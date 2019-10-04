@@ -6,8 +6,7 @@ class RemotePayexTest < Test::Unit::TestCase
     @gateway = PayexGateway.new(fixtures(:payex))
 
     @amount = 1000
-    # cvv 210, expire date 02/14
-    @credit_card = credit_card('4581090329655682', verification_value: 210, month: 2, year: 14)
+    @credit_card = credit_card('4581090329655682')
     @declined_card = credit_card('4000300011112220')
 
     @options = {
@@ -55,7 +54,7 @@ class RemotePayexTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_void
-    assert response = @gateway.void("1")
+    assert response = @gateway.void('1')
     assert_failure response
     assert_not_equal 'OK', response.message
     assert_match %r{1}, response.message
@@ -70,7 +69,7 @@ class RemotePayexTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_refund
-    assert response = @gateway.refund(@amount, "1", order_id: '123')
+    assert response = @gateway.refund(@amount, '1', order_id: '123')
     assert_failure response
     assert_not_equal 'OK', response.message
     assert_match %r{1}, response.message

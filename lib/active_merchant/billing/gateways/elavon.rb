@@ -1,42 +1,17 @@
-require File.dirname(__FILE__) + '/viaklix'
+require 'active_merchant/billing/gateways/viaklix'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-    # = Elavon Virtual Merchant Gateway
-    #
-    # == Example use:
-    #
-    #   gateway = ActiveMerchant::Billing::ElavonGateway.new(
-    #               :login     => "my_virtual_merchant_id",
-    #               :password  => "my_virtual_merchant_pin",
-    #               :user      => "my_virtual_merchant_user_id" # optional
-    #            )
-    #
-    #   # set up credit card obj as in main ActiveMerchant example
-    #   creditcard = ActiveMerchant::Billing::CreditCard.new(
-    #     :type       => 'visa',
-    #     :number     => '41111111111111111',
-    #     :month      => 10,
-    #     :year       => 2011,
-    #     :first_name => 'Bob',
-    #     :last_name  => 'Bobsen'
-    #   )
-    #
-    #   # run request
-    #   response = gateway.purchase(1000, creditcard) # authorize and capture 10 USD
-    #
-    #   puts response.success?      # Check whether the transaction was successful
-    #   puts response.message       # Retrieve the message returned by Elavon
-    #   puts response.authorization # Retrieve the unique transaction ID returned by Elavon
-    #
     class ElavonGateway < Gateway
+      include Empty
+
       class_attribute :test_url, :live_url, :delimiter, :actions
 
-      self.test_url = 'https://demo.myvirtualmerchant.com/VirtualMerchantDemo/process.do'
-      self.live_url = 'https://www.myvirtualmerchant.com/VirtualMerchant/process.do'
+      self.test_url = 'https://api.demo.convergepay.com/VirtualMerchantDemo/process.do'
+      self.live_url = 'https://api.convergepay.com/VirtualMerchant/process.do'
 
       self.display_name = 'Elavon MyVirtualMerchant'
-      self.supported_countries = %w(US CA PR DE IE NO PL LU BE NL)
+      self.supported_countries = %w(US CA PR DE IE NO PL LU BE NL MX)
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
       self.homepage_url = 'http://www.elavon.com/'
 
@@ -47,28 +22,17 @@ module ActiveMerchant #:nodoc:
         :refund => 'CCRETURN',
         :authorize => 'CCAUTHONLY',
         :capture => 'CCFORCE',
+        :capture_complete => 'CCCOMPLETE',
         :void => 'CCDELETE',
         :store => 'CCGETTOKEN',
         :update => 'CCUPDATETOKEN',
       }
 
-      # Initialize the Gateway
-      #
-      # The gateway requires that a valid login and password be passed
-      # in the +options+ hash.
-      #
-      # ==== Options
-      #
-      # * <tt>:login</tt> -- Merchant ID
-      # * <tt>:password</tt> -- PIN
-      # * <tt>:user</tt> -- Specify a subuser of the account (optional)
-      # * <tt>:test => +true+ or +false+</tt> -- Force test transactions
       def initialize(options = {})
         requires!(options, :login, :password)
         super
       end
 
-      # Make a purchase
       def purchase(money, payment_method, options = {})
         form = {}
         add_salestax(form, options)
@@ -78,98 +42,74 @@ module ActiveMerchant #:nodoc:
         else
           add_creditcard(form, payment_method)
         end
+        add_currency(form, money, options)
         add_address(form, options)
         add_customer_data(form, options)
         add_test_mode(form, options)
-        commit(:purchase, money, form)
+        add_ip(form, options)
+        commit(:purchase, money, form, options)
       end
 
-      # Authorize a credit card for a given amount.
-      #
-      # ==== Parameters
-      # * <tt>money</tt> - The amount to be authorized as an Integer value in cents.
-      # * <tt>credit_card</tt> - The CreditCard details for the transaction.
-      # * <tt>options</tt>
-      #   * <tt>:billing_address</tt> - The billing address for the cardholder.
       def authorize(money, creditcard, options = {})
         form = {}
         add_salestax(form, options)
         add_invoice(form, options)
         add_creditcard(form, creditcard)
+        add_currency(form, money, options)
         add_address(form, options)
         add_customer_data(form, options)
         add_test_mode(form, options)
-        commit(:authorize, money, form)
+        add_ip(form, options)
+        commit(:authorize, money, form, options)
       end
 
-      # Capture authorized funds from a credit card.
-      #
-      # ==== Parameters
-      # * <tt>money</tt> - The amount to be captured as an Integer value in cents.
-      # * <tt>authorization</tt> - The approval code returned from the initial authorization.
-      # * <tt>options</tt>
-      #   * <tt>:credit_card</tt> - The CreditCard details from the initial transaction (required).
       def capture(money, authorization, options = {})
-        requires!(options, :credit_card)
-
         form = {}
-        add_salestax(form, options)
-        add_approval_code(form, authorization)
-        add_invoice(form, options)
-        add_creditcard(form, options[:credit_card])
-        add_customer_data(form, options)
-        add_test_mode(form, options)
-        commit(:capture, money, form)
+        if options[:credit_card]
+          action = :capture
+          add_salestax(form, options)
+          add_approval_code(form, authorization)
+          add_invoice(form, options)
+          add_creditcard(form, options[:credit_card])
+          add_currency(form, money, options)
+          add_customer_data(form, options)
+          add_test_mode(form, options)
+        else
+          action = :capture_complete
+          add_txn_id(form, authorization)
+          add_partial_shipment_flag(form, options)
+          add_test_mode(form, options)
+        end
+        commit(action, money, form, options)
       end
 
-      # Refund a transaction.
-      #
-      # This transaction indicates to the gateway that
-      # money should flow from the merchant to the customer.
-      #
-      # ==== Parameters
-      #
-      # * <tt>money</tt> -- The amount to be credited to the customer as an Integer value in cents.
-      # * <tt>identification</tt> -- The ID of the original transaction against which the refund is being issued.
-      # * <tt>options</tt> -- A hash of parameters.
       def refund(money, identification, options = {})
         form = {}
         add_txn_id(form, identification)
         add_test_mode(form, options)
-        commit(:refund, money, form)
+        commit(:refund, money, form, options)
       end
 
-      # Void a previous transaction
-      #
-      # ==== Parameters
-      #
-      # * <tt>authorization</tt> - The authorization returned from the previous request.
       def void(identification, options = {})
         form = {}
         add_txn_id(form, identification)
         add_test_mode(form, options)
-        commit(:void, nil, form)
+        commit(:void, nil, form, options)
       end
 
-      # Make a credit to a card.  Use the refund method if you'd like to credit using
-      # previous transaction
-      #
-      # ==== Parameters
-      # * <tt>money</tt> - The amount to be credited as an Integer value in cents.
-      # * <tt>creditcard</tt> - The credit card to be credited.
-      # * <tt>options</tt>
       def credit(money, creditcard, options = {})
         if creditcard.is_a?(String)
-          raise ArgumentError, "Reference credits are not supported. Please supply the original credit card or use the #refund method."
+          raise ArgumentError, 'Reference credits are not supported. Please supply the original credit card or use the #refund method.'
         end
 
         form = {}
         add_invoice(form, options)
         add_creditcard(form, creditcard)
+        add_currency(form, money, options)
         add_address(form, options)
         add_customer_data(form, options)
         add_test_mode(form, options)
-        commit(:credit, money, form)
+        commit(:credit, money, form, options)
       end
 
       def verify(credit_card, options = {})
@@ -187,7 +127,7 @@ module ActiveMerchant #:nodoc:
         add_test_mode(form, options)
         add_verification(form, options)
         form[:add_token] = 'Y'
-        commit(:store, nil, form)
+        commit(:store, nil, form, options)
       end
 
       def update(token, creditcard, options = {})
@@ -197,14 +137,25 @@ module ActiveMerchant #:nodoc:
         add_address(form, options)
         add_customer_data(form, options)
         add_test_mode(form, options)
-        commit(:update, nil, form)
+        commit(:update, nil, form, options)
+      end
+
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((&?ssl_pin=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?ssl_card_number=)[^&\\n\r\n]*)i, '\1[FILTERED]').
+          gsub(%r((&?ssl_cvv2cvc2=)[^&]*)i, '\1[FILTERED]')
       end
 
       private
 
-      def add_invoice(form,options)
-        form[:invoice_number] = (options[:order_id] || options[:invoice]).to_s.slice(0, 10)
-        form[:description] = options[:description].to_s.slice(0, 255)
+      def add_invoice(form, options)
+        form[:invoice_number] = truncate((options[:order_id] || options[:invoice]), 10)
+        form[:description] = truncate(options[:description], 255)
       end
 
       def add_approval_code(form, authorization)
@@ -227,8 +178,13 @@ module ActiveMerchant #:nodoc:
           add_verification_value(form, creditcard)
         end
 
-        form[:first_name] = creditcard.first_name.to_s.slice(0, 20)
-        form[:last_name] = creditcard.last_name.to_s.slice(0, 30)
+        form[:first_name] = truncate(creditcard.first_name, 20)
+        form[:last_name] = truncate(creditcard.last_name, 30)
+      end
+
+      def add_currency(form, money, options)
+        currency = options[:currency] || currency(money)
+        form[:transaction_currency] = currency if currency && (@options[:multi_currency] || options[:multi_currency])
       end
 
       def add_token(form, token)
@@ -241,39 +197,43 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(form, options)
-        form[:email] = options[:email].to_s.slice(0, 100) unless options[:email].blank?
-        form[:customer_code] = options[:customer].to_s.slice(0, 10) unless options[:customer].blank?
+        form[:email] = truncate(options[:email], 100) unless empty?(options[:email])
+        form[:customer_code] = truncate(options[:customer], 10) unless empty?(options[:customer])
+        form[:customer_number] = options[:customer_number] unless empty?(options[:customer_number])
+        options[:custom_fields]&.each do |key, value|
+          form[key.to_s] = value
+        end
       end
 
       def add_salestax(form, options)
         form[:salestax] = options[:tax] if options[:tax].present?
       end
 
-      def add_address(form,options)
+      def add_address(form, options)
         billing_address = options[:billing_address] || options[:address]
 
         if billing_address
-          form[:avs_address]    = billing_address[:address1].to_s.slice(0, 30)
-          form[:address2]       = billing_address[:address2].to_s.slice(0, 30)
-          form[:avs_zip]        = billing_address[:zip].to_s.slice(0, 10)
-          form[:city]           = billing_address[:city].to_s.slice(0, 30)
-          form[:state]          = billing_address[:state].to_s.slice(0, 10)
-          form[:company]        = billing_address[:company].to_s.slice(0, 50)
-          form[:phone]          = billing_address[:phone].to_s.slice(0, 20)
-          form[:country]        = billing_address[:country].to_s.slice(0, 50)
+          form[:avs_address]    = truncate(billing_address[:address1], 30)
+          form[:address2]       = truncate(billing_address[:address2], 30)
+          form[:avs_zip]        = truncate(billing_address[:zip].to_s.gsub(/[^a-zA-Z0-9]/, ''), 9)
+          form[:city]           = truncate(billing_address[:city], 30)
+          form[:state]          = truncate(billing_address[:state], 10)
+          form[:company]        = truncate(billing_address[:company], 50)
+          form[:phone]          = truncate(billing_address[:phone], 20)
+          form[:country]        = truncate(billing_address[:country], 50)
         end
 
         if shipping_address = options[:shipping_address]
-          first_name, last_name = parse_first_and_last_name(shipping_address[:name])
-          form[:ship_to_first_name]     = first_name.to_s.slice(0, 20)
-          form[:ship_to_last_name]      = last_name.to_s.slice(0, 30)
-          form[:ship_to_address1]       = shipping_address[:address1].to_s.slice(0, 30)
-          form[:ship_to_address2]       = shipping_address[:address2].to_s.slice(0, 30)
-          form[:ship_to_city]           = shipping_address[:city].to_s.slice(0, 30)
-          form[:ship_to_state]          = shipping_address[:state].to_s.slice(0, 10)
-          form[:ship_to_company]        = shipping_address[:company].to_s.slice(0, 50)
-          form[:ship_to_country]        = shipping_address[:country].to_s.slice(0, 50)
-          form[:ship_to_zip]            = shipping_address[:zip].to_s.slice(0, 10)
+          first_name, last_name = split_names(shipping_address[:name])
+          form[:ship_to_first_name]     = truncate(first_name, 20)
+          form[:ship_to_last_name]      = truncate(last_name, 30)
+          form[:ship_to_address1]       = truncate(shipping_address[:address1], 30)
+          form[:ship_to_address2]       = truncate(shipping_address[:address2], 30)
+          form[:ship_to_city]           = truncate(shipping_address[:city], 30)
+          form[:ship_to_state]          = truncate(shipping_address[:state], 10)
+          form[:ship_to_company]        = truncate(shipping_address[:company], 50)
+          form[:ship_to_country]        = truncate(shipping_address[:country], 50)
+          form[:ship_to_zip]            = truncate(shipping_address[:zip], 10)
         end
       end
 
@@ -281,16 +241,16 @@ module ActiveMerchant #:nodoc:
         form[:verify] = 'Y' if options[:verify]
       end
 
-      def parse_first_and_last_name(value)
-        name = value.to_s.split(' ')
-
-        last_name = name.pop || ''
-        first_name = name.join(' ')
-        [ first_name, last_name ]
-      end
-
       def add_test_mode(form, options)
         form[:test_mode] = 'TRUE' if options[:test_mode]
+      end
+
+      def add_partial_shipment_flag(form, options)
+        form[:partial_shipment_flag] = 'Y' if options[:partial_shipment_flag]
+      end
+
+      def add_ip(form, options)
+        form[:cardholder_ip] = options[:ip] if options.has_key?(:ip)
       end
 
       def message_from(response)
@@ -301,11 +261,11 @@ module ActiveMerchant #:nodoc:
         !response.has_key?('errorMessage')
       end
 
-      def commit(action, money, parameters)
+      def commit(action, money, parameters, options)
         parameters[:amount] = amount(money)
         parameters[:transaction_type] = self.actions[action]
 
-        response = parse( ssl_post(test? ? self.test_url : self.live_url, post_data(parameters)) )
+        response = parse(ssl_post(test? ? self.test_url : self.live_url, post_data(parameters, options)))
 
         Response.new(response['result'] == '0', message_from(response), response,
           :test => @options[:test] || test?,
@@ -315,10 +275,23 @@ module ActiveMerchant #:nodoc:
         )
       end
 
-      def post_data(parameters)
+      def post_data(parameters, options)
         result = preamble
         result.merge!(parameters)
-        result.collect { |key, value| "ssl_#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        result.collect { |key, value| post_data_string(key, value, options) }.join('&')
+      end
+
+      def post_data_string(key, value, options)
+        if custom_field?(key, options)
+          "#{key}=#{CGI.escape(value.to_s)}"
+        else
+          "ssl_#{key}=#{CGI.escape(value.to_s)}"
+        end
+      end
+
+      def custom_field?(field_name, options)
+        return true if options[:custom_fields]&.include?(field_name.to_sym)
+        field_name == :customer_number
       end
 
       def preamble
@@ -329,20 +302,19 @@ module ActiveMerchant #:nodoc:
           'result_format' => 'ASCII'
         }
 
-        result['user_id'] = @options[:user] unless @options[:user].blank?
+        result['user_id'] = @options[:user] unless empty?(@options[:user])
         result
       end
 
       def parse(msg)
         resp = {}
-        msg.split(self.delimiter).collect{|li|
-            key, value = li.split("=")
-            resp[key.strip.gsub(/^ssl_/, '')] = value.to_s.strip
-          }
+        msg.split(self.delimiter).collect { |li|
+          key, value = li.split('=')
+          resp[key.to_s.strip.gsub(/^ssl_/, '')] = value.to_s.strip
+        }
         resp
       end
 
     end
   end
 end
-

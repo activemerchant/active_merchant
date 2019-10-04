@@ -17,7 +17,8 @@ class BorgunTest < Test::Unit::TestCase
     @options = {
       order_id: '1',
       billing_address: address,
-      description: 'Store Purchase'
+      description: 'Store Purchase',
+      terminal_id: '3'
     }
   end
 
@@ -27,7 +28,7 @@ class BorgunTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
 
-    assert_equal "140216103700|11|15|WC0000000001|123456|1|000000012300", response.authorization
+    assert_equal '140216103700|11|15|WC0000000001|123456|1|000000012300|978', response.authorization
     assert response.test?
   end
 
@@ -44,7 +45,7 @@ class BorgunTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
 
     assert_success response
-    assert_equal "140601083732|11|18|WC0000000001|123456|5|000000012300", response.authorization
+    assert_equal '140601083732|11|18|WC0000000001|123456|5|000000012300|978', response.authorization
 
     capture = stub_comms do
       @gateway.capture(@amount, response.authorization)
@@ -61,7 +62,7 @@ class BorgunTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
-    assert_equal "140216103700|11|15|WC0000000001|123456|1|000000012300", response.authorization
+    assert_equal '140216103700|11|15|WC0000000001|123456|1|000000012300|978', response.authorization
 
     refund = stub_comms do
       @gateway.refund(@amount, response.authorization)
@@ -78,7 +79,7 @@ class BorgunTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
-    assert_equal "140216103700|11|15|WC0000000001|123456|1|000000012300", response.authorization
+    assert_equal '140216103700|11|15|WC0000000001|123456|1|000000012300|978', response.authorization
 
     refund = stub_comms do
       @gateway.void(response.authorization)
@@ -95,6 +96,18 @@ class BorgunTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       assert_match(/#{@credit_card.verification_value}/, data)
     end.respond_with(successful_purchase_response)
+  end
+
+  def test_passing_terminal_id
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, { terminal_id: '3' })
+    end.check_request do |endpoint, data, headers|
+      assert_match(/TerminalID&gt;3/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_transcript_scrubbing
+    assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end
 
   private
@@ -280,5 +293,21 @@ class BorgunTest < Test::Unit::TestCase
       </ser-root:cancelAuthorizationResponse></SOAP-ENV:Body>
       </SOAP-ENV:Envelope>
     )
+  end
+
+  def transcript
+    <<-PRE_SCRUBBED
+    <- "POST /ws/Heimir.pub.ws:Authorization HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic yyyyyyyyyyyyyyyyyyyyyyyyyy==\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: gateway01.borgun.is\r\nContent-Length: 1220\r\n\r\n"
+    <- "          <soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:aut=\"http://Borgun/Heimir/pub/ws/Authorization\">\n            <soapenv:Header/>\n            <soapenv:Body>\n              <aut:getAuthorizationInput>\n                <getAuthReqXml>\n                &lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;\n&lt;getAuthorization&gt;\n                  &lt;TransType&gt;1&lt;/TransType&gt;\n                  &lt;TrAmount&gt;12600&lt;/TrAmount&gt;\n                  &lt;TrCurrency&gt;978&lt;/TrCurrency&gt;\n                  &lt;PAN&gt;4111111111111111&lt;/PAN&gt;\n                  &lt;ExpDate&gt;1705&lt;/ExpDate&gt;\n                  &lt;CVC2&gt;123&lt;/CVC2&gt;\n                  &lt;DateAndTime&gt;141110215924&lt;/DateAndTime&gt;\n                  &lt;RRN&gt;AMRCNT158463&lt;/RRN&gt;\n                  &lt;Version&gt;1000&lt;/Version&gt;\n                  &lt;Processor&gt;938&lt;/Processor&gt;\n                  &lt;MerchantID&gt;938&lt;/MerchantID&gt;\n                  &lt;TerminalID&gt;1&lt;/TerminalID&gt;\n&lt;/getAuthorization&gt;\n\n                </getAuthReqXml>\n              </aut:getAuthorizationInput>\n            </soapenv:Body>\n          </soapenv:Envelope>\n"
+    -> "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:SOAP-ENC=\"http://schemas.xmlsoap.org/soap/encoding/\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n<SOAP-ENV:Header xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\"></SOAP-ENV:Header><SOAP-ENV:Body>\n<ser-root:getAuthorizationOutput xmlns:ser-root=\"http://Borgun/Heimir/pub/ws/Authorization\">\n  <getAuthResXml>&lt;?xml version=\"1.0\" encoding=\"iso-8859-1\"?&gt;\n&lt;getAuthorizationReply&gt;\n  &lt;Version&gt;1000&lt;/Version&gt;\n  &lt;Processor&gt;938&lt;/Processor&gt;\n  &lt;MerchantID&gt;938&lt;/MerchantID&gt;\n  &lt;TerminalID&gt;1&lt;/TerminalID&gt;\n  &lt;TransType&gt;1&lt;/TransType&gt;\n  &lt;TrAmount&gt;000000012600&lt;/TrAmount&gt;\n  &lt;TrCurrency&gt;978&lt;/TrCurrency&gt;\n  &lt;DateAndTime&gt;141110215924&lt;/DateAndTime&gt;\n  &lt;PAN&gt;4111111111111111&lt;/PAN&gt;\n  &lt;RRN&gt;AMRCNT158463&lt;/RRN&gt;\n  &lt;Transaction&gt;22&lt;/Transaction&gt;\n  &lt;Batch&gt;263&lt;/Batch&gt;\n  &lt;CVCResult&gt;M&lt;/CVCResult&gt;\n  &lt;CardAccId&gt;9858674&lt;/CardAccId&gt;\n  &lt;CardAccName&gt;Longbob+Longsen\xC3\xADk\\101\\\\IS&lt;/CardAccName&gt;\n  &lt;AuthCode&gt;114031&lt;/AuthCode&gt;\n  &lt;ActionCode&gt;000&lt;/ActionCode&gt;\n  &lt;StoreTerminal&gt;00010001&lt;/StoreTerminal&gt;\n  &lt;CardType&gt;Visa&lt;/CardType&gt;\n&lt;/getAuthorizationReply&gt;</getAuthResXml>\n</ser-root:getAuthorizationOutput></SOAP-ENV:Body>\n</SOAP-ENV:Envelope>\n"
+    PRE_SCRUBBED
+  end
+
+  def scrubbed_transcript
+    <<-POST_SCRUBBED
+    <- "POST /ws/Heimir.pub.ws:Authorization HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic [FILTERED]\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: gateway01.borgun.is\r\nContent-Length: 1220\r\n\r\n"
+    <- "          <soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:aut=\"http://Borgun/Heimir/pub/ws/Authorization\">\n            <soapenv:Header/>\n            <soapenv:Body>\n              <aut:getAuthorizationInput>\n                <getAuthReqXml>\n                &lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;\n&lt;getAuthorization&gt;\n                  &lt;TransType&gt;1&lt;/TransType&gt;\n                  &lt;TrAmount&gt;12600&lt;/TrAmount&gt;\n                  &lt;TrCurrency&gt;978&lt;/TrCurrency&gt;\n                  &lt;PAN&gt;[FILTERED]&lt;/PAN&gt;\n                  &lt;ExpDate&gt;1705&lt;/ExpDate&gt;\n                  &lt;CVC2&gt;[FILTERED]&lt;/CVC2&gt;\n                  &lt;DateAndTime&gt;141110215924&lt;/DateAndTime&gt;\n                  &lt;RRN&gt;AMRCNT158463&lt;/RRN&gt;\n                  &lt;Version&gt;1000&lt;/Version&gt;\n                  &lt;Processor&gt;938&lt;/Processor&gt;\n                  &lt;MerchantID&gt;938&lt;/MerchantID&gt;\n                  &lt;TerminalID&gt;1&lt;/TerminalID&gt;\n&lt;/getAuthorization&gt;\n\n                </getAuthReqXml>\n              </aut:getAuthorizationInput>\n            </soapenv:Body>\n          </soapenv:Envelope>\n"
+    -> "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:SOAP-ENC=\"http://schemas.xmlsoap.org/soap/encoding/\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n<SOAP-ENV:Header xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\"></SOAP-ENV:Header><SOAP-ENV:Body>\n<ser-root:getAuthorizationOutput xmlns:ser-root=\"http://Borgun/Heimir/pub/ws/Authorization\">\n  <getAuthResXml>&lt;?xml version=\"1.0\" encoding=\"iso-8859-1\"?&gt;\n&lt;getAuthorizationReply&gt;\n  &lt;Version&gt;1000&lt;/Version&gt;\n  &lt;Processor&gt;938&lt;/Processor&gt;\n  &lt;MerchantID&gt;938&lt;/MerchantID&gt;\n  &lt;TerminalID&gt;1&lt;/TerminalID&gt;\n  &lt;TransType&gt;1&lt;/TransType&gt;\n  &lt;TrAmount&gt;000000012600&lt;/TrAmount&gt;\n  &lt;TrCurrency&gt;978&lt;/TrCurrency&gt;\n  &lt;DateAndTime&gt;141110215924&lt;/DateAndTime&gt;\n  &lt;PAN&gt;[FILTERED]&lt;/PAN&gt;\n  &lt;RRN&gt;AMRCNT158463&lt;/RRN&gt;\n  &lt;Transaction&gt;22&lt;/Transaction&gt;\n  &lt;Batch&gt;263&lt;/Batch&gt;\n  &lt;CVCResult&gt;M&lt;/CVCResult&gt;\n  &lt;CardAccId&gt;9858674&lt;/CardAccId&gt;\n  &lt;CardAccName&gt;Longbob+Longsen\xC3\xADk\\101\\\\IS&lt;/CardAccName&gt;\n  &lt;AuthCode&gt;114031&lt;/AuthCode&gt;\n  &lt;ActionCode&gt;000&lt;/ActionCode&gt;\n  &lt;StoreTerminal&gt;00010001&lt;/StoreTerminal&gt;\n  &lt;CardType&gt;Visa&lt;/CardType&gt;\n&lt;/getAuthorizationReply&gt;</getAuthResXml>\n</ser-root:getAuthorizationOutput></SOAP-ENV:Body>\n</SOAP-ENV:Envelope>\n"
+    POST_SCRUBBED
   end
 end

@@ -2,41 +2,66 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class FirstdataE4Gateway < Gateway
       # TransArmor support requires v11 or lower
-      self.test_url = "https://api.demo.globalgatewaye4.firstdata.com/transaction/v11"
-      self.live_url = "https://api.globalgatewaye4.firstdata.com/transaction/v11"
+      self.test_url = 'https://api.demo.globalgatewaye4.firstdata.com/transaction/v11'
+      self.live_url = 'https://api.globalgatewaye4.firstdata.com/transaction/v11'
 
       TRANSACTIONS = {
-        sale:          "00",
-        authorization: "01",
-        verify:        "05",
-        capture:       "32",
-        void:          "33",
-        credit:        "34",
-        store:         "05"
+        sale:          '00',
+        authorization: '01',
+        verify:        '05',
+        capture:       '32',
+        void:          '33',
+        credit:        '34',
+        store:         '05'
       }
 
       POST_HEADERS = {
-        "Accepts" => "application/xml",
-        "Content-Type" => "application/xml"
+        'Accepts' => 'application/xml',
+        'Content-Type' => 'application/xml'
       }
 
-      SUCCESS = "true"
+      SUCCESS = 'true'
 
       SENSITIVE_FIELDS = [:verification_str2, :expiry_date, :card_number]
 
       BRANDS = {
         :visa => 'Visa',
-        :master => "Mastercard",
-        :american_express => "American Express",
-        :jcb => "JCB",
-        :discover => "Discover"
+        :master => 'Mastercard',
+        :american_express => 'American Express',
+        :jcb => 'JCB',
+        :discover => 'Discover'
       }
 
+      E4_BRANDS = BRANDS.merge({:mastercard => 'Mastercard'})
+
+      DEFAULT_ECI = '07'
+
       self.supported_cardtypes = BRANDS.keys
-      self.supported_countries = ["CA", "US"]
-      self.default_currency = "USD"
-      self.homepage_url = "http://www.firstdata.com"
-      self.display_name = "FirstData Global Gateway e4"
+      self.supported_countries = ['CA', 'US']
+      self.default_currency = 'USD'
+      self.homepage_url = 'http://www.firstdata.com'
+      self.display_name = 'FirstData Global Gateway e4'
+
+      STANDARD_ERROR_CODE_MAPPING = {
+        # Bank error codes: https://firstdata.zendesk.com/entries/471297-First-Data-Global-Gateway-e4-Bank-Response-Codes
+        '201' => STANDARD_ERROR_CODE[:incorrect_number],
+        '531' => STANDARD_ERROR_CODE[:invalid_cvc],
+        '503' => STANDARD_ERROR_CODE[:invalid_cvc],
+        '811' => STANDARD_ERROR_CODE[:invalid_cvc],
+        '605' => STANDARD_ERROR_CODE[:invalid_expiry_date],
+        '522' => STANDARD_ERROR_CODE[:expired_card],
+        '303' => STANDARD_ERROR_CODE[:card_declined],
+        '530' => STANDARD_ERROR_CODE[:card_declined],
+        '401' => STANDARD_ERROR_CODE[:call_issuer],
+        '402' => STANDARD_ERROR_CODE[:call_issuer],
+        '501' => STANDARD_ERROR_CODE[:pickup_card],
+        # Ecommerce error codes -- https://firstdata.zendesk.com/entries/451980-ecommerce-response-codes-etg-codes
+        '22' => STANDARD_ERROR_CODE[:invalid_number],
+        '25' => STANDARD_ERROR_CODE[:invalid_expiry_date],
+        '31' => STANDARD_ERROR_CODE[:incorrect_cvc],
+        '44' => STANDARD_ERROR_CODE[:incorrect_zip],
+        '42' => STANDARD_ERROR_CODE[:processing_error]
+      }
 
       # Create a new FirstdataE4Gateway
       #
@@ -106,13 +131,35 @@ module ActiveMerchant #:nodoc:
         commit(:store, build_store_request(credit_card, options), credit_card)
       end
 
+      def verify_credentials
+        response = void('0')
+        response.message != 'Unauthorized Request. Bad or missing credentials.'
+      end
+
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((<Card_Number>).+(</Card_Number>)), '\1[FILTERED]\2').
+          gsub(%r((<VerificationStr2>).+(</VerificationStr2>)), '\1[FILTERED]\2').
+          gsub(%r((<Password>).+(</Password>))i, '\1[FILTERED]\2').
+          gsub(%r((<CAVV>).+(</CAVV>)), '\1[FILTERED]\2').
+          gsub(%r((Card Number : ).*\d)i, '\1[FILTERED]')
+      end
+
+      def supports_network_tokenization?
+        true
+      end
+
       private
 
       def build_request(action, body)
         xml = Builder::XmlMarkup.new
 
         xml.instruct!
-        xml.tag! "Transaction" do
+        xml.tag! 'Transaction', xmlns: 'http://secure2.e-xact.com/vplug-in/transaction/rpc-enc/encodedTypes' do
           add_credentials(xml)
           add_transaction_type(xml, action)
           xml << body
@@ -124,17 +171,18 @@ module ActiveMerchant #:nodoc:
       def build_sale_or_authorization_request(money, credit_card_or_store_authorization, options)
         xml = Builder::XmlMarkup.new
 
-        add_amount(xml, money)
+        add_amount(xml, money, options)
 
         if credit_card_or_store_authorization.is_a? String
-          add_credit_card_token(xml, credit_card_or_store_authorization)
+          add_credit_card_token(xml, credit_card_or_store_authorization, options)
         else
           add_credit_card(xml, credit_card_or_store_authorization, options)
         end
 
         add_customer_data(xml, options)
         add_invoice(xml, options)
-        add_card_authentication_data(xml, options)
+        add_tax_fields(xml, options)
+        add_level_3(xml, options)
 
         xml.target!
       end
@@ -143,7 +191,7 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new
 
         add_identification(xml, identification)
-        add_amount(xml, money)
+        add_amount(xml, money, options)
         add_customer_data(xml, options)
         add_card_authentication_data(xml, options)
 
@@ -160,32 +208,53 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_credentials(xml)
-        xml.tag! "ExactID", @options[:login]
-        xml.tag! "Password", @options[:password]
+        xml.tag! 'ExactID', @options[:login]
+        xml.tag! 'Password', @options[:password]
       end
 
       def add_transaction_type(xml, action)
-        xml.tag! "Transaction_Type", TRANSACTIONS[action]
+        xml.tag! 'Transaction_Type', TRANSACTIONS[action]
       end
 
       def add_identification(xml, identification)
-        authorization_num, transaction_tag, _ = identification.split(";")
+        authorization_num, transaction_tag, _ = identification.split(';')
 
-        xml.tag! "Authorization_Num", authorization_num
-        xml.tag! "Transaction_Tag", transaction_tag
+        xml.tag! 'Authorization_Num', authorization_num
+        xml.tag! 'Transaction_Tag', transaction_tag
       end
 
-      def add_amount(xml, money)
-        xml.tag! "DollarAmount", amount(money)
+      def add_amount(xml, money, options)
+        currency_code = options[:currency] || default_currency
+        xml.tag! 'DollarAmount', localized_amount(money, currency_code)
+        xml.tag! 'Currency', currency_code
       end
 
       def add_credit_card(xml, credit_card, options)
-        xml.tag! "Card_Number", credit_card.number
-        xml.tag! "Expiry_Date", expdate(credit_card)
-        xml.tag! "CardHoldersName", credit_card.name
-        xml.tag! "CardType", card_type(credit_card.brand)
+        if credit_card.respond_to?(:track_data) && credit_card.track_data.present?
+          xml.tag! 'Track1', credit_card.track_data
+          xml.tag! 'Ecommerce_Flag', 'R'
+        else
+          xml.tag! 'Card_Number', credit_card.number
+          xml.tag! 'Expiry_Date', expdate(credit_card)
+          xml.tag! 'CardHoldersName', credit_card.name
+          xml.tag! 'CardType', card_type(credit_card.brand)
 
-        add_credit_card_verification_strings(xml, credit_card, options)
+          add_credit_card_eci(xml, credit_card, options)
+          add_credit_card_verification_strings(xml, credit_card, options)
+        end
+      end
+
+      def add_credit_card_eci(xml, credit_card, options)
+        eci = if credit_card.is_a?(NetworkTokenizationCreditCard) && credit_card.source == :apple_pay && card_brand(credit_card) == 'discover'
+                # Discover requires any Apple Pay transaction, regardless of in-app
+                # or web, and regardless of the ECI contained in the PKPaymentToken,
+                # to have an ECI value explicitly of 04.
+                '04'
+              else
+                (credit_card.respond_to?(:eci) ? credit_card.eci : nil) || options[:eci] || DEFAULT_ECI
+        end
+
+        xml.tag! 'Ecommerce_Flag', eci.to_s =~ /^[0-9]+$/ ? eci.to_s.rjust(2, '0') : eci
       end
 
       def add_credit_card_verification_strings(xml, credit_card, options)
@@ -193,23 +262,40 @@ module ActiveMerchant #:nodoc:
         if address
           address_values = []
           [:address1, :zip, :city, :state, :country].each { |part| address_values << address[part].to_s }
-          xml.tag! "VerificationStr1", address_values.join("|")
+          xml.tag! 'VerificationStr1', address_values.join('|')
         end
 
-        if credit_card.verification_value?
-          xml.tag! "CVD_Presence_Ind", "1"
-          xml.tag! "VerificationStr2", credit_card.verification_value
+        if credit_card.is_a?(NetworkTokenizationCreditCard)
+          add_network_tokenization_credit_card(xml, credit_card)
+        else
+          if credit_card.verification_value?
+            xml.tag! 'CVD_Presence_Ind', '1'
+            xml.tag! 'VerificationStr2', credit_card.verification_value
+          end
+
+          add_card_authentication_data(xml, options)
+        end
+      end
+
+      def add_network_tokenization_credit_card(xml, credit_card)
+        case card_brand(credit_card).to_sym
+        when :american_express
+          cryptogram = Base64.decode64(credit_card.payment_cryptogram)
+          xml.tag!('XID', Base64.encode64(cryptogram[20...40]))
+          xml.tag!('CAVV', Base64.encode64(cryptogram[0...20]))
+        else
+          xml.tag!('XID', credit_card.transaction_id) if credit_card.transaction_id
+          xml.tag!('CAVV', credit_card.payment_cryptogram)
         end
       end
 
       def add_card_authentication_data(xml, options)
-        xml.tag! "CAVV", options[:cavv]
-        xml.tag! "XID", options[:xid]
-        xml.tag! "Ecommerce_Flag", options[:eci]
+        xml.tag! 'CAVV', options[:cavv]
+        xml.tag! 'XID', options[:xid]
       end
 
-      def add_credit_card_token(xml, store_authorization)
-        params = store_authorization.split(";")
+      def add_credit_card_token(xml, store_authorization, options)
+        params = store_authorization.split(';')
         credit_card = CreditCard.new(
           :brand      => params[1],
           :first_name => params[2],
@@ -217,27 +303,37 @@ module ActiveMerchant #:nodoc:
           :month      => params[4],
           :year       => params[5])
 
-        xml.tag! "TransarmorToken", params[0]
-        xml.tag! "Expiry_Date", expdate(credit_card)
-        xml.tag! "CardHoldersName", credit_card.name
-        xml.tag! "CardType", card_type(credit_card.brand)
+        xml.tag! 'TransarmorToken', params[0]
+        xml.tag! 'Expiry_Date', expdate(credit_card)
+        xml.tag! 'CardHoldersName', credit_card.name
+        xml.tag! 'CardType', card_type(credit_card.brand)
+        add_card_authentication_data(xml, options)
       end
 
       def add_customer_data(xml, options)
-        xml.tag! "Customer_Ref", options[:customer] if options[:customer]
-        xml.tag! "Client_IP", options[:ip] if options[:ip]
-        xml.tag! "Client_Email", options[:email] if options[:email]
+        xml.tag! 'Customer_Ref', options[:customer] if options[:customer]
+        xml.tag! 'Client_IP', options[:ip] if options[:ip]
+        xml.tag! 'Client_Email', options[:email] if options[:email]
       end
 
       def add_address(xml, options)
         if address = (options[:billing_address] || options[:address])
-          xml.tag! "ZipCode", address[:zip]
+          xml.tag! 'ZipCode', address[:zip]
         end
       end
 
       def add_invoice(xml, options)
-        xml.tag! "Reference_No", options[:order_id]
-        xml.tag! "Reference_3",  options[:description] if options[:description]
+        xml.tag! 'Reference_No', options[:order_id]
+        xml.tag! 'Reference_3',  options[:description] if options[:description]
+      end
+
+      def add_tax_fields(xml, options)
+        xml.tag! 'Tax1Amount',  options[:tax1_amount] if options[:tax1_amount]
+        xml.tag! 'Tax1Number',  options[:tax1_number] if options[:tax1_number]
+      end
+
+      def add_level_3(xml, options)
+        xml.tag!('Level3') { |x| x << options[:level_3] } if options[:level_3]
       end
 
       def expdate(credit_card)
@@ -245,7 +341,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def card_type(credit_card_brand)
-        BRANDS[credit_card_brand.to_sym] if credit_card_brand
+        E4_BRANDS[credit_card_brand.to_sym] if credit_card_brand
       end
 
       def commit(action, request, credit_card = nil)
@@ -258,9 +354,10 @@ module ActiveMerchant #:nodoc:
 
         Response.new(successful?(response), message_from(response), response,
           :test => test?,
-          :authorization => response_authorization(action, response, credit_card),
+          :authorization => successful?(response) ? response_authorization(action, response, credit_card) : '',
           :avs_result => {:code => response[:avs]},
-          :cvv_result => response[:cvv2]
+          :cvv_result => response[:cvv2],
+          :error_code => standard_error_code(response)
         )
       end
 
@@ -281,10 +378,10 @@ module ActiveMerchant #:nodoc:
           [
             response[:authorization_num],
             response[:transaction_tag],
-            (response[:dollar_amount].to_f * 100).to_i
-          ].join(";")
+            (response[:dollar_amount].to_f * 100).round
+          ].join(';')
         else
-          ""
+          ''
         end
       end
 
@@ -297,7 +394,7 @@ module ActiveMerchant #:nodoc:
             credit_card.last_name,
             credit_card.month,
             credit_card.year
-            ].map { |value| value.to_s.gsub(/;/, "") }.join(";")
+          ].map { |value| value.to_s.gsub(/;/, '') }.join(';')
         else
           raise StandardError, "TransArmor support is not enabled on your #{display_name} account"
         end
@@ -305,16 +402,16 @@ module ActiveMerchant #:nodoc:
 
       def money_from_authorization(auth)
         _, _, amount = auth.split(/;/, 3)
-        amount.to_i # return the # of cents, no need to divide
+        amount.to_i
       end
 
       def message_from(response)
         if(response[:faultcode] && response[:faultstring])
           response[:faultstring]
-        elsif(response[:error_number] && response[:error_number] != "0")
+        elsif(response[:error_number] && response[:error_number] != '0')
           response[:error_description]
         else
-          result = (response[:exact_message] || "")
+          result = (response[:exact_message] || '')
           result << " - #{response[:bank_message]}" if response[:bank_message].present?
           result
         end
@@ -322,29 +419,33 @@ module ActiveMerchant #:nodoc:
 
       def parse_error(error)
         {
-          :transaction_approved => "false",
+          :transaction_approved => 'false',
           :error_number => error.code,
-          :error_description => error.body
+          :error_description => error.body,
+          :ecommerce_error_code => error.body.gsub(/[^\d]/, '')
         }
+      end
+
+      def standard_error_code(response)
+        STANDARD_ERROR_CODE_MAPPING[response[:bank_resp_code] || response[:ecommerce_error_code]]
       end
 
       def parse(xml)
         response = {}
         xml = REXML::Document.new(xml)
 
-        if root = REXML::XPath.first(xml, "//TransactionResult")
+        if root = REXML::XPath.first(xml, '//TransactionResult')
           parse_elements(response, root)
         end
 
-        response.delete_if{ |k,v| SENSITIVE_FIELDS.include?(k) }
+        response.delete_if { |k, v| SENSITIVE_FIELDS.include?(k) }
       end
 
       def parse_elements(response, root)
         root.elements.to_a.each do |node|
-          response[node.name.gsub(/EXact/, "Exact").underscore.to_sym] = (node.text || "").strip
+          response[node.name.gsub(/EXact/, 'Exact').underscore.to_sym] = (node.text || '').strip
         end
       end
     end
   end
 end
-

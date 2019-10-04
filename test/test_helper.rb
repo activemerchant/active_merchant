@@ -1,22 +1,10 @@
-#!/usr/bin/env ruby
 $:.unshift File.expand_path('../../lib', __FILE__)
 
-begin
-  require 'rubygems'
-  require 'bundler'
-  Bundler.setup
-rescue LoadError => e
-  puts "Error loading bundler (#{e.message}): \"gem install bundler\" for bundler support."
-end
+require 'bundler/setup'
 
 require 'test/unit'
+require 'mocha/test_unit'
 
-require 'mocha/version'
-if(Mocha::VERSION.split(".")[1].to_i < 12)
-  require 'mocha'
-else
-  require 'mocha/setup'
-end
 require 'yaml'
 require 'json'
 require 'active_merchant'
@@ -24,11 +12,7 @@ require 'comm_stub'
 
 require 'active_support/core_ext/integer/time'
 require 'active_support/core_ext/numeric/time'
-
-begin
-  require 'active_support/core_ext/time/acts_like'
-rescue LoadError
-end
+require 'active_support/core_ext/time/acts_like'
 
 ActiveMerchant::Billing::Base.mode = :test
 
@@ -47,7 +31,7 @@ end
 
 module ActiveMerchant
   module Assertions
-    AssertionClass = RUBY_VERSION > '1.9' ? MiniTest::Assertion : Test::Unit::AssertionFailedError
+    AssertionClass = defined?(Minitest) ? MiniTest::Assertion : Test::Unit::AssertionFailedError
 
     def assert_field(field, value)
       clean_backtrace do
@@ -97,11 +81,11 @@ module ActiveMerchant
       end
     end
 
-    def assert_valid(model)
+    def assert_valid(model, message=nil)
       errors = model.validate
 
       clean_backtrace do
-        assert_equal({}, errors, "Expected to be valid")
+        assert_equal({}, errors, (message || 'Expected to be valid'))
       end
 
       errors
@@ -111,15 +95,19 @@ module ActiveMerchant
       errors = model.validate
 
       clean_backtrace do
-        assert_not_equal({}, errors, "Expected to not be valid")
+        assert_not_equal({}, errors, 'Expected to not be valid')
       end
 
       errors
     end
 
     def assert_deprecation_warning(message=nil)
-      ActiveMerchant.expects(:deprecated).with(message ? message : anything)
+      ActiveMerchant.expects(:deprecated).with(message || anything)
       yield
+    end
+
+    def refute(value, message = nil)
+      assert(!value, message)
     end
 
     def silence_deprecation_warnings
@@ -132,12 +120,18 @@ module ActiveMerchant
       yield
     end
 
+    def assert_scrubbed(unexpected_value, transcript)
+      regexp = (Regexp === unexpected_value ? unexpected_value : Regexp.new(Regexp.quote(unexpected_value.to_s)))
+      refute_match regexp, transcript, 'Expected the value to be scrubbed out of the transcript'
+    end
+
     private
+
     def clean_backtrace(&block)
       yield
     rescue AssertionClass => e
       path = File.expand_path(__FILE__)
-      raise AssertionClass, e.message, e.backtrace.reject { |line| File.expand_path(line) =~ /#{path}/ }
+      raise AssertionClass, e.message, (e.backtrace.reject { |line| File.expand_path(line) =~ /#{path}/ })
     end
   end
 
@@ -147,18 +141,51 @@ module ActiveMerchant
     DEFAULT_CREDENTIALS = File.join(File.dirname(__FILE__), 'fixtures.yml') unless defined?(DEFAULT_CREDENTIALS)
 
     private
+
+    def default_expiration_date
+      @default_expiration_date ||= Date.new((Time.now.year + 1), 9, 30)
+    end
+
+    def formatted_expiration_date(credit_card)
+      credit_card.expiry_date.expiration.strftime('%Y-%m')
+    end
+
     def credit_card(number = '4242424242424242', options = {})
       defaults = {
         :number => number,
-        :month => 9,
-        :year => Time.now.year + 1,
+        :month => default_expiration_date.month,
+        :year => default_expiration_date.year,
+        :first_name => 'Longbob',
+        :last_name => 'Longsen',
+        :verification_value => options[:verification_value] || '123',
+        :brand => 'visa'
+      }.update(options)
+
+      Billing::CreditCard.new(defaults)
+    end
+
+    def credit_card_with_track_data(number = '4242424242424242', options = {})
+      exp_date = default_expiration_date.strftime('%y%m')
+
+      defaults = {
+        :track_data => "%B#{number}^LONGSEN/L. ^#{exp_date}1200000000000000**123******?",
+      }.update(options)
+
+      Billing::CreditCard.new(defaults)
+    end
+
+    def network_tokenization_credit_card(number = '4242424242424242', options = {})
+      defaults = {
+        :number => number,
+        :month => default_expiration_date.month,
+        :year => default_expiration_date.year,
         :first_name => 'Longbob',
         :last_name => 'Longsen',
         :verification_value => '123',
         :brand => 'visa'
       }.update(options)
 
-      Billing::CreditCard.new(defaults)
+      Billing::NetworkTokenizationCreditCard.new(defaults)
     end
 
     def check(options = {})
@@ -175,19 +202,67 @@ module ActiveMerchant
       Billing::Check.new(defaults)
     end
 
+    def apple_pay_payment_token(options = {})
+      # apple_pay_json_raw should contain the JSON serialization of the object described here
+      # https://developer.apple.com/library/IOs//documentation/PassKit/Reference/PaymentTokenJSON/PaymentTokenJSON.htm
+      apple_pay_json_raw = '{"version":"EC_v1","data":"","signature":""}'
+      defaults = {
+        payment_data: ActiveSupport::JSON.decode(apple_pay_json_raw),
+        payment_instrument_name: 'Visa 2424',
+        payment_network: 'Visa',
+        transaction_identifier: 'uniqueidentifier123'
+      }.update(options)
+
+      ActiveMerchant::Billing::ApplePayPaymentToken.new(defaults[:payment_data],
+        payment_instrument_name: defaults[:payment_instrument_name],
+        payment_network: defaults[:payment_network],
+        transaction_identifier: defaults[:transaction_identifier]
+      )
+    end
+
     def address(options = {})
       {
-        :name     => 'Jim Smith',
-        :address1 => '1234 My Street',
-        :address2 => 'Apt 1',
-        :company  => 'Widgets Inc',
-        :city     => 'Ottawa',
-        :state    => 'ON',
-        :zip      => 'K1C2N6',
-        :country  => 'CA',
-        :phone    => '(555)555-5555',
-        :fax      => '(555)555-6666'
+        name:     'Jim Smith',
+        address1: '456 My Street',
+        address2: 'Apt 1',
+        company:  'Widgets Inc',
+        city:     'Ottawa',
+        state:    'ON',
+        zip:      'K1C2N6',
+        country:  'CA',
+        phone:    '(555)555-5555',
+        fax:      '(555)555-6666'
       }.update(options)
+    end
+
+    def statement_address(options = {})
+      {
+        address1: '456 My Street',
+        address2: 'Apt 1',
+        city:     'Ottawa',
+        state:    'ON',
+        zip:      'K1C2N6'
+      }.update(options)
+    end
+
+    def stored_credential(*args, **options)
+      id = options.delete(:id) || options.delete(:network_transaction_id)
+
+      stored_credential = {
+        network_transaction_id: id,
+        initial_transaction: false
+      }
+
+      stored_credential[:initial_transaction] = true if args.include?(:initial)
+
+      stored_credential[:reason_type] = 'recurring' if args.include?(:recurring)
+      stored_credential[:reason_type] = 'unscheduled' if args.include?(:unscheduled)
+      stored_credential[:reason_type] = 'installment' if args.include?(:installment)
+
+      stored_credential[:initiator] = 'cardholder' if args.include?(:cardholder)
+      stored_credential[:initiator] = 'merchant' if args.include?(:merchant)
+
+      stored_credential
     end
 
     def generate_unique_id
@@ -207,7 +282,7 @@ module ActiveMerchant
     def load_fixtures
       [DEFAULT_CREDENTIALS, LOCAL_CREDENTIALS].inject({}) do |credentials, file_name|
         if File.exist?(file_name)
-          yaml_data = YAML.load(File.read(file_name))
+          yaml_data = YAML.safe_load(File.read(file_name), [], [], true)
           credentials.merge!(symbolize_keys(yaml_data))
         end
         credentials
@@ -218,7 +293,7 @@ module ActiveMerchant
       return unless hash.is_a?(Hash)
 
       hash.symbolize_keys!
-      hash.each{|k,v| symbolize_keys(v)}
+      hash.each { |k, v| symbolize_keys(v) }
     end
   end
 end
@@ -227,6 +302,24 @@ Test::Unit::TestCase.class_eval do
   include ActiveMerchant::Billing
   include ActiveMerchant::Assertions
   include ActiveMerchant::Fixtures
+
+  def capture_transcript(gateway)
+    transcript = ''
+    gateway.class.wiredump_device = transcript
+
+    yield
+
+    transcript
+  end
+
+  def dump_transcript_and_fail(gateway, amount, credit_card, params)
+    transcript = capture_transcript(gateway) do
+      gateway.purchase(amount, credit_card, params)
+    end
+
+    File.open('transcript.log', 'w') { |f| f.write(transcript) }
+    assert false, 'A purchase transcript has been written to transcript.log for you to test scrubbing with.'
+  end
 end
 
 module ActionViewHelperTestHelper
@@ -253,7 +346,29 @@ module ActionViewHelperTestHelper
   end
 
   protected
+
   def protect_against_forgery?
     false
+  end
+end
+
+class MockResponse
+  attr_reader   :code, :body, :message
+  attr_accessor :headers
+
+  def self.succeeded(body, message='')
+    MockResponse.new(200, body, message)
+  end
+
+  def self.failed(body, http_status_code=422, message='')
+    MockResponse.new(http_status_code, body, message)
+  end
+
+  def initialize(code, body, message='', headers={})
+    @code, @body, @message, @headers = code, body, message, headers
+  end
+
+  def [](header)
+    @headers[header]
   end
 end

@@ -27,78 +27,31 @@ require 'active_support/core_ext/hash/indifferent_access'
 require 'active_support/core_ext/hash/conversions'
 require 'active_support/core_ext/object/conversions'
 require 'active_support/core_ext/class/attribute'
-require 'active_support/core_ext/enumerable.rb'
-
-if(!defined?(ActiveSupport::VERSION) || (ActiveSupport::VERSION::STRING < "4.1"))
-  require 'active_support/core_ext/class/attribute_accessors'
-  require 'active_support/core_ext/class/delegating_attributes'
-end
-
+require 'active_support/core_ext/enumerable'
 require 'active_support/core_ext/module/attribute_accessors'
 
-begin
-  require 'active_support/base64'
-
-  unless defined?(Base64)
-    Base64 = ActiveSupport::Base64
-  end
-
-  unless Base64.respond_to?(:strict_encode64)
-    def Base64.strict_encode64(v)
-      ActiveSupport::Base64.encode64s(v)
-    end
-  end
-rescue LoadError
-  require 'base64'
-end
-
+require 'base64'
 require 'securerandom'
 require 'builder'
 require 'cgi'
 require 'rexml/document'
 require 'timeout'
 require 'socket'
+require 'openssl'
 
-require 'active_utils/network_connection_retries'
-silence_warnings{require 'active_utils/connection'}
-require 'active_utils/post_data'
-require 'active_utils/posts_data'
+require 'active_merchant/network_connection_retries'
+require 'active_merchant/net_http_ssl_connection'
+require 'active_merchant/connection'
+require 'active_merchant/post_data'
+require 'active_merchant/posts_data'
 
 require 'active_merchant/billing'
 require 'active_merchant/version'
 require 'active_merchant/country'
 
-I18n.enforce_available_locales = false
-
-module ActiveMerchant #:nodoc:
-  OFFSITE_PAYMENT_EXTRACTION_MESSAGE = "Integrations have been extracted into a separate gem (https://github.com/Shopify/offsite_payments) and will no longer be loaded by ActiveMerchant 2.x."
-
-  module Billing #:nodoc:
-    def self.const_missing(name)
-      if name.to_s == "Integrations"
-        ActiveMerchant.deprecated(OFFSITE_PAYMENT_EXTRACTION_MESSAGE)
-        require "active_merchant/offsite_payments_shim"
-        ActiveMerchant::OffsitePaymentsShim
-      else
-        super
-      end
-    end
-
-    def self.included(klass)
-      def klass.const_missing(name)
-        if name.to_s == "Integrations"
-          ActiveMerchant.deprecated(OFFSITE_PAYMENT_EXTRACTION_MESSAGE)
-          require "active_merchant/offsite_payments_shim"
-          ActiveMerchant::OffsitePaymentsShim
-        else
-          super
-        end
-      end
-    end
-  end
-
+module ActiveMerchant
   def self.deprecated(message, caller=Kernel.caller[1])
-    warning = caller + ": " + message
+    warning = caller + ': ' + message
     if(respond_to?(:logger) && logger.present?)
       logger.warn(warning)
     else
@@ -106,3 +59,5 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
+
+I18n.enforce_available_locales = false

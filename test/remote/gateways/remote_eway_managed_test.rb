@@ -21,7 +21,7 @@ class RemoteEwayManagedTest < Test::Unit::TestCase
 
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @valid_customer_id, @options)
-    assert_equal "00,Transaction Approved(Test Gateway)", response.message
+    assert_equal '00,Transaction Approved(Test Gateway)', response.message
     assert_success response
     assert response.test?
     assert_not_nil response.authorization
@@ -41,7 +41,7 @@ class RemoteEwayManagedTest < Test::Unit::TestCase
   def test_store_credit_card
     assert response = @gateway.store(@credit_card, @options)
     assert_success response
-    assert_equal "OK", response.message
+    assert_equal 'OK', response.message
     assert !response.token.blank?
     assert_not_nil response.token
   end
@@ -49,7 +49,7 @@ class RemoteEwayManagedTest < Test::Unit::TestCase
   def test_update_credit_card
     assert response = @gateway.update(@valid_customer_id, @credit_card, @options)
     assert_success response
-    assert_equal "OK", response.message
+    assert_equal 'OK', response.message
     assert response.token.blank?
   end
 
@@ -64,7 +64,7 @@ class RemoteEwayManagedTest < Test::Unit::TestCase
   def test_retrieve
     assert response = @gateway.retrieve(@valid_customer_id)
     assert_success response
-    assert_equal "OK", response.message
+    assert_equal 'OK', response.message
     assert response.test?
   end
 end

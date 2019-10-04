@@ -1,6 +1,11 @@
 source 'https://rubygems.org'
 gemspec
 
-gem 'rails', '~> 3.2.0'
+gem 'jruby-openssl', :platforms => :jruby
+gem 'rubocop', '~> 0.60.0', require: false
 
-eval File.read(File.expand_path("../Gemfile_common", __FILE__))
+group :test, :remote_test do
+  # gateway-specific dependencies, keeping these gems out of the gemspec
+  gem 'braintree', '>= 2.98.0'
+  gem 'mechanize'
+end

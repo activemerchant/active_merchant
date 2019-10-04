@@ -5,16 +5,12 @@ require 'test_helper'
 class GarantiTest < Test::Unit::TestCase
   def setup
     @original_kcode = nil
-    if RUBY_VERSION < '1.9' && $KCODE == "NONE"
-      @original_kcode = $KCODE
-      $KCODE = 'u'
-    end
 
-    Base.gateway_mode = :test
+    Base.mode = :test
     @gateway = GarantiGateway.new(:login => 'a', :password => 'b', :terminal_id => 'c', :merchant_id => 'd')
 
     @credit_card = credit_card(4242424242424242)
-    @amount = 1000 #1000 cents, 10$
+    @amount = 1000 # 1000 cents, 10$
 
     @options = {
       :order_id => 'db4af18c5222503d845180350fbda516',
@@ -51,12 +47,9 @@ class GarantiTest < Test::Unit::TestCase
     if ActiveSupport::Inflector.method(:transliterate).arity == -2
       assert_equal 'ABCCDEFGGHIIJKLMNOOPRSSTUUVYZ', @gateway.send(:normalize, 'ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ')
       assert_equal 'abccdefgghiijklmnooprsstuuvyz', @gateway.send(:normalize, 'abcçdefgğhıijklmnoöprsştuüvyz')
-    elsif RUBY_VERSION >= '1.9'
+    else
       assert_equal 'ABCDEFGHIJKLMNOPRSTUVYZ', @gateway.send(:normalize, 'ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ')
       assert_equal 'abcdefghijklmnoprstuvyz', @gateway.send(:normalize, 'abcçdefgğhıijklmnoöprsştuüvyz')
-    else
-      assert_equal 'ABCCDEFGGHIIJKLMNOOPRSSTUUVYZ', @gateway.send(:normalize, 'ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ')
-      assert_equal 'abccdefgghijklmnooprsstuuvyz', @gateway.send(:normalize, 'abcçdefgğhıijklmnoöprsştuüvyz')
     end
   end
 
@@ -64,6 +57,19 @@ class GarantiTest < Test::Unit::TestCase
     assert_nil @gateway.send(:normalize, nil)
   end
 
+  def test_strip_invalid_xml_chars
+    xml = <<EOF
+      <response>
+        <element>Parse the First & but not this &tilde; &x002a;</element>
+      </response>
+EOF
+    parsed_xml = @gateway.send(:strip_invalid_xml_chars, xml)
+
+    assert REXML::Document.new(parsed_xml)
+    assert_raise(REXML::ParseException) do
+      REXML::Document.new(xml)
+    end
+  end
 
   private
 
@@ -91,7 +97,7 @@ class GarantiTest < Test::Unit::TestCase
             <SequenceNum>000008</SequenceNum>
             <ProvDate>20101218 08:56:39</ProvDate>
             <CardNumberMasked></CardNumberMasked>
-            <CardHolderName></CardHolderName>
+            <CardHolderName>Company Name & Another Name</CardHolderName>
             <HostMsgList></HostMsgList>
             <RewardInqResult>
                   <RewardList></RewardList>

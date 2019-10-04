@@ -9,8 +9,6 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://www.payscout.com/'
       self.display_name = 'Payscout'
 
-      self.ssl_version = 'SSLv3'
-
       def initialize(options = {})
         requires!(options, :username, :password)
         super
@@ -42,7 +40,6 @@ module ActiveMerchant #:nodoc:
 
         commit('capture', money, post)
       end
-
 
       def refund(money, authorization, options = {})
         post = {}
@@ -105,7 +102,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        Hash[body.split('&').map{|x|x.split('=')}]
+        Hash[body.split('&').map { |x| x.split('=') }]
       end
 
       def commit(action, money, parameters)
@@ -155,10 +152,9 @@ module ActiveMerchant #:nodoc:
         post[:password]       = @options[:password]
         post[:type]           = action
 
-        request = post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        request = post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
         request
       end
     end
   end
 end
-

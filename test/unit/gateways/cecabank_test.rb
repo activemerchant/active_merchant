@@ -42,9 +42,9 @@ class CecabankTest < Test::Unit::TestCase
 
   def test_expiration_date_sent_correctly
     stub_comms do
-      @gateway.purchase(@amount, credit_card("4242424242424242", month: 1, year: 2014), @options)
+      @gateway.purchase(@amount, credit_card('4242424242424242', month: 1, year: 2014), @options)
     end.check_request do |endpoint, data, headers|
-      assert_match(/Caducidad=201401&/, data, "Expected expiration date format is yyyymm")
+      assert_match(/Caducidad=201401&/, data, 'Expected expiration date format is yyyymm')
     end.respond_with(successful_purchase_response)
   end
 
@@ -53,13 +53,14 @@ class CecabankTest < Test::Unit::TestCase
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
+    assert_match(/Formato CVV2\/CVC2 no valido/, response.message)
     assert response.test?
   end
 
   def test_successful_refund_request
     @gateway.expects(:ssl_post).returns(successful_refund_response)
 
-    assert response = @gateway.refund(@amount, "reference", @options)
+    assert response = @gateway.refund(@amount, 'reference', @options)
     assert_instance_of Response, response
     assert_success response
     assert response.test?
@@ -68,9 +69,13 @@ class CecabankTest < Test::Unit::TestCase
   def test_unsuccessful_refund_request
     @gateway.expects(:ssl_post).returns(failed_refund_response)
 
-    assert response = @gateway.refund(@amount, "reference", @options)
+    assert response = @gateway.refund(@amount, 'reference', @options)
     assert_failure response
     assert response.test?
+  end
+
+  def test_transcript_scrubbing
+    assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end
 
   private
@@ -131,5 +136,19 @@ Invalid unparsable xml in the response
   </ERROR>
 </TRANSACCION>
     RESPONSE
+  end
+
+  def transcript
+    <<-TRANSCRIPT
+      Num_operacion=0aa49d22f66af2c07163226dca82ddb8&Idioma=XML&Pago_soportado=SSL&URL_OK=NONE&URL_NOK=NONE&Importe=100&TipoMoneda=978&PAN=5540500001000004&Caducidad=201412&CVV2=989&Pago_elegido=SSL&Cifrado=SHA1&Firma=dcef9a490380a972f8ee4d801d416115402e0c94&Exponente=2&MerchantID=331009926&AcquirerBIN=0000522577&TerminalID=00000003
+      Num_operacion=0aa49d22f66af2c07163226dca82ddb8&Idioma=XML&Pago_soportado=SSL&URL_OK=NONE&URL_NOK=NONE&Importe=100&TipoMoneda=978&PAN=5540500001000004&Caducidad=201412&CVV2=989&Pago_elegido=SSL&Cifrado=SHA1&Firma=dcef9a490380a972f8ee4d801d416115402e0c94&Exponente=2&MerchantID=331009926&AcquirerBIN=0000522577&TerminalID=00000003"
+    TRANSCRIPT
+  end
+
+  def scrubbed_transcript
+    <<-SCRUBBED_TRANSCRIPT
+      Num_operacion=0aa49d22f66af2c07163226dca82ddb8&Idioma=XML&Pago_soportado=SSL&URL_OK=NONE&URL_NOK=NONE&Importe=100&TipoMoneda=978&PAN=[FILTERED]&Caducidad=201412&CVV2=[FILTERED]&Pago_elegido=SSL&Cifrado=SHA1&Firma=dcef9a490380a972f8ee4d801d416115402e0c94&Exponente=2&MerchantID=331009926&AcquirerBIN=0000522577&TerminalID=00000003
+      Num_operacion=0aa49d22f66af2c07163226dca82ddb8&Idioma=XML&Pago_soportado=SSL&URL_OK=NONE&URL_NOK=NONE&Importe=100&TipoMoneda=978&PAN=[FILTERED]&Caducidad=201412&CVV2=[FILTERED]&Pago_elegido=SSL&Cifrado=SHA1&Firma=dcef9a490380a972f8ee4d801d416115402e0c94&Exponente=2&MerchantID=331009926&AcquirerBIN=0000522577&TerminalID=00000003"
+    SCRUBBED_TRANSCRIPT
   end
 end

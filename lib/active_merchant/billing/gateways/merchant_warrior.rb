@@ -12,9 +12,9 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['AU']
       self.supported_cardtypes = [:visa, :master, :american_express,
-                                  :diners_club, :discover]
-      self.homepage_url = 'http://www.merchantwarrior.com/'
-      self.display_name = 'MerchantWarrior'
+                                  :diners_club, :discover, :jcb]
+      self.homepage_url = 'https://www.merchantwarrior.com/'
+      self.display_name = 'Merchant Warrior'
 
       self.money_format = :dollars
       self.default_currency = 'AUD'
@@ -27,7 +27,7 @@ module ActiveMerchant #:nodoc:
       def authorize(money, payment_method, options = {})
         post = {}
         add_amount(post, money, options)
-        add_product(post, options)
+        add_order_id(post, options)
         add_address(post, options)
         add_payment_method(post, payment_method)
         commit('processAuth', post)
@@ -36,21 +36,21 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment_method, options = {})
         post = {}
         add_amount(post, money, options)
-        add_product(post, options)
+        add_order_id(post, options)
         add_address(post, options)
         add_payment_method(post, payment_method)
         commit('processCard', post)
       end
 
-      def capture(money, identification)
+      def capture(money, identification, options = {})
         post = {}
         add_amount(post, money, options)
         add_transaction(post, identification)
-        post.merge!('captureAmount' => amount(money))
+        post['captureAmount'] = amount(money)
         commit('processCapture', post)
       end
 
-      def refund(money, identification)
+      def refund(money, identification, options = {})
         post = {}
         add_amount(post, money, options)
         add_transaction(post, identification)
@@ -68,6 +68,18 @@ module ActiveMerchant #:nodoc:
         commit('addCard', post)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((&?paymentCardNumber=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((CardNumber=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?paymentCardCSC=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?apiKey=)[^&]*)i, '\1[FILTERED]')
+      end
+
       private
 
       def add_transaction(post, identification)
@@ -79,14 +91,17 @@ module ActiveMerchant #:nodoc:
 
         post['customerName'] = scrub_name(address[:name])
         post['customerCountry'] = address[:country]
-        post['customerState'] = address[:state]
+        post['customerState'] = address[:state] || 'N/A'
         post['customerCity'] = address[:city]
         post['customerAddress'] = address[:address1]
         post['customerPostCode'] = address[:zip]
+        post['customerIP'] = address[:ip]
+        post['customerPhone'] = address[:phone]
+        post['customerEmail'] = address[:email]
       end
 
-      def add_product(post, options)
-        post['transactionProduct'] = options[:description]
+      def add_order_id(post, options)
+        post['transactionProduct'] = truncate(options[:order_id], 34) || SecureRandom.hex(15)
       end
 
       def add_payment_method(post, payment_method)
@@ -104,7 +119,7 @@ module ActiveMerchant #:nodoc:
       def add_creditcard(post, creditcard)
         post['paymentCardNumber'] = creditcard.number
         post['paymentCardName'] = scrub_name(creditcard.name)
-        post['paymentCardExpiry'] = creditcard.expiry_date.expiration.strftime("%m%y")
+        post['paymentCardExpiry'] = creditcard.expiry_date.expiration.strftime('%m%y')
         post['paymentCardCSC'] = creditcard.verification_value if creditcard.verification_value?
       end
 
@@ -143,7 +158,7 @@ module ActiveMerchant #:nodoc:
 
       def parse_element(response, node)
         if node.has_elements?
-          node.elements.each{|element| parse_element(response, element)}
+          node.elements.each { |element| parse_element(response, element) }
         else
           response[node.name.underscore.to_sym] = node.text
         end
@@ -173,14 +188,14 @@ module ActiveMerchant #:nodoc:
 
       def url_for(action, post)
         if token?(post)
-          [(test? ? TOKEN_TEST_URL : TOKEN_LIVE_URL), action].join("/")
+          [(test? ? TOKEN_TEST_URL : TOKEN_LIVE_URL), action].join('/')
         else
           (test? ? POST_TEST_URL : POST_LIVE_URL)
         end
       end
 
       def token?(post)
-        (post["cardID"] || post["cardName"])
+        (post['cardID'] || post['cardName'])
       end
 
       def success?(response)
@@ -188,7 +203,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data(post)
-        post.collect{|k,v| "#{k}=#{CGI.escape(v.to_s)}" }.join("&")
+        post.collect { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join('&')
       end
     end
   end

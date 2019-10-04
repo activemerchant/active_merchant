@@ -70,11 +70,11 @@ class EwayTest < Test::Unit::TestCase
   end
 
   def test_amount_style
-   assert_equal '1034', @gateway.send(:amount, 1034)
+    assert_equal '1034', @gateway.send(:amount, 1034)
 
-   assert_raise(ArgumentError) do
-     @gateway.send(:amount, '10.34')
-   end
+    assert_raise(ArgumentError) do
+      @gateway.send(:amount, '10.34')
+    end
   end
 
   def test_ensure_does_not_respond_to_authorize
@@ -92,7 +92,12 @@ class EwayTest < Test::Unit::TestCase
     assert_equal @options[:billing_address][:zip], post[:CustomerPostcode]
   end
 
+  def test_transcript_scrubbing
+    assert_equal scrubbed_transcript, @gateway.scrub(transcript)
+  end
+
   private
+
   def successful_purchase_response
     <<-XML
       <?xml version="1.0"?>
@@ -155,5 +160,27 @@ class EwayTest < Test::Unit::TestCase
         <ewayTrxnError>Error: You are requesting an amount greater than the remaining amount to be refunded. Your refund could not be processed.</ewayTrxnError>
       </ewayResponse>
     XML
+  end
+
+  def transcript
+    <<-TRANSCRIPT
+      D, [2012-11-14T16:05:08.673367 #78717] DEBUG -- : <ewaygateway><ewayCardNumber>4444333322221111</ewayCardNumber><ewayCardExpiryMonth>09</ewayCardExpiryMonth><ewayCardExpiryYear>13</ewayCardExpiryYear><ewayCustomerFirstName>Longbob</ewayCustomerFirstName><ewayCustomerLastName>Longsen</ewayCustomerLastName><ewayCardHoldersName>Longbob Longsen</ewayCardHoldersName><ewayCVN>123</ewayCVN><ewayCustomerAddress>47 Bobway, Bobville, WA, AU</ewayCustomerAddress><ewayCustomerPostcode>2000</ewayCustomerPostcode><ewayCustomerEmail>bob@testbob.com</ewayCustomerEmail><ewayCustomerInvoiceRef>1230123</ewayCustomerInvoiceRef><ewayCustomerInvoiceDescription>purchased items</ewayCustomerInvoiceDescription><ewayTrxnNumber/><ewayOption1/><ewayOption2/><ewayOption3/><ewayTotalAmount>100</ewayTotalAmount><ewayCustomerID>87654321</ewayCustomerID></ewaygateway>
+      opening connection to www.eway.com.au...
+      <- "<ewaygateway><ewayCardNumber>4444333322221111</ewayCardNumber><ewayCardExpiryMonth>09</ewayCardExpiryMonth><ewayCardExpiryYear>13</ewayCardExpiryYear><ewayCustomerFirstName>Longbob</ewayCustomerFirstName><ewayCustomerLastName>Longsen</ewayCustomerLastName><ewayCardHoldersName>Longbob Longsen</ewayCardHoldersName><ewayCVN>123</ewayCVN><ewayCustomerAddress>47 Bobway, Bobville, WA, AU</ewayCustomerAddress><ewayCustomerPostcode>2000</ewayCustomerPostcode><ewayCustomerEmail>bob@testbob.com</ewayCustomerEmail><ewayCustomerInvoiceRef>1230123</ewayCustomerInvoiceRef><ewayCustomerInvoiceDescription>purchased items</ewayCustomerInvoiceDescription><ewayTrxnNumber/><ewayOption1/><ewayOption2/><ewayOption3/><ewayTotalAmount>100</ewayTotalAmount><ewayCustomerID>87654321</ewayCustomerID></ewaygateway>"
+      -> "<ewayResponse><ewayTrxnStatus>True</ewayTrxnStatus><ewayTrxnNumber>10584</ewayTrxnNumber><ewayTrxnReference/><ewayTrxnOption1/><ewayTrxnOption2/><ewayTrxnOption3/><ewayAuthCode>123456</ewayAuthCode><ewayReturnAmount>100</ewayReturnAmount><ewayTrxnError>00,Transaction Approved(Test CVN Gateway)</ewayTrxnError></ewayResponse>\r\n"
+      read 327 bytes
+      D, [2012-11-14T16:05:10.597502 #78717] DEBUG -- : <ewayResponse><ewayTrxnStatus>True</ewayTrxnStatus><ewayTrxnNumber>10584</ewayTrxnNumber><ewayTrxnReference/><ewayTrxnOption1/><ewayTrxnOption2/><ewayTrxnOption3/><ewayAuthCode>123456</ewayAuthCode><ewayReturnAmount>100</ewayReturnAmount><ewayTrxnError>00,Transaction Approved(Test CVN Gateway)</ewayTrxnError></ewayResponse>
+    TRANSCRIPT
+  end
+
+  def scrubbed_transcript
+    <<-SCRUBBED_TRANSCRIPT
+      D, [2012-11-14T16:05:08.673367 #78717] DEBUG -- : <ewaygateway><ewayCardNumber>[FILTERED]</ewayCardNumber><ewayCardExpiryMonth>09</ewayCardExpiryMonth><ewayCardExpiryYear>13</ewayCardExpiryYear><ewayCustomerFirstName>Longbob</ewayCustomerFirstName><ewayCustomerLastName>Longsen</ewayCustomerLastName><ewayCardHoldersName>Longbob Longsen</ewayCardHoldersName><ewayCVN>[FILTERED]</ewayCVN><ewayCustomerAddress>47 Bobway, Bobville, WA, AU</ewayCustomerAddress><ewayCustomerPostcode>2000</ewayCustomerPostcode><ewayCustomerEmail>bob@testbob.com</ewayCustomerEmail><ewayCustomerInvoiceRef>1230123</ewayCustomerInvoiceRef><ewayCustomerInvoiceDescription>purchased items</ewayCustomerInvoiceDescription><ewayTrxnNumber/><ewayOption1/><ewayOption2/><ewayOption3/><ewayTotalAmount>100</ewayTotalAmount><ewayCustomerID>87654321</ewayCustomerID></ewaygateway>
+      opening connection to www.eway.com.au...
+      <- "<ewaygateway><ewayCardNumber>[FILTERED]</ewayCardNumber><ewayCardExpiryMonth>09</ewayCardExpiryMonth><ewayCardExpiryYear>13</ewayCardExpiryYear><ewayCustomerFirstName>Longbob</ewayCustomerFirstName><ewayCustomerLastName>Longsen</ewayCustomerLastName><ewayCardHoldersName>Longbob Longsen</ewayCardHoldersName><ewayCVN>[FILTERED]</ewayCVN><ewayCustomerAddress>47 Bobway, Bobville, WA, AU</ewayCustomerAddress><ewayCustomerPostcode>2000</ewayCustomerPostcode><ewayCustomerEmail>bob@testbob.com</ewayCustomerEmail><ewayCustomerInvoiceRef>1230123</ewayCustomerInvoiceRef><ewayCustomerInvoiceDescription>purchased items</ewayCustomerInvoiceDescription><ewayTrxnNumber/><ewayOption1/><ewayOption2/><ewayOption3/><ewayTotalAmount>100</ewayTotalAmount><ewayCustomerID>87654321</ewayCustomerID></ewaygateway>"
+      -> "<ewayResponse><ewayTrxnStatus>True</ewayTrxnStatus><ewayTrxnNumber>10584</ewayTrxnNumber><ewayTrxnReference/><ewayTrxnOption1/><ewayTrxnOption2/><ewayTrxnOption3/><ewayAuthCode>123456</ewayAuthCode><ewayReturnAmount>100</ewayReturnAmount><ewayTrxnError>00,Transaction Approved(Test CVN Gateway)</ewayTrxnError></ewayResponse>\r\n"
+      read 327 bytes
+      D, [2012-11-14T16:05:10.597502 #78717] DEBUG -- : <ewayResponse><ewayTrxnStatus>True</ewayTrxnStatus><ewayTrxnNumber>10584</ewayTrxnNumber><ewayTrxnReference/><ewayTrxnOption1/><ewayTrxnOption2/><ewayTrxnOption3/><ewayAuthCode>123456</ewayAuthCode><ewayReturnAmount>100</ewayReturnAmount><ewayTrxnError>00,Transaction Approved(Test CVN Gateway)</ewayTrxnError></ewayResponse>
+    SCRUBBED_TRANSCRIPT
   end
 end

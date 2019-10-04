@@ -1,7 +1,7 @@
-require File.dirname(__FILE__) + '/paypal/paypal_common_api'
-require File.dirname(__FILE__) + '/paypal/paypal_express_response'
-require File.dirname(__FILE__) + '/paypal/paypal_recurring_api'
-require File.dirname(__FILE__) + '/paypal_express_common'
+require 'active_merchant/billing/gateways/paypal/paypal_common_api'
+require 'active_merchant/billing/gateways/paypal/paypal_express_response'
+require 'active_merchant/billing/gateways/paypal/paypal_recurring_api'
+require 'active_merchant/billing/gateways/paypal_express_common'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -30,6 +30,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['US']
       self.homepage_url = 'https://www.paypal.com/cgi-bin/webscr?cmd=xpt/merchant/ExpressCheckoutIntro-outside'
       self.display_name = 'PayPal Express Checkout'
+      self.currencies_without_fractions = %w(HUF JPY TWD)
 
       def setup_authorization(money, options = {})
         requires!(options, :return_url, :cancel_return_url)
@@ -145,7 +146,9 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'n2:cpp-payflow-color', options[:background_color] unless options[:background_color].blank?
               if options[:allow_guest_checkout]
                 xml.tag! 'n2:SolutionType', 'Sole'
-                xml.tag! 'n2:LandingPage', options[:landing_page] || 'Billing'
+                unless options[:paypal_chooses_landing_page]
+                  xml.tag! 'n2:LandingPage', options[:landing_page] || 'Billing'
+                end
               end
               xml.tag! 'n2:BuyerEmail', options[:email] unless options[:email].blank?
 
@@ -186,6 +189,8 @@ module ActiveMerchant #:nodoc:
               if options.has_key?(:allow_buyer_optin)
                 xml.tag! 'n2:BuyerEmailOptInEnable', (options[:allow_buyer_optin] ? '1' : '0')
               end
+
+              xml.tag! 'n2:TotalType', options[:total_type] unless options[:total_type].blank?
             end
           end
         end

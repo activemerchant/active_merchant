@@ -48,7 +48,6 @@ class SecurePayTest < Test::Unit::TestCase
     assert response.authorization
   end
 
-
   def test_avs_result
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
@@ -63,21 +62,8 @@ class SecurePayTest < Test::Unit::TestCase
     assert_nil response.cvv_result['code']
   end
 
-
-  def test_undefine_unsupported_methods
-    assert @gateway.respond_to?(:purchase)
-
-    [ :authorize, :capture, :void, :credit ].each do |m|
-      assert !@gateway.respond_to?(m)
-    end
-  end
-
   def test_supported_countries
     assert_equal %w(US CA GB AU), SecurePayGateway.supported_countries
-  end
-
-  def test_supported_card_types_are_inherited
-    assert_equal AuthorizeNetGateway.supported_cardtypes, SecurePayGateway.supported_cardtypes
   end
 
   private

@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class OpenpayTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = OpenpayGateway.new(
       key: 'key',
@@ -60,7 +62,7 @@ class OpenpayTest < Test::Unit::TestCase
   end
 
   def test_successful_void
-    @gateway.expects(:ssl_request).returns(successful_purchase_response('cancelled'))
+    @gateway.expects(:ssl_request).returns(successful_void_response)
     authorization = 'tay1mauq3re4iuuk8bm4'
 
     assert response = @gateway.void(authorization)
@@ -91,6 +93,21 @@ class OpenpayTest < Test::Unit::TestCase
     assert response = @gateway.refund(@refund_amount, 'tei4hnvyp4agt5ecnbow')
     assert_failure response
     assert !response.authorization
+  end
+
+  def test_successful_verify
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.verify(@credit_card)
+    end.respond_with(successful_authorization_response, successful_void_response)
+    assert_success response
+  end
+
+  def test_unsuccessful_verify
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(failed_authorize_response, successful_void_response)
+    assert_failure response
+    assert_not_nil response.message
   end
 
   def test_successful_purchase_with_card_id
@@ -149,6 +166,43 @@ class OpenpayTest < Test::Unit::TestCase
 
     assert_nil response.authorization
     assert response.test?
+  end
+
+  def test_passing_device_session_id
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, device_session_id: 'TheDeviceSessionID')
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(%r{"device_session_id":"TheDeviceSessionID"}, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_passing_payment_installments
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, payments: '6')
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(%r{"payments":"6"}, data)
+      assert_match(%r{"payment_plan":}, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_transcript_scrubbing
+    assert_equal scrubbed_transcript, @gateway.scrub(transcript)
+  end
+
+  def test_nil_cvv_transcript_scrubbing
+    assert_equal nil_cvv_scrubbed_transcript, @gateway.scrub(nil_cvv_transcript)
+  end
+
+  def test_empty_string_cvv_transcript_scrubbing
+    assert_equal empty_string_cvv_scrubbed_transcript, @gateway.scrub(empty_string_cvv_transcript)
+  end
+
+  def test_whitespace_string_cvv_transcript_scrubbing
+    assert_equal whitespace_string_cvv_scrubbed_transcript, @gateway.scrub(whitespace_string_cvv_transcript)
   end
 
   private
@@ -257,7 +311,8 @@ class OpenpayTest < Test::Unit::TestCase
     "creation_date": "2014-01-20T17:08:43-06:00",
     "description": "Store Purchase",
     "error_message": null,
-    "order_id": null
+    "order_id": null,
+    "error_code": null
 }
     RESPONSE
   end
@@ -291,7 +346,8 @@ class OpenpayTest < Test::Unit::TestCase
     "creation_date": "2014-01-18T21:01:10-06:00",
     "description": "Store Purchase",
     "error_message": null,
-    "order_id": null
+    "order_id": null,
+    "error_code": null
 }
     RESPONSE
   end
@@ -325,7 +381,8 @@ class OpenpayTest < Test::Unit::TestCase
     "creation_date": "2014-01-18T21:01:10-06:00",
     "description": "Store Purchase",
     "error_message": null,
-    "order_id": null
+    "order_id": null,
+    "error_code": null
 }
       RESPONSE
   end
@@ -367,9 +424,14 @@ class OpenpayTest < Test::Unit::TestCase
     "creation_date": "2014-01-18T21:49:38-06:00",
     "description": "Store Purchase",
     "error_message": null,
-    "order_id": null
+    "order_id": null,
+    "error_code": null
 }
     RESPONSE
+  end
+
+  def successful_void_response
+    successful_purchase_response('cancelled')
   end
 
   def failed_purchase_response
@@ -384,6 +446,18 @@ class OpenpayTest < Test::Unit::TestCase
     RESPONSE
   end
 
+  def failed_authorize_response
+    <<-RESPONSE
+{
+    "category":"gateway",
+    "description":"The card is not supported on online transactions",
+    "http_code":412,
+    "error_code":3008,
+    "request_id":"a4001ef2-7613-4ec8-a23b-4de45154dbe4"
+}
+    RESPONSE
+  end
+
   def generic_error_response
     <<-RESPONSE
     {
@@ -394,5 +468,157 @@ class OpenpayTest < Test::Unit::TestCase
         "request_id": "b6b8241c-0bbc-4605-8c44-605b17d35aa8"
     }
     RESPONSE
+  end
+
+  def transcript
+    <<-TRANSCRIPT
+    {
+      "amount":"1.00",
+      "method":"card",
+      "description":"Store Purchase",
+      "order_id":null,
+      "device_session_id":null,
+      "card":{
+        "card_number":"4111111111111111",
+        "expiration_month":"09",
+        "expiration_year":"16",
+        "cvv2":"123",
+        "holder_name":"Longbob Longsen",
+      }
+    }
+    TRANSCRIPT
+  end
+
+  def scrubbed_transcript
+    <<-SCRUBBED_TRANSCRIPT
+    {
+      "amount":"1.00",
+      "method":"card",
+      "description":"Store Purchase",
+      "order_id":null,
+      "device_session_id":null,
+      "card":{
+        "card_number":"[FILTERED]",
+        "expiration_month":"09",
+        "expiration_year":"16",
+        "cvv2":"[FILTERED]",
+        "holder_name":"Longbob Longsen",
+      }
+    }
+    SCRUBBED_TRANSCRIPT
+  end
+
+  def nil_cvv_transcript
+    <<-TRANSCRIPT
+    {
+      "amount":"1.00",
+      "method":"card",
+      "description":"Store Purchase",
+      "order_id":null,
+      "device_session_id":null,
+      "card":{
+        "card_number":"4111111111111111",
+        "expiration_month":"09",
+        "expiration_year":"16",
+        "cvv2":null,
+        "holder_name":"Longbob Longsen",
+      }
+    }
+    TRANSCRIPT
+  end
+
+  def nil_cvv_scrubbed_transcript
+    <<-SCRUBBED_TRANSCRIPT
+    {
+      "amount":"1.00",
+      "method":"card",
+      "description":"Store Purchase",
+      "order_id":null,
+      "device_session_id":null,
+      "card":{
+        "card_number":"[FILTERED]",
+        "expiration_month":"09",
+        "expiration_year":"16",
+        "cvv2":[BLANK],
+        "holder_name":"Longbob Longsen",
+      }
+    }
+    SCRUBBED_TRANSCRIPT
+  end
+
+  def empty_string_cvv_transcript
+    <<-TRANSCRIPT
+    {
+      "amount":"1.00",
+      "method":"card",
+      "description":"Store Purchase",
+      "order_id":null,
+      "device_session_id":null,
+      "card":{
+        "card_number":"4111111111111111",
+        "expiration_month":"09",
+        "expiration_year":"16",
+        "cvv2":"",
+        "holder_name":"Longbob Longsen",
+      }
+    }
+    TRANSCRIPT
+  end
+
+  def empty_string_cvv_scrubbed_transcript
+    <<-SCRUBBED_TRANSCRIPT
+    {
+      "amount":"1.00",
+      "method":"card",
+      "description":"Store Purchase",
+      "order_id":null,
+      "device_session_id":null,
+      "card":{
+        "card_number":"[FILTERED]",
+        "expiration_month":"09",
+        "expiration_year":"16",
+        "cvv2":"[BLANK]",
+        "holder_name":"Longbob Longsen",
+      }
+    }
+    SCRUBBED_TRANSCRIPT
+  end
+
+  def whitespace_string_cvv_transcript
+    <<-TRANSCRIPT
+    {
+      "amount":"1.00",
+      "method":"card",
+      "description":"Store Purchase",
+      "order_id":null,
+      "device_session_id":null,
+      "card":{
+        "card_number":"4111111111111111",
+        "expiration_month":"09",
+        "expiration_year":"16",
+        "cvv2":"   ",
+        "holder_name":"Longbob Longsen",
+      }
+    }
+    TRANSCRIPT
+  end
+
+  def whitespace_string_cvv_scrubbed_transcript
+    <<-SCRUBBED_TRANSCRIPT
+    {
+      "amount":"1.00",
+      "method":"card",
+      "description":"Store Purchase",
+      "order_id":null,
+      "device_session_id":null,
+      "card":{
+        "card_number":"[FILTERED]",
+        "expiration_month":"09",
+        "expiration_year":"16",
+        "cvv2":"[BLANK]",
+        "holder_name":"Longbob Longsen",
+      }
+    }
+    SCRUBBED_TRANSCRIPT
   end
 end

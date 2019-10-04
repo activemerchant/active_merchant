@@ -24,9 +24,7 @@ class RemoteQuickpayV7Test < Test::Unit::TestCase
     @mastercard_dk  = credit_card('5413031000000000')
     @amex_dk        = credit_card('3747100000000000')
     @amex           = credit_card('3700100000000000')
-
-    # forbrugsforeningen doesn't use a verification value
-    @forbrugsforeningen = credit_card('6007221000000000', :verification_value => nil)
+    @fbg1886        = credit_card('6007221000000000')
   end
 
   def test_successful_purchase
@@ -41,10 +39,10 @@ class RemoteQuickpayV7Test < Test::Unit::TestCase
     @options[:ip] = '127.0.0.1' # will set :fraud_remote_addr
     @options[:fraud_http_referer] = 'http://www.excample.com'
     @options[:fraud_http_accept] = 'foo'
-    @options[:fraud_http_accept_language] = "DK"
-    @options[:fraud_http_accept_encoding] = "UFT8"
-    @options[:fraud_http_accept_charset] = "Latin"
-    @options[:fraud_http_user_agent] = "Safari"
+    @options[:fraud_http_accept_language] = 'DK'
+    @options[:fraud_http_accept_encoding] = 'UFT8'
+    @options[:fraud_http_accept_charset] = 'Latin'
+    @options[:fraud_http_user_agent] = 'Safari'
 
     assert response = @gateway.purchase(@amount, @visa, @options)
     assert_equal 'OK', response.message
@@ -62,13 +60,13 @@ class RemoteQuickpayV7Test < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_acquirers
-    assert response = @gateway.purchase(@amount, @visa, @options.update(:acquirers => "nets"))
+    assert response = @gateway.purchase(@amount, @visa, @options.update(:acquirers => 'nets'))
     assert_equal 'OK', response.message
     assert_success response
   end
 
   def test_unsuccessful_purchase_with_invalid_acquirers
-    assert response = @gateway.purchase(@amount, @visa, @options.update(:acquirers => "invalid"))
+    assert response = @gateway.purchase(@amount, @visa, @options.update(:acquirers => 'invalid'))
     assert_equal 'Error in field: acquirers', response.message
     assert_failure response
   end
@@ -84,7 +82,8 @@ class RemoteQuickpayV7Test < Test::Unit::TestCase
     assert response = @gateway.authorize(@amount, @visa_dankort, @options)
     assert_success response
     assert !response.authorization.blank?
-    assert_equal 'visa-dk', response.params['cardtype']
+    # A Visa-Dankort is considered a Dankort when processed by Nets
+    assert_equal 'dankort', response.params['cardtype']
   end
 
   def test_successful_visa_electron_authorization
@@ -144,7 +143,7 @@ class RemoteQuickpayV7Test < Test::Unit::TestCase
   end
 
   def test_successful_forbrugsforeningen_authorization
-    assert response = @gateway.authorize(@amount, @forbrugsforeningen, @options)
+    assert response = @gateway.authorize(@amount, @fbg1886, @options)
     assert_success response
     assert !response.authorization.blank?
     assert_equal 'fbg1886', response.params['cardtype']
@@ -202,21 +201,26 @@ class RemoteQuickpayV7Test < Test::Unit::TestCase
   end
 
   def test_successful_store_and_reference_purchase
-    assert store = @gateway.store(@visa, @options.merge(:description => "New subscription"))
+    assert store = @gateway.store(@visa, @options.merge(:description => 'New subscription'))
     assert_success store
     assert purchase = @gateway.purchase(@amount, store.authorization, @options.merge(:order_id => generate_unique_id[0...10]))
     assert_success purchase
   end
 
   def test_successful_store_with_acquirers
-    assert store = @gateway.store(@visa, @options.merge(:description => "New subscription", :acquirers => "nets"))
+    assert store = @gateway.store(@visa, @options.merge(:description => 'New subscription', :acquirers => 'nets'))
+    assert_success store
+  end
+
+  def test_successful_store_sans_description
+    assert store = @gateway.store(@visa, @options.merge(:acquirers => 'nets'))
     assert_success store
   end
 
   def test_invalid_login
     gateway = QuickpayGateway.new(
-        :login => '',
-        :password => ''
+      :login => '999999999',
+      :password => ''
     )
     assert response = gateway.purchase(@amount, @visa, @options)
     assert_equal 'Invalid merchant id', response.message

@@ -26,20 +26,31 @@ module ActiveMerchant #:nodoc:
         commit(money, post)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((&?card_num=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?card_ccv2=)[^&]*)i, '\1[FILTERED]')
+      end
+
       private
 
       def add_response_type(post)
-        post[:response_format] = "JSON"
+        post[:response_format] = 'JSON'
       end
 
       def add_customer_data(post, options)
         post[:user] = @options[:login]
         post[:phone] = options[:billing_address][:phone]
-        post[:mail] = options[:email]
+        post[:mail] = options[:email] || 'unspecified@email.com'
       end
 
       def add_order_data(post, options)
-        post[:reference] = options[:order_id]
+        post[:reference] = options[:order_id] || generate_unique_id
         post[:concept] = options[:description]
       end
 
@@ -52,7 +63,7 @@ module ActiveMerchant #:nodoc:
         post[:card_num] = creditcard.number
         post[:card_name] = creditcard.name
         post[:card_type] = card_brand(creditcard)
-        post[:card_exp] = "#{sprintf("%02d", creditcard.month)}/#{"#{creditcard.year}"[-2, 2]}"
+        post[:card_exp] = "#{sprintf("%02d", creditcard.month)}/#{creditcard.year.to_s[-2, 2]}"
         post[:card_ccv2] = creditcard.verification_value
       end
 
@@ -63,7 +74,7 @@ module ActiveMerchant #:nodoc:
 
       def card_brand(card)
         brand = super
-        ({"master" => "mastercard", "american_express" => "amex"}[brand] || brand)
+        ({'master' => 'mastercard', 'american_express' => 'amex'}[brand] || brand)
       end
 
       def parse(body)
@@ -79,25 +90,25 @@ module ActiveMerchant #:nodoc:
         end
 
         Response.new(success?(response),
-                     response["message"],
-                     response,
-                     :test => test?,
-                     :authorization => response["code_auth"])
+          response['message'],
+          response,
+          :test => test?,
+          :authorization => response['code_auth'])
       end
 
       def success?(response)
-        (response["response"] == "ok")
+        (response['response'] == 'ok')
       end
 
       def post_data(parameters = {})
-        parameters.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        parameters.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 
       def json_error(raw_response)
         msg = 'Invalid response received from the Banwire API.  Please contact Banwire support if you continue to receive this message.'
         msg += "  (The raw response returned by the API was #{raw_response.inspect})"
         {
-          "message" => msg
+          'message' => msg
         }
       end
     end

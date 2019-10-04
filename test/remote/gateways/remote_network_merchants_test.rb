@@ -7,6 +7,7 @@ class RemoteNetworkMerchantsTest < Test::Unit::TestCase
     @amount = 100
     @decline_amount = 1
     @credit_card = credit_card('4111111111111111')
+    @credit_card_with_track_data = credit_card_with_track_data('4111111111111111')
     @check = check
 
     @options = {
@@ -22,6 +23,18 @@ class RemoteNetworkMerchantsTest < Test::Unit::TestCase
     assert_equal 'SUCCESS', response.message
   end
 
+  def test_successful_purchase_with_track_data
+    assert response = @gateway.purchase(@amount, @credit_card_with_track_data, @options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_purchase_with_non_default_currency
+    @options.update(currency: 'EUR')
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+  end
+
   def test_successful_check_purchase
     assert response = @gateway.purchase(@amount, @check, @options)
     assert_success response
@@ -30,6 +43,12 @@ class RemoteNetworkMerchantsTest < Test::Unit::TestCase
 
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@decline_amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'DECLINE', response.message
+  end
+
+  def test_unsuccessful_purchase_with_track_data
+    assert response = @gateway.purchase(@decline_amount, @credit_card_with_track_data, @options)
     assert_failure response
     assert_equal 'DECLINE', response.message
   end
@@ -64,7 +83,7 @@ class RemoteNetworkMerchantsTest < Test::Unit::TestCase
 
     assert response = @gateway.void(purchase.authorization)
     assert_success response
-    assert_equal "Transaction Void Successful", response.message
+    assert_equal 'Transaction Void Successful', response.message
   end
 
   def test_refund
@@ -74,7 +93,18 @@ class RemoteNetworkMerchantsTest < Test::Unit::TestCase
 
     assert response = @gateway.refund(50, purchase.authorization)
     assert_success response
-    assert_equal "SUCCESS", response.message
+    assert_equal 'SUCCESS', response.message
+    assert response.authorization
+  end
+
+  def test_refund_with_track_data
+    assert purchase = @gateway.purchase(@amount, @credit_card_with_track_data, @options)
+    assert_success purchase
+    assert purchase.authorization
+
+    assert response = @gateway.refund(50, purchase.authorization)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
     assert response.authorization
   end
 
@@ -93,11 +123,11 @@ class RemoteNetworkMerchantsTest < Test::Unit::TestCase
   end
 
   def test_store_failure
-    @credit_card.number = "123"
-    assert store = @gateway.store(@creditcard, @options)
+    @credit_card.number = '123'
+    assert store = @gateway.store(@credit_card, @options)
     assert_failure store
-    assert store.message.include?('Billing Information missing')
-    assert_equal '', store.params['customer_vault_id']
+    assert store.message.include?('Invalid Credit Card Number')
+    assert store.params['customer_vault_id'].blank?
     assert_nil store.authorization
   end
 
@@ -108,7 +138,7 @@ class RemoteNetworkMerchantsTest < Test::Unit::TestCase
 
     assert unstore = @gateway.unstore(store.params['customer_vault_id'])
     assert_success unstore
-    assert_equal "Customer Deleted", unstore.message
+    assert_equal 'Customer Deleted', unstore.message
   end
 
   def test_purchase_on_stored_card
@@ -118,7 +148,7 @@ class RemoteNetworkMerchantsTest < Test::Unit::TestCase
 
     assert purchase = @gateway.purchase(@amount, store.params['customer_vault_id'], @options)
     assert_success purchase
-    assert_equal "SUCCESS", purchase.message
+    assert_equal 'SUCCESS', purchase.message
   end
 
   def test_invalid_login
@@ -129,5 +159,24 @@ class RemoteNetworkMerchantsTest < Test::Unit::TestCase
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Invalid Username', response.message
+  end
+
+  def test_successful_purchase_without_state
+    @options[:billing_address] = {
+      :name     => 'Jim Smith',
+      :address1 => 'Gullhauggrenda 30',
+      :address2 => 'Apt 1',
+      :company  => 'Widgets Inc',
+      :city     => 'Baerums Verk',
+      :state    => nil,
+      :zip      => '1354',
+      :country  => 'NO',
+      :phone    => '(555)555-5555',
+      :fax      => '(555)555-6666'
+    }
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
   end
 end

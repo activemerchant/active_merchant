@@ -1,6 +1,6 @@
-require File.dirname(__FILE__) + '/paypal/paypal_common_api'
-require File.dirname(__FILE__) + '/paypal/paypal_recurring_api'
-require File.dirname(__FILE__) + '/paypal_express'
+require 'active_merchant/billing/gateways/paypal/paypal_common_api'
+require 'active_merchant/billing/gateways/paypal/paypal_recurring_api'
+require 'active_merchant/billing/gateways/paypal_express'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
       include PaypalRecurringApi
 
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
-      self.supported_countries = ['US']
+      self.supported_countries = ['CA', 'NZ', 'GB', 'US']
       self.homepage_url = 'https://www.paypal.com/us/webapps/mpp/paypal-payments-pro'
       self.display_name = 'PayPal Payments Pro (US)'
 
@@ -50,7 +50,7 @@ module ActiveMerchant #:nodoc:
 
       def build_sale_or_authorization_request(action, money, credit_card_or_referenced_id, options)
         transaction_type = define_transaction_type(credit_card_or_referenced_id)
-        reference_id = credit_card_or_referenced_id if transaction_type == "DoReferenceTransaction"
+        reference_id = credit_card_or_referenced_id if transaction_type == 'DoReferenceTransaction'
 
         billing_address = options[:billing_address] || options[:address]
         currency_code = options[:currency] || currency(money)
@@ -62,6 +62,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'n2:' + transaction_type + 'RequestDetails' do
               xml.tag! 'n2:ReferenceID', reference_id if transaction_type == 'DoReferenceTransaction'
               xml.tag! 'n2:PaymentAction', action
+              add_descriptors(xml, options)
               add_payment_details(xml, money, currency_code, options)
               add_credit_card(xml, credit_card_or_referenced_id, billing_address, options) unless transaction_type == 'DoReferenceTransaction'
               xml.tag! 'n2:IPAddress', options[:ip]
@@ -78,13 +79,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'n2:CreditCardNumber', credit_card.number
           xml.tag! 'n2:ExpMonth', format(credit_card.month, :two_digits)
           xml.tag! 'n2:ExpYear', format(credit_card.year, :four_digits)
-          xml.tag! 'n2:CVV2', credit_card.verification_value
-
-          if [ 'switch', 'solo' ].include?(card_brand(credit_card).to_s)
-            xml.tag! 'n2:StartMonth', format(credit_card.start_month, :two_digits) unless credit_card.start_month.blank?
-            xml.tag! 'n2:StartYear', format(credit_card.start_year, :four_digits) unless credit_card.start_year.blank?
-            xml.tag! 'n2:IssueNumber', format(credit_card.issue_number, :two_digits) unless credit_card.issue_number.blank?
-          end
+          xml.tag! 'n2:CVV2', credit_card.verification_value unless credit_card.verification_value.blank?
 
           xml.tag! 'n2:CardOwner' do
             xml.tag! 'n2:PayerName' do
@@ -95,6 +90,24 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'n2:Payer', options[:email]
             add_address(xml, 'n2:Address', address)
           end
+
+          add_three_d_secure(xml, options) if options[:three_d_secure]
+        end
+      end
+
+      def add_descriptors(xml, options)
+        xml.tag! 'n2:SoftDescriptor', options[:soft_descriptor] unless options[:soft_descriptor].blank?
+        xml.tag! 'n2:SoftDescriptorCity', options[:soft_descriptor_city] unless options[:soft_descriptor_city].blank?
+      end
+
+      def add_three_d_secure(xml, options)
+        three_d_secure = options[:three_d_secure]
+        xml.tag! 'ThreeDSecureRequest' do
+          xml.tag! 'MpiVendor3ds', 'Y'
+          xml.tag! 'AuthStatus3ds', three_d_secure[:trans_status] unless three_d_secure[:trans_status].blank?
+          xml.tag! 'Cavv', three_d_secure[:cavv] unless three_d_secure[:cavv].blank?
+          xml.tag! 'Eci3ds', three_d_secure[:eci] unless three_d_secure[:eci].blank?
+          xml.tag! 'Xid', three_d_secure[:xid] unless three_d_secure[:xid].blank?
         end
       end
 
@@ -104,13 +117,11 @@ module ActiveMerchant #:nodoc:
         when 'master'           then 'MasterCard'
         when 'discover'         then 'Discover'
         when 'american_express' then 'Amex'
-        when 'switch'           then 'Switch'
-        when 'solo'             then 'Solo'
         end
       end
 
       def build_response(success, message, response, options = {})
-         Response.new(success, message, response, options)
+        Response.new(success, message, response, options)
       end
     end
   end

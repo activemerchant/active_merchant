@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
     end
 
     class Response
-      attr_reader :params, :message, :test, :authorization, :avs_result, :cvv_result
+      attr_reader :params, :message, :test, :authorization, :avs_result, :cvv_result, :error_code, :emv_authorization
 
       def success?
         @success
@@ -23,17 +23,19 @@ module ActiveMerchant #:nodoc:
         @test = options[:test] || false
         @authorization = options[:authorization]
         @fraud_review = options[:fraud_review]
+        @error_code = options[:error_code]
+        @emv_authorization = options[:emv_authorization]
 
         @avs_result = if options[:avs_result].kind_of?(AVSResult)
-          options[:avs_result].to_hash
-        else
-          AVSResult.new(options[:avs_result]).to_hash
+                        options[:avs_result].to_hash
+                      else
+                        AVSResult.new(options[:avs_result]).to_hash
         end
 
         @cvv_result = if options[:cvv_result].kind_of?(CVVResult)
-          options[:cvv_result].to_hash
-        else
-          CVVResult.new(options[:cvv_result]).to_hash
+                        options[:cvv_result].to_hash
+                      else
+                        CVVResult.new(options[:cvv_result]).to_hash
         end
       end
     end
@@ -68,7 +70,7 @@ module ActiveMerchant #:nodoc:
 
       def <<(response)
         if response.is_a?(MultiResponse)
-          response.responses.each{|r| @responses << r}
+          response.responses.each { |r| @responses << r }
         else
           @responses << response
         end
@@ -78,7 +80,7 @@ module ActiveMerchant #:nodoc:
         (primary_response ? primary_response.success? : true)
       end
 
-      %w(params message test authorization avs_result cvv_result test? fraud_review?).each do |m|
+      %w(params message test authorization avs_result cvv_result error_code emv_authorization test? fraud_review?).each do |m|
         class_eval %(
           def #{m}
             (@responses.empty? ? nil : primary_response.#{m})

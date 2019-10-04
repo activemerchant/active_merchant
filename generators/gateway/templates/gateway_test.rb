@@ -2,11 +2,7 @@ require 'test_helper'
 
 class <%= class_name %>Test < Test::Unit::TestCase
   def setup
-    @gateway = <%= class_name %>Gateway.new(
-      some_credential: 'login',
-      another_credential: 'password'
-    )
-
+    @gateway = <%= class_name %>Gateway.new(some_credential: 'login', another_credential: 'password')
     @credit_card = credit_card
     @amount = 100
 
@@ -32,6 +28,7 @@ class <%= class_name %>Test < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
+    assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
   end
 
   def test_successful_authorize
@@ -67,7 +64,28 @@ class <%= class_name %>Test < Test::Unit::TestCase
   def test_failed_verify
   end
 
+  def test_scrub
+    assert @gateway.supports_scrubbing?
+    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
   private
+
+  def pre_scrubbed
+    %q(
+      Run the remote tests for this gateway, and then put the contents of transcript.log here.
+    )
+  end
+
+  def post_scrubbed
+    %q(
+      Put the scrubbed contents of transcript.log here after implementing your scrubbing function.
+      Things to scrub:
+        - Credit card number
+        - CVV
+        - Sensitive authentication details
+    )
+  end
 
   def successful_purchase_response
     %(

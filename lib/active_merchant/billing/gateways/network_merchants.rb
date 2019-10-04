@@ -60,7 +60,7 @@ module ActiveMerchant #:nodoc:
         add_address(post, options)
         add_shipping_address(post, options)
         add_payment_method(post, creditcard_or_vault_id, options)
-        add_amount(post, money)
+        add_amount(post, money, options)
         post
       end
 
@@ -68,10 +68,10 @@ module ActiveMerchant #:nodoc:
         build_auth_post(money, creditcard, options)
       end
 
-      def build_capture_post(money, authorization, option)
+      def build_capture_post(money, authorization, options)
         post = {}
         post[:transactionid] = authorization
-        add_amount(post, money)
+        add_amount(post, money, options)
         post
       end
 
@@ -84,7 +84,7 @@ module ActiveMerchant #:nodoc:
       def build_refund_post(money, authorization, options)
         post = {}
         post[:transactionid] = authorization
-        add_amount(post, money)
+        add_amount(post, money, options)
         post
       end
 
@@ -115,7 +115,7 @@ module ActiveMerchant #:nodoc:
         post[:address1] = address[:address1]
         post[:address2] = address[:address2]
         post[:city] = address[:city]
-        post[:state] = address[:state]
+        post[:state] = address[:state].blank? ? 'n/a' : address[:state]
         post[:zip] = address[:zip]
         post[:country] = address[:country]
         post[:phone] = address[:phone]
@@ -131,11 +131,15 @@ module ActiveMerchant #:nodoc:
         post[:shipping_country] = shipping_address[:country]
       end
 
-      def add_swipe_data(post, options)
+      def add_swipe_data(post, creditcard, options)
         # unencrypted tracks
-        post[:track_1] = options[:track_1]
-        post[:track_2] = options[:track_2]
-        post[:track_3] = options[:track_3]
+        if creditcard.respond_to?(:track_data) && creditcard.track_data.present?
+          post[:track_1] = creditcard.track_data
+        else
+          post[:track_1] = options[:track_1]
+          post[:track_2] = options[:track_2]
+          post[:track_3] = options[:track_3]
+        end
 
         # encrypted tracks
         post[:magnesafe_track_1] = options[:magnesafe_track_1]
@@ -150,7 +154,7 @@ module ActiveMerchant #:nodoc:
         post[:processor_id] = options[:processor_id]
         post[:customer_vault] = 'add_customer' if options[:store]
 
-        add_swipe_data(post, options)
+        add_swipe_data(post, payment_source, options)
 
         if payment_source.is_a?(Check)
           check = payment_source
@@ -180,7 +184,7 @@ module ActiveMerchant #:nodoc:
         post[:password] = @options[:password]
       end
 
-      def add_amount(post, money)
+      def add_amount(post, money, options)
         post[:currency] = options[:currency] || currency(money)
         post[:amount] = amount(money)
       end
@@ -235,4 +239,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

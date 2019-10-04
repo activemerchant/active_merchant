@@ -27,7 +27,7 @@ class MerchantOneTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_success response
-    assert_equal "281719471", response.authorization
+    assert_equal '281719471', response.authorization
     assert response.test?, response.test.to_s
   end
 
@@ -60,10 +60,10 @@ class MerchantOneTest < Test::Unit::TestCase
   private
 
   def successful_purchase_response
-    "response=1&responsetext=SUCCESS&authcode=123456&transactionid=281719471&avsresponse=&cvvresponse=M&orderid=&type=sale&response_code=100"
+    'response=1&responsetext=SUCCESS&authcode=123456&transactionid=281719471&avsresponse=&cvvresponse=M&orderid=&type=sale&response_code=100'
   end
 
   def failed_purchase_response
-    "response=3&responsetext=DECLINE&authcode=123456&transactionid=281719471&avsresponse=&cvvresponse=M&orderid=&type=sale&response_code=300"
+    'response=3&responsetext=DECLINE&authcode=123456&transactionid=281719471&avsresponse=&cvvresponse=M&orderid=&type=sale&response_code=300'
   end
 end

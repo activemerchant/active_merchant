@@ -4,7 +4,7 @@ class JetpayTest < Test::Unit::TestCase
   include ActiveMerchant::Billing
 
   def setup
-    Base.gateway_mode = :test
+    Base.mode = :test
 
     @gateway = JetpayGateway.new(:login => 'login')
 
@@ -12,7 +12,6 @@ class JetpayTest < Test::Unit::TestCase
     @amount = 100
 
     @options = {
-      :order_id => '1',
       :billing_address => address(:country => 'US'),
       :shipping_address => address(:country => 'US'),
       :email => 'test@test.com',
@@ -28,8 +27,8 @@ class JetpayTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
 
-    assert_equal '707a4f1750d8dc03bd;TEST47;100', response.authorization
-    assert_equal('TEST47', response.params["approval"])
+    assert_equal '8afa688fd002821362;TEST97;100;KKLIHOJKKNKKHJKONJHOLHOL', response.authorization
+    assert_equal('TEST97', response.params['approval'])
     assert response.test?
   end
 
@@ -38,7 +37,7 @@ class JetpayTest < Test::Unit::TestCase
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal('7605f7c5d6e8f74deb;;100', response.authorization)
+    assert_equal('7605f7c5d6e8f74deb;;100;', response.authorization)
     assert response.test?
   end
 
@@ -48,19 +47,19 @@ class JetpayTest < Test::Unit::TestCase
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
 
-    assert_equal('010327153017T10018;502F6B;100', response.authorization)
-    assert_equal('502F6B', response.params["approval"])
+    assert_equal('cbf902091334a0b1aa;TEST01;100;KKLIHOJKKNKKHJKONOHCLOIO', response.authorization)
+    assert_equal('TEST01', response.params['approval'])
     assert response.test?
   end
 
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
 
-    assert response = @gateway.capture(1111, "010327153017T10018;502F7B;1111")
+    assert response = @gateway.capture(1111, '010327153017T10018;502F7B;1111')
     assert_success response
 
-    assert_equal('010327153017T10018;502F6B;1111', response.authorization)
-    assert_equal('502F6B', response.params["approval"])
+    assert_equal('010327153017T10018;502F6B;1111;', response.authorization)
+    assert_equal('502F6B', response.params['approval'])
     assert response.test?
   end
 
@@ -70,8 +69,8 @@ class JetpayTest < Test::Unit::TestCase
     assert response = @gateway.void('010327153x17T10418;502F7B;500')
     assert_success response
 
-    assert_equal('010327153x17T10418;502F7B;500', response.authorization)
-    assert_equal('502F7B', response.params["approval"])
+    assert_equal('010327153x17T10418;502F7B;500;', response.authorization)
+    assert_equal('502F7B', response.params['approval'])
     assert response.test?
   end
 
@@ -85,7 +84,7 @@ class JetpayTest < Test::Unit::TestCase
     assert response = @gateway.refund(9900, '010327153017T10017')
     assert_success response
 
-    assert_equal('010327153017T10017;002F6B;9900', response.authorization)
+    assert_equal('010327153017T10017;002F6B;9900;', response.authorization)
     assert_equal('002F6B', response.params['approval'])
     assert response.test?
 
@@ -112,7 +111,7 @@ class JetpayTest < Test::Unit::TestCase
     assert response = @gateway.refund(9900, '010327153017T10017')
     assert_success response
 
-    assert_equal('010327153017T10017;002F6B;9900', response.authorization)
+    assert_equal('010327153017T10017;002F6B;9900;', response.authorization)
     assert_equal('002F6B', response.params['approval'])
     assert response.test?
   end
@@ -131,15 +130,27 @@ class JetpayTest < Test::Unit::TestCase
     assert_equal 'P', response.cvv_result['code']
   end
 
+  def test_transcript_scrubbing
+    assert_equal scrubbed_transcript, @gateway.scrub(transcript)
+  end
+
+  def test_purchase_sends_order_origin
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<Origin>RECURRING<\/Origin>/)).returns(successful_purchase_response)
+
+    @gateway.purchase(@amount, @credit_card, {:origin => 'RECURRING'})
+  end
 
   private
+
   def successful_purchase_response
     <<-EOF
-    <JetPayResponse><TransactionID>707a4f1750d8dc03bd</TransactionID>
+    <JetPayResponse>
+      <TransactionID>8afa688fd002821362</TransactionID>
       <ActionCode>000</ActionCode>
-      <Approval>TEST47</Approval>
+      <Approval>TEST97</Approval>
       <CVV2>P</CVV2>
       <ResponseText>APPROVED</ResponseText>
+      <Token>KKLIHOJKKNKKHJKONJHOLHOL</Token>
       <AddressMatch>Y</AddressMatch>
       <ZipMatch>Y</ZipMatch>
       <AVS>Y</AVS>
@@ -160,10 +171,15 @@ class JetpayTest < Test::Unit::TestCase
   def successful_authorize_response
     <<-EOF
       <JetPayResponse>
-        <TransactionID>010327153017T10018</TransactionID>
+        <TransactionID>cbf902091334a0b1aa</TransactionID>
         <ActionCode>000</ActionCode>
-        <Approval>502F6B</Approval>
+        <Approval>TEST01</Approval>
+        <CVV2>P</CVV2>
         <ResponseText>APPROVED</ResponseText>
+        <Token>KKLIHOJKKNKKHJKONOHCLOIO</Token>
+        <AddressMatch>Y</AddressMatch>
+        <ZipMatch>Y</ZipMatch>
+        <AVS>Y</AVS>
       </JetPayResponse>
     EOF
   end
@@ -198,6 +214,32 @@ class JetpayTest < Test::Unit::TestCase
         <Approval>002F6B</Approval>
         <ResponseText>APPROVED</ResponseText>
       </JetPayResponse>
+    EOF
+  end
+
+  def transcript
+    <<-EOF
+    <TerminalID>TESTTERMINAL</TerminalID>
+    <TransactionType>SALE</TransactionType>
+    <TransactionID>e23c963a1247fd7aad</TransactionID>
+    <CardNum>4000300020001000</CardNum>
+    <CardExpMonth>09</CardExpMonth>
+    <CardExpYear>16</CardExpYear>
+    <CardName>Longbob Longsen</CardName>
+    <CVV2>123</CVV2>
+    EOF
+  end
+
+  def scrubbed_transcript
+    <<-EOF
+    <TerminalID>TESTTERMINAL</TerminalID>
+    <TransactionType>SALE</TransactionType>
+    <TransactionID>e23c963a1247fd7aad</TransactionID>
+    <CardNum>[FILTERED]</CardNum>
+    <CardExpMonth>09</CardExpMonth>
+    <CardExpYear>16</CardExpYear>
+    <CardName>Longbob Longsen</CardName>
+    <CVV2>[FILTERED]</CVV2>
     EOF
   end
 end

@@ -301,7 +301,7 @@ module ActiveMerchant #:nodoc:
           post[:username] = options[:username]
           post[:password] = options[:password]
         end
-        post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" unless value.nil? }.compact.join("&")
+        post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" unless value.nil? }.compact.join('&')
       end
     end
   end

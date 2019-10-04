@@ -21,20 +21,21 @@ module ActiveMerchant #:nodoc:
       }
 
       CURRENCY_CODES = {
-        "AUD"=> '036',
-        "CAD"=> '124',
-        "CZK"=> '203',
-        "DKK"=> '208',
-        "HKD"=> '344',
-        "ICK"=> '352',
-        "JPY"=> '392',
-        "NOK"=> '578',
-        "SGD"=> '702',
-        "SEK"=> '752',
-        "CHF"=> '756',
-        "GBP"=> '826',
-        "USD"=> '840',
-        "EUR"=> '978'
+        'AUD'=> '036',
+        'CAD'=> '124',
+        'CZK'=> '203',
+        'DKK'=> '208',
+        'HKD'=> '344',
+        'ICK'=> '352',
+        'JPY'=> '392',
+        'NOK'=> '578',
+        'SGD'=> '702',
+        'SEK'=> '752',
+        'CHF'=> '756',
+        'GBP'=> '826',
+        'USD'=> '840',
+        'EUR'=> '978',
+        'XPF'=> '953'
       }
 
       SUCCESS_CODES = ['00000']
@@ -67,6 +68,8 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, options)
         add_creditcard(post, creditcard)
+        add_amount(post, money, options)
+
         commit('authorization', money, post)
       end
 
@@ -74,6 +77,8 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, options)
         add_creditcard(post, creditcard)
+        add_amount(post, money, options)
+
         commit('purchase', money, post)
       end
 
@@ -81,8 +86,10 @@ module ActiveMerchant #:nodoc:
         requires!(options, :order_id)
         post = {}
         add_invoice(post, options)
-        post[:numappel] = authorization[0,10]
-        post[:numtrans] = authorization[10,10]
+        add_amount(post, money, options)
+        post[:numappel] = authorization[0, 10]
+        post[:numtrans] = authorization[10, 10]
+
         commit('capture', money, post)
       end
 
@@ -91,8 +98,10 @@ module ActiveMerchant #:nodoc:
         post ={}
         add_invoice(post, options)
         add_reference(post, identification)
+        add_amount(post, options[:amount], options)
         post[:porteur] = '000000000000000'
         post[:dateval] = '0000'
+
         commit('void', options[:amount], post)
       end
 
@@ -105,6 +114,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, options)
         add_reference(post, identification)
+        add_amount(post, money, options)
         commit('refund', money, post)
       end
 
@@ -121,23 +131,26 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_reference(post, identification)
-        post[:numappel] = identification[0,10]
-        post[:numtrans] = identification[10,10]
+        post[:numappel] = identification[0, 10]
+        post[:numtrans] = identification[10, 10]
+      end
+
+      def add_amount(post, money, options)
+        post[:montant] = ('0000000000' + (money ? amount(money) : ''))[-10..-1]
+        post[:devise] = CURRENCY_CODES[options[:currency] || currency(money)]
       end
 
       def parse(body)
         results = {}
         body.split(/&/).each do |pair|
-          key,val = pair.split(/\=/)
+          key, val = pair.split(/\=/)
           results[key.downcase.to_sym] = CGI.unescape(val) if val
         end
         results
       end
 
       def commit(action, money = nil, parameters = nil)
-        parameters[:montant] = ('0000000000' + (money ? amount(money) : ''))[-10..-1]
-        parameters[:devise] = CURRENCY_CODES[options[:currency] || currency(money)]
-        request_data = post_data(action,parameters)
+        request_data = post_data(action, parameters)
         response = parse(ssl_post(test? ? self.test_url : self.live_url, request_data))
         response = parse(ssl_post(self.live_url_backup, request_data)) if service_unavailable?(response) && !test?
         Response.new(success?(response), message_from(response), response.merge(
@@ -145,7 +158,7 @@ module ActiveMerchant #:nodoc:
           :test => test?,
           :authorization => response[:numappel].to_s + response[:numtrans].to_s,
           :fraud_review => false,
-          :sent_params => parameters.delete_if{|key,value| ['porteur','dateval','cvv'].include?(key.to_s)}
+          :sent_params => parameters.delete_if { |key, value| ['porteur', 'dateval', 'cvv'].include?(key.to_s) }
         )
       end
 
@@ -162,20 +175,19 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data(action, parameters = {})
-
         parameters.update(
           :version => API_VERSION,
           :type => TRANSACTIONS[action.to_sym],
           :dateq => Time.now.strftime('%d%m%Y%H%M%S'),
           :numquestion => unique_id(parameters[:order_id]),
-          :site => @options[:login].to_s[0,7],
-          :rang => @options[:login].to_s[7..-1],
+          :site => @options[:login].to_s[0, 7],
+          :rang => @options[:rang] || @options[:login].to_s[7..-1],
           :cle => @options[:password],
           :pays => '',
           :archivage => parameters[:order_id]
         )
 
-        parameters.collect { |key, value| "#{key.to_s.upcase}=#{CGI.escape(value.to_s)}" }.join("&")
+        parameters.collect { |key, value| "#{key.to_s.upcase}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 
       def unique_id(seed = 0)

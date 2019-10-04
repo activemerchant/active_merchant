@@ -1,7 +1,7 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class CecabankGateway < Gateway
-      self.test_url = 'http://tpv.ceca.es:8000'
+      self.test_url = 'https://tpv.ceca.es'
       self.live_url = 'https://pgw.ceca.es'
 
       self.supported_countries = ['ES']
@@ -13,14 +13,14 @@ module ActiveMerchant #:nodoc:
 
       #### CECA's MAGIC NUMBERS
       CECA_NOTIFICATIONS_URL = 'NONE'
-      CECA_ENCRIPTION = 'SHA1'
+      CECA_ENCRIPTION = 'SHA2'
       CECA_DECIMALS = '2'
       CECA_MODE = 'SSL'
       CECA_UI_LESS_LANGUAGE = 'XML'
       CECA_UI_LESS_LANGUAGE_REFUND = '1'
       CECA_UI_LESS_REFUND_PAGE = 'anulacion_xml'
-      CECA_ACTION_REFUND   = 'tpvanularparcialmente' #use partial refund's URL to avoid time frame limitations and decision logic on client side
-      CECA_ACTION_PURCHASE = 'tpv'
+      CECA_ACTION_REFUND   = 'anulaciones/anularParcial' # use partial refund's URL to avoid time frame limitations and decision logic on client side
+      CECA_ACTION_PURCHASE = 'tpv/compra'
       CECA_CURRENCIES_DICTIONARY = {'EUR' => 978, 'USD' => 840, 'GBP' => 826}
 
       # Creates a new CecabankGateway
@@ -94,6 +94,17 @@ module ActiveMerchant #:nodoc:
         commit(CECA_ACTION_REFUND, post)
       end
 
+      def supports_scrubbing
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((&?pan=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?cvv2=)[^&]*)i, '\1[FILTERED]')
+      end
+
       private
 
       def add_creditcard(post, creditcard)
@@ -112,7 +123,7 @@ module ActiveMerchant #:nodoc:
 
         root = REXML::Document.new(body).root
 
-        response[:success] = (root.attributes['valor'] == "OK")
+        response[:success] = (root.attributes['valor'] == 'OK')
         response[:date] = root.attributes['fecha']
         response[:operation_number] = root.attributes['numeroOperacion']
         response[:message] = root.attributes['valor']
@@ -131,7 +142,7 @@ module ActiveMerchant #:nodoc:
           response[:error_code] = root.elements['ERROR/codigo'].text
           response[:error_message] = root.elements['ERROR/descripcion'].text
         else
-          if("000" == root.elements['OPERACION'].attributes['numeroOperacion'])
+          if root.elements['OPERACION'].attributes['numeroOperacion'] == '000'
             if(root.elements['OPERACION/numeroAutorizacion'])
               response[:authorization] = root.elements['OPERACION/numeroAutorizacion'].text
             end
@@ -141,10 +152,9 @@ module ActiveMerchant #:nodoc:
         end
 
         return response
-
       rescue REXML::ParseException => e
         response[:success] = false
-        response[:message] = "Unable to parse the response."
+        response[:message] = 'Unable to parse the response.'
         response[:error_message] = e.message
         response
       end
@@ -158,16 +168,27 @@ module ActiveMerchant #:nodoc:
           'AcquirerBIN' => options[:acquirer_bin],
           'TerminalID' => options[:terminal_id]
         )
-        url = (test? ? self.test_url : self.live_url) + "/cgi-bin/#{action}"
-        xml = ssl_post(url, post_data(parameters))
+        url = (test? ? self.test_url : self.live_url) + "/tpvweb/#{action}.action"
+        xml = ssl_post("#{url}?", post_data(parameters))
         response = parse(xml)
         Response.new(
           response[:success],
-          response[:message],
+          message_from(response),
           response,
           :test => test?,
-          :authorization => build_authorization(response)
+          :authorization => build_authorization(response),
+          :error_code => response[:error_code]
         )
+      end
+
+      def message_from(response)
+        if response[:message] == 'ERROR' && response[:error_message]
+          response[:error_message]
+        elsif response[:error_message]
+          "#{response[:message]} #{response[:error_message]}"
+        else
+          response[:message]
+        end
       end
 
       def post_data(params)
@@ -184,15 +205,15 @@ module ActiveMerchant #:nodoc:
           else
             "#{key}=#{CGI.escape(value.to_s)}"
           end
-        end.compact.join("&")
+        end.compact.join('&')
       end
 
       def build_authorization(response)
-        [response[:reference], response[:authorization]].join("|")
+        [response[:reference], response[:authorization]].join('|')
       end
 
       def split_authorization(authorization)
-        authorization.split("|")
+        authorization.split('|')
       end
 
       def generate_signature(action, parameters)
@@ -221,9 +242,8 @@ module ActiveMerchant #:nodoc:
           CECA_NOTIFICATIONS_URL +
           CECA_NOTIFICATIONS_URL
         end
-        Digest::SHA1.hexdigest(signature_fields)
+        Digest::SHA2.hexdigest(signature_fields)
       end
     end
   end
 end
-
