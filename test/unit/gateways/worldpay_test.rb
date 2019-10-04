@@ -836,6 +836,14 @@ class WorldpayTest < Test::Unit::TestCase
     assert_equal '3d4187536044bd39ad6a289c4339c41c', response.authorization
   end
 
+  def test_parsing_error
+    assert_raise ActiveMerchant::InvalidResponseError do
+      stub_comms do
+        @gateway.authorize(@amount, @credit_card, @options)
+      end.respond_with('string')
+    end
+  end
+
   private
 
   def assert_tag_with_attributes(tag, attributes, string)

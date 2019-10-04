@@ -457,7 +457,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(action, xml)
-        doc = Nokogiri::XML(xml)
+        xml = xml.strip.gsub(/\&/, '&amp;')
+        begin
+          doc = Nokogiri::XML(xml, &:strict)
+        rescue Nokogiri::XML::SyntaxError => e
+          raise InvalidResponseError, "There was an error parsing the response: #{e} | The original response body was: #{xml}"
+        end
         doc.remove_namespaces!
         resp_params = {:action => action}
 
