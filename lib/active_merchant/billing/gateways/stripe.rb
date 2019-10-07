@@ -333,6 +333,8 @@ module ActiveMerchant #:nodoc:
       def card_payment_method_for_customer(customer)
         # if customer has only one payment method we choose that one
         r = commit(:get, "payment_methods?customer=#{customer}&type=card", nil, options)
+        raise r.message unless r.success?
+
         payment_methods = r.params["data"]
         return payment_methods[0]["id"] if payment_methods&.count == 1
 

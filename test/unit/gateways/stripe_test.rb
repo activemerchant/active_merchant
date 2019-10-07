@@ -449,6 +449,17 @@ class StripeTest < Test::Unit::TestCase
     end
   end
 
+  def test_exception_with_payment_intents_customer_not_found
+    @gateway.expects(:add_creditcard)
+    @gateway.expects(:ssl_request).with do |_, endpoint, _, _|
+      endpoint.start_with?('https://api.stripe.com/v1/payment_methods?customer')
+    end.returns(failed_payment_methods_for_non_exist_customer)
+
+    assert_raise RuntimeError.new("No such customer: non_exist") do
+      @gateway.purchase(@amount, @credit_card, @options.merge(three_d_secure: true))
+    end
+  end
+
   def test_successful_purchase_with_payment_intents_and_two_payment_method_with_default_payment_method
     @gateway.expects(:add_creditcard)
     @gateway.expects(:add_creditcard)
@@ -2340,6 +2351,20 @@ class StripeTest < Test::Unit::TestCase
         }
       ]
     }
+    RESPONSE
+  end
+
+  def failed_payment_methods_for_non_exist_customer
+    <<~RESPONSE
+      {
+        "error": {
+          "code": "resource_missing",
+          "doc_url": "https://stripe.com/docs/error-codes/resource-missing",
+          "message": "No such customer: non_exist",
+          "param": "customer",
+          "type": "invalid_request_error"
+        }
+      }
     RESPONSE
   end
 
