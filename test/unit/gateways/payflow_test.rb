@@ -614,7 +614,7 @@ Conn close
   <Vendor>ActiveMerchant</Vendor>
   <ProfileId>RT0000000009</ProfileId>
 </ResponseData>
-  XML
+    XML
   end
 
   def start_date_error_recurring_response
@@ -661,7 +661,7 @@ Conn close
     <TransState>6</TransState>
   </RPPaymentResult>
 </ResponseData>
-  XML
+    XML
   end
 
   def successful_authorization_response

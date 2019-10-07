@@ -1104,6 +1104,6 @@ Cardholder will pay above amount to card
 issuer pursuant to cardholder agreement.
 =========================================</CTR>
     </TransactionResult>
-RESPONSE
+    RESPONSE
   end
 end

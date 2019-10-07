@@ -351,7 +351,7 @@ class TransFirstTest < Test::Unit::TestCase
       <AVSCode>N</AVSCode>
       <CVV2Code />
       </BankCardRefundStatus>
-   XML
+    XML
   end
 
   def failed_void_response

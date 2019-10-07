@@ -181,7 +181,7 @@ class RealexTest < Test::Unit::TestCase
   <authcode>1234</authcode>
   <sha1hash>ef0a6c485452f3f94aff336fa90c6c62993056ca</sha1hash>
 </request>
-SRC
+    SRC
 
     assert_xml_equal valid_capture_xml, @gateway.build_capture_request(@amount, '1;4321;1234', {})
   end
@@ -213,7 +213,7 @@ SRC
   <autosettle flag="1"/>
   <sha1hash>3499d7bc8dbacdcfba2286bd74916d026bae630f</sha1hash>
 </request>
-SRC
+    SRC
 
     assert_xml_equal valid_purchase_request_xml, @gateway.build_purchase_or_authorization_request(:purchase, @amount, @credit_card, options)
   end
@@ -230,7 +230,7 @@ SRC
   <authcode>1234</authcode>
   <sha1hash>4132600f1dc70333b943fc292bd0ca7d8e722f6e</sha1hash>
 </request>
-SRC
+    SRC
 
     assert_xml_equal valid_void_request_xml, @gateway.build_void_request('1;4321;1234', {})
   end
@@ -259,7 +259,7 @@ SRC
   </card>
   <sha1hash>d53aebf1eaee4c3ff4c30f83f27b80ce99ba5644</sha1hash>
 </request>
-SRC
+    SRC
 
     assert_xml_equal valid_verify_request_xml, @gateway.build_verify_request(@credit_card, options)
   end
@@ -291,7 +291,7 @@ SRC
   <autosettle flag="0"/>
   <sha1hash>3499d7bc8dbacdcfba2286bd74916d026bae630f</sha1hash>
 </request>
-SRC
+    SRC
 
     assert_xml_equal valid_auth_request_xml, @gateway.build_purchase_or_authorization_request(:authorization, @amount, @credit_card, options)
   end
@@ -310,7 +310,7 @@ SRC
   <autosettle flag="1"/>
   <sha1hash>ef0a6c485452f3f94aff336fa90c6c62993056ca</sha1hash>
 </request>
-SRC
+    SRC
 
     assert_xml_equal valid_refund_request_xml, @gateway.build_refund_request(@amount, '1;4321;1234', {})
   end
@@ -332,7 +332,7 @@ SRC
   <autosettle flag="1"/>
   <sha1hash>ef0a6c485452f3f94aff336fa90c6c62993056ca</sha1hash>
 </request>
-SRC
+    SRC
 
     assert_xml_equal valid_refund_request_xml, gateway.build_refund_request(@amount, '1;4321;1234', {})
   end
@@ -364,7 +364,7 @@ SRC
   <autosettle flag="1"/>
   <sha1hash>73ff566dcfc3a73bebf1a2d387316162111f030e</sha1hash>
 </request>
-SRC
+    SRC
 
     assert_xml_equal valid_credit_request_xml, @gateway.build_credit_request(@amount, @credit_card, options)
   end
@@ -395,7 +395,7 @@ SRC
   <autosettle flag="1"/>
   <sha1hash>73ff566dcfc3a73bebf1a2d387316162111f030e</sha1hash>
 </request>
-SRC
+    SRC
 
     assert_xml_equal valid_credit_request_xml, gateway.build_credit_request(@amount, @credit_card, @options)
   end
@@ -499,7 +499,7 @@ SRC
     <message_version>1.0.2</message_version>
   </mpi>
 </request>
-SRC
+    SRC
 
     assert_xml_equal valid_auth_request_xml, @gateway.build_purchase_or_authorization_request(:authorization, @amount, @credit_card, options)
   end
@@ -543,7 +543,7 @@ SRC
     <message_version>2.1.0</message_version>
   </mpi>
 </request>
-SRC
+    SRC
 
     assert_xml_equal valid_auth_request_xml, @gateway.build_purchase_or_authorization_request(:authorization, @amount, @credit_card, options)
   end
@@ -771,7 +771,7 @@ SRC
         </address>
       </tssinfo>
     </request>
-  REQUEST
+    REQUEST
   end
 
   require 'nokogiri'

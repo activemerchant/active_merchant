@@ -236,7 +236,7 @@ read 2 bytes
 -> "0\r\n"
 -> "\r\n"
 Conn close
-TRANSCRIPT
+    TRANSCRIPT
   end
 
   def post_scrubbed
@@ -299,6 +299,6 @@ read 2 bytes
 -> "0\r\n"
 -> "\r\n"
 Conn close
-SCRUBBED
+    SCRUBBED
   end
 end

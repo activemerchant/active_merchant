@@ -419,7 +419,7 @@ class ElavonTest < Test::Unit::TestCase
     <<-RESPONSE
     ssl_result=7000\r
     ssl_result_message=The VirtualMerchant ID and/or User ID supplied in the authorization request is invalid.\r
-        RESPONSE
+    RESPONSE
   end
 
   def successful_authorization_response

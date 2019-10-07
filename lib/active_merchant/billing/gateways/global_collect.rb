@@ -268,7 +268,7 @@ POST
 #{content_type}
 #{date}
 #{uri(action, authorization)}
-EOS
+        EOS
         digest = OpenSSL::Digest.new('sha256')
         key = @options[:secret_api_key]
         "GCS v1HMAC:#{@options[:api_key_id]}:#{Base64.strict_encode64(OpenSSL::HMAC.digest(digest, key, data))}"

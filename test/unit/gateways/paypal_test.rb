@@ -1294,7 +1294,7 @@ class PaypalTest < Test::Unit::TestCase
      </CreateRecurringPaymentsProfileResponse>
     </SOAP-ENV:Body>
    </SOAP-ENV:Envelope>"
-   RESPONSE
+    RESPONSE
   end
 
   def successful_details_response

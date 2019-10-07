@@ -257,7 +257,7 @@ class QbmsTest < Test::Unit::TestCase
          </#{type}Rs>
        </QBMSXMLMsgsRs>
      </QBMSXML>
-     XML
+    XML
   end
 
   def pre_scrubbed

@@ -583,7 +583,7 @@ class HpsTest < Test::Unit::TestCase
      </PosResponse>
   </soap:Body>
 </soap:Envelope>
-   RESPONSE
+    RESPONSE
   end
 
   def failed_authorize_response
