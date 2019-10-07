@@ -6,7 +6,8 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card('4263982640269299')
-    @cabal_credit_card = credit_card('6271701225979642')
+    @cabal_card = credit_card('6271701225979642', month: 3, year: 2020)
+    @naranja_card = credit_card('5895626746595650', month: 11, year: 2020)
     @declined_card = credit_card('4917484589897107', month: 1, year: 2023)
     @invalid_card = credit_card('4917484589897106', month: 1, year: 2023)
     @three_ds_visa_card = credit_card('4000000000001091', month: 1)
@@ -40,6 +41,24 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_purchase_with_cabal_card
+    options = @options.merge({
+      email: 'joe@example.com'
+    })
+    response = @gateway.purchase(@amount, @cabal_card, options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_purchase_with_naranja_card
+    options = @options.merge({
+      email: 'joe@example.com'
+    })
+    response = @gateway.purchase(@amount, @naranja_card, options)
     assert_success response
     assert_equal 'Success', response.message
   end
