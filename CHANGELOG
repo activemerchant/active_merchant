@@ -14,6 +14,7 @@
 * Stripe Payment Intents: Fix fallback for Store [waaux] #3343
 * Update Securionpay supported countries [hossamhossny] #2472
 * Visanet Peru: Add amount argument to Capture [curiousepic] #3389
+* Rubocop: Layout/MultilineHashBraceLayout [nfarve] #3385
 
 == Version 1.99.0 (Sep 26, 2019)
 * Adyen: Add functionality to set 3DS exemptions via API [britth] #3331

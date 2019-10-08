@@ -214,7 +214,8 @@ module ActiveMerchant #:nodoc:
         xml.instruct!(:xml, encoding: 'UTF-8')
         xml.SOAP :Envelope, {
             'xmlns:SOAP' => 'http://schemas.xmlsoap.org/soap/envelope/',
-            'xmlns:hps' => 'http://Hps.Exchange.PosGateway' } do
+            'xmlns:hps' => 'http://Hps.Exchange.PosGateway'
+        } do
           xml.SOAP :Body do
             xml.hps :PosRequest do
               xml.hps 'Ver1.0'.to_sym do

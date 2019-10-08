@@ -26,8 +26,7 @@ class PayflowExpressTest < Test::Unit::TestCase
                  :state => 'ON',
                  :zip => 'K1C2N6',
                  :country => 'Canada',
-                 :phone => '(555)555-5555'
-               }
+                 :phone => '(555)555-5555'}
   end
 
   def teardown

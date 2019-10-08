@@ -14,77 +14,79 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
 
     @options = {
       order_id: '1',
-      billing_address:       {
-              name:     'Jim Smith',
-              address1: '100 Street',
-              company:  'Widgets Inc',
-              city:     'Ottawa',
-              state:    'ON',
-              zip:      'K1C2N6',
-              country:  'CA',
-              phone:    '(555)555-5555',
-              fax:      '(555)555-6666'},
+      billing_address: {
+        name:     'Jim Smith',
+        address1: '100 Street',
+        company:  'Widgets Inc',
+        city:     'Ottawa',
+        state:    'ON',
+        zip:      'K1C2N6',
+        country:  'CA',
+        phone:    '(555)555-5555',
+        fax:      '(555)555-6666'
+      },
       email: 'long@bob.com',
       customer: 'Longbob Longsen',
       description: 'Store Purchase'
     }
 
     @options_with_alternate_address = {
-        order_id: '1',
-        billing_address: {
-            name:     'PU JOI SO',
-            address1: '新北市店溪路3579號139樓',
-            company:  'Widgets Inc',
-            city:     '新北市',
-            zip:      '231509',
-            country:  'TW',
-            phone:    '(555)555-5555',
-            fax:      '(555)555-6666'
-        },
-        email: 'pujoi@so.com',
-        customer: 'PU JOI SO',
-        description: 'Store Purchase'
+      order_id: '1',
+      billing_address: {
+        name:     'PU JOI SO',
+        address1: '新北市店溪路3579號139樓',
+        company:  'Widgets Inc',
+        city:     '新北市',
+        zip:      '231509',
+        country:  'TW',
+        phone:    '(555)555-5555',
+        fax:      '(555)555-6666'
+      },
+      email: 'pujoi@so.com',
+      customer: 'PU JOI SO',
+      description: 'Store Purchase'
     }
 
     @options_with_house_number_and_street = {
-        order_id: '1',
-        house_number: '100',
-        street: 'Top Level Drive',
-        billing_address:       {
-            name:     'Jim Smith',
-            address1: '100 Top Level Dr',
-            company:  'Widgets Inc',
-            city:     'Ottawa',
-            state:    'ON',
-            zip:      'K1C2N6',
-            country:  'CA',
-            phone:    '(555)555-5555',
-            fax:      '(555)555-6666'
-        },
-        email: 'long@deb.com',
-        customer: 'Longdeb Longsen',
-        description: 'Store Purchase'
+      order_id: '1',
+      house_number: '100',
+      street: 'Top Level Drive',
+      billing_address: {
+        name:     'Jim Smith',
+        address1: '100 Top Level Dr',
+        company:  'Widgets Inc',
+        city:     'Ottawa',
+        state:    'ON',
+        zip:      'K1C2N6',
+        country:  'CA',
+        phone:    '(555)555-5555',
+        fax:      '(555)555-6666'
+      },
+      email: 'long@deb.com',
+      customer: 'Longdeb Longsen',
+      description: 'Store Purchase'
     }
 
     @options_with_no_address = {
-        order_id: '1',
-        email: 'long@bob.com',
-        customer: 'Longbob Longsen',
-        description: 'Store Purchase'
+      order_id: '1',
+      email: 'long@bob.com',
+      customer: 'Longbob Longsen',
+      description: 'Store Purchase'
     }
 
     @options_with_credit_fields = {
       order_id: '1',
-      billing_address:       {
-              name:     'Jim Smith',
-              address1: '100 Street',
-              company:  'Widgets Inc',
-              city:     'Ottawa',
-              state:    'ON',
-              zip:      'K1C2N6',
-              country:  'CA',
-              phone:    '(555)555-5555',
-              fax:      '(555)555-6666'},
+      billing_address: {
+        name:     'Jim Smith',
+        address1: '100 Street',
+        company:  'Widgets Inc',
+        city:     'Ottawa',
+        state:    'ON',
+        zip:      'K1C2N6',
+        country:  'CA',
+        phone:    '(555)555-5555',
+        fax:      '(555)555-6666'
+      },
       email: 'long@bob.com',
       customer: 'Longbob Longsen',
       description: 'Store Purchase',
@@ -105,14 +107,14 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
 
     @avs_address = @options.clone
     @avs_address.update(billing_address: {
-        name:     'Jim Smith',
-        street:   'Test AVS result',
-        houseNumberOrName: '2',
-        city:     'Cupertino',
-        state:    'CA',
-        zip:      '95014',
-        country:  'US'
-        })
+      name:     'Jim Smith',
+      street:   'Test AVS result',
+      houseNumberOrName: '2',
+      city:     'Cupertino',
+      state:    'CA',
+      zip:      '95014',
+      country:  'US'
+    })
 
     @normalized_3ds_2_options = {
       reference: '345123',

@@ -970,7 +970,8 @@ class BraintreeBlueTest < Test::Unit::TestCase
       standard_purchase_params.merge(
         {
           :external_vault => {
-            :status => 'will_vault'},
+            :status => 'will_vault'
+          },
           :transaction_source => ''
         })
     ).returns(braintree_result)
@@ -984,7 +985,8 @@ class BraintreeBlueTest < Test::Unit::TestCase
         {
           :external_vault => {
             :status => 'vaulted',
-            :previous_network_transaction_id => '123ABC'},
+            :previous_network_transaction_id => '123ABC'
+          },
           :transaction_source => ''
         })
     ).returns(braintree_result)
@@ -997,7 +999,8 @@ class BraintreeBlueTest < Test::Unit::TestCase
       standard_purchase_params.merge(
         {
           :external_vault => {
-            :status => 'will_vault'},
+            :status => 'will_vault'
+          },
           :transaction_source => 'recurring'
         })
     ).returns(braintree_result)
@@ -1011,7 +1014,8 @@ class BraintreeBlueTest < Test::Unit::TestCase
         {
           :external_vault => {
             :status => 'vaulted',
-            :previous_network_transaction_id => '123ABC'},
+            :previous_network_transaction_id => '123ABC'
+          },
           :transaction_source => 'recurring'
         })
     ).returns(braintree_result)
@@ -1024,7 +1028,8 @@ class BraintreeBlueTest < Test::Unit::TestCase
       standard_purchase_params.merge(
         {
           :external_vault => {
-            :status => 'will_vault'},
+            :status => 'will_vault'
+          },
           :transaction_source => ''
         })
     ).returns(braintree_result)
@@ -1038,7 +1043,8 @@ class BraintreeBlueTest < Test::Unit::TestCase
         {
           :external_vault => {
             :status => 'vaulted',
-            :previous_network_transaction_id => '123ABC'},
+            :previous_network_transaction_id => '123ABC'
+          },
           :transaction_source => ''
         })
     ).returns(braintree_result)
@@ -1051,7 +1057,8 @@ class BraintreeBlueTest < Test::Unit::TestCase
       standard_purchase_params.merge(
         {
           :external_vault => {
-            :status => 'will_vault'},
+            :status => 'will_vault'
+          },
           :transaction_source => 'recurring'
         })
     ).returns(braintree_result)
@@ -1065,7 +1072,8 @@ class BraintreeBlueTest < Test::Unit::TestCase
         {
           :external_vault => {
             :status => 'vaulted',
-            :previous_network_transaction_id => '123ABC'},
+            :previous_network_transaction_id => '123ABC'
+          },
           :transaction_source => 'recurring'
         })
     ).returns(braintree_result)
@@ -1078,7 +1086,8 @@ class BraintreeBlueTest < Test::Unit::TestCase
       standard_purchase_params.merge(
         {
           :external_vault => {
-            :status => 'will_vault'},
+            :status => 'will_vault'
+          },
           :transaction_source => ''
         })
     ).returns(braintree_result)
@@ -1092,7 +1101,8 @@ class BraintreeBlueTest < Test::Unit::TestCase
         {
           :external_vault => {
             :status => 'vaulted',
-            :previous_network_transaction_id => '123ABC'},
+            :previous_network_transaction_id => '123ABC'
+          },
           :transaction_source => ''
         })
     ).returns(braintree_result)
@@ -1105,7 +1115,8 @@ class BraintreeBlueTest < Test::Unit::TestCase
       standard_purchase_params.merge(
         {
           :external_vault => {
-            :status => 'will_vault'},
+            :status => 'will_vault'
+          },
           :transaction_source => 'unscheduled'
         })
     ).returns(braintree_result)

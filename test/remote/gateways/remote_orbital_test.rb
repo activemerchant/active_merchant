@@ -21,7 +21,8 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
       :amex => '371449635398431',
       :ds => '6011000995500000',
       :diners => '36438999960016',
-      :jcb => '3566002020140006'}
+      :jcb => '3566002020140006'
+    }
 
     @level_2_options = {
       tax_indicator: '1',

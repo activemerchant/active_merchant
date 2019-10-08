@@ -180,8 +180,7 @@ class PaypalExpressTest < Test::Unit::TestCase
           :description => 'item two description',
           :amount => 20000,
           :number => 2,
-          :quantity => 4
-        }
+          :quantity => 4}
       ]
     }))
 
@@ -583,7 +582,8 @@ class PaypalExpressTest < Test::Unit::TestCase
         :payment_type => 'Any',
         :invoice_id   => 'invoice_id',
         :description  => 'Description',
-        :ip           => '127.0.0.1' })
+        :ip           => '127.0.0.1'
+      })
 
     assert_equal 'Success', response.params['ack']
     assert_equal 'Success', response.message

@@ -136,8 +136,7 @@ module ActiveMerchant #:nodoc:
         requires!(options, :card_number)
 
         post = { :trans_id => identification,
-                 :card_num => options[:card_number]
-               }
+                 :card_num => options[:card_number]}
 
         post[:first_name] = options[:first_name] if options[:first_name]
         post[:last_name] = options[:last_name] if options[:last_name]

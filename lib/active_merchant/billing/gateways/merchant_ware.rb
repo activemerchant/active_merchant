@@ -13,12 +13,10 @@ module ActiveMerchant #:nodoc:
 
       ENV_NAMESPACES = { 'xmlns:xsi'  => 'http://www.w3.org/2001/XMLSchema-instance',
                          'xmlns:xsd'  => 'http://www.w3.org/2001/XMLSchema',
-                         'xmlns:env' => 'http://schemas.xmlsoap.org/soap/envelope/'
-                       }
+                         'xmlns:env' => 'http://schemas.xmlsoap.org/soap/envelope/'}
       ENV_NAMESPACES_V4 = { 'xmlns:xsi'  => 'http://www.w3.org/2001/XMLSchema-instance',
                             'xmlns:xsd'  => 'http://www.w3.org/2001/XMLSchema',
-                            'xmlns:soap' => 'http://schemas.xmlsoap.org/soap/envelope/'
-                          }
+                            'xmlns:soap' => 'http://schemas.xmlsoap.org/soap/envelope/'}
 
       TX_NAMESPACE = 'http://merchantwarehouse.com/MerchantWARE/Client/TransactionRetail'
       TX_NAMESPACE_V4 = 'http://schemas.merchantwarehouse.com/merchantware/40/Credit/'

@@ -67,16 +67,17 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
 
     @options_with_credit_fields = {
       order_id: '1',
-      billing_address:       {
-              name:     'Jim Smith',
-              address1: '100 Street',
-              company:  'Widgets Inc',
-              city:     'Ottawa',
-              state:    'ON',
-              zip:      'K1C2N6',
-              country:  'CA',
-              phone:    '(555)555-5555',
-              fax:      '(555)555-6666'},
+      billing_address: {
+        name:     'Jim Smith',
+        address1: '100 Street',
+        company:  'Widgets Inc',
+        city:     'Ottawa',
+        state:    'ON',
+        zip:      'K1C2N6',
+        country:  'CA',
+        phone:    '(555)555-5555',
+        fax:      '(555)555-6666'
+      },
       email: 'long@bob.com',
       customer: 'Longbob Longsen',
       description: 'Store Purchase',
@@ -92,14 +93,14 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
 
     @avs_address = @options.clone
     @avs_address.update(billing_address: {
-        name:     'Jim Smith',
-        street:   'Test AVS result',
-        houseNumberOrName: '2',
-        city:     'Cupertino',
-        state:    'CA',
-        zip:      '95014',
-        country:  'US'
-        })
+      name:     'Jim Smith',
+      street:   'Test AVS result',
+      houseNumberOrName: '2',
+      city:     'Cupertino',
+      state:    'CA',
+      zip:      '95014',
+      country:  'US'
+    })
 
     @normalized_3ds_2_options = {
       reference: '345123',

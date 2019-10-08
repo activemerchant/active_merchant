@@ -78,7 +78,8 @@ class RemotePaymentezTest < Test::Unit::TestCase
         configuration1: 'value1',
         configuration2: 'value2',
         configuration3: 'value3'
-      }}
+      }
+    }
 
     response = @gateway.purchase(@amount, @credit_card, @options.merge(options))
     assert_success response

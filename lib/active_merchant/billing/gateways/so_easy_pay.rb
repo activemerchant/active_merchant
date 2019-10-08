@@ -177,7 +177,8 @@ module ActiveMerchant #:nodoc:
             'xmlns:soapenc' => 'http://schemas.xmlsoap.org/soap/encoding/',
             'xmlns:tns' => 'urn:Interface',
             'xmlns:types' => 'urn:Interface/encodedTypes',
-            'xmlns:soap' => 'http://schemas.xmlsoap.org/soap/envelope/'}) do
+            'xmlns:soap' => 'http://schemas.xmlsoap.org/soap/envelope/'
+        }) do
           retval.tag!('soap:Body', {'soap:encodingStyle'=>'http://schemas.xmlsoap.org/soap/encoding/'}) do
             retval.tag!("tns:#{request}") do
               retval.tag!("#{request}Request", {'xsi:type'=>"tns:#{request}Request"}) do
