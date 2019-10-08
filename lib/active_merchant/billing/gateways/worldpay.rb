@@ -513,7 +513,7 @@ module ActiveMerchant #:nodoc:
           :avs_result => AVSResult.new(code: AVS_CODE_MAP[raw[:avs_result_code_description]]),
           :cvv_result => CVVResult.new(CVC_CODE_MAP[raw[:cvc_result_code_description]])
         )
-      rescue Nokogiri::SyntaxError => e
+      rescue Nokogiri::SyntaxError
         unparsable_response(xml)
       rescue ActiveMerchant::ResponseError => e
         if e.response.code.to_s == '401'
