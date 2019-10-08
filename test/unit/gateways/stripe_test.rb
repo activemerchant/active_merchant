@@ -517,6 +517,35 @@ class StripeTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_default_source_as_src
+    @gateway.expects(:add_creditcard)
+    @gateway.expects(:add_creditcard)
+    @gateway.expects(:ssl_request).with do |_, endpoint, post, _|
+      post && post.include?("off_session=true") && endpoint.start_with?('https://api.stripe.com/v1/payment_intents')
+    end.returns(failed_purchase_response_with_payment_intents)
+    @gateway.expects(:ssl_request).with do |_, endpoint, post, _|
+      post && post.include?("setup_future_usage=off") && endpoint.start_with?('https://api.stripe.com/v1/payment_intents')
+    end.returns(successful_purchase_response_with_payment_intents)
+    @gateway.expects(:ssl_request).with do |_, endpoint, _, _|
+      endpoint.start_with?('https://api.stripe.com/v1/payment_methods?customer')
+    end.returns(successful_payment_methods_for_customer)
+    @gateway.expects(:ssl_request).with do |_, endpoint, _, _|
+      endpoint.start_with?('https://api.stripe.com/v1/payment_methods?customer')
+    end.returns(successful_multiple_payment_methods_for_customer)
+    @gateway.expects(:ssl_request).with do |_, endpoint, _, _|
+      endpoint.start_with?('https://api.stripe.com/v1/customers')
+    end.returns(successful_customer_response_with_default_source_as_src)
+    @gateway.expects(:ssl_request).with do |_, endpoint, _, _|
+      endpoint.start_with?('https://api.stripe.com/v1/sources/')
+    end.returns(successful_source_response_for_card)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(three_d_secure: true))
+    assert_instance_of Response, response
+    assert_success response
+
+    assert_equal 'pi_test_payment_intents', response.authorization
+    assert response.test?
+  end
 
   def test_successful_purchase_with_token_string
     @gateway.expects(:add_creditcard)
@@ -2557,6 +2586,118 @@ class StripeTest < Test::Unit::TestCase
         "tax_info": null,
         "tax_info_verification": null
       }
+    RESPONSE
+  end
+
+  def successful_customer_response_with_default_source_as_src
+    <<~RESPONSE
+      {
+        "id": "cus_FsGEXE03yAgAJ3",
+        "object": "customer",
+        "account_balance": 0,
+        "address": null,
+        "balance": 0,
+        "created": 1569399535,
+        "currency": null,
+        "default_source": "src_1FQwwxKajOcZzbwkY8PBygth",
+        "delinquent": false,
+        "description": "Customer for jenny.rosen@example.com",
+        "discount": null,
+        "email": null,
+        "invoice_prefix": "90B0C120",
+        "invoice_settings": {
+          "custom_fields": null,
+          "default_payment_method": null,
+          "footer": null
+        },
+        "livemode": false,
+        "metadata": {
+        },
+        "name": null,
+        "phone": null,
+        "preferred_locales": [
+
+        ],
+        "shipping": null,
+        "sources": {
+          "object": "list",
+          "data": [
+
+          ],
+          "has_more": false,
+          "total_count": 0,
+          "url": "/v1/customers/cus_FsGEXE03yAgAJQ/sources"
+        },
+        "subscriptions": {
+          "object": "list",
+          "data": [
+
+          ],
+          "has_more": false,
+          "total_count": 0,
+          "url": "/v1/customers/cus_FsGEXE03yAgAJQ/subscriptions"
+        },
+        "tax_exempt": "none",
+        "tax_ids": {
+          "object": "list",
+          "data": [
+
+          ],
+          "has_more": false,
+          "total_count": 0,
+          "url": "/v1/customers/cus_FsGEXE03yAgAJQ/tax_ids"
+        },
+        "tax_info": null,
+        "tax_info_verification": null
+      }
+    RESPONSE
+  end
+
+  def successful_source_response_for_card
+    <<~RESPONSE
+    {
+      "id": "src_1FQwwxKajOcZzbwkY8PBygth",
+      "object": "source",
+      "amount": null,
+      "card": {
+        "exp_month": 12,
+        "exp_year": 2020,
+        "last4": "4242",
+        "country": "US",
+        "brand": "Visa",
+        "cvc_check": "pass",
+        "funding": "credit",
+        "fingerprint": "neoHFrvAFwDOoDW7",
+        "three_d_secure": "optional",
+        "name": null,
+        "address_line1_check": null,
+        "address_zip_check": null,
+        "tokenization_method": null,
+        "dynamic_last4": null
+      },
+      "client_secret": "src_client_secret_FwqeHHkXAVqqb6BGSpAMY1J2",
+      "created": 1570457555,
+      "currency": null,
+      "customer": "cus_FwqfzM0rdqRluY",
+      "flow": "none",
+      "livemode": false,
+      "metadata": {
+      },
+      "owner": {
+        "address": null,
+        "email": "jenny.rosen@example.com",
+        "name": null,
+        "phone": null,
+        "verified_address": null,
+        "verified_email": null,
+        "verified_name": null,
+        "verified_phone": null
+      },
+      "statement_descriptor": null,
+      "status": "chargeable",
+      "type": "card",
+      "usage": "reusable"
+    }
     RESPONSE
   end
 end
