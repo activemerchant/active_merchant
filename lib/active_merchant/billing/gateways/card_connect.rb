@@ -238,6 +238,7 @@ module ActiveMerchant #:nodoc:
             updated
           end
         end
+        post[:userfields] = options[:user_fields] if options[:user_fields]
       end
 
       def add_3DS(post, options)

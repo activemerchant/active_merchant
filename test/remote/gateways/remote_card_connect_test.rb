@@ -108,6 +108,32 @@ class RemoteCardConnectTest < Test::Unit::TestCase
     assert_equal 'Approval', response.message
   end
 
+  def test_successful_purchase_with_user_fields
+    # `response` does not contain userfields, but the transaction may be checked after
+    # running the test suite via an authorized call to the inquireByOrderid endpoint:
+    # <site>/cardconnect/rest/inquireByOrderid/<order_id>/<merchant_id>
+    options = {
+      order_id: '138510',
+      ip: '127.0.0.1',
+      email: 'joe@example.com',
+      po_number: '5FSD4',
+      tax_amount: '50',
+      freight_amount: '29',
+      duty_amount: '67',
+      order_date: '20170507',
+      ship_from_date: '20877',
+      user_fields: [
+        {'udf0': 'value0'},
+        {'udf1': 'value1'},
+        {'udf2': 'value2'}
+      ]
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Approval Queued for Capture', response.message
+  end
+
   def test_successful_purchase_3DS
     three_ds_options = @options.merge(
       secure_flag: 'se3453',
