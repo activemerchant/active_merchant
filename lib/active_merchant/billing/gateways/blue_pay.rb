@@ -164,6 +164,7 @@ module ActiveMerchant #:nodoc:
         post[:PAYMENT_ACCOUNT] = ''
         post[:MASTER_ID]  = identification
         post[:TRANS_TYPE] = 'REFUND'
+        post[:DOC_TYPE] = options[:doc_type] if options[:doc_type]
         post[:NAME1] = options[:first_name] || ''
         post[:NAME2] = options[:last_name] if options[:last_name]
         post[:ZIP] = options[:zip] if options[:zip]
@@ -183,6 +184,7 @@ module ActiveMerchant #:nodoc:
         post[:PAYMENT_ACCOUNT] = ''
         add_payment_method(post, payment_object)
         post[:TRANS_TYPE] = 'CREDIT'
+        post[:DOC_TYPE] = options[:doc_type] if options[:doc_type]
 
         post[:NAME1] = options[:first_name] || ''
         post[:NAME2] = options[:last_name] if options[:last_name]
