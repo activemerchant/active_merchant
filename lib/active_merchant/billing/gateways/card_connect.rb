@@ -88,6 +88,7 @@ module ActiveMerchant #:nodoc:
           add_address(post, options)
           add_customer_data(post, options)
           add_3DS(post, options)
+          add_additional_data(post, options)
           post[:capture] = 'Y'
           commit('auth', post)
         end
@@ -102,6 +103,7 @@ module ActiveMerchant #:nodoc:
         add_address(post, options)
         add_customer_data(post, options)
         add_3DS(post, options)
+        add_additional_data(post, options)
         commit('auth', post)
       end
 
