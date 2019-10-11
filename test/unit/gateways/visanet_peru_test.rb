@@ -67,7 +67,7 @@ class VisanetPeruTest < Test::Unit::TestCase
     @gateway.expects(:ssl_request).with(:post, any_parameters).returns(successful_authorize_response)
     @gateway.expects(:ssl_request).with(:put, any_parameters).returns(successful_capture_response)
     response = @gateway.authorize(@amount, @credit_card, @options)
-    capture = @gateway.capture(response.authorization, @options)
+    capture = @gateway.capture(@amount, response.authorization, @options)
     assert_success capture
     assert_equal 'OK', capture.message
     assert_match %r(^[0-9]{9}|$), capture.authorization
@@ -78,7 +78,7 @@ class VisanetPeruTest < Test::Unit::TestCase
   def test_failed_capture
     @gateway.expects(:ssl_request).returns(failed_capture_response)
     invalid_purchase_number = '900000044'
-    response = @gateway.capture(invalid_purchase_number)
+    response = @gateway.capture(@amount, invalid_purchase_number)
     assert_failure response
     assert_equal '[ "NUMORDEN 900000044 no se encuentra registrado", "No se realizo el deposito" ]', response.message
     assert_equal 400, response.error_code
