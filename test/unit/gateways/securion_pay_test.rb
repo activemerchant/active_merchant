@@ -86,7 +86,18 @@ class SecurionPayTest < Test::Unit::TestCase
 
   def test_client_data_submitted_with_purchase
     stub_comms(@gateway, :ssl_request) do
-      updated_options = @options.merge({ description: 'test charge', ip: '127.127.127.127', user_agent: 'browser XXX', referrer: 'http://www.foobar.com', email: 'foo@bar.com' })
+      updated_options = @options.merge({
+        description: 'test charge',
+        ip: '127.127.127.127',
+        user_agent: 'browser XXX',
+        referrer: 'http://www.foobar.com',
+        email: 'foo@bar.com',
+        three_d_secure: {
+          require_attempt: true,
+          require_enrolled_card: true,
+          require_successful_liability_shift_for_enrolled_card: false
+        }
+      })
       @gateway.purchase(@amount, @credit_card, updated_options)
     end.check_request do |method, endpoint, data, headers|
       assert_match(/description=test\+charge/, data)
@@ -94,6 +105,9 @@ class SecurionPayTest < Test::Unit::TestCase
       assert_match(/user_agent=browser\+XXX/, data)
       assert_match(/referrer=http\%3A\%2F\%2Fwww\.foobar\.com/, data)
       assert_match(/metadata\[email\]=foo\%40bar\.com/, data)
+      assert_match(/threeDSecure\[requireAttempt\]=true/, data)
+      assert_match(/threeDSecure\[requireEnrolledCard\]=true/, data)
+      assert_match(/threeDSecure\[requireSuccessfulLiabilityShiftForEnrolledCard\]=false/, data)
     end.respond_with(successful_purchase_response)
   end
 
