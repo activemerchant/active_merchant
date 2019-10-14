@@ -307,9 +307,7 @@ module ActiveMerchant
         vaulted_shopper_id = payment_method_details.vaulted_shopper_id
         doc.send('vaulted-shopper-id', vaulted_shopper_id) if vaulted_shopper_id
 
-        if payment_method_details.check?
-          add_echeck_transaction(doc, payment_method_details.payment_method, options, vaulted_shopper_id.present?)
-        end
+        add_echeck_transaction(doc, payment_method_details.payment_method, options, vaulted_shopper_id.present?) if payment_method_details.check?
 
         add_fraud_info(doc, options)
         add_description(doc, options)

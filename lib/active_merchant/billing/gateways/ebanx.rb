@@ -175,9 +175,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_card_or_token(post, payment)
-        if payment.is_a?(String)
-          payment, brand = payment.split('|')
-        end
+        payment, brand = payment.split('|') if payment.is_a?(String)
         post[:payment][:payment_type_code] = payment.is_a?(String) ? brand : CARD_BRAND[payment.brand.to_sym]
         post[:payment][:creditcard] = payment_details(payment)
       end

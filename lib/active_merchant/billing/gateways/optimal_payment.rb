@@ -135,9 +135,7 @@ module ActiveMerchant #:nodoc:
 
       def message_from(response)
         REXML::XPath.each(response, '//detail') do |detail|
-          if detail.is_a?(REXML::Element) && detail.elements['tag'].text == 'InternalResponseDescription'
-            return detail.elements['value'].text
-          end
+          return detail.elements['value'].text if detail.is_a?(REXML::Element) && detail.elements['tag'].text == 'InternalResponseDescription'
         end
         nil
       end

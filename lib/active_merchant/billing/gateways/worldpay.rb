@@ -203,12 +203,8 @@ module ActiveMerchant #:nodoc:
               end
               add_payment_method(xml, money, payment_method, options)
               add_shopper(xml, options)
-              if options[:hcg_additional_data]
-                add_hcg_additional_data(xml, options)
-              end
-              if options[:instalments]
-                add_instalments_data(xml, options)
-              end
+              add_hcg_additional_data(xml, options) if options[:hcg_additional_data]
+              add_instalments_data(xml, options) if options[:instalments]
               add_moto_flag(xml, options) if options.dig(:metadata, :manual_entry)
               add_additional_3ds_data(xml, options) if options[:execute_threed] && options[:three_ds_version] && options[:three_ds_version] =~ /^2/
               add_3ds_exemption(xml, options) if options[:exemption_type]
@@ -278,9 +274,7 @@ module ActiveMerchant #:nodoc:
           'exponent' => currency_exponent(currency)
         }
 
-        if options[:debit_credit_indicator]
-          amount_hash['debitCreditIndicator'] = options[:debit_credit_indicator]
-        end
+        amount_hash['debitCreditIndicator'] = options[:debit_credit_indicator] if options[:debit_credit_indicator]
 
         xml.tag! 'amount', amount_hash
       end
@@ -572,15 +566,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_code_from(success, raw)
-        unless success == 'SUCCESS'
-          raw[:iso8583_return_code_code] || raw[:error_code] || nil
-        end
+        raw[:iso8583_return_code_code] || raw[:error_code] || nil unless success == 'SUCCESS'
       end
 
       def required_status_message(raw, success_criteria)
-        if(!success_criteria.include?(raw[:last_event]))
-          "A transaction status of #{success_criteria.collect { |c| "'#{c}'" }.join(" or ")} is required."
-        end
+        "A transaction status of #{success_criteria.collect { |c| "'#{c}'" }.join(" or ")} is required." if !success_criteria.include?(raw[:last_event])
       end
 
       def authorization_from(action, raw, options)

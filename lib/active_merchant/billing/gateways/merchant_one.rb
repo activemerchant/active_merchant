@@ -91,9 +91,7 @@ module ActiveMerchant #:nodoc:
         ret = ''
         for key in parameters.keys
           ret += "#{key}=#{CGI.escape(parameters[key].to_s)}"
-          if key != parameters.keys.last
-            ret += '&'
-          end
+          ret += '&' if key != parameters.keys.last
         end
         ret.to_s
       end

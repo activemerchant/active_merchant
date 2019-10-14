@@ -156,9 +156,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_code_from(response)
-        unless success_from(response)
-          response[:msoft_code] || response[:phard_code]
-        end
+        response[:msoft_code] || response[:phard_code] unless success_from(response)
       end
     end
   end

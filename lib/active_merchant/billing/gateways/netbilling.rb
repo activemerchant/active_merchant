@@ -166,9 +166,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_user_data(post, options)
-        if options[:order_id]
-          post[:user_data] = "order_id:#{options[:order_id]}"
-        end
+        post[:user_data] = "order_id:#{options[:order_id]}" if options[:order_id]
       end
 
       def add_transaction_id(post, transaction_id)

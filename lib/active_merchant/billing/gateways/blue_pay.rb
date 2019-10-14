@@ -351,9 +351,7 @@ module ActiveMerchant #:nodoc:
         # The bp20api has max one value per form field.
         response_fields = Hash[CGI::parse(body).map { |k, v| [k.upcase, v.first] }]
 
-        if response_fields.include? 'REBILL_ID'
-          return parse_recurring(response_fields)
-        end
+        return parse_recurring(response_fields) if response_fields.include? 'REBILL_ID'
 
         parsed = {}
         response_fields.each do |k, v|
@@ -514,9 +512,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def handle_response(response)
-        if ignore_http_status || (200...300).cover?(response.code.to_i)
-          return response.body
-        end
+        return response.body if ignore_http_status || (200...300).cover?(response.code.to_i)
         raise ResponseError.new(response)
       end
     end

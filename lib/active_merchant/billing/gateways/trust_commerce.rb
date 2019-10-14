@@ -416,9 +416,7 @@ module ActiveMerchant #:nodoc:
         # symbol keys. Before sending our input to TCLink, we convert all our keys to strings and dump the symbol keys.
         # We also remove any pairs with nil values, as these confuse TCLink.
         parameters.keys.reverse_each do |key|
-          if parameters[key]
-            parameters[key.to_s] = parameters[key]
-          end
+          parameters[key.to_s] = parameters[key] if parameters[key]
           parameters.delete(key)
         end
       end

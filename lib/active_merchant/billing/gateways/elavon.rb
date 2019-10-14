@@ -98,9 +98,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def credit(money, creditcard, options = {})
-        if creditcard.is_a?(String)
-          raise ArgumentError, 'Reference credits are not supported. Please supply the original credit card or use the #refund method.'
-        end
+        raise ArgumentError, 'Reference credits are not supported. Please supply the original credit card or use the #refund method.' if creditcard.is_a?(String)
 
         form = {}
         add_invoice(form, options)
@@ -174,9 +172,7 @@ module ActiveMerchant #:nodoc:
         form[:card_number] = creditcard.number
         form[:exp_date] = expdate(creditcard)
 
-        if creditcard.verification_value?
-          add_verification_value(form, creditcard)
-        end
+        add_verification_value(form, creditcard) if creditcard.verification_value?
 
         form[:first_name] = truncate(creditcard.first_name, 20)
         form[:last_name] = truncate(creditcard.last_name, 30)

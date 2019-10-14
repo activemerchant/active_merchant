@@ -287,9 +287,7 @@ module ActiveMerchant #:nodoc:
 
       # Generates a Moneris authorization string of the form 'trans_id;receipt_id'.
       def authorization_from(response = {})
-        if response[:trans_id] && response[:receipt_id]
-          "#{response[:trans_id]};#{response[:receipt_id]}"
-        end
+        "#{response[:trans_id]};#{response[:receipt_id]}" if response[:trans_id] && response[:receipt_id]
       end
 
       # Tests for a successful response from Moneris' servers

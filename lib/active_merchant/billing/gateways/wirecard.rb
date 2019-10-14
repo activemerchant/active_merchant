@@ -290,9 +290,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'City', address[:city]
             xml.tag! 'ZipCode', address[:zip]
 
-            if address[:state] =~ /[A-Za-z]{2}/ && address[:country] =~ /^(us|ca)$/i
-              xml.tag! 'State', address[:state].upcase
-            end
+            xml.tag! 'State', address[:state].upcase if address[:state] =~ /[A-Za-z]{2}/ && address[:country] =~ /^(us|ca)$/i
 
             xml.tag! 'Country', address[:country]
             xml.tag! 'Phone', address[:phone] if address[:phone] =~ VALID_PHONE_FORMAT
@@ -331,9 +329,7 @@ module ActiveMerchant #:nodoc:
         status = nil
 
         root.elements.to_a.each do |node|
-          if node.name =~ /FNC_CC_/
-            status = REXML::XPath.first(node, 'CC_TRANSACTION/PROCESSING_STATUS')
-          end
+          status = REXML::XPath.first(node, 'CC_TRANSACTION/PROCESSING_STATUS') if node.name =~ /FNC_CC_/
         end
 
         message = ''

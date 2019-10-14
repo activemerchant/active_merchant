@@ -308,9 +308,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
-        if response[:success]
-          [ response['ReferenceID'], response['OrderNumber'] ].join(';')
-        end
+        [ response['ReferenceID'], response['OrderNumber'] ].join(';') if response[:success]
       end
     end
   end

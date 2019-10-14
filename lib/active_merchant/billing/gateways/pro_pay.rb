@@ -295,9 +295,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_code_from(response)
-        unless success_from(response)
-          response[:status]
-        end
+        response[:status] unless success_from(response)
       end
 
       def build_xml_request

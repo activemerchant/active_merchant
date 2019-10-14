@@ -157,9 +157,7 @@ module ActiveMerchant
       end
 
       def credit(amount, payment, options={})
-        if payment.is_a?(String)
-          raise ArgumentError, 'Reference credits are not supported. Please supply the original credit card or use the #refund method.'
-        end
+        raise ArgumentError, 'Reference credits are not supported. Please supply the original credit card or use the #refund method.' if payment.is_a?(String)
 
         commit(:credit) do |xml|
           add_order_id(xml, options)
@@ -479,12 +477,8 @@ module ActiveMerchant
             xml.creditCard do
               xml.cardNumber(truncate(credit_card.number, 16))
               xml.expirationDate(format(credit_card.month, :two_digits) + '/' + format(credit_card.year, :four_digits))
-              if credit_card.valid_card_verification_value?(credit_card.verification_value, credit_card.brand)
-                xml.cardCode(credit_card.verification_value)
-              end
-              if credit_card.is_a?(NetworkTokenizationCreditCard) && action != :credit
-                xml.cryptogram(credit_card.payment_cryptogram)
-              end
+              xml.cardCode(credit_card.verification_value) if credit_card.valid_card_verification_value?(credit_card.verification_value, credit_card.brand)
+              xml.cryptogram(credit_card.payment_cryptogram) if credit_card.is_a?(NetworkTokenizationCreditCard) && action != :credit
             end
           end
         end

@@ -275,9 +275,7 @@ class MercadoPagoTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, credit_card, @options)
     end.check_request do |endpoint, data, headers|
-      if endpoint =~ /payments/
-        assert_not_match(%r("payment_method_id":"amex"), data)
-      end
+      assert_not_match(%r("payment_method_id":"amex"), data) if endpoint =~ /payments/
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -290,9 +288,7 @@ class MercadoPagoTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, credit_card, @options.merge(payment_method_id: 'diners'))
     end.check_request do |endpoint, data, headers|
-      if endpoint =~ /payments/
-        assert_match(%r("payment_method_id":"diners"), data)
-      end
+      assert_match(%r("payment_method_id":"diners"), data) if endpoint =~ /payments/
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -326,9 +322,7 @@ class MercadoPagoTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(issuer_id: '1a2b3c4d'))
     end.check_request do |endpoint, data, headers|
-      if endpoint =~ /payments/
-        assert_match(%r("issuer_id":"1a2b3c4d"), data)
-      end
+      assert_match(%r("issuer_id":"1a2b3c4d"), data) if endpoint =~ /payments/
     end.respond_with(successful_purchase_response)
 
     assert_success response

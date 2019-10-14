@@ -136,13 +136,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(xml, options)
-        if options.has_key? :customer
-          xml.tag! 'CUSTOMERID', options[:customer]
-        end
+        xml.tag! 'CUSTOMERID', options[:customer] if options.has_key? :customer
 
-        if options.has_key? :ip
-          xml.tag! 'CUSTOMERIP', options[:ip]
-        end
+        xml.tag! 'CUSTOMERIP', options[:ip] if options.has_key? :ip
       end
 
       def add_address(xml, creditcard, options)

@@ -18,9 +18,7 @@ class SSLVerify
         next
       end
 
-      if !g.ssl_strict
-        disabled << g
-      end
+      disabled << g if !g.ssl_strict
 
       uri = URI.parse(g.live_url)
       result, message = ssl_verify_peer?(uri)
