@@ -195,9 +195,7 @@ module ActiveMerchant #:nodoc:
         response_hash = parse(data)
 
         expected_secure_hash = calculate_secure_hash(response_hash, @options[:secure_hash])
-        unless response_hash[:SecureHash] == expected_secure_hash
-          raise SecurityError, 'Secure Hash mismatch, response may be tampered with'
-        end
+        raise SecurityError, 'Secure Hash mismatch, response may be tampered with' unless response_hash[:SecureHash] == expected_secure_hash
 
         response_object(response_hash)
       end

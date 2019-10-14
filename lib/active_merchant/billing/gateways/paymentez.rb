@@ -276,9 +276,7 @@ module ActiveMerchant #:nodoc:
         return if success_from(response)
         if response['transaction']
           detail = response['transaction']['status_detail']
-          if STANDARD_ERROR_CODE_MAPPING.include?(detail)
-            return STANDARD_ERROR_CODE[STANDARD_ERROR_CODE_MAPPING[detail]]
-          end
+          return STANDARD_ERROR_CODE[STANDARD_ERROR_CODE_MAPPING[detail]] if STANDARD_ERROR_CODE_MAPPING.include?(detail)
         elsif response['error']
           return STANDARD_ERROR_CODE[:config_error]
         end

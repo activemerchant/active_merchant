@@ -320,9 +320,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_threeds(data, options)
-        if options[:execute_threed] == true
-          data[:threeds] = {threeDSInfo: 'CardData'}
-        end
+        data[:threeds] = {threeDSInfo: 'CardData'} if options[:execute_threed] == true
       end
 
       def determine_3ds_action(threeds_hash)
@@ -446,13 +444,9 @@ module ActiveMerchant #:nodoc:
 
           # Set moto flag only if explicitly requested via moto field
           # Requires account configuration to be able to use
-          if options.dig(:moto) && options.dig(:metadata, :manual_entry)
-            xml.DS_MERCHANT_DIRECTPAYMENT 'moto'
-          end
+          xml.DS_MERCHANT_DIRECTPAYMENT 'moto' if options.dig(:moto) && options.dig(:metadata, :manual_entry)
 
-          if data[:threeds]
-            xml.DS_MERCHANT_EMV3DS data[:threeds].to_json
-          end
+          xml.DS_MERCHANT_EMV3DS data[:threeds].to_json if data[:threeds]
         end
       end
 
@@ -599,13 +593,9 @@ module ActiveMerchant #:nodoc:
         xml_signed_fields = data[:ds_amount] + data[:ds_order] + data[:ds_merchantcode] +
           data[:ds_currency] + data[:ds_response]
 
-        if data[:ds_cardnumber]
-          xml_signed_fields += data[:ds_cardnumber]
-        end
+        xml_signed_fields += data[:ds_cardnumber] if data[:ds_cardnumber]
 
-        if data[:ds_emv3ds]
-          xml_signed_fields += data[:ds_emv3ds]
-        end
+        xml_signed_fields += data[:ds_emv3ds] if data[:ds_emv3ds]
 
         xml_signed_fields + data[:ds_transactiontype] + data[:ds_securepayment]
       end

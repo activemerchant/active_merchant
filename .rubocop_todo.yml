@@ -722,11 +722,6 @@ Style/IfInsideElse:
     - 'lib/active_merchant/billing/gateways/skip_jack.rb'
     - 'lib/active_merchant/billing/gateways/worldpay_online_payments.rb'
 
-# Offense count: 128
-# Cop supports --auto-correct.
-Style/IfUnlessModifier:
-  Enabled: false
-
 # Offense count: 1
 Style/IfUnlessModifierOfIfUnless:
   Exclude:

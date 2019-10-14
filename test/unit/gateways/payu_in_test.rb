@@ -25,9 +25,7 @@ class PayuInTest < Test::Unit::TestCase
     else
       assert_equal expected_value.to_s, value, "#{parameter} value does not match expected"
     end
-    if options[:length]
-      assert_equal options[:length], value.length, "#{parameter} value of #{value} is the wrong length"
-    end
+    assert_equal options[:length], value.length, "#{parameter} value of #{value} is the wrong length" if options[:length]
   end
 
   def test_successful_purchase

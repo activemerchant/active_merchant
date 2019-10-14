@@ -1345,9 +1345,7 @@ module ActiveMerchant #:nodoc:
         when payment_method[:method].kind_of?(ActiveMerchant::Billing::Check)
           build_tag soap, :string, 'Account', payment_method[:method].account_number
           build_tag soap, :string, 'Routing', payment_method[:method].routing_number
-          unless payment_method[:method].account_type.nil?
-            build_tag soap, :string, 'AccountType', payment_method[:method].account_type.capitalize
-          end
+          build_tag soap, :string, 'AccountType', payment_method[:method].account_type.capitalize unless payment_method[:method].account_type.nil?
           build_tag soap, :string, 'DriversLicense', options[:drivers_license]
           build_tag soap, :string, 'DriversLicenseState', options[:drivers_license_state]
           build_tag soap, :string, 'RecordType', options[:record_type]
@@ -1434,9 +1432,7 @@ module ActiveMerchant #:nodoc:
       def build_card_expiration(options)
         month = options[:payment_method].month
         year  = options[:payment_method].year
-        unless month.nil? || year.nil?
-          "#{"%02d" % month}#{year.to_s[-2..-1]}"
-        end
+        "#{"%02d" % month}#{year.to_s[-2..-1]}" unless month.nil? || year.nil?
       end
 
       def build_check_data(soap, options)
@@ -1476,9 +1472,7 @@ module ActiveMerchant #:nodoc:
 
       def build_billing_address(soap, options)
         if options[:billing_address]
-          if options[:billing_address][:name]
-            options[:billing_address][:first_name], options[:billing_address][:last_name] = split_names(options[:billing_address][:name])
-          end
+          options[:billing_address][:first_name], options[:billing_address][:last_name] = split_names(options[:billing_address][:name]) if options[:billing_address][:name]
           soap.BillingAddress 'xsi:type' => 'ns1:Address' do
             ADDRESS_OPTIONS.each do |k, v|
               build_tag soap, v[0], v[1], options[:billing_address][k]
@@ -1489,9 +1483,7 @@ module ActiveMerchant #:nodoc:
 
       def build_shipping_address(soap, options)
         if options[:shipping_address]
-          if options[:shipping_address][:name]
-            options[:shipping_address][:first_name], options[:shipping_address][:last_name] = split_names(options[:shipping_address][:name])
-          end
+          options[:shipping_address][:first_name], options[:shipping_address][:last_name] = split_names(options[:shipping_address][:name]) if options[:shipping_address][:name]
           soap.ShippingAddress 'xsi:type' => 'ns1:Address' do
             ADDRESS_OPTIONS.each do |k, v|
               build_tag soap, v[0], v[1], options[:shipping_address][k]

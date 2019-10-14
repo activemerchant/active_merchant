@@ -48,9 +48,7 @@ module ActiveMerchant #:nodoc:
 
         post = {}
         post[:checkout_id] = checkout_id
-        if(money && (original_amount != amount(money)))
-          post[:amount] = amount(money)
-        end
+        post[:amount] = amount(money) if money && (original_amount != amount(money))
         commit('/checkout/capture', post, options)
       end
 
@@ -66,9 +64,7 @@ module ActiveMerchant #:nodoc:
 
         post = {}
         post[:checkout_id] = checkout_id
-        if(money && (original_amount != amount(money)))
-          post[:amount] = amount(money)
-        end
+        post[:amount] = amount(money) if money && (original_amount != amount(money))
         post[:refund_reason] = (options[:description] || 'Refund')
         post[:payer_email_message] = options[:payer_email_message] if options[:payer_email_message]
         post[:payee_email_message] = options[:payee_email_message] if options[:payee_email_message]

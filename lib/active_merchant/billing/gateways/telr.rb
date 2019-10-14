@@ -146,9 +146,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_ref(doc, action, payment_method)
-        if ['capture', 'refund', 'void'].include?(action) || payment_method.is_a?(String)
-          doc.ref(split_authorization(payment_method)[0])
-        end
+        doc.ref(split_authorization(payment_method)[0]) if ['capture', 'refund', 'void'].include?(action) || payment_method.is_a?(String)
       end
 
       def add_authentication(doc)
@@ -251,9 +249,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_code_from(succeeded, response)
-        unless succeeded
-          response[:code]
-        end
+        response[:code] unless succeeded
       end
 
       def cvv_result(parsed)

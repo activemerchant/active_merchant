@@ -187,13 +187,9 @@ module ActiveMerchant
       def add_invoice(post, options)
         add_order_id(post, options)
 
-        if options[:billing_address]
-          post[:invoice_address]  = map_address(options[:billing_address])
-        end
+        post[:invoice_address]  = map_address(options[:billing_address]) if options[:billing_address]
 
-        if options[:shipping_address]
-          post[:shipping_address] = map_address(options[:shipping_address])
-        end
+        post[:shipping_address] = map_address(options[:shipping_address]) if options[:shipping_address]
 
         [:metadata, :branding_id, :variables].each do |field|
           post[field] = options[field] if options[field]

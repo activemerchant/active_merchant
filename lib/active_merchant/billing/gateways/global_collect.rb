@@ -228,9 +228,7 @@ module ActiveMerchant #:nodoc:
           raw_response = ssl_post(url(action, authorization), post.to_json, headers(action, post, authorization))
           response = parse(raw_response)
         rescue ResponseError => e
-          if e.response.code.to_i >= 400
-            response = parse(e.response.body)
-          end
+          response = parse(e.response.body) if e.response.code.to_i >= 400
         rescue JSON::ParserError
           response = json_error(raw_response)
         end

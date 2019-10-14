@@ -196,9 +196,7 @@ EOA
 
       def escape(string, max_length=250)
         return '' unless string
-        if max_length
-          string = string[0...max_length]
-        end
+        string = string[0...max_length] if max_length
         string.gsub(/[^A-Za-z0-9 \-_@\.\n]/, '')
       end
     end

@@ -155,9 +155,7 @@ module ActiveMerchant #:nodoc:
 
       def self.supported_countries=(country_codes)
         country_codes.each do |country_code|
-          unless ActiveMerchant::Country.find(country_code)
-            raise ActiveMerchant::InvalidCountryCodeError, "No country could be found for the country #{country_code}"
-          end
+          raise ActiveMerchant::InvalidCountryCodeError, "No country could be found for the country #{country_code}" unless ActiveMerchant::Country.find(country_code)
         end
         @supported_countries = country_codes.dup
       end
@@ -257,9 +255,7 @@ module ActiveMerchant #:nodoc:
                   money
         end
 
-        if money.is_a?(String)
-          raise ArgumentError, 'money amount must be a positive Integer in cents.'
-        end
+        raise ArgumentError, 'money amount must be a positive Integer in cents.' if money.is_a?(String)
 
         if self.money_format == :cents
           cents.to_s

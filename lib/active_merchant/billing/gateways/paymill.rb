@@ -357,9 +357,7 @@ module ActiveMerchant #:nodoc:
 
         def handle_response_correct_parsing
           @message = parsed['transaction']['processing']['return']['message']
-          if @succeeded = is_ack?
-            @options[:authorization] = parsed['transaction']['identification']['uniqueId']
-          end
+          @options[:authorization] = parsed['transaction']['identification']['uniqueId'] if @succeeded = is_ack?
         end
 
         def is_ack?

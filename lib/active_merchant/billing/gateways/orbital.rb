@@ -327,9 +327,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! :CustomerRefNum, options[:customer_ref_num]
         else
           if options[:customer_ref_num]
-            if creditcard
-              xml.tag! :CustomerProfileFromOrderInd, USE_CUSTOMER_REF_NUM
-            end
+            xml.tag! :CustomerProfileFromOrderInd, USE_CUSTOMER_REF_NUM if creditcard
             xml.tag! :CustomerRefNum, options[:customer_ref_num]
           else
             xml.tag! :CustomerProfileFromOrderInd, AUTO_GENERATE
@@ -457,9 +455,7 @@ module ActiveMerchant #:nodoc:
         # - http://download.chasepaymentech.com/docs/orbital/orbital_gateway_xml_specification.pdf
         unless creditcard.nil?
           if creditcard.verification_value?
-            if %w( visa discover ).include?(creditcard.brand)
-              xml.tag! :CardSecValInd, '1'
-            end
+            xml.tag! :CardSecValInd, '1' if %w( visa discover ).include?(creditcard.brand)
             xml.tag! :CardSecVal,  creditcard.verification_value
           end
         end

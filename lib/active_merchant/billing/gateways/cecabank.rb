@@ -143,9 +143,7 @@ module ActiveMerchant #:nodoc:
           response[:error_message] = root.elements['ERROR/descripcion'].text
         else
           if root.elements['OPERACION'].attributes['numeroOperacion'] == '000'
-            if(root.elements['OPERACION/numeroAutorizacion'])
-              response[:authorization] = root.elements['OPERACION/numeroAutorizacion'].text
-            end
+            response[:authorization] = root.elements['OPERACION/numeroAutorizacion'].text if root.elements['OPERACION/numeroAutorizacion']
           else
             response[:authorization] = root.attributes['numeroOperacion']
           end

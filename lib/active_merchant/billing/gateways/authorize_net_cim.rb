@@ -485,9 +485,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_request(action, options = {})
-        unless CIM_ACTIONS.include?(action)
-          raise StandardError, "Invalid Customer Information Manager Action: #{action}"
-        end
+        raise StandardError, "Invalid Customer Information Manager Action: #{action}" unless CIM_ACTIONS.include?(action)
 
         xml = Builder::XmlMarkup.new(:indent => 2)
         xml.instruct!(:xml, :version => '1.0', :encoding => 'utf-8')
@@ -657,9 +655,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_transaction(xml, transaction)
-        unless CIM_TRANSACTION_TYPES.include?(transaction[:type])
-          raise StandardError, "Invalid Customer Information Manager Transaction Type: #{transaction[:type]}"
-        end
+        raise StandardError, "Invalid Customer Information Manager Transaction Type: #{transaction[:type]}" unless CIM_TRANSACTION_TYPES.include?(transaction[:type])
 
         xml.tag!('transaction') do
           xml.tag!(CIM_TRANSACTION_TYPES[transaction[:type]]) do
@@ -698,9 +694,7 @@ module ActiveMerchant #:nodoc:
             if [:auth_capture, :auth_only, :capture_only].include?(transaction[:type])
               xml.tag!('recurringBilling', transaction[:recurring_billing]) if transaction.has_key?(:recurring_billing)
             end
-            unless [:void, :refund, :prior_auth_capture].include?(transaction[:type])
-              tag_unless_blank(xml, 'cardCode', transaction[:card_code])
-            end
+            tag_unless_blank(xml, 'cardCode', transaction[:card_code]) unless [:void, :refund, :prior_auth_capture].include?(transaction[:type])
           end
         end
       end
@@ -942,9 +936,7 @@ module ActiveMerchant #:nodoc:
         xml = REXML::Document.new(xml)
         root = REXML::XPath.first(xml, "//#{CIM_ACTIONS[action]}Response") ||
                REXML::XPath.first(xml, '//ErrorResponse')
-        if root
-          response = parse_element(root)
-        end
+        response = parse_element(root) if root
 
         response
       end

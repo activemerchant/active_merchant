@@ -367,9 +367,7 @@ module ActiveMerchant #:nodoc:
         errors = []
 
         if verification_value?
-          unless valid_card_verification_value?(verification_value, brand)
-            errors << [:verification_value, "should be #{card_verification_value_length(brand)} digits"]
-          end
+          errors << [:verification_value, "should be #{card_verification_value_length(brand)} digits"] unless valid_card_verification_value?(verification_value, brand)
         elsif requires_verification_value? && !valid_card_verification_value?(verification_value, brand)
           errors << [:verification_value, 'is required']
         end

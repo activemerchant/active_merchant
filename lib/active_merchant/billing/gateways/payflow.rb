@@ -312,9 +312,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_recurring_request(action, money, options)
-        unless RECURRING_ACTIONS.include?(action)
-          raise StandardError, "Invalid Recurring Profile Action: #{action}"
-        end
+        raise StandardError, "Invalid Recurring Profile Action: #{action}" unless RECURRING_ACTIONS.include?(action)
 
         xml = Builder::XmlMarkup.new
         xml.tag! 'RecurringProfiles' do
@@ -354,9 +352,7 @@ module ActiveMerchant #:nodoc:
                   yield xml
                 end
               end
-              if action != :add
-                xml.tag! 'ProfileID', options[:profile_id]
-              end
+              xml.tag! 'ProfileID', options[:profile_id] if action != :add
               if action == :inquiry
                 xml.tag! 'PaymentHistory', (options[:history] ? 'Y' : 'N')
               end

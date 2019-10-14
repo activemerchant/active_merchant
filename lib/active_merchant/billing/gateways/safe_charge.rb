@@ -245,9 +245,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_code_from(response)
-        unless success_from(response)
-          response[:ex_err_code] || response[:err_code]
-        end
+        response[:ex_err_code] || response[:err_code] unless success_from(response)
       end
 
       def underscore(camel_cased_word)
