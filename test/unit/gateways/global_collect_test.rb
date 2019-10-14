@@ -222,6 +222,16 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert_equal 'Status: REJECTED', response.message
   end
 
+  def test_cancelled_refund
+    response = stub_comms do
+      @gateway.refund(@accepted_amount, '000000142800000000920000100001')
+    end.respond_with(cancelled_refund_response)
+
+    assert_failure response
+    assert_equal '1850', response.error_code
+    assert_equal 'Status: CANCELLED', response.message
+  end
+
   def test_invalid_raw_response
     response = stub_comms do
       @gateway.purchase(@accepted_amount, @credit_card, @options)
@@ -384,6 +394,10 @@ class GlobalCollectTest < Test::Unit::TestCase
 
   def rejected_refund_response
     %({\n   \"id\" : \"00000022184000047564000-100001\",\n   \"refundOutput\" : {\n      \"amountOfMoney\" : {\n         \"amount\" : 627000,\n         \"currencyCode\" : \"COP\"\n      },\n      \"references\" : {\n         \"merchantReference\" : \"17091GTgZmcC\",\n         \"paymentReference\" : \"0\"\n      },\n      \"paymentMethod\" : \"card\",\n      \"cardRefundMethodSpecificOutput\" : {\n      }\n   },\n   \"status\" : \"REJECTED\",\n   \"statusOutput\" : {\n      \"isCancellable\" : false,\n      \"statusCategory\" : \"UNSUCCESSFUL\",\n      \"statusCode\" : 1850,\n      \"statusCodeChangeDateTime\" : \"20170313230631\"\n   }\n})
+  end
+
+  def cancelled_refund_response
+    %({\n   \"id\" : \"00000022184000047564000-100001\",\n   \"refundOutput\" : {\n      \"amountOfMoney\" : {\n         \"amount\" : 627000,\n         \"currencyCode\" : \"COP\"\n      },\n      \"references\" : {\n         \"merchantReference\" : \"17091GTgZmcC\",\n         \"paymentReference\" : \"0\"\n      },\n      \"paymentMethod\" : \"card\",\n      \"cardRefundMethodSpecificOutput\" : {\n      }\n   },\n   \"status\" : \"CANCELLED\",\n   \"statusOutput\" : {\n      \"isCancellable\" : false,\n      \"statusCategory\" : \"UNSUCCESSFUL\",\n      \"statusCode\" : 1850,\n      \"statusCodeChangeDateTime\" : \"20170313230631\"\n   }\n})
   end
 
   def successful_void_response

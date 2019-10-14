@@ -283,7 +283,7 @@ POST
       end
 
       def success_from(response)
-        !response['errorId'] && response['status'] != 'REJECTED'
+        !response['errorId'] && !['REJECTED', 'CANCELLED'].include?(response['status']) && response.dig('status_category') != 'UNSUCCESSFUL'
       end
 
       def message_from(succeeded, response)
