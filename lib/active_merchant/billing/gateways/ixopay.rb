@@ -22,6 +22,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, payment_method, options={})
+        puts build_purchase_request(money, payment_method, options), options
+
         commit('purchase', build_purchase_request(money, payment_method, options), options)
       end
 
@@ -66,7 +68,6 @@ module ActiveMerchant #:nodoc:
 
       def headers(xml)
         timestamp = Time.now.httpdate
-
         signature = generate_signature('POST', xml, timestamp)
 
         {
@@ -79,14 +80,10 @@ module ActiveMerchant #:nodoc:
       def generate_signature(http_method, xml, timestamp)
         content_type = 'text/xml; charset=utf-8'
         message = http_method + "\n" + Digest::MD5.hexdigest(xml) + "\n" + content_type + "\n" + timestamp + "\n\n" + '/transaction'
-
         digest = OpenSSL::Digest.new('sha512')
         hmac = OpenSSL::HMAC.digest(digest, @secret, message)
 
         Base64.encode64(hmac).split.join
-      end
-
-      def add_address(post, creditcard, options)
       end
 
       def add_invoice(post, money, options)
@@ -158,13 +155,49 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(xml, options)
+        # Ixopay returns an error if the elements are not added in the order used here.
         xml.tag! 'customer' do
-          options[:customer].each do |attribute, value|
-            xml.tag! attribute.to_s.camelize(:lower), value
+          add_billing_address(xml,  options[:billing_address])  if options[:billing_address]
+          add_shipping_address(xml, options[:shipping_address]) if options[:shipping_address]
+
+          if options.dig(:billing_address, :company)
+            xml.tag! 'company', options[:billing_address][:company]
           end
 
-          #xml.tag! 'ipAddress', '127.0.0.1'
+          xml.tag! 'email', options[:email]
+          xml.tag! 'ipAddress',     options[:ip] || '127.0.0.1'
         end
+      end
+
+      def add_billing_address(xml, address)
+        if address[:name]
+          xml.tag! 'firstName', split_names(address[:name])[0]
+          xml.tag! 'lastName',  split_names(address[:name])[1]
+        end
+
+        xml.tag! 'billingAddress1', address[:address1]
+        xml.tag! 'billingAddress2', address[:address2]
+        xml.tag! 'billingCity',     address[:city]
+        xml.tag! 'billingPostcode', address[:zip]
+        xml.tag! 'billingState',    address[:state]
+        xml.tag! 'billingCountry',  address[:country]
+        xml.tag! 'billingPhone',    address[:phone]
+      end
+
+      def add_shipping_address(xml, address)
+        if address[:name]
+          xml.tag! 'shippingFirstName', split_names(address[:name])[0]
+          xml.tag! 'shippingLastName',  split_names(address[:name])[1]
+        end
+
+        xml.tag! 'shippingCompany',   address[:company]
+        xml.tag! 'shippingAddress1',  address[:address1]
+        xml.tag! 'shippingAddress2',  address[:address2]
+        xml.tag! 'shippingCity',      address[:city]
+        xml.tag! 'shippingPostcode',  address[:zip]
+        xml.tag! 'shippingState',     address[:state]
+        xml.tag! 'shippingCountry',   address[:country]
+        xml.tag! 'shippingPhone',     address[:phone]
       end
 
       def new_transaction_id
