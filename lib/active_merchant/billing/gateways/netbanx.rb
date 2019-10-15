@@ -132,6 +132,11 @@ module ActiveMerchant #:nodoc:
         if options[:billing_address]
           post[:card][:billingAddress]  = map_address(options[:billing_address])
         end
+
+        if options[:authentication]
+          post[:authentication]  = map_3ds(options[:authentication]) if options[:authentication]
+        end
+
       end
 
       def add_invoice(post, money, options)
@@ -151,6 +156,7 @@ module ActiveMerchant #:nodoc:
 
         post[:currencyCode] = options[:currency] if options[:currency]
         post[:billingDetails]  = map_address(options[:billing_address]) if options[:billing_address]
+        post[:authentication]  = map_3ds(options[:authentication]) if options[:authentication]
       end
 
       def expdate(credit_card)
@@ -175,6 +181,18 @@ module ActiveMerchant #:nodoc:
           :state  => address[:state],
         }
         mapped[:country] = country.code(:alpha2).value unless country.blank?
+
+        mapped
+      end
+
+      def map_3ds(three_d_secure_options)
+        mapped = {
+          :eci => three_d_secure_options[:eci],
+          :cavv => three_d_secure_options[:cavv],
+          :threeDResult => three_d_secure_options[:threeDResult],
+          :threeDSecureVersion => three_d_secure_options[:threeDSecureVersion],
+          :directoryServerTransactionId => three_d_secure_options[:directoryServerTransactionId]
+        }
 
         mapped
       end
