@@ -5,36 +5,43 @@ class RemoteIxopayTest < Test::Unit::TestCase
     @gateway = IxopayGateway.new(fixtures(:ixopay))
 
     @amount = 100
-    @credit_card = credit_card('4000100011112224')
+    @credit_card = credit_card('4111111111111111')
     @declined_card = credit_card('4000300011112220')
+
     @options = {
       billing_address: address,
-      description: 'Store Purchase'
+      shipping_address: address,
+      email: 'test@example.com',
+      description: 'Store Purchase',
+      ip: '192.168.1.1',
     }
   end
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success response
-    assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
-  end
 
-  def test_successful_purchase_with_more_options
-    options = {
-      order_id: '1',
-      ip: "127.0.0.1",
-      email: "joe@example.com"
-    }
-
-    response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
-    assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
+    assert_equal 'FINISHED', response.message
+    assert_match /[0-9a-zA-Z]+(|[0-9a-zA-Z]+)*/, response.authorization
+
+    assert_equal @credit_card.name,           response.params['card_holder']
+    assert_equal "%02d" % @credit_card.month, response.params['expiry_month']
+    assert_equal @credit_card.year.to_s,      response.params['expiry_year']
+    assert_equal @credit_card.number[0..5],   response.params['first_six_digits']
+    assert_equal 'FINISHED',                  response.params['return_type']
+
+    assert_equal @credit_card.number.split(//).last(4).join, response.params['last_four_digits']
+
+    assert_not_nil response.params['purchase_id']
+    assert_not_nil response.params['reference_id']
   end
 
   def test_failed_purchase
-    response = @gateway.purchase(@amount, @declined_card, @options)
+    response = @gateway.purchase(@amount, @declined_card, {})
+
     assert_failure response
-    assert_equal 'REPLACE WITH FAILED PURCHASE MESSAGE', response.message
+    assert_equal 'The transaction was declined', response.message
+    assert_equal '2003', response.params['code']
   end
 
   def test_successful_authorize_and_capture
@@ -143,5 +150,4 @@ class RemoteIxopayTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:password], transcript)
   end
-
 end
