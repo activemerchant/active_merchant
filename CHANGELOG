@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+== Version 1.100.0 (Oct 16, 2019)
 * Stripe: Restore non-auto capture behaviour for card present transactions [PatrickFang] #3258
 * Revert "Revert "Worldpay: Switch to Nokogiri"" [curiousepic] #3373
 * Adyen: Fix `authorise3d` message for refusals [jeremywrowe] #3374
