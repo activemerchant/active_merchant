@@ -1,19 +1,15 @@
-require 'pp'
-
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class IxopayGateway < Gateway
       self.test_url = 'https://secure.ixopay.com/transaction'
       self.live_url = 'https://secure.ixopay.com/transaction'
 
-      self.supported_countries = ['US']
+      self.supported_countries = %w(AO AQ AR AS AT AU AW AX AZ BA BB BD BE BF BG BH BI BJ BL BM BN BO BQ BQ BR BS BT BV BW BY BZ CA CC CD CF CG CH CI CK CL CM CN CO CR CU CV CW CX CY CZ DE DJ DK DM DO DZ EC EE EG EH ER ES ET FI FJ FK FM FO FR GA GB GD GE GF GG GH GI GL GM GN GP GQ GR GS GT GU GW GY HK HM HN HR HT HU ID IE IL IM IN IO IQ IR IS IT JE JM JO JP KE KG KH KI KM KN KP KR KW KY KZ LA LB LC LI LK LR LS LT LU LV LY MA MC MD ME MF MG MH MK ML MM MN MO MP MQ MR MS MT MU MV MW MX MY MZ NA NC NE NF NG NI NL NO NP NR NU NZ OM PA PE PF PG PH PK PL PM PN PR PS PT PW PY QA RE RO RS RU RW SA SB SC SD SE SG SH SI SJ SK SL SM SN SO SR SS ST SV SX SY SZ TC TD TF TG TH TJ TK TL TM TN TO TR TT TV TW TZ UA UG UM US UY UZ VA VC VE VG VI VN VU WF WS YE YT ZA ZM ZW)
       self.default_currency = 'EUR'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
 
       self.homepage_url = 'https://www.ixopay.com'
       self.display_name = 'Ixopay'
-
-      STANDARD_ERROR_CODE_MAPPING = {}
 
       def initialize(options={})
         requires!(options, :username, :password, :secret)
@@ -22,31 +18,23 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, payment_method, options={})
-        puts build_purchase_request(money, payment_method, options), options
-
         commit('purchase', build_purchase_request(money, payment_method, options), options)
       end
 
-      def authorize(money, payment, options={})
-        post = {}
-        add_invoice(post, money, options)
-        add_payment(post, payment)
-        add_address(post, payment, options)
-        add_customer_data(post, options)
-
-        commit('authonly', post)
+      def authorize(money, payment_method, options={})
+        # todo
       end
 
       def capture(money, authorization, options={})
-        commit('capture', post)
+        # todo
       end
 
       def refund(money, authorization, options={})
-        commit('refund', post)
+        # todo
       end
 
       def void(authorization, options={})
-        commit('void', post)
+        # todo
       end
 
       def verify(credit_card, options={})
@@ -79,30 +67,30 @@ module ActiveMerchant #:nodoc:
 
       def generate_signature(http_method, xml, timestamp)
         content_type = 'text/xml; charset=utf-8'
-        message = http_method + "\n" + Digest::MD5.hexdigest(xml) + "\n" + content_type + "\n" + timestamp + "\n\n" + '/transaction'
+
+        message = http_method + "\n" + Digest::MD5.hexdigest(xml) + "\n" + content_type + "\n" \
+          + timestamp + "\n\n" + '/transaction'
+
         digest = OpenSSL::Digest.new('sha512')
         hmac = OpenSSL::HMAC.digest(digest, @secret, message)
 
         Base64.encode64(hmac).split.join
       end
 
-      def add_invoice(post, money, options)
-        post[:amount] = amount(money)
-        post[:currency] = (options[:currency] || currency(money))
-      end
-
-      def add_payment(post, payment)
-      end
-
       def parse(action, xml)
         parse_element({:action => action}, REXML::Document.new(xml))
       end
 
+      # This generic method appears in a number of gateways that parse XML.
+      # In the future, we should investigate finding a library method to
+      # drop in, or factoring it out to a module or base class.
       def parse_element(raw, node)
         node_name = node.name.underscore
+
         node.attributes.each do |k, v|
           raw["#{node_name}_#{k.underscore}".to_sym] = v
         end
+
         if node.has_elements?
           raw[node_name.to_sym] = true unless node.name.blank?
           node.elements.each { |e| parse_element(raw, e) }
@@ -111,6 +99,7 @@ module ActiveMerchant #:nodoc:
         else
           raw[node_name.to_sym] = node.text unless node.text.nil?
         end
+
         raw
       end
 
@@ -119,7 +108,7 @@ module ActiveMerchant #:nodoc:
 
         xml.instruct! :xml, encoding: 'utf-8'
 
-        xml.tag! 'transactionWithCard', 'xmlns' => "http://secure.ixopay.com/Schema/V2/TransactionWithCard" do
+        xml.tag! 'transactionWithCard', 'xmlns' => 'http://secure.ixopay.com/Schema/V2/TransactionWithCard' do
           xml.tag! 'username', @options[:username]
           xml.tag! 'password', Digest::SHA1.hexdigest(@options[:password])
           add_card_data(xml, payment_method)
@@ -149,7 +138,6 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'amount', money
           xml.tag! 'currency', currency
           xml.tag! 'description', description
-          xml.tag! 'successUrl', 'http://example.com'
           xml.tag! 'callbackUrl', options[:callback_url] || 'http://example.com'
         end
       end
@@ -165,7 +153,7 @@ module ActiveMerchant #:nodoc:
           end
 
           xml.tag! 'email', options[:email]
-          xml.tag! 'ipAddress',     options[:ip] || '127.0.0.1'
+          xml.tag! 'ipAddress', options[:ip] || '127.0.0.1'
         end
       end
 
@@ -209,8 +197,8 @@ module ActiveMerchant #:nodoc:
 
         begin
           raw_response = ssl_post(url, request, headers(request))
-        rescue StandardError => e
-          return response_from_request_error(action, e)
+        rescue StandardError => error
+          return response_from_request_error(action, error)
         end
 
         response = parse(action, raw_response)
@@ -225,8 +213,9 @@ module ActiveMerchant #:nodoc:
         )
       end
 
-      def response_from_request_error(action, e)
-        response = parse(action, e.response.body)
+      def response_from_request_error(action, error)
+        puts "*** Error"
+        response = parse(action, error.response.body)
 
         Response.new(
           success_from(response),
