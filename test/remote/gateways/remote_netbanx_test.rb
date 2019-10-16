@@ -13,12 +13,12 @@ class RemoteNetbanxTest < Test::Unit::TestCase
     }
 
     @options_3ds2 = @options.merge(
-      authentication: {
+      three_d_secure: {
+        version: '2.1.0',
         eci: '05',
         cavv: 'AAABCIEjYgAAAAAAlCNiENiWiV+=',
-        threeDResult: 'Y',
-        threeDSecureVersion: '2.1.0',
-        directoryServerTransactionId: 'a3a721f3-b6fa-4cb5-84ea-c7b5c39890a2'
+        ds_transaction_id: 'a3a721f3-b6fa-4cb5-84ea-c7b5c39890a2',
+        directory_response_status: 'Y'
       }
     )
   end

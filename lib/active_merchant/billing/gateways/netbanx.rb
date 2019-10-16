@@ -133,8 +133,8 @@ module ActiveMerchant #:nodoc:
           post[:card][:billingAddress]  = map_address(options[:billing_address])
         end
 
-        if options[:authentication]
-          post[:authentication]  = map_3ds(options[:authentication]) if options[:authentication]
+        if options[:three_d_secure]
+          post[:authentication]  = map_3ds(options[:three_d_secure]) if options[:three_d_secure]
         end
       end
 
@@ -155,7 +155,7 @@ module ActiveMerchant #:nodoc:
 
         post[:currencyCode] = options[:currency] if options[:currency]
         post[:billingDetails]  = map_address(options[:billing_address]) if options[:billing_address]
-        post[:authentication]  = map_3ds(options[:authentication]) if options[:authentication]
+        post[:authentication]  = map_3ds(options[:three_d_secure]) if options[:three_d_secure]
       end
 
       def expdate(credit_card)
@@ -188,9 +188,9 @@ module ActiveMerchant #:nodoc:
         mapped = {
           :eci => three_d_secure_options[:eci],
           :cavv => three_d_secure_options[:cavv],
-          :threeDResult => three_d_secure_options[:threeDResult],
-          :threeDSecureVersion => three_d_secure_options[:threeDSecureVersion],
-          :directoryServerTransactionId => three_d_secure_options[:directoryServerTransactionId]
+          :threeDResult => three_d_secure_options[:directory_response_status],
+          :threeDSecureVersion => three_d_secure_options[:version],
+          :directoryServerTransactionId => three_d_secure_options[:ds_transaction_id]
         }
 
         mapped
