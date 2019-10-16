@@ -136,7 +136,6 @@ module ActiveMerchant #:nodoc:
         if options[:authentication]
           post[:authentication]  = map_3ds(options[:authentication]) if options[:authentication]
         end
-
       end
 
       def add_invoice(post, money, options)

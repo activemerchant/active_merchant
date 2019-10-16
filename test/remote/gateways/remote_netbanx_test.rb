@@ -16,12 +16,11 @@ class RemoteNetbanxTest < Test::Unit::TestCase
       authentication: {
         eci: '05',
         cavv: 'AAABCIEjYgAAAAAAlCNiENiWiV+=',
-        threeDResult: "Y",
+        threeDResult: 'Y',
         threeDSecureVersion: '2.1.0',
         directoryServerTransactionId: 'a3a721f3-b6fa-4cb5-84ea-c7b5c39890a2'
       }
     )
-
   end
 
   def test_successful_purchase
