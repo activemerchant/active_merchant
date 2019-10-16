@@ -134,7 +134,7 @@ module ActiveMerchant #:nodoc:
         end
 
         if options[:three_d_secure]
-          post[:authentication]  = map_3ds(options[:three_d_secure]) if options[:three_d_secure]
+          post[:authentication]  = map_3ds(options[:three_d_secure])
         end
       end
 
@@ -188,6 +188,7 @@ module ActiveMerchant #:nodoc:
         mapped = {
           :eci => three_d_secure_options[:eci],
           :cavv => three_d_secure_options[:cavv],
+          :xid => three_d_secure_options[:xid],
           :threeDResult => three_d_secure_options[:directory_response_status],
           :threeDSecureVersion => three_d_secure_options[:version],
           :directoryServerTransactionId => three_d_secure_options[:ds_transaction_id]

@@ -18,6 +18,7 @@ class RemoteNetbanxTest < Test::Unit::TestCase
         eci: '05',
         cavv: 'AAABCIEjYgAAAAAAlCNiENiWiV+=',
         ds_transaction_id: 'a3a721f3-b6fa-4cb5-84ea-c7b5c39890a2',
+        xid: 'OU9rcTRCY1VJTFlDWTFESXFtTHU=',
         directory_response_status: 'Y'
       }
     )
