@@ -214,7 +214,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def response_from_request_error(action, error)
-        puts "*** Error"
         response = parse(action, error.response.body)
 
         Response.new(
