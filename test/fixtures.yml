@@ -444,8 +444,10 @@ iveri:
   app_id: d10a603d-4ade-405b-93f1-826dfc0181e8
 
 ixopay:
-  some_credential: SOMECREDENTIAL
-  another_credential: ANOTHERCREDENTIAL
+  username: USERNAME
+  api_key: API_KEY
+  password: PASSWORD
+  secret: SHARED_SECRET
 
 jetpay:
   login: TESTTERMINAL
