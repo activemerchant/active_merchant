@@ -200,6 +200,15 @@ class MonerisTest < Test::Unit::TestCase
     @data_key = response.params['data_key']
   end
 
+  def test_successful_store_with_duration
+    @gateway.expects(:ssl_post).returns(successful_store_with_duration_response)
+    assert response = @gateway.store(@credit_card, duration: 600)
+    assert_success response
+    assert_equal 'Successfully registered cc details', response.message
+    assert response.params['data_key'].present?
+    @data_key = response.params['data_key']
+  end
+
   def test_successful_unstore
     @gateway.expects(:ssl_post).returns(successful_unstore_response)
     test_successful_store
@@ -834,6 +843,41 @@ class MonerisTest < Test::Unit::TestCase
     <ResponseCode>027</ResponseCode>
     <Complete>true</Complete>
     <Message>Successfully registered cc details * =</Message>
+  </receipt>
+</response>
+    RESPONSE
+  end
+
+  def successful_store_with_duration_response
+    <<-RESPONSE
+<?xml version="1.0"?>
+<response>
+  <receipt>
+    <DataKey>1234567890</DataKey>
+    <ReceiptId>null</ReceiptId>
+    <ReferenceNum>null</ReferenceNum>
+    <ResponseCode>001</ResponseCode>
+    <ISO>null</ISO>
+    <AuthCode>null</AuthCode>
+    <Message>Successfully registered CC details.</Message>
+    <TransType>null</TransType>
+    <Complete>true</Complete>
+    <TransAmount>null</TransAmount>
+    <CardType>null</CardType>
+    <TransID>null</TransID>
+    <TimedOut>false</TimedOut>
+    <CorporateCard>null</CorporateCard>
+    <RecurSuccess>null</RecurSuccess>
+    <AvsResultCode>null</AvsResultCode>
+    <CvdResultCode>null</CvdResultCode>
+    <ResSuccess>true</ResSuccess>
+    <PaymentType>cc</PaymentType>
+    <IsVisaDebit>null</IsVisaDebit>
+    <ResolveData>
+      <anc1/>
+      <masked_pan>4242***4242</masked_pan>
+      <expdate>2010</expdate>
+    </ResolveData>
   </receipt>
 </response>
     RESPONSE
