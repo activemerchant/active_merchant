@@ -201,7 +201,7 @@ class GlobalCollectTest < Test::Unit::TestCase
       @gateway.authorize(@accepted_amount, @credit_card, @options.merge(pre_authorization: true))
     end.check_request do |_endpoint, data, _headers|
       assert_match(/PRE_AUTHORIZATION/, data)
-    end.respond_with(successful_authorize_response)
+    end.respond_with(successful_authorize_response_with_pre_authorization_flag)
 
     assert_success response
   end
@@ -363,10 +363,18 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_failed_provider_unresponsive_void
+    response = stub_comms do
+      @gateway.void('5d53a33d960c46d00f5dc061947d998c')
+    end.respond_with(failed_provider_unresponsive_void_response)
+
+    assert_failure response
+  end
+
   def test_successful_verify
     response = stub_comms do
       @gateway.verify(@credit_card, @options)
-    end.respond_with(successful_verify_response)
+    end.respond_with(successful_authorize_response, successful_void_response)
     assert_equal '000000142800000000920000100001', response.authorization
 
     assert_success response
@@ -375,8 +383,8 @@ class GlobalCollectTest < Test::Unit::TestCase
   def test_failed_verify
     response = stub_comms do
       @gateway.verify(@credit_card, @options)
-    end.respond_with(failed_verify_response)
-    assert_equal 'cee09c50-5d9d-41b8-b740-8c7bf06d2c66', response.authorization
+    end.respond_with(failed_authorize_response)
+    assert_equal '000000142800000000640000100001', response.authorization
 
     assert_failure response
   end
@@ -585,6 +593,10 @@ class GlobalCollectTest < Test::Unit::TestCase
     %({\n   \"errorId\" : \"460ec7ed-f8be-4bd7-bf09-a4cbe07f774e\",\n   \"errors\" : [ {\n      \"code\" : \"430330\",\n      \"message\" : \"Not authorised\"\n   } ],\n   \"paymentResult\" : {\n      \"creationOutput\" : {\n         \"additionalReference\" : \"00000014280000000064\",\n         \"externalReference\" : \"000000142800000000640000100001\"\n      },\n      \"payment\" : {\n         \"id\" : \"000000142800000000640000100001\",\n         \"paymentOutput\" : {\n            \"amountOfMoney\" : {\n               \"amount\" : 100,\n               \"currencyCode\" : \"USD\"\n            },\n            \"references\" : {\n               \"paymentReference\" : \"0\"\n            },\n            \"paymentMethod\" : \"card\",\n            \"cardPaymentMethodSpecificOutput\" : {\n               \"paymentProductId\" : 1\n            }\n         },\n         \"status\" : \"REJECTED\",\n         \"statusOutput\" : {\n            \"errors\" : [ {\n               \"code\" : \"430330\",\n               \"requestId\" : \"55635\",\n               \"message\" : \"Not authorised\"\n            } ],\n            \"isCancellable\" : false,\n            \"statusCode\" : 100,\n            \"statusCodeChangeDateTime\" : \"20160316154235\",\n            \"isAuthorized\" : false\n         }\n      }\n   }\n})
   end
 
+  def successful_authorize_response_with_pre_authorization_flag
+    %({\n   \"creationOutput\" : {\n      \"additionalReference\" : \"00000021960000000968\",\n      \"externalReference\" : \"000000219600000009680000100001\"\n   },\n   \"payment\" : {\n      \"id\" : \"000000219600000009680000100001\",\n      \"paymentOutput\" : {\n         \"amountOfMoney\" : {\n            \"amount\" : 4005,\n            \"currencyCode\" : \"USD\"\n         },\n         \"references\" : {\n            \"paymentReference\" : \"0\"\n         },\n         \"paymentMethod\" : \"card\",\n         \"cardPaymentMethodSpecificOutput\" : {\n            \"paymentProductId\" : 1,\n            \"authorisationCode\" : \"OK1131\",\n            \"fraudResults\" : {\n               \"fraudServiceResult\" : \"no-advice\",\n               \"avsResult\" : \"0\",\n               \"cvvResult\" : \"0\"\n            },\n            \"card\" : {\n               \"cardNumber\" : \"************7977\",\n               \"expiryDate\" : \"0920\"\n            }\n         }\n      },\n      \"status\" : \"PENDING_APPROVAL\",\n      \"statusOutput\" : {\n         \"isCancellable\" : true,\n         \"statusCategory\" : \"PENDING_MERCHANT\",\n         \"statusCode\" : 600,\n         \"statusCodeChangeDateTime\" : \"20191017153833\",\n         \"isAuthorized\" : true,\n         \"isRefundable\" : false\n      }\n   }\n})
+  end
+
   def successful_capture_response
     "{\n   \"payment\" : {\n      \"id\" : \"000000142800000000920000100001\",\n      \"paymentOutput\" : {\n         \"amountOfMoney\" : {\n            \"amount\" : 4005,\n            \"currencyCode\" : \"USD\"\n         },\n         \"references\" : {\n            \"paymentReference\" : \"0\"\n         },\n         \"paymentMethod\" : \"card\",\n         \"cardPaymentMethodSpecificOutput\" : {\n            \"paymentProductId\" : 1,\n            \"authorisationCode\" : \"OK1131\",\n            \"fraudResults\" : {\n               \"fraudServiceResult\" : \"no-advice\",\n               \"avsResult\" : \"0\",\n               \"cvvResult\" : \"0\"\n            },\n            \"card\" : {\n               \"cardNumber\" : \"************7977\",\n               \"expiryDate\" : \"0920\"\n            }\n         }\n      },\n      \"status\" : \"CAPTURE_REQUESTED\",\n      \"statusOutput\" : {\n         \"isCancellable\" : true,\n         \"statusCategory\" : \"PENDING_CONNECT_OR_3RD_PARTY\",\n         \"statusCode\" : 800,\n         \"statusCodeChangeDateTime\" : \"20191203163030\",\n         \"isAuthorized\" : true,\n         \"isRefundable\" : false\n      }\n   }\n}"
   end
@@ -613,12 +625,8 @@ class GlobalCollectTest < Test::Unit::TestCase
     %({\n   \"errorId\" : \"9e38736e-15f3-4d6b-8517-aad3029619b9\",\n   \"errors\" : [ {\n      \"code\" : \"1002\",\n      \"propertyName\" : \"paymentId\",\n      \"message\" : \"INVALID_PAYMENT_ID\"\n   } ]\n})
   end
 
-  def successful_verify_response
-    %({\n   \"payment\" : {\n      \"id\" : \"000000142800000000920000100001\",\n      \"paymentOutput\" : {\n         \"amountOfMoney\" : {\n            \"amount\" : 100,\n            \"currencyCode\" : \"USD\"\n         },\n         \"references\" : {\n            \"paymentReference\" : \"0\"\n         },\n         \"paymentMethod\" : \"card\",\n         \"cardPaymentMethodSpecificOutput\" : {\n            \"paymentProductId\" : 1,\n            \"authorisationCode\" : \"OK1131\",\n            \"card\" : {\n               \"cardNumber\" : \"************7977\",\n               \"expiryDate\" : \"0917\"\n            },\n            \"fraudResults\" : {\n               \"fraudServiceResult\" : \"no-advice\",\n               \"avsResult\" : \"0\",\n               \"cvvResult\" : \"0\"\n            }\n         }\n      },\n      \"status\" : \"CANCELLED\",\n      \"statusOutput\" : {\n         \"isCancellable\" : false,\n         \"statusCode\" : 99999,\n         \"statusCodeChangeDateTime\" : \"20160318170240\"\n      }\n   }\n})
-  end
-
-  def failed_verify_response
-    %({\n   \"errorId\" : \"cee09c50-5d9d-41b8-b740-8c7bf06d2c66\",\n   \"errors\" : [ {\n      \"code\" : \"430330\",\n      \"message\" : \"Not authorised\"\n   } ],\n   \"paymentResult\" : {\n      \"creationOutput\" : {\n         \"additionalReference\" : \"00000014280000000134\",\n         \"externalReference\" : \"000000142800000000920000100001\"\n      },\n      \"payment\" : {\n         \"id\" : \"000000142800000000920000100001\",\n         \"paymentOutput\" : {\n            \"amountOfMoney\" : {\n               \"amount\" : 100,\n               \"currencyCode\" : \"USD\"\n            },\n            \"references\" : {\n               \"paymentReference\" : \"0\"\n            },\n            \"paymentMethod\" : \"card\",\n            \"cardPaymentMethodSpecificOutput\" : {\n               \"paymentProductId\" : 1\n            }\n         },\n         \"status\" : \"REJECTED\",\n         \"statusOutput\" : {\n            \"errors\" : [ {\n               \"code\" : \"430330\",\n               \"requestId\" : \"64357\",\n               \"message\" : \"Not authorised\"\n            } ],\n            \"isCancellable\" : false,\n            \"statusCode\" : 100,\n            \"statusCodeChangeDateTime\" : \"20160318170253\",\n            \"isAuthorized\" : false\n         }\n      }\n   }\n})
+  def failed_provider_unresponsive_void_response
+    %({\n   \"payment\" : {\n      \"id\" : \"000000142800000000920000100001\",\n      \"paymentOutput\" : {\n         \"amountOfMoney\" : {\n            \"amount\" : 100,\n            \"currencyCode\" : \"ARS\"\n         },\n         \"references\" : {\n            \"merchantReference\" : \"0\",\n            \"paymentReference\" : \"0\",\n            \"providerId\" : \"88\"\n         },\n         \"paymentMethod\" : \"card\",\n         \"cardPaymentMethodSpecificOutput\" : {\n            \"paymentProductId\" : 3,\n            \"authorisationCode\" : \"123456\",\n            \"fraudResults\" : {\n               \"fraudServiceResult\" : \"no-advice\",\n               \"avsResult\" : \"0\",\n               \"cvvResult\" : \"0\"\n            },\n            \"card\" : {\n               \"cardNumber\" : \"************7977\",\n               \"expiryDate\" : \"0125\"\n            }\n         }\n      },\n      \"status\" : \"CANCELLED\",\n      \"statusOutput\" : {\n         \"isCancellable\" : false,\n         \"statusCategory\" : \"UNSUCCESSFUL\",\n         \"statusCode\" : 99999,\n         \"statusCodeChangeDateTime\" : \"20191011201122\",\n         \"isAuthorized\" : false,\n         \"isRefundable\" : false\n      }\n   },\n   \"cardPaymentMethodSpecificOutput\" : {\n      \"voidResponseId\" : \"98\"\n   }\n})
   end
 
   def invalid_json_response
