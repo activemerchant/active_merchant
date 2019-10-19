@@ -467,16 +467,14 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal '5100', response.params['source']['last4']
   end
 
-  def test_successful_purchase_using_stored_card_and_deprecated_api
+  def test_successful_purchase_using_stored_card_with_customer_id
     assert store = @gateway.store(@credit_card)
     assert_success store
 
     recharge_options = @options.merge(:customer => store.params['id'])
-    assert_deprecation_warning do
-      response = @gateway.purchase(@amount, nil, recharge_options)
-      assert_success response
-      assert_equal '4242', response.params['source']['last4']
-    end
+    response = @gateway.purchase(@amount, nil, recharge_options)
+    assert_success response
+    assert_equal '4242', response.params['source']['last4']
   end
 
   def test_successful_unstore
