@@ -106,13 +106,7 @@ module ActiveMerchant #:nodoc:
         add_references(post, options)
         add_device_info(post, options)
         add_geolocation(post, options)
-
-        token = if payment_method.is_a?(String)
-            payment_method
-          else
-            store(payment_method, options).authorization
-          end
-        add_payment_method(post, options, token)
+        add_payment_method(post, options, payment_method)
 
         commit(:post, :purchase, post, options)
       end
@@ -167,11 +161,11 @@ module ActiveMerchant #:nodoc:
       # the <tt>:token</tt> or <tt>:iframe</tt> values depending of <tt>:type</tt>
       # * <tt>:payer</tt> A hash containing customer information where <tt>:email</tt> is required
       #
-      def create_card_plan(token, options)
+      def create_card_plan(payment_method, options)
         post = {}
         post[:startDate] = options[:start_date] || Date.today.at_beginning_of_month.next_month
         add_type(post, options[:type] || 'recurring')
-        add_payment_method(post, options, token)
+        add_payment_method(post, options, payment_method)
         add_frequency(post, options)
         add_customer_data(post, options)
         add_address(post, options[:address])
@@ -465,16 +459,18 @@ module ActiveMerchant #:nodoc:
       # * <tt>token</tt>: token | iframe | card
       #
       def add_payment_method(post, options, value)
-        if options[:payment_method_type] == 'iframe'
-          post[:paymentMethod] = {
-            type: options[:payment_method_type],
-            iframe: { 'value' => value }
-          }
-
+        if ['iframe', 'token'].include?(options[:payment_method_type])
+          payment_method_type  = options[:payment_method_type]
+          post[:paymentMethod] = { :type => payment_method_type }
+          post[:paymentMethod][payment_method_type.to_sym] = { 'value' => value }
         else
           post[:paymentMethod] = {
-            type: options[:payment_method_type] || 'token',
-            token: { 'value' => value }
+            type: 'card',
+            card: {
+              number: value.number,
+              expiryDate: expdate(value),
+              nameOnCard: value.name
+            }
           }
         end
       end
