@@ -713,15 +713,15 @@ module ActiveMerchant #:nodoc:
             add_aav(xml, creditcard, three_d_secure)
             # CustomerAni, AVSPhoneType and AVSDestPhoneType could be added here.
 
-            add_dpanind(xml, creditcard)
-            add_aevv(xml, creditcard, three_d_secure)
-            add_digital_token_cryptogram(xml, creditcard)
-
             if parameters[:soft_descriptors].is_a?(OrbitalSoftDescriptors)
               add_soft_descriptors(xml, parameters[:soft_descriptors])
             elsif parameters[:soft_descriptors].is_a?(Hash)
               add_soft_descriptors_from_hash(xml, parameters[:soft_descriptors])
             end
+
+            add_dpanind(xml, creditcard)
+            add_aevv(xml, creditcard, three_d_secure)
+            add_digital_token_cryptogram(xml, creditcard)
 
             set_recurring_ind(xml, parameters)
 

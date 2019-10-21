@@ -108,6 +108,20 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_network_tokenization_credit_card_data_with_soft_descriptor_hash
+    stub_comms do
+      @gateway.authorize(50, network_tokenization_credit_card(nil, eci: '5', transaction_id: 'BwABB4JRdgAAAAAAiFF2AAAAAAA='), @options.merge(
+        soft_descriptors: {
+          merchant_name: 'Merch',
+          product_description: 'Description',
+          merchant_email: 'email@example',
+        }
+      ))
+    end.check_request do |endpoint, data, headers|
+      assert_xml_valid_to_xsd(data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_three_d_secure_1_data_on_visa_purchase
     stub_comms do
       @gateway.purchase(50, credit_card, @options.merge(@three_d_secure_options))
