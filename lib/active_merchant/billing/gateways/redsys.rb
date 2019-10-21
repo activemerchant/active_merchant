@@ -464,18 +464,7 @@ module ActiveMerchant #:nodoc:
         xml     = Nokogiri::XML(data)
         code    = xml.xpath('//RETORNOXML/CODIGO').text
 
-        if ['iniciaPeticion', 'trataPeticion'].include?(action)
-          vxml = Nokogiri::XML(data).remove_namespaces!.xpath("//Envelope/Body/#{action}Response/#{action}Return").inner_text
-          xml = Nokogiri::XML(vxml)
-          node = (action == 'iniciaPeticion' ? 'INFOTARJETA' : 'OPERACION')
-          op = xml.xpath("//RETORNOXML/#{node}")
-          op.children.each do |element|
-            params[element.name.downcase.to_sym] = element.text
-          end
-          message = response_text_3ds(xml, params)
-          options[:authorization] = build_authorization(params)
-          success = params.size > 0 && is_success_response?(params[:ds_response])
-        elsif code == '0'
+        if code == '0' && xml.xpath('//RETORNOXML/OPERACION').present?
           op = xml.xpath('//RETORNOXML/OPERACION')
           op.children.each do |element|
             params[element.name.downcase.to_sym] = element.text
@@ -487,6 +476,17 @@ module ActiveMerchant #:nodoc:
           else
             message = 'Response failed validation check'
           end
+        elsif ['iniciaPeticion', 'trataPeticion'].include?(action)
+          vxml = Nokogiri::XML(data).remove_namespaces!.xpath("//Envelope/Body/#{action}Response/#{action}Return").inner_text
+          xml = Nokogiri::XML(vxml)
+          node = (action == 'iniciaPeticion' ? 'INFOTARJETA' : 'OPERACION')
+          op = xml.xpath("//RETORNOXML/#{node}")
+          op.children.each do |element|
+            params[element.name.downcase.to_sym] = element.text
+          end
+          message = response_text_3ds(xml, params)
+          options[:authorization] = build_authorization(params)
+          success = params.size > 0 && is_success_response?(params[:ds_response])
         else
           # Some kind of programmer error with the request!
           message = "#{code} ERROR"
