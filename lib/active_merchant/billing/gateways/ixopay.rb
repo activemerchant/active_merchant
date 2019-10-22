@@ -82,6 +82,7 @@ module ActiveMerchant #:nodoc:
         parse_element({:action => action}, REXML::Document.new(xml))
       end
 
+      # todo
       # This generic method appears in a number of gateways that parse XML.
       # In the future, we should investigate finding a library method to
       # drop in, or factoring it out to a module or base class.
@@ -235,7 +236,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
-        response[:reference_id] ? response[:reference_id] + '|' + response[:purchase_id] : nil
+        response[:reference_id] ? "#{response[:reference_id]}|#{response[:purchase_id]}" : nil
       end
 
       def error_code_from(response)
