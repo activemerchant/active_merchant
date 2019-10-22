@@ -71,14 +71,11 @@ module ActiveMerchant #:nodoc:
 
       def generate_signature(http_method, xml, timestamp)
         content_type = 'text/xml; charset=utf-8'
-
-        message = http_method + "\n" + Digest::MD5.hexdigest(xml) + "\n" + content_type + "\n" \
-          + timestamp + "\n\n" + '/transaction'
-
+        message = "#{http_method}\n#{Digest::MD5.hexdigest(xml)}\n#{content_type}\n#{timestamp}\n\n/transaction"
         digest = OpenSSL::Digest.new('sha512')
         hmac = OpenSSL::HMAC.digest(digest, @secret, message)
 
-        Base64.encode64(hmac).split.join
+        Base64.encode64(hmac).delete("\n")
       end
 
       def parse(action, xml)
@@ -110,7 +107,7 @@ module ActiveMerchant #:nodoc:
       def build_purchase_request(money, payment_method, options)
         xml = Builder::XmlMarkup.new(indent: 2)
 
-        xml.instruct! :xml, encoding: 'utf-8'
+        xml.instruct! :xml
 
         xml.tag! 'transactionWithCard', 'xmlns' => 'http://secure.ixopay.com/Schema/V2/TransactionWithCard' do
           xml.tag! 'username', @options[:username]
