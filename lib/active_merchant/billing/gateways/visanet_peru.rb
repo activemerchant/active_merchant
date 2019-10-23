@@ -39,6 +39,7 @@ module ActiveMerchant #:nodoc:
 
       def capture(amount, authorization, options={})
         params = {}
+        params[:amount] = amount(amount) if amount
         options[:id_unico] = split_authorization(authorization)[1]
         add_auth_order_id(params, authorization, options)
         commit('deposit', params, options)
