@@ -41,7 +41,6 @@ class RemoteIxopayTest < Test::Unit::TestCase
 
     assert_failure response
     assert_equal 'The transaction was declined', response.message
-    assert_equal '2003', response.params['code']
     assert_equal '2003', response.error_code
   end
 
