@@ -23,7 +23,7 @@ module ActiveMerchant #:nodoc:
         request = build_xml_request do |xml|
           add_card_data(xml, payment_method)
           add_debit(xml, money, options)
-	      end
+        end
         commit(request)
       end
 
@@ -66,16 +66,16 @@ module ActiveMerchant #:nodoc:
 
       def parse(body)
         xml = Nokogiri::XML(body)
-	      response = Hash.from_xml(xml.to_s)["result"]
-	      response.deep_transform_keys(&:underscore)
-	      .transform_keys(&:to_sym)
+        response = Hash.from_xml(xml.to_s)['result']
+        response.deep_transform_keys(&:underscore)
+        .transform_keys(&:to_sym)
       end
 
       def build_xml_request
         builder = Nokogiri::XML::Builder.new(encoding: 'UTF-8') do |xml|
           xml.transactionWithCard 'xmlns' => 'http://secure.ixopay.com/Schema/V2/TransactionWithCard' do
-          xml.username @options[:username]
-          xml.password Digest::SHA1.hexdigest(@options[:password])
+            xml.username @options[:username]
+            xml.password Digest::SHA1.hexdigest(@options[:password])
             yield(xml)
           end
         end
