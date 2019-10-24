@@ -1,6 +1,10 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Redsys: Updates to parse method for non-3DS responses [britth] #3391
+* Rubocop: Style/IfUnlessModifier [nfarve] #3390
+* CyberSource: Send issuer data on capture [leila-alderman] #3404
+
 == Version 1.100.0 (Oct 16, 2019)
 * Stripe: Restore non-auto capture behaviour for card present transactions [PatrickFang] #3258
 * Revert "Revert "Worldpay: Switch to Nokogiri"" [curiousepic] #3373
@@ -19,8 +23,6 @@
 * Rubocop: Layout/MultilineHashBraceLayout [nfarve] #3385
 * CardConnect: Always include additional_data in purchase [therufs] #3387
 * CardConnect: Add user_fields GSF [therufs] #3388
-* Redsys: Updates to parse method for non-3DS responses [britth] #3391
-* Rubocop: Style/IfUnlessModifier [nfarve] #3390
 
 == Version 1.99.0 (Sep 26, 2019)
 * Adyen: Add functionality to set 3DS exemptions via API [britth] #3331

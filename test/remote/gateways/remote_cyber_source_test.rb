@@ -256,6 +256,16 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_successful_capture_with_issuer_additional_data
+    @options[:issuer_additional_data] = @issuer_additional_data
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    assert response = @gateway.capture(@amount, auth.authorization)
+    assert_successful_response(response)
+    assert !response.authorization.blank?
+  end
+
   def test_successful_authorization_and_failed_capture
     assert auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
