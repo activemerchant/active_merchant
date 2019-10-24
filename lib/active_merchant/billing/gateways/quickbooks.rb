@@ -11,6 +11,8 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://payments.intuit.com'
       self.display_name = 'QuickBooks Payments'
       ENDPOINT =  '/quickbooks/v4/payments/charges'
+
+      # can probably delete this const
       OAUTH_ENDPOINTS = {
         site: 'https://oauth.intuit.com',
         request_token_path: '/oauth/v1/get_request_token',
@@ -51,7 +53,7 @@ module ActiveMerchant #:nodoc:
       FRAUD_WARNING_CODES = ['PMT-1000', 'PMT-1001', 'PMT-1002', 'PMT-1003']
 
       def initialize(options = {})
-        requires!(options, :consumer_key, :consumer_secret, :access_token, :token_secret, :realm)
+        requires!(options, :consumer_key, :consumer_secret, :access_token, :token_secret, :realm, :version)
         @options = options
         super
       end
@@ -209,8 +211,26 @@ module ActiveMerchant #:nodoc:
         data.to_json
       end
 
-      def headers(method, uri)
+
+      def headers(version, method, uri)
         raise ArgumentError, "Invalid HTTP method: #{method}. Valid methods are :post and :get" unless [:post, :get].include?(method)
+
+        if version == "2.0"
+          oauth_one_header(method, uri)
+        else
+          oauth_two_header
+        end
+      end
+
+      def oauth_two_header
+        {
+          'Accept' => 'application/json',
+          'Content-Type' => 'application/x-www-form-urlencoded',
+          'Authorization' => "Bearer #{@options[:access_token]}"
+        }
+      end
+
+      def oauth_one_header(method, uri)   
         request_uri = URI.parse(uri)
 
         # Following the guidelines from http://nouncer.com/oauth/authentication.html
