@@ -4,6 +4,7 @@ class QuickBooksTest < Test::Unit::TestCase
   include CommStub
 
   def setup
+    # update constructor to build new test gateway for OAuth 2.0
     @gateway = QuickbooksGateway.new(
       consumer_key: 'consumer_key',
       consumer_secret: 'consumer_secret',
@@ -24,6 +25,7 @@ class QuickBooksTest < Test::Unit::TestCase
     @authorization = 'ECZ7U0SO423E'
   end
 
+  # run all of the below test for v1 and for v2
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     response = @gateway.purchase(@amount, @credit_card, @options)
