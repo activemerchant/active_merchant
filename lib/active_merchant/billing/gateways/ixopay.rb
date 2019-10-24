@@ -1,3 +1,5 @@
+require 'nokogiri'
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class IxopayGateway < Gateway
@@ -18,7 +20,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, payment_method, options={})
-        commit('purchase', build_purchase_request(money, payment_method, options), options)
+        request = build_xml_request do |xml|
+          add_card_data(xml, payment_method)
+          add_debit(xml, money, options)
+        end
+
+        commit(request)
       end
 
       def authorize(money, payment_method, options={})
@@ -78,31 +85,23 @@ module ActiveMerchant #:nodoc:
         Base64.encode64(hmac).delete("\n")
       end
 
-      def parse(action, xml)
-        parse_element({:action => action}, REXML::Document.new(xml))
+      def parse(body)
+        xml = Nokogiri::XML(body)
+        response = Hash.from_xml(xml.to_s)['result']
+
+        response.deep_transform_keys(&:underscore).transform_keys(&:to_sym)
       end
 
-      # todo
-      # This generic method appears in a number of gateways that parse XML.
-      # In the future, we should investigate finding a library method to
-      # drop in, or factoring it out to a module or base class.
-      def parse_element(raw, node)
-        node_name = node.name.underscore
-
-        node.attributes.each do |k, v|
-          raw["#{node_name}_#{k.underscore}".to_sym] = v
+      def build_xml_request
+        builder = Nokogiri::XML::Builder.new(encoding: 'UTF-8') do |xml|
+          xml.transactionWithCard 'xmlns' => 'http://secure.ixopay.com/Schema/V2/TransactionWithCard' do
+            xml.username @options[:username]
+            xml.password Digest::SHA1.hexdigest(@options[:password])
+            yield(xml)
+          end
         end
 
-        if node.has_elements?
-          raw[node_name.to_sym] = true unless node.name.blank?
-          node.elements.each { |e| parse_element(raw, e) }
-        elsif node.children.count > 1
-          raw[node_name.to_sym] = node.children.join(' ').strip
-        else
-          raw[node_name.to_sym] = node.text unless node.text.nil?
-        end
-
-        raw
+        builder.to_xml
       end
 
       def build_purchase_request(money, payment_method, options)
@@ -193,16 +192,16 @@ module ActiveMerchant #:nodoc:
         SecureRandom.uuid
       end
 
-      def commit(action, request, options={})
+      def commit(request)
         url = (test? ? test_url : live_url)
 
         begin
           raw_response = ssl_post(url, request, headers(request))
         rescue StandardError => error
-          return response_from_request_error(action, error)
+          return response_from_request_error(error)
         end
 
-        response = parse(action, raw_response)
+        response = parse(raw_response)
 
         Response.new(
           success_from(response),
@@ -214,8 +213,8 @@ module ActiveMerchant #:nodoc:
         )
       end
 
-      def response_from_request_error(action, error)
-        response = parse(action, error.response.body)
+      def response_from_request_error(error)
+        response = parse(error.response.body)
 
         Response.new(
           success_from(response),
@@ -232,7 +231,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        response[:message] || response[:return_type]
+        response.dig(:errors, 'error', 'message') || response[:return_type]
       end
 
       def authorization_from(response)
@@ -241,7 +240,7 @@ module ActiveMerchant #:nodoc:
 
       def error_code_from(response)
         unless success_from(response)
-          response[:code]
+          response.dig(:errors, 'error', 'code')
         end
       end
     end
