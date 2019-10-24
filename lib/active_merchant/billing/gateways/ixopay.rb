@@ -1,3 +1,5 @@
+require 'nokogiri'
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class IxopayGateway < Gateway
@@ -18,7 +20,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, payment_method, options={})
-        commit('purchase', build_purchase_request(money, payment_method, options), options)
+        request = build_xml_request do |xml|
+          add_card_data(xml, payment_method)
+          add_debit(xml, money, options)
+	end
+        commit(request)
       end
 
       def authorize(money, payment_method, options={})
@@ -58,63 +64,23 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def headers(xml)
-        timestamp = Time.now.httpdate
-        signature = generate_signature('POST', xml, timestamp)
-
-        {
-          'Authorization' => "Gateway #{options[:api_key]}:#{signature}",
-          'Date' => timestamp,
-          'Content-Type' => 'text/xml; charset=utf-8'
-        }
+      def parse(body)
+        xml = Nokogiri::XML(body)
+	response = Hash.from_xml(xml.to_s)["result"]
+	response.deep_transform_keys { |key| key.underscore }
+	  .transform_keys { |key| key.to_sym }
       end
 
-      def generate_signature(http_method, xml, timestamp)
-        content_type = 'text/xml; charset=utf-8'
-        message = "#{http_method}\n#{Digest::MD5.hexdigest(xml)}\n#{content_type}\n#{timestamp}\n\n/transaction"
-        digest = OpenSSL::Digest.new('sha512')
-        hmac = OpenSSL::HMAC.digest(digest, @secret, message)
-
-        Base64.encode64(hmac).delete("\n")
-      end
-
-      def parse(action, xml)
-        parse_element({:action => action}, REXML::Document.new(xml))
-      end
-
-      # todo
-      # This generic method appears in a number of gateways that parse XML.
-      # In the future, we should investigate finding a library method to
-      # drop in, or factoring it out to a module or base class.
-      def parse_element(raw, node)
-        node_name = node.name.underscore
-
-        node.attributes.each do |k, v|
-          raw["#{node_name}_#{k.underscore}".to_sym] = v
-        end
-
-        if node.has_elements?
-          raw[node_name.to_sym] = true unless node.name.blank?
-          node.elements.each { |e| parse_element(raw, e) }
-        elsif node.children.count > 1
-          raw[node_name.to_sym] = node.children.join(' ').strip
-        else
-          raw[node_name.to_sym] = node.text unless node.text.nil?
-        end
-
-        raw
-      end
-
-      def build_purchase_request(money, payment_method, options)
-        xml = Builder::XmlMarkup.new(indent: 2)
-
-        xml.transactionWithCard 'xmlns' => 'http://secure.ixopay.com/Schema/V2/TransactionWithCard' do
+      def build_xml_request
+        builder = Nokogiri::XML::Builder.new(encoding: 'UTF-8') do |xml|
+          xml.transactionWithCard 'xmlns' => 'http://secure.ixopay.com/Schema/V2/TransactionWithCard' do
           xml.username @options[:username]
           xml.password Digest::SHA1.hexdigest(@options[:password])
-
-          add_card_data(xml, payment_method)
-          add_debit(xml, money, options)
+            yield(xml)
+          end
         end
+
+        builder.to_xml
       end
 
       def add_card_data(xml, payment_method)
@@ -193,16 +159,11 @@ module ActiveMerchant #:nodoc:
         SecureRandom.uuid
       end
 
-      def commit(action, request, options={})
+      def commit(request)
         url = (test? ? test_url : live_url)
 
-        begin
-          raw_response = ssl_post(url, request, headers(request))
-        rescue StandardError => error
-          return response_from_request_error(action, error)
-        end
-
-        response = parse(action, raw_response)
+        raw_response = ssl_post(url, request, headers(request))
+        response = parse(raw_response)
 
         Response.new(
           success_from(response),
@@ -212,6 +173,26 @@ module ActiveMerchant #:nodoc:
           test: test?,
           error_code: error_code_from(response)
         )
+      end
+
+      def headers(xml)
+        timestamp = Time.now.httpdate
+        signature = generate_signature('POST', xml, timestamp)
+
+        {
+          'Authorization' => "Gateway #{options[:api_key]}:#{signature}",
+          'Date' => timestamp,
+          'Content-Type' => 'text/xml; charset=utf-8'
+        }
+      end
+
+      def generate_signature(http_method, xml, timestamp)
+        content_type = 'text/xml; charset=utf-8'
+        message = "#{http_method}\n#{Digest::MD5.hexdigest(xml)}\n#{content_type}\n#{timestamp}\n\n/transaction"
+        digest = OpenSSL::Digest.new('sha512')
+        hmac = OpenSSL::HMAC.digest(digest, @secret, message)
+
+        Base64.encode64(hmac).delete("\n")
       end
 
       def response_from_request_error(action, error)
@@ -232,16 +213,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        response[:message] || response[:return_type]
+        response.dig(:errors, 'error', 'message') || response[:return_type]
       end
 
       def authorization_from(response)
-        response[:reference_id] ? "#{response[:reference_id]}|#{response[:purchase_id]}" : nil
+        "#{response[:reference_id]}|#{response[:purchase_id]}"
       end
 
       def error_code_from(response)
         unless success_from(response)
-          response[:code]
+          response.dig(:errors, 'error', 'code')
         end
       end
     end
