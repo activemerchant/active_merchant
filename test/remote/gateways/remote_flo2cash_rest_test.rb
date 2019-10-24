@@ -14,6 +14,7 @@ class RemoteFlo2cashRestTest < Test::Unit::TestCase
     }
 
     @payment_options = {
+      payment_method_type: 'card',
       start_date: Date.today.next_month.to_s(:ymd),
       initial_date: Date.today.next_month.to_s(:ymd),
       amount: @amount,
@@ -23,7 +24,8 @@ class RemoteFlo2cashRestTest < Test::Unit::TestCase
       last_name: 'Doe',
       title: 'Mr.',
       address: address.merge({ state: 'VIC', country: 'NZ' }),
-      frequency: 'monthly'
+      frequency: 'monthly',
+      channel: 'vt'
     }
 
     skip_initial_payment = {
@@ -56,10 +58,17 @@ class RemoteFlo2cashRestTest < Test::Unit::TestCase
     assert_equal 'Card number is not valid', response.message
   end
 
-  def test_success_create_card_plan
+  def test_success_create_card_plan_with_card
+    response = @gateway.create_card_plan(@credit_card, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_success_create_card_plan_with_token
     store = @gateway.store(@credit_card, @auth_options)
     assert_success store
 
+    @options = @options.merge(payment_method_type: 'token')
     response = @gateway.create_card_plan(store.authorization, @options)
     assert_success response
     assert_equal 'Succeeded', response.message
@@ -69,17 +78,26 @@ class RemoteFlo2cashRestTest < Test::Unit::TestCase
     store = @gateway.store(@credit_card, @auth_options)
     assert_success store
 
-    response = @gateway.create_card_plan(store.authorization, @options_skip_initial_payment)
+    options = @options_skip_initial_payment.merge(payment_method_type: 'token')
+    response = @gateway.create_card_plan(store.authorization, options)
     assert_success response
     assert_equal 'Succeeded', response.message
   end
 
-  def test_fail_create_card_plan
+  def test_fail_create_card_plan_with_token
     store = @gateway.store(@credit_card, @auth_options)
     assert_success store
 
+    @options = @options.merge(payment_method_type: 'token')
     fail_options = @options.except(:frequency)
     response = @gateway.create_card_plan(store.authorization, fail_options)
+    assert_failure response
+    assert_equal 'Frequency can not be empty', response.message
+  end
+
+  def test_fail_create_card_plan_with_credit_card
+    fail_options = @options.except(:frequency)
+    response = @gateway.create_card_plan(@credit_card, fail_options)
     assert_failure response
     assert_equal 'Frequency can not be empty', response.message
   end
@@ -90,6 +108,7 @@ class RemoteFlo2cashRestTest < Test::Unit::TestCase
     assert_success store
 
     # Create an active Card Plan
+    @options = @options.merge(payment_method_type: 'token')
     card_plan = @gateway.create_card_plan(store.authorization, @options)
     assert_success card_plan
     assert_equal 'Succeeded', card_plan.message
@@ -107,6 +126,7 @@ class RemoteFlo2cashRestTest < Test::Unit::TestCase
     assert_success store
 
     # Create an active Card Plan
+    @options = @options.merge(payment_method_type: 'token')
     card_plan = @gateway.create_card_plan(store.authorization, @options)
     assert_success card_plan
     assert_equal 'Succeeded', card_plan.message
@@ -124,8 +144,7 @@ class RemoteFlo2cashRestTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_credit_card
-    options = @options.merge(@auth_options)
-    response = @gateway.purchase(@amount, @credit_card, options)
+    response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
   end
 
@@ -133,6 +152,7 @@ class RemoteFlo2cashRestTest < Test::Unit::TestCase
     store = @gateway.store(@credit_card, @auth_options)
     assert_success store
 
+    @options = @options.merge(payment_method_type: 'token')
     response = @gateway.purchase(@amount, store.authorization, @options)
     assert_success response
   end

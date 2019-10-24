@@ -16,6 +16,7 @@ class Flo2cashRestTest < Test::Unit::TestCase
     @amount = 100
 
     @options = {
+      payment_method_type: 'token',
       order_id: '1',
       billing_address: address,
       description: 'Store Purchase',
