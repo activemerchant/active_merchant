@@ -104,18 +104,6 @@ module ActiveMerchant #:nodoc:
         builder.to_xml
       end
 
-      def build_purchase_request(money, payment_method, options)
-        xml = Builder::XmlMarkup.new(indent: 2)
-
-        xml.transactionWithCard 'xmlns' => 'http://secure.ixopay.com/Schema/V2/TransactionWithCard' do
-          xml.username @options[:username]
-          xml.password Digest::SHA1.hexdigest(@options[:password])
-
-          add_card_data(xml, payment_method)
-          add_debit(xml, money, options)
-        end
-      end
-
       def add_card_data(xml, payment_method)
         xml.cardData do
           xml.cardHolder      payment_method.name
