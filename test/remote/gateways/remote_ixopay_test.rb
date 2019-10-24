@@ -42,10 +42,11 @@ class RemoteIxopayTest < Test::Unit::TestCase
     assert_failure response
     assert_equal 'The transaction was declined', response.message
     assert_equal '2003', response.params['code']
+    assert_equal '2003', response.error_code
   end
 
   def test_successful_authorize_and_capture
-    omit "Not yet implemented"
+    omit 'Not yet implemented'
 
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
@@ -56,7 +57,7 @@ class RemoteIxopayTest < Test::Unit::TestCase
   end
 
   def test_failed_authorize
-    omit "Not yet implemented"
+    omit 'Not yet implemented'
 
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
@@ -64,7 +65,7 @@ class RemoteIxopayTest < Test::Unit::TestCase
   end
 
   def test_partial_capture
-    omit "Not yet implemented"
+    omit 'Not yet implemented'
 
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
@@ -74,7 +75,7 @@ class RemoteIxopayTest < Test::Unit::TestCase
   end
 
   def test_failed_capture
-    omit "Not yet implemented"
+    omit 'Not yet implemented'
 
     response = @gateway.capture(@amount, '')
     assert_failure response
@@ -82,7 +83,7 @@ class RemoteIxopayTest < Test::Unit::TestCase
   end
 
   def test_successful_refund
-    omit "Not yet implemented"
+    omit 'Not yet implemented'
 
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
@@ -93,7 +94,7 @@ class RemoteIxopayTest < Test::Unit::TestCase
   end
 
   def test_partial_refund
-    omit "Not yet implemented"
+    omit 'Not yet implemented'
 
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
@@ -103,7 +104,7 @@ class RemoteIxopayTest < Test::Unit::TestCase
   end
 
   def test_failed_refund
-    omit "Not yet implemented"
+    omit 'Not yet implemented'
 
     response = @gateway.refund(@amount, '')
     assert_failure response
@@ -111,7 +112,7 @@ class RemoteIxopayTest < Test::Unit::TestCase
   end
 
   def test_successful_void
-    omit "Not yet implemented"
+    omit 'Not yet implemented'
 
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
@@ -122,7 +123,7 @@ class RemoteIxopayTest < Test::Unit::TestCase
   end
 
   def test_failed_void
-    omit "Not yet implemented"
+    omit 'Not yet implemented'
 
     response = @gateway.void('')
     assert_failure response
@@ -130,7 +131,7 @@ class RemoteIxopayTest < Test::Unit::TestCase
   end
 
   def test_successful_verify
-    omit "Not yet implemented"
+    omit 'Not yet implemented'
 
     response = @gateway.verify(@credit_card, @options)
     assert_success response
@@ -138,7 +139,7 @@ class RemoteIxopayTest < Test::Unit::TestCase
   end
 
   def test_failed_verify
-    omit "Not yet implemented"
+    omit 'Not yet implemented'
 
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
@@ -146,7 +147,7 @@ class RemoteIxopayTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    omit "Not yet implemented"
+    omit 'Not yet implemented'
 
     gateway = IxopayGateway.new(login: '', password: '')
 
@@ -156,7 +157,7 @@ class RemoteIxopayTest < Test::Unit::TestCase
   end
 
   def test_dump_transcript
-    omit "Not yet implemented"
+    omit 'Not yet implemented'
 
     # This test will run a purchase transaction on your gateway
     # and dump a transcript of the HTTP conversation so that
@@ -167,7 +168,7 @@ class RemoteIxopayTest < Test::Unit::TestCase
   end
 
   def test_transcript_scrubbing
-    omit "Not yet implemented"
+    omit 'Not yet implemented'
 
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card, @options)
