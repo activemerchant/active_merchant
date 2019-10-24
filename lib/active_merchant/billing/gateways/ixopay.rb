@@ -195,19 +195,6 @@ module ActiveMerchant #:nodoc:
         Base64.encode64(hmac).delete("\n")
       end
 
-      def response_from_request_error(action, error)
-        response = parse(action, error.response.body)
-
-        Response.new(
-          success_from(response),
-          message_from(response),
-          response,
-          authorization: authorization_from(response),
-          test: test?,
-          error_code: error_code_from(response)
-        )
-      end
-
       def success_from(response)
         response[:success] == 'true'
       end
