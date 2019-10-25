@@ -82,7 +82,7 @@ class IxopayTest < Test::Unit::TestCase
 
   def test_scrub
     assert @gateway.supports_scrubbing?
-    # assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
   private
@@ -95,19 +95,85 @@ class IxopayTest < Test::Unit::TestCase
   end
 
   def pre_scrubbed
-    #  %q(
-    #    Run the remote tests for this gateway, and then put the contents of transcript.log here.
-    #  )
+    <<-TRANSCRIPT
+      opening connection to secure.ixopay.com:443...
+      opened
+      starting SSL for secure.ixopay.com:443...
+      SSL established
+      <- "POST /transaction HTTP/1.1\r\nContent-Type: text/xml; charset=utf-8\r\nAuthorization: Gateway spreedly-integration-1:i8CtuPyY820sX8hvJuRbygSnotj+VibBxqFl9MoFLYdrwC91zxymCv3h72DZBkOYT05P/L1Ig5aQrPf8SdOWtw==\r\nDate: Fri, 18 Oct 2019 19:24:53 GMT\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: secure.ixopay.com\r\nContent-Length: 1717\r\n\r\n"
+      <- "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<transactionWithCard xmlns=\"http://secure.ixopay.com/Schema/V2/TransactionWithCard\">\n  <username>spreedly-dev-api</username>\n  <password>834ab26f399def0fea3e444d6cecbf6c61230e09</password>\n  <cardData>\n    <cardHolder>Longbob Longsen</cardHolder>\n    <pan>4111111111111111</pan>\n    <cvv>123</cvv>\n    <expirationMonth>09</expirationMonth>\n    <expirationYear>2020</expirationYear>\n  </cardData>\n  <debit>\n    <transactionId>13454623-e012-4f77-b9e7-c9536964f186</transactionId>\n    <customer>\n      <firstName>Jim</firstName>\n      <lastName>Smith</lastName>\n      <billingAddress1>456 My Street</billingAddress1>\n      <billingAddress2>Apt 1</billingAddress2>\n      <billingCity>Ottawa</billingCity>\n      <billingPostcode>K1C2N6</billingPostcode>\n      <billingState>ON</billingState>\n      <billingCountry>CA</billingCountry>\n      <billingPhone>(555)555-5555</billingPhone>\n      <shippingFirstName>Jim</shippingFirstName>\n      <shippingLastName>Smith</shippingLastName>\n      <shippingCompany>Widgets Inc</shippingCompany>\n      <shippingAddress1>456 My Street</shippingAddress1>\n      <shippingAddress2>Apt 1</shippingAddress2>\n      <shippingCity>Ottawa</shippingCity>\n      <shippingPostcode>K1C2N6</shippingPostcode>\n      <shippingState>ON</shippingState>\n      <shippingCountry>CA</shippingCountry>\n      <shippingPhone>(555)555-5555</shippingPhone>\n      <company>Widgets Inc</company>\n      <email>test@example.com</email>\n      <ipAddress>192.168.1.1</ipAddress>\n    </customer>\n    <amount>100</amount>\n    <currency>EUR</currency>\n    <description>Store Purchase</description>\n    <callbackUrl>http://example.com</callbackUrl>\n  </debit>\n</transactionWithCard>\n"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Date: Fri, 18 Oct 2019 19:24:55 GMT\r\n"
+      -> "Content-Type: text/html; charset=UTF-8\r\n"
+      -> "Transfer-Encoding: chunked\r\n"
+      -> "Connection: close\r\n"
+      -> "Set-Cookie: __cfduid=db8efa44225d95d93942c576b8f53feb31571426693; expires=Sat, 17-Oct-20 19:24:53 GMT; path=/; domain=.ixopay.com; HttpOnly\r\n"
+      -> "5: Content-Type: text/xml; charset=UTF-8\r\n"
+      -> "Cache-Control: no-cache\r\n"
+      -> "Strict-Transport-Security: max-age=15552000; includeSubDomains; preload\r\n"
+      -> "X-Content-Type-Options: nosniff\r\n"
+      -> "X-Server: vau-prod-webfe-esh-02\r\n"
+      -> "CF-Cache-Status: DYNAMIC\r\n"
+      -> "Expect-CT: max-age=604800, report-uri=\"https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct\"\r\n"
+      -> "Server: cloudflare\r\n"
+      -> "CF-RAY: 527ce522ab3b9f7c-IAD\r\n"
+      -> "Content-Encoding: gzip\r\n"
+      -> "\r\n"
+      -> "18c\r\n"
+      reading 396 bytes...
+      -> "\x1F\x8B\b\x00\x00\x00\x00\x00\x00\x03l\x92Mo\xDB0\f\x86\xEF\xF9\x15\x82\xEF\x8D\xFC\x91\xA6\xC9 \xAB\x87eE\x03\xAC=4\xC3\x80\x1De\x89\x89\x85\xD9\x92AI\x85\xFD\xEF\v\xD9q\x96\xB4\xD3E\xE0\xCB\x87/EB\xEC\xB1o\e\xF2\x0E\xE8\xB45e\x92-\xD3\x84\x80\x91Vis*\x93\xE0\x8Fw\x9B\xE4\x91/\x18\x82\v\x8D'}\xDB\x18W&\xB5\xF7\xDD7J\x1D\xC8\x80\xB0\xD4\xBD\xED\xC4\xB0\x94\xB6\xA5\aYC+\xE8\xEF\x9C\xBE\x8D\x05\t_\x10\xC2\\\x90\x12\x9C\xE3\x1E\x030:G1\x83p\x04\x04#a\xAF\xF8\xAA(\xF2j\x9D\x17b\xBD\x11\x0F\xD5}Q\xACW\x0F\x8C^\x13\xB1\xA2\v(k\xE1b\x98\xA7\xD96K\xB3\xCD\xDD\xFF+\xAF\xC8\xA9\x95\x0Fh~\r\x1D\xF0\xA7\xFD\xEB\xFE\xF0\xFCc\x17\xDD/\xE2h.\x86\x16\x8C\x7F\x01_[\xC5\xBF#(\xED\xA5@\xC5\xE8m\xE6\x9F\xDFNxA\xFC\xD0A\x99\xC8\v\x1E\xC5qrB\xD8\xAD:\x89\x84\xB0X\xC2\xDF\xB5\x13\x8C\xFAs\xF7\t\x17\xA8\x9Em\xA3\x00\xF9OkN\x95\xADH\xBC\x1D\x18F\xAFr3\x0E}\xA7qx\xB1\xC6\xD7<\xDD2z\x1D\xDF2\x7F@ \xCF\xD3<\x9D\xA1Q\x98\x99\xA3F\xE7\x0F\xBA\xDF\xE9\x93\xF6\x8E\xAF\xB2x\x18\xFD$\xCFt#\x9C\x7F\xB2\x01\xCF\xF2\xC4~\x12\xA7\xE9\xE9\xD7\xF1\xE7\xA5_b\xE8=\x8Aq\x8F\x7Fa(\x13):\x1F\x10\xF6*\xE1\xF7J\x88,\xDB\xAC\xB7\xC5\x16\xAA\xF8\xEE3\xC8\x17\xD1$\xFE/\xBE\xF8\x00\x00\x00\xFF\xFF\x03\x00\x0F\x10\x82\b\xC1\x02\x00\x00"
+      read 396 bytes
+      reading 2 bytes...
+      -> "\r\n"
+      read 2 bytes
+      -> "0\r\n"
+      -> "\r\n"
+      Conn close
+    TRANSCRIPT
   end
 
   def post_scrubbed
-    #  %q(
-    #    Put the scrubbed contents of transcript.log here after implementing your scrubbing function.
-    #    Things to scrub:
-    #      - Credit card number
-    #      - CVV
-    #      - Sensitive authentication details
-    #  )
+    transcript = <<-TRANSCRIPT
+      opening connection to secure.ixopay.com:443...
+      opened
+      starting SSL for secure.ixopay.com:443...
+      SSL established
+      <- "POST /transaction HTTP/1.1\r\nContent-Type: text/xml; charset=utf-8\r\nAuthorization: Gateway [FILTERED]:i8CtuPyY820sX8hvJuRbygSnotj+VibBxqFl9MoFLYdrwC91zxymCv3h72DZBkOYT05P/L1Ig5aQrPf8SdOWtw==\r\nDate: Fri, 18 Oct 2019 19:24:53 GMT\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: secure.ixopay.com\r\nContent-Length: 1717\r\n\r\n"
+      <- "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<transactionWithCard xmlns=\"http://secure.ixopay.com/Schema/V2/TransactionWithCard\">\n  <username>[FILTERED]</username>\n  <password>[FILTERED]</password>\n  <cardData>\n    <cardHolder>Longbob Longsen</cardHolder>\n    <pan>[FILTERED]</pan>\n    <cvv>[FILTERED]</cvv>\n    <expirationMonth>09</expirationMonth>\n    <expirationYear>2020</expirationYear>\n  </cardData>\n  <debit>\n    <transactionId>13454623-e012-4f77-b9e7-c9536964f186</transactionId>\n    <customer>\n      <firstName>Jim</firstName>\n      <lastName>Smith</lastName>\n      <billingAddress1>456 My Street</billingAddress1>\n      <billingAddress2>Apt 1</billingAddress2>\n      <billingCity>Ottawa</billingCity>\n      <billingPostcode>K1C2N6</billingPostcode>\n      <billingState>ON</billingState>\n      <billingCountry>CA</billingCountry>\n      <billingPhone>(555)555-5555</billingPhone>\n      <shippingFirstName>Jim</shippingFirstName>\n      <shippingLastName>Smith</shippingLastName>\n      <shippingCompany>Widgets Inc</shippingCompany>\n      <shippingAddress1>456 My Street</shippingAddress1>\n      <shippingAddress2>Apt 1</shippingAddress2>\n      <shippingCity>Ottawa</shippingCity>\n      <shippingPostcode>K1C2N6</shippingPostcode>\n      <shippingState>ON</shippingState>\n      <shippingCountry>CA</shippingCountry>\n      <shippingPhone>(555)555-5555</shippingPhone>\n      <company>Widgets Inc</company>\n      <email>test@example.com</email>\n      <ipAddress>192.168.1.1</ipAddress>\n    </customer>\n    <amount>100</amount>\n    <currency>EUR</currency>\n    <description>Store Purchase</description>\n    <callbackUrl>http://example.com</callbackUrl>\n  </debit>\n</transactionWithCard>\n"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Date: Fri, 18 Oct 2019 19:24:55 GMT\r\n"
+      -> "Content-Type: text/html; charset=UTF-8\r\n"
+      -> "Transfer-Encoding: chunked\r\n"
+      -> "Connection: close\r\n"
+      -> "Set-Cookie: __cfduid=db8efa44225d95d93942c576b8f53feb31571426693; expires=Sat, 17-Oct-20 19:24:53 GMT; path=/; domain=.ixopay.com; HttpOnly\r\n"
+      -> "5: Content-Type: text/xml; charset=UTF-8\r\n"
+      -> "Cache-Control: no-cache\r\n"
+      -> "Strict-Transport-Security: max-age=15552000; includeSubDomains; preload\r\n"
+      -> "X-Content-Type-Options: nosniff\r\n"
+      -> "X-Server: vau-prod-webfe-esh-02\r\n"
+      -> "CF-Cache-Status: DYNAMIC\r\n"
+      -> "Expect-CT: max-age=604800, report-uri=\"https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct\"\r\n"
+      -> "Server: cloudflare\r\n"
+      -> "CF-RAY: 527ce522ab3b9f7c-IAD\r\n"
+      -> "Content-Encoding: gzip\r\n"
+      -> "\r\n"
+      -> "18c\r\n"
+      reading 396 bytes...
+      -> "\x1F\x8B\b\x00\x00\x00\x00\x00\x00\x03l\x92Mo\xDB0\f\x86\xEF\xF9\x15\x82\xEF\x8D\xFC\x91\xA6\xC9 \xAB\x87eE\x03\xAC=4\xC3\x80\x1De\x89\x89\x85\xD9\x92AI\x85\xFD\xEF\v\xD9q\x96\xB4\xD3E\xE0\xCB\x87/EB\xEC\xB1o\e\xF2\x0E\xE8\xB45e\x92-\xD3\x84\x80\x91Vis*\x93\xE0\x8Fw\x9B\xE4\x91/\x18\x82\v\x8D'}\xDB\x18W&\xB5\xF7\xDD7J\x1D\xC8\x80\xB0\xD4\xBD\xED\xC4\xB0\x94\xB6\xA5\aYC+\xE8\xEF\x9C\xBE\x8D\x05\t_\x10\xC2\\\x90\x12\x9C\xE3\x1E\x030:G1\x83p\x04\x04#a\xAF\xF8\xAA(\xF2j\x9D\x17b\xBD\x11\x0F\xD5}Q\xACW\x0F\x8C^\x13\xB1\xA2\v(k\xE1b\x98\xA7\xD96K\xB3\xCD\xDD\xFF+\xAF\xC8\xA9\x95\x0Fh~\r\x1D\xF0\xA7\xFD\xEB\xFE\xF0\xFCc\x17\xDD/\xE2h.\x86\x16\x8C\x7F\x01_[\xC5\xBF#(\xED\xA5@\xC5\xE8m\xE6\x9F\xDFNxA\xFC\xD0A\x99\xC8\v\x1E\xC5qrB\xD8\xAD:\x89\x84\xB0X\xC2\xDF\xB5\x13\x8C\xFAs\xF7\t\x17\xA8\x9Em\xA3\x00\xF9OkN\x95\xADH\xBC\x1D\x18F\xAFr3\x0E}\xA7qx\xB1\xC6\xD7<\xDD2z\x1D\xDF2\x7F@ \xCF\xD3<\x9D\xA1Q\x98\x99\xA3F\xE7\x0F\xBA\xDF\xE9\x93\xF6\x8E\xAF\xB2x\x18\xFD$\xCFt#\x9C\x7F\xB2\x01\xCF\xF2\xC4~\x12\xA7\xE9\xE9\xD7\xF1\xE7\xA5_b\xE8=\x8Aq\x8F\x7Fa(\x13):\x1F\x10\xF6*\xE1\xF7J\x88,\xDB\xAC\xB7\xC5\x16\xAA\xF8\xEE3\xC8\x17\xD1$\xFE/\xBE\xF8\x00\x00\x00\xFF\xFF\x03\x00\x0F\x10\x82\b\xC1\x02\x00\x00"
+      read 396 bytes
+      reading 2 bytes...
+      -> "\r\n"
+      read 2 bytes
+      -> "0\r\n"
+      -> "\r\n"
+      Conn close
+    TRANSCRIPT
+
+    remove_invalid_utf_8_byte_sequences(transcript)
+  end
+
+  def remove_invalid_utf_8_byte_sequences(text)
+    text.encode('UTF-8', 'binary', invalid: :replace, undef: :replace, replace: '')
   end
 
   def successful_purchase_response

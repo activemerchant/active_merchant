@@ -63,10 +63,21 @@ module ActiveMerchant #:nodoc:
       end
 
       def scrub(transcript)
-        transcript
+        clean_transcript = remove_invalid_utf_8_byte_sequences(transcript)
+
+        clean_transcript.
+          gsub(%r((Authorization: Gateway )(.*)(:)), '\1[FILTERED]\3').
+          gsub(%r((<username>)(.*)(</username>)), '\1[FILTERED]\3').
+          gsub(%r((<password>)(.*)(</password>)), '\1[FILTERED]\3').
+          gsub(%r((<pan>)(.*)(</pan>)), '\1[FILTERED]\3').
+          gsub(%r((<cvv>)\d+(</cvv>)), '\1[FILTERED]\2')
       end
 
       private
+
+      def remove_invalid_utf_8_byte_sequences(text)
+        text.encode('UTF-8', 'binary', invalid: :replace, undef: :replace, replace: '')
+      end
 
       def headers(xml)
         timestamp = Time.now.httpdate

@@ -158,23 +158,11 @@ class RemoteIxopayTest < Test::Unit::TestCase
     assert_match %r{REPLACE WITH FAILED LOGIN MESSAGE}, response.message
   end
 
-  def test_dump_transcript
-    omit 'Not yet implemented'
-
-    # This test will run a purchase transaction on your gateway
-    # and dump a transcript of the HTTP conversation so that
-    # you can use that transcript as a reference while
-    # implementing your scrubbing logic.  You can delete
-    # this helper after completing your scrub implementation.
-    dump_transcript_and_fail(@gateway, @amount, @credit_card, @options)
-  end
-
   def test_transcript_scrubbing
-    omit 'Not yet implemented'
-
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card, @options)
     end
+
     transcript = @gateway.scrub(transcript)
 
     assert_scrubbed(@credit_card.number, transcript)
