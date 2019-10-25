@@ -159,13 +159,13 @@ class RemoteFatZebraTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_3DS_information
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:cavv => 'MDRjN2MxZTAxYjllNTBkNmM2MTA=', :xid => 'MGVmMmNlMzI4NjAyOWU2ZDgwNTQ=', :sli => '05'))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:extra => { :cavv => 'MDRjN2MxZTAxYjllNTBkNmM2MTA=', :xid => 'MGVmMmNlMzI4NjAyOWU2ZDgwNTQ=', :sli => '05' }))
     assert_success response
     assert_equal 'Approved', response.message
   end
 
   def test_failed_purchase_with_incomplete_3DS_information
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:cavv => 'MDRjN2MxZTAxYjllNTBkNmM2MTA=', :sli => '05'))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:extra => { :cavv => 'MDRjN2MxZTAxYjllNTBkNmM2MTA=', :sli => '05' }))
     assert_failure response
     assert_match %r{Extra/xid is required for SLI 05}, response.message
   end

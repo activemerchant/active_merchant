@@ -122,7 +122,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_extra_options(post, options)
-        extra = {}
+        extra = options.fetch(:extra, {})
         extra[:ecm] = '32' if options[:recurring]
         extra[:cavv] = options[:cavv] if options[:cavv]
         extra[:xid] = options[:xid] if options[:xid]
