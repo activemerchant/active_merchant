@@ -118,7 +118,6 @@ The [ActiveMerchant Wiki](https://github.com/activemerchant/active_merchant/wiki
 * [Conekta](https://conekta.io) - MX
 * [CyberSource](http://www.cybersource.com) - US, BR, CA, CN, DK, FI, FR, DE, JP, MX, NO, SE, GB, SG
 * [DIBS](http://www.dibspayment.com/) - US, FI, NO, SE, GB
-* [DataCash](http://www.datacash.com/) - GB
 * [Efsnet](http://www.concordefsnet.com/) - US
 * [Elavon MyVirtualMerchant](http://www.elavon.com/) - US, CA
 * [ePay](http://epay.dk/) - DK, SE, NO
@@ -148,6 +147,7 @@ The [ActiveMerchant Wiki](https://github.com/activemerchant/active_merchant/wiki
 * [Komoju](http://www.komoju.com/) - JP
 * [LinkPoint](http://www.linkpoint.com/) - US
 * [Litle & Co.](http://www.litle.com/) - US
+* [Mastercard (formerly DataCash, MiGS and TNSPay)](https://www.mastercard.com/gateway.html) - AU, AE, BD, BN, EG, HK, ID, IN, JO, KW, LB, LK, MU, MV, MY, NZ, OM, PH, QA, SA, SG, TT, VN
 * [maxiPago!](http://www.maxipago.com/) - BR
 * [Merchant e-Solutions](http://www.merchante-solutions.com/) - US
 * [Merchant One Gateway](http://merchantone.com/) - US
@@ -155,7 +155,6 @@ The [ActiveMerchant Wiki](https://github.com/activemerchant/active_merchant/wiki
 * [MerchantWarrior](http://www.merchantwarrior.com/) - AU
 * [Mercury](http://www.mercurypay.com) - US, CA
 * [Metrics Global](http://www.metricsglobal.com) - US
-* [MasterCard Internet Gateway Service (MiGS)](http://mastercard.com/mastercardsps) - AU, AE, BD, BN, EG, HK, ID, IN, JO, KW, LB, LK, MU, MV, MY, NZ, OM, PH, QA, SA, SG, TT, VN
 * [Modern Payments](http://www.modpay.com) - US
 * [MONEI](http://www.monei.net/) - AD, AT, BE, BG, CA, CH, CY, CZ, DE, DK, EE, ES, FI, FO, FR, GB, GI, GR, HU, IE, IL, IS, IT, LI, LT, LU, LV, MT, NL, NO, PL, PT, RO, SE, SI, SK, TR, US, VA
 * [Moneris](http://www.moneris.com/) - CA
@@ -221,7 +220,6 @@ The [ActiveMerchant Wiki](https://github.com/activemerchant/active_merchant/wiki
 * [Spreedly](https://spreedly.com) - AD, AE, AT, AU, BD, BE, BG, BN, CA, CH, CY, CZ, DE, DK, EE, EG, ES, FI, FR, GB, GI, GR, HK, HU, ID, IE, IL, IM, IN, IS, IT, JO, KW, LB, LI, LK, LT, LU, LV, MC, MT, MU, MV, MX, MY, NL, NO, NZ, OM, PH, PL, PT, QA, RO, SA, SE, SG, SI, SK, SM, TR, TT, UM, US, VA, VN, ZA
 * [Stripe](https://stripe.com/) - AT, AU, BE, CA, CH, DE, DK, ES, FI, FR, GB, IE, IT, LU, NL, NO, SE, SG, US
 * [Swipe](https://www.swipehq.com/checkout) - CA, NZ
-* [TNS](http://www.tnsi.com/) - AR, AU, BR, FR, DE, HK, MX, NZ, SG, GB, US
 * [Transact Pro](https://www.transactpro.lv/business/online-payments-acceptance) - US
 * [TransFirst](http://www.transfirst.com/) - US
 * [Transnational](http://www.tnbci.com/) - US

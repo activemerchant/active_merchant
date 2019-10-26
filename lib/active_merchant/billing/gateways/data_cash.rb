@@ -8,8 +8,8 @@ module ActiveMerchant
 
       self.supported_cardtypes = [ :visa, :master, :american_express, :discover, :diners_club, :jcb, :maestro ]
 
-      self.homepage_url = 'http://www.datacash.com/'
-      self.display_name = 'DataCash'
+      self.homepage_url = 'https://www.mastercard.com/gateway.html'
+      self.display_name = 'Mastercard (DataCash)'
 
       self.test_url = 'https://testserver.datacash.com/Transaction'
       self.live_url = 'https://mars.transaction.datacash.com/Transaction'

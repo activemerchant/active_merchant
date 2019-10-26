@@ -158,7 +158,7 @@ module ActiveMerchant #:nodoc:
       #
       # Below are links from the card providers with their requirements
       # visa:             http://usa.visa.com/personal/security/3-digit-security-code.jsp
-      # master:           http://www.mastercard.com/ca/merchant/en/getstarted/Anatomy_MasterCard.html
+      # master:           https://www.mastercard.us/en-us/merchants/get-support/merchant-learning-center/glossary.html#c
       # jcb:              http://www.jcbcard.com/security/info.html
       # diners_club:      http://www.dinersclub.com/assets/DinersClub_card_ID_features.pdf
       # discover:         https://www.discover.com/credit-cards/help-center/glossary.html
