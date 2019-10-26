@@ -167,7 +167,7 @@ class CitrusPayTest < Test::Unit::TestCase
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |method, endpoint, data, headers|
-      assert_match(/na-gateway.mastercard.com/, endpoint)
+      assert_match(/test-gateway.mastercard.com/, endpoint)
     end.respond_with(successful_capture_response)
 
     assert_success response
@@ -183,7 +183,7 @@ class CitrusPayTest < Test::Unit::TestCase
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |method, endpoint, data, headers|
-      assert_match(/ap-gateway.mastercard.com/, endpoint)
+      assert_match(/test-gateway.mastercard.com/, endpoint)
     end.respond_with(successful_capture_response)
 
     assert_success response
