@@ -8,13 +8,13 @@ module ActiveMerchant
       VERSION = '52'
 
       self.live_na_url = "https://na-gateway.mastercard.com/api/rest/version/#{VERSION}/"
-      self.test_na_url = "https://test-gateway.mastercard.com/api/rest/version/#{VERSION}/"
+      self.test_na_url = "https://na-gateway.mastercard.com/api/rest/version/#{VERSION}/"
 
       self.live_ap_url = "https://ap-gateway.mastercard.com/api/rest/version/#{VERSION}/"
-      self.test_ap_url = "https://test-gateway.mastercard.com/api/rest/version/#{VERSION}/"
+      self.test_ap_url = "https://ap-gateway.mastercard.com/api/rest/version/#{VERSION}/"
 
       self.live_eu_url = "https://eu-gateway.mastercard.com/api/rest/version/#{VERSION}/"
-      self.test_eu_url = "https://test-gateway.mastercard.com/api/rest/version/#{VERSION}/"
+      self.test_eu_url = "https://eu-gateway.mastercard.com/api/rest/version/#{VERSION}/"
 
       self.display_name = 'Mastercard (formerly TNSPay)'
       self.homepage_url = 'https://www.mastercard.com/gateway.html'
