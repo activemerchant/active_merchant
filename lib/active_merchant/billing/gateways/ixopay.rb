@@ -195,6 +195,7 @@ module ActiveMerchant #:nodoc:
       def commit(request)
         url = (test? ? test_url : live_url)
 
+        # ssl_post raises an exception for any non-2xx HTTP status from the gateway
         begin
           raw_response = ssl_post(url, request, headers(request))
         rescue StandardError => error

@@ -43,6 +43,16 @@ class RemoteIxopayTest < Test::Unit::TestCase
     assert_equal '2003', response.error_code
   end
 
+  def test_failed_authentication
+    gateway = IxopayGateway.new(username: 'baduser', password: 'badpass', secret: 'badsecret')
+    response = gateway.purchase(@amount, @credit_card, {})
+
+    assert_failure response
+
+    assert_equal 'Invalid Signature: Invalid authorization header', response.message
+    assert_equal '1004', response.error_code
+  end
+
   def test_successful_authorize_and_capture
     omit 'Not yet implemented'
 
