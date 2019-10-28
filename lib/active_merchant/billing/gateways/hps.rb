@@ -274,11 +274,12 @@ module ActiveMerchant #:nodoc:
       def commit(action, &request)
         data = build_request(action, &request)
 
-        response = begin
-          parse(ssl_post((test? ? test_url : live_url), data, 'Content-Type' => 'text/xml'))
-        rescue ResponseError => e
-          parse(e.response.body)
-        end
+        response =
+          begin
+            parse(ssl_post((test? ? test_url : live_url), data, 'Content-Type' => 'text/xml'))
+          rescue ResponseError => e
+            parse(e.response.body)
+          end
 
         ActiveMerchant::Billing::Response.new(
           successful?(response),

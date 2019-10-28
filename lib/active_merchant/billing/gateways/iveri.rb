@@ -150,11 +150,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(post)
-        raw_response = begin
-          ssl_post(live_url, build_xml_envelope(post), headers(post))
-        rescue ActiveMerchant::ResponseError => e
-          e.response.body
-        end
+        raw_response =
+          begin
+            ssl_post(live_url, build_xml_envelope(post), headers(post))
+          rescue ActiveMerchant::ResponseError => e
+            e.response.body
+          end
 
         parsed = parse(raw_response)
         succeeded = success_from(parsed)

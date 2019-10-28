@@ -309,17 +309,18 @@ module ActiveMerchant #:nodoc:
         add_authentication(post)
         post = flatten_hash(post)
 
-        response = begin
-          parse(
-            ssl_post(
-              url,
-              post.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&'),
-              'Content-Type' => 'application/x-www-form-urlencoded;charset=UTF-8'
+        response =
+          begin
+            parse(
+              ssl_post(
+                url,
+                post.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&'),
+                'Content-Type' => 'application/x-www-form-urlencoded;charset=UTF-8'
+              )
             )
-          )
-        rescue ResponseError => e
-          parse(e.response.body)
-        end
+          rescue ResponseError => e
+            parse(e.response.body)
+          end
 
         success = success_from(response)
 

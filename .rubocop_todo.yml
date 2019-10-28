@@ -99,26 +99,6 @@ Layout/MultilineOperationIndentation:
     - 'test/unit/gateways/braintree_blue_test.rb'
     - 'test/unit/gateways/skip_jack_test.rb'
 
-# Offense count: 15
-# Cop supports --auto-correct.
-Layout/RescueEnsureAlignment:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/balanced.rb'
-    - 'lib/active_merchant/billing/gateways/clearhaus.rb'
-    - 'lib/active_merchant/billing/gateways/culqi.rb'
-    - 'lib/active_merchant/billing/gateways/eway_managed.rb'
-    - 'lib/active_merchant/billing/gateways/fat_zebra.rb'
-    - 'lib/active_merchant/billing/gateways/hps.rb'
-    - 'lib/active_merchant/billing/gateways/iveri.rb'
-    - 'lib/active_merchant/billing/gateways/kushki.rb'
-    - 'lib/active_merchant/billing/gateways/merchant_e_solutions.rb'
-    - 'lib/active_merchant/billing/gateways/netbanx.rb'
-    - 'lib/active_merchant/billing/gateways/opp.rb'
-    - 'lib/active_merchant/billing/gateways/orbital.rb'
-    - 'lib/active_merchant/billing/gateways/pay_junction_v2.rb'
-    - 'lib/active_merchant/billing/gateways/quickbooks.rb'
-    - 'lib/active_merchant/billing/gateways/trans_first_transaction_express.rb'
-
 # Offense count: 649
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle.

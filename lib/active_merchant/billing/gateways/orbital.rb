@@ -609,11 +609,12 @@ module ActiveMerchant #:nodoc:
         request = ->(url) { parse(ssl_post(url, order, headers)) }
 
         # Failover URL will be attempted in the event of a connection error
-        response = begin
-          request.call(remote_url)
-        rescue ConnectionError
-          request.call(remote_url(:secondary))
-        end
+        response =
+          begin
+            request.call(remote_url)
+          rescue ConnectionError
+            request.call(remote_url(:secondary))
+          end
 
         Response.new(success?(response, message_type), message_from(response), response,
           {

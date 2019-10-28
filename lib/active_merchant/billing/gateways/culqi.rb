@@ -208,11 +208,12 @@ module ActiveMerchant #:nodoc:
       }
 
       def commit(action, params)
-        response = begin
-          parse(ssl_post(url + ACTIONS[action], post_data(action, params), headers))
-        rescue ResponseError => e
-          parse(e.response.body)
-        end
+        response =
+          begin
+            parse(ssl_post(url + ACTIONS[action], post_data(action, params), headers))
+          rescue ResponseError => e
+            parse(e.response.body)
+          end
 
         success = success_from(response)
 

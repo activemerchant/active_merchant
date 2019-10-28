@@ -158,11 +158,12 @@ module ActiveMerchant #:nodoc:
         url = test? ? self.test_url : self.live_url
         parameters[:transaction_amount]  = amount(money) if money unless action == 'V'
 
-        response = begin
-          parse(ssl_post(url, post_data(action, parameters)))
-        rescue ActiveMerchant::ResponseError => e
-          { 'error_code' => '404',  'auth_response_text' => e.to_s }
-        end
+        response =
+          begin
+            parse(ssl_post(url, post_data(action, parameters)))
+          rescue ActiveMerchant::ResponseError => e
+            { 'error_code' => '404',  'auth_response_text' => e.to_s }
+          end
 
         Response.new(response['error_code'] == '000', message_from(response), response,
           :authorization => response['transaction_id'],

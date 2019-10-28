@@ -4,6 +4,7 @@
 * Redsys: Updates to parse method for non-3DS responses [britth] #3391
 * Rubocop: Style/IfUnlessModifier [nfarve] #3390
 * CyberSource: Send issuer data on capture [leila-alderman] #3404
+* Rubocop: Layout/RescueEnsureAlignment fix [leila-alderman] #3411
 
 == Version 1.100.0 (Oct 16, 2019)
 * Stripe: Restore non-auto capture behaviour for card present transactions [PatrickFang] #3258

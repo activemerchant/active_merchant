@@ -159,12 +159,13 @@ module ActiveMerchant #:nodoc:
           end
         end
 
-        response = begin
-          parse(ssl_post(url, body, headers))
-        rescue ResponseError => e
-          raise unless(e.response.code.to_s =~ /400/)
-          parse(e.response.body)
-        end
+        response =
+          begin
+            parse(ssl_post(url, body, headers))
+          rescue ResponseError => e
+            raise unless(e.response.code.to_s =~ /400/)
+            parse(e.response.body)
+          end
 
         Response.new(
           success_from(response),

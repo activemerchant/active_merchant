@@ -170,18 +170,19 @@ module ActiveMerchant #:nodoc:
         # The QuickBooks API returns HTTP 4xx on failed transactions, which causes a
         # ResponseError raise, so we have to inspect the response and discern between
         # a legitimate HTTP error and an actual gateway transactional error.
-        response = begin
-          case method
-          when :post
-            ssl_post(endpoint, post_data(body), headers(:post, endpoint))
-          when :get
-            ssl_request(:get, endpoint, nil, headers(:get, endpoint))
-          else
-            raise ArgumentError, "Invalid HTTP method: #{method}. Valid methods are :post and :get"
+        response =
+          begin
+            case method
+            when :post
+              ssl_post(endpoint, post_data(body), headers(:post, endpoint))
+            when :get
+              ssl_request(:get, endpoint, nil, headers(:get, endpoint))
+            else
+              raise ArgumentError, "Invalid HTTP method: #{method}. Valid methods are :post and :get"
+            end
+          rescue ResponseError => e
+            extract_response_body_or_raise(e)
           end
-        rescue ResponseError => e
-          extract_response_body_or_raise(e)
-        end
 
         response_object(response)
       end

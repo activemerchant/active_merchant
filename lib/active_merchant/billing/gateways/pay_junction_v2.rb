@@ -111,11 +111,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, params)
-        response = begin
-          parse(ssl_invoke(action, params))
-        rescue ResponseError => e
-          parse(e.response.body)
-        end
+        response =
+          begin
+            parse(ssl_invoke(action, params))
+          rescue ResponseError => e
+            parse(e.response.body)
+          end
 
         success = success_from(response)
         Response.new(

@@ -333,11 +333,12 @@ module ActiveMerchant #:nodoc:
       def commit(action, request)
         request = add_transaction_code_to_request(request, action)
 
-        raw_response = begin
-          ssl_post(url, request, headers)
-        rescue ActiveMerchant::ResponseError => e
-          e.response.body
-        end
+        raw_response =
+          begin
+            ssl_post(url, request, headers)
+          rescue ActiveMerchant::ResponseError => e
+            e.response.body
+          end
 
         response = parse(raw_response)
 
