@@ -67,7 +67,6 @@ module ActiveMerchant #:nodoc:
 
         clean_transcript.
           gsub(%r((Authorization: Gateway )(.*)(:)), '\1[FILTERED]\3').
-          gsub(%r((<username>)(.*)(</username>)), '\1[FILTERED]\3').
           gsub(%r((<password>)(.*)(</password>)), '\1[FILTERED]\3').
           gsub(%r((<pan>)(.*)(</pan>)), '\1[FILTERED]\3').
           gsub(%r((<cvv>)\d+(</cvv>)), '\1[FILTERED]\2')
