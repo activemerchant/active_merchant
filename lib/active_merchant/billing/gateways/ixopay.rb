@@ -39,8 +39,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(money, authorization, options={})
-        # todo
-        # commit('refund', build_refund_request(money, payment_method, options), options)
+        request = build_xml_request do |xml|
+          add_refund(xml, money, authorization)
+        end
+
+        commit(request)
       end
 
       def void(authorization, options={})
@@ -127,6 +130,15 @@ module ActiveMerchant #:nodoc:
           xml.currency    currency
           xml.description description
           xml.callbackUrl(options[:callback_url] || 'http://example.com')
+        end
+      end
+
+      def add_refund(xml, money, authorization)
+        xml.refund do
+          xml.transactionId           new_transaction_id
+          xml.referenceTransactionId  authorization&.split('|')&.first
+          xml.amount                  money
+          xml.currency                options[:currency] || currency(money)
         end
       end
 

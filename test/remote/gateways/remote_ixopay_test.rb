@@ -81,19 +81,15 @@ class RemoteIxopayTest < Test::Unit::TestCase
   end
 
   def test_successful_refund
-    omit 'Not yet implemented'
-
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
     assert refund = @gateway.refund(@amount, purchase.authorization)
     assert_success refund
-    assert_equal 'REPLACE WITH SUCCESSFUL REFUND MESSAGE', refund.message
+    assert_equal 'FINISHED', refund.message
   end
 
   def test_partial_refund
-    omit 'Not yet implemented'
-
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
@@ -102,11 +98,9 @@ class RemoteIxopayTest < Test::Unit::TestCase
   end
 
   def test_failed_refund
-    omit 'Not yet implemented'
-
-    response = @gateway.refund(@amount, '')
+    response = @gateway.refund(@amount, nil)
     assert_failure response
-    assert_equal 'REPLACE WITH FAILED REFUND MESSAGE', response.message
+    assert_equal 'Transaction of type "refund" requires a referenceTransactionId', response.message
   end
 
   def test_successful_void
