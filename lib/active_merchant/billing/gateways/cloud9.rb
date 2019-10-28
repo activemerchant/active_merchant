@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc: ALL
     #
     class Cloud9Gateway < Gateway
       self.test_url = 'https://testlink.c9pg.com:11911'
-      self.live_url = 'https://link.c9pg.com:11911'
+      self.live_url = 'https://linkmytime.c9pg.com:11911'
       self.default_currency = 'USD'
       self.display_name = 'Cloud9 Payment Gateway'
       self.homepage_url = 'http://cloud9paymentgateway.com'
@@ -442,7 +442,7 @@ module ActiveMerchant #:nodoc: ALL
       def api_request(action, endpoint, parameters = nil)
         raw_response = nil
         begin
-          raw_response = ssl_post(target_url(endpoint), post_data(action, parameters), headers(parameters))
+          raw_response = ssl_post(target_url(endpoint, parameters[:GMID]), post_data(action, parameters), headers(parameters))
           response = parse(raw_response)
         rescue ResponseError => e
           raw_response = e.response.body
@@ -503,10 +503,11 @@ module ActiveMerchant #:nodoc: ALL
         JSON.generate(post.merge(parameters))
       end
 
-      def target_url(endpoint)
+      def target_url(endpoint, gmid)
         url = test? ? self.test_url : self.live_url
         endpoint = '/' + endpoint if endpoint&.size&.positive?
-        url + endpoint
+        query_string = gmid.present? ? "?GMID=#{gmid}" : ''
+        url + endpoint + query_string
       end
 
       def card_token?(payment)
