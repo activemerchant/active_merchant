@@ -29,8 +29,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(money, payment_method, options={})
-        # todo
-        # commit('authorize', build_authorize_request(money, payment_method, options), options)
+        request = build_xml_request do |xml|
+          add_card_data(xml, payment_method)
+          add_preauth(xml, money, options)
+        end
+
+        commit(request)
       end
 
       def capture(money, authorization, options={})
@@ -149,6 +153,22 @@ module ActiveMerchant #:nodoc:
           xml.referenceTransactionId  authorization&.split('|')&.first
           xml.amount                  money
           xml.currency                options[:currency] || currency(money)
+        end
+      end
+
+      def add_preauth(xml, money, options)
+        currency    = options[:currency] || currency(money)
+        description = options[:description].blank? ? 'Preauthorize' : options[:description]
+
+        xml.preauthorize do
+          xml.transactionId new_transaction_id
+
+          add_customer_data(xml, options)
+
+          xml.amount      money
+          xml.currency    currency
+          xml.description description
+          xml.callbackUrl(options[:callback_url] || 'http://example.com')
         end
       end
 

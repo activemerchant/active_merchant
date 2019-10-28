@@ -53,23 +53,23 @@ class RemoteIxopayTest < Test::Unit::TestCase
     assert_equal '1004', response.error_code
   end
 
-  def test_successful_authorize_and_capture
-    omit 'Not yet implemented'
-
+  def test_successful_authorize#_and_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
+    assert_equal 'FINISHED', auth.message
+    assert_not_nil auth.params['purchase_id']
+    assert_not_nil auth.params['reference_id']
 
-    assert capture = @gateway.capture(@amount, auth.authorization)
-    assert_success capture
-    assert_equal 'REPLACE WITH SUCCESS MESSAGE', capture.message
+    #assert capture = @gateway.capture(@amount, auth.authorization)
+    #assert_success capture
+    #assert_equal 'REPLACE WITH SUCCESS MESSAGE', capture.message
   end
 
   def test_failed_authorize
-    omit 'Not yet implemented'
-
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'REPLACE WITH FAILED AUTHORIZE MESSAGE', response.message
+    assert_equal 'The transaction was declined', response.message
+    assert_equal 'ERROR',                        response.params['return_type']
   end
 
   def test_partial_capture

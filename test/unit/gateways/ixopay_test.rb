@@ -46,9 +46,26 @@ class IxopayTest < Test::Unit::TestCase
     assert 'Invalid Signature: Invalid authorization header', response.message
   end
 
-  def test_successful_authorize; end
+  def test_successful_authorize
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
 
-  def test_failed_authorize; end
+    response = @gateway.authorize(@amount, @credit_card, @options)
+
+    assert_success response
+    assert_equal 'FINISHED', response.message
+    assert_equal '00eb44f8f0382443cce5|20191028-00eb44f8f0382443cce5', response.authorization
+    assert response.test?
+   end
+
+  def test_failed_authorize
+    @gateway.expects(:ssl_post).returns(failed_purchase_response)
+
+    response = @gateway.authorize(@amount, @declined_card, @options)
+
+    assert_failure response
+    assert_equal 'The transaction was declined', response.message
+    assert_equal '2003', response.error_code
+  end
 
   def test_successful_capture; end
 
@@ -247,9 +264,59 @@ class IxopayTest < Test::Unit::TestCase
     XML
   end
 
-  def successful_authorize_response; end
+  def successful_authorize_response
+    <<-XML
+      <?xml version="1.0" encoding="utf-8"?>
+      <result xmlns="http://secure.ixopay.com/Schema/V2/Result">
+        <success>true</success>
+        <referenceId>00eb44f8f0382443cce5</referenceId>
+        <purchaseId>20191028-00eb44f8f0382443cce5</purchaseId>
+        <returnType>FINISHED</returnType>
+        <paymentMethod>Creditcard</paymentMethod>
+        <returnData type="creditcardData">
+          <creditcardData>
+            <type>visa</type>
+            <cardHolder>Longbob Longsen</cardHolder>
+            <expiryMonth>09</expiryMonth>
+            <expiryYear>2020</expiryYear>
+            <firstSixDigits>411111</firstSixDigits>
+            <lastFourDigits>1111</lastFourDigits>
+          </creditcardData>
+        </returnData>
+      </result>
+    XML
+  end
 
-  def failed_authorize_response; end
+  def failed_authorize_response
+    <<-XML
+      <?xml version="1.0" encoding="utf-8"?>
+      <result xmlns="http://secure.ixopay.com/Schema/V2/Result">
+        <success>false</success>
+        <referenceId>91278c76405116378b85</referenceId>
+        <purchaseId>20191028-91278c76405116378b85</purchaseId>
+        <returnType>ERROR</returnType>
+        <paymentMethod>Creditcard</paymentMethod>
+        <returnData type="creditcardData">
+          <creditcardData>
+            <type>visa</type>
+            <cardHolder>Longbob Longsen</cardHolder>
+            <expiryMonth>09</expiryMonth>
+            <expiryYear>2020</expiryYear>
+            <firstSixDigits>400030</firstSixDigits>
+            <lastFourDigits>2220</lastFourDigits>
+          </creditcardData>
+        </returnData>
+        <errors>
+          <error>
+            <message>The transaction was declined</message>
+            <code>2003</code>
+            <adapterMessage>Test decline</adapterMessage>
+            <adapterCode>transaction_declined</adapterCode>
+          </error>
+        </errors>
+      </result>
+    XML
+  end
 
   def successful_capture_response; end
 
