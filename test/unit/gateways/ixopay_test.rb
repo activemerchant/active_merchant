@@ -37,6 +37,15 @@ class IxopayTest < Test::Unit::TestCase
     assert_equal '2003', response.error_code
   end
 
+  def test_failed_authentication
+    @gateway.expects(:ssl_post).raises(mock_response_error)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_failure response
+    assert 'Invalid Signature: Invalid authorization header', response.message
+  end
+
   def test_successful_authorize; end
 
   def test_failed_authorize; end
@@ -65,6 +74,13 @@ class IxopayTest < Test::Unit::TestCase
   end
 
   private
+
+  def mock_response_error
+    mock_response = Net::HTTPUnprocessableEntity.new('1.1', '401', 'Unauthorized')
+    mock_response.stubs(:body).returns(failed_authentication_response)
+
+    ActiveMerchant::ResponseError.new(mock_response)
+  end
 
   def pre_scrubbed
     #  %q(
@@ -131,6 +147,22 @@ class IxopayTest < Test::Unit::TestCase
             <code>2003</code>
             <adapterMessage>Test decline</adapterMessage>
             <adapterCode>transaction_declined</adapterCode>
+          </error>
+        </errors>
+      </result>
+    XML
+  end
+
+  def failed_authentication_response
+    <<-XML
+      <?xml version="1.0" encoding="utf-8"?>
+      <result xmlns="http://gateway/Schema/V2/TransactionWithCard">
+        <success>false</success>
+        <returnType>ERROR</returnType>
+        <errors>
+          <error>
+            <message>Invalid Signature: Invalid authorization header</message>
+            <code>1004</code>
           </error>
         </errors>
       </result>
