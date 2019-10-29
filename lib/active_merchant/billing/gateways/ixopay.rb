@@ -196,26 +196,12 @@ module ActiveMerchant #:nodoc:
         url = (test? ? test_url : live_url)
 
         # ssl_post raises an exception for any non-2xx HTTP status from the gateway
-        begin
-          raw_response = ssl_post(url, request, headers(request))
-        rescue StandardError => error
-          return response_from_request_error(error)
-        end
-
-        response = parse(raw_response)
-
-        Response.new(
-          success_from(response),
-          message_from(response),
-          response,
-          authorization: authorization_from(response),
-          test: test?,
-          error_code: error_code_from(response)
-        )
-      end
-
-      def response_from_request_error(error)
-        response = parse(error.response.body)
+        response =
+          begin
+            parse(ssl_post(url, request, headers(request)))
+          rescue StandardError => error
+            parse(error.response.body)
+          end
 
         Response.new(
           success_from(response),
