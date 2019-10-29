@@ -68,7 +68,9 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     options = @options.merge(
       eci: '02',
       cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA=',
-      xid: '00000000000000000501'
+      xid: '00000000000000000501',
+      # Having processor-specification enabled in Credorax test account causes 3DS tests to fail without a r1 (processor) parameter.
+      processor: 'CREDORAX'
     )
 
     response = @gateway.purchase(@amount, @fully_auth_card, options)
@@ -103,7 +105,9 @@ class RemoteCredoraxTest < Test::Unit::TestCase
         eci: eci,
         cavv: cavv,
         ds_transaction_id: ds_transaction_id
-      }
+      },
+      # Having processor-specification enabled in Credorax test account causes 3DS tests to fail without a r1 (processor) parameter.
+      processor: 'CREDORAX'
     )
 
     response = @gateway.purchase(@amount, @fully_auth_card, options)
@@ -166,7 +170,9 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     options = @options.merge(
       eci: '02',
       cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA=',
-      xid: '00000000000000000501'
+      xid: '00000000000000000501',
+      # Having processor-specification enabled in Credorax test account causes 3DS tests to fail without a r1 (processor) parameter.
+      processor: 'CREDORAX'
     )
 
     response = @gateway.authorize(@amount, @fully_auth_card, options)
@@ -186,7 +192,9 @@ class RemoteCredoraxTest < Test::Unit::TestCase
         eci: eci,
         cavv: cavv,
         ds_transaction_id: ds_transaction_id
-      }
+      },
+      # Having processor-specification enabled in Credorax test account causes 3DS tests to fail without a r1 (processor) parameter.
+      processor: 'CREDORAX'
     )
 
     response = @gateway.authorize(@amount, @fully_auth_card, options)
