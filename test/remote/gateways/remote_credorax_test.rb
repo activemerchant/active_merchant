@@ -64,11 +64,13 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  # Having processor-specification enabled in Credorax test account causes 3DS tests to fail without an r1 parameter.
   def test_successful_purchase_with_auth_data_via_3ds1_fields
     options = @options.merge(
       eci: '02',
       cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA=',
-      xid: '00000000000000000501'
+      xid: '00000000000000000501',
+      processor: 'CREDORAX'
     )
 
     response = @gateway.purchase(@amount, @fully_auth_card, options)
@@ -92,6 +94,7 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  # Having processor-specification enabled in Credorax test account causes 3DS tests to fail without an r1 parameter.
   def test_successful_purchase_with_auth_data_via_normalized_3ds2_options
     version = '2.0'
     eci = '02'
@@ -103,7 +106,8 @@ class RemoteCredoraxTest < Test::Unit::TestCase
         eci: eci,
         cavv: cavv,
         ds_transaction_id: ds_transaction_id
-      }
+      },
+      processor: 'CREDORAX'
     )
 
     response = @gateway.purchase(@amount, @fully_auth_card, options)
@@ -162,11 +166,13 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     assert_equal 'Succeeded', capture.message
   end
 
+  # Having processor-specification enabled in Credorax test account causes 3DS tests to fail without an r1 parameter.
   def test_successful_authorize_with_auth_data_via_3ds1_fields
     options = @options.merge(
       eci: '02',
       cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA=',
-      xid: '00000000000000000501'
+      xid: '00000000000000000501',
+      processor: 'CREDORAX'
     )
 
     response = @gateway.authorize(@amount, @fully_auth_card, options)
@@ -175,6 +181,7 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     assert response.authorization
   end
 
+  # Having processor-specification enabled in Credorax test account causes 3DS tests to fail without an r1 parameter.
   def test_successful_authorize_with_auth_data_via_normalized_3ds2_options
     version = '2.0'
     eci = '02'
@@ -186,7 +193,8 @@ class RemoteCredoraxTest < Test::Unit::TestCase
         eci: eci,
         cavv: cavv,
         ds_transaction_id: ds_transaction_id
-      }
+      },
+      processor: 'CREDORAX'
     )
 
     response = @gateway.authorize(@amount, @fully_auth_card, options)

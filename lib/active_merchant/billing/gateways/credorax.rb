@@ -358,7 +358,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_processor(post, options)
-        post[:r1] = options[:processor] || 'CREDORAX'
+        post[:r1] = options[:processor] if options[:processor]
         post[:r2] = options[:processor_merchant_id] if options[:processor_merchant_id]
       end
 
