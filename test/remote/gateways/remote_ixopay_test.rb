@@ -71,7 +71,7 @@ class RemoteIxopayTest < Test::Unit::TestCase
     assert_failure response
     assert_equal 'The transaction was declined', response.message
     assert_equal 'ERROR',                        response.params['return_type']
-    assert_equal response.error_code, "2003"
+    assert_equal '2003', response.error_code
   end
 
   def test_partial_capture
