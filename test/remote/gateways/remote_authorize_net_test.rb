@@ -567,6 +567,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
       authorization_code
       avs_result_code
       card_code
+      card_type
       cardholder_authentication_code
       full_response_code
       response_code
