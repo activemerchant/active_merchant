@@ -65,7 +65,7 @@ class IxopayTest < Test::Unit::TestCase
     assert_equal 'FINISHED', response.message
     assert_equal '00eb44f8f0382443cce5|20191028-00eb44f8f0382443cce5', response.authorization
     assert response.test?
-   end
+  end
 
   def test_failed_authorize
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
