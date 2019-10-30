@@ -875,8 +875,17 @@ quantum:
   password: Y
 
 # You will need to create a developer sandbox at https://developer.intuit.com/ and
-# successfully generate an OAuth 1.0a access token and token secret.
+# successfully generate an OAuth 2.0 access token and refresh_token. Access token
+# expires every 60 minutes
 quickbooks:
+  client_id:
+  client_secret:
+  refresh_token:
+  access_token:
+
+# You will need to create a developer sandbox at https://developer.intuit.com/ and
+# successfully generate an OAuth 1.0a access token and token secret.
+quickbooks_oauth_1:
   consumer_key:
   consumer_secret:
   access_token:
