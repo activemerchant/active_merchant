@@ -59,6 +59,7 @@ class RemoteIxopayTest < Test::Unit::TestCase
     assert_equal 'FINISHED', auth.message
     assert_not_nil auth.params['purchase_id']
     assert_not_nil auth.params['reference_id']
+    assert_not_nil auth.authorization
 
     #assert capture = @gateway.capture(@amount, auth.authorization)
     #assert_success capture
@@ -70,6 +71,7 @@ class RemoteIxopayTest < Test::Unit::TestCase
     assert_failure response
     assert_equal 'The transaction was declined', response.message
     assert_equal 'ERROR',                        response.params['return_type']
+    assert_equal response.error_code, "2003"
   end
 
   def test_partial_capture
