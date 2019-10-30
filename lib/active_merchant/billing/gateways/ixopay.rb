@@ -157,8 +157,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_preauth(xml, money, options)
-        currency    = options[:currency] || currency(money)
-        description = options[:description].blank? ? 'Preauthorize' : options[:description]
+        description  = options[:description].blank? ? 'Preauthorize' : options[:description]
+        currency     = options[:currency] || currency(money)
+        callback_url = options[:callback_url] || 'http://example.com'
 
         xml.preauthorize do
           xml.transactionId new_transaction_id
@@ -168,7 +169,7 @@ module ActiveMerchant #:nodoc:
           xml.amount      money
           xml.currency    currency
           xml.description description
-          xml.callbackUrl(options[:callback_url] || 'http://example.com')
+          xml.callbackUrl callback_url
         end
       end
 

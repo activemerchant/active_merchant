@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class IxopayTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = IxopayGateway.new(username: 'username', password: 'password', secret: 'secret')
 
@@ -19,7 +21,11 @@ class IxopayTest < Test::Unit::TestCase
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
-    response = @gateway.purchase(@amount, @credit_card, @options)
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert match(/<description>.+<\/description>/, data)
+    end.respond_with(successful_purchase_response)
 
     assert_success response
     assert_equal 'FINISHED', response.message
@@ -49,7 +55,11 @@ class IxopayTest < Test::Unit::TestCase
   def test_successful_authorize
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
 
-    response = @gateway.authorize(@amount, @credit_card, @options)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert match(/<description>.+<\/description>/, data)
+    end.respond_with(successful_authorize_response)
 
     assert_success response
     assert_equal 'FINISHED', response.message
