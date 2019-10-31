@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://ccapi-stg.paymentez.com/v2/'
       self.live_url = 'https://ccapi.paymentez.com/v2/'
 
-      self.supported_countries = %w[MX EC VE CO BR CL]
+      self.supported_countries = %w[MX EC CO BR CL PE]
       self.default_currency = 'USD'
       self.supported_cardtypes = %i[visa master american_express diners_club elo]
 
