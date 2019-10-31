@@ -7,6 +7,7 @@
 * Rubocop: Layout/RescueEnsureAlignment fix [leila-alderman] #3411
 * Credorax: Stop always sending r1 parameter [molbrown] #3415
 * Quickbooks: Add OAuth 2.0 support and void action [britth] #3397
+* Add UYI to list of currencies without fractions [curiousepic] #3416
 
 == Version 1.100.0 (Oct 16, 2019)
 * Stripe: Restore non-auto capture behaviour for card present transactions [PatrickFang] #3258
