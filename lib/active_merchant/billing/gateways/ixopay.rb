@@ -51,8 +51,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def void(authorization, options={})
-        # todo
-        # commit('void', build_void_request(money, payment_method, options), options)
+        request = build_xml_request do |xml|
+          add_void(xml, authorization)
+        end
+
+        commit(request)
       end
 
       def verify(credit_card, options={})
@@ -147,15 +150,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_refund(xml, money, authorization)
-        xml.refund do
-          xml.transactionId           new_transaction_id
-          xml.referenceTransactionId  authorization&.split('|')&.first
-          xml.amount                  money
-          xml.currency                options[:currency] || currency(money)
-        end
-      end
-
       def add_preauth(xml, money, options)
         description  = options[:description].blank? ? 'Preauthorize' : options[:description]
         currency     = options[:currency] || currency(money)
@@ -170,6 +164,22 @@ module ActiveMerchant #:nodoc:
           xml.currency    currency
           xml.description description
           xml.callbackUrl callback_url
+        end
+      end
+
+      def add_refund(xml, money, authorization)
+        xml.refund do
+          xml.transactionId           new_transaction_id
+          xml.referenceTransactionId  authorization&.split('|')&.first
+          xml.amount                  money
+          xml.currency                options[:currency] || currency(money)
+        end
+      end
+
+      def add_void(xml, authorization)
+        xml.void do
+          xml.transactionId           new_transaction_id
+          xml.referenceTransactionId  authorization&.split('|')&.first
         end
       end
 

@@ -97,9 +97,21 @@ class IxopayTest < Test::Unit::TestCase
     assert_equal 'Transaction of type "refund" requires a referenceTransactionId', response.message
   end
 
-  def test_successful_void; end
+  def test_successful_void
+    @gateway.expects(:ssl_post).returns(successful_void_response)
+    response = @gateway.void('eb2bef23a30b537b90fb|20191016-b2bef23a30b537b90fbe')
 
-  def test_failed_void; end
+    assert_success response
+    assert_equal 'FINISHED', response.message
+  end
+
+  def test_failed_void
+    @gateway.expects(:ssl_post).returns(failed_void_response)
+    response = @gateway.void(nil)
+
+    assert_failure response
+    assert_equal 'Transaction of type "void" requires a referenceTransactionId', response.message
+  end
 
   def test_successful_verify; end
 
@@ -359,7 +371,30 @@ class IxopayTest < Test::Unit::TestCase
     XML
   end
 
-  def successful_void_response; end
+  def successful_void_response
+    <<-XML
+    <result xmlns="http://secure.ixopay.com/Schema/V2/Result">
+      <success>true</success>
+      <referenceId>cb656bd5286e77501b2e</referenceId>
+      <purchaseId>20191031-b1f9f7991766cf933659</purchaseId>
+      <returnType>FINISHED</returnType>
+      <paymentMethod>Creditcard</paymentMethod>
+    </result>
+    XML
+  end
 
-  def failed_void_response; end
+  def failed_void_response
+    <<-XML
+    <result xmlns="http://secure.ixopay.com/Schema/V2/Result">
+      <success>false</success>
+      <returnType>ERROR</returnType>
+      <errors>
+        <error>
+          <message>Transaction of type "void" requires a referenceTransactionId</message>
+          <code>9999</code>
+        </error>
+      </errors>
+    </result>
+    XML
+  end
 end

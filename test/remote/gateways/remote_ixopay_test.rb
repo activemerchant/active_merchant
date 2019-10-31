@@ -117,22 +117,18 @@ class RemoteIxopayTest < Test::Unit::TestCase
   end
 
   def test_successful_void
-    omit 'Not yet implemented'
-
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
     assert void = @gateway.void(auth.authorization)
     assert_success void
-    assert_equal 'REPLACE WITH SUCCESSFUL VOID MESSAGE', void.message
+    assert_equal 'FINISHED', void.message
   end
 
   def test_failed_void
-    omit 'Not yet implemented'
-
     response = @gateway.void('')
     assert_failure response
-    assert_equal 'REPLACE WITH FAILED VOID MESSAGE', response.message
+    assert_equal 'Transaction of type "void" requires a referenceTransactionId', response.message
   end
 
   def test_successful_verify
