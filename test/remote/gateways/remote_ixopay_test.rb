@@ -44,27 +44,42 @@ class RemoteIxopayTest < Test::Unit::TestCase
   end
 
   def test_failed_authentication
-    gateway = IxopayGateway.new(username: 'baduser', password: 'badpass', secret: 'badsecret')
+    gateway = IxopayGateway.new(
+      username: 'baduser',
+      password: 'badpass',
+      secret:   'badsecret',
+      api_key:  'badapikey'
+    )
+
     response = gateway.purchase(@amount, @credit_card, {})
 
     assert_failure response
 
-    assert_equal 'Invalid Signature: Invalid authorization header', response.message
-    assert_equal '1004', response.error_code
+    assert_equal 'Invalid Signature', response.message
+    assert_equal '9999', response.error_code
   end
 
-  # test_successful_authorize_and_capture
-  def test_successful_authorize
+  def test_successful_authorize_and_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
+
     assert_success auth
     assert_equal 'FINISHED', auth.message
     assert_not_nil auth.params['purchase_id']
     assert_not_nil auth.params['reference_id']
     assert_not_nil auth.authorization
 
-    # assert capture = @gateway.capture(@amount, auth.authorization)
-    # assert_success capture
-    # assert_equal 'REPLACE WITH SUCCESS MESSAGE', capture.message
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+    assert_equal 'FINISHED', capture.message
+  end
+
+  def test_partial_capture
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    assert capture = @gateway.capture(@amount - 1, auth.authorization)
+    assert_success capture
+    assert_equal 'FINISHED', capture.message
   end
 
   def test_failed_authorize
@@ -72,25 +87,14 @@ class RemoteIxopayTest < Test::Unit::TestCase
     assert_failure response
     assert_equal 'The transaction was declined', response.message
     assert_equal 'ERROR',                        response.params['return_type']
-    assert_equal '2003', response.error_code
-  end
-
-  def test_partial_capture
-    omit 'Not yet implemented'
-
-    auth = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success auth
-
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
-    assert_success capture
+    assert_equal response.error_code, '2003'
   end
 
   def test_failed_capture
-    omit 'Not yet implemented'
+    response = @gateway.capture(@amount, nil)
 
-    response = @gateway.capture(@amount, '')
     assert_failure response
-    assert_equal 'REPLACE WITH FAILED CAPTURE MESSAGE', response.message
+    assert_equal 'Transaction of type "capture" requires a referenceTransactionId', response.message
   end
 
   def test_successful_refund

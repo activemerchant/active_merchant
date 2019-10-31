@@ -14,7 +14,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Ixopay'
 
       def initialize(options={})
-        requires!(options, :username, :password, :secret)
+        requires!(options, :username, :password, :secret, :api_key)
         @secret = options[:secret]
         super
       end
@@ -38,8 +38,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options={})
-        # todo
-        # commit('capture', build_capture_request(money, payment_method, options), options)
+        request = build_xml_request do |xml|
+          add_capture(xml, money, authorization, options)
+        end
+
+        commit(request)
       end
 
       def refund(money, authorization, options={})
@@ -143,7 +146,7 @@ module ActiveMerchant #:nodoc:
 
           add_customer_data(xml, options)
 
-          xml.amount      money
+          xml.amount      localized_amount(money, currency)
           xml.currency    currency
           xml.description description
           xml.callbackUrl(options[:callback_url] || 'http://example.com')
@@ -160,7 +163,7 @@ module ActiveMerchant #:nodoc:
 
           add_customer_data(xml, options)
 
-          xml.amount      money
+          xml.amount      localized_amount(money, currency)
           xml.currency    currency
           xml.description description
           xml.callbackUrl callback_url
@@ -168,11 +171,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_refund(xml, money, authorization)
+        currency = options[:currency] || currency(money)
+
         xml.refund do
           xml.transactionId           new_transaction_id
           xml.referenceTransactionId  authorization&.split('|')&.first
-          xml.amount                  money
-          xml.currency                options[:currency] || currency(money)
+          xml.amount                  localized_amount(money, currency)
+          xml.currency                currency
         end
       end
 
@@ -180,6 +185,17 @@ module ActiveMerchant #:nodoc:
         xml.void do
           xml.transactionId           new_transaction_id
           xml.referenceTransactionId  authorization&.split('|')&.first
+        end
+      end
+
+      def add_capture(xml, money, authorization, options)
+        currency = options[:currency] || currency(money)
+
+        xml.capture do
+          xml.transactionId          new_transaction_id
+          xml.referenceTransactionId authorization&.split('|')&.first
+          xml.amount                 localized_amount(money, currency)
+          xml.currency               currency
         end
       end
 
