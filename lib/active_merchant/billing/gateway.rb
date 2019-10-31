@@ -123,8 +123,9 @@ module ActiveMerchant #:nodoc:
       class_attribute :supported_cardtypes
       self.supported_cardtypes = []
 
+      # This default list of currencies without fractions are from https://en.wikipedia.org/wiki/ISO_4217
       class_attribute :currencies_without_fractions, :currencies_with_three_decimal_places
-      self.currencies_without_fractions = %w(BIF BYR CLP CVE DJF GNF ISK JPY KMF KRW PYG RWF UGX VND VUV XAF XOF XPF)
+      self.currencies_without_fractions = %w(BIF BYR CLP CVE DJF GNF ISK JPY KMF KRW PYG RWF UGX UYI VND VUV XAF XOF XPF)
       self.currencies_with_three_decimal_places = %w()
 
       class_attribute :homepage_url
