@@ -1,3 +1,4 @@
+require 'nokogiri'
 require 'active_merchant/billing/gateways/payflow/payflow_common_api'
 require 'active_merchant/billing/gateways/payflow/payflow_response'
 require 'active_merchant/billing/gateways/payflow_express'
@@ -187,7 +188,44 @@ module ActiveMerchant #:nodoc:
             end
           end
         end
-        xml.target!
+        add_level_two_three_fields(xml.target!, options)
+      end
+
+      def add_level_two_three_fields(xml_string, options)
+        if options[:level_two_fields] || options[:level_three_fields]
+          xml_doc = Nokogiri::XML.parse(xml_string)
+          %i[level_two_fields level_three_fields].each do |fields|
+            xml_string = add_fields(xml_doc, options[fields]) if options[fields]
+          end
+        end
+        xml_string
+      end
+
+      def check_fields(parent, fields, xml_doc)
+        fields.each do |k, v|
+          if v.is_a? String
+            new_node = Nokogiri::XML::Node.new(k, xml_doc)
+            new_node.add_child(v)
+            xml_doc.at_css(parent).add_child(new_node)
+          else
+            check_subparent_before_continuing(parent, k, xml_doc)
+            check_fields(k, v, xml_doc)
+          end
+        end
+        xml_doc
+      end
+
+      def check_subparent_before_continuing(parent, subparent, xml_doc)
+        unless xml_doc.at_css(subparent)
+          subparent_node = Nokogiri::XML::Node.new(subparent, xml_doc)
+          xml_doc.at_css(parent).add_child(subparent_node)
+        end
+      end
+
+      def add_fields(xml_doc, options_fields)
+        fields_to_add = JSON.parse(options_fields)
+        check_fields('Invoice', fields_to_add, xml_doc)
+        xml_doc.root.to_s
       end
 
       def build_check_request(action, money, check, options)
@@ -213,7 +251,7 @@ module ActiveMerchant #:nodoc:
             end
           end
         end
-        xml.target!
+        add_level_two_three_fields(xml.target!, options)
       end
 
       def add_credit_card(xml, credit_card, options = {})
@@ -224,20 +262,32 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'NameOnCard', credit_card.first_name
           xml.tag! 'CVNum', credit_card.verification_value if credit_card.verification_value?
 
-          if options[:three_d_secure]
-            three_d_secure = options[:three_d_secure]
-            xml.tag! 'BuyerAuthResult' do
-              xml.tag! 'Status', three_d_secure[:status] unless three_d_secure[:status].blank?
-              xml.tag! 'AuthenticationId', three_d_secure[:authentication_id] unless three_d_secure[:authentication_id].blank?
-              xml.tag! 'PAReq', three_d_secure[:pareq] unless three_d_secure[:pareq].blank?
-              xml.tag! 'ACSUrl', three_d_secure[:acs_url] unless three_d_secure[:acs_url].blank?
-              xml.tag! 'ECI', three_d_secure[:eci] unless three_d_secure[:eci].blank?
-              xml.tag! 'CAVV', three_d_secure[:cavv] unless three_d_secure[:cavv].blank?
-              xml.tag! 'XID', three_d_secure[:xid] unless three_d_secure[:xid].blank?
-            end
-          end
+          add_three_d_secure(options, xml)
 
           xml.tag! 'ExtData', 'Name' => 'LASTNAME', 'Value' =>  credit_card.last_name
+        end
+      end
+
+      def add_three_d_secure(options, xml)
+        if options[:three_d_secure]
+          three_d_secure = options[:three_d_secure]
+          xml.tag! 'BuyerAuthResult' do
+            authentication_status(three_d_secure, xml)
+            xml.tag! 'AuthenticationId', three_d_secure[:authentication_id] unless three_d_secure[:authentication_id].blank?
+            xml.tag! 'PAReq', three_d_secure[:pareq] unless three_d_secure[:pareq].blank?
+            xml.tag! 'ACSUrl', three_d_secure[:acs_url] unless three_d_secure[:acs_url].blank?
+            xml.tag! 'ECI', three_d_secure[:eci] unless three_d_secure[:eci].blank?
+            xml.tag! 'CAVV', three_d_secure[:cavv] unless three_d_secure[:cavv].blank?
+            xml.tag! 'XID', three_d_secure[:xid] unless three_d_secure[:xid].blank?
+          end
+        end
+      end
+
+      def authentication_status(three_d_secure, xml)
+        if three_d_secure[:authentication_response_status].present?
+          xml.tag! 'Status', three_d_secure[:authentication_response_status]
+        elsif three_d_secure[:directory_response_status].present?
+          xml.tag! 'Status', three_d_secure[:directory_response_status]
         end
       end
 
@@ -262,9 +312,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_recurring_request(action, money, options)
-        unless RECURRING_ACTIONS.include?(action)
-          raise StandardError, "Invalid Recurring Profile Action: #{action}"
-        end
+        raise StandardError, "Invalid Recurring Profile Action: #{action}" unless RECURRING_ACTIONS.include?(action)
 
         xml = Builder::XmlMarkup.new
         xml.tag! 'RecurringProfiles' do
@@ -304,9 +352,7 @@ module ActiveMerchant #:nodoc:
                   yield xml
                 end
               end
-              if action != :add
-                xml.tag! 'ProfileID', options[:profile_id]
-              end
+              xml.tag! 'ProfileID', options[:profile_id] if action != :add
               if action == :inquiry
                 xml.tag! 'PaymentHistory', (options[:history] ? 'Y' : 'N')
               end

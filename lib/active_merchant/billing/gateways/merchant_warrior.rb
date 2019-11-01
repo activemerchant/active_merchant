@@ -181,9 +181,7 @@ module ActiveMerchant #:nodoc:
       def add_auth(action, post)
         post['merchantUUID'] = @options[:merchant_uuid]
         post['apiKey'] = @options[:api_key]
-        unless token?(post)
-          post['method'] = action
-        end
+        post['method'] = action unless token?(post)
       end
 
       def url_for(action, post)

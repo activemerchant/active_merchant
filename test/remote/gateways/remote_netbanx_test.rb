@@ -11,6 +11,17 @@ class RemoteNetbanxTest < Test::Unit::TestCase
       description: 'Store Purchase',
       currency: 'CAD'
     }
+
+    @options_3ds2 = @options.merge(
+      three_d_secure: {
+        version: '2.1.0',
+        eci: '05',
+        cavv: 'AAABCIEjYgAAAAAAlCNiENiWiV+=',
+        ds_transaction_id: 'a3a721f3-b6fa-4cb5-84ea-c7b5c39890a2',
+        xid: 'OU9rcTRCY1VJTFlDWTFESXFtTHU=',
+        directory_response_status: 'Y'
+      }
+    )
   end
 
   def test_successful_purchase
@@ -29,6 +40,13 @@ class RemoteNetbanxTest < Test::Unit::TestCase
     }
 
     response = @gateway.purchase(@amount, @credit_card, options)
+    assert_equal 'OK', response.message
+    assert_equal response.authorization, response.params['id']
+  end
+
+  def test_successful_purchase_with_3ds2_auth
+    assert response = @gateway.purchase(@amount, @credit_card, @options_3ds2)
+    assert_success response
     assert_equal 'OK', response.message
     assert_equal response.authorization, response.params['id']
   end
@@ -71,6 +89,15 @@ class RemoteNetbanxTest < Test::Unit::TestCase
     response = @gateway.capture(@amount, SecureRandom.uuid)
     assert_failure response
     assert_equal 'The authorization ID included in this settlement request could not be found.', response.message
+  end
+
+  def test_successful_authorize_and_capture_with_3ds2_auth
+    auth = @gateway.authorize(@amount, @credit_card, @options_3ds2)
+    assert_success auth
+
+    assert capture = @gateway.capture(@amount, auth.authorization, @options_3ds2)
+    assert_success capture
+    assert_equal 'OK', capture.message
   end
 
   # def test_successful_refund
@@ -202,4 +229,5 @@ class RemoteNetbanxTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'OK', response.message
   end
+
 end

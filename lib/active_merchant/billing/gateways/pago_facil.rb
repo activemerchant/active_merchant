@@ -53,9 +53,7 @@ module ActiveMerchant #:nodoc:
 
       def add_currency(post, money, options)
         currency = options.fetch(:currency, currency(money))
-        unless currency == self.class.default_currency
-          post[:divisa] = currency
-        end
+        post[:divisa] = currency unless currency == self.class.default_currency
       end
 
       def add_payment(post, credit_card)

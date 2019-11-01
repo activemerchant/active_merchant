@@ -255,9 +255,7 @@ module ActiveMerchant #:nodoc:
         response_action = action.gsub(/tx/, 'rx')
         root  = REXML::XPath.first(xml.root, response_action)
         # we might have gotten an error
-        if root.nil?
-          root  = REXML::XPath.first(xml.root, 'errorrx')
-        end
+        root  = REXML::XPath.first(xml.root, 'errorrx') if root.nil?
         root.attributes.each do |name, value|
           hash[name.to_sym] = value
         end

@@ -48,6 +48,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def store(credit_card, options={})
+        # The store request requires a currency and amount of at least $1 USD.
+        # This is used for an authorization that is handled internally by Paymill.
+        options[:currency] = 'USD'
+        options[:money] = 100
+
         save_card(credit_card, options)
       end
 
@@ -352,9 +357,7 @@ module ActiveMerchant #:nodoc:
 
         def handle_response_correct_parsing
           @message = parsed['transaction']['processing']['return']['message']
-          if @succeeded = is_ack?
-            @options[:authorization] = parsed['transaction']['identification']['uniqueId']
-          end
+          @options[:authorization] = parsed['transaction']['identification']['uniqueId'] if @succeeded = is_ack?
         end
 
         def is_ack?

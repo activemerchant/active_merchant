@@ -103,7 +103,7 @@ module ActiveMerchant
         post = {}
 
         add_amount(post, money, options)
-        add_credit_card_or_reference(post, credit_card_or_reference)
+        add_credit_card_or_reference(post, credit_card_or_reference, options)
         add_additional_params(:authorize, post, options)
 
         post
@@ -187,13 +187,9 @@ module ActiveMerchant
       def add_invoice(post, options)
         add_order_id(post, options)
 
-        if options[:billing_address]
-          post[:invoice_address]  = map_address(options[:billing_address])
-        end
+        post[:invoice_address]  = map_address(options[:billing_address]) if options[:billing_address]
 
-        if options[:shipping_address]
-          post[:shipping_address] = map_address(options[:shipping_address])
-        end
+        post[:shipping_address] = map_address(options[:shipping_address]) if options[:shipping_address]
 
         [:metadata, :branding_id, :variables].each do |field|
           post[field] = options[field] if options[field]
@@ -216,6 +212,12 @@ module ActiveMerchant
           post[:card][:cvd]        = credit_card_or_reference.verification_value
           post[:card][:expiration] = expdate(credit_card_or_reference)
           post[:card][:issued_to]  = credit_card_or_reference.name
+        end
+
+        if options[:three_d_secure]
+          post[:card][:cavv]= options.dig(:three_d_secure, :cavv)
+          post[:card][:eci] = options.dig(:three_d_secure, :eci)
+          post[:card][:xav] = options.dig(:three_d_secure, :xid)
         end
       end
 

@@ -1,8 +1,8 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class FirstdataE4V27Gateway < Gateway
-      self.test_url = 'https://api.demo.globalgatewaye4.firstdata.com/transaction/v27'
-      self.live_url = 'https://api.globalgatewaye4.firstdata.com/transaction/v27'
+      self.test_url = 'https://api.demo.globalgatewaye4.firstdata.com/transaction/v28'
+      self.live_url = 'https://api.globalgatewaye4.firstdata.com/transaction/v28'
 
       TRANSACTIONS = {
         sale:          '00',
@@ -148,6 +148,7 @@ module ActiveMerchant #:nodoc:
           add_credit_card_token(xml, credit_card_or_store_authorization, options)
         else
           add_credit_card(xml, credit_card_or_store_authorization, options)
+          add_stored_credentials(xml, credit_card_or_store_authorization, options)
         end
 
         add_address(xml, options)
@@ -312,6 +313,35 @@ module ActiveMerchant #:nodoc:
         xml.tag!('Level3') { |x| x << options[:level_3] } if options[:level_3]
       end
 
+      def add_stored_credentials(xml, card, options)
+        return unless options[:stored_credential]
+        xml.tag! 'StoredCredentials' do
+          xml.tag! 'Indicator', stored_credential_indicator(xml, card, options)
+          if initiator = options.dig(:stored_credential, :initiator)
+            xml.tag! initiator == 'merchant' ? 'M' : 'C'
+          end
+          if reason_type = options.dig(:stored_credential, :reason_type)
+            xml.tag! 'Schedule', reason_type == 'unscheduled' ? 'U' : 'S'
+          end
+          xml.tag! 'AuthorizationTypeOverride', options[:authorization_type_override] if options[:authorization_type_override]
+          if network_transaction_id = options[:stored_credential][:network_transaction_id]
+            xml.tag! 'TransactionId', network_transaction_id
+          else
+            xml.tag! 'TransactionId', 'new'
+          end
+          xml.tag! 'OriginalAmount', options[:original_amount] if options[:original_amount]
+          xml.tag! 'ProtectbuyIndicator', options[:protectbuy_indicator] if options[:protectbuy_indicator]
+        end
+      end
+
+      def stored_credential_indicator(xml, card, options)
+        if card.brand == 'master' || options.dig(:stored_credential, :initial_transaction) == false
+          'S'
+        else
+          '1'
+        end
+      end
+
       def expdate(credit_card)
         "#{format(credit_card.month, :two_digits)}#{format(credit_card.year, :two_digits)}"
       end
@@ -438,8 +468,17 @@ module ActiveMerchant #:nodoc:
 
       def parse_elements(response, root)
         root.elements.to_a.each do |node|
-          response[node.name.gsub(/EXact/, 'Exact').underscore.to_sym] = (node.text || '').strip
+          if node.has_elements?
+            parse_elements(response, node)
+          else
+            response[name_node(root, node)] = (node.text || '').strip
+          end
         end
+      end
+
+      def name_node(root, node)
+        parent = root.name unless root.name == 'TransactionResult'
+        "#{parent}#{node.name}".gsub(/EXact/, 'Exact').underscore.to_sym
       end
     end
   end

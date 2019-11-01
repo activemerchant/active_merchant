@@ -1,7 +1,7 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     # Initial setup instructions can be found in
-    # http://cybersource.com/support_center/implementation/downloads/soap_api/SOAP_toolkits.pdf
+    # http://apps.cybersource.com/library/documentation/dev_guides/SOAP_Toolkits/SOAP_toolkits.pdf
     #
     # Important Notes
     # * For checks you can purchase and store.
@@ -24,10 +24,12 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://ics2wstesta.ic3.com/commerce/1.x/transactionProcessor'
       self.live_url = 'https://ics2wsa.ic3.com/commerce/1.x/transactionProcessor'
 
-      XSD_VERSION = '1.121'
+      # Schema files can be found here: https://ics2ws.ic3.com/commerce/1.x/transactionProcessor/
+      TEST_XSD_VERSION = '1.159'
+      PRODUCTION_XSD_VERSION = '1.159'
 
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb, :dankort, :maestro]
-      self.supported_countries = %w(US BR CA CN DK FI FR DE IN JP MX NO SE GB SG LB)
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb, :dankort, :maestro, :elo]
+      self.supported_countries = %w(US BR CA CN DK FI FR DE IN JP MX NO SE GB SG LB PK)
 
       self.default_currency = 'USD'
       self.currencies_without_fractions = %w(JPY)
@@ -43,7 +45,8 @@ module ActiveMerchant #:nodoc:
         :diners_club => '005',
         :jcb => '007',
         :dankort => '034',
-        :maestro => '042'
+        :maestro => '042',
+        :elo => '054'
       }
 
       @@response_codes = {
@@ -142,9 +145,10 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      # Adds credit to a subscription (stand alone credit).
-      def credit(money, reference, options = {})
-        commit(build_credit_request(money, reference, options), :credit, money, options)
+      # Adds credit to a card or subscription (stand alone credit).
+      def credit(money, creditcard_or_reference, options = {})
+        setup_address_hash(options)
+        commit(build_credit_request(money, creditcard_or_reference, options), :credit, money, options)
       end
 
       # Stores a customer subscription/profile with type "on-demand".
@@ -254,12 +258,16 @@ module ActiveMerchant #:nodoc:
       def build_auth_request(money, creditcard_or_reference, options)
         xml = Builder::XmlMarkup.new :indent => 2
         add_payment_method_or_subscription(xml, money, creditcard_or_reference, options)
+        add_threeds_2_ucaf_data(xml, creditcard_or_reference, options)
         add_decision_manager_fields(xml, options)
         add_mdd_fields(xml, options)
         add_auth_service(xml, creditcard_or_reference, options)
         add_threeds_services(xml, options)
         add_payment_network_token(xml) if network_tokenization?(creditcard_or_reference)
         add_business_rules_data(xml, creditcard_or_reference, options)
+        add_stored_credential_options(xml, options)
+        add_issuer_additional_data(xml, options)
+
         xml.target!
       end
 
@@ -282,12 +290,14 @@ module ActiveMerchant #:nodoc:
         add_purchase_data(xml, money, true, options)
         add_capture_service(xml, request_id, request_token)
         add_business_rules_data(xml, authorization, options)
+        add_issuer_additional_data(xml, options)
         xml.target!
       end
 
       def build_purchase_request(money, payment_method_or_reference, options)
         xml = Builder::XmlMarkup.new :indent => 2
         add_payment_method_or_subscription(xml, money, payment_method_or_reference, options)
+        add_threeds_2_ucaf_data(xml, payment_method_or_reference, options)
         add_decision_manager_fields(xml, options)
         add_mdd_fields(xml, options)
         if !payment_method_or_reference.is_a?(String) && card_brand(payment_method_or_reference) == 'check'
@@ -298,6 +308,8 @@ module ActiveMerchant #:nodoc:
           add_payment_network_token(xml) if network_tokenization?(payment_method_or_reference)
           add_business_rules_data(xml, payment_method_or_reference, options) unless options[:pinless_debit_card]
         end
+        add_issuer_additional_data(xml, options)
+
         xml.target!
       end
 
@@ -326,11 +338,10 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
-      def build_credit_request(money, reference, options)
+      def build_credit_request(money, creditcard_or_reference, options)
         xml = Builder::XmlMarkup.new :indent => 2
 
-        add_purchase_data(xml, money, true, options)
-        add_subscription(xml, options, reference)
+        add_payment_method_or_subscription(xml, money, creditcard_or_reference, options)
         add_credit_service(xml)
 
         xml.target!
@@ -483,6 +494,14 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_issuer_additional_data(xml, options)
+        return unless options[:issuer_additional_data]
+
+        xml.tag! 'issuer' do
+          xml.tag! 'additionalData', options[:issuer_additional_data]
+        end
+      end
+
       def add_mdd_fields(xml, options)
         return unless options.keys.any? { |key| key.to_s.start_with?('mdd_field') }
 
@@ -513,7 +532,46 @@ module ActiveMerchant #:nodoc:
         if network_tokenization?(payment_method)
           add_auth_network_tokenization(xml, payment_method, options)
         else
-          xml.tag! 'ccAuthService', {'run' => 'true'}
+          xml.tag! 'ccAuthService', {'run' => 'true'} do
+            if options[:three_d_secure]
+              add_normalized_threeds_2_data(xml, payment_method, options)
+            else
+              indicator = options[:commerce_indicator] || stored_credential_commerce_indicator(options)
+              xml.tag!('commerceIndicator', indicator) if indicator
+            end
+          end
+        end
+      end
+
+      def add_normalized_threeds_2_data(xml, payment_method, options)
+        threeds_2_options = options[:three_d_secure]
+
+        xml.tag!('cavv', threeds_2_options[:cavv]) if threeds_2_options[:cavv] && card_brand(payment_method).to_sym != :master
+        xml.tag!('cavvAlgorithm', threeds_2_options[:cavv_algorithm]) if threeds_2_options[:cavv_algorithm]
+        xml.tag!('paSpecificationVersion', threeds_2_options[:version]) if threeds_2_options[:version]
+        xml.tag!('directoryServerTransactionID', threeds_2_options[:ds_transaction_id]) if threeds_2_options[:ds_transaction_id]
+        xml.tag!('commerceIndicator', options[:commerce_indicator]) if options[:commerce_indicator]
+        xml.tag!('eciRaw', threeds_2_options[:eci]) if threeds_2_options[:eci]
+        xml.tag!('xid', threeds_2_options[:xid]) if threeds_2_options[:xid]
+        xml.tag!('veresEnrolled', threeds_2_options[:enrolled]) if threeds_2_options[:enrolled]
+        xml.tag!('paresStatus', threeds_2_options[:authentication_response_status]) if threeds_2_options[:authentication_response_status]
+      end
+
+      def add_threeds_2_ucaf_data(xml, payment_method, options)
+        return unless options[:three_d_secure] && card_brand(payment_method).to_sym == :master
+
+        xml.tag! 'ucaf' do
+          xml.tag!('authenticationData', options[:three_d_secure][:cavv])
+          xml.tag!('collectionIndicator', options[:collection_indicator]) if options[:collection_indicator]
+        end
+      end
+
+      def stored_credential_commerce_indicator(options)
+        return unless options[:stored_credential]
+        return if options[:stored_credential][:initial_transaction]
+        case options[:stored_credential][:reason_type]
+        when 'installment' then 'install'
+        when 'recurring' then 'recurring'
         end
       end
 
@@ -531,7 +589,7 @@ module ActiveMerchant #:nodoc:
             xml.tag!('commerceIndicator', 'vbv')
             xml.tag!('xid', payment_method.payment_cryptogram)
           end
-        when :mastercard
+        when :master
           xml.tag! 'ucaf' do
             xml.tag!('authenticationData', payment_method.payment_cryptogram)
             xml.tag!('collectionIndicator', '2')
@@ -680,8 +738,22 @@ module ActiveMerchant #:nodoc:
         country_code&.code(:alpha2)
       end
 
+      def add_stored_credential_options(xml, options={})
+        return unless options[:stored_credential]
+        if options[:stored_credential][:initial_transaction]
+          xml.tag! 'subsequentAuthFirst', 'true'
+        elsif options[:stored_credential][:reason_type] == 'unscheduled'
+          xml.tag! 'subsequentAuth', 'true'
+          xml.tag! 'subsequentAuthTransactionID', options[:stored_credential][:network_transaction_id]
+        else
+          xml.tag! 'subsequentAuthTransactionID', options[:stored_credential][:network_transaction_id]
+        end
+      end
+
       # Where we actually build the full SOAP request using builder
       def build_request(body, options)
+        xsd_version = test? ? TEST_XSD_VERSION : PRODUCTION_XSD_VERSION
+
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct!
         xml.tag! 's:Envelope', {'xmlns:s' => 'http://schemas.xmlsoap.org/soap/envelope/'} do
@@ -694,7 +766,7 @@ module ActiveMerchant #:nodoc:
             end
           end
           xml.tag! 's:Body', {'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance', 'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema'} do
-            xml.tag! 'requestMessage', {'xmlns' => "urn:schemas-cybersource-com:transaction-data-#{XSD_VERSION}"} do
+            xml.tag! 'requestMessage', {'xmlns' => "urn:schemas-cybersource-com:transaction-data-#{xsd_version}"} do
               add_merchant_data(xml, options)
               xml << body
             end

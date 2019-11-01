@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['AD', 'AE', 'AG', 'AI', 'AL', 'AM', 'AO', 'AR', 'AS', 'AT', 'AU', 'AW', 'AX', 'AZ', 'BA', 'BB', 'BD', 'BE', 'BF', 'BG', 'BH', 'BI', 'BJ', 'BL', 'BM', 'BN', 'BO', 'BQ', 'BR', 'BS', 'BT', 'BW', 'BY', 'BZ', 'CA', 'CC', 'CD', 'CF', 'CH', 'CI', 'CK', 'CL', 'CM', 'CN', 'CO', 'CR', 'CU', 'CV', 'CW', 'CX', 'CY', 'CZ', 'DE', 'DJ', 'DK', 'DM', 'DO', 'DZ', 'EC', 'EE', 'EG', 'ER', 'ES', 'ET', 'FI', 'FJ', 'FK', 'FM', 'FO', 'FR', 'GA', 'GB', 'GD', 'GE', 'GF', 'GH', 'GI', 'GL', 'GM', 'GN', 'GP', 'GQ', 'GR', 'GS', 'GT', 'GU', 'GW', 'GY', 'HK', 'HN', 'HR', 'HT', 'HU', 'ID', 'IE', 'IL', 'IM', 'IN', 'IS', 'IT', 'JM', 'JO', 'JP', 'KE', 'KG', 'KH', 'KI', 'KM', 'KN', 'KR', 'KW', 'KY', 'KZ', 'LA', 'LB', 'LC', 'LI', 'LK', 'LR', 'LS', 'LT', 'LU', 'LV', 'MA', 'MC', 'MD', 'ME', 'MF', 'MG', 'MH', 'MK', 'MM', 'MN', 'MO', 'MP', 'MQ', 'MR', 'MS', 'MT', 'MU', 'MV', 'MW', 'MX', 'MY', 'MZ', 'NA', 'NC', 'NE', 'NG', 'NI', 'NL', 'NO', 'NP', 'NR', 'NU', 'NZ', 'OM', 'PA', 'PE', 'PF', 'PG', 'PH', 'PL', 'PN', 'PS', 'PT', 'PW', 'QA', 'RE', 'RO', 'RS', 'RU', 'RW', 'SA', 'SB', 'SC', 'SE', 'SG', 'SH', 'SI', 'SJ', 'SK', 'SL', 'SM', 'SN', 'SR', 'ST', 'SV', 'SZ', 'TC', 'TD', 'TG', 'TH', 'TJ', 'TL', 'TM', 'TN', 'TO', 'TR', 'TT', 'TV', 'TW', 'TZ', 'UA', 'UG', 'US', 'UY', 'UZ', 'VC', 'VE', 'VG', 'VI', 'VN', 'WF', 'WS', 'ZA', 'ZM', 'ZW']
       self.default_currency = 'USD'
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :naranja, :cabal]
 
       def initialize(options={})
         requires!(options, :merchant_id, :api_key_id, :secret_api_key)
@@ -142,12 +142,8 @@ module ActiveMerchant #:nodoc:
 
       def add_customer_data(post, options, payment = nil)
         if payment
-          post['order']['customer']['personalInformation'] = {
-            'name' => {
-              'firstName' => payment.first_name[0..14],
-              'surname' => payment.last_name[0..69]
-            }
-          }
+          post['order']['customer']['personalInformation']['name']['firstName'] = payment.first_name[0..14] if payment.first_name
+          post['order']['customer']['personalInformation']['name']['surname'] = payment.last_name[0..69] if payment.last_name
         end
         post['order']['customer']['merchantCustomerId'] = options[:customer] if options[:customer]
         post['order']['customer']['companyInformation']['name'] = options[:company] if options[:company]
@@ -232,9 +228,7 @@ module ActiveMerchant #:nodoc:
           raw_response = ssl_post(url(action, authorization), post.to_json, headers(action, post, authorization))
           response = parse(raw_response)
         rescue ResponseError => e
-          if e.response.code.to_i >= 400
-            response = parse(e.response.body)
-          end
+          response = parse(e.response.body) if e.response.code.to_i >= 400
         rescue JSON::ParserError
           response = json_error(raw_response)
         end
@@ -272,7 +266,7 @@ POST
 #{content_type}
 #{date}
 #{uri(action, authorization)}
-EOS
+        EOS
         digest = OpenSSL::Digest.new('sha256')
         key = @options[:secret_api_key]
         "GCS v1HMAC:#{@options[:api_key_id]}:#{Base64.strict_encode64(OpenSSL::HMAC.digest(digest, key, data))}"

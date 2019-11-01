@@ -377,7 +377,7 @@ class BalancedTest < Test::Unit::TestCase
     "marketplaces.events": "/events"
   }
 }
-RESPONSE
+    RESPONSE
   end
 
   def cards_response
@@ -422,7 +422,7 @@ RESPONSE
     "cards.debits": "/cards/{cards.id}/debits"
   }
 }
-RESPONSE
+    RESPONSE
   end
 
   def debits_response
@@ -460,7 +460,7 @@ RESPONSE
     "debits.events": "/debits/{debits.id}/events"
   }
 }
-RESPONSE
+    RESPONSE
   end
 
   def authorized_debits_response
@@ -498,7 +498,7 @@ RESPONSE
     "debits.events": "/debits/{debits.id}/events"
   }
 }
-RESPONSE
+    RESPONSE
   end
 
   def authorized_partial_debits_response
@@ -536,7 +536,7 @@ RESPONSE
     "debits.events": "/debits/{debits.id}/events"
   }
 }
-RESPONSE
+    RESPONSE
   end
 
   def declined_response
@@ -555,7 +555,7 @@ RESPONSE
     }
   ]
 }
-RESPONSE
+    RESPONSE
   end
 
   def bad_email_response
@@ -576,7 +576,7 @@ RESPONSE
     }
   ]
 }
-RESPONSE
+    RESPONSE
   end
 
   def account_frozen_response
@@ -626,7 +626,7 @@ RESPONSE
     }
   ]
 }
-RESPONSE
+    RESPONSE
   end
 
   def appears_on_response
@@ -664,7 +664,7 @@ RESPONSE
     "debits.events": "/debits/{debits.id}/events"
   }
 }
-RESPONSE
+    RESPONSE
   end
 
   def holds_response
@@ -699,7 +699,7 @@ RESPONSE
     "card_holds.debit": "/debits/{card_holds.debit}"
   }
 }
-RESPONSE
+    RESPONSE
   end
 
   def method_not_allowed_response
@@ -716,7 +716,7 @@ RESPONSE
     }
   ]
 }
-RESPONSE
+    RESPONSE
   end
 
   def unauthorized_response
@@ -733,7 +733,7 @@ RESPONSE
     }
   ]
 }
-RESPONSE
+    RESPONSE
   end
 
   def voided_hold_response
@@ -768,7 +768,7 @@ RESPONSE
     "card_holds.debit": "/debits/{card_holds.debit}"
   }
 }
-RESPONSE
+    RESPONSE
   end
 
   def refunds_response
@@ -800,7 +800,7 @@ RESPONSE
     }
   ]
 }
-RESPONSE
+    RESPONSE
   end
 
   def partial_refunds_response
@@ -832,7 +832,7 @@ RESPONSE
     }
   ]
 }
-RESPONSE
+    RESPONSE
   end
 
   def refunds_pending_response
@@ -864,6 +864,6 @@ RESPONSE
     }
   ]
 }
-RESPONSE
+    RESPONSE
   end
 end

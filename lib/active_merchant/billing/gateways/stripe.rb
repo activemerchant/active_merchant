@@ -2,6 +2,8 @@ require 'active_support/core_ext/hash/slice'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
+    # This gateway uses an older version of the Stripe API.
+    # To utilize the updated {Payment Intents API}[https://stripe.com/docs/api/payment_intents], integrate with the StripePaymentIntents gateway
     class StripeGateway < Gateway
       self.live_url = 'https://api.stripe.com/v1/'
 
@@ -21,7 +23,9 @@ module ActiveMerchant #:nodoc:
         'unchecked' => 'P'
       }
 
-      self.supported_countries = %w(AT AU BE BR CA CH DE DK ES FI FR GB HK IE IT JP LU MX NL NO NZ PT SE SG US)
+      DEFAULT_API_VERSION = '2015-04-07'
+
+      self.supported_countries = %w(AT AU BE BR CA CH DE DK EE ES FI FR GB GR HK IE IT JP LT LU LV MX NL NO NZ PL PT SE SG SI SK US)
       self.default_currency = 'USD'
       self.money_format = :cents
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club, :maestro]
@@ -83,11 +87,8 @@ module ActiveMerchant #:nodoc:
           end
           r.process do
             post = create_post_for_auth_or_purchase(money, payment, options)
-            if emv_payment?(payment)
-              add_application_fee(post, options)
-            else
-              post[:capture] = 'false'
-            end
+            add_application_fee(post, options) if emv_payment?(payment)
+            post[:capture] = 'false'
             commit(:post, 'charges', post, options)
           end
         end.responses.last
@@ -123,14 +124,17 @@ module ActiveMerchant #:nodoc:
         post = {}
 
         if emv_tc_response = options.delete(:icc_data)
-          post[:card] = { emv_approval_data: emv_tc_response }
-          commit(:post, "charges/#{CGI.escape(authorization)}", post, options)
+          # update the charge with emv data if card present
+          update = {}
+          update[:card] = { emv_approval_data: emv_tc_response }
+          commit(:post, "charges/#{CGI.escape(authorization)}", update, options)
         else
           add_application_fee(post, options)
           add_amount(post, money, options)
           add_exchange_rate(post, options)
-          commit(:post, "charges/#{CGI.escape(authorization)}/capture", post, options)
         end
+
+        commit(:post, "charges/#{CGI.escape(authorization)}/capture", post, options)
       end
 
       def void(identification, options = {})
@@ -150,14 +154,21 @@ module ActiveMerchant #:nodoc:
         post[:reason] = options[:reason] if options[:reason]
         post[:expand] = [:charge]
 
-        MultiResponse.run(:first) do |r|
-          r.process { commit(:post, "charges/#{CGI.escape(identification)}/refunds", post, options) }
+        response = commit(:post, "charges/#{CGI.escape(identification)}/refunds", post, options)
 
-          if options[:refund_fee_amount] && options[:refund_fee_amount].to_s != '0'
-            r.process { fetch_application_fee(identification, options) }
-            r.process { refund_application_fee(options[:refund_fee_amount].to_i, application_fee_from_response(r.responses.last), options) }
+        if response.success? && options[:refund_fee_amount] && options[:refund_fee_amount].to_s != '0'
+          charge = api_request(:get, "charges/#{CGI.escape(identification)}", nil, options)
+
+          if application_fee = charge['application_fee']
+            fee_refund_options = {
+              currency: options[:currency], # currency isn't used by Stripe here, but we need it for #add_amount
+              key: @fee_refund_api_key
+            }
+            refund_application_fee(options[:refund_fee_amount].to_i, application_fee, fee_refund_options)
           end
         end
+
+        response
       end
 
       def verify(payment, options = {})
@@ -168,21 +179,10 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def application_fee_from_response(response)
-        return unless response.success?
-        response.params['application_fee'] unless response.params['application_fee'].empty?
-      end
-
       def refund_application_fee(money, identification, options = {})
-        return Response.new(false, 'Application fee id could not be found') unless identification
-
         post = {}
         add_amount(post, money, options)
-        options[:key] = @fee_refund_api_key if @fee_refund_api_key
-        options.delete(:stripe_account)
-
-        refund_fee = commit(:post, "application_fees/#{CGI.escape(identification)}/refunds", post, options)
-        application_fee_response!(refund_fee, "Application fee could not be refunded: #{refund_fee.message}")
+        commit(:post, "application_fees/#{CGI.escape(identification)}/refunds", post, options)
       end
 
       # Note: creating a new credit card will not change the customer's existing default credit card (use :set_default => true)
@@ -215,13 +215,9 @@ module ActiveMerchant #:nodoc:
             # The /cards endpoint does not update other customer parameters.
             r.process { commit(:post, "customers/#{CGI.escape(options[:customer])}/cards", params, options) }
 
-            if options[:set_default] and r.success? and !r.params['id'].blank?
-              post[:default_card] = r.params['id']
-            end
+            post[:default_card] = r.params['id'] if options[:set_default] and r.success? and !r.params['id'].blank?
 
-            if post.count > 0
-              r.process { update_customer(options[:customer], post) }
-            end
+            r.process { update_customer(options[:customer], post) } if post.count > 0
           end
         else
           commit(:post, 'customers', post.merge(params), options)
@@ -304,8 +300,8 @@ module ActiveMerchant #:nodoc:
         add_amount(post, money, options, true)
         post[:type] = type
         if type == 'card'
-          add_creditcard(post, payment, options)
-          post[:card].delete(:name)
+          add_creditcard(post, payment, options, true)
+          add_source_owner(post, payment, options)
         elsif type == 'three_d_secure'
           post[:three_d_secure] = {card: payment}
           post[:redirect] = {return_url: options[:redirect_url]}
@@ -313,15 +309,33 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'sources', post, options)
       end
 
+      def show_source(source_id, options)
+        commit(:get, "sources/#{source_id}", nil, options)
+      end
+
       def create_webhook_endpoint(options, events)
         post = {}
         post[:url] = options[:callback_url]
         post[:enabled_events] = events
+        post[:connect] = true if options[:stripe_account]
+        options.delete(:stripe_account)
         commit(:post, 'webhook_endpoints', post, options)
       end
 
       def delete_webhook_endpoint(options)
         commit(:delete, "webhook_endpoints/#{options[:webhook_id]}", {}, options)
+      end
+
+      def show_webhook_endpoint(options)
+        options.delete(:stripe_account)
+        commit(:get, "webhook_endpoints/#{options[:webhook_id]}", nil, options)
+      end
+
+      def list_webhook_endpoints(options)
+        params = {}
+        params[:limit] = options[:limit] if options[:limit]
+        options.delete(:stripe_account)
+        commit(:get, "webhook_endpoints?#{post_data(params)}", nil, options)
       end
 
       def create_post_for_auth_or_purchase(money, payment, options)
@@ -333,6 +347,12 @@ module ActiveMerchant #:nodoc:
           add_creditcard(post, payment, options)
         end
 
+        add_charge_details(post, money, payment, options)
+        post
+      end
+
+      # Used internally by Spreedly to populate the charge object for 3DS 1.0 transactions
+      def add_charge_details(post, money, payment, options)
         if emv_payment?(payment)
           add_statement_address(post, options)
           add_emv_metadata(post, payment)
@@ -386,9 +406,7 @@ module ActiveMerchant #:nodoc:
         copy_when_present(level_three, [:shipping_amount], options)
         copy_when_present(level_three, [:line_items], options)
 
-        unless level_three.empty?
-          post[:level3] = level_three
-        end
+        post[:level3] = level_three unless level_three.empty?
       end
 
       def add_expand_parameters(post, options)
@@ -435,7 +453,7 @@ module ActiveMerchant #:nodoc:
         post[:statement_address][:state] = statement_address[:state]
       end
 
-      def add_creditcard(post, creditcard, options)
+      def add_creditcard(post, creditcard, options, use_sources = false)
         card = {}
         if emv_payment?(creditcard)
           add_emv_creditcard(post, creditcard.icc_data)
@@ -458,7 +476,7 @@ module ActiveMerchant #:nodoc:
             card[:exp_month] = creditcard.month
             card[:exp_year] = creditcard.year
             card[:cvc] = creditcard.verification_value if creditcard.verification_value?
-            card[:name] = creditcard.name if creditcard.name
+            card[:name] = creditcard.name if creditcard.name && !use_sources
           end
 
           if creditcard.is_a?(NetworkTokenizationCreditCard)
@@ -468,7 +486,7 @@ module ActiveMerchant #:nodoc:
           end
           post[:card] = card
 
-          add_address(post, options)
+          add_address(post, options) unless use_sources
         elsif creditcard.kind_of?(String)
           if options[:track_data]
             card[:swipe_data] = options[:track_data]
@@ -516,15 +534,23 @@ module ActiveMerchant #:nodoc:
         post[:metadata][:card_read_method] = creditcard.read_method if creditcard.respond_to?(:read_method)
       end
 
-      def fetch_application_fee(identification, options = {})
-        options[:key] = @fee_refund_api_key
+      def add_source_owner(post, creditcard, options)
+        post[:owner] = {}
+        post[:owner][:name] = creditcard.name if creditcard.name
+        post[:owner][:email] = options[:email] if options[:email]
 
-        fetch_charge = commit(:get, "charges/#{CGI.escape(identification)}", nil, options)
-        application_fee_response!(fetch_charge, "Application fee id could not be retrieved: #{fetch_charge.message}")
-      end
+        if address = options[:billing_address] || options[:address]
+          owner_address = {}
+          owner_address[:line1] = address[:address1] if address[:address1]
+          owner_address[:line2] = address[:address2] if address[:address2]
+          owner_address[:country] = address[:country] if address[:country]
+          owner_address[:postal_code] = address[:zip] if address[:zip]
+          owner_address[:state] = address[:state] if address[:state]
+          owner_address[:city] = address[:city] if address[:city]
 
-      def application_fee_response!(response, message)
-        response.success? ? response : Response.new(false, message)
+          post[:owner][:phone] = address[:phone] if address[:phone]
+          post[:owner][:address] = owner_address
+        end
       end
 
       def parse(body)
@@ -586,7 +612,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def api_version(options)
-        options[:version] || @options[:version] || '2015-04-07'
+        options[:version] || @options[:version] || self.class::DEFAULT_API_VERSION
       end
 
       def api_request(method, endpoint, parameters = nil, options = {})
@@ -629,8 +655,8 @@ module ActiveMerchant #:nodoc:
         return response.fetch('error', {})['charge'] unless success
 
         if url == 'customers'
-          [response['id'], response['sources']['data'].first['id']].join('|')
-        elsif method == :post && url.match(/customers\/.*\/cards/)
+          [response['id'], response.dig('sources', 'data').first&.dig('id')].join('|')
+        elsif method == :post && (url.match(/customers\/.*\/cards/) || url.match(/payment_methods\/.*\/attach/))
           [response['customer'], response['id']].join('|')
         else
           response['id']

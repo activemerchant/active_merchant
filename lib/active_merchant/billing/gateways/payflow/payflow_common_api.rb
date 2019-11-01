@@ -159,9 +159,7 @@ module ActiveMerchant #:nodoc:
         # REXML::XPath in Ruby 1.8.6 is now unable to match nodes based on their attributes
         tx_result = root.xpath('.//TransactionResult').first
 
-        if tx_result && tx_result.attributes['Duplicate'].to_s == 'true'
-          response[:duplicate] = true
-        end
+        response[:duplicate] = true if tx_result && tx_result.attributes['Duplicate'].to_s == 'true'
 
         root.xpath('.//*').each do |node|
           parse_element(response, node)

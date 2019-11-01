@@ -123,8 +123,9 @@ module ActiveMerchant #:nodoc:
       class_attribute :supported_cardtypes
       self.supported_cardtypes = []
 
+      # This default list of currencies without fractions are from https://en.wikipedia.org/wiki/ISO_4217
       class_attribute :currencies_without_fractions, :currencies_with_three_decimal_places
-      self.currencies_without_fractions = %w(BIF BYR CLP CVE DJF GNF ISK JPY KMF KRW PYG RWF UGX VND VUV XAF XOF XPF)
+      self.currencies_without_fractions = %w(BIF BYR CLP CVE DJF GNF ISK JPY KMF KRW PYG RWF UGX UYI VND VUV XAF XOF XPF)
       self.currencies_with_three_decimal_places = %w()
 
       class_attribute :homepage_url
@@ -155,9 +156,7 @@ module ActiveMerchant #:nodoc:
 
       def self.supported_countries=(country_codes)
         country_codes.each do |country_code|
-          unless ActiveMerchant::Country.find(country_code)
-            raise ActiveMerchant::InvalidCountryCodeError, "No country could be found for the country #{country_code}"
-          end
+          raise ActiveMerchant::InvalidCountryCodeError, "No country could be found for the country #{country_code}" unless ActiveMerchant::Country.find(country_code)
         end
         @supported_countries = country_codes.dup
       end
@@ -198,6 +197,16 @@ module ActiveMerchant #:nodoc:
 
       def supports_network_tokenization?
         false
+      end
+
+      def add_fields_to_post_if_present(post, options, fields)
+        fields.each do |field|
+          add_field_to_post_if_present(post, options, field)
+        end
+      end
+
+      def add_field_to_post_if_present(post, options, field)
+        post[field] = options[field] if options[field]
       end
 
       protected # :nodoc: all
@@ -247,9 +256,7 @@ module ActiveMerchant #:nodoc:
                   money
         end
 
-        if money.is_a?(String)
-          raise ArgumentError, 'money amount must be a positive Integer in cents.'
-        end
+        raise ArgumentError, 'money amount must be a positive Integer in cents.' if money.is_a?(String)
 
         if self.money_format == :cents
           cents.to_s

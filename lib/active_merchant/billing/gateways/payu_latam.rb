@@ -12,13 +12,15 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['AR', 'BR', 'CL', 'CO', 'MX', 'PA', 'PE']
       self.default_currency = 'USD'
       self.money_format = :dollars
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
+      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :naranja, :cabal]
 
       BRAND_MAP = {
         'visa' => 'VISA',
         'master' => 'MASTERCARD',
         'american_express' => 'AMEX',
-        'diners_club' => 'DINERS'
+        'diners_club' => 'DINERS',
+        'naranja' => 'NARANJA',
+        'cabal' => 'CABAL'
       }
 
       MINIMUMS = {
@@ -195,6 +197,7 @@ module ActiveMerchant #:nodoc:
           buyer[:fullName] = buyer_hash[:name]
           buyer[:dniNumber] = buyer_hash[:dni_number]
           buyer[:dniType] = buyer_hash[:dni_type]
+          buyer[:merchantBuyerId] = buyer_hash[:merchant_buyer_id]
           buyer[:cnpj] = buyer_hash[:cnpj] if @options[:payment_country] == 'BR'
           buyer[:emailAddress] = buyer_hash[:email]
           buyer[:contactPhone] = (options[:billing_address][:phone] if options[:billing_address]) || (options[:shipping_address][:phone] if options[:shipping_address]) || ''
@@ -203,6 +206,7 @@ module ActiveMerchant #:nodoc:
           buyer[:fullName] = payment_method.name.strip
           buyer[:dniNumber] = options[:dni_number]
           buyer[:dniType] = options[:dni_type]
+          buyer[:merchantBuyerId] = options[:merchant_buyer_id]
           buyer[:cnpj] = options[:cnpj] if @options[:payment_country] == 'BR'
           buyer[:emailAddress] = options[:email]
           buyer[:contactPhone] = (options[:billing_address][:phone] if options[:billing_address]) || (options[:shipping_address][:phone] if options[:shipping_address]) || ''

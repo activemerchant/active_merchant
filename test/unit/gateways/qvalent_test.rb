@@ -187,6 +187,71 @@ class QvalentTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_stored_credential_fields_initial
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, {stored_credential: {initial_transaction: true, reason_type: 'unscheduled', initiator: 'merchant'}})
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/posEntryMode=MANUAL/, data)
+      assert_match(/storedCredentialUsage=INITIAL_STORAGE/, data)
+      assert_match(/ECI=SSL/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_fields_recurring
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, {stored_credential: {reason_type: 'recurring', initiator: 'merchant', network_transaction_id: '7890'}})
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/posEntryMode=STORED_CREDENTIAL/, data)
+      assert_match(/storedCredentialUsage=RECURRING/, data)
+      assert_match(/ECI=REC/, data)
+      assert_match(/authTraceId=7890/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_fields_unscheduled
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, {stored_credential: {reason_type: 'unscheduled', initiator: 'merchant', network_transaction_id: '7890'}})
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/posEntryMode=STORED_CREDENTIAL/, data)
+      assert_match(/storedCredentialUsage=UNSCHEDULED/, data)
+      assert_match(/ECI=MTO/, data)
+      assert_match(/authTraceId=7890/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_fields_cardholder_initiated
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, {stored_credential: {reason_type: 'unscheduled', initiator: 'cardholder', network_transaction_id: '7890'}})
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/posEntryMode=STORED_CREDENTIAL/, data)
+      refute_match(/storedCredentialUsage/, data)
+      assert_match(/ECI=MTO/, data)
+      assert_match(/authTraceId=7890/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_fields_mastercard
+    @credit_card.brand = 'master'
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, {stored_credential: {reason_type: 'recurring', initiator: 'merchant', network_transaction_id: '7890'}})
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/posEntryMode=STORED_CREDENTIAL/, data)
+      refute_match(/storedCredentialUsage/, data)
+      assert_match(/ECI=REC/, data)
+      assert_match(/authTraceId=7890/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_cvv_result
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card)

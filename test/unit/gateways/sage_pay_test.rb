@@ -469,7 +469,7 @@ CV2Result=NOTPROVIDED
 DeclineCode=00
 ExpiryDate=0616
 BankAuthCode=999777
-  TRANSCRIPT
+    TRANSCRIPT
   end
 
   def scrubbed_transcript
@@ -490,6 +490,6 @@ CV2Result=NOTPROVIDED
 DeclineCode=00
 ExpiryDate=0616
 BankAuthCode=999777
-  TRANSCRIPT
+    TRANSCRIPT
   end
 end

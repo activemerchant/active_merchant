@@ -3,6 +3,7 @@ require 'test_helper'
 class RemoteElavonTest < Test::Unit::TestCase
   def setup
     @gateway = ElavonGateway.new(fixtures(:elavon))
+    @multi_currency_gateway = ElavonGateway.new(fixtures(:elavon_multi_currency))
 
     @credit_card = credit_card('4124939999999990')
     @bad_credit_card = credit_card('invalid')
@@ -198,6 +199,34 @@ class RemoteElavonTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_custom_fields
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(custom_fields: {a_key: 'a value'}))
+
+    assert_success response
+    assert response.test?
+    assert_equal 'APPROVAL', response.message
+    assert response.authorization
+  end
+
+  def test_failed_purchase_with_multi_currency_terminal_setting_disabled
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(currency: 'USD', multi_currency: true))
+
+    assert_failure response
+    assert response.test?
+    assert_equal 'Transaction currency is not allowed for this terminal.  Your terminal must be setup with Multi currency', response.message
+    assert response.authorization
+  end
+
+  def test_successful_purchase_with_multi_currency_gateway_setting
+    assert response = @multi_currency_gateway.purchase(@amount, @credit_card, @options.merge(currency: 'JPY'))
+
+    assert_success response
+    assert response.test?
+    assert_equal 'APPROVAL', response.message
+    assert response.authorization
+  end
+
+  def test_successful_purchase_with_multi_currency_transaction_setting
+    @multi_currency_gateway.options[:multi_currency] = false
+    assert response = @multi_currency_gateway.purchase(@amount, @credit_card, @options.merge(currency: 'JPY', multi_currency: true))
 
     assert_success response
     assert response.test?

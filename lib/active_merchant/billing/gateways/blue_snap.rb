@@ -8,7 +8,7 @@ module ActiveMerchant
       self.supported_countries = %w(US CA GB AT BE BG HR CY CZ DK EE FI FR DE GR HU IE IT LV LT LU MT NL PL PT RO SK SI ES SE AR BO BR BZ CL CO CR DO EC GF GP GT HN HT MF MQ MX NI PA PE PR PY SV UY VE)
 
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club, :maestro]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club, :maestro, :naranja, :cabal]
 
       self.homepage_url = 'https://home.bluesnap.com/'
       self.display_name = 'BlueSnap'
@@ -66,6 +66,8 @@ module ActiveMerchant
         'business_savings' => 'CORPORATE_SAVINGS'
       }
 
+      STATE_CODE_COUNTRIES = %w(US CA)
+
       def initialize(options={})
         requires!(options, :api_username, :api_password)
         super
@@ -93,6 +95,7 @@ module ActiveMerchant
         commit(:capture, :put) do |doc|
           add_authorization(doc, authorization)
           add_order(doc, options)
+          add_amount(doc, money, options) if options[:include_capture_amount] == true
         end
       end
 
@@ -220,6 +223,7 @@ module ActiveMerchant
         doc.send('merchant-transaction-id', truncate(options[:order_id], 50)) if options[:order_id]
         doc.send('soft-descriptor', options[:soft_descriptor]) if options[:soft_descriptor]
         add_description(doc, options[:description]) if options[:description]
+        add_3ds(doc, options[:three_d_secure]) if options[:three_d_secure]
         add_level_3_data(doc, options)
       end
 
@@ -228,10 +232,26 @@ module ActiveMerchant
         return unless address
 
         doc.country(address[:country]) if address[:country]
-        doc.state(address[:state]) if address[:state]
+        doc.state(address[:state]) if address[:state] && STATE_CODE_COUNTRIES.include?(address[:country])
         doc.address(address[:address]) if address[:address]
         doc.city(address[:city]) if address[:city]
         doc.zip(address[:zip]) if address[:zip]
+      end
+
+      def add_3ds(doc, three_d_secure_options)
+        eci = three_d_secure_options[:eci]
+        cavv = three_d_secure_options[:cavv]
+        xid = three_d_secure_options[:xid]
+        ds_transaction_id = three_d_secure_options[:ds_transaction_id]
+        version = three_d_secure_options[:version]
+
+        doc.send('three-d-secure') do
+          doc.eci(eci) if eci
+          doc.cavv(cavv) if cavv
+          doc.xid(xid) if xid
+          doc.send('three-d-secure-version', version) if version
+          doc.send('ds-transaction-id', ds_transaction_id) if ds_transaction_id
+        end
       end
 
       def add_level_3_data(doc, options)
@@ -287,9 +307,7 @@ module ActiveMerchant
         vaulted_shopper_id = payment_method_details.vaulted_shopper_id
         doc.send('vaulted-shopper-id', vaulted_shopper_id) if vaulted_shopper_id
 
-        if payment_method_details.check?
-          add_echeck_transaction(doc, payment_method_details.payment_method, options, vaulted_shopper_id.present?)
-        end
+        add_echeck_transaction(doc, payment_method_details.payment_method, options, vaulted_shopper_id.present?) if payment_method_details.check?
 
         add_fraud_info(doc, options)
         add_description(doc, options)

@@ -62,9 +62,7 @@ module ActiveMerchant #:nodoc:
 
       def void(orderCode, options={})
         response = commit(:delete, "orders/#{CGI.escape(orderCode)}", nil, options, 'void')
-        if !response.success? && (response.params && response.params['customCode'] != 'ORDER_NOT_FOUND')
-          response = refund(nil, orderCode)
-        end
+        response = refund(nil, orderCode) if !response.success? && (response.params && response.params['customCode'] != 'ORDER_NOT_FOUND')
         response
       end
 
@@ -125,9 +123,7 @@ module ActiveMerchant #:nodoc:
           'X-Worldpay-Client-User-Agent' => user_agent,
           'X-Worldpay-Client-User-Metadata' => {:ip => options[:ip]}.to_json
         }
-        if options['Authorization']
-          headers['Authorization'] = options['Authorization']
-        end
+        headers['Authorization'] = options['Authorization'] if options['Authorization']
         headers
       end
 

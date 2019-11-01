@@ -4,17 +4,20 @@ module ActiveMerchant #:nodoc:
 
       # we recommend setting up merchant-specific endpoints.
       # https://docs.adyen.com/developers/api-manual#apiendpoints
-      self.test_url = 'https://pal-test.adyen.com/pal/servlet/Payment/v18'
-      self.live_url = 'https://pal-live.adyen.com/pal/servlet/Payment/v18'
+      self.test_url = 'https://pal-test.adyen.com/pal/servlet/Payment/'
+      self.live_url = 'https://pal-live.adyen.com/pal/servlet/Payment/'
 
       self.supported_countries = ['AT', 'AU', 'BE', 'BG', 'BR', 'CH', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GB', 'GI', 'GR', 'HK', 'HU', 'IE', 'IS', 'IT', 'LI', 'LT', 'LU', 'LV', 'MC', 'MT', 'MX', 'NL', 'NO', 'PL', 'PT', 'RO', 'SE', 'SG', 'SK', 'SI', 'US']
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb, :dankort, :maestro,  :discover, :elo]
+      self.currencies_without_fractions = %w(CVE DJF GNF IDR JPY KMF KRW PYG RWF UGX VND VUV XAF XOF XPF)
+      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb, :dankort, :maestro,  :discover, :elo, :naranja, :cabal]
 
       self.money_format = :cents
 
       self.homepage_url = 'https://www.adyen.com/'
       self.display_name = 'Adyen'
+
+      API_VERSION = 'v40'
 
       STANDARD_ERROR_CODE_MAPPING = {
         '101' => STANDARD_ERROR_CODE[:incorrect_number],
@@ -38,7 +41,7 @@ module ActiveMerchant #:nodoc:
         else
           MultiResponse.run do |r|
             r.process { authorize(money, payment, options) }
-            r.process { capture(money, r.authorization, options) }
+            r.process { capture(money, r.authorization, capture_options(options)) }
           end
         end
       end
@@ -49,31 +52,40 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, money, options)
         add_payment(post, payment)
         add_extra_data(post, payment, options)
-        add_shopper_interaction(post, payment, options)
+        add_stored_credentials(post, payment, options)
         add_address(post, options)
         add_installments(post, options) if options[:installments]
         add_3ds(post, options)
-        commit('authorise', post)
+        add_3ds_authenticated_data(post, options)
+        commit('authorise', post, options)
       end
 
       def capture(money, authorization, options={})
         post = init_post(options)
         add_invoice_for_modification(post, money, options)
         add_reference(post, authorization, options)
-        commit('capture', post)
+        commit('capture', post, options)
       end
 
       def refund(money, authorization, options={})
         post = init_post(options)
         add_invoice_for_modification(post, money, options)
         add_original_reference(post, authorization, options)
-        commit('refund', post)
+        commit('refund', post, options)
       end
 
       def void(authorization, options={})
         post = init_post(options)
         add_reference(post, authorization, options)
-        commit('cancel', post)
+        commit('cancel', post, options)
+      end
+
+      def adjust(money, authorization, options={})
+        post = init_post(options)
+        add_invoice_for_modification(post, money, options)
+        add_reference(post, authorization, options)
+        add_extra_data(post, nil, options)
+        commit('adjustAuthorisation', post, options)
       end
 
       def store(credit_card, options={})
@@ -82,14 +94,23 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, 0, options)
         add_payment(post, credit_card)
         add_extra_data(post, credit_card, options)
+        add_stored_credentials(post, credit_card, options)
         add_recurring_contract(post, options)
         add_address(post, options)
-        commit('authorise', post)
+
+        initial_response = commit('authorise', post, options)
+
+        if initial_response.success? && card_not_stored?(initial_response)
+          unsupported_failure_response(initial_response)
+        else
+          initial_response
+        end
       end
 
       def verify(credit_card, options={})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(0, credit_card, options) }
+          options[:idempotency_key] = nil
           r.process(:ignore_result) { void(r.authorization, options) }
         end
       end
@@ -128,10 +149,14 @@ module ActiveMerchant #:nodoc:
         '16' => 'N',  # Postal code doesn't match, address unknown
         '17' => 'U',  # Postal code doesn't match, address not checked
         '18' => 'I',  # Neither postal code nor address were checked
+        '19' => 'L',  # Name and postal code matches.
         '20' => 'V',  # Name, address and postal code matches.
+        '21' => 'O',  # Name and address matches.
+        '22' => 'K',  # Name matches.
         '23' => 'F',  # Postal code matches, name doesn't match.
         '24' => 'H',  # Both postal code and address matches, name doesn't match.
-        '25' => 'T'  # Address matches, name doesn't match.
+        '25' => 'T',  # Address matches, name doesn't match.
+        '26' => 'N'   # Neither postal code, address nor name matches.
       }
 
       CVC_MAPPING = {
@@ -151,30 +176,44 @@ module ActiveMerchant #:nodoc:
       }
 
       def add_extra_data(post, payment, options)
+        post[:telephoneNumber] = options[:billing_address][:phone] if options.dig(:billing_address, :phone)
         post[:shopperEmail] = options[:shopper_email] if options[:shopper_email]
         post[:shopperIP] = options[:shopper_ip] if options[:shopper_ip]
         post[:shopperReference] = options[:shopper_reference] if options[:shopper_reference]
+        post[:shopperStatement] = options[:shopper_statement] if options[:shopper_statement]
         post[:fraudOffset] = options[:fraud_offset] if options[:fraud_offset]
         post[:selectedBrand] = options[:selected_brand] if options[:selected_brand]
         post[:selectedBrand] ||= NETWORK_TOKENIZATION_CARD_SOURCE[payment.source.to_s] if payment.is_a?(NetworkTokenizationCreditCard)
         post[:deliveryDate] = options[:delivery_date] if options[:delivery_date]
         post[:merchantOrderReference] = options[:merchant_order_reference] if options[:merchant_order_reference]
+        post[:captureDelayHours] = options[:capture_delay_hours] if options[:capture_delay_hours]
         post[:additionalData] ||= {}
         post[:additionalData][:overwriteBrand] = normalize(options[:overwrite_brand]) if options[:overwrite_brand]
         post[:additionalData][:customRoutingFlag] = options[:custom_routing_flag] if options[:custom_routing_flag]
         post[:additionalData]['paymentdatasource.type'] = NETWORK_TOKENIZATION_CARD_SOURCE[payment.source.to_s] if payment.is_a?(NetworkTokenizationCreditCard)
+        post[:additionalData][:authorisationType] = options[:authorisation_type] if options[:authorisation_type]
+        post[:additionalData][:adjustAuthorisationData] = options[:adjust_authorisation_data] if options[:adjust_authorisation_data]
+        post[:additionalData][:industryUsage] = options[:industry_usage] if options[:industry_usage]
+        post[:additionalData][:updateShopperStatement] = options[:update_shopper_statement] if options[:update_shopper_statement]
+        post[:additionalData][:RequestedTestAcquirerResponseCode] = options[:requested_test_acquirer_response_code] if options[:requested_test_acquirer_response_code] && test?
+        post[:deviceFingerprint] = options[:device_fingerprint] if options[:device_fingerprint]
         add_risk_data(post, options)
       end
 
       def add_risk_data(post, options)
-        risk_data = {}
-        risk_data.merge!(options[:risk_data]) if options[:risk_data]
+        if (risk_data = options[:risk_data])
+          risk_data = Hash[risk_data.map { |k, v| ["riskdata.#{k}", v] }]
+          post[:additionalData].merge!(risk_data)
+        end
+      end
 
-        post[:additionalData][:riskData] = risk_data unless risk_data.empty?
+      def add_stored_credentials(post, payment, options)
+        add_shopper_interaction(post, payment, options)
+        add_recurring_processing_model(post, options)
       end
 
       def add_shopper_interaction(post, payment, options={})
-        if (payment.respond_to?(:verification_value) && payment.verification_value) || payment.is_a?(NetworkTokenizationCreditCard)
+        if options.dig(:stored_credential, :initial_transaction) || (payment.respond_to?(:verification_value) && payment.verification_value) || payment.is_a?(NetworkTokenizationCreditCard)
           shopper_interaction = 'Ecommerce'
         else
           shopper_interaction = 'ContAuth'
@@ -183,32 +222,48 @@ module ActiveMerchant #:nodoc:
         post[:shopperInteraction] = options[:shopper_interaction] || shopper_interaction
       end
 
+      def add_recurring_processing_model(post, options)
+        return unless options.dig(:stored_credential, :reason_type) || options[:recurring_processing_model]
+        if options.dig(:stored_credential, :reason_type) && options[:stored_credential][:reason_type] == 'unscheduled'
+          recurring_processing_model = 'CardOnFile'
+        else
+          recurring_processing_model = 'Subscription'
+        end
+
+        post[:recurringProcessingModel] = options[:recurring_processing_model] || recurring_processing_model
+      end
+
       def add_address(post, options)
         return unless post[:card]&.kind_of?(Hash)
         if (address = options[:billing_address] || options[:address]) && address[:country]
-          post[:card][:billingAddress] = {}
-          post[:card][:billingAddress][:street] = address[:address1] || 'N/A'
-          post[:card][:billingAddress][:houseNumberOrName] = address[:address2] || 'N/A'
-          post[:card][:billingAddress][:postalCode] = address[:zip] if address[:zip]
-          post[:card][:billingAddress][:city] = address[:city] || 'N/A'
-          post[:card][:billingAddress][:stateOrProvince] = address[:state] || 'N/A'
-          post[:card][:billingAddress][:country] = address[:country] if address[:country]
+          post[:billingAddress] = {}
+          post[:billingAddress][:street] = address[:address1] || 'NA'
+          post[:billingAddress][:houseNumberOrName] = address[:address2] || 'NA'
+          post[:billingAddress][:postalCode] = address[:zip] if address[:zip]
+          post[:billingAddress][:city] = address[:city] || 'NA'
+          post[:billingAddress][:stateOrProvince] = get_state(address)
+          post[:billingAddress][:country] = address[:country] if address[:country]
         end
       end
 
+      def get_state(address)
+        address[:state] && !address[:state].blank? ? address[:state] : 'NA'
+      end
+
       def add_invoice(post, money, options)
+        currency = options[:currency] || currency(money)
         amount = {
-          value: amount(money),
-          currency: options[:currency] || currency(money)
+          value: localized_amount(money, currency),
+          currency: currency
         }
         post[:amount] = amount
-        post[:recurringProcessingModel] = options[:recurring_processing_model] if options[:recurring_processing_model]
       end
 
       def add_invoice_for_modification(post, money, options)
+        currency = options[:currency] || currency(money)
         amount = {
-          value: amount(money),
-          currency: options[:currency] || currency(money)
+          value: localized_amount(money, currency),
+          currency: currency
         }
         post[:modificationAmount] = amount
       end
@@ -237,6 +292,11 @@ module ActiveMerchant #:nodoc:
         card[:holderName] ||= 'Not Provided' if credit_card.is_a?(NetworkTokenizationCreditCard)
         requires!(card, :expiryMonth, :expiryYear, :holderName, :number)
         post[:card] = card
+      end
+
+      def capture_options(options)
+        return options.merge(idempotency_key: "#{options[:idempotency_key]}-cap") if options[:idempotency_key]
+        options
       end
 
       def add_reference(post, authorization, options = {})
@@ -276,9 +336,62 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_3ds(post, options)
-        return unless options[:execute_threed] || options[:threed_dynamic]
-        post[:browserInfo] = { userAgent: options[:user_agent], acceptHeader: options[:accept_header] }
-        post[:additionalData] = { executeThreeD: 'true' } if options[:execute_threed]
+        if three_ds_2_options = options[:three_ds_2]
+          device_channel = three_ds_2_options[:channel]
+          if device_channel == 'app'
+            post[:threeDS2RequestData] = { deviceChannel: device_channel }
+          else
+            add_browser_info(three_ds_2_options[:browser_info], post)
+            post[:threeDS2RequestData] = { deviceChannel: device_channel, notificationURL: three_ds_2_options[:notification_url] }
+          end
+
+          if options.has_key?(:execute_threed)
+            post[:additionalData][:executeThreeD] = options[:execute_threed]
+            post[:additionalData][:scaExemption] = options[:sca_exemption] if options[:sca_exemption]
+          end
+        else
+          return unless options[:execute_threed] || options[:threed_dynamic]
+          post[:browserInfo] = { userAgent: options[:user_agent], acceptHeader: options[:accept_header] }
+          post[:additionalData] = { executeThreeD: 'true' } if options[:execute_threed]
+        end
+      end
+
+      def add_3ds_authenticated_data(post, options)
+        if options[:three_d_secure] && options[:three_d_secure][:eci] && options[:three_d_secure][:xid]
+          add_3ds1_authenticated_data(post, options)
+        elsif options[:three_d_secure]
+          add_3ds2_authenticated_data(post, options)
+        end
+      end
+
+      def add_3ds1_authenticated_data(post, options)
+        three_d_secure_options = options[:three_d_secure]
+        post[:mpiData] = {
+          cavv: three_d_secure_options[:cavv],
+          cavvAlgorithm: three_d_secure_options[:cavv_algorithm],
+          eci: three_d_secure_options[:eci],
+          xid: three_d_secure_options[:xid],
+          directoryResponse: three_d_secure_options[:directory_response_status],
+          authenticationResponse: three_d_secure_options[:authentication_response_status]
+        }
+      end
+
+      def add_3ds2_authenticated_data(post, options)
+        three_d_secure_options = options[:three_d_secure]
+        # If the transaction was authenticated in a frictionless flow, send the transStatus from the ARes.
+        if(three_d_secure_options[:authentication_response_status].nil?)
+          authentication_response = three_d_secure_options[:directory_response_status]
+        else
+          authentication_response = three_d_secure_options[:authentication_response_status]
+        end
+        post[:mpiData] = {
+          threeDSVersion: three_d_secure_options[:version],
+          eci: three_d_secure_options[:eci],
+          cavv: three_d_secure_options[:cavv],
+          dsTransID: three_d_secure_options[:ds_transaction_id],
+          directoryResponse: three_d_secure_options[:directory_response_status],
+          authenticationResponse: authentication_response
+        }
       end
 
       def parse(body)
@@ -286,9 +399,9 @@ module ActiveMerchant #:nodoc:
         JSON.parse(body)
       end
 
-      def commit(action, parameters)
+      def commit(action, parameters, options)
         begin
-          raw_response = ssl_post("#{url}/#{action}", post_data(action, parameters), request_headers)
+          raw_response = ssl_post("#{url}/#{action}", post_data(action, parameters), request_headers(options))
           response = parse(raw_response)
         rescue ResponseError => e
           raw_response = e.response.body
@@ -317,11 +430,11 @@ module ActiveMerchant #:nodoc:
 
       def url
         if test?
-          test_url
+          "#{test_url}#{API_VERSION}"
         elsif @options[:subdomain]
-          "https://#{@options[:subdomain]}-pal-live.adyenpayments.com/pal/servlet/Payment/v18"
+          "https://#{@options[:subdomain]}-pal-live.adyenpayments.com/pal/servlet/Payment/#{API_VERSION}"
         else
-          live_url
+          "#{live_url}#{API_VERSION}"
         end
       end
 
@@ -329,11 +442,13 @@ module ActiveMerchant #:nodoc:
         Base64.strict_encode64("#{@username}:#{@password}")
       end
 
-      def request_headers
-        {
+      def request_headers(options)
+        headers = {
           'Content-Type' => 'application/json',
           'Authorization' => "Basic #{basic_auth}"
         }
+        headers['Idempotency-Key'] = options[:idempotency_key] if options[:idempotency_key]
+        headers
       end
 
       def success_from(action, response)
@@ -342,13 +457,15 @@ module ActiveMerchant #:nodoc:
           ['Authorised', 'Received', 'RedirectShopper'].include?(response['resultCode'])
         when 'capture', 'refund', 'cancel'
           response['response'] == "[#{action}-received]"
+        when 'adjustAuthorisation'
+          response['response'] == 'Authorised' || response['response'] == '[adjustAuthorisation-received]'
         else
           false
         end
       end
 
       def message_from(action, response)
-        return authorize_message_from(response) if action.to_s == 'authorise'
+        return authorize_message_from(response) if action.to_s == 'authorise' || action.to_s == 'authorise3d'
         response['response'] || response['message']
       end
 
@@ -379,6 +496,37 @@ module ActiveMerchant #:nodoc:
 
       def error_code_from(response)
         STANDARD_ERROR_CODE_MAPPING[response['errorCode']]
+      end
+
+      def add_browser_info(browser_info, post)
+        return unless browser_info
+        post[:browserInfo] = {
+          acceptHeader: browser_info[:accept_header],
+          colorDepth: browser_info[:depth],
+          javaEnabled: browser_info[:java],
+          language: browser_info[:language],
+          screenHeight: browser_info[:height],
+          screenWidth: browser_info[:width],
+          timeZoneOffset: browser_info[:timezone],
+          userAgent: browser_info[:user_agent]
+        }
+      end
+
+      def unsupported_failure_response(initial_response)
+        Response.new(
+          false,
+          'Recurring transactions are not supported for this card type.',
+          initial_response.params,
+          authorization: initial_response.authorization,
+          test: initial_response.test,
+          error_code: initial_response.error_code,
+          avs_result: initial_response.avs_result,
+          cvv_result: initial_response.cvv_result[:code]
+        )
+      end
+
+      def card_not_stored?(response)
+        response.authorization ? response.authorization.split('#')[2].nil? : true
       end
     end
   end

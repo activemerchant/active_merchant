@@ -14,6 +14,12 @@ class TrustCommerceTest < Test::Unit::TestCase
     @amount = 100
     @check = check
     @credit_card = credit_card('4111111111111111')
+
+    @options_with_custom_fields = {
+      custom_fields: {
+        'customfield1' => 'test1'
+      }
+    }
   end
 
   def test_successful_purchase
@@ -21,7 +27,7 @@ class TrustCommerceTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card)
     assert_instance_of Response, response
     assert_success response
-    assert_equal '025-0007423614', response.authorization
+    assert_equal '025-0007423614|sale', response.authorization
   end
 
   def test_unsuccessful_purchase
@@ -39,6 +45,78 @@ class TrustCommerceTest < Test::Unit::TestCase
       assert_match(%r{aggregator1}, data)
       assert_match(%r{name=Jim\+Smith}, data)
     end.respond_with(successful_purchase_response)
+  end
+
+  def test_succesful_purchase_with_custom_fields
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options_with_custom_fields)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{customfield1=test1}, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_succesful_authorize_with_custom_fields
+    stub_comms do
+      @gateway.authorize(@amount, @check, @options_with_custom_fields)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{customfield1=test1}, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_successful_void_from_purchase
+    stub_comms do
+      @gateway.void('1235|sale')
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{action=void}, data)
+    end.respond_with(successful_void_response)
+  end
+
+  def test_successful_void_from_authorize
+    stub_comms do
+      @gateway.void('1235|preauth')
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{action=reversal}, data)
+    end.respond_with(successful_void_response)
+  end
+
+  def test_succesful_capture_with_custom_fields
+    stub_comms do
+      @gateway.capture(@amount, 'auth', @options_with_custom_fields)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{customfield1=test1}, data)
+    end.respond_with(successful_capture_response)
+  end
+
+  def test_succesful_refund_with_custom_fields
+    stub_comms do
+      @gateway.refund(@amount, 'auth|100', @options_with_custom_fields)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{customfield1=test1}, data)
+    end.respond_with(successful_refund_response)
+  end
+
+  def test_succesful_void_with_custom_fields
+    stub_comms do
+      @gateway.void('1235|sale', @options_with_custom_fields)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{customfield1=test1}, data)
+    end.respond_with(successful_void_response)
+  end
+
+  def test_succesful_store_with_custom_fields
+    stub_comms do
+      @gateway.store(@credit_card, @options_with_custom_fields)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{customfield1=test1}, data)
+    end.respond_with(successful_store_response)
+  end
+
+  def test_succesful_unstore_with_custom_fields
+    stub_comms do
+      @gateway.unstore('test', @options_with_custom_fields)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{customfield1=test1}, data)
+    end.respond_with(successful_unstore_response)
   end
 
   def test_amount_style
@@ -87,6 +165,16 @@ class TrustCommerceTest < Test::Unit::TestCase
 
   private
 
+  def successful_authorize_response
+    <<-RESPONSE
+authcode=123456
+transid=026-0193338367,
+status=approved
+avs=Y
+cvv=M
+    RESPONSE
+  end
+
   def successful_purchase_response
     <<-RESPONSE
 transid=025-0007423614
@@ -96,12 +184,50 @@ cvv=P
     RESPONSE
   end
 
+  def successful_capture_response
+    <<-RESPONSE
+transid=026-0193338993
+status=accepted
+    RESPONSE
+  end
+
   def unsuccessful_purchase_response
     <<-RESPONSE
 transid=025-0007423827
 declinetype=cvv
 status=decline
 cvv=N
+    RESPONSE
+  end
+
+  def successful_void_response
+    <<-RESPONSE
+transid=025-0007423828
+status=accpeted
+    RESPONSE
+  end
+
+  def successful_refund_response
+    <<-RESPONSE
+transid=026-0193345407
+status=accepted
+    RESPONSE
+  end
+
+  def successful_store_response
+    <<-RESPONSE
+transid=026-0193346109
+status=approved,
+cvv=M,
+avs=0
+billingid=Q5T7PT
+    RESPONSE
+  end
+
+  def successful_unstore_response
+    <<-RESPONSE
+transid=026-0193346231
+status=rejected
     RESPONSE
   end
 

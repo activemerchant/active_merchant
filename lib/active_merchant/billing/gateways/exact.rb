@@ -15,20 +15,16 @@ module ActiveMerchant #:nodoc:
 
       ENVELOPE_NAMESPACES = { 'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema',
                               'xmlns:env' => 'http://schemas.xmlsoap.org/soap/envelope/',
-                              'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance'
-                            }
+                              'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance'}
 
       SEND_AND_COMMIT_ATTRIBUTES = { 'xmlns:n1' => 'http://secure2.e-xact.com/vplug-in/transaction/rpc-enc/Request',
-                                     'env:encodingStyle' => 'http://schemas.xmlsoap.org/soap/encoding/'
-                                   }
+                                     'env:encodingStyle' => 'http://schemas.xmlsoap.org/soap/encoding/'}
 
       SEND_AND_COMMIT_SOURCE_ATTRIBUTES = { 'xmlns:n2' => 'http://secure2.e-xact.com/vplug-in/transaction/rpc-enc/encodedTypes',
-                                            'xsi:type' => 'n2:Transaction'
-                                          }
+                                            'xsi:type' => 'n2:Transaction'}
 
       POST_HEADERS = { 'soapAction' => 'http://secure2.e-xact.com/vplug-in/transaction/rpc-enc/SendAndCommit',
-                       'Content-Type' => 'text/xml'
-                     }
+                       'Content-Type' => 'text/xml'}
 
       SUCCESS = 'true'
 

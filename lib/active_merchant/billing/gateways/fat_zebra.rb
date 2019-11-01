@@ -27,6 +27,7 @@ module ActiveMerchant #:nodoc:
         add_extra_options(post, options)
         add_order_id(post, options)
         add_ip(post, options)
+        add_metadata(post, options)
 
         commit(:post, 'purchases', post)
       end
@@ -39,6 +40,7 @@ module ActiveMerchant #:nodoc:
         add_extra_options(post, options)
         add_order_id(post, options)
         add_ip(post, options)
+        add_metadata(post, options)
 
         post[:capture] = false
 
@@ -138,13 +140,18 @@ module ActiveMerchant #:nodoc:
         post[:customer_ip] = options[:ip] || '127.0.0.1'
       end
 
+      def add_metadata(post, options)
+        post[:metadata] = options.fetch(:metadata, {})
+      end
+
       def commit(method, uri, parameters=nil)
-        response = begin
-          parse(ssl_request(method, get_url(uri), parameters.to_json, headers))
-        rescue ResponseError => e
-          return Response.new(false, 'Invalid Login') if(e.response.code == '401')
-          parse(e.response.body)
-        end
+        response =
+          begin
+            parse(ssl_request(method, get_url(uri), parameters.to_json, headers))
+          rescue ResponseError => e
+            return Response.new(false, 'Invalid Login') if(e.response.code == '401')
+            parse(e.response.body)
+          end
 
         success = success_from(response)
         Response.new(

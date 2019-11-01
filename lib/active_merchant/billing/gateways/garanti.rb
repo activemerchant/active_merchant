@@ -137,9 +137,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'OrderID', format_order_id(options[:order_id])
           xml.tag! 'GroupID'
 
-          if block_given?
-            yield xml
-          end
+          yield xml if block_given?
         end
       end
 

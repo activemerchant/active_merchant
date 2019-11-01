@@ -3,25 +3,55 @@ require 'test_helper'
 class MundipaggTest < Test::Unit::TestCase
   include CommStub
   def setup
-    @gateway = MundipaggGateway.new(api_key: 'my_api_key')
     @credit_card = credit_card
+
+    @alelo_card = credit_card(
+      '5067700000000028',
+      {
+        month: 10,
+        year: 2032,
+        first_name: 'John',
+        last_name: 'Smith',
+        verification_value: '737',
+        brand: 'alelo'
+      }
+    )
+
+    @alelo_visa_card = credit_card(
+      '4025880000000010',
+      {
+        month: 10,
+        year: 2032,
+        first_name: 'John',
+        last_name: 'Smith',
+        verification_value: '737',
+        brand: 'alelo'
+      }
+    )
+
+    @gateway = MundipaggGateway.new(api_key: 'my_api_key')
     @amount = 100
 
     @options = {
+      gateway_affiliation_id: 'abc123',
       order_id: '1',
       billing_address: address,
       description: 'Store Purchase'
     }
+
+    @gateway_response_error = 'Esta loja n??o possui um meio de pagamento configurado para a bandeira VR'
   end
 
   def test_successful_purchase
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    test_successful_purchase_with(@credit_card)
+  end
 
-    response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success response
+  def test_successful_purchase_with_alelo_card
+    test_successful_purchase_with(@alelo_card)
+  end
 
-    assert_equal 'ch_90Vjq8TrwfP74XJO', response.authorization
-    assert response.test?
+  def test_successful_purchase_with_alelo_number_beginning_with_4
+    test_successful_purchase_with(@alelo_visa_card)
   end
 
   def test_successful_purchase_with_holder_document
@@ -53,10 +83,41 @@ class MundipaggTest < Test::Unit::TestCase
     assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
   end
 
+  def test_failed_purchase_with_top_level_errors
+    @gateway.expects(:ssl_post).raises(mock_response_error)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_invalid_parameter_errors(response)
+  end
+
+  def test_failed_purchase_with_gateway_response_errors
+    @gateway.expects(:ssl_post).returns(failed_response_with_gateway_response_errors)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_success response
+    assert_equal @gateway_response_error, response.message
+  end
+
   def test_successful_authorize
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
 
     response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+
+    assert_equal 'ch_gm5wrlGMI2Fb0x6K', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_authorize_with_partially_missing_address
+    shipping_address = {
+      country: 'BR',
+      address1: 'Foster St.'
+    }
+
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+    response = @gateway.authorize(@amount, @credit_card, @options.merge(shipping_address: shipping_address))
     assert_success response
 
     assert_equal 'ch_gm5wrlGMI2Fb0x6K', response.authorization
@@ -69,6 +130,23 @@ class MundipaggTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
     assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
+  end
+
+  def test_failed_authorize_with_top_level_errors
+    @gateway.expects(:ssl_post).raises(mock_response_error)
+
+    response = @gateway.authorize(@amount, @credit_card, @options)
+
+    assert_invalid_parameter_errors(response)
+  end
+
+  def test_failed_authorize_with_gateway_response_errors
+    @gateway.expects(:ssl_post).returns(failed_response_with_gateway_response_errors)
+
+    response = @gateway.authorize(@amount, @credit_card, @options)
+
+    assert_success response
+    assert_equal @gateway_response_error, response.message
   end
 
   def test_successful_capture
@@ -154,12 +232,69 @@ class MundipaggTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_failed_store_with_top_level_errors
+    @gateway.expects(:ssl_post).times(2).raises(mock_response_error)
+
+    response = @gateway.store(@credit_card, @options)
+
+    assert_invalid_parameter_errors(response)
+  end
+
+  def test_failed_store_with_gateway_response_errors
+    @gateway.expects(:ssl_post).times(2).returns(failed_response_with_gateway_response_errors)
+
+    response = @gateway.store(@credit_card, @options)
+
+    assert_success response
+    assert_equal @gateway_response_error, response.message
+  end
+
+  def test_gateway_id_fallback
+    gateway = MundipaggGateway.new(api_key: 'my_api_key', gateway_id: 'abc123')
+    options = {
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase'
+    }
+    stub_comms do
+      gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/"gateway_affiliation_id":"abc123"/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
   private
+
+  def test_successful_purchase_with(card)
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    response = @gateway.purchase(@amount, card, @options)
+    assert_success response
+
+    assert_equal 'ch_90Vjq8TrwfP74XJO', response.authorization
+    assert response.test?
+  end
+
+  def mock_response_error
+    mock_response = Net::HTTPUnprocessableEntity.new('1.1', '422', 'Unprocessable Entity')
+    mock_response.stubs(:body).returns(failed_response_with_top_level_errors)
+
+    ActiveMerchant::ResponseError.new(mock_response)
+  end
+
+  def assert_invalid_parameter_errors(response)
+    assert_failure response
+
+    assert_equal(
+      'Invalid parameters; The request is invalid. | The field neighborhood must be a string with a maximum length of 64. | The field line_1 must be a string with a maximum length of 256.',
+      response.message
+    )
+  end
 
   def pre_scrubbed
     %q(
@@ -346,6 +481,130 @@ class MundipaggTest < Test::Unit::TestCase
           "updated_at": "2018-02-01T18:42:44Z",
           "gateway_response": {
             "code": "201"
+          }
+        }
+      }
+    )
+  end
+
+  def failed_response_with_top_level_errors
+    %(
+      {
+        "message": "The request is invalid.",
+        "errors": {
+          "charge.payment.credit_card.card.billing_address.neighborhood": [
+            "The field neighborhood must be a string with a maximum length of 64."
+          ],
+          "charge.payment.credit_card.card.billing_address.line_1": [
+            "The field line_1 must be a string with a maximum length of 256."
+          ]
+        },
+        "request": {
+          "currency": "USD",
+          "amount": 100,
+          "customer": {
+            "name": "Longbob Longsen",
+            "phones": {},
+            "metadata": {}
+          },
+          "payment": {
+            "gateway_affiliation_id": "d76dffc8-c3e5-4d80-b9ee-dc8fb6c56c83",
+            "payment_method": "credit_card",
+            "credit_card": {
+              "installments": 1,
+              "capture": true,
+              "card": {
+                "last_four_digits": "2224",
+                "brand": "Visa",
+                "holder_name": "Longbob Longsen",
+                "exp_month": 9,
+                "exp_year": 2020,
+                "billing_address": {
+                  "street": "My Street",
+                  "number": "456",
+                  "zip_code": "K1C2N6",
+                  "neighborhood": "Sesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame Street",
+                  "city": "Ottawa",
+                  "state": "ON",
+                  "country": "CA",
+                  "line_1": "456, My Street, Sesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame Street"
+                },
+                "options": {}
+              }
+            },
+            "metadata": {
+              "mundipagg_payment_method_code": "1"
+            }
+          }
+        }
+      }
+    )
+  end
+
+  def failed_response_with_gateway_response_errors
+    %(
+      {
+        "id": "ch_90Vjq8TrwfP74XJO",
+        "code": "ME0KIN4A0O",
+        "gateway_id": "162bead8-23a0-4708-b687-078a69a1aa7c",
+        "amount": 100,
+        "paid_amount": 100,
+        "status": "paid",
+        "currency": "USD",
+        "payment_method": "credit_card",
+        "paid_at": "2018-02-01T18:41:05Z",
+        "created_at": "2018-02-01T18:41:04Z",
+        "updated_at": "2018-02-01T18:41:04Z",
+        "customer": {
+          "id": "cus_VxJX2NmTqyUnXgL9",
+          "name": "Longbob Longsen",
+          "email": "",
+          "delinquent": false,
+          "created_at": "2018-02-01T18:41:04Z",
+          "updated_at": "2018-02-01T18:41:04Z",
+          "phones": {}
+        },
+        "last_transaction": {
+          "id": "tran_JNzjzadcVZHlG8K2",
+          "transaction_type": "credit_card",
+          "gateway_id": "c579c8fa-53d7-41a8-b4cc-a03c712ebbb7",
+          "amount": 100,
+          "status": "captured",
+          "success": true,
+          "installments": 1,
+          "operation_type": "auth_and_capture",
+          "card": {
+            "id": "card_pD02Q6WtOTB7a3kE",
+            "first_six_digits": "400010",
+            "last_four_digits": "2224",
+            "brand": "Visa",
+            "holder_name": "Longbob Longsen",
+            "exp_month": 9,
+            "exp_year": 2019,
+            "status": "active",
+            "created_at": "2018-02-01T18:41:04Z",
+            "updated_at": "2018-02-01T18:41:04Z",
+            "billing_address": {
+              "street": "My Street",
+              "number": "456",
+              "zip_code": "K1C2N6",
+              "neighborhood": "Sesame Street",
+              "city": "Ottawa",
+              "state": "ON",
+              "country": "CA",
+              "line_1": "456, My Street, Sesame Street"
+            },
+            "type": "credit"
+          },
+          "created_at": "2018-02-01T18:41:04Z",
+          "updated_at": "2018-02-01T18:41:04Z",
+          "gateway_response": {
+            "code": "400",
+            "errors": [
+              {
+                "message": "Esta loja n??o possui um meio de pagamento configurado para a bandeira VR"
+              }
+            ]
           }
         }
       }

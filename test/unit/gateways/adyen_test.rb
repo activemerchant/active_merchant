@@ -28,6 +28,15 @@ class AdyenTest < Test::Unit::TestCase
       :brand => 'elo'
     )
 
+    @cabal_credit_card = credit_card('6035 2277 1642 7021',
+      :month => 10,
+      :year => 2020,
+      :first_name => 'John',
+      :last_name => 'Smith',
+      :verification_value => '737',
+      :brand => 'cabal'
+    )
+
     @three_ds_enrolled_card = credit_card('4212345678901237', brand: :visa)
 
     @apple_pay_card = network_tokenization_credit_card('4111111111111111',
@@ -45,7 +54,44 @@ class AdyenTest < Test::Unit::TestCase
       shopper_reference: 'John Smith',
       order_id: '345123',
       installments: 2,
-      recurring_processing_model: 'CardOnFile'
+      stored_credential: {reason_type: 'unscheduled'}
+    }
+
+    @normalized_initial_stored_credential = {
+      stored_credential: {
+        initial_transaction: true,
+        reason_type: 'unscheduled'
+      }
+    }
+
+    @normalized_stored_credential = {
+      stored_credential: {
+        initial_transaction: false,
+        reason_type: 'recurring'
+      }
+    }
+
+    @normalized_3ds_2_options = {
+      reference: '345123',
+      shopper_email: 'john.smith@test.com',
+      shopper_ip: '77.110.174.153',
+      shopper_reference: 'John Smith',
+      billing_address: address(),
+      order_id: '123',
+      stored_credential: {reason_type: 'unscheduled'},
+      three_ds_2: {
+        channel: 'browser',
+        browser_info: {
+          accept_header: 'unknown',
+          depth: 100,
+          java: false,
+          language: 'US',
+          height: 1000,
+          width: 500,
+          timezone: '-120',
+          user_agent: 'unknown'
+        }
+      }
     }
   end
 
@@ -93,10 +139,77 @@ class AdyenTest < Test::Unit::TestCase
     refute response.params['paRequest'].blank?
   end
 
+  def test_adds_3ds1_standalone_fields
+    eci = '05'
+    cavv = '3q2+78r+ur7erb7vyv66vv\/\/\/\/8='
+    cavv_algorithm = '1'
+    xid = 'ODUzNTYzOTcwODU5NzY3Qw=='
+    directory_response_status = 'C'
+    authentication_response_status = 'Y'
+    options_with_3ds1_standalone = @options.merge(
+      three_d_secure: {
+        eci: eci,
+        cavv: cavv,
+        cavv_algorithm: cavv_algorithm,
+        xid: xid,
+        directory_response_status: directory_response_status,
+        authentication_response_status: authentication_response_status
+      }
+    )
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, options_with_3ds1_standalone)
+    end.check_request do |endpoint, data, headers|
+      assert_equal eci, JSON.parse(data)['mpiData']['eci']
+      assert_equal cavv, JSON.parse(data)['mpiData']['cavv']
+      assert_equal cavv_algorithm, JSON.parse(data)['mpiData']['cavvAlgorithm']
+      assert_equal xid, JSON.parse(data)['mpiData']['xid']
+      assert_equal directory_response_status, JSON.parse(data)['mpiData']['directoryResponse']
+      assert_equal authentication_response_status, JSON.parse(data)['mpiData']['authenticationResponse']
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_adds_3ds2_standalone_fields
+    version = '2.1.0'
+    eci = '02'
+    cavv = 'jJ81HADVRtXfCBATEp01CJUAAAA='
+    ds_transaction_id = '97267598-FAE6-48F2-8083-C23433990FBC'
+    directory_response_status = 'C'
+    authentication_response_status = 'Y'
+    options_with_3ds2_standalone = @options.merge(
+      three_d_secure: {
+        version: version,
+        eci: eci,
+        cavv: cavv,
+        ds_transaction_id: ds_transaction_id,
+        directory_response_status: directory_response_status,
+        authentication_response_status: authentication_response_status
+      }
+    )
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, options_with_3ds2_standalone)
+    end.check_request do |endpoint, data, headers|
+      assert_equal version, JSON.parse(data)['mpiData']['threeDSVersion']
+      assert_equal eci, JSON.parse(data)['mpiData']['eci']
+      assert_equal cavv, JSON.parse(data)['mpiData']['cavv']
+      assert_equal ds_transaction_id, JSON.parse(data)['mpiData']['dsTransID']
+      assert_equal directory_response_status, JSON.parse(data)['mpiData']['directoryResponse']
+      assert_equal authentication_response_status, JSON.parse(data)['mpiData']['authenticationResponse']
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_failed_authorize
     @gateway.expects(:ssl_post).returns(failed_authorize_response)
 
     response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_equal 'Expired Card', response.message
+    assert_failure response
+  end
+
+  def test_failed_authorise3d
+    @gateway.expects(:ssl_post).returns(failed_authorize_response)
+
+    response = @gateway.send(:commit, 'authorise3d', {}, {})
+
     assert_equal 'Expired Card', response.message
     assert_failure response
   end
@@ -135,6 +248,15 @@ class AdyenTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_cabal_card
+    response = stub_comms do
+      @gateway.purchase(@amount, @cabal_credit_card, @options)
+    end.respond_with(successful_authorize_with_cabal_response, successful_capture_with_cabal_repsonse)
+    assert_success response
+    assert_equal '883567090118045A#883567090119063C#', response.authorization
+    assert response.test?
+  end
+
   def test_successful_maestro_purchase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge({selected_brand: 'maestro', overwrite_brand: 'true'}))
@@ -149,11 +271,36 @@ class AdyenTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_3ds_2_fields_sent
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @normalized_3ds_2_options)
+    end.check_request do |endpoint, data, headers|
+      data = JSON.parse(data)
+      assert_equal 'browser', data['threeDS2RequestData']['deviceChannel']
+      assert_equal 'unknown', data['browserInfo']['acceptHeader']
+      assert_equal 100, data['browserInfo']['colorDepth']
+      assert_equal false, data['browserInfo']['javaEnabled']
+      assert_equal 'US', data['browserInfo']['language']
+      assert_equal 1000, data['browserInfo']['screenHeight']
+      assert_equal 500, data['browserInfo']['screenWidth']
+      assert_equal '-120', data['browserInfo']['timeZoneOffset']
+      assert_equal 'unknown', data['browserInfo']['userAgent']
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_installments_sent
     stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
       assert_equal 2, JSON.parse(data)['installments']['value']
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_capture_delay_hours_sent
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({capture_delay_hours: 4}))
+    end.check_request do |endpoint, data, headers|
+      assert_equal 4, JSON.parse(data)['captureDelayHours']
     end.respond_with(successful_authorize_response)
   end
 
@@ -165,11 +312,123 @@ class AdyenTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
+  def test_execute_threed_false_sent_3ds2
+    stub_comms do
+      @gateway.authorize(@amount, '123', @normalized_3ds_2_options.merge({execute_threed: false}))
+    end.check_request do |endpoint, data, headers|
+      refute JSON.parse(data)['additionalData']['scaExemption']
+      assert_false JSON.parse(data)['additionalData']['executeThreeD']
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_sca_exemption_not_sent_if_execute_threed_missing_3ds2
+    stub_comms do
+      @gateway.authorize(@amount, '123', @normalized_3ds_2_options.merge({scaExemption: 'lowValue'}))
+    end.check_request do |endpoint, data, headers|
+      refute JSON.parse(data)['additionalData']['scaExemption']
+      refute JSON.parse(data)['additionalData']['executeThreeD']
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_sca_exemption_and_execute_threed_false_sent_3ds2
+    stub_comms do
+      @gateway.authorize(@amount, '123', @normalized_3ds_2_options.merge({sca_exemption: 'lowValue', execute_threed: false}))
+    end.check_request do |endpoint, data, headers|
+      assert_equal 'lowValue', JSON.parse(data)['additionalData']['scaExemption']
+      assert_false JSON.parse(data)['additionalData']['executeThreeD']
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_sca_exemption_and_execute_threed_true_sent_3ds2
+    stub_comms do
+      @gateway.authorize(@amount, '123', @normalized_3ds_2_options.merge({sca_exemption: 'lowValue', execute_threed: true}))
+    end.check_request do |endpoint, data, headers|
+      assert_equal 'lowValue', JSON.parse(data)['additionalData']['scaExemption']
+      assert JSON.parse(data)['additionalData']['executeThreeD']
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_sca_exemption_not_sent_when_execute_threed_true_3ds1
+    stub_comms do
+      @gateway.authorize(@amount, '123', @options.merge({sca_exemption: 'lowValue', execute_threed: true}))
+    end.check_request do |endpoint, data, headers|
+      refute JSON.parse(data)['additionalData']['scaExemption']
+      assert JSON.parse(data)['additionalData']['executeThreeD']
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_sca_exemption_not_sent_when_execute_threed_false_3ds1
+    stub_comms do
+      @gateway.authorize(@amount, '123', @options.merge({sca_exemption: 'lowValue', execute_threed: false}))
+    end.check_request do |endpoint, data, headers|
+      refute JSON.parse(data)['additionalData']['scaExemption']
+      refute JSON.parse(data)['additionalData']['executeThreeD']
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_update_shopper_statement_and_industry_usage_sent
+    stub_comms do
+      @gateway.adjust(@amount, '123', @options.merge({update_shopper_statement: 'statement note', industry_usage: 'DelayedCharge'}))
+    end.check_request do |endpoint, data, headers|
+      assert_equal 'statement note', JSON.parse(data)['additionalData']['updateShopperStatement']
+      assert_equal 'DelayedCharge', JSON.parse(data)['additionalData']['industryUsage']
+    end.respond_with(successful_adjust_response)
+  end
+
   def test_risk_data_sent
     stub_comms do
       @gateway.authorize(@amount, @credit_card, @options.merge({risk_data: {'operatingSystem' => 'HAL9000'}}))
     end.check_request do |endpoint, data, headers|
-      assert_equal 'HAL9000', JSON.parse(data)['additionalData']['riskData']['operatingSystem']
+      assert_equal 'HAL9000', JSON.parse(data)['additionalData']['riskdata.operatingSystem']
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_risk_data_complex_data
+    stub_comms do
+      risk_data = {
+        'deliveryMethod' => 'express',
+        'basket.item.productTitle' => 'Blue T Shirt',
+        'promotions.promotion.promotionName' => 'Big Sale promotion'
+      }
+      @gateway.authorize(@amount, @credit_card, @options.merge({risk_data: risk_data}))
+    end.check_request do |endpoint, data, headers|
+      parsed = JSON.parse(data)
+      assert_equal 'express', parsed['additionalData']['riskdata.deliveryMethod']
+      assert_equal 'Blue T Shirt', parsed['additionalData']['riskdata.basket.item.productTitle']
+      assert_equal 'Big Sale promotion', parsed['additionalData']['riskdata.promotions.promotion.promotionName']
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_successful_authorize_with_normalized_stored_credentials
+    @credit_card.verification_value = nil
+    stub_comms do
+      @gateway.authorize(50, @credit_card, @options.merge(@normalized_stored_credential))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/"shopperInteraction":"ContAuth"/, data)
+      assert_match(/"recurringProcessingModel":"Subscription"/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_successful_initial_authorize_with_normalized_stored_credentials
+    stub_comms do
+      @gateway.authorize(50, @credit_card, @options.merge(@normalized_initial_stored_credential))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/"shopperInteraction":"Ecommerce"/, data)
+      assert_match(/"recurringProcessingModel":"CardOnFile"/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_nonfractional_currency_handling
+    stub_comms do
+      @gateway.authorize(200, @credit_card, @options.merge(currency: 'JPY'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/"amount\":{\"value\":\"2\",\"currency\":\"JPY\"}/, data)
+    end.respond_with(successful_authorize_response)
+
+    stub_comms do
+      @gateway.authorize(200, @credit_card, @options.merge(currency: 'CLP'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/"amount\":{\"value\":\"200\",\"currency\":\"CLP\"}/, data)
     end.respond_with(successful_authorize_response)
   end
 
@@ -218,6 +477,34 @@ class AdyenTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(failed_void_response)
     response = @gateway.void('')
     assert_equal 'Original pspReference required for this operation', response.message
+    assert_failure response
+  end
+
+  def test_successful_adjust
+    @gateway.expects(:ssl_post).returns(successful_adjust_response)
+    response = @gateway.adjust(200, '8835544088660594')
+    assert_equal '8835544088660594#8835544088660594#', response.authorization
+    assert_equal '[adjustAuthorisation-received]', response.message
+  end
+
+  def test_failed_adjust
+    @gateway.expects(:ssl_post).returns(failed_adjust_response)
+    response = @gateway.adjust(200, '')
+    assert_equal 'Original pspReference required for this operation', response.message
+    assert_failure response
+  end
+
+  def test_successful_synchronous_adjust
+    @gateway.expects(:ssl_post).returns(successful_synchronous_adjust_response)
+    response = @gateway.adjust(200, '8835544088660594')
+    assert_equal '8835544088660594#8835574118820108#', response.authorization
+    assert_equal 'Authorised', response.message
+  end
+
+  def test_failed_synchronous_adjust
+    @gateway.expects(:ssl_post).returns(failed_synchronous_adjust_response)
+    response = @gateway.adjust(200, '8835544088660594')
+    assert_equal 'Refused', response.message
     assert_failure response
   end
 
@@ -282,12 +569,12 @@ class AdyenTest < Test::Unit::TestCase
     @options[:billing_address].delete(:address2)
     @options[:billing_address].delete(:state)
     @gateway.send(:add_address, post, @options)
-    assert_equal 'N/A', post[:card][:billingAddress][:street]
-    assert_equal 'N/A', post[:card][:billingAddress][:houseNumberOrName]
-    assert_equal 'N/A', post[:card][:billingAddress][:stateOrProvince]
-    assert_equal @options[:billing_address][:zip], post[:card][:billingAddress][:postalCode]
-    assert_equal @options[:billing_address][:city], post[:card][:billingAddress][:city]
-    assert_equal @options[:billing_address][:country], post[:card][:billingAddress][:country]
+    assert_equal 'NA', post[:billingAddress][:street]
+    assert_equal 'NA', post[:billingAddress][:houseNumberOrName]
+    assert_equal 'NA', post[:billingAddress][:stateOrProvince]
+    assert_equal @options[:billing_address][:zip], post[:billingAddress][:postalCode]
+    assert_equal @options[:billing_address][:city], post[:billingAddress][:city]
+    assert_equal @options[:billing_address][:country], post[:billingAddress][:country]
   end
 
   def test_authorize_with_network_tokenization_credit_card_no_name
@@ -318,6 +605,16 @@ class AdyenTest < Test::Unit::TestCase
       @gateway.verify(@credit_card, @options)
     end.respond_with(extended_avs_response)
     assert_equal 'Card member\'s name, billing address, and billing postal code match.', response.avs_result['message']
+  end
+
+  def test_optional_idempotency_key_header
+    options = @options.merge(:idempotency_key => 'test123')
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert headers['Idempotency-Key']
+    end.respond_with(successful_authorize_response)
+    assert_success response
   end
 
   private
@@ -485,6 +782,25 @@ class AdyenTest < Test::Unit::TestCase
     RESPONSE
   end
 
+  def successful_authorize_with_cabal_response
+    <<-RESPONSE
+    {
+      "pspReference":"883567090118045A",
+      "resultCode":"Authorised",
+      "authCode":"77651"
+    }
+    RESPONSE
+  end
+
+  def successful_capture_with_cabal_repsonse
+    <<-RESPONSE
+    {
+      "pspReference":"883567090119063C",
+      "response":"[capture-received]"
+    }
+    RESPONSE
+  end
+
   def successful_authorize_response
     <<-RESPONSE
     {
@@ -571,6 +887,38 @@ class AdyenTest < Test::Unit::TestCase
       "message":"Original pspReference required for this operation",
       "errorType":"validation"
     }
+    RESPONSE
+  end
+
+  def successful_adjust_response
+    <<-RESPONSE
+    {
+      "pspReference": "8835544088660594",
+      "response": "[adjustAuthorisation-received]"
+    }
+    RESPONSE
+  end
+
+  def failed_adjust_response
+    <<-RESPONSE
+    {
+      "status":422,
+      "errorCode":"167",
+      "message":"Original pspReference required for this operation",
+      "errorType":"validation"
+    }
+    RESPONSE
+  end
+
+  def successful_synchronous_adjust_response
+    <<-RESPONSE
+    {\"additionalData\":{\"authCode\":\"70125\",\"adjustAuthorisationData\":\"BQABAQA9NtGnJAkLXKqW1C+VUeCNMzDf4WwzLFBiuQ8iaA2Yvflz41t0cYxtA7XVzG2pzlJPMnkSK75k3eByNS0\\/m0\\/N2+NnnKv\\/9rYPn8Pjq1jc7CapczdqZNl8P9FwqtIa4Kdeq7ZBNeGalx9oH4reutlFggzWCr+4eYXMRqMgQNI2Bu5XvwkqBbXwbDL05CuNPjjEwO64YrCpVBLrxk4vlW4fvCLFR0u8O68C+Y4swmsPDvGUxWpRgwNVqXsTmvt9z8hlej21BErL8fPEy+fJP4Zab8oyfcLrv9FJkHZq03cyzJpOzqX458Ctn9sIwBawXzNEFN5bCt6eT1rgp0yuHeMGEGwrjNl8rijez7Rd\\/vy1WUYAAMfmZFuJMQ73l1+Hkr0VlHv6crlyP\\/FVTY\\/XIUiGMqa1yM08Zu\\/Gur5N7lU8qnMi2WO9QPyHmmdlfo7+AGsrKrzV4wY\\/wISg0pcv8PypBWVq\\/hYoCqlHsGUuIiyGLIW7A8LtG6\\/JqAA9t\\/0EdnQVz0k06IEEYnBzkQoY8Qv3cVszgPQukGstBraB47gQdVDp9vmuQjMstt8Te56SDRxtfcu0z4nQIURVSkJJNj8RYfwXH9OUbz3Vd2vwoR3lCJFTCKIeW8sidNVB3xAZnddBVQ3P\\/QxPnrrRdCcnoWSGoEOBBIxgF00XwNxJ4P7Xj1bB7oq3M7k99dgPnSdZIjyvG6BWKnCQcGyVRB0yOaYBaOCmN66EgWfXoJR5BA4Jo6gnWnESWV62iUC8OCzmis1VagfaBn0A9vWNcqKFkUr\\/68s3w8ixLJFy+WdpAS\\/flzC3bJbvy9YR9nESKAP40XiNGz9iBROCfPI2bSOvdFf831RdTxWaE+ewAC3w9GsgEKAXxzWsVeSODWRZQA0TEVOfX8SaNVa5w3EXLDsRVnmKgUH8yQnEJQBGhDJXg1sEbowE07CzzdAY5Mc=\",\"refusalReasonRaw\":\"AUTHORISED\"},\"pspReference\":\"8835574118820108\",\"response\":\"Authorised\"}
+    RESPONSE
+  end
+
+  def failed_synchronous_adjust_response
+    <<-RESPONSE
+    {\"additionalData\":{\"authCode\":\"90745\",\"refusalReasonRaw\":\"2\"},\"pspReference\":\"8835574120337117\",\"response\":\"Refused\"}
     RESPONSE
   end
 

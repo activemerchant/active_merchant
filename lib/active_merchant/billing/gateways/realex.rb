@@ -42,7 +42,8 @@ module ActiveMerchant
 
       def initialize(options = {})
         requires!(options, :login, :password)
-        options[:refund_hash] = Digest::SHA1.hexdigest(options[:rebate_secret]) if options.has_key?(:rebate_secret)
+        options[:refund_hash] = Digest::SHA1.hexdigest(options[:rebate_secret]) if options[:rebate_secret].present?
+        options[:credit_hash] = Digest::SHA1.hexdigest(options[:refund_secret]) if options[:refund_secret].present?
         super
       end
 
@@ -70,9 +71,9 @@ module ActiveMerchant
         commit(request)
       end
 
-      def credit(money, authorization, options = {})
-        ActiveMerchant.deprecated CREDIT_DEPRECATION_MESSAGE
-        refund(money, authorization, options)
+      def credit(money, creditcard, options = {})
+        request = build_credit_request(money, creditcard, options)
+        commit(request)
       end
 
       def void(authorization, options = {})
@@ -145,7 +146,11 @@ module ActiveMerchant
           add_card(xml, credit_card)
           xml.tag! 'autosettle', 'flag' => auto_settle_flag(action)
           add_signed_digest(xml, timestamp, @options[:login], sanitize_order_id(options[:order_id]), amount(money), (options[:currency] || currency(money)), credit_card.number)
-          add_network_tokenization_card(xml, credit_card) if credit_card.is_a?(NetworkTokenizationCreditCard)
+          if credit_card.is_a?(NetworkTokenizationCreditCard)
+            add_network_tokenization_card(xml, credit_card)
+          else
+            add_three_d_secure(xml, options)
+          end
           add_comments(xml, options)
           add_address_and_customer_info(xml, options)
         end
@@ -176,6 +181,22 @@ module ActiveMerchant
           xml.tag! 'autosettle', 'flag' => 1
           add_comments(xml, options)
           add_signed_digest(xml, timestamp, @options[:login], sanitize_order_id(options[:order_id]), amount(money), (options[:currency] || currency(money)), nil)
+        end
+        xml.target!
+      end
+
+      def build_credit_request(money, credit_card, options)
+        timestamp = new_timestamp
+        xml = Builder::XmlMarkup.new :indent => 2
+        xml.tag! 'request', 'timestamp' => timestamp, 'type' => 'credit' do
+          add_merchant_details(xml, options)
+          xml.tag! 'orderid', sanitize_order_id(options[:order_id])
+          add_amount(xml, money, options)
+          add_card(xml, credit_card)
+          xml.tag! 'refundhash', @options[:credit_hash] if @options[:credit_hash]
+          xml.tag! 'autosettle', 'flag' => 1
+          add_comments(xml, options)
+          add_signed_digest(xml, timestamp, @options[:login], sanitize_order_id(options[:order_id]), amount(money), (options[:currency] || currency(money)), credit_card.number)
         end
         xml.target!
       end
@@ -235,9 +256,7 @@ module ActiveMerchant
 
       def add_merchant_details(xml, options)
         xml.tag! 'merchantid', @options[:login]
-        if options[:account] || @options[:account]
-          xml.tag! 'account', (options[:account] || @options[:account])
-        end
+        xml.tag! 'account', (options[:account] || @options[:account]) if options[:account] || @options[:account]
       end
 
       def add_transaction_identifiers(xml, authorization, options)
@@ -281,6 +300,22 @@ module ActiveMerchant
           xml.tag! 'item', 'type' => 'mobile' do
             xml.tag! 'field01', payment.source.to_s.gsub('_', '-')
           end
+        end
+      end
+
+      def add_three_d_secure(xml, options)
+        return unless three_d_secure = options[:three_d_secure]
+        version = three_d_secure.fetch(:version, '')
+        xml.tag! 'mpi' do
+          if version =~ /^2/
+            xml.tag! 'authentication_value', three_d_secure[:cavv]
+            xml.tag! 'ds_trans_id', three_d_secure[:ds_transaction_id]
+          else
+            xml.tag! 'cavv', three_d_secure[:cavv]
+            xml.tag! 'xid', three_d_secure[:xid]
+          end
+          xml.tag! 'eci', three_d_secure[:eci]
+          xml.tag! 'message_version', version
         end
       end
 

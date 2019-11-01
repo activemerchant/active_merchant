@@ -137,17 +137,11 @@ module ActiveMerchant #:nodoc:
           post[:cust_id] = options[:customer] if Float(options[:customer]) rescue nil
         end
 
-        if options.has_key? :ip
-          post[:customer_ip] = options[:ip]
-        end
+        post[:customer_ip] = options[:ip] if options.has_key? :ip
 
-        if options.has_key? :cardholder_authentication_value
-          post[:cardholder_authentication_value] = options[:cardholder_authentication_value]
-        end
+        post[:cardholder_authentication_value] = options[:cardholder_authentication_value] if options.has_key? :cardholder_authentication_value
 
-        if options.has_key? :authentication_indicator
-          post[:authentication_indicator] = options[:authentication_indicator]
-        end
+        post[:authentication_indicator] = options[:authentication_indicator] if options.has_key? :authentication_indicator
       end
 
       # x_duplicate_window won't be sent by default, because sending it changes the response.
@@ -184,9 +178,7 @@ module ActiveMerchant #:nodoc:
       def message_from(results)
         if results[:response_code] == DECLINED
           return CVVResult.messages[results[:card_code]] if CARD_CODE_ERRORS.include?(results[:card_code])
-          if AVS_REASON_CODES.include?(results[:response_reason_code]) && AVS_ERRORS.include?(results[:avs_result_code])
-            return AVSResult.messages[results[:avs_result_code]]
-          end
+          return AVSResult.messages[results[:avs_result_code]] if AVS_REASON_CODES.include?(results[:response_reason_code]) && AVS_ERRORS.include?(results[:avs_result_code])
         end
 
         (results[:response_reason_text] ? results[:response_reason_text].chomp('.') : '')

@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['AR', 'BR', 'CL', 'CO', 'MX', 'PE', 'UY', 'TR']
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club, :maestro]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club, :maestro, :naranja, :cabal]
 
       self.homepage_url = 'https://dlocal.com/'
       self.display_name = 'dLocal'
@@ -93,7 +93,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def lookup_country_code(country)
-        Country.find(country).code(:alpha2)
+        Country.find(country).code(:alpha2).value
       end
 
       def add_payer(post, card, options)
@@ -102,7 +102,7 @@ module ActiveMerchant #:nodoc:
         post[:payer][:name] = card.name
         post[:payer][:email] = options[:email] if options[:email]
         post[:payer][:birth_date] = options[:birth_date] if options[:birth_date]
-        post[:payer][:phone] = address[:phone] if address[:phone]
+        post[:payer][:phone] = address[:phone] if address && address[:phone]
         post[:payer][:document] = options[:document] if options[:document]
         post[:payer][:document2] = options[:document2] if options[:document2]
         post[:payer][:user_reference] = options[:user_reference] if options[:user_reference]

@@ -403,9 +403,7 @@ module ActiveMerchant #:nodoc:
           :VPSProtocol => @options.fetch(:protocol_version, '3.00')
         )
 
-        if(application_id && (application_id != Gateway.application_id))
-          parameters.update(:ReferrerID => application_id)
-        end
+        parameters.update(:ReferrerID => application_id) if application_id && (application_id != Gateway.application_id)
 
         parameters.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end

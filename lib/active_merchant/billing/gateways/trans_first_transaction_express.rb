@@ -333,11 +333,12 @@ module ActiveMerchant #:nodoc:
       def commit(action, request)
         request = add_transaction_code_to_request(request, action)
 
-        raw_response = begin
-          ssl_post(url, request, headers)
-        rescue ActiveMerchant::ResponseError => e
-          e.response.body
-        end
+        raw_response =
+          begin
+            ssl_post(url, request, headers)
+          rescue ActiveMerchant::ResponseError => e
+            e.response.body
+          end
 
         response = parse(raw_response)
 
@@ -544,7 +545,7 @@ module ActiveMerchant #:nodoc:
               end
             end
             doc['v1'].addrLn1 billing_address[:address1] if billing_address[:address1]
-            doc['v1'].addrLn2 billing_address[:address2] if billing_address[:address2]
+            doc['v1'].addrLn2 billing_address[:address2] unless billing_address[:address2].blank?
             doc['v1'].city billing_address[:city] if billing_address[:city]
             doc['v1'].state billing_address[:state] if billing_address[:state]
             doc['v1'].zipCode billing_address[:zip] if billing_address[:zip]
@@ -559,7 +560,7 @@ module ActiveMerchant #:nodoc:
             doc['v1'].ship do
               doc['v1'].fullName fullname unless fullname.blank?
               doc['v1'].addrLn1 shipping_address[:address1] if shipping_address[:address1]
-              doc['v1'].addrLn2 shipping_address[:address2] if shipping_address[:address2]
+              doc['v1'].addrLn2 shipping_address[:address2] unless shipping_address[:address2].blank?
               doc['v1'].city shipping_address[:city] if shipping_address[:city]
               doc['v1'].state shipping_address[:state] if shipping_address[:state]
               doc['v1'].zipCode shipping_address[:zip] if shipping_address[:zip]

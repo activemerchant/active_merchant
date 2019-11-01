@@ -15,6 +15,24 @@ class PayflowTest < Test::Unit::TestCase
     @credit_card = credit_card('4242424242424242')
     @options = { :billing_address => address.merge(:first_name => 'Longbob', :last_name => 'Longsen') }
     @check = check(:name => 'Jim Smith')
+    @l2_json = '{
+      "Tender": {
+        "ACH": {
+          "AcctType": "C",
+          "AcctNum": "6355059797",
+          "ABA": "021000021"
+        }
+      }
+    }'
+
+    @l3_json = '{
+      "Invoice": {
+        "Date": "20190104",
+        "Level3Invoice": {
+          "CountyTax": {"Amount": "3.23"}
+        }
+      }
+    }'
   end
 
   def test_successful_authorization
@@ -95,6 +113,55 @@ class PayflowTest < Test::Unit::TestCase
     assert_success response
     assert_equal '126', response.params['result']
     assert response.fraud_review?
+  end
+
+  def test_successful_purchase_with_level_2_fields
+    options = @options.merge(level_two_fields: @l2_json)
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match %r(<AcctNum>6355059797</AcctNum>), data
+      assert_match %r(<ACH><AcctType>), data.tr("\n ", '')
+    end.respond_with(successful_l2_response)
+    assert_equal 'Approved', response.message
+    assert_success response
+    assert_equal 'A1ADADCE9B12', response.authorization
+    refute response.fraud_review?
+  end
+
+  def test_successful_purchase_with_level_3_fields
+    options = @options.merge(level_three_fields: @l3_json)
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match %r(<Date>20190104</Date>), data
+      assert_match %r(<Amount>3.23</Amount>), data
+      assert_match %r(<Level3Invoice><CountyTax><Amount>), data.tr("\n ", '')
+    end.respond_with(successful_l3_response)
+    assert_equal 'Approved', response.message
+    assert_success response
+    assert_equal 'A71AAC3B60A1', response.authorization
+    refute response.fraud_review?
+  end
+
+  def test_successful_purchase_with_level_2_3_fields
+    options = @options.merge(level_two_fields: @l2_json).merge(level_three_fields: @l3_json)
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match %r(<Date>20190104</Date>), data
+      assert_match %r(<Amount>3.23</Amount>), data
+      assert_match %r(<AcctNum>6355059797</AcctNum>), data
+      assert_match %r(<ACH><AcctType>), data.tr("\n ", '')
+      assert_match %r(<Level3Invoice><CountyTax><Amount>), data.tr("\n ", '')
+    end.respond_with(successful_l2_response)
+    assert_equal 'Approved', response.message
+    assert_success response
+    assert_equal 'A1ADADCE9B12', response.authorization
+    refute response.fraud_review?
   end
 
   def test_credit
@@ -375,6 +442,17 @@ class PayflowTest < Test::Unit::TestCase
     assert_three_d_secure REXML::Document.new(xml.target!), '/Card/BuyerAuthResult'
   end
 
+  def test_add_credit_card_with_three_d_secure_frictionless
+    xml = Builder::XmlMarkup.new
+    credit_card = credit_card(
+      '5641820000000005',
+      :brand => 'maestro'
+    )
+
+    @gateway.send(:add_credit_card, xml, credit_card, @options.merge(three_d_secure_option_frictionless))
+    assert_three_d_secure_frictionless REXML::Document.new(xml.target!), '/Card/BuyerAuthResult'
+  end
+
   def test_duplicate_response_flag
     @gateway.expects(:ssl_post).returns(successful_duplicate_response)
 
@@ -536,7 +614,7 @@ Conn close
   <Vendor>ActiveMerchant</Vendor>
   <ProfileId>RT0000000009</ProfileId>
 </ResponseData>
-  XML
+    XML
   end
 
   def start_date_error_recurring_response
@@ -583,7 +661,7 @@ Conn close
     <TransState>6</TransState>
   </RPPaymentResult>
 </ResponseData>
-  XML
+    XML
   end
 
   def successful_authorization_response
@@ -602,6 +680,59 @@ Conn close
     <AvsResult>Y</AvsResult>
     <StreetMatch>Match</StreetMatch>
     <CvResult>Match</CvResult>
+</ResponseData>
+    XML
+  end
+
+  def successful_l3_response
+    <<-XML
+<ResponseData>
+  <Vendor>spreedlyIntegrations</Vendor>
+  <Partner>paypal</Partner>
+  <TransactionResults>
+    <TransactionResult>
+      <Result>0</Result>
+      <ProcessorResult>
+        <AVSResult>Z</AVSResult>
+        <CVResult>M</CVResult>
+        <HostCode>A</HostCode>
+      </ProcessorResult>
+      <FraudPreprocessResult>
+        <Message>No Rules Triggered</Message>
+      </FraudPreprocessResult>
+      <FraudPostprocessResult>
+        <Message>No Rules Triggered</Message>
+      </FraudPostprocessResult>
+      <IAVSResult>N</IAVSResult>
+      <AVSResult>
+        <StreetMatch>No Match</StreetMatch>
+        <ZipMatch>Match</ZipMatch>
+      </AVSResult>
+      <CVResult>Match</CVResult>
+      <Message>Approved</Message>
+      <PNRef>A71AAC3B60A1</PNRef>
+      <AuthCode>240PNI</AuthCode>
+    </TransactionResult>
+  </TransactionResults>
+</ResponseData>
+    XML
+  end
+
+  def successful_l2_response
+    <<-XML
+<ResponseData>
+  <Vendor>spreedlyIntegrations</Vendor>
+  <Partner>paypal</Partner>
+  <TransactionResults>
+    <TransactionResult>
+      <Result>0</Result>
+      <ProcessorResult>
+        <HostCode>A</HostCode>
+      </ProcessorResult>
+      <Message>Approved</Message>
+      <PNRef>A1ADADCE9B12</PNRef>
+    </TransactionResult>
+  </TransactionResults>
 </ResponseData>
     XML
   end
@@ -756,6 +887,16 @@ Conn close
     assert_equal 'UXZEYlNBeFNpYVFzMjQxODk5RTA=', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/XID").text
   end
 
+  def assert_three_d_secure_frictionless(xml_doc, buyer_auth_result_path)
+    assert_equal 'C', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/Status").text
+    assert_equal 'QvDbSAxSiaQs241899E0', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/AuthenticationId").text
+    assert_equal 'pareq block', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/PAReq").text
+    assert_equal 'https://bankacs.bank.com/ascurl', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/ACSUrl").text
+    assert_equal '02', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/ECI").text
+    assert_equal 'jGvQIvG/5UhjAREALGYa6Vu/hto=', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/CAVV").text
+    assert_equal 'UXZEYlNBeFNpYVFzMjQxODk5RTA=', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/XID").text
+  end
+
   def authorize_buyer_auth_result_path
     '/XMLPayRequest/RequestData/Transactions/Transaction/Authorization/PayData/Tender/Card/BuyerAuthResult'
   end
@@ -767,8 +908,22 @@ Conn close
   def three_d_secure_option
     {
         :three_d_secure => {
-            :status => 'Y',
             :authentication_id => 'QvDbSAxSiaQs241899E0',
+            :authentication_response_status => 'Y',
+            :pareq => 'pareq block',
+            :acs_url => 'https://bankacs.bank.com/ascurl',
+            :eci => '02',
+            :cavv => 'jGvQIvG/5UhjAREALGYa6Vu/hto=',
+            :xid => 'UXZEYlNBeFNpYVFzMjQxODk5RTA='
+        }
+    }
+  end
+
+  def three_d_secure_option_frictionless
+    {
+        :three_d_secure => {
+            :authentication_id => 'QvDbSAxSiaQs241899E0',
+            :directory_response_status => 'C',
             :pareq => 'pareq block',
             :acs_url => 'https://bankacs.bank.com/ascurl',
             :eci => '02',

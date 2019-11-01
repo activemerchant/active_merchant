@@ -7,7 +7,7 @@ class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
 
     @amount = 100
     @declined_amount = 21
-    @credit_card = credit_card('4485896261017708')
+    @credit_card = credit_card('4485896261017708', verification_value: 999)
     @check = check
 
     billing_address = address({
@@ -74,6 +74,26 @@ class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
     assert_not_nil response.cvv_result
     assert_equal 'Street address does not match, but 5-digit postal code matches.', response.avs_result['message']
     assert_equal 'CVV matches', response.cvv_result['message']
+  end
+
+  def test_successful_purchase_without_address2
+    # Test that empty string in `address2` doesn't cause transaction failure
+    options = @options.dup
+    options[:shipping_address] = {
+      address1: '450 Main',
+      address2: '',
+      zip: '85284',
+    }
+
+    options[:billing_address] = {
+      address1: '450 Main',
+      address2: '',
+      zip: '85284',
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
   end
 
   def test_successful_purchase_without_cvv

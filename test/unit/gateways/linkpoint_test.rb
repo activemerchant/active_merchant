@@ -138,10 +138,12 @@ class LinkpointTest < Test::Unit::TestCase
           :options => [
             {
                 :name => 'Color',
-                :value => 'Red'},
+                :value => 'Red'
+            },
             {
              :name => 'Size',
-             :value => 'XL'}
+             :value => 'XL'
+            }
           ]
         },
         {

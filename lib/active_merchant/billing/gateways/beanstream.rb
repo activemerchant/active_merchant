@@ -93,12 +93,15 @@ module ActiveMerchant #:nodoc:
 
       def void(authorization, options = {})
         reference, amount, type = split_auth(authorization)
-
-        post = {}
-        add_reference(post, reference)
-        add_original_amount(post, amount)
-        add_transaction_type(post, void_action(type))
-        commit(post)
+        if type == TRANSACTIONS[:authorization]
+          capture(0, authorization, options)
+        else
+          post = {}
+          add_reference(post, reference)
+          add_original_amount(post, amount)
+          add_transaction_type(post, void_action(type))
+          commit(post)
+        end
       end
 
       def verify(source, options={})
@@ -153,6 +156,8 @@ module ActiveMerchant #:nodoc:
 
       # To match the other stored-value gateways, like TrustCommerce,
       # store and unstore need to be defined
+      #
+      # When passing a single-use token the :name option is required
       def store(payment_method, options = {})
         post = {}
         add_address(post, options)

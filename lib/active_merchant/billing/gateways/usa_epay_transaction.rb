@@ -33,9 +33,9 @@ module ActiveMerchant #:nodoc:
         '10110' => STANDARD_ERROR_CODE[:incorrect_address],
         '10111' => STANDARD_ERROR_CODE[:incorrect_address],
         '10127' => STANDARD_ERROR_CODE[:card_declined],
-        '10128' => STANDARD_ERROR_CODE[:processing_error],
-        '10132' => STANDARD_ERROR_CODE[:processing_error],
-        '00043' => STANDARD_ERROR_CODE[:call_issuer]
+        '00043' => STANDARD_ERROR_CODE[:call_issuer],
+        '10205' => STANDARD_ERROR_CODE[:card_declined],
+        '10204' => STANDARD_ERROR_CODE[:pickup_card]
       }
 
       def initialize(options = {})
@@ -153,13 +153,9 @@ module ActiveMerchant #:nodoc:
           end
         end
 
-        if options.has_key? :customer
-          post[:custid] = options[:customer]
-        end
+        post[:custid] = options[:customer] if options.has_key? :customer
 
-        if options.has_key? :ip
-          post[:ip] = options[:ip]
-        end
+        post[:ip] = options[:ip] if options.has_key? :ip
       end
 
       def add_address(post, payment, options)
@@ -252,9 +248,7 @@ module ActiveMerchant #:nodoc:
             next
           end
 
-          if key == :bill_amount
-            value = amount(value)
-          end
+          value = amount(value) if key == :bill_amount
 
           post[key.to_s.delete('_')] = value
         end
@@ -318,12 +312,15 @@ module ActiveMerchant #:nodoc:
       def commit(action, parameters)
         url = (test? ? self.test_url : self.live_url)
         response = parse(ssl_post(url, post_data(action, parameters)))
-        Response.new(response[:status] == 'Approved', message_from(response), response,
+        approved = response[:status] == 'Approved'
+        error_code = nil
+        error_code = (STANDARD_ERROR_CODE_MAPPING[response[:error_code]] || STANDARD_ERROR_CODE[:processing_error]) unless approved
+        Response.new(approved, message_from(response), response,
           :test           => test?,
           :authorization  => response[:ref_num],
           :cvv_result     => response[:cvv2_result_code],
           :avs_result     => { :code => response[:avs_result_code] },
-          :error_code     => STANDARD_ERROR_CODE_MAPPING[response[:error_code]]
+          :error_code     => error_code
         )
       end
 

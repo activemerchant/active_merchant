@@ -17,10 +17,59 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
     }
   end
 
-  def test_successful_purchase
+  def test_successful_purchase_with_billing_address
     response = @gateway.purchase(@amount, @credit_card, @options)
+
     assert_success response
     assert_equal 'Transaction Approved Successful', response.message
+
+    customer = response.params['Customer']
+
+    assert_address_match(customer, @options[:billing_address])
+  end
+
+  def test_successful_purchase_with_address
+    @options[:billing_address] = nil
+    @options[:address] = address
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_success response
+    assert_equal 'Transaction Approved Successful', response.message
+
+    customer = response.params['Customer']
+
+    assert_address_match(customer, @options[:address])
+  end
+
+  def test_successful_purchase_without_address
+    email = 'test@example.com'
+
+    @options[:billing_address] = nil
+    @options[:email] = email
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_success response
+    assert_equal 'Transaction Approved Successful', response.message
+
+    customer = response.params['Customer']
+
+    assert_equal customer['FirstName'], @credit_card.first_name
+    assert_equal customer['LastName'], @credit_card.last_name
+    assert_equal customer['Email'], email
+  end
+
+  def test_successful_purchase_with_shipping_address
+    @options[:shipping_address] = address
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_success response
+    assert_equal 'Transaction Approved Successful', response.message
+
+    # eWAY Rapid does not include the shipping address in the request response,
+    # so we can only test that the transaction is successful.
   end
 
   def test_fully_loaded_purchase
@@ -95,6 +144,61 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
     assert_equal 'Invalid Payment TotalAmount', response.message
   end
 
+  def test_successful_authorize_with_billing_address
+    response = @gateway.authorize(@amount, @credit_card, @options)
+
+    assert_success response
+    assert_equal 'Transaction Approved Successful', response.message
+
+    customer = response.params['Customer']
+
+    assert_address_match(customer, @options[:billing_address])
+  end
+
+  def test_successful_authorize_with_address
+    @options[:billing_address] = nil
+    @options[:address] = address
+
+    response = @gateway.authorize(@amount, @credit_card, @options)
+
+    assert_success response
+    assert_equal 'Transaction Approved Successful', response.message
+
+    customer = response.params['Customer']
+
+    assert_address_match(customer, @options[:address])
+  end
+
+  def test_successful_authorize_without_address
+    email = 'test@example.com'
+
+    @options[:billing_address] = nil
+    @options[:email] = email
+
+    response = @gateway.authorize(@amount, @credit_card, @options)
+
+    assert_success response
+    assert_equal 'Transaction Approved Successful', response.message
+
+    customer = response.params['Customer']
+
+    assert_equal customer['FirstName'], @credit_card.first_name
+    assert_equal customer['LastName'], @credit_card.last_name
+    assert_equal customer['Email'], email
+  end
+
+  def test_successful_authorize_with_shipping_address
+    @options[:shipping_address] = address
+
+    response = @gateway.authorize(@amount, @credit_card, @options)
+
+    assert_success response
+    assert_equal 'Transaction Approved Successful', response.message
+
+    # eWAY Rapid does not include the shipping address in the request response,
+    # so we can only test that the transaction is successful.
+  end
+
   def test_successful_authorize_and_capture
     authorize = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorize
@@ -107,7 +211,7 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
   def test_failed_authorize
     response = @gateway.authorize(@failed_amount, @credit_card, @options)
     assert_failure response
-    assert_equal 'Error Failed', response.message
+    assert_equal '', response.message
   end
 
   def test_failed_capture
@@ -127,7 +231,7 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
   def test_failed_void
     response = @gateway.void('bogus')
     assert_failure response
-    assert_equal 'Invalid Auth Transaction ID for Capture/Void', response.message
+    assert_equal 'Failed', response.message
   end
 
   def test_successful_refund
@@ -150,6 +254,22 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
     response = @gateway.store(@credit_card, @options)
     assert_success response
     assert_equal 'Transaction Approved Successful', response.message
+
+    customer = response.params['Customer']
+
+    assert_address_match(customer, @options[:billing_address])
+  end
+
+  def test_successful_store_with_shipping_address
+    @options[:shipping_address] = address
+
+    response = @gateway.store(@credit_card, @options)
+
+    assert_success response
+    assert_equal 'Transaction Approved Successful', response.message
+
+    # eWAY Rapid does not include the shipping address in the request response,
+    # so we can only test that the transaction is successful.
   end
 
   def test_failed_store
@@ -160,13 +280,72 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
     assert_equal 'Customer CountryCode Required', response.message
   end
 
-  def test_successful_update
+  def test_successful_update_with_billing_address
     response = @gateway.store(@credit_card, @options)
     assert_success response
     assert_equal 'Transaction Approved Successful', response.message
     response = @gateway.update(response.authorization, @credit_card, @options)
     assert_success response
     assert_equal 'Transaction Approved Successful', response.message
+
+    customer = response.params['Customer']
+    assert_address_match(customer, @options[:billing_address])
+  end
+
+  def test_successful_update_with_address
+    @options[:billing_address] = nil
+    @options[:address] = address
+
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+    assert_equal 'Transaction Approved Successful', response.message
+
+    response = @gateway.update(response.authorization, @credit_card, @options)
+
+    assert_success response
+    assert_equal 'Transaction Approved Successful', response.message
+
+    customer = response.params['Customer']
+
+    assert_address_match(customer, @options[:address])
+  end
+
+  def test_successful_update_without_address
+    email = 'test@example.com'
+    @options[:email] = email
+
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+    assert_equal 'Transaction Approved Successful', response.message
+
+    @options[:billing_address] = nil
+
+    response = @gateway.update(response.authorization, @credit_card, @options)
+
+    assert_success response
+    assert_equal 'Transaction Approved Successful', response.message
+
+    customer = response.params['Customer']
+
+    assert_equal customer['FirstName'], @credit_card.first_name
+    assert_equal customer['LastName'], @credit_card.last_name
+    assert_equal customer['Email'], email
+  end
+
+  def test_successful_update_with_shipping_address
+    @options[:shipping_address] = address
+
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+    assert_equal 'Transaction Approved Successful', response.message
+
+    response = @gateway.update(response.authorization, @credit_card, @options)
+
+    assert_success response
+    assert_equal 'Transaction Approved Successful', response.message
+
+    # eWAY Rapid does not include the shipping address in the request response,
+    # so we can only test that the transaction is successful.
   end
 
   def test_successful_store_purchase
@@ -190,12 +369,31 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
   end
 
   def test_transcript_scrubbing
+    credit_card_success = credit_card('4444333322221111', verification_value: 976225)
+
     transcript = capture_transcript(@gateway) do
-      @gateway.purchase(100, @credit_card_success, @params)
+      @gateway.purchase(100, credit_card_success, {})
     end
+
     clean_transcript = @gateway.scrub(transcript)
 
-    assert_scrubbed(@credit_card_success.number, clean_transcript)
-    assert_scrubbed(@credit_card_success.verification_value.to_s, clean_transcript)
+    assert_scrubbed(credit_card_success.number, clean_transcript)
+    assert_scrubbed(credit_card_success.verification_value.to_s, clean_transcript)
+  end
+
+  private
+
+  def assert_address_match(customer, address)
+    assert_equal customer['FirstName'],   address[:name].split[0]
+    assert_equal customer['LastName'],    address[:name].split[1]
+    assert_equal customer['CompanyName'], address[:company]
+    assert_equal customer['Street1'],     address[:address1]
+    assert_equal customer['Street2'],     address[:address2]
+    assert_equal customer['City'],        address[:city]
+    assert_equal customer['State'],       address[:state]
+    assert_equal customer['PostalCode'],  address[:zip]
+    assert_equal customer['Country'],     address[:country].to_s.downcase
+    assert_equal customer['Phone'],       address[:phone]
+    assert_equal customer['Fax'],         address[:fax]
   end
 end

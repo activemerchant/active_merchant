@@ -388,6 +388,188 @@ class LitleTest < Test::Unit::TestCase
     assert_equal '1', response.params['response']
   end
 
+  def test_stored_credential_cit_card_on_file_initial
+    options = @options.merge(
+      stored_credential: {
+        initial_transaction: true,
+        reason_type: 'unscheduled',
+        initiator: 'cardholder',
+        network_transaction_id: nil
+      }
+    )
+
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r(<processingType>initialCOF</processingType>), data)
+    end.respond_with(successful_authorize_stored_credentials)
+
+    assert_success response
+  end
+
+  def test_stored_credential_cit_card_on_file_used
+    options = @options.merge(
+      stored_credential: {
+        initial_transaction: false,
+        reason_type: 'unscheduled',
+        initiator: 'cardholder',
+        network_transaction_id: network_transaction_id
+      }
+    )
+
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r(<processingType>cardholderInitiatedCOF</processingType>), data)
+      assert_match(%r(<originalNetworkTransactionId>#{network_transaction_id}</originalNetworkTransactionId>), data)
+      assert_match(%r(<orderSource>ecommerce</orderSource>), data)
+    end.respond_with(successful_authorize_stored_credentials)
+
+    assert_success response
+  end
+
+  def test_stored_credential_cit_cof_doesnt_override_order_source
+    options = @options.merge(
+      order_source: '3dsAuthenticated',
+      xid: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA=',
+      cavv: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA=',
+      stored_credential: {
+        initial_transaction: false,
+        reason_type: 'unscheduled',
+        initiator: 'cardholder',
+        network_transaction_id: network_transaction_id
+      }
+    )
+
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r(<processingType>cardholderInitiatedCOF</processingType>), data)
+      assert_match(%r(<originalNetworkTransactionId>#{network_transaction_id}</originalNetworkTransactionId>), data)
+      assert_match(%r(<orderSource>3dsAuthenticated</orderSource>), data)
+    end.respond_with(successful_authorize_stored_credentials)
+
+    assert_success response
+  end
+
+  def test_stored_credential_mit_card_on_file_initial
+    options = @options.merge(
+      stored_credential: {
+        initial_transaction: true,
+        reason_type: 'unscheduled',
+        initiator: 'merchant',
+        network_transaction_id: nil
+      }
+    )
+
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r(<processingType>initialCOF</processingType>), data)
+    end.respond_with(successful_authorize_stored_credentials)
+
+    assert_success response
+  end
+
+  def test_stored_credential_mit_card_on_file_used
+    options = @options.merge(
+      stored_credential: {
+        initial_transaction: false,
+        reason_type: 'unscheduled',
+        initiator: 'merchant',
+        network_transaction_id: network_transaction_id
+      }
+    )
+
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r(<processingType>merchantInitiatedCOF</processingType>), data)
+      assert_match(%r(<originalNetworkTransactionId>#{network_transaction_id}</originalNetworkTransactionId>), data)
+      assert_match(%r(<orderSource>ecommerce</orderSource>), data)
+    end.respond_with(successful_authorize_stored_credentials)
+
+    assert_success response
+  end
+
+  def test_stored_credential_installment_initial
+    options = @options.merge(
+      stored_credential: {
+        initial_transaction: true,
+        reason_type: 'installment',
+        initiator: 'merchant',
+        network_transaction_id: nil
+      }
+    )
+
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r(<processingType>initialInstallment</processingType>), data)
+    end.respond_with(successful_authorize_stored_credentials)
+
+    assert_success response
+  end
+
+  def test_stored_credential_installment_used
+    options = @options.merge(
+      stored_credential: {
+        initial_transaction: false,
+        reason_type: 'installment',
+        initiator: 'merchant',
+        network_transaction_id: network_transaction_id
+      }
+    )
+
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r(<originalNetworkTransactionId>#{network_transaction_id}</originalNetworkTransactionId>), data)
+      assert_match(%r(<orderSource>installment</orderSource>), data)
+    end.respond_with(successful_authorize_stored_credentials)
+
+    assert_success response
+  end
+
+  def test_stored_credential_recurring_initial
+    options = @options.merge(
+      stored_credential: {
+        initial_transaction: true,
+        reason_type: 'recurring',
+        initiator: 'merchant',
+        network_transaction_id: nil
+      }
+    )
+
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r(<processingType>initialRecurring</processingType>), data)
+    end.respond_with(successful_authorize_stored_credentials)
+
+    assert_success response
+  end
+
+  def test_stored_credential_recurring_used
+    options = @options.merge(
+      stored_credential: {
+        initial_transaction: false,
+        reason_type: 'recurring',
+        initiator: 'merchant',
+        network_transaction_id: network_transaction_id
+      }
+    )
+
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r(<originalNetworkTransactionId>#{network_transaction_id}</originalNetworkTransactionId>), data)
+      assert_match(%r(<orderSource>recurring</orderSource>), data)
+    end.respond_with(successful_authorize_stored_credentials)
+
+    assert_success response
+  end
+
   def test_scrub
     assert_equal @gateway.scrub(pre_scrub), post_scrub
   end
@@ -397,6 +579,10 @@ class LitleTest < Test::Unit::TestCase
   end
 
   private
+
+  def network_transaction_id
+    '63225578415568556365452427825'
+  end
 
   def successful_purchase_response
     %(
@@ -427,6 +613,22 @@ class LitleTest < Test::Unit::TestCase
           <responseTime>2018-01-09T14:02:20</responseTime>
           <message>Approved</message>
         </echeckSalesResponse>
+      </litleOnlineResponse>
+    )
+  end
+
+  def successful_authorize_stored_credentials
+    %(
+      <litleOnlineResponse xmlns="http://www.litle.com/schema" version="9.14" response="0" message="Valid Format">
+        <authorizationResponse id="1" reportGroup="Default Report Group">
+          <litleTxnId>991939023768015826</litleTxnId>
+          <orderId>1</orderId>
+          <response>000</response>
+          <message>Approved</message>
+          <responseTime>2019-02-26T17:45:29.885</responseTime>
+          <authCode>75045</authCode>
+          <networkTransactionId>63225578415568556365452427825</networkTransactionId>
+        </authorizationResponse>
       </litleOnlineResponse>
     )
   end

@@ -105,7 +105,7 @@ EOF
             </RewardInqResult>
       </Transaction>
 </GVPSResponse>
-  EOF
+    EOF
   end
 
   # Place raw failed response from gateway here

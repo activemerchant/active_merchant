@@ -502,7 +502,7 @@ class PayeezyGateway < Test::Unit::TestCase
   def successful_store_response
     <<-RESPONSE
     {\"correlation_id\":\"124.1792879391754\",\"status\":\"success\",\"type\":\"FDToken\",\"token\":{\"type\":\"Visa\",\"cardholder_name\":\"Longbob Longsen\",\"exp_date\":\"0919\",\"value\":\"9045348309244242\"}}
-        RESPONSE
+    RESPONSE
   end
 
   def failed_store_response
@@ -630,7 +630,7 @@ message:
   def successful_void_response
     <<-RESPONSE
     {\"method\":\"credit_card\",\"amount\":\"1\",\"currency\":\"USD\",\"cvv2\":\"I\",\"token\":{\"token_type\":\"transarmor\",\"token_data\":{\"value\":\"9594258319174242\"}},\"transaction_status\":\"approved\",\"validation_status\":\"success\",\"transaction_type\":\"void\",\"transaction_id\":\"ET196233\",\"transaction_tag\":\"55083674\",\"bank_resp_code\":\"100\",\"bank_message\":\"Approved\",\"gateway_resp_code\":\"00\",\"gateway_message\":\"Transaction Normal\",\"correlation_id\":\"124.1433863576596\"}
-RESPONSE
+    RESPONSE
   end
 
   def failed_void_response
@@ -708,7 +708,7 @@ response: !ruby/object:Net::HTTPBadRequest
   socket:
   body_exist: true
 message:
-  RESPONSE
+    RESPONSE
     YAML.safe_load(yamlexcep, ['Net::HTTPBadRequest', 'ActiveMerchant::ResponseError'])
   end
 

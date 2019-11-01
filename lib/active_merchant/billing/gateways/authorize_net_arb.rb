@@ -147,9 +147,7 @@ module ActiveMerchant #:nodoc:
 
       # Builds recurring billing request
       def build_recurring_request(action, options = {})
-        unless RECURRING_ACTIONS.include?(action)
-          raise StandardError, "Invalid Automated Recurring Billing Action: #{action}"
-        end
+        raise StandardError, "Invalid Automated Recurring Billing Action: #{action}" unless RECURRING_ACTIONS.include?(action)
 
         xml = Builder::XmlMarkup.new(:indent => 2)
         xml.instruct!(:xml, :version => '1.0', :encoding => 'utf-8')

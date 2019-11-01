@@ -42,6 +42,7 @@ module ActiveMerchant #:nodoc:
         else
           add_creditcard(form, payment_method)
         end
+        add_currency(form, money, options)
         add_address(form, options)
         add_customer_data(form, options)
         add_test_mode(form, options)
@@ -54,6 +55,7 @@ module ActiveMerchant #:nodoc:
         add_salestax(form, options)
         add_invoice(form, options)
         add_creditcard(form, creditcard)
+        add_currency(form, money, options)
         add_address(form, options)
         add_customer_data(form, options)
         add_test_mode(form, options)
@@ -69,6 +71,7 @@ module ActiveMerchant #:nodoc:
           add_approval_code(form, authorization)
           add_invoice(form, options)
           add_creditcard(form, options[:credit_card])
+          add_currency(form, money, options)
           add_customer_data(form, options)
           add_test_mode(form, options)
         else
@@ -95,13 +98,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def credit(money, creditcard, options = {})
-        if creditcard.is_a?(String)
-          raise ArgumentError, 'Reference credits are not supported. Please supply the original credit card or use the #refund method.'
-        end
+        raise ArgumentError, 'Reference credits are not supported. Please supply the original credit card or use the #refund method.' if creditcard.is_a?(String)
 
         form = {}
         add_invoice(form, options)
         add_creditcard(form, creditcard)
+        add_currency(form, money, options)
         add_address(form, options)
         add_customer_data(form, options)
         add_test_mode(form, options)
@@ -170,12 +172,15 @@ module ActiveMerchant #:nodoc:
         form[:card_number] = creditcard.number
         form[:exp_date] = expdate(creditcard)
 
-        if creditcard.verification_value?
-          add_verification_value(form, creditcard)
-        end
+        add_verification_value(form, creditcard) if creditcard.verification_value?
 
         form[:first_name] = truncate(creditcard.first_name, 20)
         form[:last_name] = truncate(creditcard.last_name, 30)
+      end
+
+      def add_currency(form, money, options)
+        currency = options[:currency] || currency(money)
+        form[:transaction_currency] = currency if currency && (@options[:multi_currency] || options[:multi_currency])
       end
 
       def add_token(form, token)

@@ -300,7 +300,7 @@ class MonerisUsTest < Test::Unit::TestCase
     assert response = @gateway.purchase(100, @credit_card, @options)
     assert_equal(response.avs_result, {
       'code' => 'A',
-      'message' => 'Street address matches, but 5-digit and 9-digit postal code do not match.',
+      'message' => 'Street address matches, but postal code does not match.',
       'street_match' => 'Y',
       'postal_match' => 'N'
     })
@@ -587,7 +587,7 @@ class MonerisUsTest < Test::Unit::TestCase
         <RecurSuccess>true</RecurSuccess>
        </receipt>
      </response>
-   RESPONSE
+    RESPONSE
   end
 
   def xml_purchase_fixture

@@ -16,8 +16,7 @@ class EwayTest < Test::Unit::TestCase
                             :city => 'Bobville',
                             :state => 'WA',
                             :country => 'AU',
-                            :zip => '2000'
-                          },
+                            :zip => '2000'},
       :description => 'purchased items'
     }
   end

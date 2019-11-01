@@ -51,9 +51,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def credit(money, payment_method, options={})
-        if payment_method.is_a?(String)
-          raise ArgumentError, 'Reference credits are not supported. Please supply the original credit card or use the #refund method.'
-        end
+        raise ArgumentError, 'Reference credits are not supported. Please supply the original credit card or use the #refund method.' if payment_method.is_a?(String)
 
         post = {}
         add_auth_purchase_params(post, money, payment_method, options)

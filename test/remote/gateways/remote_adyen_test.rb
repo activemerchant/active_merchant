@@ -15,6 +15,15 @@ class RemoteAdyenTest < Test::Unit::TestCase
       :brand => 'visa'
     )
 
+    @avs_credit_card = credit_card('4400000000000008',
+      :month => 10,
+      :year => 2020,
+      :first_name => 'John',
+      :last_name => 'Smith',
+      :verification_value => '737',
+      :brand => 'visa'
+    )
+
     @elo_credit_card = credit_card('5066 9911 1111 1118',
       :month => 10,
       :year => 2020,
@@ -24,7 +33,25 @@ class RemoteAdyenTest < Test::Unit::TestCase
       :brand => 'elo'
     )
 
-    @three_ds_enrolled_card = credit_card('4212345678901237', brand: :visa)
+    @three_ds_enrolled_card = credit_card('4917610000000000', month: 10, year: 2020, verification_value: '737', brand: :visa)
+
+    @cabal_credit_card = credit_card('6035 2277 1642 7021',
+      :month => 10,
+      :year => 2020,
+      :first_name => 'John',
+      :last_name => 'Smith',
+      :verification_value => '737',
+      :brand => 'cabal'
+    )
+
+    @invalid_cabal_credit_card = credit_card('6035 2200 0000 0006',
+      :month => 10,
+      :year => 2020,
+      :first_name => 'John',
+      :last_name => 'Smith',
+      :verification_value => '737',
+      :brand => 'cabal'
+    )
 
     @declined_card = credit_card('4000300011112220')
 
@@ -61,7 +88,31 @@ class RemoteAdyenTest < Test::Unit::TestCase
       shopper_reference: 'John Smith',
       billing_address: address(),
       order_id: '123',
-      recurring_processing_model: 'CardOnFile'
+      stored_credential: {reason_type: 'unscheduled'},
+    }
+
+    @normalized_3ds_2_options = {
+      reference: '345123',
+      shopper_email: 'john.smith@test.com',
+      shopper_ip: '77.110.174.153',
+      shopper_reference: 'John Smith',
+      billing_address: address(),
+      order_id: '123',
+      stored_credential: {reason_type: 'unscheduled'},
+      three_ds_2: {
+        channel: 'browser',
+        notification_url: 'https://example.com/notification',
+        browser_info: {
+          accept_header: 'unknown',
+          depth: 100,
+          java: false,
+          language: 'US',
+          height: 1000,
+          width: 500,
+          timezone: '-120',
+          user_agent: 'unknown'
+        }
+      }
     }
   end
 
@@ -69,6 +120,36 @@ class RemoteAdyenTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'Authorised', response.message
+  end
+
+  def test_successful_authorize_avs
+    # Account configuration may need to be done: https://docs.adyen.com/developers/api-reference/payments-api#paymentresultadditionaldata
+    options = @options.update({
+      billing_address: {
+        address1: 'Infinite Loop',
+        address2: 1,
+        country: 'US',
+        city: 'Cupertino',
+        state: 'CA',
+        zip: '95014'
+      }
+    })
+    response = @gateway.authorize(@amount, @avs_credit_card, options)
+    assert_success response
+    assert_equal 'Authorised', response.message
+    assert_equal 'D', response.avs_result['code']
+  end
+
+  def test_successful_authorize_with_idempotency_key
+    options = @options.merge(idempotency_key: SecureRandom.hex)
+    response = @gateway.authorize(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Authorised', response.message
+    first_auth = response.authorization
+
+    response = @gateway.authorize(@amount, @credit_card, options)
+    assert_success response
+    assert_equal response.authorization, first_auth
   end
 
   def test_successful_authorize_with_3ds
@@ -91,6 +172,64 @@ class RemoteAdyenTest < Test::Unit::TestCase
     refute response.params['paRequest'].blank?
   end
 
+  def test_successful_authorize_with_3ds2_browser_client_data
+    assert response = @gateway.authorize(@amount, @three_ds_enrolled_card, @normalized_3ds_2_options)
+    assert response.test?
+    refute response.authorization.blank?
+
+    assert_equal response.params['resultCode'], 'IdentifyShopper'
+    refute response.params['additionalData']['threeds2.threeDS2Token'].blank?
+    refute response.params['additionalData']['threeds2.threeDSServerTransID'].blank?
+    refute response.params['additionalData']['threeds2.threeDSMethodURL'].blank?
+  end
+
+  def test_successful_purchase_with_3ds2_exemption_requested_and_execute_threed_false
+    assert response = @gateway.authorize(@amount, @three_ds_enrolled_card, @normalized_3ds_2_options.merge(execute_threed: false, sca_exemption: 'lowValue'))
+    assert response.test?
+    refute response.authorization.blank?
+
+    assert_equal response.params['resultCode'], 'Authorised'
+  end
+
+  # According to Adyen documentation, if execute_threed is set to true and an exemption provided
+  # the gateway will apply and request for the specified exemption in the authentication request,
+  # after the device fingerprint is submitted to the issuer.
+  def test_successful_purchase_with_3ds2_exemption_requested_and_execute_threed_true
+    assert response = @gateway.authorize(@amount, @three_ds_enrolled_card, @normalized_3ds_2_options.merge(execute_threed: true, sca_exemption: 'lowValue'))
+    assert response.test?
+    refute response.authorization.blank?
+
+    assert_equal response.params['resultCode'], 'IdentifyShopper'
+    refute response.params['additionalData']['threeds2.threeDS2Token'].blank?
+    refute response.params['additionalData']['threeds2.threeDSServerTransID'].blank?
+    refute response.params['additionalData']['threeds2.threeDSMethodURL'].blank?
+  end
+
+  def test_successful_authorize_with_3ds2_app_based_request
+    three_ds_app_based_options = {
+      reference: '345123',
+      shopper_email: 'john.smith@test.com',
+      shopper_ip: '77.110.174.153',
+      shopper_reference: 'John Smith',
+      billing_address: address(),
+      order_id: '123',
+      stored_credential: {reason_type: 'unscheduled'},
+      three_ds_2: {
+        channel: 'app',
+      }
+    }
+
+    assert response = @gateway.authorize(@amount, @three_ds_enrolled_card, three_ds_app_based_options)
+    assert response.test?
+    refute response.authorization.blank?
+    assert_equal response.params['resultCode'], 'IdentifyShopper'
+    refute response.params['additionalData']['threeds2.threeDS2Token'].blank?
+    refute response.params['additionalData']['threeds2.threeDSServerTransID'].blank?
+    refute response.params['additionalData']['threeds2.threeDS2DirectoryServerInformation.algorithm'].blank?
+    refute response.params['additionalData']['threeds2.threeDS2DirectoryServerInformation.directoryServerId'].blank?
+    refute response.params['additionalData']['threeds2.threeDS2DirectoryServerInformation.publicKey'].blank?
+  end
+
   # with rule set in merchant account to skip 3DS for cards of this brand
   def test_successful_authorize_with_3ds_dynamic_rule_broken
     mastercard_threed = credit_card('5212345678901234',
@@ -107,10 +246,80 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal response.params['resultCode'], 'Authorised'
   end
 
+  def test_successful_purchase_with_auth_data_via_threeds1_standalone
+    eci = '05'
+    cavv = '3q2+78r+ur7erb7vyv66vv\/\/\/\/8='
+    cavv_algorithm = '1'
+    xid = 'ODUzNTYzOTcwODU5NzY3Qw=='
+    directory_response_status = 'Y'
+    authentication_response_status = 'Y'
+    options = @options.merge(
+      three_d_secure: {
+        eci: eci,
+        cavv: cavv,
+        cavv_algorithm: cavv_algorithm,
+        xid: xid,
+        directory_response_status: directory_response_status,
+        authentication_response_status: authentication_response_status
+      }
+    )
+
+    auth = @gateway.authorize(@amount, @credit_card, options)
+    assert_success auth
+    assert_equal 'Authorised', auth.message
+    assert_equal 'true', auth.params['additionalData']['liabilityShift']
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
+
+  def test_successful_purchase_with_auth_data_via_threeds2_standalone
+    version = '2.1.0'
+    eci = '02'
+    cavv = 'jJ81HADVRtXfCBATEp01CJUAAAA='
+    ds_transaction_id = '97267598-FAE6-48F2-8083-C23433990FBC'
+    directory_response_status = 'C'
+    authentication_response_status = 'Y'
+
+    options = @options.merge(
+      three_d_secure: {
+        version: version,
+        eci: eci,
+        cavv: cavv,
+        ds_transaction_id: ds_transaction_id,
+        directory_response_status: directory_response_status,
+        authentication_response_status: authentication_response_status
+      }
+    )
+
+    auth = @gateway.authorize(@amount, @credit_card, options)
+    assert_success auth
+    assert_equal 'Authorised', auth.message
+    assert_equal 'true', auth.params['additionalData']['liabilityShift']
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+  end
+
+  def test_successful_authorize_with_no_address
+    options = {
+      reference: '345123',
+      shopper_email: 'john.smith@test.com',
+      shopper_ip: '77.110.174.153',
+      shopper_reference: 'John Smith',
+      order_id: '123',
+      recurring_processing_model: 'CardOnFile'
+    }
+    response = @gateway.authorize(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Authorised', response.message
+  end
+
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'Refused', response.message
+    assert_equal 'CVC Declined', response.message
   end
 
   def test_successful_purchase
@@ -128,7 +337,12 @@ class RemoteAdyenTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_more_options
-    options = @options.merge!(fraudOffset: '1', installments: 2)
+    options = @options.merge!(
+      fraudOffset: '1',
+      installments: 2,
+      shopper_statement: 'statement note',
+      device_fingerprint: 'm7Cmrf++0cW4P6XfF7m/rA',
+      capture_delay_hours: 4)
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert_equal '[capture-received]', response.message
@@ -147,6 +361,18 @@ class RemoteAdyenTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert_equal '[capture-received]', response.message
+  end
+
+  def test_successful_purchase_with_idempotency_key
+    options = @options.merge(idempotency_key: SecureRandom.hex)
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal '[capture-received]', response.message
+    first_auth = response.authorization
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal response.authorization, first_auth
   end
 
   def test_successful_purchase_with_apple_pay
@@ -173,10 +399,22 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal '[capture-received]', response.message
   end
 
+  def test_successful_purchase_with_cabal_card
+    response = @gateway.purchase(@amount, @cabal_credit_card, @options.merge(currency: 'ARS'))
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'Refused', response.message
+    assert_equal 'CVC Declined', response.message
+  end
+
+  def test_failed_purchase_with_invalid_cabal_card
+    response = @gateway.purchase(@amount, @invalid_cabal_credit_card, @options)
+    assert_failure response
+    assert_equal 'Invalid card number', response.message
   end
 
   def test_successful_authorize_and_capture
@@ -190,6 +428,15 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
   def test_successful_authorize_and_capture_with_elo_card
     auth = @gateway.authorize(@amount, @elo_credit_card, @options)
+    assert_success auth
+
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+    assert_equal '[capture-received]', capture.message
+  end
+
+  def test_successful_authorize_and_capture_with_cabal_card
+    auth = @gateway.authorize(@amount, @cabal_credit_card, @options)
     assert_success auth
 
     assert capture = @gateway.capture(@amount, auth.authorization)
@@ -229,6 +476,15 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal '[refund-received]', refund.message
   end
 
+  def test_successful_refund_with_cabal_card
+    purchase = @gateway.purchase(@amount, @cabal_credit_card, @options)
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount, purchase.authorization)
+    assert_success refund
+    assert_equal '[refund-received]', refund.message
+  end
+
   def test_partial_refund
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
@@ -261,10 +517,86 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal '[cancel-received]', void.message
   end
 
+  def test_successful_void_with_cabal_card
+    auth = @gateway.authorize(@amount, @cabal_credit_card, @options)
+    assert_success auth
+
+    assert void = @gateway.void(auth.authorization)
+    assert_success void
+    assert_equal '[cancel-received]', void.message
+  end
+
   def test_failed_void
     response = @gateway.void('')
     assert_failure response
     assert_equal 'Original pspReference required for this operation', response.message
+  end
+
+  def test_successful_asynchronous_adjust
+    authorize = @gateway.authorize(@amount, @credit_card, @options.merge(authorisation_type: 'PreAuth'))
+    assert_success authorize
+
+    assert adjust = @gateway.adjust(200, authorize.authorization, @options)
+    assert_success adjust
+    assert_equal '[adjustAuthorisation-received]', adjust.message
+  end
+
+  def test_successful_asynchronous_adjust_and_capture
+    authorize = @gateway.authorize(@amount, @credit_card, @options.merge(authorisation_type: 'PreAuth'))
+    assert_success authorize
+
+    assert adjust = @gateway.adjust(200, authorize.authorization, @options)
+    assert_success adjust
+    assert_equal '[adjustAuthorisation-received]', adjust.message
+
+    assert capture = @gateway.capture(200, authorize.authorization)
+    assert_success capture
+  end
+
+  def test_failed_asynchronous_adjust
+    authorize = @gateway.authorize(@amount, @credit_card, @options.merge(authorisation_type: 'PreAuth'))
+    assert_success authorize
+
+    assert response = @gateway.adjust(200, '', @options)
+    assert_failure response
+    assert_equal 'Original pspReference required for this operation', response.message
+  end
+
+  # Requires Adyen to set your test account to Synchronous Adjust mode.
+  def test_successful_synchronous_adjust_using_adjust_data
+    authorize = @gateway.authorize(@amount, @credit_card, @options.merge(authorisation_type: 'PreAuth', shopper_statement: 'statement note'))
+    assert_success authorize
+
+    options = @options.merge(adjust_authorisation_data: authorize.params['additionalData']['adjustAuthorisationData'], update_shopper_statement: 'new statement note', industry_usage: 'DelayedCharge')
+    assert adjust = @gateway.adjust(200, authorize.authorization, options)
+    assert_success adjust
+    assert_equal 'Authorised', adjust.message
+  end
+
+  # Requires Adyen to set your test account to Synchronous Adjust mode.
+  def test_successful_synchronous_adjust_and_capture
+    authorize = @gateway.authorize(@amount, @credit_card, @options.merge(authorisation_type: 'PreAuth'))
+    assert_success authorize
+
+    options = @options.merge(adjust_authorisation_data: authorize.params['additionalData']['adjustAuthorisationData'])
+    assert adjust = @gateway.adjust(200, authorize.authorization, options)
+    assert_success adjust
+    assert_equal 'Authorised', adjust.message
+
+    assert capture = @gateway.capture(200, authorize.authorization)
+    assert_success capture
+  end
+
+  # Requires Adyen to set your test account to Synchronous Adjust mode.
+  def test_failed_synchronous_adjust_using_adjust_data
+    authorize = @gateway.authorize(@amount, @credit_card, @options.merge(authorisation_type: 'PreAuth'))
+    assert_success authorize
+
+    options = @options.merge(adjust_authorisation_data: authorize.params['additionalData']['adjustAuthorisationData'],
+                             requested_test_acquirer_response_code: '2')
+    assert adjust = @gateway.adjust(200, authorize.authorization, options)
+    assert_failure adjust
+    assert_equal 'Refused', adjust.message
   end
 
   def test_successful_store
@@ -283,11 +615,18 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal 'Authorised', response.message
   end
 
+  # Adyen does not currently support recurring transactions with Cabal cards
+  def test_failed_store_with_cabal_card
+    assert response = @gateway.store(@cabal_credit_card, @options)
+    assert_failure response
+    assert_equal 'Recurring transactions are not supported for this card type.', response.message
+  end
+
   def test_failed_store
     assert response = @gateway.store(@declined_card, @options)
 
     assert_failure response
-    assert_equal 'Refused', response.message
+    assert_equal 'CVC Declined', response.message
   end
 
   def test_successful_purchase_using_stored_card
@@ -326,7 +665,22 @@ class RemoteAdyenTest < Test::Unit::TestCase
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_match 'Refused', response.message
+    assert_match 'CVC Declined', response.message
+  end
+
+  def test_verify_with_idempotency_key
+    options = @options.merge(idempotency_key: SecureRandom.hex)
+    response = @gateway.authorize(0, @credit_card, options)
+    assert_success response
+    assert_equal 'Authorised', response.message
+    first_auth = response.authorization
+
+    response = @gateway.verify(@credit_card, options)
+    assert_success response
+    assert_equal response.authorization, first_auth
+
+    response = @gateway.void(first_auth, @options)
+    assert_success response
   end
 
   def test_invalid_login
@@ -418,17 +772,28 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_success response
   end
 
-  def test_invalid_country_for_purchase
+  def test_blank_country_for_purchase
     @options[:billing_address][:country] = ''
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
     assert_match Gateway::STANDARD_ERROR_CODE[:incorrect_address], response.error_code
   end
 
-  def test_invalid_state_for_purchase
+  def test_nil_state_for_purchase
+    @options[:billing_address][:state] = nil
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+  end
+
+  def test_blank_state_for_purchase
     @options[:billing_address][:state] = ''
     response = @gateway.authorize(@amount, @credit_card, @options)
-    assert_failure response
-    assert_match Gateway::STANDARD_ERROR_CODE[:incorrect_address], response.error_code
+    assert_success response
+  end
+
+  def test_missing_phone_for_purchase
+    @options[:billing_address].delete(:phone)
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
   end
 end

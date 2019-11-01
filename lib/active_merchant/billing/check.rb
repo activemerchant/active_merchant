@@ -35,13 +35,9 @@ module ActiveMerchant #:nodoc:
 
         errors << [:routing_number, 'is invalid'] unless valid_routing_number?
 
-        if(!empty?(account_holder_type) && !%w[business personal].include?(account_holder_type.to_s))
-          errors << [:account_holder_type, 'must be personal or business']
-        end
+        errors << [:account_holder_type, 'must be personal or business'] if !empty?(account_holder_type) && !%w[business personal].include?(account_holder_type.to_s)
 
-        if(!empty?(account_type) && !%w[checking savings].include?(account_type.to_s))
-          errors << [:account_type, 'must be checking or savings']
-        end
+        errors << [:account_type, 'must be checking or savings'] if !empty?(account_type) && !%w[checking savings].include?(account_type.to_s)
 
         errors_hash(errors)
       end

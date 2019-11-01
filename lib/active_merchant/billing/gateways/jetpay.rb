@@ -213,9 +213,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'TerminalID', @options[:login]
           xml.tag! 'TransactionType', transaction_type
           xml.tag! 'TransactionID', transaction_id.nil? ? generate_unique_id.slice(0, 18) : transaction_id
-          if options && options[:origin]
-            xml.tag! 'Origin', options[:origin]
-          end
+          xml.tag! 'Origin', options[:origin] if options && options[:origin]
 
           if block_given?
             yield xml
@@ -343,13 +341,9 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'CardExpMonth', format_exp(credit_card.month)
         xml.tag! 'CardExpYear', format_exp(credit_card.year)
 
-        if credit_card.first_name || credit_card.last_name
-          xml.tag! 'CardName', [credit_card.first_name, credit_card.last_name].compact.join(' ')
-        end
+        xml.tag! 'CardName', [credit_card.first_name, credit_card.last_name].compact.join(' ') if credit_card.first_name || credit_card.last_name
 
-        unless credit_card.verification_value.nil? || (credit_card.verification_value.length == 0)
-          xml.tag! 'CVV2', credit_card.verification_value
-        end
+        xml.tag! 'CVV2', credit_card.verification_value unless credit_card.verification_value.nil? || (credit_card.verification_value.length == 0)
       end
 
       def add_addresses(xml, options)

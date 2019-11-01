@@ -34,29 +34,98 @@ class RemoteCardConnectTest < Test::Unit::TestCase
       ship_from_date: '20877',
       items: [
         {
-          line_no: '1',
+          lineno: '1',
           material: 'MATERIAL-1',
           description: 'DESCRIPTION-1',
           upc: 'UPC-1',
           quantity: '1000',
           uom: 'CS',
-          unit_cost: '900',
-          net_amnt: '150',
-          tax_amnt: '117',
-          disc_amnt: '0'
+          unitcost: '900',
+          netamnt: '150',
+          taxamnt: '117',
+          discamnt: '0'
         },
         {
-          line_no: '2',
+          lineno: '2',
           material: 'MATERIAL-2',
           description: 'DESCRIPTION-2',
           upc: 'UPC-1',
           quantity: '2000',
           uom: 'CS',
-          unit_cost: '450',
-          net_amnt: '300',
-          tax_amnt: '117',
-          disc_amnt: '0'
+          unitcost: '450',
+          netamnt: '300',
+          taxamnt: '117',
+          discamnt: '0'
         }
+      ]
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Approval Queued for Capture', response.message
+  end
+
+  def test_successful_purchase_with_more_options_but_no_PO
+    options = {
+      order_id: '1',
+      ip: '127.0.0.1',
+      email: 'joe@example.com',
+      tax_amount: '50',
+      freight_amount: '29',
+      duty_amount: '67',
+      order_date: '20170507',
+      ship_from_date: '20877',
+      items: [
+        {
+          lineno: '1',
+          material: 'MATERIAL-1',
+          description: 'DESCRIPTION-1',
+          upc: 'UPC-1',
+          quantity: '1000',
+          uom: 'CS',
+          unitcost: '900',
+          netamnt: '150',
+          taxamnt: '117',
+          discamnt: '0'
+        },
+        {
+          lineno: '2',
+          material: 'MATERIAL-2',
+          description: 'DESCRIPTION-2',
+          upc: 'UPC-1',
+          quantity: '2000',
+          uom: 'CS',
+          unitcost: '450',
+          netamnt: '300',
+          taxamnt: '117',
+          discamnt: '0'
+        }
+      ]
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Approval', response.message
+  end
+
+  def test_successful_purchase_with_user_fields
+    # `response` does not contain userfields, but the transaction may be checked after
+    # running the test suite via an authorized call to the inquireByOrderid endpoint:
+    # <site>/cardconnect/rest/inquireByOrderid/<order_id>/<merchant_id>
+    options = {
+      order_id: '138510',
+      ip: '127.0.0.1',
+      email: 'joe@example.com',
+      po_number: '5FSD4',
+      tax_amount: '50',
+      freight_amount: '29',
+      duty_amount: '67',
+      order_date: '20170507',
+      ship_from_date: '20877',
+      user_fields: [
+        {'udf0': 'value0'},
+        {'udf1': 'value1'},
+        {'udf2': 'value2'}
       ]
     }
 
