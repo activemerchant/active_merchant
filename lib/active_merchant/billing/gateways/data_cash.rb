@@ -12,7 +12,7 @@ module ActiveMerchant
       self.display_name = 'DataCash'
 
       self.test_url = 'https://testserver.datacash.com/Transaction'
-      self.live_url = 'https://venus.transaction.datacash.com/Transaction'
+      self.live_url = 'https://mars.transaction.datacash.com/Transaction'
 
       AUTH_TYPE = 'auth'
       CANCEL_TYPE = 'cancel'
