@@ -113,11 +113,27 @@ class IxopayTest < Test::Unit::TestCase
     assert_equal 'Transaction of type "void" requires a referenceTransactionId', response.message
   end
 
-  def test_successful_verify; end
+  def test_successful_verify
+    @gateway.expects(:ssl_post).times(2).returns(successful_authorize_response, successful_void_response)
+    response = @gateway.verify(credit_card('4111111111111111'), @options)
 
-  def test_successful_verify_with_failed_void; end
+    assert_success response
+    assert_equal 'FINISHED', response.message
+  end
 
-  def test_failed_verify; end
+  def test_successful_verify_with_failed_void
+    @gateway.expects(:ssl_post).times(2).returns(successful_authorize_response, failed_void_response)
+
+    response = @gateway.verify(credit_card('4111111111111111'), @options)
+    assert_success response
+  end
+
+  def test_failed_verify
+    @gateway.expects(:ssl_post).returns(failed_authorize_response)
+
+    response = @gateway.verify(@credit_card, @options)
+    assert_failure response
+  end
 
   def test_scrub
     assert @gateway.supports_scrubbing?
