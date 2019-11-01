@@ -85,7 +85,7 @@ class IxopayTest < Test::Unit::TestCase
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
 
-    response = @gateway.capture(@amount, '00eb44f8f0382443cce5|20191028-00eb44f8f0382443cce5', {})
+    response = @gateway.capture(@amount, '00eb44f8f0382443cce5|20191028-00eb44f8f0382443cce5', @options)
 
     assert_success response
     assert_equal 'FINISHED', response.message
@@ -96,7 +96,7 @@ class IxopayTest < Test::Unit::TestCase
   def test_failed_capture
     @gateway.expects(:ssl_post).returns(failed_capture_response)
 
-    response = @gateway.capture(@amount, nil, {})
+    response = @gateway.capture(@amount, nil, @options)
 
     assert_failure response
     assert_equal 'Transaction of type "capture" requires a referenceTransactionId', response.message
