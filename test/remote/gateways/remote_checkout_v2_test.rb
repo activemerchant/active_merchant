@@ -144,15 +144,12 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_equal 'request_invalid: card_number_invalid', response.message
   end
 
-<<<<<<< HEAD
-=======
   def test_avs_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, billing_address: address.update(address1: 'Test_A'))
     assert_failure response
     assert_equal 'request_invalid: card_number_invalid', response.message
   end
 
->>>>>>> activemerchant/master
   def test_successful_authorize_and_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
