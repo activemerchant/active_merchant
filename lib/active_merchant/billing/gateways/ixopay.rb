@@ -191,7 +191,7 @@ module ActiveMerchant #:nodoc:
       def add_capture(xml, money, authorization, options)
         currency = options[:currency] || currency(money)
 
-        xml.capture do |xml|
+        xml.tag! 'capture' do
           xml.transactionId          new_transaction_id
           xml.referenceTransactionId authorization&.split('|')&.first
           xml.amount                 localized_amount(money, currency)
