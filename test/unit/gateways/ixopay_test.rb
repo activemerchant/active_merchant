@@ -4,7 +4,12 @@ class IxopayTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    @gateway = IxopayGateway.new(username: 'username', password: 'password', secret: 'secret')
+    @gateway = IxopayGateway.new(
+      username: 'username',
+      password: 'password',
+      secret:   'secret',
+      api_key:  'api_key'
+    )
 
     @declined_card = credit_card('4000300011112220')
     @credit_card = credit_card
@@ -49,7 +54,7 @@ class IxopayTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
 
     assert_failure response
-    assert 'Invalid Signature: Invalid authorization header', response.message
+    assert 'Invalid Signature', response.message
   end
 
   def test_successful_authorize
@@ -77,9 +82,26 @@ class IxopayTest < Test::Unit::TestCase
     assert_equal '2003', response.error_code
   end
 
-  def test_successful_capture; end
+  def test_successful_capture
+    @gateway.expects(:ssl_post).returns(successful_capture_response)
 
-  def test_failed_capture; end
+    response = @gateway.capture(@amount, '00eb44f8f0382443cce5|20191028-00eb44f8f0382443cce5', @options)
+
+    assert_success response
+    assert_equal 'FINISHED', response.message
+    assert_equal '17dd1e0b09221e9db038|20191031-17dd1e0b09221e9db038', response.authorization
+    assert response.test?
+  end
+
+  def test_failed_capture
+    @gateway.expects(:ssl_post).returns(failed_capture_response)
+
+    response = @gateway.capture(@amount, nil, @options)
+
+    assert_failure response
+    assert_equal 'Transaction of type "capture" requires a referenceTransactionId', response.message
+    assert_equal '9999', response.error_code
+  end
 
   def test_successful_refund
     @gateway.expects(:ssl_post).returns(successful_refund_response)
@@ -340,9 +362,44 @@ class IxopayTest < Test::Unit::TestCase
     XML
   end
 
-  def successful_capture_response; end
+  def successful_capture_response
+    <<-XML
+      <?xml version="1.0" encoding="utf-8"?>
+      <result xmlns="http://secure.ixopay.com/Schema/V2/Result">
+        <success>true</success>
+        <referenceId>17dd1e0b09221e9db038</referenceId>
+        <purchaseId>20191031-17dd1e0b09221e9db038</purchaseId>
+        <returnType>FINISHED</returnType>
+        <paymentMethod>Creditcard</paymentMethod>
+        <returnData type="creditcardData">
+          <creditcardData>
+            <type>visa</type>
+            <cardHolder>Longbob Longsen</cardHolder>
+            <expiryMonth>09</expiryMonth>
+            <expiryYear>2020</expiryYear>
+            <firstSixDigits>411111</firstSixDigits>
+            <lastFourDigits>1111</lastFourDigits>
+          </creditcardData>
+        </returnData>
+      </result>
+    XML
+  end
 
-  def failed_capture_response; end
+  def failed_capture_response
+    <<-XML
+      <?xml version="1.0" encoding="utf-8"?>
+      <result xmlns="http://secure.ixopay.com/Schema/V2/Result">
+        <success>false</success>
+        <returnType>ERROR</returnType>
+        <errors>
+          <error>
+            <message>Transaction of type "capture" requires a referenceTransactionId</message>
+            <code>9999</code>
+          </error>
+        </errors>
+      </result>
+    XML
+  end
 
   def successful_refund_response
     <<-XML
