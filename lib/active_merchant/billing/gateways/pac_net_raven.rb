@@ -192,13 +192,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def signature(action, post, parameters = {})
-        string = if %w(cc_settle cc_debit cc_preauth cc_refund).include?(action)
-                   post['UserName'] + post['Timestamp'] + post['RequestID'] + post['PymtType'] + parameters['Amount'].to_s + parameters['Currency']
-                 elsif action == 'void'
-                   post['UserName'] + post['Timestamp'] + post['RequestID'] + parameters['TrackingNumber']
-                 else
-                   post['UserName']
-        end
+        string =
+          if %w(cc_settle cc_debit cc_preauth cc_refund).include?(action)
+            post['UserName'] + post['Timestamp'] + post['RequestID'] + post['PymtType'] + parameters['Amount'].to_s + parameters['Currency']
+          elsif action == 'void'
+            post['UserName'] + post['Timestamp'] + post['RequestID'] + parameters['TrackingNumber']
+          else
+            post['UserName']
+          end
         OpenSSL::HMAC.hexdigest(OpenSSL::Digest::SHA1.new(@options[:secret]), @options[:secret], string)
       end
     end

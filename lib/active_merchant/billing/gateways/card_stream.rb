@@ -341,7 +341,7 @@ module ActiveMerchant #:nodoc:
                  'A'
                else
                  'I'
-        end
+               end
 
         AVSResult.new({
           :code => code,

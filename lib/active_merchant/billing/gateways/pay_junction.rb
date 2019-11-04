@@ -243,14 +243,15 @@ module ActiveMerchant #:nodoc:
 
         requires!(options, [:periodicity, :monthly, :weekly, :daily], :payments)
 
-        periodic_type = case options[:periodicity]
-        when :monthly
-          'month'
-        when :weekly
-          'week'
-        when :daily
-          'day'
-        end
+        periodic_type =
+          case options[:periodicity]
+          when :monthly
+            'month'
+          when :weekly
+            'week'
+          when :daily
+            'day'
+          end
 
         if options[:starting_at].nil?
           start_date = Time.now.strftime('%Y-%m-%d')

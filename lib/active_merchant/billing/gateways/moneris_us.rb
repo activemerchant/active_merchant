@@ -79,7 +79,7 @@ module ActiveMerchant #:nodoc:
                    'us_ach_debit'
                  elsif post[:data_key].blank?
                    'us_purchase'
-        end
+                 end
         commit(action, post)
       end
 

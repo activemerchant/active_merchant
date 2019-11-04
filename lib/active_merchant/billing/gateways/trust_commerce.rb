@@ -264,20 +264,21 @@ module ActiveMerchant #:nodoc:
 
         requires!(options, [:periodicity, :bimonthly, :monthly, :biweekly, :weekly, :yearly, :daily])
 
-        cycle = case options[:periodicity]
-        when :monthly
-          '1m'
-        when :bimonthly
-          '2m'
-        when :weekly
-          '1w'
-        when :biweekly
-          '2w'
-        when :yearly
-          '1y'
-        when :daily
-          '1d'
-        end
+        cycle =
+          case options[:periodicity]
+          when :monthly
+            '1m'
+          when :bimonthly
+            '2m'
+          when :weekly
+            '1w'
+          when :biweekly
+            '2w'
+          when :yearly
+            '1y'
+          when :daily
+            '1d'
+          end
 
         parameters = {
           :amount => amount(money),
