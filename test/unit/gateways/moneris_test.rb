@@ -170,10 +170,11 @@ class MonerisTest < Test::Unit::TestCase
   end
 
   def test_successful_verify
-    response = stub_comms do
-      @gateway.verify(@credit_card, @options)
-    end.respond_with(successful_authorize_response, failed_void_response)
+    @gateway.expects(:ssl_post).returns(successful_verify_response)
+
+    assert response = @gateway.verify(@credit_card, @options)
     assert_success response
+    assert_equal '125-0_14;93565164-01571', response.authorization
     assert_equal 'Approved', response.message
   end
 
@@ -935,6 +936,37 @@ class MonerisTest < Test::Unit::TestCase
           <IsVisaDebit>false</IsVisaDebit>
         </receipt>
       </response>
+    RESPONSE
+  end
+
+  def successful_verify_response
+    <<-RESPONSE
+    <?xml version="1.0" standalone="yes"?>
+    <response>
+      <receipt>
+        <ReceiptId>93565164-01571</ReceiptId>
+        <ReferenceNum>660158360010251110</ReferenceNum>
+        <ResponseCode>027</ResponseCode>
+        <ISO>01</ISO>
+        <AuthCode>000000</AuthCode>
+        <TransTime>16:06:11</TransTime>
+        <TransDate>2019-11-04</TransDate>
+        <TransType>06</TransType>
+        <Complete>true</Complete>
+        <Message>APPROVED           *                    =</Message>
+        <TransAmount>0.00</TransAmount>
+        <CardType>V</CardType>
+        <TransID>125-0_14</TransID>
+        <TimedOut>false</TimedOut>
+        <BankTotals>null</BankTotals>
+        <Ticket>null</Ticket>
+        <AvsResultCode>null</AvsResultCode>
+        <ITDResponse>null</ITDResponse>
+        <CvdResultCode>1M</CvdResultCode>
+        <CavvResultCode>2</CavvResultCode>
+        <IsVisaDebit>false</IsVisaDebit>
+      </receipt>
+    </response>
     RESPONSE
   end
 
