@@ -127,4 +127,23 @@ class RemoteTest < Test::Unit::TestCase
     assert_scrubbed(@gateway.options[:access_token], transcript)
     assert_scrubbed(@gateway.options[:refresh_token], transcript)
   end
+
+  def test_failed_purchase_with_expired_token
+    @gateway.options[:access_token] = 'not_a_valid_token'
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'AuthenticationFailed', response.params['code']
+  end
+
+  def test_successful_purchase_with_expired_token
+    @gateway.options[:access_token] = 'not_a_valid_token'
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(allow_refresh: true))
+    assert_success response
+  end
+
+  def test_refresh
+    response = @gateway.refresh
+    assert_success response
+    assert response.params['access_token']
+  end
 end
