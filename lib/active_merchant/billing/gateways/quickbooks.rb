@@ -68,7 +68,7 @@ module ActiveMerchant #:nodoc:
         post[:capture] = 'true'
 
         response = commit(ENDPOINT, post)
-        check_token_response(response, ENDPOINT, post)
+        check_token_response(response, ENDPOINT, post, options)
       end
 
       def authorize(money, payment, options = {})
@@ -78,7 +78,7 @@ module ActiveMerchant #:nodoc:
         post[:capture] = 'false'
 
         response = commit(ENDPOINT, post)
-        check_token_response(response, ENDPOINT, post)
+        check_token_response(response, ENDPOINT, post, options)
       end
 
       def capture(money, authorization, options = {})
@@ -88,7 +88,7 @@ module ActiveMerchant #:nodoc:
         add_context(post, options)
 
         response = commit(capture_uri(authorization), post)
-        check_token_response(response, capture_uri(authorization), post)
+        check_token_response(response, capture_uri(authorization), post, options)
       end
 
       def refund(money, authorization, options = {})
@@ -98,18 +98,23 @@ module ActiveMerchant #:nodoc:
         authorization, _ = split_authorization(authorization)
 
         response = commit(refund_uri(authorization), post)
-        check_token_response(response, refund_uri(authorization), post)
+        check_token_response(response, refund_uri(authorization), post, options)
       end
 
       def void(authorization, options = {})
         _, request_id = split_authorization(authorization)
 
         response = commit(void_uri(request_id))
-        check_token_response(response, void_uri(request_id))
+        check_token_response(response, void_uri(request_id), {}, options)
       end
 
       def verify(credit_card, options = {})
         authorize(1.00, credit_card, options)
+      end
+
+      def refresh
+        response = refresh_access_token
+        response_object(response)
       end
 
       def supports_scrubbing?
@@ -276,8 +281,9 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def check_token_response(response, endpoint, body = {})
+      def check_token_response(response, endpoint, body = {}, options = {})
         return response unless @options[:refresh_token]
+        return response unless options[:allow_refresh]
         return response unless response.params['code'] == 'AuthenticationFailed'
         refresh_access_token
         commit(endpoint, body)
@@ -297,10 +303,11 @@ module ActiveMerchant #:nodoc:
         }
 
         response = ssl_post(REFRESH_URI, data, headers)
-        response = JSON.parse(response)
+        json_response = JSON.parse(response)
 
-        @options[:access_token] = response['access_token'] if response['access_token']
-        @options[:refresh_token] = response['refresh_token'] if response['refresh_token']
+        @options[:access_token] = json_response['access_token'] if json_response['access_token']
+        @options[:refresh_token] = json_response['refresh_token'] if json_response['refresh_token']
+        response
       end
 
       def cvv_code_from(response)
@@ -314,7 +321,7 @@ module ActiveMerchant #:nodoc:
       def success?(response)
         return FRAUD_WARNING_CODES.concat(['0']).include?(response['errors'].first['code']) if response['errors']
 
-        !['DECLINED', 'CANCELLED'].include?(response['status'])
+        !['DECLINED', 'CANCELLED'].include?(response['status']) && !['AuthenticationFailed'].include?(response['code'])
       end
 
       def message_from(response)

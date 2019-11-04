@@ -202,7 +202,7 @@ class QuickBooksTest < Test::Unit::TestCase
       anything
     ).returns(successful_purchase_response)
 
-    response = @oauth_1_gateway.purchase(@amount, @credit_card, @options)
+    response = @oauth_1_gateway.purchase(@amount, @credit_card, @options.merge(allow_refresh: true))
 
     assert_success response
 
@@ -217,7 +217,7 @@ class QuickBooksTest < Test::Unit::TestCase
       has_entries('Authorization' => 'Bearer access_token')
     ).returns(successful_purchase_response)
 
-    response = @oauth_2_gateway.purchase(@amount, @credit_card, @options)
+    response = @oauth_2_gateway.purchase(@amount, @credit_card, @options.merge(allow_refresh: true))
     assert_success response
   end
 
@@ -240,7 +240,7 @@ class QuickBooksTest < Test::Unit::TestCase
       has_entries('Authorization' => 'Bearer new_access_token')
     ).returns(successful_purchase_response)
 
-    response = @oauth_2_gateway.purchase(@amount, @credit_card, @options)
+    response = @oauth_2_gateway.purchase(@amount, @credit_card, @options.merge(allow_refresh: true))
     assert_success response
 
     assert_match(/EF1IQ9GGXS2D|/, response.authorization)
