@@ -7,8 +7,8 @@ class OppTest < Test::Unit::TestCase
     @gateway = OppGateway.new(fixtures(:opp))
     @amount = 100
 
-    @valid_card = credit_card('4200000000000000', month: 05, year: 2018, verification_value: '123')
-    @invalid_card = credit_card('4444444444444444', month: 05, year: 2018, verification_value: '123')
+    @valid_card = credit_card('4200000000000000', month: 05, year: Date.today.year + 2, verification_value: '123')
+    @invalid_card = credit_card('4444444444444444', month: 05, year: Date.today.year + 2, verification_value: '123')
 
     request_type = 'complete' # 'minimal' || 'complete'
     time = Time.now.to_i

@@ -1,13 +1,15 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
-* Redsys: Updates to parse method for non-3DS responses [britth] #3391
-* Rubocop: Style/IfUnlessModifier [nfarve] #3390
-* CyberSource: Send issuer data on capture [leila-alderman] #3404
-* Rubocop: Layout/RescueEnsureAlignment fix [leila-alderman] #3411
-* Credorax: Stop always sending r1 parameter [molbrown] #3415
-* Quickbooks: Add OAuth 2.0 support and void action [britth] #3397
+== Version 1.101.0 (Nov 4, 2019)
 * Add UYI to list of currencies without fractions [curiousepic] #3416
+* Quickbooks: Add OAuth 2.0 support and void action [britth] #3397
+* Credorax: Stop always sending r1 parameter [molbrown] #3415
+* Rubocop: Layout/RescueEnsureAlignment fix [leila-alderman] #3411
+* CyberSource: Send issuer data on capture [leila-alderman] #3404
+* Rubocop: Style/IfUnlessModifier [nfarve] #3390
+* Redsys: Updates to parse method for non-3DS responses [britth] #3391
+* Netbanx: Add 3DS2 Support [Jujhar] #3394
 
 == Version 1.100.0 (Oct 16, 2019)
 * Stripe: Restore non-auto capture behaviour for card present transactions [PatrickFang] #3258

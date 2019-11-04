@@ -6,9 +6,9 @@ class RemoteOppTest < Test::Unit::TestCase
     @gateway = OppGateway.new(fixtures(:opp))
     @amount = 100
 
-    @valid_card = credit_card('4200000000000000', month: 05, year: 2018)
-    @invalid_card = credit_card('4444444444444444', month: 05, year: 2018)
-    @amex_card = credit_card('377777777777770 ', month: 05, year: 2018, brand: 'amex', verification_value: '1234')
+    @valid_card = credit_card('4200000000000000', month: 05, year: Date.today.year + 2)
+    @invalid_card = credit_card('4444444444444444', month: 05, year: Date.today.year + 2)
+    @amex_card = credit_card('377777777777770 ', month: 05, year: Date.today.year + 2, brand: 'amex', verification_value: '1234')
 
     request_type = 'complete' # 'minimal' || 'complete'
     time = Time.now.to_i
