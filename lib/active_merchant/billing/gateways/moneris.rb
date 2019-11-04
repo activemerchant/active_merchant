@@ -134,10 +134,19 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify(credit_card, options={})
-        MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
-        end
+        requires!(options, :order_id)
+        post = {}
+        add_payment_source(post, credit_card, options)
+        post[:order_id] = options[:order_id]
+        post[:address] = options[:billing_address] || options[:address]
+        post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
+        add_stored_credential(post, options)
+        action = if post[:data_key].blank?
+                   'card_verification'
+                 else
+                   'res_card_verification_cc'
+                 end
+        commit(action, post)
       end
 
       # When passing a :duration option (time in seconds) you can create a
@@ -417,6 +426,7 @@ module ActiveMerchant #:nodoc:
             'purchasecorrection' => [:order_id, :txn_number, :crypt_type],
             'cavv_preauth' => [:order_id, :cust_id, :amount, :pan, :expdate, :cavv, :crypt_type, :wallet_indicator],
             'cavv_purchase' => [:order_id, :cust_id, :amount, :pan, :expdate, :cavv, :crypt_type, :wallet_indicator],
+            'card_verification' => [:order_id, :cust_id, :pan, :expdate, :crypt_type, :avs_info, :cvd_info, :cof_info],
             'transact' => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type],
             'Batchcloseall' => [],
             'opentotals' => [:ecr_number],
@@ -426,7 +436,8 @@ module ActiveMerchant #:nodoc:
             'res_delete' => [:data_key],
             'res_update_cc' => [:data_key, :pan, :expdate, :crypt_type, :avs_info, :cof_info],
             'res_purchase_cc' => [:data_key, :order_id, :cust_id, :amount, :crypt_type, :cof_info],
-            'res_preauth_cc' => [:data_key, :order_id, :cust_id, :amount, :crypt_type, :cof_info]
+            'res_preauth_cc' => [:data_key, :order_id, :cust_id, :amount, :crypt_type, :cof_info],
+            'res_card_verification_cc' => [:order_id, :data_key, :expdate, :crypt_type, :cof_info]
         }
       end
     end
