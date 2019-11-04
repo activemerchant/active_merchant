@@ -249,7 +249,7 @@ class ClearhausTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_signing_request_with_invalid_key
-    gateway = ClearhausGateway.new(api_key: 'test_key',  signing_key: @test_signing_key, private_key: 'foo')
+    gateway = ClearhausGateway.new(api_key: 'test_key', signing_key: @test_signing_key, private_key: 'foo')
 
     # stub actual network access, but this shouldn't be reached
     gateway.stubs(:ssl_post).returns(nil)

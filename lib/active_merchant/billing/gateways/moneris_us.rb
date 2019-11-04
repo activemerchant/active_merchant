@@ -191,7 +191,7 @@ module ActiveMerchant #:nodoc:
           if crypt_type = options[:crypt_type] || @options[:crypt_type]
             post[:crypt_type] = crypt_type
           end
-          post[:cust_id]    = options[:customer] || source.name
+          post[:cust_id] = options[:customer] || source.name
         end
       end
 

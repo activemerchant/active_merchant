@@ -291,7 +291,7 @@ module ActiveMerchant #:nodoc:
         add_pair post, 'DECLINEURL',      options[:decline_url]     if options[:decline_url]
         add_pair post, 'EXCEPTIONURL',    options[:exception_url]   if options[:exception_url]
         add_pair post, 'CANCELURL',       options[:cancel_url]      if options[:cancel_url]
-        add_pair post, 'PARAMVAR',        options[:paramvar]       if options[:paramvar]
+        add_pair post, 'PARAMVAR',        options[:paramvar]        if options[:paramvar]
         add_pair post, 'PARAMPLUS',       options[:paramplus]       if options[:paramplus]
         add_pair post, 'COMPLUS',         options[:complus]         if options[:complus]
         add_pair post, 'LANGUAGE',        options[:language]        if options[:language]

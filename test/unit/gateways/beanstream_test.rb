@@ -25,7 +25,7 @@ class BeanstreamTest < Test::Unit::TestCase
       transaction_id: 'transaction ID'
     )
 
-    @check       = check(
+    @check = check(
                      :institution_number => '001',
                      :transit_number     => '26729'
                    )

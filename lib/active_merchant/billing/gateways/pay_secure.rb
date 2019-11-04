@@ -43,7 +43,7 @@ module ActiveMerchant #:nodoc:
       # Used for capturing, which is currently not supported.
       def add_reference(post, identification)
         auth, trans_id = identification.split(';')
-        post[:authnum]    = auth
+        post[:authnum] = auth
         post[:transid] = trans_id
       end
 

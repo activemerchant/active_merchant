@@ -336,7 +336,7 @@ module ActiveMerchant #:nodoc:
           if expired?
             errors << [:year,  'expired']
           else
-            errors << [:year,  'is not a valid year']  if !valid_expiry_year?(year)
+            errors << [:year,  'is not a valid year'] if !valid_expiry_year?(year)
           end
         end
 
@@ -347,7 +347,7 @@ module ActiveMerchant #:nodoc:
         errors = []
 
         if !empty?(brand)
-          errors << [:brand, 'is invalid']  if !CreditCard.card_companies.include?(brand)
+          errors << [:brand, 'is invalid'] if !CreditCard.card_companies.include?(brand)
         end
 
         if empty?(number)

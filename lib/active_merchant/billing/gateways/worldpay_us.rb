@@ -110,8 +110,8 @@ module ActiveMerchant #:nodoc:
           post[:ci_shipaddr2] = shipping_address[:address2]
           post[:ci_shipcity] = shipping_address[:city]
           post[:ci_shipstate] = shipping_address[:state]
-          post[:ci_shipzip]    = shipping_address[:zip]
-          post[:ci_shipcountry]    = shipping_address[:country]
+          post[:ci_shipzip] = shipping_address[:zip]
+          post[:ci_shipcountry] = shipping_address[:country]
         end
       end
 

@@ -150,7 +150,7 @@ module ActiveMerchant #:nodoc:
             end
             xml.tag! 'Tender' do
               xml.tag! 'Card' do
-                xml.tag! 'ExtData', 'Name' => 'ORIGID', 'Value' =>  reference
+                xml.tag! 'ExtData', 'Name' => 'ORIGID', 'Value' => reference
               end
             end
           end
@@ -264,7 +264,7 @@ module ActiveMerchant #:nodoc:
 
           add_three_d_secure(options, xml)
 
-          xml.tag! 'ExtData', 'Name' => 'LASTNAME', 'Value' =>  credit_card.last_name
+          xml.tag! 'ExtData', 'Name' => 'LASTNAME', 'Value' => credit_card.last_name
         end
       end
 

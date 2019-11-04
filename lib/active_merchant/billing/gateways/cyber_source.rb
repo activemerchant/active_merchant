@@ -205,7 +205,7 @@ module ActiveMerchant #:nodoc:
       # This functionality is only supported by this particular gateway may
       # be changed at any time
       def calculate_tax(creditcard, options)
-        requires!(options,  :line_items)
+        requires!(options, :line_items)
         setup_address_hash(options)
         commit(build_tax_calculation_request(creditcard, options), :calculate_tax, nil, options)
       end
@@ -314,7 +314,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_void_request(identification, options)
-        order_id, request_id, request_token, action, money, currency  = identification.split(';')
+        order_id, request_id, request_token, action, money, currency = identification.split(';')
         options[:order_id] = order_id
 
         xml = Builder::XmlMarkup.new :indent => 2
@@ -444,23 +444,23 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'merchantID', @options[:login]
         xml.tag! 'merchantReferenceCode', options[:order_id] || generate_unique_id
         xml.tag! 'clientLibrary', 'Ruby Active Merchant'
-        xml.tag! 'clientLibraryVersion',  VERSION
+        xml.tag! 'clientLibraryVersion', VERSION
         xml.tag! 'clientEnvironment', RUBY_PLATFORM
       end
 
       def add_purchase_data(xml, money = 0, include_grand_total = false, options={})
         xml.tag! 'purchaseTotals' do
           xml.tag! 'currency', options[:currency] || currency(money)
-          xml.tag!('grandTotalAmount', localized_amount(money.to_i, options[:currency] || default_currency))  if include_grand_total
+          xml.tag!('grandTotalAmount', localized_amount(money.to_i, options[:currency] || default_currency)) if include_grand_total
         end
       end
 
       def add_address(xml, payment_method, address, options, shipTo = false)
         xml.tag! shipTo ? 'shipTo' : 'billTo' do
-          xml.tag! 'firstName',             payment_method.first_name             if payment_method
-          xml.tag! 'lastName',              payment_method.last_name              if payment_method
+          xml.tag! 'firstName',             payment_method.first_name if payment_method
+          xml.tag! 'lastName',              payment_method.last_name if payment_method
           xml.tag! 'street1',               address[:address1]
-          xml.tag! 'street2',               address[:address2]                unless address[:address2].blank?
+          xml.tag! 'street2',               address[:address2] unless address[:address2].blank?
           xml.tag! 'city',                  address[:city]
           xml.tag! 'state',                 address[:state]
           xml.tag! 'postalCode',            address[:zip]
@@ -679,7 +679,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'subscriptionID',  subscription_id
           end
 
-          xml.tag! 'status',            options[:subscription][:status]                         if options[:subscription][:status]
+          xml.tag! 'status',            options[:subscription][:status] if options[:subscription][:status]
           xml.tag! 'amount',            localized_amount(options[:subscription][:amount].to_i, options[:currency] || default_currency) if options[:subscription][:amount]
           xml.tag! 'numberOfPayments',  options[:subscription][:occurrences]                    if options[:subscription][:occurrences]
           xml.tag! 'automaticRenew',    options[:subscription][:automatic_renew]                if options[:subscription][:automatic_renew]

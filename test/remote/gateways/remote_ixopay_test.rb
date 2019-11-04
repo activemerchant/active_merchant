@@ -29,7 +29,7 @@ class RemoteIxopayTest < Test::Unit::TestCase
     assert_equal @credit_card.year.to_s,      response.params.dig('return_data', 'creditcard_data', 'expiry_year')
     assert_equal @credit_card.number[0..5],   response.params.dig('return_data', 'creditcard_data', 'first_six_digits')
     assert_equal @credit_card.number.split(//).last(4).join, response.params.dig('return_data', 'creditcard_data', 'last_four_digits')
-    assert_equal 'FINISHED',                  response.params['return_type']
+    assert_equal 'FINISHED', response.params['return_type']
 
     assert_not_nil response.params['purchase_id']
     assert_not_nil response.params['reference_id']

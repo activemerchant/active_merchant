@@ -374,7 +374,7 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @credit_card, @options.merge(currency: 'JPY'))
     end.check_request do |endpoint, data, headers|
       assert_match(/amount.value=1/, data)
-      assert_match(/amount.currency=JPY/,  data)
+      assert_match(/amount.currency=JPY/, data)
     end.respond_with(successful_authorize_response)
 
     assert_success response
@@ -385,7 +385,7 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @credit_card, @options.merge(currency: 'OMR'))
     end.check_request do |endpoint, data, headers|
       assert_match(/amount.value=100/, data)
-      assert_match(/amount.currency=OMR/,  data)
+      assert_match(/amount.currency=OMR/, data)
     end.respond_with(successful_authorize_response)
 
     assert_success response

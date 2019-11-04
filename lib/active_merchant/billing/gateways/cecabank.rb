@@ -130,7 +130,7 @@ module ActiveMerchant #:nodoc:
 
         if root.elements['OPERACION']
           response[:operation_type] = root.elements['OPERACION'].attributes['tipo']
-          response[:amount] =  root.elements['OPERACION/importe'].text.strip
+          response[:amount] = root.elements['OPERACION/importe'].text.strip
         end
 
         response[:description] = root.elements['OPERACION/descripcion'].text if root.elements['OPERACION/descripcion']

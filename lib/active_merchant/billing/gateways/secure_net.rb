@@ -157,7 +157,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'FIRSTNAME', creditcard.first_name
             xml.tag! 'LASTNAME', creditcard.last_name
             xml.tag! 'PHONE', address[:phone].to_s
-            xml.tag! 'STATE', address[:state].blank?  ? 'n/a' : address[:state]
+            xml.tag! 'STATE', address[:state].blank? ? 'n/a' : address[:state]
             xml.tag! 'ZIP', address[:zip].to_s
           end
         end
@@ -178,7 +178,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'LASTNAME', address[:last_name].to_s
             end
 
-            xml.tag! 'STATE', address[:state].blank?  ? 'n/a' : address[:state]
+            xml.tag! 'STATE', address[:state].blank? ? 'n/a' : address[:state]
             xml.tag! 'ZIP', address[:zip].to_s
           end
         else

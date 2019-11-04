@@ -49,7 +49,7 @@ module ActiveMerchant #:nodoc:
 
       def refund(money, identification, options = {})
         post = {}
-        post[:origtx]  = identification
+        post[:origtx] = identification
         add_invoice(post, options)
         add_customer_data(post, options)
         commit('REFUND', money, post)
@@ -107,8 +107,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_invoice(post, options)
-        post[:order_number]    = options[:order_id] if options[:order_id].present?
-        post[:itemcode]       = (options[:item_code] || @options[:default_item_code])
+        post[:order_number] = options[:order_id] if options[:order_id].present?
+        post[:itemcode] = (options[:item_code] || @options[:default_item_code])
       end
 
       def add_address(post, options)
@@ -121,8 +121,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, options)
-        post[:email_g]  = options[:email]
-        post[:custcode]  = options[:custcode] unless empty?(options[:custcode])
+        post[:email_g] = options[:email]
+        post[:custcode] = options[:custcode] unless empty?(options[:custcode])
       end
 
       def expdate(creditcard)

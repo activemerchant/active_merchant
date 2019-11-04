@@ -92,7 +92,7 @@ class SagePayTest < Test::Unit::TestCase
   end
 
   def test_dont_send_fractional_amount_for_chinese_yen
-    @amount = 100_00  # 100 YEN
+    @amount = 100_00 # 100 YEN
     @options[:currency] = 'JPY'
 
     @gateway.expects(:add_pair).with({}, :Amount, '100', :required => true)

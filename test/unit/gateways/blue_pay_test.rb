@@ -187,7 +187,7 @@ class BluePayTest < Test::Unit::TestCase
   end
 
   def test_supported_card_types
-    assert_equal [:visa, :master, :american_express, :discover, :diners_club, :jcb],  BluePayGateway.supported_cardtypes
+    assert_equal [:visa, :master, :american_express, :discover, :diners_club, :jcb], BluePayGateway.supported_cardtypes
   end
 
   def test_parser_extracts_exactly_the_keys_in_gateway_response

@@ -211,7 +211,7 @@ module ActiveMerchant
 
       def add_purchase_details(post)
         post[:EchoAmount] = 'YES'
-        post[:SCBI] = 'YES'                   # Return information about the transaction
+        post[:SCBI] = 'YES' # Return information about the transaction
         post[:MessageType] = MESSAGE_TYPE
       end
 

@@ -48,7 +48,7 @@ class RemoteOpenpayTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_refund
-    assert response = @gateway.refund(@amount, '1',  @options)
+    assert response = @gateway.refund(@amount, '1', @options)
     assert_failure response
     assert_not_nil response.message
   end

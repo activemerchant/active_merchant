@@ -593,7 +593,7 @@ class PaypalExpressTest < Test::Unit::TestCase
   def test_reference_transaction
     @gateway.expects(:ssl_post).returns(successful_reference_transaction_response)
 
-    response = @gateway.reference_transaction(2000,  { :reference_id => 'ref_id' })
+    response = @gateway.reference_transaction(2000, { :reference_id => 'ref_id' })
 
     assert_equal 'Success', response.params['ack']
     assert_equal 'Success', response.message

@@ -48,7 +48,7 @@ module ActiveMerchant #:nodoc:
       protected
 
       def build_sale_request(type, money, creditcard, options = {})
-        requires!(options,  :order_id)
+        requires!(options, :order_id)
 
         xml = Builder::XmlMarkup.new :indent => 2
 

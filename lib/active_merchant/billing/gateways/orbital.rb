@@ -456,7 +456,7 @@ module ActiveMerchant #:nodoc:
         unless creditcard.nil?
           if creditcard.verification_value?
             xml.tag! :CardSecValInd, '1' if %w( visa discover ).include?(creditcard.brand)
-            xml.tag! :CardSecVal,  creditcard.verification_value
+            xml.tag! :CardSecVal, creditcard.verification_value
           end
         end
       end

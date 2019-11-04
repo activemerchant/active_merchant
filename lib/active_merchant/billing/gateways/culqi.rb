@@ -173,7 +173,7 @@ module ActiveMerchant #:nodoc:
           post[:city] = billing_address[:city]
           post[:state] = billing_address[:state]
           post[:countrycode] = billing_address[:country]
-          post[:zip]    = billing_address[:zip]
+          post[:zip] = billing_address[:zip]
           post[:telno] = billing_address[:phone]
           post[:telnocc] = options[:telephone_country_code] || '051'
         end

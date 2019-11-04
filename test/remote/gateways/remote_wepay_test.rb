@@ -169,7 +169,7 @@ class RemoteWepayTest < Test::Unit::TestCase
     authorize = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorize
 
-    sleep 30  # Wait for authorization to clear. Doesn't always work.
+    sleep 30 # Wait for authorization to clear. Doesn't always work.
     assert capture = @gateway.capture(nil, authorize.authorization)
     assert_success capture
   end

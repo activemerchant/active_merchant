@@ -204,7 +204,7 @@ module ActiveMerchant
       end
 
       def add_credit_card_or_reference(post, credit_card_or_reference, options = {})
-        post[:card]             ||= {}
+        post[:card] ||= {}
         if credit_card_or_reference.is_a?(String)
           post[:card][:token] = credit_card_or_reference
         else

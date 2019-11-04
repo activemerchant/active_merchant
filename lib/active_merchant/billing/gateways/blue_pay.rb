@@ -84,7 +84,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_rebill(post, options) if options[:rebill]
         add_duplicate_override(post, options)
-        post[:TRANS_TYPE]  = 'AUTH'
+        post[:TRANS_TYPE] = 'AUTH'
         commit('AUTH_ONLY', money, post, options)
       end
 
@@ -107,7 +107,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_rebill(post, options) if options[:rebill]
         add_duplicate_override(post, options)
-        post[:TRANS_TYPE]  = 'SALE'
+        post[:TRANS_TYPE] = 'SALE'
         commit('AUTH_CAPTURE', money, post, options)
       end
 
@@ -385,7 +385,7 @@ module ActiveMerchant #:nodoc:
         elsif message =~ /Approved/
           message = 'This transaction has been approved'
         elsif message =~  /Expired/
-          message =  'The credit card has expired'
+          message = 'The credit card has expired'
         end
         message
       end

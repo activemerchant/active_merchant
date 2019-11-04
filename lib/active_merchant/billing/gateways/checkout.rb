@@ -198,7 +198,7 @@ module ActiveMerchant #:nodoc:
         response
       end
 
-      def authorization_from(response, action,  amount, options)
+      def authorization_from(response, action, amount, options)
         currency = options[:currency] || currency(amount)
         [response[:tranid], response[:trackid], action, amount, currency].join('|')
       end

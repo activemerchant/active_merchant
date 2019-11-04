@@ -150,11 +150,11 @@ class CreditCardTest < Test::Unit::TestCase
   end
 
   def test_should_not_be_valid_for_edge_year_cases
-    @visa.year  = Time.now.year - 1
+    @visa.year = Time.now.year - 1
     errors = assert_not_valid @visa
     assert errors[:year]
 
-    @visa.year  = Time.now.year + 21
+    @visa.year = Time.now.year + 21
     errors = assert_not_valid @visa
     assert errors[:year]
   end

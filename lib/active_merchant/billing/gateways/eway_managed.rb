@@ -138,7 +138,7 @@ module ActiveMerchant #:nodoc:
 
       # add credit card details to be stored by eway. NOTE eway requires "title" field
       def add_creditcard(post, creditcard)
-        post[:CCNumber]  = creditcard.number
+        post[:CCNumber] = creditcard.number
         post[:CCExpiryMonth]  = sprintf('%.2i', creditcard.month)
         post[:CCExpiryYear] = sprintf('%.4i', creditcard.year)[-2..-1]
         post[:CCNameOnCard] = creditcard.name

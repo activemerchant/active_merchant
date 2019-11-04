@@ -153,7 +153,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_amount(post, amount)
-        post[:amount] =  amount(amount)
+        post[:amount] = amount(amount)
       end
 
       def add_creditcard(post, creditcard)

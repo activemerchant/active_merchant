@@ -128,7 +128,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_token(post, token)
-        post[:fp] = 't'    # turn on "future payments" - what paystation calls Token Billing
+        post[:fp] = 't' # turn on "future payments" - what paystation calls Token Billing
         post[:ft] = token
       end
 
