@@ -6,10 +6,12 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://api.checkout.com'
       self.test_url = 'https://api.sandbox.checkout.com'
 
-      self.supported_countries = ['AD', 'AE', 'AT', 'BE', 'BG', 'CH', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FO', 'FI', 'FR', 'GB', 'GI', 'GL', 'GR', 'HR', 'HU', 'IE', 'IS', 'IL', 'IT', 'LI', 'LT', 'LU', 'LV', 'MC', 'MT', 'NL', 'NO', 'PL', 'PT', 'RO', 'SE', 'SI', 'SM', 'SK', 'SJ', 'TR', 'VA']
+      self.supported_countries = ['AD', 'AE', 'AR', 'AT', 'AU', 'BE', 'BG', 'BH', 'BR', 'CH', 'CL', 'CN', 'CO', 'CY', 'CZ', 'DE', 'DK', 'EE', 'EG', 'ES', 'FI', 'FR', 'GB', 'GR', 'HK', 'HR', 'HU', 'IE', 'IS', 'IT', 'JO', 'JP', 'KW', 'LI', 'LT', 'LU', 'LV', 'MC', 'MT', 'MX', 'MY', 'NL', 'NO', 'NZ', 'OM', 'PE', 'PL', 'PT', 'QA', 'RO', 'SA', 'SE', 'SG', 'SI', 'SK', 'SM', 'TR', 'US']
       self.default_currency = 'USD'
       self.money_format = :cents
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :maestro, :discover]
+      self.currencies_without_fractions = %w(BIF DJF GNF ISK KMF XAF CLF XPF JPY PYG RWF KRW VUV VND XOF)
+      self.currencies_with_three_decimal_places = %w(BHD LYD JOD KWD OMR TND)
 
       def initialize(options = {})
         requires!(options, :secret_key)

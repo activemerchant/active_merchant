@@ -112,7 +112,7 @@ The [ActiveMerchant Wiki](https://github.com/activemerchant/active_merchant/wiki
 * [Cecabank](http://www.ceca.es/es/) - ES
 * [Cenpos](https://www.cenpos.com/) - AD, AI, AG, AR, AU, AT, BS, BB, BE, BZ, BM, BR, BN, BG, CA, HR, CY, CZ, DK, DM, EE, FI, FR, DE, GR, GD, GY, HK, HU, IS, IN, IL, IT, JP, LV, LI, LT, LU, MY, MT, MX, MC, MS, NL, PA, PL, PT, KN, LC, MF, VC, SM, SG, SK, SI, ZA, ES, SR, SE, CH, TR, GB, US, UY
 * [CAMS: Central Account Management System](https://www.centralams.com/) - US
-* [Checkout.com](https://www.checkout.com/) - AT, BE, BG, CY, CZ, DE, DK, EE, ES, FI, FR, GR, HR, HU, IE, IS, IT, LI, LT, LU, LV, MT, MU, NL, NO, PL, PT, RO, SE, SI, SK, US
+* [Checkout.com](https://www.checkout.com/) - AD, AE, AR, AT, AU, BE, BG, BH, BR, CH, CL, CN, CO, CY, CZ, DE, DK, EE, EG, ES, FI, FR, GB, GR, HK, HR, HU, IE, IS, IT, JO, JP, KW, LI, LT, LU, LV, MC, MT, MX, MY, NL, NO, NZ, OM, PE, PL, PT, QA, RO, SA, SE, SG, SI, SK, SM, TR, US
 * [Clearhaus](https://www.clearhaus.com) - AD, AT, BE, BG, CH, CY, CZ, DE, DK, EE, ES, FI, FO, FR, GB, GL, GR, HR, HU, IE, IS, IT, LI, LT, LU, LV, MT, NL, NO, PL, PT, RO, SE, SI, SK
 * [Commercegate](http://www.commercegate.com/) - AD, AT, AX, BE, BG, CH, CY, CZ, DE, DK, ES, FI, FR, GB, GG, GI, GR, HR, HU, IE, IM, IS, IT, JE, LI, LT, LU, LV, MC, MT, NL, NO, PL, PT, RO, SE, SI, SK, VA
 * [Conekta](https://conekta.io) - MX
