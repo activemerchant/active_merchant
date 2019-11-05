@@ -24,12 +24,10 @@ class IxopayTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
-
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
-      assert match(/<description>.+<\/description>/, data)
+      assert_match(/<description>.+<\/description>/, data)
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -109,6 +107,16 @@ class IxopayTest < Test::Unit::TestCase
 
     assert_success response
     assert_equal 'FINISHED', response.message
+  end
+
+  def test_refund_includes_currency_option
+    options = { currency: 'USD' }
+
+    stub_comms do
+      @gateway.refund(@amount, 'eb2bef23a30b537b90fb|20191016-b2bef23a30b537b90fbe', options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<currency>USD<\/currency>/, data)
+    end.respond_with(successful_refund_response)
   end
 
   def test_failed_refund

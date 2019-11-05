@@ -47,7 +47,7 @@ module ActiveMerchant #:nodoc:
 
       def refund(money, authorization, options={})
         request = build_xml_request do |xml|
-          add_refund(xml, money, authorization)
+          add_refund(xml, money, authorization, options)
         end
 
         commit(request)
@@ -170,7 +170,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_refund(xml, money, authorization)
+      def add_refund(xml, money, authorization, options)
         currency = options[:currency] || currency(money)
 
         xml.refund do

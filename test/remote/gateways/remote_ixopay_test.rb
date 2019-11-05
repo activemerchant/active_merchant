@@ -98,10 +98,12 @@ class RemoteIxopayTest < Test::Unit::TestCase
   end
 
   def test_successful_refund
-    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    options = @options.update(currency: 'USD')
+
+    purchase = @gateway.purchase(@amount, @credit_card, options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount, purchase.authorization)
+    assert refund = @gateway.refund(@amount, purchase.authorization, options)
     assert_success refund
     assert_equal 'FINISHED', refund.message
   end
