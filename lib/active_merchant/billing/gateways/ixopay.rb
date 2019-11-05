@@ -38,19 +38,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options={})
-        # The message 'capture' conflicts with an actual method name in Rails 4.2, so we deviate
-        # from the usual format here, building the request using the tag! method.
-        xml = Builder::XmlMarkup.new(indent: 2)
-
-        xml.instruct! :xml
-
-        xml.tag! 'transactionWithCard', 'xmlns' => 'http://secure.ixopay.com/Schema/V2/TransactionWithCard' do
-          xml.tag! 'username', @options[:username]
-          xml.tag! 'password', Digest::SHA1.hexdigest(@options[:password])
+        request = build_xml_request do |xml|
           add_capture(xml, money, authorization, options)
         end
 
-        commit(xml.target!)
+        commit(request)
       end
 
       def refund(money, authorization, options={})
@@ -199,11 +191,11 @@ module ActiveMerchant #:nodoc:
       def add_capture(xml, money, authorization, options)
         currency = options[:currency] || currency(money)
 
-        xml.tag! 'capture' do
-          xml.tag! 'transactionId',          new_transaction_id
-          xml.tag! 'referenceTransactionId', authorization&.split('|')&.first
-          xml.tag! 'amount',                 localized_amount(money, currency)
-          xml.tag! 'currency',               currency
+        xml.capture_ do
+          xml.transactionId             new_transaction_id
+          xml.referenceTransactionId    authorization&.split('|')&.first
+          xml.amount                    localized_amount(money, currency)
+          xml.currency                  currency
         end
       end
 
