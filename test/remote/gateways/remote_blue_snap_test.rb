@@ -14,6 +14,13 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     @three_ds_master_card = credit_card('5200000000001096', month: 1)
     @invalid_cabal_card = credit_card('5896 5700 0000 0000', month: 1, year: 2023)
 
+    # BlueSnap may require support contact to activate fraud checking on sandbox accounts.
+    # Specific merchant-configurable thresholds can be set as follows:
+    # Order Total Amount Decline Threshold = 3728
+    # Payment Country Decline List = Brazil
+    @fraudulent_amount = 3729
+    @fraudulent_card = credit_card('4007702835532454')
+
     @options = { billing_address: address }
     @options_3ds2 = @options.merge(
       three_d_secure: {
@@ -169,6 +176,16 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @check, @options.merge(@valid_check_options))
     assert_success response
     assert_equal 'Success', response.message
+  end
+
+  def test_fraudulent_purchase
+    # Reflects specific settings on Bluesnap sandbox account.
+    response = @gateway.purchase(@fraudulent_amount, @fraudulent_card, @options)
+    assert_failure response
+    assert_match(/fraud-reference-id/, response.message)
+    assert_match(/fraud-event/, response.message)
+    assert_match(/blacklistPaymentCountryDecline/, response.message)
+    assert_match(/orderTotalDecline/, response.message)
   end
 
   def test_failed_purchase

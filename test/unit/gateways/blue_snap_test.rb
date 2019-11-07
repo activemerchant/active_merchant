@@ -10,6 +10,15 @@ class BlueSnapTest < Test::Unit::TestCase
     @credit_card = credit_card
     @check = check
     @amount = 100
+
+    # BlueSnap may require support contact to activate fraud checking on sandbox accounts.
+    # Specific merchant-configurable thresholds were set and are reflected in the
+    # recorded responses:
+    # Order Total Amount Decline Threshold = 3728
+    # Payment Country Decline List = Brazil
+    @fraudulent_amount = 3729
+    @fraudulent_card = credit_card('4007702835532454')
+
     @options = { order_id: '1', personal_identification_number: 'CNPJ' }
     @options_3ds2 = @options.merge(
       three_d_secure: {
@@ -295,6 +304,24 @@ class BlueSnapTest < Test::Unit::TestCase
       assert_not_match(/level-3-data/, data)
     end.respond_with(successful_purchase_response)
     assert_success response
+  end
+
+  def test_fraud_response_handling
+    @gateway.expects(:raw_ssl_request).returns(fraudulent_purchase_response)
+
+    response = @gateway.purchase(@fraudulent_amount, @credit_card, @options)
+    assert_failure response
+    assert_match(/fraud-reference-id/, response.message)
+    assert_match(/fraud-event/, response.message)
+  end
+
+  def test_fraud_response_handling_multiple_triggers
+    @gateway.expects(:raw_ssl_request).returns(fraudulent_purchase_response_multiple_triggers)
+
+    response = @gateway.purchase(@fraudulent_amount, @fraudulent_card, @options)
+    assert_failure response
+    assert_match(/orderTotalDecline/, response.message)
+    assert_match(/blacklistPaymentCountryDecline/, response.message)
   end
 
   def test_scrub
@@ -936,6 +963,55 @@ class BlueSnapTest < Test::Unit::TestCase
 
   def forbidden_response
     MockResponse.new(403, '<xml>You are not authorized to perform this request due to inappropriate role permissions.</xml>')
+  end
+
+  def fraudulent_purchase_response
+    body = <<-XML
+      <?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
+        <messages xmlns=\"http://ws.plimus.com\">
+          <message>
+            <error-name>FRAUD_DETECTED</error-name>
+            <code>15011</code>
+            <description>The request cannot be fulfilled for the current shopper. Please contact BlueSnap support for further details.</description>
+            <fraud-events>
+              <fraud-reference-id>6270209</fraud-reference-id>
+              <fraud-event>
+                <fraud-event-code>orderTotalDecline</fraud-event-code>
+                <fraud-event-decision>D</fraud-event-decision>
+                <fraud-event-expression>3729 &gt; 3728</fraud-event-expression>
+              </fraud-event>
+            </fraud-events>
+          </message>
+        </messages>
+    XML
+    MockResponse.new(400, body)
+  end
+
+  def fraudulent_purchase_response_multiple_triggers
+    body = <<-XML
+      <?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
+        <messages xmlns=\"http://ws.plimus.com\">
+          <message>
+            <error-name>FRAUD_DETECTED</error-name>
+            <code>15011</code>
+            <description>The request cannot be fulfilled for the current shopper. Please contact BlueSnap support for further details.</description>
+            <fraud-events>
+              <fraud-reference-id>6270189</fraud-reference-id>
+              <fraud-event>
+                <fraud-event-code>blacklistPaymentCountryDecline</fraud-event-code>
+                <fraud-event-decision>D</fraud-event-decision>
+                <fraud-event-expression>BR is in list: [BR]</fraud-event-expression>
+              </fraud-event>
+              <fraud-event>
+                <fraud-event-code>orderTotalDecline</fraud-event-code>
+                <fraud-event-decision>D</fraud-event-decision>
+                <fraud-event-expression>3729 &gt; 3728</fraud-event-expression>
+              </fraud-event>
+            </fraud-events>
+          </message>
+        </messages>
+    XML
+    MockResponse.new(400, body)
   end
 
   def credentials_are_legit_response

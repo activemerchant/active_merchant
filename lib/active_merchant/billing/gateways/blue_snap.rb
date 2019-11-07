@@ -380,7 +380,7 @@ module ActiveMerchant
         succeeded = success_from(action, response)
         Response.new(
           succeeded,
-          message_from(succeeded, parsed),
+          message_from(succeeded, response),
           parsed,
           authorization: authorization_from(action, parsed, payment_method_details),
           avs_result: avs_result(parsed),
@@ -412,9 +412,33 @@ module ActiveMerchant
         (200...300).cover?(response.code.to_i)
       end
 
-      def message_from(succeeded, parsed_response)
+      def message_from(succeeded, response)
         return 'Success' if succeeded
-        parsed_response['description']
+        parsed = parse(response)
+        if parsed.dig('error-name') == 'FRAUD_DETECTED'
+          fraud_codes_from(response)
+        else
+          parsed['description']
+        end
+      end
+
+      def fraud_codes_from(response)
+        event_summary = {}
+        doc = Nokogiri::XML(response.body)
+        fraud_events = doc.xpath('//xmlns:fraud-events', 'xmlns' => 'http://ws.plimus.com')
+        fraud_events.children.each do |child|
+          if child.children.children.any?
+            event_summary[child.name] = event_summary[child.name] || []
+            event = {}
+            child.children.each do |chi|
+              event[chi.name] = chi.text
+            end
+            event_summary[child.name] << event
+          else
+            event_summary[child.name] = child.text
+          end
+        end
+        event_summary.to_json
       end
 
       def authorization_from(action, parsed_response, payment_method_details)

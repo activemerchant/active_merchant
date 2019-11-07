@@ -4,6 +4,7 @@
 * Adyen: add `recurring_contract_type` GSF [therufs] #3460
 * Credorax: Only pass `3ds_version` parameter when required [britth] #3458
 * EBANX: Include Peru in supported countries [Ruanito] #3443
+* Bluesnap: include fraud data in response message [therufs] #3459
 
 == Version 1.103.0 (Dec 2, 2019)
 * Quickbooks: Mark transactions that returned `AuthorizationFailed` as failures [britth] #3447
