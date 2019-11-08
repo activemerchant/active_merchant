@@ -182,9 +182,7 @@ module ActiveMerchant #:nodoc:
           post[:csc] = options[:csc]
 
         elsif payment.is_a?(Check)
-          direct_debit_account_info = {}
-          add_debit(direct_debit_account_info, payment)
-          post[:direct_debit_account_info] = direct_debit_account_info
+          add_debit(post, payment)
 
         else
           if options.key?(:card_token)
