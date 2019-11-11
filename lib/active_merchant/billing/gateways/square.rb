@@ -68,20 +68,51 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'payments', post, options)
       end
 
-      def capture(money, authorization, options={})
-        commit('capture', post)
+      def capture(authorization)
+        commit(:post, "payments/#{authorization}/complete", {}, {})
       end
 
-      def refund(money, authorization, options={})
-        commit('refund', post)
+      def void(authorization, options = {})
+        post = {}
+
+        post[:reason] = options[:reason] if options[:reason]
+
+        commit(:post, "payments/#{authorization}/cancel", post, {})
       end
 
-      def void(authorization, options={})
-        commit('void', post)
+      def refund(money, identification, options={})
+        post = { payment_id: identification }
+
+        add_idempotency_key(post, options)
+        add_amount(post, money, options)
+
+        post[:reason] = options[:reason] if options[:reason]
+
+        commit(:post, "refunds", post, options)
       end
 
       def store(payment, options = {})
+        customer_post = options[:customer]
 
+        add_idempotency_key(customer_post, options)
+
+        response = {}
+
+        MultiResponse.run do |r|
+          r.process { commit(:post, "customers", customer_post, options) }
+          customer_id = r.params['customer']['id']
+
+          response[:customer] = r.params['customer']
+
+          customer_card_post = create_post_for_customer_card(options[:customer], payment)
+          add_customer(customer_card_post, customer_id)
+
+          r.process { commit(:post, "customers/#{customer_id}/cards", customer_card_post, options) }
+
+          response[:card] = r.params['card']
+        end
+
+        return Response.new(true, nil, response)
       end
 
       def unstore(identification, options = {}, deprecated_options = {})
@@ -90,13 +121,6 @@ module ActiveMerchant #:nodoc:
 
       def update_customer(customer_id, options = {})
         # commit(:post, "customers/#{CGI.escape(customer_id)}", options, options)
-      end
-
-      def verify(credit_card, options={})
-        MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
-        end
       end
 
       def supports_scrubbing?
@@ -108,6 +132,10 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
+      def add_idempotency_key(post, options)
+        post[:idempotency_key] = options[:idempotency_key]
+      end
 
       def add_amount(post, money, options)
         currency = options[:currency] || currency(money)
@@ -131,12 +159,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_charge_details(post, money, payment, options)
-        post[:idempotency_key] = options[:idempotency_key]
 
+        add_idempotency_key(post, options)
         add_amount(post, money, options)
         add_application_fee(post, options)
 
         return post
+      end
+
+      def add_customer(post, identification)
+        post[:customer_id] = identification
       end
 
       def create_post_for_auth_or_purchase(money, payment, options)
@@ -153,11 +185,20 @@ module ActiveMerchant #:nodoc:
         return post
       end
 
+      def create_post_for_customer_card(customer, payment)
+        post = {
+          card_nonce: payment,
+          billing_address: customer[:address] ? customer[:address] : {},
+          cardholder_name: "#{customer[:given_name]} #{customer[:family_name]}"
+        }
+
+        return post
+      end
+
       def api_request(method, endpoint, parameters = nil, options = {})
         url = (test? ? test_url : live_url)
         raw_response = response = nil
         begin
-          puts parameters
           raw_response = ssl_request(method, "#{url}/#{endpoint}", parameters.to_json, headers(options))
           response = parse(raw_response)
         rescue ResponseError => e
@@ -182,7 +223,7 @@ module ActiveMerchant #:nodoc:
           success,
           message_from(success, response),
           response,
-          authorization: success ? response['payment']['id'] : nil,
+          authorization: authorization_from(success, url, method, response),
           avs_result: success ? { :code => avs_code } : nil,
           cvv_result: success ? cvc_code : nil,
 
@@ -205,6 +246,22 @@ module ActiveMerchant #:nodoc:
         return success ? 'Transaction approved' : response['errors'][0]['detail']
       end
 
+      def authorization_from(success, url, method, response)
+        return response.fetch('errors', [])[0]['detail'] unless success
+
+        if method == :post && (url == 'payments' || url.match(/payments\/.*\/complete/) || url.match(/payments\/.*\/cancel/))
+          return response['payment']['id']
+        elsif method == :post && url == 'refunds'
+          return response['refund']['id']
+        elsif method == :post && url == 'customers'
+          return response['customer']['id']
+        elsif method == :post && (url.match(/customers\/.*\/cards/))
+          return response['card']['id']
+        else
+          return nil
+        end
+      end
+
       def error_code_from(response)
         return nil unless response['errors']
 
@@ -220,8 +277,8 @@ module ActiveMerchant #:nodoc:
         key = options[:access_token] || @access_token
 
         return {
-          'Content-Type': 'application/json',
-          'Authorization' => 'Bearer ' + key,
+          'Content-Type' => 'application/json',
+          'Authorization' => "Bearer #{key}",
           'Square-Version' => api_version(options),
         }
       end

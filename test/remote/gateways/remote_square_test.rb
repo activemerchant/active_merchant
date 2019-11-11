@@ -5,11 +5,31 @@ class RemoteSquareTest < Test::Unit::TestCase
     @gateway = SquareGateway.new(fixtures(:square))
 
     @amount = 200
+    @refund_amount = 100
 
     @card_nonce = 'cnon:card-nonce-ok'
     @declined_card_nonce = 'cnon:card-nonce-declined'
 
-    @options = {}
+    @options = {
+      reason: 'Customer Canceled',
+    }
+
+    @customer = {
+      given_name: 'John',
+      family_name: 'Doe',
+      company_name: 'John Doe Inc',
+      email_address: 'john.doe@example.com',
+      phone_number: '1231231234',
+      address: {
+        address_line_1: '123 Main St.',
+        address_line_2: 'Apt 2A',
+        address_line_3: 'Att John Doe',
+        locality: 'Chicago',
+        administrative_district_level_1: 'Illinois',
+        administrative_district_level_2: 'United States',
+        postal_code: '94103'
+      }
+    }
   end
 
   def test_successful_authorize
@@ -28,19 +48,64 @@ class RemoteSquareTest < Test::Unit::TestCase
     # assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
   end
 
+  def test_successful_authorize_then_capture
+    @options[:idempotency_key] = SecureRandom.hex(10)
+
+    assert authorization = @gateway.authorize(@amount, @card_nonce, @options)
+    assert_success authorization
+
+    assert capture = @gateway.capture(authorization.authorization)
+    assert_success capture
+    # assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
+  end
+
+  def test_successful_authorize_then_void
+    @options[:idempotency_key] = SecureRandom.hex(10)
+
+    assert authorization = @gateway.authorize(@amount, @card_nonce, @options)
+    assert_success authorization
+
+    assert void = @gateway.void(authorization.authorization, @options)
+    assert_success void
+    # assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
+  end
+
   def test_successful_purchase
     @options[:idempotency_key] = SecureRandom.hex(10)
 
-    assert response = @gateway.purchase(@amount, @card_nonce, @options)
-    assert_success response
+    assert purchase = @gateway.purchase(@amount, @card_nonce, @options)
+    assert_success purchase
     # assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
   end
 
   def test_unsuccessful_purchase
     @options[:idempotency_key] = SecureRandom.hex(10)
 
-    assert response = @gateway.purchase(@amount, @declined_card_nonce, @options)
-    assert_failure response
+    assert purchase = @gateway.purchase(@amount, @declined_card_nonce, @options)
+    assert_failure purchase
+    # assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
+  end
+
+  def test_successful_purchase_then_refund
+    @options[:idempotency_key] = SecureRandom.hex(10)
+    assert purchase = @gateway.purchase(@amount, @card_nonce, @options)
+    assert_success purchase
+
+    sleep 2
+
+    @options[:idempotency_key] = SecureRandom.hex(10)
+    assert refund = @gateway.refund(@refund_amount, purchase.authorization, @options)
+    assert_success refund
+
+    # assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
+  end
+
+  def test_successful_store
+    @options[:customer] = @customer
+
+    assert store = @gateway.store(@card_nonce, @options)
+    pp store
+    # assert_success store
     # assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
   end
 
