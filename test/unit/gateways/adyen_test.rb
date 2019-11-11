@@ -551,6 +551,22 @@ class AdyenTest < Test::Unit::TestCase
     assert_equal 'Refused', response.message
   end
 
+  def test_successful_unstore
+    response = stub_comms do
+      @gateway.unstore(shopper_reference: 'shopper_reference',
+                       recurring_detail_reference: 'detail_reference')
+    end.respond_with(successful_unstore_response)
+    assert_equal '[detail-successfully-disabled]', response.message
+  end
+
+  def test_failed_unstore
+    @gateway.expects(:ssl_post).returns(failed_unstore_response)
+    response = @gateway.unstore(shopper_reference: 'random_reference',
+                                recurring_detail_reference: 'detail_reference')
+    assert_failure response
+    assert_equal 'Contract not found', response.message
+  end
+
   def test_successful_verify
     response = stub_comms do
       @gateway.verify(@credit_card, @options)
@@ -983,6 +999,18 @@ class AdyenTest < Test::Unit::TestCase
   def failed_store_response
     <<-RESPONSE
     {"pspReference":"8835205393394754","refusalReason":"Refused","resultCode":"Refused"}
+    RESPONSE
+  end
+
+  def successful_unstore_response
+    <<-RESPONSE
+    {"response":"[detail-successfully-disabled]"}
+    RESPONSE
+  end
+
+  def failed_unstore_response
+    <<-RESPONSE
+    {"status":422,"errorCode":"800","message":"Contract not found","errorType":"validation"}
     RESPONSE
   end
 
