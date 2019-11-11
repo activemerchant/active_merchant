@@ -104,8 +104,16 @@ class RemoteSquareTest < Test::Unit::TestCase
     @options[:customer] = @customer
 
     assert store = @gateway.store(@card_nonce, @options)
-    pp store
-    # assert_success store
+    # assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
+  end
+
+  def test_successful_store_then_unstore
+    @options[:customer] = @customer
+
+    assert store = @gateway.store(@card_nonce, @options)
+    # assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
+    
+    assert unstore = @gateway.unstore(store.params['customer']['id'], @options)
     # assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
   end
 

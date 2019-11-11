@@ -115,8 +115,8 @@ module ActiveMerchant #:nodoc:
         return Response.new(true, nil, response)
       end
 
-      def unstore(identification, options = {}, deprecated_options = {})
-
+      def unstore(identification, options = {})
+        commit(:delete, "customers/#{identification}", {}, options)
       end
 
       def update_customer(customer_id, options = {})
@@ -257,6 +257,8 @@ module ActiveMerchant #:nodoc:
           return response['customer']['id']
         elsif method == :post && (url.match(/customers\/.*\/cards/))
           return response['card']['id']
+        elsif method == :delete && (url.match(/customers/))
+          return {}
         else
           return nil
         end
