@@ -226,8 +226,8 @@ class SkipJackTest < Test::Unit::TestCase
     @options[:shipping_address] = @shipping_address
     @gateway.expects(:ssl_post).with do |url, params|
       url == 'https://developer.skipjackic.com/scripts/evolvcc.dll?AuthorizeAPI' &&
-      CGI.parse(params)['State'].first == 'XX' &&
-      CGI.parse(params)['ShipToState'].first == 'XX'
+        CGI.parse(params)['State'].first == 'XX' &&
+        CGI.parse(params)['ShipToState'].first == 'XX'
     end.returns(successful_authorization_response)
 
     @gateway.authorize(@amount, @credit_card, @options)

@@ -643,7 +643,7 @@ module ActiveMerchant #:nodoc:
           response[:profile_proc_status] == SUCCESS
         else
           response[:proc_status] == SUCCESS &&
-          APPROVED.include?(response[:resp_code])
+            APPROVED.include?(response[:resp_code])
         end
       end
 

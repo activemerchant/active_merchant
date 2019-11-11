@@ -236,8 +236,8 @@ module ActiveMerchant #:nodoc:
       # Tests for a successful response from Moneris' servers
       def successful?(response)
         response[:response_code] &&
-        response[:complete] &&
-        (0..49).cover?(response[:response_code].to_i)
+          response[:complete] &&
+          (0..49).cover?(response[:response_code].to_i)
       end
 
       def parse(xml)

@@ -71,21 +71,6 @@ Layout/MultilineArrayBraceLayout:
 Layout/MultilineMethodCallBraceLayout:
   Enabled: false
 
-# Offense count: 24
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, IndentationWidth.
-# SupportedStyles: aligned, indented
-Layout/MultilineOperationIndentation:
-  Exclude:
-    - 'lib/active_merchant/billing/credit_card_methods.rb'
-    - 'lib/active_merchant/billing/gateways/iridium.rb'
-    - 'lib/active_merchant/billing/gateways/moneris.rb'
-    - 'lib/active_merchant/billing/gateways/moneris_us.rb'
-    - 'lib/active_merchant/billing/gateways/orbital.rb'
-    - 'lib/active_merchant/billing/gateways/redsys.rb'
-    - 'test/unit/gateways/braintree_blue_test.rb'
-    - 'test/unit/gateways/skip_jack_test.rb'
-
 # Offense count: 649
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle.

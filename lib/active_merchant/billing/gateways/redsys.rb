@@ -373,9 +373,9 @@ module ActiveMerchant #:nodoc:
 
       def build_signature(data)
         str = data[:amount] +
-          data[:order_id].to_s +
-          @options[:login].to_s +
-          data[:currency]
+              data[:order_id].to_s +
+              @options[:login].to_s +
+              data[:currency]
 
         if card = data[:card]
           str << card[:pan]
@@ -495,14 +495,14 @@ module ActiveMerchant #:nodoc:
           sig.casecmp(data[:ds_signature].to_s).zero?
         else
           str = data[:ds_amount] +
-            data[:ds_order].to_s +
-            data[:ds_merchantcode] +
-            data[:ds_currency] +
-            data[:ds_response] +
-            data[:ds_cardnumber].to_s +
-            data[:ds_transactiontype].to_s +
-            data[:ds_securepayment].to_s +
-            @options[:secret_key]
+                data[:ds_order].to_s +
+                data[:ds_merchantcode] +
+                data[:ds_currency] +
+                data[:ds_response] +
+                data[:ds_cardnumber].to_s +
+                data[:ds_transactiontype].to_s +
+                data[:ds_securepayment].to_s +
+                @options[:secret_key]
 
           sig = Digest::SHA1.hexdigest(str)
           data[:ds_signature].to_s.downcase == sig
@@ -591,7 +591,7 @@ module ActiveMerchant #:nodoc:
 
       def xml_signed_fields(data)
         xml_signed_fields = data[:ds_amount] + data[:ds_order] + data[:ds_merchantcode] +
-          data[:ds_currency] + data[:ds_response]
+                            data[:ds_currency] + data[:ds_response]
 
         xml_signed_fields += data[:ds_cardnumber] if data[:ds_cardnumber]
 
