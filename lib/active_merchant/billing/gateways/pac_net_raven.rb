@@ -198,7 +198,7 @@ module ActiveMerchant #:nodoc:
                    post['UserName'] + post['Timestamp'] + post['RequestID'] + parameters['TrackingNumber']
                  else
                    post['UserName']
-        end
+                 end
         OpenSSL::HMAC.hexdigest(OpenSSL::Digest::SHA1.new(@options[:secret]), @options[:secret], string)
       end
     end

@@ -252,7 +252,7 @@ module ActiveMerchant #:nodoc:
                 '04'
               else
                 (credit_card.respond_to?(:eci) ? credit_card.eci : nil) || options[:eci] || DEFAULT_ECI
-        end
+              end
 
         xml.tag! 'Ecommerce_Flag', eci.to_s =~ /^[0-9]+$/ ? eci.to_s.rjust(2, '0') : eci
       end

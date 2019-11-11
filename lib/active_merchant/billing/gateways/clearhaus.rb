@@ -60,7 +60,7 @@ module ActiveMerchant #:nodoc:
                    "/cards/#{payment}/authorizations"
                  else
                    raise ArgumentError.new("Unknown payment type #{payment.inspect}")
-        end
+                 end
 
         post[:recurring] = options[:recurring] if options[:recurring]
         post[:card][:pares] = options[:pares] if options[:pares]

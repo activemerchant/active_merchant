@@ -418,16 +418,17 @@ module ActiveMerchant #:nodoc:
       def calculate_signature(signed_parameters, algorithm, secret)
         return legacy_calculate_signature(signed_parameters, secret) unless algorithm
 
-        sha_encryptor = case algorithm
-        when 'sha256'
-          Digest::SHA256
-        when 'sha512'
-          Digest::SHA512
-        when 'sha1'
-          Digest::SHA1
-        else
-          raise "Unknown signature algorithm #{algorithm}"
-        end
+        sha_encryptor =
+          case algorithm
+          when 'sha256'
+            Digest::SHA256
+          when 'sha512'
+            Digest::SHA512
+          when 'sha1'
+            Digest::SHA1
+          else
+            raise "Unknown signature algorithm #{algorithm}"
+          end
 
         filtered_params = signed_parameters.select { |k, v| !v.blank? }
         sha_encryptor.hexdigest(

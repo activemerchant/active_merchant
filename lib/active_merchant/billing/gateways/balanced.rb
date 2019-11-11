@@ -49,7 +49,7 @@ module ActiveMerchant #:nodoc:
                          r.authorization
                        else
                          payment_method
-          end
+                       end
           r.process { commit('debits', "cards/#{card_identifier_from(identifier)}/debits", post) }
         end
       end
@@ -66,7 +66,7 @@ module ActiveMerchant #:nodoc:
                          r.authorization
                        else
                          payment_method
-          end
+                       end
           r.process { commit('card_holds', "cards/#{card_identifier_from(identifier)}/card_holds", post) }
         end
       end

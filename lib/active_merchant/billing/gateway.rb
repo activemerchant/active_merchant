@@ -254,7 +254,7 @@ module ActiveMerchant #:nodoc:
                   money.cents
                 else
                   money
-        end
+                end
 
         raise ArgumentError, 'money amount must be a positive Integer in cents.' if money.is_a?(String)
 

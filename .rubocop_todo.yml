@@ -35,13 +35,6 @@ Layout/EmptyLineAfterGuardClause:
 Layout/EmptyLinesAroundClassBody:
   Enabled: false
 
-# Offense count: 39
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyleAlignWith, AutoCorrect, Severity.
-# SupportedStylesAlignWith: keyword, variable, start_of_line
-Layout/EndAlignment:
-  Enabled: false
-
 # Offense count: 174
 # Cop supports --auto-correct.
 # Configuration parameters: AllowForAlignment, ForceEqualSignAlignment.

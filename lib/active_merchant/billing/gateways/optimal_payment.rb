@@ -95,24 +95,25 @@ module ActiveMerchant #:nodoc:
       def commit(action, money, post)
         post[:order_id] ||= 'order_id'
 
-        xml = case action
-        when 'ccAuthorize', 'ccPurchase', 'ccVerification'
-          cc_auth_request(money, post)
-        when 'ccCredit', 'ccSettlement'
-          cc_post_auth_request(money, post)
-        when 'ccStoredDataAuthorize', 'ccStoredDataPurchase'
-          cc_stored_data_request(money, post)
-        when 'ccAuthorizeReversal'
-          cc_auth_reversal_request(post)
-        # when 'ccCancelSettle', 'ccCancelCredit', 'ccCancelPayment'
-        #  cc_cancel_request(money, post)
-        # when 'ccPayment'
-        #  cc_payment_request(money, post)
-        # when 'ccAuthenticate'
-        #  cc_authenticate_request(money, post)
-        else
-          raise 'Unknown Action'
-        end
+        xml =
+          case action
+          when 'ccAuthorize', 'ccPurchase', 'ccVerification'
+            cc_auth_request(money, post)
+          when 'ccCredit', 'ccSettlement'
+            cc_post_auth_request(money, post)
+          when 'ccStoredDataAuthorize', 'ccStoredDataPurchase'
+            cc_stored_data_request(money, post)
+          when 'ccAuthorizeReversal'
+            cc_auth_reversal_request(post)
+          # when 'ccCancelSettle', 'ccCancelCredit', 'ccCancelPayment'
+          #  cc_cancel_request(money, post)
+          # when 'ccPayment'
+          #  cc_payment_request(money, post)
+          # when 'ccAuthenticate'
+          #  cc_authenticate_request(money, post)
+          else
+            raise 'Unknown Action'
+          end
         txnRequest = escape_uri(xml)
         response = parse(ssl_post(test? ? self.test_url : self.live_url, "txnMode=#{action}&txnRequest=#{txnRequest}"))
 

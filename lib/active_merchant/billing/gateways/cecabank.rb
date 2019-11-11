@@ -215,31 +215,32 @@ module ActiveMerchant #:nodoc:
       end
 
       def generate_signature(action, parameters)
-        signature_fields = case action
-        when CECA_ACTION_REFUND
-          options[:key].to_s +
-          options[:merchant_id].to_s +
-          options[:acquirer_bin].to_s +
-          options[:terminal_id].to_s +
-          parameters['Num_operacion'].to_s +
-          parameters['Importe'].to_s +
-          parameters['TipoMoneda'].to_s +
-          CECA_DECIMALS +
-          parameters['Referencia'].to_s +
-          CECA_ENCRIPTION
-        else
-          options[:key].to_s +
-          options[:merchant_id].to_s +
-          options[:acquirer_bin].to_s +
-          options[:terminal_id].to_s +
-          parameters['Num_operacion'].to_s +
-          parameters['Importe'].to_s +
-          parameters['TipoMoneda'].to_s +
-          CECA_DECIMALS +
-          CECA_ENCRIPTION +
-          CECA_NOTIFICATIONS_URL +
-          CECA_NOTIFICATIONS_URL
-        end
+        signature_fields =
+          case action
+          when CECA_ACTION_REFUND
+            options[:key].to_s +
+            options[:merchant_id].to_s +
+            options[:acquirer_bin].to_s +
+            options[:terminal_id].to_s +
+            parameters['Num_operacion'].to_s +
+            parameters['Importe'].to_s +
+            parameters['TipoMoneda'].to_s +
+            CECA_DECIMALS +
+            parameters['Referencia'].to_s +
+            CECA_ENCRIPTION
+          else
+            options[:key].to_s +
+            options[:merchant_id].to_s +
+            options[:acquirer_bin].to_s +
+            options[:terminal_id].to_s +
+            parameters['Num_operacion'].to_s +
+            parameters['Importe'].to_s +
+            parameters['TipoMoneda'].to_s +
+            CECA_DECIMALS +
+            CECA_ENCRIPTION +
+            CECA_NOTIFICATIONS_URL +
+            CECA_NOTIFICATIONS_URL
+          end
         Digest::SHA2.hexdigest(signature_fields)
       end
     end
