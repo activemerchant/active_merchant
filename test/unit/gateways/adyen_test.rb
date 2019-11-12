@@ -144,7 +144,7 @@ class AdyenTest < Test::Unit::TestCase
     cavv = '3q2+78r+ur7erb7vyv66vv\/\/\/\/8='
     cavv_algorithm = '1'
     xid = 'ODUzNTYzOTcwODU5NzY3Qw=='
-    directory_response_status = 'C'
+    enrolled = 'Y'
     authentication_response_status = 'Y'
     options_with_3ds1_standalone = @options.merge(
       three_d_secure: {
@@ -152,7 +152,7 @@ class AdyenTest < Test::Unit::TestCase
         cavv: cavv,
         cavv_algorithm: cavv_algorithm,
         xid: xid,
-        directory_response_status: directory_response_status,
+        enrolled: enrolled,
         authentication_response_status: authentication_response_status
       }
     )
@@ -163,7 +163,7 @@ class AdyenTest < Test::Unit::TestCase
       assert_equal cavv, JSON.parse(data)['mpiData']['cavv']
       assert_equal cavv_algorithm, JSON.parse(data)['mpiData']['cavvAlgorithm']
       assert_equal xid, JSON.parse(data)['mpiData']['xid']
-      assert_equal directory_response_status, JSON.parse(data)['mpiData']['directoryResponse']
+      assert_equal enrolled, JSON.parse(data)['mpiData']['directoryResponse']
       assert_equal authentication_response_status, JSON.parse(data)['mpiData']['authenticationResponse']
     end.respond_with(successful_authorize_response)
   end

@@ -371,7 +371,7 @@ module ActiveMerchant #:nodoc:
           cavvAlgorithm: three_d_secure_options[:cavv_algorithm],
           eci: three_d_secure_options[:eci],
           xid: three_d_secure_options[:xid],
-          directoryResponse: three_d_secure_options[:directory_response_status],
+          directoryResponse: three_d_secure_options[:enrolled],
           authenticationResponse: three_d_secure_options[:authentication_response_status]
         }
       end
