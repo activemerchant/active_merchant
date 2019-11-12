@@ -152,66 +152,65 @@ class SquareTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
-
   private
 
   def pre_scrubbed
-    "opening connection to connect.squareupsandbox.com:443...\n" +
-    "opened\n" +
-    "starting SSL for connect.squareupsandbox.com:443...\n" +
-    "SSL established, protocol: TLSv1.2, cipher: ECDHE-RSA-AES128-GCM-SHA256\n" +
-    "<- \"POST /v2/payments HTTP/1.1\\r\\nContent-Type: application/json\\r\\nAuthorization: Bearer 098123098123098123\\r\\nSquare-Version: 2019-10-23\\r\\nConnection: close\\r\\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\\r\\nAccept: */*\\r\\nUser-Agent: Ruby\\r\\nHost: connect.squareupsandbox.com\\r\\nContent-Length: 142\\r\\n\\r\\n\"\n" +
-    "<- \"{\\\"source_id\\\":\\\"cnon:card-nonce-ok\\\",\\\"idempotency_key\\\":\\\"af43257576422c182b5c\\\",\\\"amount_money\\\":{\\\"amount\\\":200,\\\"currency\\\":\\\"USD\\\"},\\\"autocomplete\\\":true}\"\n" +
-    "-> \"HTTP/1.1 200 OK\\r\\n\"\n" +
-    "-> \"Date: Mon, 11 Nov 2019 23:35:36 GMT\\r\\n\"\n" +
-    "-> \"Frame-Options: DENY\\r\\n\"\n" +
-    "-> \"X-Frame-Options: DENY\\r\\n\"\n" +
-    "-> \"X-Content-Type-Options: nosniff\\r\\n\"\n" +
-    "-> \"X-Xss-Protection: 1; mode=block\\r\\n\"\n" +
-    "-> \"Content-Type: application/json\\r\\n\"\n" +
-    "-> \"Square-Version: 2019-10-23\\r\\n\"\n" +
-    "-> \"Squareup--Connect--V2--Common--Versionmetadata-Bin: CgoyMDE5LTEwLTIz\\r\\n\"\n" +
-    "-> \"Vary: Accept-Encoding, User-Agent\\r\\n\"\n" +
-    "-> \"Content-Encoding: gzip\\r\\n\"\n" +
-    "-> \"Content-Length: 474\\r\\n\"\n" +
-    "-> \"X-Envoy-Upstream-Service-Time: 441\\r\\n\"\n" +
-    "-> \"Strict-Transport-Security: max-age=604800; includeSubDomains\\r\\n\"\n" +
-    "-> \"Server: envoy\\r\\n\"\n" +
-    "-> \"Connection: close\\r\\n\"\n" +
-    "-> \"\\r\\n\"\n" +
-    "reading 474 bytes...\n" +
-    "-> \"\\x1F\\x8B\\b\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x8DR\\xDB\\x8E\\xDA0\\x10}\\xEFW ?\\xAE\\x96*\\xCE\\r\\x96\\xB7\\x00NUn\\xCB\\xE6\\xB6\\xB0/\\x96\\x93\\x98\\x12\\x1A\\x92`;n\\xB3+\\xFE\\xBDv\\xE8J\\xBC\\xB5R$\\xC7\\xE7\\x9C\\x9993\\x9E\\x0F\\xD0\\x90\\xEEL+\\x01&\\x83\\x0FP\\xE4\\xEA\\x00?\\xD3\\xD4w.\\x87\\xE2\\xC2\\x02W4\\x87e\\xB7\\x90\\xE9z3:\\xB5d\\n\\x1EA\\xC6(\\x114\\xC7D\\x87\\x00\\xD3\\x80OC\\b\\xD5\\x17\\x99\\xD6\\xC4r&\\x96\\xFB\\xD5u\\xE1\\x9B\\x12\\xB6M\\xFE\\x0F\\xE1\\xD8\\x18i!9\\xD7m%\\xF0\\xB9\\xAEh\\xD7\\xDB\\xB8\\x01\\xEA\\xD74\\fU\\xB0e\\x8CV\\x99\\xA6@\\x1C\\xCE\\xC1\\xF5\\x11pAD\\xCB50{^oW(Bs\\x95\\x87\\xD7-\\xCB(\\x16]C{\\xCA\\v4\\x9A\\x11\\x96\\xE3\\x9C\\nR\\x94\\xBC\\xCF~\\x17\\xECm\\xA38@\\x9F\\xAA\\x9E\\xED\\xE5)#U?\\no\\x8D\\x82\\xEF3o\\x83\\xD1n\\e\\xA00T\\xCA\\x92p\\x81mM\\xBA\\x8Ec(\\x80\\xFEn\\xB4wqT\\x18\\x84\\xB7{G\\t\\xEB\\xFD\\x9B\\n8\\x14\\xD5\\x0F\\xCA\\x1AV\\xF4=\\x01~\\x19\\xC2\\xE1;\\x1A\\xA1#]]x\\x11o\\xA4\\xB4\\xDB\\xE3\\x8E\\e\\xBB(x:m=_\\x8E\\xE1\\xCB\\xF8\\xB48\\x99\\x81\\x9D\\x8B\\xD7\\x83\\xBD\\x92\\xBF\\xFC\\xF5\\xF4\\xBD\\xC4\\xE1\\xC8\\xAD\\x17\\\"\\xE7\\x8E/\\x13OUN\\x8BJ'\\xB4F\\xD0t-=\\x17\\xF5\\x8E\\xAC\\xC3g*\\x8Euo\\x7F\\x89\\xF6\\xB7\\xEE\\xA4\\xC4wm'\\t\\xF6f3\\xB4\\xBD\\x8D\\x8DH~GzIxOj\\x82\\xEA\\xFDP#\\xE4\\x19+\\x1AQ\\xD4}\\xD1\\xF0e\\xF00G\\xBE\\x17\\xAF\\xA2A\\x84\\xC2h\\xA0\\x82\\x9E\\xE3M\\xA4m\\x94uF\\xB4\\x0E\\xDF\\xF6\\xC9L\\\"?\\xD9{\\xD6\\xDA0\\x96H\\xE5\\xACYN\\xD9_\\x8E\\xBA\\x94Ve{\\x99\\xDA\\xAF<\\x90\\xB4\\x81\\xD2\\x87\\xDF\\xA6\\xE1f\\x15Fo{\\xA5\\x15\\xB5 \\xE5\\xFF\\xAF\\xC6\\xF5\\xFA\\xE5\\x0F\\xF7\\x80\\xC4p\\xD2\\x02\\x00\\x00\"\n" +
-    "read 474 bytes\n" +
+    "opening connection to connect.squareupsandbox.com:443...\n" \
+    "opened\n" \
+    "starting SSL for connect.squareupsandbox.com:443...\n" \
+    "SSL established, protocol: TLSv1.2, cipher: ECDHE-RSA-AES128-GCM-SHA256\n" \
+    "<- \"POST /v2/payments HTTP/1.1\\r\\nContent-Type: application/json\\r\\nAuthorization: Bearer 098123098123098123\\r\\nSquare-Version: 2019-10-23\\r\\nConnection: close\\r\\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\\r\\nAccept: */*\\r\\nUser-Agent: Ruby\\r\\nHost: connect.squareupsandbox.com\\r\\nContent-Length: 142\\r\\n\\r\\n\"\n" \
+    "<- \"{\\\"source_id\\\":\\\"cnon:card-nonce-ok\\\",\\\"idempotency_key\\\":\\\"af43257576422c182b5c\\\",\\\"amount_money\\\":{\\\"amount\\\":200,\\\"currency\\\":\\\"USD\\\"},\\\"autocomplete\\\":true}\"\n" \
+    "-> \"HTTP/1.1 200 OK\\r\\n\"\n" \
+    "-> \"Date: Mon, 11 Nov 2019 23:35:36 GMT\\r\\n\"\n" \
+    "-> \"Frame-Options: DENY\\r\\n\"\n" \
+    "-> \"X-Frame-Options: DENY\\r\\n\"\n" \
+    "-> \"X-Content-Type-Options: nosniff\\r\\n\"\n" \
+    "-> \"X-Xss-Protection: 1; mode=block\\r\\n\"\n" \
+    "-> \"Content-Type: application/json\\r\\n\"\n" \
+    "-> \"Square-Version: 2019-10-23\\r\\n\"\n" \
+    "-> \"Squareup--Connect--V2--Common--Versionmetadata-Bin: CgoyMDE5LTEwLTIz\\r\\n\"\n" \
+    "-> \"Vary: Accept-Encoding, User-Agent\\r\\n\"\n" \
+    "-> \"Content-Encoding: gzip\\r\\n\"\n" \
+    "-> \"Content-Length: 474\\r\\n\"\n" \
+    "-> \"X-Envoy-Upstream-Service-Time: 441\\r\\n\"\n" \
+    "-> \"Strict-Transport-Security: max-age=604800; includeSubDomains\\r\\n\"\n" \
+    "-> \"Server: envoy\\r\\n\"\n" \
+    "-> \"Connection: close\\r\\n\"\n" \
+    "-> \"\\r\\n\"\n" \
+    "reading 474 bytes...\n" \
+    "-> \"\\x1F\\x8B\\b\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x8DR\\xDB\\x8E\\xDA0\\x10}\\xEFW ?\\xAE\\x96*\\xCE\\r\\x96\\xB7\\x00NUn\\xCB\\xE6\\xB6\\xB0/\\x96\\x93\\x98\\x12\\x1A\\x92`;n\\xB3+\\xFE\\xBDv\\xE8J\\xBC\\xB5R$\\xC7\\xE7\\x9C\\x9993\\x9E\\x0F\\xD0\\x90\\xEEL+\\x01&\\x83\\x0FP\\xE4\\xEA\\x00?\\xD3\\xD4w.\\x87\\xE2\\xC2\\x02W4\\x87e\\xB7\\x90\\xE9z3:\\xB5d\\n\\x1EA\\xC6(\\x114\\xC7D\\x87\\x00\\xD3\\x80OC\\b\\xD5\\x17\\x99\\xD6\\xC4r&\\x96\\xFB\\xD5u\\xE1\\x9B\\x12\\xB6M\\xFE\\x0F\\xE1\\xD8\\x18i!9\\xD7m%\\xF0\\xB9\\xAEh\\xD7\\xDB\\xB8\\x01\\xEA\\xD74\\fU\\xB0e\\x8CV\\x99\\xA6@\\x1C\\xCE\\xC1\\xF5\\x11pAD\\xCB50{^oW(Bs\\x95\\x87\\xD7-\\xCB(\\x16]C{\\xCA\\v4\\x9A\\x11\\x96\\xE3\\x9C\\nR\\x94\\xBC\\xCF~\\x17\\xECm\\xA38@\\x9F\\xAA\\x9E\\xED\\xE5)#U?\\no\\x8D\\x82\\xEF3o\\x83\\xD1n\\e\\xA00T\\xCA\\x92p\\x81mM\\xBA\\x8Ec(\\x80\\xFEn\\xB4wqT\\x18\\x84\\xB7{G\\t\\xEB\\xFD\\x9B\\n8\\x14\\xD5\\x0F\\xCA\\x1AV\\xF4=\\x01~\\x19\\xC2\\xE1;\\x1A\\xA1#]]x\\x11o\\xA4\\xB4\\xDB\\xE3\\x8E\\e\\xBB(x:m=_\\x8E\\xE1\\xCB\\xF8\\xB48\\x99\\x81\\x9D\\x8B\\xD7\\x83\\xBD\\x92\\xBF\\xFC\\xF5\\xF4\\xBD\\xC4\\xE1\\xC8\\xAD\\x17\\\"\\xE7\\x8E/\\x13OUN\\x8BJ'\\xB4F\\xD0t-=\\x17\\xF5\\x8E\\xAC\\xC3g*\\x8Euo\\x7F\\x89\\xF6\\xB7\\xEE\\xA4\\xC4wm'\\t\\xF6f3\\xB4\\xBD\\x8D\\x8DH~GzIxOj\\x82\\xEA\\xFDP#\\xE4\\x19+\\x1AQ\\xD4}\\xD1\\xF0e\\xF00G\\xBE\\x17\\xAF\\xA2A\\x84\\xC2h\\xA0\\x82\\x9E\\xE3M\\xA4m\\x94uF\\xB4\\x0E\\xDF\\xF6\\xC9L\\\"?\\xD9{\\xD6\\xDA0\\x96H\\xE5\\xACYN\\xD9_\\x8E\\xBA\\x94Ve{\\x99\\xDA\\xAF<\\x90\\xB4\\x81\\xD2\\x87\\xDF\\xA6\\xE1f\\x15Fo{\\xA5\\x15\\xB5 \\xE5\\xFF\\xAF\\xC6\\xF5\\xFA\\xE5\\x0F\\xF7\\x80\\xC4p\\xD2\\x02\\x00\\x00\"\n" \
+    "read 474 bytes\n" \
     "Conn close\n"
   end
 
   def post_scrubbed
-    "opening connection to connect.squareupsandbox.com:443...\n" +
-    "opened\n" +
-    "starting SSL for connect.squareupsandbox.com:443...\n" +
-    "SSL established, protocol: TLSv1.2, cipher: ECDHE-RSA-AES128-GCM-SHA256\n" +
-    "<- \"POST /v2/payments HTTP/1.1\\r\\nContent-Type: application/json\\r\\nAuthorization: Bearer [FILTERED]\\r\\nSquare-Version: 2019-10-23\\r\\nConnection: close\\r\\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\\r\\nAccept: */*\\r\\nUser-Agent: Ruby\\r\\nHost: connect.squareupsandbox.com\\r\\nContent-Length: 142\\r\\n\\r\\n\"\n" +
-    "<- \"{\\\"source_id\\\":[FILTERED],\\\"idempotency_key\\\":\\\"af43257576422c182b5c\\\",\\\"amount_money\\\":{\\\"amount\\\":200,\\\"currency\\\":\\\"USD\\\"},\\\"autocomplete\\\":true}\"\n" +
-    "-> \"HTTP/1.1 200 OK\\r\\n\"\n" +
-    "-> \"Date: Mon, 11 Nov 2019 23:35:36 GMT\\r\\n\"\n" +
-    "-> \"Frame-Options: DENY\\r\\n\"\n" +
-    "-> \"X-Frame-Options: DENY\\r\\n\"\n" +
-    "-> \"X-Content-Type-Options: nosniff\\r\\n\"\n" +
-    "-> \"X-Xss-Protection: 1; mode=block\\r\\n\"\n" +
-    "-> \"Content-Type: application/json\\r\\n\"\n" +
-    "-> \"Square-Version: 2019-10-23\\r\\n\"\n" +
-    "-> \"Squareup--Connect--V2--Common--Versionmetadata-Bin: CgoyMDE5LTEwLTIz\\r\\n\"\n" +
-    "-> \"Vary: Accept-Encoding, User-Agent\\r\\n\"\n" +
-    "-> \"Content-Encoding: gzip\\r\\n\"\n" +
-    "-> \"Content-Length: 474\\r\\n\"\n" +
-    "-> \"X-Envoy-Upstream-Service-Time: 441\\r\\n\"\n" +
-    "-> \"Strict-Transport-Security: max-age=604800; includeSubDomains\\r\\n\"\n" +
-    "-> \"Server: envoy\\r\\n\"\n" +
-    "-> \"Connection: close\\r\\n\"\n" +
-    "-> \"\\r\\n\"\n" +
-    "reading 474 bytes...\n" +
-    "-> \"\\x1F\\x8B\\b\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x8DR\\xDB\\x8E\\xDA0\\x10}\\xEFW ?\\xAE\\x96*\\xCE\\r\\x96\\xB7\\x00NUn\\xCB\\xE6\\xB6\\xB0/\\x96\\x93\\x98\\x12\\x1A\\x92`;n\\xB3+\\xFE\\xBDv\\xE8J\\xBC\\xB5R$\\xC7\\xE7\\x9C\\x9993\\x9E\\x0F\\xD0\\x90\\xEEL+\\x01&\\x83\\x0FP\\xE4\\xEA\\x00?\\xD3\\xD4w.\\x87\\xE2\\xC2\\x02W4\\x87e\\xB7\\x90\\xE9z3:\\xB5d\\n\\x1EA\\xC6(\\x114\\xC7D\\x87\\x00\\xD3\\x80OC\\b\\xD5\\x17\\x99\\xD6\\xC4r&\\x96\\xFB\\xD5u\\xE1\\x9B\\x12\\xB6M\\xFE\\x0F\\xE1\\xD8\\x18i!9\\xD7m%\\xF0\\xB9\\xAEh\\xD7\\xDB\\xB8\\x01\\xEA\\xD74\\fU\\xB0e\\x8CV\\x99\\xA6@\\x1C\\xCE\\xC1\\xF5\\x11pAD\\xCB50{^oW(Bs\\x95\\x87\\xD7-\\xCB(\\x16]C{\\xCA\\v4\\x9A\\x11\\x96\\xE3\\x9C\\nR\\x94\\xBC\\xCF~\\x17\\xECm\\xA38@\\x9F\\xAA\\x9E\\xED\\xE5)#U?\\no\\x8D\\x82\\xEF3o\\x83\\xD1n\\e\\xA00T\\xCA\\x92p\\x81mM\\xBA\\x8Ec(\\x80\\xFEn\\xB4wqT\\x18\\x84\\xB7{G\\t\\xEB\\xFD\\x9B\\n8\\x14\\xD5\\x0F\\xCA\\x1AV\\xF4=\\x01~\\x19\\xC2\\xE1;\\x1A\\xA1#]]x\\x11o\\xA4\\xB4\\xDB\\xE3\\x8E\\e\\xBB(x:m=_\\x8E\\xE1\\xCB\\xF8\\xB48\\x99\\x81\\x9D\\x8B\\xD7\\x83\\xBD\\x92\\xBF\\xFC\\xF5\\xF4\\xBD\\xC4\\xE1\\xC8\\xAD\\x17\\\"\\xE7\\x8E/\\x13OUN\\x8BJ'\\xB4F\\xD0t-=\\x17\\xF5\\x8E\\xAC\\xC3g*\\x8Euo\\x7F\\x89\\xF6\\xB7\\xEE\\xA4\\xC4wm'\\t\\xF6f3\\xB4\\xBD\\x8D\\x8DH~GzIxOj\\x82\\xEA\\xFDP#\\xE4\\x19+\\x1AQ\\xD4}\\xD1\\xF0e\\xF00G\\xBE\\x17\\xAF\\xA2A\\x84\\xC2h\\xA0\\x82\\x9E\\xE3M\\xA4m\\x94uF\\xB4\\x0E\\xDF\\xF6\\xC9L\\\"?\\xD9{\\xD6\\xDA0\\x96H\\xE5\\xACYN\\xD9_\\x8E\\xBA\\x94Ve{\\x99\\xDA\\xAF<\\x90\\xB4\\x81\\xD2\\x87\\xDF\\xA6\\xE1f\\x15Fo{\\xA5\\x15\\xB5 \\xE5\\xFF\\xAF\\xC6\\xF5\\xFA\\xE5\\x0F\\xF7\\x80\\xC4p\\xD2\\x02\\x00\\x00\"\n" +
-    "read 474 bytes\n" +
+    "opening connection to connect.squareupsandbox.com:443...\n" \
+    "opened\n" \
+    "starting SSL for connect.squareupsandbox.com:443...\n" \
+    "SSL established, protocol: TLSv1.2, cipher: ECDHE-RSA-AES128-GCM-SHA256\n" \
+    "<- \"POST /v2/payments HTTP/1.1\\r\\nContent-Type: application/json\\r\\nAuthorization: Bearer [FILTERED]\\r\\nSquare-Version: 2019-10-23\\r\\nConnection: close\\r\\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\\r\\nAccept: */*\\r\\nUser-Agent: Ruby\\r\\nHost: connect.squareupsandbox.com\\r\\nContent-Length: 142\\r\\n\\r\\n\"\n" \
+    "<- \"{\\\"source_id\\\":[FILTERED],\\\"idempotency_key\\\":\\\"af43257576422c182b5c\\\",\\\"amount_money\\\":{\\\"amount\\\":200,\\\"currency\\\":\\\"USD\\\"},\\\"autocomplete\\\":true}\"\n" \
+    "-> \"HTTP/1.1 200 OK\\r\\n\"\n" \
+    "-> \"Date: Mon, 11 Nov 2019 23:35:36 GMT\\r\\n\"\n" \
+    "-> \"Frame-Options: DENY\\r\\n\"\n" \
+    "-> \"X-Frame-Options: DENY\\r\\n\"\n" \
+    "-> \"X-Content-Type-Options: nosniff\\r\\n\"\n" \
+    "-> \"X-Xss-Protection: 1; mode=block\\r\\n\"\n" \
+    "-> \"Content-Type: application/json\\r\\n\"\n" \
+    "-> \"Square-Version: 2019-10-23\\r\\n\"\n" \
+    "-> \"Squareup--Connect--V2--Common--Versionmetadata-Bin: CgoyMDE5LTEwLTIz\\r\\n\"\n" \
+    "-> \"Vary: Accept-Encoding, User-Agent\\r\\n\"\n" \
+    "-> \"Content-Encoding: gzip\\r\\n\"\n" \
+    "-> \"Content-Length: 474\\r\\n\"\n" \
+    "-> \"X-Envoy-Upstream-Service-Time: 441\\r\\n\"\n" \
+    "-> \"Strict-Transport-Security: max-age=604800; includeSubDomains\\r\\n\"\n" \
+    "-> \"Server: envoy\\r\\n\"\n" \
+    "-> \"Connection: close\\r\\n\"\n" \
+    "-> \"\\r\\n\"\n" \
+    "reading 474 bytes...\n" \
+    "-> \"\\x1F\\x8B\\b\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x8DR\\xDB\\x8E\\xDA0\\x10}\\xEFW ?\\xAE\\x96*\\xCE\\r\\x96\\xB7\\x00NUn\\xCB\\xE6\\xB6\\xB0/\\x96\\x93\\x98\\x12\\x1A\\x92`;n\\xB3+\\xFE\\xBDv\\xE8J\\xBC\\xB5R$\\xC7\\xE7\\x9C\\x9993\\x9E\\x0F\\xD0\\x90\\xEEL+\\x01&\\x83\\x0FP\\xE4\\xEA\\x00?\\xD3\\xD4w.\\x87\\xE2\\xC2\\x02W4\\x87e\\xB7\\x90\\xE9z3:\\xB5d\\n\\x1EA\\xC6(\\x114\\xC7D\\x87\\x00\\xD3\\x80OC\\b\\xD5\\x17\\x99\\xD6\\xC4r&\\x96\\xFB\\xD5u\\xE1\\x9B\\x12\\xB6M\\xFE\\x0F\\xE1\\xD8\\x18i!9\\xD7m%\\xF0\\xB9\\xAEh\\xD7\\xDB\\xB8\\x01\\xEA\\xD74\\fU\\xB0e\\x8CV\\x99\\xA6@\\x1C\\xCE\\xC1\\xF5\\x11pAD\\xCB50{^oW(Bs\\x95\\x87\\xD7-\\xCB(\\x16]C{\\xCA\\v4\\x9A\\x11\\x96\\xE3\\x9C\\nR\\x94\\xBC\\xCF~\\x17\\xECm\\xA38@\\x9F\\xAA\\x9E\\xED\\xE5)#U?\\no\\x8D\\x82\\xEF3o\\x83\\xD1n\\e\\xA00T\\xCA\\x92p\\x81mM\\xBA\\x8Ec(\\x80\\xFEn\\xB4wqT\\x18\\x84\\xB7{G\\t\\xEB\\xFD\\x9B\\n8\\x14\\xD5\\x0F\\xCA\\x1AV\\xF4=\\x01~\\x19\\xC2\\xE1;\\x1A\\xA1#]]x\\x11o\\xA4\\xB4\\xDB\\xE3\\x8E\\e\\xBB(x:m=_\\x8E\\xE1\\xCB\\xF8\\xB48\\x99\\x81\\x9D\\x8B\\xD7\\x83\\xBD\\x92\\xBF\\xFC\\xF5\\xF4\\xBD\\xC4\\xE1\\xC8\\xAD\\x17\\\"\\xE7\\x8E/\\x13OUN\\x8BJ'\\xB4F\\xD0t-=\\x17\\xF5\\x8E\\xAC\\xC3g*\\x8Euo\\x7F\\x89\\xF6\\xB7\\xEE\\xA4\\xC4wm'\\t\\xF6f3\\xB4\\xBD\\x8D\\x8DH~GzIxOj\\x82\\xEA\\xFDP#\\xE4\\x19+\\x1AQ\\xD4}\\xD1\\xF0e\\xF00G\\xBE\\x17\\xAF\\xA2A\\x84\\xC2h\\xA0\\x82\\x9E\\xE3M\\xA4m\\x94uF\\xB4\\x0E\\xDF\\xF6\\xC9L\\\"?\\xD9{\\xD6\\xDA0\\x96H\\xE5\\xACYN\\xD9_\\x8E\\xBA\\x94Ve{\\x99\\xDA\\xAF<\\x90\\xB4\\x81\\xD2\\x87\\xDF\\xA6\\xE1f\\x15Fo{\\xA5\\x15\\xB5 \\xE5\\xFF\\xAF\\xC6\\xF5\\xFA\\xE5\\x0F\\xF7\\x80\\xC4p\\xD2\\x02\\x00\\x00\"\n" \
+    "read 474 bytes\n" \
     "Conn close\n"
   end
 
@@ -506,16 +505,16 @@ class SquareTest < Test::Unit::TestCase
 
   def successful_new_customer_response
     {
-      id: "JDKYHBWT1D4F8MFH63DBMEN8Y4",
-      created_at: "2016-03-23T20:21:54.859Z",
-      updated_at: "2016-03-23T20:21:54.859Z",
+      id: 'JDKYHBWT1D4F8MFH63DBMEN8Y4',
+      created_at: '2016-03-23T20:21:54.859Z',
+      updated_at: '2016-03-23T20:21:54.859Z',
       given_name: @options[:customer][:given_name],
       family_name: @options[:customer][:given_name],
       email_address: @options[:customer][:email],
       address: @options[:customer][:address],
       phone_number: @options[:customer][:phone_number],
-      reference_id: "YOUR_REFERENCE_ID",
-      note: "a customer"
+      reference_id: 'YOUR_REFERENCE_ID',
+      note: 'a customer'
     }.stringify_keys!
   end
 

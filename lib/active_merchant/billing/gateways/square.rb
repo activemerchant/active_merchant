@@ -54,13 +54,6 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'payments', post, options)
       end
 
-      # To create a charge on a card or a token, call
-      #
-      #   purchase(money, card_hash_or_token, { ... })
-      #
-      # To create a charge on a customer, call
-      #
-      #   purchase(money, nil, { :customer => id, ... })
       def purchase(money, payment, options={})
         post = create_post_for_auth_or_purchase(money, payment, options)
         post[:autocomplete] = true
@@ -88,7 +81,7 @@ module ActiveMerchant #:nodoc:
 
         post[:reason] = options[:reason] if options[:reason]
 
-        commit(:post, "refunds", post, options)
+        commit(:post, 'refunds', post, options)
       end
 
       def store(payment, options = {})
@@ -134,7 +127,6 @@ module ActiveMerchant #:nodoc:
           gsub(/(\\\"source_id\\\":)(\\\".*?")/, '\1[FILTERED]')
       end
 
-
       private
 
       def add_idempotency_key(post, options)
@@ -163,7 +155,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_charge_details(post, money, payment, options)
-
         add_idempotency_key(post, options)
         add_amount(post, money, options)
         add_application_fee(post, options)
@@ -192,7 +183,7 @@ module ActiveMerchant #:nodoc:
       def create_post_for_customer_card(customer, payment)
         post = {
           card_nonce: payment,
-          billing_address: customer[:address] ? customer[:address] : {},
+          billing_address: customer[:address] || {},
           cardholder_name: "#{customer[:given_name]} #{customer[:family_name]}"
         }
 
@@ -270,11 +261,11 @@ module ActiveMerchant #:nodoc:
           return response['refund']['id']
         elsif method == :post && url == 'customers'
           return response['customer']['id']
-        elsif method == :post && (url.match(/customers\/.*\/cards/))
+        elsif method == :post && url.match(/customers\/.*\/cards/)
           return response['card']['id']
-        elsif method == :put && (url.match(/customers/))
+        elsif method == :put && url.match(/customers/)
           return response['customer']['id']
-        elsif method == :delete && (url.match(/customers/))
+        elsif method == :delete && url.match(/customers/)
           return {}
         else
           return nil
