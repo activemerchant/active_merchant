@@ -99,7 +99,7 @@ module ActiveMerchant #:nodoc:
         response = {}
 
         MultiResponse.run do |r|
-          r.process { commit(:post, "customers", customer_post, options) }
+          r.process { create_customer(options) }
           customer_id = r.params['customer']['id']
 
           response[:customer] = r.params['customer']
@@ -119,8 +119,9 @@ module ActiveMerchant #:nodoc:
         commit(:delete, "customers/#{identification}", {}, options)
       end
 
-      def update_customer(customer_id, options = {})
-        # commit(:post, "customers/#{CGI.escape(customer_id)}", options, options)
+      def update_customer(identification, options = {})
+        post = options[:customer]
+        commit(:put, "customers/#{identification}", post, options)
       end
 
       def supports_scrubbing?
@@ -128,8 +129,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def scrub(transcript)
-        transcript
+        transcript.
+          gsub(%r((Authorization: Bearer )\w+), '\1[FILTERED]').
+          gsub(/(\\\"source_id\\\":)(\\\".*?")/, '\1[FILTERED]')
       end
+
 
       private
 
@@ -232,6 +236,17 @@ module ActiveMerchant #:nodoc:
         )
       end
 
+      def create_customer(options = {})
+        customer_response = api_request(:post, 'customers', options[:customer], options)
+        success = !customer_response.key?('errors')
+
+        if success && customer_response.key?('customer')
+          Response.new(success, nil, customer_response)
+        else
+          Response.new(success, customer_response['errors'][0]['detail'])
+        end
+      end
+
       def card_from_response(response)
         return {} unless response['payment']
 
@@ -257,6 +272,8 @@ module ActiveMerchant #:nodoc:
           return response['customer']['id']
         elsif method == :post && (url.match(/customers\/.*\/cards/))
           return response['card']['id']
+        elsif method == :put && (url.match(/customers/))
+          return response['customer']['id']
         elsif method == :delete && (url.match(/customers/))
           return {}
         else
