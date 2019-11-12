@@ -16,39 +16,60 @@ module ActiveMerchant #:nodoc:
       EMPTY_OBJ = {}
       BLANK = ""
       CONTENT_TYPE = "application/json"
-      WHITELISTED_RESPONSE_ROOT_KEYS = %w(AuthResponse CaptureResponse VoidResponse ReturnResponse)
+
+      WHITELISTED_RESPONSE_ROOT_KEYS = %w(
+      AuthResponse
+      CaptureResponse 
+      VoidResponse 
+      ReturnResponse 
+      CardAuthenticationResponse
+      )
 
       attr_reader :parsed_body
 
       def initialize(options={})
+        requires!(options, :device_id, :transaction_key)
         super
       end
 
       def authorize(money, credit_card, options = {})
         call(
-          request_body: { "Auth": options }.to_json
+          request_body: { "Auth": request_params(options) }.to_json
         )
       end
 
       def capture(money, authorization_id, options = {})
         call(
-          request_body: { "Capture": options }.to_json
+          request_body: { "Capture": request_params(options) }.to_json
         )
       end
 
-      def void(authorization_id, options = {})
+      def void(money, authorization_id, options = {})
         call(
-          request_body: { "Void": options }.to_json
+          request_body: { "Void": request_params(options) }.to_json
         )
       end
 
       def refund(money, authorization_id, options = {})
         call(
-          request_body: { "Return": options }.to_json
+          request_body: { "Return": request_params(options) }.to_json
+        )
+      end
+
+      def verify(credit_card, options = {})
+        call(
+          request_body: { "CardAuthentication": request_params(options) }.to_json
         )
       end
 
       private
+
+      def request_params(options)
+        {
+          "deviceID": @options[:device_id],
+          "transactionKey": @options[:transaction_key]
+        }.merge!(options)
+      end
 
       def call(request_body: )
         Net::HTTP.start(uri.host, uri.port, use_ssl: true) do |https|
