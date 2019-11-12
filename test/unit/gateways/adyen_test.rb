@@ -144,7 +144,7 @@ class AdyenTest < Test::Unit::TestCase
     cavv = '3q2+78r+ur7erb7vyv66vv\/\/\/\/8='
     cavv_algorithm = '1'
     xid = 'ODUzNTYzOTcwODU5NzY3Qw=='
-    directory_response_status = 'C'
+    enrolled = 'Y'
     authentication_response_status = 'Y'
     options_with_3ds1_standalone = @options.merge(
       three_d_secure: {
@@ -152,7 +152,7 @@ class AdyenTest < Test::Unit::TestCase
         cavv: cavv,
         cavv_algorithm: cavv_algorithm,
         xid: xid,
-        directory_response_status: directory_response_status,
+        enrolled: enrolled,
         authentication_response_status: authentication_response_status
       }
     )
