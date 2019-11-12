@@ -163,7 +163,7 @@ class AdyenTest < Test::Unit::TestCase
       assert_equal cavv, JSON.parse(data)['mpiData']['cavv']
       assert_equal cavv_algorithm, JSON.parse(data)['mpiData']['cavvAlgorithm']
       assert_equal xid, JSON.parse(data)['mpiData']['xid']
-      assert_equal directory_response_status, JSON.parse(data)['mpiData']['directoryResponse']
+      assert_equal enrolled, JSON.parse(data)['mpiData']['directoryResponse']
       assert_equal authentication_response_status, JSON.parse(data)['mpiData']['authenticationResponse']
     end.respond_with(successful_authorize_response)
   end
