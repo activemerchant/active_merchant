@@ -106,7 +106,8 @@ module ActiveMerchant #:nodoc:
           end
         end.responses.last
 
-        if options[:three_d_secure] && !r.success? && r.params.dig("error", "payment_intent", "status") == "requires_source"
+        decline_code = r.params.dig("error", "payment_intent", "last_payment_error", "decline_code")
+        if options[:three_d_secure] && !r.success? && decline_code == "authentication_required"
           options[:three_d_secure] = "setup_future_usage"
           post = create_post_for_auth_or_purchase(money, payment, options)
           r = commit(:post, 'payment_intents', post, options)

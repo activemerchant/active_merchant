@@ -1922,7 +1922,10 @@ class StripeTest < Test::Unit::TestCase
           "decline_code": "authentication_required",
           "message": "Your card was declined. This transaction requires authentication.",
           "payment_intent": {
-            "status": "requires_source"
+            "status": "requires_source",
+            "last_payment_error": {
+              "decline_code": "authentication_required"
+            }
           }
         },
       "status": "failed"
