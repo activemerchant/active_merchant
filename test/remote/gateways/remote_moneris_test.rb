@@ -199,6 +199,13 @@ class MonerisRemoteTest < Test::Unit::TestCase
     @data_key = response.params['data_key']
   end
 
+  def test_successful_store_with_duration
+    assert response = @gateway.store(@credit_card, duration: 600)
+    assert_success response
+    assert_equal 'Successfully registered cc details', response.message
+    assert response.params['data_key'].present?
+  end
+
   def test_successful_unstore
     test_successful_store
     assert response = @gateway.unstore(@data_key)
