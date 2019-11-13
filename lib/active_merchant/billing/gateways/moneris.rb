@@ -140,12 +140,21 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      # When passing a :duration option (time in seconds) you can create a
+      # temporary vault record to avoid incurring Moneris vault storage fees
+      #
+      # https://developer.moneris.com/Documentation/NA/E-Commerce%20Solutions/API/Vault#vaulttokenadd
       def store(credit_card, options = {})
         post = {}
         post[:pan] = credit_card.number
         post[:expdate] = expdate(credit_card)
         post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
-        commit('res_add_cc', post)
+        if options[:duration]
+          post[:duration] = options[:duration]
+          commit('res_temp_add', post)
+        else
+          commit('res_add_cc', post)
+        end
       end
 
       def unstore(data_key, options = {})
@@ -406,6 +415,7 @@ module ActiveMerchant #:nodoc:
             'opentotals' => [:ecr_number],
             'batchclose' => [:ecr_number],
             'res_add_cc' => [:pan, :expdate, :crypt_type, :cof_info],
+            'res_temp_add' => [:pan, :expdate, :crypt_type, :duration],
             'res_delete' => [:data_key],
             'res_update_cc' => [:data_key, :pan, :expdate, :crypt_type],
             'res_purchase_cc' => [:data_key, :order_id, :cust_id, :amount, :crypt_type, :cof_info],
