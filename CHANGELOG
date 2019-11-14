@@ -15,6 +15,7 @@
 * RuboCop: Fix Layout/MultilineOperationIndentation [leila-alderman] #3439
 * Worldpay: Update logic to set cardholderName for 3DS transactions [britth] #3444
 * Adopt new enrolled key for 3DS1 transactions. enrolled contains the 3… #3442
+* Quickbooks: Mark transactions that returned `AuthorizationFailed` as failures [britth] #3447
 
 == Version 1.101.0 (Nov 4, 2019)
 * Add UYI to list of currencies without fractions [curiousepic] #3416
