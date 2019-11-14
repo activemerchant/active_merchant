@@ -23,7 +23,8 @@ class BlackbaudBbpsTest < Test::Unit::TestCase
     response = @gateway.store(@credit_card, @options)
 
     assert_failure response
-    assert_equal 'Credit card number is not valid.', response.message  end
+    assert_equal 'Credit card number is not valid.', response.message
+  end
 
   def test_scrub
     assert @gateway.supports_scrubbing?

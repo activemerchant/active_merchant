@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class BlackbaudBbpsTest < Test::Unit::TestCase
+class BlackbaudPaymentRestTest < Test::Unit::TestCase
   def setup
     @gateway = BlackbaudPaymentRestGateway.new(api_key: 'foo', api_token: 'bearer', merchant_id: 'bar')
     @credit_card = credit_card('4242424242424242')
