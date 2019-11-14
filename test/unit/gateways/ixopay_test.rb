@@ -21,6 +21,8 @@ class IxopayTest < Test::Unit::TestCase
       description: 'Store Purchase',
       ip: '192.168.1.1'
     }
+
+    @extra_data = {extra_data: { customData1: 'some data', customData2: 'Can be anything really' }}
   end
 
   def test_successful_purchase
@@ -28,6 +30,20 @@ class IxopayTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
       assert_match(/<description>.+<\/description>/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert_equal 'FINISHED', response.message
+    assert_equal 'b2bef23a30b537b90fbe|20191016-b2bef23a30b537b90fbe', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_purchase_with_extra_data
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(@extra_data))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<extraData key="customData1">some data<\/extraData>/, data)
+      assert_match(/<extraData key="customData2">Can be anything really<\/extraData>/, data)
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -70,6 +86,22 @@ class IxopayTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_authorize_with_extra_data
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(@extra_data))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<extraData key="customData1">some data<\/extraData>/, data)
+      assert_match(/<extraData key="customData2">Can be anything really<\/extraData>/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+    assert_equal 'FINISHED', response.message
+    assert_equal '00eb44f8f0382443cce5|20191028-00eb44f8f0382443cce5', response.authorization
+    assert response.test?
+  end
+
   def test_failed_authorize
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
 
@@ -91,6 +123,22 @@ class IxopayTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_capture_with_extra_data
+    @gateway.expects(:ssl_post).returns(successful_capture_response)
+
+    response = stub_comms do
+      @gateway.capture(@amount, '00eb44f8f0382443cce5|20191028-00eb44f8f0382443cce5', @options.merge(@extra_data))
+    end.check_request do |endpoint, data, header|
+      assert_match(/<extraData key="customData1">some data<\/extraData>/, data)
+      assert_match(/<extraData key="customData2">Can be anything really<\/extraData>/, data)
+    end.respond_with(successful_capture_response)
+
+    assert_success response
+    assert_equal 'FINISHED', response.message
+    assert_equal '17dd1e0b09221e9db038|20191031-17dd1e0b09221e9db038', response.authorization
+    assert response.test?
+  end
+
   def test_failed_capture
     @gateway.expects(:ssl_post).returns(failed_capture_response)
 
@@ -104,6 +152,20 @@ class IxopayTest < Test::Unit::TestCase
   def test_successful_refund
     @gateway.expects(:ssl_post).returns(successful_refund_response)
     response = @gateway.refund(@amount, 'eb2bef23a30b537b90fb|20191016-b2bef23a30b537b90fbe')
+
+    assert_success response
+    assert_equal 'FINISHED', response.message
+  end
+
+  def test_successful_refund_with_extra_data
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
+
+    response = stub_comms do
+      @gateway.refund(@amount, 'eb2bef23a30b537b90fb|20191016-b2bef23a30b537b90fbe', @options.merge(@extra_data))
+    end.check_request do |endpoint, data, header|
+      assert_match(/<extraData key="customData1">some data<\/extraData>/, data)
+      assert_match(/<extraData key="customData2">Can be anything really<\/extraData>/, data)
+    end.respond_with(successful_refund_response)
 
     assert_success response
     assert_equal 'FINISHED', response.message
@@ -135,6 +197,19 @@ class IxopayTest < Test::Unit::TestCase
     assert_equal 'FINISHED', response.message
   end
 
+  def test_successful_void_with_extra_data
+    @gateway.expects(:ssl_post).returns(successful_void_response)
+    response = stub_comms do
+      @gateway.void('eb2bef23a30b537b90fb|20191016-b2bef23a30b537b90fbe', @options.merge(@extra_data))
+    end.check_request do |endpoint, data, header|
+      assert_match(/<extraData key="customData1">some data<\/extraData>/, data)
+      assert_match(/<extraData key="customData2">Can be anything really<\/extraData>/, data)
+    end.respond_with(successful_void_response)
+
+    assert_success response
+    assert_equal 'FINISHED', response.message
+  end
+
   def test_failed_void
     @gateway.expects(:ssl_post).returns(failed_void_response)
     response = @gateway.void(nil)
@@ -146,6 +221,19 @@ class IxopayTest < Test::Unit::TestCase
   def test_successful_verify
     @gateway.expects(:ssl_post).times(2).returns(successful_authorize_response, successful_void_response)
     response = @gateway.verify(credit_card('4111111111111111'), @options)
+
+    assert_success response
+    assert_equal 'FINISHED', response.message
+  end
+
+  def test_successful_verify_with_extra_data
+    @gateway.expects(:ssl_post).times(2).returns(successful_authorize_response, successful_void_response)
+    response = stub_comms do
+      @gateway.verify(credit_card('4111111111111111'), @options.merge(@extra_data))
+    end.check_request do |endpoint, data, header|
+      assert_match(/<extraData key="customData1">some data<\/extraData>/, data)
+      assert_match(/<extraData key="customData2">Can be anything really<\/extraData>/, data)
+    end.respond_with(successful_authorize_response, successful_void_response)
 
     assert_success response
     assert_equal 'FINISHED', response.message
