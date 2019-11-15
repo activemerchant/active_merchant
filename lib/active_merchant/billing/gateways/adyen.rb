@@ -57,6 +57,7 @@ module ActiveMerchant #:nodoc:
         add_installments(post, options) if options[:installments]
         add_3ds(post, options)
         add_3ds_authenticated_data(post, options)
+        add_splits(post, options)
         commit('authorise', post, options)
       end
 
@@ -64,6 +65,7 @@ module ActiveMerchant #:nodoc:
         post = init_post(options)
         add_invoice_for_modification(post, money, options)
         add_reference(post, authorization, options)
+        add_splits(post, options)
         commit('capture', post, options)
       end
 
@@ -71,6 +73,7 @@ module ActiveMerchant #:nodoc:
         post = init_post(options)
         add_invoice_for_modification(post, money, options)
         add_original_reference(post, authorization, options)
+        add_splits(post, options)
         commit('refund', post, options)
       end
 
@@ -205,6 +208,26 @@ module ActiveMerchant #:nodoc:
           risk_data = Hash[risk_data.map { |k, v| ["riskdata.#{k}", v] }]
           post[:additionalData].merge!(risk_data)
         end
+      end
+
+      def add_splits(post, options)
+        return unless split_data = options[:splits]
+        splits = []
+        split_data.each do |split|
+          amount = {
+            value: split['amount']['value'],
+          }
+          amount[:currency] = split['amount']['currency'] if split['amount']['currency']
+
+          split_hash = {
+            amount: amount,
+            type: split['type'],
+            reference: split['reference']
+          }
+          split_hash['account'] = split['account'] if split['account']
+          splits.push(split_hash)
+        end
+        post[:splits] = splits
       end
 
       def add_stored_credentials(post, payment, options)

@@ -312,6 +312,32 @@ class AdyenTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
+  def test_splits_sent
+    split_data = [{
+      'amount' => {
+        'currency' => 'USD',
+        'value' => 50
+        },
+      'type' => 'MarketPlace',
+      'account' => '163298747',
+      'reference' => 'QXhlbFN0b2x0ZW5iZXJnCg'
+    }, {
+      'amount' => {
+        'currency' => 'USD',
+        'value' => 50
+        },
+      'type' => 'Commission',
+      'reference' => 'THVjYXNCbGVkc29lCg'
+    }]
+
+    options = @options.merge({ splits: split_data })
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_equal split_data, JSON.parse(data)['splits']
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_execute_threed_false_sent_3ds2
     stub_comms do
       @gateway.authorize(@amount, '123', @normalized_3ds_2_options.merge({execute_threed: false}))
