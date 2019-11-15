@@ -607,6 +607,14 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal 'Authorised', response.message
   end
 
+  def test_successful_tokenize_only_store
+    assert response = @gateway.store(@credit_card, @options.merge({tokenize_only: true}))
+
+    assert_success response
+    assert !response.authorization.split('#')[2].nil?
+    assert_equal 'Success', response.message
+  end
+
   def test_successful_store_with_elo_card
     assert response = @gateway.store(@elo_credit_card, @options)
 

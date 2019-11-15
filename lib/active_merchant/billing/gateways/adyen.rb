@@ -4,8 +4,8 @@ module ActiveMerchant #:nodoc:
 
       # we recommend setting up merchant-specific endpoints.
       # https://docs.adyen.com/developers/api-manual#apiendpoints
-      self.test_url = 'https://pal-test.adyen.com/pal/servlet/Payment/'
-      self.live_url = 'https://pal-live.adyen.com/pal/servlet/Payment/'
+      self.test_url = 'https://pal-test.adyen.com/pal/servlet/'
+      self.live_url = 'https://pal-live.adyen.com/pal/servlet/'
 
       self.supported_countries = ['AT', 'AU', 'BE', 'BG', 'BR', 'CH', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GB', 'GI', 'GR', 'HK', 'HU', 'IE', 'IS', 'IT', 'LI', 'LT', 'LU', 'LV', 'MC', 'MT', 'MX', 'NL', 'NO', 'PL', 'PT', 'RO', 'SE', 'SG', 'SK', 'SI', 'US']
       self.default_currency = 'USD'
@@ -98,7 +98,9 @@ module ActiveMerchant #:nodoc:
         add_recurring_contract(post, options)
         add_address(post, options)
 
-        initial_response = commit('authorise', post, options)
+        action = options[:tokenize_only] ? 'storeToken' : 'authorise'
+
+        initial_response = commit(action, post, options)
 
         if initial_response.success? && card_not_stored?(initial_response)
           unsupported_failure_response(initial_response)
@@ -401,7 +403,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, parameters, options)
         begin
-          raw_response = ssl_post("#{url}/#{action}", post_data(action, parameters), request_headers(options))
+          raw_response = ssl_post("#{base_url(action)}/#{action}", post_data(action, parameters), request_headers(options))
           response = parse(raw_response)
         rescue ResponseError => e
           raw_response = e.response.body
@@ -428,14 +430,18 @@ module ActiveMerchant #:nodoc:
         CVC_MAPPING[response['additionalData']['cvcResult'][0]] if response.dig('additionalData', 'cvcResult')
       end
 
-      def url
+      def base_url(action)
         if test?
-          "#{test_url}#{API_VERSION}"
+          "#{test_url}#{resource(action)}"
         elsif @options[:subdomain]
-          "https://#{@options[:subdomain]}-pal-live.adyenpayments.com/pal/servlet/Payment/#{API_VERSION}"
+          "https://#{@options[:subdomain]}-pal-live.adyenpayments.com/pal/servlet/#{resource(action)}"
         else
-          "#{live_url}#{API_VERSION}"
+          "#{live_url}#{resource(action)}"
         end
+      end
+
+      def resource(action)
+        action == 'storeToken' ? 'Recurring' : "Payment/#{API_VERSION}"
       end
 
       def basic_auth
@@ -459,6 +465,8 @@ module ActiveMerchant #:nodoc:
           response['response'] == "[#{action}-received]"
         when 'adjustAuthorisation'
           response['response'] == 'Authorised' || response['response'] == '[adjustAuthorisation-received]'
+        when 'storeToken'
+          response['result'] == 'Success'
         else
           false
         end
@@ -466,20 +474,26 @@ module ActiveMerchant #:nodoc:
 
       def message_from(action, response)
         return authorize_message_from(response) if action.to_s == 'authorise' || action.to_s == 'authorise3d'
-        response['response'] || response['message']
+        response['response'] || response['message'] || response['result']
       end
 
       def authorize_message_from(response)
         if response['refusalReason'] && response['additionalData'] && response['additionalData']['refusalReasonRaw']
           "#{response['refusalReason']} | #{response['additionalData']['refusalReasonRaw']}"
         else
-          response['refusalReason'] || response['resultCode'] || response['message']
+          response['refusalReason'] || response['resultCode'] || response['message'] || response['result']
         end
       end
 
       def authorization_from(action, parameters, response)
         return nil if response['pspReference'].nil?
-        recurring = response['additionalData']['recurring.recurringDetailReference'] if response['additionalData']
+
+        if action == 'storeToken'
+          recurring = response['recurringDetailReference']
+        else
+          recurring = response['additionalData']['recurring.recurringDetailReference'] if response['additionalData']
+        end
+
         "#{parameters[:originalReference]}##{response['pspReference']}##{recurring}"
       end
 
