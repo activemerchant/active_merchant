@@ -30,6 +30,23 @@ class RemoteSquareTest < Test::Unit::TestCase
         postal_code: '94103'
       }
     }
+
+    @bad_customer = {
+      given_name: 'John',
+      family_name: 'Doe',
+      company_name: 'John Doe Inc',
+      email_address: 'john.doe@example.com',
+      phone_number: '1231231234',
+      address: {
+        address_line_1: '123 Main St.',
+        address_line_2: 'Apt 2A',
+        address_line_3: 'Att John Doe',
+        locality: 'Chicago',
+        administrative_district_level_1: 'Illinois',
+        country: 'United States',
+        postal_code: '94103'
+      }
+    }
   end
 
   def test_successful_authorize
@@ -131,6 +148,13 @@ class RemoteSquareTest < Test::Unit::TestCase
     assert_equal @options[:customer][:address].stringify_keys!, store.params['customer']['address']
 
     assert_not_nil store.params['card']['id']
+  end
+
+  def test_unsuccessful_store
+    @options[:customer] = @bad_customer
+
+    assert store = @gateway.store(@card_nonce, @options)
+    assert_failure store
   end
 
   def test_successful_store_then_unstore

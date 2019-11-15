@@ -93,10 +93,11 @@ module ActiveMerchant #:nodoc:
 
         MultiResponse.run do |r|
           r.process { create_customer(options) }
+
+          return r if !r.success?
+
           customer_id = r.params['customer']['id']
-
           response[:customer] = r.params['customer']
-
           customer_card_post = create_post_for_customer_card(options[:customer], payment)
           add_customer(customer_card_post, customer_id)
 
@@ -232,9 +233,9 @@ module ActiveMerchant #:nodoc:
         success = !customer_response.key?('errors')
 
         if success && customer_response.key?('customer')
-          Response.new(success, nil, customer_response)
+         Response.new(success, nil, customer_response)
         else
-          Response.new(success, customer_response['errors'][0]['detail'])
+         Response.new(success, customer_response['errors'][0]['detail'])
         end
       end
 
