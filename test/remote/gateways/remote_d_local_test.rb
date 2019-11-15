@@ -194,15 +194,9 @@ class RemoteDLocalTest < Test::Unit::TestCase
   end
 
   def test_failed_void
-    auth = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success auth
-
-    assert capture = @gateway.capture(@amount, auth.authorization, @options)
-    assert_success capture
-
-    response = @gateway.void(auth.authorization)
+    response = @gateway.void('')
     assert_failure response
-    assert_match 'Invalid transaction status', response.message
+    assert_match 'Invalid request', response.message
   end
 
   def test_successful_verify

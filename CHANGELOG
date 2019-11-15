@@ -3,6 +3,7 @@
 == HEAD
 * Quickbooks: Mark transactions that returned `AuthorizationFailed` as failures [britth] #3447
 * Credorax: Add referral CFT transactions [leila-alderman] #3432
+* DLocal: Updates for version 2.1 [molbrown] #3449
 
 == Version 1.102.0 (Nov 14, 2019)
 * Quickbooks: Make token refresh optional with allow_refresh flag [britth] #3419
