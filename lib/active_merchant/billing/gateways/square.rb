@@ -94,9 +94,7 @@ module ActiveMerchant #:nodoc:
         MultiResponse.run(:first) do |r|
           r.process { commit(:post, 'customers', post, options) }
 
-          if(r.success? && !r.params['customer']['id'].blank?)
-            r.process { commit(:post, "customers/#{r.params['customer']['id']}/cards", { card_nonce: payment }, options) }
-          end
+          r.process { commit(:post, "customers/#{r.params['customer']['id']}/cards", { card_nonce: payment }, options) } if r.success? && !r.params['customer']['id'].blank?
         end
       end
 
@@ -152,10 +150,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer(post, options)
-        post[:email_address] = options[:email] ? options[:email] : nil
+        first_name =  options[:billing_address][:name].split(' ')[0]
+        first_name =  options[:billing_address][:name].split(' ')[1] if options[:billing_address][:name].split(' ').length > 1
+
+        post[:email_address] = options[:email] || nil
         post[:phone_number] = options[:billing_address] ? options[:billing_address][:phone] : nil
-        post[:given_name] = options[:billing_address] ? options[:billing_address][:name].split(' ')[0] : nil
-        post[:family_name] = options[:billing_address] ? options[:billing_address][:name].split(' ').length > 1 ? options[:billing_address][:name].split(' ')[1] : nil : nil
+        post[:given_name] = first_name
+        post[:family_name] = last_name
 
         post[:address] = {}
         post[:address][:address_line_1] = options[:billing_address] ? options[:billing_address][:address1] : nil
@@ -163,6 +164,7 @@ module ActiveMerchant #:nodoc:
         post[:address][:locality] = options[:billing_address] ? options[:billing_address][:city] : nil
         post[:address][:administrative_district_level_1] = options[:billing_address] ? options[:billing_address][:state] : nil
         post[:address][:administrative_district_level_2] = options[:billing_address] ? options[:billing_address][:country] : nil
+        post[:address][:country] = options[:billing_address] ? options[:billing_address][:country] : nil
         post[:address][:postal_code] = options[:billing_address] ? options[:billing_address][:zip] : nil
       end
 
