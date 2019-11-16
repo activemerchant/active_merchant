@@ -150,8 +150,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer(post, options)
-        first_name =  options[:billing_address][:name].split(' ')[0]
-        last_name =  options[:billing_address][:name].split(' ')[1] if options[:billing_address][:name].split(' ').length > 1
+        first_name = options[:billing_address][:name].split(' ')[0]
+        last_name = options[:billing_address][:name].split(' ')[1] if options[:billing_address][:name].split(' ').length > 1
 
         post[:email_address] = options[:email] || nil
         post[:phone_number] = options[:billing_address] ? options[:billing_address][:phone] : nil
