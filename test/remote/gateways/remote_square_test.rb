@@ -11,41 +11,8 @@ class RemoteSquareTest < Test::Unit::TestCase
     @declined_card_nonce = 'cnon:card-nonce-declined'
 
     @options = {
-      reason: 'Customer Canceled',
-    }
-
-    @customer = {
-      given_name: 'John',
-      family_name: 'Doe',
-      company_name: 'John Doe Inc',
-      email_address: 'john.doe@example.com',
-      phone_number: '1231231234',
-      address: {
-        address_line_1: '123 Main St.',
-        address_line_2: 'Apt 2A',
-        address_line_3: 'Att John Doe',
-        locality: 'Chicago',
-        administrative_district_level_1: 'Illinois',
-        administrative_district_level_2: 'United States',
-        postal_code: '94103'
-      }
-    }
-
-    @bad_customer = {
-      given_name: 'John',
-      family_name: 'Doe',
-      company_name: 'John Doe Inc',
-      email_address: 'john.doe@example.com',
-      phone_number: '1231231234',
-      address: {
-        address_line_1: '123 Main St.',
-        address_line_2: 'Apt 2A',
-        address_line_3: 'Att John Doe',
-        locality: 'Chicago',
-        administrative_district_level_1: 'Illinois',
-        country: 'United States',
-        postal_code: '94103'
-      }
+      email: 'customer@example.com',
+      billing_address: address(),
     }
   end
 
@@ -138,7 +105,7 @@ class RemoteSquareTest < Test::Unit::TestCase
   end
 
   def test_successful_store
-    @options[:customer] = @customer
+    @options[:idempotency_key] = SecureRandom.hex(10)
 
     assert store = @gateway.store(@card_nonce, @options)
 
@@ -148,8 +115,8 @@ class RemoteSquareTest < Test::Unit::TestCase
 
     customer_response = store.responses[0]
     assert_not_nil customer_response.params['customer']['id']
-    assert_equal @options[:customer][:given_name], customer_response.params['customer']['given_name']
-    assert_equal @options[:customer][:address].stringify_keys!, customer_response.params['customer']['address']
+    assert_equal @options[:email], customer_response.params['customer']['email_address']
+    assert_equal @options[:billing_address][:name].split(' ')[0], customer_response.params['customer']['given_name']
 
     card_response = store.responses[1]
     assert_not_nil card_response.params['card']['id']
@@ -157,36 +124,30 @@ class RemoteSquareTest < Test::Unit::TestCase
     assert store.test?
   end
 
-  def test_unsuccessful_store
-    @options[:customer] = @bad_customer
-
-    assert store = @gateway.store(@card_nonce, @options)
-    assert_failure store
-  end
-
   def test_successful_store_then_unstore
-    @options[:customer] = @customer
+    @options[:idempotency_key] = SecureRandom.hex(10)
 
     assert store = @gateway.store(@card_nonce, @options)
 
     assert_success store
+    customer_response = store.responses[0]
 
-    assert unstore = @gateway.unstore(store.params['customer']['id'], @options)
+    assert unstore = @gateway.unstore(customer_response.params['customer']['id'], @options)
 
     assert_success unstore
     assert_empty unstore.params
   end
 
   def test_successful_store_then_update
-    @options[:customer] = @customer
+    @options[:idempotency_key] = SecureRandom.hex(10)
 
     assert store = @gateway.store(@card_nonce, @options)
+    customer_response = store.responses[0]
 
-    assert_equal @customer[:given_name], store.params['customer']['given_name']
-    assert_equal @customer[:family_name], store.params['customer']['family_name']
+    assert_equal @options[:billing_address][:name].split(' ')[0], customer_response.params['customer']['given_name']
 
-    updated_customer = { customer: { given_name: 'Tom', family_name: 'Smith' } }
-    assert update = @gateway.update_customer(store.params['customer']['id'], updated_customer)
+    @options[:billing_address][:name] = 'Tom Smith'
+    assert update = @gateway.update_customer(customer_response.params['customer']['id'], @options)
 
     assert_equal 'Tom', update.params['customer']['given_name']
     assert_equal 'Smith', update.params['customer']['family_name']

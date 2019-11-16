@@ -11,24 +11,8 @@ class SquareTest < Test::Unit::TestCase
     @declined_card_nonce = 'cnon:card-nonce-declined'
 
     @options = {
-      reason: 'Customer Canceled'
-    }
-
-    @customer = {
-      given_name: 'John',
-      family_name: 'Doe',
-      company_name: 'John Doe Inc',
-      email_address: 'john.doe@example.com',
-      phone_number: '1231231234',
-      address: {
-        address_line_1: '123 Main St.',
-        address_line_2: 'Apt 2A',
-        address_line_3: 'Att John Doe',
-        locality: 'Chicago',
-        administrative_district_level_1: 'Illinois',
-        administrative_district_level_2: 'United States',
-        postal_code: '94103'
-      }
+      email: 'customer@example.com',
+      billing_address: address(),
     }
   end
 
@@ -114,13 +98,11 @@ class SquareTest < Test::Unit::TestCase
     assert_equal 'UNOE3kv2BZwqHlJ830RCt5YCuaB_xVteEWVFkXDvKN1ddidfJWipt8p9whmElKT5mZtJ7wZ', response.authorization
     assert_equal 'PENDING', response.params['refund']['status']
     assert_equal @refund_amount, response.params['refund']['amount_money']['amount']
-    assert_equal @options[:reason], response.params['refund']['reason']
+    assert_equal 'Customer Canceled', response.params['refund']['reason']
     assert response.test?
   end
 
   def test_successful_store
-    @options[:customer] = @customer
-
     @gateway.expects(:ssl_request).twice.returns(successful_new_customer_response, successful_new_card_response)
 
     assert response = @gateway.store(@card_nonce, @options)
@@ -141,8 +123,8 @@ class SquareTest < Test::Unit::TestCase
   def test_successful_store_then_update
     @gateway.expects(:ssl_request).returns(successful_update_response)
 
-    updated_customer = { customer: { given_name: 'Tom', family_name: 'Smith' } }
-    assert response = @gateway.update_customer('JDKYHBWT1D4F8MFH63DBMEN8Y4', updated_customer)
+    @options[:billing_address][:name] = 'Tom Smith'
+    assert response = @gateway.update_customer('JDKYHBWT1D4F8MFH63DBMEN8Y4', @options)
     assert_instance_of Response, response
     assert_success response
 
@@ -493,7 +475,7 @@ class SquareTest < Test::Unit::TestCase
     {
       "refund": {
         "id": "UNOE3kv2BZwqHlJ830RCt5YCuaB_xVteEWVFkXDvKN1ddidfJWipt8p9whmElKT5mZtJ7wZ",
-        "reason": "#{@options[:reason]}",
+        "reason": "Customer Canceled",
         "status": "PENDING",
         "amount_money": {
           "amount": 100,

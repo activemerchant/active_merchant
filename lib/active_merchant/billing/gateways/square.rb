@@ -86,17 +86,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def store(payment, options = {})
-        customer_post = options[:customer]
-        add_idempotency_key(customer_post, options)
+        post = {}
+
+        add_customer(post, options)
+        add_idempotency_key(post, options)
 
         MultiResponse.run(:first) do |r|
-          r.process { commit(:post, 'customers', customer_post, options) }
+          r.process { commit(:post, 'customers', post, options) }
 
           if(r.success? && !r.params['customer']['id'].blank?)
-            customer_id = r.params['customer']['id']
-            card_post = {}
-            add_card_nonce(card_post, payment)
-            r.process { commit(:post, "customers/#{customer_id}/cards", card_post, options) }
+            r.process { commit(:post, "customers/#{r.params['customer']['id']}/cards", { card_nonce: payment }, options) }
           end
         end
       end
@@ -106,7 +105,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def update_customer(identification, options = {})
-        post = options[:customer]
+        post = {}
+        add_customer(post, options)
         commit(:put, "customers/#{identification}", post, options)
       end
 
@@ -123,7 +123,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_idempotency_key(post, options)
-        post[:idempotency_key] = options[:idempotency_key]
+        post[:idempotency_key] = options[:idempotency_key] unless options[:idempotency_key].nil? || options[:idempotency_key].blank?
       end
 
       def add_amount(post, money, options)
@@ -138,16 +138,12 @@ module ActiveMerchant #:nodoc:
         post[:app_fee_money] = localized_amount(options[:application_fee], @fee_currency).to_i if options[:application_fee]
       end
 
-      def add_nonce_source(post, nonce)
-        post[:source_id] = nonce
-      end
+      def create_post_for_auth_or_purchase(money, payment, options)
+        post = {}
 
-      def add_customer_source(post, options = {})
-        post[:source_id] = options[:customer][:source_id]
-        post[:customer_id] = options[:customer][:id]
-      end
+        post[:source_id] = payment
+        post[:customer_id] = options[:customer] unless options[:customer].nil? || options[:customer].blank?
 
-      def add_charge_details(post, money, payment, options)
         add_idempotency_key(post, options)
         add_amount(post, money, options)
         add_application_fee(post, options)
@@ -155,26 +151,19 @@ module ActiveMerchant #:nodoc:
         return post
       end
 
-      def add_customer(post, identification)
-        post[:customer_id] = identification
-      end
+      def add_customer(post, options)
+        post[:email_address] = options[:email] ? options[:email] : nil
+        post[:phone_number] = options[:billing_address] ? options[:billing_address][:phone] : nil
+        post[:given_name] = options[:billing_address] ? options[:billing_address][:name].split(' ')[0] : nil
+        post[:family_name] = options[:billing_address] ? options[:billing_address][:name].split(' ').length > 1 ? options[:billing_address][:name].split(' ')[1] : nil : nil
 
-      def create_post_for_auth_or_purchase(money, payment, options)
-        post = {}
-
-        if options[:customer]
-          add_customer_source(post, options[:customer])
-        else
-          add_nonce_source(post, payment)
-        end
-
-        add_charge_details(post, money, payment, options)
-
-        return post
-      end
-
-      def add_card_nonce(post, nonce)
-        post[:card_nonce] = nonce
+        post[:address] = {}
+        post[:address][:address_line_1] = options[:billing_address] ? options[:billing_address][:address1] : nil
+        post[:address][:address_line_2] = options[:billing_address] ? options[:billing_address][:address2] : nil
+        post[:address][:locality] = options[:billing_address] ? options[:billing_address][:city] : nil
+        post[:address][:administrative_district_level_1] = options[:billing_address] ? options[:billing_address][:state] : nil
+        post[:address][:administrative_district_level_2] = options[:billing_address] ? options[:billing_address][:country] : nil
+        post[:address][:postal_code] = options[:billing_address] ? options[:billing_address][:zip] : nil
       end
 
       def api_request(method, endpoint, parameters = nil, options = {})
