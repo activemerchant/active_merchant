@@ -37,7 +37,8 @@ module ActiveMerchant #:nodoc:
         'PAYMENT_LIMIT_EXCEEDED' => STANDARD_ERROR_CODE[:processing_error],
         'GENERIC_DECLINE' => STANDARD_ERROR_CODE[:card_declined],
         'INVALID_FEES' => STANDARD_ERROR_CODE[:config_error],
-        'GIFT_CARD_AVAILABLE_AMOUNT' => STANDARD_ERROR_CODE[:card_declined]
+        'GIFT_CARD_AVAILABLE_AMOUNT' => STANDARD_ERROR_CODE[:card_declined],
+        'BAD_REQUEST' => STANDARD_ERROR_CODE[:processing_error]
       }
 
       def initialize(options={})
@@ -86,27 +87,18 @@ module ActiveMerchant #:nodoc:
 
       def store(payment, options = {})
         customer_post = options[:customer]
-
         add_idempotency_key(customer_post, options)
 
-        response = {}
+        MultiResponse.run(:first) do |r|
+          r.process { commit(:post, 'customers', customer_post, options) }
 
-        MultiResponse.run do |r|
-          r.process { create_customer(options) }
-
-          return r if !r.success?
-
-          customer_id = r.params['customer']['id']
-          response[:customer] = r.params['customer']
-          customer_card_post = create_post_for_customer_card(options[:customer], payment)
-          add_customer(customer_card_post, customer_id)
-
-          r.process { commit(:post, "customers/#{customer_id}/cards", customer_card_post, options) }
-
-          response[:card] = r.params['card']
+          if(r.success? && !r.params['customer']['id'].blank?)
+            customer_id = r.params['customer']['id']
+            card_post = {}
+            add_card_nonce(card_post, payment)
+            r.process { commit(:post, "customers/#{customer_id}/cards", card_post, options) }
+          end
         end
-
-        return Response.new(true, nil, response)
       end
 
       def unstore(identification, options = {})
@@ -181,14 +173,8 @@ module ActiveMerchant #:nodoc:
         return post
       end
 
-      def create_post_for_customer_card(customer, payment)
-        post = {
-          card_nonce: payment,
-          billing_address: customer[:address] || {},
-          cardholder_name: "#{customer[:given_name]} #{customer[:family_name]}"
-        }
-
-        return post
+      def add_card_nonce(post, nonce)
+        post[:card_nonce] = nonce
       end
 
       def api_request(method, endpoint, parameters = nil, options = {})
@@ -222,21 +208,9 @@ module ActiveMerchant #:nodoc:
           authorization: authorization_from(success, url, method, response),
           avs_result: success ? { :code => avs_code } : nil,
           cvv_result: success ? cvc_code : nil,
-
-          test: test?,
-          error_code: error_code_from(response)
+          error_code: success ? nil : error_code_from(response),
+          test: test?
         )
-      end
-
-      def create_customer(options = {})
-        customer_response = api_request(:post, 'customers', options[:customer], options)
-        success = !customer_response.key?('errors')
-
-        if success && customer_response.key?('customer')
-         Response.new(success, nil, customer_response)
-        else
-         Response.new(success, customer_response['errors'][0]['detail'])
-        end
       end
 
       def card_from_response(response)
@@ -277,7 +251,8 @@ module ActiveMerchant #:nodoc:
         return nil unless response['errors']
 
         code = response['errors'][0]['code']
-        return STANDARD_ERROR_CODE_MAPPING[code]
+        return STANDARD_ERROR_CODE_MAPPING[code] unless STANDARD_ERROR_CODE_MAPPING[code].nil?
+        return STANDARD_ERROR_CODE[:processing_error]
       end
 
       def api_version(options)

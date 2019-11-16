@@ -121,17 +121,21 @@ class SquareTest < Test::Unit::TestCase
   def test_successful_store
     @options[:customer] = @customer
 
-    @gateway.expects(:create_customer).returns(Response.new(true, nil, customer: successful_new_customer_response))
-    @gateway.expects(:ssl_request).returns(successful_new_card_response)
+    @gateway.expects(:ssl_request).twice.returns(successful_new_customer_response, successful_new_card_response)
 
     assert response = @gateway.store(@card_nonce, @options)
 
-    assert_instance_of Response, response
+    assert_instance_of MultiResponse, response
     assert_success response
-    assert_not_nil response.params['customer']['id']
-    assert_equal @options[:customer][:given_name], response.params['customer']['given_name']
-    assert_equal @options[:customer][:address].stringify_keys!, response.params['customer']['address']
-    assert_not_nil response.params['card']['id']
+    assert_equal 2, response.responses.size
+
+    customer_response = response.responses[0]
+    assert_not_nil customer_response.params['customer']['id']
+
+    card_response = response.responses[1]
+    assert_not_nil card_response.params['card']['id']
+
+    assert response.test?
   end
 
   def test_successful_store_then_update
@@ -504,18 +508,13 @@ class SquareTest < Test::Unit::TestCase
   end
 
   def successful_new_customer_response
+    <<-RESPONSE
     {
-      id: 'JDKYHBWT1D4F8MFH63DBMEN8Y4',
-      created_at: '2016-03-23T20:21:54.859Z',
-      updated_at: '2016-03-23T20:21:54.859Z',
-      given_name: @options[:customer][:given_name],
-      family_name: @options[:customer][:given_name],
-      email_address: @options[:customer][:email],
-      address: @options[:customer][:address],
-      phone_number: @options[:customer][:phone_number],
-      reference_id: 'YOUR_REFERENCE_ID',
-      note: 'a customer'
-    }.stringify_keys!
+      "customer": {
+        "id": "JDKYHBWT1D4F8MFH63DBMEN8Y4"
+      }
+    }
+    RESPONSE
   end
 
   def successful_new_card_response

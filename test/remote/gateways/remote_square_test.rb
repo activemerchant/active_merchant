@@ -142,12 +142,19 @@ class RemoteSquareTest < Test::Unit::TestCase
 
     assert store = @gateway.store(@card_nonce, @options)
 
+    assert_instance_of MultiResponse, store
     assert_success store
-    assert_not_nil store.params['customer']['id']
-    assert_equal @options[:customer][:given_name], store.params['customer']['given_name']
-    assert_equal @options[:customer][:address].stringify_keys!, store.params['customer']['address']
+    assert_equal 2, store.responses.size
 
-    assert_not_nil store.params['card']['id']
+    customer_response = store.responses[0]
+    assert_not_nil customer_response.params['customer']['id']
+    assert_equal @options[:customer][:given_name], customer_response.params['customer']['given_name']
+    assert_equal @options[:customer][:address].stringify_keys!, customer_response.params['customer']['address']
+
+    card_response = store.responses[1]
+    assert_not_nil card_response.params['card']['id']
+
+    assert store.test?
   end
 
   def test_unsuccessful_store
