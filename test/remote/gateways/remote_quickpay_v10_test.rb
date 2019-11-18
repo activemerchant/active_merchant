@@ -167,6 +167,12 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_store_subscription
+    updated_options = @options.merge(amount: @amount)
+    assert response = @gateway.store_subscription(updated_options)
+    assert_success response
+  end
+
   def test_successful_store_and_reference_purchase
     assert store = @gateway.store(@valid_card, @options)
     assert_success store
@@ -199,6 +205,24 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_get_payment_link_for_subscription
+    updated_options = @options.merge(amount: @amount)
+    assert store = @gateway.store_subscription(@valid_card, updated_options)
+    assert_success store
+    assert link = @gateway.get_payment_link(@amount, store.authorization, updated_options)
+    assert_success link
+  end
+
+  def test_failed_get_payment_link_for_subscription
+    updated_options = @options.merge(amount: @amount)
+    assert store = @gateway.store_subscription(@valid_card, updated_options)
+    assert_success store
+    assert link = @gateway.get_payment_link(@amount, '123', updated_options)
+    puts link.inspect
+    assert_equal 'Not found: No such transaction: Subscription 123', link.message
+    assert_failure link
+  end
+
   def test_invalid_login
     gateway = QuickpayV10Gateway.new(api_key: '**')
     assert response = gateway.purchase(@amount, @valid_card, @options)
@@ -216,5 +240,4 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
     assert_scrubbed(@valid_card.verification_value.to_s, clean_transcript)
     assert_scrubbed(@gateway.options[:api_key], clean_transcript)
   end
-
 end

@@ -35,6 +35,10 @@ module ActiveMerchant #:nodoc:
       ssl_request(:post, endpoint, data, headers)
     end
 
+    def ssl_put(endpoint, data, headers = {})
+      ssl_request(:put, endpoint, data, headers)
+    end
+
     def ssl_request(method, endpoint, data, headers)
       handle_response(raw_ssl_request(method, endpoint, data, headers))
     end

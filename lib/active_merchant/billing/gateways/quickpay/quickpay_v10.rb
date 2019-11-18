@@ -33,6 +33,14 @@ module ActiveMerchant
         end
       end
 
+      def purchase_subscription(money, subscription_id, options = {})
+        post ={}
+        add_autocapture(post, true) # or false?
+        add_order_id(post, options)
+        add_amount(post, money, options)
+        commit(synchronized_path("/subscriptions/#{subscription_id}/recurring"), post)
+      end
+
       def authorize(money, credit_card_or_reference, options = {})
         MultiResponse.run(true) do |r|
           if credit_card_or_reference.is_a?(String)
@@ -45,6 +53,12 @@ module ActiveMerchant
             commit(synchronized_path("/payments/#{r.responses.last.params["id"]}/authorize"), post)
           }
         end
+      end
+
+      def get_payment_link(money, subscription_id, options = {})
+        put = {}
+        add_amount(put, money, options)
+        commit("/subscriptions/#{subscription_id}/link", put, :put)
       end
 
       def void(identification, _options = {})
@@ -78,8 +92,16 @@ module ActiveMerchant
       def store(credit_card, options = {})
         MultiResponse.run do |r|
           r.process { create_store(options) }
-          r.process { authorize_store(r.authorization, credit_card, options)}
+          r.process { authorize_store(r.authorization, credit_card, options) }
         end
+      end
+
+      def store_subscription(options = {})
+        post = {}
+        add_currency(post, nil, options)
+        add_order_id(post, options)
+        add_description(post, options)
+        commit('/subscriptions', post)
       end
 
       def unstore(identification)
@@ -143,10 +165,14 @@ module ActiveMerchant
           commit('/payments', post)
         end
 
-        def commit(action, params = {})
+        def commit(action, params = {}, method = :post)
           success = false
           begin
-            response = parse(ssl_post(self.live_url + action, params.to_json, headers))
+            ssl_response = case method
+                           when :post then ssl_post(self.live_url + action, params.to_json, headers)
+                           when :put then ssl_put(self.live_url + action, params.to_json, headers)
+                           end
+            response = parse(ssl_response)
             success = successful?(response)
           rescue ResponseError => e
             response = response_error(e.response.body)
@@ -183,6 +209,10 @@ module ActiveMerchant
         def add_order_id(post, options)
           requires!(options, :order_id)
           post[:order_id] = format_order_id(options[:order_id])
+        end
+
+        def add_description(post, options)
+          post[:description] = format_order_id(options[:description])
         end
 
         def add_invoice(post, options)
@@ -293,8 +323,6 @@ module ActiveMerchant
         def synchronized_path(path)
           "#{path}?synchronized"
         end
-
     end
-
   end
 end
