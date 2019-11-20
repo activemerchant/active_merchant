@@ -291,6 +291,7 @@ module ActiveMerchant #:nodoc:
         add_capture_service(xml, request_id, request_token)
         add_business_rules_data(xml, authorization, options)
         add_issuer_additional_data(xml, options)
+        add_mdd_fields(xml, options)
         xml.target!
       end
 

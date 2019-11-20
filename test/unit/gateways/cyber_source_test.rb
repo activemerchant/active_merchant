@@ -273,6 +273,14 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response_capture.test?
   end
 
+  def test_capture_includes_mdd_fields
+    stub_comms do
+      @gateway.capture(100, '1846925324700976124593', order_id: '1', mdd_field_2: 'CustomValue2', mdd_field_3: 'CustomValue3')
+    end.check_request do |endpoint, data, headers|
+      assert_match(/field2>CustomValue2.*field3>CustomValue3</m, data)
+    end.respond_with(successful_capture_response)
+  end
+
   def test_successful_credit_card_purchase_request
     @gateway.stubs(:ssl_post).returns(successful_capture_response)
     assert response = @gateway.purchase(@amount, @credit_card, @options)
