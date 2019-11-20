@@ -337,6 +337,15 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_capture_with_mdd_fields
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    (1..20).each { |e| @options["mdd_field_#{e}".to_sym] = "value #{e}" }
+    assert capture = @gateway.capture(@amount, auth.authorization, @options)
+    assert_success capture
+  end
+
   def test_successful_authorize_with_nonfractional_currency
     assert response = @gateway.authorize(100, @credit_card, @options.merge(:currency => 'JPY'))
     assert_equal '1', response.params['amount']
