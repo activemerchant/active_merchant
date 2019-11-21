@@ -6,6 +6,7 @@
 * DLocal: Updates for version 2.1 [molbrown] #3449
 * CyberSource: Send MDD on capture [leila-alderman] #3453
 * Ixopay: Include extra_data gateway specific field [therufs] #3450
+* CyberSource: Fix XML error on capture [leila-alderman] #3454
 
 == Version 1.102.0 (Nov 14, 2019)
 * Quickbooks: Make token refresh optional with allow_refresh flag [britth] #3419
