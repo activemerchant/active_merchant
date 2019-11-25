@@ -129,6 +129,8 @@ module ActiveMerchant #:nodoc:
         post[:card][:cvv] = card.verification_value
         post[:card][:descriptor] = options[:dynamic_descriptor] if options[:dynamic_descriptor]
         post[:card][:capture] = (action == 'purchase')
+        post[:card][:installments] = options[:installments] if options[:installments]
+        post[:card][:installments_id] = options[:installments_id] if options[:installments_id]
       end
 
       def parse(body)

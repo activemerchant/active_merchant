@@ -26,6 +26,13 @@ class RemoteDLocalTest < Test::Unit::TestCase
       document: '10563145',
       currency: 'ARS'
     }
+    @options_argentina_installments = {
+      billing_address: address(country: 'Argentina'),
+      document: '10563145',
+      currency: 'ARS',
+      installments: '3',
+      installments_id: 'INS54434'
+    }
     @options_mexico = {
       billing_address: address(country: 'Mexico'),
       document: '128475869794933',
@@ -40,6 +47,12 @@ class RemoteDLocalTest < Test::Unit::TestCase
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_match 'The payment was paid', response.message
+  end
+
+  def test_successful_purchase_with_installments
+    response = @gateway.purchase(@amount, @credit_card, @options_argentina_installments)
     assert_success response
     assert_match 'The payment was paid', response.message
   end
