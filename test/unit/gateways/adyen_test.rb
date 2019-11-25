@@ -534,6 +534,15 @@ class AdyenTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_successful_tokenize_only_store
+    response = stub_comms do
+      @gateway.store(@credit_card, @options.merge({tokenize_only: true}))
+    end.check_request do |endpoint, data, headers|
+      assert_equal 'CardOnFile', JSON.parse(data)['recurringProcessingModel']
+    end.respond_with(successful_store_response)
+    assert_equal '#8835205392522157#', response.authorization
+  end
+
   def test_successful_store
     response = stub_comms do
       @gateway.store(@credit_card, @options)
@@ -987,6 +996,12 @@ class AdyenTest < Test::Unit::TestCase
   def failed_authorize_avs_response
     <<-RESPONSE
     {\"additionalData\":{\"cvcResult\":\"0 Unknown\",\"fraudResultType\":\"GREEN\",\"avsResult\":\"3 AVS unavailable\",\"fraudManualReview\":\"false\",\"avsResultRaw\":\"U\",\"refusalReasonRaw\":\"05 : Do not honor\",\"authorisationMid\":\"494619000001174\",\"acquirerCode\":\"AdyenVisa_BR_494619\",\"acquirerReference\":\"802320302458\",\"acquirerAccountCode\":\"AdyenVisa_BR_Cabify\"},\"fraudResult\":{\"accountScore\":0,\"results\":[{\"FraudCheckResult\":{\"accountScore\":0,\"checkId\":46,\"name\":\"DistinctCountryUsageByShopper\"}}]},\"pspReference\":\"1715167376763498\",\"refusalReason\":\"Refused\",\"resultCode\":\"Refused\"}
+    RESPONSE
+  end
+
+  def successful_tokenize_only_store_response
+    <<-RESPONSE
+    {"alias":"P481159492341538","aliasType":"Default","pspReference":"881574707964582B","recurringDetailReference":"8415747079647045","result":"Success"}
     RESPONSE
   end
 

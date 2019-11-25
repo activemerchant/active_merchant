@@ -102,7 +102,9 @@ module ActiveMerchant #:nodoc:
         add_recurring_contract(post, options)
         add_address(post, options)
 
-        initial_response = commit('authorise', post, options)
+        action = options[:tokenize_only] ? 'storeToken' : 'authorise'
+
+        initial_response = commit(action, post, options)
 
         if initial_response.success? && card_not_stored?(initial_response)
           unsupported_failure_response(initial_response)
@@ -472,7 +474,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def endpoint(action)
-        action == 'disable' ? "Recurring/#{RECURRING_API_VERSION}/#{action}" : "Payment/#{PAYMENT_API_VERSION}/#{action}"
+        recurring = %w(disable storeToken).include?(action)
+        recurring ? "Recurring/#{RECURRING_API_VERSION}/#{action}" : "Payment/#{PAYMENT_API_VERSION}/#{action}"
       end
 
       def url(action)
@@ -506,6 +509,8 @@ module ActiveMerchant #:nodoc:
           response['response'] == "[#{action}-received]"
         when 'adjustAuthorisation'
           response['response'] == 'Authorised' || response['response'] == '[adjustAuthorisation-received]'
+        when 'storeToken'
+          response['result'] == 'Success'
         else
           false
         end
@@ -513,20 +518,23 @@ module ActiveMerchant #:nodoc:
 
       def message_from(action, response)
         return authorize_message_from(response) if action.to_s == 'authorise' || action.to_s == 'authorise3d'
-        response['response'] || response['message']
+        response['response'] || response['message'] || response['result']
       end
 
       def authorize_message_from(response)
         if response['refusalReason'] && response['additionalData'] && response['additionalData']['refusalReasonRaw']
           "#{response['refusalReason']} | #{response['additionalData']['refusalReasonRaw']}"
         else
-          response['refusalReason'] || response['resultCode'] || response['message']
+          response['refusalReason'] || response['resultCode'] || response['message'] || response['result']
         end
       end
 
       def authorization_from(action, parameters, response)
         return nil if response['pspReference'].nil?
+
         recurring = response['additionalData']['recurring.recurringDetailReference'] if response['additionalData']
+        recurring = response['recurringDetailReference'] if action == 'storeToken'
+
         "#{parameters[:originalReference]}##{response['pspReference']}##{recurring}"
       end
 
