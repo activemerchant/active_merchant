@@ -359,6 +359,12 @@ module ActiveMerchant #:nodoc:
             add_browser_info(three_ds_2_options[:browser_info], post)
             post[:threeDS2RequestData] = { deviceChannel: device_channel, notificationURL: three_ds_2_options[:notification_url] }
           end
+
+          if options.has_key?(:execute_threed)
+            post[:additionalData] ||= {}
+            post[:additionalData][:executeThreeD] = options[:execute_threed]
+            post[:additionalData][:scaExemption] = options[:sca_exemption] if options[:sca_exemption]
+          end
         else
           return unless options[:execute_threed] || options[:threed_dynamic]
           post[:browserInfo] = { userAgent: options[:user_agent], acceptHeader: options[:accept_header] }
