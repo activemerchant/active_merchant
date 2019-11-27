@@ -548,9 +548,18 @@ class AdyenTest < Test::Unit::TestCase
       @gateway.store(@credit_card, @options)
     end.check_request do |endpoint, data, headers|
       assert_equal 'CardOnFile', JSON.parse(data)['recurringProcessingModel']
+      assert_equal 'RECURRING', JSON.parse(data)['recurring']['contract']
     end.respond_with(successful_store_response)
     assert_success response
     assert_equal '#8835205392522157#8315202663743702', response.authorization
+  end
+
+  def test_successful_store_with_recurring_contract_type
+    stub_comms do
+      @gateway.store(@credit_card, @options.merge({recurring_contract_type: 'ONECLICK'}))
+    end.check_request do |endpoint, data, headers|
+      assert_equal 'ONECLICK', JSON.parse(data)['recurring']['contract']
+    end.respond_with(successful_store_response)
   end
 
   def test_failed_store

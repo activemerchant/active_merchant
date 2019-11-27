@@ -367,8 +367,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_recurring_contract(post, options = {})
+        recurring_contract_type = options[:recurring_contract_type] || 'RECURRING'
         recurring = {
-          contract: 'RECURRING'
+          contract: recurring_contract_type
         }
 
         post[:recurring] = recurring
