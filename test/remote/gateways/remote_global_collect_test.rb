@@ -55,6 +55,51 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  def test_successful_purchase_with_airline_data
+    options = @options.merge(
+      airline_data: {
+        code: 111,
+        name: 'Spreedly Airlines',
+        flight_date: '20190810',
+        passenger_name: 'Randi Smith',
+        flight_legs: [
+          { arrival_airport: 'BDL',
+            origin_airport: 'RDU',
+            date: '20190810',
+            carrier_code: 'SA',
+            number: 596,
+            airline_class: 'ZZ'},
+          { arrival_airport: 'RDU',
+            origin_airport: 'BDL',
+            date: '20190817',
+            carrier_code: 'SA',
+            number: 597,
+            airline_class: 'ZZ'}
+        ]
+      }
+    )
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_failed_purchase_with_insufficient_airline_data
+    options = @options.merge(
+      airline_data: {
+        flight_date: '20190810',
+        passenger_name: 'Randi Smith'
+      }
+    )
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_failure response
+    assert_equal 'PARAMETER_NOT_FOUND_IN_REQUEST', response.message
+    property_names = response.params['errors'].collect { |e| e['propertyName'] }
+    assert property_names.include? 'order.additionalInput.airlineData.code'
+    assert property_names.include? 'order.additionalInput.airlineData.name'
+  end
+
   def test_successful_purchase_with_very_long_name
     credit_card = credit_card('4567350000427977', { first_name: 'thisisaverylongfirstname'})
 

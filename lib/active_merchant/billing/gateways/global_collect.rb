@@ -100,6 +100,35 @@ module ActiveMerchant #:nodoc:
         post['order']['references']['invoiceData'] = {
           'invoiceNumber' => options[:invoice]
         }
+        add_airline_data(post, options) if options[:airline_data]
+      end
+
+      def add_airline_data(post, options)
+        airline_data = {}
+
+        flight_date = options[:airline_data][:flight_date]
+        passenger_name = options[:airline_data][:passenger_name]
+        code = options[:airline_data][:code]
+        name = options[:airline_data][:name]
+
+        airline_data['flightDate'] = flight_date if flight_date
+        airline_data['passengerName'] = passenger_name if passenger_name
+        airline_data['code'] = code if code
+        airline_data['name'] = name if name
+
+        flight_legs = []
+        options[:airline_data][:flight_legs]&.each do |fl|
+          leg = {}
+          leg['arrivalAirport'] = fl[:arrival_airport] if fl[:arrival_airport]
+          leg['originAirport'] = fl[:origin_airport] if fl[:origin_airport]
+          leg['date'] = fl[:date] if fl[:date]
+          leg['number'] = fl[:number] if fl[:number]
+          leg['carrierCode'] = fl[:carrier_code] if fl[:carrier_code]
+          leg['airlineClass'] = fl[:carrier_code] if fl[:airline_class]
+          flight_legs << leg
+        end
+        airline_data['flightLegs'] = flight_legs
+        post['order']['additionalInput']['airlineData'] = airline_data
       end
 
       def add_creator_info(post, options)
