@@ -717,6 +717,14 @@ class CyberSourceTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_address_email_has_a_default_when_email_option_is_empty
+    stub_comms do
+      @gateway.authorize(100, @credit_card, email: '')
+    end.check_request do |endpoint, data, headers|
+      assert_match('<email>null@cybersource.com</email>', data)
+    end.respond_with(successful_capture_response)
+  end
+
   private
 
   def pre_scrubbed
