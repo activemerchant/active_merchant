@@ -136,10 +136,12 @@ module ActiveMerchant #:nodoc:
 
       def add_application_fee(post, money, options)
         currency = options[:currency] || currency(money)
-        post[:app_fee_money] = {
-          amount: localized_amount(money, currency).to_i,
-          currency: currency.upcase
-        } if options[:application_fee]
+        if options[:application_fee]
+          post[:app_fee_money] = {
+            amount: localized_amount(money, currency).to_i,
+            currency: currency.upcase
+          }
+        end
       end
 
       def create_post_for_auth_or_purchase(money, payment, options)
