@@ -58,7 +58,7 @@ module ActiveMerchant #:nodoc:
         post[:address] = "#{address[:address1]}, #{address[:address2]}"
         post[:city] = address[:city]
         post[:country] = address[:country]
-        post[:mobile] = address[:phone]     # API only has a "mobile" field, no "phone"
+        post[:mobile] = address[:phone] # API only has a "mobile" field, no "phone"
       end
 
       def add_invoice(post, options)

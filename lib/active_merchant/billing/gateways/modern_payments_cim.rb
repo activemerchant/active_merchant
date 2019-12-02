@@ -81,7 +81,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, options)
-        post[:acctNum]   = options[:customer]
+        post[:acctNum] = options[:customer]
       end
 
       def add_address(post, options)

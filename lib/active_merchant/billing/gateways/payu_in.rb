@@ -154,20 +154,21 @@ module ActiveMerchant #:nodoc:
 
       def clean(value, format, maxlength)
         value ||= ''
-        value = case format
-        when :alphanumeric
-          value.gsub(/[^A-Za-z0-9]/, '')
-        when :name
-          value.gsub(/[^A-Za-z ]/, '')
-        when :numeric
-          value.gsub(/[^0-9]/, '')
-        when :text
-          value.gsub(/[^A-Za-z0-9@\-_\/\. ]/, '')
-        when nil
-          value
-        else
-          raise "Unknown format #{format} for #{value}"
-        end
+        value =
+          case format
+          when :alphanumeric
+            value.gsub(/[^A-Za-z0-9]/, '')
+          when :name
+            value.gsub(/[^A-Za-z ]/, '')
+          when :numeric
+            value.gsub(/[^0-9]/, '')
+          when :text
+            value.gsub(/[^A-Za-z0-9@\-_\/\. ]/, '')
+          when nil
+            value
+          else
+            raise "Unknown format #{format} for #{value}"
+          end
         value[0...maxlength]
       end
 

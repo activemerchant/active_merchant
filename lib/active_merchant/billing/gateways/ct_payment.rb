@@ -177,7 +177,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_invoice(post, money,  options)
+      def add_invoice(post, money, options)
         post[:CurrencyCode] = options[:currency] || (currency(money) if money)
         post[:InvoiceNumber] = options[:order_id].rjust(12, '0')
         post[:InputType] = 'I'
@@ -227,7 +227,7 @@ module ActiveMerchant #:nodoc:
             r.process { commit_raw(action, parameters) }
             r.process {
               split_auth = split_authorization(r.authorization)
-              auth =  (action.include?('recur')? split_auth[4] : split_auth[0])
+              auth = (action.include?('recur')? split_auth[4] : split_auth[0])
               action.include?('recur') ? commit_raw('recur/ack', {ID: auth}) : commit_raw('ack', {TransactionNumber: auth})
             }
           end

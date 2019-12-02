@@ -291,7 +291,7 @@ module ActiveMerchant #:nodoc:
         add_pair post, 'DECLINEURL',      options[:decline_url]     if options[:decline_url]
         add_pair post, 'EXCEPTIONURL',    options[:exception_url]   if options[:exception_url]
         add_pair post, 'CANCELURL',       options[:cancel_url]      if options[:cancel_url]
-        add_pair post, 'PARAMVAR',        options[:paramvar]       if options[:paramvar]
+        add_pair post, 'PARAMVAR',        options[:paramvar]        if options[:paramvar]
         add_pair post, 'PARAMPLUS',       options[:paramplus]       if options[:paramplus]
         add_pair post, 'COMPLUS',         options[:complus]         if options[:complus]
         add_pair post, 'LANGUAGE',        options[:language]        if options[:language]
@@ -418,16 +418,17 @@ module ActiveMerchant #:nodoc:
       def calculate_signature(signed_parameters, algorithm, secret)
         return legacy_calculate_signature(signed_parameters, secret) unless algorithm
 
-        sha_encryptor = case algorithm
-        when 'sha256'
-          Digest::SHA256
-        when 'sha512'
-          Digest::SHA512
-        when 'sha1'
-          Digest::SHA1
-        else
-          raise "Unknown signature algorithm #{algorithm}"
-        end
+        sha_encryptor =
+          case algorithm
+          when 'sha256'
+            Digest::SHA256
+          when 'sha512'
+            Digest::SHA512
+          when 'sha1'
+            Digest::SHA1
+          else
+            raise "Unknown signature algorithm #{algorithm}"
+          end
 
         filtered_params = signed_parameters.select { |k, v| !v.blank? }
         sha_encryptor.hexdigest(

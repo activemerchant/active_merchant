@@ -477,7 +477,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
 
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
-      @gateway.purchase(@amount, @credit_card,  @options)
+      @gateway.purchase(@amount, @credit_card, @options)
     end
     clean_transcript = @gateway.scrub(transcript)
 

@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'Sage Payment Solutions'
       self.live_url = 'https://www.sagepayments.net/cgi-bin'
 
-      self.supported_countries =  ['US', 'CA']
+      self.supported_countries = ['US', 'CA']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club]
 
       TRANSACTIONS = {
@@ -20,7 +20,7 @@ module ActiveMerchant #:nodoc:
       }
 
       SOURCE_CARD   = 'bankcard'
-      SOURCE_ECHECK =  'virtual_check'
+      SOURCE_ECHECK = 'virtual_check'
 
       def initialize(options = {})
         requires!(options, :login, :password)
@@ -115,7 +115,7 @@ module ActiveMerchant #:nodoc:
       # use the same method as in pay_conex
       def force_utf8(string)
         return nil unless string
-        binary = string.encode('BINARY', invalid: :replace, undef: :replace, replace: '?')   # Needed for Ruby 2.0 since #encode is a no-op if the string is already UTF-8. It's not needed for Ruby 2.1 and up since it's not a no-op there.
+        binary = string.encode('BINARY', invalid: :replace, undef: :replace, replace: '?') # Needed for Ruby 2.0 since #encode is a no-op if the string is already UTF-8. It's not needed for Ruby 2.1 and up since it's not a no-op there.
         binary.encode('UTF-8', invalid: :replace, undef: :replace, replace: '?')
       end
 
@@ -227,7 +227,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_addresses(post, options)
-        billing_address   = options[:billing_address] || options[:address] || {}
+        billing_address = options[:billing_address] || options[:address] || {}
 
         post[:C_address]    = billing_address[:address1]
         post[:C_city]       = billing_address[:city]

@@ -311,11 +311,11 @@ module ActiveMerchant #:nodoc:
               options_element = item_element.add_element('options')
               for option in value
                 opt_element = options_element.add_element('option')
-                opt_element.add_element('name').text =  option[:name]   unless option[:name].blank?
-                opt_element.add_element('value').text =  option[:value]   unless option[:value].blank?
+                opt_element.add_element('name').text = option[:name] unless option[:name].blank?
+                opt_element.add_element('value').text = option[:value] unless option[:value].blank?
               end
             else
-              item_element.add_element(key.to_s).text =  item[key].to_s unless item[key].blank?
+              item_element.add_element(key.to_s).text = item[key].to_s unless item[key].blank?
             end
           end
         end
@@ -340,7 +340,7 @@ module ActiveMerchant #:nodoc:
             :terminaltype => options[:terminaltype],
             :ip => options[:ip],
             :reference_number => options[:reference_number],
-            :recurring => options[:recurring] || 'NO',  # DO NOT USE if you are using the periodic billing option.
+            :recurring => options[:recurring] || 'NO', # DO NOT USE if you are using the periodic billing option.
             :tdate => options[:tdate]
           },
           :orderoptions => {
@@ -395,8 +395,8 @@ module ActiveMerchant #:nodoc:
           params[:billing][:zip]       = billing_address[:zip]      unless billing_address[:zip].blank?
           params[:billing][:country]   = billing_address[:country]  unless billing_address[:country].blank?
           params[:billing][:company]   = billing_address[:company]  unless billing_address[:company].blank?
-          params[:billing][:phone]     = billing_address[:phone]  unless billing_address[:phone].blank?
-          params[:billing][:email]     = options[:email] unless options[:email].blank?
+          params[:billing][:phone]     = billing_address[:phone]    unless billing_address[:phone].blank?
+          params[:billing][:email]     = options[:email]            unless options[:email].blank?
         end
 
         if shipping_address = options[:shipping_address]

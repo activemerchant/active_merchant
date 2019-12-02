@@ -23,7 +23,7 @@ class PayJunctionTest < Test::Unit::TestCase
   def test_detect_test_credentials_when_in_production
     Base.mode = :production
 
-    live_gw  = PayJunctionGateway.new(
+    live_gw = PayJunctionGateway.new(
                  :login      => 'l',
                  :password   => 'p'
                )

@@ -47,7 +47,7 @@ class BogusTest < Test::Unit::TestCase
   def test_capture
     assert  @gateway.capture(1000, '1337').success?
     assert  @gateway.capture(1000, @response.params['transid']).success?
-    response =  @gateway.capture(1000, CC_FAILURE_PLACEHOLDER)
+    response = @gateway.capture(1000, CC_FAILURE_PLACEHOLDER)
     refute response.success?
     assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
     assert_raises(ActiveMerchant::Billing::Error) do
@@ -57,7 +57,7 @@ class BogusTest < Test::Unit::TestCase
 
   def test_credit
     assert @gateway.credit(1000, credit_card(CC_SUCCESS_PLACEHOLDER)).success?
-    response =  @gateway.credit(1000, credit_card(CC_FAILURE_PLACEHOLDER))
+    response = @gateway.credit(1000, credit_card(CC_FAILURE_PLACEHOLDER))
     refute response.success?
     assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
     e = assert_raises(ActiveMerchant::Billing::Error) do

@@ -374,7 +374,7 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @credit_card, @options.merge(currency: 'JPY'))
     end.check_request do |endpoint, data, headers|
       assert_match(/amount.value=1/, data)
-      assert_match(/amount.currency=JPY/,  data)
+      assert_match(/amount.currency=JPY/, data)
     end.respond_with(successful_authorize_response)
 
     assert_success response
@@ -385,7 +385,7 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @credit_card, @options.merge(currency: 'OMR'))
     end.check_request do |endpoint, data, headers|
       assert_match(/amount.value=100/, data)
-      assert_match(/amount.currency=OMR/,  data)
+      assert_match(/amount.currency=OMR/, data)
     end.respond_with(successful_authorize_response)
 
     assert_success response
@@ -404,6 +404,60 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
     response = @gateway.store(@credit_card, @options)
     assert_failure response
     assert response.test?
+  end
+
+  def test_execute_threed_false_sent_3ds2
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @normalized_3ds_2_options.merge({execute_threed: false}))
+    end.check_request do |endpoint, data, headers|
+      refute_match(/additionalData.scaExemption/, data)
+      assert_match(/additionalData.executeThreeD=false/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_sca_exemption_not_sent_if_execute_threed_missing_3ds2
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @normalized_3ds_2_options.merge({scaExemption: 'lowValue'}))
+    end.check_request do |endpoint, data, headers|
+      refute_match(/additionalData.scaExemption/, data)
+      refute_match(/additionalData.executeThreeD=false/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_sca_exemption_and_execute_threed_false_sent_3ds2
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @normalized_3ds_2_options.merge({sca_exemption: 'lowValue', execute_threed: false}))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/additionalData.scaExemption=lowValue/, data)
+      assert_match(/additionalData.executeThreeD=false/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_sca_exemption_and_execute_threed_true_sent_3ds2
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @normalized_3ds_2_options.merge({sca_exemption: 'lowValue', execute_threed: true}))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/additionalData.scaExemption=lowValue/, data)
+      assert_match(/additionalData.executeThreeD=true/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_sca_exemption_not_sent_when_execute_threed_true_3ds1
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({sca_exemption: 'lowValue', execute_threed: true}))
+    end.check_request do |endpoint, data, headers|
+      refute_match(/additionalData.scaExemption/, data)
+      assert_match(/additionalData.executeThreeD=true/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_sca_exemption_not_sent_when_execute_threed_false_3ds1
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({sca_exemption: 'lowValue', execute_threed: false}))
+    end.check_request do |endpoint, data, headers|
+      refute_match(/additionalData.scaExemption/, data)
+      refute_match(/additionalData.executeThreeD/, data)
+    end.respond_with(successful_authorize_response)
   end
 
   def test_avs_result

@@ -254,7 +254,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_creditcard_type(post, card_type)
-        post[:Gateway]  = 'ssl'
+        post[:Gateway] = 'ssl'
         post[:card] = CARD_TYPES.detect { |ct| ct.am_code == card_type }.migs_long_code
       end
 

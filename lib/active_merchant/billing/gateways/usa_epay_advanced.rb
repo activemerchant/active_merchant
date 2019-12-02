@@ -1568,15 +1568,16 @@ module ActiveMerchant #:nodoc:
           else
             success = true
           end
-          message = case action
-          when :get_customer_payment_methods
-            p['item']
-          when :get_transaction_custom
-            items = p['item'].kind_of?(Array) ? p['item'] : [p['item']]
-            items.inject({}) { |hash, item| hash[item['field']] = item['value']; hash }
-          else
-            p
-          end
+          message =
+            case action
+            when :get_customer_payment_methods
+              p['item']
+            when :get_transaction_custom
+              items = p['item'].kind_of?(Array) ? p['item'] : [p['item']]
+              items.inject({}) { |hash, item| hash[item['field']] = item['value']; hash }
+            else
+              p
+            end
         elsif response.respond_to?(:[]) && p = response[:response]
           message = p # when response is html
         end

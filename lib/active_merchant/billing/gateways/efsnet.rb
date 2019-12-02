@@ -111,35 +111,35 @@ module ActiveMerchant #:nodoc:
       def add_address(post, options)
         if address = options[:billing_address] || options[:address]
           if address[:address2]
-            post[:billing_address]    = address[:address1].to_s << ' ' <<  address[:address2].to_s
+            post[:billing_address]    = address[:address1].to_s << ' ' << address[:address2].to_s
           else
             post[:billing_address]    = address[:address1].to_s
           end
           post[:billing_city]         = address[:city].to_s
-          post[:billing_state]        = address[:state].blank?  ? 'n/a' : address[:state]
+          post[:billing_state]        = address[:state].blank? ? 'n/a' : address[:state]
           post[:billing_postal_code]  = address[:zip].to_s
           post[:billing_country]      = address[:country].to_s
         end
 
         if address = options[:shipping_address]
           if address[:address2]
-            post[:shipping_address]   = address[:address1].to_s << ' ' <<  address[:address2].to_s
+            post[:shipping_address]   = address[:address1].to_s << ' ' << address[:address2].to_s
           else
             post[:shipping_address]   = address[:address1].to_s
           end
           post[:shipping_city]        = address[:city].to_s
-          post[:shipping_state]       = address[:state].blank?  ? 'n/a' : address[:state]
+          post[:shipping_state]       = address[:state].blank? ? 'n/a' : address[:state]
           post[:shipping_postal_code] = address[:zip].to_s
           post[:shipping_country]     = address[:country].to_s
         end
       end
 
       def add_creditcard(post, creditcard)
-        post[:billing_name]  = creditcard.name if creditcard.name
-        post[:account_number]  = creditcard.number
+        post[:billing_name] = creditcard.name if creditcard.name
+        post[:account_number] = creditcard.number
         post[:card_verification_value] = creditcard.verification_value if creditcard.verification_value?
-        post[:expiration_month]  = sprintf('%.2i', creditcard.month)
-        post[:expiration_year]  = sprintf('%.4i', creditcard.year)[-2..-1]
+        post[:expiration_month] = sprintf('%.2i', creditcard.month)
+        post[:expiration_year] = sprintf('%.4i', creditcard.year)[-2..-1]
       end
 
       def commit(action, parameters)
@@ -197,7 +197,7 @@ module ActiveMerchant #:nodoc:
         ACTIONS
       end
 
-      CREDIT_CARD_FIELDS =  %w(AuthorizationNumber ClientIpAddress BillingAddress BillingCity BillingState BillingPostalCode BillingCountry BillingName CardVerificationValue ExpirationMonth ExpirationYear ReferenceNumber TransactionAmount AccountNumber )
+      CREDIT_CARD_FIELDS = %w(AuthorizationNumber ClientIpAddress BillingAddress BillingCity BillingState BillingPostalCode BillingCountry BillingName CardVerificationValue ExpirationMonth ExpirationYear ReferenceNumber TransactionAmount AccountNumber )
 
       ACTIONS = {
            :credit_card_authorize       => CREDIT_CARD_FIELDS,

@@ -123,7 +123,7 @@ module ActiveMerchant #:nodoc:
       def add_payment(post, payment, options)
         year  = format(payment.year, :two_digits)
         month = format(payment.month, :two_digits)
-        expirydate =   "#{month}#{year}"
+        expirydate = "#{month}#{year}"
         pre_authorization = options[:pre_authorization] ? 'PRE_AUTHORIZATION' : 'FINAL_AUTHORIZATION'
 
         post['cardPaymentMethodSpecificInput'] = {

@@ -247,6 +247,15 @@ class QuickBooksTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_authorization_failed_code_results_in_failure
+    @oauth_2_gateway.expects(:ssl_post).returns(authorization_failed_oauth_2_response)
+
+    response = @oauth_2_gateway.authorize(@amount, @credit_card, @options)
+
+    assert_failure response
+    assert_equal 'AuthorizationFailed', response.error_code
+  end
+
   private
 
   def pre_scrubbed_small_json
@@ -462,6 +471,18 @@ class QuickBooksTest < Test::Unit::TestCase
     <<-RESPONSE
       {
          "code": "AuthenticationFailed",
+         "type": "INPUT",
+         "message": null,
+         "detail": null,
+         "moreInfo": null
+      }
+    RESPONSE
+  end
+
+  def authorization_failed_oauth_2_response
+    <<-RESPONSE
+      {
+         "code": "AuthorizationFailed",
          "type": "INPUT",
          "message": null,
          "detail": null,

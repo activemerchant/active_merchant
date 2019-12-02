@@ -197,8 +197,8 @@ module ActiveMerchant #:nodoc:
         def valid_number?(number)
           valid_test_mode_card_number?(number) ||
             valid_card_number_length?(number) &&
-            valid_card_number_characters?(number) &&
-            valid_by_algorithm?(brand?(number), number)
+              valid_card_number_characters?(number) &&
+              valid_by_algorithm?(brand?(number), number)
         end
 
         def card_companies

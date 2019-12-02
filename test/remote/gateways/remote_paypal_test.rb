@@ -99,7 +99,7 @@ class PaypalTest < Test::Unit::TestCase
   end
 
   def test_failed_reauthorization
-    return if not @three_days_old_auth_id2  # was authed for $10, attempt $20
+    return if not @three_days_old_auth_id2 # was authed for $10, attempt $20
     auth = @gateway.reauthorize(2000, @three_days_old_auth_id2)
     assert_false auth?
     assert !auth.authorization

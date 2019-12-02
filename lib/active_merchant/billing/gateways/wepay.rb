@@ -86,7 +86,7 @@ module ActiveMerchant #:nodoc:
           post[:address]['address1'] = billing_address[:address1] if billing_address[:address1]
           post[:address]['city']     = billing_address[:city] if billing_address[:city]
           post[:address]['country']  = billing_address[:country]  if billing_address[:country]
-          post[:address]['region']   = billing_address[:state]  if billing_address[:state]
+          post[:address]['region']   = billing_address[:state] if billing_address[:state]
           post[:address]['postal_code'] = billing_address[:zip]
         end
 

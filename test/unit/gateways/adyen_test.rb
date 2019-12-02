@@ -144,7 +144,7 @@ class AdyenTest < Test::Unit::TestCase
     cavv = '3q2+78r+ur7erb7vyv66vv\/\/\/\/8='
     cavv_algorithm = '1'
     xid = 'ODUzNTYzOTcwODU5NzY3Qw=='
-    directory_response_status = 'C'
+    enrolled = 'Y'
     authentication_response_status = 'Y'
     options_with_3ds1_standalone = @options.merge(
       three_d_secure: {
@@ -152,7 +152,7 @@ class AdyenTest < Test::Unit::TestCase
         cavv: cavv,
         cavv_algorithm: cavv_algorithm,
         xid: xid,
-        directory_response_status: directory_response_status,
+        enrolled: enrolled,
         authentication_response_status: authentication_response_status
       }
     )
@@ -163,7 +163,7 @@ class AdyenTest < Test::Unit::TestCase
       assert_equal cavv, JSON.parse(data)['mpiData']['cavv']
       assert_equal cavv_algorithm, JSON.parse(data)['mpiData']['cavvAlgorithm']
       assert_equal xid, JSON.parse(data)['mpiData']['xid']
-      assert_equal directory_response_status, JSON.parse(data)['mpiData']['directoryResponse']
+      assert_equal enrolled, JSON.parse(data)['mpiData']['directoryResponse']
       assert_equal authentication_response_status, JSON.parse(data)['mpiData']['authenticationResponse']
     end.respond_with(successful_authorize_response)
   end
@@ -309,6 +309,32 @@ class AdyenTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @credit_card, @options.merge({custom_routing_flag: 'abcdefg'}))
     end.check_request do |endpoint, data, headers|
       assert_equal 'abcdefg', JSON.parse(data)['additionalData']['customRoutingFlag']
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_splits_sent
+    split_data = [{
+      'amount' => {
+        'currency' => 'USD',
+        'value' => 50
+        },
+      'type' => 'MarketPlace',
+      'account' => '163298747',
+      'reference' => 'QXhlbFN0b2x0ZW5iZXJnCg'
+    }, {
+      'amount' => {
+        'currency' => 'USD',
+        'value' => 50
+        },
+      'type' => 'Commission',
+      'reference' => 'THVjYXNCbGVkc29lCg'
+    }]
+
+    options = @options.merge({ splits: split_data })
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_equal split_data, JSON.parse(data)['splits']
     end.respond_with(successful_authorize_response)
   end
 
@@ -508,14 +534,32 @@ class AdyenTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_successful_tokenize_only_store
+    response = stub_comms do
+      @gateway.store(@credit_card, @options.merge({tokenize_only: true}))
+    end.check_request do |endpoint, data, headers|
+      assert_equal 'CardOnFile', JSON.parse(data)['recurringProcessingModel']
+    end.respond_with(successful_store_response)
+    assert_equal '#8835205392522157#', response.authorization
+  end
+
   def test_successful_store
     response = stub_comms do
       @gateway.store(@credit_card, @options)
     end.check_request do |endpoint, data, headers|
       assert_equal 'CardOnFile', JSON.parse(data)['recurringProcessingModel']
+      assert_equal 'RECURRING', JSON.parse(data)['recurring']['contract']
     end.respond_with(successful_store_response)
     assert_success response
     assert_equal '#8835205392522157#8315202663743702', response.authorization
+  end
+
+  def test_successful_store_with_recurring_contract_type
+    stub_comms do
+      @gateway.store(@credit_card, @options.merge({recurring_contract_type: 'ONECLICK'}))
+    end.check_request do |endpoint, data, headers|
+      assert_equal 'ONECLICK', JSON.parse(data)['recurring']['contract']
+    end.respond_with(successful_store_response)
   end
 
   def test_failed_store
@@ -523,6 +567,22 @@ class AdyenTest < Test::Unit::TestCase
     response = @gateway.store(@credit_card, @options)
     assert_failure response
     assert_equal 'Refused', response.message
+  end
+
+  def test_successful_unstore
+    response = stub_comms do
+      @gateway.unstore(shopper_reference: 'shopper_reference',
+                       recurring_detail_reference: 'detail_reference')
+    end.respond_with(successful_unstore_response)
+    assert_equal '[detail-successfully-disabled]', response.message
+  end
+
+  def test_failed_unstore
+    @gateway.expects(:ssl_post).returns(failed_unstore_response)
+    response = @gateway.unstore(shopper_reference: 'random_reference',
+                                recurring_detail_reference: 'detail_reference')
+    assert_failure response
+    assert_equal 'Contract not found', response.message
   end
 
   def test_successful_verify
@@ -948,6 +1008,12 @@ class AdyenTest < Test::Unit::TestCase
     RESPONSE
   end
 
+  def successful_tokenize_only_store_response
+    <<-RESPONSE
+    {"alias":"P481159492341538","aliasType":"Default","pspReference":"881574707964582B","recurringDetailReference":"8415747079647045","result":"Success"}
+    RESPONSE
+  end
+
   def successful_store_response
     <<-RESPONSE
     {"additionalData":{"recurring.recurringDetailReference":"8315202663743702","recurring.shopperReference":"John Smith"},"pspReference":"8835205392522157","resultCode":"Authorised","authCode":"94571"}
@@ -957,6 +1023,18 @@ class AdyenTest < Test::Unit::TestCase
   def failed_store_response
     <<-RESPONSE
     {"pspReference":"8835205393394754","refusalReason":"Refused","resultCode":"Refused"}
+    RESPONSE
+  end
+
+  def successful_unstore_response
+    <<-RESPONSE
+    {"response":"[detail-successfully-disabled]"}
+    RESPONSE
+  end
+
+  def failed_unstore_response
+    <<-RESPONSE
+    {"status":422,"errorCode":"800","message":"Contract not found","errorType":"validation"}
     RESPONSE
   end
 

@@ -253,7 +253,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        results  = {}
+        results = {}
         xml = Nokogiri::XML(body)
         resp = xml.xpath('//XMLResponse/XMLTrans')
         resp.children.each do |element|

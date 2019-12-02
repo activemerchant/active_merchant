@@ -249,12 +249,13 @@ module ActiveMerchant #:nodoc:
 
       def amount(money)
         return nil if money.nil?
-        cents = if money.respond_to?(:cents)
-                  ActiveMerchant.deprecated 'Support for Money objects is deprecated and will be removed from a future release of ActiveMerchant. Please use an Integer value in cents'
-                  money.cents
-                else
-                  money
-        end
+        cents =
+          if money.respond_to?(:cents)
+            ActiveMerchant.deprecated 'Support for Money objects is deprecated and will be removed from a future release of ActiveMerchant. Please use an Integer value in cents'
+            money.cents
+          else
+            money
+          end
 
         raise ArgumentError, 'money amount must be a positive Integer in cents.' if money.is_a?(String)
 

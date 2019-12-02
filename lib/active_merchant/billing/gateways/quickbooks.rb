@@ -11,7 +11,7 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://payments.intuit.com'
       self.display_name = 'QuickBooks Payments'
       BASE = '/quickbooks/v4/payments'
-      ENDPOINT =  "#{BASE}/charges"
+      ENDPOINT = "#{BASE}/charges"
       VOID_ENDPOINT = "#{BASE}/txn-requests"
       REFRESH_URI = 'https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer'
 
@@ -42,7 +42,7 @@ module ActiveMerchant #:nodoc:
         'PMT-5001' => STANDARD_ERROR_CODE[:card_declined],      # Merchant does not support given payment method
 
         # System Error
-        'PMT-6000' => STANDARD_ERROR_CODE[:processing_error],   # A temporary Issue prevented this request from being processed.
+        'PMT-6000' => STANDARD_ERROR_CODE[:processing_error], # A temporary Issue prevented this request from being processed.
       }
 
       FRAUD_WARNING_CODES = ['PMT-1000', 'PMT-1001', 'PMT-1002', 'PMT-1003']
@@ -321,7 +321,7 @@ module ActiveMerchant #:nodoc:
       def success?(response)
         return FRAUD_WARNING_CODES.concat(['0']).include?(response['errors'].first['code']) if response['errors']
 
-        !['DECLINED', 'CANCELLED'].include?(response['status']) && !['AuthenticationFailed'].include?(response['code'])
+        !['DECLINED', 'CANCELLED'].include?(response['status']) && !['AuthenticationFailed', 'AuthorizationFailed'].include?(response['code'])
       end
 
       def message_from(response)
@@ -329,7 +329,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def errors_from(response)
-        response['errors'].present? ? STANDARD_ERROR_CODE_MAPPING[response['errors'].first['code']] : ''
+        if ['AuthenticationFailed', 'AuthorizationFailed'].include?(response['code'])
+          response['code']
+        else
+          response['errors'].present? ? STANDARD_ERROR_CODE_MAPPING[response['errors'].first['code']] : ''
+        end
       end
 
       def authorization_from(response, headers = {})

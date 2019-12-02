@@ -136,7 +136,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def headers
-        { 'Content-Type'  => 'application/x-www-form-urlencoded;charset=UTF-8' }
+        { 'Content-Type' => 'application/x-www-form-urlencoded;charset=UTF-8' }
       end
 
       def post_data(action, params)

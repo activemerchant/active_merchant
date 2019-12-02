@@ -251,7 +251,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
     cavv = '3q2+78r+ur7erb7vyv66vv\/\/\/\/8='
     cavv_algorithm = '1'
     xid = 'ODUzNTYzOTcwODU5NzY3Qw=='
-    directory_response_status = 'Y'
+    enrolled = 'Y'
     authentication_response_status = 'Y'
     options = @options.merge(
       three_d_secure: {
@@ -259,7 +259,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
         cavv: cavv,
         cavv_algorithm: cavv_algorithm,
         xid: xid,
-        directory_response_status: directory_response_status,
+        enrolled: enrolled,
         authentication_response_status: authentication_response_status
       }
     )
@@ -605,6 +605,47 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_success response
     assert !response.authorization.split('#')[2].nil?
     assert_equal 'Authorised', response.message
+  end
+
+  def test_successful_unstore
+    assert response = @gateway.store(@credit_card, @options)
+
+    assert !response.authorization.split('#')[2].nil?
+    assert_equal 'Authorised', response.message
+
+    shopper_reference = response.params['additionalData']['recurring.shopperReference']
+    recurring_detail_reference = response.params['additionalData']['recurring.recurringDetailReference']
+
+    assert response = @gateway.unstore(shopper_reference: shopper_reference,
+                                       recurring_detail_reference: recurring_detail_reference)
+
+    assert_equal '[detail-successfully-disabled]', response.message
+  end
+
+  def test_failed_unstore
+    assert response = @gateway.store(@credit_card, @options)
+
+    assert !response.authorization.split('#')[2].nil?
+    assert_equal 'Authorised', response.message
+
+    shopper_reference = response.params['additionalData']['recurring.shopperReference']
+    recurring_detail_reference = response.params['additionalData']['recurring.recurringDetailReference']
+
+    assert response = @gateway.unstore(shopper_reference: 'random_reference',
+                                       recurring_detail_reference: recurring_detail_reference)
+    assert_equal 'Contract not found', response.message
+
+    assert response = @gateway.unstore(shopper_reference: shopper_reference,
+                                       recurring_detail_reference: 'random_reference')
+    assert_equal 'PaymentDetail not found', response.message
+  end
+
+  def test_successful_tokenize_only_store
+    assert response = @gateway.store(@credit_card, @options.merge({tokenize_only: true}))
+
+    assert_success response
+    assert !response.authorization.split('#')[2].nil?
+    assert_equal 'Success', response.message
   end
 
   def test_successful_store_with_elo_card

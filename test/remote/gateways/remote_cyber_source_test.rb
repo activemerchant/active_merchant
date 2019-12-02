@@ -133,7 +133,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert response = @gateway.authorize(@amount, @declined_card, @options)
     assert response.test?
     assert_equal 'Invalid account number', response.message
-    assert_equal false,  response.success?
+    assert_equal false, response.success?
   end
 
   def test_authorize_and_void
@@ -273,7 +273,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
 
     assert capture = @gateway.capture(@amount + 10, auth.authorization, @options)
     assert_failure capture
-    assert_equal 'The requested amount exceeds the originally authorized amount',  capture.message
+    assert_equal 'The requested amount exceeds the originally authorized amount', capture.message
   end
 
   def test_failed_capture_bad_auth_info
@@ -306,7 +306,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert response = @gateway.validate_pinless_debit_card(@pinless_debit_card, @options)
     assert response.test?
     assert_equal 'Y', response.params['status']
-    assert_equal true,  response.success?
+    assert_equal true, response.success?
   end
 
   def test_network_tokenization_authorize_and_capture
@@ -335,6 +335,15 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     (1..20).each { |e| @options["mdd_field_#{e}".to_sym] = "value #{e}" }
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
+  end
+
+  def test_successful_capture_with_mdd_fields
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    (1..20).each { |e| @options["mdd_field_#{e}".to_sym] = "value #{e}" }
+    assert capture = @gateway.capture(@amount, auth.authorization, @options)
+    assert_success capture
   end
 
   def test_successful_authorize_with_nonfractional_currency

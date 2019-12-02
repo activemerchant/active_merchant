@@ -5,8 +5,8 @@ class CheckoutTest < Test::Unit::TestCase
 
   def setup
     @gateway = ActiveMerchant::Billing::CheckoutGateway.new(
-      :merchant_id    => 'SBMTEST',    # Merchant Code
-      :password => 'Password1!'          # Processing Password
+      :merchant_id    => 'SBMTEST', # Merchant Code
+      :password => 'Password1!' # Processing Password
     )
     @options = {
       order_id: generate_unique_id

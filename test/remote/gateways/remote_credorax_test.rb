@@ -285,6 +285,32 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     assert_equal 'Referred to transaction has not been found.', response.message
   end
 
+  def test_successful_referral_cft
+    options = @options.merge(@normalized_3ds_2_options)
+    response = @gateway.purchase(@amount, @three_ds_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+
+    cft_options = { referral_cft: true, email: 'john.smith@test.com' }
+    referral_cft = @gateway.refund(@amount, response.authorization, cft_options)
+    assert_success referral_cft
+    assert_equal 'Succeeded', referral_cft.message
+    # Confirm that the operation code was `referral_cft`
+    assert_equal '34', referral_cft.params['O']
+  end
+
+  def test_failed_referral_cft
+    options = @options.merge(@normalized_3ds_2_options)
+    response = @gateway.purchase(@amount, @three_ds_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+
+    cft_options = { referral_cft: true, email: 'john.smith@test.com' }
+    referral_cft = @gateway.refund(@amount, '123;123;123', cft_options)
+    assert_failure referral_cft
+    assert_equal 'Referred to transaction has not been found.', referral_cft.message
+  end
+
   def test_successful_credit
     response = @gateway.credit(@amount, @credit_card, @options)
     assert_success response
@@ -409,11 +435,12 @@ class RemoteCredoraxTest < Test::Unit::TestCase
 
   def test_purchase_passes_processor
     # returns a successful response when a valid processor parameter is sent
-    assert good_response = @gateway.purchase(@amount, @credit_card, @options.merge(fixtures(:credorax_with_processor)))
+    assert good_response = @gateway.purchase(@amount, @credit_card, @options.merge(processor: 'CREDORAX'))
     assert_success good_response
     assert_equal 'Succeeded', good_response.message
+    assert_equal 'CREDORAX', good_response.params['Z33']
 
-    # returns a failed response when an invalid tx_source parameter is sent
+    # returns a failed response when an invalid processor parameter is sent
     assert bad_response = @gateway.purchase(@amount, @credit_card, @options.merge(processor: 'invalid'))
     assert_failure bad_response
   end

@@ -24,12 +24,12 @@ class RemoteInstapayTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase
-    assert response = @gateway.purchase(@amount,  @declined_card, @options)
+    assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
   end
 
   def test_succesful_authorization
-    assert response = @gateway.authorize(@amount,  @credit_card, @options)
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
     assert_equal InstapayGateway::SUCCESS_MESSAGE, response.message
   end

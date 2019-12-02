@@ -145,6 +145,7 @@ module ActiveMerchant #:nodoc:
           xml.transactionId new_transaction_id
 
           add_customer_data(xml, options)
+          add_extra_data(xml, options[:extra_data]) if options[:extra_data]
 
           xml.amount      localized_amount(money, currency)
           xml.currency    currency
@@ -162,6 +163,7 @@ module ActiveMerchant #:nodoc:
           xml.transactionId new_transaction_id
 
           add_customer_data(xml, options)
+          add_extra_data(xml, options[:extra_data]) if options[:extra_data]
 
           xml.amount      localized_amount(money, currency)
           xml.currency    currency
@@ -174,17 +176,19 @@ module ActiveMerchant #:nodoc:
         currency = options[:currency] || currency(money)
 
         xml.refund do
-          xml.transactionId           new_transaction_id
-          xml.referenceTransactionId  authorization&.split('|')&.first
-          xml.amount                  localized_amount(money, currency)
-          xml.currency                currency
+          xml.transactionId new_transaction_id
+          add_extra_data(xml, options[:extra_data]) if options[:extra_data]
+          xml.referenceTransactionId authorization&.split('|')&.first
+          xml.amount                 localized_amount(money, currency)
+          xml.currency               currency
         end
       end
 
       def add_void(xml, authorization)
         xml.void do
-          xml.transactionId           new_transaction_id
-          xml.referenceTransactionId  authorization&.split('|')&.first
+          xml.transactionId new_transaction_id
+          add_extra_data(xml, options[:extra_data]) if options[:extra_data]
+          xml.referenceTransactionId authorization&.split('|')&.first
         end
       end
 
@@ -192,10 +196,11 @@ module ActiveMerchant #:nodoc:
         currency = options[:currency] || currency(money)
 
         xml.capture_ do
-          xml.transactionId             new_transaction_id
-          xml.referenceTransactionId    authorization&.split('|')&.first
-          xml.amount                    localized_amount(money, currency)
-          xml.currency                  currency
+          xml.transactionId new_transaction_id
+          add_extra_data(xml, options[:extra_data]) if options[:extra_data]
+          xml.referenceTransactionId authorization&.split('|')&.first
+          xml.amount                 localized_amount(money, currency)
+          xml.currency               currency
         end
       end
 
@@ -244,6 +249,12 @@ module ActiveMerchant #:nodoc:
 
       def new_transaction_id
         SecureRandom.uuid
+      end
+
+      def add_extra_data(xml, extra_data)
+        extra_data.each do |k, v|
+          xml.extraData(v, key: k)
+        end
       end
 
       def commit(request)

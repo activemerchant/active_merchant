@@ -79,7 +79,7 @@ module ActiveMerchant #:nodoc:
                    'us_ach_debit'
                  elsif post[:data_key].blank?
                    'us_purchase'
-        end
+                 end
         commit(action, post)
       end
 
@@ -191,7 +191,7 @@ module ActiveMerchant #:nodoc:
           if crypt_type = options[:crypt_type] || @options[:crypt_type]
             post[:crypt_type] = crypt_type
           end
-          post[:cust_id]    = options[:customer] || source.name
+          post[:cust_id] = options[:customer] || source.name
         end
       end
 
@@ -236,8 +236,8 @@ module ActiveMerchant #:nodoc:
       # Tests for a successful response from Moneris' servers
       def successful?(response)
         response[:response_code] &&
-        response[:complete] &&
-        (0..49).cover?(response[:response_code].to_i)
+          response[:complete] &&
+          (0..49).cover?(response[:response_code].to_i)
       end
 
       def parse(xml)

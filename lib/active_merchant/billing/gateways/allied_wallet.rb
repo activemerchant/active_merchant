@@ -113,7 +113,7 @@ module ActiveMerchant #:nodoc:
           post[:city] = billing_address[:city]
           post[:state] = billing_address[:state]
           post[:countryId] = billing_address[:country]
-          post[:postalCode]    = billing_address[:zip]
+          post[:postalCode] = billing_address[:zip]
           post[:phone] = billing_address[:phone]
         end
       end

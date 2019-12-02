@@ -35,15 +35,15 @@ class RemoteStripe3DSTest < Test::Unit::TestCase
   end
 
   def test_create_3ds_source
-    card_source  = @gateway.send(:create_source, @amount, @credit_card, 'card', @options)
-    assert response = @gateway.send(:create_source, @amount, card_source.params['id'], 'three_d_secure',  @options)
+    card_source = @gateway.send(:create_source, @amount, @credit_card, 'card', @options)
+    assert response = @gateway.send(:create_source, @amount, card_source.params['id'], 'three_d_secure', @options)
     assert_success response
     assert_three_ds_source(response)
   end
 
   def test_show_3ds_source
-    card_source  = @gateway.send(:create_source, @amount, @credit_card, 'card', @options)
-    assert three_d_secure_source = @gateway.send(:create_source, @amount, card_source.params['id'], 'three_d_secure',  @options)
+    card_source = @gateway.send(:create_source, @amount, @credit_card, 'card', @options)
+    assert three_d_secure_source = @gateway.send(:create_source, @amount, card_source.params['id'], 'three_d_secure', @options)
     assert_success three_d_secure_source
     assert_three_ds_source(three_d_secure_source)
 
@@ -118,7 +118,7 @@ class RemoteStripe3DSTest < Test::Unit::TestCase
     assert_nil webhook1.params['application']
     assert_not_nil webhook2.params['application']
 
-    response = @gateway.send(:list_webhook_endpoints,  @options.merge({limit: 100}))
+    response = @gateway.send(:list_webhook_endpoints, @options.merge({limit: 100}))
     assert_not_nil response.params
     assert_equal 'list', response.params['object']
     assert response.params['data'].size >= 2
@@ -135,7 +135,7 @@ class RemoteStripe3DSTest < Test::Unit::TestCase
     card_source_response = @gateway.send(:create_source, @amount, @credit_card, 'card', @options)
     assert_card_source(card_source_response)
 
-    assert three_ds_source_response = @gateway.send(:create_source, @amount, card_source_response.params['id'], 'three_d_secure',  @options)
+    assert three_ds_source_response = @gateway.send(:create_source, @amount, card_source_response.params['id'], 'three_d_secure', @options)
     assert_success three_ds_source_response
     assert_three_ds_source(three_ds_source_response)
 

@@ -219,7 +219,7 @@ module ActiveMerchant
 
       def add_customer_data(post, options)
         post[:email] = options[:email]
-        post[:dontsndmail]        = 'yes' unless options[:send_email_confirmation]
+        post[:dontsndmail] = 'yes' unless options[:send_email_confirmation]
         post[:ipaddress] = options[:ip]
       end
 
@@ -256,7 +256,7 @@ module ActiveMerchant
             post[:state] = shipping_address[:state]
           else
             post[:state] = 'ZZ'
-            post[:province]  = shipping_address[:state]
+            post[:province] = shipping_address[:state]
           end
 
           post[:country] = shipping_address[:country]

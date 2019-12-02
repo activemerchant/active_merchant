@@ -118,7 +118,7 @@ module ActiveMerchant #:nodoc:
       #
       # Note, once stored, PaymentExpress does not support unstoring a stored card.
       def store(credit_card, options = {})
-        request  = build_token_request(credit_card, options)
+        request = build_token_request(credit_card, options)
         commit(:validate, request)
       end
 

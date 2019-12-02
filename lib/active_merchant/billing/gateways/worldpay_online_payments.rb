@@ -1,7 +1,7 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class WorldpayOnlinePaymentsGateway < Gateway
-      self.live_url =  'https://api.worldpay.com/v1/'
+      self.live_url = 'https://api.worldpay.com/v1/'
 
       self.default_currency = 'GBP'
 

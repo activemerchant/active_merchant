@@ -9,7 +9,7 @@ class RemoteCheckoutTest < Test::Unit::TestCase
       year: '2017',
       verification_value: '956'
     )
-    @declined_card  = credit_card(
+    @declined_card = credit_card(
       '4543474002249996',
       month: '06',
       year: '2018',

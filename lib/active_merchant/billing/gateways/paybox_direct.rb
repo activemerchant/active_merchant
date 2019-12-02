@@ -171,7 +171,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        success?(response) ? SUCCESS_MESSAGE : (response[:commentaire]  || FAILURE_MESSAGE)
+        success?(response) ? SUCCESS_MESSAGE : (response[:commentaire] || FAILURE_MESSAGE)
       end
 
       def post_data(action, parameters = {})

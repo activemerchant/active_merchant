@@ -144,7 +144,7 @@ module ActiveMerchant #:nodoc:
           post[prefix+'zip']        = address[:zip].to_s
           post[prefix+'city']       = address[:city].to_s
           post[prefix+'country']    = address[:country].to_s
-          post[prefix+'state']      = address[:state].blank?  ? 'n/a' : address[:state]
+          post[prefix+'state']      = address[:state].blank? ? 'n/a' : address[:state]
         end
       end
 
@@ -181,9 +181,9 @@ module ActiveMerchant #:nodoc:
           post[:customer_vault] = 'add_customer'
           post[:customer_vault_id] = options[:store] unless options[:store] == true
         end
-        post[:ccnumber]  = creditcard.number
+        post[:ccnumber] = creditcard.number
         post[:cvv] = creditcard.verification_value if creditcard.verification_value?
-        post[:ccexp]  = expdate(creditcard)
+        post[:ccexp] = expdate(creditcard)
         post[:firstname] = creditcard.first_name
         post[:lastname]  = creditcard.last_name
       end
@@ -225,7 +225,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, money, parameters)
-        parameters[:amount]  = localized_amount(money, parameters[:currency] || default_currency) if money
+        parameters[:amount] = localized_amount(money, parameters[:currency] || default_currency) if money
         response = parse(ssl_post(self.live_url, post_data(action, parameters)))
         Response.new(response['response'] == '1', message_from(response), response,
           :authorization => (response['transactionid'] || response['customer_vault_id']),
@@ -255,7 +255,7 @@ module ActiveMerchant #:nodoc:
 
       def post_data(action, parameters = {})
         post = {}
-        post[:username]      = @options[:login]
+        post[:username] = @options[:login]
         post[:password]   = @options[:password]
         post[:type]       = action if action
 
