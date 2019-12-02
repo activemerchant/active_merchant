@@ -10,6 +10,7 @@
 * Adyen: Add gateway specific field for splits [leila-alderman] #3448
 * Adyen: Add `unstore` and `storeToken` actions with '/Recurring' endpoint [deedeelavinder][davidsantoso] #3438
 * Barclaycard Smartpay: Add functionality to set 3DS exemptions via API [britth] #3457
+* Use null@cybersource.com when option[:email] is an empty string [pi3r] #3462
 
 == Version 1.102.0 (Nov 14, 2019)
 * Quickbooks: Make token refresh optional with allow_refresh flag [britth] #3419
