@@ -86,6 +86,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def store(payment, options = {})
+        requires!(options, :idempotency_key)
+
         post = {}
 
         add_customer(post, options)
@@ -132,8 +134,12 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def add_application_fee(post, options)
-        post[:app_fee_money] = localized_amount(options[:application_fee], @fee_currency).to_i if options[:application_fee]
+      def add_application_fee(post, money, options)
+        currency = options[:currency] || currency(money)
+        post[:app_fee_money] = {
+          amount: localized_amount(money, currency).to_i,
+          currency: currency.upcase
+        } if options[:application_fee]
       end
 
       def create_post_for_auth_or_purchase(money, payment, options)
@@ -144,7 +150,7 @@ module ActiveMerchant #:nodoc:
 
         add_idempotency_key(post, options)
         add_amount(post, money, options)
-        add_application_fee(post, options)
+        add_application_fee(post, options[:application_fee], options)
 
         return post
       end
@@ -197,8 +203,8 @@ module ActiveMerchant #:nodoc:
           message_from(success, response),
           response,
           authorization: authorization_from(success, url, method, response),
-          avs_result: success ? { :code => avs_code } : nil,
-          cvv_result: success ? cvc_code : nil,
+          avs_result: success ? AVSResult.new(code: avs_code) : nil,
+          cvv_result: success ? CVVResult.new(cvc_code) : nil,
           error_code: success ? nil : error_code_from(response),
           test: test?
         )
