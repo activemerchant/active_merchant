@@ -105,6 +105,8 @@ class SquareTest < Test::Unit::TestCase
   def test_successful_store
     @gateway.expects(:ssl_request).twice.returns(successful_new_customer_response, successful_new_card_response)
 
+    @options[:idempotency_key] = SecureRandom.hex(10)
+
     assert response = @gateway.store(@card_nonce, @options)
 
     assert_instance_of MultiResponse, response
