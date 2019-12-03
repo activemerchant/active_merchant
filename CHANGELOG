@@ -14,6 +14,7 @@
 * Barclaycard Smartpay: Add functionality to set 3DS exemptions via API [britth] #3457
 * Use null@cybersource.com when option[:email] is an empty string [pi3r] #3462
 * Adyen: add `recurring_contract_type` GSF [therufs] #3460
+* Credorax: Only pass `3ds_version` parameter when required [britth] #3458
 
 == Version 1.102.0 (Nov 14, 2019)
 * Quickbooks: Make token refresh optional with allow_refresh flag [britth] #3419

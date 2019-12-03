@@ -8,7 +8,7 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     @credit_card = credit_card('4176661000001015', verification_value: '281', month: '12', year: '2022')
     @fully_auth_card = credit_card('5223450000000007', brand: 'mastercard', verification_value: '090', month: '12', year: '2025')
     @declined_card = credit_card('4176661000001111', verification_value: '681', month: '12', year: '2022')
-    @three_ds_card = credit_card('5185520050000010', verification_value: '737', month: '12', year: '2022')
+    @three_ds_card = credit_card('5455330200000016', verification_value: '737', month: '12', year: '2022')
     @options = {
       order_id: '1',
       currency: 'EUR',
@@ -71,6 +71,22 @@ class RemoteCredoraxTest < Test::Unit::TestCase
       xid: '00000000000000000501',
       # Having processor-specification enabled in Credorax test account causes 3DS tests to fail without a r1 (processor) parameter.
       processor: 'CREDORAX'
+    )
+
+    response = @gateway.purchase(@amount, @fully_auth_card, options)
+    assert_success response
+    assert_equal '1', response.params['H9']
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_purchase_with_auth_data_via_3ds1_fields_passing_3ds_version
+    options = @options.merge(
+      eci: '02',
+      cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA=',
+      xid: '00000000000000000501',
+      # Having processor-specification enabled in Credorax test account causes 3DS tests to fail without a r1 (processor) parameter.
+      processor: 'CREDORAX',
+      three_ds_version: '1.0'
     )
 
     response = @gateway.purchase(@amount, @fully_auth_card, options)

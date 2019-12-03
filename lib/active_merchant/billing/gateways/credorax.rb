@@ -305,7 +305,6 @@ module ActiveMerchant #:nodoc:
           options.dig(:stored_credential, :initiator) == 'merchant' ? post[:'3ds_channel'] = '03' : post[:'3ds_channel'] = '02'
           post[:'3ds_redirect_url'] = three_ds_2_options[:notification_url]
           post[:'3ds_challengewindowsize'] = options[:three_ds_challenge_window_size] || '03'
-          post[:'3ds_version'] = options[:three_ds_version] if options[:three_ds_version]
           post[:d5] = browser_info[:user_agent]
           post[:'3ds_transtype'] = options[:transaction_type] || '01'
           post[:'3ds_browsertz'] = browser_info[:timezone]
@@ -330,6 +329,7 @@ module ActiveMerchant #:nodoc:
 
       def add_3d_secure_1_data(post, options)
         post[:i8] = build_i8(options[:eci], options[:cavv], options[:xid])
+        post[:'3ds_version'] = options[:three_ds_version].nil? || options[:three_ds_version] == '1' ? '1.0' : options[:three_ds_version]
       end
 
       def add_normalized_3d_secure_2_data(post, options)
@@ -339,7 +339,7 @@ module ActiveMerchant #:nodoc:
           three_d_secure_options[:eci],
           three_d_secure_options[:cavv]
         )
-        post[:'3ds_version'] = three_d_secure_options[:version]
+        post[:'3ds_version'] = three_d_secure_options[:version] == '2' ? '2.0' : three_d_secure_options[:version]
         post[:'3ds_dstrxid'] = three_d_secure_options[:ds_transaction_id]
       end
 

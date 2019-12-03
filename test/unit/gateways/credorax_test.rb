@@ -265,6 +265,7 @@ class CredoraxTest < Test::Unit::TestCase
       assert_match(/3ds_shipaddrline1=456\+My\+Street/, data)
       assert_match(/3ds_shipaddrcountry=CA/, data)
       assert_match(/3ds_shipaddrcity=Ottawa/, data)
+      refute_match(/3ds_version/, data)
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -274,12 +275,13 @@ class CredoraxTest < Test::Unit::TestCase
   end
 
   def test_purchase_adds_3d_secure_fields
-    options_with_3ds = @options.merge({eci: 'sample-eci', cavv: 'sample-cavv', xid: 'sample-xid'})
+    options_with_3ds = @options.merge({eci: 'sample-eci', cavv: 'sample-cavv', xid: 'sample-xid', three_ds_version: '1'})
 
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, options_with_3ds)
     end.check_request do |endpoint, data, headers|
       assert_match(/i8=sample-eci%3Asample-cavv%3Asample-xid/, data)
+      assert_match(/3ds_version=1.0/, data)
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -294,7 +296,6 @@ class CredoraxTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, options_with_3ds)
     end.check_request do |endpoint, data, headers|
-      p data
       assert_match(/3ds_channel=03/, data)
     end.respond_with(successful_purchase_response)
 
@@ -311,6 +312,7 @@ class CredoraxTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @credit_card, options_with_3ds)
     end.check_request do |endpoint, data, headers|
       assert_match(/i8=sample-eci%3Asample-cavv%3Asample-xid/, data)
+      assert_match(/3ds_version=1.0/, data)
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -335,7 +337,7 @@ class CredoraxTest < Test::Unit::TestCase
   end
 
   def test_adds_3ds2_fields_via_normalized_hash
-    version = '2.0'
+    version = '2'
     eci = '05'
     cavv = '637574652070757070792026206b697474656e73'
     ds_transaction_id = '97267598-FAE6-48F2-8083-C23433990FBC'
@@ -352,7 +354,7 @@ class CredoraxTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, options_with_normalized_3ds)
     end.check_request do |endpoint, data, headers|
       assert_match(/i8=#{eci}%3A#{cavv}%3Anone/, data)
-      assert_match(/3ds_version=#{version}/, data)
+      assert_match(/3ds_version=2.0/, data)
       assert_match(/3ds_dstrxid=#{ds_transaction_id}/, data)
     end.respond_with(successful_purchase_response)
   end
