@@ -12,7 +12,20 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://squareup.com/'
       self.display_name = 'Square Payments Gateway'
 
-      DEFAULT_API_VERSION = '2019-10-23'
+      CVC_CODE_TRANSLATOR = {
+        'CVV_ACCEPTED' => 'M',
+        'CVV_REJECTED' => 'N',
+        'CVV_NOT_CHECKED' => 'P'
+      }.freeze
+
+      AVS_CODE_TRANSLATOR = {
+        # TODO: unsure if Square does street or only postal AVS matches
+        'AVS_ACCEPTED' => 'P', # 'P' => 'Postal code matches, but street address not verified.',
+        'AVS_REJECTED' => 'N', # 'N' => 'Street address and postal code do not match. For American Express: Card member\'s name, street address and postal code do not match.',
+        'AVS_NOT_CHECKED' => 'I' #'I' => 'Address not verified.',
+      }.freeze
+
+      DEFAULT_API_VERSION = '2019-10-23'.freeze
 
       STANDARD_ERROR_CODE_MAPPING = {
         'BAD_EXPIRATION' => STANDARD_ERROR_CODE[:invalid_expiry_date],
@@ -22,12 +35,13 @@ module ActiveMerchant #:nodoc:
         'INSUFFICIENT_FUNDS' => STANDARD_ERROR_CODE[:card_declined],
         'INVALID_LOCATION' => STANDARD_ERROR_CODE[:processing_error],
         'TRANSACTION_LIMIT' => STANDARD_ERROR_CODE[:card_declined],
-        'CARD_EXPIRED' => STANDARD_ERROR_CODE[:invalid_expiry_date],
-        'CVV_FAILURE' => STANDARD_ERROR_CODE[:card_declined],
-        'ADDRESS_VERIFICATION_FAILURE' => STANDARD_ERROR_CODE[:processing_error],
+        'CARD_EXPIRED' => STANDARD_ERROR_CODE[:expired_card],
+        'CVV_FAILURE' => STANDARD_ERROR_CODE[:incorrect_cvc],
+        'ADDRESS_VERIFICATION_FAILURE' => STANDARD_ERROR_CODE[:incorrect_address],
         'VOICE_FAILURE' => STANDARD_ERROR_CODE[:card_declined],
         'PAN_FAILURE' => STANDARD_ERROR_CODE[:incorrect_number],
         'EXPIRATION_FAILURE' => STANDARD_ERROR_CODE[:invalid_expiry_date],
+        'INVALID_EXPIRATION' => STANDARD_ERROR_CODE[:invalid_expiry_date],
         'CARD_NOT_SUPPORTED' => STANDARD_ERROR_CODE[:processing_error],
         'INVALID_PIN' => STANDARD_ERROR_CODE[:incorrect_pin],
         'INVALID_POSTAL_CODE' => STANDARD_ERROR_CODE[:incorrect_zip],
@@ -39,7 +53,7 @@ module ActiveMerchant #:nodoc:
         'INVALID_FEES' => STANDARD_ERROR_CODE[:config_error],
         'GIFT_CARD_AVAILABLE_AMOUNT' => STANDARD_ERROR_CODE[:card_declined],
         'BAD_REQUEST' => STANDARD_ERROR_CODE[:processing_error]
-      }
+      }.freeze
 
       def initialize(options={})
         requires!(options, :access_token)
@@ -154,7 +168,7 @@ module ActiveMerchant #:nodoc:
         add_amount(post, money, options)
         add_application_fee(post, options[:application_fee], options)
 
-        return post
+        post
       end
 
       def add_customer(post, options)
@@ -197,8 +211,9 @@ module ActiveMerchant #:nodoc:
         success = success_from(response)
 
         card = card_from_response(response)
-        avs_code = card['avs_status']
-        cvc_code = card['cvv_status']
+
+        avs_code = AVS_CODE_TRANSLATOR[card['avs_status']]
+        cvc_code = CVC_CODE_TRANSLATOR[card['cvv_status']]
 
         Response.new(
           success,
@@ -215,19 +230,20 @@ module ActiveMerchant #:nodoc:
       def card_from_response(response)
         return {} unless response['payment']
 
-        return response['payment']['card_details'] || {}
+        response['payment']['card_details'] || {}
       end
 
       def success_from(response)
-        return true unless response['errors']
+        !response.key?('errors')
       end
 
       def message_from(success, response)
-        return success ? 'Transaction approved' : response['errors'][0]['detail']
+        success ? 'Transaction approved' : response['errors'][0]['detail']
       end
 
       def authorization_from(success, url, method, response)
-        return response.fetch('errors', [])[0]['detail'] unless success
+        # errors.detail is a vague string -- returning the actual transaction ID here makes more sense
+        # return response.fetch('errors', [])[0]['detail'] unless success
 
         if method == :post && (url == 'payments' || url.match(/payments\/.*\/complete/) || url.match(/payments\/.*\/cancel/))
           return response['payment']['id']
@@ -250,18 +266,17 @@ module ActiveMerchant #:nodoc:
         return nil unless response['errors']
 
         code = response['errors'][0]['code']
-        return STANDARD_ERROR_CODE_MAPPING[code] unless STANDARD_ERROR_CODE_MAPPING[code].nil?
-        return STANDARD_ERROR_CODE[:processing_error]
+        STANDARD_ERROR_CODE_MAPPING[code] || STANDARD_ERROR_CODE[:processing_error]
       end
 
       def api_version(options)
-        return options[:version] || self.class::DEFAULT_API_VERSION
+        options[:version] || self.class::DEFAULT_API_VERSION
       end
 
       def headers(options = {})
         key = options[:access_token] || @access_token
 
-        return {
+        {
           'Content-Type' => 'application/json',
           'Authorization' => "Bearer #{key}",
           'Square-Version' => api_version(options),
@@ -269,20 +284,20 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        return JSON.parse(body)
+        JSON.parse(body)
       end
 
       def response_error(raw_response)
-        return parse(raw_response)
+        parse(raw_response)
       rescue JSON::ParserError
-        return json_error(raw_response)
+        json_error(raw_response)
       end
 
       def json_error(raw_response)
         msg = 'Invalid response received from the Square API.  Please visit https://squareup.com/help if you continue to receive this message.'
         msg += "  (The raw response returned by the API was #{raw_response.inspect})"
 
-        return {
+        {
           'errors' => [ { 'message' => msg } ]
         }
       end
