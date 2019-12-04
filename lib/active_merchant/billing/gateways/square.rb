@@ -22,7 +22,7 @@ module ActiveMerchant #:nodoc:
         # TODO: unsure if Square does street or only postal AVS matches
         'AVS_ACCEPTED' => 'P', # 'P' => 'Postal code matches, but street address not verified.',
         'AVS_REJECTED' => 'N', # 'N' => 'Street address and postal code do not match. For American Express: Card member\'s name, street address and postal code do not match.',
-        'AVS_NOT_CHECKED' => 'I' #'I' => 'Address not verified.',
+        'AVS_NOT_CHECKED' => 'I' # 'I' => 'Address not verified.',
       }.freeze
 
       DEFAULT_API_VERSION = '2019-10-23'.freeze
