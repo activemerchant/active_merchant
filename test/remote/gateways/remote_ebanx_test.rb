@@ -77,7 +77,7 @@ class RemoteEbanxTest < Test::Unit::TestCase
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'Sandbox - Test credit card, transaction declined reason insufficientFunds', response.message
+    assert_equal 'Invalid card or card type', response.message
     assert_equal 'NOK', response.error_code
   end
 
@@ -86,7 +86,7 @@ class RemoteEbanxTest < Test::Unit::TestCase
     assert_success auth
     assert_equal 'Accepted', auth.message
 
-    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert capture = @gateway.capture(@amount, auth.authorization, @options)
     assert_success capture
     assert_equal 'Accepted', capture.message
   end
@@ -94,16 +94,26 @@ class RemoteEbanxTest < Test::Unit::TestCase
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'Sandbox - Test credit card, transaction declined reason insufficientFunds', response.message
+    assert_equal 'Invalid card or card type', response.message
     assert_equal 'NOK', response.error_code
   end
 
-  def test_partial_capture
+  def test_successful_partial_capture_when_include_capture_amount_is_not_passed
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
     assert capture = @gateway.capture(@amount-1, auth.authorization)
     assert_success capture
+  end
+
+  # Partial capture is only available in Brazil and the EBANX Integration Team must be contacted to enable
+  def test_failed_partial_capture_when_include_capture_amount_is_passed
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    assert capture = @gateway.capture(@amount-1, auth.authorization, @options.merge(include_capture_amount: true))
+    assert_failure capture
+    assert_equal 'Partial capture not available', capture.message
   end
 
   def test_failed_capture
@@ -149,7 +159,7 @@ class RemoteEbanxTest < Test::Unit::TestCase
   def test_failed_void
     response = @gateway.void('')
     assert_failure response
-    assert_equal 'Parameter hash not informed', response.message
+    assert_equal 'Parameters hash or merchant_payment_code not informed', response.message
   end
 
   def test_successful_store_and_purchase
@@ -193,7 +203,7 @@ class RemoteEbanxTest < Test::Unit::TestCase
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_match %r{Accepted}, response.message
+    assert_match %r{Invalid card or card type}, response.message
   end
 
   def test_invalid_login

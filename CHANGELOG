@@ -8,6 +8,7 @@
 * Ingenico GlobalCollect: support `airline_data` and related GSFs [therufs] #3461
 * Add UnionPay card type [leila-alderman] #3464
 * Braintree: Fix add_credit_card_to_customer in Store [molbrown] #3466
+* EBANX: Default to not send amount on capture [chinhle23] #3463
 
 == Version 1.103.0 (Dec 2, 2019)
 * Quickbooks: Mark transactions that returned `AuthorizationFailed` as failures [britth] #3447

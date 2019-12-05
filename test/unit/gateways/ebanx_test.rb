@@ -54,9 +54,18 @@ class EbanxTest < Test::Unit::TestCase
 
     response = @gateway.capture(@amount, 'authorization', @options)
     assert_success response
-
-    assert_equal 'Sandbox - Test credit card, transaction captured', response.message
+    assert_equal '5dee94502bd59660b801c441ad5a703f2c4123f5fc892ccb', response.authorization
+    assert_equal 'Accepted', response.message
     assert response.test?
+  end
+
+  def test_failed_partial_capture
+    @gateway.expects(:ssl_request).returns(failed_partial_capture_response)
+
+    response = @gateway.capture(@amount, 'authorization', @options.merge(include_capture_amount: true))
+    assert_failure response
+    assert_equal 'BP-CAP-11', response.error_code
+    assert_equal 'Partial capture not available', response.message
   end
 
   def test_failed_capture
@@ -193,7 +202,13 @@ class EbanxTest < Test::Unit::TestCase
 
   def successful_capture_response
     %(
-      {"payment":{"hash":"592dd65824427e4f5f50564c118f399869637bfb30d54f5b","pin":"081043654","merchant_payment_code":"8424e3000d64d056fbd58639957dc1c4","order_number":null,"status":"CO","status_date":"2017-05-30 17:30:16","open_date":"2017-05-30 17:30:15","confirm_date":"2017-05-30 17:30:16","transfer_date":null,"amount_br":"3.31","amount_ext":"1.00","amount_iof":"0.01","currency_rate":"3.3000","currency_ext":"USD","due_date":"2017-06-02","instalments":"1","payment_type_code":"visa","transaction_status":{"acquirer":"EBANX","code":"OK","description":"Sandbox - Test credit card, transaction captured"},"pre_approved":true,"capture_available":false,"customer":{"document":"85351346893","email":"unspecified@example.com","name":"LONGBOB LONGSEN","birth_date":null}},"status":"SUCCESS"}
+      {"payment":{"hash":"5dee94502bd59660b801c441ad5a703f2c4123f5fc892ccb","pin":"675968133","country":"br","merchant_payment_code":"b98b2892b80771b9dadf2ebc482cb65d","order_number":null,"status":"CO","status_date":"2019-12-09 18:37:05","open_date":"2019-12-09 18:37:04","confirm_date":"2019-12-09 18:37:05","transfer_date":null,"amount_br":"4.19","amount_ext":"1.00","amount_iof":"0.02","currency_rate":"4.1700","currency_ext":"USD","due_date":"2019-12-12","instalments":"1","payment_type_code":"visa","details":{"billing_descriptor":"DEMONSTRATION"},"transaction_status":{"acquirer":"EBANX","code":"OK","description":"Accepted"},"pre_approved":true,"capture_available":false,"customer":{"document":"85351346893","email":"unspecified@example.com","name":"LONGBOB LONGSEN","birth_date":null}},"status":"SUCCESS"}
+    )
+  end
+
+  def failed_partial_capture_response
+    %(
+      {"status":"ERROR", "status_code":"BP-CAP-11", "status_message":"Partial capture not available"}
     )
   end
 

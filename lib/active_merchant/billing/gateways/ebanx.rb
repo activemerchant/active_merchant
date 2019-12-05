@@ -73,7 +73,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_integration_key(post)
         post[:hash] = authorization
-        post[:amount] = amount(money)
+        post[:amount] = amount(money) if options[:include_capture_amount].to_s == 'true'
 
         commit(:capture, post)
       end
