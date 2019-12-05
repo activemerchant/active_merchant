@@ -6,6 +6,7 @@
 * EBANX: Include Peru in supported countries [Ruanito] #3443
 * Bluesnap: include fraud data in response message [therufs] #3459
 * Ingenico GlobalCollect: support `airline_data` and related GSFs [therufs] #3461
+* Add UnionPay card type [leila-alderman] #3464
 
 == Version 1.103.0 (Dec 2, 2019)
 * Quickbooks: Mark transactions that returned `AuthorizationFailed` as failures [britth] #3447
