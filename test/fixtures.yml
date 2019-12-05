@@ -504,6 +504,11 @@ merchant_partners:
   account_id: TEST0
   merchant_pin: "1234567890"
 
+merchant_suite:
+  username: username
+  password: password
+  membershipid: membershipid
+
 merchant_ware:
  login:
  password:
