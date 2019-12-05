@@ -8,9 +8,6 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'AUD'
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
 
-      self.homepage_url = 'http://www.example.net/'
-      self.display_name = 'New Gateway'
-
       self.homepage_url = 'https://www.merchantsuite.com/developerzone/v3/'
       self.display_name = 'Merchant Suite'
 
