@@ -27,6 +27,36 @@ module ActiveMerchant #:nodoc:
         }
       end
 
+      def search_transaction(options)
+        post = {
+          SearchInput: {
+            Action: options.fetch('action', 'payment')
+          }
+        }
+
+        post[:SearchInput][:Amount] = options.fetch(:amount) if options.has_key?(:amount)
+        post[:SearchInput][:AuthoriseID] = options.fetch(:authorise_id) if options.has_key?(:authorise_id)
+        post[:SearchInput][:BankResponseCode] = options.fetch(:bank_response_code) if options.has_key?(:bank_response_code)
+        post[:SearchInput][:PaymentReason] = options.fetch(:payment_reason) if options.has_key?(:payment_reason)
+        post[:SearchInput][:CardType] = options.fetch(:card_type) if options.has_key?(:card_type)
+        post[:SearchInput][:Reference1] = options.fetch(:reference_1) if options.has_key?(:reference_1)
+        post[:SearchInput][:Reference2] = options.fetch(:reference_2) if options.has_key?(:reference_2)
+        post[:SearchInput][:Reference3] = options.fetch(:reference_3) if options.has_key?(:reference_3)
+        post[:SearchInput][:ExpiryDate] = options.fetch(:expdate) if options.has_key?(:expdate)
+        post[:SearchInput][:FromDate] = options.fetch(:from_date) if options.has_key?(:from_date)
+        post[:SearchInput][:ToDate] = options.fetch(:to_date) if options.has_key?(:to_date)
+        post[:SearchInput][:MaskedCardNumber] = options.fetch(:masked_card_number) if options.has_key?(:masked_card_number)
+        post[:SearchInput][:InternalNote] = options.fetch(:internal_note) if options.has_key?(:internal_note)
+        post[:SearchInput][:RRN] = options.fetch(:rrn) if options.has_key?(:rrn)
+        post[:SearchInput][:ReceiptNumber] = options.fetch(:receipt_number) if options.has_key?(:receipt_number)
+        post[:SearchInput][:ResponseCode] = options.fetch(:response_code) if options.has_key?(:response_code)
+        post[:SearchInput][:SettlementDate] = options.fetch(:settlement_date) if options.has_key?(:settlement_date)
+        post[:SearchInput][:Source] = options.fetch(:source) if options.has_key?(:source)
+        post[:SearchInput][:TxnNumber] = options.fetch(:txn_number) if options.has_key?(:txn_number)
+
+        commit(:post, 'txns/search', post)
+      end
+
       def purchase(money, payment, options={})
         post = {
           TxnReq: {
@@ -229,7 +259,6 @@ module ActiveMerchant #:nodoc:
 
       def commit(verb, action, parameters)
         url = (test? ? test_url : live_url) + action
-
         response = parse(ssl_request(verb, url, post_data(verb, parameters), headers))
 
         Response.new(
@@ -237,8 +266,6 @@ module ActiveMerchant #:nodoc:
           message_from(response),
           response,
           authorization: authorization_from(action, response),
-          # avs_result: AVSResult.new(code: response["some_avs_response_key"]),
-          # cvv_result: CVVResult.new(response["some_cvv_response_key"]),
           test: test?,
           error_code: error_code_from(response)
         )
@@ -255,6 +282,8 @@ module ActiveMerchant #:nodoc:
       def authorization_from(action, response)
         if action == 'tokens'
           response.dig('TokenResp', 'Token')
+        elsif action == 'txns/search'
+          response.dig('TokenResp', 'TxnRespList')
         else
           response.dig('TxnResp', 'TxnNumber') || response.dig('TxnResp', 'ReceiptNumber')
         end
