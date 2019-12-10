@@ -45,10 +45,22 @@ class RemoteMerchantSuiteTest < Test::Unit::TestCase
     assert_equal 'Success', response.message
   end
 
-  def test_successful_purchase_with_store_permission
-    response = @gateway.purchase(@amount, @credit_card, @options)
+  def test_successful_search_transaction
+    reference_3 = "TokenToSearch-#{SecureRandom.uuid}"
+    @options = @options.merge(reference_3: reference_3)
+    @gateway.purchase(@amount, @credit_card, @options)
+
+    response = @gateway.search_transaction({ reference_3: reference_3 })
+
     assert_success response
     assert_equal 'Success', response.message
+  end
+
+  def test_failed_search_transaction
+    response = @gateway.search_transaction({ reference_3: 'nonexistent token' })
+
+    assert_failure response
+    assert_equal 'Search returned no results', response.message
   end
 
   def test_successful_purchase_with_token
@@ -88,10 +100,10 @@ class RemoteMerchantSuiteTest < Test::Unit::TestCase
     assert_success refund
   end
 
-  # def test_failed_refund
-  #   response = @gateway.refund(@amount, '')
-  #   assert_failure response
-  # end
+  def test_failed_refund
+    response = @gateway.refund(@amount, '')
+    assert_failure response
+  end
 
   def test_invalid_login
     gateway = MerchantSuiteGateway.new(
