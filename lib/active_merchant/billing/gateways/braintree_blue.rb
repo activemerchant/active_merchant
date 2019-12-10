@@ -260,7 +260,7 @@ module ActiveMerchant #:nodoc:
           }
           if options[:billing_address]
             address = map_address(options[:billing_address])
-            parameters[:credit_card][:billing_address] = address unless address.all? { |_k, v| empty?(v) }
+            parameters[:billing_address] = address unless address.all? { |_k, v| empty?(v) }
           end
 
           result = @braintree_gateway.credit_card.create(parameters)
