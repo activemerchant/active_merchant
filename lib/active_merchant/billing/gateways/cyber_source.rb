@@ -288,6 +288,7 @@ module ActiveMerchant #:nodoc:
 
         xml = Builder::XmlMarkup.new :indent => 2
         add_purchase_data(xml, money, true, options)
+        add_other_tax(xml, options)
         add_mdd_fields(xml, options)
         add_capture_service(xml, request_id, request_token)
         add_business_rules_data(xml, authorization, options)
@@ -447,6 +448,14 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'clientLibrary', 'Ruby Active Merchant'
         xml.tag! 'clientLibraryVersion', VERSION
         xml.tag! 'clientEnvironment', RUBY_PLATFORM
+        add_merchant_descriptor(xml, options)
+      end
+
+      def add_merchant_descriptor(xml, options)
+        return unless options[:merchant_descriptor]
+        xml.tag! 'invoiceHeader' do
+          xml.tag! 'merchantDescriptor', options[:merchant_descriptor]
+        end
       end
 
       def add_purchase_data(xml, money = 0, include_grand_total = false, options={})
@@ -500,6 +509,14 @@ module ActiveMerchant #:nodoc:
 
         xml.tag! 'issuer' do
           xml.tag! 'additionalData', options[:issuer_additional_data]
+        end
+      end
+
+      def add_other_tax(xml, options)
+        return unless options[:local_tax_amount] || options[:national_tax_amount]
+        xml.tag! 'otherTax' do
+          xml.tag! 'localTaxAmount', options[:local_tax_amount] if options[:local_tax_amount]
+          xml.tag! 'nationalTaxAmount', options[:national_tax_amount] if options[:national_tax_amount]
         end
       end
 
@@ -708,16 +725,26 @@ module ActiveMerchant #:nodoc:
       def add_payment_method_or_subscription(xml, money, payment_method_or_reference, options)
         if payment_method_or_reference.is_a?(String)
           add_purchase_data(xml, money, true, options)
+          add_installments(xml, options)
           add_subscription(xml, options, payment_method_or_reference)
         elsif card_brand(payment_method_or_reference) == 'check'
           add_address(xml, payment_method_or_reference, options[:billing_address], options)
           add_purchase_data(xml, money, true, options)
+          add_installments(xml, options)
           add_check(xml, payment_method_or_reference)
         else
           add_address(xml, payment_method_or_reference, options[:billing_address], options)
           add_address(xml, payment_method_or_reference, options[:shipping_address], options, true)
           add_purchase_data(xml, money, true, options)
+          add_installments(xml, options)
           add_creditcard(xml, payment_method_or_reference)
+        end
+      end
+
+      def add_installments(xml, options)
+        return unless options[:installment_total_count]
+        xml.tag! 'installment' do
+          xml.tag! 'totalCount', options[:installment_total_count]
         end
       end
 

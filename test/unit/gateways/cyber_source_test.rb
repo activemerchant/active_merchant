@@ -103,6 +103,14 @@ class CyberSourceTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_purchase_includes_merchant_descriptor
+    stub_comms do
+      @gateway.purchase(100, @credit_card, merchant_descriptor: 'Spreedly')
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<merchantDescriptor>Spreedly<\/merchantDescriptor>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_authorize_includes_issuer_additional_data
     stub_comms do
       @gateway.authorize(100, @credit_card, order_id: '1', issuer_additional_data: @issuer_additional_data)
@@ -124,6 +132,14 @@ class CyberSourceTest < Test::Unit::TestCase
       @gateway.authorize(100, @credit_card, commerce_indicator: 'internet')
     end.check_request do |endpoint, data, headers|
       assert_match(/<commerceIndicator>internet<\/commerceIndicator>/m, data)
+    end.respond_with(successful_authorization_response)
+  end
+
+  def test_authorize_includes_installment_total_count
+    stub_comms do
+      @gateway.authorize(100, @credit_card, order_id: '1', installment_total_count: 5)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<installment>\s+<totalCount>5<\/totalCount>\s+<\/installment>/, data)
     end.respond_with(successful_authorization_response)
   end
 
@@ -263,6 +279,22 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response_capture.test?
   end
 
+  def test_capture_includes_local_tax_amount
+    stub_comms do
+      @gateway.capture(100, '1842651133440156177166', local_tax_amount: '0.17')
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<otherTax>\s+<localTaxAmount>0.17<\/localTaxAmount>\s+<\/otherTax>/, data)
+    end.respond_with(successful_capture_response)
+  end
+
+  def test_capture_includes_national_tax_amount
+    stub_comms do
+      @gateway.capture(100, '1842651133440156177166', national_tax_amount: '0.05')
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<otherTax>\s+<nationalTaxAmount>0.05<\/nationalTaxAmount>\s+<\/otherTax>/, data)
+    end.respond_with(successful_capture_response)
+  end
+
   def test_successful_credit_card_capture_with_elo_request
     @gateway.stubs(:ssl_post).returns(successful_authorization_response, successful_capture_response)
     assert response = @gateway.authorize(@amount, @elo_credit_card, @options)
@@ -388,6 +420,14 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response.success?
     assert response.test?
     assert_success(@gateway.credit(@amount, response.authorization, @options))
+  end
+
+  def test_credit_includes_merchant_descriptor
+    stub_comms do
+      @gateway.credit(@amount, @credit_card, merchant_descriptor: 'Spreedly')
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<merchantDescriptor>Spreedly<\/merchantDescriptor>/, data)
+    end.respond_with(successful_card_credit_response)
   end
 
   def test_successful_void_capture_request
