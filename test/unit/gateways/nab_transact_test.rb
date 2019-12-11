@@ -166,6 +166,16 @@ class NabTransactTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
+  def test_successful_addcrn
+    @gateway.expects(:ssl_post).with(&check_periodic_type(:addcrn)).returns(successful_addcrn_response)
+    assert_success @gateway.store(@credit_card)
+  end
+
+  def test_successful_editcrn
+    @gateway.expects(:ssl_post).with(&check_periodic_type(:editcrn)).returns(successful_editcrn_response)
+    assert_success @gateway.store(@credit_card, billing_id: 123456)
+  end
+
   private
 
   def pre_scrubbed
@@ -218,6 +228,13 @@ Conn close
     Proc.new do |endpoint, data, headers|
       request_hash = Hash.from_xml(data)
       request_hash['NABTransactMessage']['Payment']['TxnList']['Txn']['txnType'] == NabTransactGateway::TRANSACTIONS[type].to_s
+    end
+  end
+
+  def check_periodic_type(type)
+    Proc.new do |endpoint, data, headers|
+      request_hash = Hash.from_xml(data)
+      request_hash['NABTransactMessage']['Periodic']['PeriodicList']['PeriodicItem']['actionType'] == type.to_s
     end
   end
 
@@ -453,6 +470,94 @@ Conn close
           </Txn>
         </TxnList>
       </Payment>
+    </NABTransactMessage>
+    XML
+  end
+
+  def successful_addcrn_response
+    <<-XML.gsub(/^\s{4}/, '')
+    <?xml version="1.0" encoding="UTF-8"?>
+    <NABTransactMessage>
+      <MessageInfo>
+        <messageID>8af793f9af34bea0cf40f5fb5c630c</messageID>
+        <messageTimestamp>20100101161306527000+660</messageTimestamp>
+        <apiVersion>spxml-4.2</apiVersion>
+      </MessageInfo>
+      <RequestType>Periodic</RequestType>
+      <MerchantInfo>
+        <merchantID>XYZ0010</merchantID>
+      </MerchantInfo>
+      <Status>
+        <statusCode>0</statusCode>
+        <statusDescription>Normal</statusDescription>
+      </Status>
+      <Periodic>
+        <PeriodicList count="1">
+          <PeriodicItem ID="1">
+            <actionType>addcrn</actionType>
+            <crn>test</crn>
+            <responseCode>00</responseCode>
+            <responseText>Successful</responseText>
+            <successful>yes</successful>
+            <DirectEntryInfo>
+              <bsbNumber>080000</bsbNumber>
+              <accountNumber>999999999</accountNumber>
+              <accountName>Joe Citizen</accountName>
+            </DirectEntryInfo>
+            <CreditCardInfo>
+              <pan>444433...111</pan>
+              <expiryDate>09/15</expiryDate>
+              <recurringFlag>no</recurringFlag>
+            </CreditCardInfo>
+            <periodicType>5</periodicType>
+            <allocatedVariable>14233</allocatedVariable>
+          </PeriodicItem>
+        </PeriodicList>
+      </Periodic>
+    </NABTransactMessage>
+    XML
+  end
+
+  def successful_editcrn_response
+    <<-XML.gsub(/^\s{4}/, '')
+    <?xml version="1.0" encoding="UTF-8"?>
+    <NABTransactMessage>
+      <MessageInfo>
+        <messageID>8af793f9af34bea0cf40f5fb5c630c</messageID>
+        <messageTimestamp>20100101161306527000+660</messageTimestamp>
+        <apiVersion>spxml-4.2</apiVersion>
+      </MessageInfo>
+      <RequestType>Periodic</RequestType>
+      <MerchantInfo>
+        <merchantID>XYZ0010</merchantID>
+      </MerchantInfo>
+      <Status>
+        <statusCode>0</statusCode>
+        <statusDescription>Normal</statusDescription>
+      </Status>
+      <Periodic>
+        <PeriodicList count="1">
+          <PeriodicItem ID="1">
+            <actionType>editcrn</actionType>
+            <crn>test</crn>
+            <responseCode>00</responseCode>
+            <responseText>Successful</responseText>
+            <successful>yes</successful>
+            <DirectEntryInfo>
+              <bsbNumber>080000</bsbNumber>
+              <accountNumber>999999999</accountNumber>
+              <accountName>Joe Citizen</accountName>
+            </DirectEntryInfo>
+            <CreditCardInfo>
+              <pan>444433...111</pan>
+              <expiryDate>09/15</expiryDate>
+              <recurringFlag>no</recurringFlag>
+            </CreditCardInfo>
+            <periodicType>5</periodicType>
+            <allocatedVariable>14233</allocatedVariable>
+          </PeriodicItem>
+        </PeriodicList>
+      </Periodic>
     </NABTransactMessage>
     XML
   end
