@@ -545,6 +545,25 @@ class EwayRapidTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_moto_transaction
+    options = {
+      metadata: {
+        manual_entry: true,
+      }
+    }
+    response = stub_comms do
+      @gateway.purchase(100, 'the_customer_token', options)
+    end.check_request do |endpoint, data, headers|
+      assert_match '"Method":"TokenPayment"', data
+      assert_match '"TransactionType":"MOTO"', data
+    end.respond_with(successful_store_purchase_response)
+
+    assert_success response
+    assert_equal 'Transaction Approved Successful', response.message
+    assert_equal 10440234, response.authorization
+    assert response.test?
+  end
+
   def test_verification_results
     response = stub_comms do
       @gateway.purchase(100, @credit_card)

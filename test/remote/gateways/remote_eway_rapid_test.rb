@@ -358,6 +358,12 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
     assert_equal 'Transaction Approved Successful', response.message
   end
 
+  def test_successful_purchase_with_moto
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(metadata: { manual_entry: true }))
+    assert_success response
+    assert_equal 'Transaction Approved Successful', response.message
+  end
+
   def test_invalid_login
     gateway = EwayRapidGateway.new(
       login: 'bogus',

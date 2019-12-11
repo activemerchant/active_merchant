@@ -210,6 +210,18 @@ class PaymentExpressTest < Test::Unit::TestCase
     end
   end
 
+  def test_pass_client_type_set_to_moto_for_manual_entry
+    options = {
+      metadata: {
+        manual_entry: true,
+      }
+    }
+
+    perform_each_transaction_type_with_request_body_assertions(options) do |body|
+      assert_match(/<ClientType>MOTO<\/ClientType>/, body)
+    end
+  end
+
   def test_pass_client_type_as_symbol_for_unattended
     options = {:client_type => :unattended}
 
