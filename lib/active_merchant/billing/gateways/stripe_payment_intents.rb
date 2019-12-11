@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
     # For the legacy API, see the Stripe gateway
     class StripePaymentIntentsGateway < StripeGateway
 
-      self.supported_countries = %w(AT AU BE BR CA CH DE DK ES FI FR GB HK IE IT JP LU MX NL NO NZ PT SE SG US)
+      self.supported_countries = %w(AT AU BE BR CA CH DE DK EE ES FI FR GB GR HK IE IT JP LT LU LV MX NL NO NZ PL PT SE SG SI SK US)
 
       ALLOWED_METHOD_STATES = %w[automatic manual].freeze
       ALLOWED_CANCELLATION_REASONS = %w[duplicate fraudulent requested_by_customer abandoned].freeze
@@ -21,7 +21,9 @@ module ActiveMerchant #:nodoc:
         add_capture_method(post, options)
         add_confirmation_method(post, options)
         add_customer(post, options)
+        add_payment_method_types(post, options)
         add_payment_method_token(post, payment_method, options)
+        add_payment_method_data(post, payment_method, options)
         add_metadata(post, options)
         add_return_url(post, options)
         add_connected_account(post, options)
@@ -52,12 +54,7 @@ module ActiveMerchant #:nodoc:
 
       def create_payment_method(payment_method, options = {})
         post = {}
-        post[:type] = 'card'
-        post[:card] = {}
-        post[:card][:number] = payment_method.number
-        post[:card][:exp_month] = payment_method.month
-        post[:card][:exp_year] = payment_method.year
-        post[:card][:cvc] = payment_method.verification_value if payment_method.verification_value
+        add_card_data(post, payment_method)
         add_billing_address(post, options)
 
         commit(:post, 'payment_methods', post, options)
@@ -149,6 +146,16 @@ module ActiveMerchant #:nodoc:
 
       private
 
+      def add_card_data(post, payment_method)
+        post[:type] = 'card'
+        post[:card] = {}
+        post[:card][:number] = payment_method.number
+        post[:card][:exp_month] = payment_method.month
+        post[:card][:exp_year] = payment_method.year
+        post[:card][:cvc] = payment_method.verification_value if payment_method.verification_value
+        post
+      end
+
       def add_whitelisted_attribute(post, options, attribute)
         post[attribute] = options[attribute] if options[attribute]
         post
@@ -179,8 +186,16 @@ module ActiveMerchant #:nodoc:
         post
       end
 
+      def add_payment_method_data(post, payment_method, options)
+        return unless options[:mit]
+
+        post[:payment_method_data] = {}
+        add_card_data(post[:payment_method_data], payment_method)
+        post
+      end
+
       def add_payment_method_token(post, payment_method, options)
-        return if payment_method.nil?
+        return if payment_method.nil? || options[:mit]
 
         if payment_method.is_a?(ActiveMerchant::Billing::CreditCard)
           p = create_payment_method(payment_method, options)
@@ -214,6 +229,7 @@ module ActiveMerchant #:nodoc:
         post[:payment_method_options] ||= {}
         post[:payment_method_options][:card] ||= {}
         post[:payment_method_options][:card][:moto] = true if options[:moto]
+        post[:payment_method_options][:card][:mit_exemption] ||= { claim_without_transaction_id: true } if options[:mit]
       end
 
       def setup_future_usage(post, options = {})

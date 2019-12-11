@@ -428,6 +428,20 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert purchase.params.dig('charges', 'data')[0]['captured']
   end
 
+  def test_mit_exemption
+    options = {
+      currency: 'eur',
+      confirm: "true",
+      off_session: "true",
+      payment_method_types: ['card'],
+      mit: true
+    }
+
+    assert purchase = @gateway.purchase(@amount, @visa_card, options)
+    assert_equal 'succeeded', purchase.params['status']
+    assert purchase.params.dig('charges', 'data')[0]['captured']
+  end
+
   def test_certain_cards_require_action_even_when_marked_as_moto
     options = {
       currency: 'GBP',
