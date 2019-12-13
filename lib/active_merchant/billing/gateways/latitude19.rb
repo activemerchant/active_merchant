@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['US', 'CA']
       self.default_currency = 'USD'
-      self.money_format = :cents
+      self.money_format = :dollars
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
 
       RESPONSE_CODE_MAPPING = {
