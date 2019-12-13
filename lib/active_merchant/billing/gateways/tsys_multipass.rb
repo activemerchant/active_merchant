@@ -12,72 +12,82 @@ module ActiveMerchant #:nodoc:
       self.default_currency    = 'USD'
       self.money_format        = :cents
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club]
-      
+
       EMPTY_OBJ = {}
       BLANK = ""
       CONTENT_TYPE = "application/json"
 
       WHITELISTED_RESPONSE_ROOT_KEYS = %w(
+      SaleResponse 
       AuthResponse
       CaptureResponse 
       VoidResponse 
       ReturnResponse 
-      CardAuthenticationResponse
       )
 
-      attr_reader :parsed_body
+      attr_reader :response, :parsed_body
 
       def initialize(options={})
         requires!(options, :device_id, :transaction_key)
         super
       end
 
+      def purchase(money, credit_card, options = {})
+        commit(
+          request_body: { "Sale": options}.to_json
+        )
+      end
+
       def authorize(money, credit_card, options = {})
-        call(
-          request_body: { "Auth": request_params(options) }.to_json
+        commit(
+          request_body: { "Auth": options}.to_json
         )
       end
 
-      def capture(money, authorization_id, options = {})
-        call(
-          request_body: { "Capture": request_params(options) }.to_json
+      def capture(money, tx_reference, options = {})
+        commit(
+          request_body: { "Capture": options }.to_json
         )
       end
 
-      def void(money, authorization_id, options = {})
-        call(
-          request_body: { "Void": request_params(options) }.to_json
+      def void(tx_reference, options = {})
+        commit(
+          request_body: { "Void": options }.to_json
         )
       end
 
-      def refund(money, authorization_id, options = {})
-        call(
-          request_body: { "Return": request_params(options) }.to_json
+      def refund(money, tx_reference, options = {})
+        commit(
+          request_body: { "Return": options }.to_json
         )
       end
 
-      def verify(credit_card, options = {})
-        call(
-          request_body: { "CardAuthentication": request_params(options) }.to_json
-        )
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript
+          .gsub(/\"deviceID\":\K(?:(?!,).)*/, '[FILTERED]')
+          .gsub(/\"transactionKey\":\K(?:(?!,).)*/, '[FILTERED]')
+          .gsub(/\"cardNumber\":\K(?:(?!,).)*/, '[FILTERED]')
+          .gsub(/\"expirationDate\":\K(?:(?!,).)*/, '[FILTERED]')
+          .gsub(/\"token\":\K(?:(?!,).)*/, '[FILTERED]')
       end
 
       private
 
-      def request_params(options)
-        {
-          "deviceID": @options[:device_id],
-          "transactionKey": @options[:transaction_key]
-        }.merge!(options)
-      end
+      def commit(request_body: )
+        @response = 
+          Net::HTTP.start(uri.host, uri.port, use_ssl: true) do |https|
+            request      = Net::HTTP::Post.new(uri, {'Content-Type' => CONTENT_TYPE })
+            request.body = request_body
+            # Making the call
+            https.request(request)
+          end
 
-      def call(request_body: )
-        Net::HTTP.start(uri.host, uri.port, use_ssl: true) do |https|
-          request      = Net::HTTP::Post.new(uri, {'Content-Type' => CONTENT_TYPE })
-          request.body = request_body
-          response     = https.request(request)
-          @parsed_body = parse(response.body)
-        end
+        # Parsing the response body
+        @parsed_body = parse(response.body)
 
         Response.new(
           success?,
@@ -134,10 +144,11 @@ module ActiveMerchant #:nodoc:
       # fetch based on the transaction response types.
       def amount_key_mapping
         {
-          "AuthResponse": "processedAmount",
-          "CaptureResponse": "transactionAmount",
-          "VoidResponse": "voidedAmount",
-          "ReturnResponse": "returnAmount"
+          "SaleResponse" => "processedAmount",
+          "AuthResponse" => "processedAmount",
+          "CaptureResponse" => "transactionAmount",
+          "VoidResponse" => "voidedAmount",
+          "ReturnResponse" => "returnedAmount"
         }
       end
 
@@ -145,18 +156,18 @@ module ActiveMerchant #:nodoc:
         @recognized_response_root_key ||=
           WHITELISTED_RESPONSE_ROOT_KEYS.include?(parsed_body_root_key)
       end
-      
+
       def parsed_body_root_key
         parsed_body.first&.first
       end
 
       def parsed_body_root_value
-        @parsed_body_root_value ||= (parsed_body.first&.second || EMPTY_OBJ)
+        @parsed_body_root_value ||= (parsed_body.present? && parsed_body.first[1]) || EMPTY_OBJ
       end
 
       def parse(body)
         JSON.parse(body)
-      rescue JSON::ParseError
+      rescue JSON::ParserError
         EMPTY_OBJ
       end
 
