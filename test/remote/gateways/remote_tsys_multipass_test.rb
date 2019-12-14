@@ -14,8 +14,6 @@ class RemoteTsysMultipassTest < Test::Unit::TestCase
 
   def test_successful_purchase
     purchase_options = {
-      deviceID: @gateway.options[:device_id],
-      transactionKey: @gateway.options[:transaction_key],
       cardDataSource: "INTERNET",
       transactionAmount: "100",
       cardNumber: @card_token,
@@ -32,8 +30,6 @@ class RemoteTsysMultipassTest < Test::Unit::TestCase
 
   def test_failed_purchase
     purchase_options = {
-      deviceID: @gateway.options[:device_id],
-      transactionKey: @gateway.options[:transaction_key],
       cardDataSource: "INTERNET",
       transactionAmount: "101",
       cardNumber: @card_token,
@@ -51,8 +47,6 @@ class RemoteTsysMultipassTest < Test::Unit::TestCase
 
   def test_successful_authorize
     auth_options = {
-      deviceID: @gateway.options[:device_id],
-      transactionKey: @gateway.options[:transaction_key],
       cardDataSource: "INTERNET",
       transactionAmount: "103",
       cardNumber: @card_token,
@@ -69,8 +63,6 @@ class RemoteTsysMultipassTest < Test::Unit::TestCase
 
   def test_failed_authorize
     auth_options = {
-      deviceID: @gateway.options[:device_id],
-      transactionKey: @gateway.options[:transaction_key],
       cardDataSource: "INTERNET",
       transactionAmount: "104",
       cardNumber: @card_token,
@@ -88,8 +80,6 @@ class RemoteTsysMultipassTest < Test::Unit::TestCase
   def test_successful_capture
     # Authorize first
     auth_options = {
-      deviceID: @gateway.options[:device_id],
-      transactionKey: @gateway.options[:transaction_key],
       cardDataSource: "INTERNET",
       transactionAmount: "105",
       cardNumber: @card_token,
@@ -99,8 +89,6 @@ class RemoteTsysMultipassTest < Test::Unit::TestCase
     auth_id = @gateway.authorize("105", @card_token, auth_options).authorization
 
     capture_options = {
-      deviceID: @gateway.options[:device_id],
-      transactionKey: @gateway.options[:transaction_key],
       transactionAmount: "105",
       transactionID: auth_id
     }
@@ -115,8 +103,6 @@ class RemoteTsysMultipassTest < Test::Unit::TestCase
 
   def test_failed_capture
     capture_options = {
-      deviceID: @gateway.options[:device_id],
-      transactionKey: @gateway.options[:transaction_key],
       transactionAmount: "106",
       transactionID: "invalidtransactionid"
     }
@@ -132,8 +118,6 @@ class RemoteTsysMultipassTest < Test::Unit::TestCase
   def test_successful_void
     # Authorize first
     auth_options = {
-      deviceID: @gateway.options[:device_id],
-      transactionKey: @gateway.options[:transaction_key],
       cardDataSource: "INTERNET",
       transactionAmount: "107",
       cardNumber: @card_token,
@@ -143,8 +127,6 @@ class RemoteTsysMultipassTest < Test::Unit::TestCase
     auth_id = @gateway.authorize("107", @card_token, auth_options).authorization
 
     void_options = {
-      deviceID: @gateway.options[:device_id],
-      transactionKey: @gateway.options[:transaction_key],
       transactionAmount: "107",
       transactionID: auth_id
     }
@@ -159,8 +141,6 @@ class RemoteTsysMultipassTest < Test::Unit::TestCase
 
   def test_failed_void
     void_options = {
-      deviceID: @gateway.options[:device_id],
-      transactionKey: @gateway.options[:transaction_key],
       transactionAmount: "108" ,
       transactionID: "invalid auth id"
     }
@@ -176,8 +156,6 @@ class RemoteTsysMultipassTest < Test::Unit::TestCase
   def test_successful_refund
     # Authorize first
     auth_options = {
-      deviceID: @gateway.options[:device_id],
-      transactionKey: @gateway.options[:transaction_key],
       cardDataSource: "INTERNET",
       transactionAmount: "109",
       cardNumber: @card_token,
@@ -187,8 +165,6 @@ class RemoteTsysMultipassTest < Test::Unit::TestCase
     auth_id = @gateway.authorize("109", @card_token, auth_options).authorization
 
     refund_options = {
-      deviceID: @gateway.options[:device_id],
-      transactionKey: @gateway.options[:transaction_key],
       transactionAmount: "109",
       transactionID: auth_id
     }
@@ -204,8 +180,6 @@ class RemoteTsysMultipassTest < Test::Unit::TestCase
   def test_failed_refund
     # Authorize first
     purchase_options = {
-      deviceID: @gateway.options[:device_id],
-      transactionKey: @gateway.options[:transaction_key],
       cardDataSource: "INTERNET",
       transactionAmount: "110",
       cardNumber: @card_token,
@@ -215,8 +189,6 @@ class RemoteTsysMultipassTest < Test::Unit::TestCase
     auth_id = @gateway.purchase("110", @card_token, purchase_options).authorization
 
     refund_options = {
-      deviceID: @gateway.options[:device_id],
-      transactionKey: @gateway.options[:transaction_key],
       transactionAmount: "10000", # More amount than purchased
       transactionID: auth_id
     }
