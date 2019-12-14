@@ -34,31 +34,31 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, credit_card, options = {})
         commit(
-          request_body: { "Sale": options}.to_json
+          request_body: { "Sale": request_params(options) }.to_json
         )
       end
 
       def authorize(money, credit_card, options = {})
         commit(
-          request_body: { "Auth": options}.to_json
+          request_body: { "Auth": request_params(options) }.to_json
         )
       end
 
       def capture(money, tx_reference, options = {})
         commit(
-          request_body: { "Capture": options }.to_json
+          request_body: { "Capture": request_params(options) }.to_json
         )
       end
 
       def void(tx_reference, options = {})
         commit(
-          request_body: { "Void": options }.to_json
+          request_body: { "Void": request_params(options) }.to_json
         )
       end
 
       def refund(money, tx_reference, options = {})
         commit(
-          request_body: { "Return": options }.to_json
+          request_body: { "Return": request_params(options) }.to_json
         )
       end
 
@@ -76,6 +76,13 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
+      def request_params(options)
+        {
+          "deviceID": options[:device_id],
+          "transactionKey": options[:transaction_key]
+        }.merge!(options)
+      end
 
       def commit(request_body: )
         @response = 
@@ -162,7 +169,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parsed_body_root_value
-        @parsed_body_root_value ||= (parsed_body.present? && parsed_body.first[1]) || EMPTY_OBJ
+        (parsed_body.present? && parsed_body.first[1]) || EMPTY_OBJ
       end
 
       def parse(body)

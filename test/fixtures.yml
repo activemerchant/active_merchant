@@ -1217,6 +1217,13 @@ trans_first_transaction_express:
   gateway_id: 7777778764
   reg_key: M84PKPDMD5BY86HN
 
+tsys_multipass:
+  device_id: DEVICE_ID
+  transaction_key: TRANSACTION_KEY
+  card:
+    token: CARD_TOKEN
+    expiration_date: EXPIRATION_DATE
+
 # Transact Pro doesn't provide public testing data
 transact_pro:
   guid: GUID

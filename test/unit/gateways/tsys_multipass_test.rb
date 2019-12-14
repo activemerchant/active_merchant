@@ -1,27 +1,20 @@
 require 'test_helper'
-require 'byebug'
 
 class TsysMultipassTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    @device_id = "device_id"
-    @transaction_key = "reg_key"
-    @credit_card = credit_card
     @card_token = "asdsWPabcabcqsdfsd"
     @amount = 100
     @expiration_date = "122020"
     @auth_id = "XYZabc"
-    @cvv = "222"
 
     @gateway = TsysMultipassGateway.new(
-      device_id: @device_id,
-      transaction_key: @transaction_key
+      device_id: "device_id",
+      transaction_key: "reg_key"
     )
 
     @auth_options = {
-      deviceID: @device_id,
-      transactionKey: @transaction_key,
       cardDataSource: "INTERNET",
       transactionAmount: @amount,
       cardNumber: @card_token,
@@ -29,8 +22,6 @@ class TsysMultipassTest < Test::Unit::TestCase
     }
 
     @purchase_options = {
-      deviceID: @device_id,
-      transactionKey: @transaction_key,
       cardDataSource: "INTERNET",
       transactionAmount: @amount,
       cardNumber: @card_token,
@@ -38,33 +29,18 @@ class TsysMultipassTest < Test::Unit::TestCase
     }
 
     @capture_options = {
-      deviceID: @device_id,
-      transactionKey: @transaction_key,
       transactionAmount: @amount.to_s,
       transactionID: @auth_id
     }
 
     @refund_options = {
-      deviceID: @device_id,
-      transactionKey: @transaction_key,
       transactionAmount: @amount.to_s,
       transactionID: @auth_id
     }
 
     @void_options = {
-      deviceID: @device_id,
-      transactionKey: @transaction_key,
       transactionAmount: @amount.to_s,
       transactionID: @auth_id
-    }
-
-    @verify_options = {
-      deviceID: @device_id,
-      transactionKey: @transaction_key,
-      cardDataSource: "INTERNET",
-      cardNumber: @card_token, 
-      expirationDate: @expiration_date,
-      cvv2: @cvv
     }
   end
 
@@ -75,7 +51,7 @@ class TsysMultipassTest < Test::Unit::TestCase
 
     @gateway.expects(:response).returns(response_obj)
 
-    response = @gateway.purchase(@amount, @credit_card, @purchase_options)
+    response = @gateway.purchase(@amount, @card_token, @purchase_options)
 
     assert_equal true, response.success?
     assert_equal '12345678', response.authorization
@@ -91,7 +67,7 @@ class TsysMultipassTest < Test::Unit::TestCase
 
     @gateway.expects(:response).returns(response_obj)
 
-    response = @gateway.authorize(@amount, @credit_card, @purchase_options)
+    response = @gateway.authorize(@amount, @card_token, @purchase_options)
 
     assert_equal false, response.success?
     assert_equal nil, response.authorization
@@ -107,7 +83,7 @@ class TsysMultipassTest < Test::Unit::TestCase
 
     @gateway.expects(:response).returns(response_obj)
 
-    response = @gateway.authorize(@amount, @credit_card, @auth_options)
+    response = @gateway.authorize(@amount, @card_token, @auth_options)
 
     assert_equal true, response.success?
     assert_equal '12345678', response.authorization
@@ -123,7 +99,7 @@ class TsysMultipassTest < Test::Unit::TestCase
 
     @gateway.expects(:response).returns(response_obj)
 
-    response = @gateway.authorize(@amount, @credit_card, @auth_options)
+    response = @gateway.authorize(@amount, @card_token, @auth_options)
 
     assert_equal false, response.success?
     assert_equal nil, response.authorization
