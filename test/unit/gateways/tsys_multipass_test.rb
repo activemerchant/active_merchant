@@ -4,28 +4,28 @@ class TsysMultipassTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    @card_token = "asdsWPabcabcqsdfsd"
+    @card_token = 'asdsWPabcabcqsdfsd'
     @amount = 100
-    @expiration_date = "122020"
-    @auth_id = "XYZabc"
+    @expiration_date = '122020'
+    @auth_id = 'XYZabc'
 
     @gateway = TsysMultipassGateway.new(
-      device_id: "device_id",
-      transaction_key: "reg_key"
+      device_id: 'device_id',
+      transaction_key: 'reg_key'
     )
 
     @auth_options = {
-      cardDataSource: "INTERNET",
+      cardDataSource: 'INTERNET',
       transactionAmount: @amount,
       cardNumber: @card_token,
-      expirationDate: @expiration_date 
+      expirationDate: @expiration_date
     }
 
     @purchase_options = {
-      cardDataSource: "INTERNET",
+      cardDataSource: 'INTERNET',
       transactionAmount: @amount,
       cardNumber: @card_token,
-      expirationDate: @expiration_date 
+      expirationDate: @expiration_date
     }
 
     @capture_options = {
@@ -118,8 +118,8 @@ class TsysMultipassTest < Test::Unit::TestCase
     response = @gateway.capture(@amount, @auth_id, @capture_options)
 
     assert_equal true, response.success?
-    assert_equal "21462680", response.authorization
-    assert_equal "1100", response.amount
+    assert_equal '21462680', response.authorization
+    assert_equal '1100', response.amount
     assert_equal '', response.error_code
     assert_instance_of Response, response
   end
@@ -150,8 +150,8 @@ class TsysMultipassTest < Test::Unit::TestCase
     response = @gateway.void(@auth_id, @void_options)
 
     assert_equal true, response.success?
-    assert_equal "21468076", response.authorization
-    assert_equal "10000", response.amount
+    assert_equal '21468076', response.authorization
+    assert_equal '10000', response.amount
     assert_equal '', response.error_code
     assert_instance_of Response, response
   end
@@ -182,8 +182,8 @@ class TsysMultipassTest < Test::Unit::TestCase
     response = @gateway.refund(@amount, @auth_id, @refund_options)
 
     assert_equal true, response.success?
-    assert_equal "21468126", response.authorization
-    assert_equal "11250", response.amount
+    assert_equal '21468126', response.authorization
+    assert_equal '11250', response.amount
     assert_equal '', response.error_code
     assert_instance_of Response, response
   end

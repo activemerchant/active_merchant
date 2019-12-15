@@ -14,15 +14,15 @@ module ActiveMerchant #:nodoc:
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club]
 
       EMPTY_OBJ = {}
-      BLANK = ""
-      CONTENT_TYPE = "application/json"
+      BLANK = ''
+      CONTENT_TYPE = 'application/json'
 
       WHITELISTED_RESPONSE_ROOT_KEYS = %w(
-      SaleResponse 
-      AuthResponse
-      CaptureResponse 
-      VoidResponse 
-      ReturnResponse 
+        SaleResponse
+        AuthResponse
+        CaptureResponse
+        VoidResponse
+        ReturnResponse
       )
 
       attr_reader :response, :parsed_body
@@ -67,12 +67,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def scrub(transcript)
-        transcript
-          .gsub(/\"deviceID\":\K(?:(?!,).)*/, '[FILTERED]')
-          .gsub(/\"transactionKey\":\K(?:(?!,).)*/, '[FILTERED]')
-          .gsub(/\"cardNumber\":\K(?:(?!,).)*/, '[FILTERED]')
-          .gsub(/\"expirationDate\":\K(?:(?!,).)*/, '[FILTERED]')
-          .gsub(/\"token\":\K(?:(?!,).)*/, '[FILTERED]')
+        transcript.
+          gsub(/\"deviceID\":\K(?:(?!,).)*/, '[FILTERED]').
+          gsub(/\"transactionKey\":\K(?:(?!,).)*/, '[FILTERED]').
+          gsub(/\"cardNumber\":\K(?:(?!,).)*/, '[FILTERED]').
+          gsub(/\"expirationDate\":\K(?:(?!,).)*/, '[FILTERED]').
+          gsub(/\"token\":\K(?:(?!,).)*/, '[FILTERED]')
       end
 
       private
@@ -84,8 +84,8 @@ module ActiveMerchant #:nodoc:
         }.merge!(options)
       end
 
-      def commit(request_body: )
-        @response = 
+      def commit(request_body:)
+        @response =
           Net::HTTP.start(uri.host, uri.port, use_ssl: true) do |https|
             request      = Net::HTTP::Post.new(uri, {'Content-Type' => CONTENT_TYPE })
             request.body = request_body
@@ -110,19 +110,19 @@ module ActiveMerchant #:nodoc:
       def success?
         return false unless recognized_response_root_key?
 
-        parsed_body_root_value["status"] == "PASS"
+        parsed_body_root_value['status'] == 'PASS'
       end
 
       def message
         return BLANK unless recognized_response_root_key?
 
-        parsed_body_root_value["responseMessage"]
+        parsed_body_root_value['responseMessage']
       end
 
       def error_code
-        return BLANK unless error? 
+        return BLANK unless error?
 
-        response_code 
+        response_code
       end
 
       def error?
@@ -132,30 +132,30 @@ module ActiveMerchant #:nodoc:
       def response_code
         return BLANK unless recognized_response_root_key?
 
-        parsed_body_root_value["responseCode"]
+        parsed_body_root_value['responseCode']
       end
 
       def authorization
         return BLANK unless recognized_response_root_key?
 
-        parsed_body_root_value["transactionID"]
+        parsed_body_root_value['transactionID']
       end
 
       def amount
         return BLANK unless recognized_response_root_key?
 
-        parsed_body_root_value[ amount_key_mapping[parsed_body_root_key] ]
+        parsed_body_root_value[amount_key_mapping[parsed_body_root_key]]
       end
 
-      # This method gives us mapping of which amount field to 
+      # This method gives us mapping of which amount field to
       # fetch based on the transaction response types.
       def amount_key_mapping
         {
-          "SaleResponse" => "processedAmount",
-          "AuthResponse" => "processedAmount",
-          "CaptureResponse" => "transactionAmount",
-          "VoidResponse" => "voidedAmount",
-          "ReturnResponse" => "returnedAmount"
+          'SaleResponse' => 'processedAmount',
+          'AuthResponse' => 'processedAmount',
+          'CaptureResponse' => 'transactionAmount',
+          'VoidResponse' => 'voidedAmount',
+          'ReturnResponse' => 'returnedAmount'
         }
       end
 
