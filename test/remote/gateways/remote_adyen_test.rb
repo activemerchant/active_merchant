@@ -676,6 +676,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert response = @gateway.unstore(shopper_reference: shopper_reference,
                                        recurring_detail_reference: recurring_detail_reference)
 
+    assert_success response
     assert_equal '[detail-successfully-disabled]', response.message
   end
 
@@ -690,10 +691,14 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
     assert response = @gateway.unstore(shopper_reference: 'random_reference',
                                        recurring_detail_reference: recurring_detail_reference)
+
+    assert_failure response
     assert_equal 'Contract not found', response.message
 
     assert response = @gateway.unstore(shopper_reference: shopper_reference,
                                        recurring_detail_reference: 'random_reference')
+
+    assert_failure response
     assert_equal 'PaymentDetail not found', response.message
   end
 

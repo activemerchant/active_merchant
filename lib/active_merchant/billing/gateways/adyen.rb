@@ -512,6 +512,8 @@ module ActiveMerchant #:nodoc:
           response['response'] == 'Authorised' || response['response'] == '[adjustAuthorisation-received]'
         when 'storeToken'
           response['result'] == 'Success'
+        when 'disable'
+          response['response'] == '[detail-successfully-disabled]'
         else
           false
         end

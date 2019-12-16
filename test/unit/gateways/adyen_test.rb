@@ -592,6 +592,7 @@ class AdyenTest < Test::Unit::TestCase
       @gateway.unstore(shopper_reference: 'shopper_reference',
                        recurring_detail_reference: 'detail_reference')
     end.respond_with(successful_unstore_response)
+    assert_success response
     assert_equal '[detail-successfully-disabled]', response.message
   end
 
