@@ -1241,6 +1241,13 @@ trust_commerce:
   password: 'password'
   aggregator_id: 'abc123'
 
+tsys_multipass:
+  device_id: DEVICE_ID
+  transaction_key: TRANSACTION_KEY
+  card:
+    token: CARD_TOKEN
+    expiration_date: EXPIRATION_DATE
+
 # Working credentials, no need to replace
 usa_epay:
   login: '4EoZ5U2Q55j976W7eplC71i6b7kn4pcV'
