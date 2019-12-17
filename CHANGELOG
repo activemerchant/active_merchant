@@ -10,6 +10,7 @@
 * Braintree: Fix add_credit_card_to_customer in Store [molbrown] #3466
 * EBANX: Default to not send amount on capture [chinhle23] #3463
 * Latitude19: Convert money format to dollars [molbrown] #3468
+* Adyen: Fix response success for unstore [kheang] #3470
 * CyberSource: add several GSFs [therufs] #3465
 
 == Version 1.103.0 (Dec 2, 2019)
