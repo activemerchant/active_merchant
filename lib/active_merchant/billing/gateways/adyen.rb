@@ -51,7 +51,7 @@ module ActiveMerchant #:nodoc:
         requires!(options, :order_id)
         post = init_post(options)
         add_invoice(post, money, options)
-        add_payment(post, payment)
+        add_payment(post, payment, options)
         add_extra_data(post, payment, options)
         add_stored_credentials(post, payment, options)
         add_address(post, options)
@@ -59,6 +59,7 @@ module ActiveMerchant #:nodoc:
         add_3ds(post, options)
         add_3ds_authenticated_data(post, options)
         add_splits(post, options)
+        add_recurring_contract(post, options)
         commit('authorise', post, options)
       end
 
@@ -96,11 +97,13 @@ module ActiveMerchant #:nodoc:
         requires!(options, :order_id)
         post = init_post(options)
         add_invoice(post, 0, options)
-        add_payment(post, credit_card)
+        add_payment(post, credit_card, options)
         add_extra_data(post, credit_card, options)
         add_stored_credentials(post, credit_card, options)
-        add_recurring_contract(post, options)
         add_address(post, options)
+
+        options[:recurring_contract_type] ||= 'RECURRING'
+        add_recurring_contract(post, options)
 
         action = options[:tokenize_only] ? 'storeToken' : 'authorise'
 
@@ -313,11 +316,11 @@ module ActiveMerchant #:nodoc:
         post[:modificationAmount] = amount
       end
 
-      def add_payment(post, payment)
+      def add_payment(post, payment, options)
         if payment.is_a?(String)
           _, _, recurring_detail_reference = payment.split('#')
           post[:selectedRecurringDetailReference] = recurring_detail_reference
-          add_recurring_contract(post, options)
+          options[:recurring_contract_type] ||= 'RECURRING'
         else
           add_mpi_data_for_network_tokenization_card(post, payment) if payment.is_a?(NetworkTokenizationCreditCard)
           add_card(post, payment)
@@ -367,9 +370,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_recurring_contract(post, options = {})
-        recurring_contract_type = options[:recurring_contract_type] || 'RECURRING'
+        return unless options[:recurring_contract_type]
         recurring = {
-          contract: recurring_contract_type
+          contract: options[:recurring_contract_type]
         }
 
         post[:recurring] = recurring

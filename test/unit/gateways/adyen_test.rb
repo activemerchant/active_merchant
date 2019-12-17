@@ -148,6 +148,14 @@ class AdyenTest < Test::Unit::TestCase
     refute response.params['paRequest'].blank?
   end
 
+  def test_successful_authorize_with_recurring_contract_type
+    stub_comms do
+      @gateway.authorize(100, @credit_card, @options.merge({recurring_contract_type: 'ONECLICK'}))
+    end.check_request do |endpoint, data, headers|
+      assert_equal 'ONECLICK', JSON.parse(data)['recurring']['contract']
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_adds_3ds1_standalone_fields
     eci = '05'
     cavv = '3q2+78r+ur7erb7vyv66vv\/\/\/\/8='
@@ -566,7 +574,6 @@ class AdyenTest < Test::Unit::TestCase
       @gateway.store(@credit_card, @options)
     end.check_request do |endpoint, data, headers|
       assert_equal 'CardOnFile', JSON.parse(data)['recurringProcessingModel']
-      assert_equal 'RECURRING', JSON.parse(data)['recurring']['contract']
     end.respond_with(successful_store_response)
     assert_success response
     assert_equal '#8835205392522157#8315202663743702', response.authorization
@@ -577,6 +584,14 @@ class AdyenTest < Test::Unit::TestCase
       @gateway.store(@credit_card, @options.merge({recurring_contract_type: 'ONECLICK'}))
     end.check_request do |endpoint, data, headers|
       assert_equal 'ONECLICK', JSON.parse(data)['recurring']['contract']
+    end.respond_with(successful_store_response)
+  end
+
+  def test_recurring_contract_type_set_for_reference_purchase
+    stub_comms do
+      @gateway.store('123', @options)
+    end.check_request do |endpoint, data, headers|
+      assert_equal 'RECURRING', JSON.parse(data)['recurring']['contract']
     end.respond_with(successful_store_response)
   end
 
