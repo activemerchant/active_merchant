@@ -65,7 +65,7 @@ module ActiveMerchant #:nodoc:
 
       def update_intent(money, intent_id, payment_method, options = {})
         post = {}
-        post[:amount] = money if money
+        add_amount(post, money, options)
 
         add_payment_method_token(post, payment_method, options)
         add_payment_method_types(post, options)
@@ -91,7 +91,8 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, intent_id, options = {})
         post = {}
-        post[:amount_to_capture] = money
+        currency = options[:currency] || currency(money)
+        post[:amount_to_capture] = localized_amount(money, currency)
         if options[:transfer_amount]
           post[:transfer_data] = {}
           post[:transfer_data][:amount] = options[:transfer_amount]
