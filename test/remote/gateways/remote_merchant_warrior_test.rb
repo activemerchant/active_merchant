@@ -8,11 +8,19 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
     @failure_amount = 205
 
     @credit_card = credit_card(
-      '5123456789012346',
-      :month => 5,
-      :year => Time.now.year + 2,
-      :verification_value => '123',
-      :brand => 'master'
+      '4564710000000004',
+      :month => '2',
+      :year => '29',
+      :verification_value => '847',
+      :brand => 'visa'
+    )
+
+    @expired_card = credit_card(
+      '4564710000000012',
+      :month => '2',
+      :year => '05',
+      :verification_value => '963',
+      :brand => 'visa'
     )
 
     @options = {
@@ -44,15 +52,15 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
 
   def test_successful_purchase
     assert purchase = @gateway.purchase(@success_amount, @credit_card, @options)
-    assert_equal 'Transaction approved', purchase.message
     assert_success purchase
+    assert_equal 'Transaction approved', purchase.message
     assert_not_nil purchase.params['transaction_id']
     assert_equal purchase.params['transaction_id'], purchase.authorization
   end
 
   def test_failed_purchase
-    assert purchase = @gateway.purchase(@failure_amount, @credit_card, @options)
-    assert_equal 'Transaction declined', purchase.message
+    assert purchase = @gateway.purchase(@success_amount, @expired_card, @options)
+    assert_match 'Card has expired', purchase.message
     assert_failure purchase
     assert_not_nil purchase.params['transaction_id']
     assert_equal purchase.params['transaction_id'], purchase.authorization
@@ -68,8 +76,23 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
 
   def test_failed_refund
     assert refund = @gateway.refund(@success_amount, 'invalid-transaction-id')
-    assert_match %r{Invalid transactionID}, refund.message
+    assert_match %r{'transactionID' not found}, refund.message
     assert_failure refund
+  end
+
+  def test_successful_void
+    assert purchase = @gateway.purchase(@success_amount, @credit_card, @options)
+    assert_success purchase
+
+    assert void = @gateway.void(@success_amount, purchase.authorization)
+    assert_success void
+    assert_equal 'Transaction approved', void.message
+  end
+
+  def test_failed_void
+    assert void = @gateway.void(@success_amount, 'invalid-transaction-id')
+    assert_match %r{'transactionID' not found}, void.message
+    assert_failure void
   end
 
   def test_capture_too_much

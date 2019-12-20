@@ -58,6 +58,13 @@ module ActiveMerchant #:nodoc:
         commit('refundCard', post)
       end
 
+      def void(money, identification, options = {})
+        post = {}
+        add_amount(post, money, options)
+        add_transaction(post, identification)
+        commit('processVoid', post)
+      end
+
       def store(creditcard, options = {})
         post = {
           'cardName' => scrub_name(creditcard.name),

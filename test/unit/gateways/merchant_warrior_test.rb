@@ -61,6 +61,26 @@ class MerchantWarriorTest < Test::Unit::TestCase
     assert_nil response.authorization
   end
 
+  def test_successful_void
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
+
+    assert response = @gateway.void(@success_amount, @transaction_id, @options)
+    assert_success response
+    assert_equal 'Transaction approved', response.message
+    assert response.test?
+    assert_equal '30-d4d19f4-db17-11df-9322-0022198101cd', response.authorization
+  end
+
+  def test_failed_void
+    @gateway.expects(:ssl_post).returns(failed_refund_response)
+
+    assert response = @gateway.void(@success_amount, @transaction_id)
+    assert_failure response
+    assert_equal 'MW -016:transactionID has already been reversed', response.message
+    assert response.test?
+    assert_nil response.authorization
+  end
+
   def test_successful_store
     @credit_card.month = '2'
     @credit_card.year = '2005'

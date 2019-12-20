@@ -15,6 +15,7 @@
 * Adyen: add `recurring_contract_type` GSF to auth [therufs] #3471
 * Stripe Payment Intents: Use localized_amount on capture [molbrown] #3475
 * Add support for dLocal installments [kdelemme] #3456
+* Merchant Warrior: Add void operation [leila-alderman] #3474
 
 == Version 1.103.0 (Dec 2, 2019)
 * Quickbooks: Mark transactions that returned `AuthorizationFailed` as failures [britth] #3447
