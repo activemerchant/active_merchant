@@ -246,6 +246,24 @@ class DecidirTest < Test::Unit::TestCase
     assert_equal 1, post[:payment_method_id]
   end
 
+  def test_payment_method_id_with_mastercard
+    post = {}
+    @gateway_for_purchase.send(:add_auth_purchase_params, post, @amount, credit_card('5299910010000015'), @options)
+    assert_equal 104, post[:payment_method_id]
+  end
+
+  def test_payment_method_id_with_amex
+    post = {}
+    @gateway_for_purchase.send(:add_auth_purchase_params, post, @amount, credit_card('373953192351004'), @options)
+    assert_equal 65, post[:payment_method_id]
+  end
+
+  def test_payment_method_id_with_diners
+    post = {}
+    @gateway_for_purchase.send(:add_auth_purchase_params, post, @amount, credit_card('36463664750005'), @options)
+    assert_equal 8, post[:payment_method_id]
+  end
+
   def test_payment_method_id_with_cabal
     post = {}
     credit_card = credit_card('5896570000000008')

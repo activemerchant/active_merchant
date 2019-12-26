@@ -122,6 +122,12 @@ module ActiveMerchant #:nodoc:
       def add_payment_method_id(credit_card)
         if options[:payment_method_id]
           options[:payment_method_id].to_i
+        elsif CreditCard.brand?(credit_card.number) == 'master'
+          104
+        elsif CreditCard.brand?(credit_card.number) == 'american_express'
+          65
+        elsif CreditCard.brand?(credit_card.number) == 'diners_club'
+          8
         elsif CreditCard.brand?(credit_card.number) == 'cabal'
           63
         elsif CreditCard.brand?(credit_card.number) == 'naranja'
