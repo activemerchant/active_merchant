@@ -60,6 +60,7 @@ class AdyenTest < Test::Unit::TestCase
 
     @options = {
       billing_address: address(),
+      shipping_address: address(),
       shopper_reference: 'John Smith',
       order_id: '345123',
       installments: 2,
@@ -662,13 +663,22 @@ class AdyenTest < Test::Unit::TestCase
     @options[:billing_address].delete(:address1)
     @options[:billing_address].delete(:address2)
     @options[:billing_address].delete(:state)
+    @options[:shipping_address].delete(:state)
     @gateway.send(:add_address, post, @options)
+    # Billing Address
     assert_equal 'NA', post[:billingAddress][:street]
     assert_equal 'NA', post[:billingAddress][:houseNumberOrName]
     assert_equal 'NA', post[:billingAddress][:stateOrProvince]
     assert_equal @options[:billing_address][:zip], post[:billingAddress][:postalCode]
     assert_equal @options[:billing_address][:city], post[:billingAddress][:city]
     assert_equal @options[:billing_address][:country], post[:billingAddress][:country]
+    # Shipping Address
+    assert_equal 'NA', post[:deliveryAddress][:stateOrProvince]
+    assert_equal @options[:shipping_address][:address1], post[:deliveryAddress][:street]
+    assert_equal @options[:shipping_address][:address2], post[:deliveryAddress][:houseNumberOrName]
+    assert_equal @options[:shipping_address][:zip], post[:deliveryAddress][:postalCode]
+    assert_equal @options[:shipping_address][:city], post[:deliveryAddress][:city]
+    assert_equal @options[:shipping_address][:country], post[:deliveryAddress][:country]
   end
 
   def test_authorize_with_network_tokenization_credit_card_no_name

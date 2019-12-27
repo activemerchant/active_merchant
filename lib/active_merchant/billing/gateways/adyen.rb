@@ -282,6 +282,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(post, options)
+        if address = options[:shipping_address]
+          post[:deliveryAddress] = {}
+          post[:deliveryAddress][:street] = address[:address1] || 'NA'
+          post[:deliveryAddress][:houseNumberOrName] = address[:address2] || 'NA'
+          post[:deliveryAddress][:postalCode] = address[:zip] if address[:zip]
+          post[:deliveryAddress][:city] = address[:city] || 'NA'
+          post[:deliveryAddress][:stateOrProvince] = get_state(address)
+          post[:deliveryAddress][:country] = address[:country] if address[:country]
+        end
         return unless post[:card]&.kind_of?(Hash)
         if (address = options[:billing_address] || options[:address]) && address[:country]
           post[:billingAddress] = {}
