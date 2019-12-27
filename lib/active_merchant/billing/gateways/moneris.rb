@@ -145,6 +145,9 @@ module ActiveMerchant #:nodoc:
         post[:pan] = credit_card.number
         post[:expdate] = expdate(credit_card)
         post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
+        post[:email] = options[:email] if options[:email]
+        post[:phone] = options[:phone] if options[:phone]
+        post[:note] = options[:note] if options[:note]
         commit('res_add_cc', post)
       end
 
