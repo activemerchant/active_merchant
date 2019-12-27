@@ -17,6 +17,7 @@ module ActiveMerchant
     MIN_VERSION = :TLS1_1
     RETRY_SAFE = false
     RUBY_184_POST_HEADERS = { 'Content-Type' => 'application/x-www-form-urlencoded' }
+    PROXY_ADDRESS = :ENV
 
     attr_accessor :endpoint
     attr_accessor :open_timeout
@@ -56,7 +57,7 @@ module ActiveMerchant
         @max_version = nil
       end
       @ssl_connection = {}
-      @proxy_address = :ENV
+      @proxy_address = PROXY_ADDRESS
       @proxy_port = nil
     end
 

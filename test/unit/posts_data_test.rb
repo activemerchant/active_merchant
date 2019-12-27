@@ -1,6 +1,7 @@
 require 'test_helper'
 
 class PostsDataTests < Test::Unit::TestCase
+  class HttpConnectionAbort < StandardError; end
 
   def setup
     @url = 'http://example.com'
@@ -77,6 +78,17 @@ class PostsDataTests < Test::Unit::TestCase
 
     assert_nothing_raised do
       @gateway.ssl_post(@url, '')
+    end
+  end
+
+  def test_respecting_environment_proxy_settings
+    # ensure clean proxy config
+    gw_class = Class.new(ActiveMerchant::Billing::Gateway)
+    gateway = gw_class.new
+
+    Net::HTTP.stubs(:new).with('example.com', 80, :ENV, nil).raises(PostsDataTests::HttpConnectionAbort)
+    assert_raises(PostsDataTests::HttpConnectionAbort) do
+      gateway.ssl_post(@url, '')
     end
   end
 end
