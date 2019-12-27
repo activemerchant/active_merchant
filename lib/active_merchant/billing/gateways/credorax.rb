@@ -151,6 +151,7 @@ module ActiveMerchant #:nodoc:
         add_submerchant_id(post, options)
         add_stored_credential(post, options)
         add_processor(post, options)
+        add_authorization_details(post, options)
 
         commit(:authorize, post)
       end
@@ -365,6 +366,11 @@ module ActiveMerchant #:nodoc:
       def add_processor(post, options)
         post[:r1] = options[:processor] if options[:processor]
         post[:r2] = options[:processor_merchant_id] if options[:processor_merchant_id]
+      end
+
+      def add_authorization_details(post, options)
+        post[:a10] = options[:authorization_type] if options[:authorization_type]
+        post[:a11] = options[:multiple_capture_count] if options[:multiple_capture_count]
       end
 
       ACTIONS = {

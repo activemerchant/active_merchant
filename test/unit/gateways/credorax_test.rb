@@ -407,6 +407,16 @@ class CredoraxTest < Test::Unit::TestCase
     end.respond_with(successful_credit_response)
   end
 
+  def test_authorize_adds_authorization_details
+    options_with_auth_details = @options.merge({authorization_type: '2', multiple_capture_count: '5' })
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, options_with_auth_details)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/a10=2/, data)
+      assert_match(/a11=5/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_purchase_adds_submerchant_id
     @options[:submerchant_id] = '12345'
     stub_comms do

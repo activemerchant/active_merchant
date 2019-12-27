@@ -21,6 +21,7 @@
 * Authorize.net: Correctly parse direct_response field with quotation marks [britth] #3479
 * Decidir: Add debit card payment method IDs [leila-alderman] #3480
 * CyberSource: Add issuer data+MDD to credit & void [leila-alderman] #3481
+* Credorax: add `authorization_type` and `multiple_capture_count` GSFs [therufs] #3478
 
 == Version 1.103.0 (Dec 2, 2019)
 * Quickbooks: Mark transactions that returned `AuthorizationFailed` as failures [britth] #3447
