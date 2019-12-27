@@ -8,6 +8,8 @@ class HpsTest < Test::Unit::TestCase
 
     @credit_card = credit_card
     @amount = 100
+    @check = check(account_number: '1357902468', routing_number: '122000030', number: '1234', account_type: 'SAVINGS')
+    @check_amount = 2000
 
     @options = {
       order_id: '1',
@@ -33,6 +35,16 @@ class HpsTest < Test::Unit::TestCase
     }
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_instance_of Response, response
+    assert_success response
+  end
+
+  def test_successful_check_purchase
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@check_amount, @check, @options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/<hps:CheckSale><hps:Block1><hps:CheckAction>SALE<\/hps:CheckAction>/, data)
+    end.respond_with(successful_check_purchase_response)
+
     assert_success response
   end
 
@@ -111,6 +123,16 @@ class HpsTest < Test::Unit::TestCase
 
     void = @gateway.void('169054')
     assert_instance_of Response, void
+    assert_success void
+  end
+
+  def test_successful_check_void
+    void = stub_comms(@gateway, :ssl_request) do
+      @gateway.void('169054', check_void: true)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/<hps:Transaction><hps:CheckVoid>/, data)
+    end.respond_with(successful_check_void_response)
+
     assert_success void
   end
 
@@ -480,6 +502,35 @@ class HpsTest < Test::Unit::TestCase
     RESPONSE
   end
 
+  def successful_check_purchase_response
+    <<-RESPONSE
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <soap:Body>
+    <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+      <Ver1.0>
+        <Header>
+          <LicenseId>144379</LicenseId>
+          <SiteId>144474</SiteId>
+          <DeviceId>6407594</DeviceId>
+          <GatewayTxnId>1284694345</GatewayTxnId>
+          <GatewayRspCode>0</GatewayRspCode>
+          <GatewayRspMsg>Success</GatewayRspMsg>
+          <RspDT>2020-01-13T15:11:24.735047</RspDT>
+        </Header>
+        <Transaction>
+          <CheckSale>
+            <RspCode>0</RspCode>
+            <RspMessage>Transaction Approved. BatchID:31796</RspMessage>
+          </CheckSale>
+        </Transaction>
+      </Ver1.0>
+    </PosResponse>
+  </soap:Body>
+</soap:Envelope>
+    RESPONSE
+  end
+
   def failed_charge_response
     <<-RESPONSE
 <?xml version="1.0" encoding="UTF-8"?>
@@ -775,6 +826,35 @@ class HpsTest < Test::Unit::TestCase
            </Transaction>
         </Ver1.0>
      </PosResponse>
+  </soap:Body>
+</soap:Envelope>
+    RESPONSE
+  end
+
+  def successful_check_void_response
+    <<-RESPONSE
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <soap:Body>
+    <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+      <Ver1.0>
+        <Header>
+          <LicenseId>144379</LicenseId>
+          <SiteId>144474</SiteId>
+          <DeviceId>6407594</DeviceId>
+          <GatewayTxnId>1284696436</GatewayTxnId>
+          <GatewayRspCode>0</GatewayRspCode>
+          <GatewayRspMsg>Success</GatewayRspMsg>
+          <RspDT>2020-01-13T15:44:24.3568038</RspDT>
+        </Header>
+        <Transaction>
+          <CheckVoid>
+            <RspCode>0</RspCode>
+            <RspMessage>Transaction Approved.</RspMessage>
+          </CheckVoid>
+        </Transaction>
+      </Ver1.0>
+    </PosResponse>
   </soap:Body>
 </soap:Envelope>
     RESPONSE

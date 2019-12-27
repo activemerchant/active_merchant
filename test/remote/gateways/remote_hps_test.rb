@@ -3,10 +3,13 @@ require 'test_helper'
 class RemoteHpsTest < Test::Unit::TestCase
   def setup
     @gateway = HpsGateway.new(fixtures(:hps))
+    @check_gateway = HpsGateway.new(fixtures(:hps_echeck))
 
     @amount = 100
+    @check_amount = 2000
     @declined_amount = 1034
     @credit_card =   credit_card('4000100011112224')
+    @check = check(account_number: '1357902468', routing_number: '122000030', number: '1234', account_type: 'SAVINGS')
 
     @options = {
       order_id: '1',
@@ -17,6 +20,13 @@ class RemoteHpsTest < Test::Unit::TestCase
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_check_purchase
+    options = @options.merge(company_name: 'Hot Buttered Toast Incorporated')
+    response = @check_gateway.purchase(@check_amount, @check, options)
     assert_success response
     assert_equal 'Success', response.message
   end
@@ -136,6 +146,16 @@ class RemoteHpsTest < Test::Unit::TestCase
     assert_success auth
 
     assert void = @gateway.void(auth.authorization)
+    assert_success void
+    assert_equal 'Success', void.params['GatewayRspMsg']
+  end
+
+  def test_successful_check_void
+    options = @options.merge(company_name: 'Hot Buttered Toast Incorporated')
+    purchase = @check_gateway.purchase(@check_amount, @check, options)
+    assert_success purchase
+
+    assert void = @check_gateway.void(purchase.authorization, @options.merge(check_void: true))
     assert_success void
     assert_equal 'Success', void.params['GatewayRspMsg']
   end

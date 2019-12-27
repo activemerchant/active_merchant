@@ -411,6 +411,9 @@ hdfc:
 hps:
   secret_api_key: "skapi_cert_MYl2AQAowiQAbLp5JesGKh7QFkcizOP2jcX9BrEMqQ"
 
+hps_echeck:
+  secret_api_key:
+
 iats_payments:
   agent_code: TEST88
   password: TEST88
