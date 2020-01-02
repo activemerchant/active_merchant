@@ -140,7 +140,8 @@ module ActiveMerchant #:nodoc:
           gsub(/(Authorization: Bearer )([A-Za-z0-9\-\._~\+\/]+=*)/, '\1[FILTERED]').
           gsub(/(payment_configuration_id\\?\\?\\?":\\?\\?\\?")(\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b)/, '\1[FILTERED]').
           gsub(/(Bb-Api-Subscription-Key:\s)(\b[0-9a-f]+)/, '\1[FILTERED]').
-          gsub(/(credit_card\\?\\?\\?":{.+\\?\\?\\?"number\\?\\?\\?":\\?\\?\\?")(\d+)/, '\1[FILTERED]')
+          gsub(/(credit_card\\?\\?\\?":{.+\\?\\?\\?"number\\?\\?\\?":\\?\\?\\?")\d+/, '\1[FILTERED]').
+          gsub(/(\\?\\?\\?"csc\\?\\?\\?":\\?\\?\\?")\d+/, '\1[FILTERED]')
       end
 
       def add_billing_contact(post, options)
@@ -166,8 +167,8 @@ module ActiveMerchant #:nodoc:
 
       def add_debit(post, check)
         post[:direct_debit_account_info] = {
-          account_number: check.account_number,
-          routing_number: check.routing_number,
+          account_number: check.account_number.gsub(/\D/, ''),
+          routing_number: check.routing_number.gsub(/\D/, ''),
           account_holder: "#{check.first_name} #{check.last_name}",
           check_number: check.number,
           account_type: check.account_type
@@ -179,7 +180,7 @@ module ActiveMerchant #:nodoc:
           credit_card = {}
           add_credit(credit_card, payment)
           post[:credit_card] = credit_card
-          post[:csc] = options[:csc]
+          post[:csc] = options[:csc] || payment.verification_value
 
         elsif payment.is_a?(Check)
           add_debit(post, payment)
@@ -187,6 +188,7 @@ module ActiveMerchant #:nodoc:
         else
           if options.key?(:card_token)
             post[:card_token] = options[:card_token]
+            post[:csc] = options[:csc]
           elsif options.key?(:direct_debit_account_token)
             post[:direct_debit_account_token] = options[:direct_debit_account_token]
           else
