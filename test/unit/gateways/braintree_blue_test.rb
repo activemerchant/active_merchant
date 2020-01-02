@@ -1174,7 +1174,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
         :number => '41111111111111111111',
         :cvv => '123',
         :expiration_month => '09',
-        :expiration_year => '2020',
+        :expiration_year => (Time.now.year + 1).to_s,
         :cardholder_name => 'Longbob Longsen',
       }
     }

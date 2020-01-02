@@ -106,7 +106,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_auth_purchase_params(post, money, credit_card, options)
-        post[:payment_method_id] = add_payment_method_id(credit_card)
+        post[:payment_method_id] = add_payment_method_id(credit_card, options)
         post[:site_transaction_id] = options[:order_id]
         post[:bin] = credit_card.number[0..5]
         post[:payment_type] = options[:payment_type] || 'single'
@@ -119,9 +119,19 @@ module ActiveMerchant #:nodoc:
         add_payment(post, credit_card, options)
       end
 
-      def add_payment_method_id(credit_card)
+      def add_payment_method_id(credit_card, options)
         if options[:payment_method_id]
           options[:payment_method_id].to_i
+        elsif options[:debit]
+          if CreditCard.brand?(credit_card.number) == 'visa'
+            31
+          elsif CreditCard.brand?(credit_card.number) == 'master'
+            105
+          elsif CreditCard.brand?(credit_card.number) == 'maestro'
+            106
+          elsif CreditCard.brand?(credit_card.number) == 'cabal'
+            108
+          end
         elsif CreditCard.brand?(credit_card.number) == 'master'
           104
         elsif CreditCard.brand?(credit_card.number) == 'american_express'
