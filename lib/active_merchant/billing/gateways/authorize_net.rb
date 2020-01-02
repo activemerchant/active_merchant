@@ -1007,7 +1007,7 @@ module ActiveMerchant
       end
 
       def parse_direct_response_elements(response, options)
-        params = response[:direct_response]
+        params = response[:direct_response]&.tr('"', '')
         return {} unless params
 
         parts = params.split(options[:delimiter] || ',')
