@@ -321,11 +321,14 @@ module ActiveMerchant #:nodoc:
 
         xml = Builder::XmlMarkup.new :indent => 2
         if action == 'capture'
+          add_mdd_fields(xml, options)
           add_void_service(xml, request_id, request_token)
         else
           add_purchase_data(xml, money, true, options.merge(:currency => currency || default_currency))
+          add_mdd_fields(xml, options)
           add_auth_reversal_service(xml, request_id, request_token)
         end
+        add_issuer_additional_data(xml, options)
         xml.target!
       end
 
@@ -344,7 +347,9 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new :indent => 2
 
         add_payment_method_or_subscription(xml, money, creditcard_or_reference, options)
+        add_mdd_fields(xml, options)
         add_credit_service(xml)
+        add_issuer_additional_data(xml, options)
 
         xml.target!
       end

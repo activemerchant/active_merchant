@@ -430,6 +430,22 @@ class CyberSourceTest < Test::Unit::TestCase
     end.respond_with(successful_card_credit_response)
   end
 
+  def test_credit_includes_issuer_additional_data
+    stub_comms do
+      @gateway.credit(@amount, @credit_card, issuer_additional_data: @issuer_additional_data)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<issuer>\s+<additionalData>#{@issuer_additional_data}<\/additionalData>\s+<\/issuer>/m, data)
+    end.respond_with(successful_card_credit_response)
+  end
+
+  def test_credit_includes_mdd_fields
+    stub_comms do
+      @gateway.credit(@amount, @credit_card, mdd_field_2: 'CustomValue2', mdd_field_3: 'CustomValue3')
+    end.check_request do |endpoint, data, headers|
+      assert_match(/field2>CustomValue2.*field3>CustomValue3</m, data)
+    end.respond_with(successful_card_credit_response)
+  end
+
   def test_successful_void_capture_request
     @gateway.stubs(:ssl_post).returns(successful_capture_response, successful_auth_reversal_response)
     assert response_capture = @gateway.capture(@amount, '1846925324700976124593')
@@ -446,6 +462,26 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response.test?
     assert response_void = @gateway.void(response.authorization, @options)
     assert response_void.success?
+  end
+
+  def test_successful_void_with_issuer_additional_data
+    authorization = '1000;1842651133440156177166;AP4JY+Or4xRonEAOERAyMzQzOTEzMEM0MFZaNUZCBgDH3fgJ8AEGAMfd+AnwAwzRpAAA7RT/;authorize;100;USD;'
+
+    stub_comms do
+      @gateway.void(authorization, issuer_additional_data: @issuer_additional_data)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<issuer>\s+<additionalData>#{@issuer_additional_data}<\/additionalData>\s+<\/issuer>/m, data)
+    end.respond_with(successful_void_response)
+  end
+
+  def test_void_includes_mdd_fields
+    authorization = '1000;1842651133440156177166;AP4JY+Or4xRonEAOERAyMzQzOTEzMEM0MFZaNUZCBgDH3fgJ8AEGAMfd+AnwAwzRpAAA7RT/;authorize;100;USD;'
+
+    stub_comms do
+      @gateway.void(authorization, mdd_field_2: 'CustomValue2', mdd_field_3: 'CustomValue3')
+    end.check_request do |endpoint, data, headers|
+      assert_match(/field2>CustomValue2.*field3>CustomValue3</m, data)
+    end.respond_with(successful_void_response)
   end
 
   def test_successful_void_authorization_with_elo_request

@@ -168,6 +168,24 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_successful_response(void)
   end
 
+  def test_void_with_issuer_additional_data
+    @options[:issuer_additional_data] = @issuer_additional_data
+
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_successful_response(auth)
+    assert void = @gateway.void(auth.authorization, @options)
+    assert_successful_response(void)
+  end
+
+  def test_void_with_mdd_fields
+    (1..20).each { |e| @options["mdd_field_#{e}".to_sym] = "value #{e}" }
+
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_successful_response(auth)
+    assert void = @gateway.void(auth.authorization, @options)
+    assert_successful_response(void)
+  end
+
   def test_successful_tax_calculation
     assert response = @gateway.calculate_tax(@credit_card, @options)
     assert response.params['totalTaxAmount']
@@ -392,6 +410,18 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
 
   def test_successful_standalone_credit_to_card_with_merchant_descriptor
     @options[:merchant_descriptor] = 'Spreedly'
+    assert response = @gateway.credit(@amount, @credit_card, @options)
+    assert_successful_response(response)
+  end
+
+  def test_successful_standalone_credit_to_card_with_issuer_additional_data
+    @options[:issuer_additional_data] = @issuer_additional_data
+    assert response = @gateway.credit(@amount, @credit_card, @options)
+    assert_successful_response(response)
+  end
+
+  def test_successful_standalone_credit_to_card_with_mdd_fields
+    (1..20).each { |e| @options["mdd_field_#{e}".to_sym] = "value #{e}" }
     assert response = @gateway.credit(@amount, @credit_card, @options)
     assert_successful_response(response)
   end
