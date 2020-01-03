@@ -51,6 +51,7 @@ module ActiveMerchant #:nodoc:
         add_card_or_token(post, payment)
         add_address(post, options)
         add_customer_responsible_person(post, payment, options)
+        add_additional_data(post, options)
 
         commit(:purchase, post)
       end
@@ -196,6 +197,10 @@ module ActiveMerchant #:nodoc:
             card_cvv: payment.verification_value
           }
         end
+      end
+
+      def add_additional_data(post, options)
+        post[:device_id] = options[:device_id] if options[:device_id]
       end
 
       def parse(body)
