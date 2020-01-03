@@ -17,7 +17,8 @@ class RemoteEbanxTest < Test::Unit::TestCase
         phone_number: '8522847035'
       }),
       order_id: generate_unique_id,
-      document: '853.513.468-93'
+      document: '853.513.468-93',
+      device_id: '34c376b2767'
     }
   end
 
@@ -71,7 +72,7 @@ class RemoteEbanxTest < Test::Unit::TestCase
 
     response = @gateway.purchase(500, @credit_card, options)
     assert_success response
-    assert_equal 'Sandbox - Test credit card, transaction captured', response.message
+    assert_equal 'Accepted', response.message
   end
 
   def test_failed_purchase
