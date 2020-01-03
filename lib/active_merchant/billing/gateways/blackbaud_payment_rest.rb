@@ -140,7 +140,7 @@ module ActiveMerchant #:nodoc:
           gsub(/(Authorization: Bearer )([A-Za-z0-9\-\._~\+\/]+=*)/, '\1[FILTERED]').
           gsub(/(payment_configuration_id\\?\\?\\?":\\?\\?\\?")(\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b)/, '\1[FILTERED]').
           gsub(/(Bb-Api-Subscription-Key:\s)(\b[0-9a-f]+)/, '\1[FILTERED]').
-          gsub(/(credit_card\\?\\?\\?":{.+\\?\\?\\?"number\\?\\?\\?":\\?\\?\\?")\d+/, '\1[FILTERED]').
+          gsub(/(\\?\\?\\?"number\\?\\?\\?":\\?\\?\\?")\d+/, '\1[FILTERED]').
           gsub(/(\\?\\?\\?"csc\\?\\?\\?":\\?\\?\\?")\d+/, '\1[FILTERED]')
       end
 
