@@ -41,6 +41,7 @@ class RemoteBlackbaudPaymentRestTest < Test::Unit::TestCase
   def test_successful_purchase_with_credit_card_token
     credit_card_stored = @gateway.store(@credit_card, @options)
     @options[:card_token] = credit_card_stored.authorization
+    @options[:csc] = '123'
     response = @gateway.purchase(@amount, nil, @options)
     assert_success response
   end
@@ -56,11 +57,10 @@ class RemoteBlackbaudPaymentRestTest < Test::Unit::TestCase
     assert_scrubbed(@gateway.options[:api_key], transcript)
   end
 
-  # Validation error code: <InvalidUserAgent> Validation error message <Invalid User-Agent string.>
-  #   def test_successful_purchase_with_debit_card_token
-  #     debit_stored = @gateway.store(check, @options)
-  #     @options[:direct_debit_account_token] = debit_stored.authorization
-  #     response = response = @gateway.purchase(@amount, nil, @options)
-  #     assert_success response
-  #   end
+  def test_successful_purchase_with_debit_card_token
+    debit_stored = @gateway.store(check, @options)
+    @options[:direct_debit_account_token] = debit_stored.authorization
+    response = response = @gateway.purchase(@amount, nil, @options)
+    assert_success response
+  end
 end
