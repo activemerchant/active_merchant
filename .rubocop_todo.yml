@@ -97,12 +97,6 @@ Layout/SpaceAroundOperators:
 Layout/SpaceInsideArrayLiteralBrackets:
   Enabled: false
 
-# Offense count: 12
-# Cop supports --auto-correct.
-Layout/SpaceInsideArrayPercentLiteral:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/migs/migs_codes.rb'
-
 # Offense count: 1186
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle, EnforcedStyleForEmptyBraces.

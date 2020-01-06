@@ -85,13 +85,13 @@ module ActiveMerchant
         # migs_code: Used in response for purchase/authorize/status
         # migs_long_code: Used to pre-select card for server_purchase_url
         # name: The nice display name
-        %w(american_express AE Amex             American\ Express),
-        %w(diners_club      DC Dinersclub       Diners\ Club),
-        %w(jcb              JC JCB              JCB\ Card),
-        %w(maestro          MS Maestro          Maestro\ Card),
-        %w(master           MC Mastercard       MasterCard),
-        %w(na               PL PrivateLabelCard Private\ Label\ Card),
-        %w(visa             VC Visa             Visa\ Card')
+        %w(american_express AE Amex American\ Express),
+        %w(diners_club DC Dinersclub Diners\ Club),
+        %w(jcb JC JCB JCB\ Card),
+        %w(maestro MS Maestro Maestro\ Card),
+        %w(master MC Mastercard MasterCard),
+        %w(na PL PrivateLabelCard Private\ Label\ Card),
+        %w(visa VC Visa Visa\ Card)
       ].map do |am_code, migs_code, migs_long_code, name|
         CreditCardType.new(am_code, migs_code, migs_long_code, name)
       end
