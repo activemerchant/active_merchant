@@ -21,8 +21,8 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://www.securepay.com/'
       self.display_name = 'SecurePay'
 
-      CARD_CODE_ERRORS = %w( N S )
-      AVS_ERRORS = %w( A E N R W Z )
+      CARD_CODE_ERRORS = %w(N S)
+      AVS_ERRORS = %w(A E N R W Z)
       AVS_REASON_CODES = %w(27 45)
       TRANSACTION_ALREADY_ACTIONED = %w(310 311)
 

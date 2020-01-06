@@ -28,8 +28,8 @@ module ActiveMerchant #:nodoc:
 
       APPROVED, DECLINED = 1, 2
 
-      CARD_CODE_ERRORS = %w( N S )
-      AVS_ERRORS = %w( A E N R W Z )
+      CARD_CODE_ERRORS = %w(N S)
+      AVS_ERRORS = %w(A E N R W Z)
 
       def initialize(options = {})
         requires!(options, :login, :password)

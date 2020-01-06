@@ -21,7 +21,7 @@ module ActiveMerchant #:nodoc:
 
       MONETARY_CHANGE_STATUSES = ['SETTLE', 'AUTHORIZE', 'AUTHORIZE ADDITIONAL', 'CREDIT', 'SPLITSETTLE']
 
-      CARD_CODE_ERRORS = %w( N S "" )
+      CARD_CODE_ERRORS = %w(N S "")
 
       CARD_CODE_MESSAGES = {
         'M' => 'Card verification number matched',
@@ -32,7 +32,7 @@ module ActiveMerchant #:nodoc:
         '' => 'Transaction failed because incorrect card verification number was entered or no number was entered'
       }
 
-      AVS_ERRORS = %w( A B C E I N O P R W Z )
+      AVS_ERRORS = %w(A B C E I N O P R W Z)
 
       AVS_MESSAGES = {
         'A' => 'Street address matches billing information, zip/postal code does not',

@@ -16,7 +16,7 @@ module ActiveMerchant
         'U' => 'Issuer was not certified for card verification'
       }
 
-      CARD_CODE_ERRORS = %w( N S )
+      CARD_CODE_ERRORS = %w(N S)
 
       AVS_MESSAGES = {
         'A' => 'Street address matches billing information, zip/postal code does not',
@@ -34,7 +34,7 @@ module ActiveMerchant
         'Z' => '5-digit zip/postal code matches billing information, street address does not',
       }
 
-      AVS_ERRORS = %w( A E N R W Z )
+      AVS_ERRORS = %w(A E N R W Z)
 
       PAYMENT_GATEWAY_RESPONSES = {
         'P01' => 'AVS Mismatch Failure',

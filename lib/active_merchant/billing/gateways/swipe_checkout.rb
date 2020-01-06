@@ -11,7 +11,7 @@ module ActiveMerchant #:nodoc:
 
       TRANSACTION_API = '/createShopifyTransaction.php'
 
-      self.supported_countries = %w[ NZ CA ]
+      self.supported_countries = %w[NZ CA]
       self.default_currency = 'NZD'
       self.supported_cardtypes = [:visa, :master]
       self.homepage_url = 'https://www.swipehq.com/checkout'

@@ -10,8 +10,8 @@ module ActiveMerchant #:nodoc:
 
       self.ignore_http_status = true
 
-      CARD_CODE_ERRORS = %w( N S )
-      AVS_ERRORS = %w( A E N R W Z )
+      CARD_CODE_ERRORS = %w(N S)
+      AVS_ERRORS = %w(A E N R W Z)
       AVS_REASON_CODES = %w(27 45)
 
       FIELD_MAP = {

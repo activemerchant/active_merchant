@@ -140,11 +140,11 @@ module QuickpayCommon
     10 => {
       :authorize => %w(mobile_number acquirer autofee customer_id extras
                        zero_auth customer_ip),
-      :capture   => %w( extras ),
-      :cancel    => %w( extras ),
-      :refund    => %w( extras ),
-      :subscribe => %w( variables branding_id),
-      :authorize_subscription => %w( mobile_number acquirer customer_ip),
+      :capture   => %w(extras),
+      :cancel    => %w(extras),
+      :refund    => %w(extras),
+      :subscribe => %w(variables branding_id),
+      :authorize_subscription => %w(mobile_number acquirer customer_ip),
       :recurring => %w(auto_capture autofee zero_auth)
     }
   }

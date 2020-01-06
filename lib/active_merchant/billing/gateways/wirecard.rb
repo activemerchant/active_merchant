@@ -13,9 +13,9 @@ module ActiveMerchant #:nodoc:
         'xsi:noNamespaceSchemaLocation' => 'wirecard.xsd'
       }
 
-      PERMITTED_TRANSACTIONS = %w[ PREAUTHORIZATION CAPTURE PURCHASE ]
+      PERMITTED_TRANSACTIONS = %w[PREAUTHORIZATION CAPTURE PURCHASE]
 
-      RETURN_CODES = %w[ ACK NOK ]
+      RETURN_CODES = %w[ACK NOK]
 
       # Wirecard only allows phone numbers with a format like this: +xxx(yyy)zzz-zzzz-ppp, where:
       #   xxx = Country code

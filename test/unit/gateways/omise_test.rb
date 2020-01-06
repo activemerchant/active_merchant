@@ -23,7 +23,7 @@ class OmiseTest < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal @gateway.supported_countries, %w( TH JP )
+    assert_equal @gateway.supported_countries, %w(TH JP)
   end
 
   def test_supported_cardtypes

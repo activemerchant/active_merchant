@@ -218,7 +218,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def setup_future_usage(post, options = {})
-        post[:setup_future_usage] = options[:setup_future_usage] if %w( on_session off_session ).include?(options[:setup_future_usage])
+        post[:setup_future_usage] = options[:setup_future_usage] if %w(on_session off_session).include?(options[:setup_future_usage])
         post[:off_session] = options[:off_session] if options[:off_session] && options[:confirm] == true
         post
       end

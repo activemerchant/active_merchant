@@ -35,8 +35,8 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://www.metricsglobal.com'
       self.display_name = 'Metrics Global'
 
-      CARD_CODE_ERRORS = %w( N S )
-      AVS_ERRORS = %w( A E N R W Z )
+      CARD_CODE_ERRORS = %w(N S)
+      AVS_ERRORS = %w(A E N R W Z)
       AVS_REASON_CODES = %w(27 45)
 
       # Creates a new MetricsGlobalGateway

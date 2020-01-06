@@ -265,7 +265,7 @@ module ActiveMerchant #:nodoc:
 
       def default_customer_fields
         hash={}
-        %w( CustomerRef Title FirstName LastName Company JobDesc Email Address Suburb State PostCode Country Phone Mobile Fax URL Comments CCNumber CCNameOnCard CCExpiryMonth CCExpiryYear ).each do |field|
+        %w(CustomerRef Title FirstName LastName Company JobDesc Email Address Suburb State PostCode Country Phone Mobile Fax URL Comments CCNumber CCNameOnCard CCExpiryMonth CCExpiryYear).each do |field|
           hash[field.to_sym]=''
         end
         return hash
@@ -273,7 +273,7 @@ module ActiveMerchant #:nodoc:
 
       def default_payment_fields
         hash={}
-        %w( managedCustomerID amount invoiceReference invoiceDescription ).each do |field|
+        %w(managedCustomerID amount invoiceReference invoiceDescription).each do |field|
           hash[field.to_sym]=''
         end
         return hash

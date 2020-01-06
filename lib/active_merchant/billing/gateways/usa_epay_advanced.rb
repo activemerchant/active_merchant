@@ -230,21 +230,21 @@ module ActiveMerchant #:nodoc:
       } #:nodoc:
 
       AVS_RESULTS = {
-        'Y' => %w( YYY Y YYA YYD ),
-        'Z' => %w( NYZ Z ),
-        'A' => %w( YNA A YNY ),
-        'N' => %w( NNN N NN ),
-        'X' => %w( YYX X ),
-        'W' => %w( NYW W ),
-        'XXW' => %w( XXW ),
-        'XXU' => %w( XXU ),
-        'R' => %w( XXR R U E ),
-        'S' => %w( XXS S ),
-        'XXE' => %w( XXE ),
-        'G' => %w( XXG G C I ),
-        'B' => %w( YYG B M ),
-        'D' => %w( GGG D ),
-        'P' => %w( YGG P )
+        'Y' => %w(YYY Y YYA YYD),
+        'Z' => %w(NYZ Z),
+        'A' => %w(YNA A YNY),
+        'N' => %w(NNN N NN),
+        'X' => %w(YYX X),
+        'W' => %w(NYW W),
+        'XXW' => %w(XXW),
+        'XXU' => %w(XXU),
+        'R' => %w(XXR R U E),
+        'S' => %w(XXS S),
+        'XXE' => %w(XXE),
+        'G' => %w(XXG G C I),
+        'B' => %w(YYG B M),
+        'D' => %w(GGG D),
+        'P' => %w(YGG P)
       }.inject({}) do |map, (type, codes)|
         codes.each { |code| map[code] = type }
         map

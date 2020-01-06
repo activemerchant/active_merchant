@@ -197,7 +197,7 @@ module ActiveMerchant #:nodoc:
         ACTIONS
       end
 
-      CREDIT_CARD_FIELDS = %w(AuthorizationNumber ClientIpAddress BillingAddress BillingCity BillingState BillingPostalCode BillingCountry BillingName CardVerificationValue ExpirationMonth ExpirationYear ReferenceNumber TransactionAmount AccountNumber )
+      CREDIT_CARD_FIELDS = %w(AuthorizationNumber ClientIpAddress BillingAddress BillingCity BillingState BillingPostalCode BillingCountry BillingName CardVerificationValue ExpirationMonth ExpirationYear ReferenceNumber TransactionAmount AccountNumber)
 
       ACTIONS = {
            :credit_card_authorize       => CREDIT_CARD_FIELDS,

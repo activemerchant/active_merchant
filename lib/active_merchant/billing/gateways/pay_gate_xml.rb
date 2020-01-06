@@ -143,7 +143,7 @@ module ActiveMerchant #:nodoc:
         990028  => 'Transaction cancelled' # Customer clicks the 'Cancel' button on the payment page
       }
 
-      SUCCESS_CODES = %w( 990004 990005 990017 990012 990018 990031 )
+      SUCCESS_CODES = %w(990004 990005 990017 990012 990018 990031)
 
       TRANSACTION_CODES = {
         0 => 'Not Done',
