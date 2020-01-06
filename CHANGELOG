@@ -25,6 +25,7 @@
 * CardStream: use localized_amount to correctly support zero-decimal currencies [britth] #3473
 * EBANX: Add additional data in post [Ruanito] #3482
 * Credorax: Omit phone when nil [leila-alderman] #3490
+* TransFirst TrExp: Remove hyphens from zip [leila-alderman] #3483
 
 == Version 1.103.0 (Dec 2, 2019)
 * Quickbooks: Mark transactions that returned `AuthorizationFailed` as failures [britth] #3447
