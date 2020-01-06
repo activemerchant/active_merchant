@@ -456,5 +456,4 @@ Conn close
     </NABTransactMessage>
     XML
   end
-
 end

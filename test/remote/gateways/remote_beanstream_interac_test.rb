@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class RemoteBeanstreamInteracTest < Test::Unit::TestCase
-
   def setup
     @gateway = BeanstreamInteracGateway.new(fixtures(:beanstream_interac))
 

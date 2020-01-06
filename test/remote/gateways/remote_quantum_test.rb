@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class RemoteQuantumTest < Test::Unit::TestCase
-
   def setup
     @gateway = QuantumGateway.new(fixtures(:quantum))
 

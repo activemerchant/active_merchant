@@ -6,7 +6,6 @@ require 'test_helper'
 # only work the first time you run them since the profile, if created again, becomes a duplicate.  There is a setting in order settings which, when unchecked will allow the tests to be run any number
 # of times without needing the manual deletion step between test runs.  The setting is: Do not allow profile to be created with card data duplicated from an existing profile.
 class RemoteBeanstreamTest < Test::Unit::TestCase
-
   def setup
     @gateway = BeanstreamGateway.new(fixtures(:beanstream))
 

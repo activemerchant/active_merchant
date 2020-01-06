@@ -285,7 +285,6 @@ module ActiveMerchant #:nodoc:
           @params['CreateCustomerResult']
         end
       end
-
     end
   end
 end

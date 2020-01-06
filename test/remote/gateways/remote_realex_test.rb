@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class RemoteRealexTest < Test::Unit::TestCase
-
   def setup
     @gateway = RealexGateway.new(fixtures(:realex_with_account))
 

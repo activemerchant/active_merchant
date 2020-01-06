@@ -251,7 +251,6 @@ module ActiveMerchant #:nodoc:
       def strip_invalid_xml_chars(xml)
         xml.gsub(/&(?!(?:[a-z]+|#[0-9]+|x[a-zA-Z0-9]+);)/, '&amp;')
       end
-
     end
   end
 end

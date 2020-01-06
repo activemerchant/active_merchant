@@ -16,7 +16,6 @@ module ActiveMerchant #:nodoc:
 
       # The name of the gateway
       self.display_name = 'NELiX TransaX'
-
     end
   end
 end

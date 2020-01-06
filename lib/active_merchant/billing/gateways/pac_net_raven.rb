@@ -1,7 +1,6 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PacNetRavenGateway < Gateway
-
       AVS_ADDRESS_CODES = {
         'avs_address_unavailable'   => 'X',
         'avs_address_not_checked'   => 'X',

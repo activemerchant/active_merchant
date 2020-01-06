@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class RemoteCardSaveTest < Test::Unit::TestCase
-
   def setup
     @gateway = CardSaveGateway.new(fixtures(:card_save))
 

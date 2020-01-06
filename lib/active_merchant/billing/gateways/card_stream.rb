@@ -1,7 +1,6 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class CardStreamGateway < Gateway
-
       THREEDSECURE_REQUIRED_DEPRECATION_MESSAGE = 'Specifying the :threeDSRequired initialization option is deprecated. Please use the `:threeds_required => true` *transaction* option instead.'
 
       self.test_url = self.live_url = 'https://gateway.cardstream.com/direct/'
@@ -363,7 +362,6 @@ module ActiveMerchant #:nodoc:
       def add_pair(post, key, value, options = {})
         post[key] = value if !value.blank? || options[:required]
       end
-
     end
   end
 end

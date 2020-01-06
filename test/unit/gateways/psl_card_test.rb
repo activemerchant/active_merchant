@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class PslCardTest < Test::Unit::TestCase
-
   def setup
     @gateway = PslCardGateway.new(
                  :login => 'LOGIN',

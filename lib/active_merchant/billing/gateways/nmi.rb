@@ -318,7 +318,6 @@ module ActiveMerchant #:nodoc:
           response[:responsetext]
         end
       end
-
     end
   end
 end

@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class RemoteWorldpayTest < Test::Unit::TestCase
-
   def setup
     @gateway = WorldpayGateway.new(fixtures(:world_pay_gateway))
     @cftgateway = WorldpayGateway.new(fixtures(:world_pay_gateway_cft))

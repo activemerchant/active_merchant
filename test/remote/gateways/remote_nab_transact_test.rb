@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class RemoteNabTransactTest < Test::Unit::TestCase
-
   def setup
     @gateway = NabTransactGateway.new(fixtures(:nab_transact))
     @privileged_gateway = NabTransactGateway.new(fixtures(:nab_transact_privileged))
@@ -260,5 +259,4 @@ class RemoteNabTransactTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.number, clean_transcript)
     assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
   end
-
 end

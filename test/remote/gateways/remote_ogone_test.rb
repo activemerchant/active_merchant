@@ -3,7 +3,6 @@
 require 'test_helper'
 
 class RemoteOgoneTest < Test::Unit::TestCase
-
   def setup
     @gateway = OgoneGateway.new(fixtures(:ogone))
     @amount = 100

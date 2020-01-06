@@ -189,7 +189,6 @@ module ActiveMerchant #:nodoc:
         end
         retval.target!
       end
-
     end
   end
 end

@@ -267,5 +267,4 @@ class RemoteFirstdataE4V27Test < Test::Unit::TestCase
     assert_scrubbed(@gateway.options[:password], transcript)
     assert_scrubbed(@gateway.options[:hmac_key], transcript)
   end
-
 end

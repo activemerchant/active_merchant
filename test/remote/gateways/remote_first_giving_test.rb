@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class RemoteFirstGivingTest < Test::Unit::TestCase
-
   def setup
     @gateway = FirstGivingGateway.new(fixtures(:first_giving))
 

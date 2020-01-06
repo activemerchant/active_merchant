@@ -743,5 +743,4 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     gateway = AuthorizeNetGateway.new(login: 'unknown_login', password: 'not_right')
     assert !gateway.verify_credentials
   end
-
 end

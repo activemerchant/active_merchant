@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class RemoteFederatedCanadaTest < Test::Unit::TestCase
-
   def setup
     @gateway = FederatedCanadaGateway.new(fixtures(:federated_canada))
 

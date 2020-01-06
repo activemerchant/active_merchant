@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class RemoteSecurePayAuTest < Test::Unit::TestCase
-
   class MyCreditCard
     include ActiveMerchant::Billing::CreditCardMethods
     attr_accessor :number, :month, :year, :first_name, :last_name, :verification_value, :brand

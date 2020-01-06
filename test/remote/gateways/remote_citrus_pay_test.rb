@@ -130,5 +130,4 @@ class RemoteCitrusPayTest < Test::Unit::TestCase
     gateway = CitrusPayGateway.new(userid: 'unknown', password: 'unknown')
     assert !gateway.verify_credentials
   end
-
 end

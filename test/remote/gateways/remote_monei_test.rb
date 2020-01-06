@@ -162,5 +162,4 @@ class RemoteMoneiTest < Test::Unit::TestCase
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
   end
-
 end

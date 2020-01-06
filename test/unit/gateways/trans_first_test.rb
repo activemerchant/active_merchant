@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class TransFirstTest < Test::Unit::TestCase
-
   def setup
     @gateway = TransFirstGateway.new(
       :login => 'LOGIN',

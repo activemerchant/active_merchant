@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class PaySecureTest < Test::Unit::TestCase
-
   def setup
     @gateway = PaySecureGateway.new(
                  :login => 'login',

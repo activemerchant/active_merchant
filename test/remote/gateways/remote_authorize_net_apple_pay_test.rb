@@ -88,5 +88,4 @@ class RemoteAuthorizeNetApplePayTest < Test::Unit::TestCase
       transaction_identifier: defaults[:transaction_identifier]
     )
   end
-
 end

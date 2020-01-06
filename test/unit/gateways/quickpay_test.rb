@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class QuickpayTest < Test::Unit::TestCase
-
   def test_error_without_login_option
     assert_raise ArgumentError do
       QuickpayGateway.new
@@ -17,5 +16,4 @@ class QuickpayTest < Test::Unit::TestCase
     gateway = QuickpayGateway.new(:login => 100, :api_key => 'APIKEY')
     assert_instance_of QuickpayV10Gateway, gateway
   end
-
 end

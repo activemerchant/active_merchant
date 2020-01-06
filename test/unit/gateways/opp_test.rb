@@ -304,5 +304,4 @@ class OppTest < Test::Unit::TestCase
       @body = body
     end
   end
-
 end

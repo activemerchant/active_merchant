@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class RemoteItransactTest < Test::Unit::TestCase
-
   def setup
     @gateway = ItransactGateway.new(fixtures(:itransact))
 

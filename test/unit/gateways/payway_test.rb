@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class PaywayTest < Test::Unit::TestCase
-
   def setup
     @gateway = PaywayGateway.new(
       :username => '12341234',

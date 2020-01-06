@@ -370,5 +370,4 @@ class BeanstreamTest < Test::Unit::TestCase
   def scrubbed_transcript
     'ref1=reference+one&trnCardOwner=Longbob+Longsen&trnCardNumber=[FILTERED]&trnExpMonth=09&trnExpYear=16&trnCardCvd=[FILTERED]&ordName=xiaobo+zzz&ordEmailAddress=xiaobozzz%40example.com&username=awesomesauce&password=[FILTERED]'
   end
-
 end

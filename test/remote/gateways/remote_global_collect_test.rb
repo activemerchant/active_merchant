@@ -220,5 +220,4 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@gateway.options[:secret_api_key], transcript)
   end
-
 end

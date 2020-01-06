@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class RemoteJetpayV2CertificationTest < Test::Unit::TestCase
-
   def setup
     @gateway = JetpayV2Gateway.new(fixtures(:jetpay_v2))
 
@@ -344,5 +343,4 @@ class RemoteJetpayV2CertificationTest < Test::Unit::TestCase
     assert_equal 'APPROVED', response.message
     @unique_id = response.params['unique_id']
   end
-
 end

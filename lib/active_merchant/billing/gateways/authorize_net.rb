@@ -1059,7 +1059,6 @@ module ActiveMerchant
           balance_on_card: parts[54] || '',
         }
       end
-
     end
   end
 end

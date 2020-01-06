@@ -199,7 +199,6 @@ module ActiveMerchant #:nodoc:
           response['message'] || 'Unable to read error message'
         end
       end
-
     end
   end
 end

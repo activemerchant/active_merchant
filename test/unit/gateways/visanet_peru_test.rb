@@ -518,5 +518,4 @@ class VisanetPeruTest < Test::Unit::TestCase
     }
     RESPONSE
   end
-
 end

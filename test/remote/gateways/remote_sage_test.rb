@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class RemoteSageTest < Test::Unit::TestCase
-
   def setup
     @gateway = SageGateway.new(fixtures(:sage))
 
@@ -231,5 +230,4 @@ class RemoteSageTest < Test::Unit::TestCase
     assert_scrubbed(@check.routing_number, transcript)
     assert_scrubbed(@gateway.options[:password], transcript)
   end
-
 end

@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class RemotePayexTest < Test::Unit::TestCase
-
   def setup
     @gateway = PayexGateway.new(fixtures(:payex))
 

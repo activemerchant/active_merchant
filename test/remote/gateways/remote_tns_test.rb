@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class RemoteTnsTest < Test::Unit::TestCase
-
   def setup
     TnsGateway.ssl_strict = false # Sandbox has an improperly installed cert
     @gateway = TnsGateway.new(fixtures(:tns))

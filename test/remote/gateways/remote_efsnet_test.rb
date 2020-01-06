@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class RemoteEfsnetTest < Test::Unit::TestCase
-
   def setup
     Base.mode = :test
 

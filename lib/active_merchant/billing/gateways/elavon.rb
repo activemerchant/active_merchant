@@ -310,7 +310,6 @@ module ActiveMerchant #:nodoc:
         }
         resp
       end
-
     end
   end
 end

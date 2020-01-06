@@ -1,7 +1,6 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PaystationGateway < Gateway
-
       self.live_url = self.test_url = 'https://www.paystation.co.nz/direct/paystation.dll'
 
       # an "error code" of "0" means "No error - transaction successful"
@@ -195,7 +194,6 @@ module ActiveMerchant #:nodoc:
       def format_date(month, year)
         "#{format(year, :two_digits)}#{format(month, :two_digits)}"
       end
-
     end
 
     class PaystationResponse < Response

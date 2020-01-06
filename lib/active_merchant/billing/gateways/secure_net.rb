@@ -1,7 +1,6 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class SecureNetGateway < Gateway
-
       API_VERSION = '4.0'
 
       TRANSACTIONS = {
@@ -257,7 +256,6 @@ module ActiveMerchant #:nodoc:
       def build_authorization(response)
         [response[:transactionid], response[:transactionamount], response[:last4_digits]].join('|')
       end
-
     end
   end
 end

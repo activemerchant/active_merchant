@@ -652,5 +652,4 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
     Conn close
     )
   end
-
 end

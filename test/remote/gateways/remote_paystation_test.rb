@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class RemotePaystationTest < Test::Unit::TestCase
-
   def setup
     @gateway = PaystationGateway.new(fixtures(:paystation))
 

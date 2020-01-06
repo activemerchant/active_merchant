@@ -21,7 +21,6 @@ module ActiveMerchant
       self.supported_countries = %w(AR AU BR FR DE HK MX NZ SG GB US)
       self.default_currency = 'USD'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb, :maestro]
-
     end
   end
 end

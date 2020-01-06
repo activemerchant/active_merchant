@@ -323,7 +323,6 @@ module ActiveMerchant #:nodoc:
           'discover'        => 'DI',
           'diners_club'     => 'DC', }[key]
       end
-
     end
   end
 end

@@ -1,7 +1,6 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class AdyenGateway < Gateway
-
       # we recommend setting up merchant-specific endpoints.
       # https://docs.adyen.com/developers/api-manual#apiendpoints
       self.test_url = 'https://pal-test.adyen.com/pal/servlet/'

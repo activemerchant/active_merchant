@@ -470,5 +470,4 @@ Conn close
   def failed_ch_response
     { 'status' => { 'code' => 40000, 'message' => 'General input error' }}.to_json
   end
-
 end

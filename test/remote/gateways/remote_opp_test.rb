@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class RemoteOppTest < Test::Unit::TestCase
-
   def setup
     @gateway = OppGateway.new(fixtures(:opp))
     @amount = 100

@@ -110,5 +110,4 @@ class RemoteEpayTest < Test::Unit::TestCase
     response = @gateway.void(0)
     assert_failure response
   end
-
 end

@@ -3,7 +3,6 @@
 require 'test_helper'
 
 class RemotePayboxDirectTest < Test::Unit::TestCase
-
   def setup
     @gateway = PayboxDirectGateway.new(fixtures(:paybox_direct))
 

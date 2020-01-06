@@ -205,7 +205,6 @@ module ActiveMerchant #:nodoc:
       def handle_response(response)
         response.body
       end
-
     end
   end
 end

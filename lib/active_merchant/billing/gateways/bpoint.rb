@@ -240,7 +240,6 @@ module ActiveMerchant #:nodoc:
       end
 
       class ProcessPaymentResponse < BPointResponse
-
         private
 
         def authorization_key
@@ -257,7 +256,6 @@ module ActiveMerchant #:nodoc:
       end
 
       class AddTokenResponse < BPointResponse
-
         private
 
         def authorization_key

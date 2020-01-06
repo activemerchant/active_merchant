@@ -295,7 +295,6 @@ module ActiveMerchant #:nodoc:
       def request_timeout
         @options[:request_timeout] || 60
       end
-
     end
   end
 end

@@ -118,5 +118,4 @@ class PaypalDigitalGoodsTest < Test::Unit::TestCase
     		</SOAP-ENV:Body>
     	</SOAP-ENV:Envelope>"
   end
-
 end

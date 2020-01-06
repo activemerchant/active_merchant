@@ -16,7 +16,6 @@ module ActiveMerchant #:nodoc:
         @test_url = 'https://gw1.cardsaveonlinepayments.com:4430/'
         @live_url = 'https://gw1.cardsaveonlinepayments.com:4430/'
       end
-
     end
   end
 end

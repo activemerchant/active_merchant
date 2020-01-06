@@ -296,7 +296,6 @@ module ActiveMerchant #:nodoc:
       end
 
       class SageVault
-
         def initialize(options, gateway)
           @live_url = 'https://www.sagepayments.net/web_services/wsVault/wsVault.asmx'
           @options = options

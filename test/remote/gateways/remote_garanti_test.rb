@@ -2,7 +2,6 @@ require 'test_helper'
 
 # NOTE: tests may fail randomly because Garanti returns random(!) responses for their test server
 class RemoteGarantiTest < Test::Unit::TestCase
-
   def setup
     @gateway = GarantiGateway.new(fixtures(:garanti))
 

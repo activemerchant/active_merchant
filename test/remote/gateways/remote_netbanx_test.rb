@@ -229,5 +229,4 @@ class RemoteNetbanxTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'OK', response.message
   end
-
 end

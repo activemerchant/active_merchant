@@ -270,7 +270,6 @@ module ActiveMerchant #:nodoc:
       def authorization_parts_from(authorization)
         authorization.split(/;/)
       end
-
     end
   end
 end

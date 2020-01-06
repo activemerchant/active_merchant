@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class RemoteModernPaymentTest < Test::Unit::TestCase
-
   def setup
     @gateway = ModernPaymentsGateway.new(fixtures(:modern_payments))
 

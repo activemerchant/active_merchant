@@ -812,5 +812,4 @@ class OmiseTest < Test::Unit::TestCase
     }
     RESPONSE
   end
-
 end

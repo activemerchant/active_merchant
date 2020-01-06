@@ -427,5 +427,4 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     assert_scrubbed(@check.routing_number, transcript)
     assert_scrubbed(@gateway.options[:api_password], transcript)
   end
-
 end

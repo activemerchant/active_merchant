@@ -1607,7 +1607,6 @@ module ActiveMerchant #:nodoc:
 
         response
       end
-
     end
   end
 end

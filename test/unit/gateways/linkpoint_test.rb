@@ -256,5 +256,4 @@ class LinkpointTest < Test::Unit::TestCase
   def scrubbed_transcript
     '</orderoptions><creditcard><cardnumber>[FILTERED]</cardnumber><cardexpmonth>9</cardexpmonth><cardexpyear>16</cardexpyear><cvmvalue>[FILTERED]</cvmvalue><cvmindicator>provided</cvmindicator></creditcard><billing><name>Jim Smith</name>'
   end
-
 end

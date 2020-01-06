@@ -216,5 +216,4 @@ Parameter name: strPAN</faultstring>
 </soap:Envelope>
     XML
   end
-
 end

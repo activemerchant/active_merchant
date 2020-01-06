@@ -237,7 +237,6 @@ module ActiveMerchant #:nodoc:
         message += " (The raw response returned by the API was #{raw_response.inspect})"
         return Response.new(false, message)
       end
-
     end
   end
 end

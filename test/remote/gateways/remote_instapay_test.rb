@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class RemoteInstapayTest < Test::Unit::TestCase
-
   def setup
     @gateway = InstapayGateway.new(fixtures(:instapay))
 

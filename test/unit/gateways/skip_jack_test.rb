@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class SkipJackTest < Test::Unit::TestCase
-
   def setup
     Base.mode = :test
 

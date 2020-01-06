@@ -2,7 +2,6 @@ require 'active_merchant'
 require 'support/gateway_support'
 
 class SSLVerify
-
   def initialize
     @gateways = GatewaySupport.new.gateways
   end
@@ -86,5 +85,4 @@ class SSLVerify
   rescue Net::HTTPBadResponse, Errno::ETIMEDOUT, EOFError, SocketError, Errno::ECONNREFUSED, Timeout::Error => ex
     return :error, ex.inspect
   end
-
 end

@@ -67,5 +67,4 @@ class ItransactTest < Test::Unit::TestCase
     "<?xml version=\"1.0\" standalone=\"yes\"?>
 <GatewayInterface><TransactionResponse><TransactionResult><Status>ok</Status><ErrorCategory></ErrorCategory><ErrorMessage></ErrorMessage><WarningMessage></WarningMessage><TimeStamp>20081216141214</TimeStamp><TestMode>TRUE</TestMode><Total>1.0</Total><XID>9999999999</XID><CustomerData><BillingAddress><Address1>1234 My Street</Address1><City>Ottawa</City><FirstName>Longbob</FirstName><LastName>Longsen</LastName><State>ON</State><Zip>K1C2N6</Zip><Country>CA</Country><Phone>(555)555-5555</Phone></BillingAddress><ShippingAddress><Address1></Address1><City></City><FirstName></FirstName><LastName></LastName><State></State><Zip></Zip><Country></Country><Phone></Phone></ShippingAddress></CustomerData></TransactionResult></TransactionResponse></GatewayInterface>"
   end
-
 end

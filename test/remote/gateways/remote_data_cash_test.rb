@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class RemoteDataCashTest < Test::Unit::TestCase
-
   def setup
     # gateway to connect to Datacash
     @gateway = DataCashGateway.new(fixtures(:data_cash))

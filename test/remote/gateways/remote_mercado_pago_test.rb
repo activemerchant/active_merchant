@@ -280,5 +280,4 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:access_token], transcript)
   end
-
 end

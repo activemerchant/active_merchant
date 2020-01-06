@@ -28,13 +28,6 @@ Layout/AlignHash:
 Layout/EmptyLineAfterGuardClause:
   Enabled: false
 
-# Offense count: 173
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: empty_lines, empty_lines_except_namespace, empty_lines_special, no_empty_lines, beginning_only, ending_only
-Layout/EmptyLinesAroundClassBody:
-  Enabled: false
-
 # Offense count: 105
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle, IndentationWidth.

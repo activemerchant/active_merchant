@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class JetpayV2Test < Test::Unit::TestCase
-
   def setup
     @gateway = JetpayV2Gateway.new(:login => 'login')
 

@@ -190,5 +190,4 @@ class RemoteStripe3DSTest < Test::Unit::TestCase
     assert_equal 'three_d_secure', response.params['type']
     assert_equal false, response.params['three_d_secure']['authenticated']
   end
-
 end

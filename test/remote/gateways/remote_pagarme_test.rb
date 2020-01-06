@@ -153,5 +153,4 @@ class RemotePagarmeTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:api_key], transcript)
   end
-
 end
