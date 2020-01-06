@@ -82,7 +82,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(post, options)
         if address = options[:billing_address] || options[:address]
-          post[:CustomerAddress]    = [ address[:address1], address[:address2], address[:city], address[:state], address[:country] ].compact.join(', ')
+          post[:CustomerAddress]    = [address[:address1], address[:address2], address[:city], address[:state], address[:country]].compact.join(', ')
           post[:CustomerPostcode]   = address[:zip]
         end
       end

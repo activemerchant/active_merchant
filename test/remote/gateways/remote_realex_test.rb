@@ -40,7 +40,7 @@ class RemoteRealexTest < Test::Unit::TestCase
   end
 
   def test_realex_purchase
-    [ @visa, @mastercard ].each do |card|
+    [@visa, @mastercard].each do |card|
       response = @gateway.purchase(@amount, card,
         :order_id => generate_unique_id,
         :description => 'Test Realex Purchase',
@@ -95,7 +95,7 @@ class RemoteRealexTest < Test::Unit::TestCase
   end
 
   def test_realex_purchase_declined
-    [ @visa_declined, @mastercard_declined ].each do |card|
+    [@visa_declined, @mastercard_declined].each do |card|
       response = @gateway.purchase(@amount, card,
         :order_id => generate_unique_id,
         :description => 'Test Realex purchase declined'
@@ -153,7 +153,7 @@ class RemoteRealexTest < Test::Unit::TestCase
   end
 
   def test_realex_purchase_referral_b
-    [ @visa_referral_b, @mastercard_referral_b ].each do |card|
+    [@visa_referral_b, @mastercard_referral_b].each do |card|
       response = @gateway.purchase(@amount, card,
         :order_id => generate_unique_id,
         :description => 'Test Realex Referral B'
@@ -167,7 +167,7 @@ class RemoteRealexTest < Test::Unit::TestCase
   end
 
   def test_realex_purchase_referral_a
-    [ @visa_referral_a, @mastercard_referral_a ].each do |card|
+    [@visa_referral_a, @mastercard_referral_a].each do |card|
       response = @gateway.purchase(@amount, card,
         :order_id => generate_unique_id,
         :description => 'Test Realex Rqeferral A'
@@ -180,7 +180,7 @@ class RemoteRealexTest < Test::Unit::TestCase
   end
 
   def test_realex_purchase_coms_error
-    [ @visa_coms_error, @mastercard_coms_error ].each do |card|
+    [@visa_coms_error, @mastercard_coms_error].each do |card|
       response = @gateway.purchase(@amount, card,
         :order_id => generate_unique_id,
         :description => 'Test Realex coms error'
@@ -425,7 +425,7 @@ class RemoteRealexTest < Test::Unit::TestCase
   end
 
   def test_maps_avs_and_cvv_response_codes
-    [ @visa, @mastercard ].each do |card|
+    [@visa, @mastercard].each do |card|
       response = @gateway.purchase(@amount, card,
         :order_id => generate_unique_id,
         :description => 'Test Realex Purchase',

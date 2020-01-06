@@ -23,7 +23,7 @@ module ActiveMerchant #:nodoc:
         :quasi         => 'Q'
       }
 
-      SUCCESS_CODES = [ '1', 'T' ]
+      SUCCESS_CODES = ['1', 'T']
       SUCCESS_MESSAGE = 'The transaction was approved'
       FAILURE_MESSAGE = 'The transaction failed'
       TEST_LOGIN = '104901072025'

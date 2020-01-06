@@ -254,7 +254,7 @@ module ActiveMerchant #:nodoc:
       }
 
       def authorization_from(request, response)
-        [ response[:reference_number], request[:CardLastFourDigits], request[:Amount] ].join('|')
+        [response[:reference_number], request[:CardLastFourDigits], request[:Amount]].join('|')
       end
 
       def split_authorization(authorization)

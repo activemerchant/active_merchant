@@ -158,7 +158,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response, params)
-        [ response[:transaction_id], params[:transaction_amount] ].compact.join(';')
+        [response[:transaction_id], params[:transaction_amount]].compact.join(';')
       end
 
       def parse(xml)

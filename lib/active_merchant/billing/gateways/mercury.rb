@@ -294,7 +294,7 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      SUCCESS_CODES = [ 'Approved', 'Success' ]
+      SUCCESS_CODES = ['Approved', 'Success']
 
       def commit(action, request)
         response = parse(action, ssl_post(endpoint_url, build_soap_request(request), build_header))

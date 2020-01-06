@@ -47,7 +47,7 @@ class PaypalDigitalGoodsTest < Test::Unit::TestCase
         :description       => 'Test Title',
         :return_url        => 'http://return.url',
         :cancel_return_url => 'http://cancel.url',
-        :items             => [ ])
+        :items             => [])
     end
 
     assert_raise ArgumentError do
@@ -56,7 +56,7 @@ class PaypalDigitalGoodsTest < Test::Unit::TestCase
         :description       => 'Test Title',
         :return_url        => 'http://return.url',
         :cancel_return_url => 'http://cancel.url',
-        :items             => [ Hash.new ])
+        :items             => [Hash.new])
     end
 
     assert_raise ArgumentError do
@@ -65,12 +65,12 @@ class PaypalDigitalGoodsTest < Test::Unit::TestCase
         :description       => 'Test Title',
         :return_url        => 'http://return.url',
         :cancel_return_url => 'http://cancel.url',
-        :items             => [ { :name => 'Charge',
+        :items             => [{ :name => 'Charge',
                                   :number => '1',
                                   :quantity => '1',
                                   :amount   => 100,
                                   :description => 'Description',
-                                  :category => 'Physical' } ])
+                                  :category => 'Physical' }])
     end
   end
 
@@ -82,12 +82,12 @@ class PaypalDigitalGoodsTest < Test::Unit::TestCase
       :description       => 'Test Title',
       :return_url        => 'http://return.url',
       :cancel_return_url => 'http://cancel.url',
-      :items             => [ { :name => 'Charge',
+      :items             => [{ :name => 'Charge',
                                 :number => '1',
                                 :quantity => '1',
                                 :amount   => 100,
                                 :description => 'Description',
-                                :category => 'Digital' } ])
+                                :category => 'Digital' }])
   end
 
   private

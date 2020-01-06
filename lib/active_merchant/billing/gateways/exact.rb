@@ -5,8 +5,8 @@ module ActiveMerchant #:nodoc:
 
       API_VERSION = '8.5'
 
-      TEST_LOGINS = [ {:login => 'A00049-01', :password => 'test1'},
-                      {:login => 'A00427-01', :password => 'testus'} ]
+      TEST_LOGINS = [{:login => 'A00049-01', :password => 'test1'},
+                     {:login => 'A00427-01', :password => 'testus'}]
 
       TRANSACTIONS = { :sale          => '00',
                        :authorization => '01',
@@ -28,7 +28,7 @@ module ActiveMerchant #:nodoc:
 
       SUCCESS = 'true'
 
-      SENSITIVE_FIELDS = [ :verification_str2, :expiry_date, :card_number ]
+      SENSITIVE_FIELDS = [:verification_str2, :expiry_date, :card_number]
 
       self.supported_cardtypes = [:visa, :master, :american_express, :jcb, :discover]
       self.supported_countries = ['CA', 'US']

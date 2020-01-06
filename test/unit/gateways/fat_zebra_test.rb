@@ -372,8 +372,7 @@ Conn close
         :standalone => false,
         :rrn => '000000000002',
       },
-      :errors => [
-      ],
+      :errors => [],
       :test => true
     }.to_json
   end

@@ -380,7 +380,7 @@ module ActiveMerchant #:nodoc:
 
         success = response[:transaction_result][:status_code] == '0'
         message = response[:transaction_result][:message]
-        authorization = success ? [ options[:order_id], response[:transaction_output_data][:cross_reference], response[:transaction_output_data][:auth_code] ].compact.join(';') : nil
+        authorization = success ? [options[:order_id], response[:transaction_output_data][:cross_reference], response[:transaction_output_data][:auth_code]].compact.join(';') : nil
 
         Response.new(success, message, response,
           :test => test?,

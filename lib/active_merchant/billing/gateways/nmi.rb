@@ -284,7 +284,7 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(response, payment_type, action)
         authorization = (action == 'add_customer' ? response[:customer_vault_id] : response[:transactionid])
-        [ authorization, payment_type ].join('#')
+        [authorization, payment_type].join('#')
       end
 
       def split_authorization(authorization)

@@ -300,9 +300,9 @@ module ActiveMerchant #:nodoc:
         when :authorization
           parse_authorization_response(body)
         when :get_status
-          parse_status_response(body, [ :SerialNumber, :TransactionAmount, :TransactionStatusCode, :TransactionStatusMessage, :OrderNumber, :TransactionDateTime, :TransactionID, :ApprovalCode, :BatchNumber ])
+          parse_status_response(body, [:SerialNumber, :TransactionAmount, :TransactionStatusCode, :TransactionStatusMessage, :OrderNumber, :TransactionDateTime, :TransactionID, :ApprovalCode, :BatchNumber])
         else
-          parse_status_response(body, [ :SerialNumber, :TransactionAmount, :DesiredStatus, :StatusResponse, :StatusResponseMessage, :OrderNumber, :AuditID ])
+          parse_status_response(body, [:SerialNumber, :TransactionAmount, :DesiredStatus, :StatusResponse, :StatusResponseMessage, :OrderNumber, :AuditID])
         end
       end
 
@@ -329,7 +329,7 @@ module ActiveMerchant #:nodoc:
       def parse_status_response(body, response_keys)
         lines = split_lines(body)
 
-        keys = [ :szSerialNumber, :szErrorCode, :szNumberRecords]
+        keys = [:szSerialNumber, :szErrorCode, :szNumberRecords]
         values = split_line(lines[0])[0..2]
 
         result = Hash[*keys.zip(values).flatten]

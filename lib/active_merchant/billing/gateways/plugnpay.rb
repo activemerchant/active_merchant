@@ -88,8 +88,8 @@ module ActiveMerchant
         :credit => 'newreturn'
       }
 
-      SUCCESS_CODES = [ 'pending', 'success' ]
-      FAILURE_CODES = [ 'badcard', 'fraud' ]
+      SUCCESS_CODES = ['pending', 'success']
+      FAILURE_CODES = ['badcard', 'fraud']
 
       self.default_currency = 'USD'
       self.supported_countries = ['US']

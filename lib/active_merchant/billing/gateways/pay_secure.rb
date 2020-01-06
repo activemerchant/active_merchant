@@ -79,7 +79,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
-        [ response[:authnum], response[:transid] ].compact.join(';')
+        [response[:authnum], response[:transid]].compact.join(';')
       end
 
       def test_response?(response)

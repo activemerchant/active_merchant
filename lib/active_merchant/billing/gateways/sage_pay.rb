@@ -361,11 +361,11 @@ module ActiveMerchant #:nodoc:
         when :store
           response['Token']
         else
-          [ params[:VendorTxCode],
-            response['VPSTxId'] || params[:VPSTxId],
-            response['TxAuthNo'],
-            response['SecurityKey'] || params[:SecurityKey],
-            action ].join(';')
+          [params[:VendorTxCode],
+           response['VPSTxId'] || params[:VPSTxId],
+           response['TxAuthNo'],
+           response['SecurityKey'] || params[:SecurityKey],
+           action].join(';')
         end
       end
 
@@ -389,7 +389,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_simulator_url(action)
-        endpoint = [ :purchase, :authorization ].include?(action) ? 'VSPDirectGateway.asp' : "VSPServerGateway.asp?Service=Vendor#{TRANSACTIONS[action].capitalize}Tx"
+        endpoint = [:purchase, :authorization].include?(action) ? 'VSPDirectGateway.asp' : "VSPServerGateway.asp?Service=Vendor#{TRANSACTIONS[action].capitalize}Tx"
         "#{self.simulator_url}/#{endpoint}"
       end
 
