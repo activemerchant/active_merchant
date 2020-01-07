@@ -274,12 +274,12 @@ module ActiveMerchant #:nodoc:
       def add_customer_data(post, options)
         post[:d1] = options[:ip] || '127.0.0.1'
         if (billing_address = options[:billing_address])
-          post[:c5] = billing_address[:address1]
-          post[:c7] = billing_address[:city]
-          post[:c10] = billing_address[:zip]
-          post[:c8] = billing_address[:state]
-          post[:c9] = billing_address[:country]
-          post[:c2] = billing_address[:phone]
+          post[:c5]   = billing_address[:address1]  if billing_address[:address1]
+          post[:c7]   = billing_address[:city]      if billing_address[:city]
+          post[:c10]  = billing_address[:zip]       if billing_address[:zip]
+          post[:c8]   = billing_address[:state]     if billing_address[:state]
+          post[:c9]   = billing_address[:country]   if billing_address[:country]
+          post[:c2]   = billing_address[:phone]     if billing_address[:phone]
         end
       end
 

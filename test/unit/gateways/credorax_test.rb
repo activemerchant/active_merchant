@@ -632,6 +632,24 @@ class CredoraxTest < Test::Unit::TestCase
     end.respond_with(successful_credit_response)
   end
 
+  def test_purchase_omits_phone_when_nil
+    # purchase passes the phone number when provided
+    @options[:billing_address][:phone] = '555-444-3333'
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/c2=555-444-3333/, data)
+    end.respond_with(successful_purchase_response)
+
+    # purchase doesn't pass the phone number when nil
+    @options[:billing_address][:phone] = nil
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_not_match(/c2=/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_stored_credential_recurring_cit_initial
     options = stored_credential_options(:cardholder, :recurring, :initial)
     response = stub_comms do
