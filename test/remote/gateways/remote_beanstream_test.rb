@@ -21,10 +21,10 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     @declined_amex       = credit_card('342400001000180', {:verification_value => 1234})
 
     # Canadian EFT
-    @check               = check(
-                             :institution_number => '001',
-                             :transit_number     => '26729'
-                           )
+    @check = check(
+      :institution_number => '001',
+      :transit_number     => '26729'
+    )
 
     @amount = 1500
 
@@ -308,10 +308,10 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = BeanstreamGateway.new(
-                :merchant_id => '',
-                :login => '',
-                :password => ''
-              )
+      :merchant_id => '',
+      :login => '',
+      :password => ''
+    )
     assert response = gateway.purchase(@amount, @visa, @options)
     assert_failure response
     assert_equal 'merchantid=Invalid merchant id (merchant_id = )', response.message

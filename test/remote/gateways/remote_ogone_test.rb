@@ -232,11 +232,11 @@ class RemoteOgoneTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = OgoneGateway.new(
-                login: 'login',
-                user: 'user',
-                password: 'password',
-                signature: 'signature'
-              )
+      login: 'login',
+      user: 'user',
+      password: 'password',
+      signature: 'signature'
+    )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
   end

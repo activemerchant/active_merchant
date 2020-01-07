@@ -72,20 +72,19 @@ class CheckoutTest < Test::Unit::TestCase
 
   def test_passes_correct_currency
     stub_comms do
-      @gateway.purchase(100, credit_card, @options.merge(
-        currency: 'EUR'
-      ))
+      @gateway.purchase(100, credit_card, @options.merge(currency: 'EUR'))
     end.check_request do |endpoint, data, headers|
       assert_match(/<bill_currencycode>EUR<\/bill_currencycode>/, data)
     end.respond_with(successful_purchase_response)
   end
 
   def test_passes_descriptors
+    options = @options.merge(
+      descriptor_name: 'ZahName',
+      descriptor_city: 'Oakland'
+    )
     stub_comms do
-      @gateway.purchase(100, credit_card, @options.merge(
-        descriptor_name: 'ZahName',
-        descriptor_city: 'Oakland'
-      ))
+      @gateway.purchase(100, credit_card, options)
     end.check_request do |endpoint, data, headers|
       assert_match(/<descriptor_name>ZahName<\/descriptor_name>/, data)
       assert_match(/<descriptor_city>Oakland<\/descriptor_city>/, data)

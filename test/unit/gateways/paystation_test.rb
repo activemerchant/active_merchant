@@ -4,9 +4,9 @@ class PaystationTest < Test::Unit::TestCase
   include CommStub
   def setup
     @gateway = PaystationGateway.new(
-                 :paystation_id => 'some_id_number',
-                 :gateway_id    => 'another_id_number'
-               )
+      :paystation_id => 'some_id_number',
+      :gateway_id    => 'another_id_number'
+    )
 
     @credit_card = credit_card
     @amount = 100

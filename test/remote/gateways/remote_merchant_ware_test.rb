@@ -93,10 +93,10 @@ class RemoteMerchantWareTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = MerchantWareGateway.new(
-                :login => '',
-                :password => '',
-                :name => ''
-              )
+      :login => '',
+      :password => '',
+      :name => ''
+    )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Server was unable to process request. ---> Invalid Credentials.', response.message

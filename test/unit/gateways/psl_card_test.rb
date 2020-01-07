@@ -3,9 +3,9 @@ require 'test_helper'
 class PslCardTest < Test::Unit::TestCase
   def setup
     @gateway = PslCardGateway.new(
-                 :login => 'LOGIN',
-                 :password => 'PASSWORD'
-               )
+      :login => 'LOGIN',
+      :password => 'PASSWORD'
+    )
 
     @credit_card = credit_card
     @options = {

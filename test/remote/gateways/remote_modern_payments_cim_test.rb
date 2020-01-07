@@ -46,9 +46,9 @@ class RemoteModernPaymentsCimTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = ModernPaymentsCimGateway.new(
-                :login => '',
-                :password => ''
-              )
+      :login => '',
+      :password => ''
+    )
     assert response = gateway.create_customer(@options)
     assert_failure response
     assert_equal ModernPaymentsCimGateway::ERROR_MESSAGE, response.message

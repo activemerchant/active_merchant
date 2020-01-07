@@ -107,10 +107,10 @@ class RemoteWorldpayUsTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = WorldpayUsGateway.new(
-                :acctid => '',
-                :subid => '',
-                :merchantpin => ''
-              )
+      :acctid => '',
+      :subid => '',
+      :merchantpin => ''
+    )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert response.message =~ /DECLINED/

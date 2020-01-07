@@ -45,9 +45,9 @@ class RemoteBanwireTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = BanwireGateway.new(
-                :login => 'fakeuser',
-                :currency => 'MXN'
-              )
+      :login => 'fakeuser',
+      :currency => 'MXN'
+    )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'ID de cuenta invalido', response.message

@@ -5,9 +5,9 @@ class SecureNetTest < Test::Unit::TestCase
 
   def setup
     @gateway = SecureNetGateway.new(
-                 :login => 'X',
-                 :password => 'Y'
-               )
+      :login => 'X',
+      :password => 'Y'
+    )
 
     @credit_card = credit_card
     @amount = 100

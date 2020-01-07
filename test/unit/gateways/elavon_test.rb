@@ -5,17 +5,17 @@ class ElavonTest < Test::Unit::TestCase
 
   def setup
     @gateway = ElavonGateway.new(
-                 :login => 'login',
-                 :user => 'user',
-                 :password => 'password'
-               )
+      :login => 'login',
+      :user => 'user',
+      :password => 'password'
+    )
 
     @multi_currency_gateway = ElavonGateway.new(
-                                :login => 'login',
-                                :user => 'user',
-                                :password => 'password',
-                                :multi_currency => true
-                              )
+      :login => 'login',
+      :user => 'user',
+      :password => 'password',
+      :multi_currency => true
+    )
 
     @credit_card = credit_card
     @amount = 100

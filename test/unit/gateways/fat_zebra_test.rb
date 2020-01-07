@@ -5,9 +5,9 @@ class FatZebraTest < Test::Unit::TestCase
 
   def setup
     @gateway = FatZebraGateway.new(
-                 :username => 'TEST',
-                 :token    => 'TEST'
-               )
+      :username => 'TEST',
+      :token    => 'TEST'
+    )
 
     @credit_card = credit_card
     @amount = 100

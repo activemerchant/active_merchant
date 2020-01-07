@@ -191,9 +191,9 @@ class RemoteSageTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = SageGateway.new(
-                :login => '',
-                :password => ''
-              )
+      :login => '',
+      :password => ''
+    )
     assert response = gateway.purchase(@amount, @visa, @options)
     assert_failure response
     assert_equal 'SECURITY VIOLATION', response.message

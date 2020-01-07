@@ -3,10 +3,10 @@ require 'test_helper'
 class ItransactTest < Test::Unit::TestCase
   def setup
     @gateway = ItransactGateway.new(
-                 :login => 'login',
-                 :password => 'password',
-                 :gateway_id => '09999'
-               )
+      :login => 'login',
+      :password => 'password',
+      :gateway_id => '09999'
+    )
 
     @credit_card = credit_card
     @check = check

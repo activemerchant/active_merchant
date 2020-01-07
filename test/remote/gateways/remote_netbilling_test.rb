@@ -88,9 +88,9 @@ class RemoteNetbillingTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = NetbillingGateway.new(
-                :login => '',
-                :password => ''
-              )
+      :login => '',
+      :password => ''
+    )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_match(/missing/i, response.message)
     assert_failure response

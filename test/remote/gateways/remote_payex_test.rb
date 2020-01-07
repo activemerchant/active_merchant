@@ -108,9 +108,9 @@ class RemotePayexTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = PayexGateway.new(
-                :account => '1',
-                :encryption_key => '1'
-              )
+      :account => '1',
+      :encryption_key => '1'
+    )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_not_equal 'OK', response.message

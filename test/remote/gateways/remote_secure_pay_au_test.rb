@@ -175,9 +175,9 @@ class RemoteSecurePayAuTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = SecurePayAuGateway.new(
-                :login => 'a',
-                :password => 'a'
-              )
+      :login => 'a',
+      :password => 'a'
+    )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Invalid merchant ID', response.message

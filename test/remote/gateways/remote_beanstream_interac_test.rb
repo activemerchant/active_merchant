@@ -41,10 +41,10 @@ class RemoteBeanstreamInteracTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = BeanstreamInteracGateway.new(
-                :merchant_id => '',
-                :login => '',
-                :password => ''
-              )
+      :merchant_id => '',
+      :login => '',
+      :password => ''
+    )
     assert response = gateway.purchase(@amount, @options)
     assert_failure response
     assert_equal 'Invalid merchant id (merchant_id = 0)', response.message

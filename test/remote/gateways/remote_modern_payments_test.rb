@@ -33,9 +33,9 @@ class RemoteModernPaymentTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = ModernPaymentsGateway.new(
-                :login => '',
-                :password => ''
-              )
+      :login => '',
+      :password => ''
+    )
 
     assert_raises(ActiveMerchant::ResponseError) do
       gateway.purchase(@amount, @credit_card, @options)

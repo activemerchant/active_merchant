@@ -7,11 +7,11 @@ class BeanstreamTest < Test::Unit::TestCase
     Base.mode = :test
 
     @gateway = BeanstreamGateway.new(
-                 :login => 'merchant id',
-                 :user => 'username',
-                 :password => 'password',
-                 :api_key => 'api_key'
-               )
+      :login => 'merchant id',
+      :user => 'username',
+      :password => 'password',
+      :api_key => 'api_key'
+    )
 
     @credit_card = credit_card
 
@@ -26,9 +26,9 @@ class BeanstreamTest < Test::Unit::TestCase
     )
 
     @check = check(
-                     :institution_number => '001',
-                     :transit_number     => '26729'
-                   )
+      :institution_number => '001',
+      :transit_number     => '26729'
+    )
 
     @amount = 1000
 

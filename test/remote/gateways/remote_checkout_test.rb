@@ -27,13 +27,14 @@ class RemoteCheckoutTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_extra_options
-    response = @gateway.purchase(100, @credit_card, @options.merge(
+    options = @options.merge(
       currency: 'EUR',
       email: 'bob@example.com',
       order_id: generate_unique_id,
       customer: generate_unique_id,
       ip: '127.0.0.1'
-    ))
+    )
+    response = @gateway.purchase(100, @credit_card, options)
     assert_success response
     assert_equal 'Successful', response.message
   end

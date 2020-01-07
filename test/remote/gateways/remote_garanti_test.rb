@@ -50,11 +50,11 @@ class RemoteGarantiTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = GarantiGateway.new(
-                :login => 'PROVAUT',
-                :terminal_id => '30691300',
-                :merchant_id => '',
-                :password => ''
-              )
+      :login => 'PROVAUT',
+      :terminal_id => '30691300',
+      :merchant_id => '',
+      :password => ''
+    )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal '0651', response.params['reason_code']

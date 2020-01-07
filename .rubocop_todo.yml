@@ -28,13 +28,6 @@ Layout/AlignHash:
 Layout/EmptyLineAfterGuardClause:
   Enabled: false
 
-# Offense count: 105
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, IndentationWidth.
-# SupportedStyles: consistent, consistent_relative_to_receiver, special_for_inner_method_call, special_for_inner_method_call_in_parentheses
-Layout/FirstParameterIndentation:
-  Enabled: false
-
 # Offense count: 255
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle, IndentationWidth.

@@ -31,6 +31,7 @@
 * RuboCop: Layout/SpaceInsideArrayLiteralBrackets [leila-alderman] #3486
 * RuboCop: Layout/EmptyLinesAroundClassBody fix [leila-alderman] #3487
 * Mundipagg: Return acquirer code as the error code [leila-alderman] #3492
+* RuboCop: Fix Layout/FirstParameterIndentation [leila-alderman] #3489
 
 == Version 1.103.0 (Dec 2, 2019)
 * Quickbooks: Mark transactions that returned `AuthorizationFailed` as failures [britth] #3447

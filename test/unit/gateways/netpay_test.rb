@@ -3,10 +3,10 @@ require 'test_helper'
 class NetpayTest < Test::Unit::TestCase
   def setup
     @gateway = NetpayGateway.new(
-                 :store_id => '12345',
-                 :login    => 'login',
-                 :password => 'password'
-               )
+      :store_id => '12345',
+      :login    => 'login',
+      :password => 'password'
+    )
 
     @credit_card = credit_card
     @amount = 1000

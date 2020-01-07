@@ -5,9 +5,9 @@ class WorldpayTest < Test::Unit::TestCase
 
   def setup
     @gateway = WorldpayGateway.new(
-       :login => 'testlogin',
-       :password => 'testpassword'
-     )
+      :login => 'testlogin',
+      :password => 'testpassword'
+    )
 
     @amount = 100
     @credit_card = credit_card('4242424242424242')

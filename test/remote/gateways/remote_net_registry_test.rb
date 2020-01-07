@@ -87,9 +87,9 @@ class NetRegistryTest < Test::Unit::TestCase
 
   def test_bad_login
     gateway = NetRegistryGateway.new(
-                 :login    => 'bad-login',
-                 :password => 'bad-login'
-               )
+      :login    => 'bad-login',
+      :password => 'bad-login'
+    )
     response = gateway.purchase(@amount, @valid_creditcard)
     assert_equal 'failed', response.params['status']
     assert_failure response

@@ -3,12 +3,12 @@ require 'test_helper'
 class MigsTest < Test::Unit::TestCase
   def setup
     @gateway = MigsGateway.new(
-                 login: 'login',
-                 password: 'password',
-                 secure_hash: '76AF3392002D202A60D0AB5F9D81653C',
-                 advanced_login: 'advlogin',
-                 advanced_password: 'advpass'
-               )
+      login: 'login',
+      password: 'password',
+      secure_hash: '76AF3392002D202A60D0AB5F9D81653C',
+      advanced_login: 'advlogin',
+      advanced_password: 'advpass'
+    )
     @credit_card = credit_card
     @amount = 100
     @authorization = '2070000742'

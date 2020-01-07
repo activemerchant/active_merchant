@@ -5,10 +5,10 @@ class MerchantWareTest < Test::Unit::TestCase
 
   def setup
     @gateway = MerchantWareGateway.new(
-                 :login => 'login',
-                 :password => 'password',
-                 :name => 'name'
-               )
+      :login => 'login',
+      :password => 'password',
+      :name => 'name'
+    )
 
     @credit_card = credit_card
     @amount = 100

@@ -170,9 +170,8 @@ class CyberSourceTest < Test::Unit::TestCase
       true
     end.returns(successful_purchase_response)
 
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(
-      ignore_avs: true
-    ))
+    options = @options.merge(ignore_avs: true)
+    assert response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
   end
 
@@ -186,9 +185,8 @@ class CyberSourceTest < Test::Unit::TestCase
     # globally ignored AVS for gateway instance:
     @gateway.options[:ignore_avs] = true
 
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(
-      ignore_avs: false
-    ))
+    options = @options.merge(ignore_avs: false)
+    assert response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
   end
 
@@ -200,8 +198,8 @@ class CyberSourceTest < Test::Unit::TestCase
     end.returns(successful_purchase_response)
 
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(
-      ignore_cvv: true
-    ))
+                                                                 ignore_cvv: true
+                                                               ))
     assert_success response
   end
 
@@ -213,8 +211,8 @@ class CyberSourceTest < Test::Unit::TestCase
     end.returns(successful_purchase_response)
 
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(
-      ignore_cvv: false
-    ))
+                                                                 ignore_cvv: false
+                                                               ))
     assert_success response
   end
 

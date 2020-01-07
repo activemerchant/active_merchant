@@ -63,9 +63,9 @@ class RemoteQuantumTest < Test::Unit::TestCase
   # So we check to see if the parse failed and report
   def test_invalid_login
     gateway = QuantumGateway.new(
-                :login => '',
-                :password => ''
-              )
+      :login => '',
+      :password => ''
+    )
     assert response = gateway.purchase(@amount, @credit_card)
     assert_failure response
     assert_equal 'ERROR: Invalid Gateway Login!!', response.message
