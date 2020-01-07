@@ -206,6 +206,38 @@ class MonerisRemoteTest < Test::Unit::TestCase
     assert response.params['data_key'].present?
   end
 
+  # AVS result fields are stored in the vault and returned as part of the
+  # XML response under <Receipt//ResolveData> (which isn't parsed by ActiveMerchant so
+  # we can't test for it).
+  #
+  # Actual AVS results aren't returned processed until an actual transaction is made
+  # so we make a second purchase request.
+  def test_successful_store_and_purchase_with_avs
+    gateway = MonerisGateway.new(fixtures(:moneris).merge(avs_enabled: true))
+
+    # card number triggers AVS match
+    @credit_card = credit_card('4761739012345637', :verification_value => '012')
+    assert response = gateway.store(@credit_card, @options)
+    assert_success response
+    assert_equal 'Successfully registered cc details', response.message
+    assert response.params['data_key'].present?
+    data_key = response.params['data_key']
+
+    options_without_address = @options.dup
+    options_without_address.delete(:address)
+    assert response = gateway.purchase(@amount, data_key, options_without_address)
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+
+    assert_equal(response.avs_result, {
+        'code' => 'M',
+        'message' => 'Street address and postal code match.',
+        'street_match' => 'Y',
+        'postal_match' => 'Y'
+    })
+  end
+
   def test_successful_unstore
     test_successful_store
     assert response = @gateway.unstore(@data_key)
