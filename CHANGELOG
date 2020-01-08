@@ -22,6 +22,7 @@
 * Decidir: Add debit card payment method IDs [leila-alderman] #3480
 * CyberSource: Add issuer data+MDD to credit & void [leila-alderman] #3481
 * Credorax: add `authorization_type` and `multiple_capture_count` GSFs [therufs] #3478
+* CardStream: use localized_amount to correctly support zero-decimal currencies [britth] #3473
 
 == Version 1.103.0 (Dec 2, 2019)
 * Quickbooks: Mark transactions that returned `AuthorizationFailed` as failures [britth] #3447

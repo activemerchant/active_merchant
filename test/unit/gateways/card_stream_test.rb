@@ -40,6 +40,13 @@ class CardStreamTest < Test::Unit::TestCase
       :dynamic_descriptor => 'product'
     }
 
+    @amex = credit_card('374245455400001',
+      :month => '12',
+      :year => 2014,
+      :verification_value => '4887',
+      :brand => :american_express
+    )
+
     @declined_card = credit_card('4000300011112220',
       :month => '9',
       :year => '2014'
@@ -179,6 +186,15 @@ class CardStreamTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_amex_purchase_with_localized_invoice_amount
+    stub_comms do
+      @gateway.purchase(28400, @amex, @visacredit_descriptor_options.merge(currency: 'JPY', order_id: '1234567890'))
+    end.check_request do |endpoint, data, headers|
+      puts data
+      assert_match(/item1GrossValue=284&/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_successful_verify
     response = stub_comms do
       @gateway.verify(@visacreditcard, @visacredit_options)
@@ -243,6 +259,14 @@ class CardStreamTest < Test::Unit::TestCase
     end.returns(successful_authorization_response)
 
     @gateway.purchase(10000, @visacreditcard, @visacredit_options)
+  end
+
+  def test_nonfractional_currency_handling
+    stub_comms do
+      @gateway.authorize(200, @visacreditcard, @visacredit_options.merge(currency: 'JPY'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/amount=2&currencyCode=392/, data)
+    end.respond_with(successful_authorization_response)
   end
 
   def test_3ds_response
