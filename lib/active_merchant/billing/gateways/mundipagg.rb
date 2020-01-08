@@ -313,7 +313,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_code_from(response)
-        STANDARD_ERROR_CODE[:processing_error] unless success_from(response)
+        return if success_from(response)
+        return response['last_transaction']['acquirer_return_code'] if response['last_transaction']
+        STANDARD_ERROR_CODE[:processing_error]
       end
     end
   end
