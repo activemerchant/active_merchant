@@ -42,6 +42,7 @@
 * Moneris: Add support for temporary vault storage [alexdunae] #3446
 * Clearhaus: Update currencies without fractions list [chinhle23] #3506
 * Merchant Warrior: Add recurringFlag to purchase & authorize [carrigan] #3504
+* CardConnect: Remove domain port validation [leila-alderman] #3494
 
 == Version 1.103.0 (Dec 2, 2019)
 * Quickbooks: Mark transactions that returned `AuthorizationFailed` as failures [britth] #3447
