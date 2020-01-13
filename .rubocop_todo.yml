@@ -37,14 +37,6 @@ Layout/IndentHash:
 Layout/IndentHeredoc:
   Enabled: false
 
-# Offense count: 1
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: symmetrical, new_line, same_line
-Layout/MultilineArrayBraceLayout:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/optimal_payment.rb'
-
 # Offense count: 232
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle.

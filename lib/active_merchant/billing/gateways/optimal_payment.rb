@@ -158,8 +158,7 @@ module ActiveMerchant #:nodoc:
         %w(confirmationNumber authCode
            decision code description
            actionCode avsResponse cvdResponse
-           txnTime duplicateFound
-        ).each do |tag|
+           txnTime duplicateFound).each do |tag|
           node = REXML::XPath.first(response, "//#{tag}")
           hsh[tag] = node.text if node
         end
