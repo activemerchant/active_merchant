@@ -249,6 +249,7 @@ module ActiveMerchant #:nodoc:
 
       def amount(money)
         return nil if money.nil?
+
         cents =
           if money.respond_to?(:cents)
             ActiveMerchant.deprecated 'Support for Money objects is deprecated and will be removed from a future release of ActiveMerchant. Please use an Integer value in cents'
@@ -278,6 +279,7 @@ module ActiveMerchant #:nodoc:
         amount = amount(money)
 
         return amount unless non_fractional_currency?(currency) || three_decimal_currency?(currency)
+
         if non_fractional_currency?(currency)
           if self.money_format == :cents
             sprintf('%.0f', amount.to_f / 100)
@@ -299,6 +301,7 @@ module ActiveMerchant #:nodoc:
 
       def truncate(value, max_size)
         return nil unless value
+
         value.to_s[0, max_size]
       end
 

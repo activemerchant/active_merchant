@@ -268,6 +268,7 @@ module ActiveMerchant
 
       def add_comments(xml, options)
         return unless options[:description]
+
         xml.tag! 'comments' do
           xml.tag! 'comment', options[:description], 'id' => 1
         end
@@ -305,6 +306,7 @@ module ActiveMerchant
 
       def add_three_d_secure(xml, options)
         return unless three_d_secure = options[:three_d_secure]
+
         version = three_d_secure.fetch(:version, '')
         xml.tag! 'mpi' do
           if version =~ /^2/

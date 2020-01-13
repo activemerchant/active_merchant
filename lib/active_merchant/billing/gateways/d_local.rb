@@ -89,6 +89,7 @@ module ActiveMerchant #:nodoc:
 
       def add_country(post, card, options)
         return unless address = options[:billing_address] || options[:address]
+
         post[:country] = lookup_country_code(address[:country])
       end
 
@@ -111,6 +112,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(post, card, options)
         return unless address = options[:billing_address] || options[:address]
+
         address_object = {}
         address_object[:state] = address[:state] if address[:state]
         address_object[:city] = address[:city] if address[:city]
@@ -165,6 +167,7 @@ module ActiveMerchant #:nodoc:
       # we count 100 as a success.
       def success_from(action, response)
         return false unless response['status_code']
+
         ['100', '200', '400', '600'].include? response['status_code'].to_s
       end
 
@@ -178,6 +181,7 @@ module ActiveMerchant #:nodoc:
 
       def error_code_from(action, response)
         return if success_from(action, response)
+
         code = response['status_code'] || response['code']
         code&.to_s
       end

@@ -288,6 +288,7 @@ module ActiveMerchant #:nodoc:
         )
       rescue ResponseError => e
         return Response.new(false, 'Unable to authenticate.  Please check your credentials.', {}, :test => test?) if e.response.code == '401'
+
         raise
       end
 

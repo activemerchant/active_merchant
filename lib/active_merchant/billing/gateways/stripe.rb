@@ -198,6 +198,7 @@ module ActiveMerchant #:nodoc:
         elsif payment.is_a?(Check)
           bank_token_response = tokenize_bank_account(payment)
           return bank_token_response unless bank_token_response.success?
+
           params = { source: bank_token_response.params['token']['id'] }
         else
           add_creditcard(params, payment, options)
@@ -431,6 +432,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(post, options)
         return unless post[:card]&.kind_of?(Hash)
+
         if address = options[:billing_address] || options[:address]
           post[:card][:address_line1] = address[:address1] if address[:address1]
           post[:card][:address_line2] = address[:address2] if address[:address2]
@@ -559,12 +561,14 @@ module ActiveMerchant #:nodoc:
 
       def post_data(params)
         return nil unless params
+
         flatten_params([], params).join('&')
       end
 
       def flatten_params(flattened, params, prefix = nil)
         params.each do |key, value|
           next if value != false && value.blank?
+
           flattened_key = prefix.nil? ? key : "#{prefix}[#{key}]"
           if value.is_a?(Hash)
             flatten_params(flattened, value, flattened_key)
@@ -608,6 +612,7 @@ module ActiveMerchant #:nodoc:
 
       def stripe_client_user_agent(options)
         return user_agent unless options[:application]
+
         JSON.dump(JSON.parse(user_agent).merge!({application: options[:application]}))
       end
 
@@ -761,6 +766,7 @@ module ActiveMerchant #:nodoc:
 
       def auth_minimum_amount(options)
         return 100 unless options[:currency]
+
         return MINIMUM_AUTHORIZE_AMOUNTS[options[:currency].upcase] || 100
       end
 
@@ -768,6 +774,7 @@ module ActiveMerchant #:nodoc:
         source_path ||= dest_path
         source_path.each do |key|
           return nil unless source[key]
+
           source = source[key]
         end
 

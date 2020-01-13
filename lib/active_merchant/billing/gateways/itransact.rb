@@ -371,6 +371,7 @@ module ActiveMerchant #:nodoc:
 
       def add_vendor_data(xml, options)
         return if options[:vendor_data].blank?
+
         xml.VendorData {
           options[:vendor_data].each do |k, v|
             xml.Element {

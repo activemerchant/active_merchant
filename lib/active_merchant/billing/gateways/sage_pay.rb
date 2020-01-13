@@ -312,6 +312,7 @@ module ActiveMerchant #:nodoc:
 
       def sanitize_phone(phone)
         return nil unless phone
+
         cleansed = phone.to_s.gsub(/[^0-9+]/, '')
         truncate(cleansed, 20)
       end
@@ -426,6 +427,7 @@ module ActiveMerchant #:nodoc:
 
       def past_purchase_reference?(payment_method)
         return false unless payment_method.is_a?(String)
+
         payment_method.split(';').last == 'purchase'
       end
     end

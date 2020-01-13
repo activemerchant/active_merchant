@@ -434,6 +434,7 @@ module ActiveMerchant #:nodoc:
           return CARD_CODE_MESSAGES[response[:szCVV2ResponseCode]] if CARD_CODE_ERRORS.include?(response[:szCVV2ResponseCode])
           return AVS_MESSAGES[response[:szAVSResponseMessage]] if AVS_ERRORS.include?(response[:szAVSResponseCode])
           return RETURN_CODE_MESSAGES[response[:szReturnCode]] if response[:szReturnCode] != '1'
+
           return response[:szAuthorizationDeclinedMessage]
         end
       end

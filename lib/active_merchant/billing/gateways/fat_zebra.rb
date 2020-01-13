@@ -150,6 +150,7 @@ module ActiveMerchant #:nodoc:
             parse(ssl_request(method, get_url(uri), parameters.to_json, headers))
           rescue ResponseError => e
             return Response.new(false, 'Invalid Login') if(e.response.code == '401')
+
             parse(e.response.body)
           end
 

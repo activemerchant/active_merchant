@@ -23,11 +23,6 @@ Gemspec/OrderedDependencies:
 Layout/AlignHash:
   Enabled: false
 
-# Offense count: 167
-# Cop supports --auto-correct.
-Layout/EmptyLineAfterGuardClause:
-  Enabled: false
-
 # Offense count: 255
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle, IndentationWidth.

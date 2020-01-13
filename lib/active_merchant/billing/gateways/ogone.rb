@@ -239,6 +239,7 @@ module ActiveMerchant #:nodoc:
 
       def reference_transaction?(identifier)
         return false unless identifier.is_a?(String)
+
         _, action = identifier.split(';')
         !action.nil?
       end
@@ -322,6 +323,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(post, creditcard, options)
         return unless options[:billing_address]
+
         add_pair post, 'Owneraddress', options[:billing_address][:address1]
         add_pair post, 'OwnerZip',     options[:billing_address][:zip]
         add_pair post, 'ownertown',    options[:billing_address][:city]

@@ -379,6 +379,7 @@ module ActiveMerchant #:nodoc:
 
       def add_shopper(xml, options)
         return unless options[:execute_threed] || options[:email] || options[:customer]
+
         xml.tag! 'shopper' do
           xml.tag! 'shopperEmailAddress', options[:email] if  options[:email]
           add_authenticated_shopper_id(xml, options)
@@ -545,6 +546,7 @@ module ActiveMerchant #:nodoc:
 
       def message_from(success, raw, success_criteria)
         return 'SUCCESS' if success
+
         raw[:iso8583_return_code_description] || raw[:error] || required_status_message(raw, success_criteria)
       end
 
@@ -633,6 +635,7 @@ module ActiveMerchant #:nodoc:
 
       def credit_fund_transfer_attribute(options)
         return unless options[:credit]
+
         {'action' => 'REFUND'}
       end
 
@@ -644,6 +647,7 @@ module ActiveMerchant #:nodoc:
       def currency_exponent(currency)
         return 0 if non_fractional_currency?(currency)
         return 3 if three_decimal_currency?(currency)
+
         return 2
       end
 

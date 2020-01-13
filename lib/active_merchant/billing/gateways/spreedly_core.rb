@@ -228,6 +228,7 @@ module ActiveMerchant #:nodoc:
 
       def extra_options_to_doc(doc, value)
         return doc.text value unless value.kind_of? Hash
+
         value.each do |k, v|
           doc.send(k) do
             extra_options_to_doc(doc, v)

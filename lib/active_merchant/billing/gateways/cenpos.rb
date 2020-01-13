@@ -277,6 +277,7 @@ module ActiveMerchant #:nodoc:
       def cvv_result_code(xml)
         cvv = validation_result_element(xml, 'CVV')
         return nil unless cvv
+
         validation_result_matches?(*validation_result_element_text(cvv.parent)) ? 'M' : 'N'
       end
 

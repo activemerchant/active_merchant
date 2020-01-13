@@ -170,6 +170,7 @@ module ActiveMerchant #:nodoc:
 
       def parse(body)
         return {} unless body
+
         JSON.parse(body)
       end
 
@@ -187,6 +188,7 @@ module ActiveMerchant #:nodoc:
 
       def conekta_client_user_agent(options)
         return user_agent unless options[:application]
+
         JSON.dump(JSON.parse(user_agent).merge!({application: options[:application]}))
       end
 

@@ -207,6 +207,7 @@ module ActiveMerchant #:nodoc:
 
       def message_from(response)
         return 'Success' if success_from(response)
+
         response[:reason_codes] || response[:reason]
       end
 
@@ -240,6 +241,7 @@ module ActiveMerchant #:nodoc:
 
         params.map do |key, value|
           next if value != false && value.blank?
+
           "#{key}=#{CGI.escape(value.to_s)}"
         end.compact.join('&')
       end

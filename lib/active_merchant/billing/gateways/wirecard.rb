@@ -263,6 +263,7 @@ module ActiveMerchant #:nodoc:
       # Includes the credit-card data to the transaction-xml
       def add_creditcard(xml, creditcard)
         raise 'Creditcard must be supplied!' if creditcard.nil?
+
         xml.tag! 'CREDIT_CARD_DATA' do
           xml.tag! 'CreditCardNumber', creditcard.number
           xml.tag! 'CVC2', creditcard.verification_value
@@ -275,6 +276,7 @@ module ActiveMerchant #:nodoc:
       # Includes the IP address of the customer to the transaction-xml
       def add_customer_data(xml, options)
         return unless options[:ip]
+
         xml.tag! 'CONTACT_DATA' do
           xml.tag! 'IPAddress', options[:ip]
         end
@@ -283,6 +285,7 @@ module ActiveMerchant #:nodoc:
       # Includes the address to the transaction-xml
       def add_address(xml, address)
         return if address.nil?
+
         xml.tag! 'CORPTRUSTCENTER_DATA' do
           xml.tag! 'ADDRESS' do
             xml.tag! 'Address1', address[:address1]

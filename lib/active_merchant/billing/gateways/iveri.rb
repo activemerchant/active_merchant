@@ -66,6 +66,7 @@ module ActiveMerchant #:nodoc:
       def verify_credentials
         void = void('', options)
         return true if void.message == 'Missing OriginalMerchantTrace'
+
         false
       end
 

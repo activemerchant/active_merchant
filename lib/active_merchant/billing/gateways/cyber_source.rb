@@ -458,6 +458,7 @@ module ActiveMerchant #:nodoc:
 
       def add_merchant_descriptor(xml, options)
         return unless options[:merchant_descriptor]
+
         xml.tag! 'invoiceHeader' do
           xml.tag! 'merchantDescriptor', options[:merchant_descriptor]
         end
@@ -519,6 +520,7 @@ module ActiveMerchant #:nodoc:
 
       def add_other_tax(xml, options)
         return unless options[:local_tax_amount] || options[:national_tax_amount]
+
         xml.tag! 'otherTax' do
           xml.tag! 'localTaxAmount', options[:local_tax_amount] if options[:local_tax_amount]
           xml.tag! 'nationalTaxAmount', options[:national_tax_amount] if options[:national_tax_amount]
@@ -592,6 +594,7 @@ module ActiveMerchant #:nodoc:
       def stored_credential_commerce_indicator(options)
         return unless options[:stored_credential]
         return if options[:stored_credential][:initial_transaction]
+
         case options[:stored_credential][:reason_type]
         when 'installment' then 'install'
         when 'recurring' then 'recurring'
@@ -748,6 +751,7 @@ module ActiveMerchant #:nodoc:
 
       def add_installments(xml, options)
         return unless options[:installment_total_count]
+
         xml.tag! 'installment' do
           xml.tag! 'totalCount', options[:installment_total_count]
         end
@@ -773,6 +777,7 @@ module ActiveMerchant #:nodoc:
 
       def add_stored_credential_options(xml, options={})
         return unless options[:stored_credential]
+
         if options[:stored_credential][:initial_transaction]
           xml.tag! 'subsequentAuthFirst', 'true'
         elsif options[:stored_credential][:reason_type] == 'unscheduled'
@@ -874,6 +879,7 @@ module ActiveMerchant #:nodoc:
 
       def reason_message(reason_code)
         return if reason_code.blank?
+
         @@response_codes[:"r#{reason_code}"]
       end
 

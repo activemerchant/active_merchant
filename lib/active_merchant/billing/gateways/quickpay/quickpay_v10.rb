@@ -249,6 +249,7 @@ module ActiveMerchant
 
       def map_address(address)
         return {} if address.nil?
+
         requires!(address, :name, :address1, :city, :zip, :country)
         country = Country.find(address[:country])
         mapped = {

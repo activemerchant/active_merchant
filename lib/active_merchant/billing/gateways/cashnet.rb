@@ -145,6 +145,7 @@ module ActiveMerchant #:nodoc:
         elsif response.code.to_i == 302
           return ssl_get(URI.parse(response['location']))
         end
+
         raise ResponseError.new(response)
       end
 

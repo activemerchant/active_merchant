@@ -238,6 +238,7 @@ module ActiveMerchant #:nodoc:
         return true if response['returnCode'] == '  00'
         return true if response['returnCode'] == 'true'
         return true if response['recurReturnCode'] == '  00'
+
         return false
       end
 

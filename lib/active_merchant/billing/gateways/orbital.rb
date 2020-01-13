@@ -550,6 +550,7 @@ module ActiveMerchant #:nodoc:
 
       def add_stored_credentials(xml, parameters)
         return unless parameters[:mit_stored_credential_ind] == 'Y' || parameters[:stored_credential] && !parameters[:stored_credential].values.all?(&:nil?)
+
         if msg_type = get_msg_type(parameters)
           xml.tag! :MITMsgType, msg_type
         end
@@ -565,6 +566,7 @@ module ActiveMerchant #:nodoc:
         return parameters[:mit_msg_type] if parameters[:mit_msg_type]
         return 'CSTO' if parameters[:stored_credential][:initial_transaction]
         return unless parameters[:stored_credential][:initiator] && parameters[:stored_credential][:reason_type]
+
         initiator =
           case parameters[:stored_credential][:initiator]
           when 'customer' then 'C'
@@ -726,6 +728,7 @@ module ActiveMerchant #:nodoc:
       def set_recurring_ind(xml, parameters)
         if parameters[:recurring_ind]
           raise 'RecurringInd must be set to either "RF" or "RS"' unless %w(RF RS).include?(parameters[:recurring_ind])
+
           xml.tag! :RecurringInd, parameters[:recurring_ind]
         end
       end
@@ -831,6 +834,7 @@ module ActiveMerchant #:nodoc:
 
         value.to_s.each_char do |c|
           break if((limited_value.bytesize + c.bytesize) > byte_length)
+
           limited_value << c
         end
 

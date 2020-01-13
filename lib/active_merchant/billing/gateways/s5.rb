@@ -143,6 +143,7 @@ module ActiveMerchant #:nodoc:
 
       def add_customer(xml, creditcard, options)
         return unless creditcard.respond_to?(:number)
+
         address = options[:billing_address]
         xml.Customer do
           xml.Contact do

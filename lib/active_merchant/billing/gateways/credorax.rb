@@ -259,6 +259,7 @@ module ActiveMerchant #:nodoc:
         add_transaction_type(post, options)
         # if :transaction_type option is not passed, then check for :stored_credential options
         return unless (stored_credential = options[:stored_credential]) && options.dig(:transaction_type).nil?
+
         if stored_credential[:initiator] == 'merchant'
           case stored_credential[:reason_type]
           when 'recurring'

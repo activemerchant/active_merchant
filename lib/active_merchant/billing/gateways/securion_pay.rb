@@ -166,6 +166,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(post, options)
         return unless post[:card]&.kind_of?(Hash)
+
         if address = options[:billing_address]
           post[:card][:addressLine1] = address[:address1] if address[:address1]
           post[:card][:addressLine2] = address[:address2] if address[:address2]
@@ -214,6 +215,7 @@ module ActiveMerchant #:nodoc:
 
         params.map do |key, value|
           next if value.blank?
+
           if value.is_a?(Hash)
             h = {}
             value.each do |k, v|

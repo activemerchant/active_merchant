@@ -210,6 +210,7 @@ module ActiveMerchant #:nodoc:
           return SUCCESS_MESSAGE
         else
           return FAILURE_MESSAGE if response[:errmsg].blank?
+
           return response[:errmsg].gsub(/[^\w]/, ' ').split.join(' ').capitalize
         end
       end

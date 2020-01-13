@@ -287,6 +287,7 @@ module ActiveMerchant #:nodoc:
 
       def custom_field?(field_name, options)
         return true if options[:custom_fields]&.include?(field_name.to_sym)
+
         field_name == :customer_number
       end
 

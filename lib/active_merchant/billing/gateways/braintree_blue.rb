@@ -291,6 +291,7 @@ module ActiveMerchant #:nodoc:
           zip.gsub(/[^a-z0-9]/i, '').length > 9 ||
           zip =~ /[^a-z0-9\- ]/i
         )
+
         zip
       end
 
@@ -638,6 +639,7 @@ module ActiveMerchant #:nodoc:
 
       def add_3ds_info(parameters, three_d_secure_opts)
         return if empty?(three_d_secure_opts)
+
         pass_thru = {}
 
         pass_thru[:three_d_secure_version] = three_d_secure_opts[:version] if three_d_secure_opts[:version]
@@ -660,6 +662,7 @@ module ActiveMerchant #:nodoc:
 
       def add_stored_credential_data(parameters, credit_card_or_vault_id, options)
         return unless (stored_credential = options[:stored_credential])
+
         parameters[:external_vault] = {}
         if stored_credential[:initial_transaction]
           parameters[:external_vault][:status] = 'will_vault'

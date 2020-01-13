@@ -106,6 +106,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(post, creditcard, options)
         return if creditcard.kind_of?(String)
+
         address = (options[:billing_address] || options[:address])
         return unless address
 
@@ -181,6 +182,7 @@ module ActiveMerchant #:nodoc:
 
       def error_response(body)
         return invalid_response unless body['error']
+
         Response.new(
           false,
           body['error'],
@@ -207,6 +209,7 @@ module ActiveMerchant #:nodoc:
 
       def parse(body)
         return {} if body.blank?
+
         JSON.parse(body)
       end
 

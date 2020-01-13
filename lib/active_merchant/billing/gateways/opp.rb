@@ -258,6 +258,7 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_method(post, payment, options)
         return if payment.is_a?(String)
+
         if options[:registrationId]
           post[:card] = {
             cvv: payment.verification_value,

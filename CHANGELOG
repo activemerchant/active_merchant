@@ -34,6 +34,7 @@
 * RuboCop: Fix Layout/FirstParameterIndentation [leila-alderman] #3489
 * Braintree Blue: Remove customer hash when using a payment_method_nonce #3495
 * Credorax: Update non-standard currencies list [chinhle23] #3499
+* RuboCop: Fix Layout/EmptyLineAfterGuardClause [leila-alderman] #3496
 
 == Version 1.103.0 (Dec 2, 2019)
 * Quickbooks: Mark transactions that returned `AuthorizationFailed` as failures [britth] #3447

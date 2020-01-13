@@ -364,6 +364,7 @@ module ActiveMerchant #:nodoc:
       def error_from(response)
         return response['error'] if response['error']
         return 'Failed' unless response.key?('result')
+
         return response['result']['pgwResponseCode'] || response['result']['processor']['responseCode'] || 'Failed'
       end
 

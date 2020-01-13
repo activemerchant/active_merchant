@@ -168,6 +168,7 @@ module ActiveMerchant #:nodoc:
               ))
           rescue ResponseError => e
             raise unless(e.response.code.to_s =~ /4\d\d/)
+
             parse(e.response.body)
           end
 
@@ -226,6 +227,7 @@ module ActiveMerchant #:nodoc:
 
         params.map do |key, value|
           next if value.blank?
+
           if value.is_a?(Hash)
             h = {}
             value.each do |k, v|

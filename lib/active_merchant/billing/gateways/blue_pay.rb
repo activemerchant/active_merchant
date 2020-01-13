@@ -513,6 +513,7 @@ module ActiveMerchant #:nodoc:
 
       def handle_response(response)
         return response.body if ignore_http_status || (200...300).cover?(response.code.to_i)
+
         raise ResponseError.new(response)
       end
     end

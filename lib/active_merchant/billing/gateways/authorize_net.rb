@@ -390,6 +390,7 @@ module ActiveMerchant
 
       def add_payment_source(xml, source, options, action = nil)
         return unless source
+
         if source.is_a?(String)
           add_token_payment_method(xml, source, options)
         elsif card_brand(source) == 'check'
@@ -517,6 +518,7 @@ module ActiveMerchant
 
       def add_market_type_device_type(xml, payment, options)
         return if payment.is_a?(String) || card_brand(payment) == 'check' || card_brand(payment) == 'apple_pay'
+
         if valid_track_data
           xml.retail do
             xml.marketType(options[:market_type] || MARKET_TYPE[:retail])

@@ -206,6 +206,7 @@ module ActiveMerchant #:nodoc:
 
       def strip_leading_zero(value)
         return value unless value[0] == '0'
+
         value[1, 1]
       end
 
@@ -337,6 +338,7 @@ module ActiveMerchant #:nodoc:
         return 'The card was declined.' if %w(02 03 04 05 41 43 44 51 56 61 62 63 65 78).include?(code)
         return 'An error occurred while processing the card.' if %w(06 07 12 15 19 12 52 53 57 58 76 77 91 96 EC).include?(code)
         return "The card's security code is incorrect." if %w(EB N7).include?(code)
+
         ISSUER_MESSAGES[code]
       end
 

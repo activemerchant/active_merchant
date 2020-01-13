@@ -180,6 +180,7 @@ module ActiveMerchant #:nodoc:
 
       def billing_address_fields(options)
         return unless address = options[:billing_address]
+
         billing_address = {}
         billing_address[:street1] = address[:address1]
         billing_address[:street2] = address[:address2]
@@ -217,6 +218,7 @@ module ActiveMerchant #:nodoc:
 
       def shipping_address_fields(options)
         return unless address = options[:shipping_address]
+
         shipping_address = {}
         shipping_address[:street1] = address[:address1]
         shipping_address[:street2] = address[:address2]
@@ -292,6 +294,7 @@ module ActiveMerchant #:nodoc:
 
       def add_process_without_cvv2(payment_method, options)
         return true if payment_method.verification_value.blank? && options[:cvv].blank?
+
         false
       end
 
@@ -379,10 +382,12 @@ module ActiveMerchant #:nodoc:
         case action
         when 'store'
           return response['code'] if success
+
           error_description = response['creditCardToken']['errorDescription'] if response['creditCardToken']
           response['error'] || error_description || 'FAILED'
         when 'verify_credentials'
           return 'VERIFIED' if success
+
           'FAILED'
         else
           if response['transactionResponse']
@@ -390,6 +395,7 @@ module ActiveMerchant #:nodoc:
             response_code = response['transactionResponse']['responseCode'] || response['transactionResponse']['pendingReason']
           end
           return response_code if success
+
           response['error'] || response_message || response_code || 'FAILED'
         end
       end

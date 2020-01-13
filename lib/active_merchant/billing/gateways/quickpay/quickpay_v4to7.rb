@@ -141,6 +141,7 @@ module ActiveMerchant #:nodoc:
 
       def add_testmode(post)
         return if post[:transaction].present?
+
         post[:testmode] = test? ? '1' : '0'
       end
 

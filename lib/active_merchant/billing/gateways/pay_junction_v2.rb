@@ -168,6 +168,7 @@ module ActiveMerchant #:nodoc:
 
       def success_from(response)
         return response['response']['approved'] if response['response']
+
         false
       end
 

@@ -157,6 +157,7 @@ module ActiveMerchant #:nodoc:
           response['id'] = response['_links']['payment']['href'].split('/')[-1] if action == :capture && response.key?('_links')
         rescue ResponseError => e
           raise unless e.response.code.to_s =~ /4\d\d/
+
           response = parse(e.response.body)
         end
 
@@ -257,6 +258,7 @@ module ActiveMerchant #:nodoc:
 
       def error_code_from(succeeded, response)
         return if succeeded
+
         if response['error_type'] && response['error_codes']
           "#{response['error_type']}: #{response['error_codes'].join(', ')}"
         elsif response['error_type']

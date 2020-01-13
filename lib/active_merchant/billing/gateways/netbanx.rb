@@ -168,6 +168,7 @@ module ActiveMerchant #:nodoc:
 
       def map_address(address)
         return {} if address.nil?
+
         country = Country.find(address[:country]) if address[:country]
         mapped = {
           :street => address[:address1],
@@ -204,6 +205,7 @@ module ActiveMerchant #:nodoc:
             parse(ssl_request(method, get_url(uri), params, headers))
           rescue ResponseError => e
             return Response.new(false, 'Invalid Login') if(e.response.code == '401')
+
             parse(e.response.body)
           end
 

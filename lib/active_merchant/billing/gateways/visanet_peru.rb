@@ -213,6 +213,7 @@ module ActiveMerchant #:nodoc:
 
       def action_code_description(response)
         return nil unless response['data']
+
         response['data']['DSC_COD_ACCION']
       end
 

@@ -139,6 +139,7 @@ module ActiveMerchant #:nodoc:
 
       def endpoint(action)
         return 'void' if action == 'void'
+
         'submit'
       end
 

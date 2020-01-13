@@ -236,6 +236,7 @@ module ActiveMerchant #:nodoc:
       def card_success_from(response)
         return false if response.include?('error')
         return true if response['message'] == 'card deleted'
+
         response['card']['status'] == 'valid'
       end
 
@@ -274,6 +275,7 @@ module ActiveMerchant #:nodoc:
 
       def error_code_from(response)
         return if success_from(response)
+
         if response['transaction']
           detail = response['transaction']['status_detail']
           return STANDARD_ERROR_CODE[STANDARD_ERROR_CODE_MAPPING[detail]] if STANDARD_ERROR_CODE_MAPPING.include?(detail)

@@ -521,6 +521,7 @@ module ActiveMerchant #:nodoc:
       def currency_code(currency)
         return currency if currency =~ /^\d+$/
         raise ArgumentError, "Unknown currency #{currency}" unless CURRENCY_CODES[currency]
+
         CURRENCY_CODES[currency]
       end
 

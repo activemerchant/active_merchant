@@ -240,6 +240,7 @@ module ActiveMerchant #:nodoc:
         return oauth_v2_headers if @options[:refresh_token]
 
         raise ArgumentError, "Invalid HTTP method: #{method}. Valid methods are :post and :get" unless [:post, :get].include?(method)
+
         request_uri = URI.parse(uri)
 
         # Following the guidelines from http://nouncer.com/oauth/authentication.html
@@ -285,6 +286,7 @@ module ActiveMerchant #:nodoc:
         return response unless @options[:refresh_token]
         return response unless options[:allow_refresh]
         return response unless response.params['code'] == 'AuthenticationFailed'
+
         refresh_access_token
         commit(endpoint, body)
       end

@@ -239,6 +239,7 @@ module ActiveMerchant #:nodoc:
 
       def message_from(response)
         return response['status_message'] if response['status'] == 'ERROR'
+
         response.try(:[], 'payment').try(:[], 'transaction_status').try(:[], 'description')
       end
 
@@ -253,22 +254,26 @@ module ActiveMerchant #:nodoc:
       def post_data(action, parameters = {})
         return nil if requires_http_get(action)
         return convert_to_url_form_encoded(parameters) if action == :refund
+
         "request_body=#{parameters.to_json}"
       end
 
       def url_for(hostname, action, parameters)
         return "#{hostname}#{URL_MAP[action]}?#{convert_to_url_form_encoded(parameters)}" if requires_http_get(action)
+
         "#{hostname}#{URL_MAP[action]}"
       end
 
       def requires_http_get(action)
         return true if [:capture, :void].include?(action)
+
         false
       end
 
       def convert_to_url_form_encoded(parameters)
         parameters.map do |key, value|
           next if value != false && value.blank?
+
           "#{key}=#{value}"
         end.compact.join('&')
       end
@@ -276,6 +281,7 @@ module ActiveMerchant #:nodoc:
       def error_code_from(response, success)
         unless success
           return response['status_code'] if response['status'] == 'ERROR'
+
           response.try(:[], 'payment').try(:[], 'transaction_status').try(:[], 'code')
         end
       end

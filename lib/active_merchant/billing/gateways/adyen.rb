@@ -228,6 +228,7 @@ module ActiveMerchant #:nodoc:
 
       def add_splits(post, options)
         return unless split_data = options[:splits]
+
         splits = []
         split_data.each do |split|
           amount = {
@@ -271,6 +272,7 @@ module ActiveMerchant #:nodoc:
 
       def add_recurring_processing_model(post, options)
         return unless options.dig(:stored_credential, :reason_type) || options[:recurring_processing_model]
+
         if options.dig(:stored_credential, :reason_type) && options[:stored_credential][:reason_type] == 'unscheduled'
           recurring_processing_model = 'CardOnFile'
         else
@@ -291,6 +293,7 @@ module ActiveMerchant #:nodoc:
           post[:deliveryAddress][:country] = address[:country] if address[:country]
         end
         return unless post[:card]&.kind_of?(Hash)
+
         if (address = options[:billing_address] || options[:address]) && address[:country]
           post[:billingAddress] = {}
           post[:billingAddress][:street] = address[:address1] || 'NA'
@@ -352,6 +355,7 @@ module ActiveMerchant #:nodoc:
 
       def capture_options(options)
         return options.merge(idempotency_key: "#{options[:idempotency_key]}-cap") if options[:idempotency_key]
+
         options
       end
 
@@ -379,6 +383,7 @@ module ActiveMerchant #:nodoc:
 
       def add_recurring_contract(post, options = {})
         return unless options[:recurring_contract_type]
+
         recurring = {
           contract: options[:recurring_contract_type]
         }
@@ -408,6 +413,7 @@ module ActiveMerchant #:nodoc:
           end
         else
           return unless options[:execute_threed] || options[:threed_dynamic]
+
           post[:browserInfo] = { userAgent: options[:user_agent], acceptHeader: options[:accept_header] }
           post[:additionalData] = { executeThreeD: 'true' } if options[:execute_threed]
         end
@@ -453,6 +459,7 @@ module ActiveMerchant #:nodoc:
 
       def parse(body)
         return {} if body.blank?
+
         JSON.parse(body)
       end
 
@@ -532,6 +539,7 @@ module ActiveMerchant #:nodoc:
 
       def message_from(action, response)
         return authorize_message_from(response) if action.to_s == 'authorise' || action.to_s == 'authorise3d'
+
         response['response'] || response['message'] || response['result']
       end
 
@@ -569,6 +577,7 @@ module ActiveMerchant #:nodoc:
 
       def add_browser_info(browser_info, post)
         return unless browser_info
+
         post[:browserInfo] = {
           acceptHeader: browser_info[:accept_header],
           colorDepth: browser_info[:depth],

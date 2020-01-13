@@ -791,6 +791,7 @@ module ActiveMerchant #:nodoc:
       # when the payment method is credit card.
       def add_credit_card(xml, credit_card)
         return unless credit_card
+
         xml.tag!('creditCard') do
           # The credit card number used for payment of the subscription
           xml.tag!('cardNumber', full_or_masked_card_number(credit_card.number))

@@ -305,6 +305,7 @@ module ActiveMerchant
 
       def post_data(params)
         return nil unless params
+
         params.reject { |k, v| v.blank? }.collect { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join('&')
       end
 
@@ -335,6 +336,7 @@ module ActiveMerchant
 
       def error_code(response, success)
         return if success
+
         response['Error'].to_h['messages'].to_a.map { |e| e['code'] }.join(', ')
       end
 

@@ -166,6 +166,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(xml, address)
         raise ArgumentError.new('Address is required') unless address
+
         xml.tag! 'Address' do
           xml.tag! 'Street', "#{address[:address1]} #{address[:address2]}".strip
           xml.tag! 'City', address[:city]

@@ -249,6 +249,7 @@ module ActiveMerchant #:nodoc:
       def hashify_xml!(xml, response)
         xml = REXML::Document.new(xml)
         return if xml.root.nil?
+
         xml.elements.each('//receipt/*') do |node|
           response[node.name.underscore.to_sym] = normalize(node.text)
         end
@@ -316,6 +317,7 @@ module ActiveMerchant #:nodoc:
 
       def message_from(message)
         return 'Unspecified error' if message.blank?
+
         message.gsub(/[^\w]/, ' ').split.join(' ').capitalize
       end
 

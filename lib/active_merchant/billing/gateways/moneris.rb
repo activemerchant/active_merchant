@@ -213,6 +213,7 @@ module ActiveMerchant #:nodoc:
         # if any of :issuer_id, :payment_information, or :payment_indicator is not passed,
         # then check for :stored credential options
         return unless (stored_credential = options[:stored_credential]) && !cof_details_present?(options)
+
         if stored_credential[:initial_transaction]
           add_stored_credential_initial(post, options)
         else
@@ -306,6 +307,7 @@ module ActiveMerchant #:nodoc:
       def hashify_xml!(xml, response)
         xml = REXML::Document.new(xml)
         return if xml.root.nil?
+
         xml.elements.each('//receipt/*') do |node|
           response[node.name.underscore.to_sym] = normalize(node.text)
         end
@@ -382,11 +384,13 @@ module ActiveMerchant #:nodoc:
       def wallet_indicator(token_source)
         return 'APP' if token_source == 'apple_pay'
         return 'ANP' if token_source == 'android_pay'
+
         nil
       end
 
       def message_from(message)
         return 'Unspecified error' if message.blank?
+
         message.gsub(/[^\w]/, ' ').split.join(' ').capitalize
       end
 

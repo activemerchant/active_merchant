@@ -247,6 +247,7 @@ module ActiveMerchant #:nodoc:
 
         def last_digits(number)
           return '' if number.nil?
+
           number.length <= 4 ? number : number.slice(-4..-1)
         end
 
@@ -268,11 +269,13 @@ module ActiveMerchant #:nodoc:
 
         def valid_card_number_length?(number) #:nodoc:
           return false if number.nil?
+
           number.length >= 12
         end
 
         def valid_card_number_characters?(number) #:nodoc:
           return false if number.nil?
+
           !number.match(/\D/)
         end
 

@@ -184,6 +184,7 @@ module ActiveMerchant #:nodoc:
         authorization = [parameters[:originalReference], response['pspReference']].compact
 
         return nil if authorization.empty?
+
         return authorization.join('#')
       end
 
@@ -238,6 +239,7 @@ module ActiveMerchant #:nodoc:
         return response['resultCode'] if response.has_key?('resultCode') # Payment request
         return response['response'] if response['response'] # Modification request
         return response['result'] if response.has_key?('result') # Store/Recurring request
+
         'Failure' # Negative fallback in case of error
       end
 
@@ -367,6 +369,7 @@ module ActiveMerchant #:nodoc:
           end
         else
           return unless options[:execute_threed] || options[:threed_dynamic]
+
           post[:browserInfo] = { userAgent: options[:user_agent], acceptHeader: options[:accept_header] }
           post[:additionalData] = { executeThreeD: 'true' } if options[:execute_threed]
         end
@@ -374,6 +377,7 @@ module ActiveMerchant #:nodoc:
 
       def add_browser_info(browser_info, post)
         return unless browser_info
+
         post[:browserInfo] = {
           acceptHeader: browser_info[:accept_header],
           colorDepth: browser_info[:depth],

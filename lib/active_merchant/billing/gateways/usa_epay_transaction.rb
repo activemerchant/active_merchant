@@ -204,6 +204,7 @@ module ActiveMerchant #:nodoc:
           if payment.account_type
             account_type = payment.account_type.to_s.capitalize
             raise ArgumentError, 'account_type must be checking or savings' unless %w(Checking Savings).include?(account_type)
+
             post[:accounttype] = account_type
           end
           post[:account] = payment.account_number
@@ -228,6 +229,7 @@ module ActiveMerchant #:nodoc:
       # see: http://wiki.usaepay.com/developer/transactionapi#split_payments
       def add_split_payments(post, options)
         return unless options[:split_payments].is_a?(Array)
+
         options[:split_payments].each_with_index do |payment, index|
           prefix = '%02d' % (index + 2)
           post["#{prefix}key"]         = payment[:key]
@@ -241,6 +243,7 @@ module ActiveMerchant #:nodoc:
 
       def add_recurring_fields(post, options)
         return unless options[:recurring_fields].is_a?(Hash)
+
         options[:recurring_fields].each do |key, value|
           if value == true
             value = 'yes'
@@ -268,6 +271,7 @@ module ActiveMerchant #:nodoc:
       # see: https://wiki.usaepay.com/developer/transactionapi#line_item_details
       def add_line_items(post, options)
         return unless options[:line_items].is_a?(Array)
+
         options[:line_items].each_with_index do |line_item, index|
           %w(product_ref_num sku qty name description taxable tax_rate tax_amount commodity_code discount_rate discount_amount).each do |key|
             post["line#{index}#{key.delete('_')}"] = line_item[key.to_sym] if line_item.has_key?(key.to_sym)
@@ -329,6 +333,7 @@ module ActiveMerchant #:nodoc:
           return 'Success'
         else
           return 'Unspecified error' if response[:error].blank?
+
           return response[:error]
         end
       end

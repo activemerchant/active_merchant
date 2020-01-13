@@ -165,6 +165,7 @@ module ActiveMerchant #:nodoc:
         end
         REXML::XPath.each(response, '//detail') do |detail|
           next unless detail.is_a?(REXML::Element)
+
           tag = detail.elements['tag'].text
           value = detail.elements['value'].text
           hsh[tag] = value

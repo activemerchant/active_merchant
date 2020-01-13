@@ -119,6 +119,7 @@ module ActiveMerchant #:nodoc:
 
         params.map do |key, value|
           next if value != false && value.blank?
+
           if value.is_a?(Hash)
             h = {}
             value.each do |k, v|

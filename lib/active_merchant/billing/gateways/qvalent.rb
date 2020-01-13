@@ -147,6 +147,7 @@ module ActiveMerchant #:nodoc:
 
       def stored_credential_usage(post, payment_method, options)
         return unless payment_method.brand == 'visa'
+
         stored_credential = options[:stored_credential]
         if stored_credential[:initial_transaction]
           post['card.storedCredentialUsage'] = 'INITIAL_STORAGE'
@@ -222,6 +223,7 @@ module ActiveMerchant #:nodoc:
 
       def cvv_result(succeeded, raw)
         return unless succeeded
+
         code = CVV_CODE_MAPPING[raw['response.cvnResponse']] || raw['response.cvnResponse']
         CVVResult.new(code)
       end

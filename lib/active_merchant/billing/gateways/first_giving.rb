@@ -83,6 +83,7 @@ module ActiveMerchant #:nodoc:
         end
         element.children.each do |child|
           next if child.text?
+
           response[child.name] = child.text
         end
 

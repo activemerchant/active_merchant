@@ -256,6 +256,7 @@ module ActiveMerchant
 
       def add_level_3_data(doc, options)
         return unless options[:customer_reference_number]
+
         doc.send('level-3-data') do
           send_when_present(doc, :customer_reference_number, options)
           send_when_present(doc, :sales_tax_amount, options)
@@ -273,6 +274,7 @@ module ActiveMerchant
 
       def send_when_present(doc, options_key, options, xml_element_name = nil)
         return unless options[options_key]
+
         xml_element_name ||= options_key.to_s
 
         doc.send(xml_element_name.dasherize, options[options_key])
@@ -414,6 +416,7 @@ module ActiveMerchant
 
       def message_from(succeeded, response)
         return 'Success' if succeeded
+
         parsed = parse(response)
         if parsed.dig('error-name') == 'FRAUD_DETECTED'
           fraud_codes_from(response)
@@ -447,6 +450,7 @@ module ActiveMerchant
 
       def vaulted_shopper_id(parsed_response, payment_method_details)
         return nil unless parsed_response['content-location-header']
+
         vaulted_shopper_id = parsed_response['content-location-header'].split('/').last
         vaulted_shopper_id += "|#{payment_method_details.payment_method_type}" if payment_method_details.alt_transaction?
         vaulted_shopper_id

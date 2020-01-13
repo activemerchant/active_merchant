@@ -174,6 +174,7 @@ module ActiveMerchant #:nodoc:
 
       def add_return_url(post, options)
         return unless options[:confirm]
+
         post[:confirm] = options[:confirm]
         post[:return_url] = options[:return_url] if options[:return_url]
         post
@@ -211,6 +212,7 @@ module ActiveMerchant #:nodoc:
 
       def add_exemption(post, options = {})
         return unless options[:confirm]
+
         post[:payment_method_options] ||= {}
         post[:payment_method_options][:card] ||= {}
         post[:payment_method_options][:card][:moto] = true if options[:moto]
@@ -224,6 +226,7 @@ module ActiveMerchant #:nodoc:
 
       def add_connected_account(post, options = {})
         return unless options[:transfer_destination]
+
         post[:transfer_data] = {}
         post[:transfer_data][:destination] = options[:transfer_destination]
         post[:transfer_data][:amount] = options[:transfer_amount] if options[:transfer_amount]
@@ -235,6 +238,7 @@ module ActiveMerchant #:nodoc:
 
       def add_billing_address(post, options = {})
         return unless billing = options[:billing_address] || options[:address]
+
         post[:billing_details] = {}
         post[:billing_details][:address] = {}
         post[:billing_details][:address][:city] = billing[:city] if billing[:city]
@@ -251,6 +255,7 @@ module ActiveMerchant #:nodoc:
 
       def add_shipping_address(post, options = {})
         return unless shipping = options[:shipping]
+
         post[:shipping] = {}
         post[:shipping][:address] = {}
         post[:shipping][:address][:line1] = shipping[:address][:line1]

@@ -190,6 +190,7 @@ module ActiveMerchant #:nodoc:
 
       def message_from(message)
         return 'Unspecified error' if message.blank?
+
         message.gsub(/[^\w]/, ' ').split.join(' ').capitalize
       end
 

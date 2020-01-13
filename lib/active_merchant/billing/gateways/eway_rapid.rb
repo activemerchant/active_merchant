@@ -268,6 +268,7 @@ module ActiveMerchant #:nodoc:
 
       def add_credit_card(params, credit_card, options)
         return unless credit_card
+
         params['Customer'] ||= {}
         if credit_card.respond_to? :number
           card_details = params['Customer']['CardDetails'] = {}

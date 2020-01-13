@@ -201,6 +201,7 @@ module ActiveMerchant #:nodoc:
         )
       rescue ActiveMerchant::ResponseError => e
         raise unless(e.response.code =~ /^[67]\d\d$/)
+
         return Response.new(false, e.response.message, {:status_code => e.response.code}, :test => test?)
       end
 

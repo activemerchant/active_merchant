@@ -202,6 +202,7 @@ module ActiveMerchant #:nodoc:
 
       def check?(payment_method)
         return false if payment_method.is_a?(String)
+
         card_brand(payment_method) == 'check'
       end
 
@@ -381,6 +382,7 @@ module ActiveMerchant #:nodoc:
 
       def order_source(options={})
         return options[:order_source] unless options[:stored_credential]
+
         order_source = nil
 
         case options[:stored_credential][:reason_type]
@@ -456,6 +458,7 @@ module ActiveMerchant #:nodoc:
 
       def success_from(kind, parsed)
         return (parsed[:response] == '000') unless kind == :registerToken
+
         %w(000 801 802).include?(parsed[:response])
       end
 

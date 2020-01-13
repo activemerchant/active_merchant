@@ -133,6 +133,7 @@ module ActiveMerchant #:nodoc:
 
       def add_or_use_default(payment_data, default_value)
         return payment_data.capitalize if payment_data
+
         return default_value
       end
 

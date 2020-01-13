@@ -284,6 +284,7 @@ module ActiveMerchant #:nodoc:
 
       def message_from(response)
         return 'Success' if success_from(response)
+
         message = STATUS_RESPONSE_CODES[response[:status]]
         message += " - #{TRANSACTION_RESPONSE_CODES[response[:response_code]]}" if response[:response_code]
 

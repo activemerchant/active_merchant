@@ -132,6 +132,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(xml, tag, address, options)
         return if address.nil?
+
         xml.tag! tag do
           xml.tag! 'Name', address[:name] unless address[:name].blank?
           xml.tag! 'EMail', options[:email] unless options[:email].blank?
