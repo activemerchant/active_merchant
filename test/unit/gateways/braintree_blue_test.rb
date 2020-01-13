@@ -56,7 +56,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
 
   def test_transaction_uses_payment_method_nonce_when_option
     Braintree::TransactionGateway.any_instance.expects(:sale).
-      with(has_entries(:payment_method_nonce => 'present')).
+      with(all_of(has_entries(:payment_method_nonce => 'present'), has_key(:customer))).
       returns(braintree_result)
 
     assert response = @gateway.purchase(10, 'present', { payment_method_nonce: true })
@@ -688,6 +688,26 @@ class BraintreeBlueTest < Test::Unit::TestCase
       returns(braintree_result)
 
     @gateway.purchase(100, credit_card('41111111111111111111'), three_d_secure: {version: '2.0', cavv: 'cavv', eci: 'eci', ds_transaction_id: 'trans_id'})
+  end
+
+  def test_purchase_string_based_payment_method_nonce_removes_customer
+    Braintree::TransactionGateway.
+      any_instance.
+      expects(:sale).
+      with(Not(has_key(:customer))).
+      returns(braintree_result)
+
+    @gateway.purchase(100, credit_card('41111111111111111111'), payment_method_nonce: '1234')
+  end
+
+  def test_authorize_string_based_payment_method_nonce_removes_customer
+    Braintree::TransactionGateway.
+      any_instance.
+      expects(:sale).
+      with(Not(has_key(:customer))).
+      returns(braintree_result)
+
+    @gateway.authorize(100, credit_card('41111111111111111111'), payment_method_nonce: '1234')
   end
 
   def test_passes_recurring_flag

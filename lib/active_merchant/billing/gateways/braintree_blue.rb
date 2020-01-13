@@ -628,6 +628,11 @@ module ActiveMerchant #:nodoc:
 
         parameters[:line_items] = options[:line_items] if options[:line_items]
 
+        if options[:payment_method_nonce].is_a?(String)
+          parameters.delete(:customer)
+          parameters[:payment_method_nonce] = options[:payment_method_nonce]
+        end
+
         parameters
       end
 
