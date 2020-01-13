@@ -301,8 +301,8 @@ module ActiveMerchant #:nodoc:
       def add_invoice(xml, money, options)
         xml.AuthCode options[:force] if options[:force]
         if options[:order_items].blank?
-          xml.Total(amount(money)) unless(money.nil? || money < 0.01)
-          xml.Description(options[:description]) unless(options[:description].blank?)
+          xml.Total(amount(money)) unless money.nil? || money < 0.01
+          xml.Description(options[:description]) unless options[:description].blank?
         else
           xml.OrderItems {
             options[:order_items].each do |item|

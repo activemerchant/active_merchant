@@ -442,7 +442,7 @@ module ActiveMerchant #:nodoc:
       def add_3ds2_authenticated_data(post, options)
         three_d_secure_options = options[:three_d_secure]
         # If the transaction was authenticated in a frictionless flow, send the transStatus from the ARes.
-        if(three_d_secure_options[:authentication_response_status].nil?)
+        if three_d_secure_options[:authentication_response_status].nil?
           authentication_response = three_d_secure_options[:directory_response_status]
         else
           authentication_response = three_d_secure_options[:authentication_response_status]

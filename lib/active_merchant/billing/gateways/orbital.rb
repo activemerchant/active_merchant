@@ -243,7 +243,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def void(authorization, options = {}, deprecated = {})
-        if(!options.kind_of?(Hash))
+        if !options.kind_of?(Hash)
           ActiveMerchant.deprecated('Calling the void method with an amount parameter is deprecated and will be removed in a future version.')
           return void(options, deprecated.merge(:amount => authorization))
         end
@@ -383,7 +383,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(xml, creditcard, options)
-        if(address = (options[:billing_address] || options[:address]))
+        if (address = (options[:billing_address] || options[:address]))
           avs_supported = AVS_SUPPORTED_COUNTRIES.include?(address[:country].to_s) || empty?(address[:country])
 
           if avs_supported
@@ -421,7 +421,7 @@ module ActiveMerchant #:nodoc:
 
       # For Profile requests
       def add_customer_address(xml, options)
-        if(address = (options[:billing_address] || options[:address]))
+        if (address = (options[:billing_address] || options[:address]))
           avs_supported = AVS_SUPPORTED_COUNTRIES.include?(address[:country].to_s)
 
           xml.tag! :CustomerAddress1, byte_limit(format_address_field(address[:address1]), 30)
@@ -833,7 +833,7 @@ module ActiveMerchant #:nodoc:
         limited_value = ''
 
         value.to_s.each_char do |c|
-          break if((limited_value.bytesize + c.bytesize) > byte_length)
+          break if (limited_value.bytesize + c.bytesize) > byte_length
 
           limited_value << c
         end

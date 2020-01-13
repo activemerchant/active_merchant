@@ -112,7 +112,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, options)
-        if(billing_address = (options[:billing_address] || options[:address]))
+        if (billing_address = (options[:billing_address] || options[:address]))
           post[:CustomerEmailAddress] = billing_address[:email]
           post[:CustomerPhone] = billing_address[:phone]
           post[:CustomerBillingAddress] = billing_address[:address1]
@@ -156,7 +156,7 @@ module ActiveMerchant #:nodoc:
           xml = ssl_post(self.live_url, data, headers)
           raw = parse(xml)
         rescue ActiveMerchant::ResponseError => e
-          if(e.response.code == '500' && e.response.body.start_with?('<s:Envelope'))
+          if e.response.code == '500' && e.response.body.start_with?('<s:Envelope')
             raw = {
               message: 'See transcript for detailed error description.'
             }

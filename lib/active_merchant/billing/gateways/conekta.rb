@@ -105,7 +105,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_shipment_address(post, options)
-        if(address = options[:shipping_address])
+        if (address = options[:shipping_address])
           post[:address] = {}
           post[:address][:street1] = address[:address1] if address[:address1]
           post[:address][:street2] = address[:address2] if address[:address2]
@@ -124,7 +124,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_billing_address(post, options)
-        if(address = (options[:billing_address] || options[:address]))
+        if (address = (options[:billing_address] || options[:address]))
           post[:billing_address] = {}
           post[:billing_address][:street1] = address[:address1] if address[:address1]
           post[:billing_address][:street2] = address[:address2] if address[:address2]
@@ -142,7 +142,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(post, options)
-        if(address = (options[:billing_address] || options[:address]))
+        if (address = (options[:billing_address] || options[:address]))
           post[:address] = {}
           post[:address][:street1] = address[:address1] if address[:address1]
           post[:address][:street2] = address[:address2] if address[:address2]

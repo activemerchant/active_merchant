@@ -843,17 +843,17 @@ module ActiveMerchant
 
         response = {action: action}
 
-        response[:response_code] = if(element = doc.at_xpath('//transactionResponse/responseCode'))
+        response[:response_code] = if (element = doc.at_xpath('//transactionResponse/responseCode'))
                                      empty?(element.content) ? nil : element.content.to_i
                                    end
 
-        if(element = doc.at_xpath('//errors/error'))
+        if (element = doc.at_xpath('//errors/error'))
           response[:response_reason_code] = element.at_xpath('errorCode').content[/0*(\d+)$/, 1]
           response[:response_reason_text] = element.at_xpath('errorText').content.chomp('.')
-        elsif(element = doc.at_xpath('//transactionResponse/messages/message'))
+        elsif (element = doc.at_xpath('//transactionResponse/messages/message'))
           response[:response_reason_code] = element.at_xpath('code').content[/0*(\d+)$/, 1]
           response[:response_reason_text] = element.at_xpath('description').content.chomp('.')
-        elsif(element = doc.at_xpath('//messages/message'))
+        elsif (element = doc.at_xpath('//messages/message'))
           response[:response_reason_code] = element.at_xpath('code').content[/0*(\d+)$/, 1]
           response[:response_reason_text] = element.at_xpath('text').content.chomp('.')
         else
@@ -862,7 +862,7 @@ module ActiveMerchant
         end
 
         response[:avs_result_code] =
-          if(element = doc.at_xpath('//avsResultCode'))
+          if (element = doc.at_xpath('//avsResultCode'))
             empty?(element.content) ? nil : element.content
           end
 
@@ -962,7 +962,7 @@ module ActiveMerchant
         if response[:response_code] == DECLINED
           if CARD_CODE_ERRORS.include?(cvv_result.code)
             return cvv_result.message
-          elsif(AVS_REASON_CODES.include?(response[:response_reason_code]) && AVS_ERRORS.include?(avs_result.code))
+          elsif AVS_REASON_CODES.include?(response[:response_reason_code]) && AVS_ERRORS.include?(avs_result.code)
             return avs_result.message
           end
         end

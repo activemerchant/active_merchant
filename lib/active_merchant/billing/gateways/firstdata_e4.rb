@@ -407,9 +407,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        if(response[:faultcode] && response[:faultstring])
+        if response[:faultcode] && response[:faultstring]
           response[:faultstring]
-        elsif(response[:error_number] && response[:error_number] != '0')
+        elsif response[:error_number] && response[:error_number] != '0'
           response[:error_description]
         else
           result = (response[:exact_message] || '')

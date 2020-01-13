@@ -19,12 +19,12 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Optimal Payments'
 
       def initialize(options = {})
-        if(options[:login])
+        if options[:login]
           ActiveMerchant.deprecated("The 'login' option is deprecated in favor of 'store_id' and will be removed in a future version.")
           options[:store_id] = options[:login]
         end
 
-        if(options[:account])
+        if options[:account]
           ActiveMerchant.deprecated("The 'account' option is deprecated in favor of 'account_number' and will be removed in a future version.")
           options[:account_number] = options[:account]
         end

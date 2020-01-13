@@ -94,7 +94,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(post, options)
-        return unless(address = (options[:billing_address] || options[:address]))
+        return unless (address = (options[:billing_address] || options[:address]))
 
         post['customerName'] = scrub_name(address[:name])
         post['customerCountry'] = address[:country]

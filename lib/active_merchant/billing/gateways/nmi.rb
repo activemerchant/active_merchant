@@ -153,14 +153,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment_method(post, payment_method, options)
-        if(payment_method.is_a?(String))
+        if payment_method.is_a?(String)
           customer_vault_id, _ = split_authorization(payment_method)
           post[:customer_vault_id] = customer_vault_id
         elsif payment_method.is_a?(NetworkTokenizationCreditCard)
           post[:ccnumber] = payment_method.number
           post[:ccexp] = exp_date(payment_method)
           post[:token_cryptogram] = payment_method.payment_cryptogram
-        elsif(card_brand(payment_method) == 'check')
+        elsif card_brand(payment_method) == 'check'
           post[:payment] = 'check'
           post[:firstname] = payment_method.first_name
           post[:lastname] = payment_method.last_name
@@ -213,7 +213,7 @@ module ActiveMerchant #:nodoc:
         post[:ipaddress] = options[:ip]
         post[:customer_id] = options[:customer_id] || options[:customer]
 
-        if(billing_address = options[:billing_address] || options[:address])
+        if (billing_address = options[:billing_address] || options[:address])
           post[:company] = billing_address[:company]
           post[:address1] = billing_address[:address1]
           post[:address2] = billing_address[:address2]
@@ -224,7 +224,7 @@ module ActiveMerchant #:nodoc:
           post[:phone] = billing_address[:phone]
         end
 
-        if(shipping_address = options[:shipping_address])
+        if (shipping_address = options[:shipping_address])
           post[:shipping_company] = shipping_address[:company]
           post[:shipping_address1] = shipping_address[:address1]
           post[:shipping_address2] = shipping_address[:address2]

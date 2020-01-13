@@ -23,7 +23,7 @@ module ActiveMerchant #:nodoc:
       }
 
       def initialize(options={})
-        if(options[:login])
+        if options[:login]
           ActiveMerchant.deprecated("The 'login' option is deprecated in favor of 'agent_code' and will be removed in a future version.")
           options[:agent_code] = options[:login]
         end
@@ -96,7 +96,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(post, options)
         billing_address = options[:billing_address] || options[:address]
-        if(billing_address)
+        if billing_address
           post[:address] = billing_address[:address1]
           post[:city] = billing_address[:city]
           post[:state] = billing_address[:state]
@@ -217,7 +217,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def recursively_parse_element(node, response)
-        if(node.has_elements?)
+        if node.has_elements?
           node.elements.each { |n| recursively_parse_element(n, response) }
         else
           response[dexmlize_param_name(node.name)] = (node.text ? node.text.strip : nil)
@@ -235,7 +235,7 @@ module ActiveMerchant #:nodoc:
       def message_from(response)
         if !successful_result_message?(response) && response[:authorization_result]
           return response[:authorization_result].strip
-        elsif(response[:status] == 'Failure')
+        elsif response[:status] == 'Failure'
           return response[:errors]
         else
           response[:status]

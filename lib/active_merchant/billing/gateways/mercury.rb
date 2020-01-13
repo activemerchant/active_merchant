@@ -230,7 +230,7 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'CardType', CARD_CODES[credit_card.brand] if credit_card.brand
 
         include_cvv = !%w(Return PreAuthCapture).include?(action) && !credit_card.track_data.present?
-        xml.tag! 'CVVData', credit_card.verification_value if(include_cvv && credit_card.verification_value)
+        xml.tag! 'CVVData', credit_card.verification_value if include_cvv && credit_card.verification_value
       end
 
       def add_address(xml, options)

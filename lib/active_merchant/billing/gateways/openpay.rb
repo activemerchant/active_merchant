@@ -75,7 +75,7 @@ module ActiveMerchant #:nodoc:
           MultiResponse.run(:first) do |r|
             r.process { commit(:post, 'customers', post, options) }
 
-            if(r.success? && !r.params['id'].blank?)
+            if r.success? && !r.params['id'].blank?
               customer_id = r.params['id']
               r.process { commit(:post, "customers/#{customer_id}/cards", card, options) }
             end

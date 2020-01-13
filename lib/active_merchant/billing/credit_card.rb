@@ -329,7 +329,7 @@ module ActiveMerchant #:nodoc:
           errors << [:last_name,  'cannot be empty'] if last_name.blank?
         end
 
-        if(empty?(month) || empty?(year))
+        if empty?(month) || empty?(year)
           errors << [:month, 'is required'] if empty?(month)
           errors << [:year,  'is required'] if empty?(year)
         else

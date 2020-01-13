@@ -155,7 +155,7 @@ module ActiveMerchant #:nodoc:
       #   If the payment_object is either a CreditCard or Check object, then the transaction type will be an unmatched credit placing funds in the specified account. This is referred to a CREDIT transaction in BluePay.
       # * <tt>options</tt> -- A hash of parameters.
       def refund(money, identification, options = {})
-        if(identification && !identification.kind_of?(String))
+        if identification && !identification.kind_of?(String)
           ActiveMerchant.deprecated 'refund should only be used to refund a referenced transaction'
           return credit(money, identification, options)
         end
@@ -317,7 +317,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def commit(action, money, fields, options = {})
-        fields[:AMOUNT] = amount(money) unless(fields[:TRANS_TYPE] == 'VOID' || action == 'rebill')
+        fields[:AMOUNT] = amount(money) unless fields[:TRANS_TYPE] == 'VOID' || action == 'rebill'
         fields[:MODE] = (test? ? 'TEST' : 'LIVE')
         fields[:ACCOUNT_ID] = @options[:login]
         fields[:CUSTOMER_IP] = options[:ip] if options[:ip]
@@ -372,7 +372,7 @@ module ActiveMerchant #:nodoc:
 
       def message_from(parsed)
         message = parsed[:message]
-        if(parsed[:response_code].to_i == 2)
+        if parsed[:response_code].to_i == 2
           if CARD_CODE_ERRORS.include?(parsed[:card_code])
             message = CVVResult.messages[parsed[:card_code]]
           elsif AVS_ERRORS.include?(parsed[:avs_result_code])

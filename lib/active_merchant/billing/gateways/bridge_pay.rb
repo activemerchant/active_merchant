@@ -147,7 +147,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, options)
-        if(billing_address = (options[:billing_address] || options[:address]))
+        if (billing_address = (options[:billing_address] || options[:address]))
           post[:Street] = billing_address[:address1]
           post[:Zip]    = billing_address[:zip]
         end

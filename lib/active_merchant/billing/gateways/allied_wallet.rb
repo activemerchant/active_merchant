@@ -141,7 +141,7 @@ module ActiveMerchant #:nodoc:
           raw_response = ssl_post(url(action), post.to_json, headers)
           response = parse(raw_response)
         rescue ResponseError => e
-          raise unless(e.response.code.to_s =~ /4\d\d/)
+          raise unless e.response.code.to_s =~ /4\d\d/
 
           response = parse(e.response.body)
         end

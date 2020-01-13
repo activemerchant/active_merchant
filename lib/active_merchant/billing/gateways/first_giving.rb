@@ -49,7 +49,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(post, options)
-        if(billing_address = (options[:billing_address] || options[:address]))
+        if (billing_address = (options[:billing_address] || options[:address]))
           post[:billToAddressLine1]  = billing_address[:address1]
           post[:billToCity]          = billing_address[:city]
           post[:billToState]         = billing_address[:state]

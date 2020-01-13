@@ -170,7 +170,7 @@ module ActiveMerchant #:nodoc:
 
       def unstore(customer_vault_id, options = {})
         commit do
-          if(!customer_vault_id && options[:credit_card_token])
+          if !customer_vault_id && options[:credit_card_token]
             @braintree_gateway.credit_card.delete(options[:credit_card_token])
           else
             @braintree_gateway.customer.delete(customer_vault_id)
@@ -287,10 +287,9 @@ module ActiveMerchant #:nodoc:
 
       def scrub_zip(zip)
         return nil unless zip.present?
-        return nil if(
+        return nil if
           zip.gsub(/[^a-z0-9]/i, '').length > 9 ||
           zip =~ /[^a-z0-9\- ]/i
-        )
 
         zip
       end

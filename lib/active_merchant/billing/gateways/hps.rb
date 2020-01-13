@@ -115,7 +115,7 @@ module ActiveMerchant #:nodoc:
           xml.hps :CardHolderEmail, options[:email] if options[:email]
           xml.hps :CardHolderPhone, options[:phone] if options[:phone]
 
-          if(billing_address = (options[:billing_address] || options[:address]))
+          if (billing_address = (options[:billing_address] || options[:address]))
             xml.hps :CardHolderAddr, billing_address[:address1] if billing_address[:address1]
             xml.hps :CardHolderCity, billing_address[:city] if billing_address[:city]
             xml.hps :CardHolderState, billing_address[:state] if billing_address[:state]
@@ -249,7 +249,7 @@ module ActiveMerchant #:nodoc:
 
         doc = Nokogiri::XML(raw)
         doc.remove_namespaces!
-        if(header = doc.xpath('//Header').first)
+        if (header = doc.xpath('//Header').first)
           header.elements.each do |node|
             if node.elements.size == 0
               response[node.name] = node.text
@@ -260,12 +260,12 @@ module ActiveMerchant #:nodoc:
             end
           end
         end
-        if(transaction = doc.xpath('//Transaction/*[1]').first)
+        if (transaction = doc.xpath('//Transaction/*[1]').first)
           transaction.elements.each do |node|
             response[node.name] = node.text
           end
         end
-        if(fault = doc.xpath('//Fault/Reason/Text').first)
+        if (fault = doc.xpath('//Fault/Reason/Text').first)
           response['Fault'] = fault.text
         end
 
@@ -304,10 +304,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        if(response['Fault'])
+        if response['Fault']
           response['Fault']
-        elsif(response['GatewayRspCode'] == '0')
-          if(response['RspCode'] != '00' && response['RspCode'] != '85')
+        elsif response['GatewayRspCode'] == '0'
+          if response['RspCode'] != '00' && response['RspCode'] != '85'
             issuer_message(response['RspCode'])
           else
             response['GatewayRspMsg']
