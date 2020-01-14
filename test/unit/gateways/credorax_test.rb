@@ -804,6 +804,14 @@ class CredoraxTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_nonfractional_currency_handling
+    stub_comms do
+      @gateway.authorize(200, @credit_card, @options.merge(currency: 'JPY'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/a4=2&a1=/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
   private
 
   def stored_credential_options(*args, id: nil)

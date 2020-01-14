@@ -21,8 +21,8 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = %w(AD AT BE BG HR CY CZ DK EE FR DE GI GR GG HU IS IE IM IT JE LV LI LT LU MT MC NO PL PT RO SM SK ES SE CH GB)
       self.default_currency = 'EUR'
-      self.currencies_without_fractions = %w(CLP JPY KRW PYG VND)
-      self.currencies_with_three_decimal_places = %w(BHD JOD KWD OMR RSD TND)
+      self.currencies_without_fractions = %w(BIF CLP DJF GNF JPY KMF KRW PYG RWF VND VUV XAF XOF XPF)
+      self.currencies_with_three_decimal_places = %w(BHD IQD JOD KWD LYD OMR TND)
 
       self.money_format = :cents
       self.supported_cardtypes = [:visa, :master, :maestro]
