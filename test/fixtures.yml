@@ -623,6 +623,10 @@ netpay:
   login: POS
   password: plaza2020
 
+network_international:
+  outlet: OUTLET_REF
+  token: BEARER_TOKEN
+
 network_merchants:
   login: demo
   password: password
