@@ -50,7 +50,7 @@ module ActiveMerchant #:nodoc:
         post[:order_id] = options[:order_id]
         post[:address] = options[:billing_address] || options[:address]
         post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
-        add_cof(post, options)
+        add_stored_credential(post, options)
         action = if post[:cavv]
                    'cavv_preauth'
                  elsif post[:data_key].blank?
@@ -73,7 +73,7 @@ module ActiveMerchant #:nodoc:
         post[:order_id] = options[:order_id]
         post[:address] = options[:billing_address] || options[:address]
         post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
-        add_cof(post, options)
+        add_stored_credential(post, options)
         action = if post[:cavv]
                    'cavv_purchase'
                  elsif post[:data_key].blank?
@@ -208,6 +208,48 @@ module ActiveMerchant #:nodoc:
         post[:payment_information] = options[:payment_information] if options[:payment_information]
       end
 
+      def add_stored_credential(post, options)
+        add_cof(post, options)
+        # if any of :issuer_id, :payment_information, or :payment_indicator is not passed,
+        # then check for :stored credential options
+        return unless (stored_credential = options[:stored_credential]) && !cof_details_present?(options)
+        if stored_credential[:initial_transaction]
+          add_stored_credential_initial(post, options)
+        else
+          add_stored_credential_used(post, options)
+        end
+      end
+
+      def add_stored_credential_initial(post, options)
+        post[:payment_information] ||= '0'
+        post[:issuer_id] ||= ''
+        if options[:stored_credential][:initiator] == 'merchant'
+          case options[:stored_credential][:reason_type]
+          when 'recurring', 'installment'
+            post[:payment_indicator] ||= 'R'
+          when 'unscheduled'
+            post[:payment_indicator] ||= 'C'
+          end
+        else
+          post[:payment_indicator] ||= 'C'
+        end
+      end
+
+      def add_stored_credential_used(post, options)
+        post[:payment_information] ||= '2'
+        post[:issuer_id] = options[:stored_credential][:network_transaction_id] if options[:issuer_id].blank?
+        if options[:stored_credential][:initiator] == 'merchant'
+          case options[:stored_credential][:reason_type]
+          when 'recurring', 'installment'
+            post[:payment_indicator] ||= 'R'
+          when '', 'unscheduled'
+            post[:payment_indicator] ||= 'U'
+          end
+        else
+          post[:payment_indicator] ||= 'Z'
+        end
+      end
+
       # Common params used amongst the +credit+, +void+ and +capture+ methods
       def crediting_params(authorization, options = {})
         {
@@ -245,16 +287,14 @@ module ActiveMerchant #:nodoc:
 
       # Generates a Moneris authorization string of the form 'trans_id;receipt_id'.
       def authorization_from(response = {})
-        if response[:trans_id] && response[:receipt_id]
-          "#{response[:trans_id]};#{response[:receipt_id]}"
-        end
+        "#{response[:trans_id]};#{response[:receipt_id]}" if response[:trans_id] && response[:receipt_id]
       end
 
       # Tests for a successful response from Moneris' servers
       def successful?(response)
         response[:response_code] &&
-        response[:complete] &&
-        (0..49).cover?(response[:response_code].to_i)
+          response[:complete] &&
+          (0..49).cover?(response[:response_code].to_i)
       end
 
       def parse(xml)

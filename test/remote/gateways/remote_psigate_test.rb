@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class PsigateRemoteTest < Test::Unit::TestCase
-
   def setup
     Base.mode = :test
     @gateway = PsigateGateway.new(fixtures(:psigate))

@@ -284,19 +284,19 @@ class PaypalTest < Test::Unit::TestCase
 
   def test_should_use_test_certificate_endpoint
     gateway = PaypalGateway.new(
-                :login => 'cody',
-                :password => 'test',
-                :pem => 'PEM'
-              )
+      :login => 'cody',
+      :password => 'test',
+      :pem => 'PEM'
+    )
     assert_equal PaypalGateway::URLS[:test][:certificate], gateway.send(:endpoint_url)
   end
 
   def test_should_use_live_certificate_endpoint
     gateway = PaypalGateway.new(
-                :login => 'cody',
-                :password => 'test',
-                :pem => 'PEM'
-              )
+      :login => 'cody',
+      :password => 'test',
+      :pem => 'PEM'
+    )
     gateway.expects(:test?).returns(false)
 
     assert_equal PaypalGateway::URLS[:live][:certificate], gateway.send(:endpoint_url)
@@ -304,20 +304,20 @@ class PaypalTest < Test::Unit::TestCase
 
   def test_should_use_test_signature_endpoint
     gateway = PaypalGateway.new(
-                :login => 'cody',
-                :password => 'test',
-                :signature => 'SIG'
-              )
+      :login => 'cody',
+      :password => 'test',
+      :signature => 'SIG'
+    )
 
     assert_equal PaypalGateway::URLS[:test][:signature], gateway.send(:endpoint_url)
   end
 
   def test_should_use_live_signature_endpoint
     gateway = PaypalGateway.new(
-                :login => 'cody',
-                :password => 'test',
-                :signature => 'SIG'
-              )
+      :login => 'cody',
+      :password => 'test',
+      :signature => 'SIG'
+    )
     gateway.expects(:test?).returns(false)
 
     assert_equal PaypalGateway::URLS[:live][:signature], gateway.send(:endpoint_url)
@@ -1294,7 +1294,7 @@ class PaypalTest < Test::Unit::TestCase
      </CreateRecurringPaymentsProfileResponse>
     </SOAP-ENV:Body>
    </SOAP-ENV:Envelope>"
-   RESPONSE
+    RESPONSE
   end
 
   def successful_details_response

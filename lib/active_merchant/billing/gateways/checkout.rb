@@ -107,9 +107,7 @@ module ActiveMerchant #:nodoc:
         xml.bill_cc_ payment_method.number
         xml.bill_expmonth_ format(payment_method.month, :two_digits)
         xml.bill_expyear_ format(payment_method.year, :four_digits)
-        if payment_method.verification_value?
-          xml.bill_cvv2_ payment_method.verification_value
-        end
+        xml.bill_cvv2_ payment_method.verification_value if payment_method.verification_value?
       end
 
       def add_billing_info(xml, options)
@@ -200,7 +198,7 @@ module ActiveMerchant #:nodoc:
         response
       end
 
-      def authorization_from(response, action,  amount, options)
+      def authorization_from(response, action, amount, options)
         currency = options[:currency] || currency(amount)
         [response[:tranid], response[:trackid], action, amount, currency].join('|')
       end

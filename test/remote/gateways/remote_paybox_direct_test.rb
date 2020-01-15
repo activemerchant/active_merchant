@@ -3,7 +3,6 @@
 require 'test_helper'
 
 class RemotePayboxDirectTest < Test::Unit::TestCase
-
   def setup
     @gateway = PayboxDirectGateway.new(fixtures(:paybox_direct))
 
@@ -91,10 +90,10 @@ class RemotePayboxDirectTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = PayboxDirectGateway.new(
-                login: '199988899',
-                password: '1999888F',
-                rang: 100
-              )
+      login: '199988899',
+      password: '1999888F',
+      rang: 100
+    )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Non autorise', response.message
@@ -102,9 +101,9 @@ class RemotePayboxDirectTest < Test::Unit::TestCase
 
   def test_invalid_login_without_rang
     gateway = PayboxDirectGateway.new(
-                login: '199988899',
-                password: '1999888F'
-              )
+      login: '199988899',
+      password: '1999888F'
+    )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Non autorise', response.message

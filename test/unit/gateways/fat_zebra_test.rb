@@ -5,9 +5,9 @@ class FatZebraTest < Test::Unit::TestCase
 
   def setup
     @gateway = FatZebraGateway.new(
-                 :username => 'TEST',
-                 :token    => 'TEST'
-               )
+      :username => 'TEST',
+      :token    => 'TEST'
+    )
 
     @credit_card = credit_card
     @amount = 100
@@ -372,8 +372,7 @@ Conn close
         :standalone => false,
         :rrn => '000000000002',
       },
-      :errors => [
-      ],
+      :errors => [],
       :test => true
     }.to_json
   end

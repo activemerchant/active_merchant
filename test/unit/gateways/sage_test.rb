@@ -5,9 +5,9 @@ class SageGatewayTest < Test::Unit::TestCase
 
   def setup
     @gateway = SageGateway.new(
-                 :login => 'login',
-                 :password => 'password'
-               )
+      :login => 'login',
+      :password => 'password'
+    )
 
     @credit_card = credit_card
     @check = check

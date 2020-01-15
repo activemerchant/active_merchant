@@ -13,9 +13,9 @@ module ActiveMerchant #:nodoc:
         'xsi:noNamespaceSchemaLocation' => 'wirecard.xsd'
       }
 
-      PERMITTED_TRANSACTIONS = %w[ PREAUTHORIZATION CAPTURE PURCHASE ]
+      PERMITTED_TRANSACTIONS = %w[PREAUTHORIZATION CAPTURE PURCHASE]
 
-      RETURN_CODES = %w[ ACK NOK ]
+      RETURN_CODES = %w[ACK NOK]
 
       # Wirecard only allows phone numbers with a format like this: +xxx(yyy)zzz-zzzz-ppp, where:
       #   xxx = Country code
@@ -26,7 +26,7 @@ module ActiveMerchant #:nodoc:
       # number 5551234 within area code 202 (country code 1).
       VALID_PHONE_FORMAT = /\+\d{1,3}(\(?\d{3}\)?)?\d{3}-\d{4}-\d{3}/
 
-      self.supported_cardtypes = [ :visa, :master, :american_express, :diners_club, :jcb ]
+      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
       self.supported_countries = %w(AD CY GI IM MT RO CH AT DK GR IT MC SM TR BE EE HU LV NL SK GB BG FI IS LI NO SI VA FR IL LT PL ES CZ DE IE LU PT SE)
       self.homepage_url = 'http://www.wirecard.com'
       self.display_name = 'Wirecard'
@@ -290,9 +290,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'City', address[:city]
             xml.tag! 'ZipCode', address[:zip]
 
-            if address[:state] =~ /[A-Za-z]{2}/ && address[:country] =~ /^(us|ca)$/i
-              xml.tag! 'State', address[:state].upcase
-            end
+            xml.tag! 'State', address[:state].upcase if address[:state] =~ /[A-Za-z]{2}/ && address[:country] =~ /^(us|ca)$/i
 
             xml.tag! 'Country', address[:country]
             xml.tag! 'Phone', address[:phone] if address[:phone] =~ VALID_PHONE_FORMAT
@@ -331,9 +329,7 @@ module ActiveMerchant #:nodoc:
         status = nil
 
         root.elements.to_a.each do |node|
-          if node.name =~ /FNC_CC_/
-            status = REXML::XPath.first(node, 'CC_TRANSACTION/PROCESSING_STATUS')
-          end
+          status = REXML::XPath.first(node, 'CC_TRANSACTION/PROCESSING_STATUS') if node.name =~ /FNC_CC_/
         end
 
         message = ''

@@ -23,7 +23,7 @@ class OmiseTest < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal @gateway.supported_countries, %w( TH JP )
+    assert_equal @gateway.supported_countries, %w(TH JP)
   end
 
   def test_supported_cardtypes
@@ -73,7 +73,7 @@ class OmiseTest < Test::Unit::TestCase
 
   def test_error_code_from
     response = @gateway.send(:parse, invalid_security_code_response)
-    error_code  = @gateway.send(:error_code_from, response)
+    error_code = @gateway.send(:error_code_from, response)
     assert_equal 'invalid_security_code', error_code
   end
 
@@ -90,7 +90,7 @@ class OmiseTest < Test::Unit::TestCase
   end
 
   def test_card_declined
-    card_declined =  @gateway.send(:parse, failed_capture_response)
+    card_declined = @gateway.send(:parse, failed_capture_response)
     card_declined_code = @gateway.send(:standard_error_code_mapping, card_declined)
     assert_equal 'card_declined', card_declined_code
   end
@@ -812,5 +812,4 @@ class OmiseTest < Test::Unit::TestCase
     }
     RESPONSE
   end
-
 end

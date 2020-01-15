@@ -230,5 +230,4 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:client_password], transcript)
   end
-
 end

@@ -133,9 +133,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_creditcard(post, creditcard, options)
-        post[:card_number]  = creditcard.number
+        post[:card_number] = creditcard.number
         post[:cvv2] = creditcard.verification_value if creditcard.verification_value?
-        post[:card_exp_date]  = expdate(creditcard)
+        post[:card_exp_date] = expdate(creditcard)
       end
 
       def add_3dsecure_params(post, options)
@@ -156,13 +156,14 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, money, parameters)
         url = test? ? self.test_url : self.live_url
-        parameters[:transaction_amount]  = amount(money) if money unless action == 'V'
+        parameters[:transaction_amount] = amount(money) if money unless action == 'V'
 
-        response = begin
-          parse(ssl_post(url, post_data(action, parameters)))
-        rescue ActiveMerchant::ResponseError => e
-          { 'error_code' => '404',  'auth_response_text' => e.to_s }
-        end
+        response =
+          begin
+            parse(ssl_post(url, post_data(action, parameters)))
+          rescue ActiveMerchant::ResponseError => e
+            { 'error_code' => '404', 'auth_response_text' => e.to_s }
+          end
 
         Response.new(response['error_code'] == '000', message_from(response), response,
           :authorization => response['transaction_id'],

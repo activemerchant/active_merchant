@@ -138,10 +138,10 @@ class RemoteUsaEpayAdvancedTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = UsaEpayAdvancedGateway.new(
-                :login => '',
-                :password => '',
-                :software_id => ''
-              )
+      :login => '',
+      :password => '',
+      :software_id => ''
+    )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Invalid software ID', response.message

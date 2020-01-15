@@ -180,7 +180,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        results  = {}
+        results = {}
         xml = Nokogiri::XML(body)
         resp = xml.xpath('//Response/Transaction/Identification')
         resp.children.each do |element|

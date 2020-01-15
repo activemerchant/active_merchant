@@ -99,5 +99,4 @@ class RemoteOmiseTest < Test::Unit::TestCase
     assert_success response
     assert_equal @amount-1000, response.params['amount']
   end
-
 end

@@ -264,20 +264,21 @@ module ActiveMerchant #:nodoc:
 
         requires!(options, [:periodicity, :bimonthly, :monthly, :biweekly, :weekly, :yearly, :daily])
 
-        cycle = case options[:periodicity]
-        when :monthly
-          '1m'
-        when :bimonthly
-          '2m'
-        when :weekly
-          '1w'
-        when :biweekly
-          '2w'
-        when :yearly
-          '1y'
-        when :daily
-          '1d'
-        end
+        cycle =
+          case options[:periodicity]
+          when :monthly
+            '1m'
+          when :bimonthly
+            '2m'
+          when :weekly
+            '1w'
+          when :biweekly
+            '2w'
+          when :yearly
+            '1y'
+          when :daily
+            '1d'
+          end
 
         parameters = {
           :amount => amount(money),
@@ -416,9 +417,7 @@ module ActiveMerchant #:nodoc:
         # symbol keys. Before sending our input to TCLink, we convert all our keys to strings and dump the symbol keys.
         # We also remove any pairs with nil values, as these confuse TCLink.
         parameters.keys.reverse_each do |key|
-          if parameters[key]
-            parameters[key.to_s] = parameters[key]
-          end
+          parameters[key.to_s] = parameters[key] if parameters[key]
           parameters.delete(key)
         end
       end

@@ -3,9 +3,9 @@ require 'test_helper'
 class BeanstreamInteracTest < Test::Unit::TestCase
   def setup
     @gateway = BeanstreamInteracGateway.new(
-                 :login => 'login',
-                 :password => 'password'
-               )
+      :login => 'login',
+      :password => 'password'
+    )
 
     @amount = 100
 

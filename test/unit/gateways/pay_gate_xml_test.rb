@@ -101,5 +101,4 @@ class PayGateTest < Test::Unit::TestCase
     </protocol>
     ENDOFXML
   end
-
 end

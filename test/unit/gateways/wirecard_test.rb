@@ -365,7 +365,7 @@ class WirecardTest < Test::Unit::TestCase
               <Message>Credit card number not allowed in demo mode.</Message>
               <Advice>Only demo card number '4200000000000000' is allowed for VISA in demo mode.</Advice>
             </ERROR>
-            XML
+    XML
     result_node = '</FunctionResult>'
     auth = 'AuthorizationCode'
     successful_authorization_response.

@@ -5,9 +5,9 @@ require 'test_helper'
 class PayboxDirectTest < Test::Unit::TestCase
   def setup
     @gateway = PayboxDirectGateway.new(
-                 :login => 'l',
-                 :password => 'p'
-               )
+      :login => 'l',
+      :password => 'p'
+    )
 
     @credit_card = credit_card('1111222233334444',
       :brand => 'visa'

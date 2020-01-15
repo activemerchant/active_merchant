@@ -153,13 +153,9 @@ module ActiveMerchant #:nodoc:
           end
         end
 
-        if options.has_key? :customer
-          post[:custid] = options[:customer]
-        end
+        post[:custid] = options[:customer] if options.has_key? :customer
 
-        if options.has_key? :ip
-          post[:ip] = options[:ip]
-        end
+        post[:ip] = options[:ip] if options.has_key? :ip
       end
 
       def add_address(post, payment, options)
@@ -252,9 +248,7 @@ module ActiveMerchant #:nodoc:
             next
           end
 
-          if key == :bill_amount
-            value = amount(value)
-          end
+          value = amount(value) if key == :bill_amount
 
           post[key.to_s.delete('_')] = value
         end

@@ -220,7 +220,7 @@ module ActiveMerchant #:nodoc:
           post[:city] = billing_address[:city]
           post[:state] = billing_address[:state]
           post[:country] = billing_address[:country]
-          post[:zip]    = billing_address[:zip]
+          post[:zip] = billing_address[:zip]
           post[:phone] = billing_address[:phone]
         end
 
@@ -231,7 +231,7 @@ module ActiveMerchant #:nodoc:
           post[:shipping_city] = shipping_address[:city]
           post[:shipping_state] = shipping_address[:state]
           post[:shipping_country] = shipping_address[:country]
-          post[:shipping_zip]    = shipping_address[:zip]
+          post[:shipping_zip] = shipping_address[:zip]
           post[:shipping_phone] = shipping_address[:phone]
         end
       end
@@ -284,7 +284,7 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(response, payment_type, action)
         authorization = (action == 'add_customer' ? response[:customer_vault_id] : response[:transactionid])
-        [ authorization, payment_type ].join('#')
+        [authorization, payment_type].join('#')
       end
 
       def split_authorization(authorization)
@@ -292,7 +292,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def headers
-        { 'Content-Type'  => 'application/x-www-form-urlencoded;charset=UTF-8' }
+        { 'Content-Type' => 'application/x-www-form-urlencoded;charset=UTF-8' }
       end
 
       def post_data(action, params)
@@ -318,7 +318,6 @@ module ActiveMerchant #:nodoc:
           response[:responsetext]
         end
       end
-
     end
   end
 end

@@ -116,9 +116,9 @@ class RemoteNetaxeptTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = NetaxeptGateway.new(
-                :login => '',
-                :password => ''
-              )
+      :login => '',
+      :password => ''
+    )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_match(/Unable to authenticate merchant/, response.message)

@@ -5,9 +5,9 @@ class ModernPaymentsCimTest < Test::Unit::TestCase
     Base.mode = :test
 
     @gateway = ModernPaymentsCimGateway.new(
-                 :login => 'login',
-                 :password => 'password'
-               )
+      :login => 'login',
+      :password => 'password'
+    )
 
     @credit_card = credit_card
     @amount = 100

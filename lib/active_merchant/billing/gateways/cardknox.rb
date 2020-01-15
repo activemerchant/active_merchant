@@ -186,7 +186,7 @@ module ActiveMerchant #:nodoc:
           post[address_key(prefix, 'FirstName')] = address[:first_name]
           post[address_key(prefix, 'LastName')]  = address[:last_name]
         end
-        post[address_key(prefix, 'MiddleName')]  = address[:middle_name]
+        post[address_key(prefix, 'MiddleName')] = address[:middle_name]
 
         post[address_key(prefix, 'Company')]  = address[:company]
         post[address_key(prefix, 'Street')]   = address[:address1]

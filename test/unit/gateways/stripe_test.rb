@@ -383,9 +383,23 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def test_successful_capture_with_emv_credit_card_tc
-    @gateway.expects(:ssl_request).returns(successful_capture_response_with_icc_data)
+    stripe_charge_id = 'ch_test_emv_charge'
+    tc_emv_response = 'mock_icc_data'
+    @gateway.
+      expects(:ssl_request).
+      with(
+        :post,
+        "https://api.stripe.com/v1/charges/#{stripe_charge_id}",
+        "card[emv_approval_data]=#{tc_emv_response}",
+        anything
+      ).returns(successful_capture_response_with_icc_data)
 
-    assert response = @gateway.capture(@amount, 'ch_test_emv_charge')
+    @gateway.
+      expects(:ssl_request).
+      with(:post, 'https://api.stripe.com/v1/charges/ch_test_emv_charge/capture', '', anything).
+      returns(successful_capture_response_without_icc_data)
+
+    assert response = @gateway.capture(@amount, stripe_charge_id, icc_data: tc_emv_response)
     assert_success response
     assert response.emv_authorization, 'Response should include emv_authorization containing the EMV TC'
   end
@@ -1417,6 +1431,16 @@ class StripeTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_authorization_with_emv_payment_sets_capture_to_false
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@amount, 'ch_test_charge', application_fee: 100, icc_data: @emv_credit_card.icc_data)
+    end.check_request do |method, endpoint, data, headers|
+      assert data =~ /capture\=false/, 'request should set capture to false'
+    end.respond_with(successful_capture_response_with_icc_data)
+
+    assert_success response
+  end
+
   def test_passing_stripe_account_header
     @gateway.expects(:ssl_request).with do |method, url, post, headers|
       headers.include?('Stripe-Account')
@@ -1940,6 +1964,173 @@ class StripeTest < Test::Unit::TestCase
       "dispute": null,
       "uncaptured": false,
       "disputed": false
+    }
+    RESPONSE
+  end
+
+  def successful_capture_response_without_icc_data
+    <<-RESPONSE
+    {
+      "id": "ch_test_emv_charge",
+      "object": "charge",
+      "amount": 1000,
+      "amount_refunded": 0,
+      "application": "ca_37BT8jOfv0Cu42Vfd",
+      "application_fee": "fee_test_fee",
+      "application_fee_amount": 55,
+      "authorization_code": "123456",
+      "balance_transaction": {
+        "id": "txn_1FSQUtFwNjfzuchLeWPB9X8K",
+        "object": "balance_transaction",
+        "amount": 1000,
+        "available_on": 1571184000,
+        "created": 1570809463,
+        "currency": "usd",
+        "description": null,
+        "exchange_rate": null,
+        "fee": 55,
+        "fee_details": [
+          {
+            "amount": 55,
+            "application": "ca_37BT8jOfv0Cu42Vfd",
+            "currency": "usd",
+            "description": "application fee",
+            "type": "application_fee"
+          }
+        ],
+        "net": 945,
+        "source": "ch_test_emv_charge",
+        "sourced_transfers": {
+          "object": "list",
+          "data": [
+          ],
+          "has_more": false,
+          "total_count": 0,
+          "url": "/v1/transfers?source_transaction=ch_test_emv_charge"
+        },
+        "status": "pending",
+        "type": "charge"
+      },
+      "billing_details": {
+        "address": {
+          "city": null,
+          "country": null,
+          "line1": null,
+          "line2": null,
+          "postal_code": null,
+          "state": null
+        },
+        "email": null,
+        "name": null,
+        "phone": null
+      },
+      "captured": true,
+      "created": 1570809458,
+      "currency": "usd",
+      "customer": null,
+      "description": null,
+      "destination": null,
+      "dispute": null,
+      "failure_code": null,
+      "failure_message": null,
+      "fraud_details": {
+      },
+      "invoice": null,
+      "livemode": false,
+      "metadata": {
+        "card_read_method": "contact",
+        "shop_id": "1",
+        "shop_name": "Shop 1",
+        "transaction_fee_total_amount": "55",
+        "transaction_fee_tax_amount": "0",
+        "payments_charge_id": "86",
+        "order_transaction_id": "149",
+        "order_id": "c62.1"
+      },
+      "on_behalf_of": null,
+      "order": null,
+      "outcome": {
+        "network_status": "approved_by_network",
+        "reason": null,
+        "risk_level": "normal",
+        "risk_score": 2,
+        "seller_message": "Payment complete.",
+        "type": "authorized"
+      },
+      "paid": true,
+      "payment_intent": null,
+      "payment_method": "card_1FSQUo",
+      "payment_method_details": {
+        "card": {
+          "brand": "visa",
+          "checks": {
+            "address_line1_check": null,
+            "address_postal_code_check": null,
+            "cvc_check": null
+          },
+          "country": "US",
+          "ds_transaction_id": null,
+          "exp_month": 12,
+          "exp_year": 2022,
+          "fingerprint": "PgHpMSUia1FIuXM6",
+          "funding": "unknown",
+          "installments": null,
+          "last4": "0119",
+          "moto": null,
+          "network": "visa",
+          "network_transaction_id": "ihQUSGFPfpVpg6J3",
+          "three_d_secure": null,
+          "wallet": null
+        },
+        "type": "card"
+      },
+      "receipt_email": null,
+      "receipt_number": null,
+      "receipt_url": "https://pay.stripe.com/receipts/acct_1FPxOBFwNjfzuchL/ch_test_emv_charge/rcpt_FyNFASxNs66DXe7zTe9jW9hpYZkQda9",
+      "refunded": false,
+      "refunds": {
+        "object": "list",
+        "data": [
+        ],
+        "has_more": false,
+        "total_count": 0,
+        "url": "/v1/charges/ch_test_emv_charge/refunds"
+      },
+      "review": null,
+      "shipping": null,
+      "source": {
+        "id": "card_1FSQUo",
+        "object": "card",
+        "address_city": null,
+        "address_country": null,
+        "address_line1": null,
+        "address_line1_check": null,
+        "address_line2": null,
+        "address_state": null,
+        "address_zip": null,
+        "address_zip_check": null,
+        "brand": "Visa",
+        "country": "US",
+        "customer": null,
+        "cvc_check": null,
+        "dynamic_last4": null,
+        "emv_auth_data": "8A023030",
+        "exp_month": 12,
+        "exp_year": 2022,
+        "fingerprint": "ihQUSGFPfpVpg6J3",
+        "funding": "unknown",
+        "last4": "0119",
+        "metadata": {
+        },
+        "name": null,
+        "tokenization_method": null
+      },
+      "source_transfer": null,
+      "statement_descriptor": null,
+      "statement_descriptor_suffix": null,
+      "status": "succeeded",
+      "transfer_data": null,
+      "transfer_group": null
     }
     RESPONSE
   end

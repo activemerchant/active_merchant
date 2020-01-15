@@ -3,9 +3,9 @@ require 'test_helper'
 class NetworkMerchantsTest < Test::Unit::TestCase
   def setup
     @gateway = NetworkMerchantsGateway.new(
-                 :login => 'login',
-                 :password => 'password'
-               )
+      :login => 'login',
+      :password => 'password'
+    )
 
     @credit_card = credit_card
     @check = check

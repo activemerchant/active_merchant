@@ -25,7 +25,7 @@ module ActiveMerchant #:nodoc:
 
       DEFAULT_API_VERSION = '2015-04-07'
 
-      self.supported_countries = %w(AT AU BE BR CA CH DE DK ES FI FR GB HK IE IT JP LU MX NL NO NZ PT SE SG US)
+      self.supported_countries = %w(AT AU BE BR CA CH DE DK EE ES FI FR GB GR HK IE IT JP LT LU LV MX NL NO NZ PL PT SE SG SI SK US)
       self.default_currency = 'USD'
       self.money_format = :cents
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club, :maestro]
@@ -87,11 +87,8 @@ module ActiveMerchant #:nodoc:
           end
           r.process do
             post = create_post_for_auth_or_purchase(money, payment, options)
-            if emv_payment?(payment)
-              add_application_fee(post, options)
-            else
-              post[:capture] = 'false'
-            end
+            add_application_fee(post, options) if emv_payment?(payment)
+            post[:capture] = 'false'
             commit(:post, 'charges', post, options)
           end
         end.responses.last
@@ -127,14 +124,17 @@ module ActiveMerchant #:nodoc:
         post = {}
 
         if emv_tc_response = options.delete(:icc_data)
-          post[:card] = { emv_approval_data: emv_tc_response }
-          commit(:post, "charges/#{CGI.escape(authorization)}", post, options)
+          # update the charge with emv data if card present
+          update = {}
+          update[:card] = { emv_approval_data: emv_tc_response }
+          commit(:post, "charges/#{CGI.escape(authorization)}", update, options)
         else
           add_application_fee(post, options)
           add_amount(post, money, options)
           add_exchange_rate(post, options)
-          commit(:post, "charges/#{CGI.escape(authorization)}/capture", post, options)
         end
+
+        commit(:post, "charges/#{CGI.escape(authorization)}/capture", post, options)
       end
 
       def void(identification, options = {})
@@ -215,13 +215,9 @@ module ActiveMerchant #:nodoc:
             # The /cards endpoint does not update other customer parameters.
             r.process { commit(:post, "customers/#{CGI.escape(options[:customer])}/cards", params, options) }
 
-            if options[:set_default] and r.success? and !r.params['id'].blank?
-              post[:default_card] = r.params['id']
-            end
+            post[:default_card] = r.params['id'] if options[:set_default] and r.success? and !r.params['id'].blank?
 
-            if post.count > 0
-              r.process { update_customer(options[:customer], post) }
-            end
+            r.process { update_customer(options[:customer], post) } if post.count > 0
           end
         else
           commit(:post, 'customers', post.merge(params), options)
@@ -410,9 +406,7 @@ module ActiveMerchant #:nodoc:
         copy_when_present(level_three, [:shipping_amount], options)
         copy_when_present(level_three, [:line_items], options)
 
-        unless level_three.empty?
-          post[:level3] = level_three
-        end
+        post[:level3] = level_three unless level_three.empty?
       end
 
       def add_expand_parameters(post, options)

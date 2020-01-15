@@ -176,9 +176,9 @@ class RemoteMerchantESolutionTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = MerchantESolutionsGateway.new(
-              :login => '',
-              :password => ''
-            )
+      :login => '',
+      :password => ''
+    )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
   end
@@ -191,10 +191,11 @@ class RemoteMerchantESolutionTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_3dsecure_params
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(
-      { :xid => 'ERERERERERERERERERERERERERE=',
-        :cavv => 'ERERERERERERERERERERERERERE='
-      }))
+    options = @options.merge(
+      { xid: 'ERERERERERERERERERERERERERE=',
+        cavv: 'ERERERERERERERERERERERERERE='}
+    )
+    assert response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert_equal 'This transaction has been approved', response.message
   end

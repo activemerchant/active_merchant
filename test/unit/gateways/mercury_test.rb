@@ -92,7 +92,7 @@ class MercuryTest < Test::Unit::TestCase
 
   def test_card_present_with_max_length_track_1_data
     track_data    = '%B373953192351004^CARDUSER/JOHN^200910100000019301000000877000000930001234567?'
-    stripped_data =  'B373953192351004^CARDUSER/JOHN^200910100000019301000000877000000930001234567'
+    stripped_data = 'B373953192351004^CARDUSER/JOHN^200910100000019301000000877000000930001234567'
     @credit_card.track_data = track_data
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)

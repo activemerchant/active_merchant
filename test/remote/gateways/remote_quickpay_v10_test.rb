@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class RemoteQuickPayV10Test < Test::Unit::TestCase
-
   def setup
     @gateway = QuickpayV10Gateway.new(fixtures(:quickpay_v10_api_key))
     @amount = 100
@@ -268,5 +267,4 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
     assert_scrubbed(@valid_card.verification_value.to_s, clean_transcript)
     assert_scrubbed(@gateway.options[:api_key], clean_transcript)
   end
-
 end

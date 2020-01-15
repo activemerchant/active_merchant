@@ -100,6 +100,35 @@ module ActiveMerchant #:nodoc:
         post['order']['references']['invoiceData'] = {
           'invoiceNumber' => options[:invoice]
         }
+        add_airline_data(post, options) if options[:airline_data]
+      end
+
+      def add_airline_data(post, options)
+        airline_data = {}
+
+        flight_date = options[:airline_data][:flight_date]
+        passenger_name = options[:airline_data][:passenger_name]
+        code = options[:airline_data][:code]
+        name = options[:airline_data][:name]
+
+        airline_data['flightDate'] = flight_date if flight_date
+        airline_data['passengerName'] = passenger_name if passenger_name
+        airline_data['code'] = code if code
+        airline_data['name'] = name if name
+
+        flight_legs = []
+        options[:airline_data][:flight_legs]&.each do |fl|
+          leg = {}
+          leg['arrivalAirport'] = fl[:arrival_airport] if fl[:arrival_airport]
+          leg['originAirport'] = fl[:origin_airport] if fl[:origin_airport]
+          leg['date'] = fl[:date] if fl[:date]
+          leg['number'] = fl[:number] if fl[:number]
+          leg['carrierCode'] = fl[:carrier_code] if fl[:carrier_code]
+          leg['airlineClass'] = fl[:carrier_code] if fl[:airline_class]
+          flight_legs << leg
+        end
+        airline_data['flightLegs'] = flight_legs
+        post['order']['additionalInput']['airlineData'] = airline_data
       end
 
       def add_creator_info(post, options)
@@ -123,7 +152,7 @@ module ActiveMerchant #:nodoc:
       def add_payment(post, payment, options)
         year  = format(payment.year, :two_digits)
         month = format(payment.month, :two_digits)
-        expirydate =   "#{month}#{year}"
+        expirydate = "#{month}#{year}"
         pre_authorization = options[:pre_authorization] ? 'PRE_AUTHORIZATION' : 'FINAL_AUTHORIZATION'
 
         post['cardPaymentMethodSpecificInput'] = {
@@ -228,9 +257,7 @@ module ActiveMerchant #:nodoc:
           raw_response = ssl_post(url(action, authorization), post.to_json, headers(action, post, authorization))
           response = parse(raw_response)
         rescue ResponseError => e
-          if e.response.code.to_i >= 400
-            response = parse(e.response.body)
-          end
+          response = parse(e.response.body) if e.response.code.to_i >= 400
         rescue JSON::ParserError
           response = json_error(raw_response)
         end
@@ -268,7 +295,7 @@ POST
 #{content_type}
 #{date}
 #{uri(action, authorization)}
-EOS
+        EOS
         digest = OpenSSL::Digest.new('sha256')
         key = @options[:secret_api_key]
         "GCS v1HMAC:#{@options[:api_key_id]}:#{Base64.strict_encode64(OpenSSL::HMAC.digest(digest, key, data))}"

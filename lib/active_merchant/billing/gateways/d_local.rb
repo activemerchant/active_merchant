@@ -32,7 +32,7 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, authorization, options={})
         post = {}
-        post[:payment_id] = authorization
+        post[:authorization_id] = authorization
         add_invoice(post, money, options) if money
         commit('capture', post, options)
       end
@@ -47,7 +47,7 @@ module ActiveMerchant #:nodoc:
 
       def void(authorization, options={})
         post = {}
-        post[:payment_id] = authorization
+        post[:authorization_id] = authorization
         commit('void', post, options)
       end
 
@@ -129,6 +129,8 @@ module ActiveMerchant #:nodoc:
         post[:card][:cvv] = card.verification_value
         post[:card][:descriptor] = options[:dynamic_descriptor] if options[:dynamic_descriptor]
         post[:card][:capture] = (action == 'purchase')
+        post[:card][:installments] = options[:installments] if options[:installments]
+        post[:card][:installments_id] = options[:installments_id] if options[:installments_id]
       end
 
       def parse(body)
@@ -193,9 +195,9 @@ module ActiveMerchant #:nodoc:
         when 'refund'
           'refunds'
         when 'capture'
-          "payments/#{parameters[:payment_id]}/capture"
+          'payments'
         when 'void'
-          "payments/#{parameters[:payment_id]}/cancel"
+          "payments/#{parameters[:authorization_id]}/cancel"
         end
       end
 

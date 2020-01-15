@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class RemoteJetpayTest < Test::Unit::TestCase
-
   def setup
     @gateway = JetpayGateway.new(fixtures(:jetpay))
 

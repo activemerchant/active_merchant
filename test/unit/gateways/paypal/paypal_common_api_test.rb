@@ -164,5 +164,4 @@ class PaypalCommonApiTest < Test::Unit::TestCase
     assert_equal 'id', REXML::XPath.first(request, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:DoReferenceTransactionRequestDetails/n2:ReferenceID').text
     assert_equal '127.0.0.1', REXML::XPath.first(request, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:DoReferenceTransactionRequestDetails/n2:IPAddress').text
   end
-
 end

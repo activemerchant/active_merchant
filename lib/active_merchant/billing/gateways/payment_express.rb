@@ -13,9 +13,9 @@ module ActiveMerchant #:nodoc:
       # VISA, Mastercard, Diners Club and Farmers cards are supported
       #
       # However, regular accounts with DPS only support VISA and Mastercard
-      self.supported_cardtypes = [ :visa, :master, :american_express, :diners_club, :jcb ]
+      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
 
-      self.supported_countries = %w[ AU FJ GB HK IE MY NZ PG SG US ]
+      self.supported_countries = %w[AU FJ GB HK IE MY NZ PG SG US]
 
       self.homepage_url = 'http://www.paymentexpress.com/'
       self.display_name = 'PaymentExpress'
@@ -118,7 +118,7 @@ module ActiveMerchant #:nodoc:
       #
       # Note, once stored, PaymentExpress does not support unstoring a stored card.
       def store(credit_card, options = {})
-        request  = build_token_request(credit_card, options)
+        request = build_token_request(credit_card, options)
         commit(:validate, request)
       end
 

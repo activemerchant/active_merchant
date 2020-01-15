@@ -10,81 +10,83 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
     @credit_card = credit_card('4111111111111111', :month => 10, :year => 2020, :verification_value => 737)
     @declined_card = credit_card('4000300011112220', :month => 3, :year => 2030, :verification_value => 737)
     @three_ds_enrolled_card = credit_card('4212345678901237', brand: :visa)
-    @three_ds_2_enrolled_card = credit_card('4917610000000000', brand: :visa)
+    @three_ds_2_enrolled_card = credit_card('4917610000000000', month: 10, year: 2020, verification_value: '737', brand: :visa)
 
     @options = {
       order_id: '1',
-      billing_address:       {
-              name:     'Jim Smith',
-              address1: '100 Street',
-              company:  'Widgets Inc',
-              city:     'Ottawa',
-              state:    'ON',
-              zip:      'K1C2N6',
-              country:  'CA',
-              phone:    '(555)555-5555',
-              fax:      '(555)555-6666'},
+      billing_address: {
+        name:     'Jim Smith',
+        address1: '100 Street',
+        company:  'Widgets Inc',
+        city:     'Ottawa',
+        state:    'ON',
+        zip:      'K1C2N6',
+        country:  'CA',
+        phone:    '(555)555-5555',
+        fax:      '(555)555-6666'
+      },
       email: 'long@bob.com',
       customer: 'Longbob Longsen',
       description: 'Store Purchase'
     }
 
     @options_with_alternate_address = {
-        order_id: '1',
-        billing_address: {
-            name:     'PU JOI SO',
-            address1: '新北市店溪路3579號139樓',
-            company:  'Widgets Inc',
-            city:     '新北市',
-            zip:      '231509',
-            country:  'TW',
-            phone:    '(555)555-5555',
-            fax:      '(555)555-6666'
-        },
-        email: 'pujoi@so.com',
-        customer: 'PU JOI SO',
-        description: 'Store Purchase'
+      order_id: '1',
+      billing_address: {
+        name:     'PU JOI SO',
+        address1: '新北市店溪路3579號139樓',
+        company:  'Widgets Inc',
+        city:     '新北市',
+        zip:      '231509',
+        country:  'TW',
+        phone:    '(555)555-5555',
+        fax:      '(555)555-6666'
+      },
+      email: 'pujoi@so.com',
+      customer: 'PU JOI SO',
+      description: 'Store Purchase'
     }
 
     @options_with_house_number_and_street = {
-        order_id: '1',
-        house_number: '100',
-        street: 'Top Level Drive',
-        billing_address:       {
-            name:     'Jim Smith',
-            address1: '100 Top Level Dr',
-            company:  'Widgets Inc',
-            city:     'Ottawa',
-            state:    'ON',
-            zip:      'K1C2N6',
-            country:  'CA',
-            phone:    '(555)555-5555',
-            fax:      '(555)555-6666'
-        },
-        email: 'long@deb.com',
-        customer: 'Longdeb Longsen',
-        description: 'Store Purchase'
+      order_id: '1',
+      house_number: '100',
+      street: 'Top Level Drive',
+      billing_address: {
+        name:     'Jim Smith',
+        address1: '100 Top Level Dr',
+        company:  'Widgets Inc',
+        city:     'Ottawa',
+        state:    'ON',
+        zip:      'K1C2N6',
+        country:  'CA',
+        phone:    '(555)555-5555',
+        fax:      '(555)555-6666'
+      },
+      email: 'long@deb.com',
+      customer: 'Longdeb Longsen',
+      description: 'Store Purchase'
     }
 
     @options_with_no_address = {
-        order_id: '1',
-        email: 'long@bob.com',
-        customer: 'Longbob Longsen',
-        description: 'Store Purchase'
+      order_id: '1',
+      email: 'long@bob.com',
+      customer: 'Longbob Longsen',
+      description: 'Store Purchase'
     }
 
     @options_with_credit_fields = {
       order_id: '1',
-      billing_address:       {
-              name:     'Jim Smith',
-              address1: '100 Street',
-              company:  'Widgets Inc',
-              city:     'Ottawa',
-              state:    'ON',
-              zip:      'K1C2N6',
-              country:  'CA',
-              phone:    '(555)555-5555',
-              fax:      '(555)555-6666'},
+      billing_address: {
+        name:     'Jim Smith',
+        address1: '100 Street',
+        company:  'Widgets Inc',
+        city:     'Ottawa',
+        state:    'ON',
+        zip:      'K1C2N6',
+        country:  'CA',
+        phone:    '(555)555-5555',
+        fax:      '(555)555-6666'
+      },
       email: 'long@bob.com',
       customer: 'Longbob Longsen',
       description: 'Store Purchase',
@@ -105,14 +107,14 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
 
     @avs_address = @options.clone
     @avs_address.update(billing_address: {
-        name:     'Jim Smith',
-        street:   'Test AVS result',
-        houseNumberOrName: '2',
-        city:     'Cupertino',
-        state:    'CA',
-        zip:      '95014',
-        country:  'US'
-        })
+      name:     'Jim Smith',
+      street:   'Test AVS result',
+      houseNumberOrName: '2',
+      city:     'Cupertino',
+      state:    'CA',
+      zip:      '95014',
+      country:  'US'
+    })
 
     @normalized_3ds_2_options = {
       reference: '345123',
@@ -216,6 +218,28 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
     assert response = @gateway.authorize(@amount, @three_ds_2_enrolled_card, @normalized_3ds_2_options)
     assert response.test?
     refute response.authorization.blank?
+    assert_equal response.params['resultCode'], 'IdentifyShopper'
+    refute response.params['additionalData']['threeds2.threeDS2Token'].blank?
+    refute response.params['additionalData']['threeds2.threeDSServerTransID'].blank?
+    refute response.params['additionalData']['threeds2.threeDSMethodURL'].blank?
+  end
+
+  def test_successful_purchase_with_3ds2_exemption_requested_and_execute_threed_false
+    assert response = @gateway.authorize(@amount, @three_ds_2_enrolled_card, @normalized_3ds_2_options.merge(execute_threed: false, sca_exemption: 'lowValue'))
+    assert response.test?
+    refute response.authorization.blank?
+
+    assert_equal response.params['resultCode'], 'Authorised'
+  end
+
+  # According to Adyen documentation, if execute_threed is set to true and an exemption provided
+  # the gateway will apply and request for the specified exemption in the authentication request,
+  # after the device fingerprint is submitted to the issuer.
+  def test_successful_purchase_with_3ds2_exemption_requested_and_execute_threed_true
+    assert response = @gateway.authorize(@amount, @three_ds_2_enrolled_card, @normalized_3ds_2_options.merge(execute_threed: true, sca_exemption: 'lowValue'))
+    assert response.test?
+    refute response.authorization.blank?
+
     assert_equal response.params['resultCode'], 'IdentifyShopper'
     refute response.params['additionalData']['threeds2.threeDS2Token'].blank?
     refute response.params['additionalData']['threeds2.threeDSServerTransID'].blank?

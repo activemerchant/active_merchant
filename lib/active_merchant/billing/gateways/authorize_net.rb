@@ -132,11 +132,12 @@ module ActiveMerchant
       end
 
       def refund(amount, authorization, options={})
-        response = if auth_was_for_cim?(authorization)
-                     cim_refund(amount, authorization, options)
-                   else
-                     normal_refund(amount, authorization, options)
-        end
+        response =
+          if auth_was_for_cim?(authorization)
+            cim_refund(amount, authorization, options)
+          else
+            normal_refund(amount, authorization, options)
+          end
 
         return response if response.success?
         return response unless options[:force_full_refund_if_unsettled]
@@ -157,9 +158,7 @@ module ActiveMerchant
       end
 
       def credit(amount, payment, options={})
-        if payment.is_a?(String)
-          raise ArgumentError, 'Reference credits are not supported. Please supply the original credit card or use the #refund method.'
-        end
+        raise ArgumentError, 'Reference credits are not supported. Please supply the original credit card or use the #refund method.' if payment.is_a?(String)
 
         commit(:credit) do |xml|
           add_order_id(xml, options)
@@ -479,12 +478,8 @@ module ActiveMerchant
             xml.creditCard do
               xml.cardNumber(truncate(credit_card.number, 16))
               xml.expirationDate(format(credit_card.month, :two_digits) + '/' + format(credit_card.year, :four_digits))
-              if credit_card.valid_card_verification_value?(credit_card.verification_value, credit_card.brand)
-                xml.cardCode(credit_card.verification_value)
-              end
-              if credit_card.is_a?(NetworkTokenizationCreditCard) && action != :credit
-                xml.cryptogram(credit_card.payment_cryptogram)
-              end
+              xml.cardCode(credit_card.verification_value) if credit_card.valid_card_verification_value?(credit_card.verification_value, credit_card.brand)
+              xml.cryptogram(credit_card.payment_cryptogram) if credit_card.is_a?(NetworkTokenizationCreditCard) && action != :credit
             end
           end
         end
@@ -602,11 +597,12 @@ module ActiveMerchant
         return unless address
 
         xml.send(root_node) do
-          first_name, last_name = if address[:name]
-                                    split_names(address[:name])
-                                  else
-                                    [address[:first_name], address[:last_name]]
-          end
+          first_name, last_name =
+            if address[:name]
+              split_names(address[:name])
+            else
+              [address[:first_name], address[:last_name]]
+            end
           full_address = "#{address[:address1]} #{address[:address2]}".strip
 
           xml.firstName(truncate(first_name, 50)) unless empty?(first_name)
@@ -846,8 +842,8 @@ module ActiveMerchant
         response = {action: action}
 
         response[:response_code] = if(element = doc.at_xpath('//transactionResponse/responseCode'))
-                                     (empty?(element.content) ? nil : element.content.to_i)
-        end
+                                     empty?(element.content) ? nil : element.content.to_i
+                                   end
 
         if(element = doc.at_xpath('//errors/error'))
           response[:response_reason_code] = element.at_xpath('errorCode').content[/0*(\d+)$/, 1]
@@ -863,37 +859,45 @@ module ActiveMerchant
           response[:response_reason_text] = ''
         end
 
-        response[:avs_result_code] = if(element = doc.at_xpath('//avsResultCode'))
-                                       (empty?(element.content) ? nil : element.content)
-        end
+        response[:avs_result_code] =
+          if(element = doc.at_xpath('//avsResultCode'))
+            empty?(element.content) ? nil : element.content
+          end
 
-        response[:transaction_id] = if(element = doc.at_xpath('//transId'))
-                                      (empty?(element.content) ? nil : element.content)
-        end
+        response[:transaction_id] =
+          if element = doc.at_xpath('//transId')
+            empty?(element.content) ? nil : element.content
+          end
 
-        response[:card_code] = if(element = doc.at_xpath('//cvvResultCode'))
-                                 (empty?(element.content) ? nil : element.content)
-        end
+        response[:card_code] =
+          if element = doc.at_xpath('//cvvResultCode')
+            empty?(element.content) ? nil : element.content
+          end
 
-        response[:authorization_code] = if(element = doc.at_xpath('//authCode'))
-                                          (empty?(element.content) ? nil : element.content)
-        end
+        response[:authorization_code] =
+          if element = doc.at_xpath('//authCode')
+            empty?(element.content) ? nil : element.content
+          end
 
-        response[:cardholder_authentication_code] = if(element = doc.at_xpath('//cavvResultCode'))
-                                                      (empty?(element.content) ? nil : element.content)
-        end
+        response[:cardholder_authentication_code] =
+          if element = doc.at_xpath('//cavvResultCode')
+            empty?(element.content) ? nil : element.content
+          end
 
-        response[:account_number] = if(element = doc.at_xpath('//accountNumber'))
-                                      (empty?(element.content) ? nil : element.content[-4..-1])
-        end
+        response[:account_number] =
+          if element = doc.at_xpath('//accountNumber')
+            empty?(element.content) ? nil : element.content[-4..-1]
+          end
 
-        response[:test_request] = if(element = doc.at_xpath('//testRequest'))
-                                    (empty?(element.content) ? nil : element.content)
-        end
+        response[:test_request] =
+          if element = doc.at_xpath('//testRequest')
+            empty?(element.content) ? nil : element.content
+          end
 
-        response[:full_response_code] = if(element = doc.at_xpath('//messages/message/code'))
-                                          (empty?(element.content) ? nil : element.content)
-        end
+        response[:full_response_code] =
+          if element = doc.at_xpath('//messages/message/code')
+            empty?(element.content) ? nil : element.content
+          end
 
         response
       end
@@ -903,35 +907,41 @@ module ActiveMerchant
 
         doc = Nokogiri::XML(body).remove_namespaces!
 
-        if (element = doc.at_xpath('//messages/message'))
+        if element = doc.at_xpath('//messages/message')
           response[:message_code] = element.at_xpath('code').content[/0*(\d+)$/, 1]
           response[:message_text] = element.at_xpath('text').content.chomp('.')
         end
 
-        response[:result_code] = if(element = doc.at_xpath('//messages/resultCode'))
-                                   (empty?(element.content) ? nil : element.content)
-        end
+        response[:result_code] =
+          if element = doc.at_xpath('//messages/resultCode')
+            empty?(element.content) ? nil : element.content
+          end
 
-        response[:test_request] = if(element = doc.at_xpath('//testRequest'))
-                                    (empty?(element.content) ? nil : element.content)
-        end
+        response[:test_request] =
+          if element = doc.at_xpath('//testRequest')
+            empty?(element.content) ? nil : element.content
+          end
 
-        response[:customer_profile_id] = if(element = doc.at_xpath('//customerProfileId'))
-                                           (empty?(element.content) ? nil : element.content)
-        end
+        response[:customer_profile_id] =
+          if element = doc.at_xpath('//customerProfileId')
+            empty?(element.content) ? nil : element.content
+          end
 
-        response[:customer_payment_profile_id] = if(element = doc.at_xpath('//customerPaymentProfileIdList/numericString'))
-                                                   (empty?(element.content) ? nil : element.content)
-        end
+        response[:customer_payment_profile_id] =
+          if element = doc.at_xpath('//customerPaymentProfileIdList/numericString')
+            empty?(element.content) ? nil : element.content
+          end
 
-        response[:customer_payment_profile_id] = if(element = doc.at_xpath('//customerPaymentProfileIdList/numericString') ||
-                                                              doc.at_xpath('//customerPaymentProfileId'))
-                                                   (empty?(element.content) ? nil : element.content)
-        end
+        response[:customer_payment_profile_id] =
+          if element = doc.at_xpath('//customerPaymentProfileIdList/numericString') ||
+                       doc.at_xpath('//customerPaymentProfileId')
+            empty?(element.content) ? nil : element.content
+          end
 
-        response[:direct_response] = if(element = doc.at_xpath('//directResponse'))
-                                       (empty?(element.content) ? nil : element.content)
-        end
+        response[:direct_response] =
+          if element = doc.at_xpath('//directResponse')
+            empty?(element.content) ? nil : element.content
+          end
 
         response.merge!(parse_direct_response_elements(response, options))
 
@@ -997,7 +1007,7 @@ module ActiveMerchant
       end
 
       def parse_direct_response_elements(response, options)
-        params = response[:direct_response]
+        params = response[:direct_response]&.tr('"', '')
         return {} unless params
 
         parts = params.split(options[:delimiter] || ',')
@@ -1049,7 +1059,6 @@ module ActiveMerchant
           balance_on_card: parts[54] || '',
         }
       end
-
     end
   end
 end

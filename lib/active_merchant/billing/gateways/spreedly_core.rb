@@ -173,12 +173,8 @@ module ActiveMerchant #:nodoc:
         doc.ip(options[:ip]) if options[:ip]
         doc.description(options[:description]) if options[:description]
 
-        if options[:merchant_name_descriptor]
-          doc.merchant_name_descriptor(options[:merchant_name_descriptor])
-        end
-        if options[:merchant_location_descriptor]
-          doc.merchant_location_descriptor(options[:merchant_location_descriptor])
-        end
+        doc.merchant_name_descriptor(options[:merchant_name_descriptor]) if options[:merchant_name_descriptor]
+        doc.merchant_location_descriptor(options[:merchant_location_descriptor]) if options[:merchant_location_descriptor]
       end
 
       def add_payment_method(doc, payment_method, options)

@@ -355,14 +355,15 @@ module ActiveMerchant #:nodoc:
 
       def avs_result_from(response)
         verification = response['Verification'] || {}
-        code = case verification['Address']
-        when 'Valid'
-          'M'
-        when 'Invalid'
-          'N'
-        else
-          'I'
-        end
+        code =
+          case verification['Address']
+          when 'Valid'
+            'M'
+          when 'Invalid'
+            'N'
+          else
+            'I'
+          end
         {:code => code}
       end
 

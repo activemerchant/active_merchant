@@ -169,5 +169,4 @@ class RemoteCtPaymentTest < Test::Unit::TestCase
     assert_scrubbed(Base64.strict_encode64(@credit_card.number), transcript)
     assert_scrubbed(@gateway.options[:api_key], transcript)
   end
-
 end

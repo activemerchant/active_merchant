@@ -3,8 +3,8 @@ require 'test_helper'
 class SallieMaeTest < Test::Unit::TestCase
   def setup
     @gateway = SallieMaeGateway.new(
-                 :login => 'FAKEACCOUNT'
-               )
+      :login => 'FAKEACCOUNT'
+    )
 
     @credit_card = credit_card
     @amount = 100

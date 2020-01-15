@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class TransFirstTest < Test::Unit::TestCase
-
   def setup
     @gateway = TransFirstGateway.new(
       :login => 'LOGIN',
@@ -351,7 +350,7 @@ class TransFirstTest < Test::Unit::TestCase
       <AVSCode>N</AVSCode>
       <CVV2Code />
       </BankCardRefundStatus>
-   XML
+    XML
   end
 
   def failed_void_response

@@ -16,10 +16,10 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
     # UsaEpayAdvancedGateway.wiredump_device.sync = true
 
     @gateway = UsaEpayAdvancedGateway.new(
-                 :login => 'X',
-                 :password => 'Y',
-                 :software_id => 'Z'
-               )
+      :login => 'X',
+      :password => 'Y',
+      :software_id => 'Z'
+    )
 
     @credit_card = ActiveMerchant::Billing::CreditCard.new(
       :number => '4000100011112224',

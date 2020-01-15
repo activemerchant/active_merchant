@@ -164,9 +164,9 @@ class RemoteIridiumTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = IridiumGateway.new(
-                :login => '',
-                :password => ''
-              )
+      :login => '',
+      :password => ''
+    )
 
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response

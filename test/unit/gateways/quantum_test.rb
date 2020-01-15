@@ -3,9 +3,9 @@ require 'test_helper'
 class QuantumTest < Test::Unit::TestCase
   def setup
     @gateway = QuantumGateway.new(
-                 :login => '',
-                 :password => ''
-               )
+      :login => '',
+      :password => ''
+    )
 
     @credit_card = credit_card
     @amount = 100

@@ -172,9 +172,9 @@ class RemoteFatZebraTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = FatZebraGateway.new(
-                :username => 'invalid',
-                :token => 'wrongtoken'
-              )
+      :username => 'invalid',
+      :token => 'wrongtoken'
+    )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Invalid Login', response.message

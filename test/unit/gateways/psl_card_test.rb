@@ -1,12 +1,11 @@
 require 'test_helper'
 
 class PslCardTest < Test::Unit::TestCase
-
   def setup
     @gateway = PslCardGateway.new(
-                 :login => 'LOGIN',
-                 :password => 'PASSWORD'
-               )
+      :login => 'LOGIN',
+      :password => 'PASSWORD'
+    )
 
     @credit_card = credit_card
     @options = {
@@ -36,7 +35,7 @@ class PslCardTest < Test::Unit::TestCase
   end
 
   def test_supported_card_types
-    assert_equal [ :visa, :master, :american_express, :diners_club, :jcb, :maestro ], PslCardGateway.supported_cardtypes
+    assert_equal [:visa, :master, :american_express, :diners_club, :jcb, :maestro], PslCardGateway.supported_cardtypes
   end
 
   def test_avs_result

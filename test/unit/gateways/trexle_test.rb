@@ -440,5 +440,4 @@ class TrexleTest < Test::Unit::TestCase
       }
     }'
   end
-
 end

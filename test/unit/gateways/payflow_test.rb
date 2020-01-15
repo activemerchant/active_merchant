@@ -442,6 +442,17 @@ class PayflowTest < Test::Unit::TestCase
     assert_three_d_secure REXML::Document.new(xml.target!), '/Card/BuyerAuthResult'
   end
 
+  def test_add_credit_card_with_three_d_secure_frictionless
+    xml = Builder::XmlMarkup.new
+    credit_card = credit_card(
+      '5641820000000005',
+      :brand => 'maestro'
+    )
+
+    @gateway.send(:add_credit_card, xml, credit_card, @options.merge(three_d_secure_option_frictionless))
+    assert_three_d_secure_frictionless REXML::Document.new(xml.target!), '/Card/BuyerAuthResult'
+  end
+
   def test_duplicate_response_flag
     @gateway.expects(:ssl_post).returns(successful_duplicate_response)
 
@@ -603,7 +614,7 @@ Conn close
   <Vendor>ActiveMerchant</Vendor>
   <ProfileId>RT0000000009</ProfileId>
 </ResponseData>
-  XML
+    XML
   end
 
   def start_date_error_recurring_response
@@ -650,7 +661,7 @@ Conn close
     <TransState>6</TransState>
   </RPPaymentResult>
 </ResponseData>
-  XML
+    XML
   end
 
   def successful_authorization_response
@@ -876,6 +887,16 @@ Conn close
     assert_equal 'UXZEYlNBeFNpYVFzMjQxODk5RTA=', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/XID").text
   end
 
+  def assert_three_d_secure_frictionless(xml_doc, buyer_auth_result_path)
+    assert_equal 'C', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/Status").text
+    assert_equal 'QvDbSAxSiaQs241899E0', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/AuthenticationId").text
+    assert_equal 'pareq block', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/PAReq").text
+    assert_equal 'https://bankacs.bank.com/ascurl', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/ACSUrl").text
+    assert_equal '02', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/ECI").text
+    assert_equal 'jGvQIvG/5UhjAREALGYa6Vu/hto=', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/CAVV").text
+    assert_equal 'UXZEYlNBeFNpYVFzMjQxODk5RTA=', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/XID").text
+  end
+
   def authorize_buyer_auth_result_path
     '/XMLPayRequest/RequestData/Transactions/Transaction/Authorization/PayData/Tender/Card/BuyerAuthResult'
   end
@@ -887,8 +908,22 @@ Conn close
   def three_d_secure_option
     {
         :three_d_secure => {
-            :status => 'Y',
             :authentication_id => 'QvDbSAxSiaQs241899E0',
+            :authentication_response_status => 'Y',
+            :pareq => 'pareq block',
+            :acs_url => 'https://bankacs.bank.com/ascurl',
+            :eci => '02',
+            :cavv => 'jGvQIvG/5UhjAREALGYa6Vu/hto=',
+            :xid => 'UXZEYlNBeFNpYVFzMjQxODk5RTA='
+        }
+    }
+  end
+
+  def three_d_secure_option_frictionless
+    {
+        :three_d_secure => {
+            :authentication_id => 'QvDbSAxSiaQs241899E0',
+            :directory_response_status => 'C',
             :pareq => 'pareq block',
             :acs_url => 'https://bankacs.bank.com/ascurl',
             :eci => '02',

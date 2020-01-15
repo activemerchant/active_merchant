@@ -5,10 +5,10 @@ class MerchantWarriorTest < Test::Unit::TestCase
 
   def setup
     @gateway = MerchantWarriorGateway.new(
-                 :merchant_uuid => '4e922de8c2a4c',
-                 :api_key => 'g6jrxa9o',
-                 :api_passphrase => 'vp4ujoem'
-               )
+      :merchant_uuid => '4e922de8c2a4c',
+      :api_key => 'g6jrxa9o',
+      :api_passphrase => 'vp4ujoem'
+    )
 
     @credit_card = credit_card
     @success_amount = 10000
@@ -55,6 +55,26 @@ class MerchantWarriorTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(failed_refund_response)
 
     assert response = @gateway.refund(@success_amount, @transaction_id)
+    assert_failure response
+    assert_equal 'MW -016:transactionID has already been reversed', response.message
+    assert response.test?
+    assert_nil response.authorization
+  end
+
+  def test_successful_void
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
+
+    assert response = @gateway.void(@success_amount, @transaction_id, @options)
+    assert_success response
+    assert_equal 'Transaction approved', response.message
+    assert response.test?
+    assert_equal '30-d4d19f4-db17-11df-9322-0022198101cd', response.authorization
+  end
+
+  def test_failed_void
+    @gateway.expects(:ssl_post).returns(failed_refund_response)
+
+    assert response = @gateway.void(@success_amount, @transaction_id)
     assert_failure response
     assert_equal 'MW -016:transactionID has already been reversed', response.message
     assert response.test?

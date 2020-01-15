@@ -193,7 +193,7 @@ module ActiveMerchant #:nodoc:
 
       def refund_type(payment)
         _, kind, _ = split_authorization(payment)
-        if check?(payment) || kind  == 'echeckSales'
+        if check?(payment) || kind == 'echeckSales'
           :echeckCredit
         else
           :credit

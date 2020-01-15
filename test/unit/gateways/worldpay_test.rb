@@ -5,9 +5,9 @@ class WorldpayTest < Test::Unit::TestCase
 
   def setup
     @gateway = WorldpayGateway.new(
-       :login => 'testlogin',
-       :password => 'testpassword'
-     )
+      :login => 'testlogin',
+      :password => 'testpassword'
+    )
 
     @amount = 100
     @credit_card = credit_card('4242424242424242')
@@ -46,6 +46,16 @@ class WorldpayTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
     assert_success response
     assert_equal 'R50704213207145707', response.authorization
+  end
+
+  def test_exemption_in_request
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({exemption_type: 'LV', exemption_placement: 'AUTHENTICATION'}))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/exemption/, data)
+      assert_match(/AUTHENTICATION/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
   end
 
   def test_successful_reference_transaction_authorize_with_merchant_code
@@ -596,6 +606,39 @@ class WorldpayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_3ds_name_coersion_based_on_version
+    @options[:execute_threed] = true
+    @options[:three_ds_version] = '2.0'
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      if /<submit>/ =~ data
+        assert_match %r{<cardHolderName>Longbob Longsen</cardHolderName>}, data
+      end
+    end.respond_with(successful_authorize_response, successful_capture_response)
+    assert_success response
+
+    @options[:three_ds_version] = '2'
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      if /<submit>/ =~ data
+        assert_match %r{<cardHolderName>Longbob Longsen</cardHolderName>}, data
+      end
+    end.respond_with(successful_authorize_response, successful_capture_response)
+    assert_success response
+
+    @options[:three_ds_version] = '1.0.2'
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      if /<submit>/ =~ data
+        assert_match %r{<cardHolderName>3D</cardHolderName>}, data
+      end
+    end.respond_with(successful_authorize_response, successful_capture_response)
+    assert_success response
+  end
+
   def test_transcript_scrubbing
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end
@@ -824,6 +867,14 @@ class WorldpayTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'SUCCESS', response.message
     assert_equal '3d4187536044bd39ad6a289c4339c41c', response.authorization
+  end
+
+  def test_handles_plain_text_response
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.respond_with('Temporary Failure, please Retry')
+    assert_failure response
+    assert_match "Unparsable response received from Worldpay. Please contact Worldpay if you continue to receive this message. \(The raw response returned by the API was: \"Temporary Failure, please Retry\"\)", response.message
   end
 
   private
@@ -1383,6 +1434,7 @@ class WorldpayTest < Test::Unit::TestCase
                 <cardBrand>VISA</cardBrand>
                 <cardSubBrand>VISA_CREDIT</cardSubBrand>
                 <issuerCountryCode>N/A</issuerCountryCode>
+                <issuerName>TARGOBANK AG & CO. KGAA</issuerName>
                 <obfuscatedPAN>4111********1111</obfuscatedPAN>
               </derived>
             </cardDetails>

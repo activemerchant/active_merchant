@@ -3,27 +3,65 @@ require 'test_helper'
 class RemoteRedsysSHA256Test < Test::Unit::TestCase
   def setup
     @gateway = RedsysGateway.new(fixtures(:redsys_sha256))
+    @amount = 100
     @credit_card = credit_card('4548812049400004')
     @declined_card = credit_card
+    @threeds2_credit_card = credit_card('4918019199883839')
     @options = {
       order_id: generate_order_id,
     }
   end
 
   def test_successful_purchase
-    response = @gateway.purchase(100, @credit_card, @options)
+    response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'Transaction Approved', response.message
   end
 
+  def test_successful_authorize_3ds
+    options = @options.merge(execute_threed: true, terminal: 12)
+    response = @gateway.authorize(@amount, @credit_card, options)
+    assert_success response
+    assert response.params['ds_emv3ds']
+    assert_equal 'NO_3DS_v2', JSON.parse(response.params['ds_emv3ds'])['protocolVersion']
+    assert_equal 'CardConfiguration', response.message
+    assert response.authorization
+  end
+
+  def test_successful_purchase_3ds
+    options = @options.merge(execute_threed: true, terminal: 12)
+    response = @gateway.purchase(@amount, @threeds2_credit_card, options)
+    assert_success response
+    assert three_ds_data = JSON.parse(response.params['ds_emv3ds'])
+    assert_equal '2.1.0', three_ds_data['protocolVersion']
+    assert_equal 'https://sis-d.redsys.es/sis-simulador-web/threeDsMethod.jsp', three_ds_data['threeDSMethodURL']
+    assert_equal 'CardConfiguration', response.message
+    assert response.authorization
+  end
+
+  # Requires account configuration to allow setting moto flag
+  def test_purchase_with_moto_flag
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(moto: true, metadata: { manual_entry: true }))
+    assert_equal 'SIS0488 ERROR', response.message
+  end
+
+  def test_successful_3ds_authorize_with_exemption
+    options = @options.merge(execute_threed: true, terminal: 12)
+    response = @gateway.authorize(@amount, @credit_card, options.merge(sca_exemption: 'LWV'))
+    assert_success response
+    assert response.params['ds_emv3ds']
+    assert_equal 'NO_3DS_v2', JSON.parse(response.params['ds_emv3ds'])['protocolVersion']
+    assert_equal 'CardConfiguration', response.message
+  end
+
   def test_purchase_with_invalid_order_id
-    response = @gateway.purchase(100, @credit_card, order_id: "a%4#{generate_order_id}")
+    response = @gateway.purchase(@amount, @credit_card, order_id: "a%4#{generate_order_id}")
     assert_success response
     assert_equal 'Transaction Approved', response.message
   end
 
   def test_successful_purchase_using_vault_id
-    response = @gateway.purchase(100, @credit_card, @options.merge(store: true))
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(store: true))
     assert_success response
     assert_equal 'Transaction Approved', response.message
 
@@ -31,21 +69,21 @@ class RemoteRedsysSHA256Test < Test::Unit::TestCase
     assert_not_nil credit_card_token
 
     @options[:order_id] = generate_order_id
-    response = @gateway.purchase(100, credit_card_token, @options)
+    response = @gateway.purchase(@amount, credit_card_token, @options)
     assert_success response
     assert_equal 'Transaction Approved', response.message
   end
 
   def test_failed_purchase
-    response = @gateway.purchase(100, @declined_card, @options)
+    response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
     assert_equal 'SIS0093 ERROR', response.message
   end
 
   def test_purchase_and_refund
-    purchase = @gateway.purchase(100, @credit_card, @options)
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
-    refund = @gateway.refund(100, purchase.authorization)
+    refund = @gateway.refund(@amount, purchase.authorization)
     assert_success refund
   end
 
@@ -57,18 +95,18 @@ class RemoteRedsysSHA256Test < Test::Unit::TestCase
   end
 
   def test_successful_authorise_and_capture
-    authorize = @gateway.authorize(100, @credit_card, @options)
+    authorize = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorize
     assert_equal 'Transaction Approved', authorize.message
     assert_not_nil authorize.authorization
 
-    capture = @gateway.capture(100, authorize.authorization)
+    capture = @gateway.capture(@amount, authorize.authorization)
     assert_success capture
     assert_match(/Refund.*approved/, capture.message)
   end
 
   def test_successful_authorise_using_vault_id
-    authorize = @gateway.authorize(100, @credit_card, @options.merge(store: true))
+    authorize = @gateway.authorize(@amount, @credit_card, @options.merge(store: true))
     assert_success authorize
     assert_equal 'Transaction Approved', authorize.message
     assert_not_nil authorize.authorization
@@ -77,20 +115,20 @@ class RemoteRedsysSHA256Test < Test::Unit::TestCase
     assert_not_nil credit_card_token
 
     @options[:order_id] = generate_order_id
-    authorize = @gateway.authorize(100, credit_card_token, @options)
+    authorize = @gateway.authorize(@amount, credit_card_token, @options)
     assert_success authorize
     assert_equal 'Transaction Approved', authorize.message
     assert_not_nil authorize.authorization
   end
 
   def test_failed_authorize
-    response = @gateway.authorize(100, @declined_card, @options)
+    response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
     assert_equal 'SIS0093 ERROR', response.message
   end
 
   def test_successful_void
-    authorize = @gateway.authorize(100, @credit_card, @options)
+    authorize = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorize
 
     void = @gateway.void(authorize.authorization)
@@ -100,7 +138,7 @@ class RemoteRedsysSHA256Test < Test::Unit::TestCase
   end
 
   def test_failed_void
-    authorize = @gateway.authorize(100, @credit_card, @options)
+    authorize = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorize
 
     void = @gateway.void(authorize.authorization)

@@ -38,7 +38,6 @@ module ActiveMerchant #:nodoc:
 
         super
       end
-
     end
   end
 end

@@ -5,9 +5,9 @@ class NabTransactTest < Test::Unit::TestCase
 
   def setup
     @gateway = NabTransactGateway.new(
-                 :login => 'login',
-                 :password => 'password'
-               )
+      :login => 'login',
+      :password => 'password'
+    )
     @credit_card = credit_card
     @amount = 200
 
@@ -456,5 +456,4 @@ Conn close
     </NABTransactMessage>
     XML
   end
-
 end

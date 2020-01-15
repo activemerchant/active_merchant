@@ -16,7 +16,7 @@ module ActiveMerchant
         'U' => 'Issuer was not certified for card verification'
       }
 
-      CARD_CODE_ERRORS = %w( N S )
+      CARD_CODE_ERRORS = %w(N S)
 
       AVS_MESSAGES = {
         'A' => 'Street address matches billing information, zip/postal code does not',
@@ -34,7 +34,7 @@ module ActiveMerchant
         'Z' => '5-digit zip/postal code matches billing information, street address does not',
       }
 
-      AVS_ERRORS = %w( A E N R W Z )
+      AVS_ERRORS = %w(A E N R W Z)
 
       PAYMENT_GATEWAY_RESPONSES = {
         'P01' => 'AVS Mismatch Failure',
@@ -88,8 +88,8 @@ module ActiveMerchant
         :credit => 'newreturn'
       }
 
-      SUCCESS_CODES = [ 'pending', 'success' ]
-      FAILURE_CODES = [ 'badcard', 'fraud' ]
+      SUCCESS_CODES = ['pending', 'success']
+      FAILURE_CODES = ['badcard', 'fraud']
 
       self.default_currency = 'USD'
       self.supported_countries = ['US']
@@ -219,7 +219,7 @@ module ActiveMerchant
 
       def add_customer_data(post, options)
         post[:email] = options[:email]
-        post[:dontsndmail]        = 'yes' unless options[:send_email_confirmation]
+        post[:dontsndmail] = 'yes' unless options[:send_email_confirmation]
         post[:ipaddress] = options[:ip]
       end
 
@@ -256,7 +256,7 @@ module ActiveMerchant
             post[:state] = shipping_address[:state]
           else
             post[:state] = 'ZZ'
-            post[:province]  = shipping_address[:state]
+            post[:province] = shipping_address[:state]
           end
 
           post[:country] = shipping_address[:country]

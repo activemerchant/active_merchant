@@ -161,5 +161,4 @@ class RemoteStripeApplePayTest < Test::Unit::TestCase
     assert_equal 'wow@example.com', response.params['metadata']['email']
     assert_match CHARGE_ID_REGEX, response.authorization
   end
-
 end

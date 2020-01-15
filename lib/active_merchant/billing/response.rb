@@ -30,13 +30,13 @@ module ActiveMerchant #:nodoc:
                         options[:avs_result].to_hash
                       else
                         AVSResult.new(options[:avs_result]).to_hash
-        end
+                      end
 
         @cvv_result = if options[:cvv_result].kind_of?(CVVResult)
                         options[:cvv_result].to_hash
                       else
                         CVVResult.new(options[:cvv_result]).to_hash
-        end
+                      end
       end
     end
 

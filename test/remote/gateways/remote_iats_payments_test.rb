@@ -136,5 +136,4 @@ class IatsPaymentsTest < Test::Unit::TestCase
     assert_scrubbed(@gateway.options[:agent_code], transcript)
     assert_scrubbed(@gateway.options[:password], transcript)
   end
-
 end

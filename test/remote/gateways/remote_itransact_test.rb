@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class RemoteItransactTest < Test::Unit::TestCase
-
   def setup
     @gateway = ItransactGateway.new(fixtures(:itransact))
 
@@ -77,10 +76,10 @@ class RemoteItransactTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = ItransactGateway.new(
-                :login => 'x',
-                :password => 'x',
-                :gateway_id => 'x'
-              )
+      :login => 'x',
+      :password => 'x',
+      :gateway_id => 'x'
+    )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Invalid login credentials', response.message

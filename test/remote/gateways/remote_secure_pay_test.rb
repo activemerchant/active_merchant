@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class RemoteSecurePayTest < Test::Unit::TestCase
-
   def setup
     @gateway = SecurePayGateway.new(fixtures(:secure_pay))
 

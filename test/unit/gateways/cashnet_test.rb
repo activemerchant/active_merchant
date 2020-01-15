@@ -55,7 +55,7 @@ class Cashnet < Test::Unit::TestCase
   end
 
   def test_supported_card_types
-    assert_equal [:visa, :master, :american_express, :discover, :diners_club, :jcb],  CashnetGateway.supported_cardtypes
+    assert_equal [:visa, :master, :american_express, :discover, :diners_club, :jcb], CashnetGateway.supported_cardtypes
   end
 
   def test_add_invoice
@@ -236,7 +236,7 @@ read 2 bytes
 -> "0\r\n"
 -> "\r\n"
 Conn close
-TRANSCRIPT
+    TRANSCRIPT
   end
 
   def post_scrubbed
@@ -299,6 +299,6 @@ read 2 bytes
 -> "0\r\n"
 -> "\r\n"
 Conn close
-SCRUBBED
+    SCRUBBED
   end
 end

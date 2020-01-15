@@ -587,7 +587,7 @@ class MonerisUsTest < Test::Unit::TestCase
         <RecurSuccess>true</RecurSuccess>
        </receipt>
      </response>
-   RESPONSE
+    RESPONSE
   end
 
   def xml_purchase_fixture
@@ -645,5 +645,4 @@ read 659 bytes
 Conn close
   }
   end
-
 end

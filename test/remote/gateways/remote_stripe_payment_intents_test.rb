@@ -273,6 +273,24 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert_equal 'Payment complete.', capture_response.params.dig('charges', 'data')[0].dig('outcome', 'seller_message')
   end
 
+  def test_amount_localization
+    amount = 200000
+    options = {
+      currency: 'XPF',
+      customer: @customer,
+      confirmation_method: 'manual',
+      capture_method: 'manual',
+      confirm: true
+    }
+    assert create_response = @gateway.create_intent(amount, @visa_payment_method, options)
+    intent_id = create_response.params['id']
+    assert_equal 'requires_capture', create_response.params['status']
+
+    assert capture_response = @gateway.capture(amount, intent_id, options)
+    assert_equal 'succeeded', capture_response.params['status']
+    assert_equal 2000, capture_response.params['amount']
+  end
+
   def test_auth_and_capture_with_destination_account_and_fee
     options = {
       currency: 'GBP',
@@ -321,19 +339,20 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
   end
 
   def test_create_a_payment_intent_and_update
-    update_amount = 2050
+    amount = 200000
+    update_amount = 250000
     options = {
-      currency: 'GBP',
+      currency: 'XPF',
       customer: @customer,
       confirmation_method: 'manual',
       capture_method: 'manual',
     }
-    assert create_response = @gateway.create_intent(@amount, @visa_payment_method, options)
+    assert create_response = @gateway.create_intent(amount, @visa_payment_method, options)
     intent_id = create_response.params['id']
-    assert_equal @amount, create_response.params['amount']
+    assert_equal 2000, create_response.params['amount']
 
     assert update_response = @gateway.update_intent(update_amount, intent_id, nil, options.merge(payment_method_types: 'card'))
-    assert_equal update_amount, update_response.params['amount']
+    assert_equal 2500, update_response.params['amount']
     assert_equal 'requires_confirmation', update_response.params['status']
   end
 

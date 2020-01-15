@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class RemotePslCardTest < Test::Unit::TestCase
-
   def setup
     @gateway = PslCardGateway.new(fixtures(:psl_card))
 

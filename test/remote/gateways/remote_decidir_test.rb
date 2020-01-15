@@ -7,6 +7,11 @@ class RemoteDecidirTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card('4507990000004905')
+    @master_card_credit_card = credit_card('5299910010000015')
+    @amex_credit_card = credit_card('373953192351004')
+    @diners_club_credit_card = credit_card('36463664750005')
+    @cabal_credit_card = credit_card('5896570000000008')
+    @naranja_credit_card = credit_card('5895627823453005')
     @declined_card = credit_card('4000300011112220')
     @options = {
       order_id: SecureRandom.uuid,
@@ -17,6 +22,44 @@ class RemoteDecidirTest < Test::Unit::TestCase
 
   def test_successful_purchase
     response = @gateway_for_purchase.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'approved', response.message
+    assert response.authorization
+  end
+
+  def test_successful_purchase_with_master_card
+    response = @gateway_for_purchase.purchase(@amount, @master_card_credit_card, @options)
+    assert_success response
+    assert_equal 'approved', response.message
+    assert response.authorization
+  end
+
+  def test_successful_purchase_with_amex
+    response = @gateway_for_purchase.purchase(@amount, @amex_credit_card, @options)
+    assert_success response
+    assert_equal 'approved', response.message
+    assert response.authorization
+  end
+
+  # This test is currently failing.
+  # Decidir hasn't been able to provide a valid Diners Club test card number.
+  #
+  # def test_successful_purchase_with_diners_club
+  #   response = @gateway_for_purchase.purchase(@amount, @diners_club_credit_card, @options)
+  #   assert_success response
+  #   assert_equal 'approved', response.message
+  #   assert response.authorization
+  # end
+
+  def test_successful_purchase_with_cabal
+    response = @gateway_for_purchase.purchase(@amount, @cabal_credit_card, @options)
+    assert_success response
+    assert_equal 'approved', response.message
+    assert response.authorization
+  end
+
+  def test_successful_purchase_with_naranja
+    response = @gateway_for_purchase.purchase(@amount, @naranja_credit_card, @options)
     assert_success response
     assert_equal 'approved', response.message
     assert response.authorization
@@ -164,5 +207,4 @@ class RemoteDecidirTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway_for_purchase.options[:api_key], transcript)
   end
-
 end

@@ -112,7 +112,7 @@ The [ActiveMerchant Wiki](https://github.com/activemerchant/active_merchant/wiki
 * [Cecabank](http://www.ceca.es/es/) - ES
 * [Cenpos](https://www.cenpos.com/) - AD, AI, AG, AR, AU, AT, BS, BB, BE, BZ, BM, BR, BN, BG, CA, HR, CY, CZ, DK, DM, EE, FI, FR, DE, GR, GD, GY, HK, HU, IS, IN, IL, IT, JP, LV, LI, LT, LU, MY, MT, MX, MC, MS, NL, PA, PL, PT, KN, LC, MF, VC, SM, SG, SK, SI, ZA, ES, SR, SE, CH, TR, GB, US, UY
 * [CAMS: Central Account Management System](https://www.centralams.com/) - US
-* [Checkout.com](https://www.checkout.com/) - AT, BE, BG, CY, CZ, DE, DK, EE, ES, FI, FR, GR, HR, HU, IE, IS, IT, LI, LT, LU, LV, MT, MU, NL, NO, PL, PT, RO, SE, SI, SK, US
+* [Checkout.com](https://www.checkout.com/) - AD, AE, AR, AT, AU, BE, BG, BH, BR, CH, CL, CN, CO, CY, CZ, DE, DK, EE, EG, ES, FI, FR, GB, GR, HK, HR, HU, IE, IS, IT, JO, JP, KW, LI, LT, LU, LV, MC, MT, MX, MY, NL, NO, NZ, OM, PE, PL, PT, QA, RO, SA, SE, SG, SI, SK, SM, TR, US
 * [Clearhaus](https://www.clearhaus.com) - AD, AT, BE, BG, CH, CY, CZ, DE, DK, EE, ES, FI, FO, FR, GB, GL, GR, HR, HU, IE, IS, IT, LI, LT, LU, LV, MT, NL, NO, PL, PT, RO, SE, SI, SK
 * [Commercegate](http://www.commercegate.com/) - AD, AT, AX, BE, BG, CH, CY, CZ, DE, DK, ES, FI, FR, GB, GG, GI, GR, HR, HU, IE, IM, IS, IT, JE, LI, LT, LU, LV, MC, MT, NL, NO, PL, PT, RO, SE, SI, SK, VA
 * [Conekta](https://conekta.io) - MX
@@ -215,7 +215,7 @@ The [ActiveMerchant Wiki](https://github.com/activemerchant/active_merchant/wiki
 * [SecureNet](http://www.securenet.com/) - US
 * [SecurePay](http://www.securepay.com/) - US, CA, GB, AU
 * [SecurePayTech](http://www.securepaytech.com/) - NZ
-* [SecurionPay](https://securionpay.com/) - AD, AE, AF, AG, AI, AL, AM, AO, AR, AS, AT, AU, AW, AX, AZ, BA, BB, BD, BE, BF, BG, BH, BI, BJ, BL, BM, BN, BO, BR, BS, BT, BV, BW, BY, BZ, CA, CC, CD, CF, CG, CH, CI, CK, CL, CM, CN, CO, CR, CU, CV, CW, CX, CY, CZ, DE, DJ, DK, DM, DO, DZ, EC, EE, EG, EH, ER, ES, ET, FI, FJ, FK, FM, FO, FR, GA, GB, GD, GE, GF, GG, GH, GI, GL, GM, GN, GP, GQ, GR, GS, GT, GU, GW, GY, HK, HM, HN, HR, HT, HU, ID, IE, IL, IM, IN, IO, IQ, IR, IS, IT, JE, JM, JO, JP, KE, KG, KH, KI, KM, KN, KP, KR, KW, KY, KZ, LA, LB, LC, LI, LK, LR, LS, LT, LU, LV, LY, MA, MC, MD, ME, MF, MG, MH, MK, ML, MM, MN, MO, MP, MQ, MR, MS, MT, MU, MV, MW, MX, MY, MZ, NA, NC, NE, NF, NG, NI, NL, NO, NP, NR, NU, NZ, OM, PA, PE, PF, PG, PH, PK, PL, PM, PN, PR, PS, PT, PW, PY, QA, RE, RO, RS, RU, RW, SA, SB, SC, SD, SE, SG, SH, SI, SJ, SK, SL, SM, SN, SO, SR, ST, SV, SY, SZ, TC, TD, TF, TG, TH, TJ, TK, TL, TM, TN, TO, TR, TT, TV, TW, TZ, UA, UG, UM, US, UY, UZ, VA, VC, VE, VG, VI, VN, VU, WF, WS, YE, YT, ZA, ZM, ZW
+* [SecurionPay](https://securionpay.com/) - AD, BE, BG, CH, CY, CZ, DE, DK, EE, ES, FI, FO, FR, GI, GL, GR, GS, GT, HR, HU, IE, IS, IT, LI, LR, LT, LU, LV, MC, MT, MU, MV, MW, NL, NO, PL, RO, SE, SI
 * [SkipJack](http://www.skipjack.com/) - US, CA
 * [SoEasyPay](http://www.soeasypay.com/) - US, CA, AT, BE, BG, HR, CY, CZ, DK, EE, FI, FR, DE, GR, HU, IE, IT, LV, LT, LU, MT, NL, PL, PT, RO, SK, SI, ES, SE, GB, IS, NO, CH
 * [Spreedly](https://spreedly.com) - AD, AE, AT, AU, BD, BE, BG, BN, CA, CH, CY, CZ, DE, DK, EE, EG, ES, FI, FR, GB, GI, GR, HK, HU, ID, IE, IL, IM, IN, IS, IT, JO, KW, LB, LI, LK, LT, LU, LV, MC, MT, MU, MV, MX, MY, NL, NO, NZ, OM, PH, PL, PT, QA, RO, SA, SE, SG, SI, SK, SM, TR, TT, UM, US, VA, VN, ZA
@@ -225,6 +225,7 @@ The [ActiveMerchant Wiki](https://github.com/activemerchant/active_merchant/wiki
 * [Transact Pro](https://www.transactpro.lv/business/online-payments-acceptance) - US
 * [TransFirst](http://www.transfirst.com/) - US
 * [Transnational](http://www.tnbci.com/) - US
+* [Trexle](https://trexle.com) - AD, AE, AT, AU, BD, BE, BG, BN, CA, CH, CY, CZ, DE, DK, EE, EG, ES, FI, FR, GB, GI, GR, HK, HU, ID, IE, IL, IM, IN, IS, IT, JO, KW, LB, LI, LK, LT, LU, LV, MC, MT, MU, MV, MX, MY, NL, NO, NZ, OM, PH, PL, PT, QA, RO, SA, SE, SG, SI, SK, SM, TR, TT, UM, US, VA, VN, ZA
 * [TrustCommerce](http://www.trustcommerce.com/) - US
 * [USA ePay](http://www.usaepay.com/) - US
 * [Vanco Payment Solutions](http://vancopayments.com/) - US

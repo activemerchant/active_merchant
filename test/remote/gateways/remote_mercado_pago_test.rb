@@ -21,6 +21,13 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
       :last_name => 'Smith',
       :verification_value => '737'
     )
+    @naranja_credit_card = credit_card('5895627823453005',
+      :month => 10,
+      :year => 2020,
+      :first_name => 'John',
+      :last_name => 'Smith',
+      :verification_value => '123'
+    )
     @declined_card = credit_card('4000300011112220')
     @options = {
       billing_address: address,
@@ -51,6 +58,12 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_cabal
     response = @argentina_gateway.purchase(@amount, @cabal_credit_card, @options)
+    assert_success response
+    assert_equal 'accredited', response.message
+  end
+
+  def test_successful_purchase_with_naranja
+    response = @argentina_gateway.purchase(@amount, @naranja_credit_card, @options)
     assert_success response
     assert_equal 'accredited', response.message
   end
@@ -114,6 +127,16 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
     assert_equal 'accredited', capture.message
   end
 
+  def test_successful_authorize_and_capture_with_naranja
+    auth = @argentina_gateway.authorize(@amount, @naranja_credit_card, @options)
+    assert_success auth
+    assert_equal 'pending_capture', auth.message
+
+    assert capture = @argentina_gateway.capture(@amount, auth.authorization)
+    assert_success capture
+    assert_equal 'accredited', capture.message
+  end
+
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
@@ -162,6 +185,15 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
     assert_equal nil, refund.message
   end
 
+  def test_successful_refund_with_naranja
+    purchase = @argentina_gateway.purchase(@amount, @naranja_credit_card, @options)
+    assert_success purchase
+
+    assert refund = @argentina_gateway.refund(@amount, purchase.authorization)
+    assert_success refund
+    assert_equal nil, refund.message
+  end
+
   def test_partial_refund
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
@@ -196,6 +228,15 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
 
   def test_successful_void_with_cabal
     auth = @argentina_gateway.authorize(@amount, @cabal_credit_card, @options)
+    assert_success auth
+
+    assert void = @argentina_gateway.void(auth.authorization)
+    assert_success void
+    assert_equal 'by_collector', void.message
+  end
+
+  def test_successful_void_with_naranja
+    auth = @argentina_gateway.authorize(@amount, @naranja_credit_card, @options)
     assert_success auth
 
     assert void = @argentina_gateway.void(auth.authorization)
@@ -239,5 +280,4 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:access_token], transcript)
   end
-
 end

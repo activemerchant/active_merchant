@@ -1,3 +1,5 @@
+require 'nokogiri'
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class WorldpayGateway < Gateway
@@ -88,7 +90,7 @@ module ActiveMerchant #:nodoc:
       def refund(money, authorization, options = {})
         authorization = order_id_from_authorization(authorization.to_s)
         response = MultiResponse.run do |r|
-          r.process { inquire_request(authorization, options, 'CAPTURED', 'SETTLED', 'SETTLED_BY_MERCHANT') }
+          r.process { inquire_request(authorization, options, 'CAPTURED', 'SETTLED', 'SETTLED_BY_MERCHANT') } unless options[:authorization_validated]
           r.process { refund_request(money, authorization, options) }
         end
 
@@ -201,13 +203,11 @@ module ActiveMerchant #:nodoc:
               end
               add_payment_method(xml, money, payment_method, options)
               add_shopper(xml, options)
-              if options[:hcg_additional_data]
-                add_hcg_additional_data(xml, options)
-              end
-              if options[:instalments]
-                add_instalments_data(xml, options)
-              end
+              add_hcg_additional_data(xml, options) if options[:hcg_additional_data]
+              add_instalments_data(xml, options) if options[:instalments]
               add_moto_flag(xml, options) if options.dig(:metadata, :manual_entry)
+              add_additional_3ds_data(xml, options) if options[:execute_threed] && options[:three_ds_version] && options[:three_ds_version] =~ /^2/
+              add_3ds_exemption(xml, options) if options[:exemption_type]
             end
           end
         end
@@ -257,6 +257,14 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_additional_3ds_data(xml, options)
+        xml.tag! 'additional3DSData', 'dfReferenceId' => options[:session_id]
+      end
+
+      def add_3ds_exemption(xml, options)
+        xml.tag! 'exemption', 'type' => options[:exemption_type], 'placement' => options[:exemption_placement] || 'AUTHORISATION'
+      end
+
       def add_amount(xml, money, options)
         currency = options[:currency] || currency(money)
 
@@ -266,9 +274,7 @@ module ActiveMerchant #:nodoc:
           'exponent' => currency_exponent(currency)
         }
 
-        if options[:debit_credit_indicator]
-          amount_hash['debitCreditIndicator'] = options[:debit_credit_indicator]
-        end
+        amount_hash['debitCreditIndicator'] = options[:debit_credit_indicator] if options[:debit_credit_indicator]
 
         xml.tag! 'amount', amount_hash
       end
@@ -329,7 +335,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'date', 'month' => format(payment_method.month, :two_digits), 'year' => format(payment_method.year, :four_digits)
         end
 
-        xml.tag! 'cardHolderName', options[:execute_threed] ? '3D' : payment_method.name
+        xml.tag! 'cardHolderName', options[:execute_threed] && !options[:three_ds_version]&.start_with?('2') ? '3D' : payment_method.name
         xml.tag! 'cvc', payment_method.verification_value
 
         add_address(xml, (options[:billing_address] || options[:address]))
@@ -445,23 +451,28 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(action, xml)
-        parse_element({:action => action}, REXML::Document.new(xml))
+        xml = xml.strip.gsub(/\&/, '&amp;')
+        doc = Nokogiri::XML(xml, &:strict)
+        doc.remove_namespaces!
+        resp_params = {:action => action}
+
+        parse_elements(doc.root, resp_params)
+        resp_params
       end
 
-      def parse_element(raw, node)
+      def parse_elements(node, response)
         node_name = node.name.underscore
         node.attributes.each do |k, v|
-          raw["#{node_name}_#{k.underscore}".to_sym] = v
+          response["#{node_name}_#{k.underscore}".to_sym] = v.value
         end
-        if node.has_elements?
-          raw[node_name.to_sym] = true unless node.name.blank?
-          node.elements.each { |e| parse_element(raw, e) }
-        elsif node.children.count > 1
-          raw[node_name.to_sym] = node.children.join(' ').strip
+        if node.elements.empty?
+          response[node_name.to_sym] = node.text unless node.text.blank?
         else
-          raw[node_name.to_sym] = node.text unless node.text.nil?
+          response[node_name.to_sym] = true unless node.name.blank?
+          node.elements.each do |childnode|
+            parse_elements(childnode, response)
+          end
         end
-        raw
       end
 
       def headers(options)
@@ -481,6 +492,7 @@ module ActiveMerchant #:nodoc:
         if options[:execute_threed]
           raw[:cookie] = @cookie
           raw[:session_id] = options[:session_id]
+          raw[:is3DSOrder] = true
         end
         success = success_from(action, raw, success_criteria)
         message = message_from(success, raw, success_criteria)
@@ -495,6 +507,8 @@ module ActiveMerchant #:nodoc:
           :avs_result => AVSResult.new(code: AVS_CODE_MAP[raw[:avs_result_code_description]]),
           :cvv_result => CVVResult.new(CVC_CODE_MAP[raw[:cvc_result_code_description]])
         )
+      rescue Nokogiri::SyntaxError
+        unparsable_response(xml)
       rescue ActiveMerchant::ResponseError => e
         if e.response.code.to_s == '401'
           return Response.new(false, 'Invalid credentials', {}, :test => test?)
@@ -505,6 +519,12 @@ module ActiveMerchant #:nodoc:
 
       def url
         test? ? self.test_url : self.live_url
+      end
+
+      def unparsable_response(raw_response)
+        message = 'Unparsable response received from Worldpay. Please contact Worldpay if you continue to receive this message.'
+        message += " (The raw response returned by the API was: #{raw_response.inspect})"
+        return Response.new(false, message)
       end
 
       # Override the regular handle response so we can access the headers
@@ -546,15 +566,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_code_from(success, raw)
-        unless success == 'SUCCESS'
-          raw[:iso8583_return_code_code] || raw[:error_code] || nil
-        end
+        raw[:iso8583_return_code_code] || raw[:error_code] || nil unless success == 'SUCCESS'
       end
 
       def required_status_message(raw, success_criteria)
-        if(!success_criteria.include?(raw[:last_event]))
-          "A transaction status of #{success_criteria.collect { |c| "'#{c}'" }.join(" or ")} is required."
-        end
+        "A transaction status of #{success_criteria.collect { |c| "'#{c}'" }.join(" or ")} is required." if !success_criteria.include?(raw[:last_event])
       end
 
       def authorization_from(action, raw, options)

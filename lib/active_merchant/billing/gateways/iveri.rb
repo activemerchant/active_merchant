@@ -65,7 +65,7 @@ module ActiveMerchant #:nodoc:
 
       def verify_credentials
         void = void('', options)
-        return true if void.message ==  'Missing OriginalMerchantTrace'
+        return true if void.message == 'Missing OriginalMerchantTrace'
         false
       end
 
@@ -150,11 +150,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(post)
-        raw_response = begin
-          ssl_post(live_url, build_xml_envelope(post), headers(post))
-        rescue ActiveMerchant::ResponseError => e
-          e.response.body
-        end
+        raw_response =
+          begin
+            ssl_post(live_url, build_xml_envelope(post), headers(post))
+          rescue ActiveMerchant::ResponseError => e
+            e.response.body
+          end
 
         parsed = parse(raw_response)
         succeeded = success_from(parsed)
@@ -234,9 +235,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_code_from(response, succeeded)
-        unless succeeded
-          response['result_code']
-        end
+        response['result_code'] unless succeeded
       end
 
       def underscore(camel_cased_word)

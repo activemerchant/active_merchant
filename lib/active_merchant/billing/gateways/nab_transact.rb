@@ -39,7 +39,7 @@ module ActiveMerchant #:nodoc:
         :trigger   => 8
       }
 
-      SUCCESS_CODES = [ '00', '08', '11', '16', '77' ]
+      SUCCESS_CODES = ['00', '08', '11', '16', '77']
 
       def initialize(options = {})
         requires!(options, :login, :password)
@@ -295,7 +295,6 @@ module ActiveMerchant #:nodoc:
       def request_timeout
         @options[:request_timeout] || 60
       end
-
     end
   end
 end

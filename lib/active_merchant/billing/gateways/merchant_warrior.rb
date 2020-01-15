@@ -58,6 +58,13 @@ module ActiveMerchant #:nodoc:
         commit('refundCard', post)
       end
 
+      def void(money, identification, options = {})
+        post = {}
+        add_amount(post, money, options)
+        add_transaction(post, identification)
+        commit('processVoid', post)
+      end
+
       def store(creditcard, options = {})
         post = {
           'cardName' => scrub_name(creditcard.name),
@@ -181,9 +188,7 @@ module ActiveMerchant #:nodoc:
       def add_auth(action, post)
         post['merchantUUID'] = @options[:merchant_uuid]
         post['apiKey'] = @options[:api_key]
-        unless token?(post)
-          post['method'] = action
-        end
+        post['method'] = action unless token?(post)
       end
 
       def url_for(action, post)

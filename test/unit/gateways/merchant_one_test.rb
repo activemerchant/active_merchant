@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class MerchantOneTest < Test::Unit::TestCase
-
   def setup
     @gateway = MerchantOneGateway.new(fixtures(:merchant_one))
     @credit_card = credit_card

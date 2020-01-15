@@ -288,7 +288,6 @@ module ActiveMerchant
           'Content-Type' => 'text/xml'
         }
       end
-
     end
   end
 end

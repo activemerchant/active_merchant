@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class PostsDataTests < Test::Unit::TestCase
-
   def setup
     @url = 'http://example.com'
     @gateway = SimpleTestGateway.new

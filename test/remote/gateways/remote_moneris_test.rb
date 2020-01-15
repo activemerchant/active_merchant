@@ -6,7 +6,7 @@ class MonerisRemoteTest < Test::Unit::TestCase
 
     @gateway = MonerisGateway.new(fixtures(:moneris))
     @amount = 100
-    @credit_card = credit_card('4242424242424242')
+    @credit_card = credit_card('4242424242424242', :verification_value => '012')
     @options = {
         :order_id => generate_unique_id,
         :customer => generate_unique_id,
@@ -292,14 +292,141 @@ class MonerisRemoteTest < Test::Unit::TestCase
     })
   end
 
+  def test_purchase_using_stored_credential_recurring_cit
+    initial_options = stored_credential_options(:cardholder, :recurring, :initial)
+    assert purchase = @gateway.purchase(@amount, @credit_card, initial_options)
+    assert_success purchase
+    assert network_transaction_id = purchase.params['issuer_id']
+    assert_equal 'Approved', purchase.message
+    assert_false purchase.authorization.blank?
+    assert_not_empty purchase.params['issuer_id']
+
+    used_options = stored_credential_options(:recurring, :cardholder, id: network_transaction_id)
+    assert purchase = @gateway.purchase(@amount, @credit_card, used_options)
+    assert_success purchase
+    assert_equal 'Approved', purchase.message
+    assert_false purchase.authorization.blank?
+    assert_not_empty purchase.params['issuer_id']
+  end
+
+  def test_purchase_using_stored_credential_recurring_mit
+    initial_options = stored_credential_options(:merchant, :recurring, :initial)
+    assert purchase = @gateway.purchase(@amount, @credit_card, initial_options)
+    assert_success purchase
+    assert network_transaction_id = purchase.params['issuer_id']
+    assert_equal 'Approved', purchase.message
+    assert_false purchase.authorization.blank?
+    assert_not_empty purchase.params['issuer_id']
+
+    used_options = stored_credential_options(:merchant, :recurring, id: network_transaction_id)
+    assert purchase = @gateway.purchase(@amount, @credit_card, used_options)
+    assert_success purchase
+    assert_equal 'Approved', purchase.message
+    assert_false purchase.authorization.blank?
+    assert_not_empty purchase.params['issuer_id']
+  end
+
+  def test_purchase_using_stored_credential_installment_cit
+    initial_options = stored_credential_options(:cardholder, :installment, :initial)
+    assert purchase = @gateway.purchase(@amount, @credit_card, initial_options)
+    assert_success purchase
+    assert network_transaction_id = purchase.params['issuer_id']
+    assert_equal 'Approved', purchase.message
+    assert_false purchase.authorization.blank?
+    assert_not_empty purchase.params['issuer_id']
+
+    used_options = stored_credential_options(:installment, :cardholder, id: network_transaction_id)
+    assert purchase = @gateway.purchase(@amount, @credit_card, used_options)
+    assert_success purchase
+    assert_equal 'Approved', purchase.message
+    assert_false purchase.authorization.blank?
+    assert_not_empty purchase.params['issuer_id']
+  end
+
+  def test_purchase_using_stored_credential_installment_mit
+    initial_options = stored_credential_options(:merchant, :installment, :initial)
+    assert purchase = @gateway.purchase(@amount, @credit_card, initial_options)
+    assert_success purchase
+    assert network_transaction_id = purchase.params['issuer_id']
+    assert_equal 'Approved', purchase.message
+    assert_false purchase.authorization.blank?
+    assert_not_empty purchase.params['issuer_id']
+
+    used_options = stored_credential_options(:merchant, :installment, id: network_transaction_id)
+    assert purchase = @gateway.purchase(@amount, @credit_card, used_options)
+    assert_success purchase
+    assert_equal 'Approved', purchase.message
+    assert_false purchase.authorization.blank?
+    assert_not_empty purchase.params['issuer_id']
+  end
+
+  def test_purchase_using_stored_credential_unscheduled_cit
+    initial_options = stored_credential_options(:cardholder, :unscheduled, :initial)
+    assert purchase = @gateway.purchase(@amount, @credit_card, initial_options)
+    assert_success purchase
+    assert network_transaction_id = purchase.params['issuer_id']
+    assert_equal 'Approved', purchase.message
+    assert_false purchase.authorization.blank?
+    assert_not_empty purchase.params['issuer_id']
+
+    used_options = stored_credential_options(:unscheduled, :cardholder, id: network_transaction_id)
+    assert purchase = @gateway.purchase(@amount, @credit_card, used_options)
+    assert_success purchase
+    assert_equal 'Approved', purchase.message
+    assert_false purchase.authorization.blank?
+    assert_not_empty purchase.params['issuer_id']
+  end
+
+  def test_purchase_using_stored_credential_unscheduled_mit
+    initial_options = stored_credential_options(:merchant, :unscheduled, :initial)
+    assert purchase = @gateway.purchase(@amount, @credit_card, initial_options)
+    assert_success purchase
+    assert network_transaction_id = purchase.params['issuer_id']
+    assert_equal 'Approved', purchase.message
+    assert_false purchase.authorization.blank?
+    assert_not_empty purchase.params['issuer_id']
+
+    used_options = stored_credential_options(:merchant, :unscheduled, id: network_transaction_id)
+    assert purchase = @gateway.purchase(@amount, @credit_card, used_options)
+    assert_success purchase
+    assert_equal 'Approved', purchase.message
+    assert_false purchase.authorization.blank?
+    assert_not_empty purchase.params['issuer_id']
+  end
+
+  def test_authorize_and_capture_with_stored_credential
+    initial_options = stored_credential_options(:cardholder, :recurring, :initial)
+    assert authorization = @gateway.authorize(@amount, @credit_card, initial_options)
+    assert_success authorization
+    assert network_transaction_id = authorization.params['issuer_id']
+    assert_equal 'Approved', authorization.message
+    assert_not_empty authorization.params['issuer_id']
+
+    assert capture = @gateway.capture(@amount, authorization.authorization)
+    assert_success capture
+
+    used_options = stored_credential_options(:cardholder, :recurring, id: network_transaction_id)
+    assert authorization = @gateway.authorize(@amount, @credit_card, used_options)
+    assert_success authorization
+    assert @gateway.capture(@amount, authorization.authorization)
+  end
+
   def test_purchase_scrubbing
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card, @options)
     end
     transcript = @gateway.scrub(transcript)
 
-    assert_scrubbed(credit_card.number, transcript)
-    assert_scrubbed(credit_card.verification_value, transcript)
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:password], transcript)
+  end
+
+  private
+
+  def stored_credential_options(*args, id: nil)
+    @options.merge(order_id: generate_unique_id,
+                   stored_credential: stored_credential(*args, id: id),
+                   issuer_id: '')
   end
 end

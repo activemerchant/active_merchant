@@ -114,6 +114,42 @@ class RedsysSHA256Test < Test::Unit::TestCase
     end
   end
 
+  def test_successful_authorize_with_3ds
+    @gateway.expects(:ssl_post).returns(successful_authorize_with_3ds_response)
+    response = @gateway.authorize(100, credit_card, { execute_threed: true, order_id: '156270437866' })
+    assert response.test?
+    assert response.params['ds_emv3ds']
+    assert_equal response.message, 'CardConfiguration'
+    assert_equal response.authorization, '156270437866||'
+  end
+
+  def test_3ds_data_passed
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(100, credit_card, { execute_threed: true, order_id: '156270437866', terminal: 12, sca_exemption: 'LWV' })
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/iniciaPeticion/, data)
+      assert_match(/<DS_MERCHANT_TERMINAL>12<\/DS_MERCHANT_TERMINAL>/, data)
+      assert_match(/\"threeDSInfo\":\"CardData\"/, data)
+      assert_match(/<DS_MERCHANT_EXCEP_SCA>LWV<\/DS_MERCHANT_EXCEP_SCA>/, data)
+    end.respond_with(successful_authorize_with_3ds_response)
+  end
+
+  def test_moto_flag_passed
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(100, credit_card, { order_id: '156270437866', moto: true, metadata: { manual_entry: true } })
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/DS_MERCHANT_DIRECTPAYMENT%3Emoto%3C%2FDS_MERCHANT_DIRECTPAYMENT/, data)
+    end.respond_with(successful_authorize_with_3ds_response)
+  end
+
+  def test_moto_flag_not_passed_if_not_explicitly_requested
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(100, credit_card, { order_id: '156270437866', metadata: { manual_entry: true } })
+    end.check_request do |method, endpoint, data, headers|
+      refute_match(/DS_MERCHANT_DIRECTPAYMENT%3Emoto%3C%2FDS_MERCHANT_DIRECTPAYMENT/, data)
+    end.respond_with(successful_authorize_with_3ds_response)
+  end
+
   def test_bad_order_id_format
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(100, credit_card, order_id: 'Una#cce-ptable44Format')
@@ -201,7 +237,7 @@ class RedsysSHA256Test < Test::Unit::TestCase
   end
 
   def test_supported_cardtypes
-    assert_equal [:visa, :master, :american_express, :jcb, :diners_club], RedsysGateway.supported_cardtypes
+    assert_equal [:visa, :master, :american_express, :jcb, :diners_club, :unionpay], RedsysGateway.supported_cardtypes
   end
 
   def test_using_test_mode
@@ -287,6 +323,10 @@ class RedsysSHA256Test < Test::Unit::TestCase
 
   def successful_authorize_response
     "<?xml version='1.0' encoding=\"UTF-8\" ?><RETORNOXML><CODIGO>0</CODIGO><Ds_Version>0.1</Ds_Version><OPERACION><Ds_Amount>100</Ds_Amount><Ds_Currency>978</Ds_Currency><Ds_Order>144743367273</Ds_Order><Ds_Signature>29qv8K/6k3P1zyk5F+ZYmMel0uuOzC58kXCgp5rcnhI=</Ds_Signature><Ds_MerchantCode>091952713</Ds_MerchantCode><Ds_Terminal>1</Ds_Terminal><Ds_Response>0000</Ds_Response><Ds_AuthorisationCode>399957</Ds_AuthorisationCode><Ds_TransactionType>1</Ds_TransactionType><Ds_SecurePayment>0</Ds_SecurePayment><Ds_Language>1</Ds_Language><Ds_MerchantData></Ds_MerchantData><Ds_Card_Country>724</Ds_Card_Country></OPERACION></RETORNOXML>\n"
+  end
+
+  def successful_authorize_with_3ds_response
+    '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soapenv:Header/><soapenv:Body><p231:iniciaPeticionResponse xmlns:p231="http://webservice.sis.sermepa.es"><p231:iniciaPeticionReturn>&lt;RETORNOXML&gt;&lt;CODIGO&gt;0&lt;/CODIGO&gt;&lt;INFOTARJETA&gt;&lt;Ds_Order&gt;156270437866&lt;/Ds_Order&gt;&lt;Ds_MerchantCode&gt;091952713&lt;/Ds_MerchantCode&gt;&lt;Ds_Terminal&gt;1&lt;/Ds_Terminal&gt;&lt;Ds_TransactionType&gt;0&lt;/Ds_TransactionType&gt;&lt;Ds_EMV3DS&gt;{&quot;protocolVersion&quot;:&quot;NO_3DS_v2&quot;,&quot;threeDSInfo&quot;:&quot;CardConfiguration&quot;}&lt;/Ds_EMV3DS&gt;&lt;Ds_Signature&gt;LIWUaQh+lwsE0DBNpv2EOYALCY6ZxHDQ6gLvOcWiSB4=&lt;/Ds_Signature&gt;&lt;/INFOTARJETA&gt;&lt;/RETORNOXML&gt;</p231:iniciaPeticionReturn></p231:iniciaPeticionResponse></soapenv:Body></soapenv:Envelope>'
   end
 
   def failed_authorize_response
@@ -377,13 +417,13 @@ POST /sis/operaciones HTTP/1.1\r\nContent-Type: application/x-www-form-urlencode
     <<-PRE_SCRUBBED
   entrada=%3CDATOSENTRADA%3E%0A++%3CDS_Version%3E0.1%3C%2FDS_Version%3E%0A++%3CDS_MERCHANT_CURRENCY%3E978%3C%2FDS_MERCHANT_CURRENCY%3E%0A++%3CDS_MERCHANT_AMOUNT%3E100%3C%2FDS_MERCHANT_AMOUNT%3E%0A++%3CDS_MERCHANT_ORDER%3E135214014098%3C%2FDS_MERCHANT_ORDER%3E%0A++%3CDS_MERCHANT_TRANSACTIONTYPE%3EA%3C%2FDS_MERCHANT_TRANSACTIONTYPE%3E%0A++%3CDS_MERCHANT_TERMINAL%3E1%3C%2FDS_MERCHANT_TERMINAL%3E%0A++%3CDS_MERCHANT_MERCHANTCODE%3E91952713%3C%2FDS_MERCHANT_MERCHANTCODE%3E%0A++%3CDS_MERCHANT_MERCHANTSIGNATURE%3E39589b03cdd3c525885cdb3b3761e2fb7a8be9ee%3C%2FDS_MERCHANT_MERCHANTSIGNATURE%3E%0A++%3CDS_MERCHANT_TITULAR%3ELongbob+Longsen%3C%2FDS_MERCHANT_TITULAR%3E%0A++%3CDS_MERCHANT_PAN%3E4548812049400004%3C%2FDS_MERCHANT_PAN%3E%0A++%3CDS_MERCHANT_EXPIRYDATE%3E1309%3C%2FDS_MERCHANT_EXPIRYDATE%3E%0A++%3CDS_MERCHANT_CVV2%3E+++%3C%2FDS_MERCHANT_CVV2%3E%0A%3C%2FDATOSENTRADA%3E%0A
   <?xml version='1.0' encoding="ISO-8859-1" ?><RETORNOXML><CODIGO>0</CODIGO><Ds_Version>0.1</Ds_Version><OPERACION><Ds_Amount>100</Ds_Amount><Ds_Currency>978</Ds_Currency><Ds_Order>135214014098</Ds_Order><Ds_Signature>97FBF7E648015AC8AFCA107CD67A1F600FBE9611</Ds_Signature><Ds_MerchantCode>91952713</Ds_MerchantCode><Ds_Terminal>1</Ds_Terminal><Ds_Response>0000</Ds_Response><Ds_AuthorisationCode>701841</Ds_AuthorisationCode><Ds_TransactionType>A</Ds_TransactionType><Ds_SecurePayment>0</Ds_SecurePayment><Ds_Language>1</Ds_Language><Ds_MerchantData></Ds_MerchantData><Ds_Card_Country>724</Ds_Card_Country></OPERACION></RETORNOXML>
-  PRE_SCRUBBED
+    PRE_SCRUBBED
   end
 
   def whitespace_string_cvv_post_scrubbed
     <<-PRE_SCRUBBED
   entrada=%3CDATOSENTRADA%3E%0A++%3CDS_Version%3E0.1%3C%2FDS_Version%3E%0A++%3CDS_MERCHANT_CURRENCY%3E978%3C%2FDS_MERCHANT_CURRENCY%3E%0A++%3CDS_MERCHANT_AMOUNT%3E100%3C%2FDS_MERCHANT_AMOUNT%3E%0A++%3CDS_MERCHANT_ORDER%3E135214014098%3C%2FDS_MERCHANT_ORDER%3E%0A++%3CDS_MERCHANT_TRANSACTIONTYPE%3EA%3C%2FDS_MERCHANT_TRANSACTIONTYPE%3E%0A++%3CDS_MERCHANT_TERMINAL%3E1%3C%2FDS_MERCHANT_TERMINAL%3E%0A++%3CDS_MERCHANT_MERCHANTCODE%3E91952713%3C%2FDS_MERCHANT_MERCHANTCODE%3E%0A++%3CDS_MERCHANT_MERCHANTSIGNATURE%3E39589b03cdd3c525885cdb3b3761e2fb7a8be9ee%3C%2FDS_MERCHANT_MERCHANTSIGNATURE%3E%0A++%3CDS_MERCHANT_TITULAR%3ELongbob+Longsen%3C%2FDS_MERCHANT_TITULAR%3E%0A++%3CDS_MERCHANT_PAN%3E[FILTERED]%3C%2FDS_MERCHANT_PAN%3E%0A++%3CDS_MERCHANT_EXPIRYDATE%3E1309%3C%2FDS_MERCHANT_EXPIRYDATE%3E%0A++%3CDS_MERCHANT_CVV2%3E[BLANK]%3C%2FDS_MERCHANT_CVV2%3E%0A%3C%2FDATOSENTRADA%3E%0A
   <?xml version='1.0' encoding="ISO-8859-1" ?><RETORNOXML><CODIGO>0</CODIGO><Ds_Version>0.1</Ds_Version><OPERACION><Ds_Amount>100</Ds_Amount><Ds_Currency>978</Ds_Currency><Ds_Order>135214014098</Ds_Order><Ds_Signature>97FBF7E648015AC8AFCA107CD67A1F600FBE9611</Ds_Signature><Ds_MerchantCode>91952713</Ds_MerchantCode><Ds_Terminal>1</Ds_Terminal><Ds_Response>0000</Ds_Response><Ds_AuthorisationCode>701841</Ds_AuthorisationCode><Ds_TransactionType>A</Ds_TransactionType><Ds_SecurePayment>0</Ds_SecurePayment><Ds_Language>1</Ds_Language><Ds_MerchantData></Ds_MerchantData><Ds_Card_Country>724</Ds_Card_Country></OPERACION></RETORNOXML>
-  PRE_SCRUBBED
+    PRE_SCRUBBED
   end
 end

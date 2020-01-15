@@ -108,13 +108,14 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_split_payment
+    options = @options.merge(
+      :split_payments => [
+        { :key => 'abc123', :amount => 199, :description => 'Second payee' },
+        { :key => 'def456', :amount => 911, :description => 'Third payee' },
+      ]
+    )
     response = stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(
-        :split_payments => [
-          { :key => 'abc123', :amount => 199, :description => 'Second payee' },
-          { :key => 'def456', :amount => 911, :description => 'Third payee' },
-        ]
-      ))
+      @gateway.purchase(@amount, @credit_card, options)
     end.check_request do |endpoint, data, headers|
       assert_match %r{UM02key=abc123},                data
       assert_match %r{UM02amount=1.99},               data
@@ -130,13 +131,14 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_split_payment_with_custom_on_error
+    options = @options.merge(
+      :split_payments => [
+        { :key => 'abc123', :amount => 199, :description => 'Second payee' }
+      ],
+      :on_error => 'Continue'
+    )
     response = stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(
-        :split_payments => [
-          { :key => 'abc123', :amount => 199, :description => 'Second payee' }
-        ],
-        :on_error => 'Continue'
-      ))
+      @gateway.purchase(@amount, @credit_card, options)
     end.check_request do |endpoint, data, headers|
       assert_match %r{UMonError=Continue}, data
     end.respond_with(successful_purchase_response)
@@ -144,18 +146,19 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_recurring_fields
+    options = @options.merge(
+      :recurring_fields => {
+        add_customer: true,
+        schedule: 'quarterly',
+        bill_source_key: 'bill source key',
+        bill_amount: 123,
+        num_left: 5,
+        start: '20501212',
+        recurring_receipt: true
+      }
+    )
     response = stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(
-        :recurring_fields => {
-          add_customer: true,
-          schedule: 'quarterly',
-          bill_source_key: 'bill source key',
-          bill_amount: 123,
-          num_left: 5,
-          start: '20501212',
-          recurring_receipt: true
-        }
-      ))
+      @gateway.purchase(@amount, @credit_card, options)
     end.check_request do |endpoint, data, headers|
       assert_match %r{UMaddcustomer=yes},                 data
       assert_match %r{UMschedule=quarterly},              data
@@ -169,14 +172,15 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_custom_fields
+    options = @options.merge(
+      :custom_fields => {
+        1 => 'diablo',
+        2 => 'mephisto',
+        3 => 'baal'
+      }
+    )
     response = stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(
-        :custom_fields => {
-          1 => 'diablo',
-          2 => 'mephisto',
-          3 => 'baal'
-        }
-      ))
+      @gateway.purchase(@amount, @credit_card, options)
     end.check_request do |endpoint, data, headers|
       assert_match %r{UMcustom1=diablo},   data
       assert_match %r{UMcustom2=mephisto}, data
@@ -186,38 +190,41 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
   end
 
   def test_first_index_guard_on_custom_fields
+    num_options = @options.merge(
+      :custom_fields => {
+        0 => 'butcher',
+        1 => 'diablo',
+        2 => 'mephisto',
+        3 => 'baal'
+      }
+    )
     assert_raise(ArgumentError) do
-      @gateway.purchase(@amount, @credit_card, @options.merge(
-        :custom_fields => {
-          0 => 'butcher',
-          1 => 'diablo',
-          2 => 'mephisto',
-          3 => 'baal'
-        }
-      ))
+      @gateway.purchase(@amount, @credit_card, num_options)
     end
 
+    str_options = @options.merge(
+      :custom_fields => {
+        '0' => 'butcher',
+        '1' => 'diablo',
+        '2' => 'mephisto',
+        '3' => 'baal'
+      }
+    )
     assert_raise(ArgumentError) do
-      @gateway.purchase(@amount, @credit_card, @options.merge(
-        :custom_fields => {
-          '0' => 'butcher',
-          '1' => 'diablo',
-          '2' => 'mephisto',
-          '3' => 'baal'
-        }
-      ))
+      @gateway.purchase(@amount, @credit_card, str_options)
     end
   end
 
   def test_successful_purchase_line_items
+    options = @options.merge(
+      :line_items => [
+        { :sku=> 'abc123', :cost => 119, :quantity => 1 },
+        { :sku => 'def456', :cost => 200, :quantity => 2, :name => 'an item' },
+        { :cost => 300, :qty => 4 }
+      ]
+    )
     response = stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(
-        :line_items => [
-          { :sku=> 'abc123', :cost => 119, :quantity => 1 },
-          { :sku => 'def456', :cost => 200, :quantity => 2, :name => 'an item' },
-          { :cost => 300, :qty => 4 }
-        ]
-      ))
+      @gateway.purchase(@amount, @credit_card, options)
     end.check_request do |endpoint, data, headers|
       assert_match %r{UMline0sku=abc123},    data
       assert_match %r{UMline0cost=1.19},     data

@@ -94,9 +94,7 @@ module ActiveMerchant #:nodoc:
         sum[:iva] = 0
         sum[:subtotalIva0] = 0
 
-        if sum[:currency] != 'COP'
-          sum[:ice] = 0
-        end
+        sum[:ice] = 0 if sum[:currency] != 'COP'
       end
 
       def add_amount_by_country(sum, options)
@@ -137,11 +135,12 @@ module ActiveMerchant #:nodoc:
       }
 
       def commit(action, params)
-        response = begin
-          parse(ssl_invoke(action, params))
-        rescue ResponseError => e
-          parse(e.response.body)
-        end
+        response =
+          begin
+            parse(ssl_invoke(action, params))
+          rescue ResponseError => e
+            parse(e.response.body)
+          end
 
         success = success_from(response)
 

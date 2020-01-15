@@ -35,6 +35,42 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
     @three_ds_enrolled_card = credit_card('4917610000000000', month: 10, year: 2020, verification_value: '737', brand: :visa)
 
+    @cabal_credit_card = credit_card('6035 2277 1642 7021',
+      :month => 10,
+      :year => 2020,
+      :first_name => 'John',
+      :last_name => 'Smith',
+      :verification_value => '737',
+      :brand => 'cabal'
+    )
+
+    @invalid_cabal_credit_card = credit_card('6035 2200 0000 0006',
+      :month => 10,
+      :year => 2020,
+      :first_name => 'John',
+      :last_name => 'Smith',
+      :verification_value => '737',
+      :brand => 'cabal'
+    )
+
+    @unionpay_credit_card = credit_card('8171 9999 0000 0000 021',
+      :month => 10,
+      :year => 2030,
+      :first_name => 'John',
+      :last_name => 'Smith',
+      :verification_value => '737',
+      :brand => 'unionpay'
+    )
+
+    @invalid_unionpay_credit_card = credit_card('8171 9999 1234 0000 921',
+      :month => 10,
+      :year => 2030,
+      :first_name => 'John',
+      :last_name => 'Smith',
+      :verification_value => '737',
+      :brand => 'unionpay'
+    )
+
     @declined_card = credit_card('4000300011112220')
 
     @improperly_branded_maestro = credit_card(
@@ -233,7 +269,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
     cavv = '3q2+78r+ur7erb7vyv66vv\/\/\/\/8='
     cavv_algorithm = '1'
     xid = 'ODUzNTYzOTcwODU5NzY3Qw=='
-    directory_response_status = 'Y'
+    enrolled = 'Y'
     authentication_response_status = 'Y'
     options = @options.merge(
       three_d_secure: {
@@ -241,7 +277,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
         cavv: cavv,
         cavv_algorithm: cavv_algorithm,
         xid: xid,
-        directory_response_status: directory_response_status,
+        enrolled: enrolled,
         authentication_response_status: authentication_response_status
       }
     )
@@ -319,7 +355,12 @@ class RemoteAdyenTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_more_options
-    options = @options.merge!(fraudOffset: '1', installments: 2, shopper_statement: 'statement note', device_fingerprint: 'm7Cmrf++0cW4P6XfF7m/rA')
+    options = @options.merge!(
+      fraudOffset: '1',
+      installments: 2,
+      shopper_statement: 'statement note',
+      device_fingerprint: 'm7Cmrf++0cW4P6XfF7m/rA',
+      capture_delay_hours: 4)
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert_equal '[capture-received]', response.message
@@ -376,10 +417,34 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal '[capture-received]', response.message
   end
 
+  def test_successful_purchase_with_cabal_card
+    response = @gateway.purchase(@amount, @cabal_credit_card, @options.merge(currency: 'ARS'))
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
+
+  def test_successful_purchase_with_unionpay_card
+    response = @gateway.purchase(@amount, @unionpay_credit_card, @options.merge(currency: 'CNY'))
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
     assert_equal 'CVC Declined', response.message
+  end
+
+  def test_failed_purchase_with_invalid_cabal_card
+    response = @gateway.purchase(@amount, @invalid_cabal_credit_card, @options)
+    assert_failure response
+    assert_equal 'Invalid card number', response.message
+  end
+
+  def test_failed_purchase_with_invalid_unionpay_card
+    response = @gateway.purchase(@amount, @invalid_unionpay_credit_card, @options)
+    assert_failure response
+    assert_equal 'Invalid card number', response.message
   end
 
   def test_successful_authorize_and_capture
@@ -393,6 +458,24 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
   def test_successful_authorize_and_capture_with_elo_card
     auth = @gateway.authorize(@amount, @elo_credit_card, @options)
+    assert_success auth
+
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+    assert_equal '[capture-received]', capture.message
+  end
+
+  def test_successful_authorize_and_capture_with_cabal_card
+    auth = @gateway.authorize(@amount, @cabal_credit_card, @options)
+    assert_success auth
+
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+    assert_equal '[capture-received]', capture.message
+  end
+
+  def test_successful_authorize_and_capture_with_unionpay_card
+    auth = @gateway.authorize(@amount, @unionpay_credit_card, @options)
     assert_success auth
 
     assert capture = @gateway.capture(@amount, auth.authorization)
@@ -432,6 +515,24 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal '[refund-received]', refund.message
   end
 
+  def test_successful_refund_with_cabal_card
+    purchase = @gateway.purchase(@amount, @cabal_credit_card, @options)
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount, purchase.authorization)
+    assert_success refund
+    assert_equal '[refund-received]', refund.message
+  end
+
+  def test_successful_refund_with_unionpay_card
+    purchase = @gateway.purchase(@amount, @unionpay_credit_card, @options)
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount, purchase.authorization)
+    assert_success refund
+    assert_equal '[refund-received]', refund.message
+  end
+
   def test_partial_refund
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
@@ -457,6 +558,24 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
   def test_successful_void_with_elo_card
     auth = @gateway.authorize(@amount, @elo_credit_card, @options)
+    assert_success auth
+
+    assert void = @gateway.void(auth.authorization)
+    assert_success void
+    assert_equal '[cancel-received]', void.message
+  end
+
+  def test_successful_void_with_cabal_card
+    auth = @gateway.authorize(@amount, @cabal_credit_card, @options)
+    assert_success auth
+
+    assert void = @gateway.void(auth.authorization)
+    assert_success void
+    assert_equal '[cancel-received]', void.message
+  end
+
+  def test_successful_void_with_unionpay_card
+    auth = @gateway.authorize(@amount, @unionpay_credit_card, @options)
     assert_success auth
 
     assert void = @gateway.void(auth.authorization)
@@ -545,8 +664,69 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal 'Authorised', response.message
   end
 
+  def test_successful_unstore
+    assert response = @gateway.store(@credit_card, @options)
+
+    assert !response.authorization.split('#')[2].nil?
+    assert_equal 'Authorised', response.message
+
+    shopper_reference = response.params['additionalData']['recurring.shopperReference']
+    recurring_detail_reference = response.params['additionalData']['recurring.recurringDetailReference']
+
+    assert response = @gateway.unstore(shopper_reference: shopper_reference,
+                                       recurring_detail_reference: recurring_detail_reference)
+
+    assert_success response
+    assert_equal '[detail-successfully-disabled]', response.message
+  end
+
+  def test_failed_unstore
+    assert response = @gateway.store(@credit_card, @options)
+
+    assert !response.authorization.split('#')[2].nil?
+    assert_equal 'Authorised', response.message
+
+    shopper_reference = response.params['additionalData']['recurring.shopperReference']
+    recurring_detail_reference = response.params['additionalData']['recurring.recurringDetailReference']
+
+    assert response = @gateway.unstore(shopper_reference: 'random_reference',
+                                       recurring_detail_reference: recurring_detail_reference)
+
+    assert_failure response
+    assert_equal 'Contract not found', response.message
+
+    assert response = @gateway.unstore(shopper_reference: shopper_reference,
+                                       recurring_detail_reference: 'random_reference')
+
+    assert_failure response
+    assert_equal 'PaymentDetail not found', response.message
+  end
+
+  def test_successful_tokenize_only_store
+    assert response = @gateway.store(@credit_card, @options.merge({tokenize_only: true}))
+
+    assert_success response
+    assert !response.authorization.split('#')[2].nil?
+    assert_equal 'Success', response.message
+  end
+
   def test_successful_store_with_elo_card
     assert response = @gateway.store(@elo_credit_card, @options)
+
+    assert_success response
+    assert !response.authorization.split('#')[2].nil?
+    assert_equal 'Authorised', response.message
+  end
+
+  # Adyen does not currently support recurring transactions with Cabal cards
+  def test_failed_store_with_cabal_card
+    assert response = @gateway.store(@cabal_credit_card, @options)
+    assert_failure response
+    assert_equal 'Recurring transactions are not supported for this card type.', response.message
+  end
+
+  def test_successful_store_with_unionpay_card
+    assert response = @gateway.store(@unionpay_credit_card, @options)
 
     assert_success response
     assert !response.authorization.split('#')[2].nil?

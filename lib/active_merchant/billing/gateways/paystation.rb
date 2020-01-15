@@ -1,7 +1,6 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PaystationGateway < Gateway
-
       self.live_url = self.test_url = 'https://www.paystation.co.nz/direct/paystation.dll'
 
       # an "error code" of "0" means "No error - transaction successful"
@@ -14,7 +13,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['NZ']
 
       # TODO: check this with paystation (amex and diners need to be enabled)
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club ]
+      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
 
       self.homepage_url        = 'http://paystation.co.nz'
       self.display_name        = 'Paystation'
@@ -128,7 +127,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_token(post, token)
-        post[:fp] = 't'    # turn on "future payments" - what paystation calls Token Billing
+        post[:fp] = 't' # turn on "future payments" - what paystation calls Token Billing
         post[:ft] = token
       end
 
@@ -195,7 +194,6 @@ module ActiveMerchant #:nodoc:
       def format_date(month, year)
         "#{format(year, :two_digits)}#{format(month, :two_digits)}"
       end
-
     end
 
     class PaystationResponse < Response

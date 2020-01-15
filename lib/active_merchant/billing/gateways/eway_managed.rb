@@ -138,7 +138,7 @@ module ActiveMerchant #:nodoc:
 
       # add credit card details to be stored by eway. NOTE eway requires "title" field
       def add_creditcard(post, creditcard)
-        post[:CCNumber]  = creditcard.number
+        post[:CCNumber] = creditcard.number
         post[:CCExpiryMonth]  = sprintf('%.2i', creditcard.month)
         post[:CCExpiryYear] = sprintf('%.4i', creditcard.year)[-2..-1]
         post[:CCNameOnCard] = creditcard.name
@@ -214,11 +214,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, post)
-        raw = begin
-          ssl_post(test? ? self.test_url : self.live_url, soap_request(post, action), 'Content-Type' => 'application/soap+xml; charset=utf-8')
-        rescue ResponseError => e
-          e.response.body
-        end
+        raw =
+          begin
+            ssl_post(test? ? self.test_url : self.live_url, soap_request(post, action), 'Content-Type' => 'application/soap+xml; charset=utf-8')
+          rescue ResponseError => e
+            e.response.body
+          end
         response = parse(raw)
 
         EwayResponse.new(response[:success], response[:message], response,
@@ -264,7 +265,7 @@ module ActiveMerchant #:nodoc:
 
       def default_customer_fields
         hash={}
-        %w( CustomerRef Title FirstName LastName Company JobDesc Email Address Suburb State PostCode Country Phone Mobile Fax URL Comments CCNumber CCNameOnCard CCExpiryMonth CCExpiryYear ).each do |field|
+        %w(CustomerRef Title FirstName LastName Company JobDesc Email Address Suburb State PostCode Country Phone Mobile Fax URL Comments CCNumber CCNameOnCard CCExpiryMonth CCExpiryYear).each do |field|
           hash[field.to_sym]=''
         end
         return hash
@@ -272,7 +273,7 @@ module ActiveMerchant #:nodoc:
 
       def default_payment_fields
         hash={}
-        %w( managedCustomerID amount invoiceReference invoiceDescription ).each do |field|
+        %w(managedCustomerID amount invoiceReference invoiceDescription).each do |field|
           hash[field.to_sym]=''
         end
         return hash
@@ -284,7 +285,6 @@ module ActiveMerchant #:nodoc:
           @params['CreateCustomerResult']
         end
       end
-
     end
   end
 end

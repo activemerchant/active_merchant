@@ -106,7 +106,7 @@ class AxcessmsTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(failed_void_response)
     response = @gateway.refund(@amount - 30, 'authorization', @options)
     assert_failure response
-    assert_equal 'Reference Error - reversal needs at least one successful transaction of type (CP or DB or RB or PA)',  response.message
+    assert_equal 'Reference Error - reversal needs at least one successful transaction of type (CP or DB or RB or PA)', response.message
   end
 
   def test_authorize_using_reference_sets_proper_elements

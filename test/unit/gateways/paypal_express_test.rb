@@ -180,8 +180,7 @@ class PaypalExpressTest < Test::Unit::TestCase
           :description => 'item two description',
           :amount => 20000,
           :number => 2,
-          :quantity => 4
-        }
+          :quantity => 4}
       ]
     }))
 
@@ -583,7 +582,8 @@ class PaypalExpressTest < Test::Unit::TestCase
         :payment_type => 'Any',
         :invoice_id   => 'invoice_id',
         :description  => 'Description',
-        :ip           => '127.0.0.1' })
+        :ip           => '127.0.0.1'
+      })
 
     assert_equal 'Success', response.params['ack']
     assert_equal 'Success', response.message
@@ -593,7 +593,7 @@ class PaypalExpressTest < Test::Unit::TestCase
   def test_reference_transaction
     @gateway.expects(:ssl_post).returns(successful_reference_transaction_response)
 
-    response = @gateway.reference_transaction(2000,  { :reference_id => 'ref_id' })
+    response = @gateway.reference_transaction(2000, { :reference_id => 'ref_id' })
 
     assert_equal 'Success', response.params['ack']
     assert_equal 'Success', response.message
@@ -1099,7 +1099,7 @@ class PaypalExpressTest < Test::Unit::TestCase
       </SetExpressCheckoutResponse>
     </SOAP-ENV:Body>
   </SOAP-ENV:Envelope>
-      RESPONSE
+    RESPONSE
   end
 
   def response_with_duplicate_errors
@@ -1138,7 +1138,7 @@ class PaypalExpressTest < Test::Unit::TestCase
       </SetExpressCheckoutResponse>
     </SOAP-ENV:Body>
   </SOAP-ENV:Envelope>
-      RESPONSE
+    RESPONSE
   end
 
   def successful_cancel_billing_agreement_response
@@ -1165,7 +1165,7 @@ class PaypalExpressTest < Test::Unit::TestCase
         xsi:type="xs:string"></PostalCode><AddressID xsi:type="xs:string"></AddressID><AddressOwner xsi:type="ebl:AddressOwnerCodeType">PayPal</AddressOwner><ExternalAddressID
         xsi:type="xs:string"></ExternalAddressID><AddressStatus
         xsi:type="ebl:AddressStatusCodeType">None</AddressStatus></Address></PayerInfo></BAUpdateResponseDetails></BAUpdateResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
-      RESPONSE
+    RESPONSE
   end
 
   def failed_cancel_billing_agreement_response
@@ -1191,7 +1191,7 @@ class PaypalExpressTest < Test::Unit::TestCase
         xsi:type="xs:string"></StateOrProvince><CountryName></CountryName><Phone xsi:type="xs:string"></Phone><PostalCode xsi:type="xs:string"></PostalCode><AddressID
         xsi:type="xs:string"></AddressID><AddressOwner xsi:type="ebl:AddressOwnerCodeType">PayPal</AddressOwner><ExternalAddressID xsi:type="xs:string"></ExternalAddressID><AddressStatus
         xsi:type="ebl:AddressStatusCodeType">None</AddressStatus></Address></PayerInfo></BAUpdateResponseDetails></BAUpdateResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
-      RESPONSE
+    RESPONSE
   end
 
   def successful_billing_agreement_details_response
@@ -1224,7 +1224,7 @@ class PaypalExpressTest < Test::Unit::TestCase
         </PostalCode><AddressID xsi:type="xs:string"></AddressID><AddressOwner xsi:type="ebl:AddressOwnerCodeType">PayPal</AddressOwner>
         <ExternalAddressID xsi:type="xs:string"></ExternalAddressID><AddressStatus xsi:type="ebl:AddressStatusCodeType">None</AddressStatus>
         </Address></PayerInfo></BAUpdateResponseDetails></BAUpdateResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
-      RESPONSE
+    RESPONSE
   end
 
   def failure_billing_agreement_details_response
@@ -1256,7 +1256,7 @@ class PaypalExpressTest < Test::Unit::TestCase
       xsi:type="xs:string"></PostalCode><AddressID xsi:type="xs:string"></AddressID><AddressOwner xsi:type="ebl:AddressOwnerCodeType">PayPal</AddressOwner>
       <ExternalAddressID xsi:type="xs:string"></ExternalAddressID><AddressStatus xsi:type="ebl:AddressStatusCodeType">None</AddressStatus></Address>
       </PayerInfo></BAUpdateResponseDetails></BAUpdateResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
-      RESPONSE
+    RESPONSE
   end
 
   def pre_scrubbed
@@ -1282,7 +1282,7 @@ class PaypalExpressTest < Test::Unit::TestCase
 </SetExpressCheckoutReq>
 </env:Body></env:Envelope>
 <?xml version=\"1.0\" encoding=\"UTF-8\"?><SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:SOAP-ENC=\"http://schemas.xmlsoap.org/soap/encoding/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" xmlns:cc=\"urn:ebay:apis:CoreComponentTypes\" xmlns:wsu=\"http://schemas.xmlsoap.org/ws/2002/07/utility\" xmlns:saml=\"urn:oasis:names:tc:SAML:1.0:assertion\" xmlns:ds=\"http://www.w3.org/2000/09/xmldsig#\" xmlns:wsse=\"http://schemas.xmlsoap.org/ws/2002/12/secext\" xmlns:ed=\"urn:ebay:apis:EnhancedDataTypes\" xmlns:ebl=\"urn:ebay:apis:eBLBaseComponents\" xmlns:ns=\"urn:ebay:api:PayPalAPI\"><SOAP-ENV:Header><Security xmlns=\"http://schemas.xmlsoap.org/ws/2002/12/secext\" xsi:type=\"wsse:SecurityType\"></Security><RequesterCredentials xmlns=\"urn:ebay:api:PayPalAPI\" xsi:type=\"ebl:CustomSecurityHeaderType\"><Credentials xmlns=\"urn:ebay:apis:eBLBaseComponents\" xsi:type=\"ebl:UserIdPasswordType\"><Username xsi:type=\"xs:string\"></Username><Password xsi:type=\"xs:string\"></Password><Signature xsi:type=\"xs:string\"></Signature><Subject xsi:type=\"xs:string\"></Subject></Credentials></RequesterCredentials></SOAP-ENV:Header><SOAP-ENV:Body id=\"_0\"><SetExpressCheckoutResponse xmlns=\"urn:ebay:api:PayPalAPI\"><Timestamp xmlns=\"urn:ebay:apis:eBLBaseComponents\">2018-05-24T20:23:54Z</Timestamp><Ack xmlns=\"urn:ebay:apis:eBLBaseComponents\">Success</Ack><CorrelationID xmlns=\"urn:ebay:apis:eBLBaseComponents\">b6dd2a043921b</CorrelationID><Version xmlns=\"urn:ebay:apis:eBLBaseComponents\">124</Version><Build xmlns=\"urn:ebay:apis:eBLBaseComponents\">46549960</Build><Token xsi:type=\"ebl:ExpressCheckoutTokenType\">EC-7KR85820NC734104L</Token></SetExpressCheckoutResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
-      TRANSCRIPT
+    TRANSCRIPT
   end
 
   def post_scrubbed
@@ -1308,6 +1308,6 @@ class PaypalExpressTest < Test::Unit::TestCase
 </SetExpressCheckoutReq>
 </env:Body></env:Envelope>
 <?xml version=\"1.0\" encoding=\"UTF-8\"?><SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:SOAP-ENC=\"http://schemas.xmlsoap.org/soap/encoding/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" xmlns:cc=\"urn:ebay:apis:CoreComponentTypes\" xmlns:wsu=\"http://schemas.xmlsoap.org/ws/2002/07/utility\" xmlns:saml=\"urn:oasis:names:tc:SAML:1.0:assertion\" xmlns:ds=\"http://www.w3.org/2000/09/xmldsig#\" xmlns:wsse=\"http://schemas.xmlsoap.org/ws/2002/12/secext\" xmlns:ed=\"urn:ebay:apis:EnhancedDataTypes\" xmlns:ebl=\"urn:ebay:apis:eBLBaseComponents\" xmlns:ns=\"urn:ebay:api:PayPalAPI\"><SOAP-ENV:Header><Security xmlns=\"http://schemas.xmlsoap.org/ws/2002/12/secext\" xsi:type=\"wsse:SecurityType\"></Security><RequesterCredentials xmlns=\"urn:ebay:api:PayPalAPI\" xsi:type=\"ebl:CustomSecurityHeaderType\"><Credentials xmlns=\"urn:ebay:apis:eBLBaseComponents\" xsi:type=\"ebl:UserIdPasswordType\"><Username xsi:type=\"xs:string\"></Username><Password xsi:type=\"xs:string\"></Password><Signature xsi:type=\"xs:string\"></Signature><Subject xsi:type=\"xs:string\"></Subject></Credentials></RequesterCredentials></SOAP-ENV:Header><SOAP-ENV:Body id=\"_0\"><SetExpressCheckoutResponse xmlns=\"urn:ebay:api:PayPalAPI\"><Timestamp xmlns=\"urn:ebay:apis:eBLBaseComponents\">2018-05-24T20:23:54Z</Timestamp><Ack xmlns=\"urn:ebay:apis:eBLBaseComponents\">Success</Ack><CorrelationID xmlns=\"urn:ebay:apis:eBLBaseComponents\">b6dd2a043921b</CorrelationID><Version xmlns=\"urn:ebay:apis:eBLBaseComponents\">124</Version><Build xmlns=\"urn:ebay:apis:eBLBaseComponents\">46549960</Build><Token xsi:type=\"ebl:ExpressCheckoutTokenType\">EC-7KR85820NC734104L</Token></SetExpressCheckoutResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
-      TRANSCRIPT
+    TRANSCRIPT
   end
 end

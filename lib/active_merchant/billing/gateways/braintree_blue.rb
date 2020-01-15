@@ -6,9 +6,7 @@ rescue LoadError
   raise 'Could not load the braintree gem.  Use `gem install braintree` to install it.'
 end
 
-unless Braintree::Version::Major == 2 && Braintree::Version::Minor >= 78
-  raise "Need braintree gem >= 2.78.0. Run `gem install braintree --version '~>2.78'` to get the correct version."
-end
+raise "Need braintree gem >= 2.78.0. Run `gem install braintree --version '~>2.78'` to get the correct version." unless Braintree::Version::Major == 2 && Braintree::Version::Minor >= 78
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -262,7 +260,7 @@ module ActiveMerchant #:nodoc:
           }
           if options[:billing_address]
             address = map_address(options[:billing_address])
-            parameters[:credit_card][:billing_address] = address unless address.all? { |_k, v| empty?(v) }
+            parameters[:billing_address] = address unless address.all? { |_k, v| empty?(v) }
           end
 
           result = @braintree_gateway.credit_card.create(parameters)
@@ -302,9 +300,7 @@ module ActiveMerchant #:nodoc:
           valid_options[key] = value if [:update_existing_token, :verify_card, :verification_merchant_account_id].include?(key)
         end
 
-        if valid_options.include?(:verify_card) && @merchant_account_id
-          valid_options[:verification_merchant_account_id] ||= @merchant_account_id
-        end
+        valid_options[:verification_merchant_account_id] ||= @merchant_account_id if valid_options.include?(:verify_card) && @merchant_account_id
 
         parameters[:credit_card] ||= {}
         parameters[:credit_card][:options] = valid_options
@@ -328,9 +324,7 @@ module ActiveMerchant #:nodoc:
         mapped[:country_code_alpha2] = (address[:country] || address[:country_code_alpha2]) if address[:country] || address[:country_code_alpha2]
         mapped[:country_name] = address[:country_name] if address[:country_name]
         mapped[:country_code_alpha3] = address[:country_code_alpha3] if address[:country_code_alpha3]
-        unless address[:country].blank?
-          mapped[:country_code_alpha3] ||= Country.find(address[:country]).code(:alpha3).value
-        end
+        mapped[:country_code_alpha3] ||= Country.find(address[:country]).code(:alpha3).value unless address[:country].blank?
         mapped[:country_code_numeric] = address[:country_code_numeric] if address[:country_code_numeric]
 
         mapped
@@ -494,9 +488,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def transaction_hash(result)
-        unless result.success?
-          return { 'processor_response_code' => response_code_from_result(result) }
-        end
+        return { 'processor_response_code' => response_code_from_result(result) } unless result.success?
 
         transaction = result.transaction
         if transaction.vault_customer
@@ -588,17 +580,11 @@ module ActiveMerchant #:nodoc:
           }
         }
 
-        if options[:skip_advanced_fraud_checking]
-          parameters[:options][:skip_advanced_fraud_checking] = options[:skip_advanced_fraud_checking]
-        end
+        parameters[:options][:skip_advanced_fraud_checking] = options[:skip_advanced_fraud_checking] if options[:skip_advanced_fraud_checking]
 
-        if options[:skip_avs]
-          parameters[:options][:skip_avs] = options[:skip_avs]
-        end
+        parameters[:options][:skip_avs] = options[:skip_avs] if options[:skip_avs]
 
-        if options[:skip_cvv]
-          parameters[:options][:skip_cvv] = options[:skip_cvv]
-        end
+        parameters[:options][:skip_cvv] = options[:skip_cvv] if options[:skip_cvv]
 
         parameters[:custom_fields] = options[:custom_fields]
         parameters[:device_data] = options[:device_data] if options[:device_data]
@@ -641,6 +627,11 @@ module ActiveMerchant #:nodoc:
         parameters[:ships_from_postal_code] = options[:ships_from_postal_code] if options[:ships_from_postal_code]
 
         parameters[:line_items] = options[:line_items] if options[:line_items]
+
+        if options[:payment_method_nonce].is_a?(String)
+          parameters.delete(:customer)
+          parameters[:payment_method_nonce] = options[:payment_method_nonce]
+        end
 
         parameters
       end

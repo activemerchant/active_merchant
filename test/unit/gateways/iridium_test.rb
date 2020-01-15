@@ -341,5 +341,4 @@ class IridiumTest < Test::Unit::TestCase
   <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><CardDetailsTransactionResponse xmlns="https://www.thepaymentgateway.net/"><CardDetailsTransactionResult AuthorisationAttempted="True"><StatusCode>0</StatusCode><Message>AuthCode: 608724</Message></CardDetailsTransactionResult><TransactionOutputData CrossReference="110428221508160201608724"><AuthCode>608724</AuthCode><AddressNumericCheckResult>PASSED</AddressNumericCheckResult><PostCodeCheckResult>PASSED</PostCodeCheckResult><CV2CheckResult>PASSED</CV2CheckResult><GatewayEntryPoints><GatewayEntryPoint EntryPointURL="https://gw1.iridiumcorp.net/" Metric="100" /><GatewayEntryPoint EntryPointURL="https://gw2.iridiumcorp.net/" Metric="200" /><GatewayEntryPoint EntryPointURL="https://gw3.iridiumcorp.net/" Metric="300" /></GatewayEntryPoints></TransactionOutputData></CardDetailsTransactionResponse></soap:Body></soap:Envelope>
     POST_SCRUBBED
   end
-
 end

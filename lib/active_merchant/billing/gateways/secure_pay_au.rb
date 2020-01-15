@@ -54,7 +54,7 @@ module ActiveMerchant #:nodoc:
         :trigger          => nil
       }
 
-      SUCCESS_CODES = [ '00', '08', '11', '16', '77' ]
+      SUCCESS_CODES = ['00', '08', '11', '16', '77']
 
       def initialize(options = {})
         requires!(options, :login, :password)

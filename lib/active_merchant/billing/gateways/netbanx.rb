@@ -129,9 +129,9 @@ module ActiveMerchant #:nodoc:
         post[:card][:holderName] = credit_card.name
         post[:card][:cvv]        = credit_card.verification_value
         post[:card][:cardExpiry] = expdate(credit_card)
-        if options[:billing_address]
-          post[:card][:billingAddress]  = map_address(options[:billing_address])
-        end
+
+        post[:authentication] = map_3ds(options[:three_d_secure]) if options[:three_d_secure]
+        post[:card][:billingAddress] = map_address(options[:billing_address]) if options[:billing_address]
       end
 
       def add_invoice(post, money, options)
@@ -151,6 +151,7 @@ module ActiveMerchant #:nodoc:
 
         post[:currencyCode] = options[:currency] if options[:currency]
         post[:billingDetails]  = map_address(options[:billing_address]) if options[:billing_address]
+        post[:authentication]  = map_3ds(options[:three_d_secure]) if options[:three_d_secure]
       end
 
       def expdate(credit_card)
@@ -179,18 +180,32 @@ module ActiveMerchant #:nodoc:
         mapped
       end
 
+      def map_3ds(three_d_secure_options)
+        mapped = {
+          :eci => three_d_secure_options[:eci],
+          :cavv => three_d_secure_options[:cavv],
+          :xid => three_d_secure_options[:xid],
+          :threeDResult => three_d_secure_options[:directory_response_status],
+          :threeDSecureVersion => three_d_secure_options[:version],
+          :directoryServerTransactionId => three_d_secure_options[:ds_transaction_id]
+        }
+
+        mapped
+      end
+
       def parse(body)
         body.blank? ? {} : JSON.parse(body)
       end
 
       def commit(method, uri, parameters)
         params = parameters.to_json unless parameters.nil?
-        response = begin
-          parse(ssl_request(method, get_url(uri), params, headers))
-        rescue ResponseError => e
-          return Response.new(false, 'Invalid Login') if(e.response.code == '401')
-          parse(e.response.body)
-        end
+        response =
+          begin
+            parse(ssl_request(method, get_url(uri), params, headers))
+          rescue ResponseError => e
+            return Response.new(false, 'Invalid Login') if(e.response.code == '401')
+            parse(e.response.body)
+          end
 
         success = success_from(response)
         Response.new(

@@ -214,7 +214,8 @@ module ActiveMerchant #:nodoc:
         xml.instruct!(:xml, encoding: 'UTF-8')
         xml.SOAP :Envelope, {
             'xmlns:SOAP' => 'http://schemas.xmlsoap.org/soap/envelope/',
-            'xmlns:hps' => 'http://Hps.Exchange.PosGateway' } do
+            'xmlns:hps' => 'http://Hps.Exchange.PosGateway'
+        } do
           xml.SOAP :Body do
             xml.hps :PosRequest do
               xml.hps 'Ver1.0'.to_sym do
@@ -273,11 +274,12 @@ module ActiveMerchant #:nodoc:
       def commit(action, &request)
         data = build_request(action, &request)
 
-        response = begin
-          parse(ssl_post((test? ? test_url : live_url), data, 'Content-Type' => 'text/xml'))
-        rescue ResponseError => e
-          parse(e.response.body)
-        end
+        response =
+          begin
+            parse(ssl_post((test? ? test_url : live_url), data, 'Content-Type' => 'text/xml'))
+          rescue ResponseError => e
+            parse(e.response.body)
+          end
 
         ActiveMerchant::Billing::Response.new(
           successful?(response),

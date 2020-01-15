@@ -47,7 +47,7 @@ class BraintreeOrangeTest < Test::Unit::TestCase
   def test_add_processor
     result = {}
 
-    @gateway.send(:add_processor, result,   {:processor => 'ccprocessorb'})
+    @gateway.send(:add_processor, result, {:processor => 'ccprocessorb'})
     assert_equal ['processor_id'], result.stringify_keys.keys.sort
     assert_equal 'ccprocessorb', result[:processor_id]
   end
@@ -86,7 +86,7 @@ class BraintreeOrangeTest < Test::Unit::TestCase
   def test_add_address
     result = {}
 
-    @gateway.send(:add_address, result,   {:address1 => '164 Waverley Street', :country => 'US', :state => 'CO'})
+    @gateway.send(:add_address, result, {:address1 => '164 Waverley Street', :country => 'US', :state => 'CO'})
     assert_equal ['address1', 'city', 'company', 'country', 'phone', 'state', 'zip'], result.stringify_keys.keys.sort
     assert_equal 'CO', result['state']
     assert_equal '164 Waverley Street', result['address1']
@@ -96,7 +96,7 @@ class BraintreeOrangeTest < Test::Unit::TestCase
   def test_add_shipping_address
     result = {}
 
-    @gateway.send(:add_address, result,   {:address1 => '164 Waverley Street', :country => 'US', :state => 'CO'}, 'shipping')
+    @gateway.send(:add_address, result, {:address1 => '164 Waverley Street', :country => 'US', :state => 'CO'}, 'shipping')
     assert_equal ['shipping_address1', 'shipping_city', 'shipping_company', 'shipping_country', 'shipping_phone', 'shipping_state', 'shipping_zip'], result.stringify_keys.keys.sort
     assert_equal 'CO', result['shipping_state']
     assert_equal '164 Waverley Street', result['shipping_address1']

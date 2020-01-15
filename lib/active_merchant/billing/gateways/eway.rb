@@ -70,7 +70,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_creditcard(post, creditcard)
-        post[:CardNumber]  = creditcard.number
+        post[:CardNumber] = creditcard.number
         post[:CardExpiryMonth]  = sprintf('%.2i', creditcard.month)
         post[:CardExpiryYear] = sprintf('%.4i', creditcard.year)[-2..-1]
         post[:CustomerFirstName] = creditcard.first_name
@@ -82,7 +82,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(post, options)
         if address = options[:billing_address] || options[:address]
-          post[:CustomerAddress]    = [ address[:address1], address[:address2], address[:city], address[:state], address[:country] ].compact.join(', ')
+          post[:CustomerAddress]    = [address[:address1], address[:address2], address[:city], address[:state], address[:country]].compact.join(', ')
           post[:CustomerPostcode]   = address[:zip]
         end
       end

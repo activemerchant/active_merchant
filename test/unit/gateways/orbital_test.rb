@@ -545,7 +545,8 @@ class OrbitalGatewayTest < Test::Unit::TestCase
               :start_date => '10-10-2014',
               :end_date => '10-10-2015',
               :max_dollar_value => 1500,
-              :max_transactions => 12})
+              :max_transactions => 12
+            })
         end
       end
     end.check_request do |endpoint, data, headers|

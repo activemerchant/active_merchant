@@ -2,7 +2,7 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class SecurePayTechGateway < Gateway
       class SecurePayTechPostData < PostData
-        self.required_fields = [ :OrderReference, :CardNumber, :CardExpiry, :CardHolderName, :CardType, :MerchantID, :MerchantKey, :Amount, :Currency ]
+        self.required_fields = [:OrderReference, :CardNumber, :CardExpiry, :CardHolderName, :CardType, :MerchantID, :MerchantKey, :Amount, :Currency]
       end
 
       self.live_url = self.test_url = 'https://tx.securepaytech.com/web/HttpPostPurchase'

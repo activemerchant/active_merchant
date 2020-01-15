@@ -5,9 +5,9 @@ class SecurePayAuTest < Test::Unit::TestCase
 
   def setup
     @gateway = SecurePayAuGateway.new(
-                 :login => 'login',
-                 :password => 'password'
-               )
+      :login => 'login',
+      :password => 'password'
+    )
 
     @credit_card = credit_card
     @amount = 100

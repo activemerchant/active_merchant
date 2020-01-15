@@ -248,5 +248,4 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
     assert_scrubbed(cc_with_different_cvc.verification_value, transcript)
     assert_scrubbed(@gateway.options[:password], transcript)
   end
-
 end

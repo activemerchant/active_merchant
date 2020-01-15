@@ -171,5 +171,4 @@ class RemotePaymillTest < Test::Unit::TestCase
     gateway = PaymillGateway.new(public_key: 'unknown_key', private_key: 'unknown_key')
     assert !gateway.verify_credentials
   end
-
 end

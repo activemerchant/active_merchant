@@ -342,9 +342,7 @@ module ActiveMerchant #:nodoc:
       def add_customerdetails(xml, creditcard, address, options, shipTo = false)
         xml.tag! 'CustomerDetails' do
           if address
-            unless address[:country].blank?
-              country_code = Country.find(address[:country]).code(:numeric)
-            end
+            country_code = Country.find(address[:country]).code(:numeric) unless address[:country].blank?
             xml.tag! 'BillingAddress' do
               xml.tag! 'Address1', address[:address1]
               xml.tag! 'Address2', address[:address2]
@@ -382,7 +380,7 @@ module ActiveMerchant #:nodoc:
 
         success = response[:transaction_result][:status_code] == '0'
         message = response[:transaction_result][:message]
-        authorization = success ? [ options[:order_id], response[:transaction_output_data][:cross_reference], response[:transaction_output_data][:auth_code] ].compact.join(';') : nil
+        authorization = success ? [options[:order_id], response[:transaction_output_data][:cross_reference], response[:transaction_output_data][:auth_code]].compact.join(';') : nil
 
         Response.new(success, message, response,
           :test => test?,
@@ -399,7 +397,7 @@ module ActiveMerchant #:nodoc:
         reply = {}
         xml = REXML::Document.new(xml)
         if (root = REXML::XPath.first(xml, '//CardDetailsTransactionResponse')) or
-              (root = REXML::XPath.first(xml, '//CrossReferenceTransactionResponse'))
+           (root = REXML::XPath.first(xml, '//CrossReferenceTransactionResponse'))
           root.elements.to_a.each do |node|
             case node.name
             when 'Message'

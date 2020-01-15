@@ -23,7 +23,7 @@ module ActiveMerchant #:nodoc:
         :quasi         => 'Q'
       }
 
-      SUCCESS_CODES = [ '1', 'T' ]
+      SUCCESS_CODES = ['1', 'T']
       SUCCESS_MESSAGE = 'The transaction was approved'
       FAILURE_MESSAGE = 'The transaction failed'
       TEST_LOGIN = '104901072025'
@@ -166,9 +166,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_user_data(post, options)
-        if options[:order_id]
-          post[:user_data] = "order_id:#{options[:order_id]}"
-        end
+        post[:user_data] = "order_id:#{options[:order_id]}" if options[:order_id]
       end
 
       def add_transaction_id(post, transaction_id)
@@ -226,7 +224,6 @@ module ActiveMerchant #:nodoc:
 
         parameters.reject { |k, v| v.blank? }.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
-
     end
   end
 end

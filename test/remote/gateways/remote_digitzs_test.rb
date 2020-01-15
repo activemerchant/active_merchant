@@ -132,5 +132,4 @@ class RemoteDigitzsTest < Test::Unit::TestCase
     assert_scrubbed(@gateway.options[:api_key], transcript)
     assert_scrubbed(@gateway.options[:app_key], transcript)
   end
-
 end

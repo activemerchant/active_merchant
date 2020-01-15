@@ -53,14 +53,15 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, amount, options)
 
-        action = if payment.respond_to?(:number)
-                   add_payment(post, payment)
-                   '/authorizations'
-                 elsif payment.kind_of?(String)
-                   "/cards/#{payment}/authorizations"
-                 else
-                   raise ArgumentError.new("Unknown payment type #{payment.inspect}")
-        end
+        action =
+          if payment.respond_to?(:number)
+            add_payment(post, payment)
+            '/authorizations'
+          elsif payment.kind_of?(String)
+            "/cards/#{payment}/authorizations"
+          else
+            raise ArgumentError.new("Unknown payment type #{payment.inspect}")
+          end
 
         post[:recurring] = options[:recurring] if options[:recurring]
         post[:card][:pares] = options[:pares] if options[:pares]
@@ -130,9 +131,7 @@ module ActiveMerchant #:nodoc:
         card[:expire_month] = '%02d'% payment.month
         card[:expire_year]  = payment.year
 
-        if payment.verification_value?
-          card[:csc] = payment.verification_value
-        end
+        card[:csc] = payment.verification_value if payment.verification_value?
 
         post[:card] = card if card.any?
       end
@@ -161,12 +160,13 @@ module ActiveMerchant #:nodoc:
           end
         end
 
-        response = begin
-          parse(ssl_post(url, body, headers))
-        rescue ResponseError => e
-          raise unless(e.response.code.to_s =~ /400/)
-          parse(e.response.body)
-        end
+        response =
+          begin
+            parse(ssl_post(url, body, headers))
+          rescue ResponseError => e
+            raise unless(e.response.code.to_s =~ /400/)
+            parse(e.response.body)
+          end
 
         Response.new(
           success_from(response),
@@ -211,9 +211,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_code_from(response)
-        unless success_from(response)
-          response['status']['code']
-        end
+        response['status']['code'] unless success_from(response)
       end
     end
   end

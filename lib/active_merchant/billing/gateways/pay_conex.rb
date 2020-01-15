@@ -51,9 +51,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def credit(money, payment_method, options={})
-        if payment_method.is_a?(String)
-          raise ArgumentError, 'Reference credits are not supported. Please supply the original credit card or use the #refund method.'
-        end
+        raise ArgumentError, 'Reference credits are not supported. Please supply the original credit card or use the #refund method.' if payment_method.is_a?(String)
 
         post = {}
         add_auth_purchase_params(post, money, payment_method, options)
@@ -88,7 +86,7 @@ module ActiveMerchant #:nodoc:
 
       def force_utf8(string)
         return nil unless string
-        binary = string.encode('BINARY', invalid: :replace, undef: :replace, replace: '?')   # Needed for Ruby 2.0 since #encode is a no-op if the string is already UTF-8. It's not needed for Ruby 2.1 and up since it's not a no-op there.
+        binary = string.encode('BINARY', invalid: :replace, undef: :replace, replace: '?') # Needed for Ruby 2.0 since #encode is a no-op if the string is already UTF-8. It's not needed for Ruby 2.1 and up since it's not a no-op there.
         binary.encode('UTF-8', invalid: :replace, undef: :replace, replace: '?')
       end
 
@@ -239,7 +237,6 @@ module ActiveMerchant #:nodoc:
         message += " (The raw response returned by the API was #{raw_response.inspect})"
         return Response.new(false, message)
       end
-
     end
   end
 end

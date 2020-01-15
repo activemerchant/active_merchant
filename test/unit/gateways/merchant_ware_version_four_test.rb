@@ -3,10 +3,10 @@ require 'test_helper'
 class MerchantWareVersionFourTest < Test::Unit::TestCase
   def setup
     @gateway = MerchantWareVersionFourGateway.new(
-                 :login => 'login',
-                 :password => 'password',
-                 :name => 'name'
-               )
+      :login => 'login',
+      :password => 'password',
+      :name => 'name'
+    )
 
     @credit_card = credit_card
     @authorization = '1236564'

@@ -44,12 +44,13 @@ module ActiveMerchant #:nodoc:
         add_common_params(post, options)
 
         MultiResponse.run do |r|
-          identifier = if(payment_method.respond_to?(:number))
-                         r.process { store(payment_method, options) }
-                         r.authorization
-                       else
-                         payment_method
-          end
+          identifier =
+            if(payment_method.respond_to?(:number))
+              r.process { store(payment_method, options) }
+              r.authorization
+            else
+              payment_method
+            end
           r.process { commit('debits', "cards/#{card_identifier_from(identifier)}/debits", post) }
         end
       end
@@ -61,12 +62,13 @@ module ActiveMerchant #:nodoc:
         add_common_params(post, options)
 
         MultiResponse.run do |r|
-          identifier = if(payment_method.respond_to?(:number))
-                         r.process { store(payment_method, options) }
-                         r.authorization
-                       else
-                         payment_method
-          end
+          identifier =
+            if(payment_method.respond_to?(:number))
+              r.process { store(payment_method, options) }
+              r.authorization
+            else
+              payment_method
+            end
           r.process { commit('card_holds', "cards/#{card_identifier_from(identifier)}/card_holds", post) }
         end
       end
@@ -155,17 +157,19 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(entity_name, path, post, method=:post)
-        raw_response = begin
-          parse(ssl_request(
-            method,
-            live_url + "/#{path}",
-            post_data(post),
-            headers
-          ))
-        rescue ResponseError => e
-          raise unless(e.response.code.to_s =~ /4\d\d/)
-          parse(e.response.body)
-        end
+        raw_response =
+          begin
+            parse(
+              ssl_request(
+                method,
+                live_url + "/#{path}",
+                post_data(post),
+                headers
+              ))
+          rescue ResponseError => e
+            raise unless(e.response.code.to_s =~ /4\d\d/)
+            parse(e.response.body)
+          end
 
         Response.new(
           success_from(entity_name, raw_response),

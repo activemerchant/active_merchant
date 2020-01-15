@@ -583,7 +583,7 @@ class HpsTest < Test::Unit::TestCase
      </PosResponse>
   </soap:Body>
 </soap:Envelope>
-   RESPONSE
+    RESPONSE
   end
 
   def failed_authorize_response
@@ -981,5 +981,4 @@ read 1067 bytes
 Conn close
     }
   end
-
 end

@@ -7,9 +7,20 @@ module ActiveMerchant
       end
 
       def purchase(amount, payment_method, options={})
-        MultiResponse.run do |r|
-          r.process { authorize(amount, payment_method, options) }
-          r.process { capture(amount, r.authorization, options) }
+        if options[:pay_mode]
+          post = new_post
+          add_invoice(post, amount, options)
+          add_reference(post, *new_authorization)
+          add_payment_method(post, payment_method)
+          add_customer_data(post, payment_method, options)
+          add_3dsecure_id(post, options)
+
+          commit('pay', post)
+        else
+          MultiResponse.run do |r|
+            r.process { authorize(amount, payment_method, options) }
+            r.process { capture(amount, r.authorization, options) }
+          end
         end
       end
 
@@ -206,9 +217,23 @@ module ActiveMerchant
 
       def base_url
         if test?
-          @options[:region] == 'asia_pacific' ? test_ap_url : test_na_url
+          case @options[:region]
+          when 'asia_pacific'
+            test_ap_url
+          when 'europe'
+            test_eu_url
+          when 'north_america', nil
+            test_na_url
+          end
         else
-          @options[:region] == 'asia_pacific' ? live_ap_url : live_na_url
+          case @options[:region]
+          when 'asia_pacific'
+            live_ap_url
+          when 'europe'
+            live_eu_url
+          when 'north_america', nil
+            live_na_url
+          end
         end
       end
 

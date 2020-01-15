@@ -23,41 +23,9 @@ Gemspec/OrderedDependencies:
 Layout/AlignHash:
   Enabled: false
 
-# Offense count: 57
-# Cop supports --auto-correct.
-Layout/ClosingHeredocIndentation:
-  Enabled: false
-
 # Offense count: 167
 # Cop supports --auto-correct.
 Layout/EmptyLineAfterGuardClause:
-  Enabled: false
-
-# Offense count: 173
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: empty_lines, empty_lines_except_namespace, empty_lines_special, no_empty_lines, beginning_only, ending_only
-Layout/EmptyLinesAroundClassBody:
-  Enabled: false
-
-# Offense count: 39
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyleAlignWith, AutoCorrect, Severity.
-# SupportedStylesAlignWith: keyword, variable, start_of_line
-Layout/EndAlignment:
-  Enabled: false
-
-# Offense count: 174
-# Cop supports --auto-correct.
-# Configuration parameters: AllowForAlignment, ForceEqualSignAlignment.
-Layout/ExtraSpacing:
-  Enabled: false
-
-# Offense count: 105
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, IndentationWidth.
-# SupportedStyles: consistent, consistent_relative_to_receiver, special_for_inner_method_call, special_for_inner_method_call_in_parentheses
-Layout/FirstParameterIndentation:
   Enabled: false
 
 # Offense count: 255
@@ -82,54 +50,12 @@ Layout/MultilineArrayBraceLayout:
   Exclude:
     - 'lib/active_merchant/billing/gateways/optimal_payment.rb'
 
-# Offense count: 36
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: symmetrical, new_line, same_line
-Layout/MultilineHashBraceLayout:
-  Enabled: false
-
 # Offense count: 232
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle.
 # SupportedStyles: symmetrical, new_line, same_line
 Layout/MultilineMethodCallBraceLayout:
   Enabled: false
-
-# Offense count: 24
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, IndentationWidth.
-# SupportedStyles: aligned, indented
-Layout/MultilineOperationIndentation:
-  Exclude:
-    - 'lib/active_merchant/billing/credit_card_methods.rb'
-    - 'lib/active_merchant/billing/gateways/iridium.rb'
-    - 'lib/active_merchant/billing/gateways/moneris.rb'
-    - 'lib/active_merchant/billing/gateways/moneris_us.rb'
-    - 'lib/active_merchant/billing/gateways/orbital.rb'
-    - 'lib/active_merchant/billing/gateways/redsys.rb'
-    - 'test/unit/gateways/braintree_blue_test.rb'
-    - 'test/unit/gateways/skip_jack_test.rb'
-
-# Offense count: 15
-# Cop supports --auto-correct.
-Layout/RescueEnsureAlignment:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/balanced.rb'
-    - 'lib/active_merchant/billing/gateways/clearhaus.rb'
-    - 'lib/active_merchant/billing/gateways/culqi.rb'
-    - 'lib/active_merchant/billing/gateways/eway_managed.rb'
-    - 'lib/active_merchant/billing/gateways/fat_zebra.rb'
-    - 'lib/active_merchant/billing/gateways/hps.rb'
-    - 'lib/active_merchant/billing/gateways/iveri.rb'
-    - 'lib/active_merchant/billing/gateways/kushki.rb'
-    - 'lib/active_merchant/billing/gateways/merchant_e_solutions.rb'
-    - 'lib/active_merchant/billing/gateways/netbanx.rb'
-    - 'lib/active_merchant/billing/gateways/opp.rb'
-    - 'lib/active_merchant/billing/gateways/orbital.rb'
-    - 'lib/active_merchant/billing/gateways/pay_junction_v2.rb'
-    - 'lib/active_merchant/billing/gateways/quickbooks.rb'
-    - 'lib/active_merchant/billing/gateways/trans_first_transaction_express.rb'
 
 # Offense count: 649
 # Cop supports --auto-correct.
@@ -149,31 +75,12 @@ Layout/SpaceAroundKeyword:
 Layout/SpaceAroundOperators:
   Enabled: false
 
-# Offense count: 118
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, EnforcedStyleForEmptyBrackets.
-# SupportedStyles: space, no_space, compact
-# SupportedStylesForEmptyBrackets: space, no_space
-Layout/SpaceInsideArrayLiteralBrackets:
-  Enabled: false
-
-# Offense count: 12
-# Cop supports --auto-correct.
-Layout/SpaceInsideArrayPercentLiteral:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/migs/migs_codes.rb'
-
 # Offense count: 1186
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle, EnforcedStyleForEmptyBraces.
 # SupportedStyles: space, no_space, compact
 # SupportedStylesForEmptyBraces: space, no_space
 Layout/SpaceInsideHashLiteralBraces:
-  Enabled: false
-
-# Offense count: 115
-# Cop supports --auto-correct.
-Layout/SpaceInsidePercentLiteralDelimiters:
   Enabled: false
 
 # Offense count: 150
@@ -733,11 +640,6 @@ Style/IfInsideElse:
     - 'lib/active_merchant/billing/gateways/quantum.rb'
     - 'lib/active_merchant/billing/gateways/skip_jack.rb'
     - 'lib/active_merchant/billing/gateways/worldpay_online_payments.rb'
-
-# Offense count: 128
-# Cop supports --auto-correct.
-Style/IfUnlessModifier:
-  Enabled: false
 
 # Offense count: 1
 Style/IfUnlessModifierOfIfUnless:

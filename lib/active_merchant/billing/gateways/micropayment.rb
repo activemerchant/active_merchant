@@ -1,7 +1,6 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class MicropaymentGateway < Gateway
-
       self.display_name = 'micropayment'
       self.homepage_url = 'https://www.micropayment.de/'
 
@@ -136,7 +135,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def headers
-        { 'Content-Type'  => 'application/x-www-form-urlencoded;charset=UTF-8' }
+        { 'Content-Type' => 'application/x-www-form-urlencoded;charset=UTF-8' }
       end
 
       def post_data(action, params)

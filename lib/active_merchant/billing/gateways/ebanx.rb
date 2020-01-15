@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://sandbox.ebanxpay.com/ws/'
       self.live_url = 'https://api.ebanxpay.com/ws/'
 
-      self.supported_countries = ['BR', 'MX', 'CO', 'CL', 'AR']
+      self.supported_countries = %w(BR MX CO CL AR PE)
       self.default_currency = 'USD'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club]
 
@@ -51,6 +51,7 @@ module ActiveMerchant #:nodoc:
         add_card_or_token(post, payment)
         add_address(post, options)
         add_customer_responsible_person(post, payment, options)
+        add_additional_data(post, options)
 
         commit(:purchase, post)
       end
@@ -73,7 +74,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_integration_key(post)
         post[:hash] = authorization
-        post[:amount] = amount(money)
+        post[:amount] = amount(money) if options[:include_capture_amount].to_s == 'true'
 
         commit(:capture, post)
       end
@@ -175,9 +176,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_card_or_token(post, payment)
-        if payment.is_a?(String)
-          payment, brand = payment.split('|')
-        end
+        payment, brand = payment.split('|') if payment.is_a?(String)
         post[:payment][:payment_type_code] = payment.is_a?(String) ? brand : CARD_BRAND[payment.brand.to_sym]
         post[:payment][:creditcard] = payment_details(payment)
       end
@@ -198,6 +197,10 @@ module ActiveMerchant #:nodoc:
             card_cvv: payment.verification_value
           }
         end
+      end
+
+      def add_additional_data(post, options)
+        post[:device_id] = options[:device_id] if options[:device_id]
       end
 
       def parse(body)

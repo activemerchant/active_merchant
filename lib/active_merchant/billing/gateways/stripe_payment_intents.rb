@@ -5,8 +5,7 @@ module ActiveMerchant #:nodoc:
     # This gateway uses the current Stripe {Payment Intents API}[https://stripe.com/docs/api/payment_intents].
     # For the legacy API, see the Stripe gateway
     class StripePaymentIntentsGateway < StripeGateway
-
-      self.supported_countries = %w(AT AU BE BR CA CH DE DK ES FI FR GB HK IE IT JP LU MX NL NO NZ PT SE SG US)
+      self.supported_countries = %w(AT AU BE BR CA CH DE DK EE ES FI FR GB GR HK IE IT JP LT LU LV MX NL NO NZ PL PT SE SG SI SK US)
 
       ALLOWED_METHOD_STATES = %w[automatic manual].freeze
       ALLOWED_CANCELLATION_REASONS = %w[duplicate fraudulent requested_by_customer abandoned].freeze
@@ -65,7 +64,7 @@ module ActiveMerchant #:nodoc:
 
       def update_intent(money, intent_id, payment_method, options = {})
         post = {}
-        post[:amount] = money if money
+        add_amount(post, money, options)
 
         add_payment_method_token(post, payment_method, options)
         add_payment_method_types(post, options)
@@ -91,7 +90,8 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, intent_id, options = {})
         post = {}
-        post[:amount_to_capture] = money
+        currency = options[:currency] || currency(money)
+        post[:amount_to_capture] = localized_amount(money, currency)
         if options[:transfer_amount]
           post[:transfer_data] = {}
           post[:transfer_data][:amount] = options[:transfer_amount]
@@ -221,7 +221,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def setup_future_usage(post, options = {})
-        post[:setup_future_usage] = options[:setup_future_usage] if %w( on_session off_session ).include?(options[:setup_future_usage])
+        post[:setup_future_usage] = options[:setup_future_usage] if %w(on_session off_session).include?(options[:setup_future_usage])
         post[:off_session] = options[:off_session] if options[:off_session] && options[:confirm] == true
         post
       end

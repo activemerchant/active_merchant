@@ -72,9 +72,9 @@ class RemoteMoneyMoversTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = MoneyMoversGateway.new(
-                :login => '',
-                :password => ''
-              )
+      :login => '',
+      :password => ''
+    )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Error in transaction data or system error', response.message

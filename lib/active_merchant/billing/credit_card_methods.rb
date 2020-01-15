@@ -18,6 +18,7 @@ module ActiveMerchant #:nodoc:
         'sodexo'             => ->(num) { num =~ /^(606071|603389|606070|606069|606068|600818)\d{10}$/ },
         'vr'                 => ->(num) { num =~ /^(627416|637036)\d{10}$/ },
         'cabal'              => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 8), CABAL_RANGES) },
+        'unionpay'           => ->(num) { (16..19).cover?(num&.size) && in_bin_range?(num.slice(0, 8), UNIONPAY_RANGES) },
         'carnet'             => lambda { |num|
           num&.size == 16 && (
             in_bin_range?(num.slice(0, 6), CARNET_RANGES) ||
@@ -123,6 +124,14 @@ module ActiveMerchant #:nodoc:
         589562..589562
       ]
 
+      # In addition to the BIN ranges listed here that all begin with 81, UnionPay cards
+      # include many ranges that start with 62.
+      # Prior to adding UnionPay, cards that start with 62 were all classified as Discover.
+      # Because UnionPay cards are able to run on Discover rails, this was kept the same.
+      UNIONPAY_RANGES = [
+        81000000..81099999, 81100000..81319999, 81320000..81519999, 81520000..81639999, 81640000..81719999
+      ]
+
       def self.included(base)
         base.extend(ClassMethods)
       end
@@ -197,8 +206,8 @@ module ActiveMerchant #:nodoc:
         def valid_number?(number)
           valid_test_mode_card_number?(number) ||
             valid_card_number_length?(number) &&
-            valid_card_number_characters?(number) &&
-            valid_by_algorithm?(brand?(number), number)
+              valid_card_number_characters?(number) &&
+              valid_by_algorithm?(brand?(number), number)
         end
 
         def card_companies

@@ -79,7 +79,7 @@ module ActiveMerchant #:nodoc:
                    'us_ach_debit'
                  elsif post[:data_key].blank?
                    'us_purchase'
-        end
+                 end
         commit(action, post)
       end
 
@@ -191,7 +191,7 @@ module ActiveMerchant #:nodoc:
           if crypt_type = options[:crypt_type] || @options[:crypt_type]
             post[:crypt_type] = crypt_type
           end
-          post[:cust_id]    = options[:customer] || source.name
+          post[:cust_id] = options[:customer] || source.name
         end
       end
 
@@ -230,16 +230,14 @@ module ActiveMerchant #:nodoc:
 
       # Generates a Moneris authorization string of the form 'trans_id;receipt_id'.
       def authorization_from(response = {})
-        if response[:trans_id] && response[:receipt_id]
-          "#{response[:trans_id]};#{response[:receipt_id]}"
-        end
+        "#{response[:trans_id]};#{response[:receipt_id]}" if response[:trans_id] && response[:receipt_id]
       end
 
       # Tests for a successful response from Moneris' servers
       def successful?(response)
         response[:response_code] &&
-        response[:complete] &&
-        (0..49).cover?(response[:response_code].to_i)
+          response[:complete] &&
+          (0..49).cover?(response[:response_code].to_i)
       end
 
       def parse(xml)

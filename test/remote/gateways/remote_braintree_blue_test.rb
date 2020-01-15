@@ -292,11 +292,12 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
   def test_successful_store_with_existing_customer_id
     credit_card = credit_card('5105105105105100')
     customer_id = generate_unique_id
-    assert response = @gateway.store(credit_card, customer: customer_id)
+    assert response = @gateway.store(credit_card, @options.merge(customer: customer_id))
     assert_success response
     assert_equal 1, @braintree_backend.customer.find(customer_id).credit_cards.size
 
-    assert response = @gateway.store(credit_card, customer: customer_id)
+    credit_card = credit_card('4111111111111111')
+    assert response = @gateway.store(credit_card, @options.merge(customer: customer_id))
     assert_success response
     assert_equal 2, @braintree_backend.customer.find(customer_id).credit_cards.size
     assert_equal customer_id, response.params['customer_vault_id']

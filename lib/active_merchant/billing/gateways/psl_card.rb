@@ -21,7 +21,7 @@ module ActiveMerchant
       # American Express, Diners Club, JCB, International Maestro,
       # Style, Clydesdale Financial Services, Other
 
-      self.supported_cardtypes = [ :visa, :master, :american_express, :diners_club, :jcb, :maestro ]
+      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb, :maestro]
       self.homepage_url = 'http://www.paymentsolutionsltd.com/'
       self.display_name = 'PSL Payment Solutions'
 
@@ -211,7 +211,7 @@ module ActiveMerchant
 
       def add_purchase_details(post)
         post[:EchoAmount] = 'YES'
-        post[:SCBI] = 'YES'                   # Return information about the transaction
+        post[:SCBI] = 'YES' # Return information about the transaction
         post[:MessageType] = MESSAGE_TYPE
       end
 
