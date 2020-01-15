@@ -32,6 +32,7 @@
 * RuboCop: Layout/EmptyLinesAroundClassBody fix [leila-alderman] #3487
 * Mundipagg: Return acquirer code as the error code [leila-alderman] #3492
 * RuboCop: Fix Layout/FirstParameterIndentation [leila-alderman] #3489
+* Braintree Blue: Remove customer hash when using a payment_method_nonce #3495
 * Credorax: Update non-standard currencies list [chinhle23] #3499
 
 == Version 1.103.0 (Dec 2, 2019)
