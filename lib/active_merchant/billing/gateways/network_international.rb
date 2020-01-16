@@ -14,6 +14,8 @@ module ActiveMerchant #:nodoc:
 
       STANDARD_ERROR_CODE_MAPPING = {}
 
+      SUCCESS_STATES = %w(AWAIT_3DS AUTHORISED CAPTURED)
+
       def initialize(options={})
         requires!(options, :token)
         requires!(options, :outlet)
@@ -128,7 +130,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response['authResponse']['success'] == true
+        response.dig('authResponse', 'success') || response['state'].in?(SUCCESS_STATES)
       end
 
       def message_from(succeeded, response)
@@ -140,12 +142,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
-        response['authResponse']['authorizationCode']
+        response.dig('authResponse', 'authorizationCode') || response['_id']
       end
 
       def error_code_from(response)
         unless success_from(response)
-          response['authResponse']['resultCode']
+          response.dig('authResponse', 'authorizationCode') || response['_id']
         end
       end
     end
