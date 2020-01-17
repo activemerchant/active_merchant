@@ -77,6 +77,12 @@ module ActiveMerchant #:nodoc:
       def add_invoice(post, money, options)
         post[:order] = {}
         post[:order][:action] = options[:action] || "AUTH"
+
+        post[:order][:type] = options[:order_type] if options.has_key?(:order_type)
+        post[:order][:frequency] = options[:frequency] if options.has_key?(:frequency)
+        post[:order][:emailAddress] = options[:email]
+        post[:channel] = options[:channel] if options.has_key?(:channel)
+
         post[:order][:amount] = {}
         post[:order][:amount][:value] = amount(money)
         post[:order][:amount][:currencyCode] = options[:currency] || currency(money)

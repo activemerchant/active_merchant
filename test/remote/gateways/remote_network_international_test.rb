@@ -26,6 +26,13 @@ class RemoteNetworkInternationalTest < Test::Unit::TestCase
     assert_equal 'CAPTURED', response.message
   end
 
+  def test_successful_purchase_capture_moto
+    options = @options.merge(action: 'SALE', channel: 'MoTo')
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'CAPTURED', response.message
+  end
+
   def test_successful_purchase_with_more_options
     options = {
       order_id: '1',
