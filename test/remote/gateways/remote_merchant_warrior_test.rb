@@ -137,6 +137,16 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
     assert_success purchase
   end
 
+  def test_successful_purchase_with_recurring_flag
+    @options[:recurring_flag] = 1
+    test_successful_purchase
+  end
+
+  def test_successful_authorize_with_recurring_flag
+    @options[:recurring_flag] = 1
+    test_successful_authorize
+  end
+
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@success_amount, @credit_card, @options)
