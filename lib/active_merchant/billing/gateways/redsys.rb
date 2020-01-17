@@ -36,7 +36,7 @@ module ActiveMerchant #:nodoc:
     #
     #
     class RedsysGateway < Gateway
-      self.live_url = 'https://sis.sermepa.es/sis/operaciones'
+      self.live_url = 'https://sis.redsys.es/sis/operaciones'
       self.test_url = 'https://sis-t.redsys.es:25443/sis/operaciones'
 
       self.supported_countries = ['ES']

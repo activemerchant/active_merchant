@@ -37,6 +37,7 @@
 * RuboCop: Fix Layout/EmptyLineAfterGuardClause [leila-alderman] #3496
 * RuboCop: Fix Layout/MultilineArrayBraceLayout [leila-alderman] #3498
 * RuboCop: Fix Layout/SpaceAroundKeyword [leila-alderman] #3497
+* Redsys: Update production URL [britth] #3505
 
 == Version 1.103.0 (Dec 2, 2019)
 * Quickbooks: Mark transactions that returned `AuthorizationFailed` as failures [britth] #3447
