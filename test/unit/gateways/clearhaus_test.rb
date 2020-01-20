@@ -266,6 +266,14 @@ class ClearhausTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
+  def test_nonfractional_currency_handling
+    stub_comms do
+      @gateway.authorize(200, @credit_card, @options.merge(currency: 'JPY'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/amount=2&card/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
   private
 
   def pre_scrubbed
