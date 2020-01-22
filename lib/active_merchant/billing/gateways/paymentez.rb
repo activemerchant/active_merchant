@@ -241,6 +241,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
+        return response['detail'] if response['detail'].present?
+
         if !success_from(response) && response['error']
           response['error'] && response['error']['type']
         else
