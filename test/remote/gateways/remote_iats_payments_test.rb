@@ -95,6 +95,13 @@ class IatsPaymentsTest < Test::Unit::TestCase
     assert_equal "Success", unstore.message
   end
 
+  def test_successful_debit_store
+    assert store = @gateway.store(@check, @options)
+    assert_success store
+    assert store.authorization
+    assert_equal "Success", store.message
+  end
+
   def test_failed_store
     credit_card = credit_card('4111')
     assert store = @gateway.store(credit_card, @options)

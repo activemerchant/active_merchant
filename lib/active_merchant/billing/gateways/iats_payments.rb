@@ -19,6 +19,7 @@ module ActiveMerchant #:nodoc:
         refund: "ProcessCreditCardRefundWithTransactionIdV1",
         refund_check: "ProcessACHEFTRefundWithTransactionIdV1",
         store: "CreateCreditCardCustomerCodeV1",
+        store_check: "CreateACHEFTCustomerCode",
         unstore: "DeleteCustomerCodeV1"
       }
 
@@ -56,15 +57,15 @@ module ActiveMerchant #:nodoc:
         commit((payment_type == 'check' ? :refund_check : :refund), post)
       end
 
-      def store(credit_card, options = {})
+      def store(payment_method, options = {})
         post = {}
-        add_payment(post, credit_card)
+        add_payment(post, payment_method)
         add_address(post, options)
         add_ip(post, options)
         add_description(post, options)
         add_store_defaults(post)
 
-        commit(:store, post)
+        commit((payment_method.is_a?(Check) ? :store_check : :store), post)
       end
 
       def unstore(authorization, options = {})
@@ -183,6 +184,7 @@ module ActiveMerchant #:nodoc:
           refund: "ProcessLink.asmx",
           refund_check: "ProcessLink.asmx",
           store: "CustomerLink.asmx",
+          store_check: 'CustomerLinkv2.asmx',
           unstore: "CustomerLink.asmx"
         }
       end
@@ -243,7 +245,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(action, response)
-        if [:store, :unstore].include?(action)
+        if [:store, :unstore, :store_check].include?(action)
           response[:customercode]
         elsif [:purchase_check].include?(action)
           response[:transaction_id] ? "#{response[:transaction_id]}|check" : nil
