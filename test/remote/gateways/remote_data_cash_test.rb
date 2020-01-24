@@ -41,7 +41,6 @@ class RemoteDataCashTest < Test::Unit::TestCase
       :month => 3,
       :year => Date.today.year + 2,
       :brand => :solo,
-      :issue_number => 5,
       :start_month => 12,
       :start_year => 2006
     )
@@ -164,6 +163,7 @@ class RemoteDataCashTest < Test::Unit::TestCase
   end
 
   def test_invalid_verification_number
+    @mastercard.number = 1000350000000007
     @mastercard.verification_value = 123
     response = @gateway.purchase(@amount, @mastercard, @params)
     assert_failure response
