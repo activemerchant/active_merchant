@@ -4,9 +4,11 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
   def setup
     @gateway = MercadoPagoGateway.new(fixtures(:mercado_pago))
     @argentina_gateway = MercadoPagoGateway.new(fixtures(:mercado_pago_argentina))
+    @colombian_gateway = MercadoPagoGateway.new(fixtures(:mercado_pago_colombia))
 
     @amount = 500
     @credit_card = credit_card('4509953566233704')
+    @colombian_card = credit_card('4013540682746260')
     @elo_credit_card = credit_card('5067268650517446',
       :month => 10,
       :year => 2020,
@@ -86,6 +88,21 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
     amex_card = credit_card('375365153556885', brand: 'american_express', verification_value: '1234')
 
     response = @gateway.purchase(@amount, amex_card, @options)
+    assert_success response
+    assert_equal 'accredited', response.message
+  end
+
+  def test_successful_purchase_with_taxes_and_net_amount
+    # Minimum transaction amount is 0.30 EUR or ~1112 $COL on 1/27/20.
+    # This value must exceed that
+    amount = 10000_00
+
+    # These values need to be represented as dollars, so divide them by 100
+    tax_amount = amount * 0.19
+    @options[:net_amount] = (amount - tax_amount) / 100
+    @options[:taxes] = [{ value: tax_amount / 100, type: 'IVA' }]
+
+    response = @colombian_gateway.purchase(amount, @colombian_card, @options)
     assert_success response
     assert_equal 'accredited', response.message
   end
