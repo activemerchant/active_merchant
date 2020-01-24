@@ -952,7 +952,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal 4, (['US', 'CA', 'AU', 'VA'] & AuthorizeNetGateway.supported_countries).size
+    assert_equal 3, (%w[US CA AU] & AuthorizeNetGateway.supported_countries).size
   end
 
   def test_supported_card_types
