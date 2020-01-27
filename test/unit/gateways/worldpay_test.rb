@@ -58,6 +58,63 @@ class WorldpayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_risk_data_in_request
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(risk_data: risk_data))
+    end.check_request do |endpoint, data, headers|
+      doc = Nokogiri::XML(data)
+
+      authentication_risk_data = doc.at_xpath('//riskData//authenticationRiskData')
+      assert_equal(risk_data[:authentication_risk_data][:authentication_method], authentication_risk_data.attribute('authenticationMethod').value)
+
+      timestamp = doc.at_xpath('//riskData//authenticationRiskData//authenticationTimestamp//date')
+      assert_equal(risk_data[:authentication_risk_data][:authentication_date][:day_of_month], timestamp.attribute('dayOfMonth').value)
+      assert_equal(risk_data[:authentication_risk_data][:authentication_date][:month], timestamp.attribute('month').value)
+      assert_equal(risk_data[:authentication_risk_data][:authentication_date][:year], timestamp.attribute('year').value)
+      assert_equal(risk_data[:authentication_risk_data][:authentication_date][:hour], timestamp.attribute('hour').value)
+      assert_equal(risk_data[:authentication_risk_data][:authentication_date][:minute], timestamp.attribute('minute').value)
+      assert_equal(risk_data[:authentication_risk_data][:authentication_date][:second], timestamp.attribute('second').value)
+
+      shopper_account_risk_data_xml = doc.at_xpath('//riskData//shopperAccountRiskData')
+      shopper_account_risk_data = risk_data[:shopper_account_risk_data]
+      assert_equal(shopper_account_risk_data[:transactions_attempted_last_day], shopper_account_risk_data_xml.attribute('transactionsAttemptedLastDay').value)
+      assert_equal(shopper_account_risk_data[:transactions_attempted_last_year], shopper_account_risk_data_xml.attribute('transactionsAttemptedLastYear').value)
+      assert_equal(shopper_account_risk_data[:purchases_completed_last_six_months], shopper_account_risk_data_xml.attribute('purchasesCompletedLastSixMonths').value)
+      assert_equal(shopper_account_risk_data[:add_card_attempts_last_day], shopper_account_risk_data_xml.attribute('addCardAttemptsLastDay').value)
+      assert_equal(shopper_account_risk_data[:previous_suspicious_activity], shopper_account_risk_data_xml.attribute('previousSuspiciousActivity').value)
+      assert_equal(shopper_account_risk_data[:shipping_name_matches_account_name], shopper_account_risk_data_xml.attribute('shippingNameMatchesAccountName').value)
+      assert_equal(shopper_account_risk_data[:shopper_account_age_indicator], shopper_account_risk_data_xml.attribute('shopperAccountAgeIndicator').value)
+      assert_equal(shopper_account_risk_data[:shopper_account_change_indicator], shopper_account_risk_data_xml.attribute('shopperAccountChangeIndicator').value)
+      assert_equal(shopper_account_risk_data[:shopper_account_password_change_indicator], shopper_account_risk_data_xml.attribute('shopperAccountPasswordChangeIndicator').value)
+      assert_equal(shopper_account_risk_data[:shopper_account_shipping_address_usage_indicator], shopper_account_risk_data_xml.attribute('shopperAccountShippingAddressUsageIndicator').value)
+      assert_equal(shopper_account_risk_data[:shopper_account_payment_account_indicator], shopper_account_risk_data_xml.attribute('shopperAccountPaymentAccountIndicator').value)
+      assert_date_element(shopper_account_risk_data[:shopper_account_creation_date], shopper_account_risk_data_xml.at_xpath('//shopperAccountCreationDate//date'))
+      assert_date_element(shopper_account_risk_data[:shopper_account_modification_date], shopper_account_risk_data_xml.at_xpath('//shopperAccountModificationDate//date'))
+      assert_date_element(shopper_account_risk_data[:shopper_account_password_change_date], shopper_account_risk_data_xml.at_xpath('//shopperAccountPasswordChangeDate//date'))
+      assert_date_element(shopper_account_risk_data[:shopper_account_shipping_address_first_use_date], shopper_account_risk_data_xml.at_xpath('//shopperAccountShippingAddressFirstUseDate//date'))
+      assert_date_element(shopper_account_risk_data[:shopper_account_payment_account_first_use_date], shopper_account_risk_data_xml.at_xpath('//shopperAccountPaymentAccountFirstUseDate//date'))
+
+      transaction_risk_data_xml = doc.at_xpath('//riskData//transactionRiskData')
+      transaction_risk_data = risk_data[:transaction_risk_data]
+      assert_equal(transaction_risk_data[:shipping_method], transaction_risk_data_xml.attribute('shippingMethod').value)
+      assert_equal(transaction_risk_data[:delivery_timeframe], transaction_risk_data_xml.attribute('deliveryTimeframe').value)
+      assert_equal(transaction_risk_data[:delivery_email_address], transaction_risk_data_xml.attribute('deliveryEmailAddress').value)
+      assert_equal(transaction_risk_data[:reordering_previous_purchases], transaction_risk_data_xml.attribute('reorderingPreviousPurchases').value)
+      assert_equal(transaction_risk_data[:pre_order_purchase], transaction_risk_data_xml.attribute('preOrderPurchase').value)
+      assert_equal(transaction_risk_data[:gift_card_count], transaction_risk_data_xml.attribute('giftCardCount').value)
+
+      amount_xml = doc.at_xpath('//riskData//transactionRiskData//transactionRiskDataGiftCardAmount//amount')
+      amount_data = transaction_risk_data[:transaction_risk_data_gift_card_amount]
+      assert_equal(amount_data[:value], amount_xml.attribute('value').value)
+      assert_equal(amount_data[:currency], amount_xml.attribute('currencyCode').value)
+      assert_equal(amount_data[:exponent], amount_xml.attribute('exponent').value)
+      assert_equal(amount_data[:debit_credit_indicator], amount_xml.attribute('debitCreditIndicator').value)
+
+      assert_date_element(transaction_risk_data[:transaction_risk_data_pre_order_date], transaction_risk_data_xml.at_xpath('//transactionRiskDataPreOrderDate//date'))
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
   def test_successful_reference_transaction_authorize_with_merchant_code
     response = stub_comms do
       @gateway.authorize(@amount, @options[:order_id].to_s, @options.merge({ merchant_code: 'testlogin2'}))
@@ -879,6 +936,12 @@ class WorldpayTest < Test::Unit::TestCase
 
   private
 
+  def assert_date_element(expected_date_hash, date_element)
+    assert_equal(expected_date_hash[:day_of_month], date_element.attribute('dayOfMonth').value)
+    assert_equal(expected_date_hash[:month], date_element.attribute('month').value)
+    assert_equal(expected_date_hash[:year], date_element.attribute('year').value)
+  end
+
   def assert_tag_with_attributes(tag, attributes, string)
     assert(m = %r(<#{tag}([^>]+)/?>).match(string))
     attributes.each do |attribute, value|
@@ -894,6 +957,89 @@ class WorldpayTest < Test::Unit::TestCase
         xid: xid,
         ds_transaction_id: ds_transaction_id,
         version: version,
+      }
+    }
+  end
+
+  def risk_data
+    return @risk_data if @risk_data
+
+    authentication_time = Time.now
+    shopper_account_creation_date = Date.today
+    shopper_account_modification_date = Date.today - 1.day
+    shopper_account_password_change_date = Date.today - 2.days
+    shopper_account_shipping_address_first_use_date = Date.today - 3.day
+    shopper_account_payment_account_first_use_date = Date.today - 4.day
+    transaction_risk_data_pre_order_date = Date.today + 1.day
+
+    @risk_data = {
+      authentication_risk_data: {
+        authentication_method: 'localAccount',
+        authentication_date: {
+          day_of_month: authentication_time.strftime('%d'),
+          month: authentication_time.strftime('%m'),
+          year: authentication_time.strftime('%Y'),
+          hour: authentication_time.strftime('%H'),
+          minute: authentication_time.strftime('%M'),
+          second: authentication_time.strftime('%S')
+        }
+      },
+      shopper_account_risk_data: {
+        transactions_attempted_last_day: '1',
+        transactions_attempted_last_year: '2',
+        purchases_completed_last_six_months: '3',
+        add_card_attempts_last_day: '4',
+        previous_suspicious_activity: 'false', # Boolean (true or false)
+        shipping_name_matches_account_name: 'true', #	Boolean (true or false)
+        shopper_account_age_indicator: 'lessThanThirtyDays', # Possible Values: noAccount, createdDuringTransaction, lessThanThirtyDays, thirtyToSixtyDays, moreThanSixtyDays
+        shopper_account_change_indicator: 'thirtyToSixtyDays', # Possible values: changedDuringTransaction, lessThanThirtyDays, thirtyToSixtyDays, moreThanSixtyDays
+        shopper_account_password_change_indicator: 'noChange', # Possible Values: noChange, changedDuringTransaction, lessThanThirtyDays, thirtyToSixtyDays, moreThanSixtyDays
+        shopper_account_shipping_address_usage_indicator: 'moreThanSixtyDays', # Possible Values: thisTransaction, lessThanThirtyDays, thirtyToSixtyDays, moreThanSixtyDays
+        shopper_account_payment_account_indicator: 'thirtyToSixtyDays', # Possible Values: noAccount, duringTransaction, lessThanThirtyDays, thirtyToSixtyDays, moreThanSixtyDays
+        shopper_account_creation_date: {
+          day_of_month: shopper_account_creation_date.strftime('%d'),
+          month: shopper_account_creation_date.strftime('%m'),
+          year: shopper_account_creation_date.strftime('%Y'),
+        },
+        shopper_account_modification_date: {
+          day_of_month: shopper_account_modification_date.strftime('%d'),
+          month: shopper_account_modification_date.strftime('%m'),
+          year: shopper_account_modification_date.strftime('%Y'),
+        },
+        shopper_account_password_change_date: {
+          day_of_month: shopper_account_password_change_date.strftime('%d'),
+          month: shopper_account_password_change_date.strftime('%m'),
+          year: shopper_account_password_change_date.strftime('%Y'),
+        },
+        shopper_account_shipping_address_first_use_date: {
+          day_of_month: shopper_account_shipping_address_first_use_date.strftime('%d'),
+          month: shopper_account_shipping_address_first_use_date.strftime('%m'),
+          year: shopper_account_shipping_address_first_use_date.strftime('%Y'),
+        },
+        shopper_account_payment_account_first_use_date: {
+          day_of_month: shopper_account_payment_account_first_use_date.strftime('%d'),
+          month: shopper_account_payment_account_first_use_date.strftime('%m'),
+          year: shopper_account_payment_account_first_use_date.strftime('%Y'),
+        }
+      },
+      transaction_risk_data: {
+        shipping_method: 'digital',
+        delivery_timeframe: 'electronicDelivery',
+        delivery_email_address: 'abe@lincoln.gov',
+        reordering_previous_purchases: 'false',
+        pre_order_purchase: 'false',
+        gift_card_count: '0',
+        transaction_risk_data_gift_card_amount: {
+          value: '123',
+          currency: 'EUR',
+          exponent: '2',
+          debit_credit_indicator: 'credit'
+        },
+        transaction_risk_data_pre_order_date: {
+          day_of_month: transaction_risk_data_pre_order_date.strftime('%d'),
+          month: transaction_risk_data_pre_order_date.strftime('%m'),
+          year: transaction_risk_data_pre_order_date.strftime('%Y'),
+        }
       }
     }
   end

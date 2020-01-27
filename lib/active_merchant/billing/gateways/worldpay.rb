@@ -203,6 +203,7 @@ module ActiveMerchant #:nodoc:
               end
               add_payment_method(xml, money, payment_method, options)
               add_shopper(xml, options)
+              add_risk_data(xml, options[:risk_data]) if options[:risk_data]
               add_hcg_additional_data(xml, options) if options[:hcg_additional_data]
               add_instalments_data(xml, options) if options[:instalments]
               add_moto_flag(xml, options) if options.dig(:metadata, :manual_entry)
@@ -261,6 +262,92 @@ module ActiveMerchant #:nodoc:
 
       def add_3ds_exemption(xml, options)
         xml.exemption 'type' => options[:exemption_type], 'placement' => options[:exemption_placement] || 'AUTHORISATION'
+      end
+
+      def add_risk_data(xml, risk_data)
+        xml.riskData do
+          add_authentication_risk_data(xml, risk_data[:authentication_risk_data])
+          add_shopper_account_risk_data(xml, risk_data[:shopper_account_risk_data])
+          add_transaction_risk_data(xml, risk_data[:transaction_risk_data])
+        end
+      end
+
+      def add_authentication_risk_data(xml, authentication_risk_data)
+        return unless authentication_risk_data
+
+        timestamp = authentication_risk_data.fetch(:authentication_date, {})
+
+        xml.authenticationRiskData('authenticationMethod' => authentication_risk_data[:authentication_method]) do
+          xml.authenticationTimestamp do
+            xml.date(
+              'dayOfMonth' => timestamp[:day_of_month],
+              'month' => timestamp[:month],
+              'year' => timestamp[:year],
+              'hour' => timestamp[:hour],
+              'minute' => timestamp[:minute],
+              'second' => timestamp[:second]
+            )
+          end
+        end
+      end
+
+      def add_shopper_account_risk_data(xml, shopper_account_risk_data)
+        return unless shopper_account_risk_data
+
+        data = {
+          'transactionsAttemptedLastDay' => shopper_account_risk_data[:transactions_attempted_last_day],
+          'transactionsAttemptedLastYear' => shopper_account_risk_data[:transactions_attempted_last_year],
+          'purchasesCompletedLastSixMonths' => shopper_account_risk_data[:purchases_completed_last_six_months],
+          'addCardAttemptsLastDay' => shopper_account_risk_data[:add_card_attempts_last_day],
+          'previousSuspiciousActivity' => shopper_account_risk_data[:previous_suspicious_activity],
+          'shippingNameMatchesAccountName' => shopper_account_risk_data[:shipping_name_matches_account_name],
+          'shopperAccountAgeIndicator' => shopper_account_risk_data[:shopper_account_age_indicator],
+          'shopperAccountChangeIndicator' => shopper_account_risk_data[:shopper_account_change_indicator],
+          'shopperAccountPasswordChangeIndicator' => shopper_account_risk_data[:shopper_account_password_change_indicator],
+          'shopperAccountShippingAddressUsageIndicator' => shopper_account_risk_data[:shopper_account_shipping_address_usage_indicator],
+          'shopperAccountPaymentAccountIndicator' => shopper_account_risk_data[:shopper_account_payment_account_indicator]
+        }.reject { |_k, v| v.nil? }
+
+        xml.shopperAccountRiskData(data) do
+          add_date_element(xml, 'shopperAccountCreationDate', shopper_account_risk_data[:shopper_account_creation_date])
+          add_date_element(xml, 'shopperAccountModificationDate', shopper_account_risk_data[:shopper_account_modification_date])
+          add_date_element(xml, 'shopperAccountPasswordChangeDate', shopper_account_risk_data[:shopper_account_password_change_date])
+          add_date_element(xml, 'shopperAccountShippingAddressFirstUseDate', shopper_account_risk_data[:shopper_account_shipping_address_first_use_date])
+          add_date_element(xml, 'shopperAccountPaymentAccountFirstUseDate', shopper_account_risk_data[:shopper_account_payment_account_first_use_date])
+        end
+      end
+
+      def add_transaction_risk_data(xml, transaction_risk_data)
+        return unless transaction_risk_data
+
+        data = {
+          'shippingMethod' => transaction_risk_data[:shipping_method],
+          'deliveryTimeframe' => transaction_risk_data[:delivery_timeframe],
+          'deliveryEmailAddress' => transaction_risk_data[:delivery_email_address],
+          'reorderingPreviousPurchases' => transaction_risk_data[:reordering_previous_purchases],
+          'preOrderPurchase' => transaction_risk_data[:pre_order_purchase],
+          'giftCardCount' => transaction_risk_data[:gift_card_count]
+        }.reject { |_k, v| v.nil? }
+
+        xml.transactionRiskData(data) do
+          xml.transactionRiskDataGiftCardAmount do
+            amount_hash = {
+              'value' => transaction_risk_data.dig(:transaction_risk_data_gift_card_amount, :value),
+              'currencyCode' => transaction_risk_data.dig(:transaction_risk_data_gift_card_amount, :currency),
+              'exponent' => transaction_risk_data.dig(:transaction_risk_data_gift_card_amount, :exponent)
+            }
+            debit_credit_indicator = transaction_risk_data.dig(:transaction_risk_data_gift_card_amount, :debit_credit_indicator)
+            amount_hash['debitCreditIndicator'] = debit_credit_indicator if debit_credit_indicator
+            xml.amount(amount_hash)
+          end
+          add_date_element(xml, 'transactionRiskDataPreOrderDate', transaction_risk_data[:transaction_risk_data_pre_order_date])
+        end
+      end
+
+      def add_date_element(xml, name, date)
+        xml.tag! name do
+          xml.date('dayOfMonth' => date[:day_of_month], 'month' => date[:month], 'year' => date[:year])
+        end
       end
 
       def add_amount(xml, money, options)
