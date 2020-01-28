@@ -43,6 +43,8 @@
 * Clearhaus: Update currencies without fractions list [chinhle23] #3506
 * Merchant Warrior: Add recurringFlag to purchase & authorize [carrigan] #3504
 * Moneris: use dedicated card_verification methods [alexdunae] #3428
+* Paymentez: Correct refund and void message parsing [carrigan] #3509
+* Mercado Pago: Add taxes and net_amount gateway specific fields [carrigan] #3512
 
 == Version 1.103.0 (Dec 2, 2019)
 * Quickbooks: Mark transactions that returned `AuthorizationFailed` as failures [britth] #3447
