@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
     module Integrations #:nodoc:
       module PerfectMoney
         mattr_accessor :service_url
-        self.service_url = 'https://perfectmoney.is/api/step1.asp'
+        self.service_url = 'https://perfectmoney.com/api/step1.asp'
 
         def self.notification(*args)
           Notification.new(*args)
