@@ -1,6 +1,8 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+
+== Version 1.104.0 (Jan 29, 2020)
 * Adyen: add `recurring_contract_type` GSF [therufs] #3460
 * Credorax: Only pass `3ds_version` parameter when required [britth] #3458
 * EBANX: Include Peru in supported countries [Ruanito] #3443
@@ -14,7 +16,7 @@
 * CyberSource: add several GSFs [therufs] #3465
 * Adyen: add `recurring_contract_type` GSF to auth [therufs] #3471
 * Stripe Payment Intents: Use localized_amount on capture [molbrown] #3475
-* Add support for dLocal installments [kdelemme] #3456
+* dLocal: Add support for installments [kdelemme] #3456
 * Merchant Warrior: Add void operation [leila-alderman] #3474
 * Decidir: Update payment method IDs [leila-alderman] #3476
 * Adyen: Add delivery address [leila-alderman] #3477
@@ -26,25 +28,18 @@
 * EBANX: Add additional data in post [Ruanito] #3482
 * Credorax: Omit phone when nil [leila-alderman] #3490
 * TransFirst TrExp: Remove hyphens from zip [leila-alderman] #3483
-* RuboCop: Layout/SpaceInsideArrayPercentLiteral fix [leila-alderman] #3484
-* RuboCop: Layout/SpaceInsidePercentLiteralDelimiter [leila-alderman] #3485
-* RuboCop: Layout/SpaceInsideArrayLiteralBrackets [leila-alderman] #3486
-* RuboCop: Layout/EmptyLinesAroundClassBody fix [leila-alderman] #3487
 * Mundipagg: Return acquirer code as the error code [leila-alderman] #3492
-* RuboCop: Fix Layout/FirstParameterIndentation [leila-alderman] #3489
 * Braintree Blue: Remove customer hash when using a payment_method_nonce #3495
 * Credorax: Update non-standard currencies list [chinhle23] #3499
-* RuboCop: Fix Layout/EmptyLineAfterGuardClause [leila-alderman] #3496
-* RuboCop: Fix Layout/MultilineArrayBraceLayout [leila-alderman] #3498
-* RuboCop: Fix Layout/SpaceAroundKeyword [leila-alderman] #3497
 * Redsys: Update production URL [britth] #3505
 * Moneris: include AVS and CoF fields when storing vault records [alexdunae] #3446
 * Moneris: Add support for temporary vault storage [alexdunae] #3446
 * Clearhaus: Update currencies without fractions list [chinhle23] #3506
 * Merchant Warrior: Add recurringFlag to purchase & authorize [carrigan] #3504
-* Moneris: use dedicated card_verification methods [alexdunae] #3428
+* CardConnect: Remove domain port validation [leila-alderman] #3494
 * Paymentez: Correct refund and void message parsing [carrigan] #3509
 * Mercado Pago: Add taxes and net_amount gateway specific fields [carrigan] #3512
+* Moneris: use dedicated card_verification methods [alexdunae] #3428
 * Authorize.net: Trim down supported countries [fatcatt316] #3511
 
 == Version 1.103.0 (Dec 2, 2019)
