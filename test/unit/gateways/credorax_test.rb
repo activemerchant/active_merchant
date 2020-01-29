@@ -812,6 +812,33 @@ class CredoraxTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
+  def test_3ds_2_optional_fields_adds_fields_to_the_root_of_the_post
+    post = { }
+    options = { three_ds_2: { optional: { '3ds_optional_field_1': :a, '3ds_optional_field_2': :b } } }
+
+    @gateway.add_3ds_2_optional_fields(post, options)
+
+    assert_equal post, { '3ds_optional_field_1': :a, '3ds_optional_field_2': :b }
+  end
+
+  def test_3ds_2_optional_fields_does_not_overwrite_fields
+    post = { '3ds_optional_field_1': :existing_value }
+    options = { three_ds_2: { optional: { '3ds_optional_field_1': :a, '3ds_optional_field_2': :b } } }
+
+    @gateway.add_3ds_2_optional_fields(post, options)
+
+    assert_equal post, { '3ds_optional_field_1': :existing_value, '3ds_optional_field_2': :b }
+  end
+
+  def test_3ds_2_optional_fields_does_not_empty_fields
+    post = { }
+    options = { three_ds_2: { optional: { '3ds_optional_field_1': '', '3ds_optional_field_2': 'null', '3ds_optional_field_3': nil } } }
+
+    @gateway.add_3ds_2_optional_fields(post, options)
+
+    assert_equal post, { }
+  end
+
   private
 
   def stored_credential_options(*args, id: nil)

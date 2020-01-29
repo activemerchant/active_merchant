@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Credorax: Allow optional 3DS 2 fields [jeremywrowe] #3515
 * Stripe: Remove outdated 'customer options' deprecation [alexdunae] #3401
 
 == Version 1.104.0 (Jan 29, 2020)

@@ -132,6 +132,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_email(post, options)
         add_3d_secure(post, options)
+        add_3ds_2_optional_fields(post, options)
         add_echo(post, options)
         add_submerchant_id(post, options)
         add_stored_credential(post, options)
@@ -147,6 +148,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_email(post, options)
         add_3d_secure(post, options)
+        add_3ds_2_optional_fields(post, options)
         add_echo(post, options)
         add_submerchant_id(post, options)
         add_stored_credential(post, options)
@@ -226,6 +228,21 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(%r((b1=)\d+), '\1[FILTERED]').
           gsub(%r((b5=)\d+), '\1[FILTERED]')
+      end
+
+      def add_3ds_2_optional_fields(post, options)
+        three_ds = options[:three_ds_2] || {}
+
+        if three_ds.has_key?(:optional)
+          three_ds[:optional].each do |key, value|
+            normalized_value = normalize(value)
+            next if normalized_value.nil?
+
+            post[key] = normalized_value unless post[key]
+          end
+        end
+
+        post
       end
 
       private
@@ -405,8 +422,10 @@ module ActiveMerchant #:nodoc:
 
       def sign_request(params)
         params = params.sort
-        params.each { |param| param[1].gsub!(/[<>()\\]/, ' ') }
-        values = params.map { |param| param[1].strip }
+        values = params.map do |param|
+          value = param[1].gsub(/[<>()\\]/, ' ')
+          value.strip
+        end
         Digest::MD5.hexdigest(values.join + @options[:cipher_key])
       end
 
