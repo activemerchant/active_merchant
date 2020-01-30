@@ -9,9 +9,9 @@ module ActiveMerchant #:nodoc:
 
       ALLOWED_METHOD_STATES = %w[automatic manual].freeze
       ALLOWED_CANCELLATION_REASONS = %w[duplicate fraudulent requested_by_customer abandoned].freeze
-      CREATE_INTENT_ATTRIBUTES = %i[description statement_descriptor receipt_email save_payment_method]
-      CONFIRM_INTENT_ATTRIBUTES = %i[receipt_email return_url save_payment_method setup_future_usage off_session]
-      UPDATE_INTENT_ATTRIBUTES = %i[description statement_descriptor receipt_email setup_future_usage]
+      CREATE_INTENT_ATTRIBUTES = %i[description statement_descriptor receipt_email save_payment_method cross_border_classification]
+      CONFIRM_INTENT_ATTRIBUTES = %i[receipt_email return_url save_payment_method setup_future_usage off_session cross_border_classification]
+      UPDATE_INTENT_ATTRIBUTES = %i[description statement_descriptor receipt_email setup_future_usage cross_border_classification]
       DEFAULT_API_VERSION = '2019-05-16'
 
       def create_intent(money, payment_method, options = {})
