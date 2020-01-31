@@ -92,7 +92,7 @@ guide and [Standardized 3DS Fields](https://github.com/activemerchant/active_mer
 The [ActiveMerchant Wiki](https://github.com/activemerchant/active_merchant/wikis) contains a [table of features supported by each gateway](https://github.com/activemerchant/active_merchant/wiki/Gateway-Feature-Matrix).
 
 * [Authorize.Net CIM](http://www.authorize.net/) - US
-* [Authorize.Net](http://www.authorize.net/) - AD, AT, AU, BE, BG, CA, CH, CY, CZ, DE, DK, ES, FI, FR, GB, GB, GI, GR, HU, IE, IT, LI, LU, MC, MT, NL, NO, PL, PT, RO, SE, SI, SK, SM, TR, US, VA
+* [Authorize.Net](http://www.authorize.net/) - AU, CA, US
 * [Axcess MS](http://www.axcessms.com/) - AD, AT, BE, BG, BR, CA, CH, CY, CZ, DE, DK, EE, ES, FI, FO, FR, GB, GI, GR, HR, HU, IE, IL, IM, IS, IT, LI, LT, LU, LV, MC, MT, MX, NL, NO, PL, PT, RO, RU, SE, SI, SK, TR, US, VA
 * [Balanced](https://www.balancedpayments.com/) - US
 * [Bambora Asia-Pacific](http://www.bambora.com/) - AU, NZ
