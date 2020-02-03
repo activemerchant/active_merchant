@@ -166,7 +166,7 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct! :xml, :encoding => 'UTF-8'
         xml.declare! :DOCTYPE, :paymentService, :PUBLIC, '-//WorldPay//DTD WorldPay PaymentService v1//EN', 'http://dtd.worldpay.com/paymentService_v1.dtd'
-        xml.tag! 'paymentService', 'version' => '1.4', 'merchantCode' => @options[:login] do
+        xml.paymentService 'version' => '1.4', 'merchantCode' => @options[:login] do
           yield xml
         end
         xml.target!
@@ -174,8 +174,8 @@ module ActiveMerchant #:nodoc:
 
       def build_order_modify_request(authorization)
         build_request do |xml|
-          xml.tag! 'modify' do
-            xml.tag! 'orderModification', 'orderCode' => authorization do
+          xml.modify do
+            xml.orderModification 'orderCode' => authorization do
               yield xml
             end
           end
@@ -184,20 +184,20 @@ module ActiveMerchant #:nodoc:
 
       def build_order_inquiry_request(authorization, options)
         build_request do |xml|
-          xml.tag! 'inquiry' do
-            xml.tag! 'orderInquiry', 'orderCode' => authorization
+          xml.inquiry do
+            xml.orderInquiry 'orderCode' => authorization
           end
         end
       end
 
       def build_authorization_request(money, payment_method, options)
         build_request do |xml|
-          xml.tag! 'submit' do
-            xml.tag! 'order', order_tag_attributes(options) do
+          xml.submit do
+            xml.order order_tag_attributes(options) do
               xml.description(options[:description].blank? ? 'Purchase' : options[:description])
               add_amount(xml, money, options)
               if options[:order_content]
-                xml.tag! 'orderContent' do
+                xml.orderContent do
                   xml.cdata! options[:order_content]
                 end
               end
@@ -219,23 +219,21 @@ module ActiveMerchant #:nodoc:
 
       def build_capture_request(money, authorization, options)
         build_order_modify_request(authorization) do |xml|
-          xml.tag! 'capture' do
+          xml.capture do
             time = Time.now
-            xml.tag! 'date', 'dayOfMonth' => time.day, 'month' => time.month, 'year'=> time.year
+            xml.date 'dayOfMonth' => time.day, 'month' => time.month, 'year'=> time.year
             add_amount(xml, money, options)
           end
         end
       end
 
       def build_void_request(authorization, options)
-        build_order_modify_request(authorization) do |xml|
-          xml.tag! 'cancel'
-        end
+        build_order_modify_request(authorization, &:cancel)
       end
 
       def build_refund_request(money, authorization, options)
         build_order_modify_request(authorization) do |xml|
-          xml.tag! 'refund' do
+          xml.refund do
             add_amount(xml, money, options.merge(:debit_credit_indicator => 'credit'))
           end
         end
@@ -243,12 +241,12 @@ module ActiveMerchant #:nodoc:
 
       def build_store_request(credit_card, options)
         build_request do |xml|
-          xml.tag! 'submit' do
-            xml.tag! 'paymentTokenCreate' do
+          xml.submit do
+            xml.paymentTokenCreate do
               add_authenticated_shopper_id(xml, options)
-              xml.tag! 'createToken'
-              xml.tag! 'paymentInstrument' do
-                xml.tag! 'cardDetails' do
+              xml.createToken
+              xml.paymentInstrument do
+                xml.cardDetails do
                   add_card(xml, credit_card, options)
                 end
               end
@@ -258,11 +256,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_additional_3ds_data(xml, options)
-        xml.tag! 'additional3DSData', 'dfReferenceId' => options[:session_id]
+        xml.additional3DSData 'dfReferenceId' => options[:session_id]
       end
 
       def add_3ds_exemption(xml, options)
-        xml.tag! 'exemption', 'type' => options[:exemption_type], 'placement' => options[:exemption_placement] || 'AUTHORISATION'
+        xml.exemption 'type' => options[:exemption_type], 'placement' => options[:exemption_placement] || 'AUTHORISATION'
       end
 
       def add_amount(xml, money, options)
@@ -276,25 +274,25 @@ module ActiveMerchant #:nodoc:
 
         amount_hash['debitCreditIndicator'] = options[:debit_credit_indicator] if options[:debit_credit_indicator]
 
-        xml.tag! 'amount', amount_hash
+        xml.amount amount_hash
       end
 
       def add_payment_method(xml, amount, payment_method, options)
         if options[:payment_type] == :pay_as_order
           if options[:merchant_code]
-            xml.tag! 'payAsOrder', 'orderCode' => payment_method, 'merchantCode' => options[:merchant_code] do
+            xml.payAsOrder 'orderCode' => payment_method, 'merchantCode' => options[:merchant_code] do
               add_amount(xml, amount, options)
             end
           else
-            xml.tag! 'payAsOrder', 'orderCode' => payment_method do
+            xml.payAsOrder 'orderCode' => payment_method do
               add_amount(xml, amount, options)
             end
           end
         else
-          xml.tag! 'paymentDetails', credit_fund_transfer_attribute(options) do
+          xml.paymentDetails credit_fund_transfer_attribute(options) do
             if options[:payment_type] == :token
               xml.tag! 'TOKEN-SSL', 'tokenScope' => options[:token_scope] do
-                xml.tag! 'paymentTokenID', options[:token_id]
+                xml.paymentTokenID options[:token_id]
               end
             else
               xml.tag! card_code_for(payment_method) do
@@ -303,10 +301,10 @@ module ActiveMerchant #:nodoc:
             end
             add_stored_credential_options(xml, options)
             if options[:ip] && options[:session_id]
-              xml.tag! 'session', 'shopperIPAddress' => options[:ip], 'id' => options[:session_id]
+              xml.session 'shopperIPAddress' => options[:ip], 'id' => options[:session_id]
             else
-              xml.tag! 'session', 'shopperIPAddress' => options[:ip] if options[:ip]
-              xml.tag! 'session', 'id' => options[:session_id] if options[:session_id]
+              xml.session 'shopperIPAddress' => options[:ip] if options[:ip]
+              xml.session 'id' => options[:session_id] if options[:session_id]
             end
 
             if three_d_secure = options[:three_d_secure]
@@ -317,26 +315,30 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_three_d_secure(three_d_secure, xml)
-        xml.tag! 'info3DSecure' do
-          xml.tag! 'threeDSVersion', three_d_secure[:version]
+        xml.info3DSecure do
+          xml.threeDSVersion three_d_secure[:version]
           if three_d_secure[:version] =~ /^2/
-            xml.tag! 'dsTransactionId', three_d_secure[:ds_transaction_id]
+            xml.dsTransactionId three_d_secure[:ds_transaction_id]
           else
-            xml.tag! 'xid', three_d_secure[:xid]
+            xml.xid three_d_secure[:xid]
           end
-          xml.tag! 'cavv', three_d_secure[:cavv]
-          xml.tag! 'eci', three_d_secure[:eci]
+          xml.cavv three_d_secure[:cavv]
+          xml.eci three_d_secure[:eci]
         end
       end
 
       def add_card(xml, payment_method, options)
-        xml.tag! 'cardNumber', payment_method.number
-        xml.tag! 'expiryDate' do
-          xml.tag! 'date', 'month' => format(payment_method.month, :two_digits), 'year' => format(payment_method.year, :four_digits)
+        xml.cardNumber payment_method.number
+        xml.expiryDate do
+          xml.date(
+            'month' => format(payment_method.month, :two_digits),
+            'year' => format(payment_method.year, :four_digits)
+          )
         end
 
-        xml.tag! 'cardHolderName', options[:execute_threed] && !options[:three_ds_version]&.start_with?('2') ? '3D' : payment_method.name
-        xml.tag! 'cvc', payment_method.verification_value
+        card_holder_name = options[:execute_threed] && !options[:three_ds_version]&.start_with?('2') ? '3D' : payment_method.name
+        xml.cardHolderName card_holder_name
+        xml.cvc payment_method.verification_value
 
         add_address(xml, (options[:billing_address] || options[:address]))
       end
@@ -351,7 +353,7 @@ module ActiveMerchant #:nodoc:
 
       def add_stored_credential_using_normalized_fields(xml, options)
         if options[:stored_credential][:initial_transaction]
-          xml.tag! 'storedCredentials', 'usage' => 'FIRST'
+          xml.storedCredentials 'usage' => 'FIRST'
         else
           reason = case options[:stored_credential][:reason_type]
                    when 'installment' then 'INSTALMENT'
@@ -359,8 +361,8 @@ module ActiveMerchant #:nodoc:
                    when 'unscheduled' then 'UNSCHEDULED'
                    end
 
-          xml.tag! 'storedCredentials', 'usage' => 'USED', 'merchantInitiatedReason' => reason do
-            xml.tag! 'schemeTransactionIdentifier', options[:stored_credential][:network_transaction_id] if options[:stored_credential][:network_transaction_id]
+          xml.storedCredentials 'usage' => 'USED', 'merchantInitiatedReason' => reason do
+            xml.schemeTransactionIdentifier options[:stored_credential][:network_transaction_id] if options[:stored_credential][:network_transaction_id]
           end
         end
       end
@@ -369,29 +371,29 @@ module ActiveMerchant #:nodoc:
         return unless options[:stored_credential_usage]
 
         if options[:stored_credential_initiated_reason]
-          xml.tag! 'storedCredentials', 'usage' => options[:stored_credential_usage], 'merchantInitiatedReason' => options[:stored_credential_initiated_reason] do
-            xml.tag! 'schemeTransactionIdentifier', options[:stored_credential_transaction_id] if options[:stored_credential_transaction_id]
+          xml.storedCredentials 'usage' => options[:stored_credential_usage], 'merchantInitiatedReason' => options[:stored_credential_initiated_reason] do
+            xml.schemeTransactionIdentifier options[:stored_credential_transaction_id] if options[:stored_credential_transaction_id]
           end
         else
-          xml.tag! 'storedCredentials', 'usage' => options[:stored_credential_usage]
+          xml.storedCredentials 'usage' => options[:stored_credential_usage]
         end
       end
 
       def add_shopper(xml, options)
         return unless options[:execute_threed] || options[:email] || options[:customer]
 
-        xml.tag! 'shopper' do
-          xml.tag! 'shopperEmailAddress', options[:email] if  options[:email]
+        xml.shopper do
+          xml.shopperEmailAddress options[:email] if options[:email]
           add_authenticated_shopper_id(xml, options)
-          xml.tag! 'browser' do
-            xml.tag! 'acceptHeader', options[:accept_header]
-            xml.tag! 'userAgentHeader', options[:user_agent]
+          xml.browser do
+            xml.acceptHeader options[:accept_header]
+            xml.userAgentHeader options[:user_agent]
           end
         end
       end
 
       def add_authenticated_shopper_id(xml, options)
-        xml.tag!('authenticatedShopperID', options[:customer]) if options[:customer]
+        xml.authenticatedShopperID options[:customer] if options[:customer]
       end
 
       def add_address(xml, address)
@@ -399,40 +401,40 @@ module ActiveMerchant #:nodoc:
 
         address = address_with_defaults(address)
 
-        xml.tag! 'cardAddress' do
-          xml.tag! 'address' do
+        xml.cardAddress do
+          xml.address do
             if m = /^\s*([^\s]+)\s+(.+)$/.match(address[:name])
-              xml.tag! 'firstName', m[1]
-              xml.tag! 'lastName', m[2]
+              xml.firstName m[1]
+              xml.lastName m[2]
             end
-            xml.tag! 'address1', address[:address1]
-            xml.tag! 'address2', address[:address2] if address[:address2]
-            xml.tag! 'postalCode', address[:zip]
-            xml.tag! 'city', address[:city]
-            xml.tag! 'state', address[:state]
-            xml.tag! 'countryCode', address[:country]
-            xml.tag! 'telephoneNumber', address[:phone] if address[:phone]
+            xml.address1 address[:address1]
+            xml.address2 address[:address2] if address[:address2]
+            xml.postalCode address[:zip]
+            xml.city address[:city]
+            xml.state address[:state]
+            xml.countryCode address[:country]
+            xml.telephoneNumber address[:phone] if address[:phone]
           end
         end
       end
 
       def add_hcg_additional_data(xml, options)
-        xml.tag! 'hcgAdditionalData' do
+        xml.hcgAdditionalData do
           options[:hcg_additional_data].each do |k, v|
-            xml.tag! 'param', {name: k.to_s}, v
+            xml.param({name: k.to_s}, v)
           end
         end
       end
 
       def add_instalments_data(xml, options)
-        xml.tag! 'thirdPartyData' do
-          xml.tag! 'instalments', options[:instalments]
-          xml.tag! 'cpf', options[:cpf] if options[:cpf]
+        xml.thirdPartyData do
+          xml.instalments options[:instalments]
+          xml.cpf options[:cpf] if options[:cpf]
         end
       end
 
       def add_moto_flag(xml, options)
-        xml.tag! 'dynamicInteractionType', 'type' => 'MOTO'
+        xml.dynamicInteractionType 'type' => 'MOTO'
       end
 
       def address_with_defaults(address)

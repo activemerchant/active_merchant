@@ -4,6 +4,7 @@
 * Credorax: Allow optional 3DS 2 fields [jeremywrowe] #3515
 * Stripe: Remove outdated 'customer options' deprecation [alexdunae] #3401
 * BPoint: Remove amount from void requests [leila-alderman] #3518
+* Worldpay: Remove unnecessary .tag! methods [leila-alderman] #3519
 
 == Version 1.104.0 (Jan 29, 2020)
 * Adyen: add `recurring_contract_type` GSF [therufs] #3460
