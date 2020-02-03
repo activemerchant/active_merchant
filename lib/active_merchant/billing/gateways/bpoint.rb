@@ -61,10 +61,10 @@ module ActiveMerchant #:nodoc:
         commit(request_body)
       end
 
-      def void(amount, authorization, options={})
+      def void(authorization, options={})
         request_body = soap_request do |xml|
           process_payment(xml) do |payment_xml|
-            add_void(payment_xml, amount, authorization, options)
+            add_void(payment_xml, authorization, options)
           end
         end
         commit(request_body)
@@ -73,7 +73,7 @@ module ActiveMerchant #:nodoc:
       def verify(credit_card, options={})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
-          r.process(:ignore_result) { void(100, r.authorization, options) }
+          r.process(:ignore_result) { void(r.authorization, options.merge(amount: 100)) }
         end
       end
 
@@ -154,7 +154,9 @@ module ActiveMerchant #:nodoc:
         transaction_number_xml(xml, transaction_number)
       end
 
-      def add_void(xml, amount, transaction_number, options)
+      def add_void(xml, transaction_number, options)
+        # The amount parameter is required for void requests on BPoint.
+        amount = options[:amount]
         payment_xml(xml, 'REVERSAL', amount, options)
         transaction_number_xml(xml, transaction_number)
       end

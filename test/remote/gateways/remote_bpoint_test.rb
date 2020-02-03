@@ -103,12 +103,12 @@ class RemoteBpointTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert void = @gateway.void(@amount, auth.authorization)
+    assert void = @gateway.void(auth.authorization, amount: @amount)
     assert_success void
   end
 
   def test_failed_void
-    response = @gateway.void(@amount, '')
+    response = @gateway.void('', amount: @amount)
     assert_failure response
   end
 
