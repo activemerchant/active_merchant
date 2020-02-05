@@ -120,7 +120,7 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
-          gsub(/(integration_key\\?":\\?")(\d*)/, '\1[FILTERED]').
+          gsub(/(integration_key\\?":\\?")(\w*)/, '\1[FILTERED]').
           gsub(/(card_number\\?":\\?")(\d*)/, '\1[FILTERED]').
           gsub(/(card_cvv\\?":\\?")(\d*)/, '\1[FILTERED]')
       end

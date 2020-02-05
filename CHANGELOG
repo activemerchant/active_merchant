@@ -6,6 +6,7 @@
 * BPoint: Remove amount from void requests [leila-alderman] #3518
 * Worldpay: Remove unnecessary .tag! methods [leila-alderman] #3519
 * Stripe Payment Intents: Allow cross_border_classification parameter [fatcatt316] #3508
+* EBANX: Fix `scrub` [chinhle23] #3521
 
 == Version 1.104.0 (Jan 29, 2020)
 * Adyen: add `recurring_contract_type` GSF [therufs] #3460
