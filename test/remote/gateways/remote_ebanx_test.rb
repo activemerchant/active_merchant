@@ -18,7 +18,11 @@ class RemoteEbanxTest < Test::Unit::TestCase
       }),
       order_id: generate_unique_id,
       document: '853.513.468-93',
-      device_id: '34c376b2767'
+      device_id: '34c376b2767',
+      metadata: {
+        metadata_1: 'test',
+        metadata_2: 'test2'
+      }
     }
   end
 
