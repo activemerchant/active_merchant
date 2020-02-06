@@ -201,6 +201,7 @@ module ActiveMerchant #:nodoc:
 
       def add_additional_data(post, options)
         post[:device_id] = options[:device_id] if options[:device_id]
+        post[:metadata] = options[:metadata] if options[:metadata]
       end
 
       def parse(body)
@@ -209,7 +210,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, parameters)
         url = url_for((test? ? test_url : live_url), action, parameters)
-        response = parse(ssl_request(HTTP_METHOD[action], url, post_data(action, parameters), {}))
+        response = parse(ssl_request(HTTP_METHOD[action], url, post_data(action, parameters), {'x-ebanx-client-user-agent': "ActiveMerchant/#{ActiveMerchant::VERSION}"}))
 
         success = success_from(action, response)
 
