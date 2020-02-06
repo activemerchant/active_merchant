@@ -214,6 +214,9 @@ module ActiveMerchant #:nodoc:
 
       def add_customer_data(params, options)
         params['Customer'] ||= {}
+        params['Mobile'] = options.dig(:customer, :mobile)
+        params['Reference'] = options.dig(:customer, :reference)
+        params['Url'] = options.dig(:customer, :url)
         add_address(params['Customer'], (options[:billing_address] || options[:address]), {:email => options[:email]})
         params['ShippingAddress'] = {}
         add_address(params['ShippingAddress'], options[:shipping_address], {:skip_company => true})
