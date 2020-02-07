@@ -2,13 +2,14 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PayboxDirectGateway < Gateway
       class_attribute :live_url_backup
+      class_attribute :api_version
 
       self.test_url   = 'https://preprod-ppps.paybox.com/PPPS.php'
       self.live_url   = 'https://ppps.paybox.com/PPPS.php'
       self.live_url_backup = 'https://ppps1.paybox.com/PPPS.php'
 
       # Payment API Version
-      API_VERSION = '00103'
+      self.api_version = '00103'
 
       # Transactions hash
       TRANSACTIONS = {
@@ -178,7 +179,7 @@ module ActiveMerchant #:nodoc:
 
       def post_data(action, parameters = {})
         parameters.update(
-          :version => API_VERSION,
+          :version => api_version,
           :type => TRANSACTIONS[action.to_sym],
           :dateq => Time.now.strftime('%d%m%Y%H%M%S'),
           :numquestion => unique_id(parameters[:order_id]),
