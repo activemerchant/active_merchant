@@ -118,8 +118,6 @@ module ActiveMerchant #:nodoc: ALL
       # === Optional Options
       # * <tt>test</tt> -- determines which server to connect to
       def initialize(options = {})
-        Gateway.logger = Logger.new(STDOUT)
-        # Gateway.logger.level = Logger::DEBUG
         super
       end
 
