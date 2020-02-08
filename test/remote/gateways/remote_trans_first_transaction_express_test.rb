@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
-
   def setup
     @gateway = TransFirstTransactionExpressGateway.new(fixtures(:trans_first_transaction_express))
 

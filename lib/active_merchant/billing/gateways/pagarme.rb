@@ -44,26 +44,20 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options={})
-        if authorization.nil?
-          return Response.new(false, 'Não é possível capturar uma transação sem uma prévia autorização.')
-        end
+        return Response.new(false, 'Não é possível capturar uma transação sem uma prévia autorização.') if authorization.nil?
 
         post = {}
         commit(:post, "transactions/#{authorization}/capture", post)
       end
 
       def refund(money, authorization, options={})
-        if authorization.nil?
-          return Response.new(false, 'Não é possível estornar uma transação sem uma prévia captura.')
-        end
+        return Response.new(false, 'Não é possível estornar uma transação sem uma prévia captura.') if authorization.nil?
 
         void(authorization, options)
       end
 
       def void(authorization, options={})
-        if authorization.nil?
-          return Response.new(false, 'Não é possível estornar uma transação autorizada sem uma prévia autorização.')
-        end
+        return Response.new(false, 'Não é possível estornar uma transação autorizada sem uma prévia autorização.') if authorization.nil?
 
         post = {}
         commit(:post, "transactions/#{authorization}/refund", post)
@@ -125,6 +119,7 @@ module ActiveMerchant #:nodoc:
 
         params.map do |key, value|
           next if value != false && value.blank?
+
           if value.is_a?(Hash)
             h = {}
             value.each do |k, v|
@@ -225,9 +220,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
-        if success_from(response)
-          response['id']
-        end
+        response['id'] if success_from(response)
       end
 
       def test?

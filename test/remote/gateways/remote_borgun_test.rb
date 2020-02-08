@@ -8,7 +8,7 @@ class RemoteBorgunTest < Test::Unit::TestCase
     @gateway = BorgunGateway.new(fixtures(:borgun))
 
     @amount = 100
-    @credit_card = credit_card('5587402000012011', year: 2018, month: 9, verification_value: 415)
+    @credit_card = credit_card('5587402000012011', year: 2022, month: 9, verification_value: 415)
     @declined_card = credit_card('4155520000000002')
 
     @options = {

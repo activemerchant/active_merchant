@@ -7,9 +7,9 @@ class MerchantESolutionsTest < Test::Unit::TestCase
     Base.mode = :test
 
     @gateway = MerchantESolutionsGateway.new(
-                 :login => 'login',
-                 :password => 'password'
-               )
+      :login => 'login',
+      :password => 'password'
+    )
 
     @credit_card = credit_card
     @amount = 100

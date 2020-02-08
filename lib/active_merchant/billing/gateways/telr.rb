@@ -109,6 +109,7 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_method(doc, payment_method, options)
         return if payment_method.is_a?(String)
+
         doc.card do
           doc.number(payment_method.number)
           doc.cvv(payment_method.verification_value)
@@ -121,6 +122,7 @@ module ActiveMerchant #:nodoc:
 
       def add_customer_data(doc, payment_method, options)
         return if payment_method.is_a?(String)
+
         doc.billing do
           doc.name do
             doc.first(payment_method.first_name)
@@ -140,15 +142,14 @@ module ActiveMerchant #:nodoc:
         doc.city(address[:city] || 'City')
         doc.line1(address[:address1] || 'Address')
         return unless address
+
         doc.line2(address[:address2]) if address[:address2]
         doc.zip(address[:zip]) if address[:zip]
         doc.region(address[:state]) if address[:state]
       end
 
       def add_ref(doc, action, payment_method)
-        if ['capture', 'refund', 'void'].include?(action) || payment_method.is_a?(String)
-          doc.ref(split_authorization(payment_method)[0])
-        end
+        doc.ref(split_authorization(payment_method)[0]) if ['capture', 'refund', 'void'].include?(action) || payment_method.is_a?(String)
       end
 
       def add_authentication(doc)
@@ -251,9 +252,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_code_from(succeeded, response)
-        unless succeeded
-          response[:code]
-        end
+        response[:code] unless succeeded
       end
 
       def cvv_result(parsed)

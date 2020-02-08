@@ -78,7 +78,8 @@ class RemotePaymentezTest < Test::Unit::TestCase
         configuration1: 'value1',
         configuration2: 'value2',
         configuration3: 'value3'
-      }}
+      }
+    }
 
     response = @gateway.purchase(@amount, @credit_card, @options.merge(options))
     assert_success response
@@ -104,6 +105,7 @@ class RemotePaymentezTest < Test::Unit::TestCase
 
     assert refund = @gateway.refund(@amount, auth.authorization, @options)
     assert_success refund
+    assert_equal 'Completed', refund.message
   end
 
   def test_successful_refund_with_elo
@@ -112,6 +114,7 @@ class RemotePaymentezTest < Test::Unit::TestCase
 
     assert refund = @gateway.refund(@amount, auth.authorization, @options)
     assert_success refund
+    assert_equal 'Completed', refund.message
   end
 
   def test_successful_void
@@ -120,6 +123,7 @@ class RemotePaymentezTest < Test::Unit::TestCase
 
     assert void = @gateway.void(auth.authorization)
     assert_success void
+    assert_equal 'Completed', void.message
   end
 
   def test_successful_void_with_elo
@@ -128,6 +132,7 @@ class RemotePaymentezTest < Test::Unit::TestCase
 
     assert void = @gateway.void(auth.authorization)
     assert_success void
+    assert_equal 'Completed', void.message
   end
 
   def test_failed_void

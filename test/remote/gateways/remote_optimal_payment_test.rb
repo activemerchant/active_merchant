@@ -141,10 +141,10 @@ class RemoteOptimalPaymentTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = OptimalPaymentGateway.new(
-                :account_number => '1',
-                :store_id => 'bad',
-                :password => 'bad'
-              )
+      :account_number => '1',
+      :store_id => 'bad',
+      :password => 'bad'
+    )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'invalid merchant account', response.message

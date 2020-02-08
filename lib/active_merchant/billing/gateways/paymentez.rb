@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://ccapi-stg.paymentez.com/v2/'
       self.live_url = 'https://ccapi.paymentez.com/v2/'
 
-      self.supported_countries = %w[MX EC VE CO BR CL]
+      self.supported_countries = %w[MX EC CO BR CL PE]
       self.default_currency = 'USD'
       self.supported_cardtypes = %i[visa master american_express diners_club elo]
 
@@ -236,10 +236,13 @@ module ActiveMerchant #:nodoc:
       def card_success_from(response)
         return false if response.include?('error')
         return true if response['message'] == 'card deleted'
+
         response['card']['status'] == 'valid'
       end
 
       def message_from(response)
+        return response['detail'] if response['detail'].present?
+
         if !success_from(response) && response['error']
           response['error'] && response['error']['type']
         else
@@ -274,11 +277,10 @@ module ActiveMerchant #:nodoc:
 
       def error_code_from(response)
         return if success_from(response)
+
         if response['transaction']
           detail = response['transaction']['status_detail']
-          if STANDARD_ERROR_CODE_MAPPING.include?(detail)
-            return STANDARD_ERROR_CODE[STANDARD_ERROR_CODE_MAPPING[detail]]
-          end
+          return STANDARD_ERROR_CODE[STANDARD_ERROR_CODE_MAPPING[detail]] if STANDARD_ERROR_CODE_MAPPING.include?(detail)
         elsif response['error']
           return STANDARD_ERROR_CODE[:config_error]
         end

@@ -157,10 +157,7 @@ class PagoFacilTest < Test::Unit::TestCase
            'paisDetectedIP'=>'MX',
            'qa'=>'1',
            'https'=>'on'},
-         'status'=>'success'
-        }
-      }
-    }.to_json
+         'status'=>'success'}}}.to_json
   end
 
   def failed_purchase_response
@@ -219,10 +216,7 @@ class PagoFacilTest < Test::Unit::TestCase
            'anyoExpiracion'=>'',
            'mesExpiracion'=>'',
            'https'=>'on'},
-         'status'=>'success'
-        }
-      }
-    }.to_json
+         'status'=>'success'}}}.to_json
   end
 
   def invalid_json_response

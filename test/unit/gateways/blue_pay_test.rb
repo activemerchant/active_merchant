@@ -18,6 +18,7 @@ class BluePayTest < Test::Unit::TestCase
     )
     @amount = 100
     @credit_card = credit_card
+    @check = check
     @rebill_id = '100096219669'
     @rebill_status = 'active'
     @options = {ip: '192.168.0.1'}
@@ -132,12 +133,13 @@ class BluePayTest < Test::Unit::TestCase
 
   def test_refund_passing_extra_info
     response = stub_comms do
-      @gateway.refund(50, '123456789', @options.merge({:card_number => @credit_card.number, :first_name => 'Bob', :last_name => 'Smith', :zip => '12345'}))
+      @gateway.refund(50, '123456789', @options.merge({:card_number => @credit_card.number, :first_name => 'Bob', :last_name => 'Smith', :zip => '12345', :doc_type => 'WEB'}))
     end.check_request do |endpoint, data, headers|
       assert_match(/NAME1=Bob/, data)
       assert_match(/NAME2=Smith/, data)
       assert_match(/ZIP=12345/, data)
       assert_match(/CUSTOMER_IP=192\.168\.0\.1/, data)
+      assert_match(/DOC_TYPE=WEB/, data)
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -170,12 +172,22 @@ class BluePayTest < Test::Unit::TestCase
     end
   end
 
+  def test_successful_credit_with_check
+    response = stub_comms do
+      @gateway.credit(50, @check, @options.merge({:doc_type => 'PPD'}))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/DOC_TYPE=PPD/, data)
+    end.respond_with(successful_credit_response)
+
+    assert_success response
+  end
+
   def test_supported_countries
     assert_equal ['US', 'CA'], BluePayGateway.supported_countries
   end
 
   def test_supported_card_types
-    assert_equal [:visa, :master, :american_express, :discover, :diners_club, :jcb],  BluePayGateway.supported_cardtypes
+    assert_equal [:visa, :master, :american_express, :discover, :diners_club, :jcb], BluePayGateway.supported_cardtypes
   end
 
   def test_parser_extracts_exactly_the_keys_in_gateway_response
@@ -322,6 +334,10 @@ class BluePayTest < Test::Unit::TestCase
 
   def successful_status_recurring_response
     'last_date=2012-04-13%2009%3A49%3A27&usual_date=2012-04-13%2000%3A00%3A00&template_id=100096219668&status=active&account_id=100096218902&rebill_id=100096219669&reb_amount=2.00&creation_date=2012-04-13%2009%3A49%3A19&sched_expr=1%20DAY&next_date=2012-04-13%2000%3A00%3A00&next_amount=&user_id=100096218903&cycles_remain=4'
+  end
+
+  def successful_credit_response
+    'REBID=&AVS=_&TRANS_TYPE=CREDIT&STATUS=1&PAYMENT_ACCOUNT_MASK=C%3A244183602%3Axxxx8535&AUTH_CODE=&CARD_TYPE=ACH&MESSAGE=App%20ACH%20Credit&CVV2=_&TRANS_ID=100786598799'
   end
 
   def transcript

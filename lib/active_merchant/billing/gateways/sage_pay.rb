@@ -312,6 +312,7 @@ module ActiveMerchant #:nodoc:
 
       def sanitize_phone(phone)
         return nil unless phone
+
         cleansed = phone.to_s.gsub(/[^0-9+]/, '')
         truncate(cleansed, 20)
       end
@@ -361,11 +362,11 @@ module ActiveMerchant #:nodoc:
         when :store
           response['Token']
         else
-          [ params[:VendorTxCode],
-            response['VPSTxId'] || params[:VPSTxId],
-            response['TxAuthNo'],
-            response['SecurityKey'] || params[:SecurityKey],
-            action ].join(';')
+          [params[:VendorTxCode],
+           response['VPSTxId'] || params[:VPSTxId],
+           response['TxAuthNo'],
+           response['SecurityKey'] || params[:SecurityKey],
+           action].join(';')
         end
       end
 
@@ -379,21 +380,22 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_url(action)
-        endpoint = case action
-        when :purchase, :authorization then 'vspdirect-register'
-        when :store then 'directtoken'
-        else TRANSACTIONS[action].downcase
-        end
+        endpoint =
+          case action
+          when :purchase, :authorization then 'vspdirect-register'
+          when :store then 'directtoken'
+          else TRANSACTIONS[action].downcase
+          end
         "#{test? ? self.test_url : self.live_url}/#{endpoint}.vsp"
       end
 
       def build_simulator_url(action)
-        endpoint = [ :purchase, :authorization ].include?(action) ? 'VSPDirectGateway.asp' : "VSPServerGateway.asp?Service=Vendor#{TRANSACTIONS[action].capitalize}Tx"
+        endpoint = [:purchase, :authorization].include?(action) ? 'VSPDirectGateway.asp' : "VSPServerGateway.asp?Service=Vendor#{TRANSACTIONS[action].capitalize}Tx"
         "#{self.simulator_url}/#{endpoint}"
       end
 
       def message_from(response)
-        response['Status'] == APPROVED ? 'Success' : (response['StatusDetail'] || 'Unspecified error')    # simonr 20080207 can't actually get non-nil blanks, so this is shorter
+        response['Status'] == APPROVED ? 'Success' : (response['StatusDetail'] || 'Unspecified error') # simonr 20080207 can't actually get non-nil blanks, so this is shorter
       end
 
       def post_data(action, parameters = {})
@@ -403,9 +405,7 @@ module ActiveMerchant #:nodoc:
           :VPSProtocol => @options.fetch(:protocol_version, '3.00')
         )
 
-        if(application_id && (application_id != Gateway.application_id))
-          parameters.update(:ReferrerID => application_id)
-        end
+        parameters.update(:ReferrerID => application_id) if application_id && (application_id != Gateway.application_id)
 
         parameters.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
@@ -427,6 +427,7 @@ module ActiveMerchant #:nodoc:
 
       def past_purchase_reference?(payment_method)
         return false unless payment_method.is_a?(String)
+
         payment_method.split(';').last == 'purchase'
       end
     end

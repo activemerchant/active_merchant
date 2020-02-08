@@ -5,9 +5,9 @@ require 'test_helper'
 class NetaxeptTest < Test::Unit::TestCase
   def setup
     @gateway = NetaxeptGateway.new(
-                 :login => 'login',
-                 :password => 'password'
-               )
+      :login => 'login',
+      :password => 'password'
+    )
 
     @credit_card = credit_card
     @amount = 100

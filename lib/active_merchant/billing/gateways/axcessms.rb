@@ -93,9 +93,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse_element(response, node)
-        if node.has_attributes?
-          node.attributes.each { |name, value| response["#{node.name}_#{name}".underscore.to_sym] = value }
-        end
+        node.attributes.each { |name, value| response["#{node.name}_#{name}".underscore.to_sym] = value } if node.has_attributes?
 
         if node.has_elements?
           node.elements.each { |element| parse_element(response, element) }
@@ -168,6 +166,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(xml, address)
         raise ArgumentError.new('Address is required') unless address
+
         xml.tag! 'Address' do
           xml.tag! 'Street', "#{address[:address1]} #{address[:address2]}".strip
           xml.tag! 'City', address[:city]

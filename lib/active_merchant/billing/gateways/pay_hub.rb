@@ -145,6 +145,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(post, address)
         return unless address
+
         post[:address1] = address[:address1]
         post[:address2] = address[:address2]
         post[:zip] = address[:zip]
@@ -153,7 +154,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_amount(post, amount)
-        post[:amount] =  amount(amount)
+        post[:amount] = amount(amount)
       end
 
       def add_creditcard(post, creditcard)

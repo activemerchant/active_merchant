@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['AR', 'BR', 'CL', 'CO', 'MX', 'PE', 'UY', 'TR']
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club, :maestro, :naranja]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club, :maestro, :naranja, :cabal]
 
       self.homepage_url = 'https://dlocal.com/'
       self.display_name = 'dLocal'
@@ -32,7 +32,7 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, authorization, options={})
         post = {}
-        post[:payment_id] = authorization
+        post[:authorization_id] = authorization
         add_invoice(post, money, options) if money
         commit('capture', post, options)
       end
@@ -47,7 +47,7 @@ module ActiveMerchant #:nodoc:
 
       def void(authorization, options={})
         post = {}
-        post[:payment_id] = authorization
+        post[:authorization_id] = authorization
         commit('void', post, options)
       end
 
@@ -89,6 +89,7 @@ module ActiveMerchant #:nodoc:
 
       def add_country(post, card, options)
         return unless address = options[:billing_address] || options[:address]
+
         post[:country] = lookup_country_code(address[:country])
       end
 
@@ -111,6 +112,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(post, card, options)
         return unless address = options[:billing_address] || options[:address]
+
         address_object = {}
         address_object[:state] = address[:state] if address[:state]
         address_object[:city] = address[:city] if address[:city]
@@ -129,6 +131,8 @@ module ActiveMerchant #:nodoc:
         post[:card][:cvv] = card.verification_value
         post[:card][:descriptor] = options[:dynamic_descriptor] if options[:dynamic_descriptor]
         post[:card][:capture] = (action == 'purchase')
+        post[:card][:installments] = options[:installments] if options[:installments]
+        post[:card][:installments_id] = options[:installments_id] if options[:installments_id]
       end
 
       def parse(body)
@@ -163,6 +167,7 @@ module ActiveMerchant #:nodoc:
       # we count 100 as a success.
       def success_from(action, response)
         return false unless response['status_code']
+
         ['100', '200', '400', '600'].include? response['status_code'].to_s
       end
 
@@ -176,6 +181,7 @@ module ActiveMerchant #:nodoc:
 
       def error_code_from(action, response)
         return if success_from(action, response)
+
         code = response['status_code'] || response['code']
         code&.to_s
       end
@@ -193,9 +199,9 @@ module ActiveMerchant #:nodoc:
         when 'refund'
           'refunds'
         when 'capture'
-          "payments/#{parameters[:payment_id]}/capture"
+          'payments'
         when 'void'
-          "payments/#{parameters[:payment_id]}/cancel"
+          "payments/#{parameters[:authorization_id]}/cancel"
         end
       end
 

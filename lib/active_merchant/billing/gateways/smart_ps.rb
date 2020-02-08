@@ -3,7 +3,6 @@ require File.join(File.dirname(__FILE__), '..', 'check.rb')
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class SmartPs < Gateway #:nodoc:
-
       ##
       # This is the base gateway for processors who use the smartPS processing system
 
@@ -129,13 +128,9 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_customer_data(post, options)
-        if options.has_key? :email
-          post[:email] = options[:email]
-        end
+        post[:email] = options[:email] if options.has_key? :email
 
-        if options.has_key? :ip
-          post[:ipaddress] = options[:ip]
-        end
+        post[:ipaddress] = options[:ip] if options.has_key? :ip
       end
 
       def add_address(post, address, prefix='')
@@ -148,7 +143,7 @@ module ActiveMerchant #:nodoc:
           post[prefix+'zip']        = address[:zip].to_s
           post[prefix+'city']       = address[:city].to_s
           post[prefix+'country']    = address[:country].to_s
-          post[prefix+'state']      = address[:state].blank?  ? 'n/a' : address[:state]
+          post[prefix+'state']      = address[:state].blank? ? 'n/a' : address[:state]
         end
       end
 
@@ -185,9 +180,9 @@ module ActiveMerchant #:nodoc:
           post[:customer_vault] = 'add_customer'
           post[:customer_vault_id] = options[:store] unless options[:store] == true
         end
-        post[:ccnumber]  = creditcard.number
+        post[:ccnumber] = creditcard.number
         post[:cvv] = creditcard.verification_value if creditcard.verification_value?
-        post[:ccexp]  = expdate(creditcard)
+        post[:ccexp] = expdate(creditcard)
         post[:firstname] = creditcard.first_name
         post[:lastname]  = creditcard.last_name
       end
@@ -229,7 +224,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, money, parameters)
-        parameters[:amount]  = localized_amount(money, parameters[:currency] || default_currency) if money
+        parameters[:amount] = localized_amount(money, parameters[:currency] || default_currency) if money
         response = parse(ssl_post(self.live_url, post_data(action, parameters)))
         Response.new(response['response'] == '1', message_from(response), response,
           :authorization => (response['transactionid'] || response['customer_vault_id']),
@@ -259,7 +254,7 @@ module ActiveMerchant #:nodoc:
 
       def post_data(action, parameters = {})
         post = {}
-        post[:username]      = @options[:login]
+        post[:username] = @options[:login]
         post[:password]   = @options[:password]
         post[:type]       = action if action
 

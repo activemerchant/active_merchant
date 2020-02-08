@@ -6,9 +6,7 @@ rescue LoadError
   raise 'Could not load the braintree gem.  Use `gem install braintree` to install it.'
 end
 
-unless Braintree::Version::Major == 2 && Braintree::Version::Minor >= 78
-  raise "Need braintree gem >= 2.78.0. Run `gem install braintree --version '~>2.78'` to get the correct version."
-end
+raise "Need braintree gem >= 2.78.0. Run `gem install braintree --version '~>2.78'` to get the correct version." unless Braintree::Version::Major == 2 && Braintree::Version::Minor >= 78
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -172,7 +170,7 @@ module ActiveMerchant #:nodoc:
 
       def unstore(customer_vault_id, options = {})
         commit do
-          if(!customer_vault_id && options[:credit_card_token])
+          if !customer_vault_id && options[:credit_card_token]
             @braintree_gateway.credit_card.delete(options[:credit_card_token])
           else
             @braintree_gateway.customer.delete(customer_vault_id)
@@ -262,7 +260,7 @@ module ActiveMerchant #:nodoc:
           }
           if options[:billing_address]
             address = map_address(options[:billing_address])
-            parameters[:credit_card][:billing_address] = address unless address.all? { |_k, v| empty?(v) }
+            parameters[:billing_address] = address unless address.all? { |_k, v| empty?(v) }
           end
 
           result = @braintree_gateway.credit_card.create(parameters)
@@ -289,10 +287,10 @@ module ActiveMerchant #:nodoc:
 
       def scrub_zip(zip)
         return nil unless zip.present?
-        return nil if(
+        return nil if
           zip.gsub(/[^a-z0-9]/i, '').length > 9 ||
           zip =~ /[^a-z0-9\- ]/i
-        )
+
         zip
       end
 
@@ -302,9 +300,7 @@ module ActiveMerchant #:nodoc:
           valid_options[key] = value if [:update_existing_token, :verify_card, :verification_merchant_account_id].include?(key)
         end
 
-        if valid_options.include?(:verify_card) && @merchant_account_id
-          valid_options[:verification_merchant_account_id] ||= @merchant_account_id
-        end
+        valid_options[:verification_merchant_account_id] ||= @merchant_account_id if valid_options.include?(:verify_card) && @merchant_account_id
 
         parameters[:credit_card] ||= {}
         parameters[:credit_card][:options] = valid_options
@@ -328,9 +324,7 @@ module ActiveMerchant #:nodoc:
         mapped[:country_code_alpha2] = (address[:country] || address[:country_code_alpha2]) if address[:country] || address[:country_code_alpha2]
         mapped[:country_name] = address[:country_name] if address[:country_name]
         mapped[:country_code_alpha3] = address[:country_code_alpha3] if address[:country_code_alpha3]
-        unless address[:country].blank?
-          mapped[:country_code_alpha3] ||= Country.find(address[:country]).code(:alpha3).value
-        end
+        mapped[:country_code_alpha3] ||= Country.find(address[:country]).code(:alpha3).value unless address[:country].blank?
         mapped[:country_code_numeric] = address[:country_code_numeric] if address[:country_code_numeric]
 
         mapped
@@ -494,9 +488,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def transaction_hash(result)
-        unless result.success?
-          return { 'processor_response_code' => response_code_from_result(result) }
-        end
+        return { 'processor_response_code' => response_code_from_result(result) } unless result.success?
 
         transaction = result.transaction
         if transaction.vault_customer
@@ -588,17 +580,11 @@ module ActiveMerchant #:nodoc:
           }
         }
 
-        if options[:skip_advanced_fraud_checking]
-          parameters[:options][:skip_advanced_fraud_checking] = options[:skip_advanced_fraud_checking]
-        end
+        parameters[:options][:skip_advanced_fraud_checking] = options[:skip_advanced_fraud_checking] if options[:skip_advanced_fraud_checking]
 
-        if options[:skip_avs]
-          parameters[:options][:skip_avs] = options[:skip_avs]
-        end
+        parameters[:options][:skip_avs] = options[:skip_avs] if options[:skip_avs]
 
-        if options[:skip_cvv]
-          parameters[:options][:skip_cvv] = options[:skip_cvv]
-        end
+        parameters[:options][:skip_cvv] = options[:skip_cvv] if options[:skip_cvv]
 
         parameters[:custom_fields] = options[:custom_fields]
         parameters[:device_data] = options[:device_data] if options[:device_data]
@@ -630,13 +616,7 @@ module ActiveMerchant #:nodoc:
           }
         end
 
-        if options[:three_d_secure]
-          parameters[:three_d_secure_pass_thru] = {
-            cavv: options[:three_d_secure][:cavv],
-            eci_flag: options[:three_d_secure][:eci],
-            xid: options[:three_d_secure][:xid],
-          }
-        end
+        add_3ds_info(parameters, options[:three_d_secure])
 
         parameters[:tax_amount] = options[:tax_amount] if options[:tax_amount]
         parameters[:tax_exempt] = options[:tax_exempt] if options[:tax_exempt]
@@ -648,11 +628,40 @@ module ActiveMerchant #:nodoc:
 
         parameters[:line_items] = options[:line_items] if options[:line_items]
 
+        if options[:payment_method_nonce].is_a?(String)
+          parameters.delete(:customer)
+          parameters[:payment_method_nonce] = options[:payment_method_nonce]
+        end
+
         parameters
+      end
+
+      def add_3ds_info(parameters, three_d_secure_opts)
+        return if empty?(three_d_secure_opts)
+
+        pass_thru = {}
+
+        pass_thru[:three_d_secure_version] = three_d_secure_opts[:version] if three_d_secure_opts[:version]
+        pass_thru[:eci_flag] = three_d_secure_opts[:eci] if three_d_secure_opts[:eci]
+        pass_thru[:cavv_algorithm] = three_d_secure_opts[:cavv_algorithm] if three_d_secure_opts[:cavv_algorithm]
+        pass_thru[:cavv] = three_d_secure_opts[:cavv] if three_d_secure_opts[:cavv]
+        pass_thru[:directory_response] = three_d_secure_opts[:directory_response_status] if three_d_secure_opts[:directory_response_status]
+        pass_thru[:authentication_response] = three_d_secure_opts[:authentication_response_status] if three_d_secure_opts[:authentication_response_status]
+
+        parameters[:three_d_secure_pass_thru] = pass_thru.merge(xid_or_ds_trans_id(three_d_secure_opts))
+      end
+
+      def xid_or_ds_trans_id(three_d_secure_opts)
+        if three_d_secure_opts[:version].to_f >= 2
+          { ds_transaction_id: three_d_secure_opts[:ds_transaction_id] }
+        else
+          { xid: three_d_secure_opts[:xid] }
+        end
       end
 
       def add_stored_credential_data(parameters, credit_card_or_vault_id, options)
         return unless (stored_credential = options[:stored_credential])
+
         parameters[:external_vault] = {}
         if stored_credential[:initial_transaction]
           parameters[:external_vault][:status] = 'will_vault'

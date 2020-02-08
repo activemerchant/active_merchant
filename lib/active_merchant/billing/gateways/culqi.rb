@@ -173,22 +173,23 @@ module ActiveMerchant #:nodoc:
           post[:city] = billing_address[:city]
           post[:state] = billing_address[:state]
           post[:countrycode] = billing_address[:country]
-          post[:zip]    = billing_address[:zip]
+          post[:zip] = billing_address[:zip]
           post[:telno] = billing_address[:phone]
           post[:telnocc] = options[:telephone_country_code] || '051'
         end
       end
 
       def add_checksum(action, post)
-        checksum_elements = case action
-        when :capture    then  [post[:toid], post[:trackingid], post[:captureamount], @options[:secret_key]]
-        when :void       then  [post[:toid], post[:description], post[:trackingid], @options[:secret_key]]
-        when :refund     then  [post[:toid], post[:trackingid], post[:refundamount], @options[:secret_key]]
-        when :tokenize   then [post[:partnerid], post[:cardnumber], post[:cvv], @options[:secret_key]]
-        when :invalidate then [post[:partnerid], post[:token], @options[:secret_key]]
-        else [post[:toid], post[:totype], post[:amount], post[:description], post[:redirecturl],
-              post[:cardnumber] || post[:token], @options[:secret_key]]
-        end
+        checksum_elements =
+          case action
+          when :capture    then  [post[:toid], post[:trackingid], post[:captureamount], @options[:secret_key]]
+          when :void       then  [post[:toid], post[:description], post[:trackingid], @options[:secret_key]]
+          when :refund     then  [post[:toid], post[:trackingid], post[:refundamount], @options[:secret_key]]
+          when :tokenize   then [post[:partnerid], post[:cardnumber], post[:cvv], @options[:secret_key]]
+          when :invalidate then [post[:partnerid], post[:token], @options[:secret_key]]
+          else [post[:toid], post[:totype], post[:amount], post[:description], post[:redirecturl],
+                post[:cardnumber] || post[:token], @options[:secret_key]]
+          end
 
         post[:checksum] = Digest::MD5.hexdigest(checksum_elements.compact.join('|'))
       end
@@ -208,11 +209,12 @@ module ActiveMerchant #:nodoc:
       }
 
       def commit(action, params)
-        response = begin
-          parse(ssl_post(url + ACTIONS[action], post_data(action, params), headers))
-        rescue ResponseError => e
-          parse(e.response.body)
-        end
+        response =
+          begin
+            parse(ssl_post(url + ACTIONS[action], post_data(action, params), headers))
+          rescue ResponseError => e
+            parse(e.response.body)
+          end
 
         success = success_from(response)
 

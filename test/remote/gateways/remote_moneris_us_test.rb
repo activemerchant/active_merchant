@@ -257,5 +257,4 @@ class MonerisUsRemoteTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:password], transcript)
   end
-
 end

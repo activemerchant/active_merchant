@@ -315,6 +315,7 @@ module ActiveMerchant #:nodoc:
 
       def add_stored_credentials(xml, card, options)
         return unless options[:stored_credential]
+
         xml.tag! 'StoredCredentials' do
           xml.tag! 'Indicator', stored_credential_indicator(xml, card, options)
           if initiator = options.dig(:stored_credential, :initiator)

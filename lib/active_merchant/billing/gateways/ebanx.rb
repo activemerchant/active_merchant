@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://sandbox.ebanxpay.com/ws/'
       self.live_url = 'https://api.ebanxpay.com/ws/'
 
-      self.supported_countries = ['BR', 'MX', 'CO', 'CL', 'AR']
+      self.supported_countries = %w(BR MX CO CL AR PE)
       self.default_currency = 'USD'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club]
 
@@ -51,6 +51,7 @@ module ActiveMerchant #:nodoc:
         add_card_or_token(post, payment)
         add_address(post, options)
         add_customer_responsible_person(post, payment, options)
+        add_additional_data(post, options)
 
         commit(:purchase, post)
       end
@@ -73,7 +74,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_integration_key(post)
         post[:hash] = authorization
-        post[:amount] = amount(money)
+        post[:amount] = amount(money) if options[:include_capture_amount].to_s == 'true'
 
         commit(:capture, post)
       end
@@ -119,7 +120,7 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
-          gsub(/(integration_key\\?":\\?")(\d*)/, '\1[FILTERED]').
+          gsub(/(integration_key\\?":\\?")(\w*)/, '\1[FILTERED]').
           gsub(/(card_number\\?":\\?")(\d*)/, '\1[FILTERED]').
           gsub(/(card_cvv\\?":\\?")(\d*)/, '\1[FILTERED]')
       end
@@ -175,9 +176,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_card_or_token(post, payment)
-        if payment.is_a?(String)
-          payment, brand = payment.split('|')
-        end
+        payment, brand = payment.split('|') if payment.is_a?(String)
         post[:payment][:payment_type_code] = payment.is_a?(String) ? brand : CARD_BRAND[payment.brand.to_sym]
         post[:payment][:creditcard] = payment_details(payment)
       end
@@ -198,6 +197,10 @@ module ActiveMerchant #:nodoc:
             card_cvv: payment.verification_value
           }
         end
+      end
+
+      def add_additional_data(post, options)
+        post[:device_id] = options[:device_id] if options[:device_id]
       end
 
       def parse(body)
@@ -236,6 +239,7 @@ module ActiveMerchant #:nodoc:
 
       def message_from(response)
         return response['status_message'] if response['status'] == 'ERROR'
+
         response.try(:[], 'payment').try(:[], 'transaction_status').try(:[], 'description')
       end
 
@@ -250,22 +254,26 @@ module ActiveMerchant #:nodoc:
       def post_data(action, parameters = {})
         return nil if requires_http_get(action)
         return convert_to_url_form_encoded(parameters) if action == :refund
+
         "request_body=#{parameters.to_json}"
       end
 
       def url_for(hostname, action, parameters)
         return "#{hostname}#{URL_MAP[action]}?#{convert_to_url_form_encoded(parameters)}" if requires_http_get(action)
+
         "#{hostname}#{URL_MAP[action]}"
       end
 
       def requires_http_get(action)
         return true if [:capture, :void].include?(action)
+
         false
       end
 
       def convert_to_url_form_encoded(parameters)
         parameters.map do |key, value|
           next if value != false && value.blank?
+
           "#{key}=#{value}"
         end.compact.join('&')
       end
@@ -273,6 +281,7 @@ module ActiveMerchant #:nodoc:
       def error_code_from(response, success)
         unless success
           return response['status_code'] if response['status'] == 'ERROR'
+
           response.try(:[], 'payment').try(:[], 'transaction_status').try(:[], 'code')
         end
       end

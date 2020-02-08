@@ -3,9 +3,9 @@ require 'test_helper'
 class FederatedCanadaTest < Test::Unit::TestCase
   def setup
     @gateway = FederatedCanadaGateway.new(
-                 :login => 'demo',
-                 :password => 'password'
-               )
+      :login => 'demo',
+      :password => 'password'
+    )
 
     @credit_card = credit_card('4111111111111111')
     @credit_card.verification_value = '999'

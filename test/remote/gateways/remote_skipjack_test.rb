@@ -107,9 +107,9 @@ class RemoteSkipJackTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = SkipJackGateway.new(
-                :login => '555555555555',
-                :password => '999999999999'
-              )
+      :login => '555555555555',
+      :password => '999999999999'
+    )
 
     response = gateway.authorize(@amount, @credit_card, @options)
     assert_failure response

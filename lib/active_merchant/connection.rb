@@ -62,6 +62,7 @@ module ActiveMerchant
 
     def wiredump_device=(device)
       raise ArgumentError, "can't wiredump to frozen #{device.class}" if device&.frozen?
+
       @wiredump_device = device
     end
 

@@ -39,7 +39,7 @@ module ActiveMerchant #:nodoc:
         :trigger   => 8
       }
 
-      SUCCESS_CODES = [ '00', '08', '11', '16', '77' ]
+      SUCCESS_CODES = ['00', '08', '11', '16', '77']
 
       def initialize(options = {})
         requires!(options, :login, :password)
@@ -84,6 +84,7 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         return '' if transcript.blank?
+
         transcript.
           gsub(%r((<cardNumber>)[^<]+(<))i, '\1[FILTERED]\2').
           gsub(%r((<cvv>)[^<]+(<))i, '\1[FILTERED]\2').
@@ -295,7 +296,6 @@ module ActiveMerchant #:nodoc:
       def request_timeout
         @options[:request_timeout] || 60
       end
-
     end
   end
 end

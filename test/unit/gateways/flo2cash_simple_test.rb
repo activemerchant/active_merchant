@@ -67,7 +67,7 @@ class Flo2cashSimpleTest < Test::Unit::TestCase
   end
 
   def test_transcript_scrubbing
-    transcript =  @gateway.scrub(successful_purchase_response)
+    transcript = @gateway.scrub(successful_purchase_response)
 
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@credit_card.verification_value, transcript)

@@ -48,9 +48,7 @@ module ActiveMerchant #:nodoc:
 
         post = {}
         post[:checkout_id] = checkout_id
-        if(money && (original_amount != amount(money)))
-          post[:amount] = amount(money)
-        end
+        post[:amount] = amount(money) if money && (original_amount != amount(money))
         commit('/checkout/capture', post, options)
       end
 
@@ -66,9 +64,7 @@ module ActiveMerchant #:nodoc:
 
         post = {}
         post[:checkout_id] = checkout_id
-        if(money && (original_amount != amount(money)))
-          post[:amount] = amount(money)
-        end
+        post[:amount] = amount(money) if money && (original_amount != amount(money))
         post[:refund_reason] = (options[:description] || 'Refund')
         post[:payer_email_message] = options[:payer_email_message] if options[:payer_email_message]
         post[:payee_email_message] = options[:payee_email_message] if options[:payee_email_message]
@@ -85,12 +81,12 @@ module ActiveMerchant #:nodoc:
         post[:expiration_month] = creditcard.month
         post[:expiration_year] = creditcard.year
 
-        if(billing_address = (options[:billing_address] || options[:address]))
+        if (billing_address = (options[:billing_address] || options[:address]))
           post[:address] = {}
           post[:address]['address1'] = billing_address[:address1] if billing_address[:address1]
           post[:address]['city']     = billing_address[:city] if billing_address[:city]
           post[:address]['country']  = billing_address[:country]  if billing_address[:country]
-          post[:address]['region']   = billing_address[:state]  if billing_address[:state]
+          post[:address]['region']   = billing_address[:state] if billing_address[:state]
           post[:address]['postal_code'] = billing_address[:zip]
         end
 
@@ -174,11 +170,12 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, params, options={})
         begin
-          response = parse(ssl_post(
-            ((test? ? test_url : live_url) + action),
-            params.to_json,
-            headers(options)
-          ))
+          response = parse(
+            ssl_post(
+              ((test? ? test_url : live_url) + action),
+              params.to_json,
+              headers(options)
+            ))
         rescue ResponseError => e
           response = parse(e.response.body)
         end

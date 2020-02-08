@@ -543,5 +543,4 @@ class PinTest < Test::Unit::TestCase
       }
     }'
   end
-
 end

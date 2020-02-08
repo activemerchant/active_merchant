@@ -146,9 +146,9 @@ module ActiveMerchant #:nodoc:
           post[:sg_Address] = address[:address1] if address[:address1]
           post[:sg_City] = address[:city] if address[:city]
           post[:sg_State] = address[:state]  if address[:state]
-          post[:sg_Zip] = address[:zip]  if address[:zip]
-          post[:sg_Country] = address[:country]  if address[:country]
-          post[:sg_Phone] = address[:phone]  if address[:phone]
+          post[:sg_Zip] = address[:zip] if address[:zip]
+          post[:sg_Country] = address[:country] if address[:country]
+          post[:sg_Phone] = address[:phone] if address[:phone]
         end
 
         post[:sg_Email] = options[:email]
@@ -207,6 +207,7 @@ module ActiveMerchant #:nodoc:
 
       def message_from(response)
         return 'Success' if success_from(response)
+
         response[:reason_codes] || response[:reason]
       end
 
@@ -240,14 +241,13 @@ module ActiveMerchant #:nodoc:
 
         params.map do |key, value|
           next if value != false && value.blank?
+
           "#{key}=#{CGI.escape(value.to_s)}"
         end.compact.join('&')
       end
 
       def error_code_from(response)
-        unless success_from(response)
-          response[:ex_err_code] || response[:err_code]
-        end
+        response[:ex_err_code] || response[:err_code] unless success_from(response)
       end
 
       def underscore(camel_cased_word)

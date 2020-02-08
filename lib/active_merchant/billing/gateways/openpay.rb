@@ -75,7 +75,7 @@ module ActiveMerchant #:nodoc:
           MultiResponse.run(:first) do |r|
             r.process { commit(:post, 'customers', post, options) }
 
-            if(r.success? && !r.params['id'].blank?)
+            if r.success? && !r.params['id'].blank?
               customer_id = r.params['id']
               r.process { commit(:post, "customers/#{customer_id}/cards", card, options) }
             end
@@ -151,6 +151,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(card, options)
         return unless card.kind_of?(Hash)
+
         if address = (options[:billing_address] || options[:address])
           card[:address] = {
             line1: address[:address1],
@@ -175,6 +176,7 @@ module ActiveMerchant #:nodoc:
 
       def parse(body)
         return {} unless body
+
         JSON.parse(body)
       end
 

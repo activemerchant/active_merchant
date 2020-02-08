@@ -6,7 +6,6 @@ require 'test_helper'
 # only work the first time you run them since the profile, if created again, becomes a duplicate.  There is a setting in order settings which, when unchecked will allow the tests to be run any number
 # of times without needing the manual deletion step between test runs.  The setting is: Do not allow profile to be created with card data duplicated from an existing profile.
 class RemoteBeanstreamTest < Test::Unit::TestCase
-
   def setup
     @gateway = BeanstreamGateway.new(fixtures(:beanstream))
 
@@ -22,10 +21,10 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     @declined_amex       = credit_card('342400001000180', {:verification_value => 1234})
 
     # Canadian EFT
-    @check               = check(
-                             :institution_number => '001',
-                             :transit_number     => '26729'
-                           )
+    @check = check(
+      :institution_number => '001',
+      :transit_number     => '26729'
+    )
 
     @amount = 1500
 
@@ -187,6 +186,16 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     assert_match %r{Invalid shipping country id}, response.message
   end
 
+  def test_authorize_and_void
+    assert auth = @gateway.authorize(@amount, @visa, @options)
+    assert_success auth
+    assert_equal 'Approved', auth.message
+    assert_false auth.authorization.blank?
+
+    assert void = @gateway.void(auth.authorization)
+    assert_success void
+  end
+
   def test_authorize_and_capture
     assert auth = @gateway.authorize(@amount, @visa, @options)
     assert_success auth
@@ -299,10 +308,10 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = BeanstreamGateway.new(
-                :merchant_id => '',
-                :login => '',
-                :password => ''
-              )
+      :merchant_id => '',
+      :login => '',
+      :password => ''
+    )
     assert response = gateway.purchase(@amount, @visa, @options)
     assert_failure response
     assert_equal 'merchantid=Invalid merchant id (merchant_id = )', response.message

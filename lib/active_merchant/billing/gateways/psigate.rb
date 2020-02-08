@@ -180,7 +180,7 @@ module ActiveMerchant #:nodoc:
           )
         end
 
-        if(address = (options[:billing_address] || options[:address]))
+        if (address = (options[:billing_address] || options[:address]))
           params[:Bname] = address[:name] || creditcard.name
           params[:Baddress1]    = address[:address1] unless address[:address1].blank?
           params[:Baddress2]    = address[:address2] unless address[:address2].blank?
@@ -210,6 +210,7 @@ module ActiveMerchant #:nodoc:
           return SUCCESS_MESSAGE
         else
           return FAILURE_MESSAGE if response[:errmsg].blank?
+
           return response[:errmsg].gsub(/[^\w]/, ' ').split.join(' ').capitalize
         end
       end

@@ -9,9 +9,12 @@ class RemotePayuLatamTest < Test::Unit::TestCase
     @declined_card = credit_card('4097440000000004', verification_value: '444', first_name: 'REJECTED', last_name: '')
     @pending_card = credit_card('4097440000000004', verification_value: '444', first_name: 'PENDING', last_name: '')
     @naranja_credit_card = credit_card('5895620000000002', :verification_value => '123', :first_name => 'APPROVED', :last_name => '', :brand => 'naranja')
+    @cabal_credit_card = credit_card('5896570000000004', :verification_value => '123', :first_name => 'APPROVED', :last_name => '', :brand => 'cabal')
+    @invalid_cabal_card = credit_card('6271700000000000', :verification_value => '123', :first_name => 'APPROVED', :last_name => '', :brand => 'cabal')
 
     @options = {
       dni_number: '5415668464654',
+      merchant_buyer_id: '1',
       currency: 'ARS',
       order_id: generate_unique_id,
       description: 'Active Merchant Transaction',
@@ -57,6 +60,13 @@ class RemotePayuLatamTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_cabal_card
+    response = @gateway.purchase(@amount, @cabal_credit_card, @options)
+    assert_success response
+    assert_equal 'APPROVED', response.message
+    assert response.test?
+  end
+
   def test_successful_purchase_with_specified_language
     response = @gateway.purchase(@amount, @credit_card, @options.merge(language: 'es'))
     assert_success response
@@ -64,7 +74,7 @@ class RemotePayuLatamTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successul_purchase_with_buyer
+  def test_successful_purchase_with_buyer
     gateway = PayuLatamGateway.new(fixtures(:payu_latam).update(:account_id => '512327', payment_country: 'BR'))
 
     options_buyer = {
@@ -91,6 +101,7 @@ class RemotePayuLatamTest < Test::Unit::TestCase
         name: 'Jorge Borges',
         dni_number: '5415668464123',
         dni_type: 'TI',
+        merchant_buyer_id: '2',
         cnpj: '32593371000110',
         email: 'axaxaxas@mlo.org'
       }
@@ -219,6 +230,12 @@ class RemotePayuLatamTest < Test::Unit::TestCase
     assert_equal 'DECLINED', response.params['transactionResponse']['state']
   end
 
+  def test_failed_purchase_with_cabal_card
+    response = @gateway.purchase(@amount, @invalid_cabal_card, @options)
+    assert_failure response
+    assert_equal 'DECLINED', response.params['transactionResponse']['state']
+  end
+
   def test_failed_purchase_with_no_options
     response = @gateway.purchase(@amount, @declined_card, {})
     assert_failure response
@@ -241,6 +258,13 @@ class RemotePayuLatamTest < Test::Unit::TestCase
 
   def test_successful_authorize_with_naranja_card
     response = @gateway.authorize(@amount, @naranja_credit_card, @options)
+    assert_success response
+    assert_equal 'APPROVED', response.message
+    assert_match %r(^\d+\|(\w|-)+$), response.authorization
+  end
+
+  def test_successful_authorize_with_cabal_card
+    response = @gateway.authorize(@amount, @cabal_credit_card, @options)
     assert_success response
     assert_equal 'APPROVED', response.message
     assert_match %r(^\d+\|(\w|-)+$), response.authorization

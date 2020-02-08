@@ -8,6 +8,8 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     @three_ds_payment_method = 'pm_card_threeDSecure2Required'
     @visa_payment_method = 'pm_card_visa'
     @declined_payment_method = 'pm_card_chargeDeclined'
+    @three_ds_moto_enabled = 'pm_card_authenticationRequiredOnSetup'
+    @three_ds_authentication_required = 'pm_card_authenticationRequired'
     @three_ds_credit_card = credit_card('4000000000003220',
       verification_value: '737',
       month: 10,
@@ -206,12 +208,26 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert_equal 'John Doe', response.params['shipping']['name']
   end
 
+  def test_create_payment_intent_with_billing_address
+    options = {
+      currency: 'USD',
+      customer: @customer,
+      billing_address: address,
+      confirm: true
+    }
+
+    assert response = @gateway.create_intent(@amount, @visa_card, options)
+    assert_success response
+    assert billing = response.params.dig('charges', 'data')[0].dig('billing_details', 'address')
+    assert_equal 'Ottawa', billing['city']
+  end
+
   def test_create_payment_intent_with_connected_account
     options = {
       currency: 'USD',
       customer: @customer,
       application_fee: 100,
-      transfer_data: {destination: @destination_account}
+      transfer_destination: @destination_account
     }
 
     assert response = @gateway.create_intent(@amount, nil, options)
@@ -257,6 +273,74 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert_equal 'Payment complete.', capture_response.params.dig('charges', 'data')[0].dig('outcome', 'seller_message')
   end
 
+  def test_amount_localization
+    amount = 200000
+    options = {
+      currency: 'XPF',
+      customer: @customer,
+      confirmation_method: 'manual',
+      capture_method: 'manual',
+      confirm: true
+    }
+    assert create_response = @gateway.create_intent(amount, @visa_payment_method, options)
+    intent_id = create_response.params['id']
+    assert_equal 'requires_capture', create_response.params['status']
+
+    assert capture_response = @gateway.capture(amount, intent_id, options)
+    assert_equal 'succeeded', capture_response.params['status']
+    assert_equal 2000, capture_response.params['amount']
+  end
+
+  def test_cross_border_classification_export
+    omit('"cross_border_classification" is only allowed to be sent for certain accounts (not the account we use for testing).')
+    # Currently get back "Received unknown parameter: cross_border_classification"
+    # if I send that. I've contacted our support contact to see if they can allow
+    # us to send that value across (might be an Indian Stripe thing only).
+    options = {
+      cross_border_classification: 'export',
+      description: 'Exported service',
+      shipping: {
+        name: 'Jane Doe',
+        address: {
+          line1: '1234 Any Street',
+          postal_code: '27703',
+          city: 'Durham',
+          state: 'NC',
+          country: 'US'
+        }
+      }
+    }
+
+    assert create_response = @gateway.create_intent(@amount, @visa_payment_method, options)
+    # intent_id = create_response.params['id']
+
+    assert_success create_response # This line currently fails
+    # Once our test account is able to send cross_border_classification,
+    # assert that this was marked as an export.
+  end
+
+  def test_auth_and_capture_with_destination_account_and_fee
+    options = {
+      currency: 'GBP',
+      customer: @customer,
+      confirmation_method: 'manual',
+      capture_method: 'manual',
+      transfer_destination: @destination_account,
+      confirm: true
+    }
+    assert create_response = @gateway.create_intent(@amount, @visa_payment_method, options)
+    intent_id = create_response.params['id']
+    assert_equal 'requires_capture', create_response.params['status']
+    assert_equal @destination_account, create_response.params['transfer_data']['destination']
+    assert_nil create_response.params['application_fee_amount']
+
+    assert capture_response = @gateway.capture(@amount, intent_id, { application_fee: 100 })
+    assert_equal 'succeeded', capture_response.params['status']
+    assert_equal @destination_account, capture_response.params['transfer_data']['destination']
+    assert_equal 100, capture_response.params['application_fee_amount']
+    assert_equal 'Payment complete.', capture_response.params.dig('charges', 'data')[0].dig('outcome', 'seller_message')
+  end
+
   def test_create_a_payment_intent_and_automatically_capture
     options = {
       currency: 'GBP',
@@ -283,19 +367,20 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
   end
 
   def test_create_a_payment_intent_and_update
-    update_amount = 2050
+    amount = 200000
+    update_amount = 250000
     options = {
-      currency: 'GBP',
+      currency: 'XPF',
       customer: @customer,
       confirmation_method: 'manual',
       capture_method: 'manual',
     }
-    assert create_response = @gateway.create_intent(@amount, @visa_payment_method, options)
+    assert create_response = @gateway.create_intent(amount, @visa_payment_method, options)
     intent_id = create_response.params['id']
-    assert_equal @amount, create_response.params['amount']
+    assert_equal 2000, create_response.params['amount']
 
     assert update_response = @gateway.update_intent(update_amount, intent_id, nil, options.merge(payment_method_types: 'card'))
-    assert_equal update_amount, update_response.params['amount']
+    assert_equal 2500, update_response.params['amount']
     assert_equal 'requires_confirmation', update_response.params['status']
   end
 
@@ -366,6 +451,40 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
 
     assert unstore = @gateway.unstore(store.authorization)
     assert_nil unstore.params['customer']
+  end
+
+  def test_moto_enabled_card_requires_action_when_not_marked
+    options = {
+      currency: 'GBP',
+      confirm: true,
+    }
+    assert purchase = @gateway.purchase(@amount, @three_ds_moto_enabled, options)
+
+    assert_equal 'requires_action', purchase.params['status']
+  end
+
+  def test_moto_enabled_card_succeeds_when_marked
+    options = {
+      currency: 'GBP',
+      confirm: true,
+      moto: true,
+    }
+    assert purchase = @gateway.purchase(@amount, @three_ds_moto_enabled, options)
+
+    assert_equal 'succeeded', purchase.params['status']
+    assert purchase.params.dig('charges', 'data')[0]['captured']
+  end
+
+  def test_certain_cards_require_action_even_when_marked_as_moto
+    options = {
+      currency: 'GBP',
+      confirm: true,
+      moto: true,
+    }
+    assert purchase = @gateway.purchase(@amount, @three_ds_authentication_required, options)
+
+    assert_failure purchase
+    assert_equal 'Your card was declined. This transaction requires authentication.', purchase.message
   end
 
   def test_transcript_scrubbing

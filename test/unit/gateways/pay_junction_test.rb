@@ -8,9 +8,9 @@ class PayJunctionTest < Test::Unit::TestCase
     Base.mode = :test
 
     @gateway = PayJunctionGateway.new(
-                 :login      => 'pj-ql-01',
-                 :password   => 'pj-ql-01p'
-               )
+      :login      => 'pj-ql-01',
+      :password   => 'pj-ql-01p'
+    )
 
     @credit_card = credit_card
     @options = {
@@ -23,16 +23,16 @@ class PayJunctionTest < Test::Unit::TestCase
   def test_detect_test_credentials_when_in_production
     Base.mode = :production
 
-    live_gw  = PayJunctionGateway.new(
-                 :login      => 'l',
-                 :password   => 'p'
-               )
+    live_gw = PayJunctionGateway.new(
+      :login      => 'l',
+      :password   => 'p'
+    )
     assert_false live_gw.test?
 
     test_gw = PayJunctionGateway.new(
-                :login      => 'pj-ql-01',
-                :password   => 'pj-ql-01p'
-              )
+      :login      => 'pj-ql-01',
+      :password   => 'pj-ql-01p'
+    )
     assert test_gw.test?
   end
 

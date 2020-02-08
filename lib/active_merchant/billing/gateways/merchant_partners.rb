@@ -110,7 +110,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment_method(post, payment_method)
-        if(payment_method.is_a?(String))
+        if payment_method.is_a?(String)
           user_profile_id, last_4 = split_authorization(payment_method)
           post[:userprofileid] = user_profile_id
           post[:last4digits] = last_4
@@ -127,13 +127,13 @@ module ActiveMerchant #:nodoc:
       def add_customer_data(post, options)
         post[:email] = options[:email] if options[:email]
         post[:ipaddress] = options[:ip] if options[:ip]
-        if(billing_address = options[:billing_address])
+        if (billing_address = options[:billing_address])
           post[:billaddr1] = billing_address[:address1]
           post[:billaddr2] = billing_address[:address2]
           post[:billcity] = billing_address[:city]
           post[:billstate] = billing_address[:state]
           post[:billcountry] = billing_address[:country]
-          post[:bilzip]    = billing_address[:zip]
+          post[:bilzip] = billing_address[:zip]
           post[:phone] = billing_address[:phone]
         end
       end
@@ -235,7 +235,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_message_from(response)
-        if(response[:status] == 'Declined')
+        if response[:status] == 'Declined'
           match = response[:result].match(/DECLINED:\d{10}:(.+):/)
           match[1] if match
         end

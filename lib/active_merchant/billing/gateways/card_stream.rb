@@ -1,12 +1,12 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class CardStreamGateway < Gateway
-
       THREEDSECURE_REQUIRED_DEPRECATION_MESSAGE = 'Specifying the :threeDSRequired initialization option is deprecated. Please use the `:threeds_required => true` *transaction* option instead.'
 
       self.test_url = self.live_url = 'https://gateway.cardstream.com/direct/'
       self.money_format = :cents
       self.default_currency = 'GBP'
+      self.currencies_without_fractions = %w(CVE ISK JPY UGX)
       self.supported_countries = ['GB', 'US', 'CH', 'SE', 'SG', 'NO', 'JP', 'IS', 'HK', 'NL', 'CZ', 'CA', 'AU']
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :discover, :jcb, :maestro]
       self.homepage_url = 'http://www.cardstream.com/'
@@ -173,7 +173,7 @@ module ActiveMerchant #:nodoc:
       def capture(money, authorization, options = {})
         post = {}
         add_pair(post, :xref, authorization)
-        add_pair(post, :amount, amount(money), :required => true)
+        add_pair(post, :amount, localized_amount(money, options[:currency] || currency(money)), :required => true)
         add_remote_address(post, options)
 
         commit('CAPTURE', post)
@@ -224,8 +224,9 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_amount(post, money, options)
-        add_pair(post, :amount, amount(money), :required => true)
-        add_pair(post, :currencyCode, currency_code(options[:currency] || currency(money)))
+        currency = options[:currency] || currency(money)
+        add_pair(post, :amount, localized_amount(money, currency), :required => true)
+        add_pair(post, :currencyCode, currency_code(currency))
       end
 
       def add_customer_data(post, options)
@@ -249,7 +250,7 @@ module ActiveMerchant #:nodoc:
           if ['american_express', 'diners_club'].include?(card_brand(credit_card_or_reference).to_s)
             add_pair(post, :item1Quantity, 1)
             add_pair(post, :item1Description, (options[:description] || options[:order_id]).slice(0, 15))
-            add_pair(post, :item1GrossValue, amount(money))
+            add_pair(post, :item1GrossValue, localized_amount(money, options[:currency] || currency(money)))
           end
         end
 
@@ -341,7 +342,7 @@ module ActiveMerchant #:nodoc:
                  'A'
                else
                  'I'
-        end
+               end
 
         AVSResult.new({
           :code => code,
@@ -361,7 +362,6 @@ module ActiveMerchant #:nodoc:
       def add_pair(post, key, value, options = {})
         post[key] = value if !value.blank? || options[:required]
       end
-
     end
   end
 end

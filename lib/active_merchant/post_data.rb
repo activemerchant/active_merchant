@@ -7,6 +7,7 @@ module ActiveMerchant
 
     def []=(key, value)
       return if value.blank? && !required?(key)
+
       super
     end
 

@@ -133,7 +133,6 @@ class RemotePayflowExpressTest < Test::Unit::TestCase
 end
 
 class RemotePayflowExpressUkTest < Test::Unit::TestCase
-
   def setup
     @gateway = PayflowExpressUkGateway.new(fixtures(:payflow_uk))
   end

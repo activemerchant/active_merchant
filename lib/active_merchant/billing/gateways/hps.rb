@@ -115,7 +115,7 @@ module ActiveMerchant #:nodoc:
           xml.hps :CardHolderEmail, options[:email] if options[:email]
           xml.hps :CardHolderPhone, options[:phone] if options[:phone]
 
-          if(billing_address = (options[:billing_address] || options[:address]))
+          if (billing_address = (options[:billing_address] || options[:address]))
             xml.hps :CardHolderAddr, billing_address[:address1] if billing_address[:address1]
             xml.hps :CardHolderCity, billing_address[:city] if billing_address[:city]
             xml.hps :CardHolderState, billing_address[:state] if billing_address[:state]
@@ -206,6 +206,7 @@ module ActiveMerchant #:nodoc:
 
       def strip_leading_zero(value)
         return value unless value[0] == '0'
+
         value[1, 1]
       end
 
@@ -214,7 +215,8 @@ module ActiveMerchant #:nodoc:
         xml.instruct!(:xml, encoding: 'UTF-8')
         xml.SOAP :Envelope, {
             'xmlns:SOAP' => 'http://schemas.xmlsoap.org/soap/envelope/',
-            'xmlns:hps' => 'http://Hps.Exchange.PosGateway' } do
+            'xmlns:hps' => 'http://Hps.Exchange.PosGateway'
+        } do
           xml.SOAP :Body do
             xml.hps :PosRequest do
               xml.hps 'Ver1.0'.to_sym do
@@ -247,7 +249,7 @@ module ActiveMerchant #:nodoc:
 
         doc = Nokogiri::XML(raw)
         doc.remove_namespaces!
-        if(header = doc.xpath('//Header').first)
+        if (header = doc.xpath('//Header').first)
           header.elements.each do |node|
             if node.elements.size == 0
               response[node.name] = node.text
@@ -258,12 +260,12 @@ module ActiveMerchant #:nodoc:
             end
           end
         end
-        if(transaction = doc.xpath('//Transaction/*[1]').first)
+        if (transaction = doc.xpath('//Transaction/*[1]').first)
           transaction.elements.each do |node|
             response[node.name] = node.text
           end
         end
-        if(fault = doc.xpath('//Fault/Reason/Text').first)
+        if (fault = doc.xpath('//Fault/Reason/Text').first)
           response['Fault'] = fault.text
         end
 
@@ -273,11 +275,12 @@ module ActiveMerchant #:nodoc:
       def commit(action, &request)
         data = build_request(action, &request)
 
-        response = begin
-          parse(ssl_post((test? ? test_url : live_url), data, 'Content-Type' => 'text/xml'))
-        rescue ResponseError => e
-          parse(e.response.body)
-        end
+        response =
+          begin
+            parse(ssl_post((test? ? test_url : live_url), data, 'Content-Type' => 'text/xml'))
+          rescue ResponseError => e
+            parse(e.response.body)
+          end
 
         ActiveMerchant::Billing::Response.new(
           successful?(response),
@@ -301,10 +304,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        if(response['Fault'])
+        if response['Fault']
           response['Fault']
-        elsif(response['GatewayRspCode'] == '0')
-          if(response['RspCode'] != '00' && response['RspCode'] != '85')
+        elsif response['GatewayRspCode'] == '0'
+          if response['RspCode'] != '00' && response['RspCode'] != '85'
             issuer_message(response['RspCode'])
           else
             response['GatewayRspMsg']
@@ -335,6 +338,7 @@ module ActiveMerchant #:nodoc:
         return 'The card was declined.' if %w(02 03 04 05 41 43 44 51 56 61 62 63 65 78).include?(code)
         return 'An error occurred while processing the card.' if %w(06 07 12 15 19 12 52 53 57 58 76 77 91 96 EC).include?(code)
         return "The card's security code is incorrect." if %w(EB N7).include?(code)
+
         ISSUER_MESSAGES[code]
       end
 

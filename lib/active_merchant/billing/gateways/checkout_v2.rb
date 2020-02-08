@@ -6,10 +6,12 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://api.checkout.com'
       self.test_url = 'https://api.sandbox.checkout.com'
 
-      self.supported_countries = ['AD', 'AE', 'AT', 'BE', 'BG', 'CH', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FO', 'FI', 'FR', 'GB', 'GI', 'GL', 'GR', 'HR', 'HU', 'IE', 'IS', 'IL', 'IT', 'LI', 'LT', 'LU', 'LV', 'MC', 'MT', 'NL', 'NO', 'PL', 'PT', 'RO', 'SE', 'SI', 'SM', 'SK', 'SJ', 'TR', 'VA']
+      self.supported_countries = ['AD', 'AE', 'AR', 'AT', 'AU', 'BE', 'BG', 'BH', 'BR', 'CH', 'CL', 'CN', 'CO', 'CY', 'CZ', 'DE', 'DK', 'EE', 'EG', 'ES', 'FI', 'FR', 'GB', 'GR', 'HK', 'HR', 'HU', 'IE', 'IS', 'IT', 'JO', 'JP', 'KW', 'LI', 'LT', 'LU', 'LV', 'MC', 'MT', 'MX', 'MY', 'NL', 'NO', 'NZ', 'OM', 'PE', 'PL', 'PT', 'QA', 'RO', 'SA', 'SE', 'SG', 'SI', 'SK', 'SM', 'TR', 'US']
       self.default_currency = 'USD'
       self.money_format = :cents
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :maestro, :discover]
+      self.currencies_without_fractions = %w(BIF DJF GNF ISK KMF XAF CLF XPF JPY PYG RWF KRW VUV VND XOF)
+      self.currencies_with_three_decimal_places = %w(BHD LYD JOD KWD OMR TND)
 
       def initialize(options = {})
         requires!(options, :secret_key)
@@ -68,6 +70,10 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def verify_payment(authorization, option={})
+        commit(:verify_payment, authorization)
+      end
+
       def supports_scrubbing?
         true
       end
@@ -124,13 +130,19 @@ module ActiveMerchant #:nodoc:
       def add_transaction_data(post, options = {})
         post[:payment_type] = 'Regular' if options[:transaction_indicator] == 1
         post[:payment_type] = 'Recurring' if options[:transaction_indicator] == 2
+        post[:payment_type] = 'MOTO' if options[:transaction_indicator] == 3 || options.dig(:metadata, :manual_entry)
         post[:previous_payment_id] = options[:previous_charge_id] if options[:previous_charge_id]
       end
 
       def add_3ds(post, options)
-        if options[:three_d_secure]
+        if options[:three_d_secure] || options[:execute_threed]
           post[:'3ds'] = {}
           post[:'3ds'][:enabled] = true
+          post[:success_url] = options[:callback_url] if options[:callback_url]
+          post[:failure_url] = options[:callback_url] if options[:callback_url]
+        end
+
+        if options[:three_d_secure]
           post[:'3ds'][:eci] = options[:three_d_secure][:eci] if options[:three_d_secure][:eci]
           post[:'3ds'][:cryptogram] = options[:three_d_secure][:cavv] if options[:three_d_secure][:cavv]
           post[:'3ds'][:version] = options[:three_d_secure][:version] if options[:three_d_secure][:version]
@@ -140,13 +152,12 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, post, authorization = nil)
         begin
-          raw_response = ssl_post(url(post, action, authorization), post.to_json, headers)
+          raw_response = (action == :verify_payment ? ssl_get("#{base_url}/payments/#{post}", headers) : ssl_post(url(post, action, authorization), post.to_json, headers))
           response = parse(raw_response)
-          if action == :capture && response.key?('_links')
-            response['id'] = response['_links']['payment']['href'].split('/')[-1]
-          end
+          response['id'] = response['_links']['payment']['href'].split('/')[-1] if action == :capture && response.key?('_links')
         rescue ResponseError => e
           raise unless e.response.code.to_s =~ /4\d\d/
+
           response = parse(e.response.body)
         end
 
@@ -215,7 +226,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response['response_summary'] == 'Approved' || !response.key?('response_summary') && response.key?('action_id')
+        response['response_summary'] == 'Approved' || response['approved'] == true || !response.key?('response_summary') && response.key?('action_id')
       end
 
       def message_from(succeeded, response)
@@ -247,6 +258,7 @@ module ActiveMerchant #:nodoc:
 
       def error_code_from(succeeded, response)
         return if succeeded
+
         if response['error_type'] && response['error_codes']
           "#{response['error_type']}: #{response['error_codes'].join(', ')}"
         elsif response['error_type']

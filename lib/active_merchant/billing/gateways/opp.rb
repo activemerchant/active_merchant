@@ -125,9 +125,7 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, payment, options={})
         # debit
-        if payment.is_a?(String)
-          options[:registrationId] = payment
-        end
+        options[:registrationId] = payment if payment.is_a?(String)
         execute_dbpa(options[:risk_workflow] ? 'PA.CP': 'DB',
           money, payment, options)
       end
@@ -260,6 +258,7 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_method(post, payment, options)
         return if payment.is_a?(String)
+
         if options[:registrationId]
           post[:card] = {
             cvv: payment.verification_value,
@@ -311,17 +310,18 @@ module ActiveMerchant #:nodoc:
         add_authentication(post)
         post = flatten_hash(post)
 
-        response = begin
-          parse(
-            ssl_post(
-              url,
-              post.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&'),
-              'Content-Type' => 'application/x-www-form-urlencoded;charset=UTF-8'
+        response =
+          begin
+            parse(
+              ssl_post(
+                url,
+                post.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&'),
+                'Content-Type' => 'application/x-www-form-urlencoded;charset=UTF-8'
+              )
             )
-          )
-        rescue ResponseError => e
-          parse(e.response.body)
-        end
+          rescue ResponseError => e
+            parse(e.response.body)
+          end
 
         success = success_from(response)
 

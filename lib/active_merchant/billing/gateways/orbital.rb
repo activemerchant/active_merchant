@@ -243,7 +243,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def void(authorization, options = {}, deprecated = {})
-        if(!options.kind_of?(Hash))
+        if !options.kind_of?(Hash)
           ActiveMerchant.deprecated('Calling the void method with an amount parameter is deprecated and will be removed in a future version.')
           return void(options, deprecated.merge(:amount => authorization))
         end
@@ -327,9 +327,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! :CustomerRefNum, options[:customer_ref_num]
         else
           if options[:customer_ref_num]
-            if creditcard
-              xml.tag! :CustomerProfileFromOrderInd, USE_CUSTOMER_REF_NUM
-            end
+            xml.tag! :CustomerProfileFromOrderInd, USE_CUSTOMER_REF_NUM if creditcard
             xml.tag! :CustomerRefNum, options[:customer_ref_num]
           else
             xml.tag! :CustomerProfileFromOrderInd, AUTO_GENERATE
@@ -385,7 +383,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(xml, creditcard, options)
-        if(address = (options[:billing_address] || options[:address]))
+        if (address = (options[:billing_address] || options[:address]))
           avs_supported = AVS_SUPPORTED_COUNTRIES.include?(address[:country].to_s) || empty?(address[:country])
 
           if avs_supported
@@ -423,7 +421,7 @@ module ActiveMerchant #:nodoc:
 
       # For Profile requests
       def add_customer_address(xml, options)
-        if(address = (options[:billing_address] || options[:address]))
+        if (address = (options[:billing_address] || options[:address]))
           avs_supported = AVS_SUPPORTED_COUNTRIES.include?(address[:country].to_s)
 
           xml.tag! :CustomerAddress1, byte_limit(format_address_field(address[:address1]), 30)
@@ -457,10 +455,8 @@ module ActiveMerchant #:nodoc:
         # - http://download.chasepaymentech.com/docs/orbital/orbital_gateway_xml_specification.pdf
         unless creditcard.nil?
           if creditcard.verification_value?
-            if %w( visa discover ).include?(creditcard.brand)
-              xml.tag! :CardSecValInd, '1'
-            end
-            xml.tag! :CardSecVal,  creditcard.verification_value
+            xml.tag! :CardSecValInd, '1' if %w(visa discover).include?(creditcard.brand)
+            xml.tag! :CardSecVal, creditcard.verification_value
           end
         end
       end
@@ -554,6 +550,7 @@ module ActiveMerchant #:nodoc:
 
       def add_stored_credentials(xml, parameters)
         return unless parameters[:mit_stored_credential_ind] == 'Y' || parameters[:stored_credential] && !parameters[:stored_credential].values.all?(&:nil?)
+
         if msg_type = get_msg_type(parameters)
           xml.tag! :MITMsgType, msg_type
         end
@@ -569,15 +566,18 @@ module ActiveMerchant #:nodoc:
         return parameters[:mit_msg_type] if parameters[:mit_msg_type]
         return 'CSTO' if parameters[:stored_credential][:initial_transaction]
         return unless parameters[:stored_credential][:initiator] && parameters[:stored_credential][:reason_type]
-        initiator = case parameters[:stored_credential][:initiator]
-        when 'customer' then 'C'
-        when 'merchant' then 'M'
-        end
-        reason = case parameters[:stored_credential][:reason_type]
-        when 'recurring' then 'REC'
-        when 'installment' then 'INS'
-        when 'unscheduled' then 'USE'
-        end
+
+        initiator =
+          case parameters[:stored_credential][:initiator]
+          when 'customer' then 'C'
+          when 'merchant' then 'M'
+          end
+        reason =
+          case parameters[:stored_credential][:reason_type]
+          when 'recurring' then 'REC'
+          when 'installment' then 'INS'
+          when 'unscheduled' then 'USE'
+          end
 
         "#{initiator}#{reason}"
       end
@@ -613,11 +613,12 @@ module ActiveMerchant #:nodoc:
         request = ->(url) { parse(ssl_post(url, order, headers)) }
 
         # Failover URL will be attempted in the event of a connection error
-        response = begin
-          request.call(remote_url)
-        rescue ConnectionError
-          request.call(remote_url(:secondary))
-        end
+        response =
+          begin
+            request.call(remote_url)
+          rescue ConnectionError
+            request.call(remote_url(:secondary))
+          end
 
         Response.new(success?(response, message_type), message_from(response), response,
           {
@@ -644,7 +645,7 @@ module ActiveMerchant #:nodoc:
           response[:profile_proc_status] == SUCCESS
         else
           response[:proc_status] == SUCCESS &&
-          APPROVED.include?(response[:resp_code])
+            APPROVED.include?(response[:resp_code])
         end
       end
 
@@ -727,6 +728,7 @@ module ActiveMerchant #:nodoc:
       def set_recurring_ind(xml, parameters)
         if parameters[:recurring_ind]
           raise 'RecurringInd must be set to either "RF" or "RS"' unless %w(RF RS).include?(parameters[:recurring_ind])
+
           xml.tag! :RecurringInd, parameters[:recurring_ind]
         end
       end
@@ -831,7 +833,8 @@ module ActiveMerchant #:nodoc:
         limited_value = ''
 
         value.to_s.each_char do |c|
-          break if((limited_value.bytesize + c.bytesize) > byte_length)
+          break if (limited_value.bytesize + c.bytesize) > byte_length
+
           limited_value << c
         end
 
@@ -939,10 +942,10 @@ module ActiveMerchant #:nodoc:
 
         # Map vendor's AVS result code to a postal match code
         ORBITAL_POSTAL_MATCH_CODE = {
-            'Y' => %w( 9 A B C H JA JD M2 M3 M5 N5 N8 N9 X Z ),
-            'N' => %w( D E F G M8 ),
-            'X' => %w( 4 J R ),
-            nil => %w( 1 2 3 5 6 7 8 JB JC M1 M4 M6 M7 N3 N4 N6 N7 UK )
+            'Y' => %w(9 A B C H JA JD M2 M3 M5 N5 N8 N9 X Z),
+            'N' => %w(D E F G M8),
+            'X' => %w(4 J R),
+            nil => %w(1 2 3 5 6 7 8 JB JC M1 M4 M6 M7 N3 N4 N6 N7 UK)
         }.inject({}) do |map, (type, codes)|
           codes.each { |code| map[code] = type }
           map
@@ -950,10 +953,10 @@ module ActiveMerchant #:nodoc:
 
         # Map vendor's AVS result code to a street match code
         ORBITAL_STREET_MATCH_CODE = {
-            'Y' => %w( 9 B D F H JA JB M2 M4 M5 M6 M7 N3 N5 N7 N8 N9 X ),
-            'N' => %w( A C E G M8 Z ),
-            'X' => %w( 4 J R ),
-            nil => %w( 1 2 3 5 6 7 8 JC JD M1 M3 N4 N6 UK )
+            'Y' => %w(9 B D F H JA JB M2 M4 M5 M6 M7 N3 N5 N7 N8 N9 X),
+            'N' => %w(A C E G M8 Z),
+            'X' => %w(4 J R),
+            nil => %w(1 2 3 5 6 7 8 JC JD M1 M3 N4 N6 UK)
         }.inject({}) do |map, (type, codes)|
           codes.each { |code| map[code] = type }
           map

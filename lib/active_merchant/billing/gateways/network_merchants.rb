@@ -218,9 +218,7 @@ module ActiveMerchant #:nodoc:
         return nil unless success
 
         authorization = response['transactionid']
-        if(parameters[:customer_vault] && (authorization.nil? || authorization.empty?))
-          authorization = response['customer_vault_id']
-        end
+        authorization = response['customer_vault_id'] if parameters[:customer_vault] && (authorization.nil? || authorization.empty?)
 
         authorization
       end

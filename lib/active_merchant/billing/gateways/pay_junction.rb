@@ -97,7 +97,7 @@ module ActiveMerchant #:nodoc:
     # See example use above for address AVS fields
     # See #recurring for periodic transaction fields
     class PayJunctionGateway < Gateway
-      API_VERSION   = '1.2'
+      API_VERSION = '1.2'
 
       class_attribute :test_url, :live_url
 
@@ -243,14 +243,15 @@ module ActiveMerchant #:nodoc:
 
         requires!(options, [:periodicity, :monthly, :weekly, :daily], :payments)
 
-        periodic_type = case options[:periodicity]
-        when :monthly
-          'month'
-        when :weekly
-          'week'
-        when :daily
-          'day'
-        end
+        periodic_type =
+          case options[:periodicity]
+          when :monthly
+            'month'
+          when :weekly
+            'week'
+          when :daily
+            'day'
+          end
 
         if options[:starting_at].nil?
           start_date = Time.now.strftime('%Y-%m-%d')
@@ -318,7 +319,7 @@ module ActiveMerchant #:nodoc:
         address = options[:billing_address] || options[:address]
 
         if address
-          params[:address]  = address[:address1] unless address[:address1].blank?
+          params[:address]   = address[:address1] unless address[:address1].blank?
           params[:city]      = address[:city]     unless address[:city].blank?
           params[:state]     = address[:state]    unless address[:state].blank?
           params[:zipcode]   = address[:zip]      unless address[:zip].blank?

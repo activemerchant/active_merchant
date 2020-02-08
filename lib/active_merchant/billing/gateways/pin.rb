@@ -101,6 +101,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(post, creditcard, options)
         return if creditcard.kind_of?(String)
+
         address = (options[:billing_address] || options[:address])
         return unless address
 

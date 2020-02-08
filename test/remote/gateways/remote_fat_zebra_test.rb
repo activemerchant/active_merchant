@@ -151,6 +151,13 @@ class RemoteFatZebraTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_purchase_with_metadata
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:metadata => { :description => 'Invoice #1234356' }))
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_equal 'Invoice #1234356', response.params['response']['metadata']['description']
+  end
+
   def test_successful_purchase_with_3DS_information
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:cavv => 'MDRjN2MxZTAxYjllNTBkNmM2MTA=', :xid => 'MGVmMmNlMzI4NjAyOWU2ZDgwNTQ=', :sli => '05'))
     assert_success response
@@ -165,9 +172,9 @@ class RemoteFatZebraTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = FatZebraGateway.new(
-                :username => 'invalid',
-                :token => 'wrongtoken'
-              )
+      :username => 'invalid',
+      :token => 'wrongtoken'
+    )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Invalid Login', response.message

@@ -11,7 +11,7 @@ module ActiveMerchant #:nodoc:
 
       TRANSACTION_API = '/createShopifyTransaction.php'
 
-      self.supported_countries = %w[ NZ CA ]
+      self.supported_countries = %w[NZ CA]
       self.default_currency = 'NZD'
       self.supported_cardtypes = [:visa, :master]
       self.homepage_url = 'https://www.swipehq.com/checkout'
@@ -58,7 +58,7 @@ module ActiveMerchant #:nodoc:
         post[:address] = "#{address[:address1]}, #{address[:address2]}"
         post[:city] = address[:city]
         post[:country] = address[:country]
-        post[:mobile] = address[:phone]     # API only has a "mobile" field, no "phone"
+        post[:mobile] = address[:phone] # API only has a "mobile" field, no "phone"
       end
 
       def add_invoice(post, options)

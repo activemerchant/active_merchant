@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class RemoteDataCashTest < Test::Unit::TestCase
-
   def setup
     # gateway to connect to Datacash
     @gateway = DataCashGateway.new(fixtures(:data_cash))
@@ -42,7 +41,6 @@ class RemoteDataCashTest < Test::Unit::TestCase
       :month => 3,
       :year => Date.today.year + 2,
       :brand => :solo,
-      :issue_number => 5,
       :start_month => 12,
       :start_year => 2006
     )
@@ -165,6 +163,7 @@ class RemoteDataCashTest < Test::Unit::TestCase
   end
 
   def test_invalid_verification_number
+    @mastercard.number = 1000350000000007
     @mastercard.verification_value = 123
     response = @gateway.purchase(@amount, @mastercard, @params)
     assert_failure response
@@ -326,7 +325,7 @@ class RemoteDataCashTest < Test::Unit::TestCase
   end
 
   def test_order_id_that_is_too_long
-    @params[:order_id] =  "#{@params[:order_id]}1234356"
+    @params[:order_id] = "#{@params[:order_id]}1234356"
     response = @gateway.purchase(@amount, @mastercard, @params)
     assert_success response
     assert response.test?

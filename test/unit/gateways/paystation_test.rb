@@ -4,9 +4,9 @@ class PaystationTest < Test::Unit::TestCase
   include CommStub
   def setup
     @gateway = PaystationGateway.new(
-                 :paystation_id => 'some_id_number',
-                 :gateway_id    => 'another_id_number'
-               )
+      :paystation_id => 'some_id_number',
+      :gateway_id    => 'another_id_number'
+    )
 
     @credit_card = credit_card
     @amount = 100
@@ -425,5 +425,4 @@ class PaystationTest < Test::Unit::TestCase
   def post_scrubbed
     'pstn_pi=609035&pstn_gi=PUSHPAY&pstn_2p=t&pstn_nr=t&pstn_df=yymm&pstn_ms=a755b9c84a530aee91dc3077f57294b0&pstn_mo=Store+Purchase&pstn_mr=&pstn_am=&pstn_cu=NZD&pstn_cn=[FILTERED]&pstn_ct=visa&pstn_ex=1305&pstn_cc=[FILTERED]&pstn_tm=T&paystation=_empty'
   end
-
 end

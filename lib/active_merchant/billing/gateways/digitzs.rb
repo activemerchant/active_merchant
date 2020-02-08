@@ -188,6 +188,7 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_get(url + "/customers/#{options[:customer_id]}", headers(options)))
 
         return response.try(:[], 'data').try(:[], 'customerId') if success_from(response)
+
         return nil
       end
 
@@ -228,6 +229,7 @@ module ActiveMerchant #:nodoc:
       def message_from(response)
         return response['message'] if response['message']
         return 'Success' if success_from(response)
+
         response['errors'].map { |error_hash| error_hash['detail'] }.join(', ')
       end
 
@@ -276,6 +278,7 @@ module ActiveMerchant #:nodoc:
         return 'cardSplit' if options[:payment_type] == 'card_split'
         return 'tokenSplit' if options[:payment_type] == 'token_split'
         return 'token' if payment.is_a? String
+
         'card'
       end
 

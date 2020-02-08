@@ -101,25 +101,21 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_customer_data(post, options)
-        if options.has_key? :email
-          post[:email] = options[:email]
-        end
+        post[:email] = options[:email] if options.has_key? :email
 
-        if options.has_key? :ip
-          post[:ipaddress] = options[:ip]
-        end
+        post[:ipaddress] = options[:ip] if options.has_key? :ip
       end
 
       def add_address(post, creditcard, options)
         if address = options[:billing_address] || options[:address]
           post[:address1]    = address[:address1].to_s
           post[:address2]    = address[:address2].to_s unless address[:address2].blank?
-          post[:company]    = address[:company].to_s
-          post[:phone]      = address[:phone].to_s
-          post[:zip]        = address[:zip].to_s
-          post[:city]       = address[:city].to_s
-          post[:country]    = address[:country].to_s
-          post[:state]      = address[:state].blank?  ? 'n/a' : address[:state]
+          post[:company]     = address[:company].to_s
+          post[:phone]       = address[:phone].to_s
+          post[:zip]         = address[:zip].to_s
+          post[:city]        = address[:city].to_s
+          post[:country]     = address[:country].to_s
+          post[:state]       = address[:state].blank? ? 'n/a' : address[:state]
         end
       end
 
@@ -145,9 +141,9 @@ module ActiveMerchant #:nodoc:
           post[:customer_vault] = 'add_customer'
           post[:customer_vault_id] = options[:store] unless options[:store] == true
         end
-        post[:ccnumber]  = creditcard.number
+        post[:ccnumber] = creditcard.number
         post[:cvv] = creditcard.verification_value if creditcard.verification_value?
-        post[:ccexp]  = expdate(creditcard)
+        post[:ccexp] = expdate(creditcard)
         post[:firstname] = creditcard.first_name
         post[:lastname]  = creditcard.last_name
       end
@@ -172,7 +168,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, money, parameters)
-        parameters[:amount]  = amount(money) if money
+        parameters[:amount] = amount(money) if money
 
         response = parse(ssl_post(self.live_url, post_data(action, parameters)))
 
@@ -197,7 +193,7 @@ module ActiveMerchant #:nodoc:
 
       def post_data(action, parameters = {})
         post = {}
-        post[:username]      = @options[:login]
+        post[:username]   = @options[:login]
         post[:password]   = @options[:password]
         post[:type]       = action if action
 

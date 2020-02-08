@@ -132,6 +132,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(xml, tag, address, options)
         return if address.nil?
+
         xml.tag! tag do
           xml.tag! 'Name', address[:name] unless address[:name].blank?
           xml.tag! 'EMail', options[:email] unless options[:email].blank?
@@ -159,9 +160,7 @@ module ActiveMerchant #:nodoc:
         # REXML::XPath in Ruby 1.8.6 is now unable to match nodes based on their attributes
         tx_result = root.xpath('.//TransactionResult').first
 
-        if tx_result && tx_result.attributes['Duplicate'].to_s == 'true'
-          response[:duplicate] = true
-        end
+        response[:duplicate] = true if tx_result && tx_result.attributes['Duplicate'].to_s == 'true'
 
         root.xpath('.//*').each do |node|
           parse_element(response, node)

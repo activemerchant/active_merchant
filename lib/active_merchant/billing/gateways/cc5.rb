@@ -48,7 +48,7 @@ module ActiveMerchant #:nodoc:
       protected
 
       def build_sale_request(type, money, creditcard, options = {})
-        requires!(options,  :order_id)
+        requires!(options, :order_id)
 
         xml = Builder::XmlMarkup.new :indent => 2
 
@@ -62,7 +62,7 @@ module ActiveMerchant #:nodoc:
           add_amount_tags(money, options, xml)
           xml.tag! 'Email', options[:email] if options[:email]
 
-          if(address = (options[:billing_address] || options[:address]))
+          if (address = (options[:billing_address] || options[:address]))
             xml.tag! 'BillTo' do
               add_address(xml, address)
             end

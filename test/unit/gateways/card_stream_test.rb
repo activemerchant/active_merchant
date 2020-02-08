@@ -40,6 +40,13 @@ class CardStreamTest < Test::Unit::TestCase
       :dynamic_descriptor => 'product'
     }
 
+    @amex = credit_card('374245455400001',
+      :month => '12',
+      :year => 2014,
+      :verification_value => '4887',
+      :brand => :american_express
+    )
+
     @declined_card = credit_card('4000300011112220',
       :month => '9',
       :year => '2014'
@@ -179,6 +186,15 @@ class CardStreamTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_amex_purchase_with_localized_invoice_amount
+    stub_comms do
+      @gateway.purchase(28400, @amex, @visacredit_descriptor_options.merge(currency: 'JPY', order_id: '1234567890'))
+    end.check_request do |endpoint, data, headers|
+      puts data
+      assert_match(/item1GrossValue=284&/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_successful_verify
     response = stub_comms do
       @gateway.verify(@visacreditcard, @visacredit_options)
@@ -243,6 +259,14 @@ class CardStreamTest < Test::Unit::TestCase
     end.returns(successful_authorization_response)
 
     @gateway.purchase(10000, @visacreditcard, @visacredit_options)
+  end
+
+  def test_nonfractional_currency_handling
+    stub_comms do
+      @gateway.authorize(200, @visacreditcard, @visacredit_options.merge(currency: 'JPY'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/amount=2&currencyCode=392/, data)
+    end.respond_with(successful_authorization_response)
   end
 
   def test_3ds_response
@@ -343,7 +367,7 @@ class CardStreamTest < Test::Unit::TestCase
     <<-eos
      POST /direct/ HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: gateway.cardstream.com\r\nContent-Length: 501\r\n\r\n"
      amount=&currencyCode=826&transactionUnique=a017ca2ac0569188517ad8368c36a06d&orderRef=AM+test+purchase&customerName=Longbob+Longsen&cardNumber=4929421234600821&cardExpiryMonth=12&cardExpiryYear=14&cardCVV=356&customerAddress=Flat+6%2C+Primrose+Rise+347+Lavender+Road&customerPostCode=NN17+8YG+&merchantID=102922&action=SALE&type=1&countryCode=GB&threeDSRequired=N&signature=970b3fe099a85c9922a79af46c2cb798616b9fbd044a921ac5eb46cd1907a5e89b8c720aae59c7eb1d81a59563f209d5db51aa3c270838199f2bfdcbe2c1149d
-     eos
+    eos
   end
 
   def scrubbed_transcript

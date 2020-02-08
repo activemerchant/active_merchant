@@ -68,9 +68,7 @@ module ActiveMerchant #:nodoc:
 
       def capture(amount, authorization, options={})
         identifier, original_amount = split_authorization(authorization)
-        if amount && (amount != original_amount)
-          raise ArgumentError.new("Partial capture is not supported, and #{amount.inspect} != #{original_amount.inspect}")
-        end
+        raise ArgumentError.new("Partial capture is not supported, and #{amount.inspect} != #{original_amount.inspect}") if amount && (amount != original_amount)
 
         post = PostData.new
         add_credentials(post)

@@ -277,6 +277,7 @@ class BalancedTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, address: a)
     end.check_request do |method, endpoint, data, headers|
       next if endpoint =~ /debits/
+
       clean = proc { |s| Regexp.escape(CGI.escape(s)) }
       assert_match(%r{address\[line1\]=#{clean[a[:address1]]}}, data)
       assert_match(%r{address\[line2\]=#{clean[a[:address2]]}}, data)
@@ -294,6 +295,7 @@ class BalancedTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, address: address(zip: nil))
     end.check_request do |method, endpoint, data, headers|
       next if endpoint =~ /debits/
+
       assert_no_match(%r{address}, data)
     end.respond_with(cards_response, debits_response)
 
@@ -305,6 +307,7 @@ class BalancedTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, address: address(zip: '   '))
     end.check_request do |method, endpoint, data, headers|
       next if endpoint =~ /debits/
+
       assert_no_match(%r{address}, data)
     end.respond_with(cards_response, debits_response)
 
@@ -377,7 +380,7 @@ class BalancedTest < Test::Unit::TestCase
     "marketplaces.events": "/events"
   }
 }
-RESPONSE
+    RESPONSE
   end
 
   def cards_response
@@ -422,7 +425,7 @@ RESPONSE
     "cards.debits": "/cards/{cards.id}/debits"
   }
 }
-RESPONSE
+    RESPONSE
   end
 
   def debits_response
@@ -460,7 +463,7 @@ RESPONSE
     "debits.events": "/debits/{debits.id}/events"
   }
 }
-RESPONSE
+    RESPONSE
   end
 
   def authorized_debits_response
@@ -498,7 +501,7 @@ RESPONSE
     "debits.events": "/debits/{debits.id}/events"
   }
 }
-RESPONSE
+    RESPONSE
   end
 
   def authorized_partial_debits_response
@@ -536,7 +539,7 @@ RESPONSE
     "debits.events": "/debits/{debits.id}/events"
   }
 }
-RESPONSE
+    RESPONSE
   end
 
   def declined_response
@@ -555,7 +558,7 @@ RESPONSE
     }
   ]
 }
-RESPONSE
+    RESPONSE
   end
 
   def bad_email_response
@@ -576,7 +579,7 @@ RESPONSE
     }
   ]
 }
-RESPONSE
+    RESPONSE
   end
 
   def account_frozen_response
@@ -626,7 +629,7 @@ RESPONSE
     }
   ]
 }
-RESPONSE
+    RESPONSE
   end
 
   def appears_on_response
@@ -664,7 +667,7 @@ RESPONSE
     "debits.events": "/debits/{debits.id}/events"
   }
 }
-RESPONSE
+    RESPONSE
   end
 
   def holds_response
@@ -699,7 +702,7 @@ RESPONSE
     "card_holds.debit": "/debits/{card_holds.debit}"
   }
 }
-RESPONSE
+    RESPONSE
   end
 
   def method_not_allowed_response
@@ -716,7 +719,7 @@ RESPONSE
     }
   ]
 }
-RESPONSE
+    RESPONSE
   end
 
   def unauthorized_response
@@ -733,7 +736,7 @@ RESPONSE
     }
   ]
 }
-RESPONSE
+    RESPONSE
   end
 
   def voided_hold_response
@@ -768,7 +771,7 @@ RESPONSE
     "card_holds.debit": "/debits/{card_holds.debit}"
   }
 }
-RESPONSE
+    RESPONSE
   end
 
   def refunds_response
@@ -800,7 +803,7 @@ RESPONSE
     }
   ]
 }
-RESPONSE
+    RESPONSE
   end
 
   def partial_refunds_response
@@ -832,7 +835,7 @@ RESPONSE
     }
   ]
 }
-RESPONSE
+    RESPONSE
   end
 
   def refunds_pending_response
@@ -864,6 +867,6 @@ RESPONSE
     }
   ]
 }
-RESPONSE
+    RESPONSE
   end
 end

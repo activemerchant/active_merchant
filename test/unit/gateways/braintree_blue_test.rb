@@ -56,7 +56,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
 
   def test_transaction_uses_payment_method_nonce_when_option
     Braintree::TransactionGateway.any_instance.expects(:sale).
-      with(has_entries(:payment_method_nonce => 'present')).
+      with(all_of(has_entries(:payment_method_nonce => 'present'), has_key(:customer))).
       returns(braintree_result)
 
     assert response = @gateway.purchase(10, 'present', { payment_method_nonce: true })
@@ -643,7 +643,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
     @gateway.purchase(100, credit_card('41111111111111111111'), :customer => {:first_name => 'Longbob', :last_name => 'Longsen'})
   end
 
-  def test_three_d_secure_pass_thru_handling
+  def test_three_d_secure_pass_thru_handling_version_1
     Braintree::TransactionGateway.
       any_instance.
       expects(:sale).
@@ -655,6 +655,59 @@ class BraintreeBlueTest < Test::Unit::TestCase
       returns(braintree_result)
 
     @gateway.purchase(100, credit_card('41111111111111111111'), three_d_secure: {cavv: 'cavv', eci: 'eci', xid: 'xid'})
+  end
+
+  def test_three_d_secure_pass_thru_handling_version_2
+    Braintree::TransactionGateway.
+      any_instance.
+      expects(:sale).
+      with(has_entries(three_d_secure_pass_thru: has_entries(
+        three_d_secure_version: '2.0',
+        cavv: 'cavv',
+        eci_flag: 'eci',
+        ds_transaction_id: 'trans_id',
+        cavv_algorithm: 'algorithm',
+        directory_response: 'directory',
+        authentication_response: 'auth'
+      ))).
+      returns(braintree_result)
+
+    @gateway.purchase(100, credit_card('41111111111111111111'), three_d_secure: {version: '2.0', cavv: 'cavv', eci: 'eci', ds_transaction_id: 'trans_id', cavv_algorithm: 'algorithm', directory_response_status: 'directory', authentication_response_status: 'auth'})
+  end
+
+  def test_three_d_secure_pass_thru_some_fields
+    Braintree::TransactionGateway.
+      any_instance.
+      expects(:sale).
+      with(has_entries(three_d_secure_pass_thru: has_entries(
+        three_d_secure_version: '2.0',
+        cavv: 'cavv',
+        eci_flag: 'eci',
+        ds_transaction_id: 'trans_id'
+      ))).
+      returns(braintree_result)
+
+    @gateway.purchase(100, credit_card('41111111111111111111'), three_d_secure: {version: '2.0', cavv: 'cavv', eci: 'eci', ds_transaction_id: 'trans_id'})
+  end
+
+  def test_purchase_string_based_payment_method_nonce_removes_customer
+    Braintree::TransactionGateway.
+      any_instance.
+      expects(:sale).
+      with(Not(has_key(:customer))).
+      returns(braintree_result)
+
+    @gateway.purchase(100, credit_card('41111111111111111111'), payment_method_nonce: '1234')
+  end
+
+  def test_authorize_string_based_payment_method_nonce_removes_customer
+    Braintree::TransactionGateway.
+      any_instance.
+      expects(:sale).
+      with(Not(has_key(:customer))).
+      returns(braintree_result)
+
+    @gateway.authorize(100, credit_card('41111111111111111111'), payment_method_nonce: '1234')
   end
 
   def test_passes_recurring_flag
@@ -766,8 +819,8 @@ class BraintreeBlueTest < Test::Unit::TestCase
   def test_successful_purchase_with_descriptor
     Braintree::TransactionGateway.any_instance.expects(:sale).with do |params|
       (params[:descriptor][:name] == 'wow*productname') &&
-      (params[:descriptor][:phone] == '4443331112') &&
-      (params[:descriptor][:url] == 'wow.com')
+        (params[:descriptor][:phone] == '4443331112') &&
+        (params[:descriptor][:url] == 'wow.com')
     end.returns(braintree_result)
     @gateway.purchase(100, credit_card('41111111111111111111'), descriptor_name: 'wow*productname', descriptor_phone: '4443331112', descriptor_url: 'wow.com')
   end
@@ -937,7 +990,8 @@ class BraintreeBlueTest < Test::Unit::TestCase
       standard_purchase_params.merge(
         {
           :external_vault => {
-            :status => 'will_vault'},
+            :status => 'will_vault'
+          },
           :transaction_source => ''
         })
     ).returns(braintree_result)
@@ -951,7 +1005,8 @@ class BraintreeBlueTest < Test::Unit::TestCase
         {
           :external_vault => {
             :status => 'vaulted',
-            :previous_network_transaction_id => '123ABC'},
+            :previous_network_transaction_id => '123ABC'
+          },
           :transaction_source => ''
         })
     ).returns(braintree_result)
@@ -964,7 +1019,8 @@ class BraintreeBlueTest < Test::Unit::TestCase
       standard_purchase_params.merge(
         {
           :external_vault => {
-            :status => 'will_vault'},
+            :status => 'will_vault'
+          },
           :transaction_source => 'recurring'
         })
     ).returns(braintree_result)
@@ -978,7 +1034,8 @@ class BraintreeBlueTest < Test::Unit::TestCase
         {
           :external_vault => {
             :status => 'vaulted',
-            :previous_network_transaction_id => '123ABC'},
+            :previous_network_transaction_id => '123ABC'
+          },
           :transaction_source => 'recurring'
         })
     ).returns(braintree_result)
@@ -991,7 +1048,8 @@ class BraintreeBlueTest < Test::Unit::TestCase
       standard_purchase_params.merge(
         {
           :external_vault => {
-            :status => 'will_vault'},
+            :status => 'will_vault'
+          },
           :transaction_source => ''
         })
     ).returns(braintree_result)
@@ -1005,7 +1063,8 @@ class BraintreeBlueTest < Test::Unit::TestCase
         {
           :external_vault => {
             :status => 'vaulted',
-            :previous_network_transaction_id => '123ABC'},
+            :previous_network_transaction_id => '123ABC'
+          },
           :transaction_source => ''
         })
     ).returns(braintree_result)
@@ -1018,7 +1077,8 @@ class BraintreeBlueTest < Test::Unit::TestCase
       standard_purchase_params.merge(
         {
           :external_vault => {
-            :status => 'will_vault'},
+            :status => 'will_vault'
+          },
           :transaction_source => 'recurring'
         })
     ).returns(braintree_result)
@@ -1032,7 +1092,8 @@ class BraintreeBlueTest < Test::Unit::TestCase
         {
           :external_vault => {
             :status => 'vaulted',
-            :previous_network_transaction_id => '123ABC'},
+            :previous_network_transaction_id => '123ABC'
+          },
           :transaction_source => 'recurring'
         })
     ).returns(braintree_result)
@@ -1045,7 +1106,8 @@ class BraintreeBlueTest < Test::Unit::TestCase
       standard_purchase_params.merge(
         {
           :external_vault => {
-            :status => 'will_vault'},
+            :status => 'will_vault'
+          },
           :transaction_source => ''
         })
     ).returns(braintree_result)
@@ -1059,7 +1121,8 @@ class BraintreeBlueTest < Test::Unit::TestCase
         {
           :external_vault => {
             :status => 'vaulted',
-            :previous_network_transaction_id => '123ABC'},
+            :previous_network_transaction_id => '123ABC'
+          },
           :transaction_source => ''
         })
     ).returns(braintree_result)
@@ -1072,7 +1135,8 @@ class BraintreeBlueTest < Test::Unit::TestCase
       standard_purchase_params.merge(
         {
           :external_vault => {
-            :status => 'will_vault'},
+            :status => 'will_vault'
+          },
           :transaction_source => 'unscheduled'
         })
     ).returns(braintree_result)
@@ -1130,7 +1194,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
         :number => '41111111111111111111',
         :cvv => '123',
         :expiration_month => '09',
-        :expiration_year => '2020',
+        :expiration_year => (Time.now.year + 1).to_s,
         :cardholder_name => 'Longbob Longsen',
       }
     }

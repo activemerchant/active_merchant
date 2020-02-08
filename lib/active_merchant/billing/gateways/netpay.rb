@@ -215,6 +215,7 @@ module ActiveMerchant #:nodoc:
 
       def currency_code(currency)
         return currency if currency =~ /^\d+$/
+
         CURRENCY_CODES[currency]
       end
     end

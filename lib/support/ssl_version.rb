@@ -83,5 +83,4 @@ class SSLVersion
   rescue StandardError => ex
     return :error, ex.inspect
   end
-
 end

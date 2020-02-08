@@ -198,6 +198,7 @@ module ActiveMerchant #:nodoc:
 
       def voucher?(payment)
         return false if payment.is_a?(String)
+
         %w[sodexo vr].include? card_brand(payment)
       end
 
@@ -249,7 +250,8 @@ module ActiveMerchant #:nodoc:
           error_code: error_code_from(response)
         )
       rescue ResponseError => e
-        message = get_error_message(e)
+        message = get_error_messages(e)
+
         return Response.new(
           false,
           "#{STANDARD_ERROR_MESSAGE_MAPPING[e.response.code]} #{message}",
@@ -263,17 +265,44 @@ module ActiveMerchant #:nodoc:
         %w[pending paid processing canceled active].include? response['status']
       end
 
-      def get_error_message(error)
-        JSON.parse(error.response.body)['message']
-      end
-
       def message_from(response)
+        return gateway_response_errors(response) if gateway_response_errors?(response)
         return response['message'] if response['message']
         return response['last_transaction']['acquirer_message'] if response['last_transaction']
       end
 
+      def get_error_messages(error)
+        parsed_response_body = parse(error.response.body)
+        message = parsed_response_body['message']
+
+        parsed_response_body['errors']&.each do |type, descriptions|
+          message += ' | '
+          message += descriptions.join(', ')
+        end
+
+        message
+      end
+
+      def gateway_response_errors?(response)
+        response.try(:[], 'last_transaction').try(:[], 'gateway_response').try(:[], 'errors').present?
+      end
+
+      def gateway_response_errors(response)
+        error_string = ''
+
+        response['last_transaction']['gateway_response']['errors']&.each do |error|
+          error.each do |key, value|
+            error_string += ' | ' unless error_string.blank?
+            error_string += value
+          end
+        end
+
+        error_string
+      end
+
       def authorization_from(response, action)
         return "#{response['customer']['id']}|#{response['id']}" if action == 'store'
+
         response['id']
       end
 
@@ -286,7 +315,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_code_from(response)
-        STANDARD_ERROR_CODE[:processing_error] unless success_from(response)
+        return if success_from(response)
+        return response['last_transaction']['acquirer_return_code'] if response['last_transaction']
+
+        STANDARD_ERROR_CODE[:processing_error]
       end
     end
   end

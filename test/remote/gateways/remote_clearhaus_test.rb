@@ -74,6 +74,13 @@ class RemoteClearhausTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_purchase_and_amount_for_non_decimal_currency
+    response = @gateway.purchase(14200, @credit_card, @options.merge(currency: 'JPY'))
+    assert_success response
+    assert_equal 142, response.params['amount']
+    assert_equal 'Approved', response.message
+  end
+
   def test_successful_purchase_with_more_options
     options = {
       order_id: '1',

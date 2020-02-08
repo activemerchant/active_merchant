@@ -21,7 +21,7 @@ module ActiveMerchant #:nodoc:
 
       MONETARY_CHANGE_STATUSES = ['SETTLE', 'AUTHORIZE', 'AUTHORIZE ADDITIONAL', 'CREDIT', 'SPLITSETTLE']
 
-      CARD_CODE_ERRORS = %w( N S "" )
+      CARD_CODE_ERRORS = %w(N S "")
 
       CARD_CODE_MESSAGES = {
         'M' => 'Card verification number matched',
@@ -32,7 +32,7 @@ module ActiveMerchant #:nodoc:
         '' => 'Transaction failed because incorrect card verification number was entered or no number was entered'
       }
 
-      AVS_ERRORS = %w( A B C E I N O P R W Z )
+      AVS_ERRORS = %w(A B C E I N O P R W Z)
 
       AVS_MESSAGES = {
         'A' => 'Street address matches billing information, zip/postal code does not',
@@ -300,9 +300,9 @@ module ActiveMerchant #:nodoc:
         when :authorization
           parse_authorization_response(body)
         when :get_status
-          parse_status_response(body, [ :SerialNumber, :TransactionAmount, :TransactionStatusCode, :TransactionStatusMessage, :OrderNumber, :TransactionDateTime, :TransactionID, :ApprovalCode, :BatchNumber ])
+          parse_status_response(body, [:SerialNumber, :TransactionAmount, :TransactionStatusCode, :TransactionStatusMessage, :OrderNumber, :TransactionDateTime, :TransactionID, :ApprovalCode, :BatchNumber])
         else
-          parse_status_response(body, [ :SerialNumber, :TransactionAmount, :DesiredStatus, :StatusResponse, :StatusResponseMessage, :OrderNumber, :AuditID ])
+          parse_status_response(body, [:SerialNumber, :TransactionAmount, :DesiredStatus, :StatusResponse, :StatusResponseMessage, :OrderNumber, :AuditID])
         end
       end
 
@@ -329,7 +329,7 @@ module ActiveMerchant #:nodoc:
       def parse_status_response(body, response_keys)
         lines = split_lines(body)
 
-        keys = [ :szSerialNumber, :szErrorCode, :szNumberRecords]
+        keys = [:szSerialNumber, :szErrorCode, :szNumberRecords]
         values = split_line(lines[0])[0..2]
 
         result = Hash[*keys.zip(values).flatten]
@@ -375,7 +375,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_creditcard(post, creditcard)
-        post[:AccountNumber]  = creditcard.number
+        post[:AccountNumber] = creditcard.number
         post[:Month] = creditcard.month
         post[:Year] = creditcard.year
         post[:CVV2] = creditcard.verification_value if creditcard.verification_value?
@@ -434,6 +434,7 @@ module ActiveMerchant #:nodoc:
           return CARD_CODE_MESSAGES[response[:szCVV2ResponseCode]] if CARD_CODE_ERRORS.include?(response[:szCVV2ResponseCode])
           return AVS_MESSAGES[response[:szAVSResponseMessage]] if AVS_ERRORS.include?(response[:szAVSResponseCode])
           return RETURN_CODE_MESSAGES[response[:szReturnCode]] if response[:szReturnCode] != '1'
+
           return response[:szAuthorizationDeclinedMessage]
         end
       end

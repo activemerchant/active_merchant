@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class OgoneTest < Test::Unit::TestCase
-
   def setup
     @credentials = { :login => 'pspid',
                      :user => 'username',
@@ -806,5 +805,4 @@ read 152 bytes
 Conn close
     }
   end
-
 end

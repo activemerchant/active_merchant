@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class RemotePaySecureTest < Test::Unit::TestCase
-
   def setup
     @gateway = PaySecureGateway.new(fixtures(:pay_secure))
 
@@ -29,9 +28,9 @@ class RemotePaySecureTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = PaySecureGateway.new(
-                :login => '',
-                :password => ''
-              )
+      :login => '',
+      :password => ''
+    )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_equal "MissingField: 'MERCHANT_ID'", response.message
     assert_failure response

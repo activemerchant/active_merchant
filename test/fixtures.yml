@@ -448,6 +448,12 @@ iveri:
   cert_id: CB69E68D-C7E7-46B9-9B7A-025DCABAD6EF
   app_id: d10a603d-4ade-405b-93f1-826dfc0181e8
 
+ixopay:
+  username: USERNAME
+  api_key: API_KEY
+  password: PASSWORD
+  secret: SHARED_SECRET
+
 jetpay:
   login: TESTTERMINAL
 
@@ -880,8 +886,17 @@ quantum:
   password: Y
 
 # You will need to create a developer sandbox at https://developer.intuit.com/ and
-# successfully generate an OAuth 1.0a access token and token secret.
+# successfully generate an OAuth 2.0 access token and refresh_token. Access token
+# expires every 60 minutes
 quickbooks:
+  client_id:
+  client_secret:
+  refresh_token:
+  access_token:
+
+# You will need to create a developer sandbox at https://developer.intuit.com/ and
+# successfully generate an OAuth 1.0a access token and token secret.
+quickbooks_oauth_1:
   consumer_key:
   consumer_secret:
   access_token:
@@ -1189,9 +1204,14 @@ tns:
   userid: TESTSPREEDLY01
   password: 3f34fe50334fbe6cbe04c283411a5860
 
+# This account seem to have expired
 tns_ap:
   userid: TESTUNISOLMAA01
   password: b7f8119fda3bd27c17656badb52c95bb
+
+tns_pay_mode:
+  userid: USERID
+  password: password
 
 trans_first:
   login: 45567

@@ -425,5 +425,4 @@ class WepayTest < Test::Unit::TestCase
   def invalid_json_response
     %({"checkout_id"=1852898602,"state":"captured")
   end
-
 end

@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class RemoteSpreedlyCoreTest < Test::Unit::TestCase
-
   def setup
     @gateway = SpreedlyCoreGateway.new(fixtures(:spreedly_core))
 

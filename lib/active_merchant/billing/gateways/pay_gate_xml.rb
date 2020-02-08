@@ -106,7 +106,7 @@ module ActiveMerchant #:nodoc:
         900002  => 'Card Expired',
         900003  => 'Insufficient Funds',
         900004  => 'Invalid Card Number',
-        900005  => 'Bank Interface Timeout',  # indicates a communications failure between the banks systems
+        900005  => 'Bank Interface Timeout', # indicates a communications failure between the banks systems
         900006  => 'Invalid Card',
         900007  => 'Declined',
         900009  => 'Lost Card',
@@ -117,7 +117,7 @@ module ActiveMerchant #:nodoc:
         900014  => 'Excessive Card Usage',
         900015  => 'Card Blacklisted',
 
-        900207  => 'Declined; authentication failed',  # indicates the cardholder did not enter their MasterCard SecureCode / Verified by Visa password correctly
+        900207  => 'Declined; authentication failed', # indicates the cardholder did not enter their MasterCard SecureCode / Verified by Visa password correctly
 
         990020  => 'Auth Declined',
 
@@ -135,15 +135,15 @@ module ActiveMerchant #:nodoc:
         990053  => 'Error processing transaction',
 
         # Miscellaneous - Unless otherwise noted, the TRANSACTION_STATUS will be 0.
-        900209  => 'Transaction verification failed (phase 2)',  # Indicates the verification data returned from MasterCard SecureCode / Verified by Visa has been altered
-        900210  => 'Authentication complete; transaction must be restarted',  # Indicates that the MasterCard SecuerCode / Verified by Visa transaction has already been completed.  Most likely caused by the customer clicking the refresh button
+        900209  => 'Transaction verification failed (phase 2)', # Indicates the verification data returned from MasterCard SecureCode / Verified by Visa has been altered
+        900210  => 'Authentication complete; transaction must be restarted', # Indicates that the MasterCard SecuerCode / Verified by Visa transaction has already been completed.  Most likely caused by the customer clicking the refresh button
 
         990024  => 'Duplicate Transaction Detected.  Please check before submitting',
 
-        990028  => 'Transaction cancelled'  # Customer clicks the 'Cancel' button on the payment page
+        990028  => 'Transaction cancelled' # Customer clicks the 'Cancel' button on the payment page
       }
 
-      SUCCESS_CODES = %w( 990004 990005 990017 990012 990018 990031 )
+      SUCCESS_CODES = %w(990004 990005 990017 990012 990018 990031)
 
       TRANSACTION_CODES = {
         0 => 'Not Done',
@@ -255,9 +255,7 @@ module ActiveMerchant #:nodoc:
         response_action = action.gsub(/tx/, 'rx')
         root  = REXML::XPath.first(xml.root, response_action)
         # we might have gotten an error
-        if root.nil?
-          root  = REXML::XPath.first(xml.root, 'errorrx')
-        end
+        root  = REXML::XPath.first(xml.root, 'errorrx') if root.nil?
         root.attributes.each do |name, value|
           hash[name.to_sym] = value
         end

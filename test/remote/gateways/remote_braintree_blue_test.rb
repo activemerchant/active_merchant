@@ -292,11 +292,12 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
   def test_successful_store_with_existing_customer_id
     credit_card = credit_card('5105105105105100')
     customer_id = generate_unique_id
-    assert response = @gateway.store(credit_card, customer: customer_id)
+    assert response = @gateway.store(credit_card, @options.merge(customer: customer_id))
     assert_success response
     assert_equal 1, @braintree_backend.customer.find(customer_id).credit_cards.size
 
-    assert response = @gateway.store(credit_card, customer: customer_id)
+    credit_card = credit_card('4111111111111111')
+    assert response = @gateway.store(credit_card, @options.merge(customer: customer_id))
     assert_success response
     assert_equal 2, @braintree_backend.customer.find(customer_id).credit_cards.size
     assert_equal customer_id, response.params['customer_vault_id']
@@ -538,8 +539,16 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_three_d_secure_pass_thru
-    three_d_secure_params = { eci: '05', cavv: 'cavv', xid: 'xid' }
-    assert response = @gateway.purchase(@amount, @credit_card,
+    three_d_secure_params = { version: '2.0', cavv: 'cavv', eci: '02', ds_transaction_id: 'trans_id', cavv_algorithm: 'algorithm', directory_response_status: 'directory', authentication_response_status: 'auth' }
+    response = @gateway.purchase(@amount, @credit_card,
+      three_d_secure: three_d_secure_params
+    )
+    assert_success response
+  end
+
+  def test_successful_purchase_with_some_three_d_secure_pass_thru_fields
+    three_d_secure_params = { version: '2.0', cavv: 'cavv', eci: '02', ds_transaction_id: 'trans_id' }
+    response = @gateway.purchase(@amount, @credit_card,
       three_d_secure: three_d_secure_params
     )
     assert_success response
@@ -937,5 +946,4 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_success response
     assert_equal expected_avs_code, response.avs_result['code']
   end
-
 end

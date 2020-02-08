@@ -33,7 +33,7 @@ module ActiveMerchant #:nodoc:
 
         MultiResponse.run do |r|
           r.process { commit(url('purchase'), post) }
-          if(r.params['enrolled'].to_s == '0')
+          if r.params['enrolled'].to_s == '0'
             r.process { commit(r.params['post_uri'], r.params['form_post_vars']) }
           else
             r.process { handle_3dsecure(r) }
@@ -154,20 +154,21 @@ module ActiveMerchant #:nodoc:
 
       def clean(value, format, maxlength)
         value ||= ''
-        value = case format
-        when :alphanumeric
-          value.gsub(/[^A-Za-z0-9]/, '')
-        when :name
-          value.gsub(/[^A-Za-z ]/, '')
-        when :numeric
-          value.gsub(/[^0-9]/, '')
-        when :text
-          value.gsub(/[^A-Za-z0-9@\-_\/\. ]/, '')
-        when nil
-          value
-        else
-          raise "Unknown format #{format} for #{value}"
-        end
+        value =
+          case format
+          when :alphanumeric
+            value.gsub(/[^A-Za-z0-9]/, '')
+          when :name
+            value.gsub(/[^A-Za-z ]/, '')
+          when :numeric
+            value.gsub(/[^0-9]/, '')
+          when :text
+            value.gsub(/[^A-Za-z0-9@\-_\/\. ]/, '')
+          when nil
+            value
+          else
+            raise "Unknown format #{format} for #{value}"
+          end
         value[0...maxlength]
       end
 

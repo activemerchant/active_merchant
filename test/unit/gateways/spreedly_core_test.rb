@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class SpreedlyCoreTest < Test::Unit::TestCase
-
   def setup
     @gateway = SpreedlyCoreGateway.new(:login => 'api_login', :password => 'api_secret', :gateway_token => 'token')
     @payment_method_token = 'E3eQGR3E0xiosj7FOJRtIKbF8Ch'

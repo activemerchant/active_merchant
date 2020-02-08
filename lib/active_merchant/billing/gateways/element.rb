@@ -246,9 +246,7 @@ module ActiveMerchant #:nodoc:
         doc.remove_namespaces!
         root = doc.root.xpath('//response/*')
 
-        if root.empty?
-          root = doc.root.xpath('//Response/*')
-        end
+        root = doc.root.xpath('//Response/*') if root.empty?
 
         root.each do |node|
           if node.elements.empty?

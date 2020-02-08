@@ -213,7 +213,7 @@ module ActiveMerchant #:nodoc:
 
       # Store a credit card by creating an Ogone Alias
       def store(payment_source, options = {})
-        options[:alias_operation] = 'BYPSP' unless(options.has_key?(:billing_id) || options.has_key?(:store))
+        options[:alias_operation] = 'BYPSP' unless options.has_key?(:billing_id) || options.has_key?(:store)
         response = authorize(@options[:store_amount] || 1, payment_source, options)
         void(response.authorization) if response.success?
         response
@@ -239,6 +239,7 @@ module ActiveMerchant #:nodoc:
 
       def reference_transaction?(identifier)
         return false unless identifier.is_a?(String)
+
         _, action = identifier.split(';')
         !action.nil?
       end
@@ -291,7 +292,7 @@ module ActiveMerchant #:nodoc:
         add_pair post, 'DECLINEURL',      options[:decline_url]     if options[:decline_url]
         add_pair post, 'EXCEPTIONURL',    options[:exception_url]   if options[:exception_url]
         add_pair post, 'CANCELURL',       options[:cancel_url]      if options[:cancel_url]
-        add_pair post, 'PARAMVAR',        options[:paramvar]       if options[:paramvar]
+        add_pair post, 'PARAMVAR',        options[:paramvar]        if options[:paramvar]
         add_pair post, 'PARAMPLUS',       options[:paramplus]       if options[:paramplus]
         add_pair post, 'COMPLUS',         options[:complus]         if options[:complus]
         add_pair post, 'LANGUAGE',        options[:language]        if options[:language]
@@ -322,6 +323,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(post, creditcard, options)
         return unless options[:billing_address]
+
         add_pair post, 'Owneraddress', options[:billing_address][:address1]
         add_pair post, 'OwnerZip',     options[:billing_address][:zip]
         add_pair post, 'ownertown',    options[:billing_address][:city]
@@ -408,7 +410,7 @@ module ActiveMerchant #:nodoc:
 
       def add_signature(parameters)
         if @options[:signature].blank?
-          ActiveMerchant.deprecated(OGONE_NO_SIGNATURE_DEPRECATION_MESSAGE) unless(@options[:signature_encryptor] == 'none')
+          ActiveMerchant.deprecated(OGONE_NO_SIGNATURE_DEPRECATION_MESSAGE) unless @options[:signature_encryptor] == 'none'
           return
         end
 
@@ -418,16 +420,17 @@ module ActiveMerchant #:nodoc:
       def calculate_signature(signed_parameters, algorithm, secret)
         return legacy_calculate_signature(signed_parameters, secret) unless algorithm
 
-        sha_encryptor = case algorithm
-        when 'sha256'
-          Digest::SHA256
-        when 'sha512'
-          Digest::SHA512
-        when 'sha1'
-          Digest::SHA1
-        else
-          raise "Unknown signature algorithm #{algorithm}"
-        end
+        sha_encryptor =
+          case algorithm
+          when 'sha256'
+            Digest::SHA256
+          when 'sha512'
+            Digest::SHA512
+          when 'sha1'
+            Digest::SHA1
+          else
+            raise "Unknown signature algorithm #{algorithm}"
+          end
 
         filtered_params = signed_parameters.select { |k, v| !v.blank? }
         sha_encryptor.hexdigest(

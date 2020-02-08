@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class RemotePaymentExpressTest < Test::Unit::TestCase
-
   def setup
     @gateway = PaymentExpressGateway.new(fixtures(:payment_express))
 
@@ -146,5 +145,4 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
     assert_scrubbed(@gateway.options[:password], clean_transcript)
   end
-
 end

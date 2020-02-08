@@ -776,5 +776,4 @@ class PaymillTest < Test::Unit::TestCase
   def scrubbed_transcript
     'connection_uri=https://test-token.paymill.com?account.number=[FILTERED]&account.expiry.month=09&account.expiry.year=2016&account.verification=[FILTERED]'
   end
-
 end

@@ -3,9 +3,9 @@ require 'test_helper'
 class SoEasyPayTest < Test::Unit::TestCase
   def setup
     @gateway = SoEasyPayGateway.new(
-                 :login => 'login',
-                 :password => 'password'
-               )
+      :login => 'login',
+      :password => 'password'
+    )
 
     @credit_card = credit_card
     @amount = 100
@@ -220,5 +220,4 @@ class SoEasyPayTest < Test::Unit::TestCase
         </soap:Body>
       </soap:Envelope>)
   end
-
 end

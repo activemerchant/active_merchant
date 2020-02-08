@@ -344,7 +344,7 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(response, money, previous_token)
         original_amount = amount(money) if money
-        [ response[:transaction_id], response[:approval], original_amount, (response[:token] || previous_token)].join(';')
+        [response[:transaction_id], response[:approval], original_amount, (response[:token] || previous_token)].join(';')
       end
 
       def error_code_from(response)
@@ -368,13 +368,9 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'CardExpMonth', format_exp(credit_card.month)
         xml.tag! 'CardExpYear', format_exp(credit_card.year)
 
-        if credit_card.first_name || credit_card.last_name
-          xml.tag! 'CardName', [credit_card.first_name, credit_card.last_name].compact.join(' ')
-        end
+        xml.tag! 'CardName', [credit_card.first_name, credit_card.last_name].compact.join(' ') if credit_card.first_name || credit_card.last_name
 
-        unless credit_card.verification_value.nil? || (credit_card.verification_value.length == 0)
-          xml.tag! 'CVV2', credit_card.verification_value
-        end
+        xml.tag! 'CVV2', credit_card.verification_value unless credit_card.verification_value.nil? || (credit_card.verification_value.length == 0)
       end
 
       def add_addresses(xml, options)

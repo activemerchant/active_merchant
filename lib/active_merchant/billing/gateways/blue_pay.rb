@@ -10,8 +10,8 @@ module ActiveMerchant #:nodoc:
 
       self.ignore_http_status = true
 
-      CARD_CODE_ERRORS = %w( N S )
-      AVS_ERRORS = %w( A E N R W Z )
+      CARD_CODE_ERRORS = %w(N S)
+      AVS_ERRORS = %w(A E N R W Z)
       AVS_REASON_CODES = %w(27 45)
 
       FIELD_MAP = {
@@ -84,7 +84,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_rebill(post, options) if options[:rebill]
         add_duplicate_override(post, options)
-        post[:TRANS_TYPE]  = 'AUTH'
+        post[:TRANS_TYPE] = 'AUTH'
         commit('AUTH_ONLY', money, post, options)
       end
 
@@ -107,7 +107,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_rebill(post, options) if options[:rebill]
         add_duplicate_override(post, options)
-        post[:TRANS_TYPE]  = 'SALE'
+        post[:TRANS_TYPE] = 'SALE'
         commit('AUTH_CAPTURE', money, post, options)
       end
 
@@ -155,7 +155,7 @@ module ActiveMerchant #:nodoc:
       #   If the payment_object is either a CreditCard or Check object, then the transaction type will be an unmatched credit placing funds in the specified account. This is referred to a CREDIT transaction in BluePay.
       # * <tt>options</tt> -- A hash of parameters.
       def refund(money, identification, options = {})
-        if(identification && !identification.kind_of?(String))
+        if identification && !identification.kind_of?(String)
           ActiveMerchant.deprecated 'refund should only be used to refund a referenced transaction'
           return credit(money, identification, options)
         end
@@ -164,6 +164,7 @@ module ActiveMerchant #:nodoc:
         post[:PAYMENT_ACCOUNT] = ''
         post[:MASTER_ID]  = identification
         post[:TRANS_TYPE] = 'REFUND'
+        post[:DOC_TYPE] = options[:doc_type] if options[:doc_type]
         post[:NAME1] = options[:first_name] || ''
         post[:NAME2] = options[:last_name] if options[:last_name]
         post[:ZIP] = options[:zip] if options[:zip]
@@ -183,6 +184,7 @@ module ActiveMerchant #:nodoc:
         post[:PAYMENT_ACCOUNT] = ''
         add_payment_method(post, payment_object)
         post[:TRANS_TYPE] = 'CREDIT'
+        post[:DOC_TYPE] = options[:doc_type] if options[:doc_type]
 
         post[:NAME1] = options[:first_name] || ''
         post[:NAME2] = options[:last_name] if options[:last_name]
@@ -315,7 +317,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def commit(action, money, fields, options = {})
-        fields[:AMOUNT] = amount(money) unless(fields[:TRANS_TYPE] == 'VOID' || action == 'rebill')
+        fields[:AMOUNT] = amount(money) unless fields[:TRANS_TYPE] == 'VOID' || action == 'rebill'
         fields[:MODE] = (test? ? 'TEST' : 'LIVE')
         fields[:ACCOUNT_ID] = @options[:login]
         fields[:CUSTOMER_IP] = options[:ip] if options[:ip]
@@ -349,9 +351,7 @@ module ActiveMerchant #:nodoc:
         # The bp20api has max one value per form field.
         response_fields = Hash[CGI::parse(body).map { |k, v| [k.upcase, v.first] }]
 
-        if response_fields.include? 'REBILL_ID'
-          return parse_recurring(response_fields)
-        end
+        return parse_recurring(response_fields) if response_fields.include? 'REBILL_ID'
 
         parsed = {}
         response_fields.each do |k, v|
@@ -372,7 +372,7 @@ module ActiveMerchant #:nodoc:
 
       def message_from(parsed)
         message = parsed[:message]
-        if(parsed[:response_code].to_i == 2)
+        if parsed[:response_code].to_i == 2
           if CARD_CODE_ERRORS.include?(parsed[:card_code])
             message = CVVResult.messages[parsed[:card_code]]
           elsif AVS_ERRORS.include?(parsed[:avs_result_code])
@@ -385,7 +385,7 @@ module ActiveMerchant #:nodoc:
         elsif message =~ /Approved/
           message = 'This transaction has been approved'
         elsif message =~  /Expired/
-          message =  'The credit card has expired'
+          message = 'The credit card has expired'
         end
         message
       end
@@ -512,9 +512,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def handle_response(response)
-        if ignore_http_status || (200...300).cover?(response.code.to_i)
-          return response.body
-        end
+        return response.body if ignore_http_status || (200...300).cover?(response.code.to_i)
+
         raise ResponseError.new(response)
       end
     end

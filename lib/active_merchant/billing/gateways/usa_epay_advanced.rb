@@ -230,21 +230,21 @@ module ActiveMerchant #:nodoc:
       } #:nodoc:
 
       AVS_RESULTS = {
-        'Y' => %w( YYY Y YYA YYD ),
-        'Z' => %w( NYZ Z ),
-        'A' => %w( YNA A YNY ),
-        'N' => %w( NNN N NN ),
-        'X' => %w( YYX X ),
-        'W' => %w( NYW W ),
-        'XXW' => %w( XXW ),
-        'XXU' => %w( XXU ),
-        'R' => %w( XXR R U E ),
-        'S' => %w( XXS S ),
-        'XXE' => %w( XXE ),
-        'G' => %w( XXG G C I ),
-        'B' => %w( YYG B M ),
-        'D' => %w( GGG D ),
-        'P' => %w( YGG P )
+        'Y' => %w(YYY Y YYA YYD),
+        'Z' => %w(NYZ Z),
+        'A' => %w(YNA A YNY),
+        'N' => %w(NNN N NN),
+        'X' => %w(YYX X),
+        'W' => %w(NYW W),
+        'XXW' => %w(XXW),
+        'XXU' => %w(XXU),
+        'R' => %w(XXR R U E),
+        'S' => %w(XXS S),
+        'XXE' => %w(XXE),
+        'G' => %w(XXG G C I),
+        'B' => %w(YYG B M),
+        'D' => %w(GGG D),
+        'P' => %w(YGG P)
       }.inject({}) do |map, (type, codes)|
         codes.each { |code| map[code] = type }
         map
@@ -1345,9 +1345,7 @@ module ActiveMerchant #:nodoc:
         when payment_method[:method].kind_of?(ActiveMerchant::Billing::Check)
           build_tag soap, :string, 'Account', payment_method[:method].account_number
           build_tag soap, :string, 'Routing', payment_method[:method].routing_number
-          unless payment_method[:method].account_type.nil?
-            build_tag soap, :string, 'AccountType', payment_method[:method].account_type.capitalize
-          end
+          build_tag soap, :string, 'AccountType', payment_method[:method].account_type.capitalize unless payment_method[:method].account_type.nil?
           build_tag soap, :string, 'DriversLicense', options[:drivers_license]
           build_tag soap, :string, 'DriversLicenseState', options[:drivers_license_state]
           build_tag soap, :string, 'RecordType', options[:record_type]
@@ -1434,9 +1432,7 @@ module ActiveMerchant #:nodoc:
       def build_card_expiration(options)
         month = options[:payment_method].month
         year  = options[:payment_method].year
-        unless month.nil? || year.nil?
-          "#{"%02d" % month}#{year.to_s[-2..-1]}"
-        end
+        "#{"%02d" % month}#{year.to_s[-2..-1]}" unless month.nil? || year.nil?
       end
 
       def build_check_data(soap, options)
@@ -1476,9 +1472,7 @@ module ActiveMerchant #:nodoc:
 
       def build_billing_address(soap, options)
         if options[:billing_address]
-          if options[:billing_address][:name]
-            options[:billing_address][:first_name], options[:billing_address][:last_name] = split_names(options[:billing_address][:name])
-          end
+          options[:billing_address][:first_name], options[:billing_address][:last_name] = split_names(options[:billing_address][:name]) if options[:billing_address][:name]
           soap.BillingAddress 'xsi:type' => 'ns1:Address' do
             ADDRESS_OPTIONS.each do |k, v|
               build_tag soap, v[0], v[1], options[:billing_address][k]
@@ -1489,9 +1483,7 @@ module ActiveMerchant #:nodoc:
 
       def build_shipping_address(soap, options)
         if options[:shipping_address]
-          if options[:shipping_address][:name]
-            options[:shipping_address][:first_name], options[:shipping_address][:last_name] = split_names(options[:shipping_address][:name])
-          end
+          options[:shipping_address][:first_name], options[:shipping_address][:last_name] = split_names(options[:shipping_address][:name]) if options[:shipping_address][:name]
           soap.ShippingAddress 'xsi:type' => 'ns1:Address' do
             ADDRESS_OPTIONS.each do |k, v|
               build_tag soap, v[0], v[1], options[:shipping_address][k]
@@ -1576,15 +1568,16 @@ module ActiveMerchant #:nodoc:
           else
             success = true
           end
-          message = case action
-          when :get_customer_payment_methods
-            p['item']
-          when :get_transaction_custom
-            items = p['item'].kind_of?(Array) ? p['item'] : [p['item']]
-            items.inject({}) { |hash, item| hash[item['field']] = item['value']; hash }
-          else
-            p
-          end
+          message =
+            case action
+            when :get_customer_payment_methods
+              p['item']
+            when :get_transaction_custom
+              items = p['item'].kind_of?(Array) ? p['item'] : [p['item']]
+              items.inject({}) { |hash, item| hash[item['field']] = item['value']; hash }
+            else
+              p
+            end
         elsif response.respond_to?(:[]) && p = response[:response]
           message = p # when response is html
         end
@@ -1614,7 +1607,6 @@ module ActiveMerchant #:nodoc:
 
         response
       end
-
     end
   end
 end

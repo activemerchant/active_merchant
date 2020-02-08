@@ -235,7 +235,7 @@ class FinansbankTest < Test::Unit::TestCase
     <NUMCODE>00</NUMCODE>
     </Extra>
 </CC5Response>
-  EOF
+    EOF
   end
 
   def failed_void_response

@@ -207,5 +207,4 @@ class RemoteForteTest < Test::Unit::TestCase
   def wait_for_authorization_to_clear
     sleep(10)
   end
-
 end

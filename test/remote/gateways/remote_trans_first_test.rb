@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class RemoteTransFirstTest < Test::Unit::TestCase
-
   def setup
     @gateway = TransFirstGateway.new(fixtures(:trans_first))
 

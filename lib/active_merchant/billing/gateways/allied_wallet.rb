@@ -113,7 +113,7 @@ module ActiveMerchant #:nodoc:
           post[:city] = billing_address[:city]
           post[:state] = billing_address[:state]
           post[:countryId] = billing_address[:country]
-          post[:postalCode]    = billing_address[:zip]
+          post[:postalCode] = billing_address[:zip]
           post[:phone] = billing_address[:phone]
         end
       end
@@ -141,7 +141,8 @@ module ActiveMerchant #:nodoc:
           raw_response = ssl_post(url(action), post.to_json, headers)
           response = parse(raw_response)
         rescue ResponseError => e
-          raise unless(e.response.code.to_s =~ /4\d\d/)
+          raise unless e.response.code.to_s =~ /4\d\d/
+
           response = parse(e.response.body)
         end
 
@@ -199,7 +200,6 @@ module ActiveMerchant #:nodoc:
           response['message'] || 'Unable to read error message'
         end
       end
-
     end
   end
 end

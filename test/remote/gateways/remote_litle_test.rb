@@ -233,11 +233,11 @@ class RemoteLitleTest < Test::Unit::TestCase
 
   def test_authorize_and_capture_with_stored_credential_recurring
     credit_card = CreditCard.new(@credit_card_hash.merge(
-      number: '4100200300011001',
-      month: '05',
-      year: '2021',
-      verification_value: '463'
-    ))
+                                   number: '4100200300011001',
+                                   month: '05',
+                                   year: '2021',
+                                   verification_value: '463'
+                                 ))
 
     initial_options = @options.merge(
       order_id: 'Net_Id1',
@@ -277,11 +277,11 @@ class RemoteLitleTest < Test::Unit::TestCase
 
   def test_authorize_and_capture_with_stored_credential_installment
     credit_card = CreditCard.new(@credit_card_hash.merge(
-      number: '4457010000000009',
-      month: '01',
-      year: '2021',
-      verification_value: '349'
-    ))
+                                   number: '4457010000000009',
+                                   month: '01',
+                                   year: '2021',
+                                   verification_value: '349'
+                                 ))
 
     initial_options = @options.merge(
       order_id: 'Net_Id2',
@@ -321,11 +321,11 @@ class RemoteLitleTest < Test::Unit::TestCase
 
   def test_authorize_and_capture_with_stored_credential_mit_card_on_file
     credit_card = CreditCard.new(@credit_card_hash.merge(
-      number: '4457000800000002',
-      month: '01',
-      year: '2021',
-      verification_value: '349'
-    ))
+                                   number: '4457000800000002',
+                                   month: '01',
+                                   year: '2021',
+                                   verification_value: '349'
+                                 ))
 
     initial_options = @options.merge(
       order_id: 'Net_Id3',
@@ -365,11 +365,11 @@ class RemoteLitleTest < Test::Unit::TestCase
 
   def test_authorize_and_capture_with_stored_credential_cit_card_on_file
     credit_card = CreditCard.new(@credit_card_hash.merge(
-      number: '4457000800000002',
-      month: '01',
-      year: '2021',
-      verification_value: '349'
-    ))
+                                   number: '4457000800000002',
+                                   month: '01',
+                                   year: '2021',
+                                   verification_value: '349'
+                                 ))
 
     initial_options = @options.merge(
       order_id: 'Net_Id3',
@@ -409,11 +409,11 @@ class RemoteLitleTest < Test::Unit::TestCase
 
   def test_purchase_with_stored_credential_cit_card_on_file_non_ecommerce
     credit_card = CreditCard.new(@credit_card_hash.merge(
-      number: '4457000800000002',
-      month: '01',
-      year: '2021',
-      verification_value: '349'
-    ))
+                                   number: '4457000800000002',
+                                   month: '01',
+                                   year: '2021',
+                                   verification_value: '349'
+                                 ))
 
     initial_options = @options.merge(
       order_id: 'Net_Id3',
@@ -615,9 +615,9 @@ class RemoteLitleTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_dynamic_descriptors
     assert response = @gateway.purchase(10010, @credit_card1, @options.merge(
-      descriptor_name: 'SuperCompany',
-      descriptor_phone: '9193341121'
-    ))
+                                                                descriptor_name: 'SuperCompany',
+                                                                descriptor_phone: '9193341121'
+                                                              ))
     assert_success response
     assert_equal 'Approved', response.message
   end

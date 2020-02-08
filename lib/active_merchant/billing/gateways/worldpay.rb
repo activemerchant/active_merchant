@@ -1,3 +1,5 @@
+require 'nokogiri'
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class WorldpayGateway < Gateway
@@ -7,7 +9,7 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'GBP'
       self.money_format = :cents
       self.supported_countries = %w(HK GB AU AD AR BE BR CA CH CN CO CR CY CZ DE DK ES FI FR GI GR HU IE IN IT JP LI LU MC MT MY MX NL NO NZ PA PE PL PT SE SG SI SM TR UM VA)
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :maestro, :elo, :naranja]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :maestro, :elo, :naranja, :cabal]
       self.currencies_without_fractions = %w(HUF IDR ISK JPY KRW)
       self.currencies_with_three_decimal_places = %w(BHD KWD OMR RSD TND)
       self.homepage_url = 'http://www.worldpay.com/'
@@ -23,6 +25,7 @@ module ActiveMerchant #:nodoc:
         'diners_club'      => 'DINERS-SSL',
         'elo'              => 'ELO-SSL',
         'naranja'          => 'NARANJA-SSL',
+        'cabal'            => 'CABAL-SSL',
         'unknown'          => 'CARD-SSL'
       }
 
@@ -87,7 +90,7 @@ module ActiveMerchant #:nodoc:
       def refund(money, authorization, options = {})
         authorization = order_id_from_authorization(authorization.to_s)
         response = MultiResponse.run do |r|
-          r.process { inquire_request(authorization, options, 'CAPTURED', 'SETTLED', 'SETTLED_BY_MERCHANT') }
+          r.process { inquire_request(authorization, options, 'CAPTURED', 'SETTLED', 'SETTLED_BY_MERCHANT') } unless options[:authorization_validated]
           r.process { refund_request(money, authorization, options) }
         end
 
@@ -163,7 +166,7 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct! :xml, :encoding => 'UTF-8'
         xml.declare! :DOCTYPE, :paymentService, :PUBLIC, '-//WorldPay//DTD WorldPay PaymentService v1//EN', 'http://dtd.worldpay.com/paymentService_v1.dtd'
-        xml.tag! 'paymentService', 'version' => '1.4', 'merchantCode' => @options[:login] do
+        xml.paymentService 'version' => '1.4', 'merchantCode' => @options[:login] do
           yield xml
         end
         xml.target!
@@ -171,8 +174,8 @@ module ActiveMerchant #:nodoc:
 
       def build_order_modify_request(authorization)
         build_request do |xml|
-          xml.tag! 'modify' do
-            xml.tag! 'orderModification', 'orderCode' => authorization do
+          xml.modify do
+            xml.orderModification 'orderCode' => authorization do
               yield xml
             end
           end
@@ -181,31 +184,30 @@ module ActiveMerchant #:nodoc:
 
       def build_order_inquiry_request(authorization, options)
         build_request do |xml|
-          xml.tag! 'inquiry' do
-            xml.tag! 'orderInquiry', 'orderCode' => authorization
+          xml.inquiry do
+            xml.orderInquiry 'orderCode' => authorization
           end
         end
       end
 
       def build_authorization_request(money, payment_method, options)
         build_request do |xml|
-          xml.tag! 'submit' do
-            xml.tag! 'order', order_tag_attributes(options) do
+          xml.submit do
+            xml.order order_tag_attributes(options) do
               xml.description(options[:description].blank? ? 'Purchase' : options[:description])
               add_amount(xml, money, options)
               if options[:order_content]
-                xml.tag! 'orderContent' do
+                xml.orderContent do
                   xml.cdata! options[:order_content]
                 end
               end
               add_payment_method(xml, money, payment_method, options)
               add_shopper(xml, options)
-              if options[:hcg_additional_data]
-                add_hcg_additional_data(xml, options)
-              end
-              if options[:instalments]
-                add_instalments_data(xml, options)
-              end
+              add_hcg_additional_data(xml, options) if options[:hcg_additional_data]
+              add_instalments_data(xml, options) if options[:instalments]
+              add_moto_flag(xml, options) if options.dig(:metadata, :manual_entry)
+              add_additional_3ds_data(xml, options) if options[:execute_threed] && options[:three_ds_version] && options[:three_ds_version] =~ /^2/
+              add_3ds_exemption(xml, options) if options[:exemption_type]
             end
           end
         end
@@ -217,23 +219,21 @@ module ActiveMerchant #:nodoc:
 
       def build_capture_request(money, authorization, options)
         build_order_modify_request(authorization) do |xml|
-          xml.tag! 'capture' do
+          xml.capture do
             time = Time.now
-            xml.tag! 'date', 'dayOfMonth' => time.day, 'month' => time.month, 'year'=> time.year
+            xml.date 'dayOfMonth' => time.day, 'month' => time.month, 'year'=> time.year
             add_amount(xml, money, options)
           end
         end
       end
 
       def build_void_request(authorization, options)
-        build_order_modify_request(authorization) do |xml|
-          xml.tag! 'cancel'
-        end
+        build_order_modify_request(authorization, &:cancel)
       end
 
       def build_refund_request(money, authorization, options)
         build_order_modify_request(authorization) do |xml|
-          xml.tag! 'refund' do
+          xml.refund do
             add_amount(xml, money, options.merge(:debit_credit_indicator => 'credit'))
           end
         end
@@ -241,18 +241,26 @@ module ActiveMerchant #:nodoc:
 
       def build_store_request(credit_card, options)
         build_request do |xml|
-          xml.tag! 'submit' do
-            xml.tag! 'paymentTokenCreate' do
+          xml.submit do
+            xml.paymentTokenCreate do
               add_authenticated_shopper_id(xml, options)
-              xml.tag! 'createToken'
-              xml.tag! 'paymentInstrument' do
-                xml.tag! 'cardDetails' do
+              xml.createToken
+              xml.paymentInstrument do
+                xml.cardDetails do
                   add_card(xml, credit_card, options)
                 end
               end
             end
           end
         end
+      end
+
+      def add_additional_3ds_data(xml, options)
+        xml.additional3DSData 'dfReferenceId' => options[:session_id]
+      end
+
+      def add_3ds_exemption(xml, options)
+        xml.exemption 'type' => options[:exemption_type], 'placement' => options[:exemption_placement] || 'AUTHORISATION'
       end
 
       def add_amount(xml, money, options)
@@ -264,29 +272,27 @@ module ActiveMerchant #:nodoc:
           'exponent' => currency_exponent(currency)
         }
 
-        if options[:debit_credit_indicator]
-          amount_hash['debitCreditIndicator'] = options[:debit_credit_indicator]
-        end
+        amount_hash['debitCreditIndicator'] = options[:debit_credit_indicator] if options[:debit_credit_indicator]
 
-        xml.tag! 'amount', amount_hash
+        xml.amount amount_hash
       end
 
       def add_payment_method(xml, amount, payment_method, options)
         if options[:payment_type] == :pay_as_order
           if options[:merchant_code]
-            xml.tag! 'payAsOrder', 'orderCode' => payment_method, 'merchantCode' => options[:merchant_code] do
+            xml.payAsOrder 'orderCode' => payment_method, 'merchantCode' => options[:merchant_code] do
               add_amount(xml, amount, options)
             end
           else
-            xml.tag! 'payAsOrder', 'orderCode' => payment_method do
+            xml.payAsOrder 'orderCode' => payment_method do
               add_amount(xml, amount, options)
             end
           end
         else
-          xml.tag! 'paymentDetails', credit_fund_transfer_attribute(options) do
+          xml.paymentDetails credit_fund_transfer_attribute(options) do
             if options[:payment_type] == :token
               xml.tag! 'TOKEN-SSL', 'tokenScope' => options[:token_scope] do
-                xml.tag! 'paymentTokenID', options[:token_id]
+                xml.paymentTokenID options[:token_id]
               end
             else
               xml.tag! card_code_for(payment_method) do
@@ -295,10 +301,10 @@ module ActiveMerchant #:nodoc:
             end
             add_stored_credential_options(xml, options)
             if options[:ip] && options[:session_id]
-              xml.tag! 'session', 'shopperIPAddress' => options[:ip], 'id' => options[:session_id]
+              xml.session 'shopperIPAddress' => options[:ip], 'id' => options[:session_id]
             else
-              xml.tag! 'session', 'shopperIPAddress' => options[:ip] if options[:ip]
-              xml.tag! 'session', 'id' => options[:session_id] if options[:session_id]
+              xml.session 'shopperIPAddress' => options[:ip] if options[:ip]
+              xml.session 'id' => options[:session_id] if options[:session_id]
             end
 
             if three_d_secure = options[:three_d_secure]
@@ -309,26 +315,30 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_three_d_secure(three_d_secure, xml)
-        xml.tag! 'info3DSecure' do
-          xml.tag! 'threeDSVersion', three_d_secure[:version]
+        xml.info3DSecure do
+          xml.threeDSVersion three_d_secure[:version]
           if three_d_secure[:version] =~ /^2/
-            xml.tag! 'dsTransactionId', three_d_secure[:ds_transaction_id]
+            xml.dsTransactionId three_d_secure[:ds_transaction_id]
           else
-            xml.tag! 'xid', three_d_secure[:xid]
+            xml.xid three_d_secure[:xid]
           end
-          xml.tag! 'cavv', three_d_secure[:cavv]
-          xml.tag! 'eci', three_d_secure[:eci]
+          xml.cavv three_d_secure[:cavv]
+          xml.eci three_d_secure[:eci]
         end
       end
 
       def add_card(xml, payment_method, options)
-        xml.tag! 'cardNumber', payment_method.number
-        xml.tag! 'expiryDate' do
-          xml.tag! 'date', 'month' => format(payment_method.month, :two_digits), 'year' => format(payment_method.year, :four_digits)
+        xml.cardNumber payment_method.number
+        xml.expiryDate do
+          xml.date(
+            'month' => format(payment_method.month, :two_digits),
+            'year' => format(payment_method.year, :four_digits)
+          )
         end
 
-        xml.tag! 'cardHolderName', options[:execute_threed] ? '3D' : payment_method.name
-        xml.tag! 'cvc', payment_method.verification_value
+        card_holder_name = options[:execute_threed] && !options[:three_ds_version]&.start_with?('2') ? '3D' : payment_method.name
+        xml.cardHolderName card_holder_name
+        xml.cvc payment_method.verification_value
 
         add_address(xml, (options[:billing_address] || options[:address]))
       end
@@ -343,7 +353,7 @@ module ActiveMerchant #:nodoc:
 
       def add_stored_credential_using_normalized_fields(xml, options)
         if options[:stored_credential][:initial_transaction]
-          xml.tag! 'storedCredentials', 'usage' => 'FIRST'
+          xml.storedCredentials 'usage' => 'FIRST'
         else
           reason = case options[:stored_credential][:reason_type]
                    when 'installment' then 'INSTALMENT'
@@ -351,8 +361,8 @@ module ActiveMerchant #:nodoc:
                    when 'unscheduled' then 'UNSCHEDULED'
                    end
 
-          xml.tag! 'storedCredentials', 'usage' => 'USED', 'merchantInitiatedReason' => reason do
-            xml.tag! 'schemeTransactionIdentifier', options[:stored_credential][:network_transaction_id] if options[:stored_credential][:network_transaction_id]
+          xml.storedCredentials 'usage' => 'USED', 'merchantInitiatedReason' => reason do
+            xml.schemeTransactionIdentifier options[:stored_credential][:network_transaction_id] if options[:stored_credential][:network_transaction_id]
           end
         end
       end
@@ -361,28 +371,29 @@ module ActiveMerchant #:nodoc:
         return unless options[:stored_credential_usage]
 
         if options[:stored_credential_initiated_reason]
-          xml.tag! 'storedCredentials', 'usage' => options[:stored_credential_usage], 'merchantInitiatedReason' => options[:stored_credential_initiated_reason] do
-            xml.tag! 'schemeTransactionIdentifier', options[:stored_credential_transaction_id] if options[:stored_credential_transaction_id]
+          xml.storedCredentials 'usage' => options[:stored_credential_usage], 'merchantInitiatedReason' => options[:stored_credential_initiated_reason] do
+            xml.schemeTransactionIdentifier options[:stored_credential_transaction_id] if options[:stored_credential_transaction_id]
           end
         else
-          xml.tag! 'storedCredentials', 'usage' => options[:stored_credential_usage]
+          xml.storedCredentials 'usage' => options[:stored_credential_usage]
         end
       end
 
       def add_shopper(xml, options)
         return unless options[:execute_threed] || options[:email] || options[:customer]
-        xml.tag! 'shopper' do
-          xml.tag! 'shopperEmailAddress', options[:email] if  options[:email]
+
+        xml.shopper do
+          xml.shopperEmailAddress options[:email] if options[:email]
           add_authenticated_shopper_id(xml, options)
-          xml.tag! 'browser' do
-            xml.tag! 'acceptHeader', options[:accept_header]
-            xml.tag! 'userAgentHeader', options[:user_agent]
+          xml.browser do
+            xml.acceptHeader options[:accept_header]
+            xml.userAgentHeader options[:user_agent]
           end
         end
       end
 
       def add_authenticated_shopper_id(xml, options)
-        xml.tag!('authenticatedShopperID', options[:customer]) if options[:customer]
+        xml.authenticatedShopperID options[:customer] if options[:customer]
       end
 
       def add_address(xml, address)
@@ -390,36 +401,40 @@ module ActiveMerchant #:nodoc:
 
         address = address_with_defaults(address)
 
-        xml.tag! 'cardAddress' do
-          xml.tag! 'address' do
+        xml.cardAddress do
+          xml.address do
             if m = /^\s*([^\s]+)\s+(.+)$/.match(address[:name])
-              xml.tag! 'firstName', m[1]
-              xml.tag! 'lastName', m[2]
+              xml.firstName m[1]
+              xml.lastName m[2]
             end
-            xml.tag! 'address1', address[:address1]
-            xml.tag! 'address2', address[:address2] if address[:address2]
-            xml.tag! 'postalCode', address[:zip]
-            xml.tag! 'city', address[:city]
-            xml.tag! 'state', address[:state]
-            xml.tag! 'countryCode', address[:country]
-            xml.tag! 'telephoneNumber', address[:phone] if address[:phone]
+            xml.address1 address[:address1]
+            xml.address2 address[:address2] if address[:address2]
+            xml.postalCode address[:zip]
+            xml.city address[:city]
+            xml.state address[:state]
+            xml.countryCode address[:country]
+            xml.telephoneNumber address[:phone] if address[:phone]
           end
         end
       end
 
       def add_hcg_additional_data(xml, options)
-        xml.tag! 'hcgAdditionalData' do
+        xml.hcgAdditionalData do
           options[:hcg_additional_data].each do |k, v|
-            xml.tag! 'param', {name: k.to_s}, v
+            xml.param({name: k.to_s}, v)
           end
         end
       end
 
       def add_instalments_data(xml, options)
-        xml.tag! 'thirdPartyData' do
-          xml.tag! 'instalments', options[:instalments]
-          xml.tag! 'cpf', options[:cpf] if options[:cpf]
+        xml.thirdPartyData do
+          xml.instalments options[:instalments]
+          xml.cpf options[:cpf] if options[:cpf]
         end
+      end
+
+      def add_moto_flag(xml, options)
+        xml.dynamicInteractionType 'type' => 'MOTO'
       end
 
       def address_with_defaults(address)
@@ -439,23 +454,28 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(action, xml)
-        parse_element({:action => action}, REXML::Document.new(xml))
+        xml = xml.strip.gsub(/\&/, '&amp;')
+        doc = Nokogiri::XML(xml, &:strict)
+        doc.remove_namespaces!
+        resp_params = {:action => action}
+
+        parse_elements(doc.root, resp_params)
+        resp_params
       end
 
-      def parse_element(raw, node)
+      def parse_elements(node, response)
         node_name = node.name.underscore
         node.attributes.each do |k, v|
-          raw["#{node_name}_#{k.underscore}".to_sym] = v
+          response["#{node_name}_#{k.underscore}".to_sym] = v.value
         end
-        if node.has_elements?
-          raw[node_name.to_sym] = true unless node.name.blank?
-          node.elements.each { |e| parse_element(raw, e) }
-        elsif node.children.count > 1
-          raw[node_name.to_sym] = node.children.join(' ').strip
+        if node.elements.empty?
+          response[node_name.to_sym] = node.text unless node.text.blank?
         else
-          raw[node_name.to_sym] = node.text unless node.text.nil?
+          response[node_name.to_sym] = true unless node.name.blank?
+          node.elements.each do |childnode|
+            parse_elements(childnode, response)
+          end
         end
-        raw
       end
 
       def headers(options)
@@ -475,6 +495,7 @@ module ActiveMerchant #:nodoc:
         if options[:execute_threed]
           raw[:cookie] = @cookie
           raw[:session_id] = options[:session_id]
+          raw[:is3DSOrder] = true
         end
         success = success_from(action, raw, success_criteria)
         message = message_from(success, raw, success_criteria)
@@ -489,6 +510,8 @@ module ActiveMerchant #:nodoc:
           :avs_result => AVSResult.new(code: AVS_CODE_MAP[raw[:avs_result_code_description]]),
           :cvv_result => CVVResult.new(CVC_CODE_MAP[raw[:cvc_result_code_description]])
         )
+      rescue Nokogiri::SyntaxError
+        unparsable_response(xml)
       rescue ActiveMerchant::ResponseError => e
         if e.response.code.to_s == '401'
           return Response.new(false, 'Invalid credentials', {}, :test => test?)
@@ -499,6 +522,12 @@ module ActiveMerchant #:nodoc:
 
       def url
         test? ? self.test_url : self.live_url
+      end
+
+      def unparsable_response(raw_response)
+        message = 'Unparsable response received from Worldpay. Please contact Worldpay if you continue to receive this message.'
+        message += " (The raw response returned by the API was: #{raw_response.inspect})"
+        return Response.new(false, message)
       end
 
       # Override the regular handle response so we can access the headers
@@ -519,6 +548,7 @@ module ActiveMerchant #:nodoc:
 
       def message_from(success, raw, success_criteria)
         return 'SUCCESS' if success
+
         raw[:iso8583_return_code_description] || raw[:error] || required_status_message(raw, success_criteria)
       end
 
@@ -540,15 +570,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_code_from(success, raw)
-        unless success == 'SUCCESS'
-          raw[:iso8583_return_code_code] || raw[:error_code] || nil
-        end
+        raw[:iso8583_return_code_code] || raw[:error_code] || nil unless success == 'SUCCESS'
       end
 
       def required_status_message(raw, success_criteria)
-        if(!success_criteria.include?(raw[:last_event]))
-          "A transaction status of #{success_criteria.collect { |c| "'#{c}'" }.join(" or ")} is required."
-        end
+        "A transaction status of #{success_criteria.collect { |c| "'#{c}'" }.join(" or ")} is required." if !success_criteria.include?(raw[:last_event])
       end
 
       def authorization_from(action, raw, options)
@@ -611,6 +637,7 @@ module ActiveMerchant #:nodoc:
 
       def credit_fund_transfer_attribute(options)
         return unless options[:credit]
+
         {'action' => 'REFUND'}
       end
 
@@ -622,6 +649,7 @@ module ActiveMerchant #:nodoc:
       def currency_exponent(currency)
         return 0 if non_fractional_currency?(currency)
         return 3 if three_decimal_currency?(currency)
+
         return 2
       end
 

@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class ConnectionTest < Test::Unit::TestCase
-
   def setup
     @ok = stub(:code => 200, :message => 'OK', :body => 'success')
 
@@ -244,5 +243,4 @@ class ConnectionTest < Test::Unit::TestCase
       @connection.wiredump_device = transcript
     end
   end
-
 end

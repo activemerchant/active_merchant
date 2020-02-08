@@ -291,6 +291,7 @@ module ActiveMerchant #:nodoc:
         MultiResponse.run do |r|
           r.process { commit(:store, store_customer_request) }
           return r unless r.success? && r.params['custId']
+
           customer_id = r.params['custId']
 
           store_payment_method_request = build_xml_payment_storage_request do |doc|
@@ -333,11 +334,12 @@ module ActiveMerchant #:nodoc:
       def commit(action, request)
         request = add_transaction_code_to_request(request, action)
 
-        raw_response = begin
-          ssl_post(url, request, headers)
-        rescue ActiveMerchant::ResponseError => e
-          e.response.body
-        end
+        raw_response =
+          begin
+            ssl_post(url, request, headers)
+          rescue ActiveMerchant::ResponseError => e
+            e.response.body
+          end
 
         response = parse(raw_response)
 
@@ -383,6 +385,7 @@ module ActiveMerchant #:nodoc:
 
       def error_code_from(succeeded, response)
         return if succeeded
+
         response['errorCode'] || response['rspCode']
       end
 
@@ -547,7 +550,7 @@ module ActiveMerchant #:nodoc:
             doc['v1'].addrLn2 billing_address[:address2] unless billing_address[:address2].blank?
             doc['v1'].city billing_address[:city] if billing_address[:city]
             doc['v1'].state billing_address[:state] if billing_address[:state]
-            doc['v1'].zipCode billing_address[:zip] if billing_address[:zip]
+            doc['v1'].zipCode billing_address[:zip].delete('-') if billing_address[:zip]
             doc['v1'].ctry 'US'
           end
 
@@ -562,7 +565,7 @@ module ActiveMerchant #:nodoc:
               doc['v1'].addrLn2 shipping_address[:address2] unless shipping_address[:address2].blank?
               doc['v1'].city shipping_address[:city] if shipping_address[:city]
               doc['v1'].state shipping_address[:state] if shipping_address[:state]
-              doc['v1'].zipCode shipping_address[:zip] if shipping_address[:zip]
+              doc['v1'].zipCode shipping_address[:zip].delete('-') if shipping_address[:zip]
               doc['v1'].phone shipping_address[:phone].gsub(/\D/, '') if shipping_address[:phone]
               doc['v1'].email shipping_address[:email] if shipping_address[:email]
             end

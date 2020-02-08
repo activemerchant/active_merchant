@@ -103,9 +103,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'Transaction' do
             xml.tag! 'TranType', 'Credit'
             xml.tag! 'TranCode', action
-            if options[:allow_partial_auth] && ['PreAuth', 'Sale'].include?(action)
-              xml.tag! 'PartialAuth', 'Allow'
-            end
+            xml.tag! 'PartialAuth', 'Allow' if options[:allow_partial_auth] && ['PreAuth', 'Sale'].include?(action)
             add_invoice(xml, options[:order_id], nil, options)
             add_reference(xml, 'RecordNumberRequested')
             add_customer_data(xml, options)
@@ -126,9 +124,7 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'TStream' do
           xml.tag! 'Transaction' do
             xml.tag! 'TranType', 'Credit'
-            if options[:allow_partial_auth] && (action == 'PreAuthCapture')
-              xml.tag! 'PartialAuth', 'Allow'
-            end
+            xml.tag! 'PartialAuth', 'Allow' if options[:allow_partial_auth] && (action == 'PreAuthCapture')
             xml.tag! 'TranCode', (@use_tokenization ? (action + 'ByRecordNo') : action)
             add_invoice(xml, invoice_no, ref_no, options)
             add_reference(xml, record_no)
@@ -234,7 +230,7 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'CardType', CARD_CODES[credit_card.brand] if credit_card.brand
 
         include_cvv = !%w(Return PreAuthCapture).include?(action) && !credit_card.track_data.present?
-        xml.tag! 'CVVData', credit_card.verification_value if(include_cvv && credit_card.verification_value)
+        xml.tag! 'CVVData', credit_card.verification_value if include_cvv && credit_card.verification_value
       end
 
       def add_address(xml, options)
@@ -298,7 +294,7 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      SUCCESS_CODES = [ 'Approved', 'Success' ]
+      SUCCESS_CODES = ['Approved', 'Success']
 
       def commit(action, request)
         response = parse(action, ssl_post(endpoint_url, build_soap_request(request), build_header))

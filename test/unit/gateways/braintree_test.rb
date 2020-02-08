@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class BraintreeTest < Test::Unit::TestCase
-
   def test_new_with_login_password_creates_braintree_orange
     gateway = BraintreeGateway.new(
       :login => 'LOGIN',

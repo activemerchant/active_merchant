@@ -7,11 +7,11 @@ class BeanstreamTest < Test::Unit::TestCase
     Base.mode = :test
 
     @gateway = BeanstreamGateway.new(
-                 :login => 'merchant id',
-                 :user => 'username',
-                 :password => 'password',
-                 :api_key => 'api_key'
-               )
+      :login => 'merchant id',
+      :user => 'username',
+      :password => 'password',
+      :api_key => 'api_key'
+    )
 
     @credit_card = credit_card
 
@@ -25,10 +25,10 @@ class BeanstreamTest < Test::Unit::TestCase
       transaction_id: 'transaction ID'
     )
 
-    @check       = check(
-                     :institution_number => '001',
-                     :transit_number     => '26729'
-                   )
+    @check = check(
+      :institution_number => '001',
+      :transit_number     => '26729'
+    )
 
     @amount = 1000
 
@@ -370,5 +370,4 @@ class BeanstreamTest < Test::Unit::TestCase
   def scrubbed_transcript
     'ref1=reference+one&trnCardOwner=Longbob+Longsen&trnCardNumber=[FILTERED]&trnExpMonth=09&trnExpYear=16&trnCardCvd=[FILTERED]&ordName=xiaobo+zzz&ordEmailAddress=xiaobozzz%40example.com&username=awesomesauce&password=[FILTERED]'
   end
-
 end

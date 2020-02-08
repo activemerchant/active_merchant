@@ -5,10 +5,10 @@ class MerchantWarriorTest < Test::Unit::TestCase
 
   def setup
     @gateway = MerchantWarriorGateway.new(
-                 :merchant_uuid => '4e922de8c2a4c',
-                 :api_key => 'g6jrxa9o',
-                 :api_passphrase => 'vp4ujoem'
-               )
+      :merchant_uuid => '4e922de8c2a4c',
+      :api_key => 'g6jrxa9o',
+      :api_passphrase => 'vp4ujoem'
+    )
 
     @credit_card = credit_card
     @success_amount = 10000
@@ -19,6 +19,16 @@ class MerchantWarriorTest < Test::Unit::TestCase
       :address => address,
       :transaction_product => 'TestProduct'
     }
+  end
+
+  def test_successful_authorize
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+
+    assert response = @gateway.authorize(@success_amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Transaction approved', response.message
+    assert response.test?
+    assert_equal '1336-20be3569-b600-11e6-b9c3-005056b209e0', response.authorization
   end
 
   def test_successful_purchase
@@ -55,6 +65,26 @@ class MerchantWarriorTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(failed_refund_response)
 
     assert response = @gateway.refund(@success_amount, @transaction_id)
+    assert_failure response
+    assert_equal 'MW -016:transactionID has already been reversed', response.message
+    assert response.test?
+    assert_nil response.authorization
+  end
+
+  def test_successful_void
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
+
+    assert response = @gateway.void(@success_amount, @transaction_id, @options)
+    assert_success response
+    assert_equal 'Transaction approved', response.message
+    assert response.test?
+    assert_equal '30-d4d19f4-db17-11df-9322-0022198101cd', response.authorization
+  end
+
+  def test_failed_void
+    @gateway.expects(:ssl_post).returns(failed_refund_response)
+
+    assert response = @gateway.void(@success_amount, @transaction_id)
     assert_failure response
     assert_equal 'MW -016:transactionID has already been reversed', response.message
     assert response.test?
@@ -139,6 +169,42 @@ class MerchantWarriorTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_authorize_recurring_flag_absent
+    stub_comms do
+      @gateway.authorize(@success_amount, @credit_card)
+    end.check_request do |endpoint, data, headers|
+      assert_not_match(/recurringFlag&/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_authorize_recurring_flag_present
+    recurring_flag = 1
+
+    stub_comms do
+      @gateway.authorize(@success_amount, @credit_card, recurring_flag: recurring_flag)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/recurringFlag=#{recurring_flag}&/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_purchase_recurring_flag_absent
+    stub_comms do
+      @gateway.purchase(@success_amount, @credit_card)
+    end.check_request do |endpoint, data, headers|
+      assert_not_match(/recurringFlag&/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_recurring_flag_present
+    recurring_flag = 1
+
+    stub_comms do
+      @gateway.purchase(@success_amount, @credit_card, recurring_flag: recurring_flag)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/recurringFlag=#{recurring_flag}&/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
@@ -218,6 +284,32 @@ class MerchantWarriorTest < Test::Unit::TestCase
   <cardID>KOCI10023982</cardID>
   <cardKey>s5KQIxsZuiyvs3Sc</cardKey>
   <ivrCardID>10023982</ivrCardID>
+</mwResponse>
+    XML
+  end
+
+  def successful_authorize_response
+    <<-XML
+<?xml version="1.0" encoding="UTF-8"?>
+<mwResponse>
+  <responseCode>0</responseCode>
+  <responseMessage>Transaction approved</responseMessage>
+  <transactionID>1336-20be3569-b600-11e6-b9c3-005056b209e0</transactionID>
+  <transactionReferenceID>12345</transactionReferenceID>
+  <authCode>731357421</authCode>
+  <receiptNo>731357421</receiptNo>
+  <authMessage>Honour with identification</authMessage>
+  <authResponseCode>08</authResponseCode>
+  <authSettledDate>2016-11-29</authSettledDate>
+  <paymentCardNumber>512345XXXXXX2346</paymentCardNumber>
+  <transactionAmount>1.00</transactionAmount>
+  <cardType>mc</cardType>
+  <cardExpiryMonth>05</cardExpiryMonth>
+  <cardExpiryYear>21</cardExpiryYear>
+  <custom1/>
+  <custom2/>
+  <custom3/>
+  <customHash>65b172551b7d3a0706c0ce5330c98470</customHash>
 </mwResponse>
     XML
   end

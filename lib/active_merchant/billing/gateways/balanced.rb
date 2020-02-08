@@ -44,12 +44,13 @@ module ActiveMerchant #:nodoc:
         add_common_params(post, options)
 
         MultiResponse.run do |r|
-          identifier = if(payment_method.respond_to?(:number))
-                         r.process { store(payment_method, options) }
-                         r.authorization
-                       else
-                         payment_method
-          end
+          identifier =
+            if payment_method.respond_to?(:number)
+              r.process { store(payment_method, options) }
+              r.authorization
+            else
+              payment_method
+            end
           r.process { commit('debits', "cards/#{card_identifier_from(identifier)}/debits", post) }
         end
       end
@@ -61,12 +62,13 @@ module ActiveMerchant #:nodoc:
         add_common_params(post, options)
 
         MultiResponse.run do |r|
-          identifier = if(payment_method.respond_to?(:number))
-                         r.process { store(payment_method, options) }
-                         r.authorization
-                       else
-                         payment_method
-          end
+          identifier =
+            if payment_method.respond_to?(:number)
+              r.process { store(payment_method, options) }
+              r.authorization
+            else
+              payment_method
+            end
           r.process { commit('card_holds', "cards/#{card_identifier_from(identifier)}/card_holds", post) }
         end
       end
@@ -137,7 +139,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(post, options)
         address = (options[:billing_address] || options[:address])
-        if(address && address[:zip].present?)
+        if address && address[:zip].present?
           post[:address] = {}
           post[:address][:line1] = address[:address1] if address[:address1]
           post[:address][:line2] = address[:address2] if address[:address2]
@@ -155,17 +157,20 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(entity_name, path, post, method=:post)
-        raw_response = begin
-          parse(ssl_request(
-            method,
-            live_url + "/#{path}",
-            post_data(post),
-            headers
-          ))
-        rescue ResponseError => e
-          raise unless(e.response.code.to_s =~ /4\d\d/)
-          parse(e.response.body)
-        end
+        raw_response =
+          begin
+            parse(
+              ssl_request(
+                method,
+                live_url + "/#{path}",
+                post_data(post),
+                headers
+              ))
+          rescue ResponseError => e
+            raise unless e.response.code.to_s =~ /4\d\d/
+
+            parse(e.response.body)
+          end
 
         Response.new(
           success_from(entity_name, raw_response),
@@ -178,13 +183,13 @@ module ActiveMerchant #:nodoc:
 
       def success_from(entity_name, raw_response)
         entity = (raw_response[entity_name] || []).first
-        if(!entity)
+        if !entity
           false
-        elsif((entity_name == 'refunds') && entity.include?('status'))
+        elsif (entity_name == 'refunds') && entity.include?('status')
           %w(succeeded pending).include?(entity['status'])
-        elsif(entity.include?('status'))
+        elsif entity.include?('status')
           (entity['status'] == 'succeeded')
-        elsif(entity_name == 'cards')
+        elsif entity_name == 'cards'
           !!entity['id']
         else
           false
@@ -192,7 +197,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(raw_response)
-        if(raw_response['errors'])
+        if raw_response['errors']
           error = raw_response['errors'].first
           (error['additional'] || error['message'] || error['description'])
         else
@@ -222,6 +227,7 @@ module ActiveMerchant #:nodoc:
 
         params.map do |key, value|
           next if value.blank?
+
           if value.is_a?(Hash)
             h = {}
             value.each do |k, v|

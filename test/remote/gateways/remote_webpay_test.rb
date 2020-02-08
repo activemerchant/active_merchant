@@ -3,7 +3,6 @@
 require 'test_helper'
 
 class RemoteWebpayTest < Test::Unit::TestCase
-
   def setup
     @gateway = WebpayGateway.new(fixtures(:webpay))
 
@@ -134,5 +133,4 @@ class RemoteWebpayTest < Test::Unit::TestCase
     assert_failure response
     assert_equal 'Invalid API key provided. Check your API key is correct.', response.message
   end
-
 end

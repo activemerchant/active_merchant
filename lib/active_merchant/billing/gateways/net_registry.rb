@@ -24,7 +24,7 @@ module ActiveMerchant
     class NetRegistryGateway < Gateway
       self.live_url = self.test_url = 'https://paygate.ssllock.net/external2.pl'
 
-      FILTERED_PARAMS = [ 'card_no', 'card_expiry', 'receipt_array' ]
+      FILTERED_PARAMS = ['card_no', 'card_expiry', 'receipt_array']
 
       self.supported_countries = ['AU']
 

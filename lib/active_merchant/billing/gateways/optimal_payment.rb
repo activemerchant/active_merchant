@@ -19,12 +19,12 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Optimal Payments'
 
       def initialize(options = {})
-        if(options[:login])
+        if options[:login]
           ActiveMerchant.deprecated("The 'login' option is deprecated in favor of 'store_id' and will be removed in a future version.")
           options[:store_id] = options[:login]
         end
 
-        if(options[:account])
+        if options[:account]
           ActiveMerchant.deprecated("The 'account' option is deprecated in favor of 'account_number' and will be removed in a future version.")
           options[:account_number] = options[:account]
         end
@@ -95,24 +95,25 @@ module ActiveMerchant #:nodoc:
       def commit(action, money, post)
         post[:order_id] ||= 'order_id'
 
-        xml = case action
-        when 'ccAuthorize', 'ccPurchase', 'ccVerification'
-          cc_auth_request(money, post)
-        when 'ccCredit', 'ccSettlement'
-          cc_post_auth_request(money, post)
-        when 'ccStoredDataAuthorize', 'ccStoredDataPurchase'
-          cc_stored_data_request(money, post)
-        when 'ccAuthorizeReversal'
-          cc_auth_reversal_request(post)
-        # when 'ccCancelSettle', 'ccCancelCredit', 'ccCancelPayment'
-        #  cc_cancel_request(money, post)
-        # when 'ccPayment'
-        #  cc_payment_request(money, post)
-        # when 'ccAuthenticate'
-        #  cc_authenticate_request(money, post)
-        else
-          raise 'Unknown Action'
-        end
+        xml =
+          case action
+          when 'ccAuthorize', 'ccPurchase', 'ccVerification'
+            cc_auth_request(money, post)
+          when 'ccCredit', 'ccSettlement'
+            cc_post_auth_request(money, post)
+          when 'ccStoredDataAuthorize', 'ccStoredDataPurchase'
+            cc_stored_data_request(money, post)
+          when 'ccAuthorizeReversal'
+            cc_auth_reversal_request(post)
+          # when 'ccCancelSettle', 'ccCancelCredit', 'ccCancelPayment'
+          #  cc_cancel_request(money, post)
+          # when 'ccPayment'
+          #  cc_payment_request(money, post)
+          # when 'ccAuthenticate'
+          #  cc_authenticate_request(money, post)
+          else
+            raise 'Unknown Action'
+          end
         txnRequest = escape_uri(xml)
         response = parse(ssl_post(test? ? self.test_url : self.live_url, "txnMode=#{action}&txnRequest=#{txnRequest}"))
 
@@ -135,9 +136,7 @@ module ActiveMerchant #:nodoc:
 
       def message_from(response)
         REXML::XPath.each(response, '//detail') do |detail|
-          if detail.is_a?(REXML::Element) && detail.elements['tag'].text == 'InternalResponseDescription'
-            return detail.elements['value'].text
-          end
+          return detail.elements['value'].text if detail.is_a?(REXML::Element) && detail.elements['tag'].text == 'InternalResponseDescription'
         end
         nil
       end
@@ -159,13 +158,13 @@ module ActiveMerchant #:nodoc:
         %w(confirmationNumber authCode
            decision code description
            actionCode avsResponse cvdResponse
-           txnTime duplicateFound
-        ).each do |tag|
+           txnTime duplicateFound).each do |tag|
           node = REXML::XPath.first(response, "//#{tag}")
           hsh[tag] = node.text if node
         end
         REXML::XPath.each(response, '//detail') do |detail|
           next unless detail.is_a?(REXML::Element)
+
           tag = detail.elements['tag'].text
           value = detail.elements['value'].text
           hsh[tag] = value
@@ -254,8 +253,7 @@ module ActiveMerchant #:nodoc:
       def schema
         { 'xmlns' => 'http://www.optimalpayments.com/creditcard/xmlschema/v1',
           'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance',
-          'xsi:schemaLocation' => 'http://www.optimalpayments.com/creditcard/xmlschema/v1'
-        }
+          'xsi:schemaLocation' => 'http://www.optimalpayments.com/creditcard/xmlschema/v1'}
       end
 
       def build_merchant_account(xml)
@@ -323,10 +321,8 @@ module ActiveMerchant #:nodoc:
           'master'          => 'MC',
           'american_express'=> 'AM',
           'discover'        => 'DI',
-          'diners_club'     => 'DC',
-        }[key]
+          'diners_club'     => 'DC', }[key]
       end
-
     end
   end
 end

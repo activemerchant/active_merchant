@@ -175,10 +175,11 @@ module ActiveMerchant #:nodoc:
 
       def add_additional_verification(xml, options)
         return unless (options[:verify_zip].to_s == 'true') || (options[:verify_address].to_s == 'true')
+
         if address = options[:billing_address]
           xml.AdditionalVerification do
-            xml.Zip address[:zip] if options[:verify_zip].to_s  == 'true'
-            xml.Address address[:address1] if options[:verify_address].to_s  == 'true'
+            xml.Zip address[:zip] if options[:verify_zip].to_s == 'true'
+            xml.Address address[:address1] if options[:verify_address].to_s == 'true'
           end
         end
       end

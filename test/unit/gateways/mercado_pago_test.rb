@@ -20,6 +20,13 @@ class MercadoPagoTest < Test::Unit::TestCase
       :last_name => 'Smith',
       :verification_value => '737'
     )
+    @naranja_credit_card = credit_card('5895627823453005',
+      :month => 10,
+      :year => 2020,
+      :first_name => 'John',
+      :last_name => 'Smith',
+      :verification_value => '123'
+    )
     @amount = 100
 
     @options = {
@@ -55,6 +62,17 @@ class MercadoPagoTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).at_most(2).returns(successful_purchase_with_cabal_response)
 
     response = @gateway.purchase(@amount, @cabal_credit_card, @options)
+    assert_success response
+
+    assert_equal '20728968|1.0', response.authorization
+    assert_equal 'accredited', response.message
+    assert response.test?
+  end
+
+  def test_successful_purchase_with_naranja
+    @gateway.expects(:ssl_post).at_most(2).returns(successful_purchase_with_naranja_response)
+
+    response = @gateway.purchase(@amount, @naranja_credit_card, @options)
     assert_success response
 
     assert_equal '20728968|1.0', response.authorization
@@ -104,6 +122,17 @@ class MercadoPagoTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_authorize_with_naranja
+    @gateway.expects(:ssl_post).at_most(2).returns(successful_authorize_with_naranja_response)
+
+    response = @gateway.authorize(@amount, @naranja_credit_card, @options)
+    assert_success response
+
+    assert_equal '20729288|1.0', response.authorization
+    assert_equal 'pending_capture', response.message
+    assert response.test?
+  end
+
   def test_failed_authorize
     @gateway.expects(:ssl_post).at_most(2).returns(failed_authorize_response)
 
@@ -137,6 +166,17 @@ class MercadoPagoTest < Test::Unit::TestCase
 
   def test_successful_capture_with_cabal
     @gateway.expects(:ssl_request).returns(successful_capture_with_cabal_response)
+
+    response = @gateway.capture(@amount, 'authorization|amount')
+    assert_success response
+
+    assert_equal '20729288|1.0', response.authorization
+    assert_equal 'accredited', response.message
+    assert response.test?
+  end
+
+  def test_successful_capture_with_naranja
+    @gateway.expects(:ssl_request).returns(successful_capture_with_naranja_response)
 
     response = @gateway.capture(@amount, 'authorization|amount')
     assert_success response
@@ -235,9 +275,7 @@ class MercadoPagoTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, credit_card, @options)
     end.check_request do |endpoint, data, headers|
-      if endpoint =~ /payments/
-        assert_not_match(%r("payment_method_id":"amex"), data)
-      end
+      assert_not_match(%r("payment_method_id":"amex"), data) if endpoint =~ /payments/
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -250,9 +288,7 @@ class MercadoPagoTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, credit_card, @options.merge(payment_method_id: 'diners'))
     end.check_request do |endpoint, data, headers|
-      if endpoint =~ /payments/
-        assert_match(%r("payment_method_id":"diners"), data)
-      end
+      assert_match(%r("payment_method_id":"diners"), data) if endpoint =~ /payments/
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -286,13 +322,111 @@ class MercadoPagoTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(issuer_id: '1a2b3c4d'))
     end.check_request do |endpoint, data, headers|
-      if endpoint =~ /payments/
-        assert_match(%r("issuer_id":"1a2b3c4d"), data)
-      end
+      assert_match(%r("issuer_id":"1a2b3c4d"), data) if endpoint =~ /payments/
     end.respond_with(successful_purchase_response)
 
     assert_success response
     assert_equal '4141491|1.0', response.authorization
+  end
+
+  def test_purchase_includes_taxes_array
+    taxes_type = 'IVA'
+    taxes_value = 500.0
+    taxes_object = { value: taxes_value, type: taxes_type }
+    taxes_array = [taxes_object, taxes_object]
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(taxes: taxes_array))
+    end.check_request do |endpoint, data, headers|
+      single_pattern = "{\"value\":#{taxes_value},\"type\":\"#{taxes_type}\"}"
+      pattern = "\"taxes\":[#{single_pattern},#{single_pattern}]"
+      assert_match(pattern, data) if endpoint =~ /payments/
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_includes_taxes_hash
+    taxes_type = 'IVA'
+    taxes_value = 500.0
+    taxes_object = { value: taxes_value, type: taxes_type }
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(taxes: taxes_object))
+    end.check_request do |endpoint, data, headers|
+      pattern = "\"taxes\":[{\"value\":#{taxes_value},\"type\":\"#{taxes_type}\"}]"
+      assert_match(pattern, data) if endpoint =~ /payments/
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_includes_net_amount
+    net_amount = 9500
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(net_amount: net_amount))
+    end.check_request do |endpoint, data, headers|
+      assert_match("\"net_amount\":#{net_amount}", data) if endpoint =~ /payments/
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_authorize_includes_taxes_array
+    taxes_type = 'IVA'
+    taxes_value = 500.0
+    taxes_object = { value: taxes_value, type: taxes_type }
+    taxes_array = [taxes_object, taxes_object]
+
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(taxes: taxes_array))
+    end.check_request do |endpoint, data, headers|
+      single_pattern = "{\"value\":#{taxes_value},\"type\":\"#{taxes_type}\"}"
+      pattern = "\"taxes\":[#{single_pattern},#{single_pattern}]"
+      assert_match(pattern, data) if endpoint =~ /payments/
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_authorize_includes_taxes_hash
+    taxes_type = 'IVA'
+    taxes_value = 500.0
+    taxes_object = { value: taxes_value, type: taxes_type }
+
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(taxes: taxes_object))
+    end.check_request do |endpoint, data, headers|
+      pattern = "\"taxes\":[{\"value\":#{taxes_value},\"type\":\"#{taxes_type}\"}]"
+      assert_match(pattern, data) if endpoint =~ /payments/
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_authorize_includes_net_amount
+    net_amount = 9500
+
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(net_amount: net_amount))
+    end.check_request do |endpoint, data, headers|
+      assert_match("\"net_amount\":#{net_amount}", data) if endpoint =~ /payments/
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_invalid_taxes_type
+    assert_raises(ArgumentError) do
+      stub_comms do
+        @gateway.purchase(@amount, @credit_card, @options.merge(taxes: 10))
+      end.respond_with(successful_purchase_response)
+    end
+  end
+
+  def test_invalid_taxes_embedded_type
+    assert_raises(ArgumentError) do
+      stub_comms do
+        @gateway.purchase(@amount, @credit_card, @options.merge(taxes: [{ value: 500, type: 'IVA' }, 10]))
+      end.respond_with(successful_purchase_response)
+    end
+  end
+
+  def test_invalid_taxes_shape
+    assert_raises(ArgumentError) do
+      stub_comms do
+        @gateway.purchase(@amount, @credit_card, @options.merge(taxes: [{ amount: 500, type: 'IVA' }]))
+      end.respond_with(successful_purchase_response)
+    end
   end
 
   private
@@ -425,6 +559,12 @@ class MercadoPagoTest < Test::Unit::TestCase
     )
   end
 
+  def successful_purchase_with_naranja_response
+    %(
+    {"id":20728968,"date_created":"2019-08-06T15:38:12.000-04:00","date_approved":"2019-08-06T15:38:12.000-04:00","date_last_updated":"2019-08-06T15:38:12.000-04:00","date_of_expiration":null,"money_release_date":"2019-08-20T15:38:12.000-04:00","operation_type":"regular_payment","issuer_id":"688","payment_method_id":"naranja","payment_type_id":"credit_card","status":"approved","status_detail":"accredited","currency_id":"ARS","description":"Store Purchase","live_mode":false,"sponsor_id":null,"authorization_code":null,"money_release_schema":null,"taxes_amount":0,"counter_currency":null,"shipping_amount":0,"pos_id":null,"store_id":null,"collector_id":388534608,"payer":{"first_name":"Test","last_name":"Test","email":"test_user_80507629@testuser.com","identification":{"number":"32659430","type":"DNI"},"phone":{"area_code":"01","number":"1111-1111","extension":""},"type":"registered","entity_type":null,"id":"388571255"},"metadata":{},"additional_info":{"payer":{"address":{"zip_code":"K1C2N6","street_name":"456 My Street Apt 1"}},"shipments":{"receiver_address":{"zip_code":"K1C2N6","street_name":"456 My Street Apt 1"}}},"order":{},"external_reference":"ab86ce493d1cc1e447877720843812e9","transaction_amount":5,"transaction_amount_refunded":0,"coupon_amount":0,"differential_pricing_id":null,"deduction_schema":null,"transaction_details":{"payment_method_reference_id":null,"net_received_amount":4.79,"total_paid_amount":5,"overpaid_amount":0,"external_resource_url":null,"installment_amount":5,"financial_institution":null,"payable_deferral_period":null,"acquirer_reference":null},"fee_details":[{"type":"mercadopago_fee","amount":0.21,"fee_payer":"collector"}],"captured":true,"binary_mode":true,"call_for_authorize_id":null,"statement_descriptor":"SPREEDLYMLA","installments":1,"card":{"id":null,"first_six_digits":"603522","last_four_digits":"7021","expiration_month":10,"expiration_year":2020,"date_created":"2019-08-06T15:38:12.000-04:00","date_last_updated":"2019-08-06T15:38:12.000-04:00","cardholder":{"name":"John Smith","identification":{"number":null,"type":null}}},"notification_url":null,"refunds":[],"processing_mode":"aggregator","merchant_account_id":null,"acquirer":null,"merchant_number":null,"acquirer_reconciliation":[]}
+    )
+  end
+
   def failed_purchase_response
     %(
       {"id":4142297,"date_created":"2017-07-06T10:13:32.000-04:00","date_approved":null,"date_last_updated":"2017-07-06T10:13:32.000-04:00","date_of_expiration":null,"money_release_date":null,"operation_type":"regular_payment","issuer_id":"166","payment_method_id":"visa","payment_type_id":"credit_card","status":"rejected","status_detail":"cc_rejected_other_reason","currency_id":"MXN","description":"Store Purchase","live_mode":false,"sponsor_id":null,"authorization_code":null,"related_exchange_rate":null,"collector_id":261735089,"payer":{"type":"guest","id":null,"email":"user@example.com","identification":{"type":null,"number":null},"phone":{"area_code":null,"number":null,"extension":""},"first_name":"First User","last_name":"User","entity_type":null},"metadata":{},"additional_info":{"payer":{"address":{"zip_code":"K1C2N6","street_name":"My Street","street_number":"456"}}},"order":{"type":"mercadopago","id":"830943860538524456"},"external_reference":null,"transaction_amount":5,"transaction_amount_refunded":0,"coupon_amount":0,"differential_pricing_id":null,"deduction_schema":null,"transaction_details":{"net_received_amount":0,"total_paid_amount":5,"overpaid_amount":0,"external_resource_url":null,"installment_amount":5,"financial_institution":null,"payment_method_reference_id":null,"payable_deferral_period":null,"acquirer_reference":null},"fee_details":[],"captured":true,"binary_mode":false,"call_for_authorize_id":null,"statement_descriptor":"WWW.MERCADOPAGO.COM","installments":1,"card":{"id":null,"first_six_digits":"400030","last_four_digits":"2220","expiration_month":9,"expiration_year":2018,"date_created":"2017-07-06T10:13:32.000-04:00","date_last_updated":"2017-07-06T10:13:32.000-04:00","cardholder":{"name":"Longbob Longsen","identification":{"number":null,"type":null}}},"notification_url":null,"refunds":[],"processing_mode":null,"merchant_account_id":null,"acquirer":null,"merchant_number":null}
@@ -449,6 +589,12 @@ class MercadoPagoTest < Test::Unit::TestCase
     )
   end
 
+  def successful_authorize_with_naranja_response
+    %(
+    {"id":20729288,"date_created":"2019-08-06T15:57:47.000-04:00","date_approved":null,"date_last_updated":"2019-08-06T15:57:49.000-04:00","date_of_expiration":null,"money_release_date":null,"operation_type":"regular_payment","issuer_id":"688","payment_method_id":"naranja","payment_type_id":"credit_card","status":"authorized","status_detail":"pending_capture","currency_id":"ARS","description":"Store Purchase","live_mode":false,"sponsor_id":null,"authorization_code":null,"money_release_schema":null,"taxes_amount":0,"counter_currency":null,"shipping_amount":0,"pos_id":null,"store_id":null,"collector_id":388534608,"payer":{"first_name":"Test","last_name":"Test","email":"test_user_80507629@testuser.com","identification":{"number":"32659430","type":"DNI"},"phone":{"area_code":"01","number":"1111-1111","extension":""},"type":"registered","entity_type":null,"id":"388571255"},"metadata":{},"additional_info":{"payer":{"address":{"zip_code":"K1C2N6","street_name":"456 My Street Apt 1"}},"shipments":{"receiver_address":{"zip_code":"K1C2N6","street_name":"456 My Street Apt 1"}}},"order":{},"external_reference":"f70cb796271176441a5077012ff2af2a","transaction_amount":5,"transaction_amount_refunded":0,"coupon_amount":0,"differential_pricing_id":null,"deduction_schema":null,"transaction_details":{"payment_method_reference_id":null,"net_received_amount":0,"total_paid_amount":5,"overpaid_amount":0,"external_resource_url":null,"installment_amount":5,"financial_institution":null,"payable_deferral_period":null,"acquirer_reference":null},"fee_details":[],"captured":false,"binary_mode":true,"call_for_authorize_id":null,"statement_descriptor":"SPREEDLYMLA","installments":1,"card":{"id":null,"first_six_digits":"603522","last_four_digits":"7021","expiration_month":10,"expiration_year":2020,"date_created":"2019-08-06T15:57:47.000-04:00","date_last_updated":"2019-08-06T15:57:47.000-04:00","cardholder":{"name":"John Smith","identification":{"number":null,"type":null}}},"notification_url":null,"refunds":[],"processing_mode":"aggregator","merchant_account_id":null,"acquirer":null,"merchant_number":null,"acquirer_reconciliation":[]}
+    )
+  end
+
   def failed_authorize_response
     %(
       {"id":4261953,"date_created":"2017-07-13T14:25:33.000-04:00","date_approved":null,"date_last_updated":"2017-07-13T14:25:33.000-04:00","date_of_expiration":null,"money_release_date":null,"operation_type":"regular_payment","issuer_id":"25","payment_method_id":"visa","payment_type_id":"credit_card","status":"rejected","status_detail":"cc_rejected_other_reason","currency_id":"BRL","description":"Store Purchase","live_mode":false,"sponsor_id":null,"authorization_code":null,"related_exchange_rate":null,"collector_id":263489584,"payer":{"type":"guest","id":null,"email":"user+br@example.com","identification":{"type":null,"number":null},"phone":{"area_code":null,"number":null,"extension":null},"first_name":null,"last_name":null,"entity_type":null},"metadata":{},"additional_info":{"payer":{"address":{"zip_code":"K1C2N6","street_name":"My Street","street_number":"456"}}},"order":{"type":"mercadopago","id":"7528376941458928221"},"external_reference":null,"transaction_amount":5,"transaction_amount_refunded":0,"coupon_amount":0,"differential_pricing_id":null,"deduction_schema":null,"transaction_details":{"net_received_amount":0,"total_paid_amount":5,"overpaid_amount":0,"external_resource_url":null,"installment_amount":5,"financial_institution":null,"payment_method_reference_id":null,"payable_deferral_period":null,"acquirer_reference":null},"fee_details":[],"captured":false,"binary_mode":false,"call_for_authorize_id":null,"statement_descriptor":"WWW.MERCADOPAGO.COM","installments":1,"card":{"id":null,"first_six_digits":"400030","last_four_digits":"2220","expiration_month":9,"expiration_year":2018,"date_created":"2017-07-13T14:25:33.000-04:00","date_last_updated":"2017-07-13T14:25:33.000-04:00","cardholder":{"name":"Longbob Longsen","identification":{"number":null,"type":null}}},"notification_url":null,"refunds":[],"processing_mode":"aggregator","merchant_account_id":null,"acquirer":null,"merchant_number":null}
@@ -470,6 +616,12 @@ class MercadoPagoTest < Test::Unit::TestCase
   def successful_capture_with_cabal_response
     %(
     {"id":20729288,"date_created":"2019-08-06T15:57:47.000-04:00","date_approved":"2019-08-06T15:57:49.000-04:00","date_last_updated":"2019-08-06T15:57:49.000-04:00","date_of_expiration":null,"money_release_date":"2019-08-20T15:57:49.000-04:00","operation_type":"regular_payment","issuer_id":"688","payment_method_id":"cabal","payment_type_id":"credit_card","status":"approved","status_detail":"accredited","currency_id":"ARS","description":"Store Purchase","live_mode":false,"sponsor_id":null,"authorization_code":null,"money_release_schema":null,"taxes_amount":0,"counter_currency":null,"shipping_amount":0,"pos_id":null,"store_id":null,"collector_id":388534608,"payer":{"first_name":"Test","last_name":"Test","email":"test_user_80507629@testuser.com","identification":{"number":"32659430","type":"DNI"},"phone":{"area_code":"01","number":"1111-1111","extension":""},"type":"registered","entity_type":null,"id":"388571255"},"metadata":{},"additional_info":{"payer":{"address":{"zip_code":"K1C2N6","street_name":"456 My Street Apt 1"}},"shipments":{"receiver_address":{"zip_code":"K1C2N6","street_name":"456 My Street Apt 1"}}},"order":{},"external_reference":"f70cb796271176441a5077012ff2af2a","transaction_amount":5,"transaction_amount_refunded":0,"coupon_amount":0,"differential_pricing_id":null,"deduction_schema":null,"transaction_details":{"payment_method_reference_id":null,"net_received_amount":4.79,"total_paid_amount":5,"overpaid_amount":0,"external_resource_url":null,"installment_amount":5,"financial_institution":null,"payable_deferral_period":null,"acquirer_reference":null},"fee_details":[{"type":"mercadopago_fee","amount":0.21,"fee_payer":"collector"}],"captured":true,"binary_mode":true,"call_for_authorize_id":null,"statement_descriptor":"SPREEDLYMLA","installments":1,"card":{"id":null,"first_six_digits":"603522","last_four_digits":"7021","expiration_month":10,"expiration_year":2020,"date_created":"2019-08-06T15:57:47.000-04:00","date_last_updated":"2019-08-06T15:57:47.000-04:00","cardholder":{"name":"John Smith","identification":{"number":null,"type":null}}},"notification_url":null,"refunds":[],"processing_mode":"aggregator","merchant_account_id":null,"acquirer":null,"merchant_number":null,"acquirer_reconciliation":[]}
+    )
+  end
+
+  def successful_capture_with_naranja_response
+    %(
+    {"id":20729288,"date_created":"2019-08-06T15:57:47.000-04:00","date_approved":"2019-08-06T15:57:49.000-04:00","date_last_updated":"2019-08-06T15:57:49.000-04:00","date_of_expiration":null,"money_release_date":"2019-08-20T15:57:49.000-04:00","operation_type":"regular_payment","issuer_id":"688","payment_method_id":"naranja","payment_type_id":"credit_card","status":"approved","status_detail":"accredited","currency_id":"ARS","description":"Store Purchase","live_mode":false,"sponsor_id":null,"authorization_code":null,"money_release_schema":null,"taxes_amount":0,"counter_currency":null,"shipping_amount":0,"pos_id":null,"store_id":null,"collector_id":388534608,"payer":{"first_name":"Test","last_name":"Test","email":"test_user_80507629@testuser.com","identification":{"number":"32659430","type":"DNI"},"phone":{"area_code":"01","number":"1111-1111","extension":""},"type":"registered","entity_type":null,"id":"388571255"},"metadata":{},"additional_info":{"payer":{"address":{"zip_code":"K1C2N6","street_name":"456 My Street Apt 1"}},"shipments":{"receiver_address":{"zip_code":"K1C2N6","street_name":"456 My Street Apt 1"}}},"order":{},"external_reference":"f70cb796271176441a5077012ff2af2a","transaction_amount":5,"transaction_amount_refunded":0,"coupon_amount":0,"differential_pricing_id":null,"deduction_schema":null,"transaction_details":{"payment_method_reference_id":null,"net_received_amount":4.79,"total_paid_amount":5,"overpaid_amount":0,"external_resource_url":null,"installment_amount":5,"financial_institution":null,"payable_deferral_period":null,"acquirer_reference":null},"fee_details":[{"type":"mercadopago_fee","amount":0.21,"fee_payer":"collector"}],"captured":true,"binary_mode":true,"call_for_authorize_id":null,"statement_descriptor":"SPREEDLYMLA","installments":1,"card":{"id":null,"first_six_digits":"603522","last_four_digits":"7021","expiration_month":10,"expiration_year":2020,"date_created":"2019-08-06T15:57:47.000-04:00","date_last_updated":"2019-08-06T15:57:47.000-04:00","cardholder":{"name":"John Smith","identification":{"number":null,"type":null}}},"notification_url":null,"refunds":[],"processing_mode":"aggregator","merchant_account_id":null,"acquirer":null,"merchant_number":null,"acquirer_reconciliation":[]}
     )
   end
 

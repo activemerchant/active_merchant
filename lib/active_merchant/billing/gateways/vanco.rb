@@ -108,6 +108,7 @@ module ActiveMerchant
 
       def message_from(succeeded, response)
         return 'Success' if succeeded
+
         response[:error_message]
       end
 
@@ -288,7 +289,6 @@ module ActiveMerchant
           'Content-Type' => 'text/xml'
         }
       end
-
     end
   end
 end

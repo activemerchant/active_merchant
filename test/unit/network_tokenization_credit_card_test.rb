@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class NetworkTokenizationCreditCardTest < Test::Unit::TestCase
-
   def setup
     @tokenized_card = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
       number: '4242424242424242', :brand => 'visa',

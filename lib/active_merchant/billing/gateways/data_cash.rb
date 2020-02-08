@@ -6,7 +6,7 @@ module ActiveMerchant
       self.default_currency = 'GBP'
       self.supported_countries = ['GB']
 
-      self.supported_cardtypes = [ :visa, :master, :american_express, :discover, :diners_club, :jcb, :maestro ]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb, :maestro]
 
       self.homepage_url = 'http://www.datacash.com/'
       self.display_name = 'DataCash'
@@ -123,9 +123,7 @@ module ActiveMerchant
           add_authentication(xml)
 
           xml.tag! :Transaction do
-            if options[:set_up_continuous_authority]
-              xml.tag! :ContAuthTxn, :type => 'setup'
-            end
+            xml.tag! :ContAuthTxn, :type => 'setup' if options[:set_up_continuous_authority]
             xml.tag! :CardTxn do
               xml.tag! :method, type
               add_credit_card(xml, credit_card, options[:billing_address])

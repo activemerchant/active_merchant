@@ -50,7 +50,7 @@ module ActiveMerchant #:nodoc:
         post[:order_id] = options[:order_id]
         post[:address] = options[:billing_address] || options[:address]
         post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
-        add_cof(post, options)
+        add_stored_credential(post, options)
         action = if post[:cavv]
                    'cavv_preauth'
                  elsif post[:data_key].blank?
@@ -73,7 +73,7 @@ module ActiveMerchant #:nodoc:
         post[:order_id] = options[:order_id]
         post[:address] = options[:billing_address] || options[:address]
         post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
-        add_cof(post, options)
+        add_stored_credential(post, options)
         action = if post[:cavv]
                    'cavv_purchase'
                  elsif post[:data_key].blank?
@@ -134,18 +134,39 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify(credit_card, options={})
-        MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
-        end
+        requires!(options, :order_id)
+        post = {}
+        add_payment_source(post, credit_card, options)
+        post[:order_id] = options[:order_id]
+        post[:address] = options[:billing_address] || options[:address]
+        post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
+        add_stored_credential(post, options)
+        action = if post[:data_key].blank?
+                   'card_verification'
+                 else
+                   'res_card_verification_cc'
+                 end
+        commit(action, post)
       end
 
+      # When passing a :duration option (time in seconds) you can create a
+      # temporary vault record to avoid incurring Moneris vault storage fees
+      #
+      # https://developer.moneris.com/Documentation/NA/E-Commerce%20Solutions/API/Vault#vaulttokenadd
       def store(credit_card, options = {})
         post = {}
         post[:pan] = credit_card.number
         post[:expdate] = expdate(credit_card)
+        post[:address] = options[:billing_address] || options[:address]
         post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
-        commit('res_add_cc', post)
+        add_stored_credential(post, options)
+
+        if options[:duration]
+          post[:duration] = options[:duration]
+          commit('res_temp_add', post)
+        else
+          commit('res_add_cc', post)
+        end
       end
 
       def unstore(data_key, options = {})
@@ -208,6 +229,49 @@ module ActiveMerchant #:nodoc:
         post[:payment_information] = options[:payment_information] if options[:payment_information]
       end
 
+      def add_stored_credential(post, options)
+        add_cof(post, options)
+        # if any of :issuer_id, :payment_information, or :payment_indicator is not passed,
+        # then check for :stored credential options
+        return unless (stored_credential = options[:stored_credential]) && !cof_details_present?(options)
+
+        if stored_credential[:initial_transaction]
+          add_stored_credential_initial(post, options)
+        else
+          add_stored_credential_used(post, options)
+        end
+      end
+
+      def add_stored_credential_initial(post, options)
+        post[:payment_information] ||= '0'
+        post[:issuer_id] ||= ''
+        if options[:stored_credential][:initiator] == 'merchant'
+          case options[:stored_credential][:reason_type]
+          when 'recurring', 'installment'
+            post[:payment_indicator] ||= 'R'
+          when 'unscheduled'
+            post[:payment_indicator] ||= 'C'
+          end
+        else
+          post[:payment_indicator] ||= 'C'
+        end
+      end
+
+      def add_stored_credential_used(post, options)
+        post[:payment_information] ||= '2'
+        post[:issuer_id] = options[:stored_credential][:network_transaction_id] if options[:issuer_id].blank?
+        if options[:stored_credential][:initiator] == 'merchant'
+          case options[:stored_credential][:reason_type]
+          when 'recurring', 'installment'
+            post[:payment_indicator] ||= 'R'
+          when '', 'unscheduled'
+            post[:payment_indicator] ||= 'U'
+          end
+        else
+          post[:payment_indicator] ||= 'Z'
+        end
+      end
+
       # Common params used amongst the +credit+, +void+ and +capture+ methods
       def crediting_params(authorization, options = {})
         {
@@ -245,16 +309,14 @@ module ActiveMerchant #:nodoc:
 
       # Generates a Moneris authorization string of the form 'trans_id;receipt_id'.
       def authorization_from(response = {})
-        if response[:trans_id] && response[:receipt_id]
-          "#{response[:trans_id]};#{response[:receipt_id]}"
-        end
+        "#{response[:trans_id]};#{response[:receipt_id]}" if response[:trans_id] && response[:receipt_id]
       end
 
       # Tests for a successful response from Moneris' servers
       def successful?(response)
         response[:response_code] &&
-        response[:complete] &&
-        (0..49).cover?(response[:response_code].to_i)
+          response[:complete] &&
+          (0..49).cover?(response[:response_code].to_i)
       end
 
       def parse(xml)
@@ -266,6 +328,7 @@ module ActiveMerchant #:nodoc:
       def hashify_xml!(xml, response)
         xml = REXML::Document.new(xml)
         return if xml.root.nil?
+
         xml.elements.each('//receipt/*') do |node|
           response[node.name.underscore.to_sym] = normalize(node.text)
         end
@@ -342,11 +405,13 @@ module ActiveMerchant #:nodoc:
       def wallet_indicator(token_source)
         return 'APP' if token_source == 'apple_pay'
         return 'ANP' if token_source == 'android_pay'
+
         nil
       end
 
       def message_from(message)
         return 'Unspecified error' if message.blank?
+
         message.gsub(/[^\w]/, ' ').split.join(' ').capitalize
       end
 
@@ -361,15 +426,18 @@ module ActiveMerchant #:nodoc:
             'purchasecorrection' => [:order_id, :txn_number, :crypt_type],
             'cavv_preauth' => [:order_id, :cust_id, :amount, :pan, :expdate, :cavv, :crypt_type, :wallet_indicator],
             'cavv_purchase' => [:order_id, :cust_id, :amount, :pan, :expdate, :cavv, :crypt_type, :wallet_indicator],
+            'card_verification' => [:order_id, :cust_id, :pan, :expdate, :crypt_type, :avs_info, :cvd_info, :cof_info],
             'transact' => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type],
             'Batchcloseall' => [],
             'opentotals' => [:ecr_number],
             'batchclose' => [:ecr_number],
-            'res_add_cc' => [:pan, :expdate, :crypt_type, :cof_info],
+            'res_add_cc' => [:pan, :expdate, :crypt_type, :avs_info, :cof_info],
+            'res_temp_add' => [:pan, :expdate, :crypt_type, :duration],
             'res_delete' => [:data_key],
-            'res_update_cc' => [:data_key, :pan, :expdate, :crypt_type],
+            'res_update_cc' => [:data_key, :pan, :expdate, :crypt_type, :avs_info, :cof_info],
             'res_purchase_cc' => [:data_key, :order_id, :cust_id, :amount, :crypt_type, :cof_info],
-            'res_preauth_cc' => [:data_key, :order_id, :cust_id, :amount, :crypt_type, :cof_info]
+            'res_preauth_cc' => [:data_key, :order_id, :cust_id, :amount, :crypt_type, :cof_info],
+            'res_card_verification_cc' => [:order_id, :data_key, :expdate, :crypt_type, :cof_info]
         }
       end
     end

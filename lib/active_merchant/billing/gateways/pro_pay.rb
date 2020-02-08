@@ -253,7 +253,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        results  = {}
+        results = {}
         xml = Nokogiri::XML(body)
         resp = xml.xpath('//XMLResponse/XMLTrans')
         resp.children.each do |element|
@@ -284,6 +284,7 @@ module ActiveMerchant #:nodoc:
 
       def message_from(response)
         return 'Success' if success_from(response)
+
         message = STATUS_RESPONSE_CODES[response[:status]]
         message += " - #{TRANSACTION_RESPONSE_CODES[response[:response_code]]}" if response[:response_code]
 
@@ -295,9 +296,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_code_from(response)
-        unless success_from(response)
-          response[:status]
-        end
+        response[:status] unless success_from(response)
       end
 
       def build_xml_request

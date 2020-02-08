@@ -5,11 +5,13 @@ module ActiveMerchant #:nodoc:
     # This gateway uses the current Stripe {Payment Intents API}[https://stripe.com/docs/api/payment_intents].
     # For the legacy API, see the Stripe gateway
     class StripePaymentIntentsGateway < StripeGateway
+      self.supported_countries = %w(AT AU BE BR CA CH DE DK EE ES FI FR GB GR HK IE IT JP LT LU LV MX NL NO NZ PL PT SE SG SI SK US)
+
       ALLOWED_METHOD_STATES = %w[automatic manual].freeze
       ALLOWED_CANCELLATION_REASONS = %w[duplicate fraudulent requested_by_customer abandoned].freeze
-      CREATE_INTENT_ATTRIBUTES = %i[description statement_descriptor receipt_email save_payment_method]
-      CONFIRM_INTENT_ATTRIBUTES = %i[receipt_email return_url save_payment_method setup_future_usage off_session]
-      UPDATE_INTENT_ATTRIBUTES = %i[description statement_descriptor receipt_email setup_future_usage]
+      CREATE_INTENT_ATTRIBUTES = %i[description statement_descriptor receipt_email save_payment_method cross_border_classification]
+      CONFIRM_INTENT_ATTRIBUTES = %i[receipt_email return_url save_payment_method setup_future_usage off_session cross_border_classification]
+      UPDATE_INTENT_ATTRIBUTES = %i[description statement_descriptor receipt_email setup_future_usage cross_border_classification]
       DEFAULT_API_VERSION = '2019-05-16'
 
       def create_intent(money, payment_method, options = {})
@@ -24,6 +26,7 @@ module ActiveMerchant #:nodoc:
         add_connected_account(post, options)
         add_shipping_address(post, options)
         setup_future_usage(post, options)
+        add_exemption(post, options)
 
         CREATE_INTENT_ATTRIBUTES.each do |attribute|
           add_whitelisted_attribute(post, options, attribute)
@@ -54,13 +57,14 @@ module ActiveMerchant #:nodoc:
         post[:card][:exp_month] = payment_method.month
         post[:card][:exp_year] = payment_method.year
         post[:card][:cvc] = payment_method.verification_value if payment_method.verification_value
+        add_billing_address(post, options)
 
         commit(:post, 'payment_methods', post, options)
       end
 
       def update_intent(money, intent_id, payment_method, options = {})
         post = {}
-        post[:amount] = money if money
+        add_amount(post, money, options)
 
         add_payment_method_token(post, payment_method, options)
         add_payment_method_types(post, options)
@@ -86,8 +90,13 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, intent_id, options = {})
         post = {}
-        post[:amount_to_capture] = money
-        add_connected_account(post, options)
+        currency = options[:currency] || currency(money)
+        post[:amount_to_capture] = localized_amount(money, currency)
+        if options[:transfer_amount]
+          post[:transfer_data] = {}
+          post[:transfer_data][:amount] = options[:transfer_amount]
+        end
+        post[:application_fee_amount] = options[:application_fee] if options[:application_fee]
         commit(:post, "payment_intents/#{intent_id}/capture", post, options)
       end
 
@@ -125,7 +134,7 @@ module ActiveMerchant #:nodoc:
           end
           commit(:post, "payment_methods/#{params[:payment_method]}/attach", { customer: customer_id }, options)
         else
-          super(payment, options)
+          super(payment_method, options)
         end
       end
 
@@ -165,6 +174,7 @@ module ActiveMerchant #:nodoc:
 
       def add_return_url(post, options)
         return unless options[:confirm]
+
         post[:confirm] = options[:confirm]
         post[:return_url] = options[:return_url] if options[:return_url]
         post
@@ -200,25 +210,52 @@ module ActiveMerchant #:nodoc:
         post
       end
 
+      def add_exemption(post, options = {})
+        return unless options[:confirm]
+
+        post[:payment_method_options] ||= {}
+        post[:payment_method_options][:card] ||= {}
+        post[:payment_method_options][:card][:moto] = true if options[:moto]
+      end
+
       def setup_future_usage(post, options = {})
-        post[:setup_future_usage] = options[:setup_future_usage] if %w( on_session off_session ).include?(options[:setup_future_usage])
+        post[:setup_future_usage] = options[:setup_future_usage] if %w(on_session off_session).include?(options[:setup_future_usage])
         post[:off_session] = options[:off_session] if options[:off_session] && options[:confirm] == true
         post
       end
 
       def add_connected_account(post, options = {})
-        return unless transfer_data = options[:transfer_data]
+        return unless options[:transfer_destination]
+
         post[:transfer_data] = {}
-        post[:transfer_data][:destination] = transfer_data[:destination] if transfer_data[:destination]
-        post[:transfer_data][:amount] = transfer_data[:amount] if transfer_data[:amount]
+        post[:transfer_data][:destination] = options[:transfer_destination]
+        post[:transfer_data][:amount] = options[:transfer_amount] if options[:transfer_amount]
         post[:on_behalf_of] = options[:on_behalf_of] if options[:on_behalf_of]
         post[:transfer_group] = options[:transfer_group] if options[:transfer_group]
         post[:application_fee_amount] = options[:application_fee] if options[:application_fee]
         post
       end
 
+      def add_billing_address(post, options = {})
+        return unless billing = options[:billing_address] || options[:address]
+
+        post[:billing_details] = {}
+        post[:billing_details][:address] = {}
+        post[:billing_details][:address][:city] = billing[:city] if billing[:city]
+        post[:billing_details][:address][:country] = billing[:country] if billing[:country]
+        post[:billing_details][:address][:line1] = billing[:address1] if billing[:address1]
+        post[:billing_details][:address][:line2] = billing[:address2] if billing[:address2]
+        post[:billing_details][:address][:postal_code] = billing[:zip] if billing[:zip]
+        post[:billing_details][:address][:state] = billing[:state] if billing[:state]
+        post[:billing_details][:email] = billing[:email] if billing[:email]
+        post[:billing_details][:name] = billing[:name] if billing[:name]
+        post[:billing_details][:phone] = billing[:phone] if billing[:phone]
+        post
+      end
+
       def add_shipping_address(post, options = {})
         return unless shipping = options[:shipping]
+
         post[:shipping] = {}
         post[:shipping][:address] = {}
         post[:shipping][:address][:line1] = shipping[:address][:line1]

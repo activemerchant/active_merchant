@@ -8,8 +8,7 @@ class RemoteBraintreeTest < Test::Unit::TestCase
     @credit_card = credit_card('4111111111111111', :brand => 'visa')
     @declined_amount = rand(99)
     @options = {  :order_id => generate_unique_id,
-                  :billing_address => address
-               }
+                  :billing_address => address}
   end
 
   def test_successful_purchase
@@ -20,12 +19,12 @@ class RemoteBraintreeTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_echeck
     check = ActiveMerchant::Billing::Check.new(
-              :name => 'Fredd Bloggs',
-              :routing_number => '111000025', # Valid ABA # - Bank of America, TX
-              :account_number => '999999999999',
-              :account_holder_type => 'personal',
-              :account_type => 'checking'
-            )
+      :name => 'Fredd Bloggs',
+      :routing_number => '111000025', # Valid ABA # - Bank of America, TX
+      :account_number => '999999999999',
+      :account_holder_type => 'personal',
+      :account_type => 'checking'
+    )
     response = @gateway.purchase(@amount, check, @options)
     assert_success response
     assert_equal 'This transaction has been approved', response.message
@@ -151,9 +150,9 @@ class RemoteBraintreeTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = InspireGateway.new(
-                :login => '',
-                :password => ''
-              )
+      :login => '',
+      :password => ''
+    )
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_equal 'Invalid Username', response.message
     assert_failure response

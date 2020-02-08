@@ -37,6 +37,8 @@ module ActiveMerchant #:nodoc:
         post[:card] = credit_card_hash(creditcard)
         post[:billingAddress] = billing_address_hash(options) if options[:billing_address]
         post[:deliveryAddress] = shipping_address_hash(options) if options[:shipping_address]
+        post[:shopperStatement] = options[:shopper_statement] if options[:shopper_statement]
+
         add_3ds(post, options)
         commit('authorise', post)
       end
@@ -127,25 +129,25 @@ module ActiveMerchant #:nodoc:
       # Smartpay may return AVS codes not covered by standard AVSResult codes.
       # Smartpay's descriptions noted below.
       AVS_MAPPING = {
-        '0'  => 'R',  # Unknown
-        '1'  => 'A',	# Address matches, postal code doesn't
-        '2'  => 'N',	# Neither postal code nor address match
-        '3'  => 'R',	# AVS unavailable
-        '4'  => 'E',	# AVS not supported for this card type
-        '5'  => 'U',	# No AVS data provided
-        '6'  => 'Z',	# Postal code matches, address doesn't match
-        '7'  => 'D',	# Both postal code and address match
-        '8'  => 'U',	# Address not checked, postal code unknown
-        '9'  => 'B',	# Address matches, postal code unknown
-        '10' => 'N',	# Address doesn't match, postal code unknown
-        '11' => 'U',	# Postal code not checked, address unknown
-        '12' => 'B',	# Address matches, postal code not checked
-        '13' => 'U',	# Address doesn't match, postal code not checked
-        '14' => 'P',	# Postal code matches, address unknown
-        '15' => 'P',	# Postal code matches, address not checked
-        '16' => 'N',	# Postal code doesn't match, address unknown
-        '17' => 'U',  # Postal code doesn't match, address not checked
-        '18' => 'I'	  # Neither postal code nor address were checked
+        '0'  => 'R', # Unknown
+        '1'  => 'A', # Address matches, postal code doesn't
+        '2'  => 'N', # Neither postal code nor address match
+        '3'  => 'R', # AVS unavailable
+        '4'  => 'E', # AVS not supported for this card type
+        '5'  => 'U', # No AVS data provided
+        '6'  => 'Z', # Postal code matches, address doesn't match
+        '7'  => 'D', # Both postal code and address match
+        '8'  => 'U', # Address not checked, postal code unknown
+        '9'  => 'B', # Address matches, postal code unknown
+        '10' => 'N', # Address doesn't match, postal code unknown
+        '11' => 'U', # Postal code not checked, address unknown
+        '12' => 'B', # Address matches, postal code not checked
+        '13' => 'U', # Address doesn't match, postal code not checked
+        '14' => 'P', # Postal code matches, address unknown
+        '15' => 'P', # Postal code matches, address not checked
+        '16' => 'N', # Postal code doesn't match, address unknown
+        '17' => 'U', # Postal code doesn't match, address not checked
+        '18' => 'I'	 # Neither postal code nor address were checked
       }
 
       def commit(action, post, account = 'ws', password = @options[:password])
@@ -182,6 +184,7 @@ module ActiveMerchant #:nodoc:
         authorization = [parameters[:originalReference], response['pspReference']].compact
 
         return nil if authorization.empty?
+
         return authorization.join('#')
       end
 
@@ -236,6 +239,7 @@ module ActiveMerchant #:nodoc:
         return response['resultCode'] if response.has_key?('resultCode') # Payment request
         return response['response'] if response['response'] # Modification request
         return response['result'] if response.has_key?('result') # Store/Recurring request
+
         'Failure' # Negative fallback in case of error
       end
 
@@ -350,30 +354,40 @@ module ActiveMerchant #:nodoc:
 
       def add_3ds(post, options)
         if three_ds_2_options = options[:three_ds_2]
-          if browser_info = three_ds_2_options[:browser_info]
-            post[:browserInfo] = {
-              acceptHeader: browser_info[:accept_header],
-              colorDepth: browser_info[:depth],
-              javaEnabled: browser_info[:java],
-              language: browser_info[:language],
-              screenHeight: browser_info[:height],
-              screenWidth: browser_info[:width],
-              timeZoneOffset: browser_info[:timezone],
-              userAgent: browser_info[:user_agent]
-            }
+          device_channel = three_ds_2_options[:channel]
+          if device_channel == 'app'
+            post[:threeDS2RequestData] = { deviceChannel: device_channel }
+          else
+            add_browser_info(three_ds_2_options[:browser_info], post)
+            post[:threeDS2RequestData] = { deviceChannel: device_channel, notificationURL: three_ds_2_options[:notification_url] }
+          end
 
-            if device_channel = three_ds_2_options[:channel]
-              post[:threeDS2RequestData] = {
-                deviceChannel: device_channel,
-                notificationURL: three_ds_2_options[:notification_url]
-              }
-            end
+          if options.has_key?(:execute_threed)
+            post[:additionalData] ||= {}
+            post[:additionalData][:executeThreeD] = options[:execute_threed]
+            post[:additionalData][:scaExemption] = options[:sca_exemption] if options[:sca_exemption]
           end
         else
           return unless options[:execute_threed] || options[:threed_dynamic]
+
           post[:browserInfo] = { userAgent: options[:user_agent], acceptHeader: options[:accept_header] }
           post[:additionalData] = { executeThreeD: 'true' } if options[:execute_threed]
         end
+      end
+
+      def add_browser_info(browser_info, post)
+        return unless browser_info
+
+        post[:browserInfo] = {
+          acceptHeader: browser_info[:accept_header],
+          colorDepth: browser_info[:depth],
+          javaEnabled: browser_info[:java],
+          language: browser_info[:language],
+          screenHeight: browser_info[:height],
+          screenWidth: browser_info[:width],
+          timeZoneOffset: browser_info[:timezone],
+          userAgent: browser_info[:user_agent]
+        }
       end
     end
   end

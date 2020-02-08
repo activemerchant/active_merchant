@@ -240,6 +240,91 @@ class DecidirTest < Test::Unit::TestCase
     assert_equal @gateway_for_purchase.scrub(pre_scrubbed), post_scrubbed
   end
 
+  def test_payment_method_id_with_visa
+    post = {}
+    @gateway_for_purchase.send(:add_auth_purchase_params, post, @amount, @credit_card, @options)
+    assert_equal 1, post[:payment_method_id]
+  end
+
+  def test_payment_method_id_with_mastercard
+    post = {}
+    @gateway_for_purchase.send(:add_auth_purchase_params, post, @amount, credit_card('5299910010000015'), @options)
+    assert_equal 104, post[:payment_method_id]
+  end
+
+  def test_payment_method_id_with_amex
+    post = {}
+    @gateway_for_purchase.send(:add_auth_purchase_params, post, @amount, credit_card('373953192351004'), @options)
+    assert_equal 65, post[:payment_method_id]
+  end
+
+  def test_payment_method_id_with_diners
+    post = {}
+    @gateway_for_purchase.send(:add_auth_purchase_params, post, @amount, credit_card('36463664750005'), @options)
+    assert_equal 8, post[:payment_method_id]
+  end
+
+  def test_payment_method_id_with_cabal
+    post = {}
+    credit_card = credit_card('5896570000000008')
+    @gateway_for_purchase.send(:add_auth_purchase_params, post, @amount, credit_card, @options)
+    assert_equal 63, post[:payment_method_id]
+  end
+
+  def test_payment_method_id_with_naranja
+    post = {}
+    credit_card = credit_card('5895627823453005')
+    @gateway_for_purchase.send(:add_auth_purchase_params, post, @amount, credit_card, @options)
+    assert_equal 24, post[:payment_method_id]
+  end
+
+  def test_payment_method_id_with_visa_debit
+    visa_debit_card = credit_card('4517721004856075')
+    debit_options = @options.merge(debit: true)
+
+    stub_comms(@gateway_for_purchase, :ssl_request) do
+      @gateway_for_purchase.purchase(@amount, visa_debit_card, debit_options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/"payment_method_id":31/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_payment_method_id_with_mastercard_debit
+    # currently lacking a valid MasterCard debit card number, so using the MasterCard credit card number
+    mastercard = credit_card('5299910010000015')
+    debit_options = @options.merge(debit: true)
+
+    stub_comms(@gateway_for_purchase, :ssl_request) do
+      @gateway_for_purchase.purchase(@amount, mastercard, debit_options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/"payment_method_id":105/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_payment_method_id_with_maestro_debit
+    # currently lacking a valid Maestro debit card number, so using a generated test card number
+    maestro_card = credit_card('6759649826438453')
+    debit_options = @options.merge(debit: true)
+
+    stub_comms(@gateway_for_purchase, :ssl_request) do
+      @gateway_for_purchase.purchase(@amount, maestro_card, debit_options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/"payment_method_id":106/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_payment_method_id_with_cabal_debit
+    # currently lacking a valid Cabal debit card number, so using the Cabal credit card number
+    cabal_card = credit_card('5896570000000008')
+    debit_options = @options.merge(debit: true)
+
+    stub_comms(@gateway_for_purchase, :ssl_request) do
+      @gateway_for_purchase.purchase(@amount, cabal_card, debit_options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/"payment_method_id":108/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   private
 
   def pre_scrubbed

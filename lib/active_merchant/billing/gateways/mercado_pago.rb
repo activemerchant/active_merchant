@@ -96,6 +96,8 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, payment, options)
         add_address(post, options)
         add_processing_mode(post, options)
+        add_net_amount(post, options)
+        add_taxes(post, options)
         post[:binary_mode] = (options[:binary_mode].nil? ? true : options[:binary_mode])
         post
       end
@@ -108,6 +110,7 @@ module ActiveMerchant #:nodoc:
 
       def add_processing_mode(post, options)
         return unless options[:processing_mode]
+
         post[:processing_mode] = options[:processing_mode]
         post[:merchant_account_id] = options[:merchant_account_id] if options[:merchant_account_id]
         add_merchant_services(post, options)
@@ -115,6 +118,7 @@ module ActiveMerchant #:nodoc:
 
       def add_merchant_services(post, options)
         return unless options[:fraud_scoring] || options[:fraud_manual_review]
+
         merchant_services = {}
         merchant_services[:fraud_scoring] = options[:fraud_scoring] if options[:fraud_scoring]
         merchant_services[:fraud_manual_review] = options[:fraud_manual_review] if options[:fraud_manual_review]
@@ -192,6 +196,47 @@ module ActiveMerchant #:nodoc:
         post[:token] = options[:card_token]
         post[:issuer_id] = options[:issuer_id] if options[:issuer_id]
         post[:payment_method_id] = options[:payment_method_id] if options[:payment_method_id]
+      end
+
+      def add_net_amount(post, options)
+        post[:net_amount] = Float(options[:net_amount]) if options[:net_amount]
+      end
+
+      def add_taxes(post, options)
+        return unless (tax_object = options[:taxes])
+
+        if tax_object.is_a?(Array)
+          post[:taxes] = process_taxes_array(tax_object)
+        elsif tax_object.is_a?(Hash)
+          post[:taxes] = process_taxes_hash(tax_object)
+        else
+          raise taxes_error
+        end
+      end
+
+      def process_taxes_hash(tax_object)
+        [sanitize_taxes_hash(tax_object)]
+      end
+
+      def process_taxes_array(taxes_array)
+        taxes_array.map do |tax_object|
+          raise taxes_error unless tax_object.is_a?(Hash)
+
+          sanitize_taxes_hash(tax_object)
+        end
+      end
+
+      def sanitize_taxes_hash(tax_object)
+        tax_value = tax_object['value'] || tax_object[:value]
+        tax_type = tax_object['type'] || tax_object[:type]
+
+        raise taxes_error if tax_value.nil? || tax_type.nil?
+
+        { value: Float(tax_value), type: tax_type }
+      end
+
+      def taxes_error
+        ArgumentError.new("Taxes should be a single object or array of objects with the shape: { value: 500, type: 'IVA' }")
       end
 
       def parse(body)

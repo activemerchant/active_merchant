@@ -43,9 +43,9 @@ class RemoteSecurePayTechTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = SecurePayTechGateway.new(
-                :login => 'foo',
-                :password => 'bar'
-              )
+      :login => 'foo',
+      :password => 'bar'
+    )
     assert response = gateway.purchase(@accepted_amount, @credit_card, @options)
     assert_equal 'Bad or malformed request', response.message
     assert_failure response

@@ -21,7 +21,8 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
       :amex => '371449635398431',
       :ds => '6011000995500000',
       :diners => '36438999960016',
-      :jcb => '3566002020140006'}
+      :jcb => '3566002020140006'
+    }
 
     @level_2_options = {
       tax_indicator: '1',
@@ -59,15 +60,14 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_soft_descriptor_hash
-    assert response = @gateway.purchase(
-      @amount, @credit_card, @options.merge(
-        soft_descriptors: {
-          merchant_name: 'Merch',
-          product_description: 'Description',
-          merchant_email: 'email@example',
-        }
-      )
+    options = @options.merge(
+      soft_descriptors: {
+        merchant_name: 'Merch',
+        product_description: 'Description',
+        merchant_email: 'email@example'
+      }
     )
+    assert response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert_equal 'Approved', response.message
   end
@@ -199,12 +199,13 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
         verification_value: fixture[:card][:verification_value],
         brand: fixture[:card][:brand]
       })
-      assert response = @gateway.authorize(100, cc, @options.merge(
+      options = @options.merge(
         order_id: '2',
         currency: 'USD',
         three_d_secure: fixture[:three_d_secure],
         address: fixture[:address]
-      ))
+      )
+      assert response = @gateway.authorize(100, cc, options)
 
       assert_success response
       assert_equal 'Approved', response.message
@@ -216,12 +217,13 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
         verification_value: fixture[:card][:verification_value],
         brand: fixture[:card][:brand]
       })
-      assert response = @gateway.purchase(100, cc, @options.merge(
+      options = @options.merge(
         order_id: '2',
         currency: 'USD',
         three_d_secure: fixture[:three_d_secure],
         address: fixture[:address]
-      ))
+      )
+      assert response = @gateway.purchase(100, cc, options)
 
       assert_success response
       assert_equal 'Approved', response.message

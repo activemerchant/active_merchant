@@ -31,7 +31,7 @@ module ActiveMerchant
 
       self.money_format = :cents
       self.default_currency = 'EUR'
-      self.supported_cardtypes = [ :visa, :master, :american_express, :diners_club ]
+      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
       self.supported_countries = %w(IE GB FR BE NL LU IT US CA ES)
       self.homepage_url = 'http://www.realexpayments.com/'
       self.display_name = 'Realex'
@@ -256,9 +256,7 @@ module ActiveMerchant
 
       def add_merchant_details(xml, options)
         xml.tag! 'merchantid', @options[:login]
-        if options[:account] || @options[:account]
-          xml.tag! 'account', (options[:account] || @options[:account])
-        end
+        xml.tag! 'account', (options[:account] || @options[:account]) if options[:account] || @options[:account]
       end
 
       def add_transaction_identifiers(xml, authorization, options)
@@ -270,6 +268,7 @@ module ActiveMerchant
 
       def add_comments(xml, options)
         return unless options[:description]
+
         xml.tag! 'comments' do
           xml.tag! 'comment', options[:description], 'id' => 1
         end
@@ -307,6 +306,7 @@ module ActiveMerchant
 
       def add_three_d_secure(xml, options)
         return unless three_d_secure = options[:three_d_secure]
+
         version = three_d_secure.fetch(:version, '')
         xml.tag! 'mpi' do
           if version =~ /^2/

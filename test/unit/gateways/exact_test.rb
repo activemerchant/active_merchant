@@ -49,8 +49,8 @@ class ExactTest < Test::Unit::TestCase
   end
 
   def test_expdate
-    assert_equal('%02d%s' % [ @credit_card.month,
-                              @credit_card.year.to_s[-2..-1] ],
+    assert_equal('%02d%s' % [@credit_card.month,
+                             @credit_card.year.to_s[-2..-1]],
       @gateway.send(:expdate, @credit_card))
   end
 

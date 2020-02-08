@@ -9,6 +9,7 @@ class CreditCardMethodsTest < Test::Unit::TestCase
 
   def maestro_card_numbers
     %w[
+      5612590000000000 5817500000000000 5818000000000000
       6390000000000000 6390700000000000 6390990000000000
       6761999999999999 6763000000000000 6799999999999999
     ]
@@ -17,7 +18,8 @@ class CreditCardMethodsTest < Test::Unit::TestCase
   def non_maestro_card_numbers
     %w[
       4999999999999999 5100000000000000 5599999999999999
-      5900000000000000 5999999999999999 7000000000000000
+      5612709999999999 5817520000000000 5818019999999999
+      5912600000000000 6000009999999999 7000000000000000
     ]
   end
 
@@ -135,6 +137,7 @@ class CreditCardMethodsTest < Test::Unit::TestCase
   def test_should_detect_elo_card
     assert_equal 'elo', CreditCard.brand?('5090510000000000')
     assert_equal 'elo', CreditCard.brand?('5067530000000000')
+    assert_equal 'elo', CreditCard.brand?('6277800000000000')
     assert_equal 'elo', CreditCard.brand?('6509550000000000')
   end
 
@@ -167,6 +170,23 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_equal 'cabal', CreditCard.brand?('6035224400000000')
   end
 
+  # UnionPay BINs beginning with 62 overlap with Discover's range of valid card numbers.
+  # We intentionally misidentify these cards as Discover, which works because transactions with
+  # UnionPay cards will run on Discover rails.
+  def test_should_detect_unionpay_cards_beginning_with_62_as_discover
+    assert_equal 'discover', CreditCard.brand?('6212345678901265')
+    assert_equal 'discover', CreditCard.brand?('6221260000000000')
+    assert_equal 'discover', CreditCard.brand?('6250941006528599')
+    assert_equal 'discover', CreditCard.brand?('6212345678900000003')
+  end
+
+  def test_should_detect_unionpay_card
+    assert_equal 'unionpay', CreditCard.brand?('8100000000000000')
+    assert_equal 'unionpay', CreditCard.brand?('814400000000000000')
+    assert_equal 'unionpay', CreditCard.brand?('8171999927660000')
+    assert_equal 'unionpay', CreditCard.brand?('8171999900000000021')
+  end
+
   def test_should_detect_when_an_argument_brand_does_not_match_calculated_brand
     assert CreditCard.matching_brand?('4175001000000000', 'visa')
     assert_false CreditCard.matching_brand?('4175001000000000', 'master')
@@ -192,7 +212,6 @@ class CreditCardMethodsTest < Test::Unit::TestCase
   def test_matching_discover_card
     assert_equal 'discover', CreditCard.brand?('6011000000000000')
     assert_equal 'discover', CreditCard.brand?('6500000000000000')
-    assert_equal 'discover', CreditCard.brand?('6221260000000000')
     assert_equal 'discover', CreditCard.brand?('6450000000000000')
 
     assert_not_equal 'discover', CreditCard.brand?('6010000000000000')

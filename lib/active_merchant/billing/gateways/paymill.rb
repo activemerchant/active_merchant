@@ -86,7 +86,7 @@ module ActiveMerchant #:nodoc:
         post['account.expiry.year'] = sprintf('%.4i', credit_card.year)
         post['account.verification'] = credit_card.verification_value
         post['account.email'] = (options[:email] || nil)
-        post['presentation.amount3D'] =  (options[:money] || nil)
+        post['presentation.amount3D'] = (options[:money] || nil)
         post['presentation.currency3D'] = (options[:currency] || currency(options[:money]))
       end
 
@@ -357,9 +357,7 @@ module ActiveMerchant #:nodoc:
 
         def handle_response_correct_parsing
           @message = parsed['transaction']['processing']['return']['message']
-          if @succeeded = is_ack?
-            @options[:authorization] = parsed['transaction']['identification']['uniqueId']
-          end
+          @options[:authorization] = parsed['transaction']['identification']['uniqueId'] if @succeeded = is_ack?
         end
 
         def is_ack?

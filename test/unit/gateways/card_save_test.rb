@@ -273,5 +273,4 @@ class CardSaveTest < Test::Unit::TestCase
       </soap:Body>
     </soap:Envelope>)
   end
-
 end

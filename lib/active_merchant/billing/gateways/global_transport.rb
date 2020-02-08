@@ -188,7 +188,6 @@ module ActiveMerchant #:nodoc:
           ExtData: ''
         }
       end
-
     end
   end
 end

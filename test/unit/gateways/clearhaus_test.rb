@@ -249,7 +249,7 @@ class ClearhausTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_signing_request_with_invalid_key
-    gateway = ClearhausGateway.new(api_key: 'test_key',  signing_key: @test_signing_key, private_key: 'foo')
+    gateway = ClearhausGateway.new(api_key: 'test_key', signing_key: @test_signing_key, private_key: 'foo')
 
     # stub actual network access, but this shouldn't be reached
     gateway.stubs(:ssl_post).returns(nil)
@@ -264,6 +264,14 @@ class ClearhausTest < Test::Unit::TestCase
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
+  def test_nonfractional_currency_handling
+    stub_comms do
+      @gateway.authorize(200, @credit_card, @options.merge(currency: 'JPY'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/amount=2&card/, data)
+    end.respond_with(successful_authorize_response)
   end
 
   private
@@ -470,5 +478,4 @@ Conn close
   def failed_ch_response
     { 'status' => { 'code' => 40000, 'message' => 'General input error' }}.to_json
   end
-
 end

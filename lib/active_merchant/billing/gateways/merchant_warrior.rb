@@ -30,6 +30,7 @@ module ActiveMerchant #:nodoc:
         add_order_id(post, options)
         add_address(post, options)
         add_payment_method(post, payment_method)
+        add_recurring_flag(post, options)
         commit('processAuth', post)
       end
 
@@ -39,6 +40,7 @@ module ActiveMerchant #:nodoc:
         add_order_id(post, options)
         add_address(post, options)
         add_payment_method(post, payment_method)
+        add_recurring_flag(post, options)
         commit('processCard', post)
       end
 
@@ -56,6 +58,13 @@ module ActiveMerchant #:nodoc:
         add_transaction(post, identification)
         post['refundAmount'] = amount(money)
         commit('refundCard', post)
+      end
+
+      def void(money, identification, options = {})
+        post = {}
+        add_amount(post, money, options)
+        add_transaction(post, identification)
+        commit('processVoid', post)
       end
 
       def store(creditcard, options = {})
@@ -87,7 +96,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(post, options)
-        return unless(address = (options[:billing_address] || options[:address]))
+        return unless (address = (options[:billing_address] || options[:address]))
 
         post['customerName'] = scrub_name(address[:name])
         post['customerCountry'] = address[:country]
@@ -133,6 +142,12 @@ module ActiveMerchant #:nodoc:
         post['transactionAmount'] = amount(money)
         post['transactionCurrency'] = currency
         post['hash'] = verification_hash(amount(money), currency)
+      end
+
+      def add_recurring_flag(post, options)
+        return if options[:recurring_flag].nil?
+
+        post['recurringFlag'] = options[:recurring_flag]
       end
 
       def verification_hash(money, currency)
@@ -181,9 +196,7 @@ module ActiveMerchant #:nodoc:
       def add_auth(action, post)
         post['merchantUUID'] = @options[:merchant_uuid]
         post['apiKey'] = @options[:api_key]
-        unless token?(post)
-          post['method'] = action
-        end
+        post['method'] = action unless token?(post)
       end
 
       def url_for(action, post)

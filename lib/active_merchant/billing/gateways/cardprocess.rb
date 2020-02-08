@@ -123,6 +123,7 @@ module ActiveMerchant #:nodoc:
 
       def add_invoice(post, money, options)
         return if money.nil?
+
         post[:amount] = amount(money)
         post[:currency] = (options[:currency] || currency(money))
         post[:merchantInvoiceId] = options[:merchant_invoice_id] if options[:merchant_invoice_id]
@@ -132,6 +133,7 @@ module ActiveMerchant #:nodoc:
 
       def add_payment(post, payment)
         return if payment.is_a?(String)
+
         post[:paymentBrand] = payment.brand.upcase if payment.brand
         post[:card] ||= {}
         post[:card][:number] = payment.number

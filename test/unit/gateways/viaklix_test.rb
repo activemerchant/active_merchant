@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class ViaklixTest < Test::Unit::TestCase
-
   def setup
     @gateway = ViaklixGateway.new(
       :login => 'LOGIN',

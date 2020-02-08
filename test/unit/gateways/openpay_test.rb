@@ -384,7 +384,7 @@ class OpenpayTest < Test::Unit::TestCase
     "order_id": null,
     "error_code": null
 }
-      RESPONSE
+    RESPONSE
   end
 
   def successful_purchase_response(status = 'completed')

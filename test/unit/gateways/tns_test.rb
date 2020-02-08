@@ -189,6 +189,22 @@ class TnsTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_europe_region_url
+    @gateway = TnsGateway.new(
+      userid: 'userid',
+      password: 'password',
+      region: 'europe'
+    )
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/secure.eu.tnspayments.com/, endpoint)
+    end.respond_with(successful_capture_response)
+
+    assert_success response
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed

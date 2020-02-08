@@ -3,9 +3,9 @@ require 'test_helper'
 class PayexTest < Test::Unit::TestCase
   def setup
     @gateway = PayexGateway.new(
-                 :account => 'account',
-                 :encryption_key => 'encryption_key'
-               )
+      :account => 'account',
+      :encryption_key => 'encryption_key'
+    )
 
     @credit_card = credit_card
     @amount = 1000

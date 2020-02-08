@@ -922,5 +922,4 @@ class LitleTest < Test::Unit::TestCase
       Conn close
     post_scrub
   end
-
 end

@@ -89,7 +89,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, options)
-        if(billing_address = (options[:billing_address] || options[:address]))
+        if (billing_address = (options[:billing_address] || options[:address]))
           post[:Email] = billing_address[:email]
         end
       end
@@ -107,7 +107,7 @@ module ActiveMerchant #:nodoc:
         begin
           raw = parse(ssl_post(url, data, headers(action)), action)
         rescue ActiveMerchant::ResponseError => e
-          if(e.response.code == '500' && e.response.body.start_with?('<?xml'))
+          if e.response.code == '500' && e.response.body.start_with?('<?xml')
             raw = parse(e.response.body, action)
           else
             raise
