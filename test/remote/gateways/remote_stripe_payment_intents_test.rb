@@ -291,34 +291,6 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert_equal 2000, capture_response.params['amount']
   end
 
-  def test_cross_border_classification_export
-    omit('"cross_border_classification" is only allowed to be sent for certain accounts (not the account we use for testing).')
-    # Currently get back "Received unknown parameter: cross_border_classification"
-    # if I send that. I've contacted our support contact to see if they can allow
-    # us to send that value across (might be an Indian Stripe thing only).
-    options = {
-      cross_border_classification: 'export',
-      description: 'Exported service',
-      shipping: {
-        name: 'Jane Doe',
-        address: {
-          line1: '1234 Any Street',
-          postal_code: '27703',
-          city: 'Durham',
-          state: 'NC',
-          country: 'US'
-        }
-      }
-    }
-
-    assert create_response = @gateway.create_intent(@amount, @visa_payment_method, options)
-    # intent_id = create_response.params['id']
-
-    assert_success create_response # This line currently fails
-    # Once our test account is able to send cross_border_classification,
-    # assert that this was marked as an export.
-  end
-
   def test_auth_and_capture_with_destination_account_and_fee
     options = {
       currency: 'GBP',
