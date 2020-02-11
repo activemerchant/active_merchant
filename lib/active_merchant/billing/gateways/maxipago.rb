@@ -67,6 +67,11 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def credit(money, identification, options = {})
+        ActiveMerchant.deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, identification, options)
+      end
+
       def verify(creditcard, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(1.00, creditcard, options) }
