@@ -74,7 +74,7 @@ class MerchantWarriorTest < Test::Unit::TestCase
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_refund_response)
 
-    assert response = @gateway.void(@success_amount, @transaction_id, @options)
+    assert response = @gateway.void(@transaction_id, amount: @success_amount)
     assert_success response
     assert_equal 'Transaction approved', response.message
     assert response.test?
@@ -84,7 +84,7 @@ class MerchantWarriorTest < Test::Unit::TestCase
   def test_failed_void
     @gateway.expects(:ssl_post).returns(failed_refund_response)
 
-    assert response = @gateway.void(@success_amount, @transaction_id)
+    assert response = @gateway.void(@transaction_id, amount: @success_amount)
     assert_failure response
     assert_equal 'MW -016:transactionID has already been reversed', response.message
     assert response.test?

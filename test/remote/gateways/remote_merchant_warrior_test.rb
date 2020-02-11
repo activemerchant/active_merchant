@@ -84,13 +84,13 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
     assert purchase = @gateway.purchase(@success_amount, @credit_card, @options)
     assert_success purchase
 
-    assert void = @gateway.void(@success_amount, purchase.authorization)
+    assert void = @gateway.void(purchase.authorization, amount: @success_amount)
     assert_success void
     assert_equal 'Transaction approved', void.message
   end
 
   def test_failed_void
-    assert void = @gateway.void(@success_amount, 'invalid-transaction-id')
+    assert void = @gateway.void('invalid-transaction-id', amount: @success_amount)
     assert_match %r{'transactionID' not found}, void.message
     assert_failure void
   end

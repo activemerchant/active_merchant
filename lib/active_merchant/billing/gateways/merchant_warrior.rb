@@ -60,9 +60,12 @@ module ActiveMerchant #:nodoc:
         commit('refundCard', post)
       end
 
-      def void(money, identification, options = {})
+      def void(identification, options = {})
         post = {}
-        add_amount(post, money, options)
+        # The amount parameter is required for void transactions
+        # on the Merchant Warrior gateway.
+        post['transactionAmount'] = options[:amount]
+        post['hash'] = void_verification_hash(identification)
         add_transaction(post, identification)
         commit('processVoid', post)
       end
@@ -157,6 +160,16 @@ module ActiveMerchant #:nodoc:
             @options[:merchant_uuid].to_s +
             money.to_s +
             currency
+          ).downcase
+        )
+      end
+
+      def void_verification_hash(transaction_id)
+        Digest::MD5.hexdigest(
+          (
+            @options[:api_passphrase].to_s +
+            @options[:merchant_uuid].to_s +
+            transaction_id
           ).downcase
         )
       end
