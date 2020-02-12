@@ -9,6 +9,7 @@
 * Worldpay: Add `riskData` GSF [fatcatt316] #3514
 * Paypal: Fix OrderTotal elements in `add_payment_details` [chinhle23] #3517
 * EBANX: Add metadata information in post [miguelxpn] #3522
+* HPS: support eCheck [therufs] #3500
 
 == Version 1.104.0 (Jan 29, 2020)
 * Adyen: add `recurring_contract_type` GSF [therufs] #3460
