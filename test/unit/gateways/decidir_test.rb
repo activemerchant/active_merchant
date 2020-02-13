@@ -35,16 +35,26 @@ class DecidirTest < Test::Unit::TestCase
       card_holder_birthday: '01011980',
       card_holder_identification_type: 'dni',
       card_holder_identification_number: '123456',
-      installments: 12
+      establishment_name: 'Heavenly Buffaloes',
+      fraud_detection: {
+        send_to_cs: false,
+        channel: 'Web',
+        dispatch_method: 'Store Pick Up'
+      },
+      installments: 12,
+      site_id: '99999999'
     }
 
     response = stub_comms(@gateway_for_purchase, :ssl_request) do
       @gateway_for_purchase.purchase(@amount, @credit_card, @options.merge(options))
     end.check_request do |method, endpoint, data, headers|
-      assert data =~ /card_holder_door_number/, '1234'
-      assert data =~ /card_holder_birthday/, '01011980'
-      assert data =~ /type/, 'dni'
-      assert data =~ /number/, '123456'
+      assert data =~ /"card_holder_door_number":1234/
+      assert data =~ /"card_holder_birthday":"01011980"/
+      assert data =~ /"type":"dni"/
+      assert data =~ /"number":"123456"/
+      assert data =~ /"establishment_name":"Heavenly Buffaloes"/
+      assert data =~ /"site_id":"99999999"/
+      assert data =~ /"fraud_detection":{"send_to_cs":false,"channel":"Web","dispatch_method":"Store Pick Up"}/
     end.respond_with(successful_purchase_response)
 
     assert_equal 7719132, response.authorization
@@ -346,7 +356,7 @@ class DecidirTest < Test::Unit::TestCase
       -> "Via: kong/0.8.3\r\n"
       -> "\r\n"
       reading 659 bytes...
-      -> "{\"id\":7721017,\"site_transaction_id\":\"d5972b68-87d5-46fd-8d3d-b2512902b9af\",\"payment_method_id\":1,\"card_brand\":\"Visa\",\"amount\":100,\"currency\":\"ars\",\"status\":\"approved\",\"status_details\":{\"ticket\":\"7297\",\"card_authorization_code\":\"153842\",\"address_validation_code\":\"VTE0011\",\"error\":null},\"date\":\"2019-06-24T15:38Z\",\"customer\":null,\"bin\":\"450799\",\"installments\":1,\"first_installment_expiration_date\":null,\"payment_type\":\"single\",\"sub_payments\":[],\"site_id\":\"99999999\",\"fraud_detection\":null,\"aggregate_data\":null,\"establishment_name\":null,\"spv\":null,\"confirmed\":null,\"pan\":\"345425f15b2c7c4584e0044357b6394d7e\",\"customer_token\":null,\"card_data\":\"/tokens/7721017\"}"
+      -> "{\"id\":7721017,\"site_transaction_id\":\"d5972b68-87d5-46fd-8d3d-b2512902b9af\",\"payment_method_id\":1,\"card_brand\":\"Visa\",\"amount\":100,\"currency\":\"ars\",\"status\":\"approved\",\"status_details\":{\"ticket\":\"7297\",\"card_authorization_code\":\"153842\",\"address_validation_code\":\"VTE0011\",\"error\":null},\"date\":\"2019-06-24T15:38Z\",\"customer\":null,\"bin\":\"450799\",\"installments\":1,\"first_installment_expiration_date\":null,\"payment_type\":\"single\",\"sub_payments\":[],\"site_id\":\"99999999\",\"fraud_detection\":null,\"aggregate_data\":null,\"establishment_name\":\"Heavenly Buffaloes\",\"spv\":null,\"confirmed\":null,\"pan\":\"345425f15b2c7c4584e0044357b6394d7e\",\"customer_token\":null,\"card_data\":\"/tokens/7721017\"}"
       read 659 bytes
       Conn close
     )
@@ -371,7 +381,7 @@ class DecidirTest < Test::Unit::TestCase
       -> "Via: kong/0.8.3\r\n"
       -> "\r\n"
       reading 659 bytes...
-      -> "{\"id\":7721017,\"site_transaction_id\":\"d5972b68-87d5-46fd-8d3d-b2512902b9af\",\"payment_method_id\":1,\"card_brand\":\"Visa\",\"amount\":100,\"currency\":\"ars\",\"status\":\"approved\",\"status_details\":{\"ticket\":\"7297\",\"card_authorization_code\":\"153842\",\"address_validation_code\":\"VTE0011\",\"error\":null},\"date\":\"2019-06-24T15:38Z\",\"customer\":null,\"bin\":\"450799\",\"installments\":1,\"first_installment_expiration_date\":null,\"payment_type\":\"single\",\"sub_payments\":[],\"site_id\":\"99999999\",\"fraud_detection\":null,\"aggregate_data\":null,\"establishment_name\":null,\"spv\":null,\"confirmed\":null,\"pan\":\"345425f15b2c7c4584e0044357b6394d7e\",\"customer_token\":null,\"card_data\":\"/tokens/7721017\"}"
+      -> "{\"id\":7721017,\"site_transaction_id\":\"d5972b68-87d5-46fd-8d3d-b2512902b9af\",\"payment_method_id\":1,\"card_brand\":\"Visa\",\"amount\":100,\"currency\":\"ars\",\"status\":\"approved\",\"status_details\":{\"ticket\":\"7297\",\"card_authorization_code\":\"153842\",\"address_validation_code\":\"VTE0011\",\"error\":null},\"date\":\"2019-06-24T15:38Z\",\"customer\":null,\"bin\":\"450799\",\"installments\":1,\"first_installment_expiration_date\":null,\"payment_type\":\"single\",\"sub_payments\":[],\"site_id\":\"99999999\",\"fraud_detection\":null,\"aggregate_data\":null,\"establishment_name\":\"Heavenly Buffaloes\",\"spv\":null,\"confirmed\":null,\"pan\":\"345425f15b2c7c4584e0044357b6394d7e\",\"customer_token\":null,\"card_data\":\"/tokens/7721017\"}"
       read 659 bytes
       Conn close
     )
@@ -379,7 +389,7 @@ class DecidirTest < Test::Unit::TestCase
 
   def successful_purchase_response
     %(
-      {"id":7719132,"site_transaction_id":"ebcb2db7-7aab-4f33-a7d1-6617a5749fce","payment_method_id":1,"card_brand":"Visa","amount":100,"currency":"ars","status":"approved","status_details":{"ticket":"7156","card_authorization_code":"174838","address_validation_code":"VTE0011","error":null},"date":"2019-06-21T17:48Z","customer":null,"bin":"450799","installments":1,"first_installment_expiration_date":null,"payment_type":"single","sub_payments":[],"site_id":"99999999","fraud_detection":null,"aggregate_data":null,"establishment_name":null,"spv":null,"confirmed":null,"pan":"345425f15b2c7c4584e0044357b6394d7e","customer_token":null,"card_data":"/tokens/7719132"}
+      {"id":7719132,"site_transaction_id":"ebcb2db7-7aab-4f33-a7d1-6617a5749fce","payment_method_id":1,"card_brand":"Visa","amount":100,"currency":"ars","status":"approved","status_details":{"ticket":"7156","card_authorization_code":"174838","address_validation_code":"VTE0011","error":null},"date":"2019-06-21T17:48Z","customer":null,"bin":"450799","installments":1,"establishment_name":"Heavenly Buffaloes","first_installment_expiration_date":null,"payment_type":"single","sub_payments":[],"site_id":"99999999","fraud_detection":null,"aggregate_data":null,"establishment_name":null,"spv":null,"confirmed":null,"pan":"345425f15b2c7c4584e0044357b6394d7e","customer_token":null,"card_data":"/tokens/7719132"}
     )
   end
 

@@ -73,12 +73,21 @@ class RemoteDecidirTest < Test::Unit::TestCase
       card_holder_birthday: '01011980',
       card_holder_identification_type: 'dni',
       card_holder_identification_number: '123456',
-      installments: '12'
+      establishment_name: 'Heavenly Buffaloes',
+      fraud_detection: {
+        send_to_cs: false,
+        channel: 'Web',
+        dispatch_method: 'Store Pick Up'
+      },
+      installments: '12',
+      site_id: '99999999'
     }
 
     response = @gateway_for_purchase.purchase(@amount, credit_card('4509790112684851'), @options.merge(options))
     assert_success response
     assert_equal 'approved', response.message
+    assert_equal 'Heavenly Buffaloes', response.params['establishment_name']
+    assert_equal '99999999', response.params['site_id']
     assert response.authorization
   end
 

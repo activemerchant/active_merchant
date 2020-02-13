@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['AR']
       self.money_format = :cents
       self.default_currency = 'ARS'
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :naranja, :cabal]
+      self.supported_cardtypes = %i[visa master american_express diners_club naranja cabal]
 
       self.homepage_url = 'http://www.decidir.com'
       self.display_name = 'Decidir'
@@ -113,6 +113,9 @@ module ActiveMerchant #:nodoc:
         post[:installments] = options[:installments] ? options[:installments].to_i : 1
         post[:description] = options[:description] if options[:description]
         post[:email] = options[:email] if options[:email]
+        post[:establishment_name] = options[:establishment_name] if options[:establishment_name]
+        post[:fraud_detection] = add_fraud_detection(options[:fraud_detection]) if options[:fraud_detection].present?
+        post[:site_id] = options[:site_id] if options[:site_id]
         post[:sub_payments] = []
 
         add_invoice(post, money, options)
@@ -174,6 +177,19 @@ module ActiveMerchant #:nodoc:
         card_data[:card_holder_identification][:number] = options[:card_holder_identification_number] if options[:card_holder_identification_number]
 
         post[:card_data] = card_data
+      end
+
+      def add_fraud_detection(options = {})
+        {}.tap do |hsh|
+          hsh[:send_to_cs] = options[:send_to_cs] if valid_fraud_detection_option?(options[:send_to_cs]) # true/false
+          hsh[:channel] = options[:channel] if valid_fraud_detection_option?(options[:channel])
+          hsh[:dispatch_method] = options[:dispatch_method] if valid_fraud_detection_option?(options[:dispatch_method])
+        end
+      end
+
+      # Avoid sending fields with empty or null when not populated.
+      def valid_fraud_detection_option?(val)
+        !val.nil? && val != ''
       end
 
       def headers(options = {})
