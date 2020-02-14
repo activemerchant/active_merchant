@@ -48,27 +48,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def store(credit_card, options={})
-        # Paymill returns a token that is only good for one use
-        # The recommended approach for recurring is to convert
-        # the token into a Payment, which can be used multiple times.
-        if options[:convert_token]
-          MultiResponse.run do |r|
-            # Store the card, get back a token (i.e. tok_abc123 )
-            r.process { save_card(credit_card) }
-            # Convert the token into a Payment object, which represents a card (i.e. pay_abc456 )
-            r.process { convert_token_to_payment(r.authorization) }
-          end
-        else
-          save_card(credit_card)
-        end
-      end
-
-      def unstore(payment_id)
-        commit(:delete, "payments/#{CGI.escape(payment_id)}", nil)
-      end
-
-      def convert_token_to_payment(token)
-        commit(:post, 'payments', { :token => token })
+        save_card(credit_card)
       end
 
       def supports_scrubbing
@@ -107,17 +87,17 @@ module ActiveMerchant #:nodoc:
           return Response.new(false, response_message(parsed), parsed, {})
         end
 
-        response_from(raw_response, action)
+        response_from(raw_response)
       end
 
-      def response_from(raw_response, action)
+      def response_from(raw_response)
         parsed = JSON.parse(raw_response)
         options = {
           :authorization => authorization_from(parsed),
           :test => (parsed['mode'] == 'test'),
         }
 
-        succeeded = (parsed['data'] == []) || (parsed['data']['response_code'].to_i == 20000) || (action == 'payments' && parsed['data']['id'].present?)
+        succeeded = (parsed['data'] == []) || (parsed['data']['response_code'].to_i == 20000)
         Response.new(succeeded, response_message(parsed), parsed, options)
       end
 
@@ -134,11 +114,7 @@ module ActiveMerchant #:nodoc:
       def action_with_token(action, money, payment_method, options)
         case payment_method
         when String
-          if payment_method =~ /\Apay_/
-            self.send("#{action}_with_payment", money, payment_method, options)
-          else
-            self.send("#{action}_with_token", money, payment_method, options)
-          end
+          self.send("#{action}_with_token", money, payment_method, options)
         else
           MultiResponse.run do |r|
             r.process { save_card(payment_method) }
@@ -154,15 +130,6 @@ module ActiveMerchant #:nodoc:
         post[:token] = card_token
         post[:description] = options[:order_id]
         post[:source] = 'active_merchant'
-        commit(:post, 'transactions', post)
-      end
-
-      def purchase_with_payment(money, payment_id, options)
-        post = {}
-
-        add_amount(post, money, options)
-        post[:payment] = payment_id
-        post[:description] = options[:description]
         commit(:post, 'transactions', post)
       end
 

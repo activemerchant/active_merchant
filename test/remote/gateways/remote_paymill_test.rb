@@ -137,24 +137,6 @@ class RemotePaymillTest < Test::Unit::TestCase
     assert_success purchase
   end
 
-  def test_successful_store_with_multiple_purchases
-    store = @gateway.store(@credit_card)
-    assert_success store
-    assert_not_nil store.authorization
-
-    # Do first purchase with the token (i.e. tok_abc123)
-    purchase_1 = @gateway.purchase(@amount, store.authorization)
-    payment_id = purchase_1.params['data']['payment']['id']
-
-    # Do next payment with the payment id (i.e. pay_abc123)
-    purchase_2 = @gateway.purchase(@amount, payment_id, { description: 'something' })
-    assert_success purchase_2
-
-    # Do subsequent payments with the same payment id (i.e. pay_abc123)
-    purchase_3 = @gateway.purchase(@amount, payment_id, { description: 'something else' })
-    assert_success purchase_3
-  end
-
   def test_failed_store_with_invalid_card
     @credit_card.number = ''
     assert response = @gateway.store(@credit_card)
