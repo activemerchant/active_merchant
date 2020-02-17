@@ -471,7 +471,7 @@ module ActiveMerchant #:nodoc:
           raw_response = e.response.body
           response = parse(raw_response)
         end
-        success = success_from(action, response)
+        success = success_from(action, response, options)
         Response.new(
           success,
           message_from(action, response),
@@ -520,7 +520,12 @@ module ActiveMerchant #:nodoc:
         headers
       end
 
-      def success_from(action, response)
+      def success_from(action, response, options)
+        if ['RedirectShopper', 'ChallengeShopper'].include?(response.dig('resultCode')) && !options[:execute_threed] && !options[:threed_dynamic]
+          response['refusalReason'] = 'Received unexpected 3DS authentication response. Use the execute_threed and/or threed_dynamic options to initiate a proper 3DS flow.'
+          return false
+        end
+
         case action.to_s
         when 'authorise', 'authorise3d'
           ['Authorised', 'Received', 'RedirectShopper'].include?(response['resultCode'])
