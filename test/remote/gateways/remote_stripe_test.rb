@@ -657,6 +657,14 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_statement_descriptor_suffix
+    suffix = 'SUFFIX'
+
+    assert response = @gateway.purchase(@amount, @credit_card, statement_descriptor_suffix: suffix)
+    assert_success response
+    assert_equal suffix, response.params['statement_descriptor_suffix']
+  end
+
   def test_verify_credentials
     assert @gateway.verify_credentials
 

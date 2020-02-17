@@ -126,12 +126,15 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
   end
 
   def test_create_payment_intent_with_metadata
+    suffix = 'SUFFIX'
+
     options = {
       currency: 'USD',
       customer: @customer,
       description: 'ActiveMerchant Test Purchase',
       receipt_email: 'test@example.com',
       statement_descriptor: 'Statement Descriptor',
+      statement_descriptor_suffix: suffix,
       metadata: { key_1: 'value_1', key_2: 'value_2' }
     }
 
@@ -142,6 +145,7 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert_equal 'ActiveMerchant Test Purchase', response.params['description']
     assert_equal 'test@example.com', response.params['receipt_email']
     assert_equal 'Statement Descriptor', response.params['statement_descriptor']
+    assert_equal suffix, response.params['statement_descriptor_suffix']
   end
 
   def test_create_payment_intent_that_saves_payment_method

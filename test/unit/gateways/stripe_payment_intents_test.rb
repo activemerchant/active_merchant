@@ -55,6 +55,16 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     assert_equal 'requires_confirmation', update.params['status']
   end
 
+  def test_contains_statement_descriptor_suffix
+    options = @options.merge(capture_method: 'manual', statement_descriptor_suffix: 'suffix')
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.create_intent(@amount, @visa_token, options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/statement_descriptor_suffix=suffix/, data)
+    end.respond_with(successful_create_intent_response)
+  end
+
   def test_successful_create_and_void_intent
     @gateway.expects(:ssl_request).twice.returns(successful_create_intent_response, successful_void_response)
     assert create = @gateway.create_intent(@amount, @visa_token, @options.merge(capture_method: 'manual', confirm: true))

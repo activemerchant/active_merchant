@@ -363,6 +363,16 @@ class StripeTest < Test::Unit::TestCase
     assert response.emv_authorization, 'Response should include emv_authorization containing the EMV ARPC'
   end
 
+  def test_contains_statement_descriptor_suffix
+    options = @options.merge(statement_descriptor_suffix: 'suffix')
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/statement_descriptor_suffix=suffix/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_declined_authorization_with_emv_credit_card
     @gateway.expects(:ssl_request).returns(declined_authorization_response_with_emv_auth_data)
 
