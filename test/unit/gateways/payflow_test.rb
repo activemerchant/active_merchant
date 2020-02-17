@@ -907,29 +907,29 @@ Conn close
 
   def three_d_secure_option
     {
-        :three_d_secure => {
-            :authentication_id => 'QvDbSAxSiaQs241899E0',
-            :authentication_response_status => 'Y',
-            :pareq => 'pareq block',
-            :acs_url => 'https://bankacs.bank.com/ascurl',
-            :eci => '02',
-            :cavv => 'jGvQIvG/5UhjAREALGYa6Vu/hto=',
-            :xid => 'UXZEYlNBeFNpYVFzMjQxODk5RTA='
-        }
+      :three_d_secure => {
+        :authentication_id => 'QvDbSAxSiaQs241899E0',
+        :authentication_response_status => 'Y',
+        :pareq => 'pareq block',
+        :acs_url => 'https://bankacs.bank.com/ascurl',
+        :eci => '02',
+        :cavv => 'jGvQIvG/5UhjAREALGYa6Vu/hto=',
+        :xid => 'UXZEYlNBeFNpYVFzMjQxODk5RTA='
+      }
     }
   end
 
   def three_d_secure_option_frictionless
     {
-        :three_d_secure => {
-            :authentication_id => 'QvDbSAxSiaQs241899E0',
-            :directory_response_status => 'C',
-            :pareq => 'pareq block',
-            :acs_url => 'https://bankacs.bank.com/ascurl',
-            :eci => '02',
-            :cavv => 'jGvQIvG/5UhjAREALGYa6Vu/hto=',
-            :xid => 'UXZEYlNBeFNpYVFzMjQxODk5RTA='
-        }
+      :three_d_secure => {
+        :authentication_id => 'QvDbSAxSiaQs241899E0',
+        :directory_response_status => 'C',
+        :pareq => 'pareq block',
+        :acs_url => 'https://bankacs.bank.com/ascurl',
+        :eci => '02',
+        :cavv => 'jGvQIvG/5UhjAREALGYa6Vu/hto=',
+        :xid => 'UXZEYlNBeFNpYVFzMjQxODk5RTA='
+      }
     }
   end
 end

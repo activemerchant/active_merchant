@@ -339,14 +339,14 @@ class PacNetRavenGatewayTest < Test::Unit::TestCase
 
     assert_equal "PymtType=cc_preauth&RAPIVersion=2&UserName=user&Timestamp=2013-10-08T14%3A31%3A54.Z&RequestID=wouykiikdvqbwwxueppby&Signature=7794efc8c0d39f0983edc10f778e6143ba13531d&CardNumber=4242424242424242&Expiry=09#{@credit_card.year.to_s[-2..-1]}&CVV2=123&Currency=USD&BillingStreetAddressLineOne=Address+1&BillingStreetAddressLineFour=Address+2&BillingPostalCode=ZIP123",
       @gateway.send(:post_data, 'cc_preauth', {
-      'CardNumber' => @credit_card.number,
-      'Expiry' => @gateway.send(:expdate, @credit_card),
-      'CVV2' => @credit_card.verification_value,
-      'Currency' => 'USD',
-      'BillingStreetAddressLineOne' => 'Address 1',
-      'BillingStreetAddressLineFour' => 'Address 2',
-      'BillingPostalCode' => 'ZIP123'
-    })
+        'CardNumber' => @credit_card.number,
+        'Expiry' => @gateway.send(:expdate, @credit_card),
+        'CVV2' => @credit_card.verification_value,
+        'Currency' => 'USD',
+        'BillingStreetAddressLineOne' => 'Address 1',
+        'BillingStreetAddressLineFour' => 'Address 2',
+        'BillingPostalCode' => 'ZIP123'
+      })
   end
 
   def test_signature_for_cc_preauth_action
@@ -356,9 +356,9 @@ class PacNetRavenGatewayTest < Test::Unit::TestCase
       'RequestID' => 'wouykiikdvqbwwxueppby',
       'PymtType' => 'cc_preauth'
     }, {
-        'Amount' => 100,
-        'Currency' => 'USD',
-        'TrackingNumber' => '123456789'
+      'Amount' => 100,
+      'Currency' => 'USD',
+      'TrackingNumber' => '123456789'
     })
   end
 
@@ -369,9 +369,9 @@ class PacNetRavenGatewayTest < Test::Unit::TestCase
       'RequestID' => 'wouykiikdvqbwwxueppby',
       'PymtType' => 'cc_settle'
     }, {
-        'Amount' => 100,
-        'Currency' => 'USD',
-        'TrackingNumber' => '123456789'
+      'Amount' => 100,
+      'Currency' => 'USD',
+      'TrackingNumber' => '123456789'
     })
   end
 
@@ -382,9 +382,9 @@ class PacNetRavenGatewayTest < Test::Unit::TestCase
       'RequestID' => 'wouykiikdvqbwwxueppby',
       'PymtType' => 'cc_debit'
     }, {
-        'Amount' => 100,
-        'Currency' => 'USD',
-        'TrackingNumber' => '123456789'
+      'Amount' => 100,
+      'Currency' => 'USD',
+      'TrackingNumber' => '123456789'
     })
   end
 
@@ -395,9 +395,9 @@ class PacNetRavenGatewayTest < Test::Unit::TestCase
       'RequestID' => 'wouykiikdvqbwwxueppby',
       'PymtType' => 'cc_refund'
     }, {
-        'Amount' => 100,
-        'Currency' => 'USD',
-        'TrackingNumber' => '123456789'
+      'Amount' => 100,
+      'Currency' => 'USD',
+      'TrackingNumber' => '123456789'
     })
   end
 
@@ -407,9 +407,9 @@ class PacNetRavenGatewayTest < Test::Unit::TestCase
       'Timestamp' => '2013-10-08T14:31:54.Z',
       'RequestID' => 'wouykiikdvqbwwxueppby'
     }, {
-        'Amount' => 100,
-        'Currency' => 'USD',
-        'TrackingNumber' => '123456789'
+      'Amount' => 100,
+      'Currency' => 'USD',
+      'TrackingNumber' => '123456789'
     })
   end
 

@@ -23,13 +23,6 @@ Gemspec/OrderedDependencies:
 Layout/AlignHash:
   Enabled: false
 
-# Offense count: 255
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, IndentationWidth.
-# SupportedStyles: special_inside_parentheses, consistent, align_braces
-Layout/IndentHash:
-  Enabled: false
-
 # Offense count: 392
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle.
@@ -977,3 +970,4 @@ Style/ZeroLengthPredicate:
 # URISchemes: http, https
 Metrics/LineLength:
   Max: 2602
+

@@ -46,23 +46,23 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
     }
 
     @options_with_shipping_house_number_and_shipping_street = {
-        order_id: '1',
-        street: 'Top Level Drive',
-        house_number: '1000',
-        billing_address: address,
-        shipping_house_number: '999',
-        shipping_street: 'Downtown Loop',
-        shipping_address: {
-            name:     'PU JOI SO',
-            address1: '新北市店溪路3579號139樓',
-            company:  'Widgets Inc',
-            city:     '新北市',
-            zip:      '231509',
-            country:  'TW',
-            phone:    '(555)555-5555',
-            fax:      '(555)555-6666'
-        },
-        description: 'Store Purchase'
+      order_id: '1',
+      street: 'Top Level Drive',
+      house_number: '1000',
+      billing_address: address,
+      shipping_house_number: '999',
+      shipping_street: 'Downtown Loop',
+      shipping_address: {
+        name:     'PU JOI SO',
+        address1: '新北市店溪路3579號139樓',
+        company:  'Widgets Inc',
+        city:     '新北市',
+        zip:      '231509',
+        country:  'TW',
+        phone:    '(555)555-5555',
+        fax:      '(555)555-6666'
+      },
+      description: 'Store Purchase'
     }
 
     @options_with_credit_fields = {

@@ -23,7 +23,7 @@ class RemoteNmiTest < Test::Unit::TestCase
       :description => 'Store purchase'
     }
     @level3_options = {
-       tax: 5.25, shipping: 10.51, ponumber: 1002
+      tax: 5.25, shipping: 10.51, ponumber: 1002
     }
   end
 

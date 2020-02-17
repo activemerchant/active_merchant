@@ -220,9 +220,9 @@ module ActiveMerchant #:nodoc:
         msg = 'Invalid response received from the Openpay API.  Please contact soporte@openpay.mx if you continue to receive this message.'
         msg += "  (The raw response returned by the API was #{raw_response.inspect})"
         {
-            'category' => 'request',
-            'error_code' => '9999',
-            'description' => msg
+          'category' => 'request',
+          'error_code' => '9999',
+          'description' => msg
         }
       end
     end

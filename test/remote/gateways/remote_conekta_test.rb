@@ -39,13 +39,13 @@ class RemoteConektaTest < Test::Unit::TestCase
       carrier: 'Estafeta',
       email: 'bob@something.com',
       line_items: [{
-      name: 'Box of Cohiba S1s',
-      description: 'Imported From Mex.',
-      unit_price: 20000,
-      quantity: 1,
-      sku: '7500244909',
-      type: 'food'
-     }]
+        name: 'Box of Cohiba S1s',
+        description: 'Imported From Mex.',
+        unit_price: 20000,
+        quantity: 1,
+        sku: '7500244909',
+        type: 'food'
+      }]
     }
   end
 

@@ -12,9 +12,9 @@ module ActiveMerchant #:nodoc:
       }
 
       XML_ATTRIBUTES = {
-                        'xmlns' => 'http://gateway.securenet.com/API/Contracts',
-                        'xmlns:i' => 'http://www.w3.org/2001/XMLSchema-instance'
-                       }
+        'xmlns' => 'http://gateway.securenet.com/API/Contracts',
+        'xmlns:i' => 'http://www.w3.org/2001/XMLSchema-instance'
+      }
       NIL_ATTRIBUTE = { 'i:nil' => 'true' }
 
       self.supported_countries = ['US']

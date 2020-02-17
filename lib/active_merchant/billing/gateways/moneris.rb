@@ -417,27 +417,27 @@ module ActiveMerchant #:nodoc:
 
       def actions
         {
-            'purchase' => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type, :avs_info, :cvd_info, :track2, :pos_code, :cof_info],
-            'preauth' => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type, :avs_info, :cvd_info, :track2, :pos_code, :cof_info],
-            'command' => [:order_id],
-            'refund' => [:order_id, :amount, :txn_number, :crypt_type],
-            'indrefund' => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type],
-            'completion' => [:order_id, :comp_amount, :txn_number, :crypt_type],
-            'purchasecorrection' => [:order_id, :txn_number, :crypt_type],
-            'cavv_preauth' => [:order_id, :cust_id, :amount, :pan, :expdate, :cavv, :crypt_type, :wallet_indicator],
-            'cavv_purchase' => [:order_id, :cust_id, :amount, :pan, :expdate, :cavv, :crypt_type, :wallet_indicator],
-            'card_verification' => [:order_id, :cust_id, :pan, :expdate, :crypt_type, :avs_info, :cvd_info, :cof_info],
-            'transact' => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type],
-            'Batchcloseall' => [],
-            'opentotals' => [:ecr_number],
-            'batchclose' => [:ecr_number],
-            'res_add_cc' => [:pan, :expdate, :crypt_type, :avs_info, :cof_info],
-            'res_temp_add' => [:pan, :expdate, :crypt_type, :duration],
-            'res_delete' => [:data_key],
-            'res_update_cc' => [:data_key, :pan, :expdate, :crypt_type, :avs_info, :cof_info],
-            'res_purchase_cc' => [:data_key, :order_id, :cust_id, :amount, :crypt_type, :cof_info],
-            'res_preauth_cc' => [:data_key, :order_id, :cust_id, :amount, :crypt_type, :cof_info],
-            'res_card_verification_cc' => [:order_id, :data_key, :expdate, :crypt_type, :cof_info]
+          'purchase' => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type, :avs_info, :cvd_info, :track2, :pos_code, :cof_info],
+          'preauth' => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type, :avs_info, :cvd_info, :track2, :pos_code, :cof_info],
+          'command' => [:order_id],
+          'refund' => [:order_id, :amount, :txn_number, :crypt_type],
+          'indrefund' => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type],
+          'completion' => [:order_id, :comp_amount, :txn_number, :crypt_type],
+          'purchasecorrection' => [:order_id, :txn_number, :crypt_type],
+          'cavv_preauth' => [:order_id, :cust_id, :amount, :pan, :expdate, :cavv, :crypt_type, :wallet_indicator],
+          'cavv_purchase' => [:order_id, :cust_id, :amount, :pan, :expdate, :cavv, :crypt_type, :wallet_indicator],
+          'card_verification' => [:order_id, :cust_id, :pan, :expdate, :crypt_type, :avs_info, :cvd_info, :cof_info],
+          'transact' => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type],
+          'Batchcloseall' => [],
+          'opentotals' => [:ecr_number],
+          'batchclose' => [:ecr_number],
+          'res_add_cc' => [:pan, :expdate, :crypt_type, :avs_info, :cof_info],
+          'res_temp_add' => [:pan, :expdate, :crypt_type, :duration],
+          'res_delete' => [:data_key],
+          'res_update_cc' => [:data_key, :pan, :expdate, :crypt_type, :avs_info, :cof_info],
+          'res_purchase_cc' => [:data_key, :order_id, :cust_id, :amount, :crypt_type, :cof_info],
+          'res_preauth_cc' => [:data_key, :order_id, :cust_id, :amount, :crypt_type, :cof_info],
+          'res_card_verification_cc' => [:order_id, :data_key, :expdate, :crypt_type, :cof_info]
         }
       end
     end

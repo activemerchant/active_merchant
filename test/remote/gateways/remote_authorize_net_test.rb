@@ -19,15 +19,15 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
 
     @level_2_options = {
       tax: {
-          amount: '100',
-          name: 'tax name',
-          description: 'tax description'
-        },
+        amount: '100',
+        name: 'tax name',
+        description: 'tax description'
+      },
       duty: {
-          amount: '200',
-          name: 'duty name',
-          description: 'duty description'
-        },
+        amount: '200',
+        name: 'duty name',
+        description: 'duty description'
+      },
       shipping: {
         amount: '300',
         name: 'shipping name',

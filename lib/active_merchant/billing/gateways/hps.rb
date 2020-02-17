@@ -263,8 +263,8 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new(encoding: 'UTF-8')
         xml.instruct!(:xml, encoding: 'UTF-8')
         xml.SOAP :Envelope, {
-            'xmlns:SOAP' => 'http://schemas.xmlsoap.org/soap/envelope/',
-            'xmlns:hps' => 'http://Hps.Exchange.PosGateway'
+          'xmlns:SOAP' => 'http://schemas.xmlsoap.org/soap/envelope/',
+          'xmlns:hps' => 'http://Hps.Exchange.PosGateway'
         } do
           xml.SOAP :Body do
             xml.hps :PosRequest do

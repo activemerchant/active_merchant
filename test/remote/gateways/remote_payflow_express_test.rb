@@ -16,7 +16,7 @@ class RemotePayflowExpressTest < Test::Unit::TestCase
           :country => 'CA',
           :zip => '90210',
           :phone => '555-555-5555'
-       },
+        },
       :email => 'cody@example.com'
     }
   end

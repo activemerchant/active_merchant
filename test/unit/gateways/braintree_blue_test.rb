@@ -1151,7 +1151,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
           :external_vault => {
             :status => 'vaulted',
             :previous_network_transaction_id => '123ABC'
-        },
+          },
           :transaction_source => 'unscheduled'
         })
     ).returns(braintree_result)
@@ -1184,7 +1184,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
 
   def standard_purchase_params
     {
-    :amount => '1.00',
+      :amount => '1.00',
       :order_id => '1',
       :customer => {:id => nil, :email => nil, :phone => nil,
                     :first_name => 'Longbob', :last_name => 'Longsen'},

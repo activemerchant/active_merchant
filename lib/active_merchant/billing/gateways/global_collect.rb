@@ -156,16 +156,16 @@ module ActiveMerchant #:nodoc:
         pre_authorization = options[:pre_authorization] ? 'PRE_AUTHORIZATION' : 'FINAL_AUTHORIZATION'
 
         post['cardPaymentMethodSpecificInput'] = {
-            'paymentProductId' => BRAND_MAP[payment.brand],
-            'skipAuthentication' => 'true', # refers to 3DSecure
-            'skipFraudService' => 'true',
-            'authorizationMode' => pre_authorization
+          'paymentProductId' => BRAND_MAP[payment.brand],
+          'skipAuthentication' => 'true', # refers to 3DSecure
+          'skipFraudService' => 'true',
+          'authorizationMode' => pre_authorization
         }
         post['cardPaymentMethodSpecificInput']['card'] = {
-            'cvv' => payment.verification_value,
-            'cardNumber' => payment.number,
-            'expiryDate' => expirydate,
-            'cardholderName' => payment.name
+          'cvv' => payment.verification_value,
+          'cardNumber' => payment.number,
+          'expiryDate' => expirydate,
+          'cardholderName' => payment.name
         }
       end
 

@@ -1431,12 +1431,12 @@ class PaypalTest < Test::Unit::TestCase
 
   def three_d_secure_option
     {
-        three_d_secure: {
-            trans_status: 'Y',
-            eci: 'eci',
-            cavv: 'cavv',
-            xid: 'xid'
-        }
+      three_d_secure: {
+        trans_status: 'Y',
+        eci: 'eci',
+        cavv: 'cavv',
+        xid: 'xid'
+      }
     }
   end
 end

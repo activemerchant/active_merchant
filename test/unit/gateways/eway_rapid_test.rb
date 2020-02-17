@@ -384,18 +384,18 @@ class EwayRapidTest < Test::Unit::TestCase
   def test_successful_store
     response = stub_comms do
       @gateway.store(@credit_card, :billing_address => {
-          :title    => 'Mr.',
-          :name     => 'Jim Awesome Smith',
-          :company  => 'Awesome Co',
-          :address1 => '1234 My Street',
-          :address2 => 'Apt 1',
-          :city     => 'Ottawa',
-          :state    => 'ON',
-          :zip      => 'K1C2N6',
-          :country  => 'CA',
-          :phone    => '(555)555-5555',
-          :fax      => '(555)555-6666'
-        })
+        :title    => 'Mr.',
+        :name     => 'Jim Awesome Smith',
+        :company  => 'Awesome Co',
+        :address1 => '1234 My Street',
+        :address2 => 'Apt 1',
+        :city     => 'Ottawa',
+        :state    => 'ON',
+        :zip      => 'K1C2N6',
+        :country  => 'CA',
+        :phone    => '(555)555-5555',
+        :fax      => '(555)555-6666'
+      })
     end.check_request do |endpoint, data, headers|
       assert_match '"Method":"CreateTokenCustomer"', data
     end.respond_with(successful_store_response)

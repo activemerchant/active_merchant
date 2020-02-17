@@ -128,7 +128,7 @@ class LinkpointTest < Test::Unit::TestCase
         :city => 'Lost Angeles',
         :state => 'CA',
         :zip => '90210'
-        },
+      },
       :line_items => [
         {
           :id => '123456',
@@ -137,20 +137,20 @@ class LinkpointTest < Test::Unit::TestCase
           :quantity => '1',
           :options => [
             {
-                :name => 'Color',
-                :value => 'Red'
+              :name => 'Color',
+              :value => 'Red'
             },
             {
-             :name => 'Size',
-             :value => 'XL'
+              :name => 'Size',
+              :value => 'XL'
             }
           ]
         },
         {
-           :id => '111',
-           :description => 'keychain',
-           :price => '3.00',
-           :quantity => '1'
+          :id => '111',
+          :description => 'keychain',
+          :price => '3.00',
+          :quantity => '1'
         }
       ]
     }

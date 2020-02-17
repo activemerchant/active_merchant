@@ -187,28 +187,28 @@ class QuickpayV10Test < Test::Unit::TestCase
 
   def successful_authorization_response
     {
-       'id'          => 1145,
-       'order_id'    => '310f59c57a',
-       'accepted'    => false,
-       'test_mode'   => true,
-       'branding_id' => nil,
-       'variables'   => {},
-       'acquirer'    => 'clearhaus',
-       'operations'  => [],
-       'metadata'    => {
-          'type'             =>'card',
-          'brand'            =>'quickpay-test-card',
-          'last4'            =>'0008',
-          'exp_month'        =>9,
-          'exp_year'         =>2016,
-          'country'          =>'DK',
-          'is_3d_secure'     =>false,
-          'customer_ip'      =>nil,
-          'customer_country' =>nil
-       },
-       'created_at' => '2015-03-30T16:56:17Z',
-       'balance'    => 0,
-       'currency'   => 'DKK'
+      'id'          => 1145,
+      'order_id'    => '310f59c57a',
+      'accepted'    => false,
+      'test_mode'   => true,
+      'branding_id' => nil,
+      'variables'   => {},
+      'acquirer'    => 'clearhaus',
+      'operations'  => [],
+      'metadata'    => {
+        'type'             =>'card',
+        'brand'            =>'quickpay-test-card',
+        'last4'            =>'0008',
+        'exp_month'        =>9,
+        'exp_year'         =>2016,
+        'country'          =>'DK',
+        'is_3d_secure'     =>false,
+        'customer_ip'      =>nil,
+        'customer_country' =>nil
+      },
+      'created_at' => '2015-03-30T16:56:17Z',
+      'balance'    => 0,
+      'currency'   => 'DKK'
     }.to_json
   end
 
@@ -231,29 +231,29 @@ class QuickpayV10Test < Test::Unit::TestCase
 
   def succesful_refund_response
     {
-       'id'          =>1145,
-       'order_id'    =>'310f59c57a',
-       'accepted'    =>true,
-       'test_mode'   =>true,
-       'branding_id' =>nil,
-       'variables'   =>{},
-       'acquirer'    =>'clearhaus',
-       'operations'  =>[],
-       'metadata'=>{
-          'type'             =>'card',
-          'brand'            =>'quickpay-test-card',
-          'last4'            =>'0008',
-          'exp_month'        =>9,
-          'exp_year'         =>2016,
-          'country'          =>'DK',
-          'is_3d_secure'     =>false,
-          'customer_ip'      =>nil,
-          'customer_country' =>nil
-        },
-       'created_at' =>'2015-03-30T16:56:17Z',
-       'balance'    =>100,
-       'currency'   =>'DKK'
-      }.to_json
+      'id'          =>1145,
+      'order_id'    =>'310f59c57a',
+      'accepted'    =>true,
+      'test_mode'   =>true,
+      'branding_id' =>nil,
+      'variables'   =>{},
+      'acquirer'    =>'clearhaus',
+      'operations'  =>[],
+      'metadata'=>{
+        'type'             =>'card',
+        'brand'            =>'quickpay-test-card',
+        'last4'            =>'0008',
+        'exp_month'        =>9,
+        'exp_year'         =>2016,
+        'country'          =>'DK',
+        'is_3d_secure'     =>false,
+        'customer_ip'      =>nil,
+        'customer_country' =>nil
+      },
+      'created_at' =>'2015-03-30T16:56:17Z',
+      'balance'    =>100,
+      'currency'   =>'DKK'
+    }.to_json
   end
 
   def failed_authorization_response

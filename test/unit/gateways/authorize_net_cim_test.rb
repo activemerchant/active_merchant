@@ -561,7 +561,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert response = @gateway.create_customer_profile_transaction_for_void(
       :transaction => {
         :trans_id => 1
-        }
+      }
     )
     assert_instance_of Response, response
     assert_success response
@@ -577,7 +577,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
         :trans_id => 1,
         :amount => '1.00',
         :credit_card_number_masked => 'XXXX1234'
-        }
+      }
     )
     assert_instance_of Response, response
     assert_success response

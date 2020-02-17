@@ -419,7 +419,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
 
     options = {
       :order_id => '36'
-      }
+    }
 
     assert auth_response = @gateway.authorize(20500, credit_card, options)
     assert_success auth_response
@@ -1132,12 +1132,12 @@ class RemoteLitleCertification < Test::Unit::TestCase
 
     # purchase
     purchase_options = options.merge({
-                                         :order_id => transaction_id,
-                                         :token    => {
-                                             :month => credit_card.month,
-                                             :year  => credit_card.year
-                                         }
-                                     })
+      :order_id => transaction_id,
+      :token    => {
+        :month => credit_card.month,
+        :year  => credit_card.year
+      }
+    })
 
     assert purchase_response = @gateway.purchase(100, token, purchase_options)
     assert_success purchase_response
@@ -1146,12 +1146,12 @@ class RemoteLitleCertification < Test::Unit::TestCase
 
     # credit
     credit_options = options.merge({
-                                       :order_id => transaction_id,
-                                       :token    => {
-                                           :month => credit_card.month,
-                                           :year  => credit_card.year
-                                       }
-                                   })
+      :order_id => transaction_id,
+      :token    => {
+        :month => credit_card.month,
+        :year  => credit_card.year
+      }
+    })
 
     assert credit_response = @gateway.credit(500, token, credit_options)
     assert_success credit_response

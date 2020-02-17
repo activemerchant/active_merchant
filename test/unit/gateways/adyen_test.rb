@@ -344,7 +344,7 @@ class AdyenTest < Test::Unit::TestCase
       'amount' => {
         'currency' => 'USD',
         'value' => 50
-        },
+      },
       'type' => 'MarketPlace',
       'account' => '163298747',
       'reference' => 'QXhlbFN0b2x0ZW5iZXJnCg'
@@ -352,7 +352,7 @@ class AdyenTest < Test::Unit::TestCase
       'amount' => {
         'currency' => 'USD',
         'value' => 50
-        },
+      },
       'type' => 'Commission',
       'reference' => 'THVjYXNCbGVkc29lCg'
     }]

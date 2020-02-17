@@ -260,10 +260,10 @@ module ActiveMerchant #:nodoc:
       def parse(body)
         xml = Nokogiri::XML(body)
         {
-            :unique_id => xml.xpath('//Response/Transaction/Identification/UniqueID').text,
-            :status => translate_status_code(xml.xpath('//Response/Transaction/Processing/Status/@code').text),
-            :reason => translate_status_code(xml.xpath('//Response/Transaction/Processing/Reason/@code').text),
-            :message => xml.xpath('//Response/Transaction/Processing/Return').text
+          :unique_id => xml.xpath('//Response/Transaction/Identification/UniqueID').text,
+          :status => translate_status_code(xml.xpath('//Response/Transaction/Processing/Status/@code').text),
+          :reason => translate_status_code(xml.xpath('//Response/Transaction/Processing/Reason/@code').text),
+          :message => xml.xpath('//Response/Transaction/Processing/Return').text
         }
       end
 
@@ -311,26 +311,26 @@ module ActiveMerchant #:nodoc:
       # Private: Translate Monei status code to native ruby symbols
       def translate_status_code(code)
         {
-            '00' => :success,
-            '40' => :neutral,
-            '59' => :waiting_bank,
-            '60' => :rejected_bank,
-            '64' => :waiting_risk,
-            '65' => :rejected_risk,
-            '70' => :rejected_validation,
-            '80' => :waiting,
-            '90' => :new
+          '00' => :success,
+          '40' => :neutral,
+          '59' => :waiting_bank,
+          '60' => :rejected_bank,
+          '64' => :waiting_risk,
+          '65' => :rejected_risk,
+          '70' => :rejected_validation,
+          '80' => :waiting,
+          '90' => :new
         }[code]
       end
 
       # Private: Translate AM operations to Monei operations codes
       def tanslate_payment_code(action)
         {
-            :purchase => 'CC.DB',
-            :authorize => 'CC.PA',
-            :capture => 'CC.CP',
-            :refund => 'CC.RF',
-            :void => 'CC.RV'
+          :purchase => 'CC.DB',
+          :authorize => 'CC.PA',
+          :capture => 'CC.CP',
+          :refund => 'CC.RF',
+          :void => 'CC.RV'
         }[action]
       end
     end

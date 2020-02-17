@@ -419,8 +419,8 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
   def test_add_address_with_single_billing_and_shipping_names
     post = {}
     options = {
-        :billing_address  => address(:name => 'Smith'),
-        :shipping_address => address(:name => 'Longsen')
+      :billing_address  => address(:name => 'Smith'),
+      :shipping_address => address(:name => 'Longsen')
     }
 
     @gateway.send(:add_address, post, @credit_card, options)

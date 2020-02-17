@@ -162,13 +162,13 @@ class RemoteMerchantESolutionTest < Test::Unit::TestCase
 
   def test_unsuccessful_cvv_check
     credit_card = ActiveMerchant::Billing::CreditCard.new({
-                    :first_name => 'John',
-                    :last_name  => 'Doe',
-                    :number => '4111111111111111',
-                    :month      => '11',
-                    :year       => (Time.now.year + 1).to_s,
-                    :verification_value => '555'
-                  })
+      :first_name => 'John',
+      :last_name  => 'Doe',
+      :number => '4111111111111111',
+      :month      => '11',
+      :year       => (Time.now.year + 1).to_s,
+      :verification_value => '555'
+    })
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_equal 'N', response.cvv_result['code']
     assert_equal 'CVV does not match', response.cvv_result['message']
