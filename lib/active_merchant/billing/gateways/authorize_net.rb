@@ -544,6 +544,7 @@ module ActiveMerchant
       def add_check(xml, check)
         xml.payment do
           xml.bankAccount do
+            xml.accountType(check.account_type)
             xml.routingNumber(check.routing_number)
             xml.accountNumber(check.account_number)
             xml.nameOnAccount(truncate(check.name, 22))

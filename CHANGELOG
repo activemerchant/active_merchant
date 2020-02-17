@@ -12,6 +12,7 @@
 * HPS: support eCheck [therufs] #3500
 * Decidir: Add support for fraud_detection, site_id, and establishment_name [fatcatt316] #3527
 * Merchant Warrior: Send void amount in options [leila-alderman] #3525
+* Authorize.Net: Pass `account_type` to `check` payment types [chinhle23] #3530
 
 == Version 1.104.0 (Jan 29, 2020)
 * Adyen: add `recurring_contract_type` GSF [therufs] #3460
