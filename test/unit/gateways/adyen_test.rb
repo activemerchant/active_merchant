@@ -149,6 +149,13 @@ class AdyenTest < Test::Unit::TestCase
     refute response.params['paRequest'].blank?
   end
 
+  def test_failed_authorize_with_unexpected_3ds
+    @gateway.expects(:ssl_post).returns(successful_authorize_with_3ds_response)
+    response = @gateway.authorize(@amount, @three_ds_enrolled_card, @options)
+    assert_failure response
+    assert_match 'Received unexpected 3DS authentication response', response.message
+  end
+
   def test_successful_authorize_with_recurring_contract_type
     stub_comms do
       @gateway.authorize(100, @credit_card, @options.merge({recurring_contract_type: 'ONECLICK'}))

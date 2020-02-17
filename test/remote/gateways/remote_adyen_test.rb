@@ -284,6 +284,16 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal response.params['resultCode'], 'Authorised'
   end
 
+  # Fail in situations where neither execute_threed nor dynamic_threed is
+  # present, but the account is set to dynamic 3ds and it is triggered. This
+  # test assumes a Dynamic 3DS rule set for the Adyen test account to always
+  # perform 3ds auth for an amount of 8484
+  def test_purchase_fails_on_unexpected_3ds_initiation
+    response = @gateway.purchase(8484, @three_ds_enrolled_card, @options)
+    assert_failure response
+    assert_match 'Received unexpected 3DS authentication response', response.message
+  end
+
   def test_successful_purchase_with_auth_data_via_threeds1_standalone
     eci = '05'
     cavv = '3q2+78r+ur7erb7vyv66vv\/\/\/\/8='
