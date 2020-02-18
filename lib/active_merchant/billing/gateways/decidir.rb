@@ -181,7 +181,7 @@ module ActiveMerchant #:nodoc:
 
       def add_fraud_detection(options = {})
         {}.tap do |hsh|
-          hsh[:send_to_cs] = options[:send_to_cs] if valid_fraud_detection_option?(options[:send_to_cs]) # true/false
+          hsh[:send_to_cs] = attempt_boolean(options[:send_to_cs]) if valid_fraud_detection_option?(options[:send_to_cs])
           hsh[:channel] = options[:channel] if valid_fraud_detection_option?(options[:channel])
           hsh[:dispatch_method] = options[:dispatch_method] if valid_fraud_detection_option?(options[:dispatch_method])
         end
@@ -190,6 +190,17 @@ module ActiveMerchant #:nodoc:
       # Avoid sending fields with empty or null when not populated.
       def valid_fraud_detection_option?(val)
         !val.nil? && val != ''
+      end
+
+      # Returns a boolean if a boolean or 'true' or 'false' is sent in.
+      # Otherwise, returns the original value.
+      # This is so if the user sends an invalid boolean value like "okay",
+      # the gateway will send back an error.
+      def attempt_boolean(val)
+        return true if val == 'true'
+        return false if val == 'false'
+
+        val
       end
 
       def headers(options = {})

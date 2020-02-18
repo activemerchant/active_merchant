@@ -75,7 +75,7 @@ class RemoteDecidirTest < Test::Unit::TestCase
       card_holder_identification_number: '123456',
       establishment_name: 'Heavenly Buffaloes',
       fraud_detection: {
-        send_to_cs: false,
+        send_to_cs: 'false',
         channel: 'Web',
         dispatch_method: 'Store Pick Up'
       },
@@ -103,6 +103,13 @@ class RemoteDecidirTest < Test::Unit::TestCase
     response = @gateway_for_purchase.purchase(@amount, @declined_card, @options.merge(installments: -1))
     assert_failure response
     assert_equal 'invalid_param: installments', response.message
+    assert_match 'invalid_request_error', response.error_code
+  end
+
+  def test_failed_purchase_with_invalid_boolean_field
+    response = @gateway_for_purchase.purchase(@amount, @declined_card, @options.merge(fraud_detection: { send_to_cs: 'okay' }))
+    assert_failure response
+    assert_equal 'invalid_param: fraud_detection.send_to_cs', response.message
     assert_match 'invalid_request_error', response.error_code
   end
 

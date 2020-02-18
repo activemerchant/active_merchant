@@ -37,7 +37,7 @@ class DecidirTest < Test::Unit::TestCase
       card_holder_identification_number: '123456',
       establishment_name: 'Heavenly Buffaloes',
       fraud_detection: {
-        send_to_cs: false,
+        send_to_cs: 'false',
         channel: 'Web',
         dispatch_method: 'Store Pick Up'
       },
