@@ -16,6 +16,7 @@
 * Redsys: Update scrub method to account for 3DS error responses [britth] #3534
 * RuboCop: Fix Layout/IndentHash [leila-alderman] #3529
 * Bambora Apac: Send void amount in options [leila-alderman] #3532
+* Credorax: Fix `3ds_transtype` setting in post [chinhle23] #3531
 
 == Version 1.104.0 (Jan 29, 2020)
 * Adyen: add `recurring_contract_type` GSF [therufs] #3460
