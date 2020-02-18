@@ -30,7 +30,7 @@ module ActiveMerchant #:nodoc:
         commit('SubmitSinglePayment') do |xml|
           xml.Transaction do
             xml.CustRef options[:order_id]
-            add_amount(xml, money)
+            xml.Amount amount(money)
             xml.TrnType '1'
             add_payment(xml, payment)
             add_credentials(xml, options)
@@ -43,7 +43,7 @@ module ActiveMerchant #:nodoc:
         commit('SubmitSinglePayment') do |xml|
           xml.Transaction do
             xml.CustRef options[:order_id]
-            add_amount(xml, money)
+            xml.Amount amount(money)
             xml.TrnType '2'
             add_payment(xml, payment)
             add_credentials(xml, options)
@@ -56,7 +56,7 @@ module ActiveMerchant #:nodoc:
         commit('SubmitSingleCapture') do |xml|
           xml.Capture do
             xml.Receipt authorization
-            add_amount(xml, money)
+            xml.Amount amount(money)
             add_credentials(xml, options)
           end
         end
@@ -66,17 +66,17 @@ module ActiveMerchant #:nodoc:
         commit('SubmitSingleRefund') do |xml|
           xml.Refund do
             xml.Receipt authorization
-            add_amount(xml, money)
+            xml.Amount amount(money)
             add_credentials(xml, options)
           end
         end
       end
 
-      def void(money, authorization, options={})
+      def void(authorization, options={})
         commit('SubmitSingleVoid') do |xml|
           xml.Void do
             xml.Receipt authorization
-            add_amount(xml, money)
+            xml.Amount amount(options[:amount])
             add_credentials(xml, options)
           end
         end
@@ -114,10 +114,6 @@ module ActiveMerchant #:nodoc:
           xml.UserName @options[:username]
           xml.Password @options[:password]
         end
-      end
-
-      def add_amount(xml, money)
-        xml.Amount amount(money)
       end
 
       def add_payment(xml, payment)
