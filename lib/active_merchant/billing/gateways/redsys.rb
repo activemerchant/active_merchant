@@ -270,8 +270,10 @@ module ActiveMerchant #:nodoc:
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
           gsub(%r((%3CDS_MERCHANT_PAN%3E)\d+(%3C%2FDS_MERCHANT_PAN%3E))i, '\1[FILTERED]\2').
           gsub(%r((%3CDS_MERCHANT_CVV2%3E)\d+(%3C%2FDS_MERCHANT_CVV2%3E))i, '\1[FILTERED]\2').
+          gsub(%r((&lt;DS_MERCHANT_PAN&gt;)\d+(&lt;/DS_MERCHANT_PAN&gt;))i, '\1[FILTERED]\2').
           gsub(%r((<DS_MERCHANT_PAN>)\d+(</DS_MERCHANT_PAN>))i, '\1[FILTERED]\2').
           gsub(%r((<DS_MERCHANT_CVV2>)\d+(</DS_MERCHANT_CVV2>))i, '\1[FILTERED]\2').
+          gsub(%r((&lt;DS_MERCHANT_CVV2&gt;)\d+(&lt;/DS_MERCHANT_CVV2&gt;))i, '\1[FILTERED]\2').
           gsub(%r((DS_MERCHANT_CVV2)%2F%3E%0A%3C%2F)i, '\1[BLANK]').
           gsub(%r((DS_MERCHANT_CVV2)%2F%3E%3C)i, '\1[BLANK]').
           gsub(%r((DS_MERCHANT_CVV2%3E)(%3C%2FDS_MERCHANT_CVV2))i, '\1[BLANK]\2').
