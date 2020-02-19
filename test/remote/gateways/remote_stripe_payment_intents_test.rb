@@ -227,17 +227,26 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
   end
 
   def test_create_payment_intent_with_connected_account
+    transfer_group = 'XFERGROUP'
+    application_fee = 100
+
+    # You may not provide the application_fee_amount parameter and the transfer_data[amount] parameter
+    # simultaneously. They are mutually exclusive.
     options = {
       currency: 'USD',
       customer: @customer,
-      application_fee: 100,
-      transfer_destination: @destination_account
+      application_fee: application_fee,
+      transfer_destination: @destination_account,
+      on_behalf_of: @destination_account,
+      transfer_group: transfer_group
     }
 
     assert response = @gateway.create_intent(@amount, nil, options)
 
     assert_success response
-    assert_equal 100, response.params['application_fee_amount']
+    assert_equal application_fee, response.params['application_fee_amount']
+    assert_equal transfer_group, response.params['transfer_group']
+    assert_equal @destination_account, response.params['on_behalf_of']
     assert_equal @destination_account, response.params.dig('transfer_data', 'destination')
   end
 

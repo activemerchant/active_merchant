@@ -373,6 +373,7 @@ module ActiveMerchant #:nodoc:
         add_exchange_rate(post, options)
         add_destination(post, options)
         add_level_three(post, options)
+        add_connected_account(post, options)
         post
       end
 
@@ -551,6 +552,16 @@ module ActiveMerchant #:nodoc:
           post[:owner][:phone] = address[:phone] if address[:phone]
           post[:owner][:address] = owner_address
         end
+      end
+
+      def add_connected_account(post, options = {})
+        return unless options[:transfer_destination]
+
+        post[:transfer_data] = { destination: options[:transfer_destination] }
+        post[:transfer_data][:amount] = options[:transfer_amount] if options[:transfer_amount]
+        post[:on_behalf_of] = options[:on_behalf_of] if options[:on_behalf_of]
+        post[:transfer_group] = options[:transfer_group] if options[:transfer_group]
+        post[:application_fee_amount] = options[:application_fee_amount] if options[:application_fee_amount]
       end
 
       def parse(body)

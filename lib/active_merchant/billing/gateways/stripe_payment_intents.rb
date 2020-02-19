@@ -149,6 +149,11 @@ module ActiveMerchant #:nodoc:
 
       private
 
+      def add_connected_account(post, options = {})
+        super(post, options)
+        post[:application_fee_amount] = options[:application_fee] if options[:application_fee]
+      end
+
       def add_whitelisted_attribute(post, options, attribute)
         post[attribute] = options[attribute] if options[attribute]
         post
@@ -221,18 +226,6 @@ module ActiveMerchant #:nodoc:
       def setup_future_usage(post, options = {})
         post[:setup_future_usage] = options[:setup_future_usage] if %w(on_session off_session).include?(options[:setup_future_usage])
         post[:off_session] = options[:off_session] if options[:off_session] && options[:confirm] == true
-        post
-      end
-
-      def add_connected_account(post, options = {})
-        return unless options[:transfer_destination]
-
-        post[:transfer_data] = {}
-        post[:transfer_data][:destination] = options[:transfer_destination]
-        post[:transfer_data][:amount] = options[:transfer_amount] if options[:transfer_amount]
-        post[:on_behalf_of] = options[:on_behalf_of] if options[:on_behalf_of]
-        post[:transfer_group] = options[:transfer_group] if options[:transfer_group]
-        post[:application_fee_amount] = options[:application_fee] if options[:application_fee]
         post
       end
 

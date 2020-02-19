@@ -122,6 +122,30 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal 'wow@example.com', response.params['metadata']['email']
   end
 
+  def test_purchase_with_connected_account
+    destination = fixtures(:stripe_destination)[:stripe_user_id]
+    transfer_group = 'XFERGROUP'
+    application_fee_amount = 100
+
+    # You may not provide the application_fee_amount parameter and the transfer_data[amount] parameter
+    # simultaneously. They are mutually exclusive.
+    options = @options.merge({
+      customer: @customer,
+      application_fee_amount: application_fee_amount,
+      transfer_destination: destination,
+      on_behalf_of: destination,
+      transfer_group: transfer_group
+    })
+
+    assert response = @gateway.purchase(@amount, @credit_card, options)
+
+    assert_success response
+    assert_equal application_fee_amount, response.params['application_fee_amount']
+    assert_equal transfer_group, response.params['transfer_group']
+    assert_equal destination, response.params['on_behalf_of']
+    assert_equal destination, response.params.dig('transfer_data', 'destination')
+  end
+
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response

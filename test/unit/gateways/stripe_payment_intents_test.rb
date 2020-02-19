@@ -95,6 +95,32 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
       'requires_payment_method, requires_capture, requires_confirmation, requires_action.', cancel.message
   end
 
+  def test_connected_account
+    destination = 'account_27701'
+    amount = 8000
+    on_behalf_of = 'account_27704'
+    transfer_group = 'TG1000'
+    application_fee_amount = 100
+
+    options = @options.merge(
+      transfer_destination: destination,
+      transfer_amount: amount,
+      on_behalf_of: on_behalf_of,
+      transfer_group: transfer_group,
+      application_fee: application_fee_amount
+    )
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.create_intent(@amount, @visa_token, options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/transfer_data\[destination\]=#{destination}/, data)
+      assert_match(/transfer_data\[amount\]=#{amount}/, data)
+      assert_match(/on_behalf_of=#{on_behalf_of}/, data)
+      assert_match(/transfer_group=#{transfer_group}/, data)
+      assert_match(/application_fee_amount=#{application_fee_amount}/, data)
+    end.respond_with(successful_create_intent_response)
+  end
+
   private
 
   def successful_create_intent_response
