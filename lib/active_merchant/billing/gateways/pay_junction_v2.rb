@@ -21,6 +21,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)
+        add_address(post, options)
 
         commit('purchase', post)
       end
@@ -30,6 +31,7 @@ module ActiveMerchant #:nodoc:
         post[:status] = 'HOLD'
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)
+        add_address(post, options)
 
         commit('authorize', post)
       end
@@ -108,6 +110,27 @@ module ActiveMerchant #:nodoc:
           post[:cardExpYear] = format(payment_method.year, :four_digits)
           post[:cardCvv] = payment_method.verification_value
         end
+      end
+
+      def add_address(post, options)
+        if (address = options[:billing_address])
+          post[:billing] = {}
+          post[:billing][:firstName] = address[:first_name] if address[:first_name]
+          post[:billing][:lastName] = address[:last_name] if address[:last_name]
+          post[:billing][:companyName] = address[:company] if address[:company]
+          post[:billing][:phone] = address[:phone_number] if address[:phone_number]
+
+          post[:billing][:address] = {}
+          post[:billing][:address][:address] = address[:address1] if address[:address1]
+          post[:billing][:address][:city] = address[:city] if address[:city]
+          post[:billing][:address][:state] = address[:state] if address[:state]
+          post[:billing][:address][:country] = address[:country] if address[:country]
+          post[:billing][:address][:zip] = address[:zip] if address[:zip]
+        end
+      end
+
+      def get_state(address)
+        address[:state] && !address[:state].blank? ? address[:state] : 'NA'
       end
 
       def commit(action, params)
