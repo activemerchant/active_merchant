@@ -5,9 +5,10 @@ class PayJunctionV2Test < Test::Unit::TestCase
     @gateway = PayJunctionV2Gateway.new(api_login: 'api_login', api_password: 'api_password', api_key: 'api_key')
 
     @amount = 99
-    @credit_card = credit_card('4444333322221111', month: 01, year: 2020, verification_value: 999)
+    @credit_card = credit_card('4444333322221111', month: 01, year: 2022, verification_value: 999)
     @options = {
-      order_id: generate_unique_id
+      order_id: generate_unique_id,
+      billing_address: address
     }
   end
 
@@ -203,6 +204,21 @@ class PayJunctionV2Test < Test::Unit::TestCase
     response = @gateway.store(credit_card, @options)
     assert_failure response
     assert_match %r{Card Number is not a valid card number}, response.message
+  end
+
+  def test_add_address
+    post = {:card => {:billingAddress => {}}}
+    @gateway.send(:add_address, post, @options)
+    # Billing Address
+    assert_equal @options[:billing_address][:first_name], post[:billing][:firstName]
+    assert_equal @options[:billing_address][:last_name], post[:billing][:lastName]
+    assert_equal @options[:billing_address][:company], post[:billing][:companyName]
+    assert_equal @options[:billing_address][:phone_number], post[:billing][:phone]
+    assert_equal @options[:billing_address][:address1], post[:billing][:address][:address]
+    assert_equal @options[:billing_address][:city], post[:billing][:address][:city]
+    assert_equal @options[:billing_address][:state], post[:billing][:address][:state]
+    assert_equal @options[:billing_address][:country], post[:billing][:address][:country]
+    assert_equal @options[:billing_address][:zip], post[:billing][:address][:zip]
   end
 
   def test_scrub

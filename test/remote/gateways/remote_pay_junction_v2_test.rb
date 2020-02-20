@@ -5,9 +5,10 @@ class RemotePayJunctionV2Test < Test::Unit::TestCase
     @gateway = PayJunctionV2Gateway.new(fixtures(:pay_junction_v2))
 
     @amount = 99
-    @credit_card = credit_card('4444333322221111', month: 01, year: 2020, verification_value: 999)
+    @credit_card = credit_card('4444333322221111', month: 01, year: 2021, verification_value: 999)
     @options = {
-      order_id: generate_unique_id
+      order_id: generate_unique_id,
+      billing_address: address()
     }
   end
 
@@ -81,13 +82,13 @@ class RemotePayJunctionV2Test < Test::Unit::TestCase
   end
 
   def test_partial_refund
-    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    purchase = @gateway.purchase(@amount+50, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount-50, purchase.authorization)
+    assert refund = @gateway.refund(@amount, purchase.authorization)
     assert_success refund
     assert_equal 'Approved', refund.message
-    assert_equal sprintf('%.2f', (@amount-50).to_f / 100), refund.params['amountTotal']
+    assert_equal sprintf('%.2f', @amount.to_f / 100), refund.params['amountTotal']
   end
 
   def test_failed_refund
