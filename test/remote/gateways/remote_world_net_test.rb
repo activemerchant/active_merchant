@@ -25,10 +25,10 @@ class RemoteWorldNetTest < Test::Unit::TestCase
   def test_successful_purchase_with_more_options
     options = {
       order_id: generate_order_id,
-      email: "joe@example.com",
+      email: 'joe@example.com',
       billing_address: address,
       description: 'Store Purchase',
-      ip: "127.0.0.1",
+      ip: '127.0.0.1',
     }
 
     response = @gateway.purchase(@amount, @credit_card, options)
@@ -109,10 +109,10 @@ class RemoteWorldNetTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert void = @gateway.void(auth.authorization)
-  # UNSUPPORTED
-  #   assert_success void
-  #   assert_equal 'REPLACE WITH SUCCESSFUL VOID MESSAGE', response.message
+    assert @gateway.void(auth.authorization)
+    # UNSUPPORTED
+    #   assert_success void
+    #   assert_equal 'REPLACE WITH SUCCESSFUL VOID MESSAGE', response.message
   end
 
   def test_failed_void
@@ -156,7 +156,6 @@ class RemoteWorldNetTest < Test::Unit::TestCase
     response = @gateway.store(@credit_card, @options)
     assert_success response
     assert_equal nil, response.message
-    card_reference = response.authorization
 
     assert response = @gateway.unstore('123456789', @options)
     assert_failure response

@@ -2,13 +2,7 @@ require 'test_helper'
 
 # NOTE: tests may fail randomly because Garanti returns random(!) responses for their test server
 class RemoteGarantiTest < Test::Unit::TestCase
-
   def setup
-    if RUBY_VERSION < '1.9' && $KCODE == "NONE"
-      @original_kcode = $KCODE
-      $KCODE = 'u'
-    end
-
     @gateway = GarantiGateway.new(fixtures(:garanti))
 
     @amount = 100 # 1 cents = 0.01$
@@ -56,13 +50,13 @@ class RemoteGarantiTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = GarantiGateway.new(
-                :login => 'PROVAUT',
-                :terminal_id => '30691300',
-                :merchant_id => '',
-                :password => ''
-              )
+      :login => 'PROVAUT',
+      :terminal_id => '30691300',
+      :merchant_id => '',
+      :password => ''
+    )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal '0651', response.params["reason_code"]
+    assert_equal '0651', response.params['reason_code']
   end
 end

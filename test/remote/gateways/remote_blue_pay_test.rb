@@ -10,7 +10,8 @@ class BluePayTest < Test::Unit::TestCase
     @options = {
       :order_id => generate_unique_id,
       :billing_address => address,
-      :description => 'Store purchase'
+      :description => 'Store purchase',
+      :ip => '192.168.0.1'
     }
 
     @recurring_options = {
@@ -36,7 +37,7 @@ class BluePayTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, check, @options.merge(:email=>'foo@example.com'))
     assert_success response
     assert response.test?
-    assert_equal 'This transaction has been approved', response.message
+    assert_equal 'App ACH Sale', response.message
     assert response.authorization
   end
 
@@ -72,8 +73,8 @@ class BluePayTest < Test::Unit::TestCase
     unknown_response_keys = response_keys - BluePayGateway::FIELD_MAP.values
     missing_response_keys = BluePayGateway::FIELD_MAP.values - response_keys
 
-    assert_empty unknown_response_keys, "unknown_response_keys"
-    assert_empty missing_response_keys, "missing response_keys"
+    assert_empty unknown_response_keys, 'unknown_response_keys'
+    assert_empty missing_response_keys, 'missing response_keys'
   end
 
   def test_that_we_understand_and_parse_all_keys_in_rebilling_response
@@ -87,8 +88,8 @@ class BluePayTest < Test::Unit::TestCase
     unknown_response_keys = response_keys - BluePayGateway::REBILL_FIELD_MAP.values
     missing_response_keys = BluePayGateway::REBILL_FIELD_MAP.values - response_keys
 
-    assert_empty unknown_response_keys, "unknown_response_keys"
-    assert_empty missing_response_keys, "missing response_keys"
+    assert_empty unknown_response_keys, 'unknown_response_keys'
+    assert_empty missing_response_keys, 'missing response_keys'
   end
 
   def test_authorization_and_capture
@@ -168,6 +169,24 @@ class BluePayTest < Test::Unit::TestCase
     assert response.authorization
   ensure
     ActiveMerchant::Billing::BluePayGateway.application_id = nil
+  end
+
+  def test_successful_refund_with_check
+    assert response = @gateway.purchase(@amount, check, @options.merge(:email=>'foo@example.com'))
+    assert_success response
+    assert response.test?
+    assert_equal 'App ACH Sale', response.message
+    assert response.authorization
+
+    assert refund = @gateway.refund(@amount, response.authorization, @options.merge(:doc_type=>'PPD'))
+    assert_success refund
+    assert_equal 'App ACH Void', refund.message
+  end
+
+  def test_successful_credit_with_check
+    assert credit = @gateway.credit(@amount, check, @options.merge(:doc_type=>'PPD'))
+    assert_success credit
+    assert_equal 'App ACH Credit', credit.message
   end
 
   def test_transcript_scrubbing

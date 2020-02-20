@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
       include BraintreeCommon
 
       self.display_name = 'Braintree (Orange Platform)'
-      self.supported_countries = ["US"]
+      self.supported_countries = ['US']
 
       self.live_url = self.test_url = 'https://secure.braintreepaymentgateway.com/api/transact.php'
 

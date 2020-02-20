@@ -4,7 +4,7 @@ class OmiseTest < Test::Unit::TestCase
   def setup
     @gateway = OmiseGateway.new(
       public_key: 'pkey_test_abc',
-      secret_key: 'skey_test_123',
+      secret_key: 'skey_test_123'
     )
 
     @credit_card = credit_card
@@ -23,7 +23,7 @@ class OmiseTest < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal @gateway.supported_countries, %w( TH JP )
+    assert_equal @gateway.supported_countries, %w(TH JP)
   end
 
   def test_supported_cardtypes
@@ -39,8 +39,8 @@ class OmiseTest < Test::Unit::TestCase
   end
 
   def test_gateway_url
-     assert_equal 'https://api.omise.co/', OmiseGateway::API_URL
-     assert_equal 'https://vault.omise.co/', OmiseGateway::VAULT_URL
+    assert_equal 'https://api.omise.co/', OmiseGateway::API_URL
+    assert_equal 'https://vault.omise.co/', OmiseGateway::VAULT_URL
   end
 
   def test_request_headers
@@ -51,29 +51,29 @@ class OmiseTest < Test::Unit::TestCase
 
   def test_post_data
     post_data = @gateway.send(:post_data, { card: {number: '4242424242424242'} })
-    assert_equal "{\"card\":{\"number\":\"4242424242424242\"}}", post_data
+    assert_equal '{"card":{"number":"4242424242424242"}}', post_data
   end
 
   def test_parse_response
     response = @gateway.send(:parse, successful_purchase_response)
-    assert(response.key?('object'), "expect json response has object key")
+    assert(response.key?('object'), 'expect json response has object key')
   end
 
   def test_successful_response
     response = @gateway.send(:parse, successful_purchase_response)
     success  = @gateway.send(:successful?, response)
-    assert(success, "expect success to be true")
+    assert(success, 'expect success to be true')
   end
 
   def test_error_response
     response = @gateway.send(:parse, error_response)
     success  = @gateway.send(:successful?, response)
-    assert(!success, "expect success to be false")
+    assert(!success, 'expect success to be false')
   end
 
   def test_error_code_from
     response = @gateway.send(:parse, invalid_security_code_response)
-    error_code  = @gateway.send(:error_code_from, response)
+    error_code = @gateway.send(:error_code_from, response)
     assert_equal 'invalid_security_code', error_code
   end
 
@@ -90,7 +90,7 @@ class OmiseTest < Test::Unit::TestCase
   end
 
   def test_card_declined
-    card_declined =  @gateway.send(:parse, failed_capture_response)
+    card_declined = @gateway.send(:parse, failed_capture_response)
     card_declined_code = @gateway.send(:standard_error_code_mapping, card_declined)
     assert_equal 'card_declined', card_declined_code
   end
@@ -812,5 +812,4 @@ class OmiseTest < Test::Unit::TestCase
     }
     RESPONSE
   end
-
 end

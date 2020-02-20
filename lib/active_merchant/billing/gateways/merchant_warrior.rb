@@ -30,6 +30,7 @@ module ActiveMerchant #:nodoc:
         add_order_id(post, options)
         add_address(post, options)
         add_payment_method(post, payment_method)
+        add_recurring_flag(post, options)
         commit('processAuth', post)
       end
 
@@ -39,6 +40,7 @@ module ActiveMerchant #:nodoc:
         add_order_id(post, options)
         add_address(post, options)
         add_payment_method(post, payment_method)
+        add_recurring_flag(post, options)
         commit('processCard', post)
       end
 
@@ -46,7 +48,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_amount(post, money, options)
         add_transaction(post, identification)
-        post.merge!('captureAmount' => amount(money))
+        post['captureAmount'] = amount(money)
         commit('processCapture', post)
       end
 
@@ -56,6 +58,13 @@ module ActiveMerchant #:nodoc:
         add_transaction(post, identification)
         post['refundAmount'] = amount(money)
         commit('refundCard', post)
+      end
+
+      def void(money, identification, options = {})
+        post = {}
+        add_amount(post, money, options)
+        add_transaction(post, identification)
+        commit('processVoid', post)
       end
 
       def store(creditcard, options = {})
@@ -68,6 +77,18 @@ module ActiveMerchant #:nodoc:
         commit('addCard', post)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((&?paymentCardNumber=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((CardNumber=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?paymentCardCSC=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?apiKey=)[^&]*)i, '\1[FILTERED]')
+      end
+
       private
 
       def add_transaction(post, identification)
@@ -75,17 +96,17 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(post, options)
-        return unless(address = (options[:billing_address] || options[:address]))
+        return unless (address = (options[:billing_address] || options[:address]))
 
         post['customerName'] = scrub_name(address[:name])
         post['customerCountry'] = address[:country]
-        post['customerState'] = address[:state]
+        post['customerState'] = address[:state] || 'N/A'
         post['customerCity'] = address[:city]
         post['customerAddress'] = address[:address1]
         post['customerPostCode'] = address[:zip]
-		post['customerIP'] = address[:ip]
-		post['customerPhone'] = address[:phone]
-		post['customerEmail'] = address[:email]
+        post['customerIP'] = address[:ip]
+        post['customerPhone'] = address[:phone]
+        post['customerEmail'] = address[:email]
       end
 
       def add_order_id(post, options)
@@ -107,7 +128,7 @@ module ActiveMerchant #:nodoc:
       def add_creditcard(post, creditcard)
         post['paymentCardNumber'] = creditcard.number
         post['paymentCardName'] = scrub_name(creditcard.name)
-        post['paymentCardExpiry'] = creditcard.expiry_date.expiration.strftime("%m%y")
+        post['paymentCardExpiry'] = creditcard.expiry_date.expiration.strftime('%m%y')
         post['paymentCardCSC'] = creditcard.verification_value if creditcard.verification_value?
       end
 
@@ -121,6 +142,12 @@ module ActiveMerchant #:nodoc:
         post['transactionAmount'] = amount(money)
         post['transactionCurrency'] = currency
         post['hash'] = verification_hash(amount(money), currency)
+      end
+
+      def add_recurring_flag(post, options)
+        return if options[:recurring_flag].nil?
+
+        post['recurringFlag'] = options[:recurring_flag]
       end
 
       def verification_hash(money, currency)
@@ -146,7 +173,7 @@ module ActiveMerchant #:nodoc:
 
       def parse_element(response, node)
         if node.has_elements?
-          node.elements.each{|element| parse_element(response, element)}
+          node.elements.each { |element| parse_element(response, element) }
         else
           response[node.name.underscore.to_sym] = node.text
         end
@@ -169,21 +196,19 @@ module ActiveMerchant #:nodoc:
       def add_auth(action, post)
         post['merchantUUID'] = @options[:merchant_uuid]
         post['apiKey'] = @options[:api_key]
-        unless token?(post)
-          post['method'] = action
-        end
+        post['method'] = action unless token?(post)
       end
 
       def url_for(action, post)
         if token?(post)
-          [(test? ? TOKEN_TEST_URL : TOKEN_LIVE_URL), action].join("/")
+          [(test? ? TOKEN_TEST_URL : TOKEN_LIVE_URL), action].join('/')
         else
           (test? ? POST_TEST_URL : POST_LIVE_URL)
         end
       end
 
       def token?(post)
-        (post["cardID"] || post["cardName"])
+        (post['cardID'] || post['cardName'])
       end
 
       def success?(response)
@@ -191,7 +216,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data(post)
-        post.collect{|k,v| "#{k}=#{CGI.escape(v.to_s)}" }.join("&")
+        post.collect { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join('&')
       end
     end
   end

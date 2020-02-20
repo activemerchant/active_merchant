@@ -48,7 +48,7 @@ module ActiveMerchant #:nodoc:
       protected
 
       def build_sale_request(type, money, creditcard, options = {})
-        requires!(options,  :order_id)
+        requires!(options, :order_id)
 
         xml = Builder::XmlMarkup.new :indent => 2
 
@@ -62,7 +62,7 @@ module ActiveMerchant #:nodoc:
           add_amount_tags(money, options, xml)
           xml.tag! 'Email', options[:email] if options[:email]
 
-          if(address = (options[:billing_address] || options[:address]))
+          if (address = (options[:billing_address] || options[:address]))
             xml.tag! 'BillTo' do
               add_address(xml, address)
             end
@@ -70,7 +70,6 @@ module ActiveMerchant #:nodoc:
               add_address(xml, address)
             end
           end
-
         end
 
         xml.target!
@@ -148,7 +147,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(request)
-        raw_response = ssl_post((test? ? self.test_url : self.live_url), "DATA=" + request)
+        raw_response = ssl_post((test? ? self.test_url : self.live_url), 'DATA=' + request)
 
         response = parse(raw_response)
 
@@ -175,25 +174,23 @@ module ActiveMerchant #:nodoc:
 
       def parse_element(response, node)
         if node.has_elements?
-          node.elements.each{|element| parse_element(response, element) }
+          node.elements.each { |element| parse_element(response, element) }
         else
           response[node.name.underscore.to_sym] = node.text
         end
       end
 
       def success?(response)
-        (response[:response] == "Approved")
+        (response[:response] == 'Approved')
       end
 
       def normalize(text)
         return unless text
 
         if ActiveSupport::Inflector.method(:transliterate).arity == -2
-          ActiveSupport::Inflector.transliterate(text,'')
-        elsif RUBY_VERSION >= '1.9'
-          text.gsub(/[^\x00-\x7F]+/, '')
+          ActiveSupport::Inflector.transliterate(text, '')
         else
-          ActiveSupport::Inflector.transliterate(text).to_s
+          text.gsub(/[^\x00-\x7F]+/, '')
         end
       end
     end

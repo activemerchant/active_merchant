@@ -36,7 +36,6 @@ class IridiumTest < Test::Unit::TestCase
     assert response.test?
   end
 
-
   def test_successful_authorize
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
 
@@ -50,7 +49,7 @@ class IridiumTest < Test::Unit::TestCase
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
 
-    assert response = @gateway.capture(1111, "1;100115172046327701460093;460093")
+    assert response = @gateway.capture(1111, '1;100115172046327701460093;460093')
     assert_success response
 
     assert_equal('100115172047506301812526', response.authorization)
@@ -103,18 +102,16 @@ class IridiumTest < Test::Unit::TestCase
   def test_use_ducktyping_for_credit_card
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
-    credit_card = stub(:number => '4242424242424242', :verification_value => '123', :name => "Hans Tester", :year => 2012, :month => 1)
+    credit_card = stub(:number => '4242424242424242', :verification_value => '123', :name => 'Hans Tester', :year => 2012, :month => 1)
 
     assert_nothing_raised do
       assert_success @gateway.purchase(@amount, credit_card, @options)
     end
   end
 
-
   def test_transcript_scrubbing
     assert_equal post_scrubbed, @gateway.scrub(pre_scrubbed)
   end
-
 
   private
 
@@ -344,5 +341,4 @@ class IridiumTest < Test::Unit::TestCase
   <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><CardDetailsTransactionResponse xmlns="https://www.thepaymentgateway.net/"><CardDetailsTransactionResult AuthorisationAttempted="True"><StatusCode>0</StatusCode><Message>AuthCode: 608724</Message></CardDetailsTransactionResult><TransactionOutputData CrossReference="110428221508160201608724"><AuthCode>608724</AuthCode><AddressNumericCheckResult>PASSED</AddressNumericCheckResult><PostCodeCheckResult>PASSED</PostCodeCheckResult><CV2CheckResult>PASSED</CV2CheckResult><GatewayEntryPoints><GatewayEntryPoint EntryPointURL="https://gw1.iridiumcorp.net/" Metric="100" /><GatewayEntryPoint EntryPointURL="https://gw2.iridiumcorp.net/" Metric="200" /><GatewayEntryPoint EntryPointURL="https://gw3.iridiumcorp.net/" Metric="300" /></GatewayEntryPoints></TransactionOutputData></CardDetailsTransactionResponse></soap:Body></soap:Envelope>
     POST_SCRUBBED
   end
-
 end

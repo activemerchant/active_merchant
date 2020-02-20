@@ -57,7 +57,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>:test</tt> -- +true+ or +false+. If true, perform transactions against the test server.
       #   Otherwise, perform transactions against the production server.
       def initialize(options = {})
-        ActiveMerchant.deprecated "ARB functionality in ActiveMerchant is deprecated and will be removed in a future version. Please contact the ActiveMerchant maintainers if you have an interest in taking ownership of a separate gem that continues support for it."
+        ActiveMerchant.deprecated 'ARB functionality in ActiveMerchant is deprecated and will be removed in a future version. Please contact the ActiveMerchant maintainers if you have an interest in taking ownership of a separate gem that continues support for it.'
         requires!(options, :login, :password)
         super
       end
@@ -147,9 +147,7 @@ module ActiveMerchant #:nodoc:
 
       # Builds recurring billing request
       def build_recurring_request(action, options = {})
-        unless RECURRING_ACTIONS.include?(action)
-          raise StandardError, "Invalid Automated Recurring Billing Action: #{action}"
-        end
+        raise StandardError, "Invalid Automated Recurring Billing Action: #{action}" unless RECURRING_ACTIONS.include?(action)
 
         xml = Builder::XmlMarkup.new(:indent => 2)
         xml.instruct!(:xml, :version => '1.0', :encoding => 'utf-8')
@@ -232,6 +230,7 @@ module ActiveMerchant #:nodoc:
       def add_interval(xml, options)
         interval = options[:interval]
         return unless interval
+
         xml.tag!('interval') do
           # The measurement of time, in association with the Interval Unit,
           # that is used to define the frequency of the billing occurrences
@@ -246,6 +245,7 @@ module ActiveMerchant #:nodoc:
       def add_duration(xml, options)
         duration = options[:duration]
         return unless duration
+
         # The date the subscription begins
         # (also the date the initial billing occurs)
         xml.tag!('startDate', duration[:start_date]) if duration[:start_date]
@@ -255,6 +255,7 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_schedule(xml, options)
         return unless options[:interval] || options[:duration]
+
         xml.tag!('paymentSchedule') do
           # Contains information about the interval of time between payments
           add_interval(xml, options)
@@ -269,6 +270,7 @@ module ActiveMerchant #:nodoc:
       # Adds customer's credit card or bank account payment information
       def add_payment(xml, options)
         return unless options[:credit_card] || options[:bank_account]
+
         xml.tag!('payment') do
           # Contains the customer’s credit card information
           add_credit_card(xml, options)
@@ -283,6 +285,7 @@ module ActiveMerchant #:nodoc:
       def add_credit_card(xml, options)
         credit_card = options[:credit_card]
         return unless credit_card
+
         xml.tag!('creditCard') do
           # The credit card number used for payment of the subscription
           xml.tag!('cardNumber', credit_card.number)
@@ -297,6 +300,7 @@ module ActiveMerchant #:nodoc:
       def add_bank_account(xml, options)
         bank_account = options[:bank_account]
         return unless bank_account
+
         xml.tag!('bankAccount') do
           # The type of bank account used for payment of the subscription
           xml.tag!('accountType', bank_account[:account_type])
@@ -319,6 +323,7 @@ module ActiveMerchant #:nodoc:
       def add_order(xml, options)
         order = options[:order]
         return unless order
+
         xml.tag!('order') do
           # Merchant-assigned invoice number for the subscription (optional)
           xml.tag!('invoiceNumber', order[:invoice_number])
@@ -331,6 +336,7 @@ module ActiveMerchant #:nodoc:
       def add_customer(xml, options)
         customer = options[:customer]
         return unless customer
+
         xml.tag!('customer') do
           xml.tag!('type', customer[:type]) if customer[:type]
           xml.tag!('id', customer[:id]) if customer[:id]
@@ -346,6 +352,7 @@ module ActiveMerchant #:nodoc:
       def add_drivers_license(xml, options)
         return unless customer = options[:customer]
         return unless drivers_license = customer[:drivers_license]
+
         xml.tag!('driversLicense') do
           # The customer's driver's license number
           xml.tag!('number', drivers_license[:number])
@@ -359,6 +366,7 @@ module ActiveMerchant #:nodoc:
       # Adds address information
       def add_address(xml, container_name, address)
         return if address.blank?
+
         xml.tag!(container_name) do
           xml.tag!('firstName', address[:first_name])
           xml.tag!('lastName', address[:last_name])
@@ -377,7 +385,7 @@ module ActiveMerchant #:nodoc:
 
       def recurring_commit(action, request)
         url = test? ? test_url : live_url
-        xml = ssl_post(url, request, "Content-Type" => "text/xml")
+        xml = ssl_post(url, request, 'Content-Type' => 'text/xml')
 
         response = recurring_parse(action, xml)
 
@@ -395,7 +403,7 @@ module ActiveMerchant #:nodoc:
         response = {}
         xml = REXML::Document.new(xml)
         root = REXML::XPath.first(xml, "//#{RECURRING_ACTIONS[action]}Response") ||
-               REXML::XPath.first(xml, "//ErrorResponse")
+               REXML::XPath.first(xml, '//ErrorResponse')
         if root
           root.elements.to_a.each do |node|
             recurring_parse_element(response, node)
@@ -407,7 +415,7 @@ module ActiveMerchant #:nodoc:
 
       def recurring_parse_element(response, node)
         if node.has_elements?
-          node.elements.each{|e| recurring_parse_element(response, e) }
+          node.elements.each { |e| recurring_parse_element(response, e) }
         else
           response[node.name.underscore.to_sym] = node.text
         end

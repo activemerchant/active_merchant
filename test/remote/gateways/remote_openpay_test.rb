@@ -21,10 +21,17 @@ class RemoteOpenpayTest < Test::Unit::TestCase
     assert_nil response.message
   end
 
+  def test_successful_purchase_with_email
+    @options[:email] = '%d@example.org' % Time.now
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_nil response.message
+  end
+
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'The card is not supported on online transactions', response.message
+    assert_equal 'The card was declined', response.message
   end
 
   def test_successful_refund
@@ -41,7 +48,7 @@ class RemoteOpenpayTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_refund
-    assert response = @gateway.refund(@amount, '1',  @options)
+    assert response = @gateway.refund(@amount, '1', @options)
     assert_failure response
     assert_not_nil response.message
   end
@@ -52,10 +59,17 @@ class RemoteOpenpayTest < Test::Unit::TestCase
     assert_nil response.message
   end
 
+  def test_successful_authorize_with_email
+    @options[:email] = '%d@example.org' % Time.now
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_nil response.message
+  end
+
   def test_unsuccessful_authorize
     assert response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'The card is not supported on online transactions', response.message
+    assert_equal 'The card was declined', response.message
   end
 
   def test_successful_capture
@@ -117,6 +131,11 @@ class RemoteOpenpayTest < Test::Unit::TestCase
     assert_match %r{cardNumber not allowed for Card points}, response.message
   end
 
+  def test_successful_purchase_with_installments
+    assert response = @gateway.purchase(@amount * 300, @store_card, @options.merge(payments: '3'))
+    assert_success response
+  end
+
   def test_successful_store
     new_email_address = '%d@example.org' % Time.now
     assert response = @gateway.store(@credit_card, name: 'Test User', email: new_email_address)
@@ -146,7 +165,7 @@ class RemoteOpenpayTest < Test::Unit::TestCase
   def test_unsuccessful_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_match /The card is not supported/, response.message
+    assert_match(/The card was declined/, response.message)
   end
 
   def test_invalid_login
@@ -181,7 +200,7 @@ class RemoteOpenpayTest < Test::Unit::TestCase
   end
 
   def test_empty_string_cvv_scrubbing
-    @credit_card.verification_value = ""
+    @credit_card.verification_value = ''
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card, @options)
     end
@@ -191,7 +210,7 @@ class RemoteOpenpayTest < Test::Unit::TestCase
   end
 
   def test_whitespace_string_cvv_scrubbing
-    @credit_card.verification_value = "    "
+    @credit_card.verification_value = '    '
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card, @options)
     end

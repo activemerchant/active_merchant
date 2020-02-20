@@ -10,7 +10,6 @@ require 'test_helper'
 # All purchases made in these tests are $1, so hopefully you won't be
 # sent broke if you forget...
 class NetRegistryTest < Test::Unit::TestCase
-
   def setup
     @gateway = NetRegistryGateway.new(fixtures(:net_registry))
 
@@ -58,8 +57,8 @@ class NetRegistryTest < Test::Unit::TestCase
       assert_match(/\A\d{6}\z/, response.authorization)
 
       response = @gateway.capture(@amount,
-                                  response.authorization,
-                                  :credit_card => @valid_creditcard)
+        response.authorization,
+        :credit_card => @valid_creditcard)
       assert_success response
       assert_equal 'approved', response.params['status']
     end
@@ -88,9 +87,9 @@ class NetRegistryTest < Test::Unit::TestCase
 
   def test_bad_login
     gateway = NetRegistryGateway.new(
-                 :login    => 'bad-login',
-                 :password => 'bad-login'
-               )
+      :login    => 'bad-login',
+      :password => 'bad-login'
+    )
     response = gateway.purchase(@amount, @valid_creditcard)
     assert_equal 'failed', response.params['status']
     assert_failure response

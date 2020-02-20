@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class PostsDataTests < Test::Unit::TestCase
-
   def setup
     @url = 'http://example.com'
     @gateway = SimpleTestGateway.new
@@ -40,6 +39,14 @@ class PostsDataTests < Test::Unit::TestCase
   def test_successful_raw_request
     ActiveMerchant::Connection.any_instance.expects(:request).returns(@ok)
     assert_equal @ok, @gateway.raw_ssl_request(:post, @url, '')
+  end
+
+  def test_raw_ssl_request_does_not_mutate_headers_argument
+    ActiveMerchant::Connection.any_instance.expects(:request).returns(@ok)
+
+    headers = { 'Content-Type' => 'text/xml' }.freeze
+    @gateway.raw_ssl_request(:post, @url, '', headers)
+    assert_equal({ 'Content-Type' => 'text/xml' }, headers)
   end
 
   def test_setting_ssl_strict_outside_class_definition

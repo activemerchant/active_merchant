@@ -105,6 +105,7 @@ class NetRegistryTest < Test::Unit::TestCase
   end
 
   private
+
   def successful_purchase_response
     <<-RESPONSE
 approved
@@ -384,7 +385,7 @@ cashout_amount=0
 receipt_array=ARRAY(0x83752d0)
 account_type=CREDIT A/C
 result=0
-RESPONSE
+    RESPONSE
   end
 
   def purchase_with_expired_credit_card_response

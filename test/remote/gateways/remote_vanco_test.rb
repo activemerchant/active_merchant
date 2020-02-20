@@ -11,7 +11,7 @@ class RemoteVancoTest < Test::Unit::TestCase
 
     @options = {
       order_id: '1',
-      billing_address: address(country: "US", state: "NC", zip: "06085"),
+      billing_address: address(country: 'US', state: 'NC', zip: '06085'),
       description: 'Store Purchase'
     }
   end
@@ -19,32 +19,32 @@ class RemoteVancoTest < Test::Unit::TestCase
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "Success", response.message
+    assert_equal 'Success', response.message
   end
 
   def test_successful_purchase_with_fund_id
-    response = @gateway.purchase(@amount, @credit_card, @options.merge(fund_id: "TheFund"))
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(fund_id: 'TheFund'))
     assert_success response
-    assert_equal "Success", response.message
+    assert_equal 'Success', response.message
   end
 
   def test_successful_purchase_with_ip_address
-    response = @gateway.purchase(@amount, @credit_card, @options.merge(ip: "192.168.19.123"))
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(ip: '192.168.19.123'))
     assert_success response
-    assert_equal "Success", response.message
+    assert_equal 'Success', response.message
   end
 
   def test_successful_purchase_sans_minimal_options
     response = @gateway.purchase(@amount, @credit_card)
     assert_success response
-    assert_equal "Success", response.message
+    assert_equal 'Success', response.message
   end
 
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card)
     assert_failure response
-    assert_equal("Invalid Expiration Date", response.message)
-    assert_equal("183", response.params["error_codes"])
+    assert_equal('Invalid Expiration Date', response.message)
+    assert_equal('183', response.params['error_codes'])
   end
 
   def test_successful_echeck_purchase
@@ -55,7 +55,7 @@ class RemoteVancoTest < Test::Unit::TestCase
   end
 
   def test_failed_echeck_purchase
-    response = @gateway.purchase(@amount, check(routing_number: "121042883"), @options)
+    response = @gateway.purchase(@amount, check(routing_number: '121042883'), @options)
     assert_failure response
     assert_equal 'Invalid Routing Number', response.message
   end
@@ -66,7 +66,7 @@ class RemoteVancoTest < Test::Unit::TestCase
 
     refund = @gateway.refund(@amount, purchase.authorization)
     assert_success refund
-    assert_equal "Success", refund.message
+    assert_equal 'Success', refund.message
   end
 
   def test_partial_refund
@@ -105,6 +105,6 @@ class RemoteVancoTest < Test::Unit::TestCase
     )
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "Invalid Login Key", response.message
+    assert_equal 'Invalid Login Key', response.message
   end
 end

@@ -1,8 +1,6 @@
 require 'test_helper'
 
 class RemoteSoEasyPayTest < Test::Unit::TestCase
-
-
   def setup
     @gateway = SoEasyPayGateway.new(fixtures(:so_easy_pay))
 
@@ -55,12 +53,11 @@ class RemoteSoEasyPayTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = SoEasyPayGateway.new(
-                :login => 'one',
-                :password => 'wrong'
-              )
+      :login => 'one',
+      :password => 'wrong'
+    )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Website verification failed, wrong websiteID or password', response.message
   end
 end
-

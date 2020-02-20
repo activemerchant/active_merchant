@@ -2,7 +2,6 @@ require 'test_helper'
 require 'logger'
 
 class UsaEpayTest < Test::Unit::TestCase
-
   def test_transaction_gateway_created
     gateway = UsaEpayGateway.new(
       :login => 'X'

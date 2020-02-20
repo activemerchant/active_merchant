@@ -59,6 +59,20 @@ class CountryTest < Test::Unit::TestCase
     assert_equal 'GB', country.code(:alpha2).value
   end
 
+  def test_find_romania
+    country = ActiveMerchant::Country.find('ROM')
+    assert_equal 'RO', country.code(:alpha2).value
+
+    country = ActiveMerchant::Country.find('ROU')
+    assert_equal 'RO', country.code(:alpha2).value
+
+    country = ActiveMerchant::Country.find('Romania')
+    assert_equal 'ROU', country.code(:alpha3).value
+
+    country = ActiveMerchant::Country.find('Romania')
+    assert_not_equal 'ROM', country.code(:alpha3).value
+  end
+
   def test_raise_on_nil_name
     assert_raises(ActiveMerchant::InvalidCountryCodeError) do
       ActiveMerchant::Country.find(nil)
@@ -66,7 +80,7 @@ class CountryTest < Test::Unit::TestCase
   end
 
   def test_country_names_are_alphabetized
-    country_names = ActiveMerchant::Country::COUNTRIES.map { | each | each[:name] }
+    country_names = ActiveMerchant::Country::COUNTRIES.map { |each| each[:name] }
     assert_equal(country_names.sort, country_names)
   end
 

@@ -7,7 +7,7 @@ class RedsysTest < Test::Unit::TestCase
     Base.mode = :test
     @credentials = {
       :login      => '091952713',
-      :secret_key => "qwertyasdf0123456789",
+      :secret_key => 'qwertyasdf0123456789',
       :terminal   => '1',
     }
     @gateway = RedsysGateway.new(@credentials)
@@ -32,8 +32,8 @@ class RedsysTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     res = @gateway.purchase(123, credit_card, @options)
     assert_success res
-    assert_equal "Transaction Approved", res.message
-    assert_equal "1001|123|978", res.authorization
+    assert_equal 'Transaction Approved', res.message
+    assert_equal '1001|123|978', res.authorization
     assert_equal '1001', res.params['ds_order']
   end
 
@@ -41,8 +41,8 @@ class RedsysTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_purchase_response_with_credit_card_token)
     res = @gateway.purchase(123, credit_card, @options)
     assert_success res
-    assert_equal "Transaction Approved", res.message
-    assert_equal "141661632759|100|978", res.authorization
+    assert_equal 'Transaction Approved', res.message
+    assert_equal '141661632759|100|978', res.authorization
     assert_equal '141661632759', res.params['ds_order']
     assert_equal '77bff3a969d6f97b2ec815448cdcff453971f573', res.params['ds_merchant_identifier']
   end
@@ -51,7 +51,7 @@ class RedsysTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
     res = @gateway.purchase(123, credit_card, @options)
     assert_failure res
-    assert_equal "Refusal with no specific reason", res.message
+    assert_equal 'Refusal with no specific reason', res.message
     assert_equal '1002', res.params['ds_order']
   end
 
@@ -65,7 +65,7 @@ class RedsysTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(error_purchase_response)
     res = @gateway.purchase(123, credit_card, @options)
     assert_failure res
-    assert_equal "SIS0051 ERROR", res.message
+    assert_equal 'SIS0051 ERROR', res.message
   end
 
   def test_refund_request
@@ -75,18 +75,18 @@ class RedsysTest < Test::Unit::TestCase
 
   def test_successful_refund
     @gateway.expects(:ssl_post).returns(successful_refund_response)
-    res = @gateway.refund(123, "1001")
+    res = @gateway.refund(123, '1001')
     assert_success res
-    assert_equal "Refund / Confirmation approved", res.message
-    assert_equal "1001|123|978", res.authorization
-    assert_equal "1001", res.params['ds_order']
+    assert_equal 'Refund / Confirmation approved', res.message
+    assert_equal '1001|123|978', res.authorization
+    assert_equal '1001', res.params['ds_order']
   end
 
   def test_error_refund
     @gateway.expects(:ssl_post).returns(error_refund_response)
-    res = @gateway.refund(123, "1001")
+    res = @gateway.refund(123, '1001')
     assert_failure res
-    assert_equal "SIS0057 ERROR", res.message
+    assert_equal 'SIS0057 ERROR', res.message
   end
 
   # Remaining methods a pretty much the same, so we just test that
@@ -96,9 +96,9 @@ class RedsysTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).with(
       anything,
       all_of(
-        includes(CGI.escape("<DS_MERCHANT_TRANSACTIONTYPE>1</DS_MERCHANT_TRANSACTIONTYPE>")),
-        includes(CGI.escape("<DS_MERCHANT_PAN>4242424242424242</DS_MERCHANT_PAN>")),
-        includes(CGI.escape("<DS_MERCHANT_AMOUNT>123</DS_MERCHANT_AMOUNT>"))
+        includes(CGI.escape('<DS_MERCHANT_TRANSACTIONTYPE>1</DS_MERCHANT_TRANSACTIONTYPE>')),
+        includes(CGI.escape('<DS_MERCHANT_PAN>4242424242424242</DS_MERCHANT_PAN>')),
+        includes(CGI.escape('<DS_MERCHANT_AMOUNT>123</DS_MERCHANT_AMOUNT>'))
       ),
       anything
     ).returns(successful_authorize_response)
@@ -114,7 +114,7 @@ class RedsysTest < Test::Unit::TestCase
 
   def test_bad_order_id_format
     stub_comms(@gateway, :ssl_request) do
-      @gateway.authorize(123, credit_card, order_id: "Una#cce-ptable44Format")
+      @gateway.authorize(123, credit_card, order_id: 'Una#cce-ptable44Format')
     end.check_request do |method, endpoint, data, headers|
       assert_match(/MERCHANT_ORDER%3E\d\d\d\dUnaccept%3C/, data)
     end.respond_with(successful_authorize_response)
@@ -122,7 +122,7 @@ class RedsysTest < Test::Unit::TestCase
 
   def test_order_id_numeric_start_but_too_long
     stub_comms(@gateway, :ssl_request) do
-      @gateway.authorize(123, credit_card, order_id: "1234ThisIs]FineButTooLong")
+      @gateway.authorize(123, credit_card, order_id: '1234ThisIs]FineButTooLong')
     end.check_request do |method, endpoint, data, headers|
       assert_match(/MERCHANT_ORDER%3E1234ThisIsFi%3C/, data)
     end.respond_with(successful_authorize_response)
@@ -132,9 +132,9 @@ class RedsysTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).with(
       anything,
       all_of(
-        includes(CGI.escape("<DS_MERCHANT_TRANSACTIONTYPE>2</DS_MERCHANT_TRANSACTIONTYPE>")),
-        includes(CGI.escape("<DS_MERCHANT_ORDER>1001</DS_MERCHANT_ORDER>")),
-        includes(CGI.escape("<DS_MERCHANT_AMOUNT>123</DS_MERCHANT_AMOUNT>"))
+        includes(CGI.escape('<DS_MERCHANT_TRANSACTIONTYPE>2</DS_MERCHANT_TRANSACTIONTYPE>')),
+        includes(CGI.escape('<DS_MERCHANT_ORDER>1001</DS_MERCHANT_ORDER>')),
+        includes(CGI.escape('<DS_MERCHANT_AMOUNT>123</DS_MERCHANT_AMOUNT>'))
       ),
       anything
     ).returns(successful_capture_response)
@@ -145,10 +145,10 @@ class RedsysTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).with(
       anything,
       all_of(
-        includes(CGI.escape("<DS_MERCHANT_TRANSACTIONTYPE>9</DS_MERCHANT_TRANSACTIONTYPE>")),
-        includes(CGI.escape("<DS_MERCHANT_ORDER>1001</DS_MERCHANT_ORDER>")),
-        includes(CGI.escape("<DS_MERCHANT_AMOUNT>123</DS_MERCHANT_AMOUNT>")),
-        includes(CGI.escape("<DS_MERCHANT_CURRENCY>978</DS_MERCHANT_CURRENCY>"))
+        includes(CGI.escape('<DS_MERCHANT_TRANSACTIONTYPE>9</DS_MERCHANT_TRANSACTIONTYPE>')),
+        includes(CGI.escape('<DS_MERCHANT_ORDER>1001</DS_MERCHANT_ORDER>')),
+        includes(CGI.escape('<DS_MERCHANT_AMOUNT>123</DS_MERCHANT_AMOUNT>')),
+        includes(CGI.escape('<DS_MERCHANT_CURRENCY>978</DS_MERCHANT_CURRENCY>'))
       ),
       anything
     ).returns(successful_void_response)
@@ -158,7 +158,7 @@ class RedsysTest < Test::Unit::TestCase
   def test_override_currency
     @gateway.expects(:ssl_post).with(
       anything,
-      includes(CGI.escape("<DS_MERCHANT_CURRENCY>840</DS_MERCHANT_CURRENCY>")),
+      includes(CGI.escape('<DS_MERCHANT_CURRENCY>840</DS_MERCHANT_CURRENCY>')),
       anything
     ).returns(successful_purchase_response)
     @gateway.authorize(123, credit_card, :order_id => '1001', :currency => 'USD')
@@ -174,19 +174,19 @@ class RedsysTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).times(2).returns(successful_authorize_response).then.returns(failed_void_response)
     response = @gateway.verify(credit_card, @options)
     assert_success response
-    assert_equal "Transaction Approved", response.message
+    assert_equal 'Transaction Approved', response.message
   end
 
   def test_unsuccessful_verify
     @gateway.expects(:ssl_post).returns(failed_authorize_response)
     response = @gateway.verify(credit_card, @options)
     assert_failure response
-    assert_equal "SIS0093 ERROR", response.message
+    assert_equal 'SIS0093 ERROR', response.message
   end
 
   def test_unknown_currency
     assert_raise ArgumentError do
-      @gateway.purchase(123, credit_card, @options.merge(currency: "HUH WUT"))
+      @gateway.purchase(123, credit_card, @options.merge(currency: 'HUH WUT'))
     end
   end
 
@@ -199,7 +199,7 @@ class RedsysTest < Test::Unit::TestCase
   end
 
   def test_supported_cardtypes
-    assert_equal [:visa, :master, :american_express, :jcb, :diners_club], RedsysGateway.supported_cardtypes
+    assert_equal [:visa, :master, :american_express, :jcb, :diners_club, :unionpay], RedsysGateway.supported_cardtypes
   end
 
   def test_using_test_mode
@@ -256,11 +256,11 @@ class RedsysTest < Test::Unit::TestCase
   # one with card and another without.
 
   def purchase_request
-    "entrada=%3CDATOSENTRADA%3E%0A++%3CDS_Version%3E0.1%3C%2FDS_Version%3E%0A++%3CDS_MERCHANT_CURRENCY%3E978%3C%2FDS_MERCHANT_CURRENCY%3E%0A++%3CDS_MERCHANT_AMOUNT%3E123%3C%2FDS_MERCHANT_AMOUNT%3E%0A++%3CDS_MERCHANT_ORDER%3E1001%3C%2FDS_MERCHANT_ORDER%3E%0A++%3CDS_MERCHANT_TRANSACTIONTYPE%3EA%3C%2FDS_MERCHANT_TRANSACTIONTYPE%3E%0A++%3CDS_MERCHANT_PRODUCTDESCRIPTION%2F%3E%0A++%3CDS_MERCHANT_TERMINAL%3E1%3C%2FDS_MERCHANT_TERMINAL%3E%0A++%3CDS_MERCHANT_MERCHANTCODE%3E091952713%3C%2FDS_MERCHANT_MERCHANTCODE%3E%0A++%3CDS_MERCHANT_MERCHANTSIGNATURE%3Eb98b606a6a588d8c45c239f244160efbbe30b4a8%3C%2FDS_MERCHANT_MERCHANTSIGNATURE%3E%0A++%3CDS_MERCHANT_TITULAR%3ELongbob+Longsen%3C%2FDS_MERCHANT_TITULAR%3E%0A++%3CDS_MERCHANT_PAN%3E4242424242424242%3C%2FDS_MERCHANT_PAN%3E%0A++%3CDS_MERCHANT_EXPIRYDATE%3E#{(Time.now.year + 1).to_s.slice(2,2)}09%3C%2FDS_MERCHANT_EXPIRYDATE%3E%0A++%3CDS_MERCHANT_CVV2%3E123%3C%2FDS_MERCHANT_CVV2%3E%0A%3C%2FDATOSENTRADA%3E%0A"
+    "entrada=%3CDATOSENTRADA%3E%0A++%3CDS_Version%3E0.1%3C%2FDS_Version%3E%0A++%3CDS_MERCHANT_CURRENCY%3E978%3C%2FDS_MERCHANT_CURRENCY%3E%0A++%3CDS_MERCHANT_AMOUNT%3E123%3C%2FDS_MERCHANT_AMOUNT%3E%0A++%3CDS_MERCHANT_ORDER%3E1001%3C%2FDS_MERCHANT_ORDER%3E%0A++%3CDS_MERCHANT_TRANSACTIONTYPE%3EA%3C%2FDS_MERCHANT_TRANSACTIONTYPE%3E%0A++%3CDS_MERCHANT_PRODUCTDESCRIPTION%2F%3E%0A++%3CDS_MERCHANT_TERMINAL%3E1%3C%2FDS_MERCHANT_TERMINAL%3E%0A++%3CDS_MERCHANT_MERCHANTCODE%3E091952713%3C%2FDS_MERCHANT_MERCHANTCODE%3E%0A++%3CDS_MERCHANT_MERCHANTSIGNATURE%3Eb98b606a6a588d8c45c239f244160efbbe30b4a8%3C%2FDS_MERCHANT_MERCHANTSIGNATURE%3E%0A++%3CDS_MERCHANT_TITULAR%3ELongbob+Longsen%3C%2FDS_MERCHANT_TITULAR%3E%0A++%3CDS_MERCHANT_PAN%3E4242424242424242%3C%2FDS_MERCHANT_PAN%3E%0A++%3CDS_MERCHANT_EXPIRYDATE%3E#{(Time.now.year + 1).to_s.slice(2, 2)}09%3C%2FDS_MERCHANT_EXPIRYDATE%3E%0A++%3CDS_MERCHANT_CVV2%3E123%3C%2FDS_MERCHANT_CVV2%3E%0A%3C%2FDATOSENTRADA%3E%0A"
   end
 
   def purchase_request_with_credit_card_token
-    "entrada=%3CDATOSENTRADA%3E%0A++%3CDS_Version%3E0.1%3C%2FDS_Version%3E%0A++%3CDS_MERCHANT_CURRENCY%3E978%3C%2FDS_MERCHANT_CURRENCY%3E%0A++%3CDS_MERCHANT_AMOUNT%3E123%3C%2FDS_MERCHANT_AMOUNT%3E%0A++%3CDS_MERCHANT_ORDER%3E1001%3C%2FDS_MERCHANT_ORDER%3E%0A++%3CDS_MERCHANT_TRANSACTIONTYPE%3EA%3C%2FDS_MERCHANT_TRANSACTIONTYPE%3E%0A++%3CDS_MERCHANT_PRODUCTDESCRIPTION%2F%3E%0A++%3CDS_MERCHANT_TERMINAL%3E1%3C%2FDS_MERCHANT_TERMINAL%3E%0A++%3CDS_MERCHANT_MERCHANTCODE%3E091952713%3C%2FDS_MERCHANT_MERCHANTCODE%3E%0A++%3CDS_MERCHANT_MERCHANTSIGNATURE%3Ecbcc0dee5724cd3fff08bbd4371946a0599c7fb9%3C%2FDS_MERCHANT_MERCHANTSIGNATURE%3E%0A++%3CDS_MERCHANT_IDENTIFIER%3E77bff3a969d6f97b2ec815448cdcff453971f573%3C%2FDS_MERCHANT_IDENTIFIER%3E%0A%3C%2FDATOSENTRADA%3E%0A"
+    'entrada=%3CDATOSENTRADA%3E%0A++%3CDS_Version%3E0.1%3C%2FDS_Version%3E%0A++%3CDS_MERCHANT_CURRENCY%3E978%3C%2FDS_MERCHANT_CURRENCY%3E%0A++%3CDS_MERCHANT_AMOUNT%3E123%3C%2FDS_MERCHANT_AMOUNT%3E%0A++%3CDS_MERCHANT_ORDER%3E1001%3C%2FDS_MERCHANT_ORDER%3E%0A++%3CDS_MERCHANT_TRANSACTIONTYPE%3EA%3C%2FDS_MERCHANT_TRANSACTIONTYPE%3E%0A++%3CDS_MERCHANT_PRODUCTDESCRIPTION%2F%3E%0A++%3CDS_MERCHANT_TERMINAL%3E1%3C%2FDS_MERCHANT_TERMINAL%3E%0A++%3CDS_MERCHANT_MERCHANTCODE%3E091952713%3C%2FDS_MERCHANT_MERCHANTCODE%3E%0A++%3CDS_MERCHANT_MERCHANTSIGNATURE%3Ecbcc0dee5724cd3fff08bbd4371946a0599c7fb9%3C%2FDS_MERCHANT_MERCHANTSIGNATURE%3E%0A++%3CDS_MERCHANT_IDENTIFIER%3E77bff3a969d6f97b2ec815448cdcff453971f573%3C%2FDS_MERCHANT_IDENTIFIER%3E%0A++%3CDS_MERCHANT_DIRECTPAYMENT%3Etrue%3C%2FDS_MERCHANT_DIRECTPAYMENT%3E%0A%3C%2FDATOSENTRADA%3E%0A'
   end
 
   def successful_purchase_response
@@ -371,13 +371,13 @@ POST /sis/operaciones HTTP/1.1\r\nContent-Type: application/x-www-form-urlencode
     <<-PRE_SCRUBBED
   entrada=%3CDATOSENTRADA%3E%0A++%3CDS_Version%3E0.1%3C%2FDS_Version%3E%0A++%3CDS_MERCHANT_CURRENCY%3E978%3C%2FDS_MERCHANT_CURRENCY%3E%0A++%3CDS_MERCHANT_AMOUNT%3E100%3C%2FDS_MERCHANT_AMOUNT%3E%0A++%3CDS_MERCHANT_ORDER%3E135214014098%3C%2FDS_MERCHANT_ORDER%3E%0A++%3CDS_MERCHANT_TRANSACTIONTYPE%3EA%3C%2FDS_MERCHANT_TRANSACTIONTYPE%3E%0A++%3CDS_MERCHANT_TERMINAL%3E1%3C%2FDS_MERCHANT_TERMINAL%3E%0A++%3CDS_MERCHANT_MERCHANTCODE%3E91952713%3C%2FDS_MERCHANT_MERCHANTCODE%3E%0A++%3CDS_MERCHANT_MERCHANTSIGNATURE%3E39589b03cdd3c525885cdb3b3761e2fb7a8be9ee%3C%2FDS_MERCHANT_MERCHANTSIGNATURE%3E%0A++%3CDS_MERCHANT_TITULAR%3ELongbob+Longsen%3C%2FDS_MERCHANT_TITULAR%3E%0A++%3CDS_MERCHANT_PAN%3E4548812049400004%3C%2FDS_MERCHANT_PAN%3E%0A++%3CDS_MERCHANT_EXPIRYDATE%3E1309%3C%2FDS_MERCHANT_EXPIRYDATE%3E%0A++%3CDS_MERCHANT_CVV2%3E+++%3C%2FDS_MERCHANT_CVV2%3E%0A%3C%2FDATOSENTRADA%3E%0A
   <?xml version='1.0' encoding="ISO-8859-1" ?><RETORNOXML><CODIGO>0</CODIGO><Ds_Version>0.1</Ds_Version><OPERACION><Ds_Amount>100</Ds_Amount><Ds_Currency>978</Ds_Currency><Ds_Order>135214014098</Ds_Order><Ds_Signature>97FBF7E648015AC8AFCA107CD67A1F600FBE9611</Ds_Signature><Ds_MerchantCode>91952713</Ds_MerchantCode><Ds_Terminal>1</Ds_Terminal><Ds_Response>0000</Ds_Response><Ds_AuthorisationCode>701841</Ds_AuthorisationCode><Ds_TransactionType>A</Ds_TransactionType><Ds_SecurePayment>0</Ds_SecurePayment><Ds_Language>1</Ds_Language><Ds_MerchantData></Ds_MerchantData><Ds_Card_Country>724</Ds_Card_Country></OPERACION></RETORNOXML>
-  PRE_SCRUBBED
+    PRE_SCRUBBED
   end
 
   def whitespace_string_cvv_post_scrubbed
     <<-PRE_SCRUBBED
   entrada=%3CDATOSENTRADA%3E%0A++%3CDS_Version%3E0.1%3C%2FDS_Version%3E%0A++%3CDS_MERCHANT_CURRENCY%3E978%3C%2FDS_MERCHANT_CURRENCY%3E%0A++%3CDS_MERCHANT_AMOUNT%3E100%3C%2FDS_MERCHANT_AMOUNT%3E%0A++%3CDS_MERCHANT_ORDER%3E135214014098%3C%2FDS_MERCHANT_ORDER%3E%0A++%3CDS_MERCHANT_TRANSACTIONTYPE%3EA%3C%2FDS_MERCHANT_TRANSACTIONTYPE%3E%0A++%3CDS_MERCHANT_TERMINAL%3E1%3C%2FDS_MERCHANT_TERMINAL%3E%0A++%3CDS_MERCHANT_MERCHANTCODE%3E91952713%3C%2FDS_MERCHANT_MERCHANTCODE%3E%0A++%3CDS_MERCHANT_MERCHANTSIGNATURE%3E39589b03cdd3c525885cdb3b3761e2fb7a8be9ee%3C%2FDS_MERCHANT_MERCHANTSIGNATURE%3E%0A++%3CDS_MERCHANT_TITULAR%3ELongbob+Longsen%3C%2FDS_MERCHANT_TITULAR%3E%0A++%3CDS_MERCHANT_PAN%3E[FILTERED]%3C%2FDS_MERCHANT_PAN%3E%0A++%3CDS_MERCHANT_EXPIRYDATE%3E1309%3C%2FDS_MERCHANT_EXPIRYDATE%3E%0A++%3CDS_MERCHANT_CVV2%3E[BLANK]%3C%2FDS_MERCHANT_CVV2%3E%0A%3C%2FDATOSENTRADA%3E%0A
   <?xml version='1.0' encoding="ISO-8859-1" ?><RETORNOXML><CODIGO>0</CODIGO><Ds_Version>0.1</Ds_Version><OPERACION><Ds_Amount>100</Ds_Amount><Ds_Currency>978</Ds_Currency><Ds_Order>135214014098</Ds_Order><Ds_Signature>97FBF7E648015AC8AFCA107CD67A1F600FBE9611</Ds_Signature><Ds_MerchantCode>91952713</Ds_MerchantCode><Ds_Terminal>1</Ds_Terminal><Ds_Response>0000</Ds_Response><Ds_AuthorisationCode>701841</Ds_AuthorisationCode><Ds_TransactionType>A</Ds_TransactionType><Ds_SecurePayment>0</Ds_SecurePayment><Ds_Language>1</Ds_Language><Ds_MerchantData></Ds_MerchantData><Ds_Card_Country>724</Ds_Card_Country></OPERACION></RETORNOXML>
-  PRE_SCRUBBED
+    PRE_SCRUBBED
   end
 end

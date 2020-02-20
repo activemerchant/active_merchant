@@ -113,9 +113,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def scrub(transcript)
-        transcript
-          .gsub(%r{(<CARDNUMBER>\d{6})\d+(\d{4}</CARDNUMBER>)}, '\1...\2')
-          .gsub(%r{(<CVV>)\d+(</CVV)}, '\1...\2')
+        transcript.
+          gsub(%r{(<CARDNUMBER>\d{6})\d+(\d{4}</CARDNUMBER>)}, '\1...\2').
+          gsub(%r{(<CVV>)\d+(</CVV)}, '\1...\2')
       end
 
       private
@@ -128,6 +128,7 @@ module ActiveMerchant #:nodoc:
       def add_address(post, _creditcard, options)
         address = options[:billing_address] || options[:address]
         return unless address
+
         post[:address1] = address[:address1]
         post[:address2] = address[:address2]
         post[:city]     = address[:city]

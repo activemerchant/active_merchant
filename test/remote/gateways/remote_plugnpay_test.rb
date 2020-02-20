@@ -3,7 +3,7 @@ require 'test_helper'
 class PlugnpayTest < Test::Unit::TestCase
   def setup
     @gateway = PlugnpayGateway.new(fixtures(:plugnpay))
-    @good_card = credit_card("4111111111111111", first_name: 'cardtest')
+    @good_card = credit_card('4111111111111111', first_name: 'cardtest')
     @bad_card = credit_card('1234123412341234')
     @options = {
       :billing_address => address,
@@ -47,7 +47,7 @@ class PlugnpayTest < Test::Unit::TestCase
 
     assert capture = @gateway.capture(@amount, authorization.authorization)
     assert_success capture
-    assert capture.params['aux_msg'].include? "has been successfully marked for settlement."
+    assert capture.params['aux_msg'].include? 'has been successfully marked for settlement.'
     assert_equal 'Success', capture.message
   end
 
@@ -57,7 +57,7 @@ class PlugnpayTest < Test::Unit::TestCase
 
     assert capture = @gateway.capture(@amount - 1, authorization.authorization)
     assert_success capture
-    assert capture.params['aux_msg'].include? "has been successfully reauthed for usd 0.99"
+    assert capture.params['aux_msg'].include? 'has been successfully reauthed for usd 0.99'
     assert_equal 'Success', capture.message
   end
 

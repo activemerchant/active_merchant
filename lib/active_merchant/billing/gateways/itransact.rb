@@ -301,8 +301,8 @@ module ActiveMerchant #:nodoc:
       def add_invoice(xml, money, options)
         xml.AuthCode options[:force] if options[:force]
         if options[:order_items].blank?
-          xml.Total(amount(money)) unless(money.nil? || money < 0.01)
-          xml.Description(options[:description]) unless( options[:description].blank?)
+          xml.Total(amount(money)) unless money.nil? || money < 0.01
+          xml.Description(options[:description]) unless options[:description].blank?
         else
           xml.OrderItems {
             options[:order_items].each do |item|
@@ -336,7 +336,7 @@ module ActiveMerchant #:nodoc:
         xml.AccountInfo {
           xml.CardAccount {
             xml.AccountNumber(creditcard.number.to_s)
-            xml.ExpirationMonth(creditcard.month.to_s.rjust(2,'0'))
+            xml.ExpirationMonth(creditcard.month.to_s.rjust(2, '0'))
             xml.ExpirationYear(creditcard.year.to_s)
             xml.CVVNumber(creditcard.verification_value.to_s) unless creditcard.verification_value.blank?
           }
@@ -371,8 +371,9 @@ module ActiveMerchant #:nodoc:
 
       def add_vendor_data(xml, options)
         return if options[:vendor_data].blank?
+
         xml.VendorData {
-          options[:vendor_data].each do |k,v|
+          options[:vendor_data].each do |k, v|
             xml.Element {
               xml.Name(k)
               xml.Key(v)
@@ -424,7 +425,7 @@ module ActiveMerchant #:nodoc:
 
       def successful?(response)
         # Turns out the PaymentClearing gateway is not consistent...
-        response[:status].downcase =='ok'
+        response[:status].casecmp('ok').zero?
       end
 
       def test_mode?(response)
@@ -445,4 +446,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

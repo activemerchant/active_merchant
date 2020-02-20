@@ -20,8 +20,8 @@ module ActiveMerchant #:nodoc:
 
       class_attribute :test_url, :live_url
 
-      self.test_url = "https://secure.metricsglobalgateway.com/gateway/transact.dll?testing=true"
-      self.live_url = "https://secure.metricsglobalgateway.com/gateway/transact.dll"
+      self.test_url = 'https://secure.metricsglobalgateway.com/gateway/transact.dll?testing=true'
+      self.live_url = 'https://secure.metricsglobalgateway.com/gateway/transact.dll'
 
       class_attribute :duplicate_window
 
@@ -35,8 +35,8 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://www.metricsglobal.com'
       self.display_name = 'Metrics Global'
 
-      CARD_CODE_ERRORS = %w( N S )
-      AVS_ERRORS = %w( A E N R W Z )
+      CARD_CODE_ERRORS = %w(N S)
+      AVS_ERRORS = %w(A E N R W Z)
       AVS_REASON_CODES = %w(27 45)
 
       # Creates a new MetricsGlobalGateway
@@ -136,8 +136,7 @@ module ActiveMerchant #:nodoc:
         requires!(options, :card_number)
 
         post = { :trans_id => identification,
-                 :card_num => options[:card_number]
-               }
+                 :card_num => options[:card_number]}
 
         post[:first_name] = options[:first_name] if options[:first_name]
         post[:last_name] = options[:last_name] if options[:last_name]
@@ -213,14 +212,14 @@ module ActiveMerchant #:nodoc:
         post[:version]        = API_VERSION
         post[:login]          = @options[:login]
         post[:tran_key]       = @options[:password]
-        post[:relay_response] = "FALSE"
+        post[:relay_response] = 'FALSE'
         post[:type]           = action
-        post[:delim_data]     = "TRUE"
-        post[:delim_char]     = ","
-        post[:encap_char]     = "$"
+        post[:delim_data]     = 'TRUE'
+        post[:delim_char]     = ','
+        post[:encap_char]     = '$'
         post[:solution_ID]    = application_id if application_id
 
-        request = post.merge(parameters).collect { |key, value| "x_#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        request = post.merge(parameters).collect { |key, value| "x_#{key}=#{CGI.escape(value.to_s)}" }.join('&')
         request
       end
 
@@ -243,21 +242,15 @@ module ActiveMerchant #:nodoc:
           post[:email_customer] = false
         end
 
-        if options.has_key? :customer
-          post[:cust_id] = options[:customer]
-        end
+        post[:cust_id] = options[:customer] if options.has_key? :customer
 
-        if options.has_key? :ip
-          post[:customer_ip] = options[:ip]
-        end
+        post[:customer_ip] = options[:ip] if options.has_key? :ip
       end
 
       # x_duplicate_window won't be sent by default, because sending it changes the response.
       # "If this field is present in the request with or without a value, an enhanced duplicate transaction response will be sent."
       def add_duplicate_window(post)
-        unless duplicate_window.nil?
-          post[:duplicate_window] = duplicate_window
-        end
+        post[:duplicate_window] = duplicate_window unless duplicate_window.nil?
       end
 
       def add_address(post, options)
@@ -268,7 +261,7 @@ module ActiveMerchant #:nodoc:
           post[:zip]     = address[:zip].to_s
           post[:city]    = address[:city].to_s
           post[:country] = address[:country].to_s
-          post[:state]   = address[:state].blank?  ? 'n/a' : address[:state]
+          post[:state]   = address[:state].blank? ? 'n/a' : address[:state]
         end
 
         if address = options[:shipping_address]
@@ -280,16 +273,14 @@ module ActiveMerchant #:nodoc:
           post[:ship_to_zip]     = address[:zip].to_s
           post[:ship_to_city]    = address[:city].to_s
           post[:ship_to_country] = address[:country].to_s
-          post[:ship_to_state]   = address[:state].blank?  ? 'n/a' : address[:state]
+          post[:ship_to_state]   = address[:state].blank? ? 'n/a' : address[:state]
         end
       end
 
       def message_from(results)
         if results[:response_code] == DECLINED
-          return CVVResult.messages[ results[:card_code] ] if CARD_CODE_ERRORS.include?(results[:card_code])
-          if AVS_REASON_CODES.include?(results[:response_reason_code]) && AVS_ERRORS.include?(results[:avs_result_code])
-            return AVSResult.messages[ results[:avs_result_code] ]
-          end
+          return CVVResult.messages[results[:card_code]] if CARD_CODE_ERRORS.include?(results[:card_code])
+          return AVSResult.messages[results[:avs_result_code]] if AVS_REASON_CODES.include?(results[:response_reason_code]) && AVS_ERRORS.include?(results[:avs_result_code])
         end
 
         (results[:response_reason_text] ? results[:response_reason_text].chomp('.') : '')

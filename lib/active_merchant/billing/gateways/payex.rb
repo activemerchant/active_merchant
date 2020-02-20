@@ -1,4 +1,4 @@
-require "nokogiri"
+require 'nokogiri'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -16,7 +16,7 @@ module ActiveMerchant #:nodoc:
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
       self.homepage_url = 'http://payex.com/'
       self.display_name = 'Payex'
-      self.default_currency = "EUR"
+      self.default_currency = 'EUR'
 
       TRANSACTION_STATUS = {
         sale:       '0',
@@ -63,14 +63,13 @@ module ActiveMerchant #:nodoc:
         if payment_method.respond_to?(:number)
           # credit card authorization
           MultiResponse.new.tap do |r|
-            r.process {send_initialize(amount, true, options)}
-            r.process {send_purchasecc(payment_method, r.params['orderref'])}
+            r.process { send_initialize(amount, true, options) }
+            r.process { send_purchasecc(payment_method, r.params['orderref']) }
           end
         else
           # stored authorization
           send_autopay(amount, payment_method, true, options)
         end
-
       end
 
       # Public: Send a purchase Payex request
@@ -92,8 +91,8 @@ module ActiveMerchant #:nodoc:
         if payment_method.respond_to?(:number)
           # credit card purchase
           MultiResponse.new.tap do |r|
-            r.process {send_initialize(amount, false, options)}
-            r.process {send_purchasecc(payment_method, r.params['orderref'])}
+            r.process { send_initialize(amount, false, options) }
+            r.process { send_purchasecc(payment_method, r.params['orderref']) }
           end
         else
           # stored purchase
@@ -155,10 +154,10 @@ module ActiveMerchant #:nodoc:
         requires!(options, :order_id)
         amount = amount(1) # 1 cent for authorization
         MultiResponse.run(:first) do |r|
-          r.process {send_create_agreement(options)}
-          r.process {send_initialize(amount, true, options.merge({agreement_ref: r.authorization}))}
+          r.process { send_create_agreement(options) }
+          r.process { send_initialize(amount, true, options.merge({agreement_ref: r.authorization})) }
           order_ref = r.params['orderref']
-          r.process {send_purchasecc(creditcard, order_ref)}
+          r.process { send_purchasecc(creditcard, order_ref) }
         end
       end
 
@@ -360,12 +359,12 @@ module ActiveMerchant #:nodoc:
         response = {}
 
         xmldoc = Nokogiri::XML(xml)
-        body = xmldoc.xpath("//soap:Body/*[1]")[0].inner_text
+        body = xmldoc.xpath('//soap:Body/*[1]')[0].inner_text
 
         doc = Nokogiri::XML(body)
 
-        doc.root.xpath("*").each do |node|
-          if (node.elements.size == 0)
+        doc.root&.xpath('*')&.each do |node|
+          if node.elements.size == 0
             response[node.name.downcase.to_sym] = node.text
           else
             node.elements.each do |childnode|
@@ -373,7 +372,7 @@ module ActiveMerchant #:nodoc:
               response[name.to_sym] = childnode.text
             end
           end
-        end unless doc.root.nil?
+        end
 
         response
       end
@@ -387,11 +386,11 @@ module ActiveMerchant #:nodoc:
         }
         response = parse(ssl_post(url, request, headers))
         Response.new(success?(response),
-                     message_from(response),
-                     response,
-                     test: test?,
-                     authorization: build_authorization(response)
-                    )
+          message_from(response),
+          response,
+          test: test?,
+          authorization: build_authorization(response)
+        )
       end
 
       def build_authorization(response)
@@ -409,4 +408,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

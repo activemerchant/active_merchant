@@ -9,7 +9,8 @@ class NetbanxTest < Test::Unit::TestCase
     @options = {
       order_id: '1',
       billing_address: address,
-      description: 'Store Purchase'
+      description: 'Store Purchase',
+      currency: 'CAD'
     }
   end
 
@@ -604,7 +605,32 @@ class NetbanxTest < Test::Unit::TestCase
     RESPONSE
   end
 
-  # just returns a 200 when successful
   def successful_unstore_response
+    <<-RESPONSE
+    {
+      "id": "2f840ab3-0e71-4387-bad3-4705e6f4b015",
+      "status": "ACTIVE",
+      "merchantCustomerId": "5e9d1ab0f847d147ffe872a9faf76d98",
+      "locale": "en_GB",
+      "paymentToken": "PJzuA8s6c6pSIs4",
+      "addresses": [],
+      "cards": [
+        {
+          "status": "ACTIVE",
+          "id": "e4a3cd5a-56db-4d9b-97d3-fdd9ab3bd0f4",
+          "cardBin": "453091",
+          "lastDigits": "2345",
+          "cardExpiry": {
+            "year": 2017,
+            "month": 9
+          },
+          "holderName": "Longbob Longsen",
+          "cardType": "VI",
+          "paymentToken": "C6gmdUA1xWT8RsC",
+          "defaultCardIndicator": true
+        }
+      ]
+    }
+    RESPONSE
   end
 end

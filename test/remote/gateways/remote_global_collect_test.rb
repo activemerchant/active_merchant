@@ -10,6 +10,7 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     @accepted_amount = 4005
     @rejected_amount = 2997
     @options = {
+      email: 'example@example.com',
       billing_address: address,
       description: 'Store Purchase'
     }
@@ -21,11 +22,13 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
-  def test_successful_purchase_with_more_options
+  def test_successful_purchase_with_fraud_fields
     options = @options.merge(
-      order_id: '1',
-      ip: "127.0.0.1",
-      email: "joe@example.com"
+      fraud_fields:
+      {
+        'website' => 'www.example.com',
+        'giftMessage' => 'Happy Day!'
+      }
     )
 
     response = @gateway.purchase(@amount, @credit_card, options)
@@ -33,8 +36,80 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  def test_successful_purchase_with_more_options
+    options = @options.merge(
+      order_id: '1',
+      ip: '127.0.0.1',
+      email: 'joe@example.com',
+      sdk_identifier: 'Channel',
+      sdk_creator: 'Bob',
+      integrator: 'Bill',
+      creator: 'Super',
+      name: 'Cala',
+      version: '1.0',
+      extension_ID: '5555555'
+    )
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_purchase_with_airline_data
+    options = @options.merge(
+      airline_data: {
+        code: 111,
+        name: 'Spreedly Airlines',
+        flight_date: '20190810',
+        passenger_name: 'Randi Smith',
+        flight_legs: [
+          { arrival_airport: 'BDL',
+            origin_airport: 'RDU',
+            date: '20190810',
+            carrier_code: 'SA',
+            number: 596,
+            airline_class: 'ZZ'},
+          { arrival_airport: 'RDU',
+            origin_airport: 'BDL',
+            date: '20190817',
+            carrier_code: 'SA',
+            number: 597,
+            airline_class: 'ZZ'}
+        ]
+      }
+    )
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_failed_purchase_with_insufficient_airline_data
+    options = @options.merge(
+      airline_data: {
+        flight_date: '20190810',
+        passenger_name: 'Randi Smith'
+      }
+    )
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_failure response
+    assert_equal 'PARAMETER_NOT_FOUND_IN_REQUEST', response.message
+    property_names = response.params['errors'].collect { |e| e['propertyName'] }
+    assert property_names.include? 'order.additionalInput.airlineData.code'
+    assert property_names.include? 'order.additionalInput.airlineData.name'
+  end
+
   def test_successful_purchase_with_very_long_name
-    credit_card = credit_card('4567350000427977', { first_name: "thisisaverylongfirstname"})
+    credit_card = credit_card('4567350000427977', { first_name: 'thisisaverylongfirstname'})
+
+    response = @gateway.purchase(@amount, credit_card, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_purchase_with_blank_name
+    credit_card = credit_card('4567350000427977', { first_name: nil, last_name: nil})
 
     response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response
@@ -66,8 +141,9 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@amount - 1, auth.authorization)
     assert_success capture
+    assert_equal 99, capture.params['payment']['paymentOutput']['amountOfMoney']['amount']
   end
 
   def test_failed_capture
@@ -144,5 +220,4 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@gateway.options[:secret_api_key], transcript)
   end
-
 end

@@ -1,5 +1,3 @@
-require 'openssl'
-
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class ClearhausGateway < Gateway
@@ -10,7 +8,7 @@ module ActiveMerchant #:nodoc:
                                   'HU', 'IS', 'IE', 'IT', 'LV', 'LI', 'LT', 'LU', 'MT', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'GB']
 
       self.default_currency    = 'EUR'
-      self.currencies_without_fractions = %w(BIF BYR DJF GNF JPY KMF KRW PYG RWF VND VUV XAF XOF XPF)
+      self.currencies_without_fractions = %w(BIF CLP DJF GNF JPY KMF KRW PYG RWF UGX VND VUV XAF XOF XPF)
       self.supported_cardtypes = [:visa, :master]
 
       self.homepage_url = 'https://www.clearhaus.com'
@@ -55,17 +53,18 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, amount, options)
 
-        action = if payment.respond_to?(:number)
-           add_payment(post, payment)
-          "/authorizations"
-        elsif payment.kind_of?(String)
-          "/cards/#{payment}/authorizations"
-        else
-          raise ArgumentError.new("Unknown payment type #{payment.inspect}")
-        end
+        action =
+          if payment.respond_to?(:number)
+            add_payment(post, payment)
+            '/authorizations'
+          elsif payment.kind_of?(String)
+            "/cards/#{payment}/authorizations"
+          else
+            raise ArgumentError.new("Unknown payment type #{payment.inspect}")
+          end
 
         post[:recurring] = options[:recurring] if options[:recurring]
-        post[:threed_secure] = {pares: options[:pares]} if options[:pares]
+        post[:card][:pares] = options[:pares] if options[:pares]
 
         commit(action, post)
       end
@@ -90,7 +89,7 @@ module ActiveMerchant #:nodoc:
 
       def verify(credit_card, options={})
         MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
+          r.process { authorize(0, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
         end
       end
@@ -99,7 +98,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_payment(post, credit_card)
 
-        commit("/cards", post)
+        commit('/cards', post)
       end
 
       def supports_scrubbing?
@@ -110,7 +109,7 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(%r((Authorization: Basic )[\w=]+), '\1[FILTERED]').
           gsub(%r((&?card(?:\[|%5B)csc(?:\]|%5D)=)[^&]*)i, '\1[FILTERED]').
-          gsub(%r((&?card(?:\[|%5B)number(?:\]|%5D)=)[^&]*)i, '\1[FILTERED]')
+          gsub(%r((&?card(?:\[|%5B)pan(?:\]|%5D)=)[^&]*)i, '\1[FILTERED]')
       end
 
       private
@@ -128,21 +127,19 @@ module ActiveMerchant #:nodoc:
 
       def add_payment(post, payment)
         card = {}
-        card[:number]       = payment.number
+        card[:pan]          = payment.number
         card[:expire_month] = '%02d'% payment.month
         card[:expire_year]  = payment.year
 
-        if payment.verification_value?
-          card[:csc]  = payment.verification_value
-        end
+        card[:csc] = payment.verification_value if payment.verification_value?
 
         post[:card] = card if card.any?
       end
 
       def headers(api_key)
         {
-          "Authorization"  => "Basic " + Base64.strict_encode64("#{api_key}:"),
-          "User-Agent"     => "Clearhaus ActiveMerchantBindings/#{ActiveMerchant::VERSION}"
+          'Authorization' => 'Basic ' + Base64.strict_encode64("#{api_key}:"),
+          'User-Agent'    => "Clearhaus ActiveMerchantBindings/#{ActiveMerchant::VERSION}"
         }
       end
 
@@ -157,18 +154,20 @@ module ActiveMerchant #:nodoc:
 
         if @options[:signing_key] && @options[:private_key]
           begin
-            headers["Signature"] = generate_signature(body)
+            headers['Signature'] = generate_signature(body)
           rescue OpenSSL::PKey::RSAError => e
             return Response.new(false, e.message)
           end
         end
 
-        response = begin
-          parse(ssl_post(url, body, headers))
-        rescue ResponseError => e
-          raise unless(e.response.code.to_s =~ /400/)
-          parse(e.response.body)
-        end
+        response =
+          begin
+            parse(ssl_post(url, body, headers))
+          rescue ResponseError => e
+            raise unless e.response.code.to_s =~ /400/
+
+            parse(e.response.body)
+          end
 
         Response.new(
           success_from(response),
@@ -213,9 +212,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_code_from(response)
-        unless success_from(response)
-          response['status']['code']
-        end
+        response['status']['code'] unless success_from(response)
       end
     end
   end

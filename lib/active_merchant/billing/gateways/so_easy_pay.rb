@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
         'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE', 'GB',
         'IS', 'NO', 'CH'
       ]
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :maestro, :jcb, :solo, :diners_club]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :maestro, :jcb, :diners_club]
       self.homepage_url = 'http://www.soeasypay.com/'
       self.display_name = 'SoEasyPay'
 
@@ -114,7 +114,7 @@ module ActiveMerchant #:nodoc:
       def fill_cardholder(soap, card, options)
         ch_info = options[:billing_address] || options[:address]
 
-        soap.tag!('customerIP',options[:ip].to_s)
+        soap.tag!('customerIP', options[:ip].to_s)
         name = card.name || ch_info[:name]
         soap.tag!('cardHolderName', name.to_s)
         address = ch_info[:address1] || ''
@@ -135,7 +135,7 @@ module ActiveMerchant #:nodoc:
       def fill_card(soap, card)
         soap.tag!('cardNumber', card.number.to_s)
         soap.tag!('cardSecurityCode', card.verification_value.to_s)
-        soap.tag!('cardExpireMonth', card.month.to_s.rjust(2, "0"))
+        soap.tag!('cardExpireMonth', card.month.to_s.rjust(2, '0'))
         soap.tag!('cardExpireYear', card.year.to_s)
       end
 
@@ -157,15 +157,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(soap_action, soap, options)
-        headers = {"SOAPAction" => "\"urn:Interface##{soap_action}\"",
-                   "Content-Type" => "text/xml; charset=utf-8"}
+        headers = {'SOAPAction' => "\"urn:Interface##{soap_action}\"",
+                   'Content-Type' => 'text/xml; charset=utf-8'}
         response_string = ssl_post(test? ? self.test_url : self.live_url, soap, headers)
         response = parse(response_string, soap_action)
         return Response.new(response['errorcode'] == '000',
-                            response['errormessage'],
-                            response,
-                            :test => test?,
-                            :authorization => response['transaction_id'])
+          response['errormessage'],
+          response,
+          :test => test?,
+          :authorization => response['transaction_id'])
       end
 
       def build_soap(request)
@@ -177,7 +177,8 @@ module ActiveMerchant #:nodoc:
             'xmlns:soapenc' => 'http://schemas.xmlsoap.org/soap/encoding/',
             'xmlns:tns' => 'urn:Interface',
             'xmlns:types' => 'urn:Interface/encodedTypes',
-            'xmlns:soap' => 'http://schemas.xmlsoap.org/soap/envelope/'}) do
+            'xmlns:soap' => 'http://schemas.xmlsoap.org/soap/envelope/'
+        }) do
           retval.tag!('soap:Body', {'soap:encodingStyle'=>'http://schemas.xmlsoap.org/soap/encoding/'}) do
             retval.tag!("tns:#{request}") do
               retval.tag!("#{request}Request", {'xsi:type'=>"tns:#{request}Request"}) do
@@ -188,7 +189,6 @@ module ActiveMerchant #:nodoc:
         end
         retval.target!
       end
-
     end
   end
 end

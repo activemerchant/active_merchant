@@ -23,7 +23,7 @@ module ActiveMerchant #:nodoc:
         :quasi         => 'Q'
       }
 
-      SUCCESS_CODES = [ '1', 'T' ]
+      SUCCESS_CODES = ['1', 'T']
       SUCCESS_MESSAGE = 'The transaction was approved'
       FAILURE_MESSAGE = 'The transaction failed'
       TEST_LOGIN = '104901072025'
@@ -31,7 +31,6 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'NETbilling'
       self.homepage_url = 'http://www.netbilling.com'
       self.supported_countries = ['US']
-      self.ssl_version = :TLSv1
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club]
 
       def initialize(options = {})
@@ -144,14 +143,14 @@ module ActiveMerchant #:nodoc:
           post[:bill_state]      = billing_address[:state]
         end
 
-       if shipping_address = options[:shipping_address]
-         post[:ship_name1], post[:ship_name2] = split_names(shipping_address[:name])
-         post[:ship_street]     = shipping_address[:address1]
-         post[:ship_zip]        = shipping_address[:zip]
-         post[:ship_city]       = shipping_address[:city]
-         post[:ship_country]    = shipping_address[:country]
-         post[:ship_state]      = shipping_address[:state]
-       end
+        if shipping_address = options[:shipping_address]
+          post[:ship_name1], post[:ship_name2] = split_names(shipping_address[:name])
+          post[:ship_street]     = shipping_address[:address1]
+          post[:ship_zip]        = shipping_address[:zip]
+          post[:ship_city]       = shipping_address[:city]
+          post[:ship_country]    = shipping_address[:country]
+          post[:ship_state]      = shipping_address[:state]
+        end
       end
 
       def add_invoice(post, options)
@@ -167,9 +166,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_user_data(post, options)
-        if options[:order_id]
-          post[:user_data] = "order_id:#{options[:order_id]}"
-        end
+        post[:user_data] = "order_id:#{options[:order_id]}" if options[:order_id]
       end
 
       def add_transaction_id(post, transaction_id)
@@ -187,7 +184,7 @@ module ActiveMerchant #:nodoc:
       def parse(body)
         results = {}
         body.split(/&/).each do |pair|
-          key,val = pair.split(/\=/)
+          key, val = pair.split(/\=/)
           results[key.to_sym] = CGI.unescape(val)
         end
         results
@@ -203,7 +200,8 @@ module ActiveMerchant #:nodoc:
           :cvv_result => response[:cvv2_code]
         )
       rescue ActiveMerchant::ResponseError => e
-        raise unless(e.response.code =~ /^[67]\d\d$/)
+        raise unless e.response.code =~ /^[67]\d\d$/
+
         return Response.new(false, e.response.message, {:status_code => e.response.code}, :test => test?)
       end
 
@@ -225,9 +223,8 @@ module ActiveMerchant #:nodoc:
         parameters[:pay_type] = 'C'
         parameters[:tran_type] = TRANSACTIONS[action]
 
-        parameters.reject{|k,v| v.blank?}.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        parameters.reject { |k, v| v.blank? }.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
-
     end
   end
 end
