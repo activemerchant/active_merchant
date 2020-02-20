@@ -1,22 +1,25 @@
 = ActiveMerchant CHANGELOG
 
-== HEAD
+== Version 1.105.0 (Feb 20, 2020)
+* Credorax: Fix `3ds_transtype` setting in post [chinhle23] #3531
+* Bambora Apac: Send void amount in options [leila-alderman] #3532
+* RuboCop: Fix Layout/IndentHash [leila-alderman] #3529
+* Stripe: Add connected account support [Carrigan] #3535
+* Redsys: Update scrub method to account for 3DS error responses [britth] #3534
+* Authorize.Net: Pass `account_type` to `check` payment types [chinhle23] #3530
+* Merchant Warrior: Send void amount in options [leila-alderman] #3525
+* Stripe: Add support for `statement_descriptor_suffix` field [Carrigan] #3528
+* Decidir: Add support for fraud_detection, site_id, and establishment_name [fatcatt316] #3527
+* HPS: support eCheck [therufs] #3500
+* EBANX: Add metadata information in post [miguelxpn] #3522
+* Paypal: Fix OrderTotal elements in `add_payment_details` [chinhle23] #3517
+* Worldpay: Add `riskData` GSF [fatcatt316] #3514
+* EBANX: Fix `scrub` [chinhle23] #3521
+* Worldpay: Remove unnecessary .tag! methods [leila-alderman] #3519
+* BPoint: Remove amount from void requests [leila-alderman] #3518
+* Authorize.net: Trim supported countries to AU, CA, US [fatcatt316] #3516
 * Credorax: Allow optional 3DS 2 fields [jeremywrowe] #3515
 * Stripe: Remove outdated 'customer options' deprecation [alexdunae] #3401
-* BPoint: Remove amount from void requests [leila-alderman] #3518
-* Worldpay: Remove unnecessary .tag! methods [leila-alderman] #3519
-* EBANX: Fix `scrub` [chinhle23] #3521
-* Worldpay: Add `riskData` GSF [fatcatt316] #3514
-* Paypal: Fix OrderTotal elements in `add_payment_details` [chinhle23] #3517
-* EBANX: Add metadata information in post [miguelxpn] #3522
-* HPS: support eCheck [therufs] #3500
-* Decidir: Add support for fraud_detection, site_id, and establishment_name [fatcatt316] #3527
-* Merchant Warrior: Send void amount in options [leila-alderman] #3525
-* Authorize.Net: Pass `account_type` to `check` payment types [chinhle23] #3530
-* Redsys: Update scrub method to account for 3DS error responses [britth] #3534
-* RuboCop: Fix Layout/IndentHash [leila-alderman] #3529
-* Bambora Apac: Send void amount in options [leila-alderman] #3532
-* Credorax: Fix `3ds_transtype` setting in post [chinhle23] #3531
 
 == Version 1.104.0 (Jan 29, 2020)
 * Adyen: add `recurring_contract_type` GSF [therufs] #3460
