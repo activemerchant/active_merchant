@@ -8,7 +8,7 @@ class PayJunctionV2Test < Test::Unit::TestCase
     @credit_card = credit_card('4444333322221111', month: 01, year: 2022, verification_value: 999)
     @options = {
       order_id: generate_unique_id,
-      billing_address: address()
+      billing_address: address
     }
   end
 

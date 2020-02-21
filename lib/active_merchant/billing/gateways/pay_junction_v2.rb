@@ -129,10 +129,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def get_state(address)
-        address[:state] && !address[:state].blank? ? address[:state] : 'NA'
-      end
-
       def commit(action, params)
         response =
           begin
