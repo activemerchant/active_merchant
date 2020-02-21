@@ -69,40 +69,6 @@ class PaypalCommonApiTest < Test::Unit::TestCase
     assert_equal 'foo', REXML::XPath.first(request, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Name').text
   end
 
-  def test_add_payment_details_adds_order_total_elements
-    options = {
-      :subtotal => 25,
-      :shipping => 5,
-      :handling => 2,
-      :tax => 1
-    }
-    request = wrap_xml do |xml|
-      @gateway.send(:add_payment_details, xml, 100, 'USD', options)
-    end
-
-    assert_equal '25', REXML::XPath.first(request, '//n2:PaymentDetails/n2:ItemTotal').text
-    assert_equal '5', REXML::XPath.first(request, '//n2:PaymentDetails/n2:ShippingTotal').text
-    assert_equal '2', REXML::XPath.first(request, '//n2:PaymentDetails/n2:HandlingTotal').text
-    assert_equal '1', REXML::XPath.first(request, '//n2:PaymentDetails/n2:TaxTotal').text
-  end
-
-  def test_add_payment_details_does_not_add_order_total_elements_when_any_element_is_nil
-    options = {
-      :subtotal => nil,
-      :shipping => 5,
-      :handling => 2,
-      :tax => 1
-    }
-    request = wrap_xml do |xml|
-      @gateway.send(:add_payment_details, xml, 100, 'USD', options)
-    end
-
-    assert_equal nil, REXML::XPath.first(request, '//n2:PaymentDetails/n2:ItemTotal')
-    assert_equal nil, REXML::XPath.first(request, '//n2:PaymentDetails/n2:ShippingTotal')
-    assert_equal nil, REXML::XPath.first(request, '//n2:PaymentDetails/n2:HandlingTotal')
-    assert_equal nil, REXML::XPath.first(request, '//n2:PaymentDetails/n2:TaxTotal')
-  end
-
   def test_add_express_only_payment_details_adds_non_blank_fields
     request = wrap_xml do |xml|
       @gateway.send(:add_express_only_payment_details, xml, {:payment_action => 'Sale', :payment_request_id => ''})

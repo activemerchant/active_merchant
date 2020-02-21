@@ -586,11 +586,11 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'n2:OrderTotal', localized_amount(money, currency_code), 'currencyID' => currency_code
 
           # All of the values must be included together and add up to the order total
-          if [:subtotal, :shipping, :handling, :tax].all?{ |o| options[o].present?}
-            xml.tag! 'n2:ItemTotal', localized_amount(options[:subtotal].to_i, currency_code), 'currencyID' => currency_code
-            xml.tag! 'n2:ShippingTotal', localized_amount(options[:shipping].to_i, currency_code),'currencyID' => currency_code
-            xml.tag! 'n2:HandlingTotal', localized_amount(options[:handling].to_i, currency_code),'currencyID' => currency_code
-            xml.tag! 'n2:TaxTotal', localized_amount(options[:tax].to_i, currency_code), 'currencyID' => currency_code
+          if [:subtotal, :shipping, :handling, :tax].all?{ |o| options.has_key?(o) }
+            xml.tag! 'n2:ItemTotal', localized_amount(options[:subtotal], currency_code), 'currencyID' => currency_code
+            xml.tag! 'n2:ShippingTotal', localized_amount(options[:shipping], currency_code),'currencyID' => currency_code
+            xml.tag! 'n2:HandlingTotal', localized_amount(options[:handling], currency_code),'currencyID' => currency_code
+            xml.tag! 'n2:TaxTotal', localized_amount(options[:tax], currency_code), 'currencyID' => currency_code
           end
 
           xml.tag! 'n2:InsuranceTotal', localized_amount(options[:insurance_total], currency_code),'currencyID' => currency_code unless options[:insurance_total].blank?
