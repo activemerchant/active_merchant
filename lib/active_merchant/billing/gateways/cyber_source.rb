@@ -49,6 +49,11 @@ module ActiveMerchant #:nodoc:
         :elo => '054'
       }
 
+      @@decision_codes = {
+        :accept => 'ACCEPT',
+        :review => 'REVIEW'
+      }
+
       @@response_codes = {
         :r100 => 'Successful transaction',
         :r101 => 'Request is missing one or more required fields',
@@ -828,7 +833,7 @@ module ActiveMerchant #:nodoc:
           response = { message: e.to_s }
         end
 
-        success = response[:decision] == 'ACCEPT'
+        success = success?(response)
         message = response[:message]
 
         authorization = success ? authorization_from(response, action, amount, options) : nil
@@ -836,6 +841,7 @@ module ActiveMerchant #:nodoc:
         Response.new(success, message, response,
           :test => test?,
           :authorization => authorization,
+          :fraud_review => in_fraud_review?(response),
           :avs_result => { :code => response[:avsCode] },
           :cvv_result => response[:cvCode]
         )
@@ -886,6 +892,14 @@ module ActiveMerchant #:nodoc:
       def authorization_from(response, action, amount, options)
         [options[:order_id], response[:requestID], response[:requestToken], action, amount,
          options[:currency], response[:subscriptionID]].join(';')
+      end
+
+      def in_fraud_review?(response)
+        response[:decision] == @@decision_codes[:review]
+      end
+
+      def success?(response)
+        response[:decision] == @@decision_codes[:accept]
       end
     end
   end
