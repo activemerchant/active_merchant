@@ -22,6 +22,7 @@
 * Authorize.net: Trim supported countries to AU, CA, US [fatcatt316] #3516
 * Credorax: Allow optional 3DS 2 fields [jeremywrowe] #3515
 * Stripe: Remove outdated 'customer options' deprecation [alexdunae] #3401
+* Added support for fraud review in CyberSource gateway [greg-burgoon] #3536
 
 == Version 1.104.0 (Jan 29, 2020)
 * Adyen: add `recurring_contract_type` GSF [therufs] #3460
