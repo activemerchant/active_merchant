@@ -24,6 +24,8 @@ module ActiveMerchant #:nodoc:
       }
 
       DEFAULT_API_VERSION = '2015-04-07'
+      STATEMENT_DESC_API_VERSION = '2019-02-19'
+      CHARGE_REQ_API_VERSION = '2019-09-09'
 
       self.supported_countries = %w(AT AU BE BR CA CH DE DK EE ES FI FR GB GR HK IE IT JP LT LU LV MX NL NO NZ PL PT SE SG SI SK US)
       self.default_currency = 'USD'
@@ -365,6 +367,9 @@ module ActiveMerchant #:nodoc:
           add_customer_data(post, options)
           post[:description] = options[:description]
           post[:statement_descriptor] = options[:statement_description]
+          if api_version(options) >= STATEMENT_DESC_API_VERSION
+            post[:statement_descriptor_suffix] = options[:statement_descriptor_suffix]
+          end
           post[:receipt_email] = options[:receipt_email] if options[:receipt_email]
           add_customer(post, payment, options)
           add_flags(post, options)
@@ -385,7 +390,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_application_fee(post, options)
-        post[:application_fee] = options[:application_fee] if options[:application_fee]
+        post[:application_fee_amount] = options[:application_fee] if options[:application_fee]
       end
 
       def add_exchange_rate(post, options)
@@ -394,9 +399,20 @@ module ActiveMerchant #:nodoc:
 
       def add_destination(post, options)
         if options[:destination]
-          post[:destination] = {}
-          post[:destination][:account] = options[:destination]
-          post[:destination][:amount] = options[:destination_amount] if options[:destination_amount]
+          if api_version(options) < CHARGE_REQ_API_VERSION
+            # Deprecated
+            post[:destination] = {}
+            post[:destination][:account] = options[:destination]
+            post[:destination][:amount] = options[:destination_amount] if options[:destination_amount]
+          else
+            # When using transfer_data[destination], the settlement merchant can be specified with on_behalf_of. If you
+            # need to retain the behavior of destination[account], on_behalf_of must be explicitly set to the same value
+            # as transfer_data[destination].
+            post[:transfer_data] = {}
+            post[:transfer_data][:destination] = options[:destination]
+            post[:transfer_data][:amount] = options[:destination_amount] if options[:destination_amount]
+            post[:on_behalf_of] = options[:destination]
+          end
         end
       end
 
