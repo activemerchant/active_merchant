@@ -15,7 +15,6 @@
 * Decidir: Add support for fraud_detection, site_id, and establishment_name [fatcatt316] #3527
 * HPS: support eCheck [therufs] #3500
 * EBANX: Add metadata information in post [miguelxpn] #3522
-* Paypal: Fix OrderTotal elements in `add_payment_details` [chinhle23] #3517
 * Worldpay: Add `riskData` GSF [fatcatt316] #3514
 * EBANX: Fix `scrub` [chinhle23] #3521
 * Worldpay: Remove unnecessary .tag! methods [leila-alderman] #3519
