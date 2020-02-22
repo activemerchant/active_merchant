@@ -41,11 +41,14 @@ module ActiveMerchant #:nodoc:
         add_address(post, payment, options)
         add_customer_data(post, options)
 
-        commit('authonly', post)
+        commit('auth', post, options)
       end
 
+
       def capture(amount, authorization, options={})
-        commit('capture', post)
+        post = {}
+        add_auth_id(post, authorization)
+        commit('capture', post, options)
       end
 
       def refund(amount, authorization, options={})
@@ -93,7 +96,11 @@ module ActiveMerchant #:nodoc:
 
       def add_creds(post)
         post[:merchant] = options[:merchant]
-        post[:secret]= options[:secret]
+        post[:secret] = options[:secret]
+      end
+
+      def add_auth_id(post, authorization)
+        post[:ref] = authorization
       end
 
       def commit(action, post, options)
@@ -119,6 +126,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
+        response["id"]
       end
 
       def post_data(post)
