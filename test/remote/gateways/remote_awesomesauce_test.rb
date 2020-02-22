@@ -51,43 +51,32 @@ class RemoteAwesomesauceTest < Test::Unit::TestCase
     assert_failure response
   end
 
-  # def test_successful_refund
-  #   purchase = @gateway.purchase(@amount, @credit_card, @options)
-  #   assert_success purchase
+  def test_successful_refund
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
 
-  #   assert refund = @gateway.refund(@amount, purchase.authorization)
-  #   assert_success refund
-  #   # assert_equal 'REPLACE WITH SUCCESSFUL REFUND MESSAGE', refund.message
-  # end
+    assert refund = @gateway.refund(@amount, purchase.authorization)
+    assert_success refund
+  end
 
-  # def test_partial_refund
-  #   purchase = @gateway.purchase(@amount, @credit_card, @options)
-  #   assert_success purchase
 
-  #   assert refund = @gateway.refund(@amount-1, purchase.authorization)
-  #   assert_success refund
-  # end
+  def test_failed_refund
+    response = @gateway.refund(@amount, '')
+    assert_failure response
+  end
 
-  # def test_failed_refund
-  #   response = @gateway.refund(@amount, '')
-  #   assert_failure response
-  #   # assert_equal 'REPLACE WITH FAILED REFUND MESSAGE', response.message
-  # end
+  def test_successful_void
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
 
-  # def test_successful_void
-  #   auth = @gateway.authorize(@amount, @credit_card, @options)
-  #   assert_success auth
+    assert void = @gateway.void(auth.authorization)
+    assert_success void
+  end
 
-  #   assert void = @gateway.void(auth.authorization)
-  #   assert_success void
-  #   # assert_equal 'REPLACE WITH SUCCESSFUL VOID MESSAGE', void.message
-  # end
-
-  # def test_failed_void
-  #   response = @gateway.void('')
-  #   assert_failure response
-  #   # assert_equal 'REPLACE WITH FAILED VOID MESSAGE', response.message
-  # end
+  def test_failed_void
+    response = @gateway.void('')
+    assert_failure response
+  end
 
   # def test_successful_verify
   #   response = @gateway.verify(@credit_card, @options)

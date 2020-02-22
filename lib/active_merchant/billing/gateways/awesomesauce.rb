@@ -52,11 +52,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(amount, authorization, options={})
-        commit('refund', post)
+        post = {}
+        add_auth_id(post, authorization)
+        commit('cancel', post, options)
       end
 
       def void(authorization, options={})
-        commit('void', post)
+        post = {}
+        add_auth_id(post, authorization)
+        commit('cancel', post, options)
       end
 
       def verify(credit_card, options={})
