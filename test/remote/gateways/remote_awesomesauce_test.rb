@@ -11,7 +11,6 @@ class RemoteAwesomesauceTest < Test::Unit::TestCase
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
-    puts response
     assert_success response
   end
 
@@ -58,7 +57,6 @@ class RemoteAwesomesauceTest < Test::Unit::TestCase
     assert refund = @gateway.refund(@amount, purchase.authorization)
     assert_success refund
   end
-
 
   def test_failed_refund
     response = @gateway.refund(@amount, '')
