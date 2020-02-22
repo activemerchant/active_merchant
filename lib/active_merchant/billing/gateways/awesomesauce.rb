@@ -9,14 +9,14 @@ module ActiveMerchant #:nodoc:
       self.money_format = :dollars 
       self.supported_cardtypes = [:visa, :master, :american_express]
 
-      self.homepage_url = 'https://awesomesauce-staging.herokuapp.com/'
+      self.homepage_url = 'https://awesomesauce-prod.herokuapp.com/'
       self.display_name = 'Awesomesauce'
 
       STANDARD_ERROR_CODE_MAPPING = {
-        '01' => STANDARD_ERROR_CODE_MAPPING[:card_declined]
-        '02' => STANDARD_ERROR_CODE_MAPPING[:invalid_number]
-        '03' => STANDARD_ERROR_CODE_MAPPING[:expired_card]
-        '10' => STANDARD_ERROR_CODE_MAPPING[:processing_error]
+        '01' => STANDARD_ERROR_CODE[:card_declined],
+        '02' => STANDARD_ERROR_CODE[:invalid_number],
+        '03' => STANDARD_ERROR_CODE[:expired_card], 
+        '10' => STANDARD_ERROR_CODE[:processing_error]
       }
 
       def initialize(options={})
@@ -31,7 +31,7 @@ module ActiveMerchant #:nodoc:
         add_address(post, payment, options)
         add_customer_data(post, options)
 
-        commit('sale', post)
+        commit('purchase', post, options)
       end
 
       def authorize(amount, payment, options={})
@@ -88,26 +88,31 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        {}
+        JSON.parse(body)
       end
 
-      def commit(action, parameters)
-        url = (test? ? test_url : live_url)
-        response = parse(ssl_post(url, post_data(action, parameters)))
+      def add_creds(post)
+        post[:merchant] = options[:merchant]
+        post[:secret]= options[:secret]
+      end
+
+      def commit(action, post, options)
+        add_creds(post)
+        url = "#{(test? ? test_url : live_url)}/api/#{action}.json"
+        response = parse(ssl_post(url, post_data(post)))
 
         Response.new(
           success_from(response),
           message_from(response),
           response,
           authorization: authorization_from(response),
-          avs_result: AVSResult.new(code: response["some_avs_response_key"]),
-          cvv_result: CVVResult.new(response["some_cvv_response_key"]),
           test: test?,
           error_code: error_code_from(response)
         )
       end
 
       def success_from(response)
+        response["succeeded"]
       end
 
       def message_from(response)
@@ -116,12 +121,13 @@ module ActiveMerchant #:nodoc:
       def authorization_from(response)
       end
 
-      def post_data(action, parameters = {})
+      def post_data(post)
+       post.to_json
       end
 
       def error_code_from(response)
         unless success_from(response)
-          # TODO: lookup error code for this response
+          response["error"]
         end
       end
     end
