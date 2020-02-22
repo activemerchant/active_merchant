@@ -63,9 +63,9 @@ module ActiveMerchant #:nodoc:
         commit('cancel', post, options)
       end
 
-      def verify(credit_card, options={})
+      def verify(amount, credit_card, options={})
         MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
+          r.process { authorize(amount, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
         end
       end
@@ -75,7 +75,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def scrub(transcript)
-        transcript
+        transcript.
+        gsub(%r((number\D+)\d*), '\1[FILTERED]').
+        gsub(%r((cv2\D+)\d*), '\1[FILTERED]').
+        gsub(%r((secret\D+)\d*), '\1[FILTERED]')
       end
 
       private

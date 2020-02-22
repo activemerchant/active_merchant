@@ -78,44 +78,25 @@ class RemoteAwesomesauceTest < Test::Unit::TestCase
     assert_failure response
   end
 
-  # def test_successful_verify
-  #   response = @gateway.verify(@credit_card, @options)
-  #   assert_success response
-  #   # assert_match %r{REPLACE WITH SUCCESS MESSAGE}, response.message
-  # end
+  def test_successful_verify
+    response = @gateway.verify(100, @credit_card, @options)
+    assert_success response
+  end
 
-  # def test_failed_verify
-  #   response = @gateway.verify(@credit_card, @options)
-  #   assert_failure response
-  #   # assert_match %r{REPLACE WITH FAILED PURCHASE MESSAGE}, response.message
-  # end
+  def test_failed_verify
+    response = @gateway.verify(103, @credit_card, @options)
+    assert_failure response
+  end
 
-  # def test_invalid_login
-  #   gateway = AwesomesauceGateway.new(login: '', password: '')
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
 
-  #   response = gateway.purchase(@amount, @credit_card, @options)
-  #   assert_failure response
-  #   # assert_match %r{REPLACE WITH FAILED LOGIN MESSAGE}, response.message
-  # end
-
-  # def test_dump_transcript
-  #   # This test will run a purchase transaction on your gateway
-  #   # and dump a transcript of the HTTP conversation so that
-  #   # you can use that transcript as a reference while
-  #   # implementing your scrubbing logic.  You can delete
-  #   # this helper after completing your scrub implementation.
-  #   dump_transcript_and_fail(@gateway, @amount, @credit_card, @options)
-  # end
-
-  # def test_transcript_scrubbing
-  #   transcript = capture_transcript(@gateway) do
-  #     @gateway.purchase(@amount, @credit_card, @options)
-  #   end
-  #   transcript = @gateway.scrub(transcript)
-
-  #   assert_scrubbed(@credit_card.number, transcript)
-  #   assert_scrubbed(@credit_card.verification_value, transcript)
-  #   assert_scrubbed(@gateway.options[:password], transcript)
-  # end
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:secret], transcript)
+  end
 
 end
