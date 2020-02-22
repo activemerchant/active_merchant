@@ -28,8 +28,8 @@ authorize_net:
 
 # Working credentials, no need to replace
 awesomesauce:
-  some_credential: SOMECREDENTIAL
-  another_credential: ANOTHERCREDENTIAL
+  merchant: test
+  secret: abc123
 
 axcessms:
   channel: channel

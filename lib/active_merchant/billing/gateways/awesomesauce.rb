@@ -12,16 +12,21 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://awesomesauce-staging.herokuapp.com/'
       self.display_name = 'Awesomesauce'
 
-      STANDARD_ERROR_CODE_MAPPING = {}
+      STANDARD_ERROR_CODE_MAPPING = {
+        '01' => STANDARD_ERROR_CODE_MAPPING[:card_declined]
+        '02' => STANDARD_ERROR_CODE_MAPPING[:invalid_number]
+        '03' => STANDARD_ERROR_CODE_MAPPING[:expired_card]
+        '10' => STANDARD_ERROR_CODE_MAPPING[:processing_error]
+      }
 
       def initialize(options={})
-        requires!(options, :some_credential, :another_credential)
+        requires!(options, :merchant, :secret)
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(amount, payment, options={})
         post = {}
-        add_invoice(post, money, options)
+        add_invoice(post, amount, options)
         add_payment(post, payment)
         add_address(post, payment, options)
         add_customer_data(post, options)
@@ -29,9 +34,9 @@ module ActiveMerchant #:nodoc:
         commit('sale', post)
       end
 
-      def authorize(money, payment, options={})
+      def authorize(amount, payment, options={})
         post = {}
-        add_invoice(post, money, options)
+        add_invoice(post, amount, options)
         add_payment(post, payment)
         add_address(post, payment, options)
         add_customer_data(post, options)
@@ -39,11 +44,11 @@ module ActiveMerchant #:nodoc:
         commit('authonly', post)
       end
 
-      def capture(money, authorization, options={})
+      def capture(amount, authorization, options={})
         commit('capture', post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(amount, authorization, options={})
         commit('refund', post)
       end
 
@@ -74,9 +79,9 @@ module ActiveMerchant #:nodoc:
       def add_address(post, creditcard, options)
       end
 
-      def add_invoice(post, money, options)
-        post[:amount] = amount(money)
-        post[:currency] = (options[:currency] || currency(money))
+      def add_invoice(post, amount, options)
+        post[:amount] = amount(amount)
+        post[:currency] = (options[:currency] || currency(amount))
       end
 
       def add_payment(post, payment)
