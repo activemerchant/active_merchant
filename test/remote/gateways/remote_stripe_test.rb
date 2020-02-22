@@ -18,9 +18,9 @@ class RemoteStripeTest < Test::Unit::TestCase
     @verified_bank_account = fixtures(:stripe_verified_bank_account)
 
     @options = {
-      :currency => 'USD',
-      :description => 'ActiveMerchant Test Purchase',
-      :email => 'wow@example.com'
+      currency: 'USD',
+      description: 'ActiveMerchant Test Purchase',
+      email: 'wow@example.com'
     }
   end
 
@@ -57,7 +57,7 @@ class RemoteStripeTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_recurring_flag
-    custom_options = @options.merge(:eci => 'recurring')
+    custom_options = @options.merge(eci: 'recurring')
     assert response = @gateway.purchase(@amount, @credit_card, custom_options)
     assert_success response
     assert_equal 'charge', response.params['object']
@@ -68,7 +68,7 @@ class RemoteStripeTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_destination
     destination = fixtures(:stripe_destination)[:stripe_user_id]
-    custom_options = @options.merge(:destination => destination)
+    custom_options = @options.merge(destination: destination)
     assert response = @gateway.purchase(@amount, @credit_card, custom_options)
     assert_success response
     assert_equal 'charge', response.params['object']
@@ -80,7 +80,7 @@ class RemoteStripeTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_destination_and_amount
     destination = fixtures(:stripe_destination)[:stripe_user_id]
-    custom_options = @options.merge(:destination => destination, :destination_amount => @amount - 20)
+    custom_options = @options.merge(destination: destination, destination_amount: @amount - 20)
     assert response = @gateway.purchase(@amount, @credit_card, custom_options)
     assert_success response
     assert_equal 'charge', response.params['object']
@@ -156,7 +156,7 @@ class RemoteStripeTest < Test::Unit::TestCase
 
   def test_unsuccessful_purchase_with_destination_and_amount
     destination = fixtures(:stripe_destination)[:stripe_user_id]
-    custom_options = @options.merge(:destination => destination, :destination_amount => @amount + 20)
+    custom_options = @options.merge(destination: destination, destination_amount: @amount + 20)
     assert response = @gateway.purchase(@amount, @credit_card, custom_options)
     assert_failure response
     assert_match %r{must be less than or equal to the charge amount}, response.message
@@ -193,7 +193,7 @@ class RemoteStripeTest < Test::Unit::TestCase
 
   def test_authorization_and_capture_with_destination
     destination = fixtures(:stripe_destination)[:stripe_user_id]
-    custom_options = @options.merge(:destination => destination)
+    custom_options = @options.merge(destination: destination)
 
     assert authorization = @gateway.authorize(@amount, @credit_card, custom_options)
     assert_success authorization
@@ -208,7 +208,7 @@ class RemoteStripeTest < Test::Unit::TestCase
 
   def test_authorization_and_capture_with_destination_and_amount
     destination = fixtures(:stripe_destination)[:stripe_user_id]
-    custom_options = @options.merge(:destination => destination, :destination_amount => @amount - 20)
+    custom_options = @options.merge(destination: destination, destination_amount: @amount - 20)
 
     assert authorization = @gateway.authorize(@amount, @credit_card, custom_options)
     assert_success authorization
@@ -495,14 +495,14 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert store = @gateway.store(@credit_card)
     assert_success store
 
-    recharge_options = @options.merge(:customer => store.params['id'])
+    recharge_options = @options.merge(customer: store.params['id'])
     response = @gateway.purchase(@amount, nil, recharge_options)
     assert_success response
     assert_equal '4242', response.params['source']['last4']
   end
 
   def test_successful_unstore
-    creation = @gateway.store(@credit_card, {:description => 'Active Merchant Unstore Customer'})
+    creation = @gateway.store(@credit_card, {description: 'Active Merchant Unstore Customer'})
     card_id = creation.params['sources']['data'].first['id']
 
     assert response = @gateway.unstore(creation.authorization)
@@ -513,7 +513,7 @@ class RemoteStripeTest < Test::Unit::TestCase
   end
 
   def test_successful_unstore_using_deprecated_api
-    creation = @gateway.store(@credit_card, {:description => 'Active Merchant Unstore Customer'})
+    creation = @gateway.store(@credit_card, {description: 'Active Merchant Unstore Customer'})
     card_id = creation.params['sources']['data'].first['id']
     customer_id = creation.params['id']
 
@@ -557,7 +557,7 @@ class RemoteStripeTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = StripeGateway.new(:login => 'active_merchant_test')
+    gateway = StripeGateway.new(login: 'active_merchant_test')
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_match 'Invalid API Key provided', response.message
@@ -584,25 +584,25 @@ class RemoteStripeTest < Test::Unit::TestCase
   end
 
   def test_creditcard_purchase_with_customer
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:customer => '1234'))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(customer: '1234'))
     assert_success response
     assert_equal 'charge', response.params['object']
     assert response.params['paid']
   end
 
   def test_expanding_objects
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:expand => 'balance_transaction'))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(expand: 'balance_transaction'))
     assert_success response
     assert response.params['balance_transaction'].is_a?(Hash)
     assert_equal 'balance_transaction', response.params['balance_transaction']['object']
   end
 
   def test_successful_update
-    creation    = @gateway.store(@credit_card, {:description => 'Active Merchant Update Credit Card'})
+    creation    = @gateway.store(@credit_card, {description: 'Active Merchant Update Credit Card'})
     customer_id = creation.params['id']
     card_id     = creation.params['sources']['data'].first['id']
 
-    assert response = @gateway.update(customer_id, card_id, { :name => 'John Doe', :address_line1 => '123 Main Street', :address_city => 'Pleasantville', :address_state => 'NY', :address_zip => '12345', :exp_year => Time.now.year + 2, :exp_month => 6 })
+    assert response = @gateway.update(customer_id, card_id, { name: 'John Doe', address_line1: '123 Main Street', address_city: 'Pleasantville', address_state: 'NY', address_zip: '12345', exp_year: Time.now.year + 2, exp_month: 6 })
     assert_success response
     assert_equal 'John Doe',        response.params['name']
     assert_equal '123 Main Street', response.params['address_line1']

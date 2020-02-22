@@ -110,7 +110,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def build_get_express_details_request(token)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.tag! 'GetExpressCheckout' do
           xml.tag! 'Authorization' do
             xml.tag! 'PayData' do
@@ -126,7 +126,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_setup_express_sale_or_authorization_request(action, money, options = {})
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.tag! 'SetExpressCheckout' do
           xml.tag! action do
             add_pay_data xml, money, options
@@ -136,7 +136,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_sale_or_authorization_request(action, money, options)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.tag! 'DoExpressCheckout' do
           xml.tag! action do
             add_pay_data xml, money, options

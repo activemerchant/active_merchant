@@ -80,21 +80,21 @@ module ActiveMerchant #:nodoc:
         request = build_recurring_request(options[:profile_id] ? :modify : :add, money, options) do |xml|
           add_credit_card(xml, credit_card, options) if credit_card
         end
-        commit(request, options.merge(:request_type => :recurring))
+        commit(request, options.merge(request_type: :recurring))
       end
 
       def cancel_recurring(profile_id)
         ActiveMerchant.deprecated RECURRING_DEPRECATION_MESSAGE
 
-        request = build_recurring_request(:cancel, 0, :profile_id => profile_id)
-        commit(request, options.merge(:request_type => :recurring))
+        request = build_recurring_request(:cancel, 0, profile_id: profile_id)
+        commit(request, options.merge(request_type: :recurring))
       end
 
       def recurring_inquiry(profile_id, options = {})
         ActiveMerchant.deprecated RECURRING_DEPRECATION_MESSAGE
 
-        request = build_recurring_request(:inquiry, nil, options.update(:profile_id => profile_id))
-        commit(request, options.merge(:request_type => :recurring))
+        request = build_recurring_request(:inquiry, nil, options.update(profile_id: profile_id))
+        commit(request, options.merge(request_type: :recurring))
       end
 
       def express

@@ -9,9 +9,9 @@ class RemotePayeezyTest < Test::Unit::TestCase
     @amount = 100
     @reversal_id = "REV-#{SecureRandom.random_number(1000000)}"
     @options = {
-      :billing_address => address,
-      :merchant_ref => 'Store Purchase',
-      :ta_token => 'NOIW'
+      billing_address: address,
+      merchant_ref: 'Store Purchase',
+      ta_token: 'NOIW'
     }
     @options_mdd = {
       soft_descriptors: {

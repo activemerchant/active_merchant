@@ -4,10 +4,10 @@ class QuickpayV10Test < Test::Unit::TestCase
   include CommStub
 
   def setup
-    @gateway = QuickpayV10Gateway.new(:api_key => 'APIKEY')
+    @gateway = QuickpayV10Gateway.new(api_key: 'APIKEY')
     @credit_card = credit_card('4242424242424242')
     @amount = 100
-    @options = { :order_id => '1', :billing_address => address, :customer_ip => '1.1.1.1' }
+    @options = { order_id: '1', billing_address: address, customer_ip: '1.1.1.1' }
   end
 
   def parse(body)

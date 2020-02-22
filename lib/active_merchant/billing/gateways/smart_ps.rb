@@ -117,7 +117,7 @@ module ActiveMerchant #:nodoc:
       def store(payment_source, options = {})
         post = {}
         billing_id = options.delete(:billing_id).to_s || true
-        add_payment_source(post, payment_source, :store => billing_id)
+        add_payment_source(post, payment_source, store: billing_id)
         add_address(post, options[:billing_address] || options[:address])
         add_customer_data(post, options)
         commit(nil, nil, post)
@@ -227,10 +227,10 @@ module ActiveMerchant #:nodoc:
         parameters[:amount] = localized_amount(money, parameters[:currency] || default_currency) if money
         response = parse(ssl_post(self.live_url, post_data(action, parameters)))
         Response.new(response['response'] == '1', message_from(response), response,
-          :authorization => (response['transactionid'] || response['customer_vault_id']),
-          :test => test?,
-          :cvv_result => response['cvvresponse'],
-          :avs_result => { :code => response['avsresponse'] }
+          authorization: (response['transactionid'] || response['customer_vault_id']),
+          test: test?,
+          cvv_result: response['cvvresponse'],
+          avs_result: { code: response['avsresponse'] }
         )
       end
 

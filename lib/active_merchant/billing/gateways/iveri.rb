@@ -84,7 +84,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def build_xml_envelope(vxml)
-        builder = Nokogiri::XML::Builder.new(:encoding => 'UTF-8') do |xml|
+        builder = Nokogiri::XML::Builder.new(encoding: 'UTF-8') do |xml|
           xml[:soap].Envelope 'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance', 'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema', 'xmlns:soap' => 'http://schemas.xmlsoap.org/soap/envelope/' do
             xml[:soap].Body do
               xml.Execute 'xmlns' => 'http://iveri.com/' do

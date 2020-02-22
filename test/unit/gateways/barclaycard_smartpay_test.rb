@@ -257,7 +257,7 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
   end
 
   def test_failed_capture
-    @gateway.stubs(:ssl_post).raises(ActiveMerchant::ResponseError.new(stub(:code => '422', :body => failed_capture_response)))
+    @gateway.stubs(:ssl_post).raises(ActiveMerchant::ResponseError.new(stub(code: '422', body: failed_capture_response)))
 
     response = @gateway.capture(@amount, '0000000000000000', @options)
     assert_failure response
@@ -289,7 +289,7 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
   end
 
   def test_failed_refund
-    @gateway.stubs(:ssl_post).raises(ActiveMerchant::ResponseError.new(stub(:code => '422', :body => failed_refund_response)))
+    @gateway.stubs(:ssl_post).raises(ActiveMerchant::ResponseError.new(stub(code: '422', body: failed_refund_response)))
 
     response = @gateway.refund(@amount, '0000000000000000', @options)
     assert_failure response
@@ -399,7 +399,7 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
   end
 
   def test_failed_store
-    @gateway.stubs(:ssl_post).raises(ActiveMerchant::ResponseError.new(stub(:code => '422', :body => failed_store_response)))
+    @gateway.stubs(:ssl_post).raises(ActiveMerchant::ResponseError.new(stub(code: '422', body: failed_store_response)))
 
     response = @gateway.store(@credit_card, @options)
     assert_failure response

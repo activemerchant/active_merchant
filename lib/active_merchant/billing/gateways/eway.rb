@@ -114,8 +114,8 @@ module ActiveMerchant #:nodoc:
         Response.new(success?(response),
           message_from(response[:ewaytrxnerror]),
           response,
-          :authorization => response[:ewaytrxnnumber],
-          :test => test?
+          authorization: response[:ewaytrxnnumber],
+          test: test?
         )
       end
 

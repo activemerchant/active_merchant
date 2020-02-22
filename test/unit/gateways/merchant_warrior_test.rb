@@ -5,9 +5,9 @@ class MerchantWarriorTest < Test::Unit::TestCase
 
   def setup
     @gateway = MerchantWarriorGateway.new(
-      :merchant_uuid => '4e922de8c2a4c',
-      :api_key => 'g6jrxa9o',
-      :api_passphrase => 'vp4ujoem'
+      merchant_uuid: '4e922de8c2a4c',
+      api_key: 'g6jrxa9o',
+      api_passphrase: 'vp4ujoem'
     )
 
     @credit_card = credit_card
@@ -16,8 +16,8 @@ class MerchantWarriorTest < Test::Unit::TestCase
     @failure_amount = 10033
 
     @options = {
-      :address => address,
-      :transaction_product => 'TestProduct'
+      address: address,
+      transaction_product: 'TestProduct'
     }
   end
 

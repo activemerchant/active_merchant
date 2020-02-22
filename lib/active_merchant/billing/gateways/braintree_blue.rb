@@ -60,12 +60,12 @@ module ActiveMerchant #:nodoc:
         end
 
         @configuration = Braintree::Configuration.new(
-          :merchant_id       => options[:merchant_id],
-          :public_key        => options[:public_key],
-          :private_key       => options[:private_key],
-          :environment       => (options[:environment] || (test? ? :sandbox : :production)).to_sym,
-          :custom_user_agent => "ActiveMerchant #{ActiveMerchant::VERSION}",
-          :logger            => options[:logger] || logger
+          merchant_id: options[:merchant_id],
+          public_key: options[:public_key],
+          private_key: options[:private_key],
+          environment: (options[:environment] || (test? ? :sandbox : :production)).to_sym,
+          custom_user_agent: "ActiveMerchant #{ActiveMerchant::VERSION}",
+          logger: options[:logger] || logger
         )
 
         @braintree_gateway = Braintree::Gateway.new(@configuration)
@@ -83,7 +83,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, credit_card_or_vault_id, options = {})
-        authorize(money, credit_card_or_vault_id, options.merge(:submit_for_settlement => true))
+        authorize(money, credit_card_or_vault_id, options.merge(submit_for_settlement: true))
       end
 
       def credit(money, credit_card_or_vault_id, options = {})
@@ -144,26 +144,26 @@ module ActiveMerchant #:nodoc:
 
           options[:update_existing_token] = braintree_credit_card.token
           credit_card_params = merge_credit_card_options({
-            :credit_card => {
-              :cardholder_name => creditcard.name,
-              :number => creditcard.number,
-              :cvv => creditcard.verification_value,
-              :expiration_month => creditcard.month.to_s.rjust(2, '0'),
-              :expiration_year => creditcard.year.to_s
+            credit_card: {
+              cardholder_name: creditcard.name,
+              number: creditcard.number,
+              cvv: creditcard.verification_value,
+              expiration_month: creditcard.month.to_s.rjust(2, '0'),
+              expiration_year: creditcard.year.to_s
             }
           }, options)[:credit_card]
 
           result = @braintree_gateway.customer.update(vault_id,
-            :first_name => creditcard.first_name,
-            :last_name => creditcard.last_name,
-            :email => scrub_email(options[:email]),
-            :phone => options[:phone] || (options[:billing_address][:phone] if options[:billing_address] &&
+            first_name: creditcard.first_name,
+            last_name: creditcard.last_name,
+            email: scrub_email(options[:email]),
+            phone: options[:phone] || (options[:billing_address][:phone] if options[:billing_address] &&
               options[:billing_address][:phone]),
-            :credit_card => credit_card_params
+            credit_card: credit_card_params
           )
           Response.new(result.success?, message_from_result(result),
-            :braintree_customer => (customer_hash(@braintree_gateway.customer.find(vault_id), :include_credit_cards) if result.success?),
-            :customer_vault_id => (result.customer.id if result.success?)
+            braintree_customer: (customer_hash(@braintree_gateway.customer.find(vault_id), :include_credit_cards) if result.success?),
+            customer_vault_id: (result.customer.id if result.success?)
           )
         end
       end
@@ -215,33 +215,33 @@ module ActiveMerchant #:nodoc:
             credit_card_params = { payment_method_nonce: options[:payment_method_nonce] }
           else
             credit_card_params = {
-              :credit_card => {
-                :cardholder_name => creditcard.name,
-                :number => creditcard.number,
-                :cvv => creditcard.verification_value,
-                :expiration_month => creditcard.month.to_s.rjust(2, '0'),
-                :expiration_year => creditcard.year.to_s,
-                :token => options[:credit_card_token]
+              credit_card: {
+                cardholder_name: creditcard.name,
+                number: creditcard.number,
+                cvv: creditcard.verification_value,
+                expiration_month: creditcard.month.to_s.rjust(2, '0'),
+                expiration_year: creditcard.year.to_s,
+                token: options[:credit_card_token]
               }
             }
           end
           parameters = {
-            :first_name => creditcard.first_name,
-            :last_name => creditcard.last_name,
-            :email => scrub_email(options[:email]),
-            :phone => options[:phone] || (options[:billing_address][:phone] if options[:billing_address] &&
+            first_name: creditcard.first_name,
+            last_name: creditcard.last_name,
+            email: scrub_email(options[:email]),
+            phone: options[:phone] || (options[:billing_address][:phone] if options[:billing_address] &&
               options[:billing_address][:phone]),
-            :id => options[:customer],
-            :device_data => options[:device_data],
+            id: options[:customer],
+            device_data: options[:device_data],
           }.merge credit_card_params
           result = @braintree_gateway.customer.create(merge_credit_card_options(parameters, options))
           Response.new(result.success?, message_from_result(result),
             {
-              :braintree_customer => (customer_hash(result.customer, :include_credit_cards) if result.success?),
-              :customer_vault_id => (result.customer.id if result.success?),
-              :credit_card_token => (result.customer.credit_cards[0].token if result.success?)
+              braintree_customer: (customer_hash(result.customer, :include_credit_cards) if result.success?),
+              customer_vault_id: (result.customer.id if result.success?),
+              credit_card_token: (result.customer.credit_cards[0].token if result.success?)
             },
-            :authorization => (result.customer.id if result.success?)
+            authorization: (result.customer.id if result.success?)
           )
         end
       end
@@ -313,12 +313,12 @@ module ActiveMerchant #:nodoc:
 
       def map_address(address)
         mapped = {
-          :street_address => address[:address1],
-          :extended_address => address[:address2],
-          :company => address[:company],
-          :locality => address[:city],
-          :region => address[:state],
-          :postal_code => scrub_zip(address[:zip]),
+          street_address: address[:address1],
+          extended_address: address[:address2],
+          company: address[:company],
+          locality: address[:city],
+          region: address[:state],
+          postal_code: scrub_zip(address[:zip]),
         }
 
         mapped[:country_code_alpha2] = (address[:country] || address[:country_code_alpha2]) if address[:country] || address[:country_code_alpha2]
@@ -565,18 +565,18 @@ module ActiveMerchant #:nodoc:
 
       def create_transaction_parameters(money, credit_card_or_vault_id, options)
         parameters = {
-          :amount => localized_amount(money, options[:currency] || default_currency).to_s,
-          :order_id => options[:order_id],
-          :customer => {
-            :id => options[:store] == true ? '' : options[:store],
-            :email => scrub_email(options[:email]),
-            :phone => options[:phone] || (options[:billing_address][:phone] if options[:billing_address] &&
+          amount: localized_amount(money, options[:currency] || default_currency).to_s,
+          order_id: options[:order_id],
+          customer: {
+            id: options[:store] == true ? '' : options[:store],
+            email: scrub_email(options[:email]),
+            phone: options[:phone] || (options[:billing_address][:phone] if options[:billing_address] &&
               options[:billing_address][:phone])
           },
-          :options => {
-            :store_in_vault => options[:store] ? true : false,
-            :submit_for_settlement => options[:submit_for_settlement],
-            :hold_in_escrow => options[:hold_in_escrow],
+          options: {
+            store_in_vault: options[:store] ? true : false,
+            submit_for_settlement: options[:submit_for_settlement],
+            hold_in_escrow: options[:hold_in_escrow],
           }
         }
 
@@ -692,38 +692,38 @@ module ActiveMerchant #:nodoc:
           end
         else
           parameters[:customer].merge!(
-            :first_name => credit_card_or_vault_id.first_name,
-            :last_name => credit_card_or_vault_id.last_name
+            first_name: credit_card_or_vault_id.first_name,
+            last_name: credit_card_or_vault_id.last_name
           )
           if credit_card_or_vault_id.is_a?(NetworkTokenizationCreditCard)
             if credit_card_or_vault_id.source == :apple_pay
               parameters[:apple_pay_card] = {
-                :number => credit_card_or_vault_id.number,
-                :expiration_month => credit_card_or_vault_id.month.to_s.rjust(2, '0'),
-                :expiration_year => credit_card_or_vault_id.year.to_s,
-                :cardholder_name => credit_card_or_vault_id.name,
-                :cryptogram => credit_card_or_vault_id.payment_cryptogram,
-                :eci_indicator => credit_card_or_vault_id.eci
+                number: credit_card_or_vault_id.number,
+                expiration_month: credit_card_or_vault_id.month.to_s.rjust(2, '0'),
+                expiration_year: credit_card_or_vault_id.year.to_s,
+                cardholder_name: credit_card_or_vault_id.name,
+                cryptogram: credit_card_or_vault_id.payment_cryptogram,
+                eci_indicator: credit_card_or_vault_id.eci
               }
             elsif credit_card_or_vault_id.source == :android_pay || credit_card_or_vault_id.source == :google_pay
               parameters[:android_pay_card] = {
-                :number => credit_card_or_vault_id.number,
-                :cryptogram => credit_card_or_vault_id.payment_cryptogram,
-                :expiration_month => credit_card_or_vault_id.month.to_s.rjust(2, '0'),
-                :expiration_year => credit_card_or_vault_id.year.to_s,
-                :google_transaction_id => credit_card_or_vault_id.transaction_id,
-                :source_card_type => credit_card_or_vault_id.brand,
-                :source_card_last_four => credit_card_or_vault_id.last_digits,
-                :eci_indicator => credit_card_or_vault_id.eci
+                number: credit_card_or_vault_id.number,
+                cryptogram: credit_card_or_vault_id.payment_cryptogram,
+                expiration_month: credit_card_or_vault_id.month.to_s.rjust(2, '0'),
+                expiration_year: credit_card_or_vault_id.year.to_s,
+                google_transaction_id: credit_card_or_vault_id.transaction_id,
+                source_card_type: credit_card_or_vault_id.brand,
+                source_card_last_four: credit_card_or_vault_id.last_digits,
+                eci_indicator: credit_card_or_vault_id.eci
               }
             end
           else
             parameters[:credit_card] = {
-              :number => credit_card_or_vault_id.number,
-              :cvv => credit_card_or_vault_id.verification_value,
-              :expiration_month => credit_card_or_vault_id.month.to_s.rjust(2, '0'),
-              :expiration_year => credit_card_or_vault_id.year.to_s,
-              :cardholder_name => credit_card_or_vault_id.name
+              number: credit_card_or_vault_id.number,
+              cvv: credit_card_or_vault_id.verification_value,
+              expiration_month: credit_card_or_vault_id.month.to_s.rjust(2, '0'),
+              expiration_year: credit_card_or_vault_id.year.to_s,
+              cardholder_name: credit_card_or_vault_id.name
             }
           end
         end

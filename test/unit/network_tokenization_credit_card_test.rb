@@ -3,7 +3,7 @@ require 'test_helper'
 class NetworkTokenizationCreditCardTest < Test::Unit::TestCase
   def setup
     @tokenized_card = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
-      number: '4242424242424242', :brand => 'visa',
+      number: '4242424242424242', brand: 'visa',
       month: default_expiration_date.month, year: default_expiration_date.year,
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=', eci: '05'
     })

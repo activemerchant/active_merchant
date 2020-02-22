@@ -230,7 +230,7 @@ module ActiveMerchant #:nodoc:
 
       # R – Refund request
       def refund(money, authorization, options = {})
-        order = build_new_order_xml(REFUND, money, nil, options.merge(:authorization => authorization)) do |xml|
+        order = build_new_order_xml(REFUND, money, nil, options.merge(authorization: authorization)) do |xml|
           add_refund(xml, options[:currency])
           xml.tag! :CustomerRefNum, options[:customer_ref_num] if @options[:customer_profiles] && options[:profile_txn]
         end
@@ -245,7 +245,7 @@ module ActiveMerchant #:nodoc:
       def void(authorization, options = {}, deprecated = {})
         if !options.kind_of?(Hash)
           ActiveMerchant.deprecated('Calling the void method with an amount parameter is deprecated and will be removed in a future version.')
-          return void(options, deprecated.merge(:amount => authorization))
+          return void(options, deprecated.merge(amount: authorization))
         end
 
         order = build_void_request_xml(authorization, options)
@@ -286,13 +286,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def retrieve_customer_profile(customer_ref_num)
-        options = {:customer_profile_action => RETRIEVE, :customer_ref_num => customer_ref_num}
+        options = {customer_profile_action: RETRIEVE, customer_ref_num: customer_ref_num}
         order = build_customer_request_xml(nil, options)
         commit(order, :retrieve_customer_profile)
       end
 
       def delete_customer_profile(customer_ref_num)
-        options = {:customer_profile_action => DELETE, :customer_ref_num => customer_ref_num}
+        options = {customer_profile_action: DELETE, customer_ref_num: customer_ref_num}
         order = build_customer_request_xml(nil, options)
         commit(order, :delete_customer_profile)
       end
@@ -622,10 +622,10 @@ module ActiveMerchant #:nodoc:
 
         Response.new(success?(response, message_type), message_from(response), response,
           {
-            :authorization => authorization_string(response[:tx_ref_num], response[:order_id]),
-            :test => self.test?,
-            :avs_result => OrbitalGateway::AVSResult.new(response[:avs_resp_code]),
-            :cvv_result => OrbitalGateway::CVVResult.new(response[:cvv2_resp_code])
+            authorization: authorization_string(response[:tx_ref_num], response[:order_id]),
+            test: self.test?,
+            avs_result: OrbitalGateway::AVSResult.new(response[:avs_resp_code]),
+            cvv_result: OrbitalGateway::CVVResult.new(response[:cvv2_resp_code])
           }
         )
       end
@@ -786,8 +786,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def xml_envelope
-        xml = Builder::XmlMarkup.new(:indent => 2)
-        xml.instruct!(:xml, :version => '1.0', :encoding => 'UTF-8')
+        xml = Builder::XmlMarkup.new(indent: 2)
+        xml.instruct!(:xml, version: '1.0', encoding: 'UTF-8')
         xml
       end
 

@@ -15,37 +15,37 @@ class RealexTest < Test::Unit::TestCase
     @refund_secret = 'your_refund_secret'
 
     @gateway = RealexGateway.new(
-      :login => @login,
-      :password => @password,
-      :account => @account
+      login: @login,
+      password: @password,
+      account: @account
     )
 
     @gateway_with_account = RealexGateway.new(
-      :login => @login,
-      :password => @password,
-      :account => 'bill_web_cengal'
+      login: @login,
+      password: @password,
+      account: 'bill_web_cengal'
     )
 
     @credit_card = CreditCard.new(
-      :number => '4263971921001307',
-      :month => 8,
-      :year => 2008,
-      :first_name => 'Longbob',
-      :last_name => 'Longsen',
-      :brand => 'visa'
+      number: '4263971921001307',
+      month: 8,
+      year: 2008,
+      first_name: 'Longbob',
+      last_name: 'Longsen',
+      brand: 'visa'
     )
 
     @options = {
-      :order_id => '1'
+      order_id: '1'
     }
 
     @address = {
-      :name => 'Longbob Longsen',
-      :address1 => '123 Fake Street',
-      :city => 'Belfast',
-      :state => 'Antrim',
-      :country => 'Northern Ireland',
-      :zip => 'BT2 8XX'
+      name: 'Longbob Longsen',
+      address1: '123 Fake Street',
+      city: 'Belfast',
+      state: 'Antrim',
+      country: 'Northern Ireland',
+      zip: 'BT2 8XX'
     }
 
     @amount = 100
@@ -90,12 +90,12 @@ class RealexTest < Test::Unit::TestCase
 
   def test_hash
     gateway = RealexGateway.new(
-      :login => 'thestore',
-      :password => 'mysecret'
+      login: 'thestore',
+      password: 'mysecret'
     )
     Time.stubs(:now).returns(Time.new(2001, 4, 3, 12, 32, 45))
     gateway.expects(:ssl_post).with(anything, regexp_matches(/9af7064afd307c9f988e8dfc271f9257f1fc02f6/)).returns(successful_purchase_response)
-    gateway.purchase(29900, credit_card('5105105105105100'), :order_id => 'ORD453-11')
+    gateway.purchase(29900, credit_card('5105105105105100'), order_id: 'ORD453-11')
   end
 
   def test_successful_purchase
@@ -188,7 +188,7 @@ class RealexTest < Test::Unit::TestCase
 
   def test_purchase_xml
     options = {
-      :order_id => '1'
+      order_id: '1'
     }
 
     @gateway.expects(:new_timestamp).returns('20090824160201')
@@ -237,7 +237,7 @@ class RealexTest < Test::Unit::TestCase
 
   def test_verify_xml
     options = {
-      :order_id => '1'
+      order_id: '1'
     }
     @gateway.expects(:new_timestamp).returns('20181026114304')
 
@@ -266,7 +266,7 @@ class RealexTest < Test::Unit::TestCase
 
   def test_auth_xml
     options = {
-      :order_id => '1'
+      order_id: '1'
     }
 
     @gateway.expects(:new_timestamp).returns('20090824160201')
@@ -316,7 +316,7 @@ class RealexTest < Test::Unit::TestCase
   end
 
   def test_refund_with_rebate_secret_xml
-    gateway = RealexGateway.new(:login => @login, :password => @password, :account => @account, :rebate_secret => @rebate_secret)
+    gateway = RealexGateway.new(login: @login, password: @password, account: @account, rebate_secret: @rebate_secret)
 
     gateway.expects(:new_timestamp).returns('20090824160201')
 
@@ -339,7 +339,7 @@ class RealexTest < Test::Unit::TestCase
 
   def test_credit_xml
     options = {
-      :order_id => '1'
+      order_id: '1'
     }
 
     @gateway.expects(:new_timestamp).returns('20190717161006')
@@ -370,7 +370,7 @@ class RealexTest < Test::Unit::TestCase
   end
 
   def test_credit_with_refund_secret_xml
-    gateway = RealexGateway.new(:login => @login, :password => @password, :account => @account, :refund_secret => @refund_secret)
+    gateway = RealexGateway.new(login: @login, password: @password, account: @account, refund_secret: @refund_secret)
 
     gateway.expects(:new_timestamp).returns('20190717161006')
 
@@ -404,9 +404,9 @@ class RealexTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
     options = {
-      :order_id => '1',
-      :billing_address => @address,
-      :shipping_address => @address
+      order_id: '1',
+      billing_address: @address,
+      shipping_address: @address
     }
 
     @gateway.expects(:new_timestamp).returns('20090824160201')
@@ -421,8 +421,8 @@ class RealexTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).with(anything, regexp_matches(/<code>28\|123<\/code>/)).returns(successful_purchase_response)
 
     options = {
-      :order_id => '1',
-      :shipping_address => @address
+      order_id: '1',
+      shipping_address: @address
     }
 
     @gateway.authorize(@amount, @credit_card, options)
@@ -432,8 +432,8 @@ class RealexTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).with(anything, regexp_matches(/<code>28\|123<\/code>/)).returns(successful_purchase_response)
 
     options = {
-      :order_id => '1',
-      :billing_address => @address
+      order_id: '1',
+      billing_address: @address
     }
 
     @gateway.authorize(@amount, @credit_card, options)

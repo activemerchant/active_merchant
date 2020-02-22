@@ -5,23 +5,23 @@ class WorldpayTest < Test::Unit::TestCase
 
   def setup
     @gateway = WorldpayGateway.new(
-      :login => 'testlogin',
-      :password => 'testpassword'
+      login: 'testlogin',
+      password: 'testpassword'
     )
 
     @amount = 100
     @credit_card = credit_card('4242424242424242')
     @token = '|99411111780163871111|shopper|59424549c291397379f30c5c082dbed8'
     @elo_credit_card = credit_card('4514 1600 0000 0008',
-      :month => 10,
-      :year => 2020,
-      :first_name => 'John',
-      :last_name => 'Smith',
-      :verification_value => '737',
-      :brand => 'elo'
+      month: 10,
+      year: 2020,
+      first_name: 'John',
+      last_name: 'Smith',
+      verification_value: '737',
+      brand: 'elo'
     )
     @sodexo_voucher = credit_card('6060704495764400', brand: 'sodexo')
-    @options = {:order_id => 1}
+    @options = {order_id: 1}
     @store_options = {
       customer: '59424549c291397379f30c5c082dbed8',
       email: 'wow@example.com'
@@ -597,9 +597,9 @@ class WorldpayTest < Test::Unit::TestCase
     ActiveMerchant::Billing::Base.mode = :production
 
     @gateway = WorldpayGateway.new(
-      :login => 'testlogin',
-      :password => 'testpassword',
-      :test => true
+      login: 'testlogin',
+      password: 'testpassword',
+      test: true
     )
 
     stub_comms do

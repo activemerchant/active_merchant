@@ -33,49 +33,49 @@ module ActiveMerchant #:nodoc:
       AUTHORIZE_NET_CIM_NAMESPACE = 'AnetApi/xml/v1/schema/AnetApiSchema.xsd'
 
       CIM_ACTIONS = {
-        :create_customer_profile => 'createCustomerProfile',
-        :create_customer_payment_profile => 'createCustomerPaymentProfile',
-        :create_customer_shipping_address => 'createCustomerShippingAddress',
-        :get_customer_profile => 'getCustomerProfile',
-        :get_customer_profile_ids => 'getCustomerProfileIds',
-        :get_customer_payment_profile => 'getCustomerPaymentProfile',
-        :get_customer_shipping_address => 'getCustomerShippingAddress',
-        :delete_customer_profile => 'deleteCustomerProfile',
-        :delete_customer_payment_profile => 'deleteCustomerPaymentProfile',
-        :delete_customer_shipping_address => 'deleteCustomerShippingAddress',
-        :update_customer_profile => 'updateCustomerProfile',
-        :update_customer_payment_profile => 'updateCustomerPaymentProfile',
-        :update_customer_shipping_address => 'updateCustomerShippingAddress',
-        :create_customer_profile_transaction => 'createCustomerProfileTransaction',
-        :validate_customer_payment_profile => 'validateCustomerPaymentProfile'
+        create_customer_profile: 'createCustomerProfile',
+        create_customer_payment_profile: 'createCustomerPaymentProfile',
+        create_customer_shipping_address: 'createCustomerShippingAddress',
+        get_customer_profile: 'getCustomerProfile',
+        get_customer_profile_ids: 'getCustomerProfileIds',
+        get_customer_payment_profile: 'getCustomerPaymentProfile',
+        get_customer_shipping_address: 'getCustomerShippingAddress',
+        delete_customer_profile: 'deleteCustomerProfile',
+        delete_customer_payment_profile: 'deleteCustomerPaymentProfile',
+        delete_customer_shipping_address: 'deleteCustomerShippingAddress',
+        update_customer_profile: 'updateCustomerProfile',
+        update_customer_payment_profile: 'updateCustomerPaymentProfile',
+        update_customer_shipping_address: 'updateCustomerShippingAddress',
+        create_customer_profile_transaction: 'createCustomerProfileTransaction',
+        validate_customer_payment_profile: 'validateCustomerPaymentProfile'
       }
 
       CIM_TRANSACTION_TYPES = {
-        :auth_capture => 'profileTransAuthCapture',
-        :auth_only => 'profileTransAuthOnly',
-        :capture_only => 'profileTransCaptureOnly',
-        :prior_auth_capture => 'profileTransPriorAuthCapture',
-        :refund => 'profileTransRefund',
-        :void => 'profileTransVoid'
+        auth_capture: 'profileTransAuthCapture',
+        auth_only: 'profileTransAuthOnly',
+        capture_only: 'profileTransCaptureOnly',
+        prior_auth_capture: 'profileTransPriorAuthCapture',
+        refund: 'profileTransRefund',
+        void: 'profileTransVoid'
       }
 
       CIM_VALIDATION_MODES = {
-        :none => 'none',
-        :test => 'testMode',
-        :live => 'liveMode',
-        :old => 'oldLiveMode'
+        none: 'none',
+        test: 'testMode',
+        live: 'liveMode',
+        old: 'oldLiveMode'
       }
 
       BANK_ACCOUNT_TYPES = {
-        :checking => 'checking',
-        :savings => 'savings',
-        :business_checking => 'businessChecking'
+        checking: 'checking',
+        savings: 'savings',
+        business_checking: 'businessChecking'
       }
 
       ECHECK_TYPES = {
-        :ccd => 'CCD',
-        :ppd => 'PPD',
-        :web => 'WEB'
+        ccd: 'CCD',
+        ppd: 'PPD',
+        web: 'WEB'
       }
 
       self.homepage_url = 'http://www.authorize.net/'
@@ -487,9 +487,9 @@ module ActiveMerchant #:nodoc:
       def build_request(action, options = {})
         raise StandardError, "Invalid Customer Information Manager Action: #{action}" unless CIM_ACTIONS.include?(action)
 
-        xml = Builder::XmlMarkup.new(:indent => 2)
-        xml.instruct!(:xml, :version => '1.0', :encoding => 'utf-8')
-        xml.tag!("#{CIM_ACTIONS[action]}Request", :xmlns => AUTHORIZE_NET_CIM_NAMESPACE) do
+        xml = Builder::XmlMarkup.new(indent: 2)
+        xml.instruct!(:xml, version: '1.0', encoding: 'utf-8')
+        xml.tag!("#{CIM_ACTIONS[action]}Request", xmlns: AUTHORIZE_NET_CIM_NAMESPACE) do
           add_merchant_authentication(xml)
           # Merchant-assigned reference ID for the request
           xml.tag!('refId', options[:ref_id]) if options[:ref_id]

@@ -3,9 +3,9 @@ require 'test_helper'
 class MerchantWareVersionFourTest < Test::Unit::TestCase
   def setup
     @gateway = MerchantWareVersionFourGateway.new(
-      :login => 'login',
-      :password => 'password',
-      :name => 'name'
+      login: 'login',
+      password: 'password',
+      name: 'name'
     )
 
     @credit_card = credit_card
@@ -13,8 +13,8 @@ class MerchantWareVersionFourTest < Test::Unit::TestCase
     @amount = 100
 
     @options = {
-      :order_id => '1',
-      :billing_address => address
+      order_id: '1',
+      billing_address: address
     }
   end
 
@@ -31,7 +31,7 @@ class MerchantWareVersionFourTest < Test::Unit::TestCase
   end
 
   def test_soap_fault_during_authorization
-    response_400 = stub(:code => '400', :message => 'Bad Request', :body => failed_authorize_response)
+    response_400 = stub(code: '400', message: 'Bad Request', body: failed_authorize_response)
     @gateway.expects(:ssl_post).raises(ActiveMerchant::ResponseError.new(response_400))
 
     assert response = @gateway.authorize(@amount, @credit_card, @options)

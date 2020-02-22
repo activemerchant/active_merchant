@@ -57,7 +57,7 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment_method, options = {})
         MultiResponse.run do |r|
           r.process { authorize(money, payment_method, options) }
-          r.process { capture(money, r.authorization, options.merge(:authorization_validated => true)) }
+          r.process { capture(money, r.authorization, options.merge(authorization_validated: true)) }
         end
       end
 
@@ -73,7 +73,7 @@ module ActiveMerchant #:nodoc:
           r.process { inquire_request(authorization, options, 'AUTHORISED') } unless options[:authorization_validated]
           if r.params
             authorization_currency = r.params['amount_currency_code']
-            options = options.merge(:currency => authorization_currency) if authorization_currency.present?
+            options = options.merge(currency: authorization_currency) if authorization_currency.present?
           end
           r.process { capture_request(money, authorization, options) }
         end
@@ -106,13 +106,13 @@ module ActiveMerchant #:nodoc:
       #   merchant ID.
       def credit(money, payment_method, options = {})
         payment_details = payment_details_from(payment_method)
-        credit_request(money, payment_method, payment_details.merge(:credit => true, **options))
+        credit_request(money, payment_method, payment_details.merge(credit: true, **options))
       end
 
       def verify(payment_method, options={})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, payment_method, options) }
-          r.process(:ignore_result) { void(r.authorization, options.merge(:authorization_validated => true)) }
+          r.process(:ignore_result) { void(r.authorization, options.merge(authorization_validated: true)) }
         end
       end
 
@@ -163,8 +163,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_request
-        xml = Builder::XmlMarkup.new :indent => 2
-        xml.instruct! :xml, :encoding => 'UTF-8'
+        xml = Builder::XmlMarkup.new indent: 2
+        xml.instruct! :xml, encoding: 'UTF-8'
         xml.declare! :DOCTYPE, :paymentService, :PUBLIC, '-//WorldPay//DTD WorldPay PaymentService v1//EN', 'http://dtd.worldpay.com/paymentService_v1.dtd'
         xml.paymentService 'version' => '1.4', 'merchantCode' => @options[:login] do
           yield xml
@@ -235,7 +235,7 @@ module ActiveMerchant #:nodoc:
       def build_refund_request(money, authorization, options)
         build_order_modify_request(authorization) do |xml|
           xml.refund do
-            add_amount(xml, money, options.merge(:debit_credit_indicator => 'credit'))
+            add_amount(xml, money, options.merge(debit_credit_indicator: 'credit'))
           end
         end
       end
@@ -544,7 +544,7 @@ module ActiveMerchant #:nodoc:
         xml = xml.strip.gsub(/\&/, '&amp;')
         doc = Nokogiri::XML(xml, &:strict)
         doc.remove_namespaces!
-        resp_params = {:action => action}
+        resp_params = {action: action}
 
         parse_elements(doc.root, resp_params)
         resp_params
@@ -591,17 +591,17 @@ module ActiveMerchant #:nodoc:
           success,
           message,
           raw,
-          :authorization => authorization_from(action, raw, options),
-          :error_code => error_code_from(success, raw),
-          :test => test?,
-          :avs_result => AVSResult.new(code: AVS_CODE_MAP[raw[:avs_result_code_description]]),
-          :cvv_result => CVVResult.new(CVC_CODE_MAP[raw[:cvc_result_code_description]])
+          authorization: authorization_from(action, raw, options),
+          error_code: error_code_from(success, raw),
+          test: test?,
+          avs_result: AVSResult.new(code: AVS_CODE_MAP[raw[:avs_result_code_description]]),
+          cvv_result: CVVResult.new(CVC_CODE_MAP[raw[:cvc_result_code_description]])
         )
       rescue Nokogiri::SyntaxError
         unparsable_response(xml)
       rescue ActiveMerchant::ResponseError => e
         if e.response.code.to_s == '401'
-          return Response.new(false, 'Invalid credentials', {}, :test => test?)
+          return Response.new(false, 'Invalid credentials', {}, test: test?)
         else
           raise e
         end

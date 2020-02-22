@@ -5,14 +5,14 @@ class PlugnpayTest < Test::Unit::TestCase
     Base.mode = :test
 
     @gateway = PlugnpayGateway.new(
-      :login => 'X',
-      :password => 'Y'
+      login: 'X',
+      password: 'Y'
     )
 
     @credit_card = credit_card
     @options = {
-      :billing_address => address,
-      :description => 'Store purchase'
+      billing_address: address,
+      description: 'Store purchase'
     }
     @amount = 100
   end
@@ -69,7 +69,7 @@ class PlugnpayTest < Test::Unit::TestCase
   def test_add_address_outsite_north_america
     result = PlugnpayGateway::PlugnpayPostData.new
 
-    @gateway.send(:add_addresses, result, :billing_address => {:address1 => '164 Waverley Street', :country => 'DE', :state => 'Dortmund'})
+    @gateway.send(:add_addresses, result, billing_address: {address1: '164 Waverley Street', country: 'DE', state: 'Dortmund'})
 
     assert_equal result[:state], 'ZZ'
     assert_equal result[:province], 'Dortmund'
@@ -84,7 +84,7 @@ class PlugnpayTest < Test::Unit::TestCase
   def test_add_address
     result = PlugnpayGateway::PlugnpayPostData.new
 
-    @gateway.send(:add_addresses, result, :billing_address => {:address1 => '164 Waverley Street', :country => 'US', :state => 'CO'})
+    @gateway.send(:add_addresses, result, billing_address: {address1: '164 Waverley Street', country: 'US', state: 'CO'})
 
     assert_equal result[:card_state], 'CO'
     assert_equal result[:card_address1], '164 Waverley Street'

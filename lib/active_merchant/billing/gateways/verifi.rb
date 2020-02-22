@@ -50,12 +50,12 @@ module ActiveMerchant #:nodoc:
       SUCCESS = 1
 
       TRANSACTIONS = {
-        :authorization => 'auth',
-        :purchase => 'sale',
-        :capture => 'capture',
-        :void => 'void',
-        :credit => 'credit',
-        :refund => 'refund'
+        authorization: 'auth',
+        purchase: 'sale',
+        capture: 'capture',
+        void: 'void',
+        credit: 'credit',
+        refund: 'refund'
       }
 
       self.supported_countries = ['US']
@@ -195,10 +195,10 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(self.live_url, post_data(trx_type, post)))
 
         Response.new(response[:response].to_i == SUCCESS, message_from(response), response,
-          :test => test?,
-          :authorization => response[:transactionid],
-          :avs_result => { :code => response[:avsresponse] },
-          :cvv_result => response[:cvvresponse]
+          test: test?,
+          authorization: response[:transactionid],
+          avs_result: { code: response[:avsresponse] },
+          cvv_result: response[:cvvresponse]
         )
       end
 

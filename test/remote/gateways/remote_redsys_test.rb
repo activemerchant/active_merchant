@@ -53,7 +53,7 @@ class RemoteRedsysTest < Test::Unit::TestCase
 
   # Multiple currencies are not supported in test, but should at least fail.
   def test_purchase_and_refund_with_currency
-    response = @gateway.purchase(600, @credit_card, @options.merge(:currency => 'PEN'))
+    response = @gateway.purchase(600, @credit_card, @options.merge(currency: 'PEN'))
     assert_failure response
     assert_equal 'SIS0027 ERROR', response.message
   end

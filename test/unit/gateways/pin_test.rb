@@ -2,16 +2,16 @@ require 'test_helper'
 
 class PinTest < Test::Unit::TestCase
   def setup
-    @gateway = PinGateway.new(:api_key => 'I_THISISNOTAREALAPIKEY')
+    @gateway = PinGateway.new(api_key: 'I_THISISNOTAREALAPIKEY')
 
     @credit_card = credit_card
     @amount = 100
 
     @options = {
-      :email => 'roland@pinpayments.com',
-      :billing_address => address,
-      :description => 'Store Purchase',
-      :ip => '127.0.0.1'
+      email: 'roland@pinpayments.com',
+      billing_address: address,
+      description: 'Store Purchase',
+      ip: '127.0.0.1'
     }
   end
 
@@ -130,7 +130,7 @@ class PinTest < Test::Unit::TestCase
 
   def test_successful_refund
     token = 'ch_encBuMDf17qTabmVjDsQlg'
-    @gateway.expects(:ssl_request).with(:post, "https://test-api.pinpayments.com/1/charges/#{token}/refunds", {:amount => '100'}.to_json, instance_of(Hash)).returns(successful_refund_response)
+    @gateway.expects(:ssl_request).with(:post, "https://test-api.pinpayments.com/1/charges/#{token}/refunds", {amount: '100'}.to_json, instance_of(Hash)).returns(successful_refund_response)
 
     assert response = @gateway.refund(100, token)
     assert_equal 'rf_d2C7M6Mn4z2m3APqarNN6w', response.authorization
@@ -140,7 +140,7 @@ class PinTest < Test::Unit::TestCase
 
   def test_unsuccessful_refund
     token = 'ch_encBuMDf17qTabmVjDsQlg'
-    @gateway.expects(:ssl_request).with(:post, "https://test-api.pinpayments.com/1/charges/#{token}/refunds", {:amount => '100'}.to_json, instance_of(Hash)).returns(failed_refund_response)
+    @gateway.expects(:ssl_request).with(:post, "https://test-api.pinpayments.com/1/charges/#{token}/refunds", {amount: '100'}.to_json, instance_of(Hash)).returns(failed_refund_response)
 
     assert response = @gateway.refund(100, token)
     assert_failure response
@@ -262,7 +262,7 @@ class PinTest < Test::Unit::TestCase
     @gateway.send(:add_capture, post, @options)
     assert_equal post[:capture], true
 
-    @gateway.send(:add_capture, post, :capture => false)
+    @gateway.send(:add_capture, post, capture: false)
     assert_equal post[:capture], false
   end
 
@@ -310,7 +310,7 @@ class PinTest < Test::Unit::TestCase
     expected_headers['X-Safe-Card'] = '1'
 
     @gateway.expects(:ssl_request).with(:post, anything, anything, expected_headers).returns(successful_purchase_response)
-    assert @gateway.purchase(@amount, @credit_card, :partner_key => 'MyPartnerKey', :safe_card => '1')
+    assert @gateway.purchase(@amount, @credit_card, partner_key: 'MyPartnerKey', safe_card: '1')
   end
 
   def test_transcript_scrubbing

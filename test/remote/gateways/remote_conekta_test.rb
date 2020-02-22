@@ -25,7 +25,7 @@ class RemoteConektaTest < Test::Unit::TestCase
     )
 
     @options = {
-      :device_fingerprint => '41l9l92hjco6cuekf0c7dq68v4',
+      device_fingerprint: '41l9l92hjco6cuekf0c7dq68v4',
       description: 'Blue clip',
       billing_address: {
         address1: 'Rio Missisipi #123',

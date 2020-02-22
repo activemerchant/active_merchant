@@ -12,12 +12,12 @@ module ActiveMerchant #:nodoc:
 
       # Transactions hash
       TRANSACTIONS = {
-        :authorization => '00001',
-        :capture => '00002',
-        :purchase => '00003',
-        :unreferenced_credit => '00004',
-        :void => '00005',
-        :refund => '00014'
+        authorization: '00001',
+        capture: '00002',
+        purchase: '00003',
+        unreferenced_credit: '00004',
+        void: '00005',
+        refund: '00014'
       }
 
       CURRENCY_CODES = {
@@ -156,11 +156,11 @@ module ActiveMerchant #:nodoc:
         Response.new(
           success?(response),
           message_from(response),
-          response.merge(:timestamp => parameters[:dateq]),
-          :test => test?,
-          :authorization => response[:numappel].to_s + response[:numtrans].to_s,
-          :fraud_review => false,
-          :sent_params => parameters.delete_if { |key, value| ['porteur', 'dateval', 'cvv'].include?(key.to_s) }
+          response.merge(timestamp: parameters[:dateq]),
+          test: test?,
+          authorization: response[:numappel].to_s + response[:numtrans].to_s,
+          fraud_review: false,
+          sent_params: parameters.delete_if { |key, value| ['porteur', 'dateval', 'cvv'].include?(key.to_s) }
         )
       end
 
@@ -178,15 +178,15 @@ module ActiveMerchant #:nodoc:
 
       def post_data(action, parameters = {})
         parameters.update(
-          :version => API_VERSION,
-          :type => TRANSACTIONS[action.to_sym],
-          :dateq => Time.now.strftime('%d%m%Y%H%M%S'),
-          :numquestion => unique_id(parameters[:order_id]),
-          :site => @options[:login].to_s[0, 7],
-          :rang => @options[:rang] || @options[:login].to_s[7..-1],
-          :cle => @options[:password],
-          :pays => '',
-          :archivage => parameters[:order_id]
+          version: API_VERSION,
+          type: TRANSACTIONS[action.to_sym],
+          dateq: Time.now.strftime('%d%m%Y%H%M%S'),
+          numquestion: unique_id(parameters[:order_id]),
+          site: @options[:login].to_s[0, 7],
+          rang: @options[:rang] || @options[:login].to_s[7..-1],
+          cle: @options[:password],
+          pays: '',
+          archivage: parameters[:order_id]
         )
 
         parameters.collect { |key, value| "#{key.to_s.upcase}=#{CGI.escape(value.to_s)}" }.join('&')

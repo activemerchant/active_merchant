@@ -8,9 +8,9 @@ class RemotePayuLatamTest < Test::Unit::TestCase
     @credit_card = credit_card('4097440000000004', verification_value: '444', first_name: 'APPROVED', last_name: '')
     @declined_card = credit_card('4097440000000004', verification_value: '444', first_name: 'REJECTED', last_name: '')
     @pending_card = credit_card('4097440000000004', verification_value: '444', first_name: 'PENDING', last_name: '')
-    @naranja_credit_card = credit_card('5895620000000002', :verification_value => '123', :first_name => 'APPROVED', :last_name => '', :brand => 'naranja')
-    @cabal_credit_card = credit_card('5896570000000004', :verification_value => '123', :first_name => 'APPROVED', :last_name => '', :brand => 'cabal')
-    @invalid_cabal_card = credit_card('6271700000000000', :verification_value => '123', :first_name => 'APPROVED', :last_name => '', :brand => 'cabal')
+    @naranja_credit_card = credit_card('5895620000000002', verification_value: '123', first_name: 'APPROVED', last_name: '', brand: 'naranja')
+    @cabal_credit_card = credit_card('5896570000000004', verification_value: '123', first_name: 'APPROVED', last_name: '', brand: 'cabal')
+    @invalid_cabal_card = credit_card('6271700000000000', verification_value: '123', first_name: 'APPROVED', last_name: '', brand: 'cabal')
 
     @options = {
       dni_number: '5415668464654',
@@ -75,7 +75,7 @@ class RemotePayuLatamTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_buyer
-    gateway = PayuLatamGateway.new(fixtures(:payu_latam).update(:account_id => '512327', payment_country: 'BR'))
+    gateway = PayuLatamGateway.new(fixtures(:payu_latam).update(account_id: '512327', payment_country: 'BR'))
 
     options_buyer = {
       currency: 'BRL',
@@ -114,7 +114,7 @@ class RemotePayuLatamTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_brazil
-    gateway = PayuLatamGateway.new(fixtures(:payu_latam).update(:account_id => '512327', payment_country: 'BR'))
+    gateway = PayuLatamGateway.new(fixtures(:payu_latam).update(account_id: '512327', payment_country: 'BR'))
 
     options_brazil = {
       payment_country: 'BR',
@@ -149,7 +149,7 @@ class RemotePayuLatamTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_colombia
-    gateway = PayuLatamGateway.new(fixtures(:payu_latam).update(:account_id => '512321', payment_country: 'CO'))
+    gateway = PayuLatamGateway.new(fixtures(:payu_latam).update(account_id: '512321', payment_country: 'CO'))
 
     options_colombia = {
       payment_country: 'CO',
@@ -183,7 +183,7 @@ class RemotePayuLatamTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_mexico
-    gateway = PayuLatamGateway.new(fixtures(:payu_latam).update(:account_id => '512324', payment_country: 'MX'))
+    gateway = PayuLatamGateway.new(fixtures(:payu_latam).update(account_id: '512324', payment_country: 'MX'))
 
     options_mexico = {
       payment_country: 'MX',

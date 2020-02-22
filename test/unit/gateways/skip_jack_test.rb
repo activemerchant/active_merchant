@@ -4,34 +4,34 @@ class SkipJackTest < Test::Unit::TestCase
   def setup
     Base.mode = :test
 
-    @gateway = SkipJackGateway.new(:login => 'X', :password => 'Y')
+    @gateway = SkipJackGateway.new(login: 'X', password: 'Y')
 
     @credit_card = credit_card('4242424242424242')
 
     @billing_address = {
-      :address1 => '123 Any St.',
-      :address2 => 'Apt. B',
-      :city => 'Anytown',
-      :state => 'ST',
-      :country => 'US',
-      :zip => '51511-1234',
-      :phone => '616-555-1212',
-      :fax => '616-555-2121'
+      address1: '123 Any St.',
+      address2: 'Apt. B',
+      city: 'Anytown',
+      state: 'ST',
+      country: 'US',
+      zip: '51511-1234',
+      phone: '616-555-1212',
+      fax: '616-555-2121'
     }
 
     @shipping_address = {
-      :name => 'Stew Packman',
-      :address1 => 'Company',
-      :address2 => '321 No RD',
-      :city => 'Nowhereton',
-      :state => 'ZC',
-      :country => 'MX',
-      :phone => '0123231212'
+      name: 'Stew Packman',
+      address1: 'Company',
+      address2: '321 No RD',
+      city: 'Nowhereton',
+      state: 'ZC',
+      country: 'MX',
+      phone: '0123231212'
     }
 
     @options = {
-      :order_id => 1,
-      :email => 'cody@example.com'
+      order_id: 1,
+      email: 'cody@example.com'
     }
 
     @amount = 100

@@ -15,10 +15,10 @@ class RemoteSageTest < Test::Unit::TestCase
     @declined_card = credit_card('4000')
 
     @options = {
-      :order_id => generate_unique_id,
-      :billing_address => address,
-      :shipping_address => address,
-      :email => 'longbob@example.com'
+      order_id: generate_unique_id,
+      billing_address: address,
+      shipping_address: address,
+      email: 'longbob@example.com'
     }
   end
 
@@ -191,8 +191,8 @@ class RemoteSageTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = SageGateway.new(
-      :login => '',
-      :password => ''
+      login: '',
+      password: ''
     )
     assert response = gateway.purchase(@amount, @visa, @options)
     assert_failure response

@@ -35,23 +35,23 @@ module ActiveMerchant #:nodoc:
       # 10 Preauthorise
       # 11 Preauth Complete (Advice)
       TRANSACTIONS = {
-        :purchase => 0,
-        :authorization => 10,
-        :capture => 11,
-        :void => 6,
-        :refund => 4
+        purchase:       0,
+        authorization:  10,
+        capture:        11,
+        void:           6,
+        refund:         4
       }
 
       PERIODIC_ACTIONS = {
-        :add_triggered    => 'add',
-        :remove_triggered => 'delete',
-        :trigger          => 'trigger'
+        add_triggered:      'add',
+        remove_triggered:   'delete',
+        trigger:            'trigger'
       }
 
       PERIODIC_TYPES = {
-        :add_triggered    => 4,
-        :remove_triggered => nil,
-        :trigger          => nil
+        add_triggered:    4,
+        remove_triggered: nil,
+        trigger:          nil
       }
 
       SUCCESS_CODES = ['00', '08', '11', '16', '77']
@@ -184,8 +184,8 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(test? ? self.test_url : self.live_url, build_request(action, request)))
 
         Response.new(success?(response), message_from(response), response,
-          :test => test?,
-          :authorization => authorization_from(response)
+          test: test?,
+          authorization: authorization_from(response)
         )
       end
 
@@ -241,8 +241,8 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(test? ? self.test_periodic_url : self.live_periodic_url, my_request))
 
         Response.new(success?(response), message_from(response), response,
-          :test => test?,
-          :authorization => authorization_from(response)
+          test: test?,
+          authorization: authorization_from(response)
         )
       end
 

@@ -9,20 +9,20 @@ module ActiveMerchant #:nodoc:
       SP_SERVICE_VERSION = '1.1'
 
       TRANSACTIONS = {
-        :authorization  => 'PA',
-        :purchase       => 'P',
-        :capture        => 'PAC',
-        :refund         => 'R',
-        :void           => 'VP',
-        :check_purchase => 'D',
-        :check_refund   => 'C',
-        :void_purchase  => 'VP',
-        :void_refund    => 'VR'
+        authorization:    'PA',
+        purchase:         'P',
+        capture:          'PAC',
+        refund:           'R',
+        void:             'VP',
+        check_purchase:   'D',
+        check_refund:     'C',
+        void_purchase:    'VP',
+        void_refund:      'VR'
       }
 
       PROFILE_OPERATIONS = {
-        :new => 'N',
-        :modify => 'M'
+        new: 'N',
+        modify: 'M'
       }
 
       CVD_CODES = {
@@ -41,24 +41,24 @@ module ActiveMerchant #:nodoc:
       }
 
       PERIODS = {
-        :days   => 'D',
-        :weeks  => 'W',
-        :months => 'M',
-        :years  => 'Y'
+        days: 'D',
+        weeks: 'W',
+        months: 'M',
+        years: 'Y'
       }
 
       PERIODICITIES = {
-        :daily     => [:days, 1],
-        :weekly    => [:weeks, 1],
-        :biweekly  => [:weeks, 2],
-        :monthly   => [:months, 1],
-        :bimonthly => [:months, 2],
-        :yearly    => [:years, 1]
+        daily: [:days, 1],
+        weekly: [:weeks, 1],
+        biweekly: [:weeks, 2],
+        monthly: [:months, 1],
+        bimonthly: [:months, 2],
+        yearly: [:years, 1]
       }
 
       RECURRING_OPERATION = {
-        :update => 'M',
-        :cancel => 'C'
+        update: 'M',
+        cancel: 'C'
       }
 
       STATES = {
@@ -414,10 +414,10 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post((use_profile_api ? SECURE_PROFILE_URL : self.live_url), data))
         response[:customer_vault_id] = response[:customerCode] if response[:customerCode]
         build_response(success?(response), message_from(response), response,
-          :test => test? || response[:authCode] == 'TEST',
-          :authorization => authorization_from(response),
-          :cvv_result => CVD_CODES[response[:cvdId]],
-          :avs_result => { :code => AVS_CODES.include?(response[:avsId]) ? AVS_CODES[response[:avsId]] : response[:avsId] }
+          test: test? || response[:authCode] == 'TEST',
+          authorization: authorization_from(response),
+          cvv_result: CVD_CODES[response[:cvdId]],
+          avs_result: { code: AVS_CODES.include?(response[:avsId]) ? AVS_CODES[response[:avsId]] : response[:avsId] }
         )
       end
 

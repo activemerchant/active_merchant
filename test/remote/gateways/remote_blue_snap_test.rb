@@ -33,7 +33,7 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     )
 
     @check = check
-    @invalid_check = check(:routing_number => '123456', :account_number => '123456789')
+    @invalid_check = check(routing_number: '123456', account_number: '123456789')
     @valid_check_options = {
       billing_address: {
         address1: '123 Street',

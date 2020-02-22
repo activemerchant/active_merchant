@@ -166,10 +166,10 @@ module ActiveMerchant #:nodoc:
           end
 
         Response.new(response['error_code'] == '000', message_from(response), response,
-          :authorization => response['transaction_id'],
-          :test => test?,
-          :cvv_result => response['cvv2_result'],
-          :avs_result => { :code => response['avs_result'] }
+          authorization: response['transaction_id'],
+          test: test?,
+          cvv_result: response['cvv2_result'],
+          avs_result: { code: response['avs_result'] }
         )
       end
 

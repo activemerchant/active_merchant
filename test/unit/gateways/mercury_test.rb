@@ -9,11 +9,11 @@ class MercuryTest < Test::Unit::TestCase
     @gateway = MercuryGateway.new(fixtures(:mercury))
 
     @amount = 100
-    @credit_card = credit_card('5499990123456781', :brand => 'master')
+    @credit_card = credit_card('5499990123456781', brand: 'master')
     @declined_card = credit_card('4000300011112220')
 
     @options = {
-      :order_id => 'c111111111.1'
+      order_id: 'c111111111.1'
     }
   end
 

@@ -118,10 +118,10 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(test? ? self.test_url : self.live_url, "txnMode=#{action}&txnRequest=#{txnRequest}"))
 
         Response.new(successful?(response), message_from(response), hash_from_xml(response),
-          :test          => test?,
-          :authorization => authorization_from(response),
-          :avs_result => { :code => avs_result_from(response) },
-          :cvv_result => cvv_result_from(response)
+          test: test?,
+          authorization: authorization_from(response),
+          avs_result: { code: avs_result_from(response) },
+          cvv_result: cvv_result_from(response)
         )
       end
 
@@ -173,7 +173,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def xml_document(root_tag)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.tag!(root_tag, schema) do
           yield xml
         end

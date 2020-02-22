@@ -159,8 +159,8 @@ module ActiveMerchant #:nodoc:
           success,
           message_from(response),
           response,
-          :test => response['test'],
-          :authorization => authorization_from(response, success, uri)
+          test: response['test'],
+          authorization: authorization_from(response, success, uri)
         )
       end
 

@@ -38,61 +38,61 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'CyberSource'
 
       @@credit_card_codes = {
-        :visa  => '001',
-        :master => '002',
-        :american_express => '003',
-        :discover => '004',
-        :diners_club => '005',
-        :jcb => '007',
-        :dankort => '034',
-        :maestro => '042',
-        :elo => '054'
+        visa: '001',
+        master: '002',
+        american_express: '003',
+        discover: '004',
+        diners_club: '005',
+        jcb: '007',
+        dankort: '034',
+        maestro: '042',
+        elo: '054'
       }
 
       @@decision_codes = {
-        :accept => 'ACCEPT',
-        :review => 'REVIEW'
+        accept: 'ACCEPT',
+        review: 'REVIEW'
       }
 
       @@response_codes = {
-        :r100 => 'Successful transaction',
-        :r101 => 'Request is missing one or more required fields',
-        :r102 => 'One or more fields contains invalid data',
-        :r150 => 'General failure',
-        :r151 => 'The request was received but a server time-out occurred',
-        :r152 => 'The request was received, but a service timed out',
-        :r200 => 'The authorization request was approved by the issuing bank but declined by CyberSource because it did not pass the AVS check',
-        :r201 => 'The issuing bank has questions about the request',
-        :r202 => 'Expired card',
-        :r203 => 'General decline of the card',
-        :r204 => 'Insufficient funds in the account',
-        :r205 => 'Stolen or lost card',
-        :r207 => 'Issuing bank unavailable',
-        :r208 => 'Inactive card or card not authorized for card-not-present transactions',
-        :r209 => 'American Express Card Identifiction Digits (CID) did not match',
-        :r210 => 'The card has reached the credit limit',
-        :r211 => 'Invalid card verification number',
-        :r221 => "The customer matched an entry on the processor's negative file",
-        :r230 => 'The authorization request was approved by the issuing bank but declined by CyberSource because it did not pass the card verification check',
-        :r231 => 'Invalid account number',
-        :r232 => 'The card type is not accepted by the payment processor',
-        :r233 => 'General decline by the processor',
-        :r234 => 'A problem exists with your CyberSource merchant configuration',
-        :r235 => 'The requested amount exceeds the originally authorized amount',
-        :r236 => 'Processor failure',
-        :r237 => 'The authorization has already been reversed',
-        :r238 => 'The authorization has already been captured',
-        :r239 => 'The requested transaction amount must match the previous transaction amount',
-        :r240 => 'The card type sent is invalid or does not correlate with the credit card number',
-        :r241 => 'The request ID is invalid',
-        :r242 => 'You requested a capture, but there is no corresponding, unused authorization record.',
-        :r243 => 'The transaction has already been settled or reversed',
-        :r244 => 'The bank account number failed the validation check',
-        :r246 => 'The capture or credit is not voidable because the capture or credit information has already been submitted to your processor',
-        :r247 => 'You requested a credit for a capture that was previously voided',
-        :r250 => 'The request was received, but a time-out occurred with the payment processor',
-        :r254 => 'Your CyberSource account is prohibited from processing stand-alone refunds',
-        :r255 => 'Your CyberSource account is not configured to process the service in the country you specified'
+        r100: 'Successful transaction',
+        r101: 'Request is missing one or more required fields',
+        r102: 'One or more fields contains invalid data',
+        r150: 'General failure',
+        r151: 'The request was received but a server time-out occurred',
+        r152: 'The request was received, but a service timed out',
+        r200: 'The authorization request was approved by the issuing bank but declined by CyberSource because it did not pass the AVS check',
+        r201: 'The issuing bank has questions about the request',
+        r202: 'Expired card',
+        r203: 'General decline of the card',
+        r204: 'Insufficient funds in the account',
+        r205: 'Stolen or lost card',
+        r207: 'Issuing bank unavailable',
+        r208: 'Inactive card or card not authorized for card-not-present transactions',
+        r209: 'American Express Card Identifiction Digits (CID) did not match',
+        r210: 'The card has reached the credit limit',
+        r211: 'Invalid card verification number',
+        r221: "The customer matched an entry on the processor's negative file",
+        r230: 'The authorization request was approved by the issuing bank but declined by CyberSource because it did not pass the card verification check',
+        r231: 'Invalid account number',
+        r232: 'The card type is not accepted by the payment processor',
+        r233: 'General decline by the processor',
+        r234: 'A problem exists with your CyberSource merchant configuration',
+        r235: 'The requested amount exceeds the originally authorized amount',
+        r236: 'Processor failure',
+        r237: 'The authorization has already been reversed',
+        r238: 'The authorization has already been captured',
+        r239: 'The requested transaction amount must match the previous transaction amount',
+        r240: 'The card type sent is invalid or does not correlate with the credit card number',
+        r241: 'The request ID is invalid',
+        r242: 'You requested a capture, but there is no corresponding, unused authorization record.',
+        r243: 'The transaction has already been settled or reversed',
+        r244: 'The bank account number failed the validation check',
+        r246: 'The capture or credit is not voidable because the capture or credit information has already been submitted to your processor',
+        r247: 'You requested a credit for a capture that was previously voided',
+        r250: 'The request was received, but a time-out occurred with the payment processor',
+        r254: 'Your CyberSource account is prohibited from processing stand-alone refunds',
+        r255: 'Your CyberSource account is not configured to process the service in the country you specified'
       }
 
       # These are the options that can be used when creating a new CyberSource
@@ -250,18 +250,18 @@ module ActiveMerchant #:nodoc:
       # were only provided with one or two of them or even none
       def setup_address_hash(options)
         default_address = {
-          :address1 => 'Unspecified',
-          :city => 'Unspecified',
-          :state => 'NC',
-          :zip => '00000',
-          :country => 'US'
+          address1: 'Unspecified',
+          city: 'Unspecified',
+          state: 'NC',
+          zip: '00000',
+          country: 'US'
         }
         options[:billing_address] = options[:billing_address] || options[:address] || default_address
         options[:shipping_address] = options[:shipping_address] || {}
       end
 
       def build_auth_request(money, creditcard_or_reference, options)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         add_payment_method_or_subscription(xml, money, creditcard_or_reference, options)
         add_threeds_2_ucaf_data(xml, creditcard_or_reference, options)
         add_decision_manager_fields(xml, options)
@@ -277,7 +277,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_tax_calculation_request(creditcard, options)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         add_address(xml, creditcard, options[:billing_address], options, false)
         add_address(xml, creditcard, options[:shipping_address], options, true)
         add_line_item_data(xml, options)
@@ -291,7 +291,7 @@ module ActiveMerchant #:nodoc:
         order_id, request_id, request_token = authorization.split(';')
         options[:order_id] = order_id
 
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         add_purchase_data(xml, money, true, options)
         add_other_tax(xml, options)
         add_mdd_fields(xml, options)
@@ -302,7 +302,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_purchase_request(money, payment_method_or_reference, options)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         add_payment_method_or_subscription(xml, money, payment_method_or_reference, options)
         add_threeds_2_ucaf_data(xml, payment_method_or_reference, options)
         add_decision_manager_fields(xml, options)
@@ -324,12 +324,12 @@ module ActiveMerchant #:nodoc:
         order_id, request_id, request_token, action, money, currency = identification.split(';')
         options[:order_id] = order_id
 
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         if action == 'capture'
           add_mdd_fields(xml, options)
           add_void_service(xml, request_id, request_token)
         else
-          add_purchase_data(xml, money, true, options.merge(:currency => currency || default_currency))
+          add_purchase_data(xml, money, true, options.merge(currency: currency || default_currency))
           add_mdd_fields(xml, options)
           add_auth_reversal_service(xml, request_id, request_token)
         end
@@ -341,7 +341,7 @@ module ActiveMerchant #:nodoc:
         order_id, request_id, request_token = identification.split(';')
         options[:order_id] = order_id
 
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         add_purchase_data(xml, money, true, options)
         add_credit_service(xml, request_id, request_token)
 
@@ -349,7 +349,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_credit_request(money, creditcard_or_reference, options)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
 
         add_payment_method_or_subscription(xml, money, creditcard_or_reference, options)
         add_mdd_fields(xml, options)
@@ -360,12 +360,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_create_subscription_request(payment_method, options)
-        default_subscription_params = {:frequency => 'on-demand', :amount => 0, :automatic_renew => false}
+        default_subscription_params = {frequency: 'on-demand', amount: 0, automatic_renew: false}
         options[:subscription] = default_subscription_params.update(
           options[:subscription] || {}
         )
 
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         add_address(xml, payment_method, options[:billing_address], options)
         add_purchase_data(xml, options[:setup_fee] || 0, true, options)
         if card_brand(payment_method) == 'check'
@@ -390,7 +390,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_update_subscription_request(reference, creditcard, options)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         add_address(xml, creditcard, options[:billing_address], options) unless options[:billing_address].blank?
         add_purchase_data(xml, options[:setup_fee], true, options) unless options[:setup_fee].blank?
         add_creditcard(xml, creditcard)    if creditcard
@@ -402,21 +402,21 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_delete_subscription_request(reference, options)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         add_subscription(xml, options, reference)
         add_subscription_delete_service(xml, options)
         xml.target!
       end
 
       def build_retrieve_subscription_request(reference, options)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         add_subscription(xml, options, reference)
         add_subscription_retrieve_service(xml, options)
         xml.target!
       end
 
       def build_validate_pinless_debit_request(creditcard, options)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         add_creditcard(xml, creditcard)
         add_validate_pinless_debit_service(xml)
         xml.target!
@@ -797,7 +797,7 @@ module ActiveMerchant #:nodoc:
       def build_request(body, options)
         xsd_version = test? ? TEST_XSD_VERSION : PRODUCTION_XSD_VERSION
 
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.instruct!
         xml.tag! 's:Envelope', {'xmlns:s' => 'http://schemas.xmlsoap.org/soap/envelope/'} do
           xml.tag! 's:Header' do
@@ -839,11 +839,11 @@ module ActiveMerchant #:nodoc:
         authorization = success ? authorization_from(response, action, amount, options) : nil
 
         Response.new(success, message, response,
-          :test => test?,
-          :authorization => authorization,
-          :fraud_review => in_fraud_review?(response),
-          :avs_result => { :code => response[:avsCode] },
-          :cvv_result => response[:cvCode]
+          test: test?,
+          authorization: authorization,
+          fraud_review: in_fraud_review?(response),
+          avs_result: { code: response[:avsCode] },
+          cvv_result: response[:cvCode]
         )
       end
 

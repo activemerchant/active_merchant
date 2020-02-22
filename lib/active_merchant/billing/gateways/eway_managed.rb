@@ -223,8 +223,8 @@ module ActiveMerchant #:nodoc:
         response = parse(raw)
 
         EwayResponse.new(response[:success], response[:message], response,
-          :test => test?,
-          :authorization => response[:auth_code]
+          test: test?,
+          authorization: response[:auth_code]
         )
       end
 
@@ -242,7 +242,7 @@ module ActiveMerchant #:nodoc:
                  default_customer_fields.merge(arguments)
                end
 
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.instruct!
         xml.tag! 'soap12:Envelope', {'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance', 'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema', 'xmlns:soap12' => 'http://www.w3.org/2003/05/soap-envelope'} do
           xml.tag! 'soap12:Header' do

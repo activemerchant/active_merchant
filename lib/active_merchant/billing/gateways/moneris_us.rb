@@ -33,7 +33,7 @@ module ActiveMerchant #:nodoc:
         requires!(options, :login, :password)
         @cvv_enabled = options[:cvv_enabled]
         @avs_enabled = options[:avs_enabled]
-        options = { :crypt_type => 7 }.merge(options)
+        options = { crypt_type: 7 }.merge(options)
         super
       end
 
@@ -91,7 +91,7 @@ module ActiveMerchant #:nodoc:
       # gateways the two numbers are concatenated together with a ; separator as
       # the authorization number returned by authorization
       def capture(money, authorization, options = {})
-        commit 'us_completion', crediting_params(authorization, :comp_amount => amount(money))
+        commit 'us_completion', crediting_params(authorization, comp_amount: amount(money))
       end
 
       # Voiding requires the original transaction ID and order ID of some open
@@ -116,7 +116,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(money, authorization, options = {})
-        commit 'us_refund', crediting_params(authorization, :amount => amount(money))
+        commit 'us_refund', crediting_params(authorization, amount: amount(money))
       end
 
       def store(payment_source, options = {})
@@ -198,9 +198,9 @@ module ActiveMerchant #:nodoc:
       # Common params used amongst the +credit+, +void+ and +capture+ methods
       def crediting_params(authorization, options = {})
         {
-          :txn_number => split_authorization(authorization).first,
-          :order_id   => split_authorization(authorization).last,
-          :crypt_type => options[:crypt_type] || @options[:crypt_type]
+          txn_number: split_authorization(authorization).first,
+          order_id: split_authorization(authorization).last,
+          crypt_type: options[:crypt_type] || @options[:crypt_type]
         }.merge(options)
       end
 
@@ -221,10 +221,10 @@ module ActiveMerchant #:nodoc:
         response = parse(raw)
 
         Response.new(successful?(response), message_from(response[:message]), response,
-          :test          => test?,
-          :avs_result    => { :code => response[:avs_result_code] },
-          :cvv_result    => response[:cvd_result_code] && response[:cvd_result_code][-1, 1],
-          :authorization => authorization_from(response)
+          test: test?,
+          avs_result: { code: response[:avs_result_code] },
+          cvv_result: response[:cvd_result_code] && response[:cvd_result_code][-1, 1],
+          authorization: authorization_from(response)
         )
       end
 
@@ -241,7 +241,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(xml)
-        response = { :message => 'Global Error Receipt', :complete => false }
+        response = { message: 'Global Error Receipt', complete: false }
         hashify_xml!(xml, response)
         response
       end

@@ -9,14 +9,14 @@ class QuickpayV4to7Test < Test::Unit::TestCase
 
   def setup
     @gateway = QuickpayGateway.new(
-      :login => merchant_id,
-      :password => 'PASSWORD',
-      :version  => 7
+      login: merchant_id,
+      password: 'PASSWORD',
+      version: 7
     )
 
     @credit_card = credit_card('4242424242424242')
     @amount = 100
-    @options = { :order_id => '1', :billing_address => address }
+    @options = { order_id: '1', billing_address: address }
   end
 
   def test_successful_purchase
@@ -39,14 +39,14 @@ class QuickpayV4to7Test < Test::Unit::TestCase
 
   def test_successful_store_for_v6
     @gateway = QuickpayGateway.new(
-      :login => merchant_id,
-      :password => 'PASSWORD',
-      :version => 6
+      login: merchant_id,
+      password: 'PASSWORD',
+      version: 6
     )
     @gateway.expects(:generate_check_hash).returns(mock_md5_hash)
 
     response = stub_comms do
-      @gateway.store(@credit_card, {:order_id => 'fa73664073e23597bbdd', :description => 'Storing Card'})
+      @gateway.store(@credit_card, {order_id: 'fa73664073e23597bbdd', description: 'Storing Card'})
     end.check_request do |endpoint, data, headers|
       assert_equal(expected_store_parameters_v6, CGI::parse(data))
     end.respond_with(successful_store_response_v6)
@@ -61,7 +61,7 @@ class QuickpayV4to7Test < Test::Unit::TestCase
     @gateway.expects(:generate_check_hash).returns(mock_md5_hash)
 
     response = stub_comms do
-      @gateway.store(@credit_card, {:order_id => 'ed7546cb4ceb8f017ea4', :description => 'Storing Card'})
+      @gateway.store(@credit_card, {order_id: 'ed7546cb4ceb8f017ea4', description: 'Storing Card'})
     end.check_request do |endpoint, data, headers|
       assert_equal(expected_store_parameters_v7, CGI::parse(data))
     end.respond_with(successful_store_response_v7)
@@ -133,7 +133,7 @@ class QuickpayV4to7Test < Test::Unit::TestCase
   end
 
   def test_add_testmode_does_not_add_testmode_if_transaction_id_present
-    post_hash = {:transaction => '12345'}
+    post_hash = {transaction: '12345'}
     @gateway.send(:add_testmode, post_hash)
     assert_equal nil, post_hash[:testmode]
   end

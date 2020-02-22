@@ -4,7 +4,7 @@ class HpsTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    @gateway = HpsGateway.new({:secret_api_key => '12'})
+    @gateway = HpsGateway.new({secret_api_key: '12'})
 
     @credit_card = credit_card
     @amount = 100
@@ -332,10 +332,10 @@ class HpsTest < Test::Unit::TestCase
     @credit_card.brand = 'visa'
 
     options = {
-      :three_d_secure => {
-        :cavv => 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
-        :eci => '05',
-        :xid => 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
+      three_d_secure: {
+        cavv: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+        eci: '05',
+        xid: 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
       }
     }
 
@@ -359,10 +359,10 @@ class HpsTest < Test::Unit::TestCase
     @credit_card.brand = 'master'
 
     options = {
-      :three_d_secure => {
-        :cavv => 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
-        :eci => '05',
-        :xid => 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
+      three_d_secure: {
+        cavv: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+        eci: '05',
+        xid: 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
       }
     }
 
@@ -386,10 +386,10 @@ class HpsTest < Test::Unit::TestCase
     @credit_card.brand = 'discover'
 
     options = {
-      :three_d_secure => {
-        :cavv => 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
-        :eci => '5',
-        :xid => 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
+      three_d_secure: {
+        cavv: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+        eci: '5',
+        xid: 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
       }
     }
 
@@ -413,10 +413,10 @@ class HpsTest < Test::Unit::TestCase
     @credit_card.brand = 'american_express'
 
     options = {
-      :three_d_secure => {
-        :cavv => 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
-        :eci => '05',
-        :xid => 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
+      three_d_secure: {
+        cavv: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+        eci: '05',
+        xid: 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
       }
     }
 
@@ -440,10 +440,10 @@ class HpsTest < Test::Unit::TestCase
     @credit_card.brand = 'jcb'
 
     options = {
-      :three_d_secure => {
-        :cavv => 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
-        :eci => '5',
-        :xid => 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
+      three_d_secure: {
+        cavv: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+        eci: '5',
+        xid: 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
       }
     }
 

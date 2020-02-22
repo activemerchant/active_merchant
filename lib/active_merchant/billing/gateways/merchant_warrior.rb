@@ -201,8 +201,8 @@ module ActiveMerchant #:nodoc:
           success?(response),
           response[:response_message],
           response,
-          :test => test?,
-          :authorization => (response[:card_id] || response[:transaction_id])
+          test: test?,
+          authorization: (response[:card_id] || response[:transaction_id])
         )
       end
 

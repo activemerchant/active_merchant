@@ -17,50 +17,50 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     @mastercard          = credit_card('5100000010001004')
     @declined_mastercard = credit_card('5100000020002000')
 
-    @amex                = credit_card('371100001000131', {:verification_value => 1234})
-    @declined_amex       = credit_card('342400001000180', {:verification_value => 1234})
+    @amex                = credit_card('371100001000131', {verification_value: 1234})
+    @declined_amex       = credit_card('342400001000180', {verification_value: 1234})
 
     # Canadian EFT
     @check = check(
-      :institution_number => '001',
-      :transit_number     => '26729'
+      institution_number: '001',
+      transit_number: '26729'
     )
 
     @amount = 1500
 
     @options = {
-      :order_id => generate_unique_id,
-      :billing_address => {
-        :name => 'xiaobo zzz',
-        :phone => '555-555-5555',
-        :address1 => '4444 Levesque St.',
-        :address2 => 'Apt B',
-        :city => 'Montreal',
-        :state => 'Quebec',
-        :country => 'CA',
-        :zip => 'H2C1X8'
+      order_id: generate_unique_id,
+      billing_address: {
+        name: 'xiaobo zzz',
+        phone: '555-555-5555',
+        address1: '4444 Levesque St.',
+        address2: 'Apt B',
+        city: 'Montreal',
+        state: 'Quebec',
+        country: 'CA',
+        zip: 'H2C1X8'
       },
-      :shipping_address => {
-        :name => 'shippy',
-        :phone => '888-888-8888',
-        :address1 => '777 Foster Street',
-        :address2 => 'Ste #100',
-        :city => 'Durham',
-        :state => 'North Carolina',
-        :country => 'US',
-        :zip => '27701'
+      shipping_address: {
+        name: 'shippy',
+        phone: '888-888-8888',
+        address1: '777 Foster Street',
+        address2: 'Ste #100',
+        city: 'Durham',
+        state: 'North Carolina',
+        country: 'US',
+        zip: '27701'
       },
-      :email => 'xiaobozzz@example.com',
-      :subtotal => 800,
-      :shipping => 100,
-      :tax1 => 100,
-      :tax2 => 100,
-      :custom => 'reference one'
+      email: 'xiaobozzz@example.com',
+      subtotal: 800,
+      shipping: 100,
+      tax1: 100,
+      tax2: 100,
+      custom: 'reference one'
     }
 
     @recurring_options = @options.merge(
-      :interval => { :unit => :months, :length => 1 },
-      :occurences => 5)
+      interval: { unit: :months, length: 1 },
+      occurences: 5)
   end
 
   def test_successful_visa_purchase
@@ -145,9 +145,9 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_only_email
     options = {
-      :order_id => generate_unique_id,
-      :email => 'xiaobozzz@example.com',
-      :shipping_email => 'ship@mail.com'
+      order_id: generate_unique_id,
+      email: 'xiaobozzz@example.com',
+      shipping_email: 'ship@mail.com'
     }
 
     assert response = @gateway.purchase(@amount, @visa, options)
@@ -292,7 +292,7 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     assert response.test?
     assert_false response.authorization.blank?
 
-    assert response = @gateway.update_recurring(@amount + 500, @visa, @recurring_options.merge(:account_id => response.params['rbAccountId']))
+    assert response = @gateway.update_recurring(@amount + 500, @visa, @recurring_options.merge(account_id: response.params['rbAccountId']))
     assert_success response
   end
 
@@ -302,15 +302,15 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     assert response.test?
     assert_false response.authorization.blank?
 
-    assert response = @gateway.cancel_recurring(:account_id => response.params['rbAccountId'])
+    assert response = @gateway.cancel_recurring(account_id: response.params['rbAccountId'])
     assert_success response
   end
 
   def test_invalid_login
     gateway = BeanstreamGateway.new(
-      :merchant_id => '',
-      :login => '',
-      :password => ''
+      merchant_id: '',
+      login: '',
+      password: ''
     )
     assert response = gateway.purchase(@amount, @visa, @options)
     assert_failure response

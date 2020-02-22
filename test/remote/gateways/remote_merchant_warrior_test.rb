@@ -2,37 +2,37 @@ require 'test_helper'
 
 class RemoteMerchantWarriorTest < Test::Unit::TestCase
   def setup
-    @gateway = MerchantWarriorGateway.new(fixtures(:merchant_warrior).merge(:test => true))
+    @gateway = MerchantWarriorGateway.new(fixtures(:merchant_warrior).merge(test: true))
 
     @success_amount = 100
     @failure_amount = 205
 
     @credit_card = credit_card(
       '4564710000000004',
-      :month => '2',
-      :year => '29',
-      :verification_value => '847',
-      :brand => 'visa'
+      month: '2',
+      year: '29',
+      verification_value: '847',
+      brand: 'visa'
     )
 
     @expired_card = credit_card(
       '4564710000000012',
-      :month => '2',
-      :year => '05',
-      :verification_value => '963',
-      :brand => 'visa'
+      month: '2',
+      year: '05',
+      verification_value: '963',
+      brand: 'visa'
     )
 
     @options = {
-      :billing_address => {
-        :name => 'Longbob Longsen',
-        :country => 'AU',
-        :state => 'Queensland',
-        :city => 'Brisbane',
-        :address1 => '123 test st',
-        :zip => '4000'
+      billing_address: {
+        name: 'Longbob Longsen',
+        country: 'AU',
+        state: 'Queensland',
+        city: 'Brisbane',
+        address1: '123 test st',
+        zip: '4000'
       },
-      :description => 'TestProduct'
+      description: 'TestProduct'
     }
   end
 

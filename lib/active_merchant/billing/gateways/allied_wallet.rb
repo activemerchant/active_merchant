@@ -152,8 +152,8 @@ module ActiveMerchant #:nodoc:
           message_from(succeeded, response),
           response,
           authorization: response['id'],
-          :avs_result => AVSResult.new(code: response['avs_response']),
-          :cvv_result => CVVResult.new(response['cvv2_response']),
+          avs_result: AVSResult.new(code: response['avs_response']),
+          cvv_result: CVVResult.new(response['cvv2_response']),
           test: test?
         )
       rescue JSON::ParserError

@@ -187,8 +187,8 @@ module ActiveMerchant #:nodoc:
         Response.new(success,
           (success ? response['error_code'] : response['description']),
           response,
-          :test => test?,
-          :authorization => response['id']
+          test: test?,
+          authorization: response['id']
         )
       end
 

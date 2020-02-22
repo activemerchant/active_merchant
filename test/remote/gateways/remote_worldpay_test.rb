@@ -8,20 +8,20 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card('4111111111111111')
     @elo_credit_card = credit_card('4514 1600 0000 0008',
-      :month => 10,
-      :year => 2020,
-      :first_name => 'John',
-      :last_name => 'Smith',
-      :verification_value => '737',
-      :brand => 'elo'
+      month: 10,
+      year: 2020,
+      first_name: 'John',
+      last_name: 'Smith',
+      verification_value: '737',
+      brand: 'elo'
     )
     @cabal_card = credit_card('6035220000000006')
     @naranja_card = credit_card('5895620000000002')
     @sodexo_voucher = credit_card('6060704495764400', brand: 'sodexo')
-    @declined_card = credit_card('4111111111111111', :first_name => nil, :last_name => 'REFUSED')
-    @threeDS_card = credit_card('4111111111111111', :first_name => nil, :last_name => '3D')
-    @threeDS2_card = credit_card('4111111111111111', :first_name => nil, :last_name => '3DS_V2_FRICTIONLESS_IDENTIFIED')
-    @threeDS_card_external_MPI = credit_card('4444333322221111', :first_name => 'AA', :last_name => 'BD')
+    @declined_card = credit_card('4111111111111111', first_name: nil, last_name: 'REFUSED')
+    @threeDS_card = credit_card('4111111111111111', first_name: nil, last_name: '3D')
+    @threeDS2_card = credit_card('4111111111111111', first_name: nil, last_name: '3DS_V2_FRICTIONLESS_IDENTIFIED')
+    @threeDS_card_external_MPI = credit_card('4444333322221111', first_name: 'AA', last_name: 'BD')
 
     @options = {
       order_id: generate_unique_id,
@@ -58,7 +58,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize_avs_and_cvv
-    card = credit_card('4111111111111111', :verification_value => 555)
+    card = credit_card('4111111111111111', verification_value: 555)
     assert response = @gateway.authorize(@amount, card, @options.merge(billing_address: address.update(zip: 'CCCC')))
     assert_success response
     assert_equal 'SUCCESS', response.message
@@ -404,21 +404,21 @@ class RemoteWorldpayTest < Test::Unit::TestCase
   end
 
   def test_authorize_fractional_currency
-    assert_success(result = @gateway.authorize(1234, @credit_card, @options.merge(:currency => 'USD')))
+    assert_success(result = @gateway.authorize(1234, @credit_card, @options.merge(currency: 'USD')))
     assert_equal 'USD', result.params['amount_currency_code']
     assert_equal '1234', result.params['amount_value']
     assert_equal '2', result.params['amount_exponent']
   end
 
   def test_authorize_nonfractional_currency
-    assert_success(result = @gateway.authorize(1234, @credit_card, @options.merge(:currency => 'IDR')))
+    assert_success(result = @gateway.authorize(1234, @credit_card, @options.merge(currency: 'IDR')))
     assert_equal 'IDR', result.params['amount_currency_code']
     assert_equal '12', result.params['amount_value']
     assert_equal '0', result.params['amount_exponent']
   end
 
   def test_authorize_three_decimal_currency
-    assert_success(result = @gateway.authorize(1234, @credit_card, @options.merge(:currency => 'OMR')))
+    assert_success(result = @gateway.authorize(1234, @credit_card, @options.merge(currency: 'OMR')))
     assert_equal 'OMR', result.params['amount_currency_code']
     assert_equal '1234', result.params['amount_value']
     assert_equal '3', result.params['amount_exponent']
@@ -426,11 +426,11 @@ class RemoteWorldpayTest < Test::Unit::TestCase
 
   def test_reference_transaction
     assert_success(original = @gateway.authorize(100, @credit_card, @options))
-    assert_success(@gateway.authorize(200, original.authorization, :order_id => generate_unique_id))
+    assert_success(@gateway.authorize(200, original.authorization, order_id: generate_unique_id))
   end
 
   def test_invalid_login
-    gateway = WorldpayGateway.new(:login => '', :password => '')
+    gateway = WorldpayGateway.new(login: '', password: '')
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Invalid credentials', response.message

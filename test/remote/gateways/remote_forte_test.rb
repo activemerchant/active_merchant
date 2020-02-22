@@ -10,13 +10,13 @@ class RemoteForteTest < Test::Unit::TestCase
 
     @check = check
     @bad_check = check({
-      :name => 'Jim Smith',
-      :bank_name => 'Bank of Elbonia',
-      :routing_number => '1234567890',
-      :account_number => '0987654321',
-      :account_holder_type => '',
-      :account_type => 'checking',
-      :number => '0'
+      name: 'Jim Smith',
+      bank_name: 'Bank of Elbonia',
+      routing_number: '1234567890',
+      account_number: '0987654321',
+      account_holder_type: '',
+      account_type: 'checking',
+      number: '0'
     })
 
     @options = {

@@ -26,11 +26,11 @@ module ActiveMerchant #:nodoc:
       APPROVED = '1'
 
       TRANSACTIONS = {
-        :purchase       => 'Purchase',
-        :credit         => 'Refund',
-        :authorization  => 'Auth',
-        :capture        => 'Complete',
-        :validate       => 'Validate'
+        purchase: 'Purchase',
+        credit: 'Refund',
+        authorization: 'Auth',
+        capture: 'Complete',
+        validate: 'Validate'
       }
 
       # We require the DPS gateway username and password when the object is created.
@@ -302,8 +302,8 @@ module ActiveMerchant #:nodoc:
 
         # Return a response
         PaymentExpressResponse.new(response[:success] == APPROVED, message_from(response), response,
-          :test => response[:test_mode] == '1',
-          :authorization => authorization_from(action, response)
+          test: response[:test_mode] == '1',
+          authorization: authorization_from(action, response)
         )
       end
 

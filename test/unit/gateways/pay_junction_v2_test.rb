@@ -207,7 +207,7 @@ class PayJunctionV2Test < Test::Unit::TestCase
   end
 
   def test_add_address
-    post = {:card => {:billingAddress => {}}}
+    post = {card: {billingAddress: {}}}
     @gateway.send(:add_address, post, @options)
     # Billing Address
     assert_equal @options[:billing_address][:first_name], post[:billing][:firstName]

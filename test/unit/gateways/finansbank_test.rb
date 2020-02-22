@@ -7,18 +7,18 @@ class FinansbankTest < Test::Unit::TestCase
     @original_kcode = nil
 
     @gateway = FinansbankGateway.new(
-      :login => 'login',
-      :password => 'password',
-      :client_id => 'client_id'
+      login: 'login',
+      password: 'password',
+      client_id: 'client_id'
     )
 
     @credit_card = credit_card
     @amount = 100
 
     @options = {
-      :order_id => '1',
-      :billing_address => address,
-      :description => 'Store Purchase'
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase'
     }
   end
 

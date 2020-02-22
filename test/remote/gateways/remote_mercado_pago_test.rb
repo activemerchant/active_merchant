@@ -10,25 +10,25 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
     @credit_card = credit_card('4509953566233704')
     @colombian_card = credit_card('4013540682746260')
     @elo_credit_card = credit_card('5067268650517446',
-      :month => 10,
-      :year => 2020,
-      :first_name => 'John',
-      :last_name => 'Smith',
-      :verification_value => '737'
+      month: 10,
+      year: 2020,
+      first_name: 'John',
+      last_name: 'Smith',
+      verification_value: '737'
     )
     @cabal_credit_card = credit_card('6035227716427021',
-      :month => 10,
-      :year => 2020,
-      :first_name => 'John',
-      :last_name => 'Smith',
-      :verification_value => '737'
+      month: 10,
+      year: 2020,
+      first_name: 'John',
+      last_name: 'Smith',
+      verification_value: '737'
     )
     @naranja_credit_card = credit_card('5895627823453005',
-      :month => 10,
-      :year => 2020,
-      :first_name => 'John',
-      :last_name => 'Smith',
-      :verification_value => '123'
+      month: 10,
+      year: 2020,
+      first_name: 'John',
+      last_name: 'Smith',
+      verification_value: '123'
     )
     @declined_card = credit_card('4000300011112220')
     @options = {

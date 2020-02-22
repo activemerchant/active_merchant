@@ -7,8 +7,8 @@ class MonerisUsTest < Test::Unit::TestCase
     Base.mode = :test
 
     @gateway = MonerisUsGateway.new(
-      :login => 'monusqa002',
-      :password => 'qatoken'
+      login: 'monusqa002',
+      password: 'qatoken'
     )
 
     @amount = 100
@@ -18,7 +18,7 @@ class MonerisUsTest < Test::Unit::TestCase
       account_number: '1234455',
       number: 123
     })
-    @options = { :order_id => '1', :billing_address => address }
+    @options = { order_id: '1', billing_address: address }
   end
 
   def test_default_options
@@ -99,11 +99,11 @@ class MonerisUsTest < Test::Unit::TestCase
 
   def test_preauth_is_valid_xml
     params = {
-      :order_id => 'order1',
-      :amount => '1.01',
-      :pan => '4242424242424242',
-      :expdate => '0303',
-      :crypt_type => 7,
+      order_id: 'order1',
+      amount: '1.01',
+      pan: '4242424242424242',
+      expdate: '0303',
+      crypt_type: 7,
     }
 
     assert data = @gateway.send(:post_data, 'us_preauth', params)
@@ -113,11 +113,11 @@ class MonerisUsTest < Test::Unit::TestCase
 
   def test_purchase_is_valid_xml
     params = {
-      :order_id => 'order1',
-      :amount => '1.01',
-      :pan => '4242424242424242',
-      :expdate => '0303',
-      :crypt_type => 7,
+      order_id: 'order1',
+      amount: '1.01',
+      pan: '4242424242424242',
+      expdate: '0303',
+      crypt_type: 7,
     }
 
     assert data = @gateway.send(:post_data, 'us_purchase', params)
@@ -127,11 +127,11 @@ class MonerisUsTest < Test::Unit::TestCase
 
   def test_capture_is_valid_xml
     params = {
-      :order_id => 'order1',
-      :amount => '1.01',
-      :pan => '4242424242424242',
-      :expdate => '0303',
-      :crypt_type => 7,
+      order_id: 'order1',
+      amount: '1.01',
+      pan: '4242424242424242',
+      expdate: '0303',
+      crypt_type: 7,
     }
 
     assert data = @gateway.send(:post_data, 'us_preauth', params)
@@ -183,7 +183,7 @@ class MonerisUsTest < Test::Unit::TestCase
   def test_successful_purchase_with_vault
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     test_successful_store
-    assert response = @gateway.purchase(100, @data_key, {:order_id => generate_unique_id, :customer => generate_unique_id})
+    assert response = @gateway.purchase(100, @data_key, {order_id: generate_unique_id, customer: generate_unique_id})
     assert_success response
     assert_equal 'Approved', response.message
     assert response.authorization.present?
@@ -192,7 +192,7 @@ class MonerisUsTest < Test::Unit::TestCase
   def test_successful_authorization_with_vault
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     test_successful_store
-    assert response = @gateway.authorize(100, @data_key, {:order_id => generate_unique_id, :customer => generate_unique_id})
+    assert response = @gateway.authorize(100, @data_key, {order_id: generate_unique_id, customer: generate_unique_id})
     assert_success response
     assert_equal 'Approved', response.message
     assert response.authorization.present?

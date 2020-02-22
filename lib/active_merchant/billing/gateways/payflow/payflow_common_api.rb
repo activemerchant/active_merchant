@@ -37,20 +37,20 @@ module ActiveMerchant #:nodoc:
       XMLNS = 'http://www.paypal.com/XMLPay'
 
       CARD_MAPPING = {
-        :visa => 'Visa',
-        :master => 'MasterCard',
-        :discover => 'Discover',
-        :american_express => 'Amex',
-        :jcb => 'JCB',
-        :diners_club => 'DinersClub',
+        visa: 'Visa',
+        master: 'MasterCard',
+        discover: 'Discover',
+        american_express: 'Amex',
+        jcb: 'JCB',
+        diners_club: 'DinersClub',
       }
 
       TRANSACTIONS = {
-        :purchase       => 'Sale',
-        :authorization  => 'Authorization',
-        :capture        => 'Capture',
-        :void           => 'Void',
-        :credit         => 'Credit'
+        purchase: 'Sale',
+        authorization: 'Authorization',
+        capture: 'Capture',
+        void: 'Void',
+        credit: 'Credit'
       }
 
       CVV_CODE = {

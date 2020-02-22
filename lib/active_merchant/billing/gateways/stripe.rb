@@ -612,7 +612,7 @@ module ActiveMerchant #:nodoc:
           'User-Agent' => "Stripe/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
           'Stripe-Version' => api_version(options),
           'X-Stripe-Client-User-Agent' => stripe_client_user_agent(options),
-          'X-Stripe-Client-User-Metadata' => {:ip => options[:ip]}.to_json
+          'X-Stripe-Client-User-Metadata' => {ip: options[:ip]}.to_json
         }
         headers['Idempotency-Key'] = idempotency_key if idempotency_key
         headers['Stripe-Account'] = options[:stripe_account] if options[:stripe_account]
@@ -656,12 +656,12 @@ module ActiveMerchant #:nodoc:
         Response.new(success,
           message_from(success, response),
           response,
-          :test => response_is_test?(response),
-          :authorization => authorization_from(success, url, method, response),
-          :avs_result => { :code => avs_code },
-          :cvv_result => cvc_code,
-          :emv_authorization => emv_authorization_from_response(response),
-          :error_code => success ? nil : error_code_from(response)
+          test: response_is_test?(response),
+          authorization: authorization_from(success, url, method, response),
+          avs_result: { code: avs_code },
+          cvv_result: cvc_code,
+          emv_authorization: emv_authorization_from_response(response),
+          error_code: success ? nil : error_code_from(response)
         )
       end
 

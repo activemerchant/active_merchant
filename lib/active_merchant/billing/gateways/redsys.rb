@@ -91,11 +91,11 @@ module ActiveMerchant #:nodoc:
       # More operations are supported by the gateway itself, but
       # are not supported in this library.
       SUPPORTED_TRANSACTIONS = {
-        :purchase   => 'A',
-        :authorize  => '1',
-        :capture    => '2',
-        :refund     => '3',
-        :cancel     => '9'
+        purchase:   'A',
+        authorize:  '1',
+        capture:    '2',
+        refund:     '3',
+        cancel:     '9'
       }
 
       # These are the text meanings sent back by the acquirer when
@@ -236,7 +236,7 @@ module ActiveMerchant #:nodoc:
         data = {}
         add_action(data, :cancel)
         order_id, amount, currency = split_authorization(authorization)
-        add_amount(data, amount, :currency => currency)
+        add_amount(data, amount, currency: currency)
         add_order(data, order_id)
         data[:description] = options[:description]
 
@@ -313,10 +313,10 @@ module ActiveMerchant #:nodoc:
           year  = sprintf('%.4i', card.year)
           month = sprintf('%.2i', card.month)
           data[:card] = {
-            :name => name,
-            :pan  => card.number,
-            :date => "#{year[2..3]}#{month}",
-            :cvv  => card.verification_value
+            name: name,
+            pan: card.number,
+            date: "#{year[2..3]}#{month}",
+            cvv: card.verification_value
           }
         end
       end
@@ -407,7 +407,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_sha1_xml_request(data, options = {})
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         build_merchant_data(xml, data, options)
         xml.target!
       end
@@ -464,7 +464,7 @@ module ActiveMerchant #:nodoc:
         params  = {}
         success = false
         message = ''
-        options = @options.merge(:test => test?)
+        options = @options.merge(test: test?)
         xml     = Nokogiri::XML(data)
         code    = xml.xpath('//RETORNOXML/CODIGO').text
 

@@ -107,8 +107,8 @@ module ActiveMerchant
           (response[:result] == '00'),
           message_from(response),
           response,
-          :test => (response[:message] =~ %r{\[ test system \]}),
-          :authorization => authorization_from(response),
+          test: (response[:message] =~ %r{\[ test system \]}),
+          authorization: authorization_from(response),
           avs_result: AVSResult.new(code: response[:avspostcoderesponse]),
           cvv_result: CVVResult.new(response[:cvnresult])
         )
@@ -138,7 +138,7 @@ module ActiveMerchant
 
       def build_purchase_or_authorization_request(action, money, credit_card, options)
         timestamp = new_timestamp
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.tag! 'request', 'timestamp' => timestamp, 'type' => 'auth' do
           add_merchant_details(xml, options)
           xml.tag! 'orderid', sanitize_order_id(options[:order_id])
@@ -159,7 +159,7 @@ module ActiveMerchant
 
       def build_capture_request(money, authorization, options)
         timestamp = new_timestamp
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.tag! 'request', 'timestamp' => timestamp, 'type' => 'settle' do
           add_merchant_details(xml, options)
           add_amount(xml, money, options)
@@ -172,7 +172,7 @@ module ActiveMerchant
 
       def build_refund_request(money, authorization, options)
         timestamp = new_timestamp
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.tag! 'request', 'timestamp' => timestamp, 'type' => 'rebate' do
           add_merchant_details(xml, options)
           add_transaction_identifiers(xml, authorization, options)
@@ -187,7 +187,7 @@ module ActiveMerchant
 
       def build_credit_request(money, credit_card, options)
         timestamp = new_timestamp
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.tag! 'request', 'timestamp' => timestamp, 'type' => 'credit' do
           add_merchant_details(xml, options)
           xml.tag! 'orderid', sanitize_order_id(options[:order_id])
@@ -203,7 +203,7 @@ module ActiveMerchant
 
       def build_void_request(authorization, options)
         timestamp = new_timestamp
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.tag! 'request', 'timestamp' => timestamp, 'type' => 'void' do
           add_merchant_details(xml, options)
           add_transaction_identifiers(xml, authorization, options)
@@ -216,7 +216,7 @@ module ActiveMerchant
       # Verify initiates an OTB (Open To Buy) request
       def build_verify_request(credit_card, options)
         timestamp = new_timestamp
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.tag! 'request', 'timestamp' => timestamp, 'type' => 'otb' do
           add_merchant_details(xml, options)
           xml.tag! 'orderid', sanitize_order_id(options[:order_id])

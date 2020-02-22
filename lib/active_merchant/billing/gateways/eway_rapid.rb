@@ -232,7 +232,7 @@ module ActiveMerchant #:nodoc:
         params[key] = {}
 
         add_name_and_email(params[key], options[:shipping_address], options[:email])
-        add_address(params[key], options[:shipping_address], {:skip_company => true})
+        add_address(params[key], options[:shipping_address], {skip_company: true})
       end
 
       def add_name_and_email(params, address, email, payment_method = nil)
@@ -304,13 +304,13 @@ module ActiveMerchant #:nodoc:
           succeeded,
           message_from(succeeded, raw),
           raw,
-          :authorization => authorization_from(raw),
-          :test => test?,
-          :avs_result => avs_result_from(raw),
-          :cvv_result => cvv_result_from(raw)
+          authorization: authorization_from(raw),
+          test: test?,
+          avs_result: avs_result_from(raw),
+          cvv_result: cvv_result_from(raw)
         )
       rescue ActiveMerchant::ResponseError => e
-        return ActiveMerchant::Billing::Response.new(false, e.response.message, {:status_code => e.response.code}, :test => test?)
+        return ActiveMerchant::Billing::Response.new(false, e.response.message, {status_code: e.response.code}, test: test?)
       end
 
       def parse(data)
@@ -365,7 +365,7 @@ module ActiveMerchant #:nodoc:
           else
             'I'
           end
-        {:code => code}
+        {code: code}
       end
 
       def cvv_result_from(response)

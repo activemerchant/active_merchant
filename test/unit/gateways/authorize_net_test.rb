@@ -1226,7 +1226,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
   def test_successful_apple_pay_authorization_with_network_tokenization
     credit_card = network_tokenization_credit_card('4242424242424242',
-      :payment_cryptogram => '111111111100cryptogram'
+      payment_cryptogram: '111111111100cryptogram'
     )
 
     response = stub_comms do
@@ -1246,7 +1246,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
   def test_failed_apple_pay_authorization_with_network_tokenization_not_supported
     credit_card = network_tokenization_credit_card('4242424242424242',
-      :payment_cryptogram => '111111111100cryptogram'
+      payment_cryptogram: '111111111100cryptogram'
     )
 
     response = stub_comms do

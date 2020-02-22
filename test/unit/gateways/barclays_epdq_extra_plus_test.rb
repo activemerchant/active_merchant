@@ -2,21 +2,21 @@ require 'test_helper'
 
 class BarclaysEpdqExtraPlusTest < Test::Unit::TestCase
   def setup
-    @credentials = { :login => 'pspid',
-                     :user => 'username',
-                     :password => 'password',
-                     :signature => 'mynicesig',
-                     :signature_encryptor => 'sha512' }
+    @credentials = { login: 'pspid',
+                     user: 'username',
+                     password: 'password',
+                     signature: 'mynicesig',
+                     signature_encryptor: 'sha512' }
     @gateway = BarclaysEpdqExtraPlusGateway.new(@credentials)
     @credit_card = credit_card
-    @mastercard  = credit_card('5399999999999999', :brand => 'mastercard')
+    @mastercard  = credit_card('5399999999999999', brand: 'mastercard')
     @amount = 100
     @identification = '3014726'
     @billing_id = 'myalias'
     @options = {
-      :order_id => '1',
-      :billing_address => address,
-      :description => 'Store Purchase'
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase'
     }
     @parameters = {
       'orderID' => '1',
@@ -54,7 +54,7 @@ class BarclaysEpdqExtraPlusTest < Test::Unit::TestCase
     @gateway.expects(:add_pair).at_least(1)
     @gateway.expects(:add_pair).with(anything, 'ECI', '7')
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:action => 'SAS'))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(action: 'SAS'))
     assert_success response
     assert_equal '3014726;SAS', response.authorization
     assert response.params['HTML_ANSWER'].nil?
@@ -74,7 +74,7 @@ class BarclaysEpdqExtraPlusTest < Test::Unit::TestCase
     @gateway.expects(:add_pair).at_least(1)
     @gateway.expects(:add_pair).with(anything, 'ECI', '4')
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:eci => 4))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(eci: 4))
     assert_success response
     assert_equal '3014726;SAL', response.authorization
     assert response.test?
@@ -82,7 +82,7 @@ class BarclaysEpdqExtraPlusTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_3dsecure
     @gateway.expects(:ssl_post).returns(successful_3dsecure_purchase_response)
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:d3d => true))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(d3d: true))
     assert_success response
     assert_equal '3014726;SAL', response.authorization
     assert response.params['HTML_ANSWER']
@@ -115,7 +115,7 @@ class BarclaysEpdqExtraPlusTest < Test::Unit::TestCase
     @gateway.expects(:add_pair).at_least(1)
     @gateway.expects(:add_pair).with(anything, 'ECI', '4')
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
-    assert response = @gateway.authorize(@amount, @credit_card, @options.merge(:eci => 4))
+    assert response = @gateway.authorize(@amount, @credit_card, @options.merge(eci: 4))
     assert_success response
     assert_equal '3014726;RES', response.authorization
     assert response.test?
@@ -123,7 +123,7 @@ class BarclaysEpdqExtraPlusTest < Test::Unit::TestCase
 
   def test_successful_authorize_with_3dsecure
     @gateway.expects(:ssl_post).returns(successful_3dsecure_purchase_response)
-    assert response = @gateway.authorize(@amount, @credit_card, @options.merge(:d3d => true))
+    assert response = @gateway.authorize(@amount, @credit_card, @options.merge(d3d: true))
     assert_success response
     assert_equal '3014726;RES', response.authorization
     assert response.params['HTML_ANSWER']
@@ -141,7 +141,7 @@ class BarclaysEpdqExtraPlusTest < Test::Unit::TestCase
 
   def test_successful_capture_with_action_option
     @gateway.expects(:ssl_post).returns(successful_capture_response)
-    assert response = @gateway.capture(@amount, '3048326', :action => 'SAS')
+    assert response = @gateway.capture(@amount, '3048326', action: 'SAS')
     assert_success response
     assert_equal '3048326;SAS', response.authorization
     assert response.test?
@@ -185,7 +185,7 @@ class BarclaysEpdqExtraPlusTest < Test::Unit::TestCase
     @gateway.expects(:add_pair).at_least(1)
     @gateway.expects(:add_pair).with(anything, 'ECI', '7')
     @gateway.expects(:ssl_post).times(2).returns(successful_purchase_response)
-    assert response = @gateway.store(@credit_card, :billing_id => @billing_id)
+    assert response = @gateway.store(@credit_card, billing_id: @billing_id)
     assert_success response
     assert_equal '3014726;RES', response.authorization
     assert_equal '2', response.billing_id
@@ -197,7 +197,7 @@ class BarclaysEpdqExtraPlusTest < Test::Unit::TestCase
     @gateway.expects(:add_pair).with(anything, 'ECI', '7')
     @gateway.expects(:ssl_post).times(2).returns(successful_purchase_response)
     assert_deprecation_warning(BarclaysEpdqExtraPlusGateway::OGONE_STORE_OPTION_DEPRECATION_MESSAGE) do
-      assert response = @gateway.store(@credit_card, :store => @billing_id)
+      assert response = @gateway.store(@credit_card, store: @billing_id)
       assert_success response
       assert_equal '3014726;RES', response.authorization
       assert response.test?
@@ -239,7 +239,7 @@ class BarclaysEpdqExtraPlusTest < Test::Unit::TestCase
   end
 
   def test_custom_currency_at_gateway_level
-    gateway = BarclaysEpdqExtraPlusGateway.new(@credentials.merge(:currency => 'USD'))
+    gateway = BarclaysEpdqExtraPlusGateway.new(@credentials.merge(currency: 'USD'))
     gateway.expects(:add_pair).at_least(1)
     gateway.expects(:add_pair).with(anything, 'currency', 'USD')
     gateway.expects(:ssl_post).returns(successful_purchase_response)
@@ -247,11 +247,11 @@ class BarclaysEpdqExtraPlusTest < Test::Unit::TestCase
   end
 
   def test_local_custom_currency_overwrite_gateway_level
-    gateway = BarclaysEpdqExtraPlusGateway.new(@credentials.merge(:currency => 'USD'))
+    gateway = BarclaysEpdqExtraPlusGateway.new(@credentials.merge(currency: 'USD'))
     gateway.expects(:add_pair).at_least(1)
     gateway.expects(:add_pair).with(anything, 'currency', 'EUR')
     gateway.expects(:ssl_post).returns(successful_purchase_response)
-    gateway.purchase(@amount, @credit_card, @options.merge(:currency => 'EUR'))
+    gateway.purchase(@amount, @credit_card, @options.merge(currency: 'EUR'))
   end
 
   def test_avs_result
@@ -310,13 +310,13 @@ class BarclaysEpdqExtraPlusTest < Test::Unit::TestCase
   end
 
   def test_without_signature
-    gateway = BarclaysEpdqExtraPlusGateway.new(@credentials.merge(:signature => nil, :signature_encryptor => nil))
+    gateway = BarclaysEpdqExtraPlusGateway.new(@credentials.merge(signature: nil, signature_encryptor: nil))
     gateway.expects(:ssl_post).returns(successful_purchase_response)
     assert_deprecation_warning(BarclaysEpdqExtraPlusGateway::OGONE_NO_SIGNATURE_DEPRECATION_MESSAGE) do
       gateway.purchase(@amount, @credit_card, @options)
     end
 
-    gateway = BarclaysEpdqExtraPlusGateway.new(@credentials.merge(:signature => nil, :signature_encryptor => 'none'))
+    gateway = BarclaysEpdqExtraPlusGateway.new(@credentials.merge(signature: nil, signature_encryptor: 'none'))
     gateway.expects(:ssl_post).returns(successful_purchase_response)
     assert_no_deprecation_warning do
       gateway.purchase(@amount, @credit_card, @options)
@@ -324,27 +324,27 @@ class BarclaysEpdqExtraPlusTest < Test::Unit::TestCase
   end
 
   def test_signature_for_accounts_created_before_10_may_20101
-    gateway = BarclaysEpdqExtraPlusGateway.new(@credentials.merge(:signature_encryptor => nil))
+    gateway = BarclaysEpdqExtraPlusGateway.new(@credentials.merge(signature_encryptor: nil))
     assert signature = gateway.send(:add_signature, @parameters)
     assert_equal Digest::SHA1.hexdigest('1100EUR4111111111111111MrPSPIDRES2mynicesig').upcase, signature
   end
 
   def test_signature_for_accounts_with_signature_encryptor_to_sha1
-    gateway = BarclaysEpdqExtraPlusGateway.new(@credentials.merge(:signature_encryptor => 'sha1'))
+    gateway = BarclaysEpdqExtraPlusGateway.new(@credentials.merge(signature_encryptor: 'sha1'))
 
     assert signature = gateway.send(:add_signature, @parameters)
     assert_equal Digest::SHA1.hexdigest(string_to_digest).upcase, signature
   end
 
   def test_signature_for_accounts_with_signature_encryptor_to_sha256
-    gateway = BarclaysEpdqExtraPlusGateway.new(@credentials.merge(:signature_encryptor => 'sha256'))
+    gateway = BarclaysEpdqExtraPlusGateway.new(@credentials.merge(signature_encryptor: 'sha256'))
 
     assert signature = gateway.send(:add_signature, @parameters)
     assert_equal Digest::SHA256.hexdigest(string_to_digest).upcase, signature
   end
 
   def test_signature_for_accounts_with_signature_encryptor_to_sha512
-    gateway = BarclaysEpdqExtraPlusGateway.new(@credentials.merge(:signature_encryptor => 'sha512'))
+    gateway = BarclaysEpdqExtraPlusGateway.new(@credentials.merge(signature_encryptor: 'sha512'))
     assert signature = gateway.send(:add_signature, @parameters)
     assert_equal Digest::SHA512.hexdigest(string_to_digest).upcase, signature
   end
@@ -359,13 +359,13 @@ class BarclaysEpdqExtraPlusTest < Test::Unit::TestCase
     post = {}
     gateway = BarclaysEpdqExtraPlusGateway.new(@credentials)
 
-    gateway.send(:add_d3d, post, { :win_3ds => :pop_up })
+    gateway.send(:add_d3d, post, { win_3ds: :pop_up })
     assert 'POPUP', post['WIN3DS']
 
-    gateway.send(:add_d3d, post, { :win_3ds => :pop_ix })
+    gateway.send(:add_d3d, post, { win_3ds: :pop_ix })
     assert 'POPIX', post['WIN3DS']
 
-    gateway.send(:add_d3d, post, { :win_3ds => :invalid })
+    gateway.send(:add_d3d, post, { win_3ds: :invalid })
     assert 'MAINW', post['WIN3DS']
   end
 
@@ -374,14 +374,14 @@ class BarclaysEpdqExtraPlusTest < Test::Unit::TestCase
     gateway = BarclaysEpdqExtraPlusGateway.new(@credentials)
 
     gateway.send(:add_d3d, post, {
-      :http_accept => 'text/html',
-      :http_user_agent => 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)',
-      :accept_url => 'https://accept_url',
-      :decline_url => 'https://decline_url',
-      :exception_url => 'https://exception_url',
-      :paramsplus => 'params_plus',
-      :complus => 'com_plus',
-      :language => 'fr_FR'
+      http_accept: 'text/html',
+      http_user_agent: 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)',
+      accept_url: 'https://accept_url',
+      decline_url: 'https://decline_url',
+      exception_url: 'https://exception_url',
+      paramsplus: 'params_plus',
+      complus: 'com_plus',
+      language: 'fr_FR'
     })
     assert 'HTTP_ACCEPT', 'text/html'
     assert 'HTTP_USER_AGENT', 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)'

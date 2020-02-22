@@ -164,13 +164,13 @@ module ActiveMerchant #:nodoc:
         return Response.new(response['errorcode'] == '000',
           response['errormessage'],
           response,
-          :test => test?,
-          :authorization => response['transaction_id'])
+          test: test?,
+          authorization: response['transaction_id'])
       end
 
       def build_soap(request)
-        retval = Builder::XmlMarkup.new(:indent => 2)
-        retval.instruct!(:xml, :version => '1.0', :encoding => 'utf-8')
+        retval = Builder::XmlMarkup.new(indent: 2)
+        retval.instruct!(:xml, version: '1.0', encoding: 'utf-8')
         retval.tag!('soap:Envelope', {
           'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance',
           'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema',

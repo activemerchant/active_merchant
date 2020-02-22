@@ -14,7 +14,7 @@ class RemotePagarmeTest < Test::Unit::TestCase
     @declined_card = credit_card('4242424242424242', {
       first_name: 'Richard',
       last_name: 'Deschamps',
-      :verification_value => '688'
+      verification_value: '688'
     })
 
     @options = {

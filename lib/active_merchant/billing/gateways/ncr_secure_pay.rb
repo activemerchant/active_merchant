@@ -141,7 +141,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def request_body(action, parameters = {})
-        Nokogiri::XML::Builder.new(:encoding => 'utf-8') do |xml|
+        Nokogiri::XML::Builder.new(encoding: 'utf-8') do |xml|
           xml.MonetraTrans do
             xml.Trans(identifier: parameters.delete(:identifier) || '1') do
               xml.username(options[:username])

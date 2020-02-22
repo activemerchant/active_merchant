@@ -3,9 +3,9 @@ require 'test_helper'
 class ItransactTest < Test::Unit::TestCase
   def setup
     @gateway = ItransactGateway.new(
-      :login => 'login',
-      :password => 'password',
-      :gateway_id => '09999'
+      login: 'login',
+      password: 'password',
+      gateway_id: '09999'
     )
 
     @credit_card = credit_card
@@ -13,11 +13,11 @@ class ItransactTest < Test::Unit::TestCase
     @amount = 1014 # = $10.14
 
     @options = {
-      :email => 'name@domain.com',
-      :order_id => '1',
-      :billing_address => address,
-      :description => 'Store Purchase',
-      :email_text => ['line1', 'line2', 'line3']
+      email: 'name@domain.com',
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase',
+      email_text: ['line1', 'line2', 'line3']
     }
   end
 

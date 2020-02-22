@@ -5,10 +5,10 @@ class RemoteBraintreeTest < Test::Unit::TestCase
     @gateway = InspireGateway.new(fixtures(:inspire))
 
     @amount = rand(1001..11000)
-    @credit_card = credit_card('4111111111111111', :brand => 'visa')
+    @credit_card = credit_card('4111111111111111', brand: 'visa')
     @declined_amount = rand(99)
-    @options = {  :order_id => generate_unique_id,
-                  :billing_address => address}
+    @options = {  order_id: generate_unique_id,
+                  billing_address: address}
   end
 
   def test_successful_purchase
@@ -19,11 +19,11 @@ class RemoteBraintreeTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_echeck
     check = ActiveMerchant::Billing::Check.new(
-      :name => 'Fredd Bloggs',
-      :routing_number => '111000025', # Valid ABA # - Bank of America, TX
-      :account_number => '999999999999',
-      :account_holder_type => 'personal',
-      :account_type => 'checking'
+      name: 'Fredd Bloggs',
+      routing_number: '111000025', # Valid ABA # - Bank of America, TX
+      account_number: '999999999999',
+      account_holder_type: 'personal',
+      account_type: 'checking'
     )
     response = @gateway.purchase(@amount, check, @options)
     assert_success response
@@ -73,7 +73,7 @@ class RemoteBraintreeTest < Test::Unit::TestCase
 
   def test_update_vault
     test_add_to_vault_with_custom_vault_id
-    @credit_card = credit_card('4111111111111111', :month => 10)
+    @credit_card = credit_card('4111111111111111', month: 10)
     response = @gateway.update(@options[:store], @credit_card)
     assert_success response
     assert_equal 'Customer Update Successful', response.message
@@ -150,8 +150,8 @@ class RemoteBraintreeTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = InspireGateway.new(
-      :login => '',
-      :password => ''
+      login: '',
+      password: ''
     )
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_equal 'Invalid Username', response.message

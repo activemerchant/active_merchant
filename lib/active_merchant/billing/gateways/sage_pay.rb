@@ -13,26 +13,26 @@ module ActiveMerchant #:nodoc:
       APPROVED = 'OK'
 
       TRANSACTIONS = {
-        :purchase => 'PAYMENT',
-        :credit => 'REFUND',
-        :authorization => 'DEFERRED',
-        :capture => 'RELEASE',
-        :void => 'VOID',
-        :abort => 'ABORT',
-        :store => 'TOKEN',
-        :unstore => 'REMOVETOKEN',
-        :repeat => 'REPEAT'
+        purchase: 'PAYMENT',
+        credit: 'REFUND',
+        authorization: 'DEFERRED',
+        capture: 'RELEASE',
+        void: 'VOID',
+        abort: 'ABORT',
+        store: 'TOKEN',
+        unstore: 'REMOVETOKEN',
+        repeat: 'REPEAT'
       }
 
       CREDIT_CARDS = {
-        :visa => 'VISA',
-        :master => 'MC',
-        :delta => 'DELTA',
-        :maestro => 'MAESTRO',
-        :american_express => 'AMEX',
-        :electron => 'UKE',
-        :diners_club => 'DC',
-        :jcb => 'JCB'
+        visa: 'VISA',
+        master: 'MC',
+        delta: 'DELTA',
+        maestro: 'MAESTRO',
+        american_express: 'AMEX',
+        electron: 'UKE',
+        diners_club: 'DC',
+        jcb: 'JCB'
       }
 
       AVS_CODE = {
@@ -213,18 +213,18 @@ module ActiveMerchant #:nodoc:
 
       def add_amount(post, money, options)
         currency = options[:currency] || currency(money)
-        add_pair(post, :Amount, localized_amount(money, currency), :required => true)
-        add_pair(post, :Currency, currency, :required => true)
+        add_pair(post, :Amount, localized_amount(money, currency), required: true)
+        add_pair(post, :Currency, currency, required: true)
       end
 
       def add_currency(post, money, options)
         currency = options[:currency] || currency(money)
-        add_pair(post, :Currency, currency, :required => true)
+        add_pair(post, :Currency, currency, required: true)
       end
 
       # doesn't actually use the currency -- dodgy!
       def add_release_amount(post, money, options)
-        add_pair(post, :ReleaseAmount, amount(money), :required => true)
+        add_pair(post, :ReleaseAmount, amount(money), required: true)
       end
 
       def add_customer_data(post, options)
@@ -269,7 +269,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_invoice(post, options)
-        add_pair(post, :VendorTxCode, sanitize_order_id(options[:order_id]), :required => true)
+        add_pair(post, :VendorTxCode, sanitize_order_id(options[:order_id]), required: true)
         add_pair(post, :Description, truncate(options[:description] || options[:order_id], 100))
       end
 
@@ -286,10 +286,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_credit_card(post, credit_card)
-        add_pair(post, :CardHolder, truncate(credit_card.name, 50), :required => true)
-        add_pair(post, :CardNumber, credit_card.number, :required => true)
+        add_pair(post, :CardHolder, truncate(credit_card.name, 50), required: true)
+        add_pair(post, :CardNumber, credit_card.number, required: true)
 
-        add_pair(post, :ExpiryDate, format_date(credit_card.month, credit_card.year), :required => true)
+        add_pair(post, :ExpiryDate, format_date(credit_card.month, credit_card.year), required: true)
         add_pair(post, :CardType, map_card_type(credit_card))
 
         add_pair(post, :CV2, credit_card.verification_value)
@@ -347,13 +347,13 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(url_for(action), post_data(action, parameters)))
 
         Response.new(response['Status'] == APPROVED, message_from(response), response,
-          :test => test?,
-          :authorization => authorization_from(response, parameters, action),
-          :avs_result => {
-            :street_match => AVS_CODE[response['AddressResult']],
-            :postal_match => AVS_CODE[response['PostCodeResult']],
+          test: test?,
+          authorization: authorization_from(response, parameters, action),
+          avs_result: {
+            street_match: AVS_CODE[response['AddressResult']],
+            postal_match: AVS_CODE[response['PostCodeResult']],
           },
-          :cvv_result => CVV_CODE[response['CV2Result']]
+          cvv_result: CVV_CODE[response['CV2Result']]
         )
       end
 
@@ -400,12 +400,12 @@ module ActiveMerchant #:nodoc:
 
       def post_data(action, parameters = {})
         parameters.update(
-          :Vendor => @options[:login],
-          :TxType => TRANSACTIONS[action],
-          :VPSProtocol => @options.fetch(:protocol_version, '3.00')
+          Vendor: @options[:login],
+          TxType: TRANSACTIONS[action],
+          VPSProtocol: @options.fetch(:protocol_version, '3.00')
         )
 
-        parameters.update(:ReferrerID => application_id) if application_id && (application_id != Gateway.application_id)
+        parameters.update(ReferrerID: application_id) if application_id && (application_id != Gateway.application_id)
 
         parameters.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end

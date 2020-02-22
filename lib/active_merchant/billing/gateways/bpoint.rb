@@ -91,7 +91,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def soap_request
-        Nokogiri::XML::Builder.new(:encoding => 'utf-8') do |xml|
+        Nokogiri::XML::Builder.new(encoding: 'utf-8') do |xml|
           xml.send('soap12:Envelope', soap_envelope_attributes) {
             xml.send('soap12:Body') {
               yield(xml) if block_given?

@@ -11,9 +11,9 @@ class RemoteNabTransactTest < Test::Unit::TestCase
     @declined_card = credit_card('4111111111111234')
 
     @options = {
-      :order_id => '1',
-      :billing_address => address,
-      :description => 'NAB Transact Purchase'
+      order_id: '1',
+      billing_address: address,
+      description: 'NAB Transact Purchase'
     }
   end
 
@@ -63,8 +63,8 @@ class RemoteNabTransactTest < Test::Unit::TestCase
   # ensure we get the error.
   def test_successful_purchase_with_card_acceptor
     card_acceptor_options = {
-      :merchant_name => 'ActiveMerchant',
-      :merchant_location => 'Melbourne'
+      merchant_name: 'ActiveMerchant',
+      merchant_location: 'Melbourne'
     }
     card_acceptor_options.each do |key, value|
       options = @options.merge({key => value})
@@ -128,8 +128,8 @@ class RemoteNabTransactTest < Test::Unit::TestCase
 
   def test_authorize_and_capture_with_card_acceptor
     card_acceptor_options = {
-      :merchant_name => 'ActiveMerchant',
-      :merchant_location => 'Melbourne'
+      merchant_name: 'ActiveMerchant',
+      merchant_location: 'Melbourne'
     }
     card_acceptor_options.each do |key, value|
       options = @options.merge({key => value})
@@ -161,11 +161,11 @@ class RemoteNabTransactTest < Test::Unit::TestCase
   # You need to speak to NAB Transact to have this feature enabled on
   # your account otherwise you will receive a "Permission denied" error
   def test_credit
-    assert response = @gateway.credit(@amount, @credit_card, {:order_id => '1'})
+    assert response = @gateway.credit(@amount, @credit_card, {order_id: '1'})
     assert_failure response
     assert_equal 'Permission denied', response.message
 
-    assert response = @privileged_gateway.credit(@amount, @credit_card, {:order_id => '1'})
+    assert response = @privileged_gateway.credit(@amount, @credit_card, {order_id: '1'})
     assert_success response
     assert_equal 'Approved', response.message
   end
@@ -181,8 +181,8 @@ class RemoteNabTransactTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = NabTransactGateway.new(
-      :login => 'ABCFAKE',
-      :password => 'changeit'
+      login: 'ABCFAKE',
+      password: 'changeit'
     )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
@@ -204,11 +204,11 @@ class RemoteNabTransactTest < Test::Unit::TestCase
   def test_duplicate_store
     @gateway.unstore(1236)
 
-    assert response = @gateway.store(@credit_card, {:billing_id => 1236})
+    assert response = @gateway.store(@credit_card, {billing_id: 1236})
     assert_success response
     assert_equal 'Successful', response.message
 
-    assert response = @gateway.store(@credit_card, {:billing_id => 1236})
+    assert response = @gateway.store(@credit_card, {billing_id: 1236})
     assert_failure response
     assert_equal 'Duplicate CRN Found', response.message
   end
@@ -239,7 +239,7 @@ class RemoteNabTransactTest < Test::Unit::TestCase
     trigger_amount = 0
     @gateway.unstore(gateway_id)
 
-    assert response = @gateway.store(@credit_card, {:billing_id => gateway_id, :amount => 150})
+    assert response = @gateway.store(@credit_card, {billing_id: gateway_id, amount: 150})
     assert_success response
     assert_equal 'Successful', response.message
 

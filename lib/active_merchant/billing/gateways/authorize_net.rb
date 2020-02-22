@@ -58,21 +58,21 @@ module ActiveMerchant
       }
 
       MARKET_TYPE = {
-        :moto  => '1',
-        :retail  => '2'
+        moto: '1',
+        retail: '2'
       }
 
       DEVICE_TYPE = {
-        :unknown => '1',
-        :unattended_terminal => '2',
-        :self_service_terminal => '3',
-        :electronic_cash_register => '4',
-        :personal_computer_terminal => '5',
-        :airpay => '6',
-        :wireless_pos => '7',
-        :website => '8',
-        :dial_terminal => '9',
-        :virtual_terminal => '10'
+        unknown: '1',
+        unattended_terminal: '2',
+        self_service_terminal: '3',
+        electronic_cash_register: '4',
+        personal_computer_terminal: '5',
+        airpay: '6',
+        wireless_pos: '7',
+        website: '8',
+        dial_terminal: '9',
+        virtual_terminal: '10'
       }
 
       class_attribute :duplicate_window
@@ -221,13 +221,13 @@ module ActiveMerchant
 
       def supports_network_tokenization?
         card = Billing::NetworkTokenizationCreditCard.new({
-          :number => '4111111111111111',
-          :month => 12,
-          :year => 20,
-          :first_name => 'John',
-          :last_name => 'Smith',
-          :brand => 'visa',
-          :payment_cryptogram => 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
+          number: '4111111111111111',
+          month: 12,
+          year: 20,
+          first_name: 'John',
+          last_name: 'Smith',
+          brand: 'visa',
+          payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
         })
 
         request = post_data(:authorize) do |xml|

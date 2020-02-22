@@ -14,12 +14,12 @@ class RemoteSecurePayAuTest < Test::Unit::TestCase
     @gateway = SecurePayAuGateway.new(fixtures(:secure_pay_au))
 
     @amount = 100
-    @credit_card = credit_card('4242424242424242', {:month => 9, :year => 15})
+    @credit_card = credit_card('4242424242424242', {month: 9, year: 15})
 
     @options = {
-      :order_id => '2',
-      :billing_address => address,
-      :description => 'Store Purchase'
+      order_id: '2',
+      billing_address: address,
+      description: 'Store Purchase'
     }
   end
 
@@ -31,13 +31,13 @@ class RemoteSecurePayAuTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_custom_credit_card_class
     options = {
-      :number => 4242424242424242,
-      :month => 9,
-      :year => Time.now.year + 1,
-      :first_name => 'Longbob',
-      :last_name => 'Longsen',
-      :verification_value => '123',
-      :brand => 'visa'
+      number: 4242424242424242,
+      month: 9,
+      year: Time.now.year + 1,
+      first_name: 'Longbob',
+      last_name: 'Longsen',
+      verification_value: '123',
+      brand: 'visa'
     }
     credit_card = MyCreditCard.new(options)
     assert response = @gateway.purchase(@amount, credit_card, @options)
@@ -120,7 +120,7 @@ class RemoteSecurePayAuTest < Test::Unit::TestCase
   end
 
   def test_successful_unstore
-    @gateway.store(@credit_card, {:billing_id => 'test1234', :amount => 15000}) rescue nil
+    @gateway.store(@credit_card, {billing_id: 'test1234', amount: 15000}) rescue nil
 
     assert response = @gateway.unstore('test1234')
     assert_success response
@@ -139,23 +139,23 @@ class RemoteSecurePayAuTest < Test::Unit::TestCase
   def test_successful_store
     @gateway.unstore('test1234') rescue nil
 
-    assert response = @gateway.store(@credit_card, {:billing_id => 'test1234', :amount => 15000})
+    assert response = @gateway.store(@credit_card, {billing_id: 'test1234', amount: 15000})
     assert_success response
 
     assert_equal 'Successful', response.message
   end
 
   def test_failed_store
-    @gateway.store(@credit_card, {:billing_id => 'test1234', :amount => 15000}) rescue nil # Ensure it already exists
+    @gateway.store(@credit_card, {billing_id: 'test1234', amount: 15000}) rescue nil # Ensure it already exists
 
-    assert response = @gateway.store(@credit_card, {:billing_id => 'test1234', :amount => 15000})
+    assert response = @gateway.store(@credit_card, {billing_id: 'test1234', amount: 15000})
     assert_failure response
 
     assert_equal 'Duplicate Client ID Found', response.message
   end
 
   def test_successful_triggered_payment
-    @gateway.store(@credit_card, {:billing_id => 'test1234', :amount => 15000}) rescue nil # Ensure it already exists
+    @gateway.store(@credit_card, {billing_id: 'test1234', amount: 15000}) rescue nil # Ensure it already exists
 
     assert response = @gateway.purchase(12300, 'test1234', @options)
     assert_success response
@@ -175,8 +175,8 @@ class RemoteSecurePayAuTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = SecurePayAuGateway.new(
-      :login => 'a',
-      :password => 'a'
+      login: 'a',
+      password: 'a'
     )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response

@@ -229,7 +229,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_card_present_authorize_and_capture_with_track_data_only
-    track_credit_card = ActiveMerchant::Billing::CreditCard.new(:track_data => '%B378282246310005^LONGSON/LONGBOB^1705101130504392?')
+    track_credit_card = ActiveMerchant::Billing::CreditCard.new(track_data: '%B378282246310005^LONGSON/LONGBOB^1705101130504392?')
     assert authorization = @gateway.authorize(@amount, track_credit_card, @options)
     assert_success authorization
 
@@ -254,7 +254,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_card_present_purchase_with_track_data_only
-    track_credit_card = ActiveMerchant::Billing::CreditCard.new(:track_data => '%B378282246310005^LONGSON/LONGBOB^1705101130504392?')
+    track_credit_card = ActiveMerchant::Billing::CreditCard.new(track_data: '%B378282246310005^LONGSON/LONGBOB^1705101130504392?')
     response = @gateway.purchase(@amount, track_credit_card, @options)
     assert response.test?
     assert_equal 'This transaction has been approved', response.message
@@ -563,8 +563,8 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
 
   def test_bad_login
     gateway = AuthorizeNetGateway.new(
-      :login => 'X',
-      :password => 'Y'
+      login: 'X',
+      password: 'Y'
     )
 
     response = gateway.purchase(@amount, @credit_card)
@@ -720,9 +720,9 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
 
   def test_network_tokenization_transcript_scrubbing
     credit_card = network_tokenization_credit_card('4111111111111111',
-      :brand              => 'visa',
-      :eci                => '05',
-      :payment_cryptogram => 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
+      brand: 'visa',
+      eci: '05',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
     )
 
     transcript = capture_transcript(@gateway) do

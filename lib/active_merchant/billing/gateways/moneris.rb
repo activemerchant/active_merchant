@@ -92,7 +92,7 @@ module ActiveMerchant #:nodoc:
       # gateways the two numbers are concatenated together with a ; separator as
       # the authorization number returned by authorization
       def capture(money, authorization, options = {})
-        commit 'completion', crediting_params(authorization, :comp_amount => amount(money))
+        commit 'completion', crediting_params(authorization, comp_amount: amount(money))
       end
 
       # Voiding requires the original transaction ID and order ID of some open
@@ -130,7 +130,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(money, authorization, options = {})
-        commit 'refund', crediting_params(authorization, :amount => amount(money))
+        commit 'refund', crediting_params(authorization, amount: amount(money))
       end
 
       def verify(credit_card, options={})
@@ -275,9 +275,9 @@ module ActiveMerchant #:nodoc:
       # Common params used amongst the +credit+, +void+ and +capture+ methods
       def crediting_params(authorization, options = {})
         {
-          :txn_number => split_authorization(authorization).first,
-          :order_id   => split_authorization(authorization).last,
-          :crypt_type => options[:crypt_type] || @options[:crypt_type]
+          txn_number: split_authorization(authorization).first,
+          order_id: split_authorization(authorization).last,
+          crypt_type: options[:crypt_type] || @options[:crypt_type]
         }.merge(options)
       end
 
@@ -301,10 +301,10 @@ module ActiveMerchant #:nodoc:
           successful?(response),
           message_from(response[:message]),
           response,
-          :test => test?,
-          :avs_result => {:code => response[:avs_result_code]},
-          :cvv_result => response[:cvd_result_code] && response[:cvd_result_code][-1, 1],
-          :authorization => authorization_from(response))
+          test: test?,
+          avs_result: {code: response[:avs_result_code]},
+          cvv_result: response[:cvd_result_code] && response[:cvd_result_code][-1, 1],
+          authorization: authorization_from(response))
       end
 
       # Generates a Moneris authorization string of the form 'trans_id;receipt_id'.
@@ -320,7 +320,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(xml)
-        response = { :message => 'Global Error Receipt', :complete => false }
+        response = { message: 'Global Error Receipt', complete: false }
         hashify_xml!(xml, response)
         response
       end

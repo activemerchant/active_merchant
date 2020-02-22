@@ -8,49 +8,49 @@ class CyberSourceTest < Test::Unit::TestCase
     Base.mode = :test
 
     @gateway = CyberSourceGateway.new(
-      :login => 'l',
-      :password => 'p'
+      login: 'l',
+      password: 'p'
     )
 
     @amount = 100
     @customer_ip = '127.0.0.1'
-    @credit_card = credit_card('4111111111111111', :brand => 'visa')
-    @master_credit_card = credit_card('4111111111111111', :brand => 'master')
-    @elo_credit_card = credit_card('5067310000000010', :brand => 'elo')
-    @declined_card = credit_card('801111111111111', :brand => 'visa')
+    @credit_card = credit_card('4111111111111111', brand: 'visa')
+    @master_credit_card = credit_card('4111111111111111', brand: 'master')
+    @elo_credit_card = credit_card('5067310000000010', brand: 'elo')
+    @declined_card = credit_card('801111111111111', brand: 'visa')
     @check = check()
 
     @options = {
-      :ip => @customer_ip,
-      :order_id => '1000',
-      :line_items => [
+      ip: @customer_ip,
+      order_id: '1000',
+      line_items: [
         {
-          :declared_value => @amount,
-          :quantity => 2,
-          :code => 'default',
-          :description => 'Giant Walrus',
-          :sku => 'WA323232323232323'
+          declared_value: @amount,
+          quantity: 2,
+          code: 'default',
+          description: 'Giant Walrus',
+          sku: 'WA323232323232323'
         },
         {
-          :declared_value => @amount,
-          :quantity => 2,
-          :description => 'Marble Snowcone',
-          :sku => 'FAKE1232132113123'
+          declared_value: @amount,
+          quantity: 2,
+          description: 'Marble Snowcone',
+          sku: 'FAKE1232132113123'
         }
       ],
-      :currency => 'USD'
+      currency: 'USD'
     }
 
     @subscription_options = {
-      :order_id => generate_unique_id,
-      :credit_card => @credit_card,
-      :setup_fee => 100,
-      :subscription => {
-        :frequency => 'weekly',
-        :start_date => Date.today.next_week,
-        :occurrences => 4,
-        :automatic_renew => true,
-        :amount => 100
+      order_id: generate_unique_id,
+      credit_card: @credit_card,
+      setup_fee: 100,
+      subscription: {
+        frequency: 'weekly',
+        start_date: Date.today.next_week,
+        occurrences: 4,
+        automatic_renew: true,
+        amount: 100
       }
     }
 
@@ -156,7 +156,7 @@ class CyberSourceTest < Test::Unit::TestCase
   def test_successful_pinless_debit_card_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:pinless_debit_card => true))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(pinless_debit_card: true))
     assert_equal 'Successful transaction', response.message
     assert_success response
     assert_equal "#{@options[:order_id]};#{response.params['requestID']};#{response.params['requestToken']};purchase;100;USD;", response.authorization
@@ -362,7 +362,7 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response = @gateway.store(@credit_card, @subscription_options)
     assert response.success?
     assert response.test?
-    assert response = @gateway.unstore(response.authorization, :order_id => generate_unique_id)
+    assert response = @gateway.unstore(response.authorization, order_id: generate_unique_id)
     assert response.success?
     assert response.test?
   end
@@ -372,7 +372,7 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response = @gateway.store(@credit_card, @subscription_options)
     assert response.success?
     assert response.test?
-    assert response = @gateway.retrieve(response.authorization, :order_id => generate_unique_id)
+    assert response = @gateway.retrieve(response.authorization, order_id: generate_unique_id)
     assert response.success?
     assert response.test?
   end
@@ -537,10 +537,10 @@ class CyberSourceTest < Test::Unit::TestCase
 
   def test_successful_auth_with_network_tokenization_for_visa
     credit_card = network_tokenization_credit_card('4111111111111111',
-      :brand              => 'visa',
-      :transaction_id     => '123',
-      :eci                => '05',
-      :payment_cryptogram => '111111111100cryptogram'
+      brand: 'visa',
+      transaction_id: '123',
+      eci: '05',
+      payment_cryptogram: '111111111100cryptogram'
     )
 
     response = stub_comms do
@@ -555,10 +555,10 @@ class CyberSourceTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_network_tokenization_for_visa
     credit_card = network_tokenization_credit_card('4111111111111111',
-      :brand              => 'visa',
-      :transaction_id     => '123',
-      :eci                => '05',
-      :payment_cryptogram => '111111111100cryptogram'
+      brand: 'visa',
+      transaction_id: '123',
+      eci: '05',
+      payment_cryptogram: '111111111100cryptogram'
     )
 
     response = stub_comms do
@@ -579,10 +579,10 @@ class CyberSourceTest < Test::Unit::TestCase
     end.returns(successful_purchase_response)
 
     credit_card = network_tokenization_credit_card('5555555555554444',
-      :brand              => 'master',
-      :transaction_id     => '123',
-      :eci                => '05',
-      :payment_cryptogram => '111111111100cryptogram'
+      brand: 'master',
+      transaction_id: '123',
+      eci: '05',
+      payment_cryptogram: '111111111100cryptogram'
     )
 
     assert response = @gateway.authorize(@amount, credit_card, @options)
@@ -597,10 +597,10 @@ class CyberSourceTest < Test::Unit::TestCase
     end.returns(successful_purchase_response)
 
     credit_card = network_tokenization_credit_card('378282246310005',
-      :brand              => 'american_express',
-      :transaction_id     => '123',
-      :eci                => '05',
-      :payment_cryptogram => Base64.encode64('111111111100cryptogram')
+      brand: 'american_express',
+      transaction_id: '123',
+      eci: '05',
+      payment_cryptogram: Base64.encode64('111111111100cryptogram')
     )
 
     assert response = @gateway.authorize(@amount, credit_card, @options)
@@ -610,10 +610,10 @@ class CyberSourceTest < Test::Unit::TestCase
   def test_successful_auth_first_unscheduled_stored_cred
     @gateway.stubs(:ssl_post).returns(successful_authorization_response)
     @options[:stored_credential] = {
-      :initiator => 'cardholder',
-      :reason_type => 'unscheduled',
-      :initial_transaction => true,
-      :network_transaction_id => ''
+      initiator: 'cardholder',
+      reason_type: 'unscheduled',
+      initial_transaction: true,
+      network_transaction_id: ''
     }
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_equal Response, response.class
@@ -624,10 +624,10 @@ class CyberSourceTest < Test::Unit::TestCase
   def test_successful_auth_subsequent_unscheduled_stored_cred
     @gateway.stubs(:ssl_post).returns(successful_authorization_response)
     @options[:stored_credential] = {
-      :initiator => 'merchant',
-      :reason_type => 'unscheduled',
-      :initial_transaction => false,
-      :network_transaction_id => '016150703802094'
+      initiator: 'merchant',
+      reason_type: 'unscheduled',
+      initial_transaction: false,
+      network_transaction_id: '016150703802094'
     }
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_equal Response, response.class
@@ -638,10 +638,10 @@ class CyberSourceTest < Test::Unit::TestCase
   def test_successful_auth_first_recurring_stored_cred
     @gateway.stubs(:ssl_post).returns(successful_authorization_response)
     @options[:stored_credential] = {
-      :initiator => 'cardholder',
-      :reason_type => 'recurring',
-      :initial_transaction => true,
-      :network_transaction_id => ''
+      initiator: 'cardholder',
+      reason_type: 'recurring',
+      initial_transaction: true,
+      network_transaction_id: ''
     }
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_equal Response, response.class
@@ -652,10 +652,10 @@ class CyberSourceTest < Test::Unit::TestCase
   def test_successful_auth_subsequent_recurring_stored_cred
     @gateway.stubs(:ssl_post).returns(successful_authorization_response)
     @options[:stored_credential] = {
-      :initiator => 'merchant',
-      :reason_type => 'recurring',
-      :initial_transaction => false,
-      :network_transaction_id => '016150703802094'
+      initiator: 'merchant',
+      reason_type: 'recurring',
+      initial_transaction: false,
+      network_transaction_id: '016150703802094'
     }
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_equal Response, response.class

@@ -4,13 +4,13 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    @gateway = UsaEpayTransactionGateway.new(:login => 'LOGIN')
+    @gateway = UsaEpayTransactionGateway.new(login: 'LOGIN')
 
     @credit_card = credit_card('4242424242424242')
     @check = check
     @options = {
-      :billing_address  => address,
-      :shipping_address => address
+      billing_address: address,
+      shipping_address: address
     }
     @amount = 100
   end
@@ -21,7 +21,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
   end
 
   def test_request_url_live
-    gateway = UsaEpayTransactionGateway.new(:login => 'LOGIN', :test => false)
+    gateway = UsaEpayTransactionGateway.new(login: 'LOGIN', test: false)
     gateway.expects(:ssl_post).
       with('https://www.usaepay.com/gate', regexp_matches(Regexp.new('^' + Regexp.escape(purchase_request)))).
       returns(successful_purchase_response)
@@ -78,7 +78,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
 
   def test_successful_purchase_passing_extra_info
     response = stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(:invoice => '1337', :description => 'socool'))
+      @gateway.purchase(@amount, @credit_card, @options.merge(invoice: '1337', description: 'socool'))
     end.check_request do |endpoint, data, headers|
       assert_match(/UMinvoice=1337/, data)
       assert_match(/UMdescription=socool/, data)
@@ -89,7 +89,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
 
   def test_successful_purchase_passing_extra_test_mode
     response = stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(:test_mode => true))
+      @gateway.purchase(@amount, @credit_card, @options.merge(test_mode: true))
     end.check_request do |endpoint, data, headers|
       assert_match(/UMtestmode=1/, data)
     end.respond_with(successful_purchase_response)
@@ -98,7 +98,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
 
   def test_successful_purchase_email_receipt
     response = stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(:email => 'bobby@hill.com', :cust_receipt => 'Yes', :cust_receipt_name => 'socool'))
+      @gateway.purchase(@amount, @credit_card, @options.merge(email: 'bobby@hill.com', cust_receipt: 'Yes', cust_receipt_name: 'socool'))
     end.check_request do |endpoint, data, headers|
       assert_match(/UMcustreceipt=Yes/, data)
       assert_match(/UMcustreceiptname=socool/, data)
@@ -109,9 +109,9 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
 
   def test_successful_purchase_split_payment
     options = @options.merge(
-      :split_payments => [
-        { :key => 'abc123', :amount => 199, :description => 'Second payee' },
-        { :key => 'def456', :amount => 911, :description => 'Third payee' },
+      split_payments: [
+        { key: 'abc123', amount: 199, description: 'Second payee' },
+        { key: 'def456', amount: 911, description: 'Third payee' },
       ]
     )
     response = stub_comms do
@@ -132,10 +132,10 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
 
   def test_successful_purchase_split_payment_with_custom_on_error
     options = @options.merge(
-      :split_payments => [
-        { :key => 'abc123', :amount => 199, :description => 'Second payee' }
+      split_payments: [
+        { key: 'abc123', amount: 199, description: 'Second payee' }
       ],
-      :on_error => 'Continue'
+      on_error: 'Continue'
     )
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
@@ -147,7 +147,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
 
   def test_successful_purchase_recurring_fields
     options = @options.merge(
-      :recurring_fields => {
+      recurring_fields: {
         add_customer: true,
         schedule: 'quarterly',
         bill_source_key: 'bill source key',
@@ -173,7 +173,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
 
   def test_successful_purchase_custom_fields
     options = @options.merge(
-      :custom_fields => {
+      custom_fields: {
         1 => 'diablo',
         2 => 'mephisto',
         3 => 'baal'
@@ -191,7 +191,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
 
   def test_first_index_guard_on_custom_fields
     num_options = @options.merge(
-      :custom_fields => {
+      custom_fields: {
         0 => 'butcher',
         1 => 'diablo',
         2 => 'mephisto',
@@ -203,7 +203,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
     end
 
     str_options = @options.merge(
-      :custom_fields => {
+      custom_fields: {
         '0' => 'butcher',
         '1' => 'diablo',
         '2' => 'mephisto',
@@ -217,10 +217,10 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
 
   def test_successful_purchase_line_items
     options = @options.merge(
-      :line_items => [
-        { :sku=> 'abc123', :cost => 119, :quantity => 1 },
-        { :sku => 'def456', :cost => 200, :quantity => 2, :name => 'an item' },
-        { :cost => 300, :qty => 4 }
+      line_items: [
+        { sku: 'abc123', cost: 119, quantity: 1 },
+        { sku: 'def456', cost: 200, quantity: 2, name: 'an item' },
+        { cost: 300, qty: 4 }
       ]
     )
     response = stub_comms do
@@ -252,7 +252,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
 
   def test_successful_authorize_passing_extra_info
     response = stub_comms do
-      @gateway.authorize(@amount, @credit_card, @options.merge(:invoice => '1337', order_id: 'w00t', :description => 'socool'))
+      @gateway.authorize(@amount, @credit_card, @options.merge(invoice: '1337', order_id: 'w00t', description: 'socool'))
     end.check_request do |endpoint, data, headers|
       assert_match(/UMinvoice=1337/, data)
       assert_match(/UMorderid=w00t/, data)
@@ -264,7 +264,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
 
   def test_successful_authorize_passing_extra_test_mode
     response = stub_comms do
-      @gateway.authorize(@amount, @credit_card, @options.merge(:test_mode => true))
+      @gateway.authorize(@amount, @credit_card, @options.merge(test_mode: true))
     end.check_request do |endpoint, data, headers|
       assert_match(/UMtestmode=1/, data)
     end.respond_with(successful_authorize_response)
@@ -292,7 +292,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
 
   def test_successful_capture_passing_extra_test_mode
     response = stub_comms do
-      @gateway.capture(@amount, '65074409', @options.merge(:test_mode => true))
+      @gateway.capture(@amount, '65074409', @options.merge(test_mode: true))
     end.check_request do |endpoint, data, headers|
       assert_match(/UMtestmode=1/, data)
     end.respond_with(successful_capture_response)
@@ -329,7 +329,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
 
   def test_successful_refund_passing_extra_test_mode
     response = stub_comms do
-      @gateway.refund(@amount, '65074409', @options.merge(:test_mode => true))
+      @gateway.refund(@amount, '65074409', @options.merge(test_mode: true))
     end.check_request do |endpoint, data, headers|
       assert_match(/UMtestmode=1/, data)
     end.respond_with(successful_refund_response)
@@ -356,7 +356,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
 
   def test_successful_void_passing_extra_info
     response = stub_comms do
-      @gateway.void('65074409', @options.merge(:no_release => true))
+      @gateway.void('65074409', @options.merge(no_release: true))
     end.check_request do |endpoint, data, headers|
       assert_match(/UMcommand=cc%3Avoid/, data)
       assert_match(/UMtestmode=0/, data)
@@ -366,7 +366,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
 
   def test_successful_void_passing_extra_test_mode
     response = stub_comms do
-      @gateway.refund(@amount, '65074409', @options.merge(:test_mode => true))
+      @gateway.refund(@amount, '65074409', @options.merge(test_mode: true))
     end.check_request do |endpoint, data, headers|
       assert_match(/UMtestmode=1/, data)
     end.respond_with(successful_void_response)
@@ -419,8 +419,8 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
   def test_add_address_with_single_billing_and_shipping_names
     post = {}
     options = {
-      :billing_address  => address(:name => 'Smith'),
-      :shipping_address => address(:name => 'Longsen')
+      billing_address: address(name: 'Smith'),
+      shipping_address: address(name: 'Longsen')
     }
 
     @gateway.send(:add_address, post, @credit_card, options)
@@ -437,13 +437,13 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
 
   def test_add_test_mode_with_true_test_mode_option
     post = {}
-    @gateway.send(:add_test_mode, post, :test_mode => true)
+    @gateway.send(:add_test_mode, post, test_mode: true)
     assert_equal 1, post[:testmode]
   end
 
   def test_add_test_mode_with_false_test_mode_option
     post = {}
-    @gateway.send(:add_test_mode, post, :test_mode => false)
+    @gateway.send(:add_test_mode, post, test_mode: false)
     assert_equal 0, post[:testmode]
   end
 

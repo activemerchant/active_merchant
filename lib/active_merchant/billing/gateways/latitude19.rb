@@ -398,7 +398,7 @@ module ActiveMerchant #:nodoc:
           false,
           message_from(response),
           response,
-          :test => test?
+          test: test?
         )
       end
 

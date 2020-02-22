@@ -158,28 +158,28 @@ class PacNetRavenGatewayTest < Test::Unit::TestCase
 
   def test_argument_error_prn
     exception = assert_raises(ArgumentError) {
-      PacNetRavenGateway.new(:user => 'user', :secret => 'secret')
+      PacNetRavenGateway.new(user: 'user', secret: 'secret')
     }
     assert_equal 'Missing required parameter: prn', exception.message
   end
 
   def test_argument_error_user
     exception = assert_raises(ArgumentError) {
-      PacNetRavenGateway.new(:secret => 'secret', :prn => 123456)
+      PacNetRavenGateway.new(secret: 'secret', prn: 123456)
     }
     assert_equal 'Missing required parameter: user', exception.message
   end
 
   def test_argument_error_secret
     exception = assert_raises(ArgumentError) {
-      PacNetRavenGateway.new(:user => 'user', :prn => 123456)
+      PacNetRavenGateway.new(user: 'user', prn: 123456)
     }
     assert_equal 'Missing required parameter: secret', exception.message
   end
 
   def test_add_address
     result = {}
-    @gateway.send(:add_address, result, :billing_address => {:address1 => 'Address 1', :address2 => 'Address 2', :zip => 'ZIP'})
+    @gateway.send(:add_address, result, billing_address: {address1: 'Address 1', address2: 'Address 2', zip: 'ZIP'})
     assert_equal ['BillingPostalCode', 'BillingStreetAddressLineFour', 'BillingStreetAddressLineOne'], result.stringify_keys.keys.sort
     assert_equal 'ZIP', result['BillingPostalCode']
     assert_equal 'Address 2', result['BillingStreetAddressLineFour']
@@ -334,8 +334,8 @@ class PacNetRavenGatewayTest < Test::Unit::TestCase
   end
 
   def test_post_data
-    @gateway.stubs(:request_id => 'wouykiikdvqbwwxueppby')
-    @gateway.stubs(:timestamp => '2013-10-08T14:31:54.Z')
+    @gateway.stubs(request_id: 'wouykiikdvqbwwxueppby')
+    @gateway.stubs(timestamp: '2013-10-08T14:31:54.Z')
 
     assert_equal "PymtType=cc_preauth&RAPIVersion=2&UserName=user&Timestamp=2013-10-08T14%3A31%3A54.Z&RequestID=wouykiikdvqbwwxueppby&Signature=7794efc8c0d39f0983edc10f778e6143ba13531d&CardNumber=4242424242424242&Expiry=09#{@credit_card.year.to_s[-2..-1]}&CVV2=123&Currency=USD&BillingStreetAddressLineOne=Address+1&BillingStreetAddressLineFour=Address+2&BillingPostalCode=ZIP123",
       @gateway.send(:post_data, 'cc_preauth', {

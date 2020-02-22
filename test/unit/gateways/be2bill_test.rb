@@ -3,17 +3,17 @@ require 'test_helper'
 class Be2billTest < Test::Unit::TestCase
   def setup
     @gateway = Be2billGateway.new(
-      :login    => 'login',
-      :password => 'password'
+      login: 'login',
+      password: 'password'
     )
 
     @credit_card = credit_card
     @amount = 100
 
     @options = {
-      :order_id        => '1',
-      :billing_address => address,
-      :description     => 'Store Purchase'
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase'
     }
   end
 

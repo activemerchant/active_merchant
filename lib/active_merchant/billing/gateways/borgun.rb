@@ -182,8 +182,8 @@ module ActiveMerchant #:nodoc:
 
       def build_request(action, post)
         mode = action == 'void' ? 'cancel' : 'get'
-        xml = Builder::XmlMarkup.new :indent => 18
-        xml.instruct!(:xml, :version => '1.0', :encoding => 'utf-8')
+        xml = Builder::XmlMarkup.new indent: 18
+        xml.instruct!(:xml, version: '1.0', encoding: 'utf-8')
         xml.tag!("#{mode}Authorization") do
           post.each do |field, value|
             xml.tag!(field, value)

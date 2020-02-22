@@ -5,15 +5,15 @@ class RemoteCardSaveTest < Test::Unit::TestCase
     @gateway = CardSaveGateway.new(fixtures(:card_save))
 
     @amount = 100
-    @credit_card = credit_card('4976000000003436', :verification_value => '452')
-    @declined_card = credit_card('4221690000004963', :verification_value => '125')
-    @addresses = {'4976000000003436' => { :name => 'John Watson', :address1 => '32 Edward Street', :city => 'Camborne,', :state => 'Cornwall', :country => 'GB', :zip => 'TR14 8PA' },
-                  '4221690000004963' => { :name => 'Ian Lee', :address1 => '274 Lymington Avenue', :city => 'London', :state => 'London', :country => 'GB', :zip => 'N22 6JN' }}
+    @credit_card = credit_card('4976000000003436', verification_value: '452')
+    @declined_card = credit_card('4221690000004963', verification_value: '125')
+    @addresses = {'4976000000003436' => { name: 'John Watson', address1: '32 Edward Street', city: 'Camborne,', state: 'Cornwall', country: 'GB', zip: 'TR14 8PA' },
+                  '4221690000004963' => { name: 'Ian Lee', address1: '274 Lymington Avenue', city: 'London', state: 'London', country: 'GB', zip: 'N22 6JN' }}
 
     @options = {
-      :order_id => '1',
-      :billing_address => @addresses[@credit_card.number],
-      :description => 'Store Purchase'
+      order_id: '1',
+      billing_address: @addresses[@credit_card.number],
+      description: 'Store Purchase'
     }
   end
 
@@ -48,8 +48,8 @@ class RemoteCardSaveTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = CardSaveGateway.new(
-      :login => '',
-      :password => ''
+      login: '',
+      password: ''
     )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response

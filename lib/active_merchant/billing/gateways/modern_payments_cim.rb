@@ -17,8 +17,8 @@ module ActiveMerchant #:nodoc:
       ERROR_MESSAGE   = 'Transaction error'
 
       PAYMENT_METHOD = {
-        :check => 1,
-        :credit_card => 2
+        check: 1,
+        credit_card: 2
       }
 
       def initialize(options = {})
@@ -111,7 +111,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_request(action, params)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.instruct!
         xml.tag! 'env:Envelope',
           { 'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema',
@@ -153,9 +153,9 @@ module ActiveMerchant #:nodoc:
 
         response = parse(action, data)
         Response.new(successful?(action, response), message_from(action, response), response,
-          :test => test?,
-          :authorization => authorization_from(action, response),
-          :avs_result => { :code => response[:avs_code] }
+          test: test?,
+          authorization: authorization_from(action, response),
+          avs_result: { code: response[:avs_code] }
         )
       end
 

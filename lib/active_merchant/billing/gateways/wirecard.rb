@@ -180,10 +180,10 @@ module ActiveMerchant #:nodoc:
         authorization = response[:GuWID]
 
         Response.new(success, message, response,
-          :test => test?,
-          :authorization => authorization,
-          :avs_result => { :code => avs_code(response, options) },
-          :cvv_result => response[:CVCResponseCode]
+          test: test?,
+          authorization: authorization,
+          avs_result: { code: avs_code(response, options) },
+          cvv_result: response[:CVCResponseCode]
         )
       rescue ResponseError => e
         if e.response.code == '401'
@@ -197,7 +197,7 @@ module ActiveMerchant #:nodoc:
       def build_request(action, money, options)
         options = prepare_options_hash(options)
         options[:action] = action
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.instruct!
         xml.tag! 'WIRECARD_BXML' do
           xml.tag! 'W_REQUEST' do

@@ -3,14 +3,14 @@ require 'test_helper'
 class TransFirstTest < Test::Unit::TestCase
   def setup
     @gateway = TransFirstGateway.new(
-      :login => 'LOGIN',
-      :password => 'PASSWORD'
+      login: 'LOGIN',
+      password: 'PASSWORD'
     )
 
     @credit_card = credit_card('4242424242424242')
     @check = check
     @options = {
-      :billing_address => address
+      billing_address: address
     }
     @amount = 100
   end

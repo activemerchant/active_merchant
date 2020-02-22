@@ -37,11 +37,11 @@ module ActiveMerchant #:nodoc:
           Response.new(false,
             'FAILED',
             'FAILED',
-            :test => test?,
-            :authorization => false,
-            :avs_result => {},
-            :cvv_result => {},
-            :error_code => false
+            test: test?,
+            authorization: false,
+            avs_result: {},
+            cvv_result: {},
+            error_code: false
           )
         end
       end
@@ -121,7 +121,7 @@ module ActiveMerchant #:nodoc:
           'Content-Type' => 'application/json',
           'User-Agent' => "Worldpay/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
           'X-Worldpay-Client-User-Agent' => user_agent,
-          'X-Worldpay-Client-User-Metadata' => {:ip => options[:ip]}.to_json
+          'X-Worldpay-Client-User-Metadata' => {ip: options[:ip]}.to_json
         }
         headers['Authorization'] = options['Authorization'] if options['Authorization']
         headers
@@ -174,11 +174,11 @@ module ActiveMerchant #:nodoc:
         Response.new(success,
           success ? 'SUCCESS' : response['message'],
           response,
-          :test => test?,
-          :authorization => authorization,
-          :avs_result => {},
-          :cvv_result => {},
-          :error_code => success ? nil : response['customCode']
+          test: test?,
+          authorization: authorization,
+          avs_result: {},
+          cvv_result: {},
+          error_code: success ? nil : response['customCode']
         )
       end
 

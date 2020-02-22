@@ -154,8 +154,8 @@ module ActiveMerchant
         end
 
         Response.new(success, message_from(success, response), response,
-          :test => test?,
-          :authorization => authorization_from(response)
+          test: test?,
+          authorization: authorization_from(response)
         )
       end
 
@@ -253,12 +253,12 @@ module ActiveMerchant
         requires!(address, :name, :address1, :city, :zip, :country)
         country = Country.find(address[:country])
         mapped = {
-          :name         => address[:name],
-          :street       => address[:address1],
-          :city         => address[:city],
-          :region       => address[:address2],
-          :zip_code     => address[:zip],
-          :country_code => country.code(:alpha3).value
+          name: address[:name],
+          street: address[:address1],
+          city: address[:city],
+          region: address[:address2],
+          zip_code: address[:zip],
+          country_code: country.code(:alpha3).value
         }
         mapped
       end

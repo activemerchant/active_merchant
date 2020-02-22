@@ -187,7 +187,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_request(post)
-        xml = Builder::XmlMarkup.new :indent => 8
+        xml = Builder::XmlMarkup.new indent: 8
         xml.tag!('acr:MerchantId', post.delete(:MerchantId))
         xml.tag!('acr:Password', post.delete(:Password))
         xml.tag!('acr:UserId', post.delete(:UserId))

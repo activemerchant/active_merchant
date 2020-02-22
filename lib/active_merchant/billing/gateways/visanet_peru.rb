@@ -155,9 +155,9 @@ module ActiveMerchant #:nodoc:
           success_from(response),
           message_from(response, options, action),
           response,
-          :test => test?,
-          :authorization => authorization_from(params, response, options),
-          :error_code => response['errorCode']
+          test: test?,
+          authorization: authorization_from(params, response, options),
+          error_code: response['errorCode']
         )
       end
 
@@ -230,9 +230,9 @@ module ActiveMerchant #:nodoc:
           false,
           message_from(response, options, action),
           response,
-          :test => test?,
-          :authorization => response['transactionUUID'],
-          :error_code => response['errorCode']
+          test: test?,
+          authorization: response['transactionUUID'],
+          error_code: response['errorCode']
         )
       end
 

@@ -172,8 +172,8 @@ module ActiveMerchant #:nodoc:
           message_from(succeeded, response_data),
           response_data,
           authorization: authorization_from(post, response_data),
-          :avs_result => AVSResult.new(code: response_data['avs_response']),
-          :cvv_result => CVVResult.new(response_data['cvv2_response']),
+          avs_result: AVSResult.new(code: response_data['avs_response']),
+          cvv_result: CVVResult.new(response_data['cvv2_response']),
           test: test?
         )
       end
@@ -185,7 +185,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_request(post)
-        Nokogiri::XML::Builder.new(:encoding => 'utf-8') do |xml|
+        Nokogiri::XML::Builder.new(encoding: 'utf-8') do |xml|
           xml.interface_driver {
             xml.trans_catalog {
               xml.transaction(name: 'creditcard') {

@@ -6,9 +6,9 @@ class RedsysSHA256Test < Test::Unit::TestCase
   def setup
     Base.mode = :test
     @credentials = {
-      :login      => '091952713',
-      :secret_key => 'QIK77hYl6UFcoCYFKcj+ZjJg8Q6I93Dx',
-      :signature_algorithm => 'sha256'
+      login: '091952713',
+      secret_key: 'QIK77hYl6UFcoCYFKcj+ZjJg8Q6I93Dx',
+      signature_algorithm: 'sha256'
     }
     @gateway = RedsysGateway.new(@credentials)
     @credit_card = credit_card('4548812049400004')
@@ -22,17 +22,17 @@ class RedsysSHA256Test < Test::Unit::TestCase
     @credit_card.month = 9
     @credit_card.year = 2017
     @gateway.expects(:ssl_post).with(RedsysGateway.test_url, purchase_request, @headers).returns(successful_purchase_response)
-    @gateway.purchase(100, @credit_card, :order_id => '144742736014')
+    @gateway.purchase(100, @credit_card, order_id: '144742736014')
   end
 
   def test_purchase_payload_with_credit_card_token
     @gateway.expects(:ssl_post).with(RedsysGateway.test_url, purchase_request_with_credit_card_token, @headers).returns(successful_purchase_response)
-    @gateway.purchase(100, '3126bb8b80a79e66eb1ecc39e305288b60075f86', :order_id => '144742884282')
+    @gateway.purchase(100, '3126bb8b80a79e66eb1ecc39e305288b60075f86', order_id: '144742884282')
   end
 
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
-    res = @gateway.purchase(100, credit_card, :order_id => '144742736014')
+    res = @gateway.purchase(100, credit_card, order_id: '144742736014')
     assert_success res
     assert_equal 'Transaction Approved', res.message
     assert_equal '144742736014|100|978', res.authorization
@@ -42,7 +42,7 @@ class RedsysSHA256Test < Test::Unit::TestCase
   # This one is being werid...
   def test_successful_purchase_requesting_credit_card_token
     @gateway.expects(:ssl_post).returns(successful_purchase_response_with_credit_card_token)
-    res = @gateway.purchase(100, 'e55e1d0ef338e281baf1d0b5b68be433260ddea0', :order_id => '144742955848')
+    res = @gateway.purchase(100, 'e55e1d0ef338e281baf1d0b5b68be433260ddea0', order_id: '144742955848')
     assert_success res
     assert_equal 'Transaction Approved', res.message
     assert_equal '144742955848|100|978', res.authorization
@@ -52,7 +52,7 @@ class RedsysSHA256Test < Test::Unit::TestCase
 
   def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
-    res = @gateway.purchase(100, credit_card, :order_id => '144743314659')
+    res = @gateway.purchase(100, credit_card, order_id: '144743314659')
     assert_failure res
     assert_equal 'SIS0093 ERROR', res.message
   end
@@ -65,7 +65,7 @@ class RedsysSHA256Test < Test::Unit::TestCase
 
   def test_error_purchase
     @gateway.expects(:ssl_post).returns(error_purchase_response)
-    res = @gateway.purchase(100, credit_card, :order_id => '123')
+    res = @gateway.purchase(100, credit_card, order_id: '123')
     assert_failure res
     assert_equal 'SIS0051 ERROR', res.message
   end
@@ -104,7 +104,7 @@ class RedsysSHA256Test < Test::Unit::TestCase
       ),
       anything
     ).returns(successful_authorize_response)
-    response = @gateway.authorize(100, credit_card, :order_id => '144743367273')
+    response = @gateway.authorize(100, credit_card, order_id: '144743367273')
     assert_success response
   end
 
@@ -213,25 +213,25 @@ class RedsysSHA256Test < Test::Unit::TestCase
       includes(CGI.escape('<DS_MERCHANT_CURRENCY>840</DS_MERCHANT_CURRENCY>')),
       anything
     ).returns(successful_purchase_response)
-    @gateway.authorize(100, credit_card, :order_id => '1001', :currency => 'USD')
+    @gateway.authorize(100, credit_card, order_id: '1001', currency: 'USD')
   end
 
   def test_successful_verify
     @gateway.expects(:ssl_post).times(2).returns(successful_authorize_response).then.returns(successful_void_response)
-    response = @gateway.verify(credit_card, :order_id => '144743367273')
+    response = @gateway.verify(credit_card, order_id: '144743367273')
     assert_success response
   end
 
   def test_successful_verify_with_failed_void
     @gateway.expects(:ssl_post).times(2).returns(successful_authorize_response).then.returns(failed_void_response)
-    response = @gateway.verify(credit_card, :order_id => '144743367273')
+    response = @gateway.verify(credit_card, order_id: '144743367273')
     assert_success response
     assert_equal 'Transaction Approved', response.message
   end
 
   def test_unsuccessful_verify
     @gateway.expects(:ssl_post).returns(failed_authorize_response)
-    response = @gateway.verify(credit_card, :order_id => '141278225678')
+    response = @gateway.verify(credit_card, order_id: '141278225678')
     assert_failure response
     assert_equal 'SIS0093 ERROR', response.message
   end
@@ -262,10 +262,10 @@ class RedsysSHA256Test < Test::Unit::TestCase
   def test_overriding_options
     Base.mode = :production
     gw = RedsysGateway.new(
-      :terminal => 1,
-      :login => '1234',
-      :secret_key => '12345',
-      :test => true
+      terminal: 1,
+      login: '1234',
+      secret_key: '12345',
+      test: true
     )
     assert gw.test?
     assert_equal RedsysGateway.test_url, gw.send(:url)
@@ -274,9 +274,9 @@ class RedsysSHA256Test < Test::Unit::TestCase
   def test_production_mode
     Base.mode = :production
     gw = RedsysGateway.new(
-      :terminal => 1,
-      :login => '1234',
-      :secret_key => '12345'
+      terminal: 1,
+      login: '1234',
+      secret_key: '12345'
     )
     assert !gw.test?
     assert_equal RedsysGateway.live_url, gw.send(:url)

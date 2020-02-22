@@ -5,25 +5,25 @@ class ElavonTest < Test::Unit::TestCase
 
   def setup
     @gateway = ElavonGateway.new(
-      :login => 'login',
-      :user => 'user',
-      :password => 'password'
+      login: 'login',
+      user: 'user',
+      password: 'password'
     )
 
     @multi_currency_gateway = ElavonGateway.new(
-      :login => 'login',
-      :user => 'user',
-      :password => 'password',
-      :multi_currency => true
+      login: 'login',
+      user: 'user',
+      password: 'password',
+      multi_currency: true
     )
 
     @credit_card = credit_card
     @amount = 100
 
     @options = {
-      :order_id => '1',
-      :billing_address => address,
-      :description => 'Store Purchase'
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase'
     }
   end
 
@@ -60,7 +60,7 @@ class ElavonTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_capture_response)
     authorization = '123456;00000000-0000-0000-0000-00000000000'
 
-    assert response = @gateway.capture(@amount, authorization, :credit_card => @credit_card)
+    assert response = @gateway.capture(@amount, authorization, credit_card: @credit_card)
     assert_instance_of Response, response
     assert_success response
 
@@ -85,7 +85,7 @@ class ElavonTest < Test::Unit::TestCase
   def test_successful_capture_with_additional_options
     authorization = '123456;00000000-0000-0000-0000-00000000000'
     response = stub_comms do
-      @gateway.capture(@amount, authorization, :test_mode => true, :partial_shipment_flag => true)
+      @gateway.capture(@amount, authorization, test_mode: true, partial_shipment_flag: true)
     end.check_request do |endpoint, data, headers|
       assert_match(/ssl_transaction_type=CCCOMPLETE/, data)
       assert_match(/ssl_test_mode=TRUE/, data)
@@ -146,7 +146,7 @@ class ElavonTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(failed_authorization_response)
     authorization = '123456INVALID;00000000-0000-0000-0000-00000000000'
 
-    assert response = @gateway.capture(@amount, authorization, :credit_card => @credit_card)
+    assert response = @gateway.capture(@amount, authorization, credit_card: @credit_card)
     assert_instance_of Response, response
     assert_failure response
   end
@@ -279,7 +279,7 @@ class ElavonTest < Test::Unit::TestCase
 
     @options[:billing_address][:zip] = bad_zip
 
-    @gateway.expects(:commit).with(anything, anything, has_entries(:avs_zip => stripped_zip), anything)
+    @gateway.expects(:commit).with(anything, anything, has_entries(avs_zip: stripped_zip), anything)
 
     @gateway.purchase(@amount, @credit_card, @options)
   end
@@ -287,14 +287,14 @@ class ElavonTest < Test::Unit::TestCase
   def test_zip_codes_with_letters_are_left_intact
     @options[:billing_address][:zip] = '.K1%Z_5E3-'
 
-    @gateway.expects(:commit).with(anything, anything, has_entries(:avs_zip => 'K1Z5E3'), anything)
+    @gateway.expects(:commit).with(anything, anything, has_entries(avs_zip: 'K1Z5E3'), anything)
 
     @gateway.purchase(@amount, @credit_card, @options)
   end
 
   def test_custom_fields_in_request
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(:customer_number => '123', :custom_fields => {:a_key => 'a value'}))
+      @gateway.purchase(@amount, @credit_card, @options.merge(customer_number: '123', custom_fields: {a_key: 'a value'}))
     end.check_request do |endpoint, data, headers|
       assert_match(/customer_number=123/, data)
       assert_match(/a_key/, data)

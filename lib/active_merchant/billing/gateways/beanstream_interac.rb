@@ -18,7 +18,7 @@ module ActiveMerchant #:nodoc:
       # post back is for until the response of the confirmation is
       # received, which contains the order number.
       def self.confirm(transaction)
-        gateway = new(:login => '')
+        gateway = new(login: '')
         gateway.confirm(transaction)
       end
 

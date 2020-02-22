@@ -4,6 +4,7 @@
 * PayJunctionV2: Send billing address in `auth` and `purchase` transactions [naashton] #3538
 * Adyen: Fix some remote tests [curiousepic] #3541
 * Redsys: Properly escape cardholder name and description fields in 3DS requests [britth] #3537
+* RuboCop: Fix Style/HashSyntax [leila-alderman] #3540
 
 == Version 1.105.0 (Feb 20, 2020)
 * Credorax: Fix `3ds_transtype` setting in post [chinhle23] #3531

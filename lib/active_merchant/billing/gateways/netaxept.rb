@@ -136,17 +136,17 @@ module ActiveMerchant #:nodoc:
           success,
           message,
           raw,
-          :test => test?,
-          :authorization => authorization
+          test: test?,
+          authorization: authorization
         )
       end
 
       def parse(result, expects_xml=true)
         if expects_xml
           doc = REXML::Document.new(result)
-          extract_xml(doc.root).merge(:container => doc.root.name)
+          extract_xml(doc.root).merge(container: doc.root.name)
         else
-          {:result => result}
+          {result: result}
         end
       end
 

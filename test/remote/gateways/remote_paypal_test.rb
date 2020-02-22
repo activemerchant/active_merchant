@@ -8,19 +8,18 @@ class PaypalTest < Test::Unit::TestCase
     @declined_card = credit_card('234234234234')
 
     @params = {
-      :order_id => generate_unique_id,
-      :email => 'buyer@jadedpallet.com',
-      :billing_address =>
-        {
-          :name => 'Longbob Longsen',
-          :address1 => '4321 Penny Lane',
-          :city => 'Jonsetown',
-          :state => 'NC',
-          :country => 'US',
-          :zip => '23456'
-        },
-      :description => 'Stuff that you purchased, yo!',
-      :ip => '10.0.0.1'
+      order_id: generate_unique_id,
+      email: 'buyer@jadedpallet.com',
+      billing_address: {
+        name: 'Longbob Longsen',
+          address1: '4321 Penny Lane',
+          city: 'Jonsetown',
+          state: 'NC',
+          country: 'US',
+          zip: '23456'
+      },
+      description: 'Stuff that you purchased, yo!',
+      ip: '10.0.0.1'
     }
 
     @amount = 100
@@ -120,7 +119,7 @@ class PaypalTest < Test::Unit::TestCase
   def test_successful_incomplete_captures
     auth = @gateway.authorize(100, @credit_card, @params)
     assert_success auth
-    response = @gateway.capture(60, auth.authorization, {:complete_type => 'NotComplete'})
+    response = @gateway.capture(60, auth.authorization, {complete_type: 'NotComplete'})
     assert_success response
     assert response.params['transaction_id']
     assert_equal '0.60', response.params['gross_amount']
@@ -133,7 +132,7 @@ class PaypalTest < Test::Unit::TestCase
   def test_successful_capture_updating_the_invoice_id
     auth = @gateway.authorize(@amount, @credit_card, @params)
     assert_success auth
-    response = @gateway.capture(@amount, auth.authorization, :order_id => "NEWID#{generate_unique_id}")
+    response = @gateway.capture(@amount, auth.authorization, order_id: "NEWID#{generate_unique_id}")
     assert_success response
     assert response.params['transaction_id']
     assert_equal '1.00', response.params['gross_amount']
@@ -151,7 +150,7 @@ class PaypalTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @params)
     assert_success purchase
 
-    credit = @gateway.refund(@amount, purchase.authorization, :note => 'Sorry')
+    credit = @gateway.refund(@amount, purchase.authorization, note: 'Sorry')
     assert_success credit
     assert credit.test?
     assert_equal 'USD',  credit.params['net_refund_amount_currency_id']
@@ -193,7 +192,7 @@ class PaypalTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @params)
     assert_success response
 
-    response = @gateway.transfer(@amount, 'joe@example.com', :subject => 'Your money', :note => 'Thanks for taking care of that')
+    response = @gateway.transfer(@amount, 'joe@example.com', subject: 'Your money', note: 'Thanks for taking care of that')
     assert_success response
   end
 
@@ -208,8 +207,8 @@ class PaypalTest < Test::Unit::TestCase
     assert_success response
 
     response = @gateway.transfer([@amount, 'joe@example.com'],
-      [600, 'jane@example.com', {:note => 'Thanks for taking care of that'}],
-      :subject => 'Your money')
+      [600, 'jane@example.com', {note: 'Thanks for taking care of that'}],
+      subject: 'Your money')
     assert_success response
   end
 
@@ -227,7 +226,7 @@ class PaypalTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @params)
     assert_success response
 
-    response = @gateway.transfer([@amount, 'joe@example.com'], :receiver_type => 'EmailAddress', :subject => 'Your money', :note => 'Thanks for taking care of that')
+    response = @gateway.transfer([@amount, 'joe@example.com'], receiver_type: 'EmailAddress', subject: 'Your money', note: 'Thanks for taking care of that')
     assert_success response
   end
 
@@ -235,7 +234,7 @@ class PaypalTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @params)
     assert_success response
 
-    response = @gateway.transfer([@amount, '4ET96X3PQEN8H'], :receiver_type => 'UserID', :subject => 'Your money', :note => 'Thanks for taking care of that')
+    response = @gateway.transfer([@amount, '4ET96X3PQEN8H'], receiver_type: 'UserID', subject: 'Your money', note: 'Thanks for taking care of that')
     assert_success response
   end
 
@@ -243,7 +242,7 @@ class PaypalTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @params)
     assert_success response
 
-    response = @gateway.transfer([@amount, 'joe@example.com'], :receiver_type => 'UserID', :subject => 'Your money', :note => 'Thanks for taking care of that')
+    response = @gateway.transfer([@amount, 'joe@example.com'], receiver_type: 'UserID', subject: 'Your money', note: 'Thanks for taking care of that')
     assert_failure response
   end
 

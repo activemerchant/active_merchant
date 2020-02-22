@@ -10,19 +10,19 @@ class OptimalPaymentTest < Test::Unit::TestCase
 
   def setup
     @gateway = OptimalPaymentGateway.new(
-      :account_number => '12345678',
-      :store_id => 'login',
-      :password => 'password'
+      account_number: '12345678',
+      store_id: 'login',
+      password: 'password'
     )
 
     @credit_card = credit_card
     @amount = 100
 
     @options = {
-      :order_id => '1',
-      :billing_address => address,
-      :description => 'Store Purchase',
-      :email => 'email@example.com'
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase',
+      email: 'email@example.com'
     }
   end
 
@@ -41,19 +41,19 @@ class OptimalPaymentTest < Test::Unit::TestCase
 
   def test_minimal_request
     options = {
-      :order_id => '1',
-      :description => 'Store Purchase',
-      :billing_address => {
-        :zip      => 'K1C2N6',
+      order_id: '1',
+      description: 'Store Purchase',
+      billing_address: {
+        zip: 'K1C2N6',
       }
     }
     credit_card = CreditCard.new(
-      :number => '4242424242424242',
-      :month => 9,
-      :year => Time.now.year + 1,
-      :first_name => 'Longbob',
-      :last_name => 'Longsen',
-      :brand => 'visa'
+      number: '4242424242424242',
+      month: 9,
+      year: Time.now.year + 1,
+      first_name: 'Longbob',
+      last_name: 'Longsen',
+      brand: 'visa'
     )
     @gateway.instance_variable_set('@credit_card', credit_card)
     assert_match minimal_request, @gateway.cc_auth_request(@amount, options)
@@ -99,7 +99,7 @@ class OptimalPaymentTest < Test::Unit::TestCase
   end
 
   def test_purchase_with_shipping_address
-    @options[:shipping_address] = {:country => 'CA'}
+    @options[:shipping_address] = {country: 'CA'}
     @gateway.expects(:ssl_post).with do |url, data|
       xml = data.split('&').detect { |string| string =~ /txnRequest=/ }.gsub('txnRequest=', '')
       doc = Nokogiri::XML.parse(CGI.unescape(xml))
@@ -136,12 +136,12 @@ class OptimalPaymentTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     credit_card = CreditCard.new(
-      :number => '4242424242424242',
-      :month => 9,
-      :year => Time.now.year + 1,
-      :first_name => 'Longbob',
-      :last_name => 'Longsen',
-      :brand => 'visa'
+      number: '4242424242424242',
+      month: 9,
+      year: Time.now.year + 1,
+      first_name: 'Longbob',
+      last_name: 'Longsen',
+      brand: 'visa'
     )
 
     stub_comms do
@@ -174,10 +174,10 @@ class OptimalPaymentTest < Test::Unit::TestCase
   def test_in_production_with_test_param_sends_request_to_test_server
     ActiveMerchant::Billing::Base.mode = :production
     @gateway = OptimalPaymentGateway.new(
-      :account_number => '12345678',
-      :store_id => 'login',
-      :password => 'password',
-      :test => true
+      account_number: '12345678',
+      store_id: 'login',
+      password: 'password',
+      test: true
     )
     @gateway.expects(:ssl_post).with('https://webservices.test.optimalpayments.com/creditcardWS/CreditCardServlet/v1', anything).returns(successful_purchase_response)
 
@@ -214,17 +214,17 @@ class OptimalPaymentTest < Test::Unit::TestCase
   def test_deprecated_options
     assert_deprecation_warning("The 'account' option is deprecated in favor of 'account_number' and will be removed in a future version.") do
       @gateway = OptimalPaymentGateway.new(
-        :account => '12345678',
-        :store_id => 'login',
-        :password => 'password'
+        account: '12345678',
+        store_id: 'login',
+        password: 'password'
       )
     end
 
     assert_deprecation_warning("The 'login' option is deprecated in favor of 'store_id' and will be removed in a future version.") do
       @gateway = OptimalPaymentGateway.new(
-        :account_number => '12345678',
-        :login => 'login',
-        :password => 'password'
+        account_number: '12345678',
+        login: 'login',
+        password: 'password'
       )
     end
   end

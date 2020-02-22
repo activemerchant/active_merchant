@@ -388,14 +388,14 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(self.live_url, post_data(payload), 'Content-Type' => 'text/xml'))
 
         Response.new(successful?(response), response[:error_message], response,
-          :test => test?,
-          :authorization => response[:xid],
-          :avs_result => { :code => response[:avs_response] },
-          :cvv_result => response[:cvv_response])
+          test: test?,
+          authorization: response[:xid],
+          avs_result: { code: response[:avs_response] },
+          cvv_result: response[:cvv_response])
       end
 
       def post_data(payload)
-        payload_xml = payload.root.to_xml(:indent => 0)
+        payload_xml = payload.root.to_xml(indent: 0)
 
         payload_signature = sign_payload(payload_xml)
 
@@ -410,7 +410,7 @@ module ActiveMerchant #:nodoc:
         end.doc
 
         request.root.children.first.after payload.root
-        request.to_xml(:indent => 0)
+        request.to_xml(indent: 0)
       end
 
       def parse(raw_xml)

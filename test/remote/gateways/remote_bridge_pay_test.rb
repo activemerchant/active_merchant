@@ -9,10 +9,10 @@ class RemoteBridgePayTest < Test::Unit::TestCase
     @declined_card = credit_card('4000300011100000')
 
     @check = check(
-      :name => 'John Doe',
-      :routing_number => '490000018',
-      :account_number => '1234567890',
-      :number => '1001'
+      name: 'John Doe',
+      routing_number: '490000018',
+      account_number: '1234567890',
+      number: '1001'
     )
 
     @options = {

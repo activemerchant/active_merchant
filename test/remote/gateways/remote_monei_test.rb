@@ -154,10 +154,10 @@ class RemoteMoneiTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = MoneiGateway.new(
-      :sender_id => 'mother',
-      :channel_id => 'there is no other',
-      :login => 'like mother',
-      :pwd => 'so treat Her right'
+      sender_id: 'mother',
+      channel_id: 'there is no other',
+      login: 'like mother',
+      pwd: 'so treat Her right'
     )
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response

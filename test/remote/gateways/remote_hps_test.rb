@@ -350,10 +350,10 @@ class RemoteHpsTest < Test::Unit::TestCase
     @credit_card.brand = 'visa'
 
     options = {
-      :three_d_secure => {
-        :cavv => 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
-        :eci => '05',
-        :xid => 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
+      three_d_secure: {
+        cavv: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+        eci: '05',
+        xid: 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
       }
     }
 
@@ -367,10 +367,10 @@ class RemoteHpsTest < Test::Unit::TestCase
     @credit_card.brand = 'master'
 
     options = {
-      :three_d_secure => {
-        :cavv => 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
-        :eci => '05',
-        :xid => 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
+      three_d_secure: {
+        cavv: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+        eci: '05',
+        xid: 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
       }
     }
 
@@ -384,10 +384,10 @@ class RemoteHpsTest < Test::Unit::TestCase
     @credit_card.brand = 'discover'
 
     options = {
-      :three_d_secure => {
-        :cavv => 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
-        :eci => '05',
-        :xid => 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
+      three_d_secure: {
+        cavv: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+        eci: '05',
+        xid: 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
       }
     }
 
@@ -401,10 +401,10 @@ class RemoteHpsTest < Test::Unit::TestCase
     @credit_card.brand = 'american_express'
 
     options = {
-      :three_d_secure => {
-        :cavv => 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
-        :eci => '05',
-        :xid => 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
+      three_d_secure: {
+        cavv: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+        eci: '05',
+        xid: 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
       }
     }
 
@@ -418,10 +418,10 @@ class RemoteHpsTest < Test::Unit::TestCase
     @credit_card.brand = 'jcb'
 
     options = {
-      :three_d_secure => {
-        :cavv => 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
-        :eci => '05',
-        :xid => 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
+      three_d_secure: {
+        cavv: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+        eci: '05',
+        xid: 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
       }
     }
 

@@ -4,7 +4,7 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    @gateway = StripePaymentIntentsGateway.new(:login => 'login')
+    @gateway = StripePaymentIntentsGateway.new(login: 'login')
 
     @credit_card = credit_card()
     @threeds_2_card = credit_card('4000000000003220')
