@@ -1,15 +1,16 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class AwesomesauceGateway < Gateway
-      self.test_url = 'https://example.com/test'
-      self.live_url = 'https://example.com/live'
+      self.test_url = 'https://awesomesauce-staging.herokuapp.com'
+      self.live_url = 'https://awesomesauce-prod.herokuapp.com'
 
-      self.supported_countries = ['US']
+      self.supported_countries = ['US', 'GB']
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.money_format = :dollars 
+      self.supported_cardtypes = [:visa, :master, :american_express]
 
-      self.homepage_url = 'http://www.example.net/'
-      self.display_name = 'New Gateway'
+      self.homepage_url = 'https://awesomesauce-staging.herokuapp.com/'
+      self.display_name = 'Awesomesauce'
 
       STANDARD_ERROR_CODE_MAPPING = {}
 
