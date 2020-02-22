@@ -26,6 +26,11 @@ authorize_net:
   login: 7Tt72zseSzH
   password: 7gTh55rdy92ZkP4z
 
+# Working credentials, no need to replace
+awesomesauce:
+  some_credential: SOMECREDENTIAL
+  another_credential: ANOTHERCREDENTIAL
+
 axcessms:
   channel: channel
   sender: sender
