@@ -27,14 +27,13 @@ class RemoteAwesomesauceTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase
-    response = @gateway.purchase(102, @credit_card, @options)
+    response = @gateway.purchase(101, @credit_card, @options)
     assert_failure response
   end
 
   def test_successful_authorize_and_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
-    print auth.authorization
 
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
@@ -46,7 +45,7 @@ class RemoteAwesomesauceTest < Test::Unit::TestCase
   end
 
   def test_failed_capture
-    response = @gateway.capture(110, '')
+    response = @gateway.capture(100,'')
     assert_failure response
   end
 
