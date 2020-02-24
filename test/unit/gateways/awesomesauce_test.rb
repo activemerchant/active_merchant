@@ -104,27 +104,42 @@ class AwesomesauceTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  # def test_successful_verify
-  # end
+  def test_successful_verify
+    @gateway.expects(:ssl_post).times(2).returns(successful_verify_response)
 
-  # def test_successful_verify_with_failed_void
-  # end
+    response = @gateway.verify(100, @credit_card, @options)
+    assert_success response
 
-  # def test_failed_verify
-  # end
+    assert_equal "cancelYSRwsh91", response.authorization
+    assert response.test?
+  end
+
+  def test_successful_verify_with_failed_void
+    @gateway.expects(:ssl_post).times(2).returns(successful_authorize_response, failed_void_response)
+
+    response = @gateway.verify(100,@credit_card, @options)
+    assert_success response
+  end
+
+  def test_failed_verify
+    @gateway.expects(:ssl_post).returns(failed_verify_response)
+
+    response = @gateway.verify(103, @credit_card, @options)
+    assert_failure response
+  end
 
   # def test_scrub
   #   assert @gateway.supports_scrubbing?
   #   assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   # end
 
-  # private
+  private
 
-  # def pre_scrubbed
-  #   %q(
-  #     Run the remote tests for this gateway, and then put the contents of transcript.log here.
-  #   )
-  # end
+  def pre_scrubbed
+    %q(
+      
+    )
+  end
 
   # def post_scrubbed
   #   %q(
@@ -146,7 +161,7 @@ class AwesomesauceTest < Test::Unit::TestCase
 
       # $ DEBUG_ACTIVE_MERCHANT=true ruby -Itest \
       #   test/remote/gateways/remote_awesomesauce_test.rb \
-      #   -n test_failed_void
+      #   -n test_successful_purchase
   
   end
 
@@ -203,4 +218,17 @@ class AwesomesauceTest < Test::Unit::TestCase
       {\"succeeded\":false,\"id\":\"cancelerr10ObsvZvBe\",\"error\":\"10\"}
     RESPONSE
   end
+  
+  def successful_verify_response
+    <<-RESPONSE
+      {\"succeeded\":true,\"id\":\"cancelYSRwsh91\"}
+    RESPONSE
+  end
+
+  def failed_verify_response
+    <<-RESPONSE
+      {\"succeeded\":false,\"id\":\"autherr03ea5GFT__\",\"error\":\"03\"}
+    RESPONSE
+  end
+
 end
