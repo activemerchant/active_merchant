@@ -21,7 +21,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(money, credit_card, options={})
-        response = create_token(true, credit_card.first_name+' '+credit_card.last_name, credit_card.month, credit_card.year, credit_card.number, credit_card.verification_value)
+        response = create_token(true, credit_card.first_name + ' ' + credit_card.last_name, credit_card.month, credit_card.year, credit_card.number, credit_card.verification_value)
         if response.success?
           options[:authorizeOnly] = true
           post = create_post_for_auth_or_purchase(response.authorization, money, options)
@@ -32,7 +32,7 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, authorization, options={})
         if authorization
-          commit(:post, "orders/#{CGI.escape(authorization)}/capture", {'captureAmount'=>money}, options, 'capture')
+          commit(:post, "orders/#{CGI.escape(authorization)}/capture", {'captureAmount' => money}, options, 'capture')
         else
           Response.new(false,
             'FAILED',
@@ -47,7 +47,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, credit_card, options={})
-        response = create_token(true, credit_card.first_name+' '+credit_card.last_name, credit_card.month, credit_card.year, credit_card.number, credit_card.verification_value)
+        response = create_token(true, credit_card.first_name + ' ' + credit_card.last_name, credit_card.month, credit_card.year, credit_card.number, credit_card.verification_value)
         if response.success?
           post = create_post_for_auth_or_purchase(response.authorization, money, options)
           response = commit(:post, 'orders', post, options, 'purchase')
@@ -74,16 +74,16 @@ module ActiveMerchant #:nodoc:
 
       def create_token(reusable, name, exp_month, exp_year, number, cvc)
         obj = {
-          'reusable'=> reusable,
-          'paymentMethod'=> {
-            'type'=> 'Card',
-            'name'=> name,
-            'expiryMonth'=> exp_month,
-            'expiryYear'=> exp_year,
-            'cardNumber'=> number,
-            'cvc'=> cvc
+          'reusable' => reusable,
+          'paymentMethod' => {
+            'type' => 'Card',
+            'name' => name,
+            'expiryMonth' => exp_month,
+            'expiryYear' => exp_year,
+            'cardNumber' => number,
+            'cvc' => cvc
           },
-          'clientKey'=> @client_key
+          'clientKey' => @client_key
         }
         token_response = commit(:post, 'tokens', obj, {'Authorization' => @service_key}, 'token')
         token_response
@@ -95,15 +95,15 @@ module ActiveMerchant #:nodoc:
           'orderDescription' => options[:description] || 'Worldpay Order',
           'amount' => money,
           'currencyCode' => options[:currency] || default_currency,
-          'name' => options[:billing_address]&&options[:billing_address][:name] ? options[:billing_address][:name] : '',
+          'name' => options[:billing_address] && options[:billing_address][:name] ? options[:billing_address][:name] : '',
           'billingAddress' => {
-            'address1'=>options[:billing_address]&&options[:billing_address][:address1] ? options[:billing_address][:address1] : '',
-            'address2'=>options[:billing_address]&&options[:billing_address][:address2] ? options[:billing_address][:address2] : '',
-            'address3'=>'',
-            'postalCode'=>options[:billing_address]&&options[:billing_address][:zip] ? options[:billing_address][:zip] : '',
-            'city'=>options[:billing_address]&&options[:billing_address][:city] ? options[:billing_address][:city] : '',
-            'state'=>options[:billing_address]&&options[:billing_address][:state] ? options[:billing_address][:state] : '',
-            'countryCode'=>options[:billing_address]&&options[:billing_address][:country] ? options[:billing_address][:country] : ''
+            'address1' => options[:billing_address] && options[:billing_address][:address1] ? options[:billing_address][:address1] : '',
+            'address2' => options[:billing_address] && options[:billing_address][:address2] ? options[:billing_address][:address2] : '',
+            'address3' => '',
+            'postalCode' => options[:billing_address] && options[:billing_address][:zip] ? options[:billing_address][:zip] : '',
+            'city' => options[:billing_address] && options[:billing_address][:city] ? options[:billing_address][:city] : '',
+            'state' => options[:billing_address] && options[:billing_address][:state] ? options[:billing_address][:state] : '',
+            'countryCode' => options[:billing_address] && options[:billing_address][:country] ? options[:billing_address][:country] : ''
           },
           'customerOrderCode' => options[:order_id],
           'orderType' => 'ECOM',
@@ -147,7 +147,7 @@ module ActiveMerchant #:nodoc:
                   success = true
                 elsif type == 'purchase' && response['paymentStatus'] == 'SUCCESS'
                   success = true
-                elsif type == 'capture' || type=='refund' || type=='void'
+                elsif type == 'capture' || type == 'refund' || type == 'void'
                   success = true
                 end
               end

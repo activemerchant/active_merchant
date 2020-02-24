@@ -139,7 +139,7 @@ class RemoteOppTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @valid_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@amount - 1, auth.authorization)
     assert_success capture
     assert_match %r{Request successfully processed}, capture.message
   end
@@ -149,7 +149,7 @@ class RemoteOppTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @valid_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount-1, purchase.authorization)
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization)
     assert_success refund
     assert_match %r{Request successfully processed}, refund.message
   end

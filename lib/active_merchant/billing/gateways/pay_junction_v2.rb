@@ -160,8 +160,8 @@ module ActiveMerchant #:nodoc:
         {
           'Authorization' => 'Basic ' + Base64.encode64("#{@options[:api_login]}:#{@options[:api_password]}").strip,
           'Content-Type'  => 'application/x-www-form-urlencoded;charset=UTF-8',
-          'Accept'  => 'application/json',
-          'X-PJ-Application-Key'  => @options[:api_key].to_s
+          'Accept' => 'application/json',
+          'X-PJ-Application-Key' => @options[:api_key].to_s
         }
       end
 

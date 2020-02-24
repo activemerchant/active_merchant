@@ -180,7 +180,7 @@ module ActiveMerchant #:nodoc:
 
       def headers
         {
-          'Content-Type'  => 'application/xml'
+          'Content-Type' => 'application/xml'
         }
       end
 

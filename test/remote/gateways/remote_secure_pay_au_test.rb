@@ -72,7 +72,7 @@ class RemoteSecurePayAuTest < Test::Unit::TestCase
     assert auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount+1, auth.authorization)
+    assert capture = @gateway.capture(@amount + 1, auth.authorization)
     assert_failure capture
     assert_equal 'Preauth was done for smaller amount', capture.message
   end
@@ -92,7 +92,7 @@ class RemoteSecurePayAuTest < Test::Unit::TestCase
     assert_success response
     authorization = response.authorization
 
-    assert response = @gateway.refund(@amount+1, authorization)
+    assert response = @gateway.refund(@amount + 1, authorization)
     assert_failure response
     assert_equal 'Only $1.0 available for refund', response.message
   end
@@ -114,7 +114,7 @@ class RemoteSecurePayAuTest < Test::Unit::TestCase
     assert_success response
     authorization = response.authorization
 
-    assert response = @gateway.void(authorization+'1')
+    assert response = @gateway.void(authorization + '1')
     assert_failure response
     assert_equal 'Unable to retrieve original FDR txn', response.message
   end

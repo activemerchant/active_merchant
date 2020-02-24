@@ -156,7 +156,7 @@ class RemoteSageTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @visa, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount-1, purchase.authorization, @options)
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization, @options)
     assert_success refund
     assert_equal 'APPROVED', refund.message
   end

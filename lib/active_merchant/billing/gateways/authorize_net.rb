@@ -58,7 +58,7 @@ module ActiveMerchant
       }
 
       MARKET_TYPE = {
-        :moto  => '1',
+        :moto => '1',
         :retail  => '2'
       }
 

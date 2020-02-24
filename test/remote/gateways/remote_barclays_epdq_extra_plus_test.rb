@@ -208,7 +208,7 @@ class RemoteBarclaysEpdqExtraPlusTest < Test::Unit::TestCase
   def test_unsuccessful_refund
     assert purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
-    assert refund = @gateway.refund(@amount+1, purchase.authorization, @options) # too much refund requested
+    assert refund = @gateway.refund(@amount + 1, purchase.authorization, @options) # too much refund requested
     assert_failure refund
     assert refund.authorization
     assert_equal 'Overflow in refunds requests', refund.message

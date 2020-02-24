@@ -17,7 +17,7 @@ module ActiveMerchant
         '3' => 'Rejected'
       }
 
-      RESPONSE_CODES= {
+      RESPONSE_CODES = {
         '00' => 'Completed Successfully',
         '01' => 'Refer to card issuer',
         '03' => 'Invalid merchant',

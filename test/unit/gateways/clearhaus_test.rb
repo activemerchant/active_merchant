@@ -459,14 +459,14 @@ Conn close
     {
       'id' => '58dabba0-e9ea-4133-8c38-bfa1028c1ed2',
       'status' => {
-        'code'=> 20000
+        'code' => 20000
       },
       'processed_at' => '2014-07-09T12:14:31+00:00',
       'last4' => '0004',
       'scheme' => 'mastercard',
       '_links' => {
         'authorizations' => { 'href' => '/cards/58dabba0-e9ea-4133-8c38-bfa1028c1ed2/authorizations' },
-          'credits'=> { 'href' => '/cards/58dabba0-e9ea-4133-8c38-bfa1028c1ed2/credits' }
+          'credits' => { 'href' => '/cards/58dabba0-e9ea-4133-8c38-bfa1028c1ed2/credits' }
       }
     }.to_json
   end

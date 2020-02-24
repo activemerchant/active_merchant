@@ -67,7 +67,7 @@ class TransFirstTest < Test::Unit::TestCase
     response = @gateway.refund(@amount, 'TransID')
     assert_success response
     assert_equal '207686608|creditcard', response.authorization
-    assert_equal @amount, response.params['amount'].to_i*100
+    assert_equal @amount, response.params['amount'].to_i * 100
   end
 
   def test_failed_refund

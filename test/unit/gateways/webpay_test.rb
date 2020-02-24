@@ -342,7 +342,7 @@ class WebpayTest < Test::Unit::TestCase
   end
 
   def successful_partially_refunded_response(options = {})
-    options = {:livemode=>false}.merge!(options)
+    options = {:livemode => false}.merge!(options)
     <<-RESPONSE
 {
   "id": "ch_test_charge",

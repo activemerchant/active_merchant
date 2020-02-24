@@ -218,7 +218,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
   def test_successful_purchase_line_items
     options = @options.merge(
       :line_items => [
-        { :sku=> 'abc123', :cost => 119, :quantity => 1 },
+        { :sku => 'abc123', :cost => 119, :quantity => 1 },
         { :sku => 'def456', :cost => 200, :quantity => 2, :name => 'an item' },
         { :cost => 300, :qty => 4 }
       ]

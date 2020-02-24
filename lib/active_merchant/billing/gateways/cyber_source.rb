@@ -38,7 +38,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'CyberSource'
 
       @@credit_card_codes = {
-        :visa  => '001',
+        :visa => '001',
         :master => '002',
         :american_express => '003',
         :discover => '004',

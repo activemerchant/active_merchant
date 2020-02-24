@@ -47,13 +47,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options = {})
-        post ={}
+        post = {}
         post[:transactionid] = authorization
         commit('capture', money, post)
       end
 
       def void(authorization, options = {})
-        post ={}
+        post = {}
         post[:transactionid] = authorization
         commit('void', nil, post)
       end
@@ -134,16 +134,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(post, address, prefix='')
-        prefix +='_' unless prefix.blank?
+        prefix += '_' unless prefix.blank?
         unless address.blank? or address.values.blank?
-          post[prefix+'address1']    = address[:address1].to_s
-          post[prefix+'address2']    = address[:address2].to_s unless address[:address2].blank?
-          post[prefix+'company']    = address[:company].to_s
-          post[prefix+'phone']      = address[:phone].to_s
-          post[prefix+'zip']        = address[:zip].to_s
-          post[prefix+'city']       = address[:city].to_s
-          post[prefix+'country']    = address[:country].to_s
-          post[prefix+'state']      = address[:state].blank? ? 'n/a' : address[:state]
+          post[prefix + 'address1']    = address[:address1].to_s
+          post[prefix + 'address2']    = address[:address2].to_s unless address[:address2].blank?
+          post[prefix + 'company']    = address[:company].to_s
+          post[prefix + 'phone']      = address[:phone].to_s
+          post[prefix + 'zip']        = address[:zip].to_s
+          post[prefix + 'city']       = address[:city].to_s
+          post[prefix + 'country']    = address[:country].to_s
+          post[prefix + 'state']      = address[:state].blank? ? 'n/a' : address[:state]
         end
       end
 

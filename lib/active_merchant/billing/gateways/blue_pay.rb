@@ -18,7 +18,7 @@ module ActiveMerchant #:nodoc:
         'TRANS_ID' => :transaction_id,
         'STATUS' => :response_code,
         'AVS' => :avs_result_code,
-        'CVV2'=> :card_code,
+        'CVV2' => :card_code,
         'AUTH_CODE' => :authorization,
         'MESSAGE' => :message,
         'REBID' => :rebid,
@@ -29,7 +29,7 @@ module ActiveMerchant #:nodoc:
 
       REBILL_FIELD_MAP = {
         'REBILL_ID' => :rebill_id,
-        'ACCOUNT_ID'=> :account_id,
+        'ACCOUNT_ID' => :account_id,
         'USER_ID' => :user_id,
         'TEMPLATE_ID' => :template_id,
         'STATUS' => :status,

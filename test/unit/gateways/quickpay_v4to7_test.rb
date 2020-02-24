@@ -192,33 +192,33 @@ class QuickpayV4to7Test < Test::Unit::TestCase
 
   def expected_store_parameters_v6
     {
-      'cardnumber'=>['4242424242424242'],
-      'cvd'=>['123'],
-      'expirationdate'=>[expected_expiration_date],
-      'ordernumber'=>['fa73664073e23597bbdd'],
-      'description'=>['Storing Card'],
-      'testmode'=>['1'],
-      'protocol'=>['6'],
-      'msgtype'=>['subscribe'],
-      'merchant'=>[merchant_id],
-      'md5check'=>[mock_md5_hash]
+      'cardnumber' => ['4242424242424242'],
+      'cvd' => ['123'],
+      'expirationdate' => [expected_expiration_date],
+      'ordernumber' => ['fa73664073e23597bbdd'],
+      'description' => ['Storing Card'],
+      'testmode' => ['1'],
+      'protocol' => ['6'],
+      'msgtype' => ['subscribe'],
+      'merchant' => [merchant_id],
+      'md5check' => [mock_md5_hash]
     }
   end
 
   def expected_store_parameters_v7
     {
-      'amount'=>['0'],
-      'currency'=>['DKK'],
-      'cardnumber'=>['4242424242424242'],
-      'cvd'=>['123'],
-      'expirationdate'=>[expected_expiration_date],
-      'ordernumber'=>['ed7546cb4ceb8f017ea4'],
-      'description'=>['Storing Card'],
-      'testmode'=>['1'],
-      'protocol'=>['7'],
-      'msgtype'=>['subscribe'],
-      'merchant'=>[merchant_id],
-      'md5check'=>[mock_md5_hash]
+      'amount' => ['0'],
+      'currency' => ['DKK'],
+      'cardnumber' => ['4242424242424242'],
+      'cvd' => ['123'],
+      'expirationdate' => [expected_expiration_date],
+      'ordernumber' => ['ed7546cb4ceb8f017ea4'],
+      'description' => ['Storing Card'],
+      'testmode' => ['1'],
+      'protocol' => ['7'],
+      'msgtype' => ['subscribe'],
+      'merchant' => [merchant_id],
+      'md5check' => [mock_md5_hash]
     }
   end
 

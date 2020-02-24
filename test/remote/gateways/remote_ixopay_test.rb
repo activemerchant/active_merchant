@@ -165,7 +165,7 @@ class RemoteIxopayTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount-1, purchase.authorization)
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization)
     assert_success refund
   end
 
@@ -173,7 +173,7 @@ class RemoteIxopayTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options.merge(@extra_data))
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount-1, purchase.authorization)
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization)
     assert_success refund
   end
 

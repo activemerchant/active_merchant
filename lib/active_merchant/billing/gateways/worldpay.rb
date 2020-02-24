@@ -222,7 +222,7 @@ module ActiveMerchant #:nodoc:
         build_order_modify_request(authorization) do |xml|
           xml.capture do
             time = Time.now
-            xml.date 'dayOfMonth' => time.day, 'month' => time.month, 'year'=> time.year
+            xml.date 'dayOfMonth' => time.day, 'month' => time.month, 'year' => time.year
             add_amount(xml, money, options)
           end
         end

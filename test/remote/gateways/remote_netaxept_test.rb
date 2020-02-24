@@ -52,7 +52,7 @@ class RemoteNetaxeptTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
 
-    response = @gateway.refund(@amount+100, response.authorization)
+    response = @gateway.refund(@amount + 100, response.authorization)
     assert_failure response
     assert_equal 'Unable to credit more than captured amount', response.message
   end

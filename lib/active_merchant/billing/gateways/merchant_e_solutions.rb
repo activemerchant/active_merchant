@@ -46,7 +46,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, transaction_id, options = {})
-        post ={}
+        post = {}
         post[:transaction_id] = transaction_id
         post[:client_reference_number] = options[:customer] if options.has_key?(:customer)
         add_invoice(post, options)

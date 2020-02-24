@@ -44,7 +44,7 @@ class OptimalPaymentTest < Test::Unit::TestCase
       :order_id => '1',
       :description => 'Store Purchase',
       :billing_address => {
-        :zip      => 'K1C2N6',
+        :zip => 'K1C2N6',
       }
     }
     credit_card = CreditCard.new(

@@ -107,7 +107,7 @@ class RemoteEbanxTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@amount - 1, auth.authorization)
     assert_success capture
   end
 
@@ -116,7 +116,7 @@ class RemoteEbanxTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization, @options.merge(include_capture_amount: true))
+    assert capture = @gateway.capture(@amount - 1, auth.authorization, @options.merge(include_capture_amount: true))
     assert_failure capture
     assert_equal 'Partial capture not available', capture.message
   end
@@ -142,7 +142,7 @@ class RemoteEbanxTest < Test::Unit::TestCase
     assert_success purchase
 
     refund_options = @options.merge(description: 'refund due to returned item')
-    assert refund = @gateway.refund(@amount-1, purchase.authorization, refund_options)
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization, refund_options)
     assert_success refund
   end
 

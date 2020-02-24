@@ -237,13 +237,13 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     vault_id = response.params['customer_vault_id']
     purchase_response = @gateway.purchase(@amount, vault_id)
     response_billing_details = {
-      'country_name'=>'United States of America',
-      'region'=>'Illinois',
-      'company'=>nil,
-      'postal_code'=>'60622',
-      'extended_address'=>'Suite 403',
-      'street_address'=>'1 E Main St',
-      'locality'=>'Chicago'
+      'country_name' => 'United States of America',
+      'region' => 'Illinois',
+      'company' => nil,
+      'postal_code' => '60622',
+      'extended_address' => 'Suite 403',
+      'street_address' => '1 E Main St',
+      'locality' => 'Chicago'
     }
     assert_equal purchase_response.params['braintree_transaction']['billing_details'], response_billing_details
   end
@@ -565,7 +565,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, credit_card('51051051051051000'))
     assert_failure response
     assert_match %r{Credit card number is invalid\. \(81715\)}, response.message
-    assert_equal({'processor_response_code'=>'91577'}, response.params['braintree_transaction'])
+    assert_equal({'processor_response_code' => '91577'}, response.params['braintree_transaction'])
   end
 
   def test_authorize_and_capture
@@ -669,7 +669,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert failed_void = @gateway.void(auth.authorization)
     assert_failure failed_void
     assert_match('Transaction can only be voided if status is authorized', failed_void.message)
-    assert_equal({'processor_response_code'=>'91504'}, failed_void.params['braintree_transaction'])
+    assert_equal({'processor_response_code' => '91504'}, failed_void.params['braintree_transaction'])
   end
 
   def test_failed_capture_with_invalid_transaction_id

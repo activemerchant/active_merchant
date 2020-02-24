@@ -302,7 +302,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def threeds_url
-        test? ? 'https://sis-t.redsys.es:25443/sis/services/SerClsWSEntradaV2': 'https://sis.redsys.es/sis/services/SerClsWSEntradaV2'
+        test? ? 'https://sis-t.redsys.es:25443/sis/services/SerClsWSEntradaV2' : 'https://sis.redsys.es/sis/services/SerClsWSEntradaV2'
       end
 
       def add_payment(data, card)
@@ -356,7 +356,7 @@ module ActiveMerchant #:nodoc:
         if action
           {
             'Content-Type' => 'text/xml',
-            'SOAPAction'    => action
+            'SOAPAction' => action
           }
         else
           {

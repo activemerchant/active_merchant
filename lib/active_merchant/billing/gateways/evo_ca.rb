@@ -245,7 +245,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_paymentmethod(post, payment)
-        if card_brand(payment)=='check'
+        if card_brand(payment) == 'check'
           post[:payment]              = 'check'
           post[:checkname]            = payment.name
           post[:checkaba]             = payment.routing_number

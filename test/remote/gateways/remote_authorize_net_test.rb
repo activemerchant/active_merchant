@@ -592,7 +592,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    capture = @gateway.capture(@amount-1, auth.authorization)
+    capture = @gateway.capture(@amount - 1, auth.authorization)
     assert_success capture
   end
 

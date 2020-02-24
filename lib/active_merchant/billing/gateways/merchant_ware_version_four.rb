@@ -16,7 +16,7 @@ module ActiveMerchant #:nodoc:
       TX_NAMESPACE = 'http://schemas.merchantwarehouse.com/merchantware/40/Credit/'
 
       ACTIONS = {
-        :purchase  => 'SaleKeyed',
+        :purchase => 'SaleKeyed',
         :reference_purchase => 'RepeatSale',
         :authorize => 'PreAuthorizationKeyed',
         :capture   => 'PostAuthorization',

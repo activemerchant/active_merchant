@@ -34,7 +34,7 @@ class BluePayTest < Test::Unit::TestCase
 
   #  The included test account credentials do not support ACH processor.
   def test_successful_purchase_with_check
-    assert response = @gateway.purchase(@amount, check, @options.merge(:email=>'foo@example.com'))
+    assert response = @gateway.purchase(@amount, check, @options.merge(:email => 'foo@example.com'))
     assert_success response
     assert response.test?
     assert_equal 'App ACH Sale', response.message
@@ -172,19 +172,19 @@ class BluePayTest < Test::Unit::TestCase
   end
 
   def test_successful_refund_with_check
-    assert response = @gateway.purchase(@amount, check, @options.merge(:email=>'foo@example.com'))
+    assert response = @gateway.purchase(@amount, check, @options.merge(:email => 'foo@example.com'))
     assert_success response
     assert response.test?
     assert_equal 'App ACH Sale', response.message
     assert response.authorization
 
-    assert refund = @gateway.refund(@amount, response.authorization, @options.merge(:doc_type=>'PPD'))
+    assert refund = @gateway.refund(@amount, response.authorization, @options.merge(:doc_type => 'PPD'))
     assert_success refund
     assert_equal 'App ACH Void', refund.message
   end
 
   def test_successful_credit_with_check
-    assert credit = @gateway.credit(@amount, check, @options.merge(:doc_type=>'PPD'))
+    assert credit = @gateway.credit(@amount, check, @options.merge(:doc_type => 'PPD'))
     assert_success credit
     assert_equal 'App ACH Credit', credit.message
   end

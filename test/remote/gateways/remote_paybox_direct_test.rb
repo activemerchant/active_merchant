@@ -78,7 +78,7 @@ class RemotePayboxDirectTest < Test::Unit::TestCase
     assert purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount/2, purchase.authorization, order_id: '1')
+    assert refund = @gateway.refund(@amount / 2, purchase.authorization, order_id: '1')
     assert_success refund
   end
 

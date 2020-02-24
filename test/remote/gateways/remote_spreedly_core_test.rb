@@ -187,7 +187,7 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
     }
     assert response = @gateway.store(@credit_card, options)
     assert_success response
-    expected_data = { 'first_attribute' => { 'sub_dude'=>'ExcellentSubValue' }, 'second_attribute' =>'AnotherValue' }
+    expected_data = { 'first_attribute' => { 'sub_dude' => 'ExcellentSubValue' }, 'second_attribute' => 'AnotherValue' }
     assert_equal expected_data, response.params['payment_method_data']
   end
 

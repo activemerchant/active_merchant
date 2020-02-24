@@ -73,7 +73,7 @@ class RemoteVancoTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    refund = @gateway.refund(@amount-1, purchase.authorization)
+    refund = @gateway.refund(@amount - 1, purchase.authorization)
     assert_success refund
   end
 
@@ -81,7 +81,7 @@ class RemoteVancoTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    refund = @gateway.refund(@amount+500, purchase.authorization)
+    refund = @gateway.refund(@amount + 500, purchase.authorization)
     assert_failure refund
     assert_match(/Amount Cannot Be Greater Than/, refund.message)
   end

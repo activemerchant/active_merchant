@@ -4,8 +4,8 @@ class RemoteEwayManagedTest < Test::Unit::TestCase
   def setup
     @gateway = EwayManagedGateway.new(fixtures(:eway_managed).merge({ :test => true }))
 
-    @valid_card='4444333322221111'
-    @valid_customer_id='9876543211000'
+    @valid_card = '4444333322221111'
+    @valid_customer_id = '9876543211000'
 
     @credit_card = credit_card(@valid_card)
 

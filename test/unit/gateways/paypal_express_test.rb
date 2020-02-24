@@ -643,7 +643,7 @@ class PaypalExpressTest < Test::Unit::TestCase
   end
 
   def test_paypal_chooses_landing_page
-    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 10, {:allow_guest_checkout => true, :paypal_chooses_landing_page=> true}))
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 10, {:allow_guest_checkout => true, :paypal_chooses_landing_page => true}))
 
     assert_equal 'Sole', REXML::XPath.first(xml, '//n2:SolutionType').text
     assert_nil REXML::XPath.first(xml, '//n2:LandingPage')

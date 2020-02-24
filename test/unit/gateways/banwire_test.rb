@@ -30,7 +30,7 @@ class BanwireTest < Test::Unit::TestCase
       :order_id => '2',
       :email => 'test@email.com',
       :billing_address => address(:address1 => 'Horacio', :zip => 11560),
-      :description  => 'Store purchase amex'
+      :description => 'Store purchase amex'
     }
   end
 

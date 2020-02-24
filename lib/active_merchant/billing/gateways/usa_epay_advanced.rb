@@ -181,7 +181,7 @@ module ActiveMerchant #:nodoc:
         :po_number => [:string, 'PONum'],
         :order_id => [:string, 'OrderID'],
         :clerk => [:string, 'Clerk'],
-        :terminal  => [:string, 'Terminal'],
+        :terminal => [:string, 'Terminal'],
         :table => [:string, 'Table'],
         :description => [:string, 'Description'],
         :comments => [:string, 'Comments'],
@@ -1310,7 +1310,7 @@ module ActiveMerchant #:nodoc:
         if options[:payment_methods]
           length = options[:payment_methods].length
           soap.PaymentMethods 'SOAP-ENC:arrayType' => "ns1:PaymentMethod[#{length}]",
-                              'xsi:type' =>'ns1:PaymentMethodArray' do
+                              'xsi:type' => 'ns1:PaymentMethodArray' do
             build_customer_payment_methods soap, options
           end
         end

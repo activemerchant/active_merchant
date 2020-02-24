@@ -128,7 +128,7 @@ module ActiveMerchant #:nodoc:
       def add_payment(post, payment)
         card = {}
         card[:pan]          = payment.number
-        card[:expire_month] = '%02d'% payment.month
+        card[:expire_month] = '%02d' % payment.month
         card[:expire_year]  = payment.year
 
         card[:csc] = payment.verification_value if payment.verification_value?

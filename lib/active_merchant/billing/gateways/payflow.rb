@@ -136,7 +136,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'Description', options[:description] unless options[:description].blank?
               xml.tag! 'OrderDesc', options[:order_desc] unless options[:order_desc].blank?
               xml.tag! 'Comment', options[:comment] unless options[:comment].blank?
-              xml.tag!('ExtData', 'Name'=> 'COMMENT2', 'Value'=> options[:comment2]) unless options[:comment2].blank?
+              xml.tag!('ExtData', 'Name' => 'COMMENT2', 'Value' => options[:comment2]) unless options[:comment2].blank?
               xml.tag! 'TaxAmt', options[:taxamt] unless options[:taxamt].blank?
               xml.tag! 'FreightAmt', options[:freightamt] unless options[:freightamt].blank?
               xml.tag! 'DutyAmt', options[:dutyamt] unless options[:dutyamt].blank?
@@ -169,7 +169,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'OrderDesc', options[:order_desc] unless options[:order_desc].blank?
               # Comment and Comment2 will show up in manager.paypal.com as Comment1 and Comment2
               xml.tag! 'Comment', options[:comment] unless options[:comment].blank?
-              xml.tag!('ExtData', 'Name'=> 'COMMENT2', 'Value'=> options[:comment2]) unless options[:comment2].blank?
+              xml.tag!('ExtData', 'Name' => 'COMMENT2', 'Value' => options[:comment2]) unless options[:comment2].blank?
               xml.tag! 'TaxAmt', options[:taxamt] unless options[:taxamt].blank?
               xml.tag! 'FreightAmt', options[:freightamt] unless options[:freightamt].blank?
               xml.tag! 'DutyAmt', options[:dutyamt] unless options[:dutyamt].blank?

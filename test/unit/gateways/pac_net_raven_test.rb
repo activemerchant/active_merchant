@@ -308,28 +308,28 @@ class PacNetRavenGatewayTest < Test::Unit::TestCase
   def test_message_from_approved
     assert_equal 'This transaction has been approved', @gateway.send(:message_from, {
       'Status' => 'Approved',
-      'Message'=> nil
+      'Message' => nil
     })
   end
 
   def test_message_from_declined
     assert_equal 'This transaction has been declined', @gateway.send(:message_from, {
       'Status' => 'Declined',
-      'Message'=> nil
+      'Message' => nil
     })
   end
 
   def test_message_from_voided
     assert_equal 'This transaction has been voided', @gateway.send(:message_from, {
       'Status' => 'Voided',
-      'Message'=> nil
+      'Message' => nil
     })
   end
 
   def test_message_from_status
     assert_equal 'This is the message', @gateway.send(:message_from, {
       'Status' => 'SomeStatus',
-      'Message'=> 'This is the message'
+      'Message' => 'This is the message'
     })
   end
 

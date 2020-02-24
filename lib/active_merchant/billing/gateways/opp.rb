@@ -126,7 +126,7 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment, options={})
         # debit
         options[:registrationId] = payment if payment.is_a?(String)
-        execute_dbpa(options[:risk_workflow] ? 'PA.CP': 'DB',
+        execute_dbpa(options[:risk_workflow] ? 'PA.CP' : 'DB',
           money, payment, options)
       end
 

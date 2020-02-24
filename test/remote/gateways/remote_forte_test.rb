@@ -111,7 +111,7 @@ class RemoteForteTest < Test::Unit::TestCase
 
     wait_for_authorization_to_clear
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization, @options)
+    assert capture = @gateway.capture(@amount - 1, auth.authorization, @options)
     assert_success capture
   end
 
@@ -134,7 +134,7 @@ class RemoteForteTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.credit(@amount-1, @credit_card, @options)
+    assert refund = @gateway.credit(@amount - 1, @credit_card, @options)
     assert_success refund
   end
 

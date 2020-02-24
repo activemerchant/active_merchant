@@ -21,21 +21,21 @@ module ActiveMerchant #:nodoc:
       }
 
       CURRENCY_CODES = {
-        'AUD'=> '036',
-        'CAD'=> '124',
-        'CZK'=> '203',
-        'DKK'=> '208',
-        'HKD'=> '344',
-        'ICK'=> '352',
-        'JPY'=> '392',
-        'NOK'=> '578',
-        'SGD'=> '702',
-        'SEK'=> '752',
-        'CHF'=> '756',
-        'GBP'=> '826',
-        'USD'=> '840',
-        'EUR'=> '978',
-        'XPF'=> '953'
+        'AUD' => '036',
+        'CAD' => '124',
+        'CZK' => '203',
+        'DKK' => '208',
+        'HKD' => '344',
+        'ICK' => '352',
+        'JPY' => '392',
+        'NOK' => '578',
+        'SGD' => '702',
+        'SEK' => '752',
+        'CHF' => '756',
+        'GBP' => '826',
+        'USD' => '840',
+        'EUR' => '978',
+        'XPF' => '953'
       }
 
       SUCCESS_CODES = ['00000']
@@ -95,7 +95,7 @@ module ActiveMerchant #:nodoc:
 
       def void(identification, options = {})
         requires!(options, :order_id, :amount)
-        post ={}
+        post = {}
         add_invoice(post, options)
         add_reference(post, identification)
         add_amount(post, options[:amount], options)
