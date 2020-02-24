@@ -344,7 +344,7 @@ module ActiveMerchant #:nodoc:
         def valid_naranja_algo?(numbers) #:nodoc:
           num_array = numbers.to_s.chars.map(&:to_i)
           multipliers = [4, 3, 2, 7, 6, 5, 4, 3, 2, 7, 6, 5, 4, 3, 2]
-          num_sum = num_array[0..14].zip(multipliers).map { |a, b| a*b }.reduce(:+)
+          num_sum = num_array[0..14].zip(multipliers).map { |a, b| a * b }.reduce(:+)
           intermediate = 11 - (num_sum % 11)
           final_num = intermediate > 9 ? 0 : intermediate
           final_num == num_array[15]

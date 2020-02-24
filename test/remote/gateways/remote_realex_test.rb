@@ -300,7 +300,7 @@ class RemoteRealexTest < Test::Unit::TestCase
   def test_realex_authorize_then_capture_with_extra_amount
     order_id = generate_unique_id
 
-    auth_response = @gateway.authorize(@amount*115, @visa,
+    auth_response = @gateway.authorize(@amount * 115, @visa,
       order_id: order_id,
       description: 'Test Realex Purchase',
       billing_address: {

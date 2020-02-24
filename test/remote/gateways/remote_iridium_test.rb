@@ -145,7 +145,7 @@ class RemoteIridiumTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
 
-    assert response = @gateway.credit(@amount*2, response.authorization)
+    assert response = @gateway.credit(@amount * 2, response.authorization)
     assert_failure response
   end
 

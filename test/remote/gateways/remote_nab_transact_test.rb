@@ -121,7 +121,7 @@ class RemoteNabTransactTest < Test::Unit::TestCase
 
     authorization = auth.authorization
 
-    assert capture = @gateway.capture(@amount+100, authorization)
+    assert capture = @gateway.capture(@amount + 100, authorization)
     assert_failure capture
     assert_equal 'Preauth was done for smaller amount', capture.message
   end
@@ -174,7 +174,7 @@ class RemoteNabTransactTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     authorization = response.authorization
-    assert response = @gateway.refund(@amount+1, authorization)
+    assert response = @gateway.refund(@amount + 1, authorization)
     assert_failure response
     assert_equal 'Only 2.00 AUD available for refund', response.message
   end

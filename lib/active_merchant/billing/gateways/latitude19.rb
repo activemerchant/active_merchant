@@ -324,7 +324,7 @@ module ActiveMerchant #:nodoc:
 
       def headers
         {
-          'Content-Type'  => 'application/json'
+          'Content-Type' => 'application/json'
         }
       end
 

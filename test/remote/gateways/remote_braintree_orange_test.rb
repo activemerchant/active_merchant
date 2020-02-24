@@ -60,7 +60,7 @@ class RemoteBraintreeOrangeTest < Test::Unit::TestCase
     assert_success response
     assert_not_nil customer_id = response.params['customer_vault_id']
 
-    assert second_response = @gateway.purchase(@amount*2, customer_id, @options)
+    assert second_response = @gateway.purchase(@amount * 2, customer_id, @options)
     assert_equal 'This transaction has been approved', second_response.message
     assert second_response.success?
   end

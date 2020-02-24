@@ -31,7 +31,7 @@ class RemoteCardSaveTest < Test::Unit::TestCase
   end
 
   def test_authorize_and_capture
-    amount = @amount+10
+    amount = @amount + 10
     assert auth = @gateway.authorize(amount, @credit_card, @options)
     assert_success auth
     assert auth.message =~ /AuthCode: ([0-9]+)/

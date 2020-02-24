@@ -369,7 +369,7 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
 
   def test_successful_add_to_vault_and_use
     test_add_to_vault_with_custom_vault_id_with_store_method
-    assert second_response = @gateway.purchase(@amount*2, @options[:vault_id], @options)
+    assert second_response = @gateway.purchase(@amount * 2, @options[:vault_id], @options)
     assert_equal 'Approved', second_response.message
     assert second_response.success?
   end
@@ -379,13 +379,13 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     assert response = @gateway.update(@options[:vault_id], @declined_visa)
     assert_success response
 
-    assert second_response = @gateway.purchase(@amount*2, @options[:vault_id], @options)
+    assert second_response = @gateway.purchase(@amount * 2, @options[:vault_id], @options)
     assert_equal 'DECLINE', second_response.message
   end
 
   def test_unsuccessful_closed_profile_charge
     test_delete_from_vault
-    assert second_response = @gateway.purchase(@amount*2, @options[:vault_id], @options)
+    assert second_response = @gateway.purchase(@amount * 2, @options[:vault_id], @options)
     assert_failure second_response
     assert_match %r{Invalid customer code\.}, second_response.message
   end

@@ -898,7 +898,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
       routing_number: '011100012',
       account_number: '1099999998'
     )
-    options     = {
+    options = {
       order_id: '53'
     }
 
@@ -917,7 +917,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
       routing_number: '1145_7895',
       account_number: '1022222102'
     )
-    options     = {
+    options = {
       order_id: '54'
     }
 

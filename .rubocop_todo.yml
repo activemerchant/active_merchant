@@ -44,12 +44,6 @@ Layout/MultilineMethodCallBraceLayout:
 Layout/SpaceAroundEqualsInParameterDefault:
   Enabled: false
 
-# Offense count: 782
-# Cop supports --auto-correct.
-# Configuration parameters: AllowForAlignment.
-Layout/SpaceAroundOperators:
-  Enabled: false
-
 # Offense count: 1186
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle, EnforcedStyleForEmptyBraces.

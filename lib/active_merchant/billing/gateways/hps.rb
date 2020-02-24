@@ -162,7 +162,7 @@ module ActiveMerchant #:nodoc:
         xml.hps :CardData do
           if card_or_token.respond_to?(:number)
             if card_or_token.track_data
-              xml.tag!('hps:TrackData', 'method'=>'swipe') do
+              xml.tag!('hps:TrackData', 'method' => 'swipe') do
                 xml.text! card_or_token.track_data
               end
               if options[:encryption_type]

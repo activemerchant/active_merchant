@@ -391,7 +391,7 @@ module ActiveMerchant #:nodoc:
           string << error[:Message] if error[:Message]
           error[:Advice].each_with_index do |advice, index|
             string << ' (' if index == 0
-            string << "#{index+1}. #{advice}"
+            string << "#{index + 1}. #{advice}"
             string << ' and ' if index < error[:Advice].size - 1
             string << ')' if index == error[:Advice].size - 1
           end

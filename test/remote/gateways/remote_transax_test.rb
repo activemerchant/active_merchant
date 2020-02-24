@@ -82,7 +82,7 @@ class RemoteTransaxTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_sku
-    @options['product_sku_#']='123456'
+    @options['product_sku_#'] = '123456'
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'This transaction has been approved', response.message

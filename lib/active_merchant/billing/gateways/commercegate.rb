@@ -74,8 +74,8 @@ module ActiveMerchant #:nodoc:
         post[:customerIP]  = options[:ip] || '127.0.0.1'
         post[:amount]      = amount(money)
         post[:email]       = options[:email] || 'unknown@example.com'
-        post[:currencyCode]= options[:currency] || currency(money)
-        post[:merchAcct]   = options[:merchant]
+        post[:currencyCode] = options[:currency] || currency(money)
+        post[:merchAcct] = options[:merchant]
       end
 
       def add_creditcard(params, creditcard)

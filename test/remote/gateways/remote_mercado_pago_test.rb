@@ -161,7 +161,7 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
   end
 
   def test_partial_capture
-    auth = @gateway.authorize(@amount+1, @credit_card, @options)
+    auth = @gateway.authorize(@amount + 1, @credit_card, @options)
     assert_success auth
 
     assert capture = @gateway.capture(@amount, auth.authorization)
@@ -215,7 +215,7 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount-1, purchase.authorization)
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization)
     assert_success refund
   end
 

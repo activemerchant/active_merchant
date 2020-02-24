@@ -193,7 +193,7 @@ class RemoteOgoneTest < Test::Unit::TestCase
   def test_unsuccessful_refund
     assert purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
-    assert refund = @gateway.refund(@amount+1, purchase.authorization, @options) # too much refund requested
+    assert refund = @gateway.refund(@amount + 1, purchase.authorization, @options) # too much refund requested
     assert_failure refund
     assert refund.authorization
     assert_equal 'Overflow in refunds requests', refund.message
@@ -220,10 +220,10 @@ class RemoteOgoneTest < Test::Unit::TestCase
 
   def test_reference_transactions
     # Setting an alias
-    assert response = @gateway.purchase(@amount, credit_card('4000100011112224'), @options.merge(billing_id: 'awesomeman', order_id: Time.now.to_i.to_s+'1'))
+    assert response = @gateway.purchase(@amount, credit_card('4000100011112224'), @options.merge(billing_id: 'awesomeman', order_id: Time.now.to_i.to_s + '1'))
     assert_success response
     # Updating an alias
-    assert response = @gateway.purchase(@amount, credit_card('4111111111111111'), @options.merge(billing_id: 'awesomeman', order_id: Time.now.to_i.to_s+'2'))
+    assert response = @gateway.purchase(@amount, credit_card('4111111111111111'), @options.merge(billing_id: 'awesomeman', order_id: Time.now.to_i.to_s + '2'))
     assert_success response
     # Using an alias (i.e. don't provide the credit card)
     assert response = @gateway.purchase(@amount, 'awesomeman', @options.merge(order_id: Time.now.to_i.to_s + '3'))

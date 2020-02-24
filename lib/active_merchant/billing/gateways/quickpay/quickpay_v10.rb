@@ -215,7 +215,7 @@ module ActiveMerchant
         end
 
         if options[:three_d_secure]
-          post[:card][:cavv]= options.dig(:three_d_secure, :cavv)
+          post[:card][:cavv] = options.dig(:three_d_secure, :cavv)
           post[:card][:eci] = options.dig(:three_d_secure, :eci)
           post[:card][:xav] = options.dig(:three_d_secure, :xid)
         end

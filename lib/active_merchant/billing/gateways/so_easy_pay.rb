@@ -179,9 +179,9 @@ module ActiveMerchant #:nodoc:
           'xmlns:types' => 'urn:Interface/encodedTypes',
           'xmlns:soap' => 'http://schemas.xmlsoap.org/soap/envelope/'
         }) do
-          retval.tag!('soap:Body', {'soap:encodingStyle'=>'http://schemas.xmlsoap.org/soap/encoding/'}) do
+          retval.tag!('soap:Body', {'soap:encodingStyle' => 'http://schemas.xmlsoap.org/soap/encoding/'}) do
             retval.tag!("tns:#{request}") do
-              retval.tag!("#{request}Request", {'xsi:type'=>"tns:#{request}Request"}) do
+              retval.tag!("#{request}Request", {'xsi:type' => "tns:#{request}Request"}) do
                 yield retval
               end
             end

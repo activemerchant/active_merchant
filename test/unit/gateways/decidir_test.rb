@@ -168,7 +168,7 @@ class DecidirTest < Test::Unit::TestCase
   def test_partial_refund
     @gateway_for_purchase.expects(:ssl_request).returns(partial_refund_response)
 
-    response = @gateway_for_purchase.refund(@amount-1, 81932, @options)
+    response = @gateway_for_purchase.refund(@amount - 1, 81932, @options)
     assert_success response
 
     assert_equal 81932, response.authorization

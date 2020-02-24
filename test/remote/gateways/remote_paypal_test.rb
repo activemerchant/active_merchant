@@ -66,10 +66,10 @@ class PaypalTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_order_total_elements
     order_total_elements = {
-      subtotal: @amount/4,
-      shipping: @amount/4,
-      handling: @amount/4,
-      tax: @amount/4
+      subtotal: @amount / 4,
+      shipping: @amount / 4,
+      handling: @amount / 4,
+      tax: @amount / 4
     }
 
     response = @gateway.purchase(@amount, @credit_card, @params.merge(order_total_elements))
@@ -79,10 +79,10 @@ class PaypalTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_non_fractional_currency_when_any_order_total_element_is_nil
     order_total_elements = {
-      subtotal: @amount/4,
-      shipping: @amount/4,
+      subtotal: @amount / 4,
+      shipping: @amount / 4,
       handling: nil,
-      tax: @amount/4
+      tax: @amount / 4
     }
 
     response = @gateway.purchase(@amount, @credit_card, @params.merge(order_total_elements).merge(currency: 'JPY'))

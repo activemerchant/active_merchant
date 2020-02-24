@@ -50,7 +50,7 @@ class RemoteBraintreeTest < Test::Unit::TestCase
     assert_equal 'This transaction has been approved', response.message
     assert_not_nil customer_id = response.params['customer_vault_id']
 
-    second_response = @gateway.purchase(@amount*2, customer_id, @options)
+    second_response = @gateway.purchase(@amount * 2, customer_id, @options)
     assert_equal 'This transaction has been approved', second_response.message
     assert_success second_response
   end
@@ -139,7 +139,7 @@ class RemoteBraintreeTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card)
     assert_success response
 
-    response = @gateway.refund(@amount-500, response.authorization)
+    response = @gateway.refund(@amount - 500, response.authorization)
     assert_success response
   end
 

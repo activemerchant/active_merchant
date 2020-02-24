@@ -6,8 +6,8 @@ class EwayManagedTest < Test::Unit::TestCase
 
     @gateway = EwayManagedGateway.new(username: 'username', login: 'login', password: 'password')
 
-    @valid_card='4444333322221111'
-    @valid_customer_id='9876543211000'
+    @valid_card = '4444333322221111'
+    @valid_customer_id = '9876543211000'
 
     @credit_card = credit_card(@valid_card)
     @declined_card = credit_card('4444111111111111')

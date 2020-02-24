@@ -83,7 +83,7 @@ class RemoteDigitzsTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount-1, purchase.authorization, @options)
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization, @options)
     assert_success refund
   end
 

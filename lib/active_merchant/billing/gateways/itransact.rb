@@ -439,7 +439,7 @@ module ActiveMerchant #:nodoc:
 
       def sign_payload(payload)
         key = @options[:password].to_s
-        digest=OpenSSL::HMAC.digest(OpenSSL::Digest::SHA1.new(key), key, payload)
+        digest = OpenSSL::HMAC.digest(OpenSSL::Digest::SHA1.new(key), key, payload)
         signature = Base64.encode64(digest)
         signature.chomp!
       end

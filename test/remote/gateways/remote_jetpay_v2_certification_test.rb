@@ -332,7 +332,7 @@ class RemoteJetpayV2CertificationTest < Test::Unit::TestCase
   end
 
   def test_certification_tok19_purchase_using_token_visa
-    visa   = credit_card('4111111111111111', month: 12, year: 2017, brand: 'visa', verification_value: '101')
+    visa = credit_card('4111111111111111', month: 12, year: 2017, brand: 'visa', verification_value: '101')
     assert response = @gateway.store(visa, @options)
     assert_success response
 

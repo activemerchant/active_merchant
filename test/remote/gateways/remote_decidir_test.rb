@@ -157,7 +157,7 @@ class RemoteDecidirTest < Test::Unit::TestCase
     purchase = @gateway_for_purchase.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway_for_purchase.refund(@amount-1, purchase.authorization)
+    assert refund = @gateway_for_purchase.refund(@amount - 1, purchase.authorization)
     assert_success refund
     assert_equal 'approved', refund.message
     assert refund.authorization

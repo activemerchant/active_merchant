@@ -419,7 +419,7 @@ module ActiveMerchant #:nodoc:
 
       def add_external_account(post, card_params, payment)
         external_account = {}
-        external_account[:object] ='card'
+        external_account[:object] = 'card'
         external_account[:currency] = (options[:currency] || currency(payment)).downcase
         post[:external_account] = external_account.merge(card_params[:card])
       end

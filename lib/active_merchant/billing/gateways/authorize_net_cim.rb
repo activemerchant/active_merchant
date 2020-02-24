@@ -852,7 +852,7 @@ module ActiveMerchant #:nodoc:
 
         response_params = parse(action, xml)
 
-        message_element= response_params['messages']['message']
+        message_element = response_params['messages']['message']
         first_error = message_element.is_a?(Array) ? message_element.first : message_element
         message = first_error['text']
         test_mode = @options[:test_requests] || message =~ /Test Mode/

@@ -189,7 +189,7 @@ module ActiveMerchant #:nodoc:
         xml_document('ccAuthRequestV1') do |xml|
           build_merchant_account(xml)
           xml.merchantRefNum opts[:order_id]
-          xml.amount(money/100.0)
+          xml.amount(money / 100.0)
           build_card(xml, opts)
           build_billing_details(xml, opts)
           build_shipping_details(xml, opts)
@@ -210,7 +210,7 @@ module ActiveMerchant #:nodoc:
           build_merchant_account(xml)
           xml.confirmationNumber opts[:confirmationNumber]
           xml.merchantRefNum opts[:order_id]
-          xml.amount(money/100.0)
+          xml.amount(money / 100.0)
         end
       end
 
@@ -219,7 +219,7 @@ module ActiveMerchant #:nodoc:
           build_merchant_account(xml)
           xml.merchantRefNum opts[:order_id]
           xml.confirmationNumber opts[:confirmationNumber]
-          xml.amount(money/100.0)
+          xml.amount(money / 100.0)
         end
       end
 
@@ -319,7 +319,7 @@ module ActiveMerchant #:nodoc:
       def card_type(key)
         { 'visa'            => 'VI',
           'master'          => 'MC',
-          'american_express'=> 'AM',
+          'american_express' => 'AM',
           'discover'        => 'DI',
           'diners_club'     => 'DC', }[key]
       end
