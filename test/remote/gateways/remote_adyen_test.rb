@@ -285,6 +285,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, options)
     assert_success auth
     assert_equal 'Authorised', auth.message
+    # The assertion below requires the "3D Secure Result" data activated for the test account
     assert_equal 'true', auth.params['additionalData']['liabilityShift']
 
     response = @gateway.purchase(@amount, @credit_card, options)
@@ -314,6 +315,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, options)
     assert_success auth
     assert_equal 'Authorised', auth.message
+    # The assertion below requires the "3D Secure Result" data activated for the test account
     assert_equal 'true', auth.params['additionalData']['liabilityShift']
 
     response = @gateway.purchase(@amount, @credit_card, options)
@@ -337,7 +339,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'CVC Declined', response.message
+    assert_equal 'Refused', response.message
   end
 
   def test_successful_purchase
@@ -432,7 +434,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'CVC Declined', response.message
+    assert_equal 'Refused', response.message
   end
 
   def test_failed_purchase_with_invalid_cabal_card
@@ -737,7 +739,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert response = @gateway.store(@declined_card, @options)
 
     assert_failure response
-    assert_equal 'CVC Declined', response.message
+    assert_equal 'Refused', response.message
   end
 
   def test_successful_purchase_using_stored_card
@@ -776,7 +778,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_match 'CVC Declined', response.message
+    assert_match 'Refused', response.message
   end
 
   def test_verify_with_idempotency_key
