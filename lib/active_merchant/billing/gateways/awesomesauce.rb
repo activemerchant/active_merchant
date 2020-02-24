@@ -78,7 +78,7 @@ module ActiveMerchant #:nodoc:
         transcript.
         gsub(%r((number\D+)\d*), '\1[FILTERED]').
         gsub(%r((cv2\D+)\d*), '\1[FILTERED]').
-        gsub(%r((secret\D+)\d*), '\1[FILTERED]')
+        gsub(%r((secret\\?":\\?")\w*), '\1[FILTERED]')
       end
 
       private
@@ -86,7 +86,7 @@ module ActiveMerchant #:nodoc:
       def add_customer_data(post, options)
       end
 
-      def add_address(post, creditcard, options)
+      def add_address(post, payment, options)
       end
 
       def add_invoice(post, amount, options)
@@ -95,6 +95,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment(post, payment)
+        post[:number] = payment.number
+        post[:cv2] = payment.verification_value
+        post[:exp] = expdate(payment)
       end
 
       def parse(body)
