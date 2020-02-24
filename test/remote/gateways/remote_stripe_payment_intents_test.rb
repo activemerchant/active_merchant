@@ -48,6 +48,38 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert purchase.params.dig('charges', 'data')[0]['captured']
   end
 
+  def test_purchases_with_same_idempotency_key
+    options = {
+      currency: 'GBP',
+      customer: @customer,
+      idempotency_key: SecureRandom.uuid
+    }
+    assert purchase1 = @gateway.purchase(@amount, @visa_payment_method, options)
+    assert_equal 'succeeded', purchase1.params['status']
+    assert purchase1.params.dig('charges', 'data')[0]['captured']
+
+    assert purchase2 = @gateway.purchase(@amount, @visa_payment_method, options)
+    assert purchase2.success?
+    assert_equal purchase1.authorization, purchase2.authorization
+    assert_equal purchase1.params['charges']['data'][0]['id'], purchase2.params['charges']['data'][0]['id']
+  end
+
+  def test_purchases_with_same_idempotency_key_different_options
+    options = {
+      currency: 'GBP',
+      customer: @customer,
+      idempotency_key: SecureRandom.uuid
+    }
+    assert purchase = @gateway.purchase(@amount, @visa_payment_method, options)
+    assert_equal 'succeeded', purchase.params['status']
+    assert purchase.params.dig('charges', 'data')[0]['captured']
+
+    options[:currency] = 'USD'
+    assert purchase = @gateway.purchase(@amount, @visa_payment_method, options)
+    refute purchase.success?
+    assert_match(/^Keys for idempotent requests can only be used with the same parameters they were first used with/, purchase.message)
+  end
+
   def test_unsuccessful_purchase
     options = {
       currency: 'GBP',

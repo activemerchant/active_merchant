@@ -74,6 +74,17 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     assert_equal 'canceled', cancel.params['status']
   end
 
+  def test_create_intent_with_optional_idempotency_key_header
+    idempotency_key = 'test123'
+    options = @options.merge(idempotency_key: idempotency_key)
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.create_intent(@amount, @visa_token, options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_equal idempotency_key, headers['Idempotency-Key']
+    end.respond_with(successful_create_intent_response)
+  end
+
   def test_failed_capture_after_creation
     @gateway.expects(:ssl_request).returns(failed_capture_response)
 
