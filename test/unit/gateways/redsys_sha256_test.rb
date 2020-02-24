@@ -134,6 +134,20 @@ class RedsysSHA256Test < Test::Unit::TestCase
     end.respond_with(successful_authorize_with_3ds_response)
   end
 
+  def test_3ds_data_with_special_characters_properly_escaped
+    @credit_card.first_name = 'Julián'
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(100, @credit_card, { execute_threed: true, order_id: '156270437866', terminal: 12, sca_exemption: 'LWV', description: 'esta es la descripción' })
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/iniciaPeticion/, data)
+      assert_match(/<DS_MERCHANT_TERMINAL>12<\/DS_MERCHANT_TERMINAL>/, data)
+      assert_match(/\"threeDSInfo\":\"CardData\"/, data)
+      assert_match(/<DS_MERCHANT_EXCEP_SCA>LWV<\/DS_MERCHANT_EXCEP_SCA>/, data)
+      assert_match(/Juli%C3%A1n/, data)
+      assert_match(/descripci%C3%B3n/, data)
+    end.respond_with(successful_authorize_with_3ds_response)
+  end
+
   def test_moto_flag_passed
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(100, credit_card, { order_id: '156270437866', moto: true, metadata: { manual_entry: true } })

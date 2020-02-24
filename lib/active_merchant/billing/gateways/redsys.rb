@@ -426,7 +426,11 @@ module ActiveMerchant #:nodoc:
           xml.DS_MERCHANT_AMOUNT             data[:amount]
           xml.DS_MERCHANT_ORDER              data[:order_id]
           xml.DS_MERCHANT_TRANSACTIONTYPE    data[:action]
-          xml.DS_MERCHANT_PRODUCTDESCRIPTION data[:description]
+          if data[:description] && data[:threeds]
+            xml.DS_MERCHANT_PRODUCTDESCRIPTION CGI.escape(data[:description])
+          else
+            xml.DS_MERCHANT_PRODUCTDESCRIPTION data[:description]
+          end
           xml.DS_MERCHANT_TERMINAL           options[:terminal] || @options[:terminal]
           xml.DS_MERCHANT_MERCHANTCODE       @options[:login]
           xml.DS_MERCHANT_MERCHANTSIGNATURE  build_signature(data) unless sha256_authentication?
@@ -434,7 +438,11 @@ module ActiveMerchant #:nodoc:
 
           # Only when card is present
           if data[:card]
-            xml.DS_MERCHANT_TITULAR    data[:card][:name]
+            if data[:card][:name] && data[:threeds]
+              xml.DS_MERCHANT_TITULAR    CGI.escape(data[:card][:name])
+            else
+              xml.DS_MERCHANT_TITULAR    data[:card][:name]
+            end
             xml.DS_MERCHANT_PAN        data[:card][:pan]
             xml.DS_MERCHANT_EXPIRYDATE data[:card][:date]
             xml.DS_MERCHANT_CVV2       data[:card][:cvv]
