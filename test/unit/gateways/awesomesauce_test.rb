@@ -128,41 +128,29 @@ class AwesomesauceTest < Test::Unit::TestCase
     assert_failure response
   end
 
-  # def test_scrub
-  #   assert @gateway.supports_scrubbing?
-  #   assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
-  # end
+  def test_scrub
+    assert @gateway.supports_scrubbing?
+    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
 
   private
 
   def pre_scrubbed
-    %q(
-      
-    )
+    <<-PRE_SCRUBBED
+      {\"amount\":\"1.00\",\"currency\":\"USD\",\"number\":\"4111111111111111\",\"cv2\":\"123\",\"exp\":\"0921\",\"merchant\":\"test\",\"secret\":\"abc123\"}
+      PRE_SCRUBBED
   end
 
-  # def post_scrubbed
-  #   %q(
-  #     Put the scrubbed contents of transcript.log here after implementing your scrubbing function.
-  #     Things to scrub:
-  #       - Credit card number
-  #       - CVV
-  #       - Sensitive authentication details
-  #   )
-  # end
+  def post_scrubbed
+    <<-POST_SCRUBBED
+      {\"amount\":\"1.00\",\"currency\":\"USD\",\"number\":\"[FILTERED]\",\"cv2\":\"[FILTERED]\",\"exp\":\"0921\",\"merchant\":\"test\",\"secret\":\"[FILTERED]\"}
+     POST_SCRUBBED
+  end
 
   def successful_purchase_response
     <<-RESPONSE
       {\"succeeded\":true,\"id\":\"purchDjvHxq-5\",\"amount\":\"1.00\"}
     RESPONSE
-    
-      # Easy to capture by setting the DEBUG_ACTIVE_MERCHANT environment variable
-      # to "true" when running remote tests:
-
-      # $ DEBUG_ACTIVE_MERCHANT=true ruby -Itest \
-      #   test/remote/gateways/remote_awesomesauce_test.rb \
-      #   -n test_successful_purchase
-  
   end
 
   def failed_purchase_response
