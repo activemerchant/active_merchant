@@ -28,8 +28,6 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, amount, options)
         add_payment(post, payment)
-        add_address(post, payment, options)
-        add_customer_data(post, options)
 
         commit('purchase', post, options)
       end
@@ -38,9 +36,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, amount, options)
         add_payment(post, payment)
-        add_address(post, payment, options)
-        add_customer_data(post, options)
-
+      
         commit('auth', post, options)
       end
 
@@ -48,18 +44,21 @@ module ActiveMerchant #:nodoc:
       def capture(amount, authorization, options={})
         post = {}
         add_auth_id(post, authorization)
+
         commit('capture', post, options)
       end
 
       def refund(amount, authorization, options={})
         post = {}
         add_auth_id(post, authorization)
+
         commit('cancel', post, options)
       end
 
       def void(authorization, options={})
         post = {}
         add_auth_id(post, authorization)
+        
         commit('cancel', post, options)
       end
 
@@ -82,12 +81,6 @@ module ActiveMerchant #:nodoc:
       end
 
       private
-
-      def add_customer_data(post, options)
-      end
-
-      def add_address(post, payment, options)
-      end
 
       def add_invoice(post, amount, options)
         post[:amount] = amount(amount)
