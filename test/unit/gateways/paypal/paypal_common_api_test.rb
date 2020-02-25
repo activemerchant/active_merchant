@@ -71,10 +71,10 @@ class PaypalCommonApiTest < Test::Unit::TestCase
 
   def test_add_payment_details_adds_order_total_elements
     options = {
-      :subtotal => 25,
-      :shipping => 5,
-      :handling => 2,
-      :tax => 1
+      subtotal: 25,
+      shipping: 5,
+      handling: 2,
+      tax: 1
     }
     request = wrap_xml do |xml|
       @gateway.send(:add_payment_details, xml, 100, 'USD', options)
@@ -88,10 +88,10 @@ class PaypalCommonApiTest < Test::Unit::TestCase
 
   def test_add_payment_details_does_not_add_order_total_elements_when_any_element_is_nil
     options = {
-      :subtotal => nil,
-      :shipping => 5,
-      :handling => 2,
-      :tax => 1
+      subtotal: nil,
+      shipping: 5,
+      handling: 2,
+      tax: 1
     }
     request = wrap_xml do |xml|
       @gateway.send(:add_payment_details, xml, 100, 'USD', options)
