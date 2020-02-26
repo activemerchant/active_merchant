@@ -151,6 +151,7 @@ module ActiveMerchant #:nodoc:
           xml.currency    currency
           xml.description description
           xml.callbackUrl(options[:callback_url])
+          add_stored_credentials(xml, options)
         end
       end
 
@@ -169,6 +170,7 @@ module ActiveMerchant #:nodoc:
           xml.currency    currency
           xml.description description
           xml.callbackUrl callback_url
+          add_stored_credentials(xml, options)
         end
       end
 
@@ -249,6 +251,25 @@ module ActiveMerchant #:nodoc:
 
       def new_transaction_id
         SecureRandom.uuid
+      end
+
+      # Ixopay does not pass any parameters for cardholder/merchant initiated.
+      # Ixopay also doesn't support installment transactions, only recurring
+      # ("RECURRING") and unscheduled ("CARDONFILE").
+      #
+      # Furthermore, Ixopay is slightly unusual in its application of stored
+      # credentials in that the gateway does not return a true
+      # network_transaction_id that can be sent on subsequent transactions.
+      def add_stored_credentials(xml, options)
+        return unless stored_credential = options[:stored_credential]
+
+        if stored_credential[:initial_transaction]
+          xml.transactionIndicator 'INITIAL'
+        elsif stored_credential[:reason_type] == 'recurring'
+          xml.transactionIndicator 'RECURRING'
+        elsif stored_credential[:reason_type] == 'unscheduled'
+          xml.transactionIndicator 'CARDONFILE'
+        end
       end
 
       def add_extra_data(xml, extra_data)

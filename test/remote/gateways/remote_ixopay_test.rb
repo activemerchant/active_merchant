@@ -14,6 +14,7 @@ class RemoteIxopayTest < Test::Unit::TestCase
       email: 'test@example.com',
       description: 'Store Purchase',
       ip: '192.168.1.1',
+      stored_credential: stored_credential(:initial)
     }
 
     @extra_data = {extra_data: { customData1: 'some data', customData2: 'Can be anything really' }}

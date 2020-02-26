@@ -258,6 +258,98 @@ class IxopayTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
+  # Stored Credential Tests
+  # Ixopay does not pass any parameters for cardholder/merchant initiated.
+  # Ixopay also doesn't support installment transactions, only recurring
+  # ("RECURRING") and unscheduled ("CARDONFILE").
+  #
+  # Furthermore, Ixopay is slightly unusual in its application of stored
+  # credentials in that the gateway does not return a true
+  # network_transaction_id that can be sent on subsequent transactions.
+  def test_purchase_stored_credentials_initial
+    options = @options.merge(
+      stored_credential: stored_credential(:initial, :recurring)
+    )
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<transactionIndicator>INITIAL<\/transactionIndicator>/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert_equal 'FINISHED', response.message
+  end
+
+  def test_authorize_stored_credentials_initial
+    options = @options.merge(
+      stored_credential: stored_credential(:initial, :unscheduled)
+    )
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<transactionIndicator>INITIAL<\/transactionIndicator>/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+    assert_equal 'FINISHED', response.message
+  end
+
+  def test_purchase_stored_credentials_recurring
+    options = @options.merge(
+      stored_credential: stored_credential(:recurring)
+    )
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<transactionIndicator>RECURRING<\/transactionIndicator>/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert_equal 'FINISHED', response.message
+  end
+
+  def test_authorize_stored_credentials_recurring
+    options = @options.merge(
+      stored_credential: stored_credential(:recurring)
+    )
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<transactionIndicator>RECURRING<\/transactionIndicator>/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+    assert_equal 'FINISHED', response.message
+  end
+
+  def test_purchase_stored_credentials_unscheduled
+    options = @options.merge(
+      stored_credential: stored_credential(:unscheduled)
+    )
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<transactionIndicator>CARDONFILE<\/transactionIndicator>/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert_equal 'FINISHED', response.message
+  end
+
+  def test_authorize_stored_credentials_unscheduled
+    options = @options.merge(
+      stored_credential: stored_credential(:unscheduled)
+    )
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<transactionIndicator>CARDONFILE<\/transactionIndicator>/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+    assert_equal 'FINISHED', response.message
+  end
+
   private
 
   def mock_response_error
