@@ -210,6 +210,6 @@ class RemoteOppTest < Test::Unit::TestCase
 
     assert_scrubbed(@valid_card.number, transcript)
     assert_scrubbed(@valid_card.verification_value, transcript)
-    assert_scrubbed(@gateway.options[:password], transcript)
+    assert_scrubbed(@gateway.options[:access_token], transcript)
   end
 end
