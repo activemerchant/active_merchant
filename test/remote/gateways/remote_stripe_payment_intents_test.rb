@@ -418,6 +418,31 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert_equal 'requested_by_customer', cancel_response.params['cancellation_reason']
   end
 
+  def test_create_a_payment_intent_and_void_requires_unique_idempotency_key
+    idempotency_key = SecureRandom.hex
+    options = {
+      currency: 'GBP',
+      customer: @customer,
+      return_url: 'https://www.example.com',
+      confirmation_method: 'manual',
+      capture_method: 'manual',
+      idempotency_key: idempotency_key
+    }
+    assert create_response = @gateway.create_intent(@amount, @three_ds_payment_method, options)
+    assert_equal 'requires_confirmation', create_response.params['status']
+    intent_id = create_response.params['id']
+
+    assert get_response = @gateway.show_intent(intent_id, options)
+    assert_equal 'requires_confirmation', get_response.params['status']
+
+    assert_failure cancel_response = @gateway.void(intent_id, cancellation_reason: 'requested_by_customer', idempotency_key: idempotency_key)
+    assert_match(/^Keys for idempotent requests can only be used for the same endpoint they were first used for/, cancel_response.message)
+
+    assert cancel_response = @gateway.void(intent_id, cancellation_reason: 'requested_by_customer', idempotency_key: "#{idempotency_key}-auto-void")
+    assert_equal 'canceled', cancel_response.params['status']
+    assert_equal 'requested_by_customer', cancel_response.params['cancellation_reason']
+  end
+
   def test_failed_void_after_capture
     options = {
       currency: 'GBP',
