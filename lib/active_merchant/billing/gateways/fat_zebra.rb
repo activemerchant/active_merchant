@@ -79,6 +79,7 @@ module ActiveMerchant #:nodoc:
         post = {}
 
         add_creditcard(post, creditcard)
+        post[:is_billing] = options[:is_billing] if options[:is_billing]
 
         commit(:post, 'credit_cards', post)
       end

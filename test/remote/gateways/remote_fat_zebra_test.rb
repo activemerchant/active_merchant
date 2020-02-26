@@ -118,7 +118,7 @@ class RemoteFatZebraTest < Test::Unit::TestCase
 
   def test_successful_void_refund
     purchase = @gateway.purchase(@amount, @credit_card, @options)
-    puts purchase.inspect
+
     refund = @gateway.refund(@amount, purchase.authorization, @options)
 
     assert response = @gateway.void(refund.authorization, @options)
@@ -137,6 +137,24 @@ class RemoteFatZebraTest < Test::Unit::TestCase
 
     assert_success card
     assert_not_nil card.authorization
+  end
+
+  def test_successful_store_without_cvv
+    credit_card = @credit_card
+    credit_card.verification_value = nil
+    assert card = @gateway.store(credit_card, is_billing: true)
+
+    assert_success card
+    assert_not_nil card.authorization
+  end
+
+  def test_failed_store_without_cvv
+    credit_card = @credit_card
+    credit_card.verification_value = nil
+    assert card = @gateway.store(credit_card)
+
+    assert_failure card
+    assert_match %r{CVV is required}, card.message
   end
 
   def test_purchase_with_token
@@ -165,9 +183,9 @@ class RemoteFatZebraTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase_with_incomplete_3DS_information
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(cavv: 'MDRjN2MxZTAxYjllNTBkNmM2MTA=', sli: '05'))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(xid: 'MGVmMmNlMzI4NjAyOWU2ZDgwNTZ=', sli: '05'))
     assert_failure response
-    assert_match %r{Extra/xid is required for SLI 05}, response.message
+    assert_match %r{Extra/cavv is required for SLI 05}, response.message
   end
 
   def test_invalid_login

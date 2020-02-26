@@ -169,6 +169,26 @@ class FatZebraTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_successful_tokenization_without_cvv
+    credit_card = @credit_card
+    credit_card.verification_value = nil
+    @gateway.expects(:ssl_request).returns(successful_no_cvv_tokenize_response)
+
+    assert response = @gateway.store(credit_card, is_billing: true)
+    assert_success response
+    assert_equal 'ep3c05nzsqvft15wsf1z|credit_cards', response.authorization
+  end
+
+  def test_unsuccessful_tokenization_without_cvv
+    credit_card = @credit_card
+    credit_card.verification_value = nil
+    @gateway.expects(:ssl_request).returns(failed_no_cvv_tokenize_response)
+
+    assert response = @gateway.store(credit_card)
+    assert_failure response
+    assert_equal 'CVV is required', response.message
+  end
+
   def test_successful_refund
     @gateway.expects(:ssl_request).returns(successful_refund_response)
 
@@ -429,6 +449,40 @@ Conn close
       },
       errors: [
         "Expiry date can't be blank"
+      ],
+      test: false
+    }.to_json
+  end
+
+  def successful_no_cvv_tokenize_response
+    {
+      successful: true,
+      response: {
+        token: 'ep3c05nzsqvft15wsf1z',
+        card_holder: 'Bob ',
+        card_number: '512345XXXXXX2346',
+        card_expiry: nil,
+        authorized: true,
+        transaction_count: 0
+      },
+      errors: [],
+      test: false
+    }.to_json
+  end
+
+  def failed_no_cvv_tokenize_response
+    {
+      successful: false,
+      response: {
+        token: nil,
+        card_holder: 'Bob ',
+        card_number: '512345XXXXXX2346',
+        card_expiry: nil,
+        authorized: false,
+        transaction_count: 0
+      },
+      errors: [
+        'CVV is required'
       ],
       test: false
     }.to_json

@@ -9,6 +9,7 @@
 * Stripe Payment Intents: Add tests for "Idempotency-Key" header [fatcatt316] #3542
 * Paypal: Fix RuboCop Style/HashSyntax violations [chinhle23] #3547
 * Rubocop corrections for space around operators [cdmackeyfree] #3543
+* Fat Zebra: Add `is_billing` in post for `store` call [chinhle23] #3551
 
 == Version 1.105.0 (Feb 20, 2020)
 * Credorax: Fix `3ds_transtype` setting in post [chinhle23] #3531
