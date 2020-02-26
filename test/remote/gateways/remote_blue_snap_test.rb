@@ -52,6 +52,20 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     assert_equal 'Success', response.message
   end
 
+  def test_successful_fractionless_currency_purchase
+    options = @options.merge(currency: 'JPY')
+    response = @gateway.purchase(12300, @credit_card, options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_three_decimal_currency_purchase
+    options = @options.merge(currency: 'BHD')
+    response = @gateway.purchase(1234, @credit_card, options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
   def test_successful_purchase_with_cabal_card
     options = @options.merge({
       email: 'joe@example.com'

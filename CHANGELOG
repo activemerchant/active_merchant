@@ -12,6 +12,7 @@
 * Fat Zebra: Add `is_billing` in post for `store` call [chinhle23] #3551
 * SafeCharge: Adds four supported countries [carrigan] #3550
 * Ixopay: Support stored credentials [leila-alderman] #3549
+* BlueSnap: Adds localized currency support [carrigan] #3552
 
 == Version 1.105.0 (Feb 20, 2020)
 * Credorax: Fix `3ds_transtype` setting in post [chinhle23] #3531
