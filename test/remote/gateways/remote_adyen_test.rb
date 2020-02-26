@@ -180,6 +180,26 @@ class RemoteAdyenTest < Test::Unit::TestCase
     refute response.params['paRequest'].blank?
   end
 
+  def test_successful_authorize_with_3ds_with_idempotency_key
+    options = @options.merge(idempotency_key: SecureRandom.hex, execute_threed: true)
+    assert response = @gateway.authorize(@amount, @three_ds_enrolled_card, options)
+    assert response.test?
+    refute response.authorization.blank?
+    assert_equal response.params['resultCode'], 'RedirectShopper'
+    refute response.params['issuerUrl'].blank?
+    refute response.params['md'].blank?
+    refute response.params['paRequest'].blank?
+
+    assert response2 = @gateway.authorize(@amount, @three_ds_enrolled_card, options)
+    assert_success response2
+    refute response2.authorization.blank?
+    assert_equal response2.params['resultCode'], 'RedirectShopper'
+    refute response2.params['issuerUrl'].blank?
+    refute response2.params['md'].blank?
+    refute response2.params['paRequest'].blank?
+    assert_equal response.authorization, response2.authorization
+  end
+
   def test_successful_authorize_with_3ds_dynamic
     assert response = @gateway.authorize(@amount, @three_ds_enrolled_card, @options.merge(threed_dynamic: true))
     assert response.test?
@@ -581,6 +601,34 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_success auth
 
     assert void = @gateway.void(auth.authorization)
+    assert_success void
+    assert_equal '[cancel-received]', void.message
+  end
+
+  def test_successul_void_of_pending_3ds_authorization
+    assert auth = @gateway.authorize(@amount, @three_ds_enrolled_card, @options.merge(execute_threed: true))
+    assert auth.test?
+    refute auth.authorization.blank?
+    assert_equal auth.params['resultCode'], 'RedirectShopper'
+    refute auth.params['issuerUrl'].blank?
+    refute auth.params['md'].blank?
+    refute auth.params['paRequest'].blank?
+
+    assert void = @gateway.void(auth.authorization)
+    assert_success void
+    assert_equal '[cancel-received]', void.message
+  end
+
+  def test_successful_void_requires_unique_idempotency_key
+    idempotency_key = SecureRandom.hex
+    options = @options.merge(idempotency_key: idempotency_key)
+    auth = @gateway.authorize(@amount, @credit_card, options)
+    assert_success auth
+
+    assert void = @gateway.void(auth.authorization, idempotency_key: idempotency_key)
+    assert_failure void
+
+    assert void = @gateway.void(auth.authorization, idempotency_key: "#{idempotency_key}-auto-void")
     assert_success void
     assert_equal '[cancel-received]', void.message
   end
