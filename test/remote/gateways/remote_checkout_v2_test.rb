@@ -8,6 +8,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     @credit_card = credit_card('4242424242424242', verification_value: '100', month: '6', year: '2025')
     @expired_card = credit_card('4242424242424242', verification_value: '100', month: '6', year: '2010')
     @declined_card = credit_card('42424242424242424', verification_value: '234', month: '6', year: '2025')
+    @threeds_card = credit_card('4485040371536584', verification_value: '100', month: '12', year: '2020')
 
     @options = {
       order_id: '1',
@@ -180,6 +181,14 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
 
     assert capture = @gateway.capture(nil, auth.authorization)
     assert_success capture
+  end
+
+  def test_direct_3ds_authorize
+    auth = @gateway.authorize(@amount, @threeds_card, @options.merge(execute_threed: true))
+
+    assert_equal 'Pending', auth.message
+    assert_equal 'Y', auth.params['3ds']['enrolled']
+    assert auth.params['_links']['redirect']
   end
 
   def test_failed_authorize

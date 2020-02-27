@@ -235,7 +235,7 @@ module ActiveMerchant #:nodoc:
         elsif response['error_type']
           response['error_type'] + ': ' + response['error_codes'].first
         else
-          response['response_summary'] || response['response_code'] || 'Unable to read error message'
+          response['response_summary'] || response['response_code'] || response['status'] || 'Unable to read error message'
         end
       end
 
