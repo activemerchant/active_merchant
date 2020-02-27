@@ -10,6 +10,7 @@
 * Paypal: Fix RuboCop Style/HashSyntax violations [chinhle23] #3547
 * Rubocop corrections for space around operators [cdmackeyfree] #3543
 * Fat Zebra: Add `is_billing` in post for `store` call [chinhle23] #3551
+* SafeCharge: Adds four supported countries [carrigan] #3550
 
 == Version 1.105.0 (Feb 20, 2020)
 * Credorax: Fix `3ds_transtype` setting in post [chinhle23] #3531
@@ -73,7 +74,6 @@
 * Authorize.net: Trim down supported countries [fatcatt316] #3511
 * Stripe: Add support for `statement_descriptor_suffix` field [carrigan] #3528
 * Stripe: Add connected account support [carrigan] #3535
-* SafeCharge: Adds four supported countries [carrigan] #3550
 
 == Version 1.103.0 (Dec 2, 2019)
 * Quickbooks: Mark transactions that returned `AuthorizationFailed` as failures [britth] #3447
