@@ -45,7 +45,6 @@ module ActiveMerchant #:nodoc:
         CONFIRM_INTENT_ATTRIBUTES.each do |attribute|
           add_whitelisted_attribute(post, options, attribute)
         end
-
         commit(:post, "payment_intents/#{intent_id}/confirm", post, options)
       end
 
@@ -58,7 +57,7 @@ module ActiveMerchant #:nodoc:
         post[:card][:exp_year] = payment_method.year
         post[:card][:cvc] = payment_method.verification_value if payment_method.verification_value
         add_billing_address(post, options)
-
+        options = format_idempotency_key(options, 'pm')
         commit(:post, 'payment_methods', post, options)
       end
 
@@ -76,7 +75,6 @@ module ActiveMerchant #:nodoc:
         UPDATE_INTENT_ATTRIBUTES.each do |attribute|
           add_whitelisted_attribute(post, options, attribute)
         end
-
         commit(:post, "payment_intents/#{intent_id}", post, options)
       end
 
@@ -97,6 +95,7 @@ module ActiveMerchant #:nodoc:
           post[:transfer_data][:amount] = options[:transfer_amount]
         end
         post[:application_fee_amount] = options[:application_fee] if options[:application_fee]
+        options = format_idempotency_key(options, 'capture')
         commit(:post, "payment_intents/#{intent_id}/capture", post, options)
       end
 
@@ -129,9 +128,11 @@ module ActiveMerchant #:nodoc:
             post[:validate] = options[:validate] unless options[:validate].nil?
             post[:description] = options[:description] if options[:description]
             post[:email] = options[:email] if options[:email]
+            options = format_idempotency_key(options, 'customer')
             customer = commit(:post, 'customers', post, options)
             customer_id = customer.params['id']
           end
+          options = format_idempotency_key(options, 'attach')
           commit(:post, "payment_methods/#{params[:payment_method]}/attach", { customer: customer_id }, options)
         else
           super(payment_method, options)
@@ -263,6 +264,12 @@ module ActiveMerchant #:nodoc:
         post[:shipping][:phone] = shipping[:phone] if shipping[:phone]
         post[:shipping][:tracking_number] = shipping[:tracking_number] if shipping[:tracking_number]
         post
+      end
+
+      def format_idempotency_key(options, suffix)
+        return options unless options[:idempotency_key]
+
+        options.merge(idempotency_key: "#{options[:idempotency_key]}-#{suffix}")
       end
     end
   end

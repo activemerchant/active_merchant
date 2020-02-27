@@ -14,6 +14,7 @@
 * Ixopay: Support stored credentials [leila-alderman] #3549
 * BlueSnap: Adds localized currency support [carrigan] #3552
 * CheckoutV2: Use status as message for 3DS txns in progress [britth] #3545
+* Stripe Payment Intents: Prevent idempotency key errors for compound actions [britth] #3554
 
 == Version 1.105.0 (Feb 20, 2020)
 * Credorax: Fix `3ds_transtype` setting in post [chinhle23] #3531
