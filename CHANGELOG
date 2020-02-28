@@ -16,6 +16,7 @@
 * CheckoutV2: Use status as message for 3DS txns in progress [britth] #3545
 * Stripe Payment Intents: Prevent idempotency key errors for compound actions [britth] #3554
 * Adyen: Add tests for voiding with idempotency keys [jknipp] #3553
+* Fat Zebra: Fix `store` call [chinhle23] #3556
 
 == Version 1.105.0 (Feb 20, 2020)
 * Credorax: Fix `3ds_transtype` setting in post [chinhle23] #3531

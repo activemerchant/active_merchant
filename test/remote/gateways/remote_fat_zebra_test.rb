@@ -142,7 +142,7 @@ class RemoteFatZebraTest < Test::Unit::TestCase
   def test_successful_store_without_cvv
     credit_card = @credit_card
     credit_card.verification_value = nil
-    assert card = @gateway.store(credit_card, is_billing: true)
+    assert card = @gateway.store(credit_card, recurring: true)
 
     assert_success card
     assert_not_nil card.authorization

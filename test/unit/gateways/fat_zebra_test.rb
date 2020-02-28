@@ -174,7 +174,7 @@ class FatZebraTest < Test::Unit::TestCase
     credit_card.verification_value = nil
     @gateway.expects(:ssl_request).returns(successful_no_cvv_tokenize_response)
 
-    assert response = @gateway.store(credit_card, is_billing: true)
+    assert response = @gateway.store(credit_card, recurring: true)
     assert_success response
     assert_equal 'ep3c05nzsqvft15wsf1z|credit_cards', response.authorization
   end
