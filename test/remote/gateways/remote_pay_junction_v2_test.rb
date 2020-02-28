@@ -25,6 +25,13 @@ class RemotePayJunctionV2Test < Test::Unit::TestCase
     assert_success response
     assert_equal 'Approved', response.message
     assert response.test?
+
+    assert_match @options[:billing_address][:company], response.params['billing']['companyName']
+    assert_match @options[:billing_address][:address1], response.params['billing']['address']['address']
+    assert_match @options[:billing_address][:city], response.params['billing']['address']['city']
+    assert_match @options[:billing_address][:state], response.params['billing']['address']['state']
+    assert_match @options[:billing_address][:country], response.params['billing']['address']['country']
+    assert_match @options[:billing_address][:zip], response.params['billing']['address']['zip']
   end
 
   def test_successful_purchase_sans_options

@@ -209,16 +209,15 @@ class PayJunctionV2Test < Test::Unit::TestCase
   def test_add_address
     post = {card: {billingAddress: {}}}
     @gateway.send(:add_address, post, @options)
-    # Billing Address
-    assert_equal @options[:billing_address][:first_name], post[:billing][:firstName]
-    assert_equal @options[:billing_address][:last_name], post[:billing][:lastName]
-    assert_equal @options[:billing_address][:company], post[:billing][:companyName]
-    assert_equal @options[:billing_address][:phone_number], post[:billing][:phone]
-    assert_equal @options[:billing_address][:address1], post[:billing][:address][:address]
-    assert_equal @options[:billing_address][:city], post[:billing][:address][:city]
-    assert_equal @options[:billing_address][:state], post[:billing][:address][:state]
-    assert_equal @options[:billing_address][:country], post[:billing][:address][:country]
-    assert_equal @options[:billing_address][:zip], post[:billing][:address][:zip]
+    assert_equal @options[:billing_address][:first_name], post[:billingFirstName]
+    assert_equal @options[:billing_address][:last_name], post[:billingLastName]
+    assert_equal @options[:billing_address][:company], post[:billingCompanyName]
+    assert_equal @options[:billing_address][:phone_number], post[:billingPhone]
+    assert_equal @options[:billing_address][:address1], post[:billingAddress]
+    assert_equal @options[:billing_address][:city], post[:billingCity]
+    assert_equal @options[:billing_address][:state], post[:billingState]
+    assert_equal @options[:billing_address][:country], post[:billingCountry]
+    assert_equal @options[:billing_address][:zip], post[:billingZip]
   end
 
   def test_scrub
