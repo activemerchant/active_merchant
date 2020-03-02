@@ -205,6 +205,86 @@ class MerchantWarriorTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_authorize_with_soft_descriptor_absent
+    stub_comms do
+      @gateway.authorize(@success_amount, @credit_card)
+    end.check_request do |endpoint, data, headers|
+      assert_not_match(/descriptorName&/, data)
+      assert_not_match(/descriptorCity&/, data)
+      assert_not_match(/descriptorState&/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_authorize_with_soft_descriptor_present
+    stub_comms do
+      @gateway.authorize(@success_amount, @credit_card, soft_descriptor_options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/descriptorName=FOO%2ATest&/, data)
+      assert_match(/descriptorCity=Melbourne&/, data)
+      assert_match(/descriptorState=VIC&/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_purchase_with_soft_descriptor_absent
+    stub_comms do
+      @gateway.purchase(@success_amount, @credit_card)
+    end.check_request do |endpoint, data, headers|
+      assert_not_match(/descriptorName&/, data)
+      assert_not_match(/descriptorCity&/, data)
+      assert_not_match(/descriptorState&/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_with_soft_descriptor_present
+    stub_comms do
+      @gateway.purchase(@success_amount, @credit_card, soft_descriptor_options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/descriptorName=FOO%2ATest&/, data)
+      assert_match(/descriptorCity=Melbourne&/, data)
+      assert_match(/descriptorState=VIC&/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_capture_with_soft_descriptor_absent
+    stub_comms do
+      @gateway.capture(@success_amount, @credit_card)
+    end.check_request do |endpoint, data, headers|
+      assert_not_match(/descriptorName&/, data)
+      assert_not_match(/descriptorCity&/, data)
+      assert_not_match(/descriptorState&/, data)
+    end.respond_with(successful_capture_response)
+  end
+
+  def test_capture_with_soft_descriptor_present
+    stub_comms do
+      @gateway.capture(@success_amount, @credit_card, soft_descriptor_options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/descriptorName=FOO%2ATest&/, data)
+      assert_match(/descriptorCity=Melbourne&/, data)
+      assert_match(/descriptorState=VIC&/, data)
+    end.respond_with(successful_capture_response)
+  end
+
+  def test_refund_with_soft_descriptor_absent
+    stub_comms do
+      @gateway.refund(@success_amount, @credit_card)
+    end.check_request do |endpoint, data, headers|
+      assert_not_match(/descriptorName&/, data)
+      assert_not_match(/descriptorCity&/, data)
+      assert_not_match(/descriptorState&/, data)
+    end.respond_with(successful_refund_response)
+  end
+
+  def test_refund_with_soft_descriptor_present
+    stub_comms do
+      @gateway.refund(@success_amount, @credit_card, soft_descriptor_options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/descriptorName=FOO%2ATest&/, data)
+      assert_match(/descriptorCity=Melbourne&/, data)
+      assert_match(/descriptorState=VIC&/, data)
+    end.respond_with(successful_refund_response)
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
@@ -314,11 +394,35 @@ class MerchantWarriorTest < Test::Unit::TestCase
     XML
   end
 
+  def successful_capture_response
+    <<-XML
+<?xml version="1.0" encoding="UTF-8"?>
+<mwResponse>
+  <responseCode>0</responseCode>
+  <responseMessage>Transaction approved</responseMessage>
+  <transactionID>1336-fe4d3be6-b604-11e6-b9c3-005056b209e0</transactionID>
+  <authCode>731357526</authCode>
+  <receiptNo>731357526</receiptNo>
+  <authMessage>Approved or completed successfully</authMessage>
+  <authResponseCode>00</authResponseCode>
+  <authSettledDate>2016-11-30</authSettledDate>
+</mwResponse>
+    XML
+  end
+
   def pre_scrubbed
     'transactionAmount=1.00&transactionCurrency=AUD&hash=adb50f6ff360f861e6f525e8daae76b5&transactionProduct=98fc25d40a47f3d24da460c0ca307c&customerName=Longbob+Longsen&customerCountry=AU&customerState=Queensland&customerCity=Brisbane&customerAddress=123+test+st&customerPostCode=4000&customerIP=&customerPhone=&customerEmail=&paymentCardNumber=5123456789012346&paymentCardName=Longbob+Longsen&paymentCardExpiry=0520&paymentCardCSC=123&merchantUUID=51f7da294af8f&apiKey=nooudtd0&method=processCard'
   end
 
   def post_scrubbed
     'transactionAmount=1.00&transactionCurrency=AUD&hash=adb50f6ff360f861e6f525e8daae76b5&transactionProduct=98fc25d40a47f3d24da460c0ca307c&customerName=Longbob+Longsen&customerCountry=AU&customerState=Queensland&customerCity=Brisbane&customerAddress=123+test+st&customerPostCode=4000&customerIP=&customerPhone=&customerEmail=&paymentCardNumber=[FILTERED]&paymentCardName=Longbob+Longsen&paymentCardExpiry=0520&paymentCardCSC=[FILTERED]&merchantUUID=51f7da294af8f&apiKey=[FILTERED]&method=processCard'
+  end
+
+  def soft_descriptor_options
+    {
+      descriptor_name: 'FOO*Test',
+      descriptor_city: 'Melbourne',
+      descriptor_state: 'VIC'
+    }
   end
 end

@@ -31,6 +31,7 @@ module ActiveMerchant #:nodoc:
         add_address(post, options)
         add_payment_method(post, payment_method)
         add_recurring_flag(post, options)
+        add_soft_descriptors(post, options)
         commit('processAuth', post)
       end
 
@@ -41,6 +42,7 @@ module ActiveMerchant #:nodoc:
         add_address(post, options)
         add_payment_method(post, payment_method)
         add_recurring_flag(post, options)
+        add_soft_descriptors(post, options)
         commit('processCard', post)
       end
 
@@ -48,6 +50,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_amount(post, money, options)
         add_transaction(post, identification)
+        add_soft_descriptors(post, options)
         post['captureAmount'] = amount(money)
         commit('processCapture', post)
       end
@@ -56,6 +59,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_amount(post, money, options)
         add_transaction(post, identification)
+        add_soft_descriptors(post, options)
         post['refundAmount'] = amount(money)
         commit('refundCard', post)
       end
@@ -151,6 +155,12 @@ module ActiveMerchant #:nodoc:
         return if options[:recurring_flag].nil?
 
         post['recurringFlag'] = options[:recurring_flag]
+      end
+
+      def add_soft_descriptors(post, options)
+        post['descriptorName'] = options[:descriptor_name] if options[:descriptor_name]
+        post['descriptorCity'] = options[:descriptor_city] if options[:descriptor_city]
+        post['descriptorState'] = options[:descriptor_state] if options[:descriptor_state]
       end
 
       def verification_hash(money, currency)

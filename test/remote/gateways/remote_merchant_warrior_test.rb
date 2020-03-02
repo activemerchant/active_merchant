@@ -147,6 +147,27 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
     test_successful_authorize
   end
 
+  def test_successful_authorize_with_soft_descriptors
+    @options[:descriptor_name] = 'FOO*Test'
+    @options[:descriptor_city] = 'Melbourne'
+    @options[:descriptor_state] = 'VIC'
+    test_successful_authorize
+  end
+
+  def test_successful_purchase_with_soft_descriptors
+    @options[:descriptor_name] = 'FOO*Test'
+    @options[:descriptor_city] = 'Melbourne'
+    @options[:descriptor_state] = 'VIC'
+    test_successful_purchase
+  end
+
+  def test_successful_refund_with_soft_descriptors
+    @options[:descriptor_name] = 'FOO*Test'
+    @options[:descriptor_city] = 'Melbourne'
+    @options[:descriptor_state] = 'VIC'
+    test_successful_refund
+  end
+
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@success_amount, @credit_card, @options)
