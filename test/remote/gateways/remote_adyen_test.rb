@@ -967,4 +967,71 @@ class RemoteAdyenTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
   end
+
+  def test_purchase_using_stored_credential_recurring_cit
+    initial_options = stored_credential_options(:cardholder, :recurring, :initial)
+    assert auth = @gateway.authorize(@amount, @credit_card, initial_options)
+    assert_success auth
+    assert_equal 'Subscription', auth.params['additionalData']['recurringProcessingModel']
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+    assert_equal '[capture-received]', capture.message
+    assert network_transaction_id = 'none'
+
+    used_options = stored_credential_options(:recurring, :cardholder, id: network_transaction_id)
+    assert purchase = @gateway.purchase(@amount, @credit_card, used_options)
+    assert_success purchase
+  end
+
+  def test_purchase_using_stored_credential_recurring_mit
+    initial_options = stored_credential_options(:merchant, :recurring, :initial)
+    assert auth = @gateway.authorize(@amount, @credit_card, initial_options)
+    assert_success auth
+    assert_equal 'Subscription', auth.params['additionalData']['recurringProcessingModel']
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+    assert_equal '[capture-received]', capture.message
+    assert network_transaction_id = 'none'
+
+    used_options = stored_credential_options(:recurring, :cardholder, id: network_transaction_id)
+    assert purchase = @gateway.purchase(@amount, @credit_card, used_options)
+    assert_success purchase
+  end
+
+  def test_purchase_using_stored_credential_unscheduled_cit
+    initial_options = stored_credential_options(:cardholder, :unscheduled, :initial)
+    assert auth = @gateway.authorize(@amount, @credit_card, initial_options)
+    assert_success auth
+    assert_equal 'CardOnFile', auth.params['additionalData']['recurringProcessingModel']
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+    assert_equal '[capture-received]', capture.message
+    assert network_transaction_id = 'none'
+
+    used_options = stored_credential_options(:unscheduled, :cardholder, id: network_transaction_id)
+    assert purchase = @gateway.purchase(@amount, @credit_card, used_options)
+    assert_success purchase
+  end
+
+  def test_purchase_using_stored_credential_unscheduled_mit
+    initial_options = stored_credential_options(:merchant, :unscheduled, :initial)
+    assert auth = @gateway.authorize(@amount, @credit_card, initial_options)
+    assert_success auth
+    assert_equal 'UnscheduledCardOnFile', auth.params['additionalData']['recurringProcessingModel']
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+    assert_equal '[capture-received]', capture.message
+    assert network_transaction_id = 'none'
+
+    used_options = stored_credential_options(:unscheduled, :cardholder, id: network_transaction_id)
+    assert purchase = @gateway.purchase(@amount, @credit_card, used_options)
+    assert_success purchase
+  end
+
+  private
+
+  def stored_credential_options(*args, id: nil)
+    @options.merge(order_id: generate_unique_id,
+                   stored_credential: stored_credential(*args, id: id))
+  end
 end

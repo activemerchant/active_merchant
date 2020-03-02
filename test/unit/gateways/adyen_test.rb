@@ -67,20 +67,6 @@ class AdyenTest < Test::Unit::TestCase
       stored_credential: {reason_type: 'unscheduled'}
     }
 
-    @normalized_initial_stored_credential = {
-      stored_credential: {
-        initial_transaction: true,
-        reason_type: 'unscheduled'
-      }
-    }
-
-    @normalized_stored_credential = {
-      stored_credential: {
-        initial_transaction: false,
-        reason_type: 'recurring'
-      }
-    }
-
     @normalized_3ds_2_options = {
       reference: '345123',
       shopper_email: 'john.smith@test.com',
@@ -459,23 +445,104 @@ class AdyenTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
-  def test_successful_authorize_with_normalized_stored_credentials
+  def test_stored_credential_recurring_cit_initial
+    options = stored_credential_options(:cardholder, :recurring, :initial)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/"shopperInteraction":"Ecommerce"/, data)
+      assert_match(/"recurringProcessingModel":"Subscription"/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_recurring_cit_used
     @credit_card.verification_value = nil
-    stub_comms do
-      @gateway.authorize(50, @credit_card, @options.merge(@normalized_stored_credential))
+    options = stored_credential_options(:cardholder, :recurring, id: 'abc123')
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |endpoint, data, headers|
       assert_match(/"shopperInteraction":"ContAuth"/, data)
       assert_match(/"recurringProcessingModel":"Subscription"/, data)
     end.respond_with(successful_authorize_response)
+
+    assert_success response
   end
 
-  def test_successful_initial_authorize_with_normalized_stored_credentials
-    stub_comms do
-      @gateway.authorize(50, @credit_card, @options.merge(@normalized_initial_stored_credential))
+  def test_stored_credential_recurring_mit_initial
+    options = stored_credential_options(:merchant, :recurring, :initial)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/"shopperInteraction":"ContAuth"/, data)
+      assert_match(/"recurringProcessingModel":"Subscription"/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_recurring_mit_used
+    @credit_card.verification_value = nil
+    options = stored_credential_options(:merchant, :recurring, id: 'abc123')
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/"shopperInteraction":"ContAuth"/, data)
+      assert_match(/"recurringProcessingModel":"Subscription"/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_unscheduled_cit_initial
+    options = stored_credential_options(:cardholder, :unscheduled, :initial)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |endpoint, data, headers|
       assert_match(/"shopperInteraction":"Ecommerce"/, data)
       assert_match(/"recurringProcessingModel":"CardOnFile"/, data)
     end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_unscheduled_cit_used
+    @credit_card.verification_value = nil
+    options = stored_credential_options(:cardholder, :unscheduled, id: 'abc123')
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/"shopperInteraction":"ContAuth"/, data)
+      assert_match(/"recurringProcessingModel":"CardOnFile"/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_unscheduled_mit_initial
+    options = stored_credential_options(:merchant, :unscheduled, :initial)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/"shopperInteraction":"ContAuth"/, data)
+      assert_match(/"recurringProcessingModel":"UnscheduledCardOnFile"/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_unscheduled_mit_used
+    @credit_card.verification_value = nil
+    options = stored_credential_options(:merchant, :unscheduled, id: 'abc123')
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/"shopperInteraction":"ContAuth"/, data)
+      assert_match(/"recurringProcessingModel":"UnscheduledCardOnFile"/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
   end
 
   def test_nonfractional_currency_handling
@@ -729,6 +796,16 @@ class AdyenTest < Test::Unit::TestCase
   end
 
   private
+
+  def stored_credential_options(*args, id: nil)
+    {
+      order_id: '#1001',
+      description: 'AM test',
+      currency: 'GBP',
+      customer: '123',
+      stored_credential: stored_credential(*args, id: id)
+    }
+  end
 
   def pre_scrubbed
     <<-PRE_SCRUBBED

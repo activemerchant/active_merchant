@@ -261,7 +261,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_shopper_interaction(post, payment, options={})
-        if options.dig(:stored_credential, :initial_transaction) || (payment.respond_to?(:verification_value) && payment.verification_value) || payment.is_a?(NetworkTokenizationCreditCard)
+        if  (options.dig(:stored_credential, :initial_transaction) && options.dig(:stored_credential, :initiator) == 'cardholder') ||
+            (payment.respond_to?(:verification_value) && payment.verification_value && options.dig(:stored_credential, :initial_transaction).nil?) ||
+            payment.is_a?(NetworkTokenizationCreditCard)
           shopper_interaction = 'Ecommerce'
         else
           shopper_interaction = 'ContAuth'
@@ -273,8 +275,12 @@ module ActiveMerchant #:nodoc:
       def add_recurring_processing_model(post, options)
         return unless options.dig(:stored_credential, :reason_type) || options[:recurring_processing_model]
 
-        if options.dig(:stored_credential, :reason_type) && options[:stored_credential][:reason_type] == 'unscheduled'
-          recurring_processing_model = 'CardOnFile'
+        if options.dig(:stored_credential, :reason_type) == 'unscheduled'
+          if options.dig(:stored_credential, :initiator) == 'merchant'
+            recurring_processing_model = 'UnscheduledCardOnFile'
+          else
+            recurring_processing_model = 'CardOnFile'
+          end
         else
           recurring_processing_model = 'Subscription'
         end
