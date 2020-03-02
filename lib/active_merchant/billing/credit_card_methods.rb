@@ -13,7 +13,12 @@ module ActiveMerchant #:nodoc:
         'diners_club'        => ->(num) { num =~ /^3(0[0-5]|[68]\d)\d{11}$/ },
         'jcb'                => ->(num) { num =~ /^35(28|29|[3-8]\d)\d{12}$/ },
         'dankort'            => ->(num) { num =~ /^5019\d{12}$/ },
-        'maestro'            => ->(num) { (12..19).cover?(num&.size) && in_bin_range?(num.slice(0, 6), MAESTRO_RANGES) },
+        'maestro'            => lambda { |num|
+          (12..19).cover?(num&.size) && (
+            in_bin_range?(num.slice(0, 6), MAESTRO_RANGES) ||
+            MAESTRO_BINS.any? { |bin| num.slice(0, bin.size) == bin }
+          )
+        },
         'forbrugsforeningen' => ->(num) { num =~ /^600722\d{10}$/ },
         'sodexo'             => ->(num) { num =~ /^(606071|603389|606070|606069|606068|600818)\d{10}$/ },
         'vr'                 => ->(num) { num =~ /^(627416|637036)\d{10}$/ },
@@ -65,6 +70,10 @@ module ActiveMerchant #:nodoc:
         (510000..559999),
       ]
 
+      MAESTRO_BINS = Set.new(
+        ['500033', '581149']
+      )
+
       # https://www.mastercard.us/content/dam/mccom/global/documents/mastercard-rules.pdf, page 73
       MAESTRO_RANGES = [
         (561200..561269),
@@ -111,7 +120,7 @@ module ActiveMerchant #:nodoc:
         405886..405886, 430471..430471, 438061..438061, 438064..438064, 470063..470066,
         496067..496067, 506699..506704, 506706..506706, 506713..506714, 506716..506716,
         506749..506750, 506752..506752, 506754..506756, 506758..506762, 506764..506767,
-        506770..506771, 509015..509019, 509880..509882, 509884..509885, 509987..509988
+        506770..506771, 509015..509019, 509880..509882, 509884..509885, 509987..509992
       ]
 
       CABAL_RANGES = [

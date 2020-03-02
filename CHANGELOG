@@ -21,7 +21,8 @@
 * PayJunctionv2: Fix billing address fields [leila-alderman] #3557
 * Adyen: Fail unexpected 3DS responses [curiousepic] #3546
 * Merchant Warrior: Add support for setting soft descriptors [daBayrus] #3558
-* Adyen: Fix stored credentials [chinhle23] #3560 
+* Adyen: Fix stored credentials [chinhle23] #3560
+* Update BIN ranges for Alelo and Maestro cards [leila-alderman] #3559
 
 == Version 1.105.0 (Feb 20, 2020)
 * Credorax: Fix `3ds_transtype` setting in post [chinhle23] #3531
