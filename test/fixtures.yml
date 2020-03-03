@@ -560,10 +560,6 @@ moneris:
   login: store3
   password: yesguy
 
-moneris_us:
-  login: monusqa002
-  password: qatoken
-
 money_movers:
   login: demo
   password: password
