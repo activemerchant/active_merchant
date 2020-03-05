@@ -229,4 +229,12 @@ class RemoteEbanxTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:integration_key], transcript)
   end
+
+  def test_successful_purchase_with_long_order_id
+    options = @options.update(order_id: SecureRandom.hex(50))
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Accepted', response.message
+  end
 end
