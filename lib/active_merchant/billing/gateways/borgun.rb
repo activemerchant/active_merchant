@@ -34,7 +34,7 @@ module ActiveMerchant #:nodoc:
         post[:TransType] = '5'
         add_invoice(post, money, options)
         add_payment_method(post, payment)
-        commit('authonly', post)
+        commit('authonly', post, options)
       end
 
       def capture(money, authorization, options={})
@@ -125,12 +125,12 @@ module ActiveMerchant #:nodoc:
         response
       end
 
-      def commit(action, post)
+      def commit(action, post, options={})
         post[:Version] = '1000'
         post[:Processor] = @options[:processor]
         post[:MerchantID] = @options[:merchant_id]
 
-        request = build_request(action, post)
+        request = build_request(action, post, options)
         raw = ssl_post(url(action), request, headers)
         pairs = parse(raw)
         success = success_from(pairs)
@@ -180,7 +180,7 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def build_request(action, post)
+      def build_request(action, post, options={})
         mode = action == 'void' ? 'cancel' : 'get'
         xml = Builder::XmlMarkup.new indent: 18
         xml.instruct!(:xml, version: '1.0', encoding: 'utf-8')
@@ -188,9 +188,20 @@ module ActiveMerchant #:nodoc:
           post.each do |field, value|
             xml.tag!(field, value)
           end
+          build_airline_xml(xml, options[:passenger_itinerary_data]) if options[:passenger_itinerary_data]
         end
         inner = CGI.escapeHTML(xml.target!)
         envelope(mode).sub(/{{ :body }}/, inner)
+      end
+
+      def build_airline_xml(xml, airline_data)
+        xml.tag!('PassengerItineraryData') do
+          xml.tag!('A1') do
+            airline_data.each do |field, value|
+              xml.tag!(field, value)
+            end
+          end
+        end
       end
 
       def envelope(mode)
