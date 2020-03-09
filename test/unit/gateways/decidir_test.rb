@@ -67,7 +67,7 @@ class DecidirTest < Test::Unit::TestCase
 
     response = @gateway_for_purchase.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal 'TARJETA INVALIDA', response.message
+    assert_equal 'TARJETA INVALIDA | invalid_number', response.message
     assert_match Gateway::STANDARD_ERROR_CODE[:invalid_number], response.error_code
   end
 
@@ -104,7 +104,7 @@ class DecidirTest < Test::Unit::TestCase
     assert_failure response
 
     assert_equal 7719358, response.authorization
-    assert_equal 'TARJETA INVALIDA', response.message
+    assert_equal 'TARJETA INVALIDA | invalid_number', response.message
     assert response.test?
   end
 
@@ -235,7 +235,7 @@ class DecidirTest < Test::Unit::TestCase
     response = @gateway_for_auth.verify(@credit_card, @options)
     assert_failure response
 
-    assert_equal 'TARJETA INVALIDA', response.message
+    assert_equal 'TARJETA INVALIDA | invalid_number', response.message
     assert response.test?
   end
 
