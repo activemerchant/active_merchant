@@ -25,6 +25,7 @@
 * Update BIN ranges for Alelo and Maestro cards [leila-alderman] #3559
 * EBANX: Fix declines if order id is bigger than 40 chars [miguelxpn] #3563
 * Moneris US: Remove gateway [chinhle23] #3561
+* Decidir: Decidir: Improving the response message when encountering errors [naashton] #3564
 
 == Version 1.105.0 (Feb 20, 2020)
 * Credorax: Fix `3ds_transtype` setting in post [chinhle23] #3531

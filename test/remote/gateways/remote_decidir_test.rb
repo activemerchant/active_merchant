@@ -95,8 +95,8 @@ class RemoteDecidirTest < Test::Unit::TestCase
   def test_failed_purchase
     response = @gateway_for_purchase.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'TARJETA INVALIDA', response.message
-    assert_match Gateway::STANDARD_ERROR_CODE[:invalid_number], response.error_code
+    assert_equal 'COMERCIO INVALIDO | invalid_card', response.message
+    assert_match Gateway::STANDARD_ERROR_CODE[:config_error], response.error_code
   end
 
   def test_failed_purchase_with_invalid_field
@@ -121,7 +121,7 @@ class RemoteDecidirTest < Test::Unit::TestCase
   def test_failed_authorize
     response = @gateway_for_auth.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'TARJETA INVALIDA', response.message
+    assert_equal 'TARJETA INVALIDA | invalid_number', response.message
     assert_match Gateway::STANDARD_ERROR_CODE[:invalid_number], response.error_code
   end
 
@@ -196,7 +196,7 @@ class RemoteDecidirTest < Test::Unit::TestCase
   def test_failed_verify
     response = @gateway_for_auth.verify(@declined_card, @options)
     assert_failure response
-    assert_match %r{TARJETA INVALIDA}, response.message
+    assert_match %r{TARJETA INVALIDA | invalid_number}, response.message
   end
 
   def test_invalid_login

@@ -37,6 +37,7 @@ module ActiveMerchant #:nodoc:
         56 => STANDARD_ERROR_CODE[:card_declined],
         57 => STANDARD_ERROR_CODE[:card_declined],
         76 => STANDARD_ERROR_CODE[:call_issuer],
+        91 => STANDARD_ERROR_CODE[:call_issuer],
         96 => STANDARD_ERROR_CODE[:processing_error],
         97 => STANDARD_ERROR_CODE[:processing_error],
       }
@@ -239,9 +240,8 @@ module ActiveMerchant #:nodoc:
         return response['message'] if response['message']
 
         message = nil
-
         if error = response.dig('status_details', 'error')
-          message = error.dig('reason', 'description')
+          message = "#{error.dig('reason', 'description')} | #{error['type']}"
         elsif response['error_type']
           message = response['validation_errors'].map { |errors| "#{errors['code']}: #{errors['param']}" }.join(', ') if response['validation_errors']
           message ||= response['error_type']
