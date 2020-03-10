@@ -241,10 +241,7 @@ module ActiveMerchant #:nodoc:
 
         message = nil
         if error = response.dig('status_details', 'error')
-          message = error.dig('reason', 'description')
-          if detail = error['type']
-            message += ' | ' + detail
-          end
+          message = "#{error.dig('reason', 'description')} | #{error['type']}"
         elsif response['error_type']
           message = response['validation_errors'].map { |errors| "#{errors['code']}: #{errors['param']}" }.join(', ') if response['validation_errors']
           message ||= response['error_type']
