@@ -242,7 +242,7 @@ module ActiveMerchant #:nodoc:
         message = nil
         if error = response.dig('status_details', 'error')
           message = error.dig('reason', 'description')
-          if detail = error.dig('type')
+          if detail = error['type']
             message += ' | ' + detail
           end
         elsif response['error_type']
