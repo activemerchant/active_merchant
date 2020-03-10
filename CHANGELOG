@@ -1,6 +1,8 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+
+== Version 1.106.0 (Mar 10, 2020)
 * PayJunctionV2: Send billing address in `auth` and `purchase` transactions [naashton] #3538
 * Adyen: Fix some remote tests [curiousepic] #3541
 * Redsys: Properly escape cardholder name and description fields in 3DS requests [britth] #3537
