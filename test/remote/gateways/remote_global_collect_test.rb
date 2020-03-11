@@ -20,12 +20,12 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     response = @gateway.purchase(@accepted_amount, @credit_card, @options)
     assert_success response
     assert_equal 'Succeeded', response.message
+    assert_equal 'CAPTURE_REQUESTED', response.params['payment']['status']
   end
 
   def test_successful_purchase_with_fraud_fields
     options = @options.merge(
-      fraud_fields:
-      {
+      fraud_fields: {
         'website' => 'www.example.com',
         'giftMessage' => 'Happy Day!'
       }
@@ -53,6 +53,27 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert_equal 'Succeeded', response.message
+  end
+
+  # When approval is required, purchase will not make a capture request
+  def test_successful_purchase_with_requires_approval_true
+    options = @options.merge(requires_approval: true)
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal 'PENDING_APPROVAL', response.params['payment']['status']
+    assert_equal 'PENDING_MERCHANT', response.params['payment']['statusOutput']['statusCategory']
+  end
+
+  # When approval is not required, purchase will make a capture request
+  def test_successful_purchase_with_requires_approval_false
+    options = @options.merge(requires_approval: false)
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal 'CAPTURE_REQUESTED', response.params['payment']['status']
   end
 
   def test_successful_purchase_with_airline_data

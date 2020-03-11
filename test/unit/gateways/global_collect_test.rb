@@ -35,6 +35,26 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_successful_purchase_with_requires_approval_true
+    stub_comms do
+      @gateway.purchase(@accepted_amount, @credit_card, @options.merge(requires_approval: true))
+    end.check_request do |endpoint, data, headers|
+      assert_equal true, JSON.parse(data)['cardPaymentMethodSpecificInput']['requiresApproval']
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_successful_purchase_with_requires_approval_false
+    stub_comms do
+      @gateway.purchase(@accepted_amount, @credit_card, @options.merge(requires_approval: false))
+    end.check_request do |endpoint, data, headers|
+      # This block is called twice, since a purchase constitutes two calls:
+      # * authorize
+      # * capture
+      # Only testing that this data is sent for `authorize` call
+      assert_equal false, JSON.parse(data)['cardPaymentMethodSpecificInput']['requiresApproval'] if endpoint.end_with?('/payments')
+    end.respond_with(successful_authorize_response, successful_capture_response)
+  end
+
   def test_successful_purchase_airline_fields
     options = @options.merge(
       airline_data: {
