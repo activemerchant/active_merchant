@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Stripe Payment Intents: Early return failed `payment_methods` response [chinhle23] #3570
 
 == Version 1.106.0 (Mar 10, 2020)
 * PayJunctionV2: Send billing address in `auth` and `purchase` transactions [naashton] #3538

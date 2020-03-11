@@ -20,7 +20,9 @@ module ActiveMerchant #:nodoc:
         add_capture_method(post, options)
         add_confirmation_method(post, options)
         add_customer(post, options)
-        add_payment_method_token(post, payment_method, options)
+        payment_method = add_payment_method_token(post, payment_method, options)
+        return payment_method if payment_method.is_a?(ActiveMerchant::Billing::Response)
+
         add_metadata(post, options)
         add_return_url(post, options)
         add_connected_account(post, options)
@@ -41,7 +43,9 @@ module ActiveMerchant #:nodoc:
 
       def confirm_intent(intent_id, payment_method, options = {})
         post = {}
-        add_payment_method_token(post, payment_method, options)
+        payment_method = add_payment_method_token(post, payment_method, options)
+        return payment_method if payment_method.is_a?(ActiveMerchant::Billing::Response)
+
         CONFIRM_INTENT_ATTRIBUTES.each do |attribute|
           add_whitelisted_attribute(post, options, attribute)
         end
@@ -65,7 +69,9 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_amount(post, money, options)
 
-        add_payment_method_token(post, payment_method, options)
+        payment_method = add_payment_method_token(post, payment_method, options)
+        return payment_method if payment_method.is_a?(ActiveMerchant::Billing::Response)
+
         add_payment_method_types(post, options)
         add_customer(post, options)
         add_metadata(post, options)
@@ -121,7 +127,9 @@ module ActiveMerchant #:nodoc:
         # If customer option is provided, create a payment method and attach to customer id
         # Otherwise, create a customer, then attach
         if payment_method.is_a?(StripePaymentToken) || payment_method.is_a?(ActiveMerchant::Billing::CreditCard)
-          add_payment_method_token(params, payment_method, options)
+          payment_method = add_payment_method_token(params, payment_method, options)
+          return payment_method if payment_method.is_a?(ActiveMerchant::Billing::Response)
+
           if options[:customer]
             customer_id = options[:customer]
           else
@@ -191,6 +199,8 @@ module ActiveMerchant #:nodoc:
 
         if payment_method.is_a?(ActiveMerchant::Billing::CreditCard)
           p = create_payment_method(payment_method, options)
+          return p unless p.success?
+
           payment_method = p.params['id']
         end
 
