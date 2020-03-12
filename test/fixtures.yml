@@ -16,6 +16,11 @@ adyen:
   password: ''
   merchant_account: ''
 
+adyen_checkout:
+  username: ''
+  password: ''
+  merchant_account: ''
+
 allied_wallet:
   site_id: site_id
   merchant_id: merchant_id
