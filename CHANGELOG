@@ -4,6 +4,7 @@
 * Stripe Payment Intents: Early return failed `payment_methods` response [chinhle23] #3570
 * Borgun: Support `passengerItineraryData` [therufs] #3572
 * Ingenico GlobalCollect: support optional `requires_approval` field [fatcatt316] #3571
+* CenPOS: Update failing remote tests [britth] #3575
 
 == Version 1.106.0 (Mar 10, 2020)
 * PayJunctionV2: Send billing address in `auth` and `purchase` transactions [naashton] #3538
