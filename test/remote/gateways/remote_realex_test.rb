@@ -2,7 +2,7 @@ require 'test_helper'
 
 class RemoteRealexTest < Test::Unit::TestCase
   def setup
-    @gateway = RealexGateway.new(fixtures(:realex_with_account))
+    @gateway = RealexGateway.new(fixtures(:realex))
 
     # Replace the card numbers with the test account numbers from Realex
     @visa              = card_fixtures(:realex_visa)
