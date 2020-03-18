@@ -55,18 +55,19 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
-  # When approval is required, purchase will not make a capture request
+  # When requires_approval is true (or not present),
+  # `purchase` will make both an `auth` and a `capture` call
   def test_successful_purchase_with_requires_approval_true
     options = @options.merge(requires_approval: true)
 
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert_equal 'Succeeded', response.message
-    assert_equal 'PENDING_APPROVAL', response.params['payment']['status']
-    assert_equal 'PENDING_MERCHANT', response.params['payment']['statusOutput']['statusCategory']
+    assert_equal 'CAPTURE_REQUESTED', response.params['payment']['status']
   end
 
-  # When approval is not required, purchase will make a capture request
+  # When requires_approval is false, `purchase` will only make an `auth` call
+  # to request capture (and no subsequent `capture` call).
   def test_successful_purchase_with_requires_approval_false
     options = @options.merge(requires_approval: false)
 

@@ -356,11 +356,9 @@ POST
 
       # Capture hasn't already been requested,
       # and
-      # 'requires_approval' is not true
-      #   true = payment requires approval before the funds will be captured using the Approve payment or Capture payment API
-      #   false = payment does not require approval, and the funds will be captured automatically
+      # `requires_approval` is not false
       def should_request_capture?(response, requires_approval)
-        !capture_requested?(response) && requires_approval != true
+        !capture_requested?(response) && requires_approval != false
       end
 
       def capture_requested?(response)

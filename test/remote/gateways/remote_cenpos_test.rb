@@ -113,7 +113,7 @@ class RemoteCenposTest < Test::Unit::TestCase
     @gateway.capture(@amount, response.authorization)
     capture = @gateway.capture(@amount, response.authorization)
     assert_failure capture
-    assert_match /Duplicated.*transaction/, capture.message
+    assert_match(/Duplicated.*transaction/, capture.message)
   end
 
   def test_successful_void
