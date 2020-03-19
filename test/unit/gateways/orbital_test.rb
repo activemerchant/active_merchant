@@ -44,12 +44,6 @@ class OrbitalGatewayTest < Test::Unit::TestCase
         network_transaction_id: 'abcdefg12345678'
       }
     }
-    @normalized_initial_stored_credential = {
-      stored_credential: {
-        initial_transaction: true,
-        initiator: 'customer'
-      }
-    }
     @three_d_secure_options = {
       three_d_secure: {
         eci: '5',
@@ -491,23 +485,157 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_successful_purchase_with_normalized_stored_credentials
-    stub_comms do
-      @gateway.purchase(50, credit_card, @options.merge(@normalized_mit_stored_credential))
+  def test_stored_credential_recurring_cit_initial
+    options = stored_credential_options(:cardholder, :recurring, :initial)
+    response = stub_comms do
+      @gateway.purchase(50, credit_card, options)
     end.check_request do |endpoint, data, headers|
-      assert_match %{<MITMsgType>MUSE</MITMsgType>}, data
-      assert_match %{<MITStoredCredentialInd>Y</MITStoredCredentialInd>}, data
-      assert_match %{<MITSubmittedTransactionID>abcdefg12345678</MITSubmittedTransactionID>}, data
+      assert_match(/<MITMsgType>CSTO</, data)
+      assert_match(/<MITStoredCredentialInd>Y</, data)
     end.respond_with(successful_purchase_response)
+
+    assert_success response
   end
 
-  def test_successful_initial_purchase_with_normalized_stored_credentials
-    stub_comms do
-      @gateway.purchase(50, credit_card, @options.merge(@normalized_initial_stored_credential))
+  def test_stored_credential_recurring_cit_used
+    credit_card.verification_value = nil
+    options = stored_credential_options(:cardholder, :recurring, id: 'abc123')
+    response = stub_comms do
+      @gateway.purchase(50, credit_card, options)
     end.check_request do |endpoint, data, headers|
-      assert_match %{<MITMsgType>CSTO</MITMsgType>}, data
-      assert_match %{<MITStoredCredentialInd>Y</MITStoredCredentialInd>}, data
+      assert_match(/<MITMsgType>CREC</, data)
+      assert_match(/<MITStoredCredentialInd>Y</, data)
     end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_recurring_mit_initial
+    options = stored_credential_options(:merchant, :recurring, :initial)
+    response = stub_comms do
+      @gateway.purchase(50, credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<MITMsgType>CSTO</, data)
+      assert_match(/<MITStoredCredentialInd>Y</, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_recurring_mit_used
+    credit_card.verification_value = nil
+    options = stored_credential_options(:merchant, :recurring, id: 'abc123')
+    response = stub_comms do
+      @gateway.purchase(50, credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<MITMsgType>MREC</, data)
+      assert_match(/<MITStoredCredentialInd>Y</, data)
+      assert_match(/<MITSubmittedTransactionID>abc123</, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_unscheduled_cit_initial
+    options = stored_credential_options(:cardholder, :unscheduled, :initial)
+    response = stub_comms do
+      @gateway.purchase(50, credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<MITMsgType>CSTO</, data)
+      assert_match(/<MITStoredCredentialInd>Y</, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_unscheduled_cit_used
+    credit_card.verification_value = nil
+    options = stored_credential_options(:cardholder, :unscheduled, id: 'abc123')
+    response = stub_comms do
+      @gateway.purchase(50, credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<MITMsgType>CUSE</, data)
+      assert_match(/<MITStoredCredentialInd>Y</, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_unscheduled_mit_initial
+    options = stored_credential_options(:merchant, :unscheduled, :initial)
+    response = stub_comms do
+      @gateway.purchase(50, credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<MITMsgType>CSTO</, data)
+      assert_match(/<MITStoredCredentialInd>Y</, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_unscheduled_mit_used
+    credit_card.verification_value = nil
+    options = stored_credential_options(:merchant, :unscheduled, id: 'abc123')
+    response = stub_comms do
+      @gateway.purchase(50, credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<MITMsgType>MUSE</, data)
+      assert_match(/<MITStoredCredentialInd>Y</, data)
+      assert_match(/<MITSubmittedTransactionID>abc123</, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_installment_cit_initial
+    options = stored_credential_options(:cardholder, :installment, :initial)
+    response = stub_comms do
+      @gateway.purchase(50, credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<MITMsgType>CSTO</, data)
+      assert_match(/<MITStoredCredentialInd>Y</, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_installment_cit_used
+    credit_card.verification_value = nil
+    options = stored_credential_options(:cardholder, :installment, id: 'abc123')
+    response = stub_comms do
+      @gateway.purchase(50, credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<MITMsgType>CINS</, data)
+      assert_match(/<MITStoredCredentialInd>Y</, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_installment_mit_initial
+    options = stored_credential_options(:merchant, :installment, :initial)
+    response = stub_comms do
+      @gateway.purchase(50, credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<MITMsgType>CSTO</, data)
+      assert_match(/<MITStoredCredentialInd>Y</, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_installment_mit_used
+    credit_card.verification_value = nil
+    options = stored_credential_options(:merchant, :installment, id: 'abc123')
+    response = stub_comms do
+      @gateway.purchase(50, credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<MITMsgType>MINS</, data)
+      assert_match(/<MITStoredCredentialInd>Y</, data)
+      assert_match(/<MITSubmittedTransactionID>abc123</, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
   end
 
   def test_successful_purchase_with_overridden_normalized_stored_credentials
@@ -638,14 +766,6 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_success response
   end
 
-  #   <AVSzip>K1C2N6</AVSzip>
-  #   <AVSaddress1>456 My Street</AVSaddress1>
-  #   <AVSaddress2>Apt 1</AVSaddress2>
-  #   <AVScity>Ottawa</AVScity>
-  #   <AVSstate>ON</AVSstate>
-  #   <AVSphoneNum>5555555555</AVSphoneNum>
-  #   <AVSname>Longbob Longsen</AVSname>
-  #   <AVScountryCode>CA</AVScountryCode>
   def test_send_address_details_for_united_states
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1, billing_address: address)
@@ -897,6 +1017,16 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   end
 
   private
+
+  def stored_credential_options(*args, id: nil)
+    {
+      order_id: '#1001',
+      description: 'AM test',
+      currency: 'GBP',
+      customer: '123',
+      stored_credential: stored_credential(*args, id: id)
+    }
+  end
 
   def successful_purchase_response(resp_code = '00')
     %Q{<?xml version="1.0" encoding="UTF-8"?><Response><NewOrderResp><IndustryType></IndustryType><MessageType>AC</MessageType><MerchantID>700000000000</MerchantID><TerminalID>001</TerminalID><CardBrand>VI</CardBrand><AccountNum>4111111111111111</AccountNum><OrderID>1</OrderID><TxRefNum>4A5398CF9B87744GG84A1D30F2F2321C66249416</TxRefNum><TxRefIdx>1</TxRefIdx><ProcStatus>0</ProcStatus><ApprovalStatus>1</ApprovalStatus><RespCode>#{resp_code}</RespCode><AVSRespCode>H </AVSRespCode><CVV2RespCode>N</CVV2RespCode><AuthCode>091922</AuthCode><RecurringAdviceCd></RecurringAdviceCd><CAVVRespCode></CAVVRespCode><StatusMsg>Approved</StatusMsg><RespMsg></RespMsg><HostRespCode>00</HostRespCode><HostAVSRespCode>Y</HostAVSRespCode><HostCVV2RespCode>N</HostCVV2RespCode><CustomerRefNum></CustomerRefNum><CustomerName></CustomerName><ProfileProcStatus></ProfileProcStatus><CustomerProfileMessage></CustomerProfileMessage><RespTime>144951</RespTime></NewOrderResp></Response>}

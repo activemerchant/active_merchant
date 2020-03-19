@@ -256,35 +256,30 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
-  def test_successful_purchase_with_normalized_mit_stored_credentials
-    stored_credential = {
-      stored_credential: {
-        initial_transaction: false,
-        initiator: 'merchant',
-        reason_type: 'unscheduled',
-        network_transaction_id: 'abcdefg12345678'
-      }
-    }
+  def test_purchase_using_stored_credential_recurring_cit
+    initial_options = stored_credential_options(:cardholder, :recurring, :initial)
+    assert purchase = @gateway.purchase(@amount, @credit_card, initial_options)
+    assert_success purchase
+    assert_equal 'Approved', purchase.message
+    assert network_transaction_id = purchase.params['mit_received_transaction_id']
 
-    response = @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential))
-
-    assert_success response
-    assert_equal 'Approved', response.message
+    used_options = stored_credential_options(:recurring, :cardholder, id: network_transaction_id)
+    assert purchase = @gateway.purchase(@amount, @credit_card, used_options)
+    assert_success purchase
+    assert_equal 'Approved', purchase.message
   end
 
-  def test_successful_purchase_with_normalized_cit_stored_credentials
-    stored_credential = {
-      stored_credential: {
-        initial_transaction: true,
-        initiator: 'customer',
-        reason_type: 'unscheduled'
-      }
-    }
+  def test_purchase_using_stored_credential_recurring_mit
+    initial_options = stored_credential_options(:merchant, :recurring, :initial)
+    assert purchase = @gateway.purchase(@amount, @credit_card, initial_options)
+    assert_success purchase
+    assert_equal 'Approved', purchase.message
+    assert network_transaction_id = purchase.params['mit_received_transaction_id']
 
-    response = @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential))
-
-    assert_success response
-    assert_equal 'Approved', response.message
+    used_options = stored_credential_options(:recurring, :merchant, id: network_transaction_id)
+    assert purchase = @gateway.purchase(@amount, @credit_card, used_options)
+    assert_success purchase
+    assert_equal 'Approved', purchase.message
   end
 
   def test_successful_purchase_with_overridden_normalized_stored_credentials
@@ -482,5 +477,12 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_scrubbed(@gateway.options[:password], transcript)
     assert_scrubbed(@gateway.options[:login], transcript)
     assert_scrubbed(@gateway.options[:merchant_id], transcript)
+  end
+
+  private
+
+  def stored_credential_options(*args, id: nil)
+    @options.merge(order_id: generate_unique_id,
+                   stored_credential: stored_credential(*args, id: id))
   end
 end

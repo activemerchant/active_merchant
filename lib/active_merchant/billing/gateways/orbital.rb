@@ -569,7 +569,7 @@ module ActiveMerchant #:nodoc:
 
         initiator =
           case parameters[:stored_credential][:initiator]
-          when 'customer' then 'C'
+          when 'cardholder', 'customer' then 'C'
           when 'merchant' then 'M'
           end
         reason =
