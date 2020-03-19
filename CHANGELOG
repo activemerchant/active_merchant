@@ -6,6 +6,7 @@
 * Ingenico GlobalCollect: support optional `requires_approval` field [fatcatt316] #3571
 * CenPOS: Update failing remote tests [britth] #3575
 * Realex: Update remote tests [britth] #3576
+* FirstData e4 v27: Properly tag stored credential initiation field in request [britth] #3578
 
 == Version 1.106.0 (Mar 10, 2020)
 * PayJunctionV2: Send billing address in `auth` and `purchase` transactions [naashton] #3538

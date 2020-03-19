@@ -319,7 +319,7 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'StoredCredentials' do
           xml.tag! 'Indicator', stored_credential_indicator(xml, card, options)
           if initiator = options.dig(:stored_credential, :initiator)
-            xml.tag! initiator == 'merchant' ? 'M' : 'C'
+            xml.tag! 'Initiation', initiator == 'merchant' ? 'M' : 'C'
           end
           if reason_type = options.dig(:stored_credential, :reason_type)
             xml.tag! 'Schedule', reason_type == 'unscheduled' ? 'U' : 'S'

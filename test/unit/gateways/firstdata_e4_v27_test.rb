@@ -73,6 +73,7 @@ class FirstdataE4V27Test < Test::Unit::TestCase
       assert_match(/Indicator>1</, data)
       assert_match(/Schedule>U</, data)
       assert_match(/TransactionId>new</, data)
+      assert_match(/Initiation>C/, data)
     end.respond_with(successful_purchase_response_with_stored_credentials)
 
     assert_success response

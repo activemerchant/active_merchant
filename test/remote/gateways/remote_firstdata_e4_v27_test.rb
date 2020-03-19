@@ -91,6 +91,7 @@ class RemoteFirstdataE4V27Test < Test::Unit::TestCase
     assert_match(/Transaction Normal/, response.message)
     assert_success response
     assert_equal '1', response.params['stored_credentials_indicator']
+    assert_equal 'C', response.params['stored_credentials_initiation']
     assert_equal 'U', response.params['stored_credentials_schedule']
     assert_not_nil response.params['stored_credentials_transaction_id']
   end
