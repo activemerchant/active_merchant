@@ -7,7 +7,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
 
     @gateway = CyberSourceGateway.new({nexus: 'NC'}.merge(fixtures(:cyber_source)))
 
-    @credit_card = credit_card('4111111111111111', verification_value: '321')
+    @credit_card = credit_card('4111111111111111', verification_value: '987')
     @declined_card = credit_card('801111111111111')
     @pinless_debit_card = credit_card('4002269999999999')
     @elo_credit_card = credit_card('5067310000000010',
@@ -141,6 +141,13 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert response.test?
     assert_equal 'Invalid account number', response.message
     assert_equal false, response.success?
+  end
+
+  def test_purchase_and_void
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_successful_response(purchase)
+    assert void = @gateway.void(purchase.authorization, @options)
+    assert_successful_response(void)
   end
 
   def test_authorize_and_void

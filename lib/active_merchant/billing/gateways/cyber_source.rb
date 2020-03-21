@@ -325,7 +325,8 @@ module ActiveMerchant #:nodoc:
         options[:order_id] = order_id
 
         xml = Builder::XmlMarkup.new indent: 2
-        if action == 'capture'
+        case action
+        when 'capture', 'purchase'
           add_mdd_fields(xml, options)
           add_void_service(xml, request_id, request_token)
         else

@@ -451,22 +451,34 @@ class CyberSourceTest < Test::Unit::TestCase
     end.respond_with(successful_card_credit_response)
   end
 
+  def test_successful_void_purchase_request
+    purchase = '1000;1842651133440156177166;AP4JY+Or4xRonEAOERAyMzQzOTEzMEM0MFZaNUZCBgDH3fgJ8AEGAMfd+AnwAwzRpAAA7RT/;purchase;100;USD;'
+
+    stub_comms do
+      @gateway.void(purchase, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r(<voidService run=\"true\"), data)
+    end.respond_with(successful_void_response)
+  end
+
   def test_successful_void_capture_request
-    @gateway.stubs(:ssl_post).returns(successful_capture_response, successful_auth_reversal_response)
-    assert response_capture = @gateway.capture(@amount, '1846925324700976124593')
-    assert response_capture.success?
-    assert response_capture.test?
-    assert response_auth_reversal = @gateway.void(response_capture.authorization, @options)
-    assert response_auth_reversal.success?
+    capture = '1000;1842651133440156177166;AP4JY+Or4xRonEAOERAyMzQzOTEzMEM0MFZaNUZCBgDH3fgJ8AEGAMfd+AnwAwzRpAAA7RT/;capture;100;USD;'
+
+    stub_comms do
+      @gateway.void(capture, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r(<voidService run=\"true\"), data)
+    end.respond_with(successful_void_response)
   end
 
   def test_successful_void_authorization_request
-    @gateway.stubs(:ssl_post).returns(successful_authorization_response, successful_void_response)
-    assert response = @gateway.authorize(@amount, @credit_card, @options)
-    assert response.success?
-    assert response.test?
-    assert response_void = @gateway.void(response.authorization, @options)
-    assert response_void.success?
+    authorization = '1000;1842651133440156177166;AP4JY+Or4xRonEAOERAyMzQzOTEzMEM0MFZaNUZCBgDH3fgJ8AEGAMfd+AnwAwzRpAAA7RT/;authorize;100;USD;'
+
+    stub_comms do
+      @gateway.void(authorization, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r(<ccAuthReversalService run=\"true\"), data)
+    end.respond_with(successful_auth_reversal_response)
   end
 
   def test_successful_void_with_issuer_additional_data
