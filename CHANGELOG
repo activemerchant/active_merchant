@@ -10,6 +10,7 @@
 * Orbital: Fix stored credentials [chinhle23] #3579
 * Acapture(Opp): Update gateway credentials [molbrown] #3574
 * Ingenico GlobalCollect: support `requires_approval` field [fatcatt316] #3577
+* CyberSource: Fix `void` for `purchase` transactions [chinhle23] #3581
 
 == Version 1.106.0 (Mar 10, 2020)
 * PayJunctionV2: Send billing address in `auth` and `purchase` transactions [naashton] #3538
