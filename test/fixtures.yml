@@ -633,8 +633,7 @@ openpay:
   merchant_id: 'mzdtln0bmtms6o3kck8f'
 
 opp:
-  user_id: '8a8294174b7ecb28014b9699220015cc'
-  password: 'sy6KJsT8'
+  access_token: 'OGE4Mjk0MTc0YjdlY2IyODAxNGI5Njk5MjIwMDE1Y2N8c3k2S0pzVDg='
   entity_id: '8a8294174d0a8edd014d242337942575'
 
 optimal_payment:

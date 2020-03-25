@@ -13,8 +13,7 @@ module ActiveMerchant #:nodoc:
       # == Usage
       #
       #   gateway = ActiveMerchant::Billing::OppGateway.new(
-      #      user_id: 'merchant user id',
-      #      password: 'password',
+      #      access_token: 'access_token',
       #      entity_id: 'entity id',
       #   )
       #
