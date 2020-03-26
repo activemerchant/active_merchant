@@ -102,13 +102,21 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_method(post, payment_method, options)
         post[:source] = {}
-        post[:source][:type] = 'card'
-        post[:source][:name] = payment_method.name
-        post[:source][:number] = payment_method.number
-        post[:source][:cvv] = payment_method.verification_value
+        if payment_method.is_a?(NetworkTokenizationCreditCard) && payment_method.source == :network_token
+          post[:source][:type] = 'network_token'
+          post[:source][:token] = payment_method.number
+          post[:source][:token_type] = payment_method.brand == 'visa' ? 'vts' : 'mdes'
+          post[:source][:cryptogram] = payment_method.payment_cryptogram
+          post[:source][:eci] = options[:eci] || '05'
+        else
+          post[:source][:type] = 'card'
+          post[:source][:name] = payment_method.name
+          post[:source][:number] = payment_method.number
+          post[:source][:cvv] = payment_method.verification_value
+          post[:source][:stored] = 'true' if options[:card_on_file] == true
+        end
         post[:source][:expiry_year] = format(payment_method.year, :four_digits)
         post[:source][:expiry_month] = format(payment_method.month, :two_digits)
-        post[:source][:stored] = 'true' if options[:card_on_file] == true
       end
 
       def add_customer_data(post, options)
