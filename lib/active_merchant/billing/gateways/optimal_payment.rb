@@ -65,6 +65,10 @@ module ActiveMerchant #:nodoc:
         commit('ccVerification', 0, options)
       end
 
+      def store(credit_card, options = {})
+        verify(credit_card, options)
+      end
+
       def supports_scrubbing?
         true
       end

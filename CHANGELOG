@@ -13,6 +13,7 @@
 * CyberSource: Fix `void` for `purchase` transactions [chinhle23] #3581
 * Checkout V2: Begin to add support for using network tokens for transactions. [arbianchi] #3580
 * Opp: Update remote test fixtures [ccarruitero] #3582
+* Optimal Payment: Add support for store [britth] #3585
 
 == Version 1.106.0 (Mar 10, 2020)
 * PayJunctionV2: Send billing address in `auth` and `purchase` transactions [naashton] #3538
