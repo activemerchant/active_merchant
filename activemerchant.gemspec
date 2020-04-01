@@ -19,6 +19,8 @@ Gem::Specification.new do |s|
   s.files = Dir['CHANGELOG', 'README.md', 'MIT-LICENSE', 'CONTRIBUTORS', 'lib/**/*', 'vendor/**/*']
   s.require_path = 'lib'
 
+  s.metadata['allowed_push_host'] = "https://rubygems.org"
+
   s.has_rdoc = true if Gem::VERSION < '1.7.0'
 
   s.add_dependency('activesupport', '>= 4.2')
