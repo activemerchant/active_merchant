@@ -1,6 +1,8 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+
+== Version 1.107.0 (Apr 1, 2020)
 * Stripe Payment Intents: Early return failed `payment_methods` response [chinhle23] #3570
 * Borgun: Support `passengerItineraryData` [therufs] #3572
 * Ingenico GlobalCollect: support optional `requires_approval` field [fatcatt316] #3571
@@ -14,6 +16,7 @@
 * Checkout V2: Begin to add support for using network tokens for transactions. [arbianchi] #3580
 * Opp: Update remote test fixtures [ccarruitero] #3582
 * Optimal Payment: Add support for store [britth] #3585
+* SecurePay Australia : Update test URL (#3586)
 
 == Version 1.106.0 (Mar 10, 2020)
 * PayJunctionV2: Send billing address in `auth` and `purchase` transactions [naashton] #3538
