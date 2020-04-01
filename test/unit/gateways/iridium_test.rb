@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class IridiumTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     Base.mode = :test
 
@@ -107,6 +109,14 @@ class IridiumTest < Test::Unit::TestCase
     assert_nothing_raised do
       assert_success @gateway.purchase(@amount, credit_card, @options)
     end
+  end
+
+  def test_nonfractional_currency_handling
+    stub_comms do
+      @gateway.authorize(14200, @credit_card, @options.merge(currency: 'JPY'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<TransactionDetails Amount=\"142\"/, data)
+    end.respond_with(successful_authorize_response)
   end
 
   def test_transcript_scrubbing

@@ -291,7 +291,8 @@ module ActiveMerchant #:nodoc:
         order_id, cross_reference, _ = authorization.split(';')
         build_request(options) do |xml|
           if money
-            details = {'CurrencyCode' => currency_code(options[:currency] || default_currency), 'Amount' => amount(money)}
+            currency = options[:currency] || currency(money)
+            details = {'CurrencyCode' => currency_code(currency), 'Amount' => localized_amount(money, currency)}
           else
             details = {'CurrencyCode' => currency_code(default_currency), 'Amount' => '0'}
           end
@@ -327,8 +328,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_purchase_data(xml, type, money, options)
+        currency = options[:currency] || currency(money)
         requires!(options, :order_id)
-        xml.tag! 'TransactionDetails', {'Amount' => amount(money), 'CurrencyCode' => currency_code(options[:currency] || currency(money))} do
+        xml.tag! 'TransactionDetails', {'Amount' => localized_amount(money, currency), 'CurrencyCode' => currency_code(currency)} do
           xml.tag! 'MessageDetails', {'TransactionType' => type}
           xml.tag! 'OrderID', options[:order_id]
           xml.tag! 'TransactionControl' do
