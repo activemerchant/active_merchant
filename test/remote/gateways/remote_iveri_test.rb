@@ -124,6 +124,10 @@ class RemoteIveriTest < Test::Unit::TestCase
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response
+    assert_equal 'Authorisation', response.responses[0].params['transaction_command']
+    assert_equal '0', response.responses[0].params['result_status']
+    assert_equal 'Void', response.responses[1].params['transaction_command']
+    assert_equal '0', response.responses[1].params['result_status']
     assert_equal 'Succeeded', response.message
   end
 
