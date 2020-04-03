@@ -421,7 +421,6 @@ module ActiveMerchant #:nodoc:
         params = {}
         params[:customer_vault_id] = result.transaction.customer_details.id if result.success?
         params[:braintree_transaction] = transaction_hash(result)
-        params[:descriptor] = result.transaction.descriptor.as_json if result.transaction
         params
       end
 
@@ -591,6 +590,12 @@ module ActiveMerchant #:nodoc:
           "token"               => transaction.credit_card_details.token
         }
 
+        descriptor = {
+          "name"  => transaction&.descriptor&.name,
+          "phone" => transaction&.descriptor&.phone,
+          "url"   => transaction&.descriptor&.url
+        }
+
         {
           "order_id"                => transaction.order_id,
           "status"                  => transaction.status,
@@ -600,7 +605,8 @@ module ActiveMerchant #:nodoc:
           "shipping_details"        => shipping_details,
           "vault_customer"          => vault_customer,
           "merchant_account_id"     => transaction.merchant_account_id,
-          "processor_response_code" => response_code_from_result(result)
+          "processor_response_code" => response_code_from_result(result),
+          "descriptor"              => descriptor
         }
       end
 
