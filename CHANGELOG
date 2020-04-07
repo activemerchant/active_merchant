@@ -4,6 +4,7 @@
 * Iridium: Localize zero-decimal currencies [chinhle23] #3587
 * iVeri: Fix `verify` action [chinhle23] #3588
 * Ixopay: Properly support three-decimal currencies [chinhle23] #3589
+* Kushki: support `auth` and `capture` [therufs] #3591
 
 == Version 1.107.1 (Apr 1, 2020)
 * Add `allowed_push_host` to gemspec [mdeloupy]
