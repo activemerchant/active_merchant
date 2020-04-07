@@ -350,6 +350,18 @@ class IxopayTest < Test::Unit::TestCase
     assert_equal 'FINISHED', response.message
   end
 
+  def test_three_decimal_currency_handling
+    response = stub_comms do
+      @gateway.authorize(14200, @credit_card, @options.merge(currency: 'KWD'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<amount>14.200<\/amount>/, data)
+      assert_match(/<currency>KWD<\/currency>/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+    assert_equal 'FINISHED', response.message
+  end
+
   private
 
   def mock_response_error
