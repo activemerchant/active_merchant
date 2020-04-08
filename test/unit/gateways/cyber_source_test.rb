@@ -103,6 +103,16 @@ class CyberSourceTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_merchant_description
+    stub_comms do
+      @gateway.authorize(100, @credit_card, merchant_descriptor_name: 'Test Name', merchant_descriptor_address1: '123 Main Dr', merchant_descriptor_locality: 'Durham')
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r(<merchantDescriptor>.*<name>Test Name</name>.*</merchantDescriptor>)m, data)
+      assert_match(%r(<merchantDescriptor>.*<address1>123 Main Dr</address1>.*</merchantDescriptor>)m, data)
+      assert_match(%r(<merchantDescriptor>.*<locality>Durham</locality>.*</merchantDescriptor>)m, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_purchase_includes_merchant_descriptor
     stub_comms do
       @gateway.purchase(100, @credit_card, merchant_descriptor: 'Spreedly')

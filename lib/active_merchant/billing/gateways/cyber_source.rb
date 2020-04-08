@@ -25,8 +25,8 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://ics2wsa.ic3.com/commerce/1.x/transactionProcessor'
 
       # Schema files can be found here: https://ics2ws.ic3.com/commerce/1.x/transactionProcessor/
-      TEST_XSD_VERSION = '1.159'
-      PRODUCTION_XSD_VERSION = '1.159'
+      TEST_XSD_VERSION = '1.164'
+      PRODUCTION_XSD_VERSION = '1.164'
 
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb, :dankort, :maestro, :elo]
       self.supported_countries = %w(US BR CA CN DK FI FR DE IN JP MX NO SE GB SG LB PK)
@@ -272,6 +272,7 @@ module ActiveMerchant #:nodoc:
         add_business_rules_data(xml, creditcard_or_reference, options)
         add_stored_credential_options(xml, options)
         add_issuer_additional_data(xml, options)
+        add_merchant_description(xml, options)
 
         xml.target!
       end
@@ -298,6 +299,8 @@ module ActiveMerchant #:nodoc:
         add_capture_service(xml, request_id, request_token)
         add_business_rules_data(xml, authorization, options)
         add_issuer_additional_data(xml, options)
+        add_merchant_description(xml, options)
+
         xml.target!
       end
 
@@ -316,6 +319,7 @@ module ActiveMerchant #:nodoc:
           add_business_rules_data(xml, payment_method_or_reference, options) unless options[:pinless_debit_card]
         end
         add_issuer_additional_data(xml, options)
+        add_merchant_description(xml, options)
 
         xml.target!
       end
@@ -356,6 +360,7 @@ module ActiveMerchant #:nodoc:
         add_mdd_fields(xml, options)
         add_credit_service(xml)
         add_issuer_additional_data(xml, options)
+        add_merchant_description(xml, options)
 
         xml.target!
       end
@@ -467,6 +472,18 @@ module ActiveMerchant #:nodoc:
 
         xml.tag! 'invoiceHeader' do
           xml.tag! 'merchantDescriptor', options[:merchant_descriptor]
+        end
+      end
+
+      def add_merchant_description(xml, options)
+        return unless options[:merchant_descriptor_name] || options[:merchant_descriptor_address1] || options[:merchant_descriptor_locality]
+
+        xml.tag! 'merchantInformation' do
+          xml.tag! 'merchantDescriptor' do
+            xml.tag! 'name', options[:merchant_descriptor_name] if options[:merchant_descriptor_name]
+            xml.tag! 'address1', options[:merchant_descriptor_address1] if options[:merchant_descriptor_address1]
+            xml.tag! 'locality', options[:merchant_descriptor_locality] if options[:merchant_descriptor_locality]
+          end
         end
       end
 

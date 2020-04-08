@@ -370,6 +370,21 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_successful_response(capture)
   end
 
+  def test_merchant_description
+    merchant_options = {
+      merchantInformation: {
+        merchantDescriptor: {
+          name: 'Test Name',
+          address1: '123 Main Dr',
+          locality: 'Durham',
+        }
+      }
+    }
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(merchant_options))
+    assert_successful_response(response)
+  end
+
   def test_successful_capture_with_tax
     assert auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_successful_response(auth)
