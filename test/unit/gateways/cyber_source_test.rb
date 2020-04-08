@@ -97,6 +97,14 @@ class CyberSourceTest < Test::Unit::TestCase
     end.respond_with(successful_authorization_response)
   end
 
+  def test_purchase_includes_merchant_descriptor
+    stub_comms do
+      @gateway.purchase(100, @credit_card, merchant_descriptor: 'Chargify')
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<merchantDescriptor>Chargify<\/merchantDescriptor>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_successful_check_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 

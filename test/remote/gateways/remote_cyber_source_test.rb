@@ -190,6 +190,13 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_merchant_descriptor
+    @options[:merchant_descriptor] = 'Chargify'
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+  end
+
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_equal 'Invalid account number', response.message
