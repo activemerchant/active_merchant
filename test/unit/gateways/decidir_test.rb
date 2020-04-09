@@ -86,6 +86,14 @@ class DecidirTest < Test::Unit::TestCase
     end
   end
 
+  def test_failed_purchase_error_response
+    @gateway_for_purchase.expects(:ssl_request).returns(unique_error_response)
+
+    response = @gateway_for_purchase.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_match 'invalid_request_error | invalid_param | payment_type', response.error_code
+  end
+
   def test_successful_authorize
     @gateway_for_auth.expects(:ssl_request).returns(successful_authorize_response)
 
@@ -462,5 +470,11 @@ class DecidirTest < Test::Unit::TestCase
     %(
       {"error_type":"not_found_error","entity_name":"","id":""}
     )
+  end
+
+  def unique_error_response
+    %{
+      {\"error\":{\"error_type\":\"invalid_request_error\",\"validation_errors\":[{\"code\":\"invalid_param\",\"param\":\"payment_type\"}]}}
+    }
   end
 end

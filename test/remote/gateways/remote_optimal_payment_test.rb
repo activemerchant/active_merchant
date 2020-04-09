@@ -98,7 +98,6 @@ class RemoteOptimalPaymentTest < Test::Unit::TestCase
     assert_not_nil response.authorization
     assert_equal 'ERROR', response.params['decision']
 
-
     assert stored_purchase = @gateway.stored_purchase(@amount, response.authorization)
     assert_failure stored_purchase
     assert_equal 'ERROR', stored_purchase.params['decision']

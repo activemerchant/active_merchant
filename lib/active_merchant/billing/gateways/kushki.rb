@@ -209,7 +209,6 @@ module ActiveMerchant #:nodoc:
         if ['void', 'refund'].include?(action)
           base_url + 'v1/' + ENDPOINT[action] + '/' + params[:ticketNumber].to_s
         else
-          #require 'pry-byebug'; byebug
           base_url + 'card/v1/' + ENDPOINT[action]
         end
       end
