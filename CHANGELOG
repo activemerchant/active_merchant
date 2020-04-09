@@ -8,6 +8,7 @@
 * PaymentExpress: Update references to Windcave to reflect rebranding [britth] #3595
 * Decidir: Improve handling of error responses from the gateway [naashton] #3594
 * CyberSource: Added support for MerchantInformation CyberSource-specific fields [apfranzen] #3592
+* ePay: Send unique order ids for remote tests [curiousepic] #3593
 
 == Version 1.107.1 (Apr 1, 2020)
 * Add `allowed_push_host` to gemspec [mdeloupy]
