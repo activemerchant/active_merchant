@@ -5,6 +5,7 @@
 * iVeri: Fix `verify` action [chinhle23] #3588
 * Ixopay: Properly support three-decimal currencies [chinhle23] #3589
 * Kushki: support `auth` and `capture` [therufs] #3591
+* PaymentExpress: Update references to Windcave to reflect rebranding [britth] #3595
 
 == Version 1.107.1 (Apr 1, 2020)
 * Add `allowed_push_host` to gemspec [mdeloupy]
