@@ -1,7 +1,6 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
-* CyberSource: Added support for MerchantInformation CyberSource-specific fields [apfranzen] #3592
 * Iridium: Localize zero-decimal currencies [chinhle23] #3587
 * iVeri: Fix `verify` action [chinhle23] #3588
 * Ixopay: Properly support three-decimal currencies [chinhle23] #3589
