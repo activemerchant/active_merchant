@@ -44,8 +44,7 @@ class AdyenTest < Test::Unit::TestCase
         shipping_address: address(),
         shopper_reference: 'John Smith',
         order_id: '345123',
-        installments: 2,
-        stored_credential: {reason_type: 'unscheduled'}
+        installments: 2
     }
 
     @normalized_initial_stored_credential = {
@@ -65,7 +64,9 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_successful_purchase
     response = stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options)
+      @gateway.purchase(@amount, @credit_card, @options.merge(recurring_processing_model: 'Subscription'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 'Subscription', JSON.parse(data)['recurringProcessingModel']
     end.respond_with(successful_authorize_response, successful_capture_response)
     assert_success response
     assert_equal '#7914775043909934#', response.authorization
@@ -139,9 +140,34 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_successful_store
     response = stub_comms do
-      @gateway.store(@credit_card, @options)
+      @gateway.store(@credit_card, @options.merge(recurring_processing_model: 'Subscription'))
     end.check_request do |_endpoint, data, _headers|
-      assert_equal 'CardOnFile', JSON.parse(data)['recurringProcessingModel']
+      assert_equal 'Subscription', JSON.parse(data)['recurringProcessingModel']
+    end.respond_with(successful_store_response)
+    assert_success response
+    assert_equal '#8835205392522157#8315202663743702', response.authorization
+  end
+
+  def test_successful_store_with_add_3ds_data
+    response = stub_comms do
+      @gateway.store(@credit_card, @options.merge(allow3DS2: true, origin: 'http://localhost', channel: 'web', browser_info: {}))
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal true, JSON.parse(data)['additionalData']['allow3DS2']
+      assert_equal 'web', JSON.parse(data)['channel']
+      assert_equal 'http://localhost', JSON.parse(data)['origin']
+      assert_equal Hash.new, JSON.parse(data)['browserInfo']
+    end.respond_with(successful_store_response)
+    assert_success response
+    assert_equal '#8835205392522157#8315202663743702', response.authorization
+  end
+
+  def test_successful_store_with_three_ds_data
+    response = stub_comms do
+      @gateway.store(@credit_card, @options.merge(three_ds_data: { paymentData: 'fake', details: 'fake' }))
+    end.check_request do |endpoint, data, _headers|
+      r = { "paymentData" => nil, "details" => nil }
+      assert_equal r, JSON.parse(data)
+      assert_equal "https://checkout-test.adyen.com/v51/payments/details", endpoint
     end.respond_with(successful_store_response)
     assert_success response
     assert_equal '#8835205392522157#8315202663743702', response.authorization
@@ -165,7 +191,7 @@ class AdyenTest < Test::Unit::TestCase
   end
 
   def test_add_address
-    post = {:card => {:billingAddress => {}}}
+    post = {:paymentMethod => {:billingAddress => {}}}
     @options[:billing_address].delete(:address1)
     @options[:billing_address].delete(:address2)
     @options[:billing_address].delete(:state)

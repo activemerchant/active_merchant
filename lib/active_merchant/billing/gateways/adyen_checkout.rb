@@ -52,6 +52,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def store(credit_card, options={})
+        return details(options) if options[:three_ds_data]
+
         requires!(options, :order_id)
         post = init_post(options)
         add_invoice(post, 0, options)
@@ -59,6 +61,7 @@ module ActiveMerchant #:nodoc:
         add_extra_data(post, options)
         add_stored_credentials(post, credit_card, options)
         add_address(post, options)
+        add_three_ds_data(post, options) if options[:allow3DS2]
 
         initial_response = commit('payments', post, options)
 
@@ -67,6 +70,12 @@ module ActiveMerchant #:nodoc:
         else
           initial_response
         end
+      end
+
+      def details(options)
+        post = {}
+        add_three_ds_details(post, options)
+        commit('payments/details', post, options)
       end
 
       def supports_scrubbing?
@@ -153,6 +162,19 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_three_ds_data(post, options)
+        post[:additionalData] ||= {}
+        post[:additionalData][:allow3DS2] = options[:allow3DS2] if options[:allow3DS2]
+        post[:channel] = options[:channel] if options[:channel]
+        post[:origin] = options[:origin] if options[:origin]
+        post[:browserInfo] = options[:browser_info] if options[:browser_info] # Autopopulated with `populateBrowserInfoFor3ds` service enabled
+      end
+
+      def add_three_ds_details(post, options)
+        post[:paymentData] = options[:three_ds_data]['paymentData']
+        post[:details] = options[:three_ds_data]['details']
+      end
+
       def add_splits(post, options)
         return unless split_data = options[:splits]
 
@@ -219,7 +241,7 @@ module ActiveMerchant #:nodoc:
           post[:deliveryAddress][:stateOrProvince] = get_state(address)
           post[:deliveryAddress][:country] = address[:country] if address[:country]
         end
-        return unless post[:card]&.kind_of?(Hash)
+        return unless post[:paymentMethod]&.kind_of?(Hash)
 
         if (address = options[:billing_address] || options[:address]) && address[:country]
           post[:billingAddress] = {}
@@ -358,6 +380,8 @@ module ActiveMerchant #:nodoc:
 
       def success_from(action, response)
         case action.to_s
+        when 'payments/details'
+          response['resultCode'] == 'Authorised'
         when 'payments'
           ['Authorised', 'Received', 'RedirectShopper'].include?(response['resultCode'])
         when 'refund'
@@ -415,7 +439,7 @@ module ActiveMerchant #:nodoc:
       def unsupported_failure_response(initial_response)
         Response.new(
             false,
-            'Recurring transactions are not supported for this card type.',
+            unsupported_failure_message(initial_response),
             initial_response.params,
             authorization: initial_response.authorization,
             test: initial_response.test,
@@ -423,6 +447,12 @@ module ActiveMerchant #:nodoc:
             avs_result: initial_response.avs_result,
             cvv_result: initial_response.cvv_result[:code]
         )
+      end
+
+      def unsupported_failure_message(initial_response)
+        return "This card requires 3DSecure verification." if initial_response.params['resultCode'] == 'RedirectShopper'
+
+        'Recurring transactions are not supported for this card type.'
       end
 
       def card_not_stored?(response)
