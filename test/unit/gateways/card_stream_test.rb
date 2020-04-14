@@ -190,7 +190,6 @@ class CardStreamTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(28400, @amex, @visacredit_descriptor_options.merge(currency: 'JPY', order_id: '1234567890'))
     end.check_request do |endpoint, data, headers|
-      puts data
       assert_match(/item1GrossValue=284&/, data)
     end.respond_with(successful_purchase_response)
   end
