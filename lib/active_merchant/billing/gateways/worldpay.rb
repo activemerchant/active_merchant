@@ -580,7 +580,7 @@ module ActiveMerchant #:nodoc:
         xml = ssl_post(url, request, headers(options))
         raw = parse(action, xml)
         if options[:execute_threed]
-          raw[:cookie] = @cookie
+          raw[:cookie] = @cookie if defined?(@cookie)
           raw[:session_id] = options[:session_id]
           raw[:is3DSOrder] = true
         end

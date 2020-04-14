@@ -539,7 +539,7 @@ class CheckoutV2Test < Test::Unit::TestCase
 
   def error_4xx_response
     mock_response = Net::HTTPUnauthorized.new('1.1', '401', 'Unauthorized')
-    mock_response.stubs(:body).returns("")
+    mock_response.stubs(:body).returns('')
 
     ActiveMerchant::ResponseError.new(mock_response)
   end

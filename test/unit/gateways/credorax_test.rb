@@ -280,7 +280,6 @@ class CredoraxTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, options_with_3ds)
     end.check_request do |endpoint, data, headers|
-      p data
       assert_match(/3ds_channel=02/, data)
       assert_match(/3ds_transtype=03/, data)
     end.respond_with(successful_purchase_response)
