@@ -733,8 +733,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
 
   def test_passes_transaction_source
     Braintree::TransactionGateway.any_instance.expects(:sale).with do |params|
-      (params[:transaction_source] == 'recurring')
-      (params[:recurring] == nil)
+      (params[:transaction_source] == 'recurring') && (params[:recurring] == nil)
     end.returns(braintree_result)
     @gateway.purchase(100, credit_card('41111111111111111111'), transaction_source: 'recurring', recurring: true)
   end

@@ -33,7 +33,7 @@ namespace :test do
   Rake::TestTask.new(:units) do |t|
     t.pattern = 'test/unit/**/*_test.rb'
     t.libs << 'test'
-    t.verbose = true
+    t.verbose = false
   end
 
   desc 'Run all tests that do not require network access'

@@ -962,7 +962,7 @@ class WorldpayTest < Test::Unit::TestCase
   end
 
   def risk_data
-    return @risk_data if @risk_data
+    return @risk_data if defined?(@risk_data)
 
     authentication_time = Time.now
     shopper_account_creation_date = Date.today
