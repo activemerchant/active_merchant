@@ -39,6 +39,7 @@ module ActiveMerchant #:nodoc:
         post = init_post(options)
         add_invoice(post, money, options)
         add_payment(post, payment)
+        add_extra_data(post, options)
         add_stored_credentials(post, payment, options)
         add_shopper_reference(post, options)
         commit('payments', post, options)
