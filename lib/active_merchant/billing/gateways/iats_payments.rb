@@ -14,12 +14,12 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'iATS Payments'
 
       ACTIONS = {
-        purchase: 'ProcessCreditCardV1',
-        purchase_check: 'ProcessACHEFTV1',
-        refund: 'ProcessCreditCardRefundWithTransactionIdV1',
-        refund_check: 'ProcessACHEFTRefundWithTransactionIdV1',
-        store: 'CreateCreditCardCustomerCodeV1',
-        unstore: 'DeleteCustomerCodeV1'
+        purchase: 'ProcessCreditCard',
+        purchase_check: 'ProcessACHEFT',
+        refund: 'ProcessCreditCardRefundWithTransactionId',
+        refund_check: 'ProcessACHEFTRefundWithTransactionId',
+        store: 'CreateCreditCardCustomerCode',
+        unstore: 'DeleteCustomerCode'
       }
 
       def initialize(options={})
@@ -39,6 +39,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, money, options)
         add_payment(post, payment)
         add_address(post, options)
+        add_customer_details(post, options)
         add_ip(post, options)
         add_description(post, options)
 
@@ -60,6 +61,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_payment(post, credit_card)
         add_address(post, options)
+        add_customer_details(post, options)
         add_ip(post, options)
         add_description(post, options)
         add_store_defaults(post)
@@ -144,6 +146,12 @@ module ActiveMerchant #:nodoc:
         post[:amount] = 0
       end
 
+      def add_customer_details(post, options)
+        post[:phone] = options[:phone] if options[:phone]
+        post[:email] = options[:email] if options[:email]
+        post[:country] = options[:country] if options[:country]
+      end
+
       def expdate(creditcard)
         year  = sprintf('%.4i', creditcard.year)
         month = sprintf('%.2i', creditcard.month)
@@ -178,12 +186,12 @@ module ActiveMerchant #:nodoc:
 
       def endpoints
         {
-          purchase: 'ProcessLink.asmx',
-          purchase_check: 'ProcessLink.asmx',
-          refund: 'ProcessLink.asmx',
-          refund_check: 'ProcessLink.asmx',
-          store: 'CustomerLink.asmx',
-          unstore: 'CustomerLink.asmx'
+          purchase: 'ProcessLinkv3.asmx',
+          purchase_check: 'ProcessLinkv3.asmx',
+          refund: 'ProcessLinkv3.asmx',
+          refund_check: 'ProcessLinkv3.asmx',
+          store: 'CustomerLinkv3.asmx',
+          unstore: 'CustomerLinkv3.asmx'
         }
       end
 
