@@ -39,8 +39,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, payment, options={})
+        method_name = payment.is_a?(String) ? 'ProcessPayment' : 'ProcessPaymentWithCard'
+
         request = build_soap_request do |xml|
-          xml.ProcessPaymentWithCard(SOAP_XMLNS) do
+          xml.send(method_name, SOAP_XMLNS) do
             xml.ProcessType 'sales'
             add_authentication(xml, options)
             add_invoice(xml, money, options)
@@ -50,7 +52,7 @@ module ActiveMerchant #:nodoc:
           end
         end
 
-        commit('ProcessPaymentWithCard', request)
+        commit(method_name, request)
       end
 
       def store(credit_card, options={})
@@ -118,10 +120,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment(xml, payment)
-        xml.CardNum payment.number
-        xml.LastMonth format(payment.month, :two_digits)
-        xml.LastYear format(payment.year, :four_digits)
-        xml.CVV payment.verification_value if payment.verification_value.present?
+        if payment.is_a?(String)
+          xml.CardToken payment
+        else
+          xml.CardNum payment.number
+          xml.LastMonth format(payment.month, :two_digits)
+          xml.LastYear format(payment.year, :four_digits)
+          xml.CVV payment.verification_value if payment.verification_value.present?
+        end
       end
 
       def add_payment_store(xml, payment)
