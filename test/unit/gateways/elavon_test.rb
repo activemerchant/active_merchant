@@ -122,6 +122,28 @@ class ElavonTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_dynamic_dba
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(dba: 'MANYMAG*BAKERS MONTHLY'))
+    end.check_request do |_endpoint, data, _headers|
+      parsed = CGI.parse(data)
+      assert_equal ['MANYMAG*BAKERS MONTHLY'], parsed['ssl_dynamic_dba']
+    end.respond_with(successful_authorization_response)
+
+    assert_success response
+  end
+
+  def test_successful_authorization_with_dynamic_dba
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(dba: 'MANYMAG*BAKERS MONTHLY'))
+    end.check_request do |_endpoint, data, _headers|
+      parsed = CGI.parse(data)
+      assert_equal ['MANYMAG*BAKERS MONTHLY'], parsed['ssl_dynamic_dba']
+    end.respond_with(successful_authorization_response)
+
+    assert_success response
+  end
+
   def test_successful_purchase_with_multi_currency
     response = stub_comms(@multi_currency_gateway) do
       @multi_currency_gateway.purchase(@amount, @credit_card, @options.merge(currency: 'EUR'))

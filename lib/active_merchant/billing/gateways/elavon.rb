@@ -47,6 +47,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(form, options)
         add_test_mode(form, options)
         add_ip(form, options)
+        add_ssl_dynamic_dba(form, options)
         commit(:purchase, money, form, options)
       end
 
@@ -60,6 +61,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(form, options)
         add_test_mode(form, options)
         add_ip(form, options)
+        add_ssl_dynamic_dba(form, options)
         commit(:authorize, money, form, options)
       end
 
@@ -209,7 +211,6 @@ module ActiveMerchant #:nodoc:
         billing_address = options[:billing_address] || options[:address]
 
         if billing_address
-          form[:avs_address]    = truncate(billing_address[:address1], 30)
           form[:address2]       = truncate(billing_address[:address2], 30)
           form[:avs_zip]        = truncate(billing_address[:zip].to_s.gsub(/[^a-zA-Z0-9]/, ''), 9)
           form[:city]           = truncate(billing_address[:city], 30)
@@ -247,6 +248,10 @@ module ActiveMerchant #:nodoc:
 
       def add_ip(form, options)
         form[:cardholder_ip] = options[:ip] if options.has_key?(:ip)
+      end
+
+      def add_ssl_dynamic_dba(form, options)
+        form[:dynamic_dba] = options[:dba] if options.has_key?(:dba)
       end
 
       def message_from(response)

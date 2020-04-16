@@ -10,6 +10,7 @@
 * CyberSource: Added support for MerchantInformation CyberSource-specific fields [apfranzen] #3592
 * ePay: Send unique order ids for remote tests [curiousepic] #3593
 * Checkout V2: Send more informative error messages for 4xx errors [britth] #3601
+* Elavon: Add ssl_dynamic_dba field [apfranzen] #3600
 
 == Version 1.107.1 (Apr 1, 2020)
 * Add `allowed_push_host` to gemspec [mdeloupy]
