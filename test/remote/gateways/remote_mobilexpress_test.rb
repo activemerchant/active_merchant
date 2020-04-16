@@ -5,8 +5,18 @@ class RemoteMobilexpressTest < Test::Unit::TestCase
     @gateway = MobilexpressGateway.new(fixtures(:mobilexpress))
 
     @amount = 100
-    @credit_card = credit_card('4603454603454606', month: 12, year: 2018, verification_value: '000')
-    @credit_card_store = credit_card('4603454603454606', month: 12, year: 2018, verification_value: nil)
+    @credit_card = credit_card(
+      '4603454603454606',
+      month: 12,
+      year: Date.today.year,
+      verification_value: '000'
+    )
+    @credit_card_store = credit_card(
+      '4603454603454606',
+      month: 12,
+      year: Date.today.year,
+      verification_value: nil
+    )
     @declined_card = credit_card('4000300011112220')
     @options = {
       billing_address: address,
@@ -25,11 +35,24 @@ class RemoteMobilexpressTest < Test::Unit::TestCase
       ip: "127.0.0.1",
       email: "joe@example.com",
       customer_id: SecureRandom.uuid,
-      customer_name: 'Bob Longson',
-      ip: '127.0.0.1'
+      customer_name: 'Bob Longson'
     }
 
     response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_purchase_with_token
+    @options.merge!(
+      customer_id: SecureRandom.uuid,
+      customer_name: 'Bob Longson',
+      ip: '127.0.0.1'
+    )
+    store_response = @gateway.store(@credit_card_store, @options)
+    token = store_response.authorization
+
+    response = @gateway.purchase(@amount, token, @options)
     assert_success response
     assert_equal 'Success', response.message
   end
@@ -95,7 +118,7 @@ class RemoteMobilexpressTest < Test::Unit::TestCase
     transcript = @gateway.scrub(transcript)
 
     assert_scrubbed(@credit_card.number, transcript)
-    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_match(/<CVV>\[FILTERED\]<\/CVV>/i, transcript)
     assert_scrubbed(@gateway.options[:api_password], transcript)
   end
 
