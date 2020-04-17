@@ -71,7 +71,7 @@ module ActiveMerchant #:nodoc:
 
       def add_creditcard(post, creditcard)
         post[:CardNumber] = creditcard.number
-        post[:CardExpiryMonth]  = sprintf('%.2i', creditcard.month)
+        post[:CardExpiryMonth] = sprintf('%.2i', creditcard.month)
         post[:CardExpiryYear] = sprintf('%.4i', creditcard.year)[-2..-1]
         post[:CustomerFirstName] = creditcard.first_name
         post[:CustomerLastName]  = creditcard.last_name
@@ -114,8 +114,8 @@ module ActiveMerchant #:nodoc:
         Response.new(success?(response),
           message_from(response[:ewaytrxnerror]),
           response,
-          :authorization => response[:ewaytrxnnumber],
-          :test => test?
+          authorization: response[:ewaytrxnnumber],
+          test: test?
         )
       end
 

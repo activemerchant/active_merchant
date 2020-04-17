@@ -98,7 +98,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_credit_card(xml, payment)
-        xml.CreditCard :Registered => 'False' do
+        xml.CreditCard Registered: 'False' do
           xml.CardNumber payment.number
           xml.ExpM format(payment.month, :two_digits)
           xml.ExpY format(payment.year, :four_digits)

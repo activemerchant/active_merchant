@@ -3,13 +3,13 @@ require 'test_helper'
 class PsigateTest < Test::Unit::TestCase
   def setup
     @gateway = PsigateGateway.new(
-      :login => 'teststore',
-      :password => 'psigate1234'
+      login: 'teststore',
+      password: 'psigate1234'
     )
 
     @amount = 100
     @credit_card = credit_card('4111111111111111')
-    @options = { :order_id => '1', :billing_address => address }
+    @options = { order_id: '1', billing_address: address }
   end
 
   def test_successful_authorization

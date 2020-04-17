@@ -3,8 +3,8 @@ require 'test_helper'
 class PayflowUkTest < Test::Unit::TestCase
   def setup
     @gateway = PayflowUkGateway.new(
-      :login => 'LOGIN',
-      :password => 'PASSWORD'
+      login: 'LOGIN',
+      password: 'PASSWORD'
     )
   end
 

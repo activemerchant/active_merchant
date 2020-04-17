@@ -6,57 +6,57 @@ class RemoteDataCashTest < Test::Unit::TestCase
     @gateway = DataCashGateway.new(fixtures(:data_cash))
 
     @mastercard = CreditCard.new(
-      :number => '5120790000000034',
-      :month => 3,
-      :year => Date.today.year + 2,
-      :first_name => 'Mark',
-      :last_name => 'McBride',
-      :brand => :master
+      number: '5120790000000034',
+      month: 3,
+      year: Date.today.year + 2,
+      first_name: 'Mark',
+      last_name: 'McBride',
+      brand: :master
     )
 
     @mastercard_declined = CreditCard.new(
-      :number => '5473000000000106',
-      :month => 3,
-      :year => Date.today.year + 2,
-      :first_name => 'Mark',
-      :last_name => 'McBride',
-      :brand => :master,
-      :verification_value => '547'
+      number: '5473000000000106',
+      month: 3,
+      year: Date.today.year + 2,
+      first_name: 'Mark',
+      last_name: 'McBride',
+      brand: :master,
+      verification_value: '547'
     )
 
     @visa_delta = CreditCard.new(
-      :number => '4539792100000003',
-      :month => 3,
-      :year => Date.today.year + 2,
-      :first_name => 'Mark',
-      :last_name => 'McBride',
-      :brand => :visa,
-      :verification_value => '444'
+      number: '4539792100000003',
+      month: 3,
+      year: Date.today.year + 2,
+      first_name: 'Mark',
+      last_name: 'McBride',
+      brand: :visa,
+      verification_value: '444'
     )
 
     @solo = CreditCard.new(
-      :first_name => 'Cody',
-      :last_name => 'Fauser',
-      :number => '633499100000000004',
-      :month => 3,
-      :year => Date.today.year + 2,
-      :brand => :solo,
-      :start_month => 12,
-      :start_year => 2006
+      first_name: 'Cody',
+      last_name: 'Fauser',
+      number: '633499100000000004',
+      month: 3,
+      year: Date.today.year + 2,
+      brand: :solo,
+      start_month: 12,
+      start_year: 2006
     )
 
     @address = {
-      :name     => 'Mark McBride',
-      :address1 => 'Flat 12/3',
-      :address2 => '45 Main Road',
-      :city     => 'Sometown',
-      :state    => 'Somecounty',
-      :zip      => 'A987AA',
-      :phone    => '(555)555-5555'
+      name: 'Mark McBride',
+      address1: 'Flat 12/3',
+      address2: '45 Main Road',
+      city: 'Sometown',
+      state: 'Somecounty',
+      zip: 'A987AA',
+      phone: '(555)555-5555'
     }
 
     @params = {
-      :order_id => generate_unique_id
+      order_id: generate_unique_id
     }
 
     @amount = 198
@@ -108,7 +108,7 @@ class RemoteDataCashTest < Test::Unit::TestCase
     assert response.test?
 
     # Make second payment on the continuous authorization that was set up in the first purchase
-    second_order_params = { :order_id => generate_unique_id }
+    second_order_params = { order_id: generate_unique_id }
     purchase = @gateway.purchase(201, response.authorization, second_order_params)
     assert_success purchase
   end
@@ -120,7 +120,7 @@ class RemoteDataCashTest < Test::Unit::TestCase
     assert !response.authorization.to_s.split(';')[2].blank?
 
     # Make second payment on the continuous authorization that was set up in the first purchase
-    second_order_params = { :order_id => generate_unique_id }
+    second_order_params = { order_id: generate_unique_id }
     purchase = @gateway.purchase(201, response.authorization, second_order_params)
     assert_success purchase
   end
@@ -146,7 +146,7 @@ class RemoteDataCashTest < Test::Unit::TestCase
     assert capture.test?
 
     # Collect second purchase
-    second_order_params = { :order_id => generate_unique_id }
+    second_order_params = { order_id: generate_unique_id }
     purchase = @gateway.purchase(201, first_authorization.authorization, second_order_params)
     assert_success purchase
     assert purchase.test?
@@ -309,7 +309,7 @@ class RemoteDataCashTest < Test::Unit::TestCase
     assert response.test?
 
     # Make second payment on the continuous authorization that was set up in the first purchase
-    second_order_params = { :order_id => generate_unique_id }
+    second_order_params = { order_id: generate_unique_id }
     purchase = @gateway.purchase(201, response.authorization, second_order_params)
     assert_success purchase
 

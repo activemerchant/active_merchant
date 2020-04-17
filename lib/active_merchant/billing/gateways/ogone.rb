@@ -122,10 +122,10 @@ module ActiveMerchant #:nodoc:
 
       SUCCESS_MESSAGE = 'The transaction was successful'
 
-      THREE_D_SECURE_DISPLAY_WAYS = { :main_window => 'MAINW',  # display the identification page in the main window (default value).
+      THREE_D_SECURE_DISPLAY_WAYS = { main_window: 'MAINW', # display the identification page in the main window (default value).
 
-                                      :pop_up      => 'POPUP',  # display the identification page in a pop-up window and return to the main window at the end.
-                                      :pop_ix      => 'POPIX' } # display the identification page in a pop-up window and remain in the pop-up window.
+                                      pop_up: 'POPUP',  # display the identification page in a pop-up window and return to the main window at the end.
+                                      pop_ix: 'POPIX' } # display the identification page in a pop-up window and remain in the pop-up window.
 
       OGONE_NO_SIGNATURE_DEPRECATION_MESSAGE   = 'Signature usage will be the default for a future release of ActiveMerchant. You should either begin using it, or update your configuration to explicitly disable it (signature_encryptor: none)'
       OGONE_STORE_OPTION_DEPRECATION_MESSAGE   = "The 'store' option has been renamed to 'billing_id', and its usage is deprecated."
@@ -366,10 +366,10 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(url(parameters['PAYID']), post_data(action, parameters)))
 
         options = {
-          :authorization => [response['PAYID'], action].join(';'),
-          :test          => test?,
-          :avs_result    => { :code => AVS_MAPPING[response['AAVCheck']] },
-          :cvv_result    => CVV_MAPPING[response['CVCCheck']]
+          authorization: [response['PAYID'], action].join(';'),
+          test: test?,
+          avs_result: { code: AVS_MAPPING[response['AAVCheck']] },
+          cvv_result: CVV_MAPPING[response['CVCCheck']]
         }
         OgoneResponse.new(successful?(response), message_from(response), response, options)
       end

@@ -2,6 +2,16 @@
 
 require 'test_helper'
 
+class BlueSnapCurrencyDocMock
+  attr_accessor :received_amount
+
+  def currency(currency); end
+
+  def amount(amount)
+    @received_amount = amount
+  end
+end
+
 class BlueSnapTest < Test::Unit::TestCase
   include CommStub
 
@@ -334,7 +344,32 @@ class BlueSnapTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed_echeck), post_scrubbed_echeck
   end
 
+  def test_localizes_currencies
+    amount = 1234
+
+    # Check a 2 decimal place currency
+    assert_equal '12.34', check_amount_registered(amount, 'USD')
+
+    # Check all 0 decimal currencies
+    ActiveMerchant::Billing::BlueSnapGateway.currencies_without_fractions.each do |currency|
+      assert_equal '12', check_amount_registered(amount, currency)
+    end
+
+    # Check all 3 decimal currencies
+    ActiveMerchant::Billing::BlueSnapGateway.currencies_with_three_decimal_places.each do |currency|
+      assert_equal '1.234', check_amount_registered(amount, currency)
+    end
+  end
+
   private
+
+  def check_amount_registered(amount, currency)
+    doc = BlueSnapCurrencyDocMock.new
+    options = @options.merge(currency: currency)
+    @gateway.send(:add_amount, doc, amount, options)
+
+    doc.received_amount
+  end
 
   def pre_scrubbed
     %q{

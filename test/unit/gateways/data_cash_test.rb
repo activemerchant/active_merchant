@@ -3,8 +3,8 @@ require 'test_helper'
 class DataCashTest < Test::Unit::TestCase
   def setup
     @gateway = DataCashGateway.new(
-      :login => 'LOGIN',
-      :password => 'PASSWORD'
+      login: 'LOGIN',
+      password: 'PASSWORD'
     )
 
     @credit_card = credit_card('4242424242424242')
@@ -12,19 +12,19 @@ class DataCashTest < Test::Unit::TestCase
     @amount = 100
 
     @address = {
-      :name     => 'Mark McBride',
-      :address1 => 'Flat 12/3',
-      :address2 => '45 Main Road',
-      :city     => 'London',
-      :state    => 'None',
-      :country  => 'GBR',
-      :zip      => 'A987AA',
-      :phone    => '(555)555-5555'
+      name: 'Mark McBride',
+      address1: 'Flat 12/3',
+      address2: '45 Main Road',
+      city: 'London',
+      state: 'None',
+      country: 'GBR',
+      zip: 'A987AA',
+      phone: '(555)555-5555'
     }
 
     @options = {
-      :order_id => generate_unique_id,
-      :billing_address => @address
+      order_id: generate_unique_id,
+      billing_address: @address
     }
   end
 
@@ -96,7 +96,7 @@ class DataCashTest < Test::Unit::TestCase
 
   def test_purchase_does_not_raise_exception_with_missing_billing_address
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
-    assert @gateway.authorize(100, @credit_card, {:order_id => generate_unique_id }).is_a?(ActiveMerchant::Billing::Response)
+    assert @gateway.authorize(100, @credit_card, {order_id: generate_unique_id }).is_a?(ActiveMerchant::Billing::Response)
   end
 
   def test_continuous_authority_purchase_with_missing_continuous_authority_reference

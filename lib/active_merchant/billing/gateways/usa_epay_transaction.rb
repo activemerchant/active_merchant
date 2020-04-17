@@ -10,13 +10,13 @@ module ActiveMerchant #:nodoc:
       self.display_name         = 'USA ePay'
 
       TRANSACTIONS = {
-        :authorization  => 'cc:authonly',
-        :purchase       => 'cc:sale',
-        :capture        => 'cc:capture',
-        :refund         => 'cc:refund',
-        :void           => 'cc:void',
-        :void_release   => 'cc:void:release',
-        :check_purchase => 'check:sale'
+        authorization: 'cc:authonly',
+        purchase: 'cc:sale',
+        capture: 'cc:capture',
+        refund: 'cc:refund',
+        void: 'cc:void',
+        void_release: 'cc:void:release',
+        check_purchase: 'check:sale'
       }
 
       STANDARD_ERROR_CODE_MAPPING = {
@@ -82,7 +82,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options = {})
-        post = { :refNum => authorization }
+        post = { refNum: authorization }
 
         add_amount(post, money)
         add_test_mode(post, options)
@@ -90,7 +90,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(money, authorization, options = {})
-        post = { :refNum => authorization }
+        post = { refNum: authorization }
 
         add_amount(post, money)
         add_test_mode(post, options)
@@ -107,7 +107,7 @@ module ActiveMerchant #:nodoc:
       # Pass `no_release: true` to keep the void from immediately settling
       def void(authorization, options = {})
         command = (options[:no_release] ? :void : :void_release)
-        post = { :refNum => authorization }
+        post = { refNum: authorization }
         add_test_mode(post, options)
         commit(command, post)
       end
@@ -296,20 +296,20 @@ module ActiveMerchant #:nodoc:
         end
 
         {
-          :status           => fields['UMstatus'],
-          :auth_code        => fields['UMauthCode'],
-          :ref_num          => fields['UMrefNum'],
-          :batch            => fields['UMbatch'],
-          :avs_result       => fields['UMavsResult'],
-          :avs_result_code  => fields['UMavsResultCode'],
-          :cvv2_result      => fields['UMcvv2Result'],
-          :cvv2_result_code => fields['UMcvv2ResultCode'],
-          :vpas_result_code => fields['UMvpasResultCode'],
-          :result           => fields['UMresult'],
-          :error            => fields['UMerror'],
-          :error_code       => fields['UMerrorcode'],
-          :acs_url          => fields['UMacsurl'],
-          :payload          => fields['UMpayload']
+          status: fields['UMstatus'],
+          auth_code: fields['UMauthCode'],
+          ref_num: fields['UMrefNum'],
+          batch: fields['UMbatch'],
+          avs_result: fields['UMavsResult'],
+          avs_result_code: fields['UMavsResultCode'],
+          cvv2_result: fields['UMcvv2Result'],
+          cvv2_result_code: fields['UMcvv2ResultCode'],
+          vpas_result_code: fields['UMvpasResultCode'],
+          result: fields['UMresult'],
+          error: fields['UMerror'],
+          error_code: fields['UMerrorcode'],
+          acs_url: fields['UMacsurl'],
+          payload: fields['UMpayload']
         }.delete_if { |k, v| v.nil? }
       end
 
@@ -320,11 +320,11 @@ module ActiveMerchant #:nodoc:
         error_code = nil
         error_code = (STANDARD_ERROR_CODE_MAPPING[response[:error_code]] || STANDARD_ERROR_CODE[:processing_error]) unless approved
         Response.new(approved, message_from(response), response,
-          :test           => test?,
-          :authorization  => response[:ref_num],
-          :cvv_result     => response[:cvv2_result_code],
-          :avs_result     => { :code => response[:avs_result_code] },
-          :error_code     => error_code
+          test: test?,
+          authorization: response[:ref_num],
+          cvv_result: response[:cvv2_result_code],
+          avs_result: { code: response[:avs_result_code] },
+          error_code: error_code
         )
       end
 

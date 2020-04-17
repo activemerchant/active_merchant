@@ -5,51 +5,51 @@ class CardStreamTest < Test::Unit::TestCase
 
   def setup
     @gateway = CardStreamGateway.new(
-      :login => 'login',
-      :shared_secret => 'secret'
+      login: 'login',
+      shared_secret: 'secret'
     )
 
     @visacreditcard = credit_card('4929421234600821',
-      :month => '12',
-      :year => '2014',
-      :verification_value => '356',
-      :brand => :visa
+      month: '12',
+      year: '2014',
+      verification_value: '356',
+      brand: :visa
     )
 
     @visacredit_options = {
-      :billing_address => {
-        :address1 => 'Flat 6, Primrose Rise',
-        :address2 => '347 Lavender Road',
-        :city => '',
-        :state => 'Northampton',
-        :zip => 'NN17 8YG '
+      billing_address: {
+        address1: 'Flat 6, Primrose Rise',
+        address2: '347 Lavender Road',
+        city: '',
+        state: 'Northampton',
+        zip: 'NN17 8YG '
       },
-      :order_id => generate_unique_id,
-      :description => 'AM test purchase'
+      order_id: generate_unique_id,
+      description: 'AM test purchase'
     }
 
     @visacredit_descriptor_options = {
-      :billing_address => {
-        :address1 => 'Flat 6, Primrose Rise',
-        :address2 => '347 Lavender Road',
-        :city => '',
-        :state => 'Northampton',
-        :zip => 'NN17 8YG '
+      billing_address: {
+        address1: 'Flat 6, Primrose Rise',
+        address2: '347 Lavender Road',
+        city: '',
+        state: 'Northampton',
+        zip: 'NN17 8YG '
       },
-      :merchant_name => 'merchant',
-      :dynamic_descriptor => 'product'
+      merchant_name: 'merchant',
+      dynamic_descriptor: 'product'
     }
 
     @amex = credit_card('374245455400001',
-      :month => '12',
-      :year => 2014,
-      :verification_value => '4887',
-      :brand => :american_express
+      month: '12',
+      year: 2014,
+      verification_value: '4887',
+      brand: :american_express
     )
 
     @declined_card = credit_card('4000300011112220',
-      :month => '9',
-      :year => '2014'
+      month: '9',
+      year: '2014'
     )
   end
 
@@ -285,9 +285,9 @@ class CardStreamTest < Test::Unit::TestCase
   def test_deprecated_3ds_required
     assert_deprecation_warning(CardStreamGateway::THREEDSECURE_REQUIRED_DEPRECATION_MESSAGE) do
       @gateway = CardStreamGateway.new(
-        :login => 'login',
-        :shared_secret => 'secret',
-        :threeDSRequired => true
+        login: 'login',
+        shared_secret: 'secret',
+        threeDSRequired: true
       )
     end
     stub_comms do

@@ -251,10 +251,10 @@ module ActiveMerchant #:nodoc:
         )
 
         {
-            'Authorization' => 'Basic ' + Base64.encode64(@options[:login].to_s + ':').strip,
-            'User-Agent' => "Balanced/v1.1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
-            'Accept' => 'application/vnd.api+json;revision=1.1',
-            'X-Balanced-User-Agent' => @@ua,
+          'Authorization' => 'Basic ' + Base64.encode64(@options[:login].to_s + ':').strip,
+          'User-Agent' => "Balanced/v1.1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
+          'Accept' => 'application/vnd.api+json;revision=1.1',
+          'X-Balanced-User-Agent' => @@ua,
         }
       end
     end

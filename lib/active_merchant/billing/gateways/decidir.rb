@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['AR']
       self.money_format = :cents
       self.default_currency = 'ARS'
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :naranja, :cabal]
+      self.supported_cardtypes = %i[visa master american_express diners_club naranja cabal]
 
       self.homepage_url = 'http://www.decidir.com'
       self.display_name = 'Decidir'
@@ -37,6 +37,7 @@ module ActiveMerchant #:nodoc:
         56 => STANDARD_ERROR_CODE[:card_declined],
         57 => STANDARD_ERROR_CODE[:card_declined],
         76 => STANDARD_ERROR_CODE[:call_issuer],
+        91 => STANDARD_ERROR_CODE[:call_issuer],
         96 => STANDARD_ERROR_CODE[:processing_error],
         97 => STANDARD_ERROR_CODE[:processing_error],
       }
@@ -113,6 +114,9 @@ module ActiveMerchant #:nodoc:
         post[:installments] = options[:installments] ? options[:installments].to_i : 1
         post[:description] = options[:description] if options[:description]
         post[:email] = options[:email] if options[:email]
+        post[:establishment_name] = options[:establishment_name] if options[:establishment_name]
+        post[:fraud_detection] = add_fraud_detection(options[:fraud_detection]) if options[:fraud_detection].present?
+        post[:site_id] = options[:site_id] if options[:site_id]
         post[:sub_payments] = []
 
         add_invoice(post, money, options)
@@ -176,6 +180,19 @@ module ActiveMerchant #:nodoc:
         post[:card_data] = card_data
       end
 
+      def add_fraud_detection(options = {})
+        {}.tap do |hsh|
+          hsh[:send_to_cs] = options[:send_to_cs] if valid_fraud_detection_option?(options[:send_to_cs]) # true/false
+          hsh[:channel] = options[:channel] if valid_fraud_detection_option?(options[:channel])
+          hsh[:dispatch_method] = options[:dispatch_method] if valid_fraud_detection_option?(options[:dispatch_method])
+        end
+      end
+
+      # Avoid sending fields with empty or null when not populated.
+      def valid_fraud_detection_option?(val)
+        !val.nil? && val != ''
+      end
+
       def headers(options = {})
         {
           'apikey' => @options[:api_key],
@@ -223,9 +240,8 @@ module ActiveMerchant #:nodoc:
         return response['message'] if response['message']
 
         message = nil
-
         if error = response.dig('status_details', 'error')
-          message = error.dig('reason', 'description')
+          message = "#{error.dig('reason', 'description')} | #{error['type']}"
         elsif response['error_type']
           message = response['validation_errors'].map { |errors| "#{errors['code']}: #{errors['param']}" }.join(', ') if response['validation_errors']
           message ||= response['error_type']
@@ -250,6 +266,11 @@ module ActiveMerchant #:nodoc:
           error_code ||= error['type']
         elsif response['error_type']
           error_code = response['error_type'] if response['validation_errors']
+        elsif error = response.dig('error')
+          validation_errors = error.dig('validation_errors', 0)
+          code = validation_errors['code'] if validation_errors && validation_errors['code']
+          param = validation_errors['param'] if validation_errors && validation_errors['param']
+          error_code = "#{error['error_type']} | #{code} | #{param}" if error['error_type']
         end
 
         error_code || STANDARD_ERROR_CODE[:processing_error]

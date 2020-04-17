@@ -6,18 +6,18 @@ class JetpayTest < Test::Unit::TestCase
   def setup
     Base.mode = :test
 
-    @gateway = JetpayGateway.new(:login => 'login')
+    @gateway = JetpayGateway.new(login: 'login')
 
     @credit_card = credit_card
     @amount = 100
 
     @options = {
-      :billing_address => address(:country => 'US'),
-      :shipping_address => address(:country => 'US'),
-      :email => 'test@test.com',
-      :ip => '127.0.0.1',
-      :order_id => '12345',
-      :tax => 7
+      billing_address: address(country: 'US'),
+      shipping_address: address(country: 'US'),
+      email: 'test@test.com',
+      ip: '127.0.0.1',
+      order_id: '12345',
+      tax: 7
     }
   end
 
@@ -76,7 +76,7 @@ class JetpayTest < Test::Unit::TestCase
 
   def test_successful_credit
     # no need for csv
-    card = credit_card('4242424242424242', :verification_value => nil)
+    card = credit_card('4242424242424242', verification_value: nil)
 
     @gateway.expects(:ssl_post).returns(successful_credit_response)
 
@@ -137,7 +137,7 @@ class JetpayTest < Test::Unit::TestCase
   def test_purchase_sends_order_origin
     @gateway.expects(:ssl_post).with(anything, regexp_matches(/<Origin>RECURRING<\/Origin>/)).returns(successful_purchase_response)
 
-    @gateway.purchase(@amount, @credit_card, {:origin => 'RECURRING'})
+    @gateway.purchase(@amount, @credit_card, {origin: 'RECURRING'})
   end
 
   private

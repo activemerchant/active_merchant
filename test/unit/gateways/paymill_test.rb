@@ -2,7 +2,7 @@ require 'test_helper'
 
 class PaymillTest < Test::Unit::TestCase
   def setup
-    @gateway = PaymillGateway.new(:public_key => 'PUBLIC', :private_key => 'PRIVATE')
+    @gateway = PaymillGateway.new(public_key: 'PUBLIC', private_key: 'PRIVATE')
 
     @credit_card = credit_card
     @amount = 100

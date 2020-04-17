@@ -92,7 +92,7 @@ module ActiveMerchant #:nodoc:
       # gateways the two numbers are concatenated together with a ; separator as
       # the authorization number returned by authorization
       def capture(money, authorization, options = {})
-        commit 'completion', crediting_params(authorization, :comp_amount => amount(money))
+        commit 'completion', crediting_params(authorization, comp_amount: amount(money))
       end
 
       # Voiding requires the original transaction ID and order ID of some open
@@ -130,7 +130,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(money, authorization, options = {})
-        commit 'refund', crediting_params(authorization, :amount => amount(money))
+        commit 'refund', crediting_params(authorization, amount: amount(money))
       end
 
       def verify(credit_card, options={})
@@ -275,9 +275,9 @@ module ActiveMerchant #:nodoc:
       # Common params used amongst the +credit+, +void+ and +capture+ methods
       def crediting_params(authorization, options = {})
         {
-          :txn_number => split_authorization(authorization).first,
-          :order_id   => split_authorization(authorization).last,
-          :crypt_type => options[:crypt_type] || @options[:crypt_type]
+          txn_number: split_authorization(authorization).first,
+          order_id: split_authorization(authorization).last,
+          crypt_type: options[:crypt_type] || @options[:crypt_type]
         }.merge(options)
       end
 
@@ -301,10 +301,10 @@ module ActiveMerchant #:nodoc:
           successful?(response),
           message_from(response[:message]),
           response,
-          :test => test?,
-          :avs_result => {:code => response[:avs_result_code]},
-          :cvv_result => response[:cvd_result_code] && response[:cvd_result_code][-1, 1],
-          :authorization => authorization_from(response))
+          test: test?,
+          avs_result: {code: response[:avs_result_code]},
+          cvv_result: response[:cvd_result_code] && response[:cvd_result_code][-1, 1],
+          authorization: authorization_from(response))
       end
 
       # Generates a Moneris authorization string of the form 'trans_id;receipt_id'.
@@ -320,7 +320,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(xml)
-        response = { :message => 'Global Error Receipt', :complete => false }
+        response = { message: 'Global Error Receipt', complete: false }
         hashify_xml!(xml, response)
         response
       end
@@ -417,27 +417,27 @@ module ActiveMerchant #:nodoc:
 
       def actions
         {
-            'purchase' => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type, :avs_info, :cvd_info, :track2, :pos_code, :cof_info],
-            'preauth' => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type, :avs_info, :cvd_info, :track2, :pos_code, :cof_info],
-            'command' => [:order_id],
-            'refund' => [:order_id, :amount, :txn_number, :crypt_type],
-            'indrefund' => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type],
-            'completion' => [:order_id, :comp_amount, :txn_number, :crypt_type],
-            'purchasecorrection' => [:order_id, :txn_number, :crypt_type],
-            'cavv_preauth' => [:order_id, :cust_id, :amount, :pan, :expdate, :cavv, :crypt_type, :wallet_indicator],
-            'cavv_purchase' => [:order_id, :cust_id, :amount, :pan, :expdate, :cavv, :crypt_type, :wallet_indicator],
-            'card_verification' => [:order_id, :cust_id, :pan, :expdate, :crypt_type, :avs_info, :cvd_info, :cof_info],
-            'transact' => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type],
-            'Batchcloseall' => [],
-            'opentotals' => [:ecr_number],
-            'batchclose' => [:ecr_number],
-            'res_add_cc' => [:pan, :expdate, :crypt_type, :avs_info, :cof_info],
-            'res_temp_add' => [:pan, :expdate, :crypt_type, :duration],
-            'res_delete' => [:data_key],
-            'res_update_cc' => [:data_key, :pan, :expdate, :crypt_type, :avs_info, :cof_info],
-            'res_purchase_cc' => [:data_key, :order_id, :cust_id, :amount, :crypt_type, :cof_info],
-            'res_preauth_cc' => [:data_key, :order_id, :cust_id, :amount, :crypt_type, :cof_info],
-            'res_card_verification_cc' => [:order_id, :data_key, :expdate, :crypt_type, :cof_info]
+          'purchase' => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type, :avs_info, :cvd_info, :track2, :pos_code, :cof_info],
+          'preauth' => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type, :avs_info, :cvd_info, :track2, :pos_code, :cof_info],
+          'command' => [:order_id],
+          'refund' => [:order_id, :amount, :txn_number, :crypt_type],
+          'indrefund' => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type],
+          'completion' => [:order_id, :comp_amount, :txn_number, :crypt_type],
+          'purchasecorrection' => [:order_id, :txn_number, :crypt_type],
+          'cavv_preauth' => [:order_id, :cust_id, :amount, :pan, :expdate, :cavv, :crypt_type, :wallet_indicator],
+          'cavv_purchase' => [:order_id, :cust_id, :amount, :pan, :expdate, :cavv, :crypt_type, :wallet_indicator],
+          'card_verification' => [:order_id, :cust_id, :pan, :expdate, :crypt_type, :avs_info, :cvd_info, :cof_info],
+          'transact' => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type],
+          'Batchcloseall' => [],
+          'opentotals' => [:ecr_number],
+          'batchclose' => [:ecr_number],
+          'res_add_cc' => [:pan, :expdate, :crypt_type, :avs_info, :cof_info],
+          'res_temp_add' => [:pan, :expdate, :crypt_type, :duration],
+          'res_delete' => [:data_key],
+          'res_update_cc' => [:data_key, :pan, :expdate, :crypt_type, :avs_info, :cof_info],
+          'res_purchase_cc' => [:data_key, :order_id, :cust_id, :amount, :crypt_type, :cof_info],
+          'res_preauth_cc' => [:data_key, :order_id, :cust_id, :amount, :crypt_type, :cof_info],
+          'res_card_verification_cc' => [:order_id, :data_key, :expdate, :crypt_type, :cof_info]
         }
       end
     end

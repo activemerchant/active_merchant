@@ -41,6 +41,17 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_equal 'Y', response.cvv_result['code']
   end
 
+  def test_successful_purchase_using_network_token
+    network_token = network_tokenization_credit_card({source: :network_token})
+    response = stub_comms do
+      @gateway.purchase(@amount, network_token)
+    end.respond_with(successful_purchase_with_network_token_response)
+
+    assert_success response
+    assert_equal '2FCFE326D92D4C27EDD699560F484', response.params['source']['payment_account_reference']
+    assert response.test?
+  end
+
   def test_successful_authorize_includes_avs_result
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card)
@@ -351,6 +362,12 @@ class CheckoutV2Test < Test::Unit::TestCase
        }
       }
     )
+  end
+
+  def successful_purchase_with_network_token_response
+    purchase_response = JSON.parse(successful_purchase_response)
+    purchase_response['source']['payment_account_reference'] = '2FCFE326D92D4C27EDD699560F484'
+    purchase_response.to_json
   end
 
   def failed_purchase_response

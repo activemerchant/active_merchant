@@ -175,10 +175,10 @@ module ActiveMerchant #:nodoc:
           success_from(response),
           message_from(response),
           response,
-          :test => test?,
-          :authorization => authorization_from(response),
-          :avs_result => { :code => response[:avs_code] },
-          :cvv_result => response[:cvv2_code]
+          test: test?,
+          authorization: authorization_from(response),
+          avs_result: { code: response[:avs_code] },
+          cvv_result: response[:cvv2_code]
         )
       end
 

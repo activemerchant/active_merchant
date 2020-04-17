@@ -72,7 +72,7 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, authorization, _options = {})
         post = {
-            transaction: { id: authorization }
+          transaction: { id: authorization }
         }
         post[:order] = {amount: amount(money).to_f} if money
 

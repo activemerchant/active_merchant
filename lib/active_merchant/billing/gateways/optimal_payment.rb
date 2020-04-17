@@ -65,6 +65,10 @@ module ActiveMerchant #:nodoc:
         commit('ccVerification', 0, options)
       end
 
+      def store(credit_card, options = {})
+        verify(credit_card, options)
+      end
+
       def supports_scrubbing?
         true
       end
@@ -118,10 +122,10 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(test? ? self.test_url : self.live_url, "txnMode=#{action}&txnRequest=#{txnRequest}"))
 
         Response.new(successful?(response), message_from(response), hash_from_xml(response),
-          :test          => test?,
-          :authorization => authorization_from(response),
-          :avs_result => { :code => avs_result_from(response) },
-          :cvv_result => cvv_result_from(response)
+          test: test?,
+          authorization: authorization_from(response),
+          avs_result: { code: avs_result_from(response) },
+          cvv_result: cvv_result_from(response)
         )
       end
 
@@ -173,7 +177,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def xml_document(root_tag)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.tag!(root_tag, schema) do
           yield xml
         end
@@ -189,7 +193,7 @@ module ActiveMerchant #:nodoc:
         xml_document('ccAuthRequestV1') do |xml|
           build_merchant_account(xml)
           xml.merchantRefNum opts[:order_id]
-          xml.amount(money/100.0)
+          xml.amount(money / 100.0)
           build_card(xml, opts)
           build_billing_details(xml, opts)
           build_shipping_details(xml, opts)
@@ -210,7 +214,7 @@ module ActiveMerchant #:nodoc:
           build_merchant_account(xml)
           xml.confirmationNumber opts[:confirmationNumber]
           xml.merchantRefNum opts[:order_id]
-          xml.amount(money/100.0)
+          xml.amount(money / 100.0)
         end
       end
 
@@ -219,7 +223,7 @@ module ActiveMerchant #:nodoc:
           build_merchant_account(xml)
           xml.merchantRefNum opts[:order_id]
           xml.confirmationNumber opts[:confirmationNumber]
-          xml.amount(money/100.0)
+          xml.amount(money / 100.0)
         end
       end
 
@@ -319,7 +323,7 @@ module ActiveMerchant #:nodoc:
       def card_type(key)
         { 'visa'            => 'VI',
           'master'          => 'MC',
-          'american_express'=> 'AM',
+          'american_express' => 'AM',
           'discover'        => 'DI',
           'diners_club'     => 'DC', }[key]
       end

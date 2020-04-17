@@ -80,21 +80,21 @@ module ActiveMerchant #:nodoc:
         request = build_recurring_request(options[:profile_id] ? :modify : :add, money, options) do |xml|
           add_credit_card(xml, credit_card, options) if credit_card
         end
-        commit(request, options.merge(:request_type => :recurring))
+        commit(request, options.merge(request_type: :recurring))
       end
 
       def cancel_recurring(profile_id)
         ActiveMerchant.deprecated RECURRING_DEPRECATION_MESSAGE
 
-        request = build_recurring_request(:cancel, 0, :profile_id => profile_id)
-        commit(request, options.merge(:request_type => :recurring))
+        request = build_recurring_request(:cancel, 0, profile_id: profile_id)
+        commit(request, options.merge(request_type: :recurring))
       end
 
       def recurring_inquiry(profile_id, options = {})
         ActiveMerchant.deprecated RECURRING_DEPRECATION_MESSAGE
 
-        request = build_recurring_request(:inquiry, nil, options.update(:profile_id => profile_id))
-        commit(request, options.merge(:request_type => :recurring))
+        request = build_recurring_request(:inquiry, nil, options.update(profile_id: profile_id))
+        commit(request, options.merge(request_type: :recurring))
       end
 
       def express
@@ -136,7 +136,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'Description', options[:description] unless options[:description].blank?
               xml.tag! 'OrderDesc', options[:order_desc] unless options[:order_desc].blank?
               xml.tag! 'Comment', options[:comment] unless options[:comment].blank?
-              xml.tag!('ExtData', 'Name'=> 'COMMENT2', 'Value'=> options[:comment2]) unless options[:comment2].blank?
+              xml.tag!('ExtData', 'Name' => 'COMMENT2', 'Value' => options[:comment2]) unless options[:comment2].blank?
               xml.tag! 'TaxAmt', options[:taxamt] unless options[:taxamt].blank?
               xml.tag! 'FreightAmt', options[:freightamt] unless options[:freightamt].blank?
               xml.tag! 'DutyAmt', options[:dutyamt] unless options[:dutyamt].blank?
@@ -169,7 +169,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'OrderDesc', options[:order_desc] unless options[:order_desc].blank?
               # Comment and Comment2 will show up in manager.paypal.com as Comment1 and Comment2
               xml.tag! 'Comment', options[:comment] unless options[:comment].blank?
-              xml.tag!('ExtData', 'Name'=> 'COMMENT2', 'Value'=> options[:comment2]) unless options[:comment2].blank?
+              xml.tag!('ExtData', 'Name' => 'COMMENT2', 'Value' => options[:comment2]) unless options[:comment2].blank?
               xml.tag! 'TaxAmt', options[:taxamt] unless options[:taxamt].blank?
               xml.tag! 'FreightAmt', options[:freightamt] unless options[:freightamt].blank?
               xml.tag! 'DutyAmt', options[:dutyamt] unless options[:dutyamt].blank?

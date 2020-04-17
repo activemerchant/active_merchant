@@ -173,9 +173,9 @@ module ActiveMerchant #:nodoc:
           response[:success],
           message_from(response),
           response,
-          :test => test?,
-          :authorization => build_authorization(response),
-          :error_code => response[:error_code]
+          test: test?,
+          authorization: build_authorization(response),
+          error_code: response[:error_code]
         )
       end
 

@@ -12,8 +12,8 @@ class PayeezyGateway < Test::Unit::TestCase
     @check = check
     @amount = 100
     @options = {
-      :billing_address => address,
-      :ta_token => '123'
+      billing_address: address,
+      ta_token: '123'
     }
     @options_stored_credentials = {
       cardbrand_original_transaction_id: 'abc123',

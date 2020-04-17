@@ -80,22 +80,22 @@ module ActiveMerchant #:nodoc:
       #                        as network tokenization.
 
       STANDARD_ERROR_CODE = {
-        :incorrect_number => 'incorrect_number',
-        :invalid_number => 'invalid_number',
-        :invalid_expiry_date => 'invalid_expiry_date',
-        :invalid_cvc => 'invalid_cvc',
-        :expired_card => 'expired_card',
-        :incorrect_cvc => 'incorrect_cvc',
-        :incorrect_zip => 'incorrect_zip',
-        :incorrect_address => 'incorrect_address',
-        :incorrect_pin => 'incorrect_pin',
-        :card_declined => 'card_declined',
-        :processing_error => 'processing_error',
-        :call_issuer => 'call_issuer',
-        :pickup_card => 'pick_up_card',
-        :config_error => 'config_error',
-        :test_mode_live_card => 'test_mode_live_card',
-        :unsupported_feature => 'unsupported_feature',
+        incorrect_number: 'incorrect_number',
+        invalid_number: 'invalid_number',
+        invalid_expiry_date: 'invalid_expiry_date',
+        invalid_cvc: 'invalid_cvc',
+        expired_card: 'expired_card',
+        incorrect_cvc: 'incorrect_cvc',
+        incorrect_zip: 'incorrect_zip',
+        incorrect_address: 'incorrect_address',
+        incorrect_pin: 'incorrect_pin',
+        card_declined: 'card_declined',
+        processing_error: 'processing_error',
+        call_issuer: 'call_issuer',
+        pickup_card: 'pick_up_card',
+        config_error: 'config_error',
+        test_mode_live_card: 'test_mode_live_card',
+        unsupported_feature: 'unsupported_feature',
       }
 
       cattr_reader :implementations
@@ -223,11 +223,11 @@ module ActiveMerchant #:nodoc:
 
       def user_agent
         @@ua ||= JSON.dump({
-          :bindings_version => ActiveMerchant::VERSION,
-          :lang => 'ruby',
-          :lang_version => "#{RUBY_VERSION} p#{RUBY_PATCHLEVEL} (#{RUBY_RELEASE_DATE})",
-          :platform => RUBY_PLATFORM,
-          :publisher => 'active_merchant'
+          bindings_version: ActiveMerchant::VERSION,
+          lang: 'ruby',
+          lang_version: "#{RUBY_VERSION} p#{RUBY_PATCHLEVEL} (#{RUBY_RELEASE_DATE})",
+          platform: RUBY_PLATFORM,
+          publisher: 'active_merchant'
         })
       end
 
@@ -320,7 +320,7 @@ module ActiveMerchant #:nodoc:
             raise ArgumentError.new("Missing required parameter: #{param.first}") unless hash.has_key?(param.first)
 
             valid_options = param[1..-1]
-            raise ArgumentError.new("Parameter: #{param.first} must be one of #{valid_options.to_sentence(:words_connector => 'or')}") unless valid_options.include?(hash[param.first])
+            raise ArgumentError.new("Parameter: #{param.first} must be one of #{valid_options.to_sentence(words_connector: 'or')}") unless valid_options.include?(hash[param.first])
           else
             raise ArgumentError.new("Missing required parameter: #{param}") unless hash.has_key?(param)
           end

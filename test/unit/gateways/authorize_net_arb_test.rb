@@ -6,8 +6,8 @@ class AuthorizeNetArbTest < Test::Unit::TestCase
   def setup
     ActiveMerchant.expects(:deprecated).with('ARB functionality in ActiveMerchant is deprecated and will be removed in a future version. Please contact the ActiveMerchant maintainers if you have an interest in taking ownership of a separate gem that continues support for it.')
     @gateway = AuthorizeNetArbGateway.new(
-      :login => 'X',
-      :password => 'Y'
+      login: 'X',
+      password: 'Y'
     )
     @amount = 100
     @credit_card = credit_card
@@ -19,14 +19,14 @@ class AuthorizeNetArbTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_recurring_response)
 
     response = @gateway.recurring(@amount, @credit_card,
-      :billing_address => address.merge(:first_name => 'Jim', :last_name => 'Smith'),
-      :interval => {
-        :length => 10,
-        :unit => :days
+      billing_address: address.merge(first_name: 'Jim', last_name: 'Smith'),
+      interval: {
+        length: 10,
+        unit: :days
       },
-      :duration => {
-        :start_date => Time.now.strftime('%Y-%m-%d'),
-        :occurrences => 30
+      duration: {
+        start_date: Time.now.strftime('%Y-%m-%d'),
+        occurrences: 30
       }
     )
 
@@ -39,7 +39,7 @@ class AuthorizeNetArbTest < Test::Unit::TestCase
   def test_successful_update_recurring
     @gateway.expects(:ssl_post).returns(successful_update_recurring_response)
 
-    response = @gateway.update_recurring(:subscription_id => @subscription_id, :amount => @amount * 2)
+    response = @gateway.update_recurring(subscription_id: @subscription_id, amount: @amount * 2)
 
     assert_instance_of Response, response
     assert response.success?
@@ -69,8 +69,8 @@ class AuthorizeNetArbTest < Test::Unit::TestCase
   end
 
   def test_expdate_formatting
-    assert_equal '2009-09', @gateway.send(:expdate, credit_card('4111111111111111', :month => '9', :year => '2009'))
-    assert_equal '2013-11', @gateway.send(:expdate, credit_card('4111111111111111', :month => '11', :year => '2013'))
+    assert_equal '2009-09', @gateway.send(:expdate, credit_card('4111111111111111', month: '9', year: '2009'))
+    assert_equal '2013-11', @gateway.send(:expdate, credit_card('4111111111111111', month: '11', year: '2013'))
   end
 
   private

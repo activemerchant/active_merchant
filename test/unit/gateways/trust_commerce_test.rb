@@ -4,9 +4,9 @@ class TrustCommerceTest < Test::Unit::TestCase
   include CommStub
   def setup
     @gateway = TrustCommerceGateway.new(
-      :login => 'TestMerchant',
-      :password => 'password',
-      :aggregator_id => 'abc123'
+      login: 'TestMerchant',
+      password: 'password',
+      aggregator_id: 'abc123'
     )
     # Force SSL post
     @gateway.stubs(:tclink?).returns(false)

@@ -54,12 +54,12 @@ class GatewayTest < Test::Unit::TestCase
   end
 
   def test_card_brand
-    credit_card = stub(:brand => 'visa')
+    credit_card = stub(brand: 'visa')
     assert_equal 'visa', Gateway.card_brand(credit_card)
   end
 
   def test_card_brand_using_type
-    credit_card = stub(:type => 'String')
+    credit_card = stub(type: 'String')
     assert_equal 'string', Gateway.card_brand(credit_card)
   end
 

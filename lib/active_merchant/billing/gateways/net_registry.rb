@@ -37,11 +37,11 @@ module ActiveMerchant
       self.homepage_url = 'http://www.netregistry.com.au'
 
       TRANSACTIONS = {
-        :authorization => 'preauth',
-        :purchase => 'purchase',
-        :capture => 'completion',
-        :status => 'status',
-        :refund => 'refund'
+        authorization: 'preauth',
+        purchase: 'purchase',
+        capture: 'completion',
+        status: 'status',
+        refund: 'refund'
       }
 
       # Create a new NetRegistry gateway.
@@ -145,7 +145,7 @@ module ActiveMerchant
         response = parse(ssl_post(self.live_url, post_data(action, params)))
 
         Response.new(response['status'] == 'approved', message_from(response), response,
-          :authorization => authorization_from(response, action)
+          authorization: authorization_from(response, action)
         )
       end
 

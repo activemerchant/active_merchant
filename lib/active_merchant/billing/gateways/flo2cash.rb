@@ -119,9 +119,9 @@ module ActiveMerchant #:nodoc:
           succeeded,
           message_from(succeeded, raw),
           raw,
-          :authorization => authorization_from(action, raw[:transaction_id], post[:OriginalTransactionId]),
-          :error_code => error_code_from(succeeded, raw),
-          :test => test?
+          authorization: authorization_from(action, raw[:transaction_id], post[:OriginalTransactionId]),
+          error_code: error_code_from(succeeded, raw),
+          test: test?
         )
       end
 
@@ -133,7 +133,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_request(action, post)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         post.each do |field, value|
           xml.tag!(field, value)
         end

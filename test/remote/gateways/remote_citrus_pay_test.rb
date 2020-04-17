@@ -104,8 +104,8 @@ class RemoteCitrusPayTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = CitrusPayGateway.new(
-      :userid => 'nosuch',
-      :password => 'thing'
+      userid: 'nosuch',
+      password: 'thing'
     )
     response = gateway.authorize(@amount, @credit_card, @options)
     assert_failure response

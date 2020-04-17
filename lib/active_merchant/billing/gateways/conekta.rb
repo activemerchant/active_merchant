@@ -180,7 +180,7 @@ module ActiveMerchant #:nodoc:
           'Accept-Language' => 'es',
           'Authorization' => 'Basic ' + Base64.encode64("#{@options[:key]}:"),
           'RaiseHtmlError' => 'false',
-          'Conekta-Client-User-Agent' => {'agent'=>"Conekta ActiveMerchantBindings/#{ActiveMerchant::VERSION}"}.to_json,
+          'Conekta-Client-User-Agent' => {'agent' => "Conekta ActiveMerchantBindings/#{ActiveMerchant::VERSION}"}.to_json,
           'X-Conekta-Client-User-Agent' => conekta_client_user_agent(options),
           'X-Conekta-Client-User-Metadata' => options[:meta].to_json
         }

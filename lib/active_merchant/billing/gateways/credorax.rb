@@ -325,7 +325,7 @@ module ActiveMerchant #:nodoc:
           post[:'3ds_redirect_url'] = three_ds_2_options[:notification_url]
           post[:'3ds_challengewindowsize'] = options[:three_ds_challenge_window_size] || '03'
           post[:d5] = browser_info[:user_agent]
-          post[:'3ds_transtype'] = options[:transaction_type] || '01'
+          post[:'3ds_transtype'] = options[:three_ds_transtype] || '01'
           post[:'3ds_browsertz'] = browser_info[:timezone]
           post[:'3ds_browserscreenwidth'] = browser_info[:width]
           post[:'3ds_browserscreenheight'] = browser_info[:height]

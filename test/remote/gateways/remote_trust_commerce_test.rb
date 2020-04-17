@@ -14,19 +14,19 @@ class TrustCommerceTest < Test::Unit::TestCase
     @invalid_verification_value = '1234'
 
     @valid_address = {
-      :address1 => '123 Test St.',
-      :address2 => nil,
-      :city => 'Somewhere',
-      :state => 'CA',
-      :zip => '90001'
+      address1: '123 Test St.',
+      address2: nil,
+      city: 'Somewhere',
+      state: 'CA',
+      zip: '90001'
     }
 
     @invalid_address = {
-      :address1 => '187 Apple Tree Lane.',
-      :address2 => nil,
-      :city => 'Woodside',
-      :state => 'CA',
-      :zip => '94062'
+      address1: '187 Apple Tree Lane.',
+      address2: nil,
+      city: 'Woodside',
+      state: 'CA',
+      zip: '94062'
     }
 
     # The Trust Commerce API does not return anything different when custom fields are present.
@@ -38,12 +38,12 @@ class TrustCommerceTest < Test::Unit::TestCase
     }
 
     @options = {
-      :ip => '10.10.10.10',
-      :order_id => '#1000.1',
-      :email => 'cody@example.com',
-      :billing_address => @valid_address,
-      :shipping_address => @valid_address,
-      :custom_fields => custom_fields
+      ip: '10.10.10.10',
+      order_id: '#1000.1',
+      email: 'cody@example.com',
+      billing_address: @valid_address,
+      shipping_address: @valid_address,
+      custom_fields: custom_fields
     }
   end
 
@@ -88,7 +88,7 @@ class TrustCommerceTest < Test::Unit::TestCase
   end
 
   def test_purchase_with_avs_for_invalid_address
-    assert response = @gateway.purchase(@amount, @credit_card, @options.update(:billing_address => @invalid_address))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.update(billing_address: @invalid_address))
     assert_equal 'N', response.params['avs']
     assert_match %r{The transaction was successful}, response.message
     assert_success response
@@ -107,7 +107,7 @@ class TrustCommerceTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize_with_avs
-    assert response = @gateway.authorize(@amount, @credit_card, :billing_address => @valid_address)
+    assert response = @gateway.authorize(@amount, @credit_card, billing_address: @valid_address)
 
     assert_equal 'Y', response.avs_result['code']
     assert_match %r{The transaction was successful}, response.message
@@ -124,7 +124,7 @@ class TrustCommerceTest < Test::Unit::TestCase
   end
 
   def test_authorization_with_avs_for_invalid_address
-    assert response = @gateway.authorize(@amount, @credit_card, @options.update(:billing_address => @invalid_address))
+    assert response = @gateway.authorize(@amount, @credit_card, @options.update(billing_address: @invalid_address))
     assert_equal 'N', response.params['avs']
     assert_match %r{The transaction was successful}, response.message
     assert_success response
@@ -190,14 +190,14 @@ class TrustCommerceTest < Test::Unit::TestCase
   end
 
   def test_successful_recurring
-    assert response = @gateway.recurring(@amount, @credit_card, :periodicity => :weekly)
+    assert response = @gateway.recurring(@amount, @credit_card, periodicity: :weekly)
 
     assert_match %r{The transaction was successful}, response.message
     assert_success response
   end
 
   def test_failed_recurring
-    assert response = @gateway.recurring(@amount, @declined_credit_card, :periodicity => :weekly)
+    assert response = @gateway.recurring(@amount, @declined_credit_card, periodicity: :weekly)
 
     assert_bad_data_response(response)
   end

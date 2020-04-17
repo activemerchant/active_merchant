@@ -80,12 +80,12 @@ module ActiveMerchant
       }
 
       TRANSACTIONS = {
-        :authorization => 'auth',
-        :purchase => 'auth',
-        :capture => 'mark',
-        :void => 'void',
-        :refund => 'return',
-        :credit => 'newreturn'
+        authorization: 'auth',
+        purchase: 'auth',
+        capture: 'mark',
+        void: 'void',
+        refund: 'return',
+        credit: 'newreturn'
       }
 
       SUCCESS_CODES = ['pending', 'success']
@@ -179,10 +179,10 @@ module ActiveMerchant
         message = success ? 'Success' : message_from(response)
 
         Response.new(success, message, response,
-          :test => test?,
-          :authorization => response[:orderid],
-          :avs_result => { :code => response[:avs_code] },
-          :cvv_result => response[:cvvresp]
+          test: test?,
+          authorization: response[:orderid],
+          avs_result: { code: response[:avs_code] },
+          cvv_result: response[:cvvresp]
         )
       end
 

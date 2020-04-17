@@ -211,7 +211,7 @@ class BalancedTest < Test::Unit::TestCase
 
     new_email_address = '%d@example.org' % Time.now
     assert response = @gateway.store(@credit_card, {
-        email: new_email_address
+      email: new_email_address
     })
     assert_instance_of String, response.authorization
   end

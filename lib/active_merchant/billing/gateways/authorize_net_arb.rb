@@ -39,10 +39,10 @@ module ActiveMerchant #:nodoc:
       AUTHORIZE_NET_ARB_NAMESPACE = 'AnetApi/xml/v1/schema/AnetApiSchema.xsd'
 
       RECURRING_ACTIONS = {
-        :create => 'ARBCreateSubscription',
-        :update => 'ARBUpdateSubscription',
-        :cancel => 'ARBCancelSubscription',
-        :status => 'ARBGetSubscriptionStatus'
+        create: 'ARBCreateSubscription',
+        update: 'ARBUpdateSubscription',
+        cancel: 'ARBCancelSubscription',
+        status: 'ARBGetSubscriptionStatus'
       }
 
       # Creates a new AuthorizeNetArbGateway
@@ -126,7 +126,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>subscription_id</tt> -- A string containing the +subscription_id+ of the recurring payment already in place
       #   for a given credit card. (REQUIRED)
       def cancel_recurring(subscription_id)
-        request = build_recurring_request(:cancel, :subscription_id => subscription_id)
+        request = build_recurring_request(:cancel, subscription_id: subscription_id)
         recurring_commit(:cancel, request)
       end
 
@@ -139,7 +139,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>subscription_id</tt> -- A string containing the +subscription_id+ of the recurring payment already in place
       #   for a given credit card. (REQUIRED)
       def status_recurring(subscription_id)
-        request = build_recurring_request(:status, :subscription_id => subscription_id)
+        request = build_recurring_request(:status, subscription_id: subscription_id)
         recurring_commit(:status, request)
       end
 
@@ -149,9 +149,9 @@ module ActiveMerchant #:nodoc:
       def build_recurring_request(action, options = {})
         raise StandardError, "Invalid Automated Recurring Billing Action: #{action}" unless RECURRING_ACTIONS.include?(action)
 
-        xml = Builder::XmlMarkup.new(:indent => 2)
-        xml.instruct!(:xml, :version => '1.0', :encoding => 'utf-8')
-        xml.tag!("#{RECURRING_ACTIONS[action]}Request", :xmlns => AUTHORIZE_NET_ARB_NAMESPACE) do
+        xml = Builder::XmlMarkup.new(indent: 2)
+        xml.instruct!(:xml, version: '1.0', encoding: 'utf-8')
+        xml.tag!("#{RECURRING_ACTIONS[action]}Request", xmlns: AUTHORIZE_NET_ARB_NAMESPACE) do
           add_merchant_authentication(xml)
           # Merchant-assigned reference ID for the request
           xml.tag!('refId', options[:ref_id]) if options[:ref_id]
@@ -394,8 +394,8 @@ module ActiveMerchant #:nodoc:
         success = response[:result_code] == 'Ok'
 
         Response.new(success, message, response,
-          :test => test_mode,
-          :authorization => response[:subscription_id]
+          test: test_mode,
+          authorization: response[:subscription_id]
         )
       end
 

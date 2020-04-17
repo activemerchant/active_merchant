@@ -112,8 +112,8 @@ module ActiveMerchant #:nodoc:
       def response_from(raw_response)
         parsed = JSON.parse(raw_response)
         options = {
-          :authorization => authorization_from(parsed),
-          :test => (parsed['mode'] == 'test'),
+          authorization: authorization_from(parsed),
+          test: (parsed['mode'] == 'test'),
         }
 
         succeeded = (parsed['data'] == []) || (parsed['data']['response_code'].to_i == 20000)
@@ -181,7 +181,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def response_for_save_from(raw_response)
-        options = { :test => test? }
+        options = { test: test? }
 
         parser = ResponseParser.new(raw_response, options)
         parser.generate_response

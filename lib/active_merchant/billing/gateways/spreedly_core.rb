@@ -283,10 +283,10 @@ module ActiveMerchant #:nodoc:
       def response_from(raw_response, authorization_field)
         parsed = parse(raw_response)
         options = {
-          :authorization => parsed[authorization_field],
-          :test => (parsed[:on_test_gateway] == 'true'),
-          :avs_result => { :code => parsed[:response_avs_code] },
-          :cvv_result => parsed[:response_cvv_code]
+          authorization: parsed[authorization_field],
+          test: (parsed[:on_test_gateway] == 'true'),
+          avs_result: { code: parsed[:response_avs_code] },
+          cvv_result: parsed[:response_cvv_code]
         }
 
         Response.new(parsed[:succeeded] == 'true', parsed[:message] || parsed[:error], parsed, options)

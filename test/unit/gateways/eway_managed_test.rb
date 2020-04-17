@@ -4,10 +4,10 @@ class EwayManagedTest < Test::Unit::TestCase
   def setup
     Base.mode = :test
 
-    @gateway = EwayManagedGateway.new(:username => 'username', :login => 'login', :password => 'password')
+    @gateway = EwayManagedGateway.new(username: 'username', login: 'login', password: 'password')
 
-    @valid_card='4444333322221111'
-    @valid_customer_id='9876543211000'
+    @valid_card = '4444333322221111'
+    @valid_customer_id = '9876543211000'
 
     @credit_card = credit_card(@valid_card)
     @declined_card = credit_card('4444111111111111')
@@ -15,22 +15,22 @@ class EwayManagedTest < Test::Unit::TestCase
     @amount = 100
 
     @options = {
-      :billing_address => {
-        :address1 => '1234 My Street',
-        :address2 => 'Apt 1',
-        :company => 'Widgets Inc',
-        :city => 'Ottawa',
-        :state => 'ON',
-        :zip => 'K1C2N6',
-        :country => 'au',
-        :title => 'Mr.',
-        :phone => '(555)555-5555'
+      billing_address: {
+        address1: '1234 My Street',
+        address2: 'Apt 1',
+        company: 'Widgets Inc',
+        city: 'Ottawa',
+        state: 'ON',
+        zip: 'K1C2N6',
+        country: 'au',
+        title: 'Mr.',
+        phone: '(555)555-5555'
       },
-      :email => 'someguy1232@fakeemail.net',
-      :order_id => '1000',
-      :customer => 'mycustomerref',
-      :description => 'My Description',
-      :invoice => 'invoice-4567'
+      email: 'someguy1232@fakeemail.net',
+      order_id: '1000',
+      customer: 'mycustomerref',
+      description: 'My Description',
+      invoice: 'invoice-4567'
     }
   end
 
@@ -39,17 +39,17 @@ class EwayManagedTest < Test::Unit::TestCase
       @gateway.store(@credit_card, { })
     end
     assert_raise ArgumentError do
-      @gateway.store(@credit_card, { :billing_address => {} })
+      @gateway.store(@credit_card, { billing_address: {} })
     end
     assert_raise ArgumentError do
-      @gateway.store(@credit_card, { :billing_address => { :title => 'Mr.' } })
+      @gateway.store(@credit_card, { billing_address: { title: 'Mr.' } })
     end
     assert_raise ArgumentError do
-      @gateway.store(@credit_card, { :billing_address => { :country => 'au' } })
+      @gateway.store(@credit_card, { billing_address: { country: 'au' } })
     end
     assert_nothing_raised do
       @gateway.expects(:ssl_post).returns(successful_store_response)
-      @gateway.store(@credit_card, { :billing_address => { :title => 'Mr.', :country => 'au' } })
+      @gateway.store(@credit_card, { billing_address: { title: 'Mr.', country: 'au' } })
     end
   end
 
@@ -58,17 +58,17 @@ class EwayManagedTest < Test::Unit::TestCase
       @gateway.update(@valid_customer_id, @credit_card, { })
     end
     assert_raise ArgumentError do
-      @gateway.update(@valid_customer_id, @credit_card, { :billing_address => {} })
+      @gateway.update(@valid_customer_id, @credit_card, { billing_address: {} })
     end
     assert_raise ArgumentError do
-      @gateway.update(@valid_customer_id, @credit_card, { :billing_address => { :title => 'Mr.' } })
+      @gateway.update(@valid_customer_id, @credit_card, { billing_address: { title: 'Mr.' } })
     end
     assert_raise ArgumentError do
-      @gateway.update(@valid_customer_id, @credit_card, { :billing_address => { :country => 'au' } })
+      @gateway.update(@valid_customer_id, @credit_card, { billing_address: { country: 'au' } })
     end
     assert_nothing_raised do
       @gateway.expects(:ssl_post).returns(successful_update_response)
-      @gateway.update(@valid_customer_id, @credit_card, { :billing_address => { :title => 'Mr.', :country => 'au' } })
+      @gateway.update(@valid_customer_id, @credit_card, { billing_address: { title: 'Mr.', country: 'au' } })
     end
   end
 

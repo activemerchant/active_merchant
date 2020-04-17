@@ -61,7 +61,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(money, authorization, options={})
-        add_invoice(post={}, money, options)
+        add_invoice(post = {}, money, options)
         commit('refund', post, authorization)
       end
 

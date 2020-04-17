@@ -149,13 +149,13 @@ EOA
           succeeded,
           message_from(succeeded, raw),
           raw,
-          :authorization => authorization_from(post, raw),
-          :test => test?
+          authorization: authorization_from(post, raw),
+          test: test?
         )
       end
 
       def build_request(post)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.instruct!
         post.each do |field, value|
           xml.tag!(field, value)

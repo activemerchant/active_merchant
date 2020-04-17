@@ -152,13 +152,13 @@ module ActiveMerchant
 
     def credit_card(number = '4242424242424242', options = {})
       defaults = {
-        :number => number,
-        :month => default_expiration_date.month,
-        :year => default_expiration_date.year,
-        :first_name => 'Longbob',
-        :last_name => 'Longsen',
-        :verification_value => options[:verification_value] || '123',
-        :brand => 'visa'
+        number: number,
+        month: default_expiration_date.month,
+        year: default_expiration_date.year,
+        first_name: 'Longbob',
+        last_name: 'Longsen',
+        verification_value: options[:verification_value] || '123',
+        brand: 'visa'
       }.update(options)
 
       Billing::CreditCard.new(defaults)
@@ -168,7 +168,7 @@ module ActiveMerchant
       exp_date = default_expiration_date.strftime('%y%m')
 
       defaults = {
-        :track_data => "%B#{number}^LONGSEN/L. ^#{exp_date}1200000000000000**123******?",
+        track_data: "%B#{number}^LONGSEN/L. ^#{exp_date}1200000000000000**123******?",
       }.update(options)
 
       Billing::CreditCard.new(defaults)
@@ -176,13 +176,13 @@ module ActiveMerchant
 
     def network_tokenization_credit_card(number = '4242424242424242', options = {})
       defaults = {
-        :number => number,
-        :month => default_expiration_date.month,
-        :year => default_expiration_date.year,
-        :first_name => 'Longbob',
-        :last_name => 'Longsen',
-        :verification_value => '123',
-        :brand => 'visa'
+        number: number,
+        month: default_expiration_date.month,
+        year: default_expiration_date.year,
+        first_name: 'Longbob',
+        last_name: 'Longsen',
+        verification_value: '123',
+        brand: 'visa'
       }.update(options)
 
       Billing::NetworkTokenizationCreditCard.new(defaults)
@@ -190,13 +190,13 @@ module ActiveMerchant
 
     def check(options = {})
       defaults = {
-        :name => 'Jim Smith',
-        :bank_name => 'Bank of Elbonia',
-        :routing_number => '244183602',
-        :account_number => '15378535',
-        :account_holder_type => 'personal',
-        :account_type => 'checking',
-        :number => '1'
+        name: 'Jim Smith',
+        bank_name: 'Bank of Elbonia',
+        routing_number: '244183602',
+        account_number: '15378535',
+        account_holder_type: 'personal',
+        account_type: 'checking',
+        number: '1'
       }.update(options)
 
       Billing::Check.new(defaults)

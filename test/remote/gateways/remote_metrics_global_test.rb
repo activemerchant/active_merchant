@@ -6,11 +6,11 @@ class MetricsGlobalTest < Test::Unit::TestCase
 
     @gateway = MetricsGlobalGateway.new(fixtures(:metrics_global))
     @amount = 100
-    @credit_card = credit_card('4111111111111111', :verification_value => '999')
+    @credit_card = credit_card('4111111111111111', verification_value: '999')
     @options = {
-      :order_id => generate_unique_id,
-      :billing_address => address(:address1 => '888 Test Street', :zip => '77777'),
-      :description => 'Store purchase'
+      order_id: generate_unique_id,
+      billing_address: address(address1: '888 Test Street', zip: '77777'),
+      description: 'Store purchase'
     }
   end
 
@@ -57,8 +57,8 @@ class MetricsGlobalTest < Test::Unit::TestCase
 
   def test_bad_login
     gateway = MetricsGlobalGateway.new(
-      :login => 'X',
-      :password => 'Y'
+      login: 'X',
+      password: 'Y'
     )
 
     assert response = gateway.purchase(@amount, @credit_card)
@@ -78,8 +78,8 @@ class MetricsGlobalTest < Test::Unit::TestCase
 
   def test_using_test_request
     gateway = MetricsGlobalGateway.new(
-      :login => 'X',
-      :password => 'Y'
+      login: 'X',
+      password: 'Y'
     )
 
     assert response = gateway.purchase(@amount, @credit_card)

@@ -7,14 +7,14 @@ class PayflowTest < Test::Unit::TestCase
     Base.mode = :test
 
     @gateway = PayflowGateway.new(
-      :login => 'LOGIN',
-      :password => 'PASSWORD'
+      login: 'LOGIN',
+      password: 'PASSWORD'
     )
 
     @amount = 100
     @credit_card = credit_card('4242424242424242')
-    @options = { :billing_address => address.merge(:first_name => 'Longbob', :last_name => 'Longsen') }
-    @check = check(:name => 'Jim Smith')
+    @options = { billing_address: address.merge(first_name: 'Longbob', last_name: 'Longsen') }
+    @check = check(name: 'Jim Smith')
     @l2_json = '{
       "Tender": {
         "ACH": {
@@ -229,9 +229,9 @@ class PayflowTest < Test::Unit::TestCase
     Base.mode = :production
 
     gateway = PayflowGateway.new(
-      :login => 'LOGIN',
-      :password => 'PASSWORD',
-      :test => true
+      login: 'LOGIN',
+      password: 'PASSWORD',
+      test: true
     )
 
     assert gateway.test?
@@ -241,8 +241,8 @@ class PayflowTest < Test::Unit::TestCase
     Base.mode = :production
 
     gateway = PayflowGateway.new(
-      :login => 'LOGIN',
-      :password => 'PASSWORD'
+      login: 'LOGIN',
+      password: 'PASSWORD'
     )
 
     refute gateway.test?
@@ -250,26 +250,26 @@ class PayflowTest < Test::Unit::TestCase
 
   def test_partner_class_accessor
     assert_equal 'PayPal', PayflowGateway.partner
-    gateway = PayflowGateway.new(:login => 'test', :password => 'test')
+    gateway = PayflowGateway.new(login: 'test', password: 'test')
     assert_equal 'PayPal', gateway.options[:partner]
   end
 
   def test_partner_class_accessor_used_when_passed_in_partner_is_blank
     assert_equal 'PayPal', PayflowGateway.partner
-    gateway = PayflowGateway.new(:login => 'test', :password => 'test', :partner => '')
+    gateway = PayflowGateway.new(login: 'test', password: 'test', partner: '')
     assert_equal 'PayPal', gateway.options[:partner]
   end
 
   def test_passed_in_partner_overrides_class_accessor
     assert_equal 'PayPal', PayflowGateway.partner
-    gateway = PayflowGateway.new(:login => 'test', :password => 'test', :partner => 'PayPalUk')
+    gateway = PayflowGateway.new(login: 'test', password: 'test', partner: 'PayPalUk')
     assert_equal 'PayPalUk', gateway.options[:partner]
   end
 
   def test_express_instance
     gateway = PayflowGateway.new(
-      :login => 'test',
-      :password => 'password'
+      login: 'test',
+      password: 'password'
     )
     express = gateway.express
     assert_instance_of PayflowExpressGateway, express
@@ -309,8 +309,8 @@ class PayflowTest < Test::Unit::TestCase
     assert_raises ArgumentError do
       assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
         @gateway.recurring(@amount, @credit_card,
-          :periodicity => :monthly,
-          :initial_transaction => { }
+          periodicity: :monthly,
+          initial_transaction: { }
         )
       end
     end
@@ -320,8 +320,8 @@ class PayflowTest < Test::Unit::TestCase
     assert_raises ArgumentError do
       assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
         @gateway.recurring(@amount, @credit_card,
-          :periodicity => :monthly,
-          :initial_transaction => { :amount => :purchase }
+          periodicity: :monthly,
+          initial_transaction: { amount: :purchase }
         )
       end
     end
@@ -347,7 +347,7 @@ class PayflowTest < Test::Unit::TestCase
     @gateway.stubs(:ssl_post).returns(successful_recurring_response)
 
     response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
-      @gateway.recurring(@amount, @credit_card, :periodicity => :monthly)
+      @gateway.recurring(@amount, @credit_card, periodicity: :monthly)
     end
 
     assert_instance_of PayflowResponse, response
@@ -361,7 +361,7 @@ class PayflowTest < Test::Unit::TestCase
     @gateway.stubs(:ssl_post).returns(successful_recurring_response)
 
     response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
-      @gateway.recurring(@amount, nil, :profile_id => 'RT0000000009', :periodicity => :monthly)
+      @gateway.recurring(@amount, nil, profile_id: 'RT0000000009', periodicity: :monthly)
     end
 
     assert_instance_of PayflowResponse, response
@@ -375,7 +375,7 @@ class PayflowTest < Test::Unit::TestCase
     @gateway.stubs(:ssl_post).returns(successful_recurring_response)
 
     response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
-      @gateway.recurring(@amount, nil, :profile_id => 'RT0000000009', :retry_num_days => 3, :periodicity => :monthly)
+      @gateway.recurring(@amount, nil, profile_id: 'RT0000000009', retry_num_days: 3, periodicity: :monthly)
     end
 
     assert_instance_of PayflowResponse, response
@@ -389,7 +389,7 @@ class PayflowTest < Test::Unit::TestCase
     @gateway.stubs(:ssl_post).returns(start_date_error_recurring_response)
 
     response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
-      @gateway.recurring(@amount, nil, :profile_id => 'RT0000000009', :starting_at => Date.yesterday, :periodicity => :monthly)
+      @gateway.recurring(@amount, nil, profile_id: 'RT0000000009', starting_at: Date.yesterday, periodicity: :monthly)
     end
 
     assert_instance_of PayflowResponse, response
@@ -404,7 +404,7 @@ class PayflowTest < Test::Unit::TestCase
     @gateway.stubs(:ssl_post).returns(start_date_missing_recurring_response)
 
     response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
-      @gateway.recurring(@amount, nil, :profile_id => 'RT0000000009', :periodicity => :yearly)
+      @gateway.recurring(@amount, nil, profile_id: 'RT0000000009', periodicity: :yearly)
     end
 
     assert_instance_of PayflowResponse, response
@@ -419,7 +419,7 @@ class PayflowTest < Test::Unit::TestCase
     @gateway.stubs(:ssl_post).returns(successful_payment_history_recurring_response)
 
     response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
-      @gateway.recurring_inquiry('RT0000000009', :history => true)
+      @gateway.recurring_inquiry('RT0000000009', history: true)
     end
     assert_equal 1, response.payment_history.size
     assert_equal '1', response.payment_history.first['payment_num']
@@ -427,7 +427,7 @@ class PayflowTest < Test::Unit::TestCase
   end
 
   def test_recurring_profile_payment_history_inquiry_contains_the_proper_xml
-    request = @gateway.send(:build_recurring_request, :inquiry, nil, :profile_id => 'RT0000000009', :history => true)
+    request = @gateway.send(:build_recurring_request, :inquiry, nil, profile_id: 'RT0000000009', history: true)
     assert_match %r(<PaymentHistory>Y</PaymentHistory), request
   end
 
@@ -435,7 +435,7 @@ class PayflowTest < Test::Unit::TestCase
     xml = Builder::XmlMarkup.new
     credit_card = credit_card(
       '5641820000000005',
-      :brand => 'maestro'
+      brand: 'maestro'
     )
 
     @gateway.send(:add_credit_card, xml, credit_card, @options.merge(three_d_secure_option))
@@ -446,7 +446,7 @@ class PayflowTest < Test::Unit::TestCase
     xml = Builder::XmlMarkup.new
     credit_card = credit_card(
       '5641820000000005',
-      :brand => 'maestro'
+      brand: 'maestro'
     )
 
     @gateway.send(:add_credit_card, xml, credit_card, @options.merge(three_d_secure_option_frictionless))
@@ -484,8 +484,8 @@ class PayflowTest < Test::Unit::TestCase
   end
 
   def test_passed_in_verbosity
-    assert_nil PayflowGateway.new(:login => 'test', :password => 'test').options[:verbosity]
-    gateway = PayflowGateway.new(:login => 'test', :password => 'test', :verbosity => 'HIGH')
+    assert_nil PayflowGateway.new(login: 'test', password: 'test').options[:verbosity]
+    gateway = PayflowGateway.new(login: 'test', password: 'test', verbosity: 'HIGH')
     assert_equal 'HIGH', gateway.options[:verbosity]
     @gateway.expects(:ssl_post).returns(verbose_transaction_response)
     response = @gateway.purchase(100, @credit_card, @options)
@@ -907,29 +907,29 @@ Conn close
 
   def three_d_secure_option
     {
-        :three_d_secure => {
-            :authentication_id => 'QvDbSAxSiaQs241899E0',
-            :authentication_response_status => 'Y',
-            :pareq => 'pareq block',
-            :acs_url => 'https://bankacs.bank.com/ascurl',
-            :eci => '02',
-            :cavv => 'jGvQIvG/5UhjAREALGYa6Vu/hto=',
-            :xid => 'UXZEYlNBeFNpYVFzMjQxODk5RTA='
-        }
+      three_d_secure: {
+        authentication_id: 'QvDbSAxSiaQs241899E0',
+        authentication_response_status: 'Y',
+        pareq: 'pareq block',
+        acs_url: 'https://bankacs.bank.com/ascurl',
+        eci: '02',
+        cavv: 'jGvQIvG/5UhjAREALGYa6Vu/hto=',
+        xid: 'UXZEYlNBeFNpYVFzMjQxODk5RTA='
+      }
     }
   end
 
   def three_d_secure_option_frictionless
     {
-        :three_d_secure => {
-            :authentication_id => 'QvDbSAxSiaQs241899E0',
-            :directory_response_status => 'C',
-            :pareq => 'pareq block',
-            :acs_url => 'https://bankacs.bank.com/ascurl',
-            :eci => '02',
-            :cavv => 'jGvQIvG/5UhjAREALGYa6Vu/hto=',
-            :xid => 'UXZEYlNBeFNpYVFzMjQxODk5RTA='
-        }
+      three_d_secure: {
+        authentication_id: 'QvDbSAxSiaQs241899E0',
+        directory_response_status: 'C',
+        pareq: 'pareq block',
+        acs_url: 'https://bankacs.bank.com/ascurl',
+        eci: '02',
+        cavv: 'jGvQIvG/5UhjAREALGYa6Vu/hto=',
+        xid: 'UXZEYlNBeFNpYVFzMjQxODk5RTA='
+      }
     }
   end
 end

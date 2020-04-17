@@ -2,7 +2,7 @@ require 'cgi'
 
 module ActiveMerchant
   class PostData < Hash
-    class_attribute :required_fields, :instance_writer => false
+    class_attribute :required_fields, instance_writer: false
     self.required_fields = []
 
     def []=(key, value)

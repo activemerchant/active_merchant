@@ -11,12 +11,12 @@ module ActiveMerchant #:nodoc:
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club]
 
       TRANSACTIONS = {
-        :purchase           => '01',
-        :authorization      => '02',
-        :capture            => '11',
-        :void               => '04',
-        :credit             => '06',
-        :refund             => '10'
+        purchase:       '01',
+        authorization:  '02',
+        capture:        '11',
+        void:           '04',
+        credit:         '06',
+        refund:         '10'
       }
 
       SOURCE_CARD   = 'bankcard'
@@ -261,10 +261,10 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(url, post_data(action, params)), source)
 
         Response.new(success?(response), response[:message], response,
-          :test => test?,
-          :authorization => authorization_from(response, source),
-          :avs_result => { :code => response[:avs_result] },
-          :cvv_result => response[:cvv_result]
+          test: test?,
+          authorization: authorization_from(response, source),
+          avs_result: { code: response[:avs_result] },
+          cvv_result: response[:cvv_result]
         )
       end
 

@@ -196,8 +196,8 @@ module ActiveMerchant #:nodoc:
           succeeded,
           message_from(succeeded, raw),
           raw,
-          :authorization => authorization_from(raw),
-          :test => test?
+          authorization: authorization_from(raw),
+          test: test?
         )
       end
 

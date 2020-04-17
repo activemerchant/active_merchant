@@ -92,8 +92,8 @@ module ActiveMerchant #:nodoc:
         Response.new(success?(response),
           response['message'],
           response,
-          :test => test?,
-          :authorization => response['code_auth'])
+          test: test?,
+          authorization: response['code_auth'])
       end
 
       def success?(response)

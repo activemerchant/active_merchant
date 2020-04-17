@@ -143,7 +143,7 @@ class WorldpayUsTest < Test::Unit::TestCase
 
   def test_passing_billing_address
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, :billing_address => address)
+      @gateway.purchase(@amount, @credit_card, billing_address: address)
     end.check_request do |endpoint, data, headers|
       assert_match(/ci_billaddr1=456\+My\+Street/, data)
       assert_match(/ci_billzip=K1C2N6/, data)
@@ -152,7 +152,7 @@ class WorldpayUsTest < Test::Unit::TestCase
 
   def test_passing_phone_number
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, :billing_address => address)
+      @gateway.purchase(@amount, @credit_card, billing_address: address)
     end.check_request do |endpoint, data, headers|
       assert_match(/ci_phone=%28555%29555-5555/, data)
     end.respond_with(successful_purchase_response)
@@ -160,7 +160,7 @@ class WorldpayUsTest < Test::Unit::TestCase
 
   def test_passing_billing_address_without_phone
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, :billing_address => address(:phone => nil))
+      @gateway.purchase(@amount, @credit_card, billing_address: address(phone: nil))
     end.check_request do |endpoint, data, headers|
       assert_no_match(/udf3/, data)
     end.respond_with(successful_purchase_response)

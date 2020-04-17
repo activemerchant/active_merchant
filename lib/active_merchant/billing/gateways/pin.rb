@@ -47,7 +47,7 @@ module ActiveMerchant #:nodoc:
 
       # Refund a transaction
       def refund(money, token, options = {})
-        commit(:post, "charges/#{CGI.escape(token)}/refunds", { :amount => amount(money) }, options)
+        commit(:post, "charges/#{CGI.escape(token)}/refunds", { amount: amount(money) }, options)
       end
 
       # Authorize an amount on a credit card. Once authorized, you can later
@@ -61,7 +61,7 @@ module ActiveMerchant #:nodoc:
       # Captures a previously authorized charge. Capturing only part of the original
       # authorization is currently not supported.
       def capture(money, token, options = {})
-        commit(:put, "charges/#{CGI.escape(token)}/capture", { :amount => amount(money) }, options)
+        commit(:put, "charges/#{CGI.escape(token)}/capture", { amount: amount(money) }, options)
       end
 
       # Updates the credit card for the customer.
@@ -107,11 +107,11 @@ module ActiveMerchant #:nodoc:
 
         post[:card] ||= {}
         post[:card].merge!(
-          :address_line1 => address[:address1],
-          :address_city => address[:city],
-          :address_postcode => address[:zip],
-          :address_state => address[:state],
-          :address_country => address[:country]
+          address_line1: address[:address1],
+          address_city: address[:city],
+          address_postcode: address[:zip],
+          address_state: address[:state],
+          address_country: address[:country]
         )
       end
 
@@ -131,11 +131,11 @@ module ActiveMerchant #:nodoc:
           post[:card] ||= {}
 
           post[:card].merge!(
-            :number => creditcard.number,
-            :expiry_month => creditcard.month,
-            :expiry_year => creditcard.year,
-            :cvc => creditcard.verification_value,
-            :name => creditcard.name
+            number: creditcard.number,
+            expiry_month: creditcard.month,
+            expiry_year: creditcard.year,
+            cvc: creditcard.verification_value,
+            name: creditcard.name
           )
         elsif creditcard.kind_of?(String)
           if creditcard =~ /^card_/
@@ -194,8 +194,8 @@ module ActiveMerchant #:nodoc:
           true,
           response['status_message'],
           body,
-          :authorization => token(response),
-          :test => test?
+          authorization: token(response),
+          test: test?
         )
       end
 
@@ -204,8 +204,8 @@ module ActiveMerchant #:nodoc:
           false,
           body['error_description'],
           body,
-          :authorization => nil,
-          :test => test?
+          authorization: nil,
+          test: test?
         )
       end
 

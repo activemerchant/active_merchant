@@ -24,19 +24,19 @@ module ActiveMerchant #:nodoc:
 
       AVS_CODE = {
         'matched;matched' => 'D',
-        'matched;notchecked' =>'B',
+        'matched;notchecked' => 'B',
         'matched;notmatched' => 'A',
         'matched;partialmatch' => 'A',
         'notchecked;matched' => 'P',
-        'notchecked;notchecked' =>'I',
+        'notchecked;notchecked' => 'I',
         'notchecked;notmatched' => 'I',
         'notchecked;partialmatch' => 'I',
         'notmatched;matched' => 'W',
-        'notmatched;notchecked' =>'C',
+        'notmatched;notchecked' => 'C',
         'notmatched;notmatched' => 'C',
         'notmatched;partialmatch' => 'C',
         'partialmatched;matched' => 'W',
-        'partialmatched;notchecked' =>'C',
+        'partialmatched;notchecked' => 'C',
         'partialmatched;notmatched' => 'C',
         'partialmatched;partialmatch' => 'C'
       }

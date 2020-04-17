@@ -207,8 +207,8 @@ module ActiveMerchant
           succeeded,
           message_from(succeeded, raw),
           raw,
-          :authorization => authorization_from(post, raw),
-          :test => test?
+          authorization: authorization_from(post, raw),
+          test: test?
         )
       end
 

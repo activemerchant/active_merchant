@@ -25,14 +25,14 @@ module ActiveMerchant #:nodoc:
       SENSITIVE_FIELDS = [:verification_str2, :expiry_date, :card_number]
 
       BRANDS = {
-        :visa => 'Visa',
-        :master => 'Mastercard',
-        :american_express => 'American Express',
-        :jcb => 'JCB',
-        :discover => 'Discover'
+        visa: 'Visa',
+        master: 'Mastercard',
+        american_express: 'American Express',
+        jcb: 'JCB',
+        discover: 'Discover'
       }
 
-      E4_BRANDS = BRANDS.merge({:mastercard => 'Mastercard'})
+      E4_BRANDS = BRANDS.merge({mastercard: 'Mastercard'})
 
       DEFAULT_ECI = '07'
 
@@ -298,11 +298,11 @@ module ActiveMerchant #:nodoc:
       def add_credit_card_token(xml, store_authorization, options)
         params = store_authorization.split(';')
         credit_card = CreditCard.new(
-          :brand      => params[1],
-          :first_name => params[2],
-          :last_name  => params[3],
-          :month      => params[4],
-          :year       => params[5])
+          brand: params[1],
+          first_name: params[2],
+          last_name: params[3],
+          month: params[4],
+          year: params[5])
 
         xml.tag! 'TransarmorToken', params[0]
         xml.tag! 'Expiry_Date', expdate(credit_card)
@@ -354,11 +354,11 @@ module ActiveMerchant #:nodoc:
         end
 
         Response.new(successful?(response), message_from(response), response,
-          :test => test?,
-          :authorization => successful?(response) ? response_authorization(action, response, credit_card) : '',
-          :avs_result => {:code => response[:avs]},
-          :cvv_result => response[:cvv2],
-          :error_code => standard_error_code(response)
+          test: test?,
+          authorization: successful?(response) ? response_authorization(action, response, credit_card) : '',
+          avs_result: {code: response[:avs]},
+          cvv_result: response[:cvv2],
+          error_code: standard_error_code(response)
         )
       end
 
@@ -420,10 +420,10 @@ module ActiveMerchant #:nodoc:
 
       def parse_error(error)
         {
-          :transaction_approved => 'false',
-          :error_number => error.code,
-          :error_description => error.body,
-          :ecommerce_error_code => error.body.gsub(/[^\d]/, '')
+          transaction_approved: 'false',
+          error_number: error.code,
+          error_description: error.body,
+          ecommerce_error_code: error.body.gsub(/[^\d]/, '')
         }
       end
 

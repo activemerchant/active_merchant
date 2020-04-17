@@ -14,20 +14,20 @@ class PaypalExpressTest < Test::Unit::TestCase
 
   def setup
     @gateway = PaypalExpressGateway.new(
-      :login => 'cody',
-      :password => 'test',
-      :pem => 'PEM'
+      login: 'cody',
+      password: 'test',
+      pem: 'PEM'
     )
 
     @address = {
-      :address1 => '1234 My Street',
-      :address2 => 'Apt 1',
-      :company => 'Widgets Inc',
-      :city => 'Ottawa',
-      :state => 'ON',
-      :zip => 'K1C2N6',
-      :country => 'Canada',
-      :phone => '(555)555-5555'
+      address1: '1234 My Street',
+      address2: 'Apt 1',
+      company: 'Widgets Inc',
+      city: 'Ottawa',
+      state: 'ON',
+      zip: 'K1C2N6',
+      country: 'Canada',
+      phone: '(555)555-5555'
     }
 
     Base.mode = :test
@@ -40,40 +40,40 @@ class PaypalExpressTest < Test::Unit::TestCase
   def test_live_redirect_url
     Base.mode = :production
     assert_equal LIVE_REDIRECT_URL, @gateway.redirect_url_for('1234567890')
-    assert_equal LIVE_REDIRECT_URL_MOBILE, @gateway.redirect_url_for('1234567890', :mobile => true)
+    assert_equal LIVE_REDIRECT_URL_MOBILE, @gateway.redirect_url_for('1234567890', mobile: true)
   end
 
   def test_live_redirect_url_without_review
     Base.mode = :production
-    assert_equal LIVE_REDIRECT_URL_WITHOUT_REVIEW, @gateway.redirect_url_for('1234567890', :review => false)
-    assert_equal LIVE_REDIRECT_URL_MOBILE_WITHOUT_REVIEW, @gateway.redirect_url_for('1234567890', :review => false, :mobile => true)
+    assert_equal LIVE_REDIRECT_URL_WITHOUT_REVIEW, @gateway.redirect_url_for('1234567890', review: false)
+    assert_equal LIVE_REDIRECT_URL_MOBILE_WITHOUT_REVIEW, @gateway.redirect_url_for('1234567890', review: false, mobile: true)
   end
 
   def test_force_sandbox_redirect_url
     Base.mode = :production
 
     gateway = PaypalExpressGateway.new(
-      :login => 'cody',
-      :password => 'test',
-      :pem => 'PEM',
-      :test => true
+      login: 'cody',
+      password: 'test',
+      pem: 'PEM',
+      test: true
     )
 
     assert gateway.test?
     assert_equal TEST_REDIRECT_URL, gateway.redirect_url_for('1234567890')
-    assert_equal TEST_REDIRECT_URL_MOBILE, gateway.redirect_url_for('1234567890', :mobile => true)
+    assert_equal TEST_REDIRECT_URL_MOBILE, gateway.redirect_url_for('1234567890', mobile: true)
   end
 
   def test_test_redirect_url
     assert_equal :test, Base.mode
     assert_equal TEST_REDIRECT_URL, @gateway.redirect_url_for('1234567890')
-    assert_equal TEST_REDIRECT_URL_MOBILE, @gateway.redirect_url_for('1234567890', :mobile => true)
+    assert_equal TEST_REDIRECT_URL_MOBILE, @gateway.redirect_url_for('1234567890', mobile: true)
   end
 
   def test_test_redirect_url_without_review
     assert_equal :test, Base.mode
-    assert_equal TEST_REDIRECT_URL_WITHOUT_REVIEW, @gateway.redirect_url_for('1234567890', :review => false)
-    assert_equal TEST_REDIRECT_URL_MOBILE_WITHOUT_REVIEW, @gateway.redirect_url_for('1234567890', :review => false, :mobile => true)
+    assert_equal TEST_REDIRECT_URL_WITHOUT_REVIEW, @gateway.redirect_url_for('1234567890', review: false)
+    assert_equal TEST_REDIRECT_URL_MOBILE_WITHOUT_REVIEW, @gateway.redirect_url_for('1234567890', review: false, mobile: true)
   end
 
   def test_get_express_details
@@ -111,7 +111,7 @@ class PaypalExpressTest < Test::Unit::TestCase
 
   def test_authorization
     @gateway.expects(:ssl_post).returns(successful_authorization_response)
-    response = @gateway.authorize(300, :token => 'EC-6WS104951Y388951L', :payer_id => 'FWRVKNRRZ3WUC')
+    response = @gateway.authorize(300, token: 'EC-6WS104951Y388951L', payer_id: 'FWRVKNRRZ3WUC')
     assert response.success?
     assert_not_nil response.authorization
     assert response.test?
@@ -130,13 +130,13 @@ class PaypalExpressTest < Test::Unit::TestCase
   end
 
   def test_includes_description
-    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, { :description => 'a description' }))
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, { description: 'a description' }))
 
     assert_equal 'a description', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:OrderDescription').text
   end
 
   def test_includes_order_id
-    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, { :order_id => '12345' }))
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, { order_id: '12345' }))
 
     assert_equal '12345', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:InvoiceID').text
   end
@@ -148,7 +148,7 @@ class PaypalExpressTest < Test::Unit::TestCase
   end
 
   def test_includes_custom_tag_if_specified
-    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {:custom => 'Foo'}))
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {custom: 'Foo'}))
 
     assert_equal 'Foo', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:Custom').text
   end
@@ -167,20 +167,20 @@ class PaypalExpressTest < Test::Unit::TestCase
 
   def test_items_are_included_if_specified_in_build_setup_request
     xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {
-      :currency => 'GBP',
-      :items => [
+      currency: 'GBP',
+      items: [
         {
-          :name => 'item one',
-          :description => 'item one description',
-          :amount => 10000,
-          :number => 1,
-          :quantity => 3
+          name: 'item one',
+          description: 'item one description',
+          amount: 10000,
+          number: 1,
+          quantity: 3
         },
-        { :name => 'item two',
-          :description => 'item two description',
-          :amount => 20000,
-          :number => 2,
-          :quantity => 4}
+        { name: 'item two',
+          description: 'item two description',
+          amount: 20000,
+          number: 2,
+          quantity: 4}
       ]
     }))
 
@@ -206,7 +206,7 @@ class PaypalExpressTest < Test::Unit::TestCase
   end
 
   def test_callback_url_is_included_if_specified_in_build_setup_request
-    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {:callback_url => 'http://example.com/update_callback'}))
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {callback_url: 'http://example.com/update_callback'}))
 
     assert_equal 'http://example.com/update_callback', REXML::XPath.first(xml, '//n2:CallbackURL').text
   end
@@ -218,7 +218,7 @@ class PaypalExpressTest < Test::Unit::TestCase
   end
 
   def test_callback_timeout_is_included_if_specified_in_build_setup_request
-    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {:callback_timeout => 2}))
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {callback_timeout: 2}))
 
     assert_equal '2', REXML::XPath.first(xml, '//n2:CallbackTimeout').text
   end
@@ -230,7 +230,7 @@ class PaypalExpressTest < Test::Unit::TestCase
   end
 
   def test_callback_version_is_included_if_specified_in_build_setup_request
-    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {:callback_version => '53.0'}))
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {callback_version: '53.0'}))
 
     assert_equal '53.0', REXML::XPath.first(xml, '//n2:CallbackVersion').text
   end
@@ -244,20 +244,20 @@ class PaypalExpressTest < Test::Unit::TestCase
   def test_flatrate_shipping_options_are_included_if_specified_in_build_setup_request
     xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0,
       {
-        :currency => 'AUD',
-        :shipping_options => [
+        currency: 'AUD',
+        shipping_options: [
           {
-             :default => true,
-             :name => 'first one',
-             :amount => 1000
+            default: true,
+            name: 'first one',
+            amount: 1000
           },
           {
-            :default => false,
-            :name => 'second one',
-            :amount => 2000
+            default: false,
+            name: 'second one',
+            amount: 2000
           }
         ]
-    }))
+      }))
 
     assert_equal 'true', REXML::XPath.first(xml, '//n2:FlatRateShippingOptions/n2:ShippingOptionIsDefault').text
     assert_equal 'first one', REXML::XPath.first(xml, '//n2:FlatRateShippingOptions/n2:ShippingOptionName').text
@@ -273,15 +273,15 @@ class PaypalExpressTest < Test::Unit::TestCase
   def test_address_is_included_if_specified
     xml = REXML::Document.new(@gateway.send(:build_setup_request, 'Sale', 0,
       {
-        :currency => 'GBP',
-        :address => {
-            :name     => 'John Doe',
-            :address1 => '123 somewhere',
-            :city     => 'Townville',
-            :country  => 'Canada',
-            :zip      => 'k1l4p2',
-            :phone    => '1231231231'
-          }
+        currency: 'GBP',
+        address: {
+          name: 'John Doe',
+          address1: '123 somewhere',
+          city: 'Townville',
+          country: 'Canada',
+          zip: 'k1l4p2',
+          phone: '1231231231'
+        }
       }))
 
     assert_equal 'John Doe', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:ShipToAddress/n2:Name').text
@@ -300,12 +300,12 @@ class PaypalExpressTest < Test::Unit::TestCase
 
   def test_amount_format_for_jpy_currency
     @gateway.expects(:ssl_post).with(anything, regexp_matches(/n2:OrderTotal currencyID=.JPY.>1<\/n2:OrderTotal>/), {}).returns(successful_authorization_response)
-    response = @gateway.authorize(100, :token => 'EC-6WS104951Y388951L', :payer_id => 'FWRVKNRRZ3WUC', :currency => 'JPY')
+    response = @gateway.authorize(100, token: 'EC-6WS104951Y388951L', payer_id: 'FWRVKNRRZ3WUC', currency: 'JPY')
     assert response.success?
   end
 
   def test_removes_fractional_amounts_with_twd_currency
-    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 150, {:currency => 'TWD'}))
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 150, {currency: 'TWD'}))
 
     assert_equal '1', REXML::XPath.first(xml, '//n2:OrderTotal').text
   end
@@ -313,28 +313,28 @@ class PaypalExpressTest < Test::Unit::TestCase
   def test_fractional_discounts_are_correctly_calculated_with_jpy_currency
     xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 14250,
       {
-        :items => [
+        items: [
           {
-            :name => 'item one',
-            :description => 'description',
-            :amount => 15000,
-            :number => 1,
-            :quantity => 1
+            name: 'item one',
+            description: 'description',
+            amount: 15000,
+            number: 1,
+            quantity: 1
           },
           {
-            :name => 'Discount',
-            :description => 'Discount',
-            :amount => -750,
-            :number => 2,
-            :quantity => 1
+            name: 'Discount',
+            description: 'Discount',
+            amount: -750,
+            number: 2,
+            quantity: 1
           }
         ],
-        :subtotal => 14250,
-        :currency => 'JPY',
-        :shipping => 0,
-        :handling => 0,
-        :tax => 0
-    }))
+        subtotal: 14250,
+        currency: 'JPY',
+        shipping: 0,
+        handling: 0,
+        tax: 0
+      }))
 
     assert_equal '142', REXML::XPath.first(xml, '//n2:OrderTotal').text
     assert_equal '142', REXML::XPath.first(xml, '//n2:ItemTotal').text
@@ -346,28 +346,28 @@ class PaypalExpressTest < Test::Unit::TestCase
   def test_non_fractional_discounts_are_correctly_calculated_with_jpy_currency
     xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 14300,
       {
-        :items => [
+        items: [
           {
-            :name => 'item one',
-            :description => 'description',
-            :amount => 15000,
-            :number => 1,
-            :quantity => 1
+            name: 'item one',
+            description: 'description',
+            amount: 15000,
+            number: 1,
+            quantity: 1
           },
           {
-            :name => 'Discount',
-            :description => 'Discount',
-            :amount => -700,
-            :number => 2,
-            :quantity => 1
+            name: 'Discount',
+            description: 'Discount',
+            amount: -700,
+            number: 2,
+            quantity: 1
           }
         ],
-        :subtotal => 14300,
-        :currency => 'JPY',
-        :shipping => 0,
-        :handling => 0,
-        :tax => 0
-    }))
+        subtotal: 14300,
+        currency: 'JPY',
+        shipping: 0,
+        handling: 0,
+        tax: 0
+      }))
 
     assert_equal '143', REXML::XPath.first(xml, '//n2:OrderTotal').text
     assert_equal '143', REXML::XPath.first(xml, '//n2:ItemTotal').text
@@ -379,28 +379,28 @@ class PaypalExpressTest < Test::Unit::TestCase
   def test_fractional_discounts_are_correctly_calculated_with_usd_currency
     xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 14250,
       {
-      :items => [
-        {
-          :name => 'item one',
-          :description => 'description',
-          :amount => 15000,
-          :number => 1,
-          :quantity => 1
-        },
-        {
-          :name => 'Discount',
-          :description => 'Discount',
-          :amount => -750,
-          :number => 2,
-          :quantity => 1
-        }
-      ],
-      :subtotal => 14250,
-      :currency => 'USD',
-      :shipping => 0,
-      :handling => 0,
-      :tax => 0
-    }))
+        items: [
+          {
+            name: 'item one',
+            description: 'description',
+            amount: 15000,
+            number: 1,
+            quantity: 1
+          },
+          {
+            name: 'Discount',
+            description: 'Discount',
+            amount: -750,
+            number: 2,
+            quantity: 1
+          }
+        ],
+      subtotal: 14250,
+      currency: 'USD',
+      shipping: 0,
+      handling: 0,
+      tax: 0
+      }))
 
     assert_equal '142.50', REXML::XPath.first(xml, '//n2:OrderTotal').text
     assert_equal '142.50', REXML::XPath.first(xml, '//n2:ItemTotal').text
@@ -416,27 +416,27 @@ class PaypalExpressTest < Test::Unit::TestCase
   end
 
   def test_adds_allow_note_if_specified
-    allow_notes_xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, { :allow_note => true }))
-    do_not_allow_notes_xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, { :allow_note => false }))
+    allow_notes_xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, { allow_note: true }))
+    do_not_allow_notes_xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, { allow_note: false }))
 
     assert_equal '1', REXML::XPath.first(allow_notes_xml, '//n2:AllowNote').text
     assert_equal '0', REXML::XPath.first(do_not_allow_notes_xml, '//n2:AllowNote').text
   end
 
   def test_handle_locale_code
-    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, { :locale => 'GB' }))
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, { locale: 'GB' }))
 
     assert_equal 'GB', REXML::XPath.first(xml, '//n2:LocaleCode').text
   end
 
   def test_handle_non_standard_locale_code
-    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, { :locale => 'IL' }))
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, { locale: 'IL' }))
 
     assert_equal 'he_IL', REXML::XPath.first(xml, '//n2:LocaleCode').text
   end
 
   def test_does_not_include_locale_in_request_unless_provided_in_options
-    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, { :locale => nil }))
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, { locale: nil }))
 
     assert_nil REXML::XPath.first(xml, '//n2:LocaleCode')
   end
@@ -455,23 +455,23 @@ class PaypalExpressTest < Test::Unit::TestCase
   def test_items_are_included_if_specified_in_build_sale_or_authorization_request
     xml = REXML::Document.new(@gateway.send(:build_sale_or_authorization_request, 'Sale', 100,
       {
-        :items => [
+        items: [
           {
-            :name => 'item one',
-            :description => 'item one description',
-            :amount => 10000,
-            :number => 1,
-            :quantity => 3
+            name: 'item one',
+            description: 'item one description',
+            amount: 10000,
+            number: 1,
+            quantity: 3
           },
           {
-            :name => 'item two',
-            :description => 'item two description',
-            :amount => 20000,
-            :number => 2,
-            :quantity => 4
+            name: 'item two',
+            description: 'item two description',
+            amount: 20000,
+            number: 2,
+            quantity: 4
           }
         ]
-    }))
+      }))
 
     assert_equal 'item one', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Name').text
     assert_equal 'item one description', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Description').text
@@ -549,11 +549,11 @@ class PaypalExpressTest < Test::Unit::TestCase
     PaypalExpressGateway.application_id = 'ActiveMerchant_FOO'
     xml = REXML::Document.new(@gateway.send(:build_reference_transaction_request, 'Sale', 2000,
       {
-        :reference_id => 'ref_id',
-        :payment_type => 'Any',
-        :invoice_id   => 'invoice_id',
-        :description  => 'Description',
-        :ip           => '127.0.0.1'
+        reference_id: 'ref_id',
+        payment_type: 'Any',
+        invoice_id: 'invoice_id',
+        description: 'Description',
+        ip: '127.0.0.1'
       }))
 
     assert_equal '124', REXML::XPath.first(xml, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:Version').text
@@ -578,11 +578,11 @@ class PaypalExpressTest < Test::Unit::TestCase
 
     response = @gateway.authorize_reference_transaction(2000,
       {
-        :reference_id => 'ref_id',
-        :payment_type => 'Any',
-        :invoice_id   => 'invoice_id',
-        :description  => 'Description',
-        :ip           => '127.0.0.1'
+        reference_id: 'ref_id',
+        payment_type: 'Any',
+        invoice_id: 'invoice_id',
+        description: 'Description',
+        ip: '127.0.0.1'
       })
 
     assert_equal 'Success', response.params['ack']
@@ -593,7 +593,7 @@ class PaypalExpressTest < Test::Unit::TestCase
   def test_reference_transaction
     @gateway.expects(:ssl_post).returns(successful_reference_transaction_response)
 
-    response = @gateway.reference_transaction(2000, { :reference_id => 'ref_id' })
+    response = @gateway.reference_transaction(2000, { reference_id: 'ref_id' })
 
     assert_equal 'Success', response.params['ack']
     assert_equal 'Success', response.message
@@ -609,8 +609,8 @@ class PaypalExpressTest < Test::Unit::TestCase
   def test_error_code_for_single_error
     @gateway.expects(:ssl_post).returns(response_with_error)
     response = @gateway.setup_authorization(100,
-      :return_url => 'http://example.com',
-      :cancel_return_url => 'http://example.com'
+      return_url: 'http://example.com',
+      cancel_return_url: 'http://example.com'
     )
     assert_equal '10736', response.params['error_codes']
   end
@@ -618,8 +618,8 @@ class PaypalExpressTest < Test::Unit::TestCase
   def test_ensure_only_unique_error_codes
     @gateway.expects(:ssl_post).returns(response_with_duplicate_errors)
     response = @gateway.setup_authorization(100,
-      :return_url => 'http://example.com',
-      :cancel_return_url => 'http://example.com'
+      return_url: 'http://example.com',
+      cancel_return_url: 'http://example.com'
     )
 
     assert_equal '10736', response.params['error_codes']
@@ -628,22 +628,22 @@ class PaypalExpressTest < Test::Unit::TestCase
   def test_error_codes_for_multiple_errors
     @gateway.expects(:ssl_post).returns(response_with_errors)
     response = @gateway.setup_authorization(100,
-      :return_url => 'http://example.com',
-      :cancel_return_url => 'http://example.com'
+      return_url: 'http://example.com',
+      cancel_return_url: 'http://example.com'
     )
 
     assert_equal ['10736', '10002'], response.params['error_codes'].split(',')
   end
 
   def test_allow_guest_checkout
-    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 10, {:allow_guest_checkout => true}))
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 10, {allow_guest_checkout: true}))
 
     assert_equal 'Sole', REXML::XPath.first(xml, '//n2:SolutionType').text
     assert_equal 'Billing', REXML::XPath.first(xml, '//n2:LandingPage').text
   end
 
   def test_paypal_chooses_landing_page
-    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 10, {:allow_guest_checkout => true, :paypal_chooses_landing_page=> true}))
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 10, {allow_guest_checkout: true, paypal_chooses_landing_page: true}))
 
     assert_equal 'Sole', REXML::XPath.first(xml, '//n2:SolutionType').text
     assert_nil REXML::XPath.first(xml, '//n2:LandingPage')
@@ -656,7 +656,7 @@ class PaypalExpressTest < Test::Unit::TestCase
   end
 
   def test_adds_brand_name_if_specified
-    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 10, {:brand_name => 'Acme'}))
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 10, {brand_name: 'Acme'}))
     assert_equal 'Acme', REXML::XPath.first(xml, '//n2:BrandName').text
   end
 
@@ -674,15 +674,15 @@ class PaypalExpressTest < Test::Unit::TestCase
   end
 
   def test_adds_buyer_optin_if_specified
-    allow_optin_xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 10, {:allow_buyer_optin => true}))
-    do_not_allow_optin_xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 10, {:allow_buyer_optin => false}))
+    allow_optin_xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 10, {allow_buyer_optin: true}))
+    do_not_allow_optin_xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 10, {allow_buyer_optin: false}))
 
     assert_equal '1', REXML::XPath.first(allow_optin_xml, '//n2:BuyerEmailOptInEnable').text
     assert_equal '0', REXML::XPath.first(do_not_allow_optin_xml, '//n2:BuyerEmailOptInEnable').text
   end
 
   def test_add_total_type_if_specified
-    total_type_xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 10, {:total_type => 'EstimatedTotal'}))
+    total_type_xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 10, {total_type: 'EstimatedTotal'}))
     no_total_type_xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 10, {}))
 
     assert_equal 'EstimatedTotal', REXML::XPath.first(total_type_xml, '//n2:TotalType').text
@@ -691,55 +691,54 @@ class PaypalExpressTest < Test::Unit::TestCase
 
   def test_structure_correct
     all_options_enabled = {
-        :allow_guest_checkout => true,
-        :max_amount => 50,
-        :locale => 'AU',
-        :page_style => 'test-gray',
-        :header_image => 'https://example.com/my_business',
-        :header_background_color => 'CAFE00',
-        :header_border_color => 'CAFE00',
-        :background_color => 'CAFE00',
-        :email => 'joe@example.com',
-        :billing_agreement => {:type => 'MerchantInitiatedBilling', :description => '9.99 per month for a year'},
-        :allow_note => true,
-        :allow_buyer_optin => true,
-        :subtotal => 35,
-        :shipping => 10,
-        :handling => 0,
-        :tax => 5,
-        :total_type => 'EstimatedTotal',
-        :items => [
-          {
-            :name => 'item one',
-            :number => 'number 1',
-            :quantity => 3,
-            :amount => 35,
-            :description => 'one description',
-            :url => 'http://example.com/number_1'
-          }
-        ],
-        :address =>
-          {
-            :name => 'John Doe',
-            :address1 => 'Apartment 1',
-            :address2 => '1 Road St',
-            :city => 'First City',
-            :state => 'NSW',
-            :country => 'AU',
-            :zip => '2000',
-            :phone => '555 5555'
-          },
-        :callback_url => 'http://example.com/update_callback',
-        :callback_timeout => 2,
-        :callback_version => '53.0',
-        :funding_sources => {:source => 'BML'},
-        :shipping_options => [
-          {
-            :default => true,
-            :name => 'first one',
-            :amount => 10
-          }
-        ]
+      allow_guest_checkout: true,
+      max_amount: 50,
+      locale: 'AU',
+      page_style: 'test-gray',
+      header_image: 'https://example.com/my_business',
+      header_background_color: 'CAFE00',
+      header_border_color: 'CAFE00',
+      background_color: 'CAFE00',
+      email: 'joe@example.com',
+      billing_agreement: {type: 'MerchantInitiatedBilling', description: '9.99 per month for a year'},
+      allow_note: true,
+      allow_buyer_optin: true,
+      subtotal: 35,
+      shipping: 10,
+      handling: 0,
+      tax: 5,
+      total_type: 'EstimatedTotal',
+      items: [
+        {
+          name: 'item one',
+          number: 'number 1',
+          quantity: 3,
+          amount: 35,
+          description: 'one description',
+          url: 'http://example.com/number_1'
+        }
+      ],
+      address:         {
+        name: 'John Doe',
+          address1: 'Apartment 1',
+          address2: '1 Road St',
+          city: 'First City',
+          state: 'NSW',
+          country: 'AU',
+          zip: '2000',
+          phone: '555 5555'
+      },
+      callback_url: 'http://example.com/update_callback',
+      callback_timeout: 2,
+      callback_version: '53.0',
+      funding_sources: {source: 'BML'},
+      shipping_options: [
+        {
+          default: true,
+          name: 'first one',
+          amount: 10
+        }
+      ]
     }
 
     doc = Nokogiri::XML(@gateway.send(:build_setup_request, 'Sale', 10, all_options_enabled))

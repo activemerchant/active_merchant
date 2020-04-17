@@ -8,7 +8,7 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
     @credit_card_with_track_data = credit_card_with_track_data('4000100011112224')
     @invalid_transaction_card = credit_card('4000300511112225')
     @check = check
-    @options = { :billing_address => address(:zip => '27614', :state => 'NC'), :shipping_address => address }
+    @options = { billing_address: address(zip: '27614', state: 'NC'), shipping_address: address }
     @amount = 100
   end
 
@@ -52,19 +52,19 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_extra_details
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:order_id => generate_unique_id, :description => 'socool'))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(order_id: generate_unique_id, description: 'socool'))
     assert_equal 'Success', response.message
     assert_success response
   end
 
   def test_successful_purchase_with_extra_test_mode
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:test_mode => true))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(test_mode: true))
     assert_equal 'Success', response.message
     assert_success response
   end
 
   def test_successful_purchase_with_email_receipt
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:email => 'hank@hill.com', :cust_receipt => 'Yes'))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(email: 'hank@hill.com', cust_receipt: 'Yes'))
     assert_equal 'Success', response.message
     assert_success response
   end
@@ -113,7 +113,7 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
     # For some reason this will fail with "You have tried this card too
     # many times, please contact merchant" unless a unique order id is
     # passed.
-    assert response = @gateway.purchase(@amount, @declined_card, @options.merge(:order_id => generate_unique_id))
+    assert response = @gateway.purchase(@amount, @declined_card, @options.merge(order_id: generate_unique_id))
     assert_failure response
     assert_match(/declined/i, response.message)
     assert Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
@@ -209,7 +209,7 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
   end
 
   def test_invalid_key
-    gateway = UsaEpayTransactionGateway.new(:login => '')
+    gateway = UsaEpayTransactionGateway.new(login: '')
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_equal 'Specified source key not found.', response.message
     assert_failure response
