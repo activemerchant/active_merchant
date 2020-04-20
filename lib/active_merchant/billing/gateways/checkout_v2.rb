@@ -166,7 +166,7 @@ module ActiveMerchant #:nodoc:
         rescue ResponseError => e
           raise unless e.response.code.to_s =~ /4\d\d/
 
-          response = parse(e.response.body)
+          response = parse(e.response.body, error: e.response)
         end
 
         succeeded = success_from(response)
@@ -224,13 +224,16 @@ module ActiveMerchant #:nodoc:
         response['source'] && response['source']['cvv_check'] ? CVVResult.new(response['source']['cvv_check']) : nil
       end
 
-      def parse(body)
+      def parse(body, error: nil)
         JSON.parse(body)
       rescue JSON::ParserError
-        {
+        response = {
+          'error_type' => error&.code,
           'message' => 'Invalid JSON response received from Checkout.com Unified Payments Gateway. Please contact Checkout.com if you continue to receive this message.',
           'raw_response' => scrub(body)
         }
+        response['error_codes'] = [error&.message] if error&.message
+        response
       end
 
       def success_from(response)
@@ -243,7 +246,7 @@ module ActiveMerchant #:nodoc:
         elsif response['error_type']
           response['error_type'] + ': ' + response['error_codes'].first
         else
-          response['response_summary'] || response['response_code'] || response['status'] || 'Unable to read error message'
+          response['response_summary'] || response['response_code'] || response['status'] || response['message'] || 'Unable to read error message'
         end
       end
 

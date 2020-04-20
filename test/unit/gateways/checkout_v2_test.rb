@@ -310,7 +310,7 @@ class CheckoutV2Test < Test::Unit::TestCase
     end.respond_with(invalid_json_response)
 
     assert_failure response
-    assert_match %r{Unable to read error message}, response.message
+    assert_match %r{Invalid JSON response received from Checkout.com Unified Payments Gateway. Please contact Checkout.com if you continue to receive this message.}, response.message
   end
 
   def test_error_code_returned
@@ -320,6 +320,15 @@ class CheckoutV2Test < Test::Unit::TestCase
 
     assert_failure response
     assert_match(/request_invalid: card_expired/, response.error_code)
+  end
+
+  def test_4xx_error_message
+    @gateway.expects(:ssl_post).raises(error_4xx_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card)
+
+    assert_failure response
+    assert_match(/401: Unauthorized/, response.message)
   end
 
   def test_supported_countries
@@ -526,6 +535,13 @@ class CheckoutV2Test < Test::Unit::TestCase
         "request_id": "e5a3ce6f-a4e9-4445-9ec7-e5975e9a6213","error_type": "request_invalid","error_codes": ["card_expired"]
       }
     )
+  end
+
+  def error_4xx_response
+    mock_response = Net::HTTPUnauthorized.new('1.1', '401', 'Unauthorized')
+    mock_response.stubs(:body).returns("")
+
+    ActiveMerchant::ResponseError.new(mock_response)
   end
 
   def successful_verify_payment_response
