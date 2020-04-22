@@ -211,6 +211,7 @@ module ActiveMerchant #:nodoc:
         billing_address = options[:billing_address] || options[:address]
 
         if billing_address
+          form[:avs_address]    = truncate(billing_address[:address1], 30)
           form[:address2]       = truncate(billing_address[:address2], 30)
           form[:avs_zip]        = truncate(billing_address[:zip].to_s.gsub(/[^a-zA-Z0-9]/, ''), 9)
           form[:city]           = truncate(billing_address[:city], 30)

@@ -11,8 +11,9 @@
 * ePay: Send unique order ids for remote tests [curiousepic] #3593
 * Checkout V2: Send more informative error messages for 4xx errors [britth] #3601
 * Elavon: Add ssl_dynamic_dba field [apfranzen] #3600
-* iATS Payments: Update gateway to v3 and add support for additional GSFs [naashton] #3599 
+* iATS Payments: Update gateway to v3 and add support for additional GSFs [naashton] #3599
 * Remove deprecated `rubyforge_project` attribute and tidy up unit test output [fatcatt316] #3598
+* Elavon: Cleanup inadvertant field removal (avs_address) in #3600 [apfranzen] #3602
 
 == Version 1.107.1 (Apr 1, 2020)
 * Add `allowed_push_host` to gemspec [mdeloupy]
