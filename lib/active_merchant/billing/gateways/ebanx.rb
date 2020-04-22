@@ -37,6 +37,15 @@ module ActiveMerchant #:nodoc:
         store: :post
       }
 
+      VERIFY_AMOUNT_PER_COUNTRY = {
+        'br' => 100,
+        'ar' => 100,
+        'co' => 100,
+        'pe' => 300,
+        'mx' => 300,
+        'cl' => 5000
+      }
+
       def initialize(options={})
         requires!(options, :integration_key)
         super
@@ -65,6 +74,7 @@ module ActiveMerchant #:nodoc:
         add_card_or_token(post, payment)
         add_address(post, options)
         add_customer_responsible_person(post, payment, options)
+        add_additional_data(post, options)
         post[:payment][:creditcard][:auto_capture] = false
 
         commit(:authorize, post)
@@ -109,7 +119,7 @@ module ActiveMerchant #:nodoc:
 
       def verify(credit_card, options={})
         MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
+          r.process { authorize(VERIFY_AMOUNT_PER_COUNTRY[customer_country(options)], credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
         end
       end
