@@ -23,6 +23,17 @@ class IatsPaymentsTest < Test::Unit::TestCase
     assert response.authorization
   end
 
+  def test_successful_purchase_with_token
+    assert store = @gateway.store(@credit_card, @options)
+    token = store.authorization
+
+    response = @gateway.purchase(@amount, token, @options)
+    assert_success response
+    assert response.test?
+    assert_equal 'Success', response.message
+    assert response.authorization
+  end
+
   def test_failed_purchase
     credit_card = credit_card('4111111111111111')
     assert response = @gateway.purchase(200, credit_card, @options)
