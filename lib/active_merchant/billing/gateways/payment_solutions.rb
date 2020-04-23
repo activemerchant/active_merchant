@@ -128,6 +128,18 @@ module ActiveMerchant #:nodoc:
             xml['d4p1'].Name 'field_c6'
             xml['d4p1'].Value options[:sidecar_value]
           end
+          if options[:sidecar_value_t6]
+            xml['d4p1'].NameValuePair do
+              xml['d4p1'].Name 'field_t6'
+              xml['d4p1'].Value '01'
+            end
+          end
+          if options[:sidecar_value_z1]
+            xml['d4p1'].NameValuePair do
+              xml['d4p1'].Name 'field_z1'
+              xml['d4p1'].Value '01'
+            end
+          end
         end
       end
 
