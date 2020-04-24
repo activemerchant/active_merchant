@@ -4,7 +4,8 @@ class RealexTest < Test::Unit::TestCase
   class ActiveMerchant::Billing::RealexGateway
     # For the purposes of testing, lets redefine some protected methods as public.
     public :build_purchase_or_authorization_request, :build_refund_request, :build_void_request,
-      :build_capture_request, :build_verify_request, :build_credit_request
+      :build_capture_request, :build_verify_request, :build_credit_request, :build_create_customer_request,
+      :build_store_card_request
   end
 
   def setup
@@ -495,6 +496,63 @@ class RealexTest < Test::Unit::TestCase
     SRC
 
     assert_xml_equal valid_credit_request_xml, gateway.build_credit_request(@amount, @credit_card, @options)
+  end
+
+  def test_create_customer_xml
+    options = {
+      order_id: '1',
+      payer_ref: 'foo',
+      email: 'test@test.com',
+      first_name: 'Foo',
+      last_name: 'Bar'
+    }
+
+    @gateway.expects(:new_timestamp).returns('20090824160201')
+
+    valid_create_customer_request_xml = <<-SRC
+<request timestamp="20090824160201" type="payer-new">
+  <merchantid>your_merchant_id</merchantid>
+  <account>your_account</account>
+  <orderid>1</orderid>
+  <payer ref="foo" type="Retail">
+    <email>test@test.com</email>
+    <firstname>Foo</firstname>
+    <lastname>Bar</lastname>
+  </payer>
+  <sha1hash>94f2104c01becae9f346aac54c4f3bc7a8b0c8ec</sha1hash>
+</request>
+    SRC
+
+    assert_xml_equal valid_create_customer_request_xml, @gateway.build_create_customer_request(options)
+  end
+
+  def test_store_card_xml
+    options = {
+      order_id: '1',
+      payer_ref: 'foo',
+      card_ref: 'bar'
+    }
+
+    @gateway.expects(:new_timestamp).returns('20090824160201')
+
+    valid_store_card_request_xml = <<-SRC
+<request timestamp="20090824160201" type="card-new">
+  <merchantid>your_merchant_id</merchantid>
+  <account>your_account</account>
+  <orderid>1</orderid>
+  <card>
+    <ref>bar</ref>
+    <payerref>foo</payerref>
+    <number>4263971921001307</number>
+    <expdate>0808</expdate>
+    <chname>Longbob Longsen</chname>
+    <type>VISA</type>
+  </card>
+  <sha1hash>dc4f06626928c08b443d6450d8e90681f487b736</sha1hash>
+</request>
+    SRC
+
+    assert_xml_equal valid_store_card_request_xml, @gateway.build_store_card_request(@credit_card, options)
   end
 
   def test_auth_with_address
