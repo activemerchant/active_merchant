@@ -100,6 +100,15 @@ module ActiveMerchant
 
       private
 
+      class StoredCard
+        attr_reader :saved_payer_ref, :saved_pmt_ref
+
+        def initialize(data)
+          @saved_payer_ref = data['SAVED_PAYER_REF'] or raise('Missing SAVED_PAYER_REF')
+          @saved_pmt_ref = data['SAVED_PMT_REF'] or raise('Missing SAVED_PMT_REF')
+        end
+      end
+
       def commit(request)
         response = parse(ssl_post(self.live_url, request))
 
@@ -138,14 +147,15 @@ module ActiveMerchant
 
       def build_purchase_or_authorization_request(action, money, credit_card, options)
         timestamp = new_timestamp
+        type = credit_card.is_a?(StoredCard) ? 'receipt-in' : 'auth'
         xml = Builder::XmlMarkup.new indent: 2
-        xml.tag! 'request', 'timestamp' => timestamp, 'type' => 'auth' do
+        xml.tag! 'request', 'timestamp' => timestamp, 'type' => type do
           add_merchant_details(xml, options)
           xml.tag! 'orderid', sanitize_order_id(options[:order_id])
           add_amount(xml, money, options)
           add_card(xml, credit_card)
           xml.tag! 'autosettle', 'flag' => auto_settle_flag(action)
-          add_signed_digest(xml, timestamp, @options[:login], sanitize_order_id(options[:order_id]), amount(money), (options[:currency] || currency(money)), credit_card.number)
+          add_signed_digest(xml, timestamp, @options[:login], sanitize_order_id(options[:order_id]), amount(money), (options[:currency] || currency(money)), credit_card_identifier(credit_card))
           if credit_card.is_a?(NetworkTokenizationCreditCard)
             add_network_tokenization_card(xml, credit_card)
           else
@@ -196,7 +206,7 @@ module ActiveMerchant
           xml.tag! 'refundhash', @options[:credit_hash] if @options[:credit_hash]
           xml.tag! 'autosettle', 'flag' => 1
           add_comments(xml, options)
-          add_signed_digest(xml, timestamp, @options[:login], sanitize_order_id(options[:order_id]), amount(money), (options[:currency] || currency(money)), credit_card.number)
+          add_signed_digest(xml, timestamp, @options[:login], sanitize_order_id(options[:order_id]), amount(money), (options[:currency] || currency(money)), credit_card_identifier(credit_card))
         end
         xml.target!
       end
@@ -222,7 +232,7 @@ module ActiveMerchant
           xml.tag! 'orderid', sanitize_order_id(options[:order_id])
           add_card(xml, credit_card)
           add_comments(xml, options)
-          add_signed_digest(xml, timestamp, @options[:login], sanitize_order_id(options[:order_id]), credit_card.number)
+          add_signed_digest(xml, timestamp, @options[:login], sanitize_order_id(options[:order_id]), credit_card_identifier(credit_card))
         end
         xml.target!
       end
@@ -279,15 +289,20 @@ module ActiveMerchant
       end
 
       def add_card(xml, credit_card)
-        xml.tag! 'card' do
-          xml.tag! 'number', credit_card.number
-          xml.tag! 'expdate', expiry_date(credit_card)
-          xml.tag! 'chname', credit_card.name
-          xml.tag! 'type', CARD_MAPPING[card_brand(credit_card).to_s]
-          xml.tag! 'issueno', ''
-          xml.tag! 'cvn' do
-            xml.tag! 'number', credit_card.verification_value
-            xml.tag! 'presind', (options['presind'] || (credit_card.verification_value? ? 1 : nil))
+        if credit_card.is_a?(StoredCard)
+          xml.tag! 'payerref', credit_card.saved_payer_ref
+          xml.tag! 'paymentmethod', credit_card.saved_pmt_ref
+        else
+          xml.tag! 'card' do
+            xml.tag! 'number', credit_card.number
+            xml.tag! 'expdate', expiry_date(credit_card)
+            xml.tag! 'chname', credit_card.name
+            xml.tag! 'type', CARD_MAPPING[card_brand(credit_card).to_s]
+            xml.tag! 'issueno', ''
+            xml.tag! 'cvn' do
+              xml.tag! 'number', credit_card.verification_value
+              xml.tag! 'presind', (options['presind'] || (credit_card.verification_value? ? 1 : nil))
+            end
           end
         end
       end
@@ -368,6 +383,10 @@ module ActiveMerchant
 
       def sanitize_order_id(order_id)
         order_id.to_s.gsub(/[^a-zA-Z0-9\-_]/, '')
+      end
+
+      def credit_card_identifier(credit_card)
+        credit_card.is_a?(StoredCard) ? credit_card.saved_payer_ref : credit_card.number
       end
     end
   end
