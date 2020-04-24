@@ -48,6 +48,11 @@ class RealexTest < Test::Unit::TestCase
       zip: 'BT2 8XX'
     }
 
+    @stored_card = RealexGateway::StoredCard.new(
+      'SAVED_PAYER_REF' => 'abc-def-ghi',
+      'SAVED_PMT_REF' => 'rst-uvw-xyz'
+    )
+
     @amount = 100
   end
 
@@ -102,6 +107,15 @@ class RealexTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_success response
+    assert response.test?
+  end
+
+  def test_successful_purchase_with_stored_card
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    response = @gateway.purchase(@amount, @stored_card, @options)
     assert_instance_of Response, response
     assert_success response
     assert response.test?
@@ -218,6 +232,29 @@ class RealexTest < Test::Unit::TestCase
     assert_xml_equal valid_purchase_request_xml, @gateway.build_purchase_or_authorization_request(:purchase, @amount, @credit_card, options)
   end
 
+  def test_purchase_xml_with_stored_card
+    options = {
+      order_id: '1'
+    }
+
+    @gateway.expects(:new_timestamp).returns('20090824160201')
+
+    valid_purchase_request_xml = <<-SRC
+<request timestamp="20090824160201" type="receipt-in">
+  <merchantid>your_merchant_id</merchantid>
+  <account>your_account</account>
+  <orderid>1</orderid>
+  <amount currency="EUR">100</amount>
+  <payerref>abc-def-ghi</payerref>
+  <paymentmethod>rst-uvw-xyz</paymentmethod>
+  <autosettle flag="1"/>
+  <sha1hash>6bf071cf4bf450e4c4f7feef2308b5b95f2b9c95</sha1hash>
+</request>
+    SRC
+
+    assert_xml_equal valid_purchase_request_xml, @gateway.build_purchase_or_authorization_request(:purchase, @amount, @stored_card, options)
+  end
+
   def test_void_xml
     @gateway.expects(:new_timestamp).returns('20090824160201')
 
@@ -294,6 +331,29 @@ class RealexTest < Test::Unit::TestCase
     SRC
 
     assert_xml_equal valid_auth_request_xml, @gateway.build_purchase_or_authorization_request(:authorization, @amount, @credit_card, options)
+  end
+
+  def test_auth_xml_with_stored_card
+    options = {
+      order_id: '1'
+    }
+
+    @gateway.expects(:new_timestamp).returns('20090824160201')
+
+    valid_auth_request_xml = <<-SRC
+<request timestamp="20090824160201" type="receipt-in">
+  <merchantid>your_merchant_id</merchantid>
+  <account>your_account</account>
+  <orderid>1</orderid>
+  <amount currency=\"EUR\">100</amount>
+  <payerref>abc-def-ghi</payerref>
+  <paymentmethod>rst-uvw-xyz</paymentmethod>
+  <autosettle flag="0"/>
+  <sha1hash>6bf071cf4bf450e4c4f7feef2308b5b95f2b9c95</sha1hash>
+</request>
+    SRC
+
+    assert_xml_equal valid_auth_request_xml, @gateway.build_purchase_or_authorization_request(:authorization, @amount, @stored_card, options)
   end
 
   def test_refund_xml
