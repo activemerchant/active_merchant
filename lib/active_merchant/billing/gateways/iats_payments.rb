@@ -39,7 +39,6 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, money, options)
         add_payment(post, payment)
         add_address(post, options)
-        add_customer_details(post, options)
         add_ip(post, options)
         add_description(post, options)
 
@@ -61,7 +60,6 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_payment(post, credit_card)
         add_address(post, options)
-        add_customer_details(post, options)
         add_ip(post, options)
         add_description(post, options)
         add_store_defaults(post)
@@ -103,6 +101,9 @@ module ActiveMerchant #:nodoc:
           post[:city] = billing_address[:city]
           post[:state] = billing_address[:state]
           post[:zip_code] = billing_address[:zip]
+          post[:phone] = billing_address[:phone] if billing_address[:phone]
+          post[:email] = billing_address[:email] if billing_address[:email]
+          post[:country] = billing_address[:country] if billing_address[:country]
         end
       end
 
@@ -144,12 +145,6 @@ module ActiveMerchant #:nodoc:
         post[:begin_date] = Time.now.xmlschema
         post[:end_date] = Time.now.xmlschema
         post[:amount] = 0
-      end
-
-      def add_customer_details(post, options)
-        post[:phone] = options[:phone] if options[:phone]
-        post[:email] = options[:email] if options[:email]
-        post[:country] = options[:country] if options[:country]
       end
 
       def expdate(creditcard)

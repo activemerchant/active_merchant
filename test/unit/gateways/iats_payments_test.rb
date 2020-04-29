@@ -12,13 +12,23 @@ class IatsPaymentsTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card
     @check = check
+    @address = {
+      name:     'Jim Smith',
+      address1: '456 My Street',
+      address2: 'Apt 1',
+      company:  'Widgets Inc',
+      city:     'Ottawa',
+      state:    'ON',
+      zip:      'K1C2N6',
+      country:  'CA',
+      phone:    '555-555-5555',
+      fax:      '(555)555-6666',
+      email:    'jimsmith@example.com'
+    }
     @options = {
       ip: '71.65.249.145',
       order_id: generate_unique_id,
-      billing_address: address,
-      phone: '5555555555',
-      email: 'test@example.com',
-      country: 'US',
+      billing_address: @address,
       description: 'Store purchase'
     }
   end
@@ -41,11 +51,11 @@ class IatsPaymentsTest < Test::Unit::TestCase
       assert_match(/<city>#{@options[:billing_address][:city]}<\/city>/, data)
       assert_match(/<state>#{@options[:billing_address][:state]}<\/state>/, data)
       assert_match(/<zipCode>#{@options[:billing_address][:zip]}<\/zipCode>/, data)
+      assert_match(/<phone>#{@options[:billing_address][:phone]}<\/phone>/, data)
+      assert_match(/<country>#{@options[:billing_address][:country]}<\/country>/, data)
       assert_match(/<total>1.00<\/total>/, data)
       assert_match(/<comment>#{@options[:description]}<\/comment>/, data)
-      assert_match(/<phone>#{@options[:phone]}<\/phone>/, data)
-      assert_match(/<email>#{@options[:email]}<\/email>/, data)
-      assert_match(/<country>#{@options[:country]}<\/country>/, data)
+      assert_match(/<email>#{@options[:billing_address][:email]}<\/email>/, data)
       assert_equal endpoint, 'https://www.uk.iatspayments.com/NetGate/ProcessLinkv3.asmx?op=ProcessCreditCard'
       assert_equal headers['Content-Type'], 'application/soap+xml; charset=utf-8'
     end.respond_with(successful_purchase_response)
@@ -85,10 +95,10 @@ class IatsPaymentsTest < Test::Unit::TestCase
       assert_match(/<city>#{@options[:billing_address][:city]}<\/city>/, data)
       assert_match(/<state>#{@options[:billing_address][:state]}<\/state>/, data)
       assert_match(/<zipCode>#{@options[:billing_address][:zip]}<\/zipCode>/, data)
+      assert_match(/<phone>#{@options[:billing_address][:phone]}<\/phone>/, data)
+      assert_match(/<country>#{@options[:billing_address][:country]}<\/country>/, data)
       assert_match(/<total>1.00<\/total>/, data)
-      assert_match(/<phone>#{@options[:phone]}<\/phone>/, data)
-      assert_match(/<email>#{@options[:email]}<\/email>/, data)
-      assert_match(/<country>#{@options[:country]}<\/country>/, data)
+      assert_match(/<email>#{@options[:billing_address][:email]}<\/email>/, data)
       assert_match(/<comment>#{@options[:description]}<\/comment>/, data)
       assert_equal endpoint, 'https://www.uk.iatspayments.com/NetGate/ProcessLinkv3.asmx?op=ProcessACHEFT'
       assert_equal headers['Content-Type'], 'application/soap+xml; charset=utf-8'
