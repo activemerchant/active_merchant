@@ -263,6 +263,7 @@ module ActiveMerchant #:nodoc:
         if payment_method.is_a?(String)
           doc.token do
             doc.litleToken(payment_method)
+            doc.expDate(format_exp_date(options[:basis_expiration_month], options[:basis_expiration_year])) if options[:basis_expiration_month] && options[:basis_expiration_year]
           end
         elsif payment_method.respond_to?(:track_data) && payment_method.track_data.present?
           doc.card do
@@ -416,7 +417,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def exp_date(payment_method)
-        "#{format(payment_method.month, :two_digits)}#{format(payment_method.year, :two_digits)}"
+        format_exp_date(payment_method.month, payment_method.year)
+      end
+
+      def format_exp_date(month, year)
+        "#{format(month, :two_digits)}#{format(year, :two_digits)}"
       end
 
       def parse(kind, xml)

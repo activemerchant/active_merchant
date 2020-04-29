@@ -153,6 +153,14 @@ class LitleTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_passing_basis_date
+    stub_comms do
+      @gateway.purchase(@amount, 'token', {basis_expiration_month: '04', basis_expiration_year: '2027'})
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<expDate>0427<\/expDate>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_add_applepay_order_source
     stub_comms do
       @gateway.purchase(@amount, @decrypted_apple_pay)
