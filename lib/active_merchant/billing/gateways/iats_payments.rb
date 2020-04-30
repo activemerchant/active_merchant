@@ -16,6 +16,7 @@ module ActiveMerchant #:nodoc:
       ACTIONS = {
         purchase: "ProcessCreditCardV1",
         purchase_check: "ProcessACHEFTV1",
+        purchase_token: "ProcessCreditCardWithCustomerCode",
         refund: "ProcessCreditCardRefundWithTransactionIdV1",
         refund_check: "ProcessACHEFTRefundWithTransactionIdV1",
         store: "CreateCreditCardCustomerCodeV1",
@@ -43,7 +44,7 @@ module ActiveMerchant #:nodoc:
         add_ip(post, options)
         add_description(post, options)
 
-        commit((payment.is_a?(Check) ? :purchase_check : :purchase), post)
+        commit(purchase_action(payment), post)
       end
 
       def refund(money, authorization, options={})
@@ -91,6 +92,16 @@ module ActiveMerchant #:nodoc:
 
       private
 
+      def purchase_action(payment)
+        if payment.is_a?(Check)
+          :purchase_check
+        elsif payment.is_a?(String)
+          :purchase_token
+        else
+          :purchase
+        end
+      end
+
       def add_ip(post, options)
         post[:customer_ip_address] = options[:ip] if options.has_key?(:ip)
       end
@@ -117,6 +128,8 @@ module ActiveMerchant #:nodoc:
       def add_payment(post, payment)
         if payment.is_a?(Check)
           add_check(post, payment)
+        elsif payment.is_a?(String)
+          post[:customer_code] = payment
         else
           add_credit_card(post, payment)
         end
@@ -181,6 +194,7 @@ module ActiveMerchant #:nodoc:
         {
           purchase: "ProcessLink.asmx",
           purchase_check: "ProcessLink.asmx",
+          purchase_token: "ProcessLinkv2.asmx",
           refund: "ProcessLink.asmx",
           refund_check: "ProcessLink.asmx",
           store: "CustomerLink.asmx",
