@@ -199,6 +199,18 @@ class IatsPaymentsTest < Test::Unit::TestCase
     assert_equal 'Success', response.message
   end
 
+  def test_successful_purchase_with_customer_code
+    response = stub_comms do
+      @gateway.purchase(@amount, 'CustomerCode', @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{<customerCode>CustomerCode</customerCode>}, data)
+    end.respond_with(successful_purchase_response)
+
+    assert response
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
   def test_failed_store
     response = stub_comms do
       @gateway.store(@credit_card, @options)
