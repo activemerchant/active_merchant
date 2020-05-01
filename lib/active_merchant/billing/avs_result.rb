@@ -39,7 +39,7 @@ module ActiveMerchant
 
       # Map vendor's AVS result code to a postal match code
       POSTAL_MATCH_CODE = {
-        'Y' => %w( D H F H J L M P Q V W X Y Z ),
+        'Y' => %w( H F J L P Q V W X Y Z ),
         'N' => %w( A C K N O ),
         'X' => %w( G S ),
         nil => %w( B E I R T U )

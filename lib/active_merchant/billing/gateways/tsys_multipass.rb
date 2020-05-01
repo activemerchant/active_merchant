@@ -23,12 +23,13 @@ module ActiveMerchant #:nodoc:
         CaptureResponse
         VoidResponse
         ReturnResponse
+        CardAuthenticationResponse
       )
 
       attr_reader :response, :parsed_body
 
       def initialize(options={})
-        requires!(options, :device_id, :transaction_key)
+        requires!(options, :multipass_device_id, :transaction_key)
         super
       end
 
@@ -39,26 +40,37 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(money, credit_card, options = {})
+        req_body = { "Auth": request_params(options) }.to_json
         commit(
-          request_body: { "Auth": request_params(options) }.to_json
+          request_body: req_body 
         )
       end
 
       def capture(money, tx_reference, options = {})
+        req_body = { "Capture": request_params(options) }.to_json
         commit(
-          request_body: { "Capture": request_params(options) }.to_json
+          request_body: req_body 
         )
       end
 
       def void(tx_reference, options = {})
+        req_body = { "Void": request_params(options) }.to_json
         commit(
-          request_body: { "Void": request_params(options) }.to_json
+          request_body: req_body
         )
       end
 
       def refund(money, tx_reference, options = {})
+        req_body = { "Return": request_params(options) }.to_json
         commit(
-          request_body: { "Return": request_params(options) }.to_json
+          request_body: req_body
+        )
+      end
+
+      def avs_check(options = {})
+        req_body = { "CardAuthentication": request_params(options) }.to_json
+        commit(
+          request_body: req_body
         )
       end
 
@@ -79,7 +91,7 @@ module ActiveMerchant #:nodoc:
 
       def request_params(options)
         {
-          "deviceID": @options[:device_id],
+          "deviceID": @options[:multipass_device_id],
           "transactionKey": @options[:transaction_key]
         }.merge!(options)
       end
@@ -92,7 +104,7 @@ module ActiveMerchant #:nodoc:
             # Making the call
             https.request(request)
           end
-
+        
         # Parsing the response body
         @parsed_body = parse(response.body)
 
@@ -103,6 +115,7 @@ module ActiveMerchant #:nodoc:
           amount: amount,
           error_code: error_code,
           authorization: authorization,
+          avs_result: avs_result_code,
           test: test?
         )
       end
@@ -117,6 +130,12 @@ module ActiveMerchant #:nodoc:
         return BLANK unless recognized_response_root_key?
 
         parsed_body_root_value['responseMessage']
+      end
+
+      def avs_result_code
+        return BLANK unless recognized_response_root_key?
+
+        AVSResult.new(code: (parsed_body_root_value['addressVerificationCode'] || BLANK))
       end
 
       def error_code
