@@ -288,6 +288,14 @@ class WorldpayTest < Test::Unit::TestCase
     assert 'cancel', response.responses.last.params['action']
   end
 
+  def test_refund_failure_with_force_full_refund_if_unsettled_does_not_force_void
+    response = stub_comms do
+      @gateway.refund(@amount, @options[:order_id], @options.merge(force_full_refund_if_unsettled: true))
+    end.respond_with("total garbage")
+
+    assert_failure response
+  end
+
   def test_refund_using_order_id_embedded_with_token
     response = stub_comms do
       authorization = "#{@options[:order_id]}|99411111780163871111|shopper|59424549c291397379f30c5c082dbed8"
