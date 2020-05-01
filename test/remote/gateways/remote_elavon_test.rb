@@ -40,7 +40,7 @@ class RemoteElavonTest < Test::Unit::TestCase
     assert_equal 'APPROVAL', auth.message
     assert auth.authorization
 
-    assert capture = @gateway.capture(@amount, auth.authorization, credit_card: @credit_card)
+    assert capture = @gateway.capture(@amount, auth.authorization, @options.merge(credit_card: @credit_card))
     assert_success capture
   end
 
@@ -70,7 +70,6 @@ class RemoteElavonTest < Test::Unit::TestCase
     assert response = @gateway.verify(@credit_card, @options)
     assert_success response
     assert_equal 'APPROVAL', response.message
-    assert_success response.responses.last, 'The void should succeed'
   end
 
   def test_failed_verify

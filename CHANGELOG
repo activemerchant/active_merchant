@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Elavon: Implement true verify action [leila-alderman] #3610
 
 == Version 1.107.3 (May 8, 2020)
 * Realex: Ignore IPv6 unsupported addresses [elfassy] #3622

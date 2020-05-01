@@ -95,7 +95,7 @@ module ActiveMerchant #:nodoc:
         end
 
         if !response.success? && options[:force_full_refund_if_unsettled] &&
-          response.params['last_event'] == 'AUTHORISED'
+           response.params['last_event'] == 'AUTHORISED'
           void(authorization, options)
         else
           response

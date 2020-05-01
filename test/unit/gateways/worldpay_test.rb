@@ -291,7 +291,7 @@ class WorldpayTest < Test::Unit::TestCase
   def test_refund_failure_with_force_full_refund_if_unsettled_does_not_force_void
     response = stub_comms do
       @gateway.refund(@amount, @options[:order_id], @options.merge(force_full_refund_if_unsettled: true))
-    end.respond_with("total garbage")
+    end.respond_with('total garbage')
 
     assert_failure response
   end

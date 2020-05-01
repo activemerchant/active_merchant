@@ -644,6 +644,7 @@ module ActiveMerchant #:nodoc:
 
       def add_auth_network_tokenization(xml, payment_method, options)
         return unless network_tokenization?(payment_method)
+
         brand = card_brand(payment_method).to_sym
 
         case brand

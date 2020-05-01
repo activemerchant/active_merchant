@@ -216,22 +216,14 @@ class ElavonTest < Test::Unit::TestCase
   def test_successful_verify
     response = stub_comms do
       @gateway.verify(@credit_card)
-    end.respond_with(successful_authorization_response, successful_void_response)
+    end.respond_with(successful_verify_response)
     assert_success response
-  end
-
-  def test_successful_verify_failed_void
-    response = stub_comms do
-      @gateway.verify(@credit_card, @options)
-    end.respond_with(successful_authorization_response, failed_void_response)
-    assert_success response
-    assert_equal 'APPROVED', response.message
   end
 
   def test_unsuccessful_verify
     response = stub_comms do
       @gateway.verify(@credit_card, @options)
-    end.respond_with(failed_authorization_response, successful_void_response)
+    end.respond_with(failed_verify_response)
     assert_failure response
     assert_equal 'The Credit Card Number supplied in the authorization request appears to be invalid.', response.message
   end
@@ -419,6 +411,23 @@ class ElavonTest < Test::Unit::TestCase
     ssl_txn_time=08/21/2012 05:37:19 PM"
   end
 
+  def successful_verify_response
+    "ssl_card_number=41**********9990
+    ssl_exp_date=0921
+    ssl_card_short_description=VISA
+    ssl_result=0
+    ssl_result_message=APPROVAL
+    ssl_transaction_type=CARDVERIFICATION
+    ssl_txn_id=010520ED3-56D114FC-B7D0-4ACF-BB3E-B1F0DA5A1EC7
+    ssl_approval_code=401169
+    ssl_cvv2_response=M
+    ssl_avs_response=M
+    ssl_account_balance=0.00
+    ssl_txn_time=05/01/2020 11:30:56 AM
+    ssl_card_type=CREDITCARD
+    ssl_partner_app_id=VM"
+  end
+
   def failed_purchase_response
     "errorCode=5000
     errorName=Credit Card Number Invalid
@@ -435,6 +444,12 @@ class ElavonTest < Test::Unit::TestCase
     "errorCode=5040
     errorName=Invalid Transaction ID
     errorMessage=The transaction ID is invalid for this transaction type"
+  end
+
+  def failed_verify_response
+    "errorCode=5000
+    errorName=Credit Card Number Invalid
+    errorMessage=The Credit Card Number supplied in the authorization request appears to be invalid."
   end
 
   def invalid_login_response

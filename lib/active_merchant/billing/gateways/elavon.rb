@@ -26,6 +26,7 @@ module ActiveMerchant #:nodoc:
         void: 'CCDELETE',
         store: 'CCGETTOKEN',
         update: 'CCUPDATETOKEN',
+        verify: 'CCVERIFY'
       }
 
       def initialize(options = {})
@@ -74,6 +75,7 @@ module ActiveMerchant #:nodoc:
           add_invoice(form, options)
           add_creditcard(form, options[:credit_card])
           add_currency(form, money, options)
+          add_address(form, options)
           add_customer_data(form, options)
           add_test_mode(form, options)
         else
@@ -113,10 +115,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify(credit_card, options = {})
-        MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
-        end
+        form = {}
+        add_creditcard(form, credit_card)
+        add_address(form, options)
+        add_test_mode(form, options)
+        add_ip(form, options)
+        commit(:verify, 0, form, options)
       end
 
       def store(creditcard, options = {})

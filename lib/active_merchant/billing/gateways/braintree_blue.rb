@@ -100,7 +100,7 @@ module ActiveMerchant #:nodoc:
           response = response_from_result(@braintree_gateway.transaction.refund(transaction_id, money))
 
           if !response.success? && options[:force_full_refund_if_unsettled] &&
-              response.message =~ /#{ERROR_CODES[:cannot_refund_if_unsettled]}/
+             response.message =~ /#{ERROR_CODES[:cannot_refund_if_unsettled]}/
             void(transaction_id)
           else
             response
