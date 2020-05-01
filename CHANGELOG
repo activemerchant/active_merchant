@@ -16,6 +16,7 @@
 * Elavon: Cleanup inadvertant field removal (avs_address) in #3600 [apfranzen] #3602
 * EBANX: Fix transaction amount for verify transaction [miguelxpn] #3603
 * iATS Payments: Update gateway to accept `email`, `phone`, and `country` fields [naashton] #3607
+* Braintree: Fix response for failed refunds when falling back to voids [jasonwebster] #3608
 
 == Version 1.107.1 (Apr 1, 2020)
 * Add `allowed_push_host` to gemspec [mdeloupy]

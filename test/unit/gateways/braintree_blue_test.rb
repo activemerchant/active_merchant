@@ -984,6 +984,19 @@ class BraintreeBlueTest < Test::Unit::TestCase
     assert response.success?
   end
 
+  def test_refund_unsettled_payment_other_error_does_not_void
+    Braintree::TransactionGateway.any_instance.
+      expects(:refund).
+      returns(braintree_error_result(message: 'Some error message'))
+
+    Braintree::TransactionGateway.any_instance.
+      expects(:void).
+      never
+
+    response = @gateway.refund(1.00, 'transaction_id', force_full_refund_if_unsettled: true)
+    refute response.success?
+  end
+
   def test_stored_credential_recurring_cit_initial
     Braintree::TransactionGateway.any_instance.expects(:sale).with(
       standard_purchase_params.merge(
