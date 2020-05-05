@@ -111,10 +111,18 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify(credit_card, options={})
-        MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
+        request = build_soap_request do |xml|
+          xml.CreditCardAVSOnly(xmlns: 'https://transaction.elementexpress.com') do
+            add_credentials(xml)
+            add_payment_method(xml, credit_card)
+            add_transaction(xml, 0, options)
+            add_terminal(xml, options)
+            add_address(xml, options)
+          end
         end
+
+        # send request with the transaction amount set to 0
+        commit('CreditCardAVSOnly', request, 0)
       end
 
       def supports_scrubbing?

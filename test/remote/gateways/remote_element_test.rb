@@ -121,7 +121,7 @@ class RemoteElementTest < Test::Unit::TestCase
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response
-    assert_match %r{Approved}, response.message
+    assert_equal 'Success', response.message
   end
 
   def test_successful_store
