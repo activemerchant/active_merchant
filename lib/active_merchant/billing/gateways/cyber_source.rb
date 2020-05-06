@@ -27,6 +27,13 @@ module ActiveMerchant #:nodoc:
       # Schema files can be found here: https://ics2ws.ic3.com/commerce/1.x/transactionProcessor/
       TEST_XSD_VERSION = '1.164'
       PRODUCTION_XSD_VERSION = '1.164'
+      ECI_BRAND_MAPPING = {
+        visa: 'vbv',
+        master: 'spa',
+        american_express: 'aesk',
+        jcb: 'js',
+        discover: 'pb',
+      }.freeze
 
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb, :dankort, :maestro, :elo]
       self.supported_countries = %w(US BR CA CN DK FI FR DE IN JP MX NO SE GB SG LB PK)
@@ -598,7 +605,7 @@ module ActiveMerchant #:nodoc:
         xml.tag!('cavvAlgorithm', threeds_2_options[:cavv_algorithm]) if threeds_2_options[:cavv_algorithm]
         xml.tag!('paSpecificationVersion', threeds_2_options[:version]) if threeds_2_options[:version]
         xml.tag!('directoryServerTransactionID', threeds_2_options[:ds_transaction_id]) if threeds_2_options[:ds_transaction_id]
-        xml.tag!('commerceIndicator', options[:commerce_indicator]) if options[:commerce_indicator]
+        xml.tag!('commerceIndicator', options[:commerce_indicator] || ECI_BRAND_MAPPING[card_brand(payment_method).to_sym])
         xml.tag!('eciRaw', threeds_2_options[:eci]) if threeds_2_options[:eci]
         xml.tag!('xid', threeds_2_options[:xid]) if threeds_2_options[:xid]
         xml.tag!('veresEnrolled', threeds_2_options[:enrolled]) if threeds_2_options[:enrolled]
@@ -630,12 +637,13 @@ module ActiveMerchant #:nodoc:
 
       def add_auth_network_tokenization(xml, payment_method, options)
         return unless network_tokenization?(payment_method)
+        brand = card_brand(payment_method).to_sym
 
-        case card_brand(payment_method).to_sym
+        case brand
         when :visa
           xml.tag! 'ccAuthService', {'run' => 'true'} do
             xml.tag!('cavv', payment_method.payment_cryptogram)
-            xml.tag!('commerceIndicator', 'vbv')
+            xml.tag!('commerceIndicator', ECI_BRAND_MAPPING[brand])
             xml.tag!('xid', payment_method.payment_cryptogram)
           end
         when :master
@@ -644,13 +652,13 @@ module ActiveMerchant #:nodoc:
             xml.tag!('collectionIndicator', '2')
           end
           xml.tag! 'ccAuthService', {'run' => 'true'} do
-            xml.tag!('commerceIndicator', 'spa')
+            xml.tag!('commerceIndicator', ECI_BRAND_MAPPING[brand])
           end
         when :american_express
           cryptogram = Base64.decode64(payment_method.payment_cryptogram)
           xml.tag! 'ccAuthService', {'run' => 'true'} do
             xml.tag!('cavv', Base64.encode64(cryptogram[0...20]))
-            xml.tag!('commerceIndicator', 'aesk')
+            xml.tag!('commerceIndicator', ECI_BRAND_MAPPING[brand])
             xml.tag!('xid', Base64.encode64(cryptogram[20...40]))
           end
         end
