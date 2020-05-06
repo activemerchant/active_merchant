@@ -729,13 +729,25 @@ class CyberSourceTest < Test::Unit::TestCase
     assert_success validation
   end
 
+  def test_adds_3ds_brand_based_commerce_indicator
+    %w(visa master american_express jcb discover).each do |brand|
+      @credit_card.brand = brand
+
+      stub_comms do
+        @gateway.purchase(@amount, @credit_card, @options.merge(three_d_secure: {}))
+      end.check_request do |endpoint, data, headers|
+        assert_match(/commerceIndicator\>#{CyberSourceGateway::ECI_BRAND_MAPPING[brand.to_sym]}/, data)
+      end.respond_with(successful_purchase_response)
+    end
+  end
+
   def test_adds_3ds2_fields_via_normalized_hash
     version = '2.0'
     eci = '05'
     cavv = '637574652070757070792026206b697474656e73'
     cavv_algorithm = 2
     ds_transaction_id = '97267598-FAE6-48F2-8083-C23433990FBC'
-    commerce_indicator = 'vbv'
+    commerce_indicator = 'commerce_indicator'
     authentication_response_status = 'Y'
     enrolled = 'Y'
     options_with_normalized_3ds = @options.merge(
@@ -771,7 +783,7 @@ class CyberSourceTest < Test::Unit::TestCase
     cavv = '637574652070757070792026206b697474656e73'
     cavv_algorithm = 1
     ds_transaction_id = '97267598-FAE6-48F2-8083-C23433990FBC'
-    commerce_indicator = 'spa'
+    commerce_indicator = 'commerce_indicator'
     collection_indicator = 2
     options_with_normalized_3ds = @options.merge(
       three_d_secure: {
