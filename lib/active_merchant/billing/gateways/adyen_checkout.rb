@@ -15,7 +15,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Adyen'
 
       PAYMENTS_API_VERSION = 'v51'
-      PAL_API_VERSION = 'v51'
+      PAL_API_VERSION = 'v49'
       PAL_TEST_URL = 'https://pal-test.adyen.com/pal/servlet/'
       PAL_LIVE_URL = 'https://pal-live.adyen.com/pal/servlet/'
 
@@ -71,6 +71,24 @@ module ActiveMerchant #:nodoc:
         else
           initial_response
         end
+      end
+
+      def update(credit_card, options = {})
+        post = init_post(options)
+        add_invoice(post, 0, options)
+        add_update_card_details(post, credit_card, options[:stored_payment_method_id])
+        add_extra_data(post, options)
+        add_stored_credentials(post, credit_card, options)
+        add_address(post, options)
+
+        commit('payments', post, options)
+      end
+
+      def unstore(identification, options = {})
+        post = init_post(identification)
+        post[:shopperReference] = identification[:customer_profile_token]
+        post[:recurringDetailReference] = identification[:payment_profile_token]
+        commit('disable', post, options)
       end
 
       def details(options)
@@ -289,6 +307,16 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_update_card_details(post, credit_card, stored_payment_method_id)
+        card = {
+          expiryMonth: credit_card.month,
+          expiryYear: credit_card.year,
+          holderName: credit_card.name,
+          storedPaymentMethodId: stored_payment_method_id
+        }
+        post[:paymentMethod] = card
+      end
+
       def add_card(post, credit_card)
         card = {
             expiryMonth: credit_card.month,
@@ -348,21 +376,24 @@ module ActiveMerchant #:nodoc:
         CVC_MAPPING[response['additionalData']['cvcResult'][0]] if response.dig('additionalData', 'cvcResult')
       end
 
-      def refund?(action)
-        action == "refund"
+      def use_pal_endpoint?(action)
+        action == "refund" || action == "disable"
       end
 
       def endpoint(action)
-        refund?(action) ? "Payment/#{PAL_API_VERSION}/#{action}" : "#{PAYMENTS_API_VERSION}/#{action}"
+        return "Payment/#{PAL_API_VERSION}/#{action}" if action == "refund"
+        return "Recurring/#{PAL_API_VERSION}/#{action}" if action == "disable"
+
+        "#{PAYMENTS_API_VERSION}/#{action}"
       end
 
       def url(action)
         if test?
-          refund?(action) ? "#{PAL_TEST_URL}#{endpoint(action)}" : "#{test_url}#{endpoint(action)}"
+          use_pal_endpoint?(action) ? "#{PAL_TEST_URL}#{endpoint(action)}" : "#{test_url}#{endpoint(action)}"
         elsif @options[:subdomain]
           "https://#{@options[:subdomain]}-pal-live.adyenpayments.com/pal/servlet/#{endpoint(action)}"
         else
-          refund?(action) ? "#{PAL_LIVE_URL}#{endpoint(action)}" : "#{live_url}#{endpoint(action)}"
+          use_pal_endpoint?(action) ? "#{PAL_LIVE_URL}#{endpoint(action)}" : "#{live_url}#{endpoint(action)}"
         end
       end
 
@@ -387,6 +418,8 @@ module ActiveMerchant #:nodoc:
           ['Authorised', 'Received', 'RedirectShopper'].include?(response['resultCode'])
         when 'refund'
           response['response'] == "[#{action}-received]"
+        when 'disable'
+          response['response'] == "[detail-successfully-disabled]"
         else
           false
         end

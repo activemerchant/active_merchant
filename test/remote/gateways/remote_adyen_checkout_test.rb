@@ -107,6 +107,31 @@ class RemoteAdyenCheckoutTest < Test::Unit::TestCase
     assert_equal 'Authorised', response.message
   end
 
+  def test_successful_update_card_details_store
+    assert response = @gateway.store(
+      credit_card('4111111111111111',
+        :month => 03,
+        :year => 2030,
+        :first_name => 'John',
+        :last_name => 'Smith',
+        :brand => 'visa',
+        :verification_value => nil
+      ),
+      @options.merge(
+        shopper_reference: 'chargify_js_1587733806270148',
+        update_card_details: true,
+        stored_payment_method_id: "8415877340540131",
+        recurring_processing_model: "Subscription",
+        shopperReference: "chargify_js_1587733806270148",
+        stored_credential: {reason_type: 'unscheduled'}
+      )
+    )
+
+    assert_success response
+    assert !response.authorization.split('#')[2].nil?
+    assert_equal 'Authorised', response.message
+  end
+
   def test_failed_store
     assert response = @gateway.store(@declined_card, @options)
 
@@ -174,5 +199,21 @@ class RemoteAdyenCheckoutTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, card, @options)
     assert_failure response
     assert_match Gateway::STANDARD_ERROR_CODE[:invalid_cvc], response.error_code
+  end
+
+  def test_successful_unstore
+    assert response = @gateway.store(@credit_card, @options)
+
+    assert_success response
+    assert !response.authorization.split('#')[2].nil?
+    assert_equal 'Authorised', response.message
+
+    unstore_token = {
+      customer_profile_token: response.params["additionalData"]["recurring.shopperReference"],
+      payment_profile_token: response.params["additionalData"]["recurring.recurringDetailReference"],
+    }
+
+    assert response = @gateway.unstore(unstore_token, {})
+    assert_success response
   end
 end
