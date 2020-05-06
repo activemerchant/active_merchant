@@ -840,6 +840,19 @@ class CyberSourceTest < Test::Unit::TestCase
     end.respond_with(successful_capture_response)
   end
 
+  def test_adds_application_id_as_partner_solution_id
+    partner_id = 'partner_id'
+    CyberSourceGateway.application_id = partner_id
+
+    stub_comms do
+      @gateway.authorize(100, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match("<partnerSolutionID>#{partner_id}</partnerSolutionID>", data)
+    end.respond_with(successful_capture_response)
+  ensure
+    CyberSourceGateway.application_id = nil
+  end
+
   private
 
   def pre_scrubbed

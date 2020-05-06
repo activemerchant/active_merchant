@@ -471,6 +471,8 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'clientLibrary', 'Ruby Active Merchant'
         xml.tag! 'clientLibraryVersion', VERSION
         xml.tag! 'clientEnvironment', RUBY_PLATFORM
+        xml.tag!('partnerSolutionID', application_id) if application_id
+
         add_merchant_descriptor(xml, options)
       end
 
