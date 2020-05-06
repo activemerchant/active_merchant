@@ -2,6 +2,7 @@
 
 == HEAD
 * Cybersource: Send a specific card brand commerceIndicator for 3DS [pi3r]
+* Cybersource: Send application_id as partnerSolutionID [pi3r]
 * Iridium: Localize zero-decimal currencies [chinhle23] #3587
 * iVeri: Fix `verify` action [chinhle23] #3588
 * Ixopay: Properly support three-decimal currencies [chinhle23] #3589
