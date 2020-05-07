@@ -225,6 +225,15 @@ class AdyenTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_failed_authorise3ds2
+    @gateway.expects(:ssl_post).returns(failed_authorize_3ds2_response)
+
+    response = @gateway.send(:commit, 'authorise3ds2', {}, {})
+
+    assert_equal '3D Not Authenticated', response.message
+    assert_failure response
+  end
+
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
     response = @gateway.capture(@amount, '7914775043909934')
@@ -996,6 +1005,26 @@ class AdyenTest < Test::Unit::TestCase
       "refusalReason": "Expired Card",
       "resultCode": "Refused"
     }
+    RESPONSE
+  end
+
+  def failed_authorize_3ds2_response
+    <<-RESPONSE
+    {
+      "additionalData":
+      {
+        "threeds2.threeDS2Result.dsTransID": "1111-abc-234",
+        "threeds2.threeDS2Result.eci":"07",
+        "threeds2.threeDS2Result.threeDSServerTransID":"222-cde-321",
+        "threeds2.threeDS2Result.transStatusReason":"01",
+        "threeds2.threeDS2Result.messageVersion":"2.1.0",
+        "threeds2.threeDS2Result.authenticationValue":"ABCDEFG",
+        "threeds2.threeDS2Result.transStatus":"N"
+       },
+       "pspReference":"8514775559925128",
+       "refusalReason":"3D Not Authenticated",
+       "resultCode":"Refused"
+     }
     RESPONSE
   end
 

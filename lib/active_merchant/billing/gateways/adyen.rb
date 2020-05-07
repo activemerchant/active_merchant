@@ -549,7 +549,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(action, response)
-        return authorize_message_from(response) if action.to_s == 'authorise' || action.to_s == 'authorise3d'
+        return authorize_message_from(response) if %w(authorise authorise3d authorise3ds2).include?(action.to_s)
 
         response['response'] || response['message'] || response['result']
       end

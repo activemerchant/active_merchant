@@ -22,6 +22,7 @@
 * Worldpay: Fix response for failed refunds when falling back to voids [jasonwebster] #3609
 * iATS Payments: Add support for Customer Code payment method [molbrown] #3611
 * HPS: Add Google Pay support [MSmedal] #3597
+* Adyen: Parse appropriate message for 3DS2 authorization calls [britth] #3619
 
 == Version 1.107.1 (Apr 1, 2020)
 * Add `allowed_push_host` to gemspec [mdeloupy]
