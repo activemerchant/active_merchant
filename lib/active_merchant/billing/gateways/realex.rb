@@ -230,13 +230,14 @@ module ActiveMerchant
       def add_address_and_customer_info(xml, options)
         billing_address = options[:billing_address] || options[:address]
         shipping_address = options[:shipping_address]
+        ipv4_address = ipv4?(options[:ip]) ? options[:ip] : nil
 
-        return unless billing_address || shipping_address || options[:customer] || options[:invoice] || options[:ip]
+        return unless billing_address || shipping_address || options[:customer] || options[:invoice] || ipv4_address
 
         xml.tag! 'tssinfo' do
           xml.tag! 'custnum', options[:customer] if options[:customer]
           xml.tag! 'prodid', options[:invoice] if options[:invoice]
-          xml.tag! 'custipaddress', options[:ip] if options[:ip]
+          xml.tag! 'custipaddress', options[:ip] if ipv4_address
 
           if billing_address
             xml.tag! 'address', 'type' => 'billing' do
@@ -368,6 +369,11 @@ module ActiveMerchant
 
       def sanitize_order_id(order_id)
         order_id.to_s.gsub(/[^a-zA-Z0-9\-_]/, '')
+      end
+
+      def ipv4?(ip_address)
+        return false if ip_address.nil?
+        !!ip_address[/\A\d+\.\d+\.\d+\.\d+\z/]
       end
     end
   end

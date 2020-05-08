@@ -188,7 +188,8 @@ class RealexTest < Test::Unit::TestCase
 
   def test_purchase_xml
     options = {
-      order_id: '1'
+      order_id: '1',
+      ip: '123.456.789.0',
     }
 
     @gateway.expects(:new_timestamp).returns('20090824160201')
@@ -212,7 +213,43 @@ class RealexTest < Test::Unit::TestCase
   </card>
   <autosettle flag="1"/>
   <sha1hash>3499d7bc8dbacdcfba2286bd74916d026bae630f</sha1hash>
+  <tssinfo>
+    <custipaddress>123.456.789.0</custipaddress>
+  </tssinfo>
 </request>
+    SRC
+
+    assert_xml_equal valid_purchase_request_xml, @gateway.build_purchase_or_authorization_request(:purchase, @amount, @credit_card, options)
+  end
+
+  def test_purchase_xml_with_ipv6
+    options = {
+      order_id: '1',
+      ip: '2a02:c7d:da18:ac00:6d10:4f13:1795:4890',
+    }
+
+    @gateway.expects(:new_timestamp).returns('20090824160201')
+
+    valid_purchase_request_xml = <<~SRC
+      <request timestamp="20090824160201" type="auth">
+        <merchantid>your_merchant_id</merchantid>
+        <account>your_account</account>
+        <orderid>1</orderid>
+        <amount currency="EUR">100</amount>
+        <card>
+          <number>4263971921001307</number>
+          <expdate>0808</expdate>
+          <chname>Longbob Longsen</chname>
+          <type>VISA</type>
+          <issueno></issueno>
+          <cvn>
+            <number></number>
+            <presind></presind>
+          </cvn>
+        </card>
+        <autosettle flag="1"/>
+        <sha1hash>3499d7bc8dbacdcfba2286bd74916d026bae630f</sha1hash>
+      </request>
     SRC
 
     assert_xml_equal valid_purchase_request_xml, @gateway.build_purchase_or_authorization_request(:purchase, @amount, @credit_card, options)
