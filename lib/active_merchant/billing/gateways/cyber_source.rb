@@ -280,6 +280,7 @@ module ActiveMerchant #:nodoc:
         add_stored_credential_options(xml, options)
         add_issuer_additional_data(xml, options)
         add_merchant_description(xml, options)
+        add_partner_solution_id(xml)
 
         xml.target!
       end
@@ -307,6 +308,7 @@ module ActiveMerchant #:nodoc:
         add_business_rules_data(xml, authorization, options)
         add_issuer_additional_data(xml, options)
         add_merchant_description(xml, options)
+        add_partner_solution_id(xml)
 
         xml.target!
       end
@@ -327,6 +329,7 @@ module ActiveMerchant #:nodoc:
         end
         add_issuer_additional_data(xml, options)
         add_merchant_description(xml, options)
+        add_partner_solution_id(xml)
 
         xml.target!
       end
@@ -346,6 +349,8 @@ module ActiveMerchant #:nodoc:
           add_auth_reversal_service(xml, request_id, request_token)
         end
         add_issuer_additional_data(xml, options)
+        add_partner_solution_id(xml)
+
         xml.target!
       end
 
@@ -356,6 +361,7 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new indent: 2
         add_purchase_data(xml, money, true, options)
         add_credit_service(xml, request_id, request_token)
+        add_partner_solution_id(xml)
 
         xml.target!
       end
@@ -471,7 +477,6 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'clientLibrary', 'Ruby Active Merchant'
         xml.tag! 'clientLibraryVersion', VERSION
         xml.tag! 'clientEnvironment', RUBY_PLATFORM
-        xml.tag!('partnerSolutionID', application_id) if application_id
 
         add_merchant_descriptor(xml, options)
       end
@@ -819,6 +824,12 @@ module ActiveMerchant #:nodoc:
         else
           xml.tag! 'subsequentAuthTransactionID', options[:stored_credential][:network_transaction_id]
         end
+      end
+
+      def add_partner_solution_id(xml)
+        return unless application_id
+
+        xml.tag!('partnerSolutionID', application_id)
       end
 
       # Where we actually build the full SOAP request using builder
