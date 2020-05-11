@@ -194,7 +194,7 @@ module ActiveMerchant #:nodoc:
       def add_terminal(xml, options)
         xml.terminal do
           xml.TerminalID '01'
-          xml.CardPresentCode 'UseDefault'
+          xml.CardPresentCode options[:card_present_code] || 'UseDefault'
           xml.CardholderPresentCode 'UseDefault'
           xml.CardInputCode 'UseDefault'
           xml.CVVPresenceCode 'UseDefault'

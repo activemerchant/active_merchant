@@ -142,6 +142,11 @@ class ElementTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_successful_purchase_with_card_present_code
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(card_present_code: 'Present'))
+    assert_equal 'Present', response.params['terminal']['cardpresentcode']
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
