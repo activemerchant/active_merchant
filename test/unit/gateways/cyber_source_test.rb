@@ -629,60 +629,98 @@ class CyberSourceTest < Test::Unit::TestCase
     assert_success response
   end
 
-  def test_successful_auth_first_unscheduled_stored_cred
-    @gateway.stubs(:ssl_post).returns(successful_authorization_response)
+  def test_cof_first
     @options[:stored_credential] = {
       initiator: 'cardholder',
-      reason_type: 'unscheduled',
+      reason_type: '',
       initial_transaction: true,
       network_transaction_id: ''
     }
-    assert response = @gateway.authorize(@amount, @credit_card, @options)
-    assert_equal Response, response.class
+    @options[:commerce_indicator] = 'internet'
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/\<subsequentAuthFirst\>true/, data)
+      assert_not_match(/\<subsequentAuthStoredCredential\>true/, data)
+      assert_not_match(/\<subsequentAuth\>/, data)
+      assert_not_match(/\<subsequentAuthTransactionID\>/, data)
+      assert_match(/\<commerceIndicator\>internet/, data)
+    end.respond_with(successful_authorization_response)
     assert response.success?
-    assert response.test?
   end
 
-  def test_successful_auth_subsequent_unscheduled_stored_cred
-    @gateway.stubs(:ssl_post).returns(successful_authorization_response)
+  def test_cof_cit_auth
+    @options[:stored_credential] = {
+      initiator: 'cardholder',
+      reason_type: 'unscheduled',
+      initial_transaction: false,
+      network_transaction_id: ''
+    }
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_not_match(/\<subsequentAuthFirst\>/, data)
+      assert_match(/\<subsequentAuthStoredCredential\>/, data)
+      assert_not_match(/\<subsequentAuth\>/, data)
+      assert_not_match(/\<subsequentAuthTransactionID\>/, data)
+    end.respond_with(successful_authorization_response)
+    assert response.success?
+  end
+
+  def test_cof_unscheduled_mit_auth
     @options[:stored_credential] = {
       initiator: 'merchant',
       reason_type: 'unscheduled',
       initial_transaction: false,
       network_transaction_id: '016150703802094'
     }
-    assert response = @gateway.authorize(@amount, @credit_card, @options)
-    assert_equal Response, response.class
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_not_match(/\<subsequentAuthFirst\>/, data)
+      assert_match(/\<subsequentAuthStoredCredential\>true/, data)
+      assert_match(/\<subsequentAuth\>true/, data)
+      assert_match(/\<subsequentAuthTransactionID\>016150703802094/, data)
+    end.respond_with(successful_authorization_response)
     assert response.success?
-    assert response.test?
   end
 
-  def test_successful_auth_first_recurring_stored_cred
-    @gateway.stubs(:ssl_post).returns(successful_authorization_response)
+  def test_cof_installment_mit_auth
     @options[:stored_credential] = {
-      initiator: 'cardholder',
-      reason_type: 'recurring',
-      initial_transaction: true,
-      network_transaction_id: ''
+      initiator: 'merchant',
+      reason_type: 'installment',
+      initial_transaction: false,
+      network_transaction_id: '016150703802094'
     }
-    assert response = @gateway.authorize(@amount, @credit_card, @options)
-    assert_equal Response, response.class
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_not_match(/\<subsequentAuthFirst\>/, data)
+      assert_not_match(/\<subsequentAuthStoredCredential\>/, data)
+      assert_match(/\<subsequentAuth\>true/, data)
+      assert_match(/\<subsequentAuthTransactionID\>016150703802094/, data)
+      assert_match(/\<commerceIndicator\>install/, data)
+    end.respond_with(successful_authorization_response)
     assert response.success?
-    assert response.test?
   end
 
-  def test_successful_auth_subsequent_recurring_stored_cred
-    @gateway.stubs(:ssl_post).returns(successful_authorization_response)
+  def test_cof_recurring_mit_auth
     @options[:stored_credential] = {
       initiator: 'merchant',
       reason_type: 'recurring',
       initial_transaction: false,
       network_transaction_id: '016150703802094'
     }
-    assert response = @gateway.authorize(@amount, @credit_card, @options)
-    assert_equal Response, response.class
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_not_match(/\<subsequentAuthFirst\>/, data)
+      assert_not_match(/\<subsequentAuthStoredCredential\>/, data)
+      assert_match(/\<subsequentAuth\>true/, data)
+      assert_match(/\<subsequentAuthTransactionID\>016150703802094/, data)
+      assert_match(/\<commerceIndicator\>recurring/, data)
+    end.respond_with(successful_authorization_response)
     assert response.success?
-    assert response.test?
   end
 
   def test_nonfractional_currency_handling

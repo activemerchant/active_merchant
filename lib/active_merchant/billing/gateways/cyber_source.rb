@@ -816,15 +816,10 @@ module ActiveMerchant #:nodoc:
 
       def add_stored_credential_options(xml, options={})
         return unless options[:stored_credential]
-
-        if options[:stored_credential][:initial_transaction]
-          xml.tag! 'subsequentAuthFirst', 'true'
-        elsif options[:stored_credential][:reason_type] == 'unscheduled'
-          xml.tag! 'subsequentAuth', 'true'
-          xml.tag! 'subsequentAuthTransactionID', options[:stored_credential][:network_transaction_id]
-        else
-          xml.tag! 'subsequentAuthTransactionID', options[:stored_credential][:network_transaction_id]
-        end
+        xml.tag! 'subsequentAuth', 'true' if options[:stored_credential][:initiator] == 'merchant'
+        xml.tag! 'subsequentAuthFirst', 'true' if options[:stored_credential][:initial_transaction]
+        xml.tag! 'subsequentAuthTransactionID', options[:stored_credential][:network_transaction_id] if options[:stored_credential][:initiator] == 'merchant'
+        xml.tag! 'subsequentAuthStoredCredential', 'true' if options[:stored_credential][:initiator] == 'cardholder' && !options[:stored_credential][:initial_transaction] ||  options[:stored_credential][:initiator] == 'merchant' && options[:stored_credential][:reason_type] == 'unscheduled'
       end
 
       def add_partner_solution_id(xml)
