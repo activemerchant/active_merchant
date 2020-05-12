@@ -70,6 +70,14 @@ class DLocalTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
+  def test_invalid_country
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@amount, @credit_card, @options.merge(billing_address: address(country: 'INVALID')))
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/\"country\":null/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_failed_authorize
     @gateway.expects(:ssl_post).returns(failed_authorize_response)
 

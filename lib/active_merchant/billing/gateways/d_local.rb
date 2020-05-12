@@ -93,8 +93,10 @@ module ActiveMerchant #:nodoc:
         post[:country] = lookup_country_code(address[:country])
       end
 
-      def lookup_country_code(country)
-        Country.find(country).code(:alpha2).value
+      def lookup_country_code(country_field)
+        Country.find(country_field).code(:alpha2).value
+      rescue InvalidCountryCodeError
+        nil
       end
 
       def add_payer(post, card, options)
