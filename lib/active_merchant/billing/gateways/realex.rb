@@ -374,7 +374,7 @@ module ActiveMerchant
       def ipv4?(ip_address)
         return false if ip_address.nil?
 
-        !!ip_address[/\A\d+\.\d+\.\d+\.\d+\z/]
+        !ip_address.match(/\A\d+\.\d+\.\d+\.\d+\z/).nil?
       end
     end
   end
