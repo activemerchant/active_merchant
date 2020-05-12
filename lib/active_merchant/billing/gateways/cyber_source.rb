@@ -874,7 +874,7 @@ module ActiveMerchant #:nodoc:
         end
 
         success = success?(response)
-        message = response[:message]
+        message = message_from(response)
 
         authorization = success ? authorization_from(response, action, amount, options) : nil
 
@@ -940,6 +940,16 @@ module ActiveMerchant #:nodoc:
 
       def success?(response)
         response[:decision] == @@decision_codes[:accept]
+      end
+
+      def message_from(response)
+        if response[:reasonCode] == '101' && response[:missingField]
+            response[:message] + ': ' + response[:missingField]
+        elsif response[:reasonCode] == '102' && response[:invalidField]
+            response[:message] + ': ' + response[:invalidField]
+        else
+          response[:message]
+        end
       end
     end
   end
