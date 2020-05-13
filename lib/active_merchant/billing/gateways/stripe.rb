@@ -654,15 +654,15 @@ module ActiveMerchant #:nodoc:
         cvc_code = CVC_CODE_TRANSLATOR[card['cvc_check']]
 
         Response.new(success,
-          message_from(success, response),
-          response,
-          test: response_is_test?(response),
-          authorization: authorization_from(success, url, method, response),
-          avs_result: { code: avs_code },
-          cvv_result: cvc_code,
-          emv_authorization: emv_authorization_from_response(response),
-          error_code: success ? nil : error_code_from(response)
-        )
+                     message_from(success, response),
+                     response,
+                     test: response_is_test?(response),
+                     authorization: authorization_from(success, url, method, response),
+                     avs_result: { code: avs_code },
+                     cvv_result: cvc_code,
+                     emv_authorization: emv_authorization_from_response(response),
+                     error_code: success ? nil : error_code_from(response)
+                    )
       end
 
       def authorization_from(success, url, method, response)

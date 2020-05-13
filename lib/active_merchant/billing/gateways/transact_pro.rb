@@ -151,7 +151,7 @@ module ActiveMerchant #:nodoc:
       def add_payment_cc(post, credit_card)
         post[:cc] = credit_card.number
         post[:cvv] = credit_card.verification_value if credit_card.verification_value?
-        year  = sprintf('%.4i', credit_card.year)
+        year = sprintf('%.4i', credit_card.year)
         month = sprintf('%.2i', credit_card.month)
         post[:expire] = "#{month}/#{year[2..3]}"
       end
@@ -162,7 +162,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        if body =~ /^ID:/
+        if /^ID:/.match?(body)
           body.split('~').reduce(Hash.new) { |h, v|
             m = v.match('(.*?):(.*)')
             h.merge!(m[1].underscore.to_sym => m[2])
@@ -197,7 +197,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def split_authorization(authorization)
-        if authorization =~ /|/
+        if /|/.match?(authorization)
           identifier, amount = authorization.split('|')
           [identifier, amount.to_i]
         else

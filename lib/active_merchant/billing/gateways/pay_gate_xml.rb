@@ -253,9 +253,9 @@ module ActiveMerchant #:nodoc:
         xml   = REXML::Document.new(body)
 
         response_action = action.gsub(/tx/, 'rx')
-        root  = REXML::XPath.first(xml.root, response_action)
+        root = REXML::XPath.first(xml.root, response_action)
         # we might have gotten an error
-        root  = REXML::XPath.first(xml.root, 'errorrx') if root.nil?
+        root = REXML::XPath.first(xml.root, 'errorrx') if root.nil?
         root.attributes.each do |name, value|
           hash[name.to_sym] = value
         end
@@ -265,8 +265,8 @@ module ActiveMerchant #:nodoc:
       def commit(action, request, authorization = nil)
         response = parse(action, ssl_post(self.live_url, request))
         Response.new(successful?(response), message_from(response), response,
-          test: test?,
-          authorization: authorization || response[:tid]
+                     test: test?,
+                     authorization: authorization || response[:tid]
         )
       end
 

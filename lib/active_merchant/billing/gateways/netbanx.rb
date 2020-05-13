@@ -222,7 +222,7 @@ module ActiveMerchant #:nodoc:
 
       def get_url(uri)
         url = (test? ? test_url : live_url)
-        if uri =~ /^customervault/
+        if /^customervault/.match?(uri)
           "#{url}#{uri}"
         else
           "#{url}cardpayments/v1/accounts/#{@options[:account_number]}/#{uri}"

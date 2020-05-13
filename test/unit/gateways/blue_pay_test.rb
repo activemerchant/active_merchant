@@ -221,7 +221,7 @@ class BluePayTest < Test::Unit::TestCase
   def test_message_from
     assert_equal 'CVV does not match', @gateway.send(:parse, 'STATUS=2&CVV2=N&AVS=A&MESSAGE=FAILURE').message
     assert_equal 'Street address matches, but postal code does not match.',
-      @gateway.send(:parse, 'STATUS=2&CVV2=M&AVS=A&MESSAGE=FAILURE').message
+                 @gateway.send(:parse, 'STATUS=2&CVV2=M&AVS=A&MESSAGE=FAILURE').message
   end
 
   # Recurring Billing Unit Tests
@@ -230,11 +230,11 @@ class BluePayTest < Test::Unit::TestCase
 
     response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
       @gateway.recurring(@amount, @credit_card,
-        billing_address: address.merge(first_name: 'Jim', last_name: 'Smith'),
-        rebill_start_date: '1 MONTH',
-        rebill_expression: '14 DAYS',
-        rebill_cycles: '24',
-        rebill_amount: @amount * 4
+                         billing_address: address.merge(first_name: 'Jim', last_name: 'Smith'),
+                         rebill_start_date: '1 MONTH',
+                         rebill_expression: '14 DAYS',
+                         rebill_cycles: '24',
+                         rebill_amount: @amount * 4
       )
     end
 

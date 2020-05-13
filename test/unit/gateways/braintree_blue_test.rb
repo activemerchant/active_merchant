@@ -860,11 +860,11 @@ class BraintreeBlueTest < Test::Unit::TestCase
       returns(braintree_result(id: 'transaction_id'))
 
     credit_card = network_tokenization_credit_card('4111111111111111',
-      brand: 'visa',
-      transaction_id: '123',
-      eci: '05',
-      payment_cryptogram: '111111111100cryptogram'
-    )
+                                                   brand: 'visa',
+                                                   transaction_id: '123',
+                                                   eci: '05',
+                                                   payment_cryptogram: '111111111100cryptogram'
+                                                  )
 
     response = @gateway.authorize(100, credit_card, test: true, order_id: '1')
     assert_equal 'transaction_id', response.authorization
@@ -893,12 +893,12 @@ class BraintreeBlueTest < Test::Unit::TestCase
       returns(braintree_result(id: 'transaction_id'))
 
     credit_card = network_tokenization_credit_card('4111111111111111',
-      brand: 'visa',
-      eci: '05',
-      payment_cryptogram: '111111111100cryptogram',
-      source: :android_pay,
-      transaction_id: '1234567890'
-    )
+                                                   brand: 'visa',
+                                                   eci: '05',
+                                                   payment_cryptogram: '111111111100cryptogram',
+                                                   source: :android_pay,
+                                                   transaction_id: '1234567890'
+                                                  )
 
     response = @gateway.authorize(100, credit_card, test: true, order_id: '1')
     assert_equal 'transaction_id', response.authorization
@@ -927,12 +927,12 @@ class BraintreeBlueTest < Test::Unit::TestCase
       returns(braintree_result(id: 'transaction_id'))
 
     credit_card = network_tokenization_credit_card('4111111111111111',
-      brand: 'visa',
-      eci: '05',
-      payment_cryptogram: '111111111100cryptogram',
-      source: :google_pay,
-      transaction_id: '1234567890'
-    )
+                                                   brand: 'visa',
+                                                   eci: '05',
+                                                   payment_cryptogram: '111111111100cryptogram',
+                                                   source: :google_pay,
+                                                   transaction_id: '1234567890'
+                                                  )
 
     response = @gateway.authorize(100, credit_card, test: true, order_id: '1')
     assert_equal 'transaction_id', response.authorization

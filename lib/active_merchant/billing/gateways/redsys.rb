@@ -565,7 +565,7 @@ module ActiveMerchant #:nodoc:
 
       def clean_order_id(order_id)
         cleansed = order_id.gsub(/[^\da-zA-Z]/, '')
-        if cleansed =~ /^\d{4}/
+        if /^\d{4}/.match?(cleansed)
           cleansed[0..11]
         else
           '%04d%s' % [rand(0..9999), cleansed[0...8]]

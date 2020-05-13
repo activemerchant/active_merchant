@@ -8,7 +8,7 @@ class SpreedlyCoreTest < Test::Unit::TestCase
     @credit_card = credit_card
     @check = check
     @amount = 103
-    @existing_transaction  = 'LKA3RchoqYO0njAfhHVw60ohjrC'
+    @existing_transaction = 'LKA3RchoqYO0njAfhHVw60ohjrC'
     @not_found_transaction = 'AdyQXaG0SVpSoMPdmFlvd3aA3uz'
   end
 

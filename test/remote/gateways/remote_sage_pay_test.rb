@@ -132,8 +132,8 @@ class RemoteSagePayTest < Test::Unit::TestCase
     assert_success capture
 
     assert refund = @gateway.refund(@amount, capture.authorization,
-      description: 'Crediting trx',
-      order_id: generate_unique_id
+                                    description: 'Crediting trx',
+                                    order_id: generate_unique_id
     )
     assert_success refund
   end
@@ -159,8 +159,8 @@ class RemoteSagePayTest < Test::Unit::TestCase
     assert_success purchase
 
     assert refund = @gateway.refund(@amount, purchase.authorization,
-      description: 'Crediting trx',
-      order_id: generate_unique_id
+                                    description: 'Crediting trx',
+                                    order_id: generate_unique_id
     )
 
     assert_success refund

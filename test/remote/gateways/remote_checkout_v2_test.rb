@@ -11,12 +11,12 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     @threeds_card = credit_card('4485040371536584', verification_value: '100', month: '12', year: '2020')
 
     @network_token = network_tokenization_credit_card('4242424242424242',
-      payment_cryptogram: 'AgAAAAAAAIR8CQrXcIhbQAAAAAA',
-      month:              '10',
-      year:               '2025',
-      source:             :network_token,
-      verification_value: nil
-    )
+                                                      payment_cryptogram: 'AgAAAAAAAIR8CQrXcIhbQAAAAAA',
+                                                      month:              '10',
+                                                      year:               '2025',
+                                                      source:             :network_token,
+                                                      verification_value: nil
+                                                     )
 
     @options = {
       order_id: '1',

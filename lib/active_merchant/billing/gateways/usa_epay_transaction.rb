@@ -320,11 +320,11 @@ module ActiveMerchant #:nodoc:
         error_code = nil
         error_code = (STANDARD_ERROR_CODE_MAPPING[response[:error_code]] || STANDARD_ERROR_CODE[:processing_error]) unless approved
         Response.new(approved, message_from(response), response,
-          test: test?,
-          authorization: response[:ref_num],
-          cvv_result: response[:cvv2_result_code],
-          avs_result: { code: response[:avs_result_code] },
-          error_code: error_code
+                     test: test?,
+                     authorization: response[:ref_num],
+                     cvv_result: response[:cvv2_result_code],
+                     avs_result: { code: response[:avs_result_code] },
+                     error_code: error_code
         )
       end
 

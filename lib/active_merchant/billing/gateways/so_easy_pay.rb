@@ -149,7 +149,7 @@ module ActiveMerchant #:nodoc:
       def parse(response, action)
         result = {}
         document = REXML::Document.new(response)
-        response_element = document.root.get_elements("//[@xsi:type='tns:#{action}Response']").first
+        response_element = document.root.get_elements("//*[@xsi:type='tns:#{action}Response']").first
         response_element.elements.each do |element|
           result[element.name.underscore] = element.text
         end
@@ -162,10 +162,10 @@ module ActiveMerchant #:nodoc:
         response_string = ssl_post(test? ? self.test_url : self.live_url, soap, headers)
         response = parse(response_string, soap_action)
         return Response.new(response['errorcode'] == '000',
-          response['errormessage'],
-          response,
-          test: test?,
-          authorization: response['transaction_id'])
+                            response['errormessage'],
+                            response,
+                            test: test?,
+                            authorization: response['transaction_id'])
       end
 
       def build_soap(request)

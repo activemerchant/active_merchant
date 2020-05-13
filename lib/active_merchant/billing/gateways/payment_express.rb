@@ -302,8 +302,8 @@ module ActiveMerchant #:nodoc:
 
         # Return a response
         PaymentExpressResponse.new(response[:success] == APPROVED, message_from(response), response,
-          test: response[:test_mode] == '1',
-          authorization: authorization_from(action, response)
+                                   test: response[:test_mode] == '1',
+                                   authorization: authorization_from(action, response)
         )
       end
 

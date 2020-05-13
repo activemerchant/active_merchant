@@ -309,8 +309,8 @@ class PayflowTest < Test::Unit::TestCase
     assert_raises ArgumentError do
       assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
         @gateway.recurring(@amount, @credit_card,
-          periodicity: :monthly,
-          initial_transaction: { }
+                           periodicity: :monthly,
+                           initial_transaction: { }
         )
       end
     end
@@ -320,8 +320,8 @@ class PayflowTest < Test::Unit::TestCase
     assert_raises ArgumentError do
       assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
         @gateway.recurring(@amount, @credit_card,
-          periodicity: :monthly,
-          initial_transaction: { amount: :purchase }
+                           periodicity: :monthly,
+                           initial_transaction: { amount: :purchase }
         )
       end
     end

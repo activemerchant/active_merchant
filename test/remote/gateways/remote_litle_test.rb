@@ -114,17 +114,17 @@ class RemoteLitleTest < Test::Unit::TestCase
 
   def test_unsuccessful_authorization
     assert response = @gateway.authorize(60060, @credit_card2,
-      {
-        order_id: '6',
-        billing_address: {
-          name: 'Joe Green',
-          address1: '6 Main St.',
-          city: 'Derry',
-          state: 'NH',
-          zip: '03038',
-          country: 'US'
-        },
-      }
+                                         {
+                                           order_id: '6',
+                                           billing_address: {
+                                             name: 'Joe Green',
+                                             address1: '6 Main St.',
+                                             city: 'Derry',
+                                             state: 'NH',
+                                             zip: '03038',
+                                             country: 'US'
+                                           },
+                                         }
     )
     assert_failure response
     assert_equal 'Insufficient Funds', response.message

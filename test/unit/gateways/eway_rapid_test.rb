@@ -154,42 +154,42 @@ class EwayRapidTest < Test::Unit::TestCase
   def test_purchase_with_all_options
     response = stub_comms do
       @gateway.purchase(200, @credit_card,
-        transaction_type: 'CustomTransactionType',
-        redirect_url: 'http://awesomesauce.com',
-        ip: '0.0.0.0',
-        application_id: 'Woohoo',
-        partner_id: 'SomePartner',
-        description: 'The Really Long Description More Than Sixty Four Characters Gets Truncated',
-        order_id: 'orderid1',
-        invoice: 'I1234',
-        currency: 'INR',
-        email: 'jim@example.com',
-        billing_address: {
-          title: 'Mr.',
-          name: 'Jim Awesome Smith',
-          company: 'Awesome Co',
-          address1: '1234 My Street',
-          address2: 'Apt 1',
-          city: 'Ottawa',
-          state: 'ON',
-          zip: 'K1C2N6',
-          country: 'CA',
-          phone: '(555)555-5555',
-          fax: '(555)555-6666'
-        },
-        shipping_address: {
-          title: 'Ms.',
-          name: 'Baker',
-          company: 'Elsewhere Inc.',
-          address1: '4321 Their St.',
-          address2: 'Apt 2',
-          city: 'Chicago',
-          state: 'IL',
-          zip: '60625',
-          country: 'US',
-          phone: '1115555555',
-          fax: '1115556666'
-        }
+                        transaction_type: 'CustomTransactionType',
+                        redirect_url: 'http://awesomesauce.com',
+                        ip: '0.0.0.0',
+                        application_id: 'Woohoo',
+                        partner_id: 'SomePartner',
+                        description: 'The Really Long Description More Than Sixty Four Characters Gets Truncated',
+                        order_id: 'orderid1',
+                        invoice: 'I1234',
+                        currency: 'INR',
+                        email: 'jim@example.com',
+                        billing_address: {
+                          title: 'Mr.',
+                          name: 'Jim Awesome Smith',
+                          company: 'Awesome Co',
+                          address1: '1234 My Street',
+                          address2: 'Apt 1',
+                          city: 'Ottawa',
+                          state: 'ON',
+                          zip: 'K1C2N6',
+                          country: 'CA',
+                          phone: '(555)555-5555',
+                          fax: '(555)555-6666'
+                        },
+                        shipping_address: {
+                          title: 'Ms.',
+                          name: 'Baker',
+                          company: 'Elsewhere Inc.',
+                          address1: '4321 Their St.',
+                          address2: 'Apt 2',
+                          city: 'Chicago',
+                          state: 'IL',
+                          zip: '60625',
+                          country: 'US',
+                          phone: '1115555555',
+                          fax: '1115556666'
+                        }
       )
     end.check_request do |endpoint, data, headers|
       assert_match(%r{"TransactionType":"CustomTransactionType"}, data)

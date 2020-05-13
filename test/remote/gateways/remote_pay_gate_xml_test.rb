@@ -5,8 +5,8 @@ class RemotePayGateXmlTest < Test::Unit::TestCase
     @gateway = PayGateXmlGateway.new(fixtures(:pay_gate_xml))
 
     @amount = 245000
-    @credit_card    = credit_card('4000000000000002')
-    @declined_card  = credit_card('4000000000000036')
+    @credit_card = credit_card('4000000000000002')
+    @declined_card = credit_card('4000000000000036')
 
     @options = {
       order_id: generate_unique_id,

@@ -216,10 +216,10 @@ module ActiveMerchant #:nodoc:
         end
 
         Response.new(success, message, response,
-          test: test?,
-          authorization: authorization,
-          avs_result: { code: response[:AVSResponseCode] },
-          cvv_result: response[:CVV2ResponseCode]
+                     test: test?,
+                     authorization: authorization,
+                     avs_result: { code: response[:AVSResponseCode] },
+                     cvv_result: response[:CVV2ResponseCode]
         )
       end
 
@@ -253,7 +253,7 @@ module ActiveMerchant #:nodoc:
         if node.has_elements?
           node.elements.each { |e| parse_element(reply, e) }
         else
-          if node.parent.name =~ /item/
+          if /item/.match?(node.parent.name)
             parent = node.parent.name + (node.parent.attributes['id'] ? '_' + node.parent.attributes['id'] : '')
             reply[(parent + '_' + node.name).to_sym] = node.text
           else

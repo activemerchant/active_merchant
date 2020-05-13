@@ -101,11 +101,11 @@ class LinkpointTest < Test::Unit::TestCase
 
   def test_successful_recurring_payment
     assert response = @gateway.recurring(2400, @credit_card,
-      order_id: generate_unique_id,
-      installments: 12,
-      startdate: 'immediate',
-      periodicity: :monthly,
-      billing_address: address
+                                         order_id: generate_unique_id,
+                                         installments: 12,
+                                         startdate: 'immediate',
+                                         periodicity: :monthly,
+                                         billing_address: address
     )
 
     assert_success response

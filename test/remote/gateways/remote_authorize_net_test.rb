@@ -679,9 +679,9 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
 
   def test_successful_authorize_and_capture_with_network_tokenization
     credit_card = network_tokenization_credit_card('4000100011112224',
-      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
-      verification_value: nil
-    )
+                                                   payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+                                                   verification_value: nil
+                                                  )
     auth = @gateway.authorize(@amount, credit_card, @options)
     assert_success auth
     assert_equal 'This transaction has been approved', auth.message
@@ -692,9 +692,9 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
 
   def test_successful_refund_with_network_tokenization
     credit_card = network_tokenization_credit_card('4000100011112224',
-      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
-      verification_value: nil
-    )
+                                                   payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+                                                   verification_value: nil
+                                                  )
 
     purchase = @gateway.purchase(@amount, credit_card, @options)
     assert_success purchase
@@ -708,9 +708,9 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
 
   def test_successful_credit_with_network_tokenization
     credit_card = network_tokenization_credit_card('4000100011112224',
-      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
-      verification_value: nil
-    )
+                                                   payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+                                                   verification_value: nil
+                                                  )
 
     response = @gateway.credit(@amount, credit_card, @options)
     assert_success response
@@ -720,10 +720,10 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
 
   def test_network_tokenization_transcript_scrubbing
     credit_card = network_tokenization_credit_card('4111111111111111',
-      brand: 'visa',
-      eci: '05',
-      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
-    )
+                                                   brand: 'visa',
+                                                   eci: '05',
+                                                   payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
+                                                  )
 
     transcript = capture_transcript(@gateway) do
       @gateway.authorize(@amount, credit_card, @options)

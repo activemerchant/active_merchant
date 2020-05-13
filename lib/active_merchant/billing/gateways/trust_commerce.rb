@@ -444,10 +444,10 @@ module ActiveMerchant #:nodoc:
         success = SUCCESS_TYPES.include?(data['status'])
         message = message_from(data)
         Response.new(success, message, data,
-          test: test?,
-          authorization: authorization_from(action, data),
-          cvv_result: data['cvv'],
-          avs_result: { code: data['avs'] }
+                     test: test?,
+                     authorization: authorization_from(action, data),
+                     cvv_result: data['cvv'],
+                     avs_result: { code: data['avs'] }
         )
       end
 

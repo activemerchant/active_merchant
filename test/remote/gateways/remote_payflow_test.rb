@@ -383,11 +383,11 @@ class RemotePayflowTest < Test::Unit::TestCase
   def test_recurring_with_initial_authorization
     response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
       @gateway.recurring(1000, @credit_card,
-        periodicity: :monthly,
-        initial_transaction: {
-          type: :purchase,
-          amount: 500
-        }
+                         periodicity: :monthly,
+                         initial_transaction: {
+                           type: :purchase,
+                           amount: 500
+                         }
       )
     end
 

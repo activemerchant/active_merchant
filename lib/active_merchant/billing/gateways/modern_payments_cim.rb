@@ -114,10 +114,9 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new indent: 2
         xml.instruct!
         xml.tag! 'env:Envelope',
-          { 'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema',
-            'xmlns:env' => 'http://schemas.xmlsoap.org/soap/envelope/',
-            'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance' } do
-
+                 { 'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema',
+                   'xmlns:env' => 'http://schemas.xmlsoap.org/soap/envelope/',
+                   'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance' } do
           xml.tag! 'env:Body' do
             xml.tag! action, { 'xmlns' => xmlns(action) } do
               xml.tag! 'clientId', @options[:login]
@@ -147,15 +146,15 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, params)
         data = ssl_post(url(action), build_request(action, params),
-          { 'Content-Type' => 'text/xml; charset=utf-8',
-            'SOAPAction' => "#{xmlns(action)}#{action}" }
+                        { 'Content-Type' => 'text/xml; charset=utf-8',
+                          'SOAPAction' => "#{xmlns(action)}#{action}" }
         )
 
         response = parse(action, data)
         Response.new(successful?(action, response), message_from(action, response), response,
-          test: test?,
-          authorization: authorization_from(action, response),
-          avs_result: { code: response[:avs_code] }
+                     test: test?,
+                     authorization: authorization_from(action, response),
+                     avs_result: { code: response[:avs_code] }
         )
       end
 

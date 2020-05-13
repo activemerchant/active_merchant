@@ -186,12 +186,12 @@ module ActiveMerchant #:nodoc:
         success = !response.key?('error')
 
         Response.new(success,
-          (success ? 'Transaction approved' : response['error']['message']),
-          response,
-          test: test?,
-          authorization: (success ? response['id'] : response['error']['charge']),
-          error_code: (success ? nil : STANDARD_ERROR_CODE_MAPPING[response['error']['code']])
-        )
+                     (success ? 'Transaction approved' : response['error']['message']),
+                     response,
+                     test: test?,
+                     authorization: (success ? response['id'] : response['error']['charge']),
+                     error_code: (success ? nil : STANDARD_ERROR_CODE_MAPPING[response['error']['code']])
+                    )
       end
 
       def headers(options = {})
@@ -259,7 +259,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def test?
-        (@options[:secret_key]&.include?('_test_'))
+        @options[:secret_key]&.include?('_test_')
       end
     end
   end

@@ -126,7 +126,7 @@ module ActiveMerchant #:nodoc:
         # debit
         options[:registrationId] = payment if payment.is_a?(String)
         execute_dbpa(options[:risk_workflow] ? 'PA.CP' : 'DB',
-          money, payment, options)
+                     money, payment, options)
       end
 
       def authorize(money, payment, options={})
@@ -357,7 +357,7 @@ module ActiveMerchant #:nodoc:
 
         success_regex = /^(000\.000\.|000\.100\.1|000\.[36])/
 
-        if success_regex =~ response['result']['code']
+        if success_regex&.match?(response['result']['code'])
           true
         else
           false

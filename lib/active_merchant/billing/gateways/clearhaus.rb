@@ -206,7 +206,7 @@ module ActiveMerchant #:nodoc:
 
       def generate_signature(body)
         key = OpenSSL::PKey::RSA.new(@options[:private_key])
-        hex = key.sign(OpenSSL::Digest.new('sha256'), body).unpack('H*').first
+        hex = key.sign(OpenSSL::Digest.new('sha256'), body).unpack1('H*')
 
         "#{@options[:signing_key]} RS256-hex #{hex}"
       end

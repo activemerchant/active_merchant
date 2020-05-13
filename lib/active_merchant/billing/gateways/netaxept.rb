@@ -123,7 +123,7 @@ module ActiveMerchant #:nodoc:
 
         success = false
         authorization = (raw['TransactionId'] || parameters[:transactionId])
-        if raw[:container] =~ /Exception|Error/
+        if /Exception|Error/.match?(raw[:container])
           message = (raw['Message'] || raw['Error']['Message'])
         elsif raw['Error'] && !raw['Error'].empty?
           message = (raw['Error']['ResponseText'] || raw['Error']['ResponseCode'])

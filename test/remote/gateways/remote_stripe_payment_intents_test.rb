@@ -11,15 +11,15 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     @three_ds_moto_enabled = 'pm_card_authenticationRequiredOnSetup'
     @three_ds_authentication_required = 'pm_card_authenticationRequired'
     @three_ds_credit_card = credit_card('4000000000003220',
-      verification_value: '737',
-      month: 10,
-      year: 2020
-    )
+                                        verification_value: '737',
+                                        month: 10,
+                                        year: 2020
+                                       )
     @visa_card = credit_card('4242424242424242',
-      verification_value: '737',
-      month: 10,
-      year: 2020
-    )
+                             verification_value: '737',
+                             month: 10,
+                             year: 2020
+                            )
     @destination_account = fixtures(:stripe_destination)[:stripe_user_id]
   end
 
@@ -543,7 +543,7 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
 
     refund = @gateway.refund(@amount - 20, intent_id)
     assert_failure refund
-    assert_match /has a status of requires_action/, refund.message
+    assert_match(/has a status of requires_action/, refund.message)
   end
 
   def test_successful_store_purchase_and_unstore

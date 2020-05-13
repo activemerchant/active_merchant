@@ -511,7 +511,7 @@ class StripeTest < Test::Unit::TestCase
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |_method, endpoint, data, _headers|
-      if %r{/charges} =~ endpoint
+      if %r{/charges}.match?(endpoint)
         assert_match('level3[merchant_reference]=123', data)
         assert_match('level3[customer_reference]=456', data)
         assert_match('level3[shipping_address_zip]=98765', data)
@@ -950,10 +950,10 @@ class StripeTest < Test::Unit::TestCase
   def test_add_creditcard_pads_eci_value
     post = {}
     credit_card = network_tokenization_credit_card('4242424242424242',
-      payment_cryptogram: '111111111100cryptogram',
-      verification_value: nil,
-      eci: '7'
-    )
+                                                   payment_cryptogram: '111111111100cryptogram',
+                                                   verification_value: nil,
+                                                   eci: '7'
+                                                  )
 
     @gateway.send(:add_creditcard, post, credit_card, {})
 
@@ -1365,10 +1365,10 @@ class StripeTest < Test::Unit::TestCase
     end.returns(successful_authorization_response)
 
     credit_card = network_tokenization_credit_card('4242424242424242',
-      payment_cryptogram: '111111111100cryptogram',
-      verification_value: nil,
-      eci: '05'
-    )
+                                                   payment_cryptogram: '111111111100cryptogram',
+                                                   verification_value: nil,
+                                                   eci: '05'
+                                                  )
 
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_instance_of Response, response
@@ -1386,11 +1386,11 @@ class StripeTest < Test::Unit::TestCase
     end.returns(successful_authorization_response)
 
     credit_card = network_tokenization_credit_card('4242424242424242',
-      payment_cryptogram: '111111111100cryptogram',
-      verification_value: nil,
-      eci: '05',
-      source: :android_pay
-    )
+                                                   payment_cryptogram: '111111111100cryptogram',
+                                                   verification_value: nil,
+                                                   eci: '05',
+                                                   source: :android_pay
+                                                  )
 
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_instance_of Response, response
@@ -1408,10 +1408,10 @@ class StripeTest < Test::Unit::TestCase
     end.returns(successful_authorization_response)
 
     credit_card = network_tokenization_credit_card('4242424242424242',
-      payment_cryptogram: '111111111100cryptogram',
-      verification_value: nil,
-      eci: '05'
-    )
+                                                   payment_cryptogram: '111111111100cryptogram',
+                                                   verification_value: nil,
+                                                   eci: '05'
+                                                  )
 
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_instance_of Response, response
@@ -1429,11 +1429,11 @@ class StripeTest < Test::Unit::TestCase
     end.returns(successful_authorization_response)
 
     credit_card = network_tokenization_credit_card('4242424242424242',
-      payment_cryptogram: '111111111100cryptogram',
-      verification_value: nil,
-      eci: '05',
-      source: :android_pay
-    )
+                                                   payment_cryptogram: '111111111100cryptogram',
+                                                   verification_value: nil,
+                                                   eci: '05',
+                                                   source: :android_pay
+                                                  )
 
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_instance_of Response, response

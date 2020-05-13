@@ -369,7 +369,7 @@ class NmiTest < Test::Unit::TestCase
 
   def test_supported_countries
     assert_equal 1,
-      (['US'] | NmiGateway.supported_countries).size
+                 (['US'] | NmiGateway.supported_countries).size
   end
 
   def test_supported_card_types
@@ -605,7 +605,7 @@ class NmiTest < Test::Unit::TestCase
       assert_match(/ccnumber=#{@credit_card.number}/, data)
       assert_match(/cvv=#{@credit_card.verification_value}/, data)
       assert_match(/ccexp=#{sprintf("%.2i", @credit_card.month)}#{@credit_card.year.to_s[-2..-1]}/,
-        data)
+                   data)
 
       test_level3_options(data) if options.any?
     end.respond_with(successful_validate_response)

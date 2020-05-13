@@ -286,8 +286,8 @@ module ActiveMerchant #:nodoc:
         response =
           begin
             parse(ssl_post(url, request, headers(request)))
-          rescue StandardError => error
-            parse(error.response.body)
+          rescue StandardError => e
+            parse(e.response.body)
           end
 
         Response.new(

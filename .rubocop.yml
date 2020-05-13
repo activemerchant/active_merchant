@@ -15,7 +15,11 @@ AllCops:
     - "lib/active_merchant/billing/gateways/paypal_express.rb"
     - "vendor/**/*"
   ExtraDetails: false
-  TargetRubyVersion: 2.3
+  # This setting disables any new cops in updated versions of RuboCop.
+  # To complete cleaning up the AM code, this should be removed to enable
+  # the cops added to newer versions of RuboCop.
+  NewCops: disable
+  TargetRubyVersion: 2.5
 
 # Active Merchant gateways are not amenable to length restrictions
 Metrics/ClassLength:
@@ -24,7 +28,7 @@ Metrics/ClassLength:
 Metrics/ModuleLength:
   Enabled: false
 
-Layout/AlignParameters:
+Layout/ParameterAlignment:
   EnforcedStyle: with_fixed_indentation
 
 Layout/DotPosition:
@@ -33,6 +37,6 @@ Layout/DotPosition:
 Layout/CaseIndentation:
   EnforcedStyle: end
 
-Layout/IndentHash:
+Layout/FirstHashElementIndentation:
   EnforcedStyle: consistent
 

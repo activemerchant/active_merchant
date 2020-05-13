@@ -159,10 +159,10 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(self.live_url, build_request(action, request), POST_HEADERS))
 
         Response.new(successful?(response), message_from(response), response,
-          test: test?,
-          authorization: authorization_from(response),
-          avs_result: { code: response[:avs] },
-          cvv_result: response[:cvv2]
+                     test: test?,
+                     authorization: authorization_from(response),
+                     avs_result: { code: response[:avs] },
+                     cvv_result: response[:cvv2]
         )
       rescue ResponseError => e
         case e.response.code

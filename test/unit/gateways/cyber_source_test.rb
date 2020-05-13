@@ -559,11 +559,11 @@ class CyberSourceTest < Test::Unit::TestCase
 
   def test_successful_auth_with_network_tokenization_for_visa
     credit_card = network_tokenization_credit_card('4111111111111111',
-      brand: 'visa',
-      transaction_id: '123',
-      eci: '05',
-      payment_cryptogram: '111111111100cryptogram'
-    )
+                                                   brand: 'visa',
+                                                   transaction_id: '123',
+                                                   eci: '05',
+                                                   payment_cryptogram: '111111111100cryptogram'
+                                                  )
 
     response = stub_comms do
       @gateway.authorize(@amount, credit_card, @options)
@@ -577,11 +577,11 @@ class CyberSourceTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_network_tokenization_for_visa
     credit_card = network_tokenization_credit_card('4111111111111111',
-      brand: 'visa',
-      transaction_id: '123',
-      eci: '05',
-      payment_cryptogram: '111111111100cryptogram'
-    )
+                                                   brand: 'visa',
+                                                   transaction_id: '123',
+                                                   eci: '05',
+                                                   payment_cryptogram: '111111111100cryptogram'
+                                                  )
 
     response = stub_comms do
       @gateway.purchase(@amount, credit_card, @options)
@@ -601,11 +601,11 @@ class CyberSourceTest < Test::Unit::TestCase
     end.returns(successful_purchase_response)
 
     credit_card = network_tokenization_credit_card('5555555555554444',
-      brand: 'master',
-      transaction_id: '123',
-      eci: '05',
-      payment_cryptogram: '111111111100cryptogram'
-    )
+                                                   brand: 'master',
+                                                   transaction_id: '123',
+                                                   eci: '05',
+                                                   payment_cryptogram: '111111111100cryptogram'
+                                                  )
 
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_success response
@@ -619,11 +619,11 @@ class CyberSourceTest < Test::Unit::TestCase
     end.returns(successful_purchase_response)
 
     credit_card = network_tokenization_credit_card('378282246310005',
-      brand: 'american_express',
-      transaction_id: '123',
-      eci: '05',
-      payment_cryptogram: Base64.encode64('111111111100cryptogram')
-    )
+                                                   brand: 'american_express',
+                                                   transaction_id: '123',
+                                                   eci: '05',
+                                                   payment_cryptogram: Base64.encode64('111111111100cryptogram')
+                                                  )
 
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_success response

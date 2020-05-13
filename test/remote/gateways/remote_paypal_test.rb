@@ -233,8 +233,8 @@ class PaypalTest < Test::Unit::TestCase
     assert_success response
 
     response = @gateway.transfer([@amount, 'joe@example.com'],
-      [600, 'jane@example.com', {note: 'Thanks for taking care of that'}],
-      subject: 'Your money')
+                                 [600, 'jane@example.com', {note: 'Thanks for taking care of that'}],
+                                 subject: 'Your money')
     assert_success response
   end
 

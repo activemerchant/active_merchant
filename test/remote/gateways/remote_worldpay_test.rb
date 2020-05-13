@@ -8,13 +8,13 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card('4111111111111111')
     @elo_credit_card = credit_card('4514 1600 0000 0008',
-      month: 10,
-      year: 2020,
-      first_name: 'John',
-      last_name: 'Smith',
-      verification_value: '737',
-      brand: 'elo'
-    )
+                                   month: 10,
+                                   year: 2020,
+                                   first_name: 'John',
+                                   last_name: 'Smith',
+                                   verification_value: '737',
+                                   brand: 'elo'
+                                  )
     @cabal_card = credit_card('6035220000000006')
     @naranja_card = credit_card('5895620000000002')
     @sodexo_voucher = credit_card('6060704495764400', brand: 'sodexo')

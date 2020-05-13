@@ -303,11 +303,11 @@ module ActiveMerchant #:nodoc:
         message = success ? 'Success' : message_from(response)
 
         Response.new(success, message, response,
-          test: test?,
-          authorization: authorization_from(response),
-          avs_result: { code: response[:avs_result] },
-          cvv_result: response[:cvv_result],
-          error_code: success ? nil : STANDARD_ERROR_CODE_MAPPING[response[:dsix_return_code]])
+                     test: test?,
+                     authorization: authorization_from(response),
+                     avs_result: { code: response[:avs_result] },
+                     cvv_result: response[:cvv_result],
+                     error_code: success ? nil : STANDARD_ERROR_CODE_MAPPING[response[:dsix_return_code]])
       end
 
       def message_from(response)

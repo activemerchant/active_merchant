@@ -201,10 +201,10 @@ module ActiveMerchant #:nodoc:
         authorization = authorization_from(success, parameters, raw)
 
         Response.new(success, raw['responsetext'], raw,
-          test: test?,
-          authorization: authorization,
-          avs_result: { code: raw['avsresponse']},
-          cvv_result: raw['cvvresponse']
+                     test: test?,
+                     authorization: authorization,
+                     avs_result: { code: raw['avsresponse']},
+                     cvv_result: raw['cvvresponse']
         )
       end
 

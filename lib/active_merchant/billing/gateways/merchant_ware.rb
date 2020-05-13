@@ -266,7 +266,7 @@ module ActiveMerchant #:nodoc:
 
         document = REXML::Document.new(http_response.body)
 
-        node     = REXML::XPath.first(document, '//soap:Fault')
+        node = REXML::XPath.first(document, '//soap:Fault')
 
         node.elements.each do |element|
           response[element.name] = element.text
@@ -291,8 +291,8 @@ module ActiveMerchant #:nodoc:
       def commit(action, request, v4 = false)
         begin
           data = ssl_post(url(v4), request,
-            'Content-Type' => 'text/xml; charset=utf-8',
-            'SOAPAction'   => soap_action(action, v4)
+                          'Content-Type' => 'text/xml; charset=utf-8',
+                          'SOAPAction'   => soap_action(action, v4)
           )
           response = parse(action, data)
         rescue ActiveMerchant::ResponseError => e
@@ -300,10 +300,10 @@ module ActiveMerchant #:nodoc:
         end
 
         Response.new(response[:success], response[:message], response,
-          test: test?,
-          authorization: authorization_from(response),
-          avs_result: { code: response['AVSResponse'] },
-          cvv_result: response['CVResponse']
+                     test: test?,
+                     authorization: authorization_from(response),
+                     avs_result: { code: response['AVSResponse'] },
+                     cvv_result: response['CVResponse']
         )
       end
 

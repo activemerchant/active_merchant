@@ -112,11 +112,11 @@ module ActiveMerchant #:nodoc:
         response = parse(raw_response)
 
         Response.new(success?(response),
-          message_from(response[:ewaytrxnerror]),
-          response,
-          authorization: response[:ewaytrxnnumber],
-          test: test?
-        )
+                     message_from(response[:ewaytrxnerror]),
+                     response,
+                     authorization: response[:ewaytrxnnumber],
+                     test: test?
+                    )
       end
 
       def success?(response)

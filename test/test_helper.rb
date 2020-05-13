@@ -13,6 +13,8 @@ require 'comm_stub'
 require 'active_support/core_ext/integer/time'
 require 'active_support/core_ext/numeric/time'
 require 'active_support/core_ext/time/acts_like'
+require 'active_support/core_ext/array/extract_options'
+require 'active_support/core_ext/kernel/singleton_class'
 
 ActiveMerchant::Billing::Base.mode = :test
 
@@ -136,7 +138,7 @@ module ActiveMerchant
   end
 
   module Fixtures
-    HOME_DIR = RUBY_PLATFORM =~ /mswin32/ ? ENV['HOMEPATH'] : ENV['HOME'] unless defined?(HOME_DIR)
+    HOME_DIR = RUBY_PLATFORM.match?(/mswin32/) ? ENV['HOMEPATH'] : ENV['HOME'] unless defined?(HOME_DIR)
     LOCAL_CREDENTIALS = File.join(HOME_DIR.to_s, '.active_merchant/fixtures.yml') unless defined?(LOCAL_CREDENTIALS)
     DEFAULT_CREDENTIALS = File.join(File.dirname(__FILE__), 'fixtures.yml') unless defined?(DEFAULT_CREDENTIALS)
 
@@ -214,10 +216,10 @@ module ActiveMerchant
       }.update(options)
 
       ActiveMerchant::Billing::ApplePayPaymentToken.new(defaults[:payment_data],
-        payment_instrument_name: defaults[:payment_instrument_name],
-        payment_network: defaults[:payment_network],
-        transaction_identifier: defaults[:transaction_identifier]
-      )
+                                                        payment_instrument_name: defaults[:payment_instrument_name],
+                                                        payment_network: defaults[:payment_network],
+                                                        transaction_identifier: defaults[:transaction_identifier]
+                                                       )
     end
 
     def address(options = {})

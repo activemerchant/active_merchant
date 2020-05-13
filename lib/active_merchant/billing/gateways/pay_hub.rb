@@ -183,14 +183,14 @@ module ActiveMerchant #:nodoc:
         end
 
         Response.new(success,
-          response_message(response),
-          response,
-          test: test?,
-          avs_result: {code: response['AVS_RESULT_CODE']},
-          cvv_result: response['VERIFICATION_RESULT_CODE'],
-          error_code: (success ? nil : STANDARD_ERROR_CODE_MAPPING[response['RESPONSE_CODE']]),
-          authorization: response['TRANSACTION_ID']
-        )
+                     response_message(response),
+                     response,
+                     test: test?,
+                     avs_result: {code: response['AVS_RESULT_CODE']},
+                     cvv_result: response['VERIFICATION_RESULT_CODE'],
+                     error_code: (success ? nil : STANDARD_ERROR_CODE_MAPPING[response['RESPONSE_CODE']]),
+                     authorization: response['TRANSACTION_ID']
+                    )
       end
 
       def response_error(raw_response)

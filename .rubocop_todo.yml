@@ -20,14 +20,14 @@ Gemspec/OrderedDependencies:
 # SupportedHashRocketStyles: key, separator, table
 # SupportedColonStyles: key, separator, table
 # SupportedLastArgumentHashStyles: always_inspect, always_ignore, ignore_implicit, ignore_explicit
-Layout/AlignHash:
+Layout/HashAlignment:
   Enabled: false
 
 # Offense count: 392
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle.
 # SupportedStyles: auto_detection, squiggly, active_support, powerpack, unindent
-Layout/IndentHeredoc:
+Layout/HeredocIndentation:
   Enabled: false
 
 # Offense count: 232
@@ -63,7 +63,7 @@ Lint/FormatParameterMismatch:
     - 'test/unit/credit_card_formatting_test.rb'
 
 # Offense count: 2
-Lint/HandleExceptions:
+Lint/SuppressedException:
   Exclude:
     - 'lib/active_merchant/billing/gateways/mastercard.rb'
     - 'lib/active_merchant/billing/gateways/trust_commerce.rb'
@@ -186,7 +186,7 @@ Naming/PredicateName:
 # Offense count: 14
 # Configuration parameters: MinNameLength, AllowNamesEndingInNumbers, AllowedNames, ForbiddenNames.
 # AllowedNames: io, id, to, by, on, in, at, ip, db
-Naming/UncommunicativeMethodParamName:
+Naming/MethodParameterName:
   Exclude:
     - 'lib/active_merchant/billing/gateways/blue_snap.rb'
     - 'lib/active_merchant/billing/gateways/cyber_source.rb'
@@ -228,28 +228,6 @@ Naming/VariableNumber:
     - 'test/unit/gateways/merchant_ware_version_four_test.rb'
     - 'test/unit/gateways/orbital_test.rb'
     - 'test/unit/gateways/paypal/paypal_common_api_test.rb'
-
-# Offense count: 4
-# Cop supports --auto-correct.
-Performance/RedundantMatch:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/opp.rb'
-    - 'test/unit/gateways/payu_latam_test.rb'
-
-# Offense count: 11
-# Cop supports --auto-correct.
-Performance/StringReplacement:
-  Exclude:
-    - 'lib/active_merchant/billing/compatibility.rb'
-    - 'lib/active_merchant/billing/gateways/card_connect.rb'
-    - 'lib/active_merchant/billing/gateways/firstdata_e4.rb'
-    - 'lib/active_merchant/billing/gateways/merchant_ware.rb'
-    - 'lib/active_merchant/billing/gateways/merchant_ware_version_four.rb'
-    - 'lib/active_merchant/billing/gateways/orbital.rb'
-    - 'lib/active_merchant/billing/gateways/quickbooks.rb'
-    - 'lib/active_merchant/billing/gateways/quickpay/quickpay_v10.rb'
-    - 'lib/active_merchant/billing/gateways/realex.rb'
-    - 'test/unit/gateways/nab_transact_test.rb'
 
 # Offense count: 2
 # Configuration parameters: EnforcedStyle.
@@ -338,13 +316,6 @@ Style/BlockComments:
 # FunctionalMethods: let, let!, subject, watch
 # IgnoredMethods: lambda, proc, it
 Style/BlockDelimiters:
-  Enabled: false
-
-# Offense count: 440
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: braces, no_braces, context_dependent
-Style/BracesAroundHashParameters:
   Enabled: false
 
 # Offense count: 2
@@ -544,21 +515,11 @@ Style/For:
 Style/FormatString:
   Enabled: false
 
-# Offense count: 22
+# Offense count: ~100
 # Configuration parameters: EnforcedStyle.
 # SupportedStyles: annotated, template, unannotated
 Style/FormatStringToken:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/redsys.rb'
-    - 'lib/active_merchant/connection.rb'
-    - 'lib/active_merchant/network_connection_retries.rb'
-    - 'test/remote/gateways/remote_balanced_test.rb'
-    - 'test/remote/gateways/remote_openpay_test.rb'
-    - 'test/unit/gateways/balanced_test.rb'
-    - 'test/unit/gateways/elavon_test.rb'
-    - 'test/unit/gateways/exact_test.rb'
-    - 'test/unit/gateways/firstdata_e4_test.rb'
-    - 'test/unit/gateways/safe_charge_test.rb'
+  Enabled: false
 
 # Offense count: 679
 # Cop supports --auto-correct.
@@ -955,6 +916,6 @@ Style/ZeroLengthPredicate:
 # Offense count: 9321
 # Configuration parameters: AllowHeredoc, AllowURI, URISchemes, IgnoreCopDirectives, IgnoredPatterns.
 # URISchemes: http, https
-Metrics/LineLength:
+Layout/LineLength:
   Max: 2602
 

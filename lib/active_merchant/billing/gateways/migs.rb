@@ -282,11 +282,11 @@ module ActiveMerchant #:nodoc:
         cvv_result_code = 'P' if cvv_result_code == 'Unsupported'
 
         Response.new(success?(response), response[:Message], response,
-          test: test?,
-          authorization: response[:TransactionNo],
-          fraud_review: fraud_review?(response),
-          avs_result: { code: avs_response_code },
-          cvv_result: cvv_result_code
+                     test: test?,
+                     authorization: response[:TransactionNo],
+                     fraud_review: fraud_review?(response),
+                     avs_result: { code: avs_response_code },
+                     cvv_result: cvv_result_code
         )
       end
 

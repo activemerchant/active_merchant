@@ -81,12 +81,12 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_visa_network_tokenization_credit_card_with_eci
     network_card = network_tokenization_credit_card('4788250000028291',
-      payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
-      transaction_id: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
-      verification_value: '111',
-      brand: 'visa',
-      eci: '5'
-    )
+                                                    payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
+                                                    transaction_id: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
+                                                    verification_value: '111',
+                                                    brand: 'visa',
+                                                    eci: '5'
+                                                   )
     assert response = @gateway.purchase(3000, network_card, @options)
     assert_success response
     assert_equal 'Approved', response.message
@@ -95,11 +95,11 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_master_card_network_tokenization_credit_card
     network_card = network_tokenization_credit_card('4788250000028291',
-      payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
-      transaction_id: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
-      verification_value: '111',
-      brand: 'master'
-    )
+                                                    payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
+                                                    transaction_id: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
+                                                    verification_value: '111',
+                                                    brand: 'master'
+                                                   )
     assert response = @gateway.purchase(3000, network_card, @options)
     assert_success response
     assert_equal 'Approved', response.message
@@ -108,11 +108,11 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_american_express_network_tokenization_credit_card
     network_card = network_tokenization_credit_card('4788250000028291',
-      payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
-      transaction_id: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
-      verification_value: '111',
-      brand: 'american_express'
-    )
+                                                    payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
+                                                    transaction_id: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
+                                                    verification_value: '111',
+                                                    brand: 'american_express'
+                                                   )
     assert response = @gateway.purchase(3000, network_card, @options)
     assert_success response
     assert_equal 'Approved', response.message
@@ -121,11 +121,11 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_discover_network_tokenization_credit_card
     network_card = network_tokenization_credit_card('4788250000028291',
-      payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
-      transaction_id: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
-      verification_value: '111',
-      brand: 'discover'
-    )
+                                                    payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
+                                                    transaction_id: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
+                                                    verification_value: '111',
+                                                    brand: 'discover'
+                                                   )
     assert response = @gateway.purchase(3000, network_card, @options)
     assert_success response
     assert_equal 'Approved', response.message

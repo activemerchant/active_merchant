@@ -262,8 +262,8 @@ module ActiveMerchant #:nodoc:
       def commit(action, request)
         begin
           data = ssl_post(url, request,
-            'Content-Type' => 'text/xml; charset=utf-8',
-            'SOAPAction'   => soap_action(action)
+                          'Content-Type' => 'text/xml; charset=utf-8',
+                          'SOAPAction'   => soap_action(action)
           )
           response = parse(action, data)
         rescue ActiveMerchant::ResponseError => e
@@ -271,10 +271,10 @@ module ActiveMerchant #:nodoc:
         end
 
         Response.new(response[:success], response[:message], response,
-          test: test?,
-          authorization: authorization_from(response),
-          avs_result: { code: response['AvsResponse'] },
-          cvv_result: response['CvResponse']
+                     test: test?,
+                     authorization: authorization_from(response),
+                     avs_result: { code: response['AvsResponse'] },
+                     cvv_result: response['CvResponse']
         )
       end
 

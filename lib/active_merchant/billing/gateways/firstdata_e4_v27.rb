@@ -229,7 +229,7 @@ module ActiveMerchant #:nodoc:
                 (credit_card.respond_to?(:eci) ? credit_card.eci : nil) || options[:eci] || DEFAULT_ECI
               end
 
-        xml.tag! 'Ecommerce_Flag', eci.to_s =~ /^[0-9]+$/ ? eci.to_s.rjust(2, '0') : eci
+        xml.tag! 'Ecommerce_Flag', /^[0-9]+$/.match?(eci.to_s) ? eci.to_s.rjust(2, '0') : eci
       end
 
       def add_credit_card_verification_strings(xml, credit_card, options)
@@ -361,11 +361,11 @@ module ActiveMerchant #:nodoc:
         end
 
         Response.new(successful?(response), message_from(response), response,
-          test: test?,
-          authorization: successful?(response) ? response_authorization(action, response, credit_card) : '',
-          avs_result: {code: response[:avs]},
-          cvv_result: response[:cvv2],
-          error_code: standard_error_code(response)
+                     test: test?,
+                     authorization: successful?(response) ? response_authorization(action, response, credit_card) : '',
+                     avs_result: {code: response[:avs]},
+                     cvv_result: response[:cvv2],
+                     error_code: standard_error_code(response)
         )
       end
 

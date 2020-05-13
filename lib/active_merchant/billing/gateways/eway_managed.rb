@@ -223,8 +223,8 @@ module ActiveMerchant #:nodoc:
         response = parse(raw)
 
         EwayResponse.new(response[:success], response[:message], response,
-          test: test?,
-          authorization: response[:auth_code]
+                         test: test?,
+                         authorization: response[:auth_code]
         )
       end
 

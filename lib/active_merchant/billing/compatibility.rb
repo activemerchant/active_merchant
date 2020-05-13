@@ -113,6 +113,6 @@ module ActiveMerchant
       end
     end
 
-    Compatibility::Model.send(:include, Rails::Model)
+    Compatibility::Model.include Rails::Model
   end
 end

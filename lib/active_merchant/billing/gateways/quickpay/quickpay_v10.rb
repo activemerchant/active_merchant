@@ -154,8 +154,8 @@ module ActiveMerchant
         end
 
         Response.new(success, message_from(success, response), response,
-          test: test?,
-          authorization: authorization_from(response)
+                     test: test?,
+                     authorization: authorization_from(response)
         )
       end
 

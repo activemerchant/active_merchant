@@ -157,16 +157,16 @@ module ActiveMerchant #:nodoc:
           }, options)[:credit_card]
 
           result = @braintree_gateway.customer.update(vault_id,
-            first_name: creditcard.first_name,
-            last_name: creditcard.last_name,
-            email: scrub_email(options[:email]),
-            phone: options[:phone] || (options[:billing_address][:phone] if options[:billing_address] &&
-              options[:billing_address][:phone]),
-            credit_card: credit_card_params
-          )
+                                                      first_name: creditcard.first_name,
+                                                      last_name: creditcard.last_name,
+                                                      email: scrub_email(options[:email]),
+                                                      phone: options[:phone] || (options[:billing_address][:phone] if options[:billing_address] &&
+                                                        options[:billing_address][:phone]),
+                                                      credit_card: credit_card_params
+                                                     )
           Response.new(result.success?, message_from_result(result),
-            braintree_customer: (customer_hash(@braintree_gateway.customer.find(vault_id), :include_credit_cards) if result.success?),
-            customer_vault_id: (result.customer.id if result.success?)
+                       braintree_customer: (customer_hash(@braintree_gateway.customer.find(vault_id), :include_credit_cards) if result.success?),
+                       customer_vault_id: (result.customer.id if result.success?)
           )
         end
       end
@@ -203,12 +203,10 @@ module ActiveMerchant #:nodoc:
 
       def check_customer_exists(customer_vault_id)
         commit do
-          begin
-            @braintree_gateway.customer.find(customer_vault_id)
-            ActiveMerchant::Billing::Response.new(true, 'Customer found', {exists: true}, authorization: customer_vault_id)
-          rescue Braintree::NotFoundError
-            ActiveMerchant::Billing::Response.new(true, 'Customer not found', {exists: false})
-          end
+          @braintree_gateway.customer.find(customer_vault_id)
+          ActiveMerchant::Billing::Response.new(true, 'Customer found', {exists: true}, authorization: customer_vault_id)
+        rescue Braintree::NotFoundError
+          ActiveMerchant::Billing::Response.new(true, 'Customer not found', {exists: false})
         end
       end
 
@@ -239,12 +237,12 @@ module ActiveMerchant #:nodoc:
           }.merge credit_card_params
           result = @braintree_gateway.customer.create(merge_credit_card_options(parameters, options))
           Response.new(result.success?, message_from_result(result),
-            {
-              braintree_customer: (customer_hash(result.customer, :include_credit_cards) if result.success?),
-              customer_vault_id: (result.customer.id if result.success?),
-              credit_card_token: (result.customer.credit_cards[0].token if result.success?)
-            },
-            authorization: (result.customer.id if result.success?)
+                       {
+                         braintree_customer: (customer_hash(result.customer, :include_credit_cards) if result.success?),
+                         customer_vault_id: (result.customer.id if result.success?),
+                         credit_card_token: (result.customer.credit_cards[0].token if result.success?)
+                       },
+                       authorization: (result.customer.id if result.success?)
           )
         end
       end
@@ -335,8 +333,8 @@ module ActiveMerchant #:nodoc:
 
       def commit(&block)
         yield
-      rescue Braintree::BraintreeError => ex
-        Response.new(false, ex.class.to_s)
+      rescue Braintree::BraintreeError => e
+        Response.new(false, e.class.to_s)
       end
 
       def message_from_result(result)

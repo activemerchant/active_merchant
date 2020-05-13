@@ -153,8 +153,8 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
   def test_successful_authorize_with_house_number_and_street
     response = stub_comms do
       @gateway.authorize(@amount,
-        @credit_card,
-        @options_with_house_number_and_street)
+                         @credit_card,
+                         @options_with_house_number_and_street)
     end.check_request do |endpoint, data, headers|
       assert_match(/billingAddress.street=Top\+Level\+Drive/, data)
       assert_match(/billingAddress.houseNumberOrName=1000/, data)
@@ -168,8 +168,8 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
   def test_successful_authorize_with_shipping_house_number_and_street
     response = stub_comms do
       @gateway.authorize(@amount,
-        @credit_card,
-        @options_with_shipping_house_number_and_shipping_street)
+                         @credit_card,
+                         @options_with_shipping_house_number_and_shipping_street)
     end.check_request do |endpoint, data, headers|
       assert_match(/billingAddress.street=Top\+Level\+Drive/, data)
       assert_match(/billingAddress.houseNumberOrName=1000/, data)
@@ -330,7 +330,7 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.credit(@amount, @credit_card, @options_with_credit_fields.merge({third_party_payout: true}))
     end.check_request do |endpoint, data, headers|
-      if /storeDetailAndSubmitThirdParty/ =~ endpoint
+      if /storeDetailAndSubmitThirdParty/.match?(endpoint)
         assert_match(%r{/storeDetailAndSubmitThirdParty}, endpoint)
         assert_match(/dateOfBirth=1990-10-11&/, data)
         assert_match(/entityType=NaturalPerson&/, data)

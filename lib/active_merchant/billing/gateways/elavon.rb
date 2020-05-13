@@ -274,10 +274,10 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(test? ? self.test_url : self.live_url, post_data(parameters, options)))
 
         Response.new(response['result'] == '0', message_from(response), response,
-          test: @options[:test] || test?,
-          authorization: authorization_from(response),
-          avs_result: { code: response['avs_response'] },
-          cvv_result: response['cvv2_response']
+                     test: @options[:test] || test?,
+                     authorization: authorization_from(response),
+                     avs_result: { code: response['avs_response'] },
+                     cvv_result: response['cvv2_response']
         )
       end
 

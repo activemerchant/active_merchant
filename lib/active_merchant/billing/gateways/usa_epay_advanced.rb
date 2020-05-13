@@ -1033,12 +1033,12 @@ module ActiveMerchant #:nodoc:
         soap = Builder::XmlMarkup.new
         soap.instruct!(:xml, version: '1.0', encoding: 'utf-8')
         soap.tag! 'SOAP-ENV:Envelope',
-          'xmlns:SOAP-ENV' => 'http://schemas.xmlsoap.org/soap/envelope/',
-          'xmlns:ns1' => 'urn:usaepay',
-          'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema',
-          'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance',
-          'xmlns:SOAP-ENC' => 'http://schemas.xmlsoap.org/soap/encoding/',
-          'SOAP-ENV:encodingStyle' => 'http://schemas.xmlsoap.org/soap/encoding/' do
+                  'xmlns:SOAP-ENV' => 'http://schemas.xmlsoap.org/soap/envelope/',
+                  'xmlns:ns1' => 'urn:usaepay',
+                  'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema',
+                  'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance',
+                  'xmlns:SOAP-ENC' => 'http://schemas.xmlsoap.org/soap/encoding/',
+                  'SOAP-ENV:encodingStyle' => 'http://schemas.xmlsoap.org/soap/encoding/' do
           soap.tag! 'SOAP-ENV:Body' do
             send("build_#{action}", soap, options)
           end
@@ -1336,7 +1336,7 @@ module ActiveMerchant #:nodoc:
         when payment_method[:method].kind_of?(ActiveMerchant::Billing::CreditCard)
           build_tag soap, :string, 'CardNumber', payment_method[:method].number
           build_tag soap, :string, 'CardExpiration',
-            "#{"%02d" % payment_method[:method].month}#{payment_method[:method].year.to_s[-2..-1]}"
+                    "#{"%02d" % payment_method[:method].month}#{payment_method[:method].year.to_s[-2..-1]}"
           if options[:billing_address]
             build_tag soap, :string, 'AvsStreet', options[:billing_address][:address1]
             build_tag soap, :string, 'AvsZip', options[:billing_address][:zip]
@@ -1520,8 +1520,8 @@ module ActiveMerchant #:nodoc:
 
         begin
           soap = ssl_post(url, request, 'Content-Type' => 'text/xml')
-        rescue ActiveMerchant::ResponseError => error
-          soap = error.response.body
+        rescue ActiveMerchant::ResponseError => e
+          soap = e.response.body
         end
 
         build_response(action, soap)

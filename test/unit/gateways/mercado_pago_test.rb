@@ -7,26 +7,26 @@ class MercadoPagoTest < Test::Unit::TestCase
     @gateway = MercadoPagoGateway.new(access_token: 'access_token')
     @credit_card = credit_card
     @elo_credit_card = credit_card('5067268650517446',
-      month: 10,
-      year: 2020,
-      first_name: 'John',
-      last_name: 'Smith',
-      verification_value: '737'
-    )
+                                   month: 10,
+                                   year: 2020,
+                                   first_name: 'John',
+                                   last_name: 'Smith',
+                                   verification_value: '737'
+                                  )
     @cabal_credit_card = credit_card('6035227716427021',
-      month: 10,
-      year: 2020,
-      first_name: 'John',
-      last_name: 'Smith',
-      verification_value: '737'
-    )
+                                     month: 10,
+                                     year: 2020,
+                                     first_name: 'John',
+                                     last_name: 'Smith',
+                                     verification_value: '737'
+                                    )
     @naranja_credit_card = credit_card('5895627823453005',
-      month: 10,
-      year: 2020,
-      first_name: 'John',
-      last_name: 'Smith',
-      verification_value: '123'
-    )
+                                       month: 10,
+                                       year: 2020,
+                                       first_name: 'John',
+                                       last_name: 'Smith',
+                                       verification_value: '123'
+                                      )
     @amount = 100
 
     @options = {
@@ -309,7 +309,7 @@ class MercadoPagoTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
-      if data =~ /payment_method_id/
+      if /payment_method_id/.match?(data)
         assert_match(/"foo":"bar"/, data)
         assert_match(/"baz":"quux"/, data)
       end

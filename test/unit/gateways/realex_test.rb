@@ -4,7 +4,7 @@ class RealexTest < Test::Unit::TestCase
   class ActiveMerchant::Billing::RealexGateway
     # For the purposes of testing, lets redefine some protected methods as public.
     public :build_purchase_or_authorization_request, :build_refund_request, :build_void_request,
-      :build_capture_request, :build_verify_request, :build_credit_request
+           :build_capture_request, :build_verify_request, :build_credit_request
   end
 
   def setup

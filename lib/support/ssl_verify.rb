@@ -80,9 +80,9 @@ class SSLVerify
     end
 
     return :success
-  rescue OpenSSL::SSL::SSLError => ex
-    return :fail, ex.inspect
-  rescue Net::HTTPBadResponse, Errno::ETIMEDOUT, EOFError, SocketError, Errno::ECONNREFUSED, Timeout::Error => ex
-    return :error, ex.inspect
+  rescue OpenSSL::SSL::SSLError => e
+    return :fail, e.inspect
+  rescue Net::HTTPBadResponse, Errno::ETIMEDOUT, EOFError, SocketError, Errno::ECONNREFUSED, Timeout::Error => e
+    return :error, e.inspect
   end
 end

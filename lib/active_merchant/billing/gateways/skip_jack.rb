@@ -264,10 +264,10 @@ module ActiveMerchant #:nodoc:
 
         # Pass along the original transaction id in the case an update transaction
         Response.new(response[:success], message_from(response, action), response,
-          test: test?,
-          authorization: response[:szTransactionFileName] || parameters[:szTransactionId],
-          avs_result: { code: response[:szAVSResponseCode] },
-          cvv_result: response[:szCVV2ResponseCode]
+                     test: test?,
+                     authorization: response[:szTransactionFileName] || parameters[:szTransactionId],
+                     avs_result: { code: response[:szAVSResponseCode] },
+                     cvv_result: response[:szCVV2ResponseCode]
         )
       end
 

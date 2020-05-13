@@ -6,9 +6,9 @@ class RemoteBarclaysEpdqExtraPlusTest < Test::Unit::TestCase
   def setup
     @gateway = BarclaysEpdqExtraPlusGateway.new(fixtures(:barclays_epdq_extra_plus))
     @amount = 100
-    @credit_card     = credit_card('4000100011112224', verification_value: '987')
-    @mastercard      = credit_card('5399999999999999', brand: 'mastercard')
-    @declined_card   = credit_card('1111111111111111')
+    @credit_card = credit_card('4000100011112224', verification_value: '987')
+    @mastercard = credit_card('5399999999999999', brand: 'mastercard')
+    @declined_card = credit_card('1111111111111111')
     @credit_card_d3d = credit_card('4000000000000002', verification_value: '111')
     @options = {
       order_id: generate_unique_id[0...30],

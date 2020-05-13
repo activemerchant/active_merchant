@@ -488,7 +488,7 @@ module ActiveMerchant
 
       def add_swipe_data(xml, credit_card)
         TRACKS.each do |key, regex|
-          if regex.match(credit_card.track_data)
+          if regex.match?(credit_card.track_data)
             @valid_track_data = true
             xml.payment do
               xml.trackData do

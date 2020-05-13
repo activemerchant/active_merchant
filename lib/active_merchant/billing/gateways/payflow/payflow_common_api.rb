@@ -181,7 +181,7 @@ module ActiveMerchant #:nodoc:
           node.xpath('.//*').each { |e| parse_element(payment_result_response, e) }
         when node.xpath('.//*').to_a.any?
           node.xpath('.//*').each { |e| parse_element(response, e) }
-        when node_name.to_s =~ /amt$/
+        when /amt$/.match?(node_name.to_s)
           # *Amt elements don't put the value in the #text - instead they use a Currency attribute
           response[node_name] = node.attributes['Currency'].to_s
         when node_name == :ext_data
