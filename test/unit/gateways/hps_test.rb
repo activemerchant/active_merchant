@@ -48,6 +48,30 @@ class HpsTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_check_purchase_does_not_raise_no_method_error_when_account_type_missing
+    check = @check.dup
+    check.account_type = nil
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@check_amount, check, @options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/<hps:CheckSale><hps:Block1><hps:CheckAction>SALE<\/hps:CheckAction>/, data)
+    end.respond_with(successful_check_purchase_response)
+
+    assert_success response
+  end
+
+  def test_check_purchase_does_not_raise_no_method_error_when_account_holder_type_missing
+    check = @check.dup
+    check.account_holder_type = nil
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@check_amount, check, @options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/<hps:CheckSale><hps:Block1><hps:CheckAction>SALE<\/hps:CheckAction>/, data)
+    end.respond_with(successful_check_purchase_response)
+
+    assert_success response
+  end
+
   def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_charge_response)
 
