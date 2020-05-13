@@ -849,6 +849,7 @@ class CyberSourceTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       assert_match("<partnerSolutionID>#{partner_id}</partnerSolutionID>", data)
     end.respond_with(successful_capture_response)
+  ensure
     CyberSourceGateway.application_id = nil
   end
 
@@ -872,7 +873,7 @@ class CyberSourceTest < Test::Unit::TestCase
     end.check_request do |_endpoint, body, _headers|
       assert_xml_valid_to_xsd(body)
       assert_match %r'<c:invalidField>c:billTo/c:postalCode</c:invalidField><'m, body
-    end.respond_with(missing_field_response)
+    end.respond_with(invalid_field_response)
     assert_failure response
   end
 
