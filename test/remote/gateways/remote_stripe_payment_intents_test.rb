@@ -180,7 +180,8 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
       currency: 'USD',
       customer: @customer,
       confirm: true,
-      return_url: 'https://www.example.com'
+      return_url: 'https://www.example.com',
+      execute_threed: true
     }
 
     assert response = @gateway.create_intent(@amount, @three_ds_credit_card, options)
@@ -254,6 +255,19 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
 
     assert response = @gateway.authorize(@amount, @three_ds_credit_card, options)
     assert_failure response
+  end
+
+  def test_purchase_fails_on_unexpected_3ds_initiation
+    options = {
+      currency: 'USD',
+      customer: @customer,
+      confirm: true,
+      return_url: 'https://www.example.com'
+    }
+
+    assert response = @gateway.purchase(100, @three_ds_credit_card, options)
+    assert_failure response
+    assert_match 'Received unexpected 3DS authentication response', response.message
   end
 
   def test_create_payment_intent_with_shipping_address

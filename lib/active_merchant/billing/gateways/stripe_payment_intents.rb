@@ -295,6 +295,16 @@ module ActiveMerchant #:nodoc:
 
         options.merge(idempotency_key: "#{options[:idempotency_key]}-#{suffix}")
       end
+
+      def success_from(response, options)
+        if response['status'] == 'requires_action' && !options[:execute_threed]
+          response['error'] = {}
+          response['error']['message'] = 'Received unexpected 3DS authentication response. Use the execute_threed option to initiate a proper 3DS flow.'
+          return false
+        end
+
+        super(response, options)
+      end
     end
   end
 end

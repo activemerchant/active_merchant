@@ -647,7 +647,7 @@ module ActiveMerchant #:nodoc:
         add_expand_parameters(parameters, options) if parameters
         response = api_request(method, url, parameters, options)
         response['webhook_id'] = options[:webhook_id] if options[:webhook_id]
-        success = success_from(response)
+        success = success_from(response, options)
 
         card = card_from_response(response)
         avs_code = AVS_CODE_TRANSLATOR["line1: #{card["address_line1_check"]}, zip: #{card["address_zip_check"]}"]
@@ -681,7 +681,7 @@ module ActiveMerchant #:nodoc:
         success ? 'Transaction approved' : response.fetch('error', {'message' => 'No error details'})['message']
       end
 
-      def success_from(response)
+      def success_from(response, options)
         !response.key?('error') && response['status'] != 'failed'
       end
 
