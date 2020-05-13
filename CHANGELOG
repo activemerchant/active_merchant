@@ -4,7 +4,7 @@
 * Elavon: Implement true verify action [leila-alderman] #3610
 * Vantiv Express: Implement true verify [leila-alderman] #3617
 * Litle: Pass expiration data for basis payment method [therufs] #3606
-* Stripe Payment Intents: Handle errors and intents without an associated charge in refund [britth] #3627
+* Stripe Payment Intents: Error handling and backwards compatibility within refund [britth] #3627
 
 == Version 1.107.3 (May 8, 2020)
 * Realex: Ignore IPv6 unsupported addresses [elfassy] #3622
