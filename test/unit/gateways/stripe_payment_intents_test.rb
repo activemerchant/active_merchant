@@ -141,6 +141,23 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     assert_equal 'invalid_request_error', create.params.dig('error', 'type')
   end
 
+  def test_failed_refund_due_to_service_unavailability
+    @gateway.expects(:ssl_request).returns(failed_service_response)
+
+    assert refund = @gateway.refund(@amount, 'pi_123')
+    assert_failure refund
+    assert_match /Error while communicating with one of our backends/, refund.params.dig('error', 'message')
+  end
+
+  def test_failed_refund_due_to_pending_3ds_auth
+    @gateway.expects(:ssl_request).returns(successful_confirm_3ds2_intent_response)
+
+    assert refund = @gateway.refund(@amount, 'pi_123')
+    assert_failure refund
+    assert_equal 'requires_action', refund.params['status']
+    assert_match /payment_intent has a status of requires_action/, refund.message
+  end
+
   private
 
   def successful_create_intent_response
@@ -323,6 +340,12 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
   def failed_payment_method_response
     <<-RESPONSE
       {"error": {"code": "validation_error", "message": "You must verify a phone number on your Stripe account before you can send raw credit card numbers to the Stripe API. You can avoid this requirement by using Stripe.js, the Stripe mobile bindings, or Stripe Checkout. For more information, see https://dashboard.stripe.com/phone-verification.", "type": "invalid_request_error"}}
+    RESPONSE
+  end
+
+  def failed_service_response
+    <<-RESPONSE
+      {"error": {"message": "Error while communicating with one of our backends.  Sorry about that!  We have been notified of the problem.  If you have any questions, we can help at https://support.stripe.com/.", "type": "api_error"  }}
     RESPONSE
   end
 end

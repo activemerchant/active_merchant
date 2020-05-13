@@ -513,6 +513,39 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert_equal refund.authorization, refund_id
   end
 
+  def test_refund_when_payment_intent_not_captured
+    options = {
+      currency: 'GBP',
+      customer: @customer,
+      confirmation_method: 'manual',
+      capture_method: 'manual',
+      confirm: true
+    }
+    assert create_response = @gateway.create_intent(@amount, @visa_payment_method, options)
+    intent_id = create_response.params['id']
+
+    refund = @gateway.refund(@amount - 20, intent_id)
+    assert_failure refund
+    assert refund.params['error']
+  end
+
+  def test_refund_when_payment_intent_requires_action
+    options = {
+      currency: 'GBP',
+      customer: @customer,
+      confirmation_method: 'manual',
+      capture_method: 'manual',
+      confirm: true
+    }
+    assert create_response = @gateway.create_intent(@amount, @three_ds_authentication_required, options)
+    assert_equal 'requires_action', create_response.params['status']
+    intent_id = create_response.params['id']
+
+    refund = @gateway.refund(@amount - 20, intent_id)
+    assert_failure refund
+    assert_match /has a status of requires_action/, refund.message
+  end
+
   def test_successful_store_purchase_and_unstore
     options = {
       currency: 'GBP',

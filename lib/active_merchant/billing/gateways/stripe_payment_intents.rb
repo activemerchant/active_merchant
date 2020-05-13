@@ -112,8 +112,22 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(money, intent_id, options = {})
-        intent = commit(:get, "payment_intents/#{intent_id}", nil, options)
-        charge_id = intent.params.dig('charges', 'data')[0].dig('id')
+        if intent_id.include?('pi_')
+          intent = api_request(:get, "payment_intents/#{intent_id}", nil, options)
+
+          return Response.new(false, intent['error']['message'], intent) if intent['error']
+
+          charge_id = intent.try(:[], 'charges').try(:[], 'data').try(:[], 0).try(:[], 'id')
+
+          if charge_id.nil?
+            error_message = "No associated charge for #{intent['id']}"
+            error_message <<  "; payment_intent has a status of #{intent['status']}" if intent.try(:[], 'status') && intent.try(:[], 'status') != 'succeeded'
+            return Response.new(false, error_message, intent)
+          end
+        else
+          charge_id = intent_id
+        end
+
         super(money, charge_id, options)
       end
 
