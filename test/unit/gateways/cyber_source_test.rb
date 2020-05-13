@@ -849,8 +849,9 @@ class CyberSourceTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       assert_match("<partnerSolutionID>#{partner_id}</partnerSolutionID>", data)
     end.respond_with(successful_capture_response)
-  ensure
     CyberSourceGateway.application_id = nil
+  end
+
   def test_missing_field
     @gateway.expects(:ssl_post).returns(missing_field_response)
 

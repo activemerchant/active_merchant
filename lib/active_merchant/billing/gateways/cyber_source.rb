@@ -944,9 +944,9 @@ module ActiveMerchant #:nodoc:
 
       def message_from(response)
         if response[:reasonCode] == '101' && response[:missingField]
-            response[:message] + ': ' + response[:missingField]
+          "#{response[:message]}: #{response[:missingField]}"
         elsif response[:reasonCode] == '102' && response[:invalidField]
-            response[:message] + ': ' + response[:invalidField]
+          "#{response[:message]}: #{response[:invalidField]}"
         else
           response[:message]
         end

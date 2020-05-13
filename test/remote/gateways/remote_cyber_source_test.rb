@@ -708,7 +708,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_successful_response(response)
   end
 
-  def test_missing_Field
+  def test_missing_field
     @options = @options.merge({
       address: {
         address1: 'Unspecified',
@@ -720,7 +720,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     })
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
-    assert !response.success?
+    assert_failure response
     assert_equal 'Request is missing one or more required fields: c:billTo/c:country', response.message
   end
 
@@ -736,7 +736,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     })
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
-    assert !response.success?
+    assert_failure response
     assert_equal 'One or more fields contains invalid data: c:billTo/c:postalCode', response.message
   end
 
