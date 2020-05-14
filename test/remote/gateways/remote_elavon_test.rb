@@ -233,6 +233,75 @@ class RemoteElavonTest < Test::Unit::TestCase
     assert response.authorization
   end
 
+  def test_successful_purchase_with_level_3_fields
+    level_3_data = {
+      customer_code: 'bob',
+      salestax: '3.45',
+      salestax_indicator: 'Y',
+      level3_indicator: 'Y',
+      ship_to_zip: '12345',
+      ship_to_country: 'US',
+      shipping_amount: '1234',
+      ship_from_postal_code: '54321',
+      discount_amount: '5',
+      duty_amount: '2',
+      national_tax_indicator: '0',
+      national_tax_amount: '10',
+      order_date: '280810',
+      other_tax: '3',
+      summary_commodity_code: '123',
+      merchant_vat_number: '222',
+      customer_vat_number: '333',
+      freight_tax_amount: '4',
+      vat_invoice_number: '26',
+      tracking_number: '45',
+      shipping_company: 'UFedzon',
+      other_fees: '2',
+      line_items: [
+        {
+          description: 'thing',
+          product_code: '23',
+          commodity_code: '444',
+          quantity: '15',
+          unit_of_measure: 'kropogs',
+          unit_cost: '4.5',
+          discount_indicator: 'Y',
+          tax_indicator: 'Y',
+          discount_amount: '1',
+          tax_rate: '8.25',
+          tax_amount: '12',
+          tax_type: 'state',
+          extended_total: '500',
+          total: '525',
+          alternative_tax: '111'
+        },
+        {
+          description: 'thing2',
+          product_code: '23',
+          commodity_code: '444',
+          quantity: '15',
+          unit_of_measure: 'kropogs',
+          unit_cost: '4.5',
+          discount_indicator: 'Y',
+          tax_indicator: 'Y',
+          discount_amount: '1',
+          tax_rate: '8.25',
+          tax_amount: '12',
+          tax_type: 'state',
+          extended_total: '500',
+          total: '525',
+          alternative_tax: '111'
+        }
+      ]
+    }
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(level_3_data: level_3_data))
+
+    assert_success response
+    assert_equal 'APPROVAL', response.message
+    assert response.authorization
+  end
+
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card, @options)

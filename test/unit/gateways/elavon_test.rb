@@ -316,6 +316,112 @@ class ElavonTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_level_3_fields_in_request
+    level_3_data = {
+      customer_code: 'bob',
+      salestax: '3.45',
+      salestax_indicator: 'Y',
+      level3_indicator: 'Y',
+      ship_to_zip: '12345',
+      ship_to_country: 'US',
+      shipping_amount: '1234',
+      ship_from_postal_code: '54321',
+      discount_amount: '5',
+      duty_amount: '2',
+      national_tax_indicator: '0',
+      national_tax_amount: '10',
+      order_date: '280810',
+      other_tax: '3',
+      summary_commodity_code: '123',
+      merchant_vat_number: '222',
+      customer_vat_number: '333',
+      freight_tax_amount: '4',
+      vat_invoice_number: '26',
+      tracking_number: '45',
+      shipping_company: 'UFedzon',
+      other_fees: '2',
+      line_items: [
+        {
+          description: 'thing',
+          product_code: '23',
+          commodity_code: '444',
+          quantity: '15',
+          unit_of_measure: 'kropogs',
+          unit_cost: '4.5',
+          discount_indicator: 'Y',
+          tax_indicator: 'Y',
+          discount_amount: '1',
+          tax_rate: '8.25',
+          tax_amount: '12',
+          tax_type: 'state',
+          extended_total: '500',
+          total: '525',
+          alternative_tax: '111'
+        },
+        {
+          description: 'thing2',
+          product_code: '23',
+          commodity_code: '444',
+          quantity: '15',
+          unit_of_measure: 'kropogs',
+          unit_cost: '4.5',
+          discount_indicator: 'Y',
+          tax_indicator: 'Y',
+          discount_amount: '1',
+          tax_rate: '8.25',
+          tax_amount: '12',
+          tax_type: 'state',
+          extended_total: '500',
+          total: '525',
+          alternative_tax: '111'
+        }
+      ]
+    }
+
+    options = @options.merge(level_3_data: level_3_data)
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/ssl_customer_code=bob/, data)
+      assert_match(/ssl_salestax=3.45/, data)
+      assert_match(/ssl_salestax_indicator=Y/, data)
+      assert_match(/ssl_level3_indicator=Y/, data)
+      assert_match(/ssl_ship_to_zip=12345/, data)
+      assert_match(/ssl_ship_to_country=US/, data)
+      assert_match(/ssl_shipping_amount=1234/, data)
+      assert_match(/ssl_ship_from_postal_code=54321/, data)
+      assert_match(/ssl_discount_amount=5/, data)
+      assert_match(/ssl_duty_amount=2/, data)
+      assert_match(/ssl_national_tax_indicator=0/, data)
+      assert_match(/ssl_national_tax_amount=10/, data)
+      assert_match(/ssl_order_date=280810/, data)
+      assert_match(/ssl_other_tax=3/, data)
+      assert_match(/ssl_summary_commodity_code=123/, data)
+      assert_match(/ssl_merchant_vat_number=222/, data)
+      assert_match(/ssl_customer_vat_number=333/, data)
+      assert_match(/ssl_freight_tax_amount=4/, data)
+      assert_match(/ssl_vat_invoice_number=26/, data)
+      assert_match(/ssl_tracking_number=45/, data)
+      assert_match(/ssl_shipping_company=UFedzon/, data)
+      assert_match(/ssl_other_fees=2/, data)
+      assert_match(/ssl_line_Item_description/, data)
+      assert_match(/ssl_line_Item_product_code/, data)
+      assert_match(/ssl_line_Item_commodity_code/, data)
+      assert_match(/ssl_line_Item_quantity/, data)
+      assert_match(/ssl_line_Item_unit_of_measure/, data)
+      assert_match(/ssl_line_Item_unit_cost/, data)
+      assert_match(/ssl_line_Item_discount_indicator/, data)
+      assert_match(/ssl_line_Item_tax_indicator/, data)
+      assert_match(/ssl_line_Item_discount_amount/, data)
+      assert_match(/ssl_line_Item_tax_rate/, data)
+      assert_match(/ssl_line_Item_tax_amount/, data)
+      assert_match(/ssl_line_Item_tax_type/, data)
+      assert_match(/ssl_line_Item_extended_total/, data)
+      assert_match(/ssl_line_Item_total/, data)
+      assert_match(/ssl_line_Item_alternative_tax/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_transcript_scrubbing
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrub), post_scrub

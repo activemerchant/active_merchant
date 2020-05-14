@@ -8,6 +8,7 @@
 * HPS: Prevent errors when account_type or account_holder_type are nil [britth] #3628
 * D Local: Handle invalid country code errors [curiousepic] #3626
 * Stripe Payment Intents: Utilize execute_threed flag to determine success [britth] #3625
+* Elavon: Add Level 3 fields [leila-alderman] #3632
 
 == Version 1.107.3 (May 8, 2020)
 * Realex: Ignore IPv6 unsupported addresses [elfassy] #3622
