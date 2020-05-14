@@ -894,25 +894,19 @@ class CyberSourceTest < Test::Unit::TestCase
   def test_missing_field
     @gateway.expects(:ssl_post).returns(missing_field_response)
 
-    response = stub_comms do
-      @gateway.purchase(@amount, credit_card, @options)
-    end.check_request do |_endpoint, body, _headers|
-      assert_xml_valid_to_xsd(body)
-      assert_match %r'<c:missingField>c:billTo/c:country</c:missingField>'m, body
-    end.respond_with(missing_field_response)
+    response = @gateway.purchase(@amount, credit_card, @options)
+
     assert_failure response
+    assert_equal 'c:billTo/c:country', response.params['missingField']
   end
 
   def test_invalid_field
     @gateway.expects(:ssl_post).returns(invalid_field_response)
 
-    response = stub_comms do
-      @gateway.purchase(@amount, credit_card, @options)
-    end.check_request do |_endpoint, body, _headers|
-      assert_xml_valid_to_xsd(body)
-      assert_match %r'<c:invalidField>c:billTo/c:postalCode</c:invalidField><'m, body
-    end.respond_with(invalid_field_response)
+    response = @gateway.purchase(@amount, credit_card, @options)
+
     assert_failure response
+    assert_equal 'c:billTo/c:postalCode', response.params['invalidField']
   end
 
   private
