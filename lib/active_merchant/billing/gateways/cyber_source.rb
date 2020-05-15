@@ -326,7 +326,9 @@ module ActiveMerchant #:nodoc:
           add_threeds_services(xml, options)
           add_payment_network_token(xml) if network_tokenization?(payment_method_or_reference)
           add_business_rules_data(xml, payment_method_or_reference, options) unless options[:pinless_debit_card]
+          add_stored_credential_options(xml, options)
         end
+
         add_issuer_additional_data(xml, options)
         add_merchant_description(xml, options)
         add_partner_solution_id(xml)
@@ -630,6 +632,7 @@ module ActiveMerchant #:nodoc:
 
       def stored_credential_commerce_indicator(options)
         return unless options[:stored_credential]
+
         return if options[:stored_credential][:initial_transaction]
 
         case options[:stored_credential][:reason_type]
@@ -819,7 +822,7 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'subsequentAuth', 'true' if options[:stored_credential][:initiator] == 'merchant'
         xml.tag! 'subsequentAuthFirst', 'true' if options[:stored_credential][:initial_transaction]
         xml.tag! 'subsequentAuthTransactionID', options[:stored_credential][:network_transaction_id] if options[:stored_credential][:initiator] == 'merchant'
-        xml.tag! 'subsequentAuthStoredCredential', 'true' if options[:stored_credential][:initiator] == 'cardholder' && !options[:stored_credential][:initial_transaction] ||  options[:stored_credential][:initiator] == 'merchant' && options[:stored_credential][:reason_type] == 'unscheduled'
+        xml.tag! 'subsequentAuthStoredCredential', 'true' if options[:stored_credential][:initiator] == 'cardholder' && !options[:stored_credential][:initial_transaction] || options[:stored_credential][:initiator] == 'merchant' && options[:stored_credential][:reason_type] == 'unscheduled'
       end
 
       def add_partner_solution_id(xml)

@@ -720,6 +720,17 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_successful_response(response)
   end
 
+  def test_successful_subsequent_unscheduled_cof_purchase
+    @options[:stored_credential] = {
+      initiator: 'merchant',
+      reason_type: 'unscheduled',
+      initial_transaction: false,
+      network_transaction_id: '016150703802094'
+    }
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_successful_response(response)
+  end
+
   def test_missing_field
     @options = @options.merge({
       address: {

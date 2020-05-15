@@ -723,6 +723,25 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response.success?
   end
 
+  def test_cof_recurring_mit_purchase
+    @options[:stored_credential] = {
+      initiator: 'merchant',
+      reason_type: 'recurring',
+      initial_transaction: false,
+      network_transaction_id: '016150703802094'
+    }
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_not_match(/\<subsequentAuthFirst\>/, data)
+      assert_not_match(/\<subsequentAuthStoredCredential\>/, data)
+      assert_match(/\<subsequentAuth\>true/, data)
+      assert_match(/\<subsequentAuthTransactionID\>016150703802094/, data)
+      assert_match(/\<commerceIndicator\>recurring/, data)
+    end.respond_with(successful_purchase_response)
+    assert response.success?
+  end
+
   def test_nonfractional_currency_handling
     @gateway.expects(:ssl_post).with do |host, request_body|
       assert_match %r(<grandTotalAmount>1</grandTotalAmount>), request_body
