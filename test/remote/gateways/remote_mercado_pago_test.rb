@@ -42,7 +42,8 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
       processing_mode: 'gateway',
       merchant_account_id: fixtures(:mercado_pago)[:merchant_account_id],
       fraud_scoring: true,
-      fraud_manual_review: true
+      fraud_manual_review: true,
+      payment_method_option_id: '123abc'
     }
   end
 

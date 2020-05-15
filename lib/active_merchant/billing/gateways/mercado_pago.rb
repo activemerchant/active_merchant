@@ -113,6 +113,7 @@ module ActiveMerchant #:nodoc:
 
         post[:processing_mode] = options[:processing_mode]
         post[:merchant_account_id] = options[:merchant_account_id] if options[:merchant_account_id]
+        post[:payment_method_option_id] = options[:payment_method_option_id] if options[:payment_method_option_id]
         add_merchant_services(post, options)
       end
 

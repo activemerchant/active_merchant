@@ -12,6 +12,7 @@
 * CyberSource: Stored Credential fixes [curiousepic] #3624
 * CyberSource: Fix invalid and missing field tests [curiousepic] #3634
 * CyberSource: Pass stored credentials with purchase [curiousepic] #3636
+* Mercado Pago: Add payment_method_option_id field [schwarzgeist] #3635
 
 == Version 1.107.3 (May 8, 2020)
 * Realex: Ignore IPv6 unsupported addresses [elfassy] #3622
