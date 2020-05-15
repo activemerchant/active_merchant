@@ -80,6 +80,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(money, payment, options = {})
+        if ach?(payment)
+          direct_bank_error = 'Direct bank account transactions are not supported for authorize.'
+          return Response.new(false, direct_bank_error)
+        end
+
         MultiResponse.run do |r|
           if payment.is_a?(ApplePayPaymentToken)
             r.process { tokenize_apple_pay_token(payment) }

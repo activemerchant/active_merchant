@@ -180,6 +180,23 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal 'Direct bank account transactions are not supported. Bank accounts must be stored and verified before use.', response.message
   end
 
+  def test_unsuccessful_echeck_auth_with_verified_account
+    customer_id = @verified_bank_account[:customer_id]
+    bank_account_id = @verified_bank_account[:bank_account_id]
+
+    payment = [customer_id, bank_account_id].join('|')
+
+    response = @gateway.authorize(@amount, payment, @options)
+    assert_failure response
+    assert_equal 'You cannot pass capture=false for this payment type.', response.message
+  end
+
+  def test_unsuccessful_direct_bank_account_auth
+    response = @gateway.authorize(@amount, @check, @options)
+    assert_failure response
+    assert_equal 'Direct bank account transactions are not supported for authorize.', response.message
+  end
+
   def test_authorization_and_capture
     assert authorization = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorization
