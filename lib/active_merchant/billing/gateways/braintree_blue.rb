@@ -601,6 +601,7 @@ module ActiveMerchant #:nodoc:
         elsif options[:recurring]
           parameters[:recurring] = true
         end
+        parameters[:skip_cvv] = true if options[:skip_cvv]
 
         add_payment_method(parameters, credit_card_or_vault_id, options)
         add_stored_credential_data(parameters, credit_card_or_vault_id, options)
