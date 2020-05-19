@@ -212,6 +212,8 @@ module ActiveMerchant #:nodoc:
       def add_additional_data(post, options)
         post[:device_id] = options[:device_id] if options[:device_id]
         post[:metadata] = options[:metadata] if options[:metadata]
+        post[:metadata] = {} if post[:metadata].nil?
+        post[:metadata][:merchant_payment_code] = options[:order_id] if options[:order_id]
       end
 
       def parse(body)
