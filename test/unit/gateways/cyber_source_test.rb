@@ -867,6 +867,24 @@ class CyberSourceTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_adds_mastercard_3ds2_default_collection_indicator
+    options_with_normalized_3ds = @options.merge(
+      three_d_secure: {
+        version: '2.0',
+        eci: '05',
+        cavv: '637574652070757070792026206b697474656e73',
+        ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC',
+        cavv_algorithm: 'vbv'
+      },
+    )
+
+    stub_comms do
+      @gateway.purchase(@amount, @master_credit_card, options_with_normalized_3ds)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<collectionIndicator\>2/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_scrub
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end

@@ -34,6 +34,7 @@ module ActiveMerchant #:nodoc:
         jcb: 'js',
         discover: 'pb',
       }.freeze
+      DEFAULT_COLLECTION_INDICATOR = 2
 
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb, :dankort, :maestro, :elo]
       self.supported_countries = %w(US BR CA CN DK FI FR DE IN JP MX NO SE GB SG LB PK)
@@ -626,7 +627,7 @@ module ActiveMerchant #:nodoc:
 
         xml.tag! 'ucaf' do
           xml.tag!('authenticationData', options[:three_d_secure][:cavv])
-          xml.tag!('collectionIndicator', options[:collection_indicator]) if options[:collection_indicator]
+          xml.tag!('collectionIndicator', options[:collection_indicator] || DEFAULT_COLLECTION_INDICATOR)
         end
       end
 
@@ -660,7 +661,7 @@ module ActiveMerchant #:nodoc:
         when :master
           xml.tag! 'ucaf' do
             xml.tag!('authenticationData', payment_method.payment_cryptogram)
-            xml.tag!('collectionIndicator', '2')
+            xml.tag!('collectionIndicator', DEFAULT_COLLECTION_INDICATOR)
           end
           xml.tag! 'ccAuthService', {'run' => 'true'} do
             xml.tag!('commerceIndicator', ECI_BRAND_MAPPING[brand])
