@@ -43,6 +43,18 @@ class RemoteForteTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @check, @options)
     assert_success response
     assert_equal 'APPROVED', response.message
+    assert_equal 'WEB', response.params['echeck']['sec_code']
+  end
+
+  def test_successful_purchase_with_echeck_with_more_options
+    options = {
+      sec_code: "PPD"
+    }
+
+    response = @gateway.purchase(@amount, @check, options)
+    assert_success response
+    assert_equal 'APPROVED', response.message
+    assert_equal 'PPD', response.params['echeck']['sec_code']
   end
 
   def test_failed_purchase_with_echeck
