@@ -17,6 +17,7 @@
 * EBANX: Send original order id as merchant_payment_code metadata [miguelxpn] #3637
 * Element: Add card_present_code field [schwarzgeist] #3623
 * Orbital: Add support for Level 3 fields [leila-alderman] #3639
+* Firstdata: Strip newline characters from address [bittercoder] #3643
 
 == Version 1.107.3 (May 8, 2020)
 * Realex: Ignore IPv6 unsupported addresses [elfassy] #3622

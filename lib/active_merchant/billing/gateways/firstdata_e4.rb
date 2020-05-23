@@ -262,7 +262,7 @@ module ActiveMerchant #:nodoc:
         address = options[:billing_address] || options[:address]
         if address
           address_values = []
-          [:address1, :zip, :city, :state, :country].each { |part| address_values << address[part].to_s }
+          [:address1, :zip, :city, :state, :country].each { |part| address_values << address[part].to_s.tr("\r\n", ' ').strip }
           xml.tag! 'VerificationStr1', address_values.join('|')
         end
 
