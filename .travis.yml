@@ -3,9 +3,11 @@ sudo: false
 cache: bundler
 
 rvm:
-- 2.5
-- 2.4
-- 2.3
+  - '2.7'
+  - '2.6'
+  - '2.5'
+  - '2.4'
+  - '2.3'
 
 gemfile:
 - gemfiles/Gemfile.rails52
@@ -16,16 +18,28 @@ gemfile:
 
 jobs:
   include:
-      rvm: 2.5
+      rvm: '2.5'
       gemfile: Gemfile
       script: bundle exec rubocop --parallel
 
 matrix:
   exclude:
-    - rvm: 2.3
+    - rvm: '2.3'
+      gemfile: 'gemfiles/Gemfile.rails60'
+    - rvm: '2.4'
+      gemfile: 'gemfiles/Gemfile.rails60'
+    - rvm: '2.3'
       gemfile: 'gemfiles/Gemfile.rails_master'
-    - rvm: 2.4
+    - rvm: '2.4'
       gemfile: 'gemfiles/Gemfile.rails_master'
+    - rvm: '2.7'
+      gemfile: 'gemfiles/Gemfile.42'
+    - rvm: '2.7'
+      gemfile: 'gemfiles/Gemfile.50'
+    - rvm: '2.7'
+      gemfile: 'gemfiles/Gemfile.51'
+    - rvm: '2.7'
+      gemfile: 'gemfiles/Gemfile.52'
 
 notifications:
   email:
