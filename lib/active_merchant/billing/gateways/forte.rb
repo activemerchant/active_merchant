@@ -5,8 +5,8 @@ module ActiveMerchant #:nodoc:
     class ForteGateway < Gateway
       include Empty
 
-      self.test_url = 'https://sandbox.forte.net/api/v2'
-      self.live_url = 'https://api.forte.net/v2'
+      self.test_url = 'https://sandbox.forte.net/api/v3'
+      self.live_url = 'https://api.forte.net/v3'
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
@@ -16,7 +16,10 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Forte'
 
       def initialize(options={})
-        requires!(options, :api_key, :secret, :location_id, :account_id)
+        requires!(options, :api_key, :secret, :location_id)
+        unless options.has_key?(:organization_id) || options.has_key?(:account_id)
+          raise ArgumentError.new("Missing required parameter: organization_id or account_id")
+        end
         super
       end
 
@@ -59,7 +62,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, options)
         add_payment_method(post, payment_method, options)
         add_billing_address(post, payment_method, options)
-        post[:action] = 'disburse'
+        post[:action] = 'credit'
 
         commit(:post, post)
       end
@@ -104,7 +107,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_auth(post)
-        post[:account_id] = "act_#{@options[:account_id]}"
+        post[:organization_id] = "org_#{organization_id}"
         post[:location_id] = "loc_#{@options[:location_id]}"
       end
 
@@ -165,7 +168,6 @@ module ActiveMerchant #:nodoc:
         post[:echeck][:account_number] = payment.account_number
         post[:echeck][:routing_number] = payment.routing_number
         post[:echeck][:account_type] = payment.account_type
-        post[:echeck][:check_number] = payment.number
         post[:echeck][:sec_code] = options[:sec_code] || "WEB"
       end
 
@@ -226,13 +228,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def endpoint
-        "/accounts/act_#{@options[:account_id].strip}/locations/loc_#{@options[:location_id].strip}/transactions/"
+        "/organizations/org_#{organization_id.strip}/locations/loc_#{@options[:location_id].strip}/transactions/"
       end
 
       def headers
         {
           'Authorization' => ('Basic ' + Base64.strict_encode64("#{@options[:api_key]}:#{@options[:secret]}")),
-          'X-Forte-Auth-Account-Id' => "act_#{@options[:account_id]}",
+          'X-Forte-Auth-Organization-Id' => "org_#{organization_id}",
           'Content-Type' => 'application/json'
         }
       end
@@ -262,6 +264,10 @@ module ActiveMerchant #:nodoc:
       def transaction_id_from(authorization)
         transaction_id, _, original_auth_transaction_id, _ = split_authorization(authorization)
         original_auth_transaction_id.present? ? original_auth_transaction_id : transaction_id
+      end
+
+      def organization_id
+        @options[:organization_id] || @options[:account_id]
       end
     end
   end
