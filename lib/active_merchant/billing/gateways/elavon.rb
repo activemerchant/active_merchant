@@ -48,7 +48,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(form, options)
         add_test_mode(form, options)
         add_ip(form, options)
-        add_ssl_dynamic_dba(form, options)
+        add_auth_purchase_params(form, options)
         add_level_3_fields(form, options) if options[:level_3_data]
         commit(:purchase, money, form, options)
       end
@@ -63,7 +63,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(form, options)
         add_test_mode(form, options)
         add_ip(form, options)
-        add_ssl_dynamic_dba(form, options)
+        add_auth_purchase_params(form, options)
         add_level_3_fields(form, options) if options[:level_3_data]
         commit(:authorize, money, form, options)
       end
@@ -257,8 +257,9 @@ module ActiveMerchant #:nodoc:
         form[:cardholder_ip] = options[:ip] if options.has_key?(:ip)
       end
 
-      def add_ssl_dynamic_dba(form, options)
+      def add_auth_purchase_params(form, options)
         form[:dynamic_dba] = options[:dba] if options.has_key?(:dba)
+        form[:merchant_initiated_unscheduled] = options[:merchant_initiated_unscheduled] if options.has_key?(:merchant_initiated_unscheduled)
       end
 
       def add_level_3_fields(form, options)

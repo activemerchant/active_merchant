@@ -820,6 +820,7 @@ module ActiveMerchant #:nodoc:
 
       def add_stored_credential_options(xml, options={})
         return unless options[:stored_credential]
+
         xml.tag! 'subsequentAuth', 'true' if options[:stored_credential][:initiator] == 'merchant'
         xml.tag! 'subsequentAuthFirst', 'true' if options[:stored_credential][:initial_transaction]
         xml.tag! 'subsequentAuthTransactionID', options[:stored_credential][:network_transaction_id] if options[:stored_credential][:initiator] == 'merchant'

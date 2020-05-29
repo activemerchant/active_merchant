@@ -128,7 +128,18 @@ class ElavonTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       parsed = CGI.parse(data)
       assert_equal ['MANYMAG*BAKERS MONTHLY'], parsed['ssl_dynamic_dba']
-    end.respond_with(successful_authorization_response)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_unscheduled
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(merchant_initiated_unscheduled: 'Y'))
+    end.check_request do |_endpoint, data, _headers|
+      parsed = CGI.parse(data)
+      assert_equal ['Y'], parsed['ssl_merchant_initiated_unscheduled']
+    end.respond_with(successful_purchase_response)
 
     assert_success response
   end

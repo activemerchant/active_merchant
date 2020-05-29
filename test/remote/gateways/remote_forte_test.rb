@@ -48,7 +48,7 @@ class RemoteForteTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_echeck_with_more_options
     options = {
-      sec_code: "WEB"
+      sec_code: 'WEB'
     }
 
     response = @gateway.purchase(@amount, @check, options)

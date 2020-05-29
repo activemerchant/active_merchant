@@ -146,7 +146,7 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
 
     assert refund = @gateway.refund(@amount, 'pi_123')
     assert_failure refund
-    assert_match /Error while communicating with one of our backends/, refund.params.dig('error', 'message')
+    assert_match(/Error while communicating with one of our backends/, refund.params.dig('error', 'message'))
   end
 
   def test_failed_refund_due_to_pending_3ds_auth
@@ -155,7 +155,7 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     assert refund = @gateway.refund(@amount, 'pi_123')
     assert_failure refund
     assert_equal 'requires_action', refund.params['status']
-    assert_match /payment_intent has a status of requires_action/, refund.message
+    assert_match(/payment_intent has a status of requires_action/, refund.message)
   end
 
   private

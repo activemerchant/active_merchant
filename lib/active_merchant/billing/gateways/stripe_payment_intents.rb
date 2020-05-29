@@ -121,7 +121,7 @@ module ActiveMerchant #:nodoc:
 
           if charge_id.nil?
             error_message = "No associated charge for #{intent['id']}"
-            error_message <<  "; payment_intent has a status of #{intent['status']}" if intent.try(:[], 'status') && intent.try(:[], 'status') != 'succeeded'
+            error_message << "; payment_intent has a status of #{intent['status']}" if intent.try(:[], 'status') && intent.try(:[], 'status') != 'succeeded'
             return Response.new(false, error_message, intent)
           end
         else

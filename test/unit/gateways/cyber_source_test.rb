@@ -875,7 +875,7 @@ class CyberSourceTest < Test::Unit::TestCase
         cavv: '637574652070757070792026206b697474656e73',
         ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC',
         cavv_algorithm: 'vbv'
-      },
+      }
     )
 
     stub_comms do

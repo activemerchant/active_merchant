@@ -557,7 +557,7 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
 
     refund = @gateway.refund(@amount - 20, intent_id)
     assert_failure refund
-    assert_match /has a status of requires_action/, refund.message
+    assert_match(/has a status of requires_action/, refund.message)
   end
 
   def test_successful_store_purchase_and_unstore

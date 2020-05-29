@@ -12,7 +12,8 @@ class RemoteElavonTest < Test::Unit::TestCase
       email: 'paul@domain.com',
       description: 'Test Transaction',
       billing_address: address,
-      ip: '203.0.113.0'
+      ip: '203.0.113.0',
+      merchant_initiated_unscheduled: 'N'
     }
     @amount = 100
   end
