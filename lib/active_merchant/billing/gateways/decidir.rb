@@ -121,6 +121,7 @@ module ActiveMerchant #:nodoc:
 
         add_invoice(post, money, options)
         add_payment(post, credit_card, options)
+        add_aggregate_data(post, options) if options[:aggregate_data]
       end
 
       def add_payment_method_id(credit_card, options)
@@ -178,6 +179,29 @@ module ActiveMerchant #:nodoc:
         card_data[:card_holder_identification][:number] = options[:card_holder_identification_number] if options[:card_holder_identification_number]
 
         post[:card_data] = card_data
+      end
+
+      def add_aggregate_data(post, options)
+        aggregate_data = {}
+        data = options[:aggregate_data]
+        aggregate_data[:indicator] = data[:indicator] if data[:indicator]
+        aggregate_data[:identification_number] = data[:identification_number] if data[:identification_number]
+        aggregate_data[:bill_to_pay] = data[:bill_to_pay] if data[:bill_to_pay]
+        aggregate_data[:bill_to_refund] = data[:bill_to_refund] if data[:bill_to_refund]
+        aggregate_data[:merchant_name] = data[:merchant_name] if data[:merchant_name]
+        aggregate_data[:street] = data[:street] if data[:street]
+        aggregate_data[:number] = data[:number] if data[:number]
+        aggregate_data[:postal_code] = data[:postal_code] if data[:postal_code]
+        aggregate_data[:category] = data[:category] if data[:category]
+        aggregate_data[:channel] = data[:channel] if data[:channel]
+        aggregate_data[:geographic_code] = data[:geographic_code] if data[:geographic_code]
+        aggregate_data[:city] = data[:city] if data[:city]
+        aggregate_data[:merchant_id] = data[:merchant_id] if data[:merchant_id]
+        aggregate_data[:province] = data[:province] if data[:province]
+        aggregate_data[:country] = data[:country] if data[:country]
+        aggregate_data[:merchant_email] = data[:merchant_email] if data[:merchant_email]
+        aggregate_data[:merchant_phone] = data[:merchant_phone] if data[:merchant_phone]
+        post[:aggregate_data] = aggregate_data
       end
 
       def add_fraud_detection(options = {})

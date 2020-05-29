@@ -2,6 +2,7 @@
 
 == HEAD
 * Elavon: Add merchant initiated unscheduled field [leila-alderman] #3647
+* Decidir: Add aggregate data fields [leila-alderman] #3648
 
 == Version 1.107.4 (Jun 2, 2020)
 * Elavon: Implement true verify action [leila-alderman] #3610
