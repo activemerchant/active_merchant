@@ -49,17 +49,17 @@ module ActiveMerchant
         super
       end
 
-      def purchase(money, credit_card, options = {})
+      def purchase(money, payment, options = {})
         requires!(options, :order_id)
 
-        request = build_purchase_or_authorization_request(:purchase, money, credit_card, options)
+        request = build_purchase_or_authorization_request(:purchase, money, payment, options)
         commit(request)
       end
 
-      def authorize(money, creditcard, options = {})
+      def authorize(money, payment, options = {})
         requires!(options, :order_id)
 
-        request = build_purchase_or_authorization_request(:authorization, money, creditcard, options)
+        request = build_purchase_or_authorization_request(:authorization, money, payment, options)
         commit(request)
       end
 
@@ -145,16 +145,25 @@ module ActiveMerchant
         [parsed[:orderid], parsed[:pasref], parsed[:authcode]].join(';')
       end
 
-      def build_purchase_or_authorization_request(action, money, credit_card, options)
+      def build_purchase_or_authorization_request(action, money, payment, options)
         timestamp = new_timestamp
         xml = Builder::XmlMarkup.new :indent => 2
-        xml.tag! 'request', 'timestamp' => timestamp, 'type' => 'auth' do
+        request_type = payment.is_a?(String) ? 'receipt-in' : 'auth'
+
+        xml.tag! 'request', 'timestamp' => timestamp, 'type' => request_type do
           add_merchant_details(xml, options)
           xml.tag! 'orderid', sanitize_order_id(options[:order_id])
           add_amount(xml, money, options)
-          add_card(xml, credit_card)
+          add_payment_details(xml, payment, options)
           xml.tag! 'autosettle', 'flag' => auto_settle_flag(action)
-          add_signed_digest(xml, timestamp, @options[:login], sanitize_order_id(options[:order_id]), amount(money), (options[:currency] || currency(money)), credit_card.number)
+          add_signed_digest(
+            xml,
+            timestamp,
+            @options[:login],
+            sanitize_order_id(options[:order_id]),
+            amount(money),
+            options[:currency] || currency(money),
+            payment.respond_to?(:number) ? payment.number : options[:customer])
           add_comments(xml, options)
           add_address_and_customer_info(xml, options)
         end
@@ -295,6 +304,28 @@ module ActiveMerchant
           xml.tag! 'issueno', credit_card.issue_number
           xml.tag! 'ref', options[:cardref]
           xml.tag! 'payerref', options[:customer]
+        end
+      end
+
+      def add_payment_details(xml, payment, options = {})
+        if payment.is_a?(String)
+          add_card_reference(xml, payment, options)
+        else
+          add_card(xml, payment)
+        end
+      end
+
+      def add_card_reference(xml, payment, options = {})
+        xml.tag! 'payerref', options[:customer]
+        xml.tag! 'paymentmethod', payment
+        xml.tag! 'channel', 'ECOM'
+
+        if options[:cvv].present?
+          xml.tag! 'paymentdata' do
+            xml.tag! 'cvn' do
+              xml.tag! 'number', options[:cvv]
+            end
+          end
         end
       end
 

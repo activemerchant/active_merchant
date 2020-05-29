@@ -44,6 +44,67 @@ class RemoteRealexTest < Test::Unit::TestCase
     end
   end
 
+  def test_realex_purchase_using_stored_card
+    [ @visa, @mastercard ].each do |card|
+      payeref = generate_unique_id
+      cardref = generate_unique_id
+
+      # store the customer and payment reference into gateway to reference they later
+      @gateway.store(card,
+        :order_id => generate_unique_id,
+        :customer => payeref,
+        :cardref  => cardref)
+
+      # do a purchase using only previous references
+      response = @gateway.purchase(
+        @amount,
+        cardref,
+        :order_id => generate_unique_id,
+        :description => 'Test Realex Purchase',
+        :customer => payeref,
+        :billing_address => {
+          :zip => '90210',
+          :country => 'US'})
+
+      assert_not_nil response
+      assert_success response
+      assert response.test?
+      assert response.authorization.length > 0
+      assert_equal "Successful", response.message
+    end
+  end
+
+  def test_realex_purchase_using_stored_card_with_cvv
+    [ @visa, @mastercard ].each do |card|
+      payeref = generate_unique_id
+      cardref = generate_unique_id
+
+      # store the customer and payment reference into gateway to reference they later
+      @gateway.store(card,
+        :order_id => generate_unique_id,
+        :customer => payeref,
+        :cardref  => cardref)
+
+      # do a purchase using only previous references
+      response = @gateway.purchase(
+        @amount,
+        cardref,
+        :order_id => generate_unique_id,
+        :description => 'Test Realex Purchase',
+        :customer => payeref,
+        :cvv => '123',
+        :billing_address => {
+          :zip => '90210',
+          :country => 'US'})
+
+      assert_not_nil response
+      assert_success response
+      assert response.test?
+      assert response.authorization.length > 0
+      assert_equal "Successful", response.message
+    end
+  end
+
   def test_realex_purchase_with_invalid_login
     gateway = RealexGateway.new(
       :login => 'invalid',
