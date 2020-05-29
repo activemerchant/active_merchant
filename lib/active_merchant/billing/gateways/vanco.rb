@@ -27,7 +27,7 @@ module ActiveMerchant
         end
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, _options={})
         MultiResponse.run do |r|
           r.process { login }
           r.process { commit(refund_request(money, authorization, r.params['response_sessionid']), :response_creditrequestreceived) }

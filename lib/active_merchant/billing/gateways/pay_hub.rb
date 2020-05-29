@@ -92,7 +92,7 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
-      def refund(amount, trans_id, options={})
+      def refund(_amount, trans_id, _options={})
         # Attempt a void in case the transaction is unsettled
         post = setup_post('void')
         add_reference(post, trans_id)
@@ -104,7 +104,7 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
-      def capture(amount, trans_id, options = {})
+      def capture(amount, trans_id, _options = {})
         post = setup_post('capture')
 
         add_reference(post, trans_id)

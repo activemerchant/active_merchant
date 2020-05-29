@@ -77,7 +77,7 @@ module ActiveMerchant #:nodoc:
         commit(:post, "payments/#{authorization}/refunds", post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, _options={})
         post = {}
         commit(:post, "payments/#{authorization}/refunds", post)
       end
@@ -192,7 +192,7 @@ module ActiveMerchant #:nodoc:
         !val.nil? && val != ''
       end
 
-      def headers(options = {})
+      def headers(_options = {})
         {
           'apikey' => @options[:api_key],
           'Content-type'  => 'application/json',

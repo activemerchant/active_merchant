@@ -139,7 +139,7 @@ module ActiveMerchant #:nodoc:
         )
       end
 
-      def post_data(action, params, options)
+      def post_data(action, params, _options)
         post = default_params
         post[:GlobalUserName] = @options[:global_user_name]
         post[:GlobalPassword] = @options[:global_password]

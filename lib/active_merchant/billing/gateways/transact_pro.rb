@@ -66,7 +66,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def capture(amount, authorization, options={})
+      def capture(amount, authorization, _options={})
         identifier, original_amount = split_authorization(authorization)
         raise ArgumentError.new("Partial capture is not supported, and #{amount.inspect} != #{original_amount.inspect}") if amount && (amount != original_amount)
 
@@ -78,7 +78,7 @@ module ActiveMerchant #:nodoc:
         commit('charge_hold', post, original_amount)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, _options={})
         identifier, original_amount = split_authorization(authorization)
 
         post = PostData.new
@@ -89,7 +89,7 @@ module ActiveMerchant #:nodoc:
         commit('refund', post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, _options={})
         identifier, amount = split_authorization(authorization)
 
         post = PostData.new
@@ -113,7 +113,7 @@ module ActiveMerchant #:nodoc:
         post[:user_ip] = (options[:ip] || '127.0.0.1')
       end
 
-      def add_address(post, creditcard, options)
+      def add_address(post, _creditcard, options)
         if address = options[:billing_address]
           post[:street]  = address[:address1].to_s
           post[:city]    = address[:city].to_s

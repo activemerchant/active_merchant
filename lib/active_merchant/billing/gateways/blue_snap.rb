@@ -410,7 +410,7 @@ module ActiveMerchant
         "line1: #{p['avs-response-code-address']}, zip: #{p['avs-response-code-zip']}, name: #{p['avs-response-code-name']}"
       end
 
-      def success_from(action, response)
+      def success_from(_action, response)
         (200...300).cover?(response.code.to_i)
       end
 

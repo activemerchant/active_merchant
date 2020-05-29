@@ -38,19 +38,19 @@ module ActiveMerchant #:nodoc:
         commit('auth', post)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, _options={})
         post = {}
         add_reference(post, 'settle', money, authorization)
         commit('settle', post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, _options={})
         post = {}
         add_reference(post, 'credit', money, authorization)
         commit('credit', post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, _options={})
         post = {}
         add_reference(post, 'void', nil, authorization)
         commit('void', post)
@@ -80,7 +80,7 @@ module ActiveMerchant #:nodoc:
         post[:processor_id] = options[:processor_id] if options[:processor_id]
       end
 
-      def add_address(post, creditcard, options)
+      def add_address(post, _creditcard, options)
         if address = options[:billing_address] || options[:address]
           post[:owner_name] = address[:name]
           post[:owner_street] = address[:address1]

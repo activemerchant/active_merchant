@@ -40,7 +40,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def capture(money, transaction_id, options={})
+      def capture(money, transaction_id, _options={})
         commit('CreditAddToBatch') do |xml|
           add_amount(xml, money)
           add_reference(xml, transaction_id)
@@ -193,7 +193,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_check_payment(xml, check, options)
+      def add_check_payment(xml, check, _options)
         xml.hps :CheckAction, 'SALE'
         xml.hps :AccountInfo do
           xml.hps :RoutingNumber, check.routing_number

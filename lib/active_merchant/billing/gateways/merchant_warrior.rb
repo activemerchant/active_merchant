@@ -70,7 +70,7 @@ module ActiveMerchant #:nodoc:
         commit('processVoid', post)
       end
 
-      def store(creditcard, options = {})
+      def store(creditcard, _options = {})
         post = {
           'cardName' => scrub_name(creditcard.name),
           'cardNumber' => creditcard.number,

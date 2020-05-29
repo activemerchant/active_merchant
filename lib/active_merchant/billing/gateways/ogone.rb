@@ -182,7 +182,7 @@ module ActiveMerchant #:nodoc:
       end
 
       # Cancels a previously authorized transaction.
-      def void(identification, options = {})
+      def void(identification, _options = {})
         post = {}
         add_authorization(post, reference_from(identification))
         commit('DES', post)
@@ -321,7 +321,7 @@ module ActiveMerchant #:nodoc:
         add_pair post, 'REMOTE_ADDR', options[:ip]
       end
 
-      def add_address(post, creditcard, options)
+      def add_address(post, _creditcard, options)
         return unless options[:billing_address]
 
         add_pair post, 'Owneraddress', options[:billing_address][:address1]

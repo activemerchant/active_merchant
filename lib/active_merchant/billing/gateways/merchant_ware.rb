@@ -130,7 +130,7 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
-      def v4_soap_request(action)
+      def v4_soap_request(_action)
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct!
         xml.tag! 'soap:Envelope', ENV_NAMESPACES_V4 do

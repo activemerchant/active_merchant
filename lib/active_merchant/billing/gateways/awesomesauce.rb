@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['US', 'GB']
       self.default_currency = 'USD'
-      self.money_format = :dollars 
+      self.money_format = :dollars
       self.supported_cardtypes = [:visa, :master, :american_express]
 
       self.homepage_url = 'https://awesomesauce-prod.herokuapp.com/'
@@ -15,7 +15,7 @@ module ActiveMerchant #:nodoc:
       STANDARD_ERROR_CODE_MAPPING = {
         '01' => STANDARD_ERROR_CODE[:card_declined],
         '02' => STANDARD_ERROR_CODE[:invalid_number],
-        '03' => STANDARD_ERROR_CODE[:expired_card], 
+        '03' => STANDARD_ERROR_CODE[:expired_card],
         '10' => STANDARD_ERROR_CODE[:processing_error]
       }
 
@@ -36,19 +36,18 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, amount, options)
         add_payment(post, payment)
-      
+
         commit('auth', post, options)
       end
 
-
-      def capture(amount, authorization, options={})
+      def capture(_amount, authorization, options={})
         post = {}
         add_auth_id(post, authorization)
 
         commit('capture', post, options)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(_amount, authorization, options={})
         post = {}
         add_auth_id(post, authorization)
 
@@ -58,7 +57,7 @@ module ActiveMerchant #:nodoc:
       def void(authorization, options={})
         post = {}
         add_auth_id(post, authorization)
-        
+
         commit('cancel', post, options)
       end
 
@@ -75,9 +74,9 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
-        gsub(%r((number\D+)\d*), '\1[FILTERED]').
-        gsub(%r((cv2\D+)\d*), '\1[FILTERED]').
-        gsub(%r((secret\\?":\\?")\w*), '\1[FILTERED]')
+          gsub(%r((number\D+)\d*), '\1[FILTERED]').
+          gsub(%r((cv2\D+)\d*), '\1[FILTERED]').
+          gsub(%r((secret\\?":\\?")\w*), '\1[FILTERED]')
       end
 
       private
@@ -106,7 +105,7 @@ module ActiveMerchant #:nodoc:
         post[:ref] = authorization
       end
 
-      def commit(action, post, options)
+      def commit(action, post, _options)
         add_creds(post)
         url = "#{(test? ? test_url : live_url)}/api/#{action}.json"
         response = parse(ssl_post(url, post_data(post)))
@@ -122,24 +121,21 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response["succeeded"]
+        response['succeeded']
       end
 
-      def message_from(response)
-      end
+      def message_from(response); end
 
       def authorization_from(response)
-        response["id"]
+        response['id']
       end
 
       def post_data(post)
-       post.to_json
+        post.to_json
       end
 
       def error_code_from(response)
-        unless success_from(response)
-          response["error"]
-        end
+        response['error'] unless success_from(response)
       end
     end
   end

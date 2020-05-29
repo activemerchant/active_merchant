@@ -321,7 +321,7 @@ module ActiveMerchant #:nodoc:
         hash
       end
 
-      def modification_request(reference, options)
+      def modification_request(reference, _options)
         hash = {}
         hash[:merchantAccount]    = @options[:merchant]
         hash[:originalReference]  = psp_reference_from(reference)
@@ -332,7 +332,7 @@ module ActiveMerchant #:nodoc:
         authorization.nil? ? nil : authorization.split('#').first
       end
 
-      def payment_request(money, options)
+      def payment_request(_money, options)
         hash = {}
         hash[:merchantAccount]    = @options[:merchant]
         hash[:reference]          = options[:order_id]

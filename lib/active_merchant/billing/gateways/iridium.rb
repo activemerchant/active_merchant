@@ -339,7 +339,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_customerdetails(xml, creditcard, address, options, shipTo = false)
+      def add_customerdetails(xml, _creditcard, address, options, _shipTo = false)
         xml.tag! 'CustomerDetails' do
           if address
             country_code = Country.find(address[:country]).code(:numeric) unless address[:country].blank?
@@ -368,7 +368,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_merchant_data(xml, options)
+      def add_merchant_data(xml, _options)
         xml.tag! 'MerchantAuthentication', {'MerchantID' => @options[:login], 'Password' => @options[:password]}
       end
 

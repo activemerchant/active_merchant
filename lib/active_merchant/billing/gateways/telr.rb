@@ -107,7 +107,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_payment_method(doc, payment_method, options)
+      def add_payment_method(doc, payment_method, _options)
         return if payment_method.is_a?(String)
 
         doc.card do
@@ -229,7 +229,7 @@ module ActiveMerchant #:nodoc:
         response
       end
 
-      def authorization_from(action, response, amount, currency)
+      def authorization_from(_action, response, amount, currency)
         auth = response[:tranref]
         auth = [auth, amount, currency].join('|')
         auth

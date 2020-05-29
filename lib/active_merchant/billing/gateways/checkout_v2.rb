@@ -70,7 +70,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def verify_payment(authorization, option={})
+      def verify_payment(authorization, _option={})
         commit(:verify_payment, authorization)
       end
 

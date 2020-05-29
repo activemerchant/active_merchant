@@ -50,13 +50,13 @@ module ActiveMerchant #:nodoc:
 
       # The +money+ amount is not used. The entire amount of the
       # initial authorization will be captured.
-      def capture(money, reference, options = {})
+      def capture(_money, reference, _options = {})
         post = {}
         add_reference(post, reference)
         commit(:capture, post, SOURCE_CARD)
       end
 
-      def void(reference, options = {})
+      def void(reference, _options = {})
         post = {}
         add_reference(post, reference)
         source = reference.split(';').last
@@ -268,7 +268,7 @@ module ActiveMerchant #:nodoc:
         )
       end
 
-      def url(params, source)
+      def url(_params, source)
         if source == SOURCE_ECHECK
           "#{live_url}/eftVirtualCheck.dll?transaction"
         else
@@ -347,12 +347,12 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'ns1:M_KEY', @options[:password]
         end
 
-        def add_credit_card(xml, credit_card, options)
+        def add_credit_card(xml, credit_card, _options)
           xml.tag! 'ns1:CARDNUMBER', credit_card.number
           xml.tag! 'ns1:EXPIRATION_DATE', exp_date(credit_card)
         end
 
-        def add_identification(xml, identification, options)
+        def add_identification(xml, identification, _options)
           xml.tag! 'ns1:GUID', identification
         end
 

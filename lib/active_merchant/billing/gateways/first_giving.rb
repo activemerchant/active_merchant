@@ -27,7 +27,7 @@ module ActiveMerchant #:nodoc:
         commit('/donation/creditcard', post)
       end
 
-      def refund(money, identifier, options = {})
+      def refund(_money, identifier, _options = {})
         get = {}
         get[:transactionId] = identifier
         get[:tranType] = 'REFUNDREQUEST'

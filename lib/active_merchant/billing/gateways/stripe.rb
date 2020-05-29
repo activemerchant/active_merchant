@@ -245,7 +245,7 @@ module ActiveMerchant #:nodoc:
         commit(:delete, "customers/#{CGI.escape(customer_id)}/cards/#{CGI.escape(card_id)}", nil, options)
       end
 
-      def tokenize_apple_pay_token(apple_pay_payment_token, options = {})
+      def tokenize_apple_pay_token(apple_pay_payment_token, _options = {})
         token_response = api_request(:post, "tokens?pk_token=#{CGI.escape(apple_pay_payment_token.payment_data.to_json)}")
         success = !token_response.key?('error')
 
@@ -505,11 +505,11 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_emv_creditcard(post, icc_data, options = {})
+      def add_emv_creditcard(post, icc_data, _options = {})
         post[:card] = { emv_auth_data: icc_data }
       end
 
-      def add_payment_token(post, token, options = {})
+      def add_payment_token(post, token, _options = {})
         post[:card] = token.payment_data['id']
       end
 
@@ -740,7 +740,7 @@ module ActiveMerchant #:nodoc:
         error_code
       end
 
-      def tokenize_bank_account(bank_account, options = {})
+      def tokenize_bank_account(bank_account, _options = {})
         account_holder_type = BANK_ACCOUNT_HOLDER_TYPE_MAPPING[bank_account.account_holder_type]
 
         post = {

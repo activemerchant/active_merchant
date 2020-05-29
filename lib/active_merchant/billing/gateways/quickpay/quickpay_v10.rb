@@ -109,7 +109,7 @@ module ActiveMerchant
         post
       end
 
-      def capture_params(money, credit_card, options = {})
+      def capture_params(money, _credit_card, options = {})
         post = {}
 
         add_amount(post, money, options)
@@ -118,7 +118,7 @@ module ActiveMerchant
         post
       end
 
-      def create_store(options = {})
+      def create_store(_options = {})
         post = {}
         commit('/cards', post)
       end
@@ -130,7 +130,7 @@ module ActiveMerchant
         commit(synchronized_path("/cards/#{identification}/authorize"), post)
       end
 
-      def create_token(identification, options)
+      def create_token(identification, _options)
         post = {}
         commit(synchronized_path("/cards/#{identification}/tokens"), post)
       end

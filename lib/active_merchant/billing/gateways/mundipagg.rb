@@ -65,7 +65,7 @@ module ActiveMerchant #:nodoc:
         commit('refund', post, authorization)
       end
 
-      def void(authorization, options={})
+      def void(authorization, _options={})
         commit('void', nil, authorization)
       end
 

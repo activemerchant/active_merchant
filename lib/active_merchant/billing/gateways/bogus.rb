@@ -55,7 +55,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def refund(money, reference, options = {})
+      def refund(money, reference, _options = {})
         money = amount(money)
         case reference
         when /1$/
@@ -67,7 +67,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def capture(money, reference, options = {})
+      def capture(money, reference, _options = {})
         money = amount(money)
         case reference
         when /1$/
@@ -79,7 +79,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def void(reference, options = {})
+      def void(reference, _options = {})
         case reference
         when /1$/
           raise Error, VOID_ERROR_MESSAGE
@@ -90,7 +90,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def store(paysource, options = {})
+      def store(paysource, _options = {})
         case normalize(paysource)
         when /1$/
           Response.new(true, SUCCESS_MESSAGE, {:billingid => '1'}, :test => true, :authorization => AUTHORIZATION)
@@ -101,7 +101,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def unstore(reference, options = {})
+      def unstore(reference, _options = {})
         case reference
         when /1$/
           Response.new(true, SUCCESS_MESSAGE, {}, :test => true)
@@ -114,7 +114,7 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def authorize_emv(money, paysource, options = {})
+      def authorize_emv(money, paysource, _options = {})
         money = amount(money)
         case money
         when /00$/
@@ -126,7 +126,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def authorize_swipe(money, paysource, options = {})
+      def authorize_swipe(money, paysource, _options = {})
         money = amount(money)
         case normalize(paysource)
         when /1$/, AUTHORIZATION
@@ -138,7 +138,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def purchase_emv(money, paysource, options = {})
+      def purchase_emv(money, paysource, _options = {})
         money = amount(money)
         case money
         when /00$/
@@ -150,7 +150,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def purchase_swipe(money, paysource, options = {})
+      def purchase_swipe(money, paysource, _options = {})
         money = amount(money)
         case normalize(paysource)
         when /1$/, AUTHORIZATION

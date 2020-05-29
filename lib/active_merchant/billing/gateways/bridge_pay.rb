@@ -59,7 +59,7 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, _options={})
         post = initialize_required_fields('Void')
 
         add_reference(post, authorization)
@@ -74,7 +74,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def store(creditcard, options={})
+      def store(creditcard, _options={})
         post = initialize_required_fields('')
         post[:transaction] = 'Create'
         post[:CardNumber]    = creditcard.number

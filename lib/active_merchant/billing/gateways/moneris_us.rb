@@ -90,7 +90,7 @@ module ActiveMerchant #:nodoc:
       # the original authorization.  To maintain the same interface as the other
       # gateways the two numbers are concatenated together with a ; separator as
       # the authorization number returned by authorization
-      def capture(money, authorization, options = {})
+      def capture(money, authorization, _options = {})
         commit 'us_completion', crediting_params(authorization, :comp_amount => amount(money))
       end
 
@@ -101,7 +101,7 @@ module ActiveMerchant #:nodoc:
       # Concatenate your transaction number and order_id by using a semicolon
       # (';'). This is to keep the Moneris interface consistent with other
       # gateways. (See +capture+ for details.)
-      def void(authorization, options = {})
+      def void(authorization, _options = {})
         commit 'us_purchasecorrection', crediting_params(authorization)
       end
 
@@ -115,7 +115,7 @@ module ActiveMerchant #:nodoc:
         refund(money, authorization, options)
       end
 
-      def refund(money, authorization, options = {})
+      def refund(money, authorization, _options = {})
         commit 'us_refund', crediting_params(authorization, :amount => amount(money))
       end
 
@@ -126,7 +126,7 @@ module ActiveMerchant #:nodoc:
         card_brand(payment_source) == 'check' ? commit('us_res_add_ach', post) : commit('us_res_add_cc', post)
       end
 
-      def unstore(data_key, options = {})
+      def unstore(data_key, _options = {})
         post = {}
         post[:data_key] = data_key
         commit('us_res_delete', post)

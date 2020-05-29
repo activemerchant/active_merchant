@@ -31,7 +31,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, _options={})
         post = {}
         authorization, _ = authorization.split('|')
         post[:capture] = true
@@ -39,14 +39,14 @@ module ActiveMerchant #:nodoc:
         commit('capture', "payments/#{authorization}", post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, _options={})
         post = {}
         authorization, original_amount = authorization.split('|')
         post[:amount] = amount(money).to_f if original_amount && original_amount.to_f > amount(money).to_f
         commit('refund', "payments/#{authorization}/refunds", post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, _options={})
         authorization, _ = authorization.split('|')
         post = { status: 'cancelled' }
         commit('void', "payments/#{authorization}", post)
@@ -72,7 +72,7 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def card_token_request(money, payment, options = {})
+      def card_token_request(_money, payment, options = {})
         post = {}
         post[:card_number] = payment.number
         post[:security_code] = payment.verification_value

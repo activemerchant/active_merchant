@@ -65,7 +65,7 @@ module ActiveMerchant #:nodoc:
         post[:cvv2]     = credit_card.verification_value
       end
 
-      def commit(action, money, parameters)
+      def commit(action, _money, parameters)
         response = parse(ssl_post(self.live_url, post_data(action, parameters)))
 
         Response.new(successful?(response), message_from(response), response,

@@ -87,7 +87,7 @@ module ActiveMerchant #:nodoc:
         post[:currency] = (options[:currency] || currency(money))
       end
 
-      def add_country(post, card, options)
+      def add_country(post, _card, options)
         return unless address = options[:billing_address] || options[:address]
 
         post[:country] = lookup_country_code(address[:country])
@@ -110,7 +110,7 @@ module ActiveMerchant #:nodoc:
         post[:payer][:address] = add_address(post, card, options)
       end
 
-      def add_address(post, card, options)
+      def add_address(_post, _card, options)
         return unless address = options[:billing_address] || options[:address]
 
         address_object = {}
@@ -165,13 +165,13 @@ module ActiveMerchant #:nodoc:
       # A refund may not be immediate, and return a status_code of 100, "Pending".
       # Since we aren't handling async notifications of eventual success,
       # we count 100 as a success.
-      def success_from(action, response)
+      def success_from(_action, response)
         return false unless response['status_code']
 
         ['100', '200', '400', '600'].include? response['status_code'].to_s
       end
 
-      def message_from(action, response)
+      def message_from(_action, response)
         response['status_detail'] || response['message']
       end
 
@@ -190,7 +190,7 @@ module ActiveMerchant #:nodoc:
         "#{(test? ? test_url : live_url)}/#{endpoint(action, parameters, options)}/"
       end
 
-      def endpoint(action, parameters, options)
+      def endpoint(action, parameters, _options)
         case action
         when 'purchase'
           'secure_payments'
@@ -224,7 +224,7 @@ module ActiveMerchant #:nodoc:
         "V2-HMAC-SHA256, Signature: #{digest}"
       end
 
-      def post_data(action, parameters = {})
+      def post_data(_action, parameters = {})
         parameters.to_json
       end
     end
