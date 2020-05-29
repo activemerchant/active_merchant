@@ -61,11 +61,11 @@ module ActiveMerchant #:nodoc:
         post['lastname'] = options[:billing_address][:last_name]
       end
 
-      def add_amount(post, money, options)
+      def add_amount(post, money, _options)
         post['amount'] = amount(money)
       end
 
-      def add_address(post, creditcard, options)
+      def add_address(post, _creditcard, options)
         post['address1'] = options[:billing_address][:address1]
         post['city'] = options[:billing_address][:city]
         post['state'] = options[:billing_address][:state]
@@ -79,7 +79,7 @@ module ActiveMerchant #:nodoc:
         post['ccexp'] = "#{sprintf("%02d", creditcard.month)}#{creditcard.year.to_s[-2, 2]}"
       end
 
-      def commit(action, money, parameters={})
+      def commit(action, _money, parameters={})
         parameters['username'] = @options[:username]
         parameters['password'] = @options[:password]
         parse(ssl_post(BASE_URL, post_data(action, parameters)))

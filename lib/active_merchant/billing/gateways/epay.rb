@@ -80,7 +80,7 @@ module ActiveMerchant #:nodoc:
         commit(:authorize, post)
       end
 
-      def capture(money, authorization, options = {})
+      def capture(money, authorization, _options = {})
         post = {}
 
         add_reference(post, authorization)
@@ -89,7 +89,7 @@ module ActiveMerchant #:nodoc:
         commit(:capture, post)
       end
 
-      def void(identification, options = {})
+      def void(identification, _options = {})
         post = {}
 
         add_reference(post, identification)
@@ -97,7 +97,7 @@ module ActiveMerchant #:nodoc:
         commit(:void, post)
       end
 
-      def refund(money, identification, options = {})
+      def refund(money, identification, _options = {})
         post = {}
 
         add_amount_without_currency(post, money)

@@ -223,7 +223,7 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
-      def build_unstore_request(identification, options)
+      def build_unstore_request(identification, _options)
         xml = Builder::XmlMarkup.new
 
         xml.tag! 'crn', identification

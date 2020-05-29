@@ -335,7 +335,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def stored_credential_indicator(xml, card, options)
+      def stored_credential_indicator(_xml, card, options)
         if card.brand == 'master' || options.dig(:stored_credential, :initial_transaction) == false
           'S'
         else

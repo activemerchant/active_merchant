@@ -99,7 +99,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>options</tt> -- A hash of parameters.
       #
       #
-      def credit(money, identification, options = {})
+      def credit(money, identification, _options = {})
         ActiveMerchant.deprecated CREDIT_DEPRECATION_MESSAGE
         refund(money, identification, {})
       end
@@ -261,7 +261,7 @@ module ActiveMerchant #:nodoc:
         xml.tag!('Amount', amount(money))
       end
 
-      def build_CustomerCreditCardTxnVoid(xml, money, parameters)
+      def build_CustomerCreditCardTxnVoid(xml, _money, parameters)
         xml.tag!('TransRequestID', parameters[:trans_request_id])
         xml.tag!('CreditCardTransID', parameters[:transaction_id])
       end

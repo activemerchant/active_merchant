@@ -50,19 +50,19 @@ module ActiveMerchant #:nodoc:
         commit('sale', money, post)
       end
 
-      def capture(money, authorization, options = {})
+      def capture(money, authorization, _options = {})
         post = {}
         post[:transactionid] = authorization
         commit('capture', money, post)
       end
 
-      def void(authorization, options = {})
+      def void(authorization, _options = {})
         post = {}
         post[:transactionid] = authorization
         commit('void', nil, post)
       end
 
-      def refund(money, authorization, options = {})
+      def refund(money, authorization, _options = {})
         post = {}
         post[:transactionid] = authorization
         commit('refund', money, post)
@@ -106,7 +106,7 @@ module ActiveMerchant #:nodoc:
         post[:ipaddress] = options[:ip] if options.has_key? :ip
       end
 
-      def add_address(post, creditcard, options)
+      def add_address(post, _creditcard, options)
         if address = options[:billing_address] || options[:address]
           post[:address1]    = address[:address1].to_s
           post[:address2]    = address[:address2].to_s unless address[:address2].blank?

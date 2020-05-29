@@ -92,7 +92,7 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
-      def build_capture_request(money, authorization, options)
+      def build_capture_request(_money, authorization, _options)
         xml = Builder::XmlMarkup.new
         add_common_credit_card_info(xml, 'PREVIOUS_SALE')
         transaction_id, _ = authorization_parts_from(authorization)
@@ -113,7 +113,7 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
-      def build_void_request(authorization, options)
+      def build_void_request(authorization, _options)
         xml = Builder::XmlMarkup.new
         add_common_credit_card_info(xml, 'VOID')
         transaction_id, _ = authorization_parts_from(authorization)
@@ -121,7 +121,7 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
-      def build_credit_request(money, authorization, options)
+      def build_credit_request(money, authorization, _options)
         xml = Builder::XmlMarkup.new
         add_common_credit_card_info(xml, 'RETURN')
         add_purchase_data(xml, money)
@@ -165,7 +165,7 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'TransactionDate', Time.now
       end
 
-      def add_address(xml, creditcard, address, options, shipTo = false)
+      def add_address(xml, creditcard, address, options, _shipTo = false)
         xml.tag! 'FirstName', creditcard.first_name
         xml.tag! 'LastName', creditcard.last_name
         xml.tag! 'Address', address[:address1] # => there is no support for address2 in quantum
@@ -186,7 +186,7 @@ module ActiveMerchant #:nodoc:
       end
 
       # Where we actually build the full SOAP request using builder
-      def build_request(body, options)
+      def build_request(body, _options)
         xml = Builder::XmlMarkup.new
         xml.instruct!
         xml.tag! 'QGWRequest' do

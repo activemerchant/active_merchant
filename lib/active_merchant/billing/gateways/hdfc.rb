@@ -163,7 +163,7 @@ EOA
         xml.target!
       end
 
-      def url(action)
+      def url(_action)
         endpoint = 'TranPortalXMLServlet'
         (test? ? test_url : live_url) + endpoint
       end

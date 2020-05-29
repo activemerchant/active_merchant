@@ -106,7 +106,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def fill_credentials(soap, options)
+      def fill_credentials(soap, _options)
         soap.tag!('websiteID', @options[:login].to_s)
         soap.tag!('password', @options[:password].to_s)
       end
@@ -156,7 +156,7 @@ module ActiveMerchant #:nodoc:
         result
       end
 
-      def commit(soap_action, soap, options)
+      def commit(soap_action, soap, _options)
         headers = {'SOAPAction' => "\"urn:Interface##{soap_action}\"",
                    'Content-Type' => 'text/xml; charset=utf-8'}
         response_string = ssl_post(test? ? self.test_url : self.live_url, soap, headers)

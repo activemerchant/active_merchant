@@ -234,7 +234,7 @@ module ActiveMerchant #:nodoc:
         commit(:authorize, request)
       end
 
-      def capture(amount, authorization, options={})
+      def capture(amount, authorization, _options={})
         transaction_id = split_authorization(authorization)[1]
         request = build_xml_transaction_request do |doc|
           add_amount(doc, amount)
@@ -244,7 +244,7 @@ module ActiveMerchant #:nodoc:
         commit(:capture, request)
       end
 
-      def void(authorization, options={})
+      def void(authorization, _options={})
         action, transaction_id = split_authorization(authorization)
 
         request = build_xml_transaction_request do |doc|
@@ -254,7 +254,7 @@ module ActiveMerchant #:nodoc:
         commit(void_type(action), request)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, _options={})
         action, transaction_id = split_authorization(authorization)
 
         request = build_xml_transaction_request do |doc|
@@ -265,7 +265,7 @@ module ActiveMerchant #:nodoc:
         commit(refund_type(action), request)
       end
 
-      def credit(amount, payment_method, options={})
+      def credit(amount, payment_method, _options={})
         request = build_xml_transaction_request do |doc|
           add_pan(doc, payment_method)
           add_amount(doc, amount)
@@ -462,7 +462,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def build_xml_request(wrapper, merchant_product_type=nil)
+      def build_xml_request(wrapper, _merchant_product_type=nil)
         Nokogiri::XML::Builder.new(encoding: 'UTF-8') do |xml|
           xml['soapenv'].Envelope('xmlns:soapenv' => SOAPENV_NAMESPACE) do
             xml['soapenv'].Body do

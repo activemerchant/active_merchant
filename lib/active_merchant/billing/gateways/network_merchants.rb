@@ -75,7 +75,7 @@ module ActiveMerchant #:nodoc:
         post
       end
 
-      def build_void_post(authorization, options)
+      def build_void_post(authorization, _options)
         post = {}
         post[:transactionid] = authorization
         post
@@ -96,7 +96,7 @@ module ActiveMerchant #:nodoc:
         post
       end
 
-      def build_unstore_post(customer_vault_id, options)
+      def build_unstore_post(customer_vault_id, _options)
         post = {}
         post['customer_vault_id'] = customer_vault_id
         post

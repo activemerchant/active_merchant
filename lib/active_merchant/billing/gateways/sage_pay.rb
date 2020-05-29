@@ -121,7 +121,7 @@ module ActiveMerchant #:nodoc:
         commit(:capture, post)
       end
 
-      def void(identification, options = {})
+      def void(identification, _options = {})
         post = {}
 
         add_reference(post, identification)
@@ -156,7 +156,7 @@ module ActiveMerchant #:nodoc:
         commit(:store, post)
       end
 
-      def unstore(token, options = {})
+      def unstore(token, _options = {})
         post = {}
         add_token(post, token)
         commit(:unstore, post)
@@ -223,7 +223,7 @@ module ActiveMerchant #:nodoc:
       end
 
       # doesn't actually use the currency -- dodgy!
-      def add_release_amount(post, money, options)
+      def add_release_amount(post, money, _options)
         add_pair(post, :ReleaseAmount, amount(money), required: true)
       end
 

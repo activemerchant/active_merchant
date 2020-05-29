@@ -92,7 +92,7 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def add_credentials(xml, options)
+      def add_credentials(xml, _options)
         xml.merchantid_ @options[:merchant_id]
         xml.password_ @options[:password]
       end

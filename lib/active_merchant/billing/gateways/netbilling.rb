@@ -62,13 +62,13 @@ module ActiveMerchant #:nodoc:
         commit(:purchase, post)
       end
 
-      def capture(money, authorization, options = {})
+      def capture(_money, authorization, _options = {})
         post = {}
         add_reference(post, authorization)
         commit(:capture, post)
       end
 
-      def refund(money, source, options = {})
+      def refund(money, source, _options = {})
         post = {}
         add_amount(post, money)
         add_reference(post, source)
@@ -87,7 +87,7 @@ module ActiveMerchant #:nodoc:
         commit(:credit, post)
       end
 
-      def void(source, options = {})
+      def void(source, _options = {})
         post = {}
         add_reference(post, source)
         commit(:void, post)
@@ -133,7 +133,7 @@ module ActiveMerchant #:nodoc:
         post[:cust_ip] = options[:ip]
       end
 
-      def add_address(post, credit_card, options)
+      def add_address(post, _credit_card, options)
         if billing_address = options[:billing_address] || options[:address]
           post[:bill_street]     = billing_address[:address1]
           post[:cust_phone]      = billing_address[:phone]

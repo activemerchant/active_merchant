@@ -365,12 +365,12 @@ module ActiveMerchant #:nodoc:
         options
       end
 
-      def add_reference(post, authorization, options = {})
+      def add_reference(post, authorization, _options = {})
         _, psp_reference, _ = authorization.split('#')
         post[:originalReference] = single_reference(authorization) || psp_reference
       end
 
-      def add_original_reference(post, authorization, options = {})
+      def add_original_reference(post, authorization, _options = {})
         original_psp_reference, _, _ = authorization.split('#')
         post[:originalReference] = single_reference(authorization) || original_psp_reference
       end
@@ -578,7 +578,7 @@ module ActiveMerchant #:nodoc:
         post
       end
 
-      def post_data(action, parameters = {})
+      def post_data(_action, parameters = {})
         JSON.generate(parameters)
       end
 

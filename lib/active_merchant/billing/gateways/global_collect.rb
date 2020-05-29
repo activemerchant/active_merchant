@@ -195,7 +195,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_address(post, creditcard, options)
+      def add_address(post, _creditcard, options)
         shipping_address = options[:shipping_address]
         if billing_address = options[:billing_address] || options[:address]
           post['order']['customer']['billingAddress'] = {
@@ -290,7 +290,7 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def auth_digest(action, post, authorization = nil)
+      def auth_digest(action, _post, authorization = nil)
         data = <<-EOS
 POST
 #{content_type}

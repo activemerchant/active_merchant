@@ -86,7 +86,7 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def add_payment(post, payment, options)
+      def add_payment(post, payment, _options)
         if payment.is_a? String
           customer_id, token = split_authorization(payment)
           post[:data][:attributes][:token] = {
@@ -125,7 +125,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def app_token_request(options)
+      def app_token_request(_options)
         post = new_post
         post[:data][:type] = 'auth'
         post[:data][:attributes] = { appKey: @options[:app_key] }

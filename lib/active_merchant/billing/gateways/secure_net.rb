@@ -186,7 +186,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_merchant_key(xml, options)
+      def add_merchant_key(xml, _options)
         xml.tag!('MERCHANT_KEY') do
           xml.tag! 'GROUPID', 0
           xml.tag! 'SECUREKEY', @options[:password]

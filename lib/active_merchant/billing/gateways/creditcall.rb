@@ -144,7 +144,7 @@ module ActiveMerchant #:nodoc:
         builder.to_xml
       end
 
-      def add_transaction_details(xml, amount, authorization, type, options={})
+      def add_transaction_details(xml, amount, authorization, type, _options={})
         xml.TransactionDetails do
           xml.MessageType type
           xml.Amount(unit: 'Minor') { xml.text(amount) } if amount
@@ -153,7 +153,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_terminal_details(xml, options={})
+      def add_terminal_details(xml, _options={})
         xml.TerminalDetails do
           xml.TerminalID @options[:terminal_id]
           xml.TransactionKey @options[:transaction_key]

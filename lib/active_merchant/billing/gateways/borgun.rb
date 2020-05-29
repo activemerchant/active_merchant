@@ -219,7 +219,7 @@ module ActiveMerchant #:nodoc:
         EOS
       end
 
-      def url(action)
+      def url(_action)
         (test? ? test_url : live_url)
       end
 

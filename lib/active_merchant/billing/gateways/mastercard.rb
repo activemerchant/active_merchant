@@ -54,7 +54,7 @@ module ActiveMerchant
         commit('refund', post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, _options={})
         post = new_post
         add_reference(post, *next_authorization(authorization), :targetTransactionId)
 
@@ -263,7 +263,7 @@ module ActiveMerchant
         end
       end
 
-      def authorization_from(request, response)
+      def authorization_from(_request, response)
         [response['order']['id'], response['transaction']['id']].join('|') if response['order']
       end
 

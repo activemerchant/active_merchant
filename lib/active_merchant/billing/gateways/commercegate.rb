@@ -50,7 +50,7 @@ module ActiveMerchant #:nodoc:
         commit('REFUND', post)
       end
 
-      def void(identification, options = {})
+      def void(identification, _options = {})
         post = {}
         post[:transID] = identification
         commit('VOID_AUTH', post)

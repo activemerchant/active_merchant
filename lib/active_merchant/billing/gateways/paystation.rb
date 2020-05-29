@@ -137,7 +137,7 @@ module ActiveMerchant #:nodoc:
         post[:ft] = options[:token] if options[:token] # specify a token to use that, or let Paystation generate one
       end
 
-      def add_authorize_flag(post, options)
+      def add_authorize_flag(post, _options)
         post[:pa] = 't' # tells Paystation that this is a pre-auth authorisation payment (account must be in pre-auth mode)
       end
 

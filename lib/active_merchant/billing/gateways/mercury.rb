@@ -242,7 +242,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def parse(action, body)
+      def parse(_action, body)
         response = {}
         hashify_xml!(unescape_xml(body), response)
         response

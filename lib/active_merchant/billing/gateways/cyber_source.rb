@@ -437,7 +437,7 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
-      def build_validate_pinless_debit_request(creditcard, options)
+      def build_validate_pinless_debit_request(creditcard, _options)
         xml = Builder::XmlMarkup.new indent: 2
         add_creditcard(xml, creditcard)
         add_validate_pinless_debit_service(xml)
@@ -646,7 +646,7 @@ module ActiveMerchant #:nodoc:
         payment_method.is_a?(NetworkTokenizationCreditCard)
       end
 
-      def add_auth_network_tokenization(xml, payment_method, options)
+      def add_auth_network_tokenization(xml, payment_method, _options)
         return unless network_tokenization?(payment_method)
 
         brand = card_brand(payment_method).to_sym
@@ -723,19 +723,19 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'ecDebitService', {'run' => 'true'}
       end
 
-      def add_subscription_create_service(xml, options)
+      def add_subscription_create_service(xml, _options)
         xml.tag! 'paySubscriptionCreateService', {'run' => 'true'}
       end
 
-      def add_subscription_update_service(xml, options)
+      def add_subscription_update_service(xml, _options)
         xml.tag! 'paySubscriptionUpdateService', {'run' => 'true'}
       end
 
-      def add_subscription_delete_service(xml, options)
+      def add_subscription_delete_service(xml, _options)
         xml.tag! 'paySubscriptionDeleteService', {'run' => 'true'}
       end
 
-      def add_subscription_retrieve_service(xml, options)
+      def add_subscription_retrieve_service(xml, _options)
         xml.tag! 'paySubscriptionRetrieveService', {'run' => 'true'}
       end
 

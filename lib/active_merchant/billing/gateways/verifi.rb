@@ -110,7 +110,7 @@ module ActiveMerchant #:nodoc:
         commit(trx_type, money, post)
       end
 
-      def capture_void_or_refund_template(trx_type, money, authorization, options)
+      def capture_void_or_refund_template(trx_type, money, authorization, _options)
         post = VerifiPostData.new
         post[:transactionid] = authorization
 

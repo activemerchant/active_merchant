@@ -227,7 +227,7 @@ Conn close
     XML
   end
 
-  def assert_metadata(name, location, &block)
+  def assert_metadata(name, location)
     stub_comms(@gateway, :ssl_request) do
       yield
     end.check_request do |method, endpoint, data, headers|

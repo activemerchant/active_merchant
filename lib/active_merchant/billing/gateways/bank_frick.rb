@@ -68,7 +68,7 @@ module ActiveMerchant #:nodoc:
         commit('refund', post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, _options={})
         post = {}
         post[:authorization] = authorization
 
@@ -89,7 +89,7 @@ module ActiveMerchant #:nodoc:
         post[:ip] = options[:ip] || '0.0.0.0'
       end
 
-      def add_address(post, creditcard, options)
+      def add_address(post, _creditcard, options)
         if address = options[:billing_address] || options[:address]
           post[:address] = address[:address1].to_s
           post[:company] = address[:company].to_s

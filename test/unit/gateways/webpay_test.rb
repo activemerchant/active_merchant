@@ -247,7 +247,7 @@ class WebpayTest < Test::Unit::TestCase
   end
 
   # Place raw successful response from gateway here
-  def successful_purchase_response(refunded=false)
+  def successful_purchase_response(_refunded=false)
     <<-RESPONSE
 {
   "id": "ch_test_charge",

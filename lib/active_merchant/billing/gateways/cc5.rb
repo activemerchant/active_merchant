@@ -86,7 +86,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def build_void_request(authorization, options = {})
+      def build_void_request(authorization, _options = {})
         xml = Builder::XmlMarkup.new indent: 2
 
         xml.tag! 'CC5Request' do

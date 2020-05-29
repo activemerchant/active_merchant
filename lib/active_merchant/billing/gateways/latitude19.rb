@@ -201,7 +201,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def get_session(options={})
+      def get_session(_options={})
         post = {}
         post[:method] = 'getSession'
         add_request_id(post)
@@ -213,7 +213,7 @@ module ActiveMerchant #:nodoc:
         commit('session', post)
       end
 
-      def get_token(authorization, payment_method, options={})
+      def get_token(authorization, payment_method, _options={})
         post = {}
         post[:method] = 'tokenize'
         add_request_id(post)

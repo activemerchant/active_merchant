@@ -184,7 +184,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def build_order_inquiry_request(authorization, options)
+      def build_order_inquiry_request(authorization, _options)
         build_request do |xml|
           xml.inquiry do
             xml.orderInquiry 'orderCode' => authorization
@@ -230,7 +230,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def build_void_request(authorization, options)
+      def build_void_request(authorization, _options)
         build_order_modify_request(authorization, &:cancel)
       end
 
@@ -522,7 +522,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_moto_flag(xml, options)
+      def add_moto_flag(xml, _options)
         xml.dynamicInteractionType 'type' => 'MOTO'
       end
 

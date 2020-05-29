@@ -199,7 +199,7 @@ module ActiveMerchant #:nodoc:
         (response['error'] ? response['error_description'] : 'Success')
       end
 
-      def authorization_from(response, params)
+      def authorization_from(response, _params)
         return response['credit_card_id'].to_s if response['credit_card_id']
 
         original_amount = response['amount'].nil? ? nil : sprintf('%0.02f', response['amount'])

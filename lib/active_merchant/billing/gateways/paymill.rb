@@ -43,7 +43,7 @@ module ActiveMerchant #:nodoc:
         commit(:post, "refunds/#{transaction_id(authorization)}", post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, _options={})
         commit(:delete, "preauthorizations/#{preauth(authorization)}")
       end
 

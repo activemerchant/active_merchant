@@ -406,7 +406,7 @@ module ActiveMerchant
         String(key).split('_').inject([]) { |buffer, e| buffer.push(buffer.empty? ? e : e.capitalize) }.join
       end
 
-      def add_settings(xml, source, options)
+      def add_settings(xml, _source, options)
         xml.transactionSettings do
           if options[:recurring]
             xml.setting do
@@ -754,7 +754,7 @@ module ActiveMerchant
         end
       end
 
-      def state_from(address, options)
+      def state_from(address, _options)
         if ['US', 'CA'].include?(address[:country])
           address[:state] || 'NC'
         else
@@ -959,7 +959,7 @@ module ActiveMerchant
         end
       end
 
-      def message_from(action, response, avs_result, cvv_result)
+      def message_from(_action, response, avs_result, cvv_result)
         if response[:response_code] == DECLINED
           if CARD_CODE_ERRORS.include?(cvv_result.code)
             return cvv_result.message

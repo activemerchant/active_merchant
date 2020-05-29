@@ -268,7 +268,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def build_card(xml, opts)
+      def build_card(xml, _opts)
         xml.tag! 'card' do
           xml.tag! 'cardNum', @credit_card.number
           xml.tag! 'cardExpiry' do

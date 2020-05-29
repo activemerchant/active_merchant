@@ -41,7 +41,7 @@ module ActiveMerchant #:nodoc:
         commit(action, post)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, _options={})
         action = 'refund'
 
         post = {}
@@ -50,7 +50,7 @@ module ActiveMerchant #:nodoc:
         commit(action, post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, _options={})
         action = 'void'
 
         post = {}
@@ -116,7 +116,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_amount_defaults(sum, money, options)
+      def add_amount_defaults(sum, money, _options)
         sum[:subtotalIva] = amount(money).to_f
         sum[:iva] = 0
         sum[:subtotalIva0] = 0
@@ -140,7 +140,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_payment_method(post, payment_method, options)
+      def add_payment_method(post, payment_method, _options)
         card = {}
         card[:number] = payment_method.number
         card[:cvv] = payment_method.verification_value
@@ -150,7 +150,7 @@ module ActiveMerchant #:nodoc:
         post[:card] = card
       end
 
-      def add_reference(post, authorization, options)
+      def add_reference(post, authorization, _options)
         post[:token] = authorization
       end
 

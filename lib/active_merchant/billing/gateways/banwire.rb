@@ -54,7 +54,7 @@ module ActiveMerchant #:nodoc:
         post[:concept] = options[:description]
       end
 
-      def add_address(post, creditcard, options)
+      def add_address(post, _creditcard, options)
         post[:address] = options[:billing_address][:address1]
         post[:post_code] = options[:billing_address][:zip]
       end
@@ -81,7 +81,7 @@ module ActiveMerchant #:nodoc:
         JSON.parse(body)
       end
 
-      def commit(money, parameters)
+      def commit(_money, parameters)
         raw_response = ssl_post(URL, post_data(parameters))
         begin
           response = parse(raw_response)
