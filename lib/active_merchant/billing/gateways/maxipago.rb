@@ -4,9 +4,13 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class MaxipagoGateway < Gateway
       API_VERSION = '3.1.1.15'
+      class_attribute :live_api_url, :test_api_url
 
       self.live_url = 'https://api.maxipago.net/UniversalAPI/postXML'
       self.test_url = 'https://testapi.maxipago.net/UniversalAPI/postXML'
+
+      self.live_api_url = 'https://api.maxipago.net/UniversalAPI/postAPI'
+      self.test_api_url = 'https://testapi.maxipago.net/UniversalAPI/postAPI'
 
       self.supported_countries = ['BR']
       self.default_currency = 'BRL'
@@ -14,6 +18,10 @@ module ActiveMerchant #:nodoc:
       self.supported_cardtypes = [:visa, :master, :discover, :american_express, :diners_club]
       self.homepage_url = 'http://www.maxipago.com/'
       self.display_name = 'maxiPago!'
+
+      STANDARD_ERROR_CODE_MAPPING = {
+        'DECLINED' => STANDARD_ERROR_CODE[:card_declined]
+      }
 
       def initialize(options = {})
         requires!(options, :login, :password)
@@ -59,11 +67,68 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def credit(money, identification, options = {})
+        ActiveMerchant.deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, identification, options)
+      end
+
       def verify(creditcard, options = {})
         MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, creditcard, options) }
+          r.process { authorize(1.00, creditcard, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
         end
+      end
+
+      def store(creditcard, options={})
+        return Response.new(false, 'Missing customer id') unless options[:customer_id]
+        commit('add-card-onfile', true) do |xml|
+          xml.customerId options[:customer_id]
+          xml.creditCardNumber creditcard.number
+          xml.expirationMonth creditcard.month.to_s.rjust(2,'0')[-2..-1]
+          xml.expirationYear '20' + creditcard.year.to_s.rjust(2,'0')[-2..-1]
+          xml.billingName creditcard.name
+          xml.billingAddress1 options[:address][:address1]
+          xml.billingAddress2 options[:address][:address2]
+          xml.billingCity options[:address][:city]
+          xml.billingState options[:address][:state]
+          xml.billingZip options[:address][:zip]
+          xml.billingCountry options[:address][:country]
+          xml.billingPhone options[:address][:phone]
+          xml.billingEmail options[:address][:email]
+        end
+      end
+      
+      def update
+
+      end
+      
+      def add_customer(options = {})
+        commit('add-consumer', true) do |xml|
+          options.each do |option_key, option_value|
+            xml.send(option_key, option_value)
+          end
+        end
+      end
+
+      def delete_customer(customer_id)
+        commit('delete-consumer', true) do |xml|
+          xml.customerId customer_id
+        end
+      end
+      
+      def update_customer(customer_token, options={})
+        commit('update-consumer', true) do |xml|
+          xml.customerId customer_token
+          options.each do |option_key, option_value|
+            xml.send(option_key, option_value)
+          end
+        end
+      end
+      
+      def unstore
+      end
+
+      def verify_credentials
       end
 
       def supports_scrubbing?
@@ -79,21 +144,63 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def commit(action)
-        request = build_xml_request(action) { |doc| yield(doc) }
-        response = parse(ssl_post(url, request, 'Content-Type' => 'text/xml'))
+      class MaxipagoPaymentToken < PaymentToken
+        def type
+          'maxipago'
+        end
+      end
 
+      def commit(action, is_api_request=false)
+        if is_api_request
+          request = build_api_request(action) { |doc| yield(doc) }
+          puts api_url		
+          puts request
+          raw_response = ssl_post(api_url, request, 'Content-Type' => 'text/xml')
+          puts raw_response
+          response = parse(raw_response)
+          puts response
+          success = api_success? response
+        else
+          request = build_xml_request(action) { |doc| yield(doc) }
+          puts request
+          raw_response = ssl_post(url, request, 'Content-Type' => 'text/xml')
+          puts raw_response
+          response = parse(raw_response)
+          puts response
+          success = success? response
+        end
         Response.new(
-          success?(response),
+          success,
           message_from(response),
           response,
           test: test?,
-          authorization: authorization_from(response)
+          authorization: authorization_from(response),
+          error_code: success ? nil : error_code_from(response)
         )
+      end
+
+      def api_url
+        test? ? self.test_api_url : self.live_api_url
       end
 
       def url
         test? ? self.test_url : self.live_url
+      end
+
+      def build_api_request(action)
+        builder = Nokogiri::XML::Builder.new(encoding: 'UTF-8')
+        builder.send("api-request") do |xml|
+          xml.verification do
+            xml.merchantId @options[:login]
+            xml.merchantKey @options[:password]
+          end
+          xml.command "#{action}"
+          xml.request do
+            yield(xml)
+          end
+        end
+
+        builder.to_xml(indent: 2)
       end
 
       def build_xml_request(action)
@@ -118,8 +225,19 @@ module ActiveMerchant #:nodoc:
         response[:response_code] == '0'
       end
 
+      def api_success?(response)
+        response[:error_code] == '0'
+      end
+
       def message_from(response)
-        response[:error_message] || response[:response_message] || response[:processor_message] || response[:error_msg]
+        message = response[:error_message] || response[:response_message] || response[:processor_message] || response[:error_msg]
+        case message
+        when 'DECLINED'
+          message = 'Cartão não autorizado.'
+        when 'creditCardNumber is not a valid credit card number.'
+          message = 'Cartão inválido.'
+        end
+        message
       end
 
       def authorization_from(response)
@@ -148,17 +266,16 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_auth_purchase(xml, money, creditcard, options)
+      def add_auth_purchase(xml, money, payment, options)
         add_processor_id(xml)
         xml.fraudCheck('N')
         add_reference_num(xml, options)
         xml.transactionDetail do
           xml.payType do
-            xml.creditCard do
-              xml.number(creditcard.number)
-              xml.expMonth(creditcard.month)
-              xml.expYear(creditcard.year)
-              xml.cvvNumber(creditcard.verification_value)
+            if payment.is_a?(MaxipagoPaymentToken)
+              add_payment_token(xml, payment, options)
+            else
+              add_creditcard(xml, payment, options)
             end
           end
         end
@@ -166,7 +283,30 @@ module ActiveMerchant #:nodoc:
           add_amount(xml, money, options)
           add_installments(xml, options)
         end
-        add_billing_address(xml, creditcard, options)
+        add_billing_address(xml, payment, options)
+      end
+
+      def error_code_from(response)
+        code = response[:response_message]
+        error_code = STANDARD_ERROR_CODE_MAPPING[code]
+        error_code
+      end
+
+      def add_payment_token(xml, token, options = {})
+        xml.onFile do
+          xml.customerId token.payment_data[:customer_id]
+          xml.token token.payment_data[:token]
+          xml.cvvNumber
+        end
+      end
+
+      def add_creditcard(xml, creditcard, options)
+        xml.creditCard do
+          xml.number(creditcard.number)
+          xml.expMonth(creditcard.month)
+          xml.expYear(creditcard.year)
+          xml.cvvNumber(creditcard.verification_value)
+        end
       end
 
       def add_reference_num(xml, options)
