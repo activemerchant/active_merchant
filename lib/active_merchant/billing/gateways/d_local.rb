@@ -118,10 +118,20 @@ module ActiveMerchant #:nodoc:
         address_object = {}
         address_object[:state] = address[:state] if address[:state]
         address_object[:city] = address[:city] if address[:city]
-        address_object[:zip_code] = address[:zip_code] if address[:zip_code]
-        address_object[:street] = address[:street] if address[:street]
-        address_object[:number] = address[:number] if address[:number]
+        address_object[:zip_code] = address[:zip] if address[:zip]
+        address_object[:street] = address[:street] || parse_street(address) if parse_street(address)
+        address_object[:number] = address[:number] || parse_house_number(address) if parse_house_number(address)
         address_object
+      end
+
+      def parse_street(address)
+        street = address[:address1].split(/\s+/).keep_if { |x| x !~ /\d/ }.join(' ')
+        street.empty? ? nil : street
+      end
+
+      def parse_house_number(address)
+        house = address[:address1].split(/\s+/).keep_if { |x| x =~ /\d/ }.join(' ')
+        house.empty? ? nil : house
       end
 
       def add_card(post, card, action, options={})
