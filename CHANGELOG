@@ -4,6 +4,7 @@
 * Forte: Change default sec_code value to PPD [molbrown] #3653
 * Elavon: Add merchant initiated unscheduled field [leila-alderman] #3647
 * Decidir: Add aggregate data fields [leila-alderman] #3648
+* Vantiv: Vantiv(Element): add option to send terminal id in transactions [cdmackeyfree] #3654
 
 == Version 1.107.4 (Jun 2, 2020)
 * Elavon: Implement true verify action [leila-alderman] #3610

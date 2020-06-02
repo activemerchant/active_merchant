@@ -147,6 +147,11 @@ class ElementTest < Test::Unit::TestCase
     assert_equal 'Present', response.params['terminal']['cardpresentcode']
   end
 
+  def test_successful_purchase_with_terminal_id
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(terminal_id: '02'))
+    assert_equal '02', response.params['terminal']['terminalid']
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
