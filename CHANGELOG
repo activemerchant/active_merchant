@@ -1,6 +1,8 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+
+== Version 1.107.4 (Jun 2, 2020)
 * Elavon: Implement true verify action [leila-alderman] #3610
 * Vantiv Express: Implement true verify [leila-alderman] #3617
 * Litle: Pass expiration data for basis payment method [therufs] #3606
