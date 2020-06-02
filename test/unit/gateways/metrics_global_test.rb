@@ -1,4 +1,5 @@
 require 'test_helper'
+require 'active_support/core_ext/kernel/singleton_class'
 
 class MetricsGlobalTest < Test::Unit::TestCase
   include CommStub
