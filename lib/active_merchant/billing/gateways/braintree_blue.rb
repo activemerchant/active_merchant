@@ -1,4 +1,5 @@
 require 'active_merchant/billing/gateways/braintree/braintree_common'
+require 'active_support/core_ext/array/extract_options'
 
 begin
   require 'braintree'
