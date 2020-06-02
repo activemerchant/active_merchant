@@ -166,7 +166,7 @@ module ActiveMerchant #:nodoc:
         post[:echeck][:routing_number] = payment.routing_number
         post[:echeck][:account_type] = payment.account_type
         post[:echeck][:check_number] = payment.number
-        post[:echeck][:sec_code] = options[:sec_code] || "WEB"
+        post[:echeck][:sec_code] = options[:sec_code] || "PPD"
       end
 
       def add_credit_card(post, payment)
