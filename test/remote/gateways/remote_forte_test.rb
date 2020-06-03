@@ -9,7 +9,7 @@ class RemoteForteTest < Test::Unit::TestCase
     @declined_card = credit_card('1111111111111111')
 
     @check = check
-    @bad_check = check({
+    @bad_check = check(
       name: 'Jim Smith',
       bank_name: 'Bank of Elbonia',
       routing_number: '1234567890',
@@ -17,7 +17,7 @@ class RemoteForteTest < Test::Unit::TestCase
       account_holder_type: '',
       account_type: 'checking',
       number: '0'
-    })
+    )
 
     @options = {
       billing_address: address,
@@ -43,6 +43,18 @@ class RemoteForteTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @check, @options)
     assert_success response
     assert_equal 'APPROVED', response.message
+    assert_equal 'WEB', response.params['echeck']['sec_code']
+  end
+
+  def test_successful_purchase_with_echeck_with_more_options
+    options = {
+      sec_code: 'PPD'
+    }
+
+    response = @gateway.purchase(@amount, @check, options)
+    assert_success response
+    assert_equal 'APPROVED', response.message
+    assert_equal 'PPD', response.params['echeck']['sec_code']
   end
 
   def test_failed_purchase_with_echeck
@@ -171,6 +183,17 @@ class RemoteForteTest < Test::Unit::TestCase
     assert_equal 'TEST APPROVAL', refund.message
   end
 
+  def test_successful_refund_with_bank_account
+    purchase = @gateway.purchase(@amount, @check, @options)
+    assert_success purchase
+
+    wait_for_authorization_to_clear
+
+    assert refund = @gateway.refund(@amount, purchase.authorization, @options)
+    assert_success refund
+    assert_equal 'APPROVED', refund.message
+  end
+
   def test_failed_refund
     response = @gateway.refund(@amount, '', @options)
     assert_failure response
@@ -188,6 +211,205 @@ class RemoteForteTest < Test::Unit::TestCase
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
     assert_match %r{INVALID CREDIT CARD NUMBER}, response.message
+  end
+
+  def test_successful_store
+    response = @gateway.store(@credit_card)
+    assert_success response
+    assert_equal 'Create Successful.', response.message
+    assert response.params['customer_token'].present?
+    @data_key = response.params['customer_token']
+  end
+
+  def test_successful_store_and_purchase_with_customer_token
+    assert response = @gateway.store(@credit_card, billing_address: address)
+    assert_success response
+    assert_equal 'Create Successful.', response.message
+
+    vault_id = response.params['customer_token']
+    purchase_response = @gateway.purchase(@amount, vault_id)
+    assert purchase_response.params['transaction_id'].start_with?('trn_')
+  end
+
+  def test_successful_store_and_purchase_with_customer_and_paymethod_tokens
+    assert response = @gateway.store(@credit_card, billing_address: address)
+    assert_success response
+    assert_equal 'Create Successful.', response.message
+
+    vault_id = response.params['customer_token'] + '|' + response.params['default_paymethod_token']
+    purchase_response = @gateway.purchase(@amount, vault_id)
+    assert_success purchase_response
+    assert purchase_response.params['transaction_id'].start_with?('trn_')
+  end
+
+  def test_successful_store_of_bank_account
+    response = @gateway.store(@check)
+    assert_success response
+    assert_equal 'Create Successful.', response.message
+    assert response.params['customer_token'].present?
+    @data_key = response.params['customer_token']
+  end
+
+  def test_successful_store_of_bank_account_and_purchase_with_customer_token
+    assert response = @gateway.store(@check, billing_address: address)
+    assert_success response
+    assert_equal 'Create Successful.', response.message
+
+    vault_id = response.params['customer_token']
+    options = { sec_code: 'WEB' }
+    purchase_response = @gateway.purchase(@amount, vault_id, options)
+    assert_success purchase_response
+    assert purchase_response.params['transaction_id'].start_with?('trn_')
+  end
+
+  def test_successful_store_of_bank_account_and_purchase_with_customer_and_paymethod_tokens
+    assert response = @gateway.store(@check, billing_address: address)
+    assert_success response
+    assert_equal 'Create Successful.', response.message
+
+    vault_id = response.params['customer_token'] + '|' + response.params['default_paymethod_token']
+    options = { sec_code: 'WEB' }
+    purchase_response = @gateway.purchase(@amount, vault_id, options)
+    assert_success purchase_response
+    assert purchase_response.params['transaction_id'].start_with?('trn_')
+  end
+
+  def test_successful_store_and_unstore_of_customer
+    assert store_response = @gateway.store(@credit_card, billing_address: address)
+    assert_success store_response
+    assert_equal 'Create Successful.', store_response.message
+
+    vault_id = store_response.params['customer_token']
+    assert unstore_response = @gateway.unstore(vault_id)
+    assert_success unstore_response
+    assert_equal 'Delete Successful.', unstore_response.message
+    assert unstore_response.params['customer_token'].present?
+    assert unstore_response.params['paymethod_token'].blank?
+  end
+
+  def test_successful_store_of_customer_and_unstore_of_only_paymethod
+    assert store_response = @gateway.store(@credit_card, billing_address: address)
+    assert_success store_response
+    assert_equal 'Create Successful.', store_response.message
+
+    vault_id = store_response.params['customer_token'] + '|' + store_response.params['default_paymethod_token']
+
+    assert unstore_response = @gateway.unstore(vault_id)
+    assert_success unstore_response
+    assert_equal 'Delete Successful.', unstore_response.message
+    assert unstore_response.params['customer_token'].blank?
+    assert unstore_response.params['paymethod_token'].present?
+  end
+
+  def test_successful_store_for_new_customer
+    response = @gateway.store(@credit_card)
+
+    assert_success response
+    assert_equal 'Create Successful.', response.message
+  end
+
+  def test_failed_store_for_new_customer
+    response = @gateway.store(@declined_card)
+
+    assert_failure response
+    assert_equal "Error[1]: Payment Method's credit card number is invalid. Error[2]: Payment Method's credit card type is invalid for the credit card number given.", response.message
+  end
+
+  def test_successful_store_for_existing_customer_without_billing_address
+    store_response1 = @gateway.store(@credit_card)
+    credit_card = credit_card('4111111111111111')
+    options = { customer_token: store_response1.params['customer_token'] }
+
+    store_response2 = @gateway.store(credit_card, options)
+    responses = store_response2.responses
+
+    assert_success store_response2
+    assert_instance_of MultiResponse, store_response2
+    assert_equal 2, responses.size
+
+    create_paymethod_response = responses[0]
+    assert_success create_paymethod_response
+
+    update_customer_response = responses[1]
+    assert_success update_customer_response
+    assert_equal 'Update Successful.', update_customer_response.message
+  end
+
+  def test_successful_store_for_existing_customer_with_billing_address
+    store_response1 = @gateway.store(@credit_card)
+    credit_card = credit_card('4111111111111111')
+    options = {
+      customer_token: store_response1.params['customer_token'],
+      billing_address: {
+        address1: '2981 Aglae Mall',
+        address2: 'Suite 949',
+        city: 'North Irmachester',
+        state: 'NE',
+        country: 'US',
+        zip: '86498'
+      }
+    }
+
+    store_response2 = @gateway.store(credit_card, options)
+    responses = store_response2.responses
+
+    assert_success store_response2
+    assert_instance_of MultiResponse, store_response2
+    assert_equal 4, responses.size
+
+    create_paymethod_response = responses[0]
+    assert_success create_paymethod_response
+
+    create_address_response = responses[1]
+    assert_success create_address_response
+    address_params = create_address_response.params['physical_address']
+    assert_equal '2981 Aglae Mall', address_params['street_line1']
+    assert_equal 'Suite 949', address_params['street_line2']
+    assert_equal 'North Irmachester', address_params['locality']
+    assert_equal 'NE', address_params['region']
+    assert_equal '86498', address_params['postal_code']
+    assert_equal 'US', address_params['country']
+
+    add_address_to_paymethod_response = responses[2]
+    assert_success add_address_to_paymethod_response
+
+    update_customer_response = responses[3]
+    assert_success update_customer_response
+  end
+
+  def test_successful_store_for_existing_customer_with_new_customer_name
+    store_response1 = @gateway.store(@credit_card)
+    credit_card = credit_card('4111111111111111')
+    options = {
+      customer_token: store_response1.params['customer_token'],
+      customer: { first_name: 'Peter', last_name: 'Jones' }
+    }
+
+    store_response2 = @gateway.store(credit_card, options)
+    responses = store_response2.responses
+
+    assert_success store_response2
+    assert_instance_of MultiResponse, store_response2
+    assert_equal 2, responses.size
+
+    create_paymethod_response = responses[0]
+    assert_success create_paymethod_response
+
+    update_customer_response = responses[1]
+    assert_success update_customer_response
+    assert_equal 'Peter', update_customer_response.params["first_name"]
+    assert_equal 'Jones', update_customer_response.params["last_name"]
+  end
+
+  def test_failed_store_for_existing_customer
+    response = @gateway.store(@credit_card)
+    credit_card = @declined_card
+    options = { customer_token: response.params['customer_token'] }
+
+    final_response = @gateway.store(credit_card, options)
+
+    assert_failure final_response
+    assert_equal "Error[1]: Payment Method's credit card number is invalid. Error[2]: Payment Method's credit card type is invalid for the credit card number given.", final_response.message
   end
 
   def test_transcript_scrubbing

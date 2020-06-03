@@ -377,7 +377,7 @@ flo2cash_simple:
 
 forte:
   location_id: "176008"
-  account_id: "300111"
+  organization_id: "300111"
   api_key: "f087a90f00f0ae57050c937ed3815c9f"
   secret: "d793d64064e3113a74fa72035cfc3a1d"
 

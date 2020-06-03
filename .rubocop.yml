@@ -1,0 +1,16 @@
+AllCops:
+  Exclude:
+  - "tmp/**/*"
+  - ".git/**/*"
+  TargetRubyVersion: 2.3.0
+
+Layout/LineLength:
+  Max: 120
+  Enabled: true
+
+Style/FrozenStringLiteralComment:
+  Enabled: false
+
+Style/StringLiterals:
+  EnforcedStyle: single_quotes
+  Enabled: true
