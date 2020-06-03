@@ -11,6 +11,9 @@
 # Paste any required PEM certificates after the pem key.
 #
 
+aafes:
+  identity_uuid: ''
+
 adyen:
   username: ''
   password: ''

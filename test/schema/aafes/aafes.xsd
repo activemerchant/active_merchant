@@ -1,0 +1,1185 @@
+<?xml version="1.0"?>
+<!-- This version contains many updates and changes for WEX & increase of termID and transID lengths. Added AVSRawResp, CVVResponse, TrnAbort, PrivateUseData for REF fields 1-10 in the Header, added FEE to Requests, added origOrderDate to Settlement Messages and SAF tags in the request body and Saf tags in the Response body.
+Changed the Typecode version format. 7-December-2017.-->
+
+<xs:schema
+    xmlns="http://www.aafes.com/credit"
+    targetNamespace="http://www.aafes.com/credit"
+    xmlns:credit="http://www.aafes.com/credit"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    elementFormDefault="qualified">
+    
+    <xs:simpleType name="AccountTypeType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="Pan"/>
+            <xs:enumeration value="Token"/>
+            <xs:enumeration value="EncryptedPayload"/>
+            <xs:enumeration value="Msg"/>
+        </xs:restriction>                                                  
+    </xs:simpleType>
+    <xs:simpleType name="RequestTypeType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="Sale"/>
+            <xs:enumeration value="Activate"/>
+            <xs:enumeration value="Issue"/>
+            <xs:enumeration value="Payment"/>
+            <xs:enumeration value="Inquiry"/>
+            <xs:enumeration value="Refund"/>
+            <xs:enumeration value="Load"/>
+            <xs:enumeration value="Recurr"/>
+            <xs:enumeration value="PreAuth"/>
+            <xs:enumeration value="FinalAuth"/>
+            <xs:enumeration value="Acknowledgment"/>
+            <xs:enumeration value="Settle"/>
+            <xs:enumeration value="KeepAlive"/>
+            <xs:enumeration value="TrnCancel"/>
+            <xs:enumeration value="TrnAbort"/>
+            <xs:enumeration value="GetToken"/>
+        </xs:restriction>                                                  
+    </xs:simpleType>
+    <xs:simpleType name="AddressVerificationResponseType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="Matched"/>
+            <xs:enumeration value="UnMatched"/>
+            <xs:enumeration value="Unavailable"/>
+            <xs:enumeration value="NotVerified"/>
+            <xs:enumeration value="Retry"/>
+        </xs:restriction>                                                  
+    </xs:simpleType>
+    <xs:element name="Message">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="Header" minOccurs="1" maxOccurs="1">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="IdentityUUID" minOccurs="1" maxOccurs="1">
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:length value="36"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="LocalDateTime" type="xs:dateTime" minOccurs="1" maxOccurs="1"/>
+                            <xs:element name="SettleIndicator" type="xs:boolean" minOccurs="1" maxOccurs="1"/>
+                            <!--For a KeepAlive message the Order number can be KeepAlive -->
+                            <xs:element name="OrderNumber" minOccurs="1" maxOccurs="1">                
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:minLength value="1"/>
+                                        <xs:maxLength value="100"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="transactionId" minOccurs='1' maxOccurs='1'>
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:minLength value="1"/>
+                                        <xs:maxLength value="44"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="termId" minOccurs='1' maxOccurs='1'>
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:minLength value="2"/>
+                                        <xs:maxLength value="10"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="Comment" minOccurs="0" maxOccurs="1">                
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:minLength value="0"/>
+                                        <xs:maxLength value="255"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="CustomerID" minOccurs="0" maxOccurs="1">                
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:length value="11"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                        </xs:sequence>                    
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="PrivateUseData" minOccurs="0" maxOccurs="1">
+                    <xs:complexType>
+                        <xs:sequence minOccurs="1" maxOccurs="10">
+                            <xs:element name="REF"> 
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:minLength value="1"/>
+                                        <xs:maxLength value="40"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                        </xs:sequence>                                        
+                    </xs:complexType>                                    
+                </xs:element>
+                <xs:element name="Request" minOccurs="0" maxOccurs="5">
+                    <xs:complexType>                          
+                        <xs:sequence>
+                            <xs:element name="Media" minOccurs="1" maxOccurs="1">                
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:enumeration value="Mastercard"/>
+                                        <xs:enumeration value="Visa"/>
+                                        <xs:enumeration value="Discover"/>
+                                        <xs:enumeration value="Amex"/>
+                                        <xs:enumeration value="Milstar"/>
+                                        <xs:enumeration value="GiftCard"/>
+                                        <xs:enumeration value="InComm"/>
+                                        <xs:enumeration value="ATT"/>
+                                        <xs:enumeration value="Esso"/>
+                                        <xs:enumeration value="WEX"/>
+                                        <xs:enumeration value="Status"/>
+                                        <!-- Use Status for Store Status messages like Store Open or Store Close messages --> 
+                                        <xs:enumeration value="Info"/>
+                                        <!-- Use Info for non-financial Heartbeat or KeepAlive messages -->
+                                    </xs:restriction>                                                  
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:choice>
+                                <xs:element name="RequestType" type="RequestTypeType"/>                
+                                <xs:element name="Reversal" type="RequestTypeType"/>
+                                <xs:element name="Void" type="RequestTypeType"/>                                                
+                            </xs:choice>
+                            <xs:element name="InputType" minOccurs="1" maxOccurs="1">                
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:enumeration value="Swiped"/>
+                                        <xs:enumeration value="Keyed"/>
+                                        <xs:enumeration value="Scanned"/>
+                                        <xs:enumeration value="Contactless"/>
+                                        <xs:enumeration value="ICC"/>
+                                        <xs:enumeration value="Network"/>
+                                    </xs:restriction>                                                  
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="SaF" minOccurs="0" maxOccurs="1">
+                                <xs:complexType>
+                                    <xs:sequence minOccurs="1" maxOccurs="1">
+                                        <xs:element name="Queued"> 
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:boolean">
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                        <xs:element name="QID"> 
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:string">
+                                                    <xs:minLength value="1"/>
+                                                    <xs:maxLength value="8"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                    </xs:sequence>                                        
+                                </xs:complexType>                                    
+                            </xs:element>
+                            <xs:element name="UPC" minOccurs="0" maxOccurs="1">
+                           <!-- Used to describe the scanned number UPC & Card number for IAB 3rd Party Giftcards -->
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:length value="30"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:choice>
+                                <xs:element name="Pan" type="AccountTypeType"/>                
+                                <xs:element name="Token" type="AccountTypeType"/>
+                                <xs:element name="EncryptedPayload" type="AccountTypeType"/>
+                                <xs:element name="Msg" type="AccountTypeType"/>                                                
+                            </xs:choice>
+                            <xs:element name="Account" minOccurs="0" maxOccurs="1">                
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:minLength value="12"/>
+                                        <xs:maxLength value="200"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <!-- YYMM -->
+                            <xs:element name="Expiration" minOccurs="0" maxOccurs="1">                
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:integer">
+                                        <xs:pattern value="[0-9][0-9][0-1][0-9]"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="CardVerificationValue" minOccurs="0" maxOccurs="1">                
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:minLength value="0"/>
+                                        <xs:maxLength value="4"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="TrackData1" minOccurs="0" maxOccurs="1">                
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:minLength value="30"/>
+                                        <xs:maxLength value="79"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="TrackData2" minOccurs="0" maxOccurs="1">                
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:minLength value="15"/>
+                                        <xs:maxLength value="40"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="EncryptTrack" minOccurs="0" maxOccurs="1">                
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:minLength value="15"/>
+                                        <xs:maxLength value="512"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <!-- Pin Number Used when redeeming a Debit or a Giftcard. -->
+                            <xs:element name="PinNum" minOccurs="0" maxOccurs="1">
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:length value="4"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="AmountField" minOccurs="0" maxOccurs="1">                
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:decimal">
+                                        <xs:fractionDigits value="2"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <!-- GiftCard Pin Data and SSC Code used for Virtual Gift Cards -->
+                            <xs:element name="GCpin" minOccurs="0" maxOccurs="1">
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:length value="8"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="WEXRequestData" minOccurs="0" maxOccurs="1">
+                                <xs:complexType>
+                                    <xs:sequence minOccurs="1" maxOccurs="1">
+                                        <xs:element name="CardSeqNumber" minOccurs="0" maxOccurs="1"> 
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:string">
+                                                    <xs:length value="5"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element> 
+                                        <xs:element name="ServiceCode" minOccurs="1" maxOccurs="2">
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:string">
+                                                    <xs:enumeration value="S"/>
+                                                    <xs:enumeration value="F"/>
+                                                    <xs:enumeration value="O"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                        <!-- Customer Activated Terminal Flag (ICR at Pump) 0=No, 1=Yes -->
+                                        <xs:element name="CATFlag" minOccurs="1" maxOccurs="2">
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:string">
+                                                    <xs:enumeration value="0"/>
+                                                    <xs:enumeration value="1"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                        <!-- This indicates the number of Prompts being sent by the POS or Pump Device --> 
+                                        <xs:element name="PromptDetailCount" minOccurs="1" maxOccurs="1">
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:integer">
+                                                    <xs:totalDigits value="1"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                        <xs:element name="DriverId" minOccurs="1" maxOccurs="1"> 
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:string" >
+                                                    <xs:minLength value="1"/>
+                                                    <xs:maxLength value="10"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                        <xs:element name="Odometer" minOccurs="1" maxOccurs="1"> 
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:string">
+                                                    <xs:minLength value="1"/>                                                     
+                                                    <xs:maxLength value="9"/>                                                     
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                        <xs:element name="VehicleId" minOccurs="0" maxOccurs="1"> 
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:string">
+                                                    <xs:minLength value="1"/>                                                     
+                                                    <xs:maxLength value="9"/>                                                     
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element> 
+                                        <xs:element name="RestrictCode" minOccurs="0" maxOccurs="1"> 
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:string" >
+                                                    <xs:length value="2"/>    
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+ <!-- This indicates the number of Products purchased by WEX Fleet card and the Product details for each will follow --> 
+                                        <xs:element name="ProdDetailCount" minOccurs="1" maxOccurs="1">
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:integer">
+                                                    <xs:totalDigits value="1"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                        <xs:element name="FuelProdGroup" minOccurs="0" maxOccurs="2">
+                                            <xs:complexType>
+                                                <xs:sequence minOccurs="1" maxOccurs="1"
+<!-- PricePerUnit is not sent on PreAuth Request but populated in Final Request under the Wex-Product Details in the Capture Request (Completion or Final Auth Request) it reflects the price per gallon or liter of fuel pumped when the hose is hung up. -->
+                                                    <xs:element name="PricePerUnit" minOccurs="0" maxOccurs="1">
+                                                        <xs:simpleType>
+                                                            <xs:restriction base="xs:decimal">
+                                                                <xs:fractionDigits value="3"/>
+                                                            </xs:restriction>
+                                                        </xs:simpleType>
+                                                    </xs:element>
+   <!-- Quantity is the amount of fuel Pumped. It is Zero on PreAuth Request but populated in Final Request. --> 
+                                                    <xs:element name="Quantity" minOccurs="0" maxOccurs="1">
+                                                        <xs:simpleType>
+                                                            <xs:restriction base="xs:decimal" >
+                                                                <xs:fractionDigits value="3"/>    
+                                                            </xs:restriction>
+                                                        </xs:simpleType>
+                                                    </xs:element>
+                                                    <xs:element name="FuelProdCode" minOccurs="1" maxOccurs="1"> 
+                                                        <xs:simpleType>
+                                                            <xs:restriction base="xs:integer">
+                                                                <xs:totalDigits value="3"/>
+                                                            </xs:restriction>
+                                                        </xs:simpleType>
+                                                    </xs:element>
+<!-- FuelDollarAmount is Zero on PreAuth Request but populated in Final Request it reflects the total dollar amount of fuel pumped when the hose is hung up. -->
+                                                    <xs:element name="FuelDollarAmount" minOccurs="0" maxOccurs="1">
+                                                        <xs:simpleType>
+                                                            <xs:restriction base="xs:decimal">
+                                                                <xs:fractionDigits value="3"/>
+                                                            </xs:restriction>
+                                                        </xs:simpleType>
+                                                    </xs:element>
+                                                </xs:sequence>
+                                            </xs:complexType>
+                                        </xs:element>
+<!-- WEX does not utilize the Unit of Measure as all WEX Fuel is considered Gallons, therefore we are removing UnitofMeasure from all WEX transactions.
+                                        <xs:element name="UnitOfMeas" minOccurs="0" maxOccurs="1">
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:string">
+                                                    <xs:length value="1"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element> -->
+                                        <xs:element name="NonFuelProductGroup" minOccurs="0" maxOccurs="5">
+                                            <xs:complexType>
+                                                <xs:sequence minOccurs="1" maxOccurs="1">
+<!-- NonFuelPricePerUnit is used to price with two decimal points the Non-Fuel products purchased on WEX cards like Off the Shelf Oil or a Car Wash -->    
+                                                    <xs:element name="NonFuelPricePerUnit" minOccurs="0" maxOccurs="1">
+                                                        <xs:simpleType>
+                                                            <xs:restriction base="xs:decimal">
+                                                                <xs:fractionDigits value="2"/>
+                                                            </xs:restriction>
+                                                        </xs:simpleType>
+                                                    </xs:element>
+ <!-- NonFuelQty is used indicate the amount of the Non-Fuel products purchased on WEX cards like Off the Shelf Oil or a Car Wash.  Usually they will be a whole number but could be a decimal so we will default to decimal-->    
+                                                    <xs:element name="NonFuelQty" minOccurs="0" maxOccurs="1">
+                                                        <xs:simpleType>
+                                                            <xs:restriction base="xs:decimal">
+                                                                <xs:fractionDigits value="2"/>
+                                                            </xs:restriction>
+                                                        </xs:simpleType>
+                                                    </xs:element>
+  <!-- NonFuelProdCode is used for Non-Fuel purchased on WEX cards like Off the Shelf Oil or a Car Wash -->
+                                                    <xs:element name="NonFuelProdCode" minOccurs="0" maxOccurs="1"> 
+                                                        <xs:simpleType>
+                                                            <xs:restriction base="xs:integer">
+                                                                <xs:totalDigits value="3"/>
+                                                            </xs:restriction>
+                                                        </xs:simpleType>
+                                                    </xs:element>
+ <!-- NonFuelAmount is used to total price (Per unit and Qty) with two decimal points the Non-Fuel Dollar Amount of this particular product. -->    
+                                                    <xs:element name="NonFuelAmount" minOccurs="0" maxOccurs="1">
+                                                        <xs:simpleType>
+                                                            <xs:restriction base="xs:decimal">
+                                                                <xs:fractionDigits value="2"/>
+                                                            </xs:restriction>
+                                                        </xs:simpleType>
+                                                    </xs:element>
+                                                </xs:sequence>
+                                            </xs:complexType>
+                                        </xs:element>
+    <!-- AlphaNumeric Driver License Number inputted by the customer at the Pump when prompted -->
+                                        <xs:element name="LicenseNumber" minOccurs="0" maxOccurs="1">
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:string" >
+                                                    <xs:minLength value="0"/>
+                                                    <xs:maxLength value="9"/>   
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                        <xs:element name="DeptNumber" minOccurs="0" maxOccurs="1"> 
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:integer" >
+                                                    <xs:totalDigits value="12"/>    
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                        <xs:element name="JobValueNumber" minOccurs="0" maxOccurs="1"> 
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:string" >
+                                                    <xs:minLength value="0"/>
+                                                    <xs:maxLength value="12"/>    
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                        <xs:element name="DataNumber" minOccurs="0" maxOccurs="1"> 
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:string" >
+                                                    <xs:minLength value="0"/>
+                                                    <xs:maxLength value="12"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                        <xs:element name="UserId" minOccurs="0" maxOccurs="1"> 
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:string" >
+                                                    <xs:minLength value="0"/>
+                                                    <xs:maxLength value="12"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                    </xs:sequence>                                        
+                                </xs:complexType>                                    
+                            </xs:element>
+                            <xs:element name="EssoLoadAmt" minOccurs="0" maxOccurs="1">
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:decimal">
+                                        <xs:fractionDigits value="2">
+                                        </xs:fractionDigits>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>                            
+                            <xs:element name="PlanNumbers" minOccurs="0" maxOccurs="1">
+                                <xs:complexType>
+                                    <xs:sequence minOccurs="1" maxOccurs="3">
+                                        <xs:element name="PlanNumber"> 
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:string">
+                                                    <xs:length value="5"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                    </xs:sequence>                                        
+                                </xs:complexType>                                    
+                            </xs:element>
+                            <xs:element name="PymntType" minOccurs="0" maxOccurs="1">
+<!-- This is used when you make a Payment to MilStar or ESSO Load to indicate HOW that load or payment was made. -->
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:enumeration value="Cash"/>
+                                        <xs:enumeration value="GiftCard"/>
+                                        <xs:enumeration value="Check"/>
+                                        <xs:enumeration value="Amex"/>                                                    
+                                        <xs:enumeration value="Discover"/>
+                                        <xs:enumeration value="Mastercard"/>
+                                        <xs:enumeration value="Visa"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="pumpNmbr" minOccurs="0" maxOccurs="1">
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:integer">
+                                        <xs:totalDigits value="2"/>
+                                    </xs:restriction>
+                                </xs:simpleType>    
+                            </xs:element>
+                            <xs:element name="EssoRequestData" minOccurs="0" maxOccurs="1">
+                                <xs:complexType>
+                                    <xs:sequence minOccurs="1" maxOccurs="1">
+                                        <xs:element name="PumpPrice"> 
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:decimal">
+                                                    <xs:fractionDigits value="2"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                        <xs:element name="ProductCode"> 
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:integer">
+                                                    <xs:totalDigits value="3"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                        <xs:element name="RationAmt"> 
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:string">
+                                                    <xs:minLength value="1"/>                                                     
+                                                    <xs:maxLength value="9"/>                                                     
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                        <xs:element name="Odometer" minOccurs="1" maxOccurs="1"> 
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:string">
+                                                    <xs:minLength value="1"/>                                                     
+                                                    <xs:maxLength value="9"/>                                                     
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                         <!-- For UnitMeas values are 0=Liters, 1=Gallons -->
+                                        <xs:element name="UnitMeas">
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:string">
+                                                    <xs:length value="1"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element name="OriginalOrder" minOccurs="0" maxOccurs="1">                
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:minLength value="1"/>
+                                        <xs:maxLength value="100"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+<!-- Commonly used in the Settlement Message of an eCommerce transaction to indicate the Original Order Date -->
+                            <xs:element name="origOrderDate" type="xs:date" minOccurs="0" maxOccurs="1"/>
+                            <xs:element name="ZipCode" minOccurs="0" maxOccurs="1"> 
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:minLength value="0"/>
+                                        <xs:maxLength value="10"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+<!-- A Commonly used for Activating a Gift Card (Financial Card) or any additional Fee charged in a transaction Assembly fee, etc. -->
+                            <xs:element name="Fee" minOccurs="0" maxOccurs="1"> 
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:decimal">
+                                        <xs:fractionDigits value="2"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="DescriptionField" minOccurs="1" maxOccurs="1">                
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:minLength value="1"/>
+                                        <xs:maxLength value="16"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <!-- This is the Original Transaction ID from the PreAuth -->
+                            <xs:element name="origTransId" minOccurs="0" maxOccurs="1">
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:minLength value="4"/>
+                                        <xs:maxLength value="8"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+    <!-- This is the Original Autorization Code from the PreAuth Response placed in the Final Auth Request -->
+                            <xs:element name="origAuthCode" minOccurs="0" maxOccurs="1">
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:minLength value="6"/>
+                                        <xs:maxLength value="8"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+    <!-- This is the Original RRN used in an Order that will Transaction Cancel or a Refund an Authorization -->
+                            <xs:element name="origRRN" minOccurs="0" maxOccurs="6">
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:length value="12"/>    
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="AmtPreAuthorized" minOccurs='0' maxOccurs='1'> 
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:decimal">
+                                        <xs:fractionDigits value="2"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="EncryptMgmt" minOccurs="0" maxOccurs="1">
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:enumeration value="DUKPT"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="EncryptAlgorithm" minOccurs="0" maxOccurs="1">
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:enumeration value="3DES"/>
+                                        <xs:enumeration value="RSA"/>
+                                        <xs:enumeration value="ECC"/>
+                                        <xs:enumeration value="AES"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <!-- Encrypted Pin Block for Debit Users -->
+                            <xs:element name="PinBlock" minOccurs="0" maxOccurs="1">
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:length value="16"/>      
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <!-- Key Serial Number (KSN) for encrypted Key handling -->
+                            <xs:element name="KSN" minOccurs="0" maxOccurs="1">
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:length value="20"/>      
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="SettleRq" minOccurs="0" maxOccurs="1">
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:enumeration value="SendToSettlement" />
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="AddressVerificationService" minOccurs="0" maxOccurs="1">
+                                <xs:complexType>
+                                    <xs:sequence>
+<!-- CardHolderName will soon be removed and the breakdown of Last name, First name and Middle Initial will be used. -->
+                                        <xs:element name="CardHolderName" minOccurs="0" maxOccurs="1">
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:string">
+                                                    <xs:minLength value="3"/>
+                                                    <xs:maxLength value="40"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                        <xs:element name="CardHolderLastName" minOccurs="0" maxOccurs="1">
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:string">
+                                                    <xs:minLength value="2"/>
+                                                    <xs:maxLength value="40"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                        <xs:element name="CardHolderFirstName" minOccurs="0" maxOccurs="1">
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:string">
+                                                    <xs:minLength value="1"/>
+                                                    <xs:maxLength value="40"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                        <xs:element name="CardHolderMiddleInitial" minOccurs="0" maxOccurs="1">
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:string">
+                                                    <xs:minLength value="1"/>
+                                                    <xs:maxLength value="1"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                        <xs:element name="BillingAddress1" minOccurs="0" maxOccurs="1">
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:string">
+                                                    <xs:minLength value="1"/>
+                                                    <xs:maxLength value="40"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                        <xs:element name="BillingAddress2" minOccurs="0" maxOccurs="1">
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:string">
+                                                    <xs:minLength value="1"/>
+                                                    <xs:maxLength value="40"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                        <xs:element name="BillingCity" minOccurs="0" maxOccurs="1">
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:string">
+                                                    <xs:minLength value="1"/>
+                                                    <xs:maxLength value="40"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                        <xs:element name="BillingState" minOccurs="0" maxOccurs="1">
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:string">
+                                                    <xs:minLength value="1"/>
+                                                    <xs:maxLength value="40"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>  
+                                        <xs:element name="BillingCountryCode" minOccurs="0" maxOccurs="1">
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:string">
+                                                    <xs:minLength value="1"/>
+                                                    <xs:maxLength value="2"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                        <xs:element name="BillingZipCode" minOccurs="0" maxOccurs="1"> 
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:string">
+                                                    <xs:minLength value="0"/>
+                                                    <xs:maxLength value="10"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                        <xs:element name="Email" minOccurs="0" maxOccurs="1">
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:string">
+                                                    <xs:minLength value="0"/>
+                                                    <xs:maxLength value="40"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                        <xs:element name="BillingPhone" minOccurs="0" maxOccurs="1">
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:integer">
+                                                    <xs:totalDigits value="10"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                        <xs:element name="ShippingAddress1" minOccurs="0" maxOccurs="1">
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:string">
+                                                    <xs:minLength value="1"/>
+                                                    <xs:maxLength value="40"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                        <xs:element name="ShippingAddress2" minOccurs="0" maxOccurs="1">
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:string">
+                                                    <xs:minLength value="1"/>
+                                                    <xs:maxLength value="40"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                        <xs:element name="ShippingCity" minOccurs="0" maxOccurs="1">
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:string">
+                                                    <xs:minLength value="1"/>
+                                                    <xs:maxLength value="40"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                        <xs:element name="ShippingState" minOccurs="0" maxOccurs="1">
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:string">
+                                                    <xs:minLength value="1"/>
+                                                    <xs:maxLength value="40"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                        <xs:element name="ShippingCountryCode" minOccurs="0" maxOccurs="1">
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:string">
+                                                    <xs:minLength value="1"/>
+                                                    <xs:maxLength value="2"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                        <xs:element name="ShippingZipCode" minOccurs="0" maxOccurs="1"> 
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:string">
+                                                    <xs:minLength value="0"/>
+                                                    <xs:maxLength value="10"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                        <xs:element name="ShippingPhone" minOccurs="0" maxOccurs="1">
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:integer">
+                                                    <xs:totalDigits value="10"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>                        
+                                    </xs:sequence>                                    
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                        <xs:attribute name="RRN" use="required">
+                            <xs:simpleType>
+                                <xs:restriction base="xs:string">
+                                    <xs:length value="12"/>                                        
+                                </xs:restriction>
+                            </xs:simpleType>
+                        </xs:attribute>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="Response" minOccurs="0" maxOccurs="5">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="Media" minOccurs="1" maxOccurs="1">                
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:enumeration value="Mastercard"/>
+                                        <xs:enumeration value="Visa"/>
+                                        <xs:enumeration value="Discover"/>
+                                        <xs:enumeration value="Amex"/>
+                                        <xs:enumeration value="Milstar"/>
+                                        <xs:enumeration value="GiftCard"/>
+                                        <xs:enumeration value="InComm"/>
+                                        <xs:enumeration value="ATT"/>
+                                        <xs:enumeration value="Esso"/>
+                                        <xs:enumeration value="WEX"/>
+                                        <xs:enumeration value="Status"/>
+                                        <xs:enumeration value="Info"/>
+                                    </xs:restriction>                                                  
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="ResponseType" minOccurs="1" maxOccurs="1">                
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:enumeration value="Approved"/>
+                                        <xs:enumeration value="Decline"/>
+                                        <xs:enumeration value="TIMEOUT"/>
+                                        <xs:enumeration value="Referral"/>
+                                        <xs:enumeration value="OK"/>
+                                    </xs:restriction>                                                  
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="AuthNumber" minOccurs="0" maxOccurs="1">                
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:minLength value="6"/>
+                                        <xs:maxLength value="8"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="CVVResponse" minOccurs="0" maxOccurs="1">
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:minLength value="1"/>
+                                        <xs:maxLength value="15"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element> 
+                            <xs:element name="ReasonCode" minOccurs="0" maxOccurs="1">
+<!-- This should be used for everything except Settlement Response messages,  therefore it is optional for Settle only but every other Response should have this element. -->                
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:minLength value="1"/>
+                                        <xs:maxLength value="3"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="CVVRawData" minOccurs="0" maxOccurs="1">
+ <!-- This should be used to reflect the actual RAW response from a provider when a CVV check was made. -->                
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:minLength value="1"/>
+                                        <xs:maxLength value="3"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="QIDSelected" minOccurs="0" maxOccurs="1">
+<!-- This should be used to reflect the actual QID number which was selected when a Saf'ed transaction is responded to. -->
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:minLength value="1"/>
+                                        <xs:maxLength value="8"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="EssoResponseData" minOccurs="0" maxOccurs="1">
+                                <xs:complexType>
+                                    <xs:sequence minOccurs="1" maxOccurs="1">
+                                        <xs:element name="VRN"> 
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:string">
+                                                    <xs:minLength value="0"/>
+                                                    <xs:maxLength value="16"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                        <xs:element name="PrePaidBalance"> 
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:decimal">
+                                                    <xs:fractionDigits value="2"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                        <xs:element name="RationAmt"> 
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:integer">
+                                                    <xs:totalDigits value="9"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                        <xs:element name="RationExpiry"> 
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:string">
+                                                    <xs:pattern value="[0-9][0-9][A-V][A-V][A-V][0-9][0-9]"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                    </xs:sequence>                                        
+                                </xs:complexType>                                    
+                            </xs:element>
+                            <xs:element name="PlanNumber" minOccurs="0" maxOccurs="1">
+ <!-- No need to reply with plan number unless it was unknown, not sent in the request or multiple plan numbers                                 were sent in the Request. --> 
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:length value="5"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="MilstarNumber" minOccurs="0" maxOccurs="1">                
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:pattern value="6019[0-9]{12}"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+         <!-- Activation of INCOMM and AT&T also after Milstar or Inquiry of GiftCards -->
+                            <xs:element name="BalanceAmount" minOccurs="0" maxOccurs="1">                
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:decimal">
+                                        <xs:fractionDigits value="2"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="CardReferenceID" minOccurs="0" maxOccurs="1">                
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:minLength value="4"/>
+                                        <xs:maxLength value="12"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="PartialAmount" minOccurs="0" maxOccurs="1"> 
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:decimal">
+                                        <xs:fractionDigits value="2"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <!-- Used for eComm Virtual Giftcard Issue Response -->
+                            <xs:element name="VrtGcAcctInfo" minOccurs="0" maxOccurs="1">
+                                <xs:complexType>
+                                    <xs:sequence minOccurs="1" maxOccurs="1">
+                                        <xs:element name="VrtGcAcctNbr"> 
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:integer">
+                                                    <xs:totalDigits value="19"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                        <xs:element name="VrtGCPin"> 
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:string">
+                                                    <xs:length value="8"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element name="DescriptionField" minOccurs="0" maxOccurs="1">                
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:minLength value="0"/>
+                                        <xs:maxLength value="16"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="origReqType" minOccurs="0" maxOccurs="1">
+                <!-- This is optional but should be used for everything except Settlement Response messages -->
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:enumeration value="Sale"/>
+                                        <xs:enumeration value="Payment"/>
+                                        <xs:enumeration value="Inquiry"/>
+                                        <xs:enumeration value="Refund"/>
+                                        <xs:enumeration value="Load"/>
+                                        <xs:enumeration value="Recurr"/>
+                                        <xs:enumeration value="PreAuth"/>
+                                        <xs:enumeration value="FinalAuth"/>
+                                        <xs:enumeration value="Acknowledgment"/>
+                                        <xs:enumeration value="Settle"/>
+                                        <xs:enumeration value="Activate"/>
+                                        <xs:enumeration value="Issue"/>
+                                        <xs:enumeration value="Reversal"/>
+                                        <xs:enumeration value="KeepAlive"/>
+                                        <xs:enumeration value="TrnCancel"/>
+                                        <xs:enumeration value="TrnAbort"/>
+                                        <xs:enumeration value="GetToken"/>
+                                    </xs:restriction>                                                  
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="origAcctType" minOccurs="0" maxOccurs="1">
+        <!-- This should be used when an Account was a PAN and a response was with a Token or Encryption -->
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:enumeration value="Pan"/>
+                                        <xs:enumeration value="Token"/>
+                                        <xs:enumeration value="Encryption"/>
+                                        <xs:enumeration value="Msg"/>
+                                    </xs:restriction>                                                  
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="origRespDate" type="xs:date" minOccurs="0" maxOccurs="1"/>
+                <!-- This should be used to signify the original response date for a credit transaction -->                                
+                            <xs:element name="modifiedAcctValue" minOccurs="0" maxOccurs="1">
+                <!-- This should be used when an Account # was responded with a token or encrypted value -->
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:minLength value="0"/>
+                                        <xs:maxLength value="255"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="TokenVersion" minOccurs="0" maxOccurs="1">
+<!-- This should be used when an Token was newly issued after a GetToken request. It denotes the version of the Token. -->
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:minLength value="0"/>
+                                        <xs:maxLength value="40"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="TokenExpiry" type="xs:date" minOccurs="0" maxOccurs="1"/>
+                    <!-- Used in the Discloses the expiration date of the issued Token -->
+                            <xs:element name="AmtPreAuthorized" minOccurs='0' maxOccurs='1'> 
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:decimal">
+                                        <xs:fractionDigits value="2"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="WEXResponseData" minOccurs="0" maxOccurs="1">
+                                <xs:complexType>
+                                    <xs:sequence minOccurs="1" maxOccurs="1">
+                                        <xs:element name="AmtPreAuthorized" minOccurs='0' maxOccurs='1'> 
+                                            <xs:simpleType>
+                                                <xs:restriction base="xs:decimal">
+                                                    <xs:fractionDigits value="2"/>
+                                                </xs:restriction>
+                                            </xs:simpleType>
+                                        </xs:element>
+                                    </xs:sequence>                                        
+                                </xs:complexType>                                    
+                            </xs:element>
+<!-- Provider Validation Results Milstar, Discover, Visa and Mastercard only Verifies on Billiing Address and Billing Zip Code AMEX can Verify on Billing Name, Billing Address, Billing Zip Code, Billing Phone and Email -->
+                            <xs:element name="AddressVerificationResponse" minOccurs="0" maxOccurs="1">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="AVSRawResp" type="xs:string" minOccurs="0" maxOccurs="1"> </xs:element>
+                                        <xs:element name="CardHolderLastName" type="AddressVerificationResponseType" minOccurs="0" maxOccurs="1">
+                                        </xs:element>
+                                        <xs:element name="CardHolderFirstName" type="AddressVerificationResponseType" minOccurs="0" maxOccurs="1">
+                                        </xs:element>
+                                        <xs:element name="CardHolderMiddleInital" type="AddressVerificationResponseType" minOccurs="0" maxOccurs="1">
+                                        </xs:element>
+                                        <xs:element name="BillingAddress1" type="AddressVerificationResponseType" minOccurs="0" maxOccurs="1">
+                                        </xs:element>
+                                        <xs:element name="BillingAddress2" type="AddressVerificationResponseType" minOccurs="0" maxOccurs="1">
+                                        </xs:element>
+                                        <xs:element name="BillingCity" type="AddressVerificationResponseType" minOccurs="0" maxOccurs="1">
+                                        </xs:element>
+                                        <xs:element name="BillingState" type="AddressVerificationResponseType" minOccurs="0" maxOccurs="1">
+                                        </xs:element>
+                                        <xs:element name="BillingCountryCode" type="AddressVerificationResponseType" minOccurs="0" maxOccurs="1">
+                                        </xs:element>
+                                        <xs:element name="BillingZipCode" type="AddressVerificationResponseType" minOccurs="0" maxOccurs="1"> 
+                                        </xs:element>
+                                        <xs:element name="Email" minOccurs="0" type="AddressVerificationResponseType" maxOccurs="1">
+                                        </xs:element>
+                                        <xs:element name="BillingPhone" type="AddressVerificationResponseType" minOccurs="0" maxOccurs="1">
+                                        </xs:element>
+                                        <xs:element name="ShippingAddress1" type="AddressVerificationResponseType" minOccurs="0" maxOccurs="1">
+                                        </xs:element>
+                                        <xs:element name="ShippingAddress2" type="AddressVerificationResponseType" minOccurs="0" maxOccurs="1">
+                                        </xs:element>
+                                        <xs:element name="ShippingCity" type="AddressVerificationResponseType" minOccurs="0" maxOccurs="1">
+                                        </xs:element>
+                                        <xs:element name="ShippingState" type="AddressVerificationResponseType" minOccurs="0" maxOccurs="1">
+                                        </xs:element>
+                                        <xs:element name="ShippingCountryCode" type="AddressVerificationResponseType" minOccurs="0" maxOccurs="1">
+                                        </xs:element>
+                                        <xs:element name="ShippingZipCode" type="AddressVerificationResponseType" minOccurs="0" maxOccurs="1">
+                                        </xs:element>
+                                        <xs:element name="ShippingPhone" type="AddressVerificationResponseType" minOccurs="0" maxOccurs="1">
+                                        </xs:element>                        
+                                    </xs:sequence>                                    
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element name="SettleRs" minOccurs="0" maxOccurs="1">
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                        <xs:enumeration value="SentForSettlement" />
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                            <xs:element name="SettleAmt" minOccurs="0" maxOccurs="1">
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:decimal">
+                                        <xs:fractionDigits value="2" />
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>
+                        </xs:sequence>  
+                        <xs:attribute name="RRN" use="required">
+                            <xs:simpleType>
+                                <xs:restriction base="xs:string">
+                                    <xs:length value="12"/>                                        
+                                </xs:restriction>
+                            </xs:simpleType>
+                        </xs:attribute>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+            <xs:attribute name="TypeCode" use="required">
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                        <xs:enumeration value="Request"/>
+                        <xs:enumeration value="Response"/>
+                        <xs:enumeration value="Settle"/>
+                    </xs:restriction>
+                </xs:simpleType> 
+            </xs:attribute>
+            <xs:attribute name="MajorVersion" use="required">
+                <xs:simpleType>
+                    <xs:restriction base="xs:integer">
+                        <xs:minInclusive value="3"/>
+                        <xs:maxInclusive value="3"/>                            
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:attribute>
+            <xs:attribute name="MinorVersion" use="required">
+                <xs:simpleType>
+                    <xs:restriction base="xs:integer">
+                        <xs:minInclusive value="1"/>
+                        <xs:maxInclusive value="2"/>                            
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:attribute>
+            <xs:attribute name="FixVersion" use="required">
+                <xs:simpleType>
+                    <xs:restriction base="xs:integer">
+                        <xs:minInclusive value="0"/>
+                        <xs:maxInclusive value="0"/>                            
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:attribute>
+        </xs:complexType>                       
+    </xs:element>
+</xs:schema>
