@@ -237,12 +237,8 @@ class WorldpayTest < Test::Unit::TestCase
       authorization = "#{@options[:order_id]}|99411111780163871111|shopper|59424549c291397379f30c5c082dbed8"
       @gateway.void(authorization, @options)
     end.check_request do |endpoint, data, headers|
-      if %r(<orderInquiry .*?>) =~ data
-        assert_tag_with_attributes('orderInquiry', {'orderCode' => @options[:order_id].to_s}, data)
-      end
-      if %r(<orderModification .*?>) =~ data
-        assert_tag_with_attributes('orderModification', {'orderCode' => @options[:order_id].to_s}, data)
-      end
+      assert_tag_with_attributes('orderInquiry', {'orderCode' => @options[:order_id].to_s}, data) if %r(<orderInquiry .*?>).match?(data)
+      assert_tag_with_attributes('orderModification', {'orderCode' => @options[:order_id].to_s}, data) if %r(<orderModification .*?>).match?(data)
     end.respond_with(successful_void_inquiry_response, successful_void_response)
     assert_success response
     assert_equal 'SUCCESS', response.message
@@ -301,12 +297,8 @@ class WorldpayTest < Test::Unit::TestCase
       authorization = "#{@options[:order_id]}|99411111780163871111|shopper|59424549c291397379f30c5c082dbed8"
       @gateway.refund(@amount, authorization, @options)
     end.check_request do |endpoint, data, headers|
-      if %r(<orderInquiry .*?>) =~ data
-        assert_tag_with_attributes('orderInquiry', {'orderCode' => @options[:order_id].to_s}, data)
-      end
-      if %r(<orderModification .*?>) =~ data
-        assert_tag_with_attributes('orderModification', {'orderCode' => @options[:order_id].to_s}, data)
-      end
+      assert_tag_with_attributes('orderInquiry', {'orderCode' => @options[:order_id].to_s}, data) if %r(<orderInquiry .*?>).match?(data)
+      assert_tag_with_attributes('orderModification', {'orderCode' => @options[:order_id].to_s}, data) if %r(<orderModification .*?>).match?(data)
     end.respond_with(successful_refund_inquiry_response('CAPTURED'), successful_refund_response)
     assert_success response
   end
@@ -325,9 +317,7 @@ class WorldpayTest < Test::Unit::TestCase
       authorization = "#{response.authorization}|99411111780163871111|shopper|59424549c291397379f30c5c082dbed8"
       @gateway.capture(@amount, authorization, @options)
     end.check_request do |endpoint, data, headers|
-      if %r(<orderModification .*?>) =~ data
-        assert_tag_with_attributes('orderModification', {'orderCode' => response.authorization}, data)
-      end
+      assert_tag_with_attributes('orderModification', {'orderCode' => response.authorization}, data) if %r(<orderModification .*?>).match?(data)
     end.respond_with(successful_authorize_response, successful_capture_response)
     assert_success response
   end
@@ -384,7 +374,7 @@ class WorldpayTest < Test::Unit::TestCase
     stub_comms do
       @gateway.capture(@amount, 'bogus', @options)
     end.check_request do |endpoint, data, headers|
-      if data =~ /capture/
+      if /capture/.match?(data)
         t = Time.now
         assert_tag_with_attributes 'date',
           {'dayOfMonth' => t.day.to_s, 'month' => t.month.to_s, 'year' => t.year.to_s},
@@ -534,7 +524,7 @@ class WorldpayTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(100, @credit_card, @options.merge(instalments: 3))
     end.check_request do |endpoint, data, headers|
-      unless /<capture>/ =~ data
+      unless /<capture>/.match?(data)
         assert_match %r(<instalments>3</instalments>), data
         assert_no_match %r(cpf), data
       end
@@ -543,7 +533,7 @@ class WorldpayTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(100, @credit_card, @options.merge(instalments: 3, cpf: 12341234))
     end.check_request do |endpoint, data, headers|
-      unless /<capture>/ =~ data
+      unless /<capture>/.match?(data)
         assert_match %r(<instalments>3</instalments>), data
         assert_match %r(<cpf>12341234</cpf>), data
       end
@@ -623,7 +613,7 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.refund(@amount, @options[:order_id], @options)
     end.check_request do |endpoint, data, headers|
-      if data =~ /<refund>/
+      if /<refund>/.match?(data)
         request_hash = Hash.from_xml(data)
         assert_equal 'credit', request_hash['paymentService']['modify']['orderModification']['refund']['amount']['debitCreditIndicator']
       end
@@ -664,9 +654,7 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
-      if /<submit>/ =~ data
-        assert_match %r{<cardHolderName>3D</cardHolderName>}, data
-      end
+      assert_match %r{<cardHolderName>3D</cardHolderName>}, data if /<submit>/.match?(data)
     end.respond_with(successful_authorize_response, successful_capture_response)
     assert_success response
   end
@@ -677,9 +665,7 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
-      if /<submit>/ =~ data
-        assert_match %r{<cardHolderName>Longbob Longsen</cardHolderName>}, data
-      end
+      assert_match %r{<cardHolderName>Longbob Longsen</cardHolderName>}, data if /<submit>/.match?(data)
     end.respond_with(successful_authorize_response, successful_capture_response)
     assert_success response
 
@@ -687,9 +673,7 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
-      if /<submit>/ =~ data
-        assert_match %r{<cardHolderName>Longbob Longsen</cardHolderName>}, data
-      end
+      assert_match %r{<cardHolderName>Longbob Longsen</cardHolderName>}, data if /<submit>/.match?(data)
     end.respond_with(successful_authorize_response, successful_capture_response)
     assert_success response
 
@@ -697,9 +681,7 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
-      if /<submit>/ =~ data
-        assert_match %r{<cardHolderName>3D</cardHolderName>}, data
-      end
+      assert_match %r{<cardHolderName>3D</cardHolderName>}, data if /<submit>/.match?(data)
     end.respond_with(successful_authorize_response, successful_capture_response)
     assert_success response
   end
@@ -800,9 +782,7 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @token, @options)
     end.check_request do |endpoint, data, headers|
-      if %r(<order .*?>) =~ data
-        assert_tag_with_attributes('order', {'orderCode' => @options[:order_id].to_s}, data)
-      end
+      assert_tag_with_attributes('order', {'orderCode' => @options[:order_id].to_s}, data) if %r(<order .*?>).match?(data)
     end.respond_with(successful_authorize_response, successful_capture_response)
 
     assert_success response
@@ -813,9 +793,7 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.verify(@token, @options)
     end.check_request do |endpoint, data, headers|
-      if %r(<order .*?>) =~ data
-        assert_tag_with_attributes('order', {'orderCode' => @options[:order_id].to_s}, data)
-      end
+      assert_tag_with_attributes('order', {'orderCode' => @options[:order_id].to_s}, data) if %r(<order .*?>).match?(data)
     end.respond_with(successful_authorize_response, successful_void_response)
 
     assert_success response
@@ -894,9 +872,7 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @token, @options)
     end.check_request do |endpoint, data, headers|
-      if %r(<order .*?>) =~ data
-        assert_tag_with_attributes('order', {'orderCode' => @options[:order_id].to_s}, data)
-      end
+      assert_tag_with_attributes('order', {'orderCode' => @options[:order_id].to_s}, data) if %r(<order .*?>).match?(data)
     end.respond_with(successful_authorize_response, successful_capture_response)
 
     assert_success response
@@ -908,9 +884,7 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.verify(@token, @options)
     end.check_request do |endpoint, data, headers|
-      if %r(<order .*?>) =~ data
-        assert_tag_with_attributes('order', {'orderCode' => @options[:order_id].to_s}, data)
-      end
+      assert_tag_with_attributes('order', {'orderCode' => @options[:order_id].to_s}, data) if %r(<order .*?>).match?(data)
     end.respond_with(successful_authorize_response, successful_void_response)
 
     assert_success response

@@ -382,9 +382,9 @@ module ActiveMerchant #:nodoc:
           end
         elsif message == 'Missing ACCOUNT_ID'
           message = 'The merchant login ID or password is invalid'
-        elsif message =~ /Approved/
+        elsif /Approved/.match?(message)
           message = 'This transaction has been approved'
-        elsif message =~  /Expired/
+        elsif /Expired/.match?(message)
           message = 'The credit card has expired'
         end
         message

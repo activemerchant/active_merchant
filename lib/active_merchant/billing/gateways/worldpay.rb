@@ -406,7 +406,7 @@ module ActiveMerchant #:nodoc:
       def add_three_d_secure(three_d_secure, xml)
         xml.info3DSecure do
           xml.threeDSVersion three_d_secure[:version]
-          if three_d_secure[:version] =~ /^2/
+          if /^2/.match?(three_d_secure[:version])
             xml.dsTransactionId three_d_secure[:ds_transaction_id]
           else
             xml.xid three_d_secure[:xid]

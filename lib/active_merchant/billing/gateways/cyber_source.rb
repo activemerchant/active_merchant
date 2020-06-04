@@ -913,7 +913,7 @@ module ActiveMerchant #:nodoc:
         if node.has_elements?
           node.elements.each { |e| parse_element(reply, e) }
         else
-          if node.parent.name =~ /item/
+          if /item/.match?(node.parent.name)
             parent = node.parent.name
             parent += '_' + node.parent.attributes['id'] if node.parent.attributes['id']
             parent += '_'

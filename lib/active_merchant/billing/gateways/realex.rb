@@ -310,7 +310,7 @@ module ActiveMerchant
 
         version = three_d_secure.fetch(:version, '')
         xml.tag! 'mpi' do
-          if version =~ /^2/
+          if /^2/.match?(version)
             xml.tag! 'authentication_value', three_d_secure[:cavv]
             xml.tag! 'ds_trans_id', three_d_secure[:ds_transaction_id]
           else

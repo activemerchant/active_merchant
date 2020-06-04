@@ -309,7 +309,7 @@ class MercadoPagoTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
-      if data =~ /payment_method_id/
+      if /payment_method_id/.match?(data)
         assert_match(/"foo":"bar"/, data)
         assert_match(/"baz":"quux"/, data)
       end

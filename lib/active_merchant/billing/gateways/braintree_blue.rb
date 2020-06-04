@@ -204,12 +204,10 @@ module ActiveMerchant #:nodoc:
 
       def check_customer_exists(customer_vault_id)
         commit do
-          begin
-            @braintree_gateway.customer.find(customer_vault_id)
-            ActiveMerchant::Billing::Response.new(true, 'Customer found', {exists: true}, authorization: customer_vault_id)
-          rescue Braintree::NotFoundError
-            ActiveMerchant::Billing::Response.new(true, 'Customer not found', {exists: false})
-          end
+          @braintree_gateway.customer.find(customer_vault_id)
+          ActiveMerchant::Billing::Response.new(true, 'Customer found', {exists: true}, authorization: customer_vault_id)
+        rescue Braintree::NotFoundError
+          ActiveMerchant::Billing::Response.new(true, 'Customer not found', {exists: false})
         end
       end
 

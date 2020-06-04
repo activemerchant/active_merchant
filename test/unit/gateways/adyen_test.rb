@@ -290,7 +290,7 @@ class AdyenTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge({selected_brand: 'maestro', overwrite_brand: 'true'}))
     end.check_request do |endpoint, data, headers|
-      if endpoint =~ /authorise/
+      if /authorise/.match?(endpoint)
         assert_match(/"overwriteBrand":true/, data)
         assert_match(/"selectedBrand":"maestro"/, data)
       end

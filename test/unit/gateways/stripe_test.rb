@@ -511,7 +511,7 @@ class StripeTest < Test::Unit::TestCase
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |_method, endpoint, data, _headers|
-      if %r{/charges} =~ endpoint
+      if %r{/charges}.match?(endpoint)
         assert_match('level3[merchant_reference]=123', data)
         assert_match('level3[customer_reference]=456', data)
         assert_match('level3[shipping_address_zip]=98765', data)

@@ -137,7 +137,7 @@ module ActiveMerchant #:nodoc:
             name: creditcard.name
           )
         elsif creditcard.kind_of?(String)
-          if creditcard =~ /^token_/
+          if /^token_/.match?(creditcard)
             post[:card_token] = creditcard
           else
             post[:customer_token] = creditcard

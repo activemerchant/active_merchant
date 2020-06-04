@@ -131,12 +131,12 @@ module ActiveMerchant
       yield
     rescue AssertionClass => e
       path = File.expand_path(__FILE__)
-      raise AssertionClass, e.message, (e.backtrace.reject { |line| File.expand_path(line) =~ /#{path}/ })
+      raise AssertionClass, e.message, (e.backtrace.reject { |line| File.expand_path(line).match?(/#{path}/) })
     end
   end
 
   module Fixtures
-    HOME_DIR = RUBY_PLATFORM =~ /mswin32/ ? ENV['HOMEPATH'] : ENV['HOME'] unless defined?(HOME_DIR)
+    HOME_DIR = RUBY_PLATFORM.match?('mswin32') ? ENV['HOMEPATH'] : ENV['HOME'] unless defined?(HOME_DIR)
     LOCAL_CREDENTIALS = File.join(HOME_DIR.to_s, '.active_merchant/fixtures.yml') unless defined?(LOCAL_CREDENTIALS)
     DEFAULT_CREDENTIALS = File.join(File.dirname(__FILE__), 'fixtures.yml') unless defined?(DEFAULT_CREDENTIALS)
 
