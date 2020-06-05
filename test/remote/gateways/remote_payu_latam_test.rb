@@ -74,6 +74,13 @@ class RemotePayuLatamTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_blank_billing_address_country
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(billing_address: { address1: 'Viamonte', country: '', zip: '10001' }))
+    assert_success response
+    assert_equal 'APPROVED', response.message
+    assert response.test?
+  end
+
   def test_successful_purchase_with_buyer
     gateway = PayuLatamGateway.new(fixtures(:payu_latam).update(account_id: '512327', payment_country: 'BR'))
 

@@ -285,6 +285,34 @@ class PayuLatamTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_request_with_blank_billing_address_fields
+    options = {
+      dni_number: '5415668464654',
+      dni_type: 'TI',
+      merchant_buyer_id: '1',
+      currency: 'ARS',
+      order_id: generate_unique_id,
+      description: 'Active Merchant Transaction',
+      billing_address: address(
+        address1: 'Viamonte',
+        address2: nil,
+        city: 'Plata',
+        state: 'Buenos Aires',
+        country: '',
+        zip: '64000',
+        phone: '7563126'
+      )
+    }
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/"merchantBuyerId":"1"/, data)
+      assert_match(/"street2":null/, data)
+      refute_match(/"country"/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_brazil_required_fields
     gateway = PayuLatamGateway.new(merchant_id: 'merchant_id', account_id: 'account_id', api_login: 'api_login', api_key: 'api_key', payment_country: 'BR')
 

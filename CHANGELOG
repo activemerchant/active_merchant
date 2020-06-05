@@ -7,6 +7,7 @@
 * Vantiv: Vantiv(Element): add option to send terminal id in transactions [cdmackeyfree] #3654
 * Update supported Ruby and Rails versions [leila-alderman] #3656
 * CI: Drop unused sudo: false Travis directive [olleolleolle] #3616
+* PayU Latam: Prevent blank country in billing_address [britth] #3657
 
 == Version 1.107.4 (Jun 2, 2020)
 * Elavon: Implement true verify action [leila-alderman] #3610

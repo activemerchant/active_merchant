@@ -186,7 +186,7 @@ module ActiveMerchant #:nodoc:
         billing_address[:street2] = address[:address2]
         billing_address[:city] = address[:city]
         billing_address[:state] = address[:state]
-        billing_address[:country] = address[:country]
+        billing_address[:country] = address[:country] unless address[:country].blank?
         billing_address[:postalCode] = address[:zip] if @options[:payment_country] == 'MX'
         billing_address[:phone] = address[:phone]
         billing_address
