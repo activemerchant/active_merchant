@@ -617,7 +617,10 @@ module ActiveMerchant #:nodoc:
         xml.tag!('directoryServerTransactionID', threeds_2_options[:ds_transaction_id]) if threeds_2_options[:ds_transaction_id]
         xml.tag!('commerceIndicator', options[:commerce_indicator] || ECI_BRAND_MAPPING[card_brand(payment_method).to_sym])
         xml.tag!('eciRaw', threeds_2_options[:eci]) if threeds_2_options[:eci]
-        xml.tag!('xid', threeds_2_options[:xid]) if threeds_2_options[:xid]
+
+        xid = threeds_2_options[:xid] || threeds_2_options[:cavv]
+        xml.tag!('xid', xid) if xid
+
         xml.tag!('veresEnrolled', threeds_2_options[:enrolled]) if threeds_2_options[:enrolled]
         xml.tag!('paresStatus', threeds_2_options[:authentication_response_status]) if threeds_2_options[:authentication_response_status]
       end
