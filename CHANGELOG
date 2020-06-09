@@ -1,6 +1,8 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+
+== Version 1.108.0 (Jun 9, 2020)
 * Cybersource: Send cavv as xid is xid is missing [pi3r] #3658
 * Forte: Change default sec_code value to PPD [molbrown] #3653
 * Elavon: Add merchant initiated unscheduled field [leila-alderman] #3647
