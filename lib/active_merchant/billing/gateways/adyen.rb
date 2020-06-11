@@ -527,14 +527,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(action, response, options)
-        if ['RedirectShopper', 'ChallengeShopper'].include?(response.dig('resultCode')) && !options[:execute_threed] && !options[:threed_dynamic]
+        if %w[RedirectShopper ChallengeShopper].include?(response.dig('resultCode')) && !options[:execute_threed] && !options[:threed_dynamic]
           response['refusalReason'] = 'Received unexpected 3DS authentication response. Use the execute_threed and/or threed_dynamic options to initiate a proper 3DS flow.'
           return false
         end
 
         case action.to_s
         when 'authorise', 'authorise3d'
-          ['Authorised', 'Received', 'RedirectShopper'].include?(response['resultCode'])
+          %w[Authorised Received RedirectShopper].include?(response['resultCode'])
         when 'capture', 'refund', 'cancel'
           response['response'] == "[#{action}-received]"
         when 'adjustAuthorisation'

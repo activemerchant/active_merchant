@@ -254,7 +254,7 @@ class OgoneTest < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal ['BE', 'DE', 'FR', 'NL', 'AT', 'CH'], OgoneGateway.supported_countries
+    assert_equal %w[BE DE FR NL AT CH], OgoneGateway.supported_countries
   end
 
   def test_supported_card_types

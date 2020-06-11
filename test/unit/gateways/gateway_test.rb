@@ -103,7 +103,7 @@ class GatewayTest < Test::Unit::TestCase
   end
 
   def test_split_names
-    assert_equal ['Longbob', 'Longsen'], @gateway.send(:split_names, 'Longbob Longsen')
+    assert_equal %w[Longbob Longsen], @gateway.send(:split_names, 'Longbob Longsen')
   end
 
   def test_split_names_with_single_name

@@ -67,7 +67,7 @@ module ActiveMerchant #:nodoc:
     class TrustCommerceGateway < Gateway
       self.live_url = self.test_url = 'https://vault.trustcommerce.com/trans/'
 
-      SUCCESS_TYPES = ['approved', 'accepted']
+      SUCCESS_TYPES = %w[approved accepted]
 
       DECLINE_CODES = {
         'decline'       => 'The credit card was declined',

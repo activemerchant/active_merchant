@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
       self.live_ca_url = 'https://gateway17.jetpay.com/canada-bb'
 
       # The countries the gateway supports merchants from as 2 digit ISO country codes
-      self.supported_countries = ['US', 'CA']
+      self.supported_countries = %w[US CA]
 
       # The card types supported by the payment gateway
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]

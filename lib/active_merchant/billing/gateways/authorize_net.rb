@@ -755,7 +755,7 @@ module ActiveMerchant
       end
 
       def state_from(address, options)
-        if ['US', 'CA'].include?(address[:country])
+        if %w[US CA].include?(address[:country])
           address[:state] || 'NC'
         else
           address[:state] || 'n/a'

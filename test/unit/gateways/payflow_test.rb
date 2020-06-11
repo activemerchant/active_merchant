@@ -283,7 +283,7 @@ class PayflowTest < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal ['US', 'CA', 'NZ', 'AU'], PayflowGateway.supported_countries
+    assert_equal %w[US CA NZ AU], PayflowGateway.supported_countries
   end
 
   def test_supported_card_types

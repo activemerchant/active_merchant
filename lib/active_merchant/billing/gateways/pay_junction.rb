@@ -107,7 +107,7 @@ module ActiveMerchant #:nodoc:
       TEST_LOGIN = 'pj-ql-01'
       TEST_PASSWORD = 'pj-ql-01p'
 
-      SUCCESS_CODES = ['00', '85']
+      SUCCESS_CODES = %w[00 85]
       SUCCESS_MESSAGE = 'The transaction was approved.'
 
       FAILURE_MESSAGE = 'The transaction was declined.'

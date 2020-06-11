@@ -146,7 +146,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def ssl_invoke(action, params)
-        if ['purchase', 'authorize', 'refund', 'credit'].include?(action)
+        if %w[purchase authorize refund credit].include?(action)
           ssl_post(url(), post_data(params), headers)
         else
           ssl_request(:put, url(params), post_data(params), headers)

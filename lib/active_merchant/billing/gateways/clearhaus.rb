@@ -4,8 +4,8 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://gateway.test.clearhaus.com'
       self.live_url = 'https://gateway.clearhaus.com'
 
-      self.supported_countries = ['DK', 'NO', 'SE', 'FI', 'DE', 'CH', 'NL', 'AD', 'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'FO', 'GL', 'EE', 'FR', 'GR',
-                                  'HU', 'IS', 'IE', 'IT', 'LV', 'LI', 'LT', 'LU', 'MT', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'GB']
+      self.supported_countries = %w[DK NO SE FI DE CH NL AD AT BE BG HR CY CZ FO GL EE FR GR
+                                    HU IS IE IT LV LI LT LU MT PL PT RO SK SI ES GB]
 
       self.default_currency    = 'EUR'
       self.currencies_without_fractions = %w(BIF CLP DJF GNF JPY KMF KRW PYG RWF UGX VND VUV XAF XOF XPF)

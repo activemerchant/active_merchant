@@ -136,7 +136,7 @@ class FirstdataE4Test < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal ['CA', 'US'], FirstdataE4Gateway.supported_countries
+    assert_equal %w[CA US], FirstdataE4Gateway.supported_countries
   end
 
   def test_supported_cardtypes

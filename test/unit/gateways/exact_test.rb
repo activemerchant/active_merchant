@@ -63,7 +63,7 @@ class ExactTest < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal ['CA', 'US'], ExactGateway.supported_countries
+    assert_equal %w[CA US], ExactGateway.supported_countries
   end
 
   def test_supported_card_types

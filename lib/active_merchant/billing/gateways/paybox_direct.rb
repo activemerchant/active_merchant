@@ -39,7 +39,7 @@ module ActiveMerchant #:nodoc:
       }
 
       SUCCESS_CODES = ['00000']
-      UNAVAILABILITY_CODES = ['00001', '00097', '00098']
+      UNAVAILABILITY_CODES = %w[00001 00097 00098]
       SUCCESS_MESSAGE = 'The transaction was approved'
       FAILURE_MESSAGE = 'The transaction failed'
 
@@ -160,7 +160,7 @@ module ActiveMerchant #:nodoc:
           test: test?,
           authorization: response[:numappel].to_s + response[:numtrans].to_s,
           fraud_review: false,
-          sent_params: parameters.delete_if { |key, value| ['porteur', 'dateval', 'cvv'].include?(key.to_s) }
+          sent_params: parameters.delete_if { |key, value| %w[porteur dateval cvv].include?(key.to_s) }
         )
       end
 

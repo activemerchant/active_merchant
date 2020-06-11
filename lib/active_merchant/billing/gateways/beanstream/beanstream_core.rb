@@ -131,7 +131,7 @@ module ActiveMerchant #:nodoc:
         base.default_currency = 'CAD'
 
         # The countries the gateway supports merchants from as 2 digit ISO country codes
-        base.supported_countries = ['CA', 'US']
+        base.supported_countries = %w[CA US]
 
         # The card types supported by the payment gateway
         base.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
@@ -259,7 +259,7 @@ module ActiveMerchant #:nodoc:
         [options[:billing_address], options[:shipping_address]].compact.each do |address|
           next if empty?(address[:country])
 
-          unless ['US', 'CA'].include?(address[:country])
+          unless %w[US CA].include?(address[:country])
             address[:state] = '--'
             address[:zip]   = '000000' unless address[:zip]
           end

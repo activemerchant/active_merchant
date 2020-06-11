@@ -6,6 +6,7 @@
 * Stripe: strict_encode64 api key [britth] #3672
 * Stripe PI: Implement verify action [leila-alderman] #3662
 * RuboCop: Fix Style/TrailingUnderscoreVariable [leila-alderman] #3663
+* RuboCop: Fix Style/WordArray [leila-alderman] #3664
 
 == Version 1.108.0 (Jun 9, 2020)
 * Cybersource: Send cavv as xid is xid is missing [pi3r] #3658

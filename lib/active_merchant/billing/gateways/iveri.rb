@@ -5,7 +5,7 @@ module ActiveMerchant #:nodoc:
     class IveriGateway < Gateway
       self.live_url = self.test_url = 'https://portal.nedsecure.co.za/iVeriWebService/Service.asmx'
 
-      self.supported_countries = ['US', 'ZA', 'GB']
+      self.supported_countries = %w[US ZA GB]
       self.default_currency = 'ZAR'
       self.money_format = :cents
       self.supported_cardtypes = [:visa, :master, :american_express]

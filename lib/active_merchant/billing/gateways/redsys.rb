@@ -480,7 +480,7 @@ module ActiveMerchant #:nodoc:
           else
             message = 'Response failed validation check'
           end
-        elsif ['iniciaPeticion', 'trataPeticion'].include?(action)
+        elsif %w[iniciaPeticion trataPeticion].include?(action)
           vxml = Nokogiri::XML(data).remove_namespaces!.xpath("//Envelope/Body/#{action}Response/#{action}Return").inner_text
           xml = Nokogiri::XML(vxml)
           node = (action == 'iniciaPeticion' ? 'INFOTARJETA' : 'OPERACION')

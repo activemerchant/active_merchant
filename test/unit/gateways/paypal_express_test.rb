@@ -632,7 +632,7 @@ class PaypalExpressTest < Test::Unit::TestCase
       cancel_return_url: 'http://example.com'
     )
 
-    assert_equal ['10736', '10002'], response.params['error_codes'].split(',')
+    assert_equal %w[10736 10002], response.params['error_codes'].split(',')
   end
 
   def test_allow_guest_checkout

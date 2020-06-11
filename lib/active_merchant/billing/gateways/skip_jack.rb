@@ -160,7 +160,7 @@ module ActiveMerchant #:nodoc:
         '-117' => 'POS Check Invalid Cashier Number'
       }
 
-      self.supported_countries = ['US', 'CA']
+      self.supported_countries = %w[US CA]
       self.supported_cardtypes = [:visa, :master, :american_express, :jcb, :discover, :diners_club]
       self.homepage_url = 'http://www.skipjack.com/'
       self.display_name = 'SkipJack'

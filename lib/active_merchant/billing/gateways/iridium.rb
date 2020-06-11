@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = self.test_url = 'https://gw1.iridiumcorp.net/'
 
       # The countries the gateway supports merchants from as 2 digit ISO country codes
-      self.supported_countries = ['GB', 'ES']
+      self.supported_countries = %w[GB ES]
       self.default_currency = 'EUR'
       self.money_format = :cents
 

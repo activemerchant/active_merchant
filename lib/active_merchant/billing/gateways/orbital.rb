@@ -71,7 +71,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://orbital1.chasepaymentech.com/authorize'
       self.secondary_live_url = 'https://orbital2.chasepaymentech.com/authorize'
 
-      self.supported_countries = ['US', 'CA']
+      self.supported_countries = %w[US CA]
       self.default_currency = 'CAD'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
 
@@ -80,7 +80,7 @@ module ActiveMerchant #:nodoc:
 
       self.money_format = :cents
 
-      AVS_SUPPORTED_COUNTRIES = ['US', 'CA', 'UK', 'GB']
+      AVS_SUPPORTED_COUNTRIES = %w[US CA UK GB]
 
       CURRENCY_CODES = {
         'AUD' => '036',

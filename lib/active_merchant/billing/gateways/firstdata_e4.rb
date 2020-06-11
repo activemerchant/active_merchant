@@ -37,7 +37,7 @@ module ActiveMerchant #:nodoc:
       DEFAULT_ECI = '07'
 
       self.supported_cardtypes = BRANDS.keys
-      self.supported_countries = ['CA', 'US']
+      self.supported_countries = %w[CA US]
       self.default_currency = 'USD'
       self.homepage_url = 'http://www.firstdata.com'
       self.display_name = 'FirstData Global Gateway e4'

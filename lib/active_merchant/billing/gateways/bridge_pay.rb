@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://gatewaystage.itstgate.com/SmartPayments/transact3.asmx'
       self.live_url = 'https://gateway.itstgate.com/SmartPayments/transact3.asmx'
 
-      self.supported_countries = ['CA', 'US']
+      self.supported_countries = %w[CA US]
       self.default_currency = 'USD'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
 

@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://www.bambora.co.nz/interface/api'
       self.test_url = 'https://demo.bambora.co.nz/interface/api'
 
-      self.supported_countries = ['AU', 'NZ']
+      self.supported_countries = %w[AU NZ]
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
 
       self.homepage_url = 'http://www.bambora.com/'

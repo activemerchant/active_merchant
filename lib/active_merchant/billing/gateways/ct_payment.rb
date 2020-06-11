@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://test.ctpaiement.ca/v1/'
       self.live_url = 'https://www.ctpaiement.com/v1/'
 
-      self.supported_countries = ['US', 'CA']
+      self.supported_countries = %w[US CA]
       self.default_currency = 'CAD'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club]
 

@@ -3,7 +3,7 @@ module ActiveMerchant #:nodoc:
     class MercadoPagoGateway < Gateway
       self.live_url = self.test_url = 'https://api.mercadopago.com/v1'
 
-      self.supported_countries = ['AR', 'BR', 'CL', 'CO', 'MX', 'PE', 'UY']
+      self.supported_countries = %w[AR BR CL CO MX PE UY]
       self.supported_cardtypes = [:visa, :master, :american_express, :elo, :cabal, :naranja]
 
       self.homepage_url = 'https://www.mercadopago.com/'
@@ -251,7 +251,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, path, parameters)
-        if ['capture', 'void'].include?(action)
+        if %w[capture void].include?(action)
           response = parse(ssl_request(:put, url(path), post_data(parameters), headers))
         else
           response = parse(ssl_post(url(path), post_data(parameters), headers(parameters)))
@@ -271,7 +271,7 @@ module ActiveMerchant #:nodoc:
         if action == 'refund'
           response['status'] != 404 && response['error'].nil?
         else
-          ['active', 'approved', 'authorized', 'cancelled', 'in_process'].include?(response['status'])
+          %w[active approved authorized cancelled in_process].include?(response['status'])
         end
       end
 

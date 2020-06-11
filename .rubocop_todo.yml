@@ -934,13 +934,6 @@ Style/TrailingCommaInArrayLiteral:
 Style/TrailingCommaInHashLiteral:
   Enabled: false
 
-# Offense count: 119
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, MinSize, WordRegex.
-# SupportedStyles: percent, brackets
-Style/WordArray:
-  Enabled: false
-
 # Offense count: 34
 # Cop supports --auto-correct.
 Style/ZeroLengthPredicate:

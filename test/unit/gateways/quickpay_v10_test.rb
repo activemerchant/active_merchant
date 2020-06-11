@@ -148,7 +148,7 @@ class QuickpayV10Test < Test::Unit::TestCase
 
   def test_supported_countries
     klass = @gateway.class
-    assert_equal ['DE', 'DK', 'ES', 'FI', 'FR', 'FO', 'GB', 'IS', 'NO', 'SE'], klass.supported_countries
+    assert_equal %w[DE DK ES FI FR FO GB IS NO SE], klass.supported_countries
   end
 
   def test_supported_card_types

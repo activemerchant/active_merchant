@@ -4,11 +4,11 @@ module ActiveMerchant #:nodoc:
       self.live_url = self.test_url = 'https://secure.soeasypay.com/gateway.asmx'
       self.money_format = :cents
 
-      self.supported_countries = [
-        'US', 'CA', 'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE',
-        'FI', 'FR', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU',
-        'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE', 'GB',
-        'IS', 'NO', 'CH'
+      self.supported_countries = %w[
+        US CA AT BE BG HR CY CZ DK EE
+        FI FR DE GR HU IE IT LV LT LU
+        MT NL PL PT RO SK SI ES SE GB
+        IS NO CH
       ]
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :maestro, :jcb, :diners_club]
       self.homepage_url = 'http://www.soeasypay.com/'

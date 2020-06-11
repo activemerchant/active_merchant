@@ -67,7 +67,7 @@ class BluePayTest < Test::Unit::TestCase
     result = {}
 
     @gateway.send(:add_address, result, billing_address: {address1: '123 Test St.', address2: '5F', city: 'Testville', company: 'Test Company', country: 'DE', state: ''})
-    assert_equal ['ADDR1', 'ADDR2', 'CITY', 'COMPANY_NAME', 'COUNTRY', 'PHONE', 'STATE', 'ZIP'], result.stringify_keys.keys.sort
+    assert_equal %w[ADDR1 ADDR2 CITY COMPANY_NAME COUNTRY PHONE STATE ZIP], result.stringify_keys.keys.sort
     assert_equal 'n/a', result[:STATE]
     assert_equal '123 Test St.', result[:ADDR1]
     assert_equal 'DE', result[:COUNTRY]
@@ -78,7 +78,7 @@ class BluePayTest < Test::Unit::TestCase
 
     @gateway.send(:add_address, result, billing_address: {address1: '123 Test St.', address2: '5F', city: 'Testville', company: 'Test Company', country: 'US', state: 'AK'})
 
-    assert_equal ['ADDR1', 'ADDR2', 'CITY', 'COMPANY_NAME', 'COUNTRY', 'PHONE', 'STATE', 'ZIP'], result.stringify_keys.keys.sort
+    assert_equal %w[ADDR1 ADDR2 CITY COMPANY_NAME COUNTRY PHONE STATE ZIP], result.stringify_keys.keys.sort
     assert_equal 'AK', result[:STATE]
     assert_equal '123 Test St.', result[:ADDR1]
     assert_equal 'US', result[:COUNTRY]
@@ -183,7 +183,7 @@ class BluePayTest < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal ['US', 'CA'], BluePayGateway.supported_countries
+    assert_equal %w[US CA], BluePayGateway.supported_countries
   end
 
   def test_supported_card_types

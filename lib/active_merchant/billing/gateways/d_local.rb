@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://sandbox.dlocal.com'
       self.live_url = 'https://api.dlocal.com'
 
-      self.supported_countries = ['AR', 'BR', 'CL', 'CO', 'MX', 'PE', 'UY', 'TR']
+      self.supported_countries = %w[AR BR CL CO MX PE UY TR]
       self.default_currency = 'USD'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club, :maestro, :naranja, :cabal]
 
@@ -184,7 +184,7 @@ module ActiveMerchant #:nodoc:
       def success_from(action, response)
         return false unless response['status_code']
 
-        ['100', '200', '400', '600'].include? response['status_code'].to_s
+        %w[100 200 400 600].include? response['status_code'].to_s
       end
 
       def message_from(action, response)

@@ -55,7 +55,7 @@ module ActiveMerchant #:nodoc:
       }
 
       # The header keys that we will provide in the response params hash
-      RESPONSE_KEYS = ['ResponseMsg', 'ResponseText', 'ResponseCode', 'TimeIn', 'TimeOut', 'AuthCode', 'OrderId', 'CardTypeName', 'MerchantId', 'IssuerAuthDate']
+      RESPONSE_KEYS = %w[ResponseMsg ResponseText ResponseCode TimeIn TimeOut AuthCode OrderId CardTypeName MerchantId IssuerAuthDate]
 
       def initialize(options = {})
         requires!(options, :store_id, :login, :password)

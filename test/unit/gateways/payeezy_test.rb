@@ -244,7 +244,7 @@ class PayeezyGateway < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal ['CA', 'US'].sort, PayeezyGateway.supported_countries.sort
+    assert_equal %w[CA US].sort, PayeezyGateway.supported_countries.sort
   end
 
   def test_supported_cardtypes

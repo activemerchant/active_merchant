@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://devapi.vnforapps.com/api.tokenization/api/v2/merchant'
       self.live_url = 'https://api.vnforapps.com/api.tokenization/api/v2/merchant'
 
-      self.supported_countries = ['US', 'PE']
+      self.supported_countries = %w[US PE]
       self.default_currency = 'PEN'
       self.money_format = :dollars
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]

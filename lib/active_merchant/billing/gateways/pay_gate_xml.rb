@@ -76,7 +76,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://www.paygate.co.za/payxml/process.trans'
 
       # The countries the gateway supports merchants from as 2 digit ISO country codes
-      self.supported_countries = ['US', 'ZA']
+      self.supported_countries = %w[US ZA]
 
       # The card types supported by the payment gateway
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]

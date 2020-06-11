@@ -70,7 +70,7 @@ module ActiveMerchant #:nodoc:
       }
 
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :maestro, :diners_club]
-      self.supported_countries = ['GB', 'IE']
+      self.supported_countries = %w[GB IE]
       self.default_currency = 'GBP'
 
       self.homepage_url = 'http://www.sagepay.com'

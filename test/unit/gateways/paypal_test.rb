@@ -219,7 +219,7 @@ class PaypalTest < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal ['CA', 'NZ', 'GB', 'US'], PaypalGateway.supported_countries
+    assert_equal %w[CA NZ GB US], PaypalGateway.supported_countries
   end
 
   def test_supported_card_types
@@ -575,7 +575,7 @@ class PaypalTest < Test::Unit::TestCase
   end
 
   def test_card_declined
-    ['15005', '10754', '10752', '10759', '10761', '15002', '11084'].each do |error_code|
+    %w[15005 10754 10752 10759 10761 15002 11084].each do |error_code|
       @gateway.expects(:ssl_request).returns(response_with_error_code(error_code))
 
       response = @gateway.purchase(@amount, @credit_card, @options)

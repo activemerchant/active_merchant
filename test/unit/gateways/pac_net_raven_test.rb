@@ -180,7 +180,7 @@ class PacNetRavenGatewayTest < Test::Unit::TestCase
   def test_add_address
     result = {}
     @gateway.send(:add_address, result, billing_address: {address1: 'Address 1', address2: 'Address 2', zip: 'ZIP'})
-    assert_equal ['BillingPostalCode', 'BillingStreetAddressLineFour', 'BillingStreetAddressLineOne'], result.stringify_keys.keys.sort
+    assert_equal %w[BillingPostalCode BillingStreetAddressLineFour BillingStreetAddressLineOne], result.stringify_keys.keys.sort
     assert_equal 'ZIP', result['BillingPostalCode']
     assert_equal 'Address 2', result['BillingStreetAddressLineFour']
     assert_equal 'Address 1', result['BillingStreetAddressLineOne']
@@ -189,7 +189,7 @@ class PacNetRavenGatewayTest < Test::Unit::TestCase
   def test_add_creditcard
     result = {}
     @gateway.send(:add_creditcard, result, @credit_card)
-    assert_equal ['CVV2', 'CardNumber', 'Expiry'], result.stringify_keys.keys.sort
+    assert_equal %w[CVV2 CardNumber Expiry], result.stringify_keys.keys.sort
     assert_equal @credit_card.number, result['CardNumber']
     assert_equal @gateway.send(:expdate, @credit_card), result['Expiry']
     assert_equal @credit_card.verification_value, result['CVV2']

@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://gateway.l19tech.com/payments/'
       self.test_url = 'https://gateway-sb.l19tech.com/payments/'
 
-      self.supported_countries = ['US', 'CA']
+      self.supported_countries = %w[US CA]
       self.default_currency = 'USD'
       self.money_format = :dollars
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]

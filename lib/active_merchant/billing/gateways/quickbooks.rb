@@ -323,7 +323,7 @@ module ActiveMerchant #:nodoc:
       def success?(response)
         return FRAUD_WARNING_CODES.concat(['0']).include?(response['errors'].first['code']) if response['errors']
 
-        !['DECLINED', 'CANCELLED'].include?(response['status']) && !['AuthenticationFailed', 'AuthorizationFailed'].include?(response['code'])
+        !%w[DECLINED CANCELLED].include?(response['status']) && !%w[AuthenticationFailed AuthorizationFailed].include?(response['code'])
       end
 
       def message_from(response)
@@ -331,7 +331,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def errors_from(response)
-        if ['AuthenticationFailed', 'AuthorizationFailed'].include?(response['code'])
+        if %w[AuthenticationFailed AuthorizationFailed].include?(response['code'])
           response['code']
         else
           response['errors'].present? ? STANDARD_ERROR_CODE_MAPPING[response['errors'].first['code']] : ''

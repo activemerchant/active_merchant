@@ -251,11 +251,11 @@ class CreditCardMethodsTest < Test::Unit::TestCase
   end
 
   def test_carnet_cards
-    numbers = [
-      '5062280000000000',
-      '6046220312312312',
-      '6393889871239871',
-      '5022751231231231'
+    numbers = %w[
+      5062280000000000
+      6046220312312312
+      6393889871239871
+      5022751231231231
     ]
     numbers.each do |num|
       assert_equal 16, num.length

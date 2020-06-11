@@ -137,7 +137,7 @@ class RealexTest < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal ['IE', 'GB', 'FR', 'BE', 'NL', 'LU', 'IT', 'US', 'CA', 'ES'], RealexGateway.supported_countries
+    assert_equal %w[IE GB FR BE NL LU IT US CA ES], RealexGateway.supported_countries
   end
 
   def test_supported_card_types

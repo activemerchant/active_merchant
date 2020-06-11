@@ -332,7 +332,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal ['AD', 'AE', 'AR', 'AT', 'AU', 'BE', 'BG', 'BH', 'BR', 'CH', 'CL', 'CN', 'CO', 'CY', 'CZ', 'DE', 'DK', 'EE', 'EG', 'ES', 'FI', 'FR', 'GB', 'GR', 'HK', 'HR', 'HU', 'IE', 'IS', 'IT', 'JO', 'JP', 'KW', 'LI', 'LT', 'LU', 'LV', 'MC', 'MT', 'MX', 'MY', 'NL', 'NO', 'NZ', 'OM', 'PE', 'PL', 'PT', 'QA', 'RO', 'SA', 'SE', 'SG', 'SI', 'SK', 'SM', 'TR', 'US'], @gateway.supported_countries
+    assert_equal %w[AD AE AR AT AU BE BG BH BR CH CL CN CO CY CZ DE DK EE EG ES FI FR GB GR HK HR HU IE IS IT JO JP KW LI LT LU LV MC MT MX MY NL NO NZ OM PE PL PT QA RO SA SE SG SI SK SM TR US], @gateway.supported_countries
   end
 
   private

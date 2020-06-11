@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://epayment.bbs.no/'
 
       # The countries the gateway supports merchants from as 2 digit ISO country codes
-      self.supported_countries = ['NO', 'DK', 'SE', 'FI']
+      self.supported_countries = %w[NO DK SE FI]
 
       # The card types supported by the payment gateway
       self.supported_cardtypes = [:visa, :master, :american_express]
