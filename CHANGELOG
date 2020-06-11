@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* DLocal: Handle nil address1 [molbrown] #3661
 
 == Version 1.108.0 (Jun 9, 2020)
 * Cybersource: Send cavv as xid is xid is missing [pi3r] #3658

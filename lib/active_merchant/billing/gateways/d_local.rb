@@ -125,11 +125,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse_street(address)
+        return unless address[:address1]
+
         street = address[:address1].split(/\s+/).keep_if { |x| x !~ /\d/ }.join(' ')
         street.empty? ? nil : street
       end
 
       def parse_house_number(address)
+        return unless address[:address1]
+
         house = address[:address1].split(/\s+/).keep_if { |x| x =~ /\d/ }.join(' ')
         house.empty? ? nil : house
       end

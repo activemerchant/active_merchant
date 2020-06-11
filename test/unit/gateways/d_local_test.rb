@@ -85,6 +85,14 @@ class DLocalTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
+  def test_passing_nil_address_1
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@amount, @credit_card, @options.merge(billing_address: address(address1: nil)))
+    end.check_request do |method, endpoint, data, headers|
+      refute_match(/"street\"/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_passing_country_as_string
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, @credit_card, @options)
