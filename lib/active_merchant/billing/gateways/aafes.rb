@@ -8,41 +8,27 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
-      # TODO: Not sure if AAFES supports traditional cards
-      # 
-    #   self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      # self.supported_cardtypes = [:visa, :master, :american_express, :discover]
 
-      self.homepage_url = ''
+      self.homepage_url = 'https://www.myecp.com/'
       self.display_name = 'AAFES'
 
       STANDARD_ERROR_CODE_MAPPING = {}
 
       def initialize(options={})
-        requires!(options, :some_credential, :another_credential)
+        requires!(options, :identity_uuid)
+        @identity_uuid = options[:identity_uuid]
         super
       end
 
-      def purchase(money, payment, options={})
-        post = {}
-        add_invoice(post, money, options)
-        add_payment(post, payment)
-        add_address(post, payment, options)
-        add_customer_data(post, options)
+      def purchase(amount, payment, options={})
+        request = build_xml_request do |xml|
+          add_headers(xml, options)
+          add_milstar_purchase(xml, amount, payment, options)
+        end
 
-        commit('sale', post)
+        commit(request)
       end
-
-      # AAFES is structured in such a way that the auth should be performed before AM can execute
-      # any transactions
-    #   def authorize(money, payment, options={})
-    #     post = {}
-    #     add_invoice(post, money, options)
-    #     add_payment(post, payment)
-    #     add_address(post, payment, options)
-    #     add_customer_data(post, options)
-
-    #     commit('authonly', post)
-    #   end
 
       def capture(money, authorization, options={})
         commit('capture', post)
@@ -88,25 +74,37 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        {}
+        puts '---- parse -----'
+        puts body
       end
 
-      def commit(action, parameters)
+      def commit(request)
         url = (test? ? test_url : live_url)
-        response = parse(ssl_post(url, post_data(action, parameters)))
+        puts '-------------------'
+        puts request
+        response =
+          begin
+            parse(ssl_post(url, request, headers))
+          rescue StandardError => error
+            parse(error.response.body)
+          end
 
         Response.new(
           success_from(response),
           message_from(response),
           response,
           authorization: authorization_from(response),
-          avs_result: AVSResult.new(code: response["some_avs_response_key"]),
-          cvv_result: CVVResult.new(response["some_cvv_response_key"]),
           test: test?,
           error_code: error_code_from(response)
         )
       end
 
+      def headers
+        {
+          'Content-Type' => 'application/xml'
+        }
+      end
+      
       def success_from(response)
       end
 
@@ -115,8 +113,19 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(response)
       end
+      
+      def build_xml_request
+        builder = Nokogiri::XML::Builder.new(encoding: 'UTF-8') do |xml|
+          xml['cm'].Message(
+            'TypeCode' => 'Request', 
+            'MajorVersion' => '3', 'MinorVersion' => '4', 
+            'FixVersion' => '0', 
+            'xmlns:cm' => 'http://www.aafes.com/credit') do
+            yield(xml)
+          end
+        end
 
-      def post_data(action, parameters = {})
+        builder.to_xml
       end
 
       def error_code_from(response)
@@ -124,6 +133,39 @@ module ActiveMerchant #:nodoc:
           # TODO: lookup error code for this response
         end
       end
+
+      def add_headers(xml, options)
+        xml['cm'].Header do
+          xml['cm'].IdentityUUID(@identity_uuid)
+          xml['cm'].LocalDateTime('2019-09-04T22:26:02') #Time.now.getutc
+          xml['cm'].SettleIndicator(false)
+          xml['cm'].OrderNumber(options[:order_id])
+          xml['cm'].TransactionId(options[:transaction_id])
+          xml['cm'].TermId(options[:term_id])
+          xml['cm'].Comment(options[:comment])
+          xml['cm'].CustomerID(options[:customer_id])
+        end
+      end
+
+      def add_milstar_purchase(xml, amount, payment, options)
+        xml['cm'].Request('RRN' => options[:rrn]) do
+          xml['cm'].Media('Milstar')
+          xml['cm'].RequestType('Sale')
+          xml['cm'].InputType('Keyed')
+          xml['cm'].Token('Token')
+          xml['cm'].Account(payment.payment_data)
+          xml['cm'].Expiration(payment.metadata[:expiration])
+          xml['cm'].AmountField(amount)
+          xml['cm'].PlanNumbers do
+            xml['cm'].PlanNumber(options[:plan_number])
+          end
+          xml['cm'].DescriptionField(options[:description])
+          xml['cm'].AddressVerificationService do
+            xml['cm'].BillingZipCode(payment.metadata[:zip])
+          end
+        end
+      end
+
     end
   end
 end

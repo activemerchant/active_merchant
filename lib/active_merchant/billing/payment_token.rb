@@ -7,6 +7,7 @@ module ActiveMerchant #:nodoc:
     # the token's type, like 'apple_pay' or 'stripe' should your target payment gateway process these tokens.
     class PaymentToken
       attr_reader :payment_data
+      attr_reader :metadata
 
       def initialize(payment_data, options = {})
         @payment_data = payment_data
