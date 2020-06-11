@@ -592,6 +592,24 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert_equal store1.params['id'], store2.params['id']
   end
 
+  def test_successful_verify
+    options = {
+      customer: @customer
+    }
+    assert verify = @gateway.verify(@visa_payment_method, options)
+
+    assert_equal 'succeeded', verify.params['status']
+  end
+
+  def test_failed_verify
+    options = {
+      customer: @customer
+    }
+    assert verify = @gateway.verify(@declined_payment_method, options)
+
+    assert_equal 'Your card was declined.', verify.message
+  end
+
   def test_moto_enabled_card_requires_action_when_not_marked
     options = {
       currency: 'GBP',
@@ -631,7 +649,6 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
       currency: 'GBP',
       customer: @customer,
       confirmation_method: 'manual',
-      capture_method: 'manual',
       return_url: 'https://www.example.com/return',
       confirm: true
     }

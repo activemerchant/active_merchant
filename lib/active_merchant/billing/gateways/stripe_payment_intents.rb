@@ -84,6 +84,21 @@ module ActiveMerchant #:nodoc:
         commit(:post, "payment_intents/#{intent_id}", post, options)
       end
 
+      def create_setup_intent(payment_method, options = {})
+        post = {}
+        add_customer(post, options)
+        payment_method = add_payment_method_token(post, payment_method, options)
+        return payment_method if payment_method.is_a?(ActiveMerchant::Billing::Response)
+
+        add_metadata(post, options)
+        add_return_url(post, options)
+        post[:on_behalf_of] = options[:on_behalf_of] if options[:on_behalf_of]
+        post[:usage] = options[:usage] if %w(on_session off_session).include?(options[:usage])
+        post[:description] = options[:description] if options[:description]
+
+        commit(:post, 'setup_intents', post, options)
+      end
+
       def authorize(money, payment_method, options = {})
         create_intent(money, payment_method, options.merge!(confirm: true, capture_method: 'manual'))
       end
@@ -168,6 +183,10 @@ module ActiveMerchant #:nodoc:
         else
           super(identification, options, deprecated_options)
         end
+      end
+
+      def verify(payment_method, options = {})
+        create_setup_intent(payment_method, options.merge!(confirm: true))
       end
 
       private
