@@ -188,6 +188,10 @@ module ActiveMerchant
       Billing::NetworkTokenizationCreditCard.new(defaults)
     end
 
+    def collect_js_payment_token(token = '00000000-000000-000000-000000000000')
+      Billing::CollectJsPaymentToken.new(token)
+    end
+
     def check(options = {})
       defaults = {
         name: 'Jim Smith',

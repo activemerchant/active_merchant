@@ -156,6 +156,8 @@ module ActiveMerchant #:nodoc:
         if payment_method.is_a?(String)
           customer_vault_id, _ = split_authorization(payment_method)
           post[:customer_vault_id] = customer_vault_id
+        elsif payment_method.is_a?(CollectJsPaymentToken)
+          post[:payment_token] = payment_method.payment_data
         elsif payment_method.is_a?(NetworkTokenizationCreditCard)
           post[:ccnumber] = payment_method.number
           post[:ccexp] = exp_date(payment_method)
