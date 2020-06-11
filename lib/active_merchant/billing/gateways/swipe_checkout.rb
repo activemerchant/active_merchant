@@ -13,7 +13,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = %w[NZ CA]
       self.default_currency = 'NZD'
-      self.supported_cardtypes = [:visa, :master]
+      self.supported_cardtypes = %i[visa master]
       self.homepage_url = 'https://www.swipehq.com/checkout'
       self.display_name = 'Swipe Checkout'
       self.money_format = :dollars

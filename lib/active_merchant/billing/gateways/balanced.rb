@@ -22,7 +22,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://api.balancedpayments.com'
 
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.homepage_url = 'https://www.balancedpayments.com/'
       self.display_name = 'Balanced'
       self.money_format = :cents

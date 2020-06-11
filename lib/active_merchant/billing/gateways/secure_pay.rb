@@ -17,7 +17,7 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'USD'
 
       self.supported_countries = %w(US CA GB AU)
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club jcb]
       self.homepage_url = 'http://www.securepay.com/'
       self.display_name = 'SecurePay'
 

@@ -6,7 +6,7 @@ module ActiveMerchant
       self.default_currency = 'GBP'
       self.supported_countries = ['GB']
 
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb, :maestro]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club jcb maestro]
 
       self.homepage_url = 'http://www.datacash.com/'
       self.display_name = 'DataCash'

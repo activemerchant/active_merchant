@@ -11,7 +11,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['BR']
       self.default_currency = 'BRL'
       self.money_format = :dollars
-      self.supported_cardtypes = [:visa, :master, :discover, :american_express, :diners_club]
+      self.supported_cardtypes = %i[visa master discover american_express diners_club]
       self.homepage_url = 'http://www.maxipago.com/'
       self.display_name = 'maxiPago!'
 

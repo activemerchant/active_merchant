@@ -13,7 +13,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = self.test_url = 'https://secure.quantumgateway.com/cgi/xml_requester.php'
 
       # visa, master, american_express, discover
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.supported_countries = ['US']
       self.default_currency = 'USD'
       self.money_format = :dollars

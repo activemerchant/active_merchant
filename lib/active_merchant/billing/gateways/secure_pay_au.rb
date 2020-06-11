@@ -15,7 +15,7 @@ module ActiveMerchant #:nodoc:
       self.live_periodic_url = 'https://api.securepay.com.au/xmlapi/periodic'
 
       self.supported_countries = ['AU']
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
+      self.supported_cardtypes = %i[visa master american_express diners_club jcb]
 
       # The homepage URL of the gateway
       self.homepage_url = 'http://securepay.com.au'

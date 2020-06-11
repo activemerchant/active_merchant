@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['AU']
       self.default_currency = 'AUD'
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners]
+      self.supported_cardtypes = %i[visa master american_express discover jcb diners]
 
       CVV_CODE_MAPPING = {
         'S' => 'D'

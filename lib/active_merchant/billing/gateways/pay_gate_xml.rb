@@ -79,7 +79,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = %w[US ZA]
 
       # The card types supported by the payment gateway
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express diners_club]
 
       # The homepage URL of the gateway
       self.homepage_url = 'http://paygate.co.za/'

@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners]
+      self.supported_cardtypes = %i[visa master american_express discover diners]
 
       self.homepage_url = 'http://payments.intuit.com'
       self.display_name = 'QuickBooks Payments'
@@ -239,7 +239,7 @@ module ActiveMerchant #:nodoc:
       def headers(method, uri)
         return oauth_v2_headers if @options[:refresh_token]
 
-        raise ArgumentError, "Invalid HTTP method: #{method}. Valid methods are :post and :get" unless [:post, :get].include?(method)
+        raise ArgumentError, "Invalid HTTP method: #{method}. Valid methods are :post and :get" unless %i[post get].include?(method)
 
         request_uri = URI.parse(uri)
 

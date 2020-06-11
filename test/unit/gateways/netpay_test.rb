@@ -150,7 +150,7 @@ class NetpayTest < Test::Unit::TestCase
   end
 
   def test_supported_cardtypes
-    assert_equal [:visa, :master, :american_express, :diners_club], NetpayGateway.supported_cardtypes
+    assert_equal %i[visa master american_express diners_club], NetpayGateway.supported_cardtypes
   end
 
   private

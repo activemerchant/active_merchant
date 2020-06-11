@@ -13,7 +13,7 @@ module ActiveMerchant #:nodoc:
       BASE_URL = 'https://secure.merchantonegateway.com/api/transact.php'
 
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.homepage_url = 'http://merchantone.com/'
       self.display_name = 'Merchant One Gateway'
       self.money_format = :dollars

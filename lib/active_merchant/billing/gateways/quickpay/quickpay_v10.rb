@@ -191,7 +191,7 @@ module ActiveMerchant
 
         post[:shipping_address] = map_address(options[:shipping_address]) if options[:shipping_address]
 
-        [:metadata, :branding_id, :variables].each do |field|
+        %i[metadata branding_id variables].each do |field|
           post[field] = options[field] if options[field]
         end
       end

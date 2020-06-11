@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'GBP'
       self.currencies_without_fractions = %w(CVE ISK JPY UGX)
       self.supported_countries = %w[GB US CH SE SG NO JP IS HK NL CZ CA AU]
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :discover, :jcb, :maestro]
+      self.supported_cardtypes = %i[visa master american_express diners_club discover jcb maestro]
       self.homepage_url = 'http://www.cardstream.com/'
       self.display_name = 'CardStream'
 

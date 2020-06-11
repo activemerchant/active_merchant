@@ -342,7 +342,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
     result = Braintree::SuccessfulResult.new(customer: customer)
     Braintree::CustomerGateway.any_instance.expects(:create).with do |params|
       assert_not_nil params[:credit_card][:billing_address]
-      [:street_address, :extended_address, :locality, :region, :postal_code, :country_name].each do |billing_attribute|
+      %i[street_address extended_address locality region postal_code country_name].each do |billing_attribute|
         params[:credit_card][:billing_address].has_key?(billing_attribute) if params[:billing_address]
       end
       params

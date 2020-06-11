@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = %w(DE)
       self.default_currency = 'EUR'
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express]
+      self.supported_cardtypes = %i[visa master american_express]
 
       def initialize(options={})
         requires!(options, :access_key)

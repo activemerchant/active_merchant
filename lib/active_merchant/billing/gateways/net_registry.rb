@@ -32,7 +32,7 @@ module ActiveMerchant
       # steps in setting up your account, as detailed in
       # "Programming for NetRegistry's E-commerce Gateway."
       # [http://rubyurl.com/hNG]
-      self.supported_cardtypes = [:visa, :master, :diners_club, :american_express, :jcb]
+      self.supported_cardtypes = %i[visa master diners_club american_express jcb]
       self.display_name = 'NetRegistry'
       self.homepage_url = 'http://www.netregistry.com.au'
 

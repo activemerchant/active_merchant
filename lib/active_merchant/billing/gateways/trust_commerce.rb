@@ -107,7 +107,7 @@ module ActiveMerchant #:nodoc:
       VOIDABLE_ACTIONS = %w(preauth sale postauth credit)
 
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :discover, :american_express, :diners_club, :jcb]
+      self.supported_cardtypes = %i[visa master discover american_express diners_club jcb]
       self.supported_countries = ['US']
       self.homepage_url = 'http://www.trustcommerce.com/'
       self.display_name = 'TrustCommerce'
@@ -262,7 +262,7 @@ module ActiveMerchant #:nodoc:
       def recurring(money, creditcard, options = {})
         ActiveMerchant.deprecated RECURRING_DEPRECATION_MESSAGE
 
-        requires!(options, [:periodicity, :bimonthly, :monthly, :biweekly, :weekly, :yearly, :daily])
+        requires!(options, %i[periodicity bimonthly monthly biweekly weekly yearly daily])
 
         cycle =
           case options[:periodicity]

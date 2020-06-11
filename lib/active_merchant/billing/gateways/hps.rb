@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jbc, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express discover jbc diners_club]
 
       self.homepage_url = 'http://developer.heartlandpaymentsystems.com/SecureSubmit/'
       self.display_name = 'Heartland Payment Systems'

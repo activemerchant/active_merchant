@@ -112,7 +112,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = %w(AD AI AG AR AU AT BS BB BE BZ BM BR BN BG CA HR CY CZ DK DM EE FI FR DE GR GD GY HK HU IS IN IL IT JP LV LI LT LU MY MT MX MC MS NL PA PL PT KN LC MF VC SM SG SK SI ZA ES SR SE CH TR GB US UY)
       self.default_currency = 'EUR'
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :discover, :jcb, :maestro, :dankort]
+      self.supported_cardtypes = %i[visa master american_express diners_club discover jcb maestro dankort]
 
       self.homepage_url = 'https://docs.oppwa.com'
       self.display_name = 'Open Payment Platform'

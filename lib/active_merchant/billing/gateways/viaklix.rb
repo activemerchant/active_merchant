@@ -14,7 +14,7 @@ module ActiveMerchant #:nodoc:
 
       APPROVED = '0'
 
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.supported_countries = ['US']
       self.display_name = 'ViaKLIX'
       self.homepage_url = 'http://viaklix.com'

@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'USD'
       self.money_format = :dollars
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.homepage_url = 'http://nmi.com/'
       self.display_name = 'NMI'
 
@@ -138,7 +138,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_level3_fields(post, options)
-        add_fields_to_post_if_present(post, options, [:tax, :shipping, :ponumber])
+        add_fields_to_post_if_present(post, options, %i[tax shipping ponumber])
       end
 
       def add_invoice(post, money, options)

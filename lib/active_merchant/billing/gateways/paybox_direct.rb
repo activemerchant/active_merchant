@@ -51,7 +51,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['FR']
 
       # The card types supported by the payment gateway
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
+      self.supported_cardtypes = %i[visa master american_express diners_club jcb]
 
       # The homepage URL of the gateway
       self.homepage_url = 'http://www.paybox.com/'

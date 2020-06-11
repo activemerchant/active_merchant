@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       URL = 'https://banwire.com/api.pago_pro'
 
       self.supported_countries = ['MX']
-      self.supported_cardtypes = [:visa, :master, :american_express]
+      self.supported_cardtypes = %i[visa master american_express]
       self.homepage_url = 'http://www.banwire.com/'
       self.display_name = 'Banwire'
 

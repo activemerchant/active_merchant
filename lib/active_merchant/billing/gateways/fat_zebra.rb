@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['AU']
       self.default_currency = 'AUD'
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express, :jcb]
+      self.supported_cardtypes = %i[visa master american_express jcb]
 
       self.homepage_url = 'https://www.fatzebra.com.au/'
       self.display_name = 'Fat Zebra'

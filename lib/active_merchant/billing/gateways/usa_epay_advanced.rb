@@ -73,7 +73,7 @@ module ActiveMerchant #:nodoc:
       FAILURE_MESSAGE = 'Default Failure' #:nodoc:
 
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club jcb]
       self.homepage_url = 'http://www.usaepay.com/'
       self.display_name = 'USA ePay Advanced SOAP Interface'
 
@@ -676,9 +676,9 @@ module ActiveMerchant #:nodoc:
         commit(__method__, request)
       end
 
-      TRANSACTION_METHODS = [
-        :run_sale, :run_auth_only, :run_credit,
-        :run_check_sale, :run_check_credit
+      TRANSACTION_METHODS = %i[
+        run_sale run_auth_only run_credit
+        run_check_sale run_check_credit
       ] #:nodoc:
 
       TRANSACTION_METHODS.each do |method|

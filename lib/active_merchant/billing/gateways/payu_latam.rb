@@ -12,7 +12,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = %w[AR BR CL CO MX PA PE]
       self.default_currency = 'USD'
       self.money_format = :dollars
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :naranja, :cabal]
+      self.supported_cardtypes = %i[visa master american_express diners_club naranja cabal]
 
       BRAND_MAP = {
         'visa' => 'VISA',

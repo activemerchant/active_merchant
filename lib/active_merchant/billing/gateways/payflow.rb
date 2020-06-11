@@ -8,9 +8,9 @@ module ActiveMerchant #:nodoc:
     class PayflowGateway < Gateway
       include PayflowCommonAPI
 
-      RECURRING_ACTIONS = Set.new([:add, :modify, :cancel, :inquiry, :reactivate, :payment])
+      RECURRING_ACTIONS = Set.new(%i[add modify cancel inquiry reactivate payment])
 
-      self.supported_cardtypes = [:visa, :master, :american_express, :jcb, :discover, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express jcb discover diners_club]
       self.homepage_url = 'https://www.paypal.com/cgi-bin/webscr?cmd=_payflow-pro-overview-outside'
       self.display_name = 'PayPal Payflow Pro'
 
@@ -318,7 +318,7 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'RecurringProfiles' do
           xml.tag! 'RecurringProfile' do
             xml.tag! action.to_s.capitalize do
-              unless [:cancel, :inquiry].include?(action)
+              unless %i[cancel inquiry].include?(action)
                 xml.tag! 'RPData' do
                   xml.tag! 'Name', options[:name] unless options[:name].nil?
                   xml.tag! 'TotalAmt', amount(money), 'Currency' => options[:currency] || currency(money)
@@ -329,7 +329,7 @@ module ActiveMerchant #:nodoc:
                   xml.tag! 'MaxFailPayments', options[:max_fail_payments] unless options[:max_fail_payments].nil?
 
                   if initial_tx = options[:initial_transaction]
-                    requires!(initial_tx, [:type, :authorization, :purchase])
+                    requires!(initial_tx, %i[type authorization purchase])
                     requires!(initial_tx, :amount) if initial_tx[:type] == :purchase
 
                     xml.tag! 'OptionalTrans', TRANSACTIONS[initial_tx[:type]]
@@ -362,7 +362,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def get_pay_period(options)
-        requires!(options, [:periodicity, :bimonthly, :monthly, :biweekly, :weekly, :yearly, :daily, :semimonthly, :quadweekly, :quarterly, :semiyearly])
+        requires!(options, %i[periodicity bimonthly monthly biweekly weekly yearly daily semimonthly quadweekly quarterly semiyearly])
         case options[:periodicity]
         when :weekly then 'Weekly'
         when :biweekly then 'Bi-weekly'

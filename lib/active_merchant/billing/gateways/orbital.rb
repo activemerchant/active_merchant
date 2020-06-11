@@ -73,7 +73,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = %w[US CA]
       self.default_currency = 'CAD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club jcb]
 
       self.display_name = 'Orbital Paymentech'
       self.homepage_url = 'http://chasepaymentech.com/'
@@ -181,7 +181,7 @@ module ActiveMerchant #:nodoc:
       USE_ORDER_ID         = 'O' #  Use OrderID field
       USE_COMMENTS         = 'D' #  Use Comments field
 
-      SENSITIVE_FIELDS = [:account_num, :cc_account_num]
+      SENSITIVE_FIELDS = %i[account_num cc_account_num]
 
       def initialize(options = {})
         requires!(options, :merchant_id)
@@ -678,7 +678,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success?(response, message_type)
-        if [:refund, :void].include?(message_type)
+        if %i[refund void].include?(message_type)
           response[:proc_status] == SUCCESS
         elsif response[:customer_profile_action]
           response[:profile_proc_status] == SUCCESS

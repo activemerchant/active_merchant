@@ -18,7 +18,7 @@ module ActiveMerchant #:nodoc:
       NIL_ATTRIBUTE = { 'i:nil' => 'true' }
 
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.homepage_url = 'http://www.securenet.com/'
       self.display_name = 'SecureNet'
 

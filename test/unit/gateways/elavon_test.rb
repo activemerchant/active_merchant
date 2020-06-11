@@ -250,7 +250,7 @@ class ElavonTest < Test::Unit::TestCase
   end
 
   def test_supported_card_types
-    assert_equal [:visa, :master, :american_express, :discover], ElavonGateway.supported_cardtypes
+    assert_equal %i[visa master american_express discover], ElavonGateway.supported_cardtypes
   end
 
   def test_avs_result

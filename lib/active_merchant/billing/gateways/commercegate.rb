@@ -11,7 +11,7 @@ module ActiveMerchant #:nodoc:
 
       self.money_format = :dollars
       self.default_currency = 'EUR'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.homepage_url = 'http://www.commercegate.com/'
       self.display_name = 'CommerceGate'
 

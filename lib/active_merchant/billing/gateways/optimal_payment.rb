@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
                                     NL NO PL PT RO SK SI ES SE CH]
 
       # The card types supported by the payment gateway
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club]
 
       # The homepage URL of the gateway
       self.homepage_url = 'http://www.optimalpayments.com/'

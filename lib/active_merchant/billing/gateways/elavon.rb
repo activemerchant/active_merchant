@@ -12,7 +12,7 @@ module ActiveMerchant #:nodoc:
 
       self.display_name = 'Elavon MyVirtualMerchant'
       self.supported_countries = %w(US CA PR DE IE NO PL LU BE NL MX)
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.homepage_url = 'http://www.elavon.com/'
 
       self.delimiter = "\n"

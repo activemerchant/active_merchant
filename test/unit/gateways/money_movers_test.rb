@@ -86,7 +86,7 @@ class MoneyMoversTest < Test::Unit::TestCase
   end
 
   def test_supported_card_types
-    assert_equal @gateway.supported_cardtypes, [:visa, :master, :american_express, :discover]
+    assert_equal @gateway.supported_cardtypes, %i[visa master american_express discover]
   end
 
   def test_avs_result

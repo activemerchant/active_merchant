@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = %w[NO DK SE FI]
 
       # The card types supported by the payment gateway
-      self.supported_cardtypes = [:visa, :master, :american_express]
+      self.supported_cardtypes = %i[visa master american_express]
 
       # The homepage URL of the gateway
       self.homepage_url = 'http://www.betalingsterminal.no/Netthandel-forside/'

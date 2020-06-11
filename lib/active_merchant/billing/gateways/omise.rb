@@ -27,7 +27,7 @@ module ActiveMerchant #:nodoc:
       # * VISA
       # * MasterCard
       # * JCB
-      self.supported_cardtypes = [:visa, :master, :jcb]
+      self.supported_cardtypes = %i[visa master jcb]
 
       # Omise main page
       self.homepage_url = 'https://www.omise.co/'

@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
                                     GI GR HK HU ID IE IL IM IN IS IT JO KW LB LI LK LT LU LV MC
                                     MT MU MV MX MY NL NO NZ OM PH PL PT QA RO SA SE SG SI SK SM
                                     TR TT UM US VA VN ZA)
-      self.supported_cardtypes = [:visa, :master, :american_express]
+      self.supported_cardtypes = %i[visa master american_express]
       self.homepage_url = 'https://trexle.com'
       self.display_name = 'Trexle'
 

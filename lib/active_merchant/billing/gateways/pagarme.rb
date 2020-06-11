@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['BR']
       self.default_currency = 'BRL'
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club]
 
       self.homepage_url = 'https://pagar.me/'
       self.display_name = 'Pagar.me'

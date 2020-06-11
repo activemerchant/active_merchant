@@ -11,7 +11,7 @@ module ActiveMerchant
       self.money_format = :cents
       self.supported_countries = %w(US CA)
 
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express discover jcb diners_club]
 
       self.homepage_url = 'https://developer.payeezy.com/'
       self.display_name = 'Payeezy'

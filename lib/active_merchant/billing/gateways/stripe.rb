@@ -28,7 +28,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = %w(AT AU BE BR CA CH DE DK EE ES FI FR GB GR HK IE IT JP LT LU LV MX NL NO NZ PL PT SE SG SI SK US)
       self.default_currency = 'USD'
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club, :maestro]
+      self.supported_cardtypes = %i[visa master american_express discover jcb diners_club maestro]
       self.currencies_without_fractions = %w(BIF CLP DJF GNF JPY KMF KRW MGA PYG RWF VND VUV XAF XOF XPF UGX)
 
       self.homepage_url = 'https://stripe.com/'
@@ -430,7 +430,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, options)
-        metadata_options = [:description, :ip, :user_agent, :referrer]
+        metadata_options = %i[description ip user_agent referrer]
         post.update(options.slice(*metadata_options))
 
         post[:external_id] = options[:order_id]
@@ -452,7 +452,7 @@ module ActiveMerchant #:nodoc:
 
       def add_statement_address(post, options)
         return unless statement_address = options[:statement_address]
-        return unless [:address1, :city, :zip, :state].all? { |key| statement_address[key].present? }
+        return unless %i[address1 city zip state].all? { |key| statement_address[key].present? }
 
         post[:statement_address] = {}
         post[:statement_address][:line1] = statement_address[:address1]

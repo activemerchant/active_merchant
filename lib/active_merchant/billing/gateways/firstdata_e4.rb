@@ -22,7 +22,7 @@ module ActiveMerchant #:nodoc:
 
       SUCCESS = 'true'
 
-      SENSITIVE_FIELDS = [:verification_str2, :expiry_date, :card_number]
+      SENSITIVE_FIELDS = %i[verification_str2 expiry_date card_number]
 
       BRANDS = {
         visa: 'Visa',
@@ -262,7 +262,7 @@ module ActiveMerchant #:nodoc:
         address = options[:billing_address] || options[:address]
         if address
           address_values = []
-          [:address1, :zip, :city, :state, :country].each { |part| address_values << address[part].to_s.tr("\r\n", ' ').strip }
+          %i[address1 zip city state country].each { |part| address_values << address[part].to_s.tr("\r\n", ' ').strip }
           xml.tag! 'VerificationStr1', address_values.join('|')
         end
 

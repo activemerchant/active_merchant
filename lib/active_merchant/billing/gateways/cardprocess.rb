@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
                                      MT HU NL AT PL PT RO SI SK FI SE GB IS LI NO
                                      CH ME MK AL RS TR BA ]
       self.default_currency = 'EUR'
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
+      self.supported_cardtypes = %i[visa master american_express diners_club jcb]
 
       self.homepage_url = 'https://vr-pay-ecommerce.docs.oppwa.com/'
       self.display_name = 'CardProcess VR-Pay'

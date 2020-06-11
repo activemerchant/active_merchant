@@ -910,13 +910,6 @@ Style/StringLiteralsInInterpolation:
     - 'lib/active_merchant/billing/gateways/worldpay.rb'
     - 'test/unit/gateways/eway_managed_test.rb'
 
-# Offense count: 309
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, MinSize.
-# SupportedStyles: percent, brackets
-Style/SymbolArray:
-  Enabled: false
-
 # Offense count: 7
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyleForMultiline.

@@ -21,7 +21,7 @@ module ActiveMerchant
       # American Express, Diners Club, JCB, International Maestro,
       # Style, Clydesdale Financial Services, Other
 
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb, :maestro]
+      self.supported_cardtypes = %i[visa master american_express diners_club jcb maestro]
       self.homepage_url = 'http://www.paymentsolutionsltd.com/'
       self.display_name = 'PSL Payment Solutions'
 
@@ -183,7 +183,7 @@ module ActiveMerchant
         address = options[:billing_address] || options[:address]
         return if address.nil?
 
-        post[:QAAddress] = [:address1, :address2, :city, :state].collect { |a| address[a] }.reject(&:blank?).join(' ')
+        post[:QAAddress] = %i[address1 address2 city state].collect { |a| address[a] }.reject(&:blank?).join(' ')
         post[:QAPostcode] = address[:zip]
       end
 

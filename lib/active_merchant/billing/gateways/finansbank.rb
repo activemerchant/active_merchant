@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = %w[US TR]
 
       # The card types supported by the payment gateway
-      self.supported_cardtypes = [:visa, :master]
+      self.supported_cardtypes = %i[visa master]
 
       # The homepage URL of the gateway
       self.homepage_url = 'https://www.fbwebpos.com/'

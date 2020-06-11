@@ -11,7 +11,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = %w[LI US]
       self.default_currency = 'EUR'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       self.homepage_url = 'http://www.bankfrickacquiring.com/'
       self.display_name = 'Bank Frick'

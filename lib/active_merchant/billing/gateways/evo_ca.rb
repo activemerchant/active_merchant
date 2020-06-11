@@ -36,7 +36,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://secure.evoepay.com/api/transact.php'
 
       self.supported_countries  = ['CA']
-      self.supported_cardtypes  = [:visa, :master, :american_express, :jcb, :discover]
+      self.supported_cardtypes  = %i[visa master american_express jcb discover]
       self.money_format         = :dollars
       self.homepage_url         = 'http://www.evocanada.com/'
       self.display_name         = 'EVO Canada'

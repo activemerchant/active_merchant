@@ -11,7 +11,7 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://payments.intuit.com/'
       self.display_name = 'QuickBooks Merchant Services'
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :discover, :american_express, :diners_club, :jcb]
+      self.supported_cardtypes = %i[visa master discover american_express diners_club jcb]
       self.supported_countries = ['US']
 
       TYPES = {

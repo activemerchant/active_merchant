@@ -1121,7 +1121,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_add_statement_address_returns_nil_if_required_fields_missing
     post = {}
-    [:address1, :city, :zip, :state].each do |required_key|
+    %i[address1 city zip state].each do |required_key|
       missing_required = @options.tap do |options|
         options[:statement_address].delete_if { |k| k == required_key }
       end
@@ -1279,7 +1279,7 @@ class StripeTest < Test::Unit::TestCase
       post.include?('expand[0]=balance_transaction&expand[1]=customer')
     end.returns(successful_authorization_response)
 
-    @options[:expand] = [:balance_transaction, :customer]
+    @options[:expand] = %i[balance_transaction customer]
 
     @gateway.authorize(@amount, @credit_card, @options)
   end

@@ -36,7 +36,7 @@ module ActiveMerchant #:nodoc:
       }.freeze
       DEFAULT_COLLECTION_INDICATOR = 2
 
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb, :dankort, :maestro, :elo]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club jcb dankort maestro elo]
       self.supported_countries = %w(US BR CA CN DK FI FR DE IN JP MX NO SE GB SG LB PK)
 
       self.default_currency = 'USD'

@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://www.sagepayments.net/cgi-bin'
 
       self.supported_countries = %w[US CA]
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express discover jcb diners_club]
 
       TRANSACTIONS = {
         purchase:       '01',

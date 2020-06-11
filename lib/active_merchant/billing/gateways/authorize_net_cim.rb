@@ -81,7 +81,7 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://www.authorize.net/'
       self.display_name = 'Authorize.Net CIM'
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       # Creates a new AuthorizeNetCimGateway
       #
@@ -691,10 +691,10 @@ module ActiveMerchant #:nodoc:
               add_order(xml, transaction[:order]) if transaction[:order].present?
 
             end
-            if [:auth_capture, :auth_only, :capture_only].include?(transaction[:type])
+            if %i[auth_capture auth_only capture_only].include?(transaction[:type])
               xml.tag!('recurringBilling', transaction[:recurring_billing]) if transaction.has_key?(:recurring_billing)
             end
-            tag_unless_blank(xml, 'cardCode', transaction[:card_code]) unless [:void, :refund, :prior_auth_capture].include?(transaction[:type])
+            tag_unless_blank(xml, 'cardCode', transaction[:card_code]) unless %i[void refund prior_auth_capture].include?(transaction[:type])
           end
         end
       end

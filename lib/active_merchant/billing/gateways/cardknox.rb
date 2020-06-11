@@ -5,7 +5,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = %w[US CA GB]
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club jcb]
 
       self.homepage_url = 'https://www.cardknox.com/'
       self.display_name = 'Cardknox'

@@ -143,7 +143,7 @@ class FirstdataE4V27Test < Test::Unit::TestCase
   end
 
   def test_supported_cardtypes
-    assert_equal [:visa, :master, :american_express, :jcb, :discover], FirstdataE4V27Gateway.supported_cardtypes
+    assert_equal %i[visa master american_express jcb discover], FirstdataE4V27Gateway.supported_cardtypes
   end
 
   def test_avs_result

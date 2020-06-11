@@ -299,7 +299,7 @@ module ActiveMerchant #:nodoc:
       def merge_credit_card_options(parameters, options)
         valid_options = {}
         options.each do |key, value|
-          valid_options[key] = value if [:update_existing_token, :verify_card, :verification_merchant_account_id].include?(key)
+          valid_options[key] = value if %i[update_existing_token verify_card verification_merchant_account_id].include?(key)
         end
 
         valid_options[:verification_merchant_account_id] ||= @merchant_account_id if valid_options.include?(:verify_card) && @merchant_account_id

@@ -16,7 +16,7 @@ module ActiveMerchant #:nodoc:
 
       SUCCESS = 'true'
 
-      SENSITIVE_FIELDS = [:cvdcode, :expiry_date, :card_number]
+      SENSITIVE_FIELDS = %i[cvdcode expiry_date card_number]
 
       BRANDS = {
         visa: 'Visa',

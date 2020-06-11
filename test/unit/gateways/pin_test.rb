@@ -42,7 +42,7 @@ class PinTest < Test::Unit::TestCase
   end
 
   def test_supported_cardtypes
-    assert_equal [:visa, :master, :american_express], PinGateway.supported_cardtypes
+    assert_equal %i[visa master american_express], PinGateway.supported_cardtypes
   end
 
   def test_display_name
