@@ -116,7 +116,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_reference(post, reference)
-        reference, _, _ = split_authorization(reference)
+        reference, = split_authorization(reference)
         post[:Refnum] = reference
       end
 
@@ -247,7 +247,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_cardknox_token(post, authorization)
-        _, token, _ = split_authorization(authorization)
+        _, token, = split_authorization(authorization)
 
         post[:Token] = token
       end

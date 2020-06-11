@@ -53,7 +53,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options={})
-        trans_id, _ = split_authorization(authorization)
+        trans_id, = split_authorization(authorization)
         options[:trans_id] = trans_id
 
         request = build_soap_request do |xml|
@@ -68,7 +68,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(money, authorization, options={})
-        trans_id, _ = split_authorization(authorization)
+        trans_id, = split_authorization(authorization)
         options[:trans_id] = trans_id
 
         request = build_soap_request do |xml|

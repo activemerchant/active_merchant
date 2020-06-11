@@ -212,7 +212,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_order_id(xml, authorization)
-        order_id, _ = split_authorization(authorization)
+        order_id, = split_authorization(authorization)
         xml.orderID order_id
       end
     end

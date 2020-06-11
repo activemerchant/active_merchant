@@ -327,7 +327,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert store.authorization
 
     new_card = credit_card('4424222222222222')
-    customer_profile_id, _, _ = store.authorization.split('#')
+    customer_profile_id, = store.authorization.split('#')
 
     assert response = @gateway.store(new_card, customer_profile_id: customer_profile_id)
     assert_success response
@@ -341,7 +341,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert store.authorization
 
     new_card = credit_card('141241')
-    customer_profile_id, _, _ = store.authorization.split('#')
+    customer_profile_id, = store.authorization.split('#')
 
     assert response = @gateway.store(new_card, customer_profile_id: customer_profile_id)
     assert_failure response
@@ -393,7 +393,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert store.authorization
 
     new_card = credit_card('4007000000027')
-    customer_profile_id, _, _ = store.authorization.split('#')
+    customer_profile_id, = store.authorization.split('#')
 
     assert response = @gateway.store(new_card, customer_profile_id: customer_profile_id, email: 'anet@example.com', billing_address: address)
     assert_success response

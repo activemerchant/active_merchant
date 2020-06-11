@@ -185,7 +185,7 @@ module ActiveMerchant #:nodoc:
       # postauth, we preserve active_merchant's nomenclature of capture() for consistency with the rest of the library. To process
       # a postauthorization with TC, you need an amount in cents or a money object, and a TC transid.
       def capture(money, authorization, options = {})
-        transaction_id, _ = split_authorization(authorization)
+        transaction_id, = split_authorization(authorization)
         parameters = {
           amount: amount(money),
           transid: transaction_id,
@@ -199,7 +199,7 @@ module ActiveMerchant #:nodoc:
       # refund() allows you to return money to a card that was previously billed. You need to supply the amount, in cents or a money object,
       # that you want to refund, and a TC transid for the transaction that you are refunding.
       def refund(money, identification, options = {})
-        transaction_id, _ = split_authorization(identification)
+        transaction_id, = split_authorization(identification)
 
         parameters = {
           amount: amount(money),

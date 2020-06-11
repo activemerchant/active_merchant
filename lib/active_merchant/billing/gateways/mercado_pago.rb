@@ -33,7 +33,7 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, authorization, options={})
         post = {}
-        authorization, _ = authorization.split('|')
+        authorization, = authorization.split('|')
         post[:capture] = true
         post[:transaction_amount] = amount(money).to_f
         commit('capture', "payments/#{authorization}", post)
@@ -47,7 +47,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def void(authorization, options={})
-        authorization, _ = authorization.split('|')
+        authorization, = authorization.split('|')
         post = { status: 'cancelled' }
         commit('void', "payments/#{authorization}", post)
       end

@@ -95,7 +95,7 @@ module ActiveMerchant #:nodoc:
       def build_capture_request(money, authorization, options)
         xml = Builder::XmlMarkup.new
         add_common_credit_card_info(xml, 'PREVIOUS_SALE')
-        transaction_id, _ = authorization_parts_from(authorization)
+        transaction_id, = authorization_parts_from(authorization)
         add_transaction_id(xml, transaction_id)
         xml.target!
       end
@@ -116,7 +116,7 @@ module ActiveMerchant #:nodoc:
       def build_void_request(authorization, options)
         xml = Builder::XmlMarkup.new
         add_common_credit_card_info(xml, 'VOID')
-        transaction_id, _ = authorization_parts_from(authorization)
+        transaction_id, = authorization_parts_from(authorization)
         add_transaction_id(xml, transaction_id)
         xml.target!
       end

@@ -155,7 +155,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options = {})
-        reference, _, _ = split_auth(authorization)
+        reference, = split_auth(authorization)
         post = {}
         add_amount(post, money)
         add_reference(post, reference)

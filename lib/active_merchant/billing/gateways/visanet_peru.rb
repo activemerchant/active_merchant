@@ -98,7 +98,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_auth_order_id(params, authorization, options)
-        purchase_number, _ = split_authorization(authorization)
+        purchase_number, = split_authorization(authorization)
         params[:purchaseNumber] = purchase_number
         params[:externalTransactionId] = options[:order_id]
       end

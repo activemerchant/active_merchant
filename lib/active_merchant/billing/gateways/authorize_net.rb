@@ -192,7 +192,7 @@ module ActiveMerchant
       end
 
       def unstore(authorization)
-        customer_profile_id, _, _ = split_authorization(authorization)
+        customer_profile_id, = split_authorization(authorization)
 
         delete_customer_profile(customer_profile_id)
       end
@@ -311,7 +311,7 @@ module ActiveMerchant
       end
 
       def cim_refund(amount, authorization, options)
-        transaction_id, card_number, _ = split_authorization(authorization)
+        transaction_id, card_number, = split_authorization(authorization)
 
         commit(:cim_refund, options) do |xml|
           add_order_id(xml, options)
@@ -331,7 +331,7 @@ module ActiveMerchant
       end
 
       def normal_refund(amount, authorization, options)
-        transaction_id, card_number, _ = split_authorization(authorization)
+        transaction_id, card_number, = split_authorization(authorization)
 
         commit(:refund) do |xml|
           xml.transactionRequest do
@@ -500,7 +500,7 @@ module ActiveMerchant
       end
 
       def add_token_payment_method(xml, token, options)
-        customer_profile_id, customer_payment_profile_id, _ = split_authorization(token)
+        customer_profile_id, customer_payment_profile_id, = split_authorization(token)
         customer_profile_id = options[:customer_profile_id] if options[:customer_profile_id]
         customer_payment_profile_id = options[:customer_payment_profile_id] if options[:customer_payment_profile_id]
         xml.customerProfileId(customer_profile_id)
@@ -988,7 +988,7 @@ module ActiveMerchant
       end
 
       def transaction_id_from(authorization)
-        transaction_id, _, _ = split_authorization(authorization)
+        transaction_id, = split_authorization(authorization)
         transaction_id
       end
 

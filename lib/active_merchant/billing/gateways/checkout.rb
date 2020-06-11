@@ -150,7 +150,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_reference(xml, authorization)
-        transid, trackid, _, _, _ = split_authorization(authorization)
+        transid, trackid, = split_authorization(authorization)
         xml.transid transid
         add_track_id(xml, trackid)
       end

@@ -154,7 +154,7 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_method(post, payment_method, options)
         if payment_method.is_a?(String)
-          customer_vault_id, _ = split_authorization(payment_method)
+          customer_vault_id, = split_authorization(payment_method)
           post[:customer_vault_id] = customer_vault_id
         elsif payment_method.is_a?(NetworkTokenizationCreditCard)
           post[:ccnumber] = payment_method.number
@@ -249,7 +249,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_reference(post, authorization)
-        transaction_id, _ = split_authorization(authorization)
+        transaction_id, = split_authorization(authorization)
         post[:transactionid] = transaction_id
       end
 

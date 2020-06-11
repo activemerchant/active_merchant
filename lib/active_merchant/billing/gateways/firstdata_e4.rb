@@ -217,7 +217,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_identification(xml, identification)
-        authorization_num, transaction_tag, _ = identification.split(';')
+        authorization_num, transaction_tag, = identification.split(';')
 
         xml.tag! 'Authorization_Num', authorization_num
         xml.tag! 'Transaction_Tag', transaction_tag

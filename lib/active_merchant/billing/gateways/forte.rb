@@ -260,7 +260,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def transaction_id_from(authorization)
-        transaction_id, _, original_auth_transaction_id, _ = split_authorization(authorization)
+        transaction_id, _, original_auth_transaction_id, = split_authorization(authorization)
         original_auth_transaction_id.present? ? original_auth_transaction_id : transaction_id
       end
     end

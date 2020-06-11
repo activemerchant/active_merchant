@@ -83,7 +83,7 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, authorization, options = {})
         post = {}
-        authorization, _ = split_authorization(authorization)
+        authorization, = split_authorization(authorization)
         post[:amount] = localized_amount(money, currency(money))
         add_context(post, options)
 
@@ -95,7 +95,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         post[:amount] = localized_amount(money, currency(money))
         add_context(post, options)
-        authorization, _ = split_authorization(authorization)
+        authorization, = split_authorization(authorization)
 
         response = commit(refund_uri(authorization), post)
         check_token_response(response, refund_uri(authorization), post, options)

@@ -749,7 +749,7 @@ module ActiveMerchant #:nodoc:
 
             # Append Transaction Reference Number at the end for Refund transactions
             if action == REFUND
-              tx_ref_num, _ = split_authorization(parameters[:authorization])
+              tx_ref_num, = split_authorization(parameters[:authorization])
               xml.tag! :TxRefNum, tx_ref_num
             end
 

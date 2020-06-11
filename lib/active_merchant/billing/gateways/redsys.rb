@@ -225,7 +225,7 @@ module ActiveMerchant #:nodoc:
         data = {}
         add_action(data, :capture)
         add_amount(data, money, options)
-        order_id, _, _ = split_authorization(authorization)
+        order_id, = split_authorization(authorization)
         add_order(data, order_id)
         data[:description] = options[:description]
 
@@ -247,7 +247,7 @@ module ActiveMerchant #:nodoc:
         data = {}
         add_action(data, :refund)
         add_amount(data, money, options)
-        order_id, _, _ = split_authorization(authorization)
+        order_id, = split_authorization(authorization)
         add_order(data, order_id)
         data[:description] = options[:description]
 

@@ -53,7 +53,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options={})
-        transaction_id, _, _ = split_authorization(authorization)
+        transaction_id, = split_authorization(authorization)
 
         request = build_xml_request do |doc|
           add_authentication(doc)
@@ -78,7 +78,7 @@ module ActiveMerchant #:nodoc:
           add_descriptor(doc, options)
           doc.send(refund_type(payment), transaction_attributes(options)) do
             if payment.is_a?(String)
-              transaction_id, _, _ = split_authorization(payment)
+              transaction_id, = split_authorization(payment)
               doc.litleTxnId(transaction_id)
               doc.amount(money) if money
             elsif check?(payment)
@@ -192,7 +192,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund_type(payment)
-        _, kind, _ = split_authorization(payment)
+        _, kind, = split_authorization(payment)
         if check?(payment) || kind == 'echeckSales'
           :echeckCredit
         else

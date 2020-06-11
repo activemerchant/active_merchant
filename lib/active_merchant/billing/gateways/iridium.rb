@@ -288,7 +288,7 @@ module ActiveMerchant #:nodoc:
 
       def build_reference_request(type, money, authorization, options)
         options[:action] = 'CrossReferenceTransaction'
-        order_id, cross_reference, _ = authorization.split(';')
+        order_id, cross_reference, = authorization.split(';')
         build_request(options) do |xml|
           if money
             currency = options[:currency] || currency(money)

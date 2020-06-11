@@ -60,7 +60,7 @@ module ActiveMerchant #:nodoc:
       def void(authorization, options={})
         post = {}
 
-        transaction_id, _ = split_authorization(authorization)
+        transaction_id, = split_authorization(authorization)
         add_pair(post, :TransID, transaction_id)
 
         commit(:void, post)
