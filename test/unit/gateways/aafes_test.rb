@@ -83,9 +83,26 @@ class AafesTest < Test::Unit::TestCase
   private
 
   def pre_scrubbed
-    %q(
-      Run the remote tests for this gateway, and then put the contents of transcript.log here.
-    )
+    <<-TRANSCRIPT
+      opening connection to uat-stargate.aafes.com:1009...
+      opened
+      starting SSL for uat-stargate.aafes.com:1009...
+      SSL established
+      <- "POST /stargate/1/creditmessage HTTP/1.1\r\nContent-Type: application/xml\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: uat-stargate.aafes.com:1009\r\nContent-Length: 1184\r\n\r\n"
+      <- "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<cm:Message xmlns:cm=\"http://www.aafes.com/credit\" TypeCode=\"Request\" MajorVersion=\"3\" MinorVersion=\"4\" FixVersion=\"0\">\n  <cm:Header>\n    <cm:IdentityUUID>9765830b-38ec-4154-b349-15ef4a302489</cm:IdentityUUID>\n    <cm:LocalDateTime>2019-09-04T22:26:02</cm:LocalDateTime>\n    <cm:SettleIndicator>false</cm:SettleIndicator>\n    <cm:OrderNumber>ONP3951033</cm:OrderNumber>\n    <cm:transactionId>6750</cm:transactionId>\n    <cm:termId>20</cm:termId>\n    <cm:Comment>Test</cm:Comment>\n    <cm:CustomerID>45017632990</cm:CustomerID>\n  </cm:Header>\n  <cm:Request RRN=\"RRNPGtwi5361\">\n    <cm:Media>Milstar</cm:Media>\n    <cm:RequestType>Sale</cm:RequestType>\n    <cm:InputType>Keyed</cm:InputType>\n    <cm:Token>Token</cm:Token>\n    <cm:Account>900PRPYIGCWDS4O2615</cm:Account>\n    <cm:Expiration>2210</cm:Expiration>\n    <cm:AmountField>50.00</cm:AmountField>\n    <cm:PlanNumbers>\n      <cm:PlanNumber>10001</cm:PlanNumber>\n    </cm:PlanNumbers>\n    <cm:DescriptionField>SALE</cm:DescriptionField>\n    <cm:AddressVerificationService>\n      <cm:BillingZipCode>75236</cm:BillingZipCode>\n    </cm:AddressVerificationService>\n  </cm:Request>\n</cm:Message>\n"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Connection: close\r\n"
+      -> "X-Powered-By: Undertow/1\r\n"
+      -> "Server: WildFly/10\r\n"
+      -> "Content-Type: application/xml;charset=UTF-8\r\n"
+      -> "Content-Length: 925\r\n"
+      -> "Date: Thu, 11 Jun 2020 12:33:42 GMT\r\n"
+      -> "\r\n"
+      reading 925 bytes...
+      -> "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<Message TypeCode=\"Response\" MajorVersion=\"3\" MinorVersion=\"4\" FixVersion=\"0\" xmlns=\"http://www.aafes.com/credit\">\n    <Header>\n        <IdentityUUID>9765830b-38ec-4154-b349-15ef4a302489</IdentityUUID>\n        <LocalDateTime>2019-09-04T22:26:02</LocalDateTime>\n        <SettleIndicator>false</SettleIndicator>\n        <OrderNumber>ONP3951033</OrderNumber>\n        <transactionId>6750</transactionId>\n        <termId>20</termId>\n        <Comment>Test</Comment>\n        <CustomerID>45017632990</CustomerID>\n    </Header>\n    <Response RRN=\"RRNPGtwi5361\">\n        <Media>Milstar</Media>\n        <ResponseType>Approved</ResponseType>\n        <AuthNumber>020503</AuthNumber>\n        <ReasonCode>000</ReasonCode>\n        <PlanNumber>10001</PlanNumber>\n        <DescriptionField>APPROVED  </DescriptionField>\n        <origReqType>Sale</origReqType>\n    </Response>\n</Message>\n"
+      read 925 bytes
+      Conn close
+    TRANSCRIPT
   end
 
   def post_scrubbed

@@ -74,13 +74,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        puts '---- parse -----'
-        puts body
+        xml = Nokogiri::XML(body)
+        response = Hash.from_xml(xml.to_s)['Message']
       end
 
       def commit(request)
         url = (test? ? test_url : live_url)
-        puts '-------------------'
+        puts '---------- request ---------'
         puts request
         response =
           begin
@@ -88,7 +88,7 @@ module ActiveMerchant #:nodoc:
           rescue StandardError => error
             parse(error.response.body)
           end
-
+        puts response
         Response.new(
           success_from(response),
           message_from(response),
@@ -137,11 +137,11 @@ module ActiveMerchant #:nodoc:
       def add_headers(xml, options)
         xml['cm'].Header do
           xml['cm'].IdentityUUID(@identity_uuid)
-          xml['cm'].LocalDateTime('2019-09-04T22:26:02') #Time.now.getutc
+          xml['cm'].LocalDateTime(Time.now.utc.iso8601)
           xml['cm'].SettleIndicator(false)
           xml['cm'].OrderNumber(options[:order_id])
-          xml['cm'].TransactionId(options[:transaction_id])
-          xml['cm'].TermId(options[:term_id])
+          xml['cm'].transactionId(options[:transaction_id])
+          xml['cm'].termId(options[:term_id])
           xml['cm'].Comment(options[:comment])
           xml['cm'].CustomerID(options[:customer_id])
         end
@@ -155,7 +155,7 @@ module ActiveMerchant #:nodoc:
           xml['cm'].Token('Token')
           xml['cm'].Account(payment.payment_data)
           xml['cm'].Expiration(payment.metadata[:expiration])
-          xml['cm'].AmountField(amount)
+          xml['cm'].AmountField('50.00')
           xml['cm'].PlanNumbers do
             xml['cm'].PlanNumber(options[:plan_number])
           end
