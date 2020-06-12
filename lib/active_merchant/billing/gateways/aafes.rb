@@ -59,18 +59,9 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def add_customer_data(post, options)
-      end
-
-      def add_address(post, creditcard, options)
-      end
-
       def add_invoice(post, money, options)
         post[:amount] = amount(money)
         post[:currency] = (options[:currency] || currency(money))
-      end
-
-      def add_payment(post, payment)
       end
 
       def parse(body)
@@ -102,9 +93,10 @@ module ActiveMerchant #:nodoc:
           'Content-Type' => 'application/xml'
         }
       end
-      
+
       def success_from(response)
-        return true if response.dig('Response', 'ReasonCode').to_i.between?(0,100) unless response.nil?
+        return true if response.dig('Response', 'ReasonCode').to_i.between?(0, 100)
+
         return false
       end
 
@@ -112,15 +104,15 @@ module ActiveMerchant #:nodoc:
         response.dig('Response', 'ResponseType')
       end
 
-      def authorization_from(response)
-      end
-      
+      def authorization_from(response) end
+
       def build_xml_request
         builder = Nokogiri::XML::Builder.new(encoding: 'UTF-8') do |xml|
           xml['cm'].Message(
-            'TypeCode' => 'Request', 
-            'MajorVersion' => '3', 'MinorVersion' => '4', 
-            'FixVersion' => '0', 
+            'TypeCode' => 'Request',
+            'MajorVersion' => '3',
+            'MinorVersion' => '4',
+            'FixVersion' => '0',
             'xmlns:cm' => 'http://www.aafes.com/credit') do
             yield(xml)
           end
@@ -166,7 +158,6 @@ module ActiveMerchant #:nodoc:
           end
         end
       end
-
     end
   end
 end

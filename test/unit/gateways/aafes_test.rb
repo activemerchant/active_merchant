@@ -4,19 +4,19 @@ class AafesTest < Test::Unit::TestCase
   def setup
     @gateway = AafesGateway.new(identity_uuid: 'identity_uuid')
 
-    # Amount field must be passed in as a decimal   
+    # Amount field must be passed in as a decimal
     @amount = '%.2f' % 100
     @metadata = {
-      :zip => 75236,
-      :expiration => 2210
+      zip: 75236,
+      expiration: 2210
     }
-    
+
     @milstar_card = ActiveMerchant::Billing::PaymentToken.new(
       '900PRPYIGCWDS4O2615',
       @metadata
     )
 
-    #TODO: The RRN needs to be unique everytime - the RRN needs to be a base-64 12 character long string
+    # TODO: The RRN needs to be unique everytime - the RRN needs to be a base-64 12 character long string
     @options = {
       order_id: 'ONP3951033',
       billing_address: address,
@@ -42,7 +42,7 @@ class AafesTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_milstar_card
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
-    
+
     response = @gateway.purchase(@amount, @milstar_card, @options)
     assert_success response
     assert_equal 'Approved', response.message
@@ -51,7 +51,7 @@ class AafesTest < Test::Unit::TestCase
 
   def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
-    
+
     response = @gateway.purchase(@amount, @milstar_card, @options)
     assert_failure response
     assert_equal 'Decline', response.message
@@ -121,15 +121,8 @@ class AafesTest < Test::Unit::TestCase
     TRANSCRIPT
   end
 
-  def post_scrubbed
-    %q(
-      Put the scrubbed contents of transcript.log here after implementing your scrubbing function.
-      Things to scrub:
-        - Credit card number
-        - CVV
-        - Sensitive authentication details
-    )
-  end
+  # def post_scrubbed
+  # end
 
   def successful_purchase_response
     <<-XML
@@ -179,21 +172,21 @@ class AafesTest < Test::Unit::TestCase
     XML
   end
 
-  def successful_capture_response
-  end
+  # def successful_capture_response
+  # end
 
-  def failed_capture_response
-  end
+  # def failed_capture_response
+  # end
 
-  def successful_refund_response
-  end
+  # def successful_refund_response
+  # end
 
-  def failed_refund_response
-  end
+  # def failed_refund_response
+  # end
 
-  def successful_void_response
-  end
+  # def successful_void_response
+  # end
 
-  def failed_void_response
-  end
+  # def failed_void_response
+  # end
 end

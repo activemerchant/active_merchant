@@ -6,16 +6,16 @@ class RemoteAafesTest < Test::Unit::TestCase
     @gateway.ssl_strict = false # Fails to send request to gateway otherwise :shrug
     @amount = '%.2f' % 100
     @metadata = {
-      :zip => 75236,
-      :expiration => 2210
+      zip: 75236,
+      expiration: 2210
     }
-    
+
     @milstar_card = ActiveMerchant::Billing::PaymentToken.new(
       '900PRPYIGCWDS4O2615',
       @metadata
     )
 
-    #TODO: The RRN needs to be unique everytime - the RRN needs to be a base-64 12 character long string
+    # TODO: The RRN needs to be unique everytime - the RRN needs to be a base-64 12 character long string
     @options = {
       order_id: 'ONP3951033',
       billing_address: address,
@@ -163,5 +163,4 @@ class RemoteAafesTest < Test::Unit::TestCase
   #   assert_scrubbed(@credit_card.verification_value, transcript)
   #   assert_scrubbed(@gateway.options[:password], transcript)
   # end
-
 end
