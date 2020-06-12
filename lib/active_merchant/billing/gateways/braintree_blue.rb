@@ -582,53 +582,27 @@ module ActiveMerchant #:nodoc:
           }
         }
 
-        parameters[:options][:skip_advanced_fraud_checking] = options[:skip_advanced_fraud_checking] if options[:skip_advanced_fraud_checking]
-
-        parameters[:options][:skip_avs] = options[:skip_avs] if options[:skip_avs]
-
-        parameters[:options][:skip_cvv] = options[:skip_cvv] if options[:skip_cvv]
-
         parameters[:custom_fields] = options[:custom_fields]
         parameters[:device_data] = options[:device_data] if options[:device_data]
         parameters[:service_fee_amount] = options[:service_fee_amount] if options[:service_fee_amount]
-        if merchant_account_id = (options[:merchant_account_id] || @merchant_account_id)
-          parameters[:merchant_account_id] = merchant_account_id
-        end
 
-        if options[:transaction_source]
-          parameters[:transaction_source] = options[:transaction_source]
-        elsif options[:recurring]
-          parameters[:recurring] = true
-        end
+        add_skip_options(parameters, options)
+        add_merchant_account_id(parameters, options)
 
         add_payment_method(parameters, credit_card_or_vault_id, options)
         add_stored_credential_data(parameters, credit_card_or_vault_id, options)
+        add_addresses(parameters, options)
 
-        parameters[:billing] = map_address(options[:billing_address]) if options[:billing_address]
-        parameters[:shipping] = map_address(options[:shipping_address]) if options[:shipping_address]
+        add_descriptor(parameters, options)
+        add_travel_data(parameters, options) if options[:travel_data]
+        add_lodging_data(parameters, options) if options[:lodging_data]
+        add_channel(parameters, options)
+        add_transaction_source(parameters, options)
 
-        channel = @options[:channel] || application_id
-        parameters[:channel] = channel if channel
-
-        if options[:descriptor_name] || options[:descriptor_phone] || options[:descriptor_url]
-          parameters[:descriptor] = {
-            name: options[:descriptor_name],
-            phone: options[:descriptor_phone],
-            url: options[:descriptor_url]
-          }
-        end
+        add_level_2_data(parameters, options)
+        add_level_3_data(parameters, options)
 
         add_3ds_info(parameters, options[:three_d_secure])
-
-        parameters[:tax_amount] = options[:tax_amount] if options[:tax_amount]
-        parameters[:tax_exempt] = options[:tax_exempt] if options[:tax_exempt]
-        parameters[:purchase_order_number] = options[:purchase_order_number] if options[:purchase_order_number]
-
-        parameters[:shipping_amount] = options[:shipping_amount] if options[:shipping_amount]
-        parameters[:discount_amount] = options[:discount_amount] if options[:discount_amount]
-        parameters[:ships_from_postal_code] = options[:ships_from_postal_code] if options[:ships_from_postal_code]
-
-        parameters[:line_items] = options[:line_items] if options[:line_items]
 
         if options[:payment_method_nonce].is_a?(String)
           parameters.delete(:customer)
@@ -636,6 +610,82 @@ module ActiveMerchant #:nodoc:
         end
 
         parameters
+      end
+
+      def add_skip_options(parameters, options)
+        parameters[:options][:skip_advanced_fraud_checking] = options[:skip_advanced_fraud_checking] if options[:skip_advanced_fraud_checking]
+        parameters[:options][:skip_avs] = options[:skip_avs] if options[:skip_avs]
+        parameters[:options][:skip_cvv] = options[:skip_cvv] if options[:skip_cvv]
+      end
+
+      def add_merchant_account_id(parameters, options)
+        return unless merchant_account_id = (options[:merchant_account_id] || @merchant_account_id)
+
+        parameters[:merchant_account_id] = merchant_account_id
+      end
+
+      def add_transaction_source(parameters, options)
+        parameters[:transaction_source] = options[:transaction_source] if options[:transaction_source]
+        parameters[:transaction_source] = 'recurring' if options[:recurring]
+      end
+
+      def add_addresses(parameters, options)
+        parameters[:billing] = map_address(options[:billing_address]) if options[:billing_address]
+        parameters[:shipping] = map_address(options[:shipping_address]) if options[:shipping_address]
+      end
+
+      def add_channel(parameters, options)
+        channel = @options[:channel] || application_id
+        parameters[:channel] = channel if channel
+      end
+
+      def add_descriptor(parameters, options)
+        return unless options[:descriptor_name] || options[:descriptor_phone] || options[:descriptor_url]
+
+        parameters[:descriptor] = {
+          name: options[:descriptor_name],
+          phone: options[:descriptor_phone],
+          url: options[:descriptor_url]
+        }
+      end
+
+      def add_level_2_data(parameters, options)
+        parameters[:tax_amount] = options[:tax_amount] if options[:tax_amount]
+        parameters[:tax_exempt] = options[:tax_exempt] if options[:tax_exempt]
+        parameters[:purchase_order_number] = options[:purchase_order_number] if options[:purchase_order_number]
+      end
+
+      def add_level_3_data(parameters, options)
+        parameters[:shipping_amount] = options[:shipping_amount] if options[:shipping_amount]
+        parameters[:discount_amount] = options[:discount_amount] if options[:discount_amount]
+        parameters[:ships_from_postal_code] = options[:ships_from_postal_code] if options[:ships_from_postal_code]
+
+        parameters[:line_items] = options[:line_items] if options[:line_items]
+      end
+
+      def add_travel_data(parameters, options)
+        parameters[:industry] = {
+          industry_type:  Braintree::Transaction::IndustryType::TravelAndCruise,
+          data: {}
+        }
+
+        parameters[:industry][:data][:travel_package] = options[:travel_data][:travel_package] if options[:travel_data][:travel_package]
+        parameters[:industry][:data][:departure_date] = options[:travel_data][:departure_date] if options[:travel_data][:departure_date]
+        parameters[:industry][:data][:lodging_check_in_date] = options[:travel_data][:lodging_check_in_date] if options[:travel_data][:lodging_check_in_date]
+        parameters[:industry][:data][:lodging_check_out_date] = options[:travel_data][:lodging_check_out_date] if options[:travel_data][:lodging_check_out_date]
+        parameters[:industry][:data][:lodging_name] = options[:travel_data][:lodging_name] if options[:travel_data][:lodging_name]
+      end
+
+      def add_lodging_data(parameters, options)
+        parameters[:industry] = {
+          industry_type: Braintree::Transaction::IndustryType::Lodging,
+          data: {}
+        }
+
+        parameters[:industry][:data][:folio_number] = options[:lodging_data][:folio_number] if options[:lodging_data][:folio_number]
+        parameters[:industry][:data][:check_in_date] = options[:lodging_data][:check_in_date] if options[:lodging_data][:check_in_date]
+        parameters[:industry][:data][:check_out_date] = options[:lodging_data][:check_out_date] if options[:lodging_data][:check_out_date]
+        parameters[:industry][:data][:room_rate] = options[:lodging_data][:room_rate] if options[:lodging_data][:room_rate]
       end
 
       def add_3ds_info(parameters, three_d_secure_opts)
