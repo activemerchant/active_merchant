@@ -882,13 +882,6 @@ Style/SingleLineMethods:
   Exclude:
     - 'test/unit/gateways/paypal/paypal_common_api_test.rb'
 
-# Offense count: 3
-# Cop supports --auto-correct.
-# Configuration parameters: .
-# SupportedStyles: use_perl_names, use_english_names
-Style/SpecialGlobalVars:
-  EnforcedStyle: use_perl_names
-
 # Offense count: 27
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle.
