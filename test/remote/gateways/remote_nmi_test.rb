@@ -24,6 +24,15 @@ class RemoteNmiTest < Test::Unit::TestCase
     @level3_options = {
       tax: 5.25, shipping: 10.51, ponumber: 1002
     }
+    @additional_options_3ds = @options.merge(
+      execute_threed: true,
+      three_d_secure: {
+        version: '1.0.2',
+        eci: '06',
+        cavv: 'AgAAAAAAAIR8CQrXcIhbQAAAAAA',
+        xid: 'MDAwMDAwMDAwMDAwMDAwMzIyNzY='
+      }
+    )
   end
 
   def test_invalid_login
@@ -126,6 +135,14 @@ class RemoteNmiTest < Test::Unit::TestCase
     assert capture = @gateway.capture(@amount, authorization.authorization)
     assert_success capture
     assert_equal 'Succeeded', capture.message
+  end
+
+  def test_successful_authorize_and_capture_with_3ds
+    assert authorization = @gateway.authorize(@amount, @credit_card, @additional_options_3ds)
+    assert_success authorization
+
+    assert capture = @gateway.capture(@amount, authorization.authorization)
+    assert_success capture
   end
 
   def test_failed_capture

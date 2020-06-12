@@ -36,6 +36,7 @@ module ActiveMerchant #:nodoc:
         add_vendor_data(post, options)
         add_merchant_defined_fields(post, options)
         add_level3_fields(post, options)
+        add_3ds_auth(post, options)
 
         commit('sale', post)
       end
@@ -49,6 +50,7 @@ module ActiveMerchant #:nodoc:
         add_vendor_data(post, options)
         add_merchant_defined_fields(post, options)
         add_level3_fields(post, options)
+        add_3ds_auth(post, options)
 
         commit('auth', post)
       end
@@ -136,6 +138,16 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
+      def add_3ds_auth(post, options)
+        if options[:three_d_secure]
+          post[:cardholder_auth] = options.dig(:three_d_secure, :status) == 'Y' ? 'verified' : 'attempted'
+          post[:eci] = options.dig(:three_d_secure, :eci)
+          post[:cavv] = options.dig(:three_d_secure, :cavv)
+          post[:xid] = options.dig(:three_d_secure, :xid)
+          post[:three_ds_version] = options.dig(:three_d_secure, :version)
+        end
+      end
 
       def add_level3_fields(post, options)
         add_fields_to_post_if_present(post, options, %i[tax shipping ponumber])
