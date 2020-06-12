@@ -663,7 +663,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def required_status_message(raw, success_criteria)
-        "A transaction status of #{success_criteria.collect { |c| "'#{c}'" }.join(" or ")} is required." if !success_criteria.include?(raw[:last_event])
+        "A transaction status of #{success_criteria.collect { |c| "'#{c}'" }.join(' or ')} is required." if !success_criteria.include?(raw[:last_event])
       end
 
       def authorization_from(action, raw, options)

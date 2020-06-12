@@ -235,7 +235,7 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(response)
         if customer_id = response.try(:[], 'data').try(:[], 'attributes').try(:[], 'customerId')
-          "#{customer_id}|#{response.try(:[], "data").try(:[], "id")}"
+          "#{customer_id}|#{response.try(:[], 'data').try(:[], 'id')}"
         else
           response.try(:[], 'data').try(:[], 'id')
         end

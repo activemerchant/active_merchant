@@ -655,7 +655,7 @@ module ActiveMerchant #:nodoc:
         success = success_from(response, options)
 
         card = card_from_response(response)
-        avs_code = AVS_CODE_TRANSLATOR["line1: #{card["address_line1_check"]}, zip: #{card["address_zip_check"]}"]
+        avs_code = AVS_CODE_TRANSLATOR["line1: #{card['address_line1_check']}, zip: #{card['address_zip_check']}"]
         cvc_code = CVC_CODE_TRANSLATOR[card['cvc_check']]
 
         Response.new(success,

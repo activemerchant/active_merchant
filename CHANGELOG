@@ -12,6 +12,7 @@
 * Add Alia card type [therufs] #3673
 * Element: Fix unit tests [leila-alderman] #3676
 * RuboCop: Fix Style/SpecialGlobalVars [leila-alderman] #3669
+* RuboCop: Fix Style/StringLiteralsInInterpolation [leila-alderman] #3670
 
 == Version 1.108.0 (Jun 9, 2020)
 * Cybersource: Send cavv as xid is xid is missing [pi3r] #3658

@@ -882,27 +882,6 @@ Style/SingleLineMethods:
   Exclude:
     - 'test/unit/gateways/paypal/paypal_common_api_test.rb'
 
-# Offense count: 27
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: single_quotes, double_quotes
-Style/StringLiteralsInInterpolation:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/banwire.rb'
-    - 'lib/active_merchant/billing/gateways/cams.rb'
-    - 'lib/active_merchant/billing/gateways/checkout_v2.rb'
-    - 'lib/active_merchant/billing/gateways/credorax.rb'
-    - 'lib/active_merchant/billing/gateways/digitzs.rb'
-    - 'lib/active_merchant/billing/gateways/ebanx.rb'
-    - 'lib/active_merchant/billing/gateways/merchant_one.rb'
-    - 'lib/active_merchant/billing/gateways/micropayment.rb'
-    - 'lib/active_merchant/billing/gateways/pagarme.rb'
-    - 'lib/active_merchant/billing/gateways/quickpay/quickpay_v10.rb'
-    - 'lib/active_merchant/billing/gateways/stripe.rb'
-    - 'lib/active_merchant/billing/gateways/usa_epay_advanced.rb'
-    - 'lib/active_merchant/billing/gateways/worldpay.rb'
-    - 'test/unit/gateways/eway_managed_test.rb'
-
 # Offense count: 7
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyleForMultiline.

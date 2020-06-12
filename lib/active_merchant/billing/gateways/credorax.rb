@@ -413,7 +413,7 @@ module ActiveMerchant #:nodoc:
           success_from(response),
           message_from(response),
           response,
-          authorization: "#{response["Z1"]};#{response["Z4"]};#{response["A1"]};#{action}",
+          authorization: "#{response['Z1']};#{response['Z4']};#{response['A1']};#{action}",
           avs_result: AVSResult.new(code: response['Z9']),
           cvv_result: CVVResult.new(response['Z14']),
           test: test?
