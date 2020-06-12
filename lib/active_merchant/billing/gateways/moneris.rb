@@ -91,7 +91,7 @@ module ActiveMerchant #:nodoc:
       # the original authorization.  To maintain the same interface as the other
       # gateways the two numbers are concatenated together with a ; separator as
       # the authorization number returned by authorization
-      def capture(money, authorization, options = {})
+      def capture(money, authorization, _options = {})
         commit 'completion', crediting_params(authorization, comp_amount: amount(money))
       end
 
@@ -129,8 +129,13 @@ module ActiveMerchant #:nodoc:
         refund(money, authorization, options)
       end
 
+<<<<<<< HEAD
       def refund(money, authorization, options = {})
         commit 'refund', crediting_params(authorization, amount: amount(money))
+=======
+      def refund(money, authorization, _options = {})
+        commit 'refund', crediting_params(authorization, :amount => amount(money))
+>>>>>>> f24140c5... Fix Rubocop UnusedMethodArgument
       end
 
       def verify(credit_card, options={})
@@ -169,7 +174,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def unstore(data_key, options = {})
+      def unstore(data_key, _options = {})
         post = {}
         post[:data_key] = data_key
         commit('res_delete', post)

@@ -41,7 +41,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, _options={})
         raise ArgumentError, 'Amount is required' unless money
 
         post = {}
@@ -241,7 +241,7 @@ module ActiveMerchant #:nodoc:
         PostData.new.merge!(parameters).to_post_data
       end
 
-      def handle_3dsecure(response)
+      def handle_3dsecure(_response)
         Response.new(false, '3D-secure enrolled cards are not supported.')
       end
     end

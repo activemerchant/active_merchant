@@ -94,7 +94,7 @@ module ActiveMerchant #:nodoc:
         commit('Netaxept/query.aspx', post)
       end
 
-      def add_credentials(post, options, secure=true)
+      def add_credentials(post, _options, secure=true)
         post[:merchantId] = @options[:login]
         post[:token] = @options[:password] if secure
       end

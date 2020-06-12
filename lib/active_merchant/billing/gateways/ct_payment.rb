@@ -170,7 +170,7 @@ module ActiveMerchant #:nodoc:
         post[:CustomerNumber] = options[:customer_number] || '0' * 8
       end
 
-      def add_address(post, creditcard, options)
+      def add_address(post, _creditcard, options)
         if address = options[:billing_address] || options[:address]
           post[:CardHolderAddress] = "#{address[:address1]} #{address[:address2]} #{address[:city]} #{address[:state]}".rjust(20, ' ')
           post[:CardHolderPostalCode] = address[:zip].gsub(/\s+/, '').rjust(9, ' ')
@@ -251,7 +251,7 @@ module ActiveMerchant #:nodoc:
         "#{response['invoiceNumber']};#{response['token']};#{response['id']}"
       end
 
-      def post_data(action, parameters = {})
+      def post_data(_action, parameters = {})
         parameters[:CompanyNumber] = @options[:company_number]
         parameters[:MerchantNumber] = @options[:merchant_number]
         parameters = parameters.collect do |key, value|

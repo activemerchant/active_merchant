@@ -34,7 +34,7 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
-      def capture(money, authorization, options={})
+      def capture(_money, authorization, options={})
         post = build_vxml_request('Debit', options) do |xml|
           add_authorization(xml, authorization, options)
         end
@@ -103,7 +103,7 @@ module ActiveMerchant #:nodoc:
         builder.to_xml
       end
 
-      def build_vxml_request(action, options)
+      def build_vxml_request(action, _options)
         builder = Nokogiri::XML::Builder.new do |xml|
           xml.V_XML('Version' => '2.0', 'CertificateID' => @options[:cert_id], 'Direction' => 'Request') do
             xml.Transaction('ApplicationID' => @options[:app_id], 'Command' => action, 'Mode' => mode) do
@@ -131,7 +131,7 @@ module ActiveMerchant #:nodoc:
         post.ElectronicCommerceIndicator(options[:eci]) if options[:eci]
       end
 
-      def add_authorization(post, authorization, options)
+      def add_authorization(post, authorization, _options)
         post.MerchantReference(split_auth(authorization)[2])
         post.TransactionIndex(split_auth(authorization)[1])
         post.OriginalRequestID(split_auth(authorization)[0])

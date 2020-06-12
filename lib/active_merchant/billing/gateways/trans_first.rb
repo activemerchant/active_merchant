@@ -57,7 +57,7 @@ module ActiveMerchant #:nodoc:
         commit((payment_type == 'check' ? :refund_echeck : :refund), post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, _options={})
         post = {}
 
         transaction_id, _ = split_authorization(authorization)

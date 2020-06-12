@@ -73,7 +73,7 @@ module ActiveMerchant #:nodoc:
         commit("transactions/#{authorization}/credit.xml", request)
       end
 
-      def void(authorization, options={})
+      def void(authorization, _options={})
         commit("transactions/#{authorization}/void.xml", '')
       end
 
@@ -108,7 +108,7 @@ module ActiveMerchant #:nodoc:
       #
       # credit_card    - The CreditCard to store
       # options        - A standard ActiveMerchant options hash
-      def unstore(authorization, options={})
+      def unstore(authorization, _options={})
         commit("payment_methods/#{authorization}/redact.xml", '', :put)
       end
 
@@ -209,7 +209,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_bank_account(doc, bank_account, options)
+      def add_bank_account(doc, bank_account, _options)
         doc.bank_account do
           doc.first_name(bank_account.first_name)
           doc.last_name(bank_account.last_name)

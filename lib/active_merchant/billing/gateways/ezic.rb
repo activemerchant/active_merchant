@@ -59,7 +59,7 @@ module ActiveMerchant
         commit('R', post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, _options={})
         post = {}
 
         add_account_id(post)

@@ -89,7 +89,7 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'customervault/v1/profiles', post)
       end
 
-      def unstore(identification, options = {})
+      def unstore(identification, _options = {})
         customer_id, card_id = identification.split('|')
 
         if card_id.nil?

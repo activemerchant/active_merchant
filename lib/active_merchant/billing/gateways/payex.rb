@@ -106,7 +106,7 @@ module ActiveMerchant #:nodoc:
       # authorization - The authorization token from the authorization request
       #
       # Returns an ActiveMerchant::Billing::Response object
-      def capture(money, authorization, options = {})
+      def capture(money, authorization, _options = {})
         amount = amount(money)
         send_capture(amount, authorization)
       end
@@ -117,7 +117,7 @@ module ActiveMerchant #:nodoc:
       # options        - A standard ActiveMerchant options hash
       #
       # Returns an ActiveMerchant::Billing::Response object
-      def void(authorization, options={})
+      def void(authorization, _options={})
         send_cancel(authorization)
       end
 
@@ -166,7 +166,7 @@ module ActiveMerchant #:nodoc:
       # authorization - The authorization token from the store request.
       #
       # Returns an ActiveMerchant::Billing::Response object
-      def unstore(authorization, options = {})
+      def unstore(authorization, _options = {})
         send_delete_agreement(authorization)
       end
 

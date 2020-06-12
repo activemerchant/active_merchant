@@ -109,7 +109,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def void(authorization, options = {})
+      def void(authorization, _options = {})
         commit do
           response_from_result(@braintree_gateway.transaction.void(authorization))
         end
@@ -332,7 +332,7 @@ module ActiveMerchant #:nodoc:
         mapped
       end
 
-      def commit(&block)
+      def commit
         yield
       rescue Braintree::BraintreeError => ex
         Response.new(false, ex.class.to_s)
@@ -661,7 +661,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_stored_credential_data(parameters, credit_card_or_vault_id, options)
+      def add_stored_credential_data(parameters, _credit_card_or_vault_id, options)
         return unless (stored_credential = options[:stored_credential])
 
         parameters[:external_vault] = {}

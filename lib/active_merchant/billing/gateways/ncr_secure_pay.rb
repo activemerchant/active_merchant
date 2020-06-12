@@ -52,7 +52,7 @@ module ActiveMerchant #:nodoc:
         commit('credit', post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, _options={})
         post = {}
         add_reference(post, authorization)
         commit('void', post)
@@ -81,7 +81,7 @@ module ActiveMerchant #:nodoc:
         post[:ttid] = reference
       end
 
-      def add_address(post, payment, options)
+      def add_address(post, _payment, options)
         address = options[:billing_address] || options[:address]
         post[:zip] = address[:zip]
         post[:street] = address[:address1]

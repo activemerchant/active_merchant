@@ -143,7 +143,7 @@ module ActiveMerchant #:nodoc:
         'submit'
       end
 
-      def fraud_review?(response)
+      def fraud_review?(_response)
         false
       end
 

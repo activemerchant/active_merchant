@@ -115,14 +115,14 @@ module ActiveMerchant #:nodoc:
         commit('capture', post)
       end
 
-      def refund(money, authorization, options = {})
+      def refund(money, authorization, _options = {})
         post = {}
         add_money(post, money)
         add_reference(post, authorization)
         commit('refund', post)
       end
 
-      def void(authorization, options = {})
+      def void(authorization, _options = {})
         post = {}
         add_reference(post, authorization)
         commit('void', post)
@@ -140,7 +140,7 @@ module ActiveMerchant #:nodoc:
         commit('profile', post)
       end
 
-      def unstore(authorization, options = {})
+      def unstore(authorization, _options = {})
         account_id, profile_id = authorization.split('|')
         commit('profile', {},
           verb: :delete,

@@ -45,7 +45,7 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def add_customer_data(post, creditcard, options)
+      def add_customer_data(post, _creditcard, options)
         post[:email] = options[:email]
         post[:ip_address] = options[:ip]
 
@@ -90,7 +90,7 @@ module ActiveMerchant #:nodoc:
         post[:currency] = (options[:currency] || currency(money))
       end
 
-      def commit(action, money, parameters)
+      def commit(action, _money, parameters)
         case action
         when 'sale'
           begin

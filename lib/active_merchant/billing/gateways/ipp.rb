@@ -53,7 +53,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, _options={})
         commit('SubmitSingleCapture') do |xml|
           xml.Capture do
             xml.Receipt authorization
@@ -63,7 +63,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, _options={})
         commit('SubmitSingleRefund') do |xml|
           xml.Refund do
             xml.Receipt authorization

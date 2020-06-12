@@ -127,7 +127,7 @@ module ActiveMerchant
 
     private
 
-    def clean_backtrace(&block)
+    def clean_backtrace
       yield
     rescue AssertionClass => e
       path = File.expand_path(__FILE__)
@@ -337,7 +337,7 @@ module ActionViewHelperTestHelper
   def setup
     @controller = Class.new do
       attr_reader :url_for_options
-      def url_for(options, *parameters_for_method_reference)
+      def url_for(options, *_parameters_for_method_reference)
         @url_for_options = options
       end
     end

@@ -54,7 +54,7 @@ module ActiveMerchant #:nodoc:
         commit(request)
       end
 
-      def void(authorization, options={})
+      def void(authorization, _options={})
         request = build_xml_request do |xml|
           add_void(xml, authorization)
         end

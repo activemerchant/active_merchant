@@ -42,7 +42,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def void(authorization, options = {})
+      def void(authorization, _options = {})
         _, transaction_id = split_authorization(authorization)
         commit(:void) do |xml|
           xml.transactionID transaction_id

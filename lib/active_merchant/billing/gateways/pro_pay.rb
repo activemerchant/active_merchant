@@ -221,7 +221,7 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def add_payment(xml, payment, options)
+      def add_payment(xml, payment, _options)
         xml.ccNum payment.number
         xml.expDate "#{format(payment.month, :two_digits)}#{format(payment.year, :two_digits)}"
         xml.CVV2 payment.verification_value

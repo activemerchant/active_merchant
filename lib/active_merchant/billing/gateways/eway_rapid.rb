@@ -75,7 +75,7 @@ module ActiveMerchant #:nodoc:
         commit(url_for('CapturePayment'), params)
       end
 
-      def void(identification, options = {})
+      def void(identification, _options = {})
         params = {}
         add_reference(params, identification)
         commit(url_for('CancelAuthorisation'), params)
@@ -266,7 +266,7 @@ module ActiveMerchant #:nodoc:
         params['Fax'] = address[:fax]
       end
 
-      def add_credit_card(params, credit_card, options)
+      def add_credit_card(params, credit_card, _options)
         return unless credit_card
 
         params['Customer'] ||= {}

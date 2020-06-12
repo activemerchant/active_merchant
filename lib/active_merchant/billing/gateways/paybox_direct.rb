@@ -149,7 +149,7 @@ module ActiveMerchant #:nodoc:
         results
       end
 
-      def commit(action, money = nil, parameters = nil)
+      def commit(action, _money = nil, parameters = nil)
         request_data = post_data(action, parameters)
         response = parse(ssl_post(test? ? self.test_url : self.live_url, request_data))
         response = parse(ssl_post(self.live_url_backup, request_data)) if service_unavailable?(response) && !test?

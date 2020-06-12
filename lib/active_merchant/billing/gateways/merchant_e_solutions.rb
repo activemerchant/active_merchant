@@ -132,7 +132,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_creditcard(post, creditcard, options)
+      def add_creditcard(post, creditcard, _options)
         post[:card_number] = creditcard.number
         post[:cvv2] = creditcard.verification_value if creditcard.verification_value?
         post[:card_exp_date] = expdate(creditcard)

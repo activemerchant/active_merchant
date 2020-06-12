@@ -94,7 +94,7 @@ module ActiveMerchant #:nodoc:
         PAYMENT_GATEWAY_RESPONSES[result[:result_code]]
       end
 
-      def post_data(action, post)
+      def post_data(_action, post)
         post[:MerchantID] = @options[:login]
         post[:MerchantKey] = @options[:password]
         post.to_s

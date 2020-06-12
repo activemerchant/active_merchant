@@ -100,7 +100,7 @@ module ActiveMerchant #:nodoc:
         commit(:refund, post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, _options={})
         post = {}
         add_integration_key(post)
         add_authorization(post, authorization)
@@ -156,7 +156,7 @@ module ActiveMerchant #:nodoc:
         post[:payment][:birth_date] = options[:birth_date] if options[:birth_date]
       end
 
-      def add_customer_responsible_person(post, payment, options)
+      def add_customer_responsible_person(post, _payment, options)
         post[:payment][:person_type] = options[:person_type] if options[:person_type]
         if options[:person_type]&.casecmp('business')&.zero?
           post[:payment][:responsible] = {}

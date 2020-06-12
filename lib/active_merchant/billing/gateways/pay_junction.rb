@@ -189,7 +189,7 @@ module ActiveMerchant #:nodoc:
 
       # The second half of the preauth(authorize)/postauth(capture) model.
       # Retrieve funds that have been previously authorized with _authorization_
-      def capture(money, authorization, options = {})
+      def capture(_money, authorization, options = {})
         parameters = {
           transaction_id: authorization,
           posture: 'capture'
@@ -201,7 +201,7 @@ module ActiveMerchant #:nodoc:
 
       # Return money to a card that was previously billed.
       # _authorization_ should be the transaction id of the transaction we are returning.
-      def refund(money, authorization, options = {})
+      def refund(money, authorization, _options = {})
         parameters = {
           transaction_amount: amount(money),
           transaction_id: authorization

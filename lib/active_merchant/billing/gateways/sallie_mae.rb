@@ -44,7 +44,7 @@ module ActiveMerchant #:nodoc:
         commit(:sale, money, post)
       end
 
-      def capture(money, authorization, options = {})
+      def capture(money, authorization, _options = {})
         post = PostData.new
         post[:postonly] = authorization
         commit(:capture, money, post)
@@ -61,7 +61,7 @@ module ActiveMerchant #:nodoc:
         post[:ci_IP]    = options[:ip].to_s unless options[:ip].blank?
       end
 
-      def add_address(post, creditcard, options)
+      def add_address(post, _creditcard, options)
         if address = options[:billing_address] || options[:address]
           post[:ci_billaddr1] = address[:address1].to_s
           post[:ci_billaddr2] = address[:address2].to_s unless address[:address2].blank?

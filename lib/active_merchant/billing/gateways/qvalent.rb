@@ -89,7 +89,7 @@ module ActiveMerchant #:nodoc:
         commit('reversal', post)
       end
 
-      def store(payment_method, options = {})
+      def store(payment_method, _options = {})
         post = {}
         add_payment_method(post, payment_method)
         add_card_reference(post)
@@ -238,7 +238,7 @@ module ActiveMerchant #:nodoc:
         post.to_query + '&message.end'
       end
 
-      def url(action)
+      def url(_action)
         (test? ? test_url : live_url)
       end
 

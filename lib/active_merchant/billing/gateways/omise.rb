@@ -145,7 +145,7 @@ module ActiveMerchant #:nodoc:
       #
       # * <tt>customer_id</tt> -- The Customer identifier (REQUIRED).
 
-      def unstore(customer_id, options={})
+      def unstore(customer_id, _options={})
         commit(:delete, "customers/#{CGI.escape(customer_id)}")
       end
 

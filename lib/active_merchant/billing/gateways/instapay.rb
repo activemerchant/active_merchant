@@ -47,7 +47,7 @@ module ActiveMerchant #:nodoc:
         commit('ns_quicksale_cc', post)
       end
 
-      def capture(money, authorization, options = {})
+      def capture(money, authorization, _options = {})
         post = {}
         add_amount(post, money)
         add_reference(post, authorization)

@@ -33,7 +33,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def refund_fee(identification, options, meta)
+      def refund_fee(_identification, _options, _meta)
         raise NotImplementedError.new
       end
 

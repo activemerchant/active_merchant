@@ -38,7 +38,7 @@ module ActiveMerchant #:nodoc:
         commit(purchase_url(post[:CVN]), money, post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, _options={})
         post = {}
 
         add_customer_id(post)
@@ -107,7 +107,7 @@ module ActiveMerchant #:nodoc:
         post[:TrxnNumber] = nil
       end
 
-      def commit(url, money, parameters)
+      def commit(url, _money, parameters)
         raw_response = ssl_post(url, post_data(parameters))
         response = parse(raw_response)
 

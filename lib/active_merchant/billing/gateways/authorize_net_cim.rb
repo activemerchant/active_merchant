@@ -565,7 +565,7 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
-      def build_get_customer_profile_ids_request(xml, options)
+      def build_get_customer_profile_ids_request(xml, _options)
         xml.target!
       end
 

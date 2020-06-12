@@ -79,12 +79,6 @@ Lint/RescueException:
 Lint/UnusedBlockArgument:
   Enabled: false
 
-# Offense count: 284
-# Cop supports --auto-correct.
-# Configuration parameters: AllowUnusedKeywordArguments, IgnoreEmptyMethods.
-Lint/UnusedMethodArgument:
-  Enabled: false
-
 # Offense count: 1418
 Metrics/AbcSize:
   Max: 192

@@ -44,7 +44,7 @@ module ActiveMerchant #:nodoc:
         commit(:capture, post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, _options={})
         post = {}
         add_reference(post, authorization, :void)
 

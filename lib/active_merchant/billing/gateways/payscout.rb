@@ -34,21 +34,21 @@ module ActiveMerchant #:nodoc:
         commit('sale', money, post)
       end
 
-      def capture(money, authorization, options = {})
+      def capture(money, authorization, _options = {})
         post = {}
         post[:transactionid] = authorization
 
         commit('capture', money, post)
       end
 
-      def refund(money, authorization, options = {})
+      def refund(money, authorization, _options = {})
         post = {}
         post[:transactionid] = authorization
 
         commit('refund', money, post)
       end
 
-      def void(authorization, options = {})
+      def void(authorization, _options = {})
         post = {}
         post[:transactionid] = authorization
 
@@ -137,7 +137,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def fraud_review?(response)
+      def fraud_review?(_response)
         false
       end
 

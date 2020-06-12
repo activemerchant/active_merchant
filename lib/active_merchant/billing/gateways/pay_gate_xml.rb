@@ -235,13 +235,13 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def build_capture(xml, money, authorization, options={})
+      def build_capture(xml, _money, authorization, _options={})
         xml.tag! 'settletx', {
           tid: authorization
         }
       end
 
-      def build_refund(xml, money, authorization, options={})
+      def build_refund(xml, money, authorization, _options={})
         xml.tag! 'refundtx', {
           tid: authorization,
           amt: amount(money)

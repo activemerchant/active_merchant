@@ -191,7 +191,7 @@ module ActiveMerchant #:nodoc:
         false
       end
 
-      def scrub(transcript)
+      def scrub(_transcript)
         raise 'This gateway does not support scrubbing.'
       end
 

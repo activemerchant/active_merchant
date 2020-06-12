@@ -164,7 +164,7 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
-      def refund(money, source, options = {})
+      def refund(money, source, _options = {})
         post = {}
         reference, _, type = split_auth(source)
         add_reference(post, reference)

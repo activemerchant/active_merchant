@@ -355,7 +355,7 @@ module ActiveMerchant #:nodoc:
         CURRENCY_CODES[currency]
       end
 
-      def post_data(action, parameters = {})
+      def post_data(_action, parameters = {})
         parameters.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 

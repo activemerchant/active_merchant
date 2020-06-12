@@ -59,21 +59,21 @@ module ActiveMerchant #:nodoc:
         commit(:authorization, source_type(source), post)
       end
 
-      def capture(amount, authorization, options = {})
+      def capture(amount, authorization, _options = {})
         post = {}
         add_reference(post, authorization)
         add_amount(post, amount)
         commit(:capture, source_type(authorization), post)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, _options={})
         post = {}
         add_reference(post, authorization)
         add_amount(post, amount)
         commit(:refund, source_type(authorization), post)
       end
 
-      def void(authorization, options = {})
+      def void(authorization, _options = {})
         post = {}
         add_reference(post, authorization)
         commit(:void, source_type(authorization), post)

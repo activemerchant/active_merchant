@@ -69,13 +69,13 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'refunds', post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, _options={})
         txn_id, endpoint = authorization.to_s.split('|')
 
         commit(:post, "#{endpoint}/void?id=#{txn_id}", {})
       end
 
-      def store(creditcard, options={})
+      def store(creditcard, _options={})
         post = {}
 
         add_creditcard(post, creditcard)

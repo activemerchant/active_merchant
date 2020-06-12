@@ -116,7 +116,7 @@ module ActiveMerchant #:nodoc:
         commit('customers', post, options)
       end
 
-      def add_customer(post, payment, options)
+      def add_customer(post, _payment, options)
         post[:customerId] = options[:customer_id] if options[:customer_id]
       end
 

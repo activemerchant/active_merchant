@@ -41,7 +41,7 @@ module ActiveMerchant #:nodoc:
         commit('capture', post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, _options={})
         post = {}
         add_reference(post, authorization)
         commit('void', post)
@@ -138,7 +138,7 @@ module ActiveMerchant #:nodoc:
         { 'Content-Type' => 'application/x-www-form-urlencoded;charset=UTF-8' }
       end
 
-      def post_data(action, params)
+      def post_data(_action, params)
         params.map { |k, v| "#{CGI.escape(k.to_s)}=#{CGI.escape(v.to_s)}" }.join('&')
       end
 

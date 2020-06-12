@@ -37,7 +37,7 @@ module ActiveMerchant #:nodoc:
         commit('authorize', params, options)
       end
 
-      def capture(amount, authorization, options={})
+      def capture(_amount, authorization, options={})
         params = {}
         options[:id_unico] = split_authorization(authorization)[1]
         add_auth_order_id(params, authorization, options)
@@ -199,7 +199,7 @@ module ActiveMerchant #:nodoc:
         response['errorCode'] == 0
       end
 
-      def message_from(response, options, action)
+      def message_from(response, options, _action)
         message_from_messages(
           response['errorMessage'],
           action_code_description(response),

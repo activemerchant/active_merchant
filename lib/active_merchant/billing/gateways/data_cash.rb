@@ -73,7 +73,7 @@ module ActiveMerchant
         end
       end
 
-      def refund(money, reference, options = {})
+      def refund(money, reference, _options = {})
         commit(build_transaction_refund_request(money, reference))
       end
 

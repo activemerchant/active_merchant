@@ -94,7 +94,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def store(credit_card, options={})
+      def store(credit_card, _options={})
         post = {}
         add_payment(post, credit_card)
 

@@ -46,13 +46,13 @@ module ActiveMerchant #:nodoc:
         commit('sale', money, post)
       end
 
-      def capture(money, authorization, options = {})
+      def capture(money, authorization, _options = {})
         post = {}
         post[:transactionid] = authorization
         commit('capture', money, post)
       end
 
-      def void(authorization, options = {})
+      def void(authorization, _options = {})
         post = {}
         post[:transactionid] = authorization
         commit('void', nil, post)
@@ -70,7 +70,7 @@ module ActiveMerchant #:nodoc:
         commit('credit', money, post)
       end
 
-      def refund(money, auth, options = {})
+      def refund(money, auth, _options = {})
         post = {}
         add_transaction(post, auth)
         commit('refund', money, post)

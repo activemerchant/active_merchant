@@ -72,7 +72,7 @@ module ActiveMerchant #:nodoc:
         commit('void', post)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(_amount, authorization, options={})
         post = {}
 
         add_credentials(post, 'SUBMIT_TRANSACTION', options)
@@ -92,7 +92,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def store(payment_method, options = {})
+      def store(payment_method, _options = {})
         post = {}
 
         add_credentials(post, 'CREATE_TOKEN')

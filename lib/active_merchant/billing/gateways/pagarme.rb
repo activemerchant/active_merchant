@@ -43,20 +43,20 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'transactions', post)
       end
 
-      def capture(money, authorization, options={})
+      def capture(_money, authorization, _options={})
         return Response.new(false, 'Não é possível capturar uma transação sem uma prévia autorização.') if authorization.nil?
 
         post = {}
         commit(:post, "transactions/#{authorization}/capture", post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(_money, authorization, options={})
         return Response.new(false, 'Não é possível estornar uma transação sem uma prévia captura.') if authorization.nil?
 
         void(authorization, options)
       end
 
-      def void(authorization, options={})
+      def void(authorization, _options={})
         return Response.new(false, 'Não é possível estornar uma transação autorizada sem uma prévia autorização.') if authorization.nil?
 
         post = {}
@@ -134,7 +134,7 @@ module ActiveMerchant #:nodoc:
         end.compact.join('&')
       end
 
-      def headers(options = {})
+      def headers(_options = {})
         {
           'Authorization' => 'Basic ' + Base64.encode64(@api_key.to_s + ':x').strip,
           'User-Agent' => "Pagar.me/1 ActiveMerchant/#{ActiveMerchant::VERSION}",

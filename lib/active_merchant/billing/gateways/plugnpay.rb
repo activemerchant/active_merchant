@@ -139,7 +139,7 @@ module ActiveMerchant
         commit(:capture, post)
       end
 
-      def void(authorization, options = {})
+      def void(authorization, _options = {})
         post = PlugnpayPostData.new
 
         post[:orderID] = authorization
