@@ -5,7 +5,7 @@ class AafesTest < Test::Unit::TestCase
     @gateway = AafesGateway.new(identity_uuid: 'identity_uuid')
 
     # Amount field must be passed in as a decimal   
-    @amount = 100.00
+    @amount = '%.2f' % 100
     @metadata = {
       :zip => 75236,
       :expiration => 2210
@@ -20,10 +20,21 @@ class AafesTest < Test::Unit::TestCase
     @options = {
       order_id: 'ONP3951033',
       billing_address: address,
-      description: 'Store Purchase',
+      description: 'SALE',
       plan_number: 10001,
       transaction_id: 6750,
       rrn: 'RRNPG1685262',
+      term_id: 20,
+      customer_id: 45017632990
+    }
+
+    @bad_options = {
+      order_id: 'ONP3951033',
+      billing_address: address,
+      description: 'Store Purchase',
+      plan_number: 10001,
+      transaction_id: 6750,
+      rrn: 'lengthofrrnmustbe12char',
       term_id: 20,
       customer_id: 45017632990
     }
@@ -33,14 +44,19 @@ class AafesTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     
     response = @gateway.purchase(@amount, @milstar_card, @options)
-    # assert_success response
-
-    # assert_equal 'REPLACE', response.authorization
-    # assert response.test?
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert response.test?
   end
 
-  # def test_failed_purchase
-  # end
+  def test_failed_purchase
+    @gateway.expects(:ssl_post).returns(failed_purchase_response)
+    
+    response = @gateway.purchase(@amount, @milstar_card, @options)
+    assert_failure response
+    assert_equal 'Decline', response.message
+    assert response.test?
+  end
 
   # def test_successful_authorize
   # end
@@ -116,23 +132,51 @@ class AafesTest < Test::Unit::TestCase
   end
 
   def successful_purchase_response
-    %(
-      Easy to capture by setting the DEBUG_ACTIVE_MERCHANT environment variable
-      to "true" when running remote tests:
-
-      $ DEBUG_ACTIVE_MERCHANT=true ruby -Itest \
-        test/remote/gateways/remote_aafes_test.rb \
-        -n test_successful_purchase
-    )
+    <<-XML
+    <Message TypeCode="Response" MajorVersion="3" MinorVersion="4" FixVersion="0" xmlns="http://www.aafes.com/credit">
+      <Header>
+          <IdentityUUID>9765830b-38ec-4154-b349-15ef4a302489</IdentityUUID>
+          <LocalDateTime>2020-06-11T19:20:10Z</LocalDateTime>
+          <SettleIndicator>false</SettleIndicator>
+          <OrderNumber>ONP3951033</OrderNumber>
+          <transactionId>6750</transactionId>
+          <termId>20</termId>
+          <Comment>Test</Comment>
+          <CustomerID>45017632990</CustomerID>
+      </Header>
+      <Response RRN="RRNP45805353">
+          <Media>Milstar</Media>
+          <ResponseType>Approved</ResponseType>
+          <AuthNumber>020588</AuthNumber>
+          <ReasonCode>000</ReasonCode>
+          <PlanNumber>10001</PlanNumber>
+          <DescriptionField>APPROVED  </DescriptionField>
+          <origReqType>Sale</origReqType>
+      </Response>
+    </Message>
+    XML
   end
 
   def failed_purchase_response
-  end
-
-  def successful_authorize_response
-  end
-
-  def failed_authorize_response
+    <<-XML
+    <Message TypeCode="Response" MajorVersion="3" MinorVersion="4" FixVersion="0" xmlns="http://www.aafes.com/credit">
+      <Header>
+          <IdentityUUID>9765830b-38ec-4154-b349-15ef4a302489</IdentityUUID>
+          <LocalDateTime>2020-06-11T19:13:34Z</LocalDateTime>
+          <SettleIndicator>false</SettleIndicator>
+          <OrderNumber>ONP3951033</OrderNumber>
+          <transactionId>6750</transactionId>
+          <termId>20</termId>
+          <Comment>Test</Comment>
+          <CustomerID>45017632990</CustomerID>
+      </Header>
+      <Response RRN="RRNP45805363">
+          <ResponseType>Decline</ResponseType>
+          <ReasonCode>951</ReasonCode>
+          <DescriptionField>INVALID_REQUEST</DescriptionField>
+      </Response>
+    </Message>
+    XML
   end
 
   def successful_capture_response

@@ -3,7 +3,7 @@ require 'test_helper'
 class RemoteAafesTest < Test::Unit::TestCase
   def setup
     @gateway = AafesGateway.new(fixtures(:aafes))
-    @gateway.ssl_strict = false
+    @gateway.ssl_strict = false # Fails to send request to gateway otherwise :shrug
     @amount = '%.2f' % 100
     @metadata = {
       :zip => 75236,
@@ -22,7 +22,7 @@ class RemoteAafesTest < Test::Unit::TestCase
       description: 'SALE',
       plan_number: 10001,
       transaction_id: 6750,
-      rrn: 'RRNP45805361',
+      rrn: 'RRNP45805353',
       term_id: 20,
       customer_id: 45017632990,
       comment: 'Test'
@@ -31,8 +31,9 @@ class RemoteAafesTest < Test::Unit::TestCase
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @milstar_card, @options)
-    # assert_success response
-    # assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
+
+    assert_success response
+    assert_equal 'Approved', response.message
   end
 
   # def test_successful_purchase_with_more_options
@@ -47,11 +48,14 @@ class RemoteAafesTest < Test::Unit::TestCase
   #   assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
   # end
 
-  # def test_failed_purchase
-  #   response = @gateway.purchase(@amount, @declined_card, @options)
-  #   assert_failure response
-  #   assert_equal 'REPLACE WITH FAILED PURCHASE MESSAGE', response.message
-  # end
+  def test_failed_purchase
+    bad_rrn = 'RRN1' # The RRN can be ANYTHING as long as it is 12 characters, base-64
+    @options[:rrn] = bad_rrn
+    response = @gateway.purchase(@amount, @milstar_card, @options)
+
+    assert_failure response
+    assert_equal 'Decline', response.message
+  end
 
   # def test_successful_authorize_and_capture
   #   auth = @gateway.authorize(@amount, @credit_card, @options)
