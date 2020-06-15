@@ -171,9 +171,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def credit_card_xml(xml, credit_card)
-        xml.send('CardNumber', credit_card.number)
-        xml.send('ExpiryDate', expdate(credit_card))
-        xml.send('CVC', credit_card.verification_value)
+        if credit_card.is_a?(String)
+          xml.send('CardNumber', credit_card)
+        else
+          xml.send('CardNumber', credit_card.number)
+          xml.send('ExpiryDate', expdate(credit_card))
+          xml.send('CVC', credit_card.verification_value)
+        end
       end
 
       def transaction_number_xml(xml, transaction_number)
