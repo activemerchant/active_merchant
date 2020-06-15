@@ -369,7 +369,7 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_execute_threed_defaults_to_false
     stub_comms do
-      @gateway.authorize(@amount, '123', @normalized_3ds_2_options)
+      @gateway.authorize(@amount, '123', @normalized_3ds_2_options.merge({threed_dynamic: false}))
     end.check_request do |endpoint, data, headers|
       refute JSON.parse(data)['additionalData']['scaExemption']
       assert_false JSON.parse(data)['additionalData']['executeThreeD']

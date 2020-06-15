@@ -210,12 +210,22 @@ class RemoteAdyenTest < Test::Unit::TestCase
     refute response.params['paRequest'].blank?
   end
 
+  def test_successful_authorize_with_execute_threed_default_to_false
+    assert response = @gateway.authorize(@amount, @three_ds_enrolled_card, @options.merge(threed_dynamic: false, sca_exemption: 'transactionRiskAnalysis'))
+    assert response.test?
+    refute response.authorization.blank?
+    assert_equal response.params['resultCode'], 'RedirectShopper'
+    refute response.params['issuerUrl'].blank?
+    refute response.params['md'].blank?
+    refute response.params['paRequest'].blank?
+  end
+
   def test_successful_authorize_with_3ds2_browser_client_data
     assert response = @gateway.authorize(@amount, @three_ds_enrolled_card, @normalized_3ds_2_options)
     assert response.test?
     refute response.authorization.blank?
 
-    assert_equal response.params['resultCode'], 'Authorised'
+    assert_equal response.params['resultCode'], 'IdentifyShopper'
     refute response.params['additionalData']['threeds2.threeDS2Token'].blank?
     refute response.params['additionalData']['threeds2.threeDSServerTransID'].blank?
     refute response.params['additionalData']['threeds2.threeDSMethodURL'].blank?
@@ -260,7 +270,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert response = @gateway.authorize(@amount, @three_ds_enrolled_card, three_ds_app_based_options)
     assert response.test?
     refute response.authorization.blank?
-    assert_equal response.params['resultCode'], 'Authorised'
+    assert_equal response.params['resultCode'], 'IdentifyShopper'
     refute response.params['additionalData']['threeds2.threeDS2Token'].blank?
     refute response.params['additionalData']['threeds2.threeDSServerTransID'].blank?
     refute response.params['additionalData']['threeds2.threeDS2DirectoryServerInformation.algorithm'].blank?

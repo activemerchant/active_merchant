@@ -413,8 +413,12 @@ module ActiveMerchant #:nodoc:
             post[:threeDS2RequestData] = { deviceChannel: device_channel, notificationURL: three_ds_2_options[:notification_url] }
           end
 
-          post[:additionalData][:executeThreeD] = options[:execute_threed] || false
+          if options.has_key?(:execute_threed)
+            post[:additionalData][:executeThreeD] = options[:execute_threed]
+          end
+          
           post[:additionalData][:scaExemption] = options[:sca_exemption] if options[:sca_exemption]
+          post[:additionalData][:executeThreeD] = false if options[:threed_dynamic] == false && options[:execute_threed].nil?
 
         else
           return unless options[:execute_threed] || options[:threed_dynamic]
