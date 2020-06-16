@@ -7,10 +7,10 @@ class NetbanxTest < Test::Unit::TestCase
     @amount = 100
 
     @options = {
-      order_id: '1',
-      billing_address: address,
-      description: 'Store Purchase',
-      currency: 'CAD'
+        order_id: '1',
+        billing_address: address,
+        description: 'Store Purchase',
+        currency: 'CAD'
     }
   end
 
@@ -34,6 +34,7 @@ class NetbanxTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize
+    @gateway.expects(:ssl_request).returns(success_auth_varification_response)
     @gateway.expects(:ssl_request).returns(successful_authorize_response)
 
     response = @gateway.authorize(@amount, @credit_card, @options)
@@ -56,7 +57,7 @@ class NetbanxTest < Test::Unit::TestCase
   def test_successful_capture
     @gateway.expects(:ssl_request).returns(successful_capture_response)
 
-    response = @gateway.authorize(@amount, '056ff3a9-5274-4452-92ab-0e3b3e591c3b')
+    response = @gateway.capture(@amount, '056ff3a9-5274-4452-92ab-0e3b3e591c3b')
     assert_success response
 
     assert_equal '11e0906b-6596-4490-b0e3-825f71a82799', response.authorization
@@ -75,6 +76,7 @@ class NetbanxTest < Test::Unit::TestCase
   end
 
   def test_successful_refund
+    @gateway.expects(:ssl_request).returns(success_varification_response)
     @gateway.expects(:ssl_request).returns(successful_capture_response)
 
     response = @gateway.refund(@amount, '056ff3a9-5274-4452-92ab-0e3b3e591c3b')
@@ -412,6 +414,26 @@ class NetbanxTest < Test::Unit::TestCase
       "currencyCode": "CAD",
       "avsResponse": "MATCH",
       "cvvVerification": "MATCH"
+    }
+    RESPONSE
+  end
+
+  def success_auth_varification_response
+    <<-RESPONSE
+    {
+      "id": "b8c53059-9da3-4054-8caf-3769161a3cdc",
+      "status": "COMPLETED",
+      "message": "OK"
+    }
+    RESPONSE
+  end
+
+  def success_varification_response
+    <<-RESPONSE
+    {
+      "id": "11e0906b-6596-4490-b0e3-825f71a82799",
+      "status": "COMPLETED",
+      "message": "OK"
     }
     RESPONSE
   end

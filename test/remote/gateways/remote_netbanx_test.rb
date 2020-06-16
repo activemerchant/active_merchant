@@ -7,20 +7,20 @@ class RemoteNetbanxTest < Test::Unit::TestCase
     @credit_card = credit_card('4530910000012345')
     @declined_amount = 11
     @options = {
-      billing_address: address,
-      description: 'Store Purchase',
-      currency: 'CAD'
+        billing_address: address,
+        description: 'Store Purchase',
+        currency: 'CAD'
     }
 
     @options_3ds2 = @options.merge(
-      three_d_secure: {
-        version: '2.1.0',
-        eci: '05',
-        cavv: 'AAABCIEjYgAAAAAAlCNiENiWiV+=',
-        ds_transaction_id: 'a3a721f3-b6fa-4cb5-84ea-c7b5c39890a2',
-        xid: 'OU9rcTRCY1VJTFlDWTFESXFtTHU=',
-        directory_response_status: 'Y'
-      }
+        three_d_secure: {
+            version: '2.1.0',
+            eci: '05',
+            cavv: 'AAABCIEjYgAAAAAAlCNiENiWiV+=',
+            ds_transaction_id: 'a3a721f3-b6fa-4cb5-84ea-c7b5c39890a2',
+            xid: 'OU9rcTRCY1VJTFlDWTFESXFtTHU=',
+            directory_response_status: 'Y'
+        }
     )
   end
 
@@ -29,14 +29,16 @@ class RemoteNetbanxTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'OK', response.message
     assert_equal response.authorization, response.params['id']
+    assert_equal "MATCH", response.params['cvvVerification']
+    assert_equal "MATCH", response.params['avsResponse']
   end
 
   def test_successful_purchase_with_more_options
     options = {
-      order_id: SecureRandom.uuid,
-      ip: '127.0.0.1',
-      billing_address: address,
-      email: 'joe@example.com'
+        order_id: SecureRandom.uuid,
+        ip: '127.0.0.1',
+        billing_address: address,
+        email: 'joe@example.com'
     }
 
     response = @gateway.purchase(@amount, @credit_card, options)
@@ -149,20 +151,22 @@ class RemoteNetbanxTest < Test::Unit::TestCase
   #   assert_equal 'OK', refund.message
   # end
 
-  def test_failed_refund
-    # Read comment in `test_successful_refund` method.
-    auth = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success auth
 
-    assert capture = @gateway.capture(@amount, auth.authorization, @options)
-    assert_success capture
-
-    # the following shall fail if you run it immediately after the capture
-    # as noted in the comment from `test_successful_refund`
-    assert refund = @gateway.refund(@amount, capture.authorization)
-    assert_failure refund
-    assert_equal 'The settlement you are attempting to refund has not been batched yet. There are no settled funds available to refund.', refund.message
-  end
+  # We added the step. If the transactions that are pending, API call needs to be Cancellation
+  # def test_failed_refund
+  #   # Read comment in `test_successful_refund` method.
+  #   auth = @gateway.authorize(@amount, @credit_card, @options)
+  #   assert_success auth
+  #
+  #   assert capture = @gateway.capture(@amount, auth.authorization, @options)
+  #   assert_success capture
+  #
+  #   # the following shall fail if you run it immediately after the capture
+  #   # as noted in the comment from `test_successful_refund`
+  #   assert refund = @gateway.refund(@amount, capture.authorization)
+  #   assert_failure refund
+  #   assert_equal 'The settlement you are attempting to refund has not been batched yet. There are no settled funds available to refund.', refund.message
+  # end
 
   def test_successful_void
     auth = @gateway.authorize(@amount, @credit_card, @options)
@@ -228,5 +232,19 @@ class RemoteNetbanxTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, store.authorization.split('|').last)
     assert_success response
     assert_equal 'OK', response.message
+  end
+
+  def test_successful_varify
+    verify = @gateway.verify(@credit_card, @options)
+    assert_success verify
+  end
+
+  def test_successful_cancel_settlement
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    authorization = response.authorization
+
+    assert cancel = @gateway.refund(@amount, authorization)
+    assert_success cancel
+    assert_equal 'OK', cancel.message
   end
 end
