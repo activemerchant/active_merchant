@@ -131,6 +131,14 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_equal 'sodexo', CreditCard.brand?('6060694495764400')
   end
 
+  def test_should_detect_alia_card
+    assert_equal 'alia', CreditCard.brand?('5049970000000000')
+    assert_equal 'alia', CreditCard.brand?('5058780000000000')
+    assert_equal 'alia', CreditCard.brand?('6010300000000000')
+    assert_equal 'alia', CreditCard.brand?('6010730000000000')
+    assert_equal 'alia', CreditCard.brand?('5058740000000000')
+  end
+
   def test_should_detect_vr_card
     assert_equal 'vr', CreditCard.brand?('6370364495764400')
   end
