@@ -101,8 +101,8 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
     @options = {
       reference: '345123',
-      shopper_email: 'john.smith@test.com',
-      shopper_ip: '77.110.174.153',
+      email: 'john.smith@test.com',
+      ip: '77.110.174.153',
       shopper_reference: 'John Smith',
       billing_address: address(),
       order_id: '123',
@@ -111,8 +111,8 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
     @normalized_3ds_2_options = {
       reference: '345123',
-      shopper_email: 'john.smith@test.com',
-      shopper_ip: '77.110.174.153',
+      email: 'john.smith@test.com',
+      ip: '77.110.174.153',
       shopper_reference: 'John Smith',
       billing_address: address(),
       order_id: '123',
@@ -253,8 +253,8 @@ class RemoteAdyenTest < Test::Unit::TestCase
   def test_successful_authorize_with_3ds2_app_based_request
     three_ds_app_based_options = {
       reference: '345123',
-      shopper_email: 'john.smith@test.com',
-      shopper_ip: '77.110.174.153',
+      email: 'john.smith@test.com',
+      ip: '77.110.174.153',
       shopper_reference: 'John Smith',
       billing_address: address(),
       order_id: '123',
@@ -362,8 +362,8 @@ class RemoteAdyenTest < Test::Unit::TestCase
   def test_successful_authorize_with_no_address
     options = {
       reference: '345123',
-      shopper_email: 'john.smith@test.com',
-      shopper_ip: '77.110.174.153',
+      email: 'john.smith@test.com',
+      ip: '77.110.174.153',
       shopper_reference: 'John Smith',
       order_id: '123',
       recurring_processing_model: 'CardOnFile'
