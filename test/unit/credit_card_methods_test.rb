@@ -101,6 +101,7 @@ class CreditCardMethodsTest < Test::Unit::TestCase
 
   def test_should_detect_diners_club
     assert_equal 'diners_club', CreditCard.brand?('36148010000000')
+    assert_equal 'diners_club', CreditCard.brand?('3000000000000004')
   end
 
   def test_should_detect_diners_club_dk
