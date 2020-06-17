@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class ElementTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = ElementGateway.new(account_id: '', account_token: '', application_id: '', acceptor_id: '', application_name: '', application_version: '')
     @credit_card = credit_card
@@ -143,13 +145,23 @@ class ElementTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_card_present_code
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(card_present_code: 'Present'))
-    assert_equal 'Present', response.params['terminal']['cardpresentcode']
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(card_present_code: 'Present'))
+    end.check_request do |endpoint, data, headers|
+      assert_match '<CardPresentCode>Present</CardPresentCode>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
   end
 
   def test_successful_purchase_with_terminal_id
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(terminal_id: '02'))
-    assert_equal '02', response.params['terminal']['terminalid']
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(terminal_id: '02'))
+    end.check_request do |endpoint, data, headers|
+      assert_match '<TerminalID>02</TerminalID>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
   end
 
   def test_scrub

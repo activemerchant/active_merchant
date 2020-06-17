@@ -10,6 +10,7 @@
 * RuboCop: Fix Style/SymbolArray [leila-alderman] #3665
 * Forte: Use underscore for unused arguments in test [wsmoak] #3605
 * Add Alia card type [therufs] #3673
+* Element: Fix unit tests [leila-alderman] #3676
 
 == Version 1.108.0 (Jun 9, 2020)
 * Cybersource: Send cavv as xid is xid is missing [pi3r] #3658
