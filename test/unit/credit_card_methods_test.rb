@@ -139,6 +139,14 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_equal 'alia', CreditCard.brand?('5058740000000000')
   end
 
+  def test_alia_number_not_validated
+    10.times do
+      number = rand(5058740000000001..5058749999999999).to_s
+      assert_equal 'alia', CreditCard.brand?(number)
+      assert CreditCard.valid_number?(number)
+    end
+  end
+
   def test_should_detect_vr_card
     assert_equal 'vr', CreditCard.brand?('6370364495764400')
   end

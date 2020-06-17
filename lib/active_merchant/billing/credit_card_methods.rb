@@ -298,6 +298,8 @@ module ActiveMerchant #:nodoc:
           case brand
           when 'naranja'
             valid_naranja_algo?(numbers)
+          when 'alia'
+            true
           else
             valid_luhn?(numbers)
           end
