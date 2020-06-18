@@ -429,7 +429,7 @@ module ActiveMerchant #:nodoc:
         xml.cardHolderName card_holder_name
         xml.cvc payment_method.verification_value
 
-        add_address(xml, (options[:billing_address] || options[:address]))
+        add_address(xml, (options[:billing_address] || options[:address]), options)
       end
 
       def add_stored_credential_options(xml, options={})
@@ -485,7 +485,7 @@ module ActiveMerchant #:nodoc:
         xml.authenticatedShopperID options[:customer] if options[:customer]
       end
 
-      def add_address(xml, address)
+      def add_address(xml, address, options)
         return unless address
 
         address = address_with_defaults(address)
@@ -500,7 +500,7 @@ module ActiveMerchant #:nodoc:
             xml.address2 address[:address2] if address[:address2]
             xml.postalCode address[:zip]
             xml.city address[:city]
-            xml.state address[:state]
+            xml.state address[:state] unless address[:country] != 'US' && options[:execute_threed]
             xml.countryCode address[:country]
             xml.telephoneNumber address[:phone] if address[:phone]
           end
