@@ -412,6 +412,35 @@ class RemoteForteTest < Test::Unit::TestCase
     assert_equal "Error[1]: Payment Method's credit card number is invalid. Error[2]: Payment Method's credit card type is invalid for the credit card number given.", final_response.message
   end
 
+  def test_successful_update
+    store_response = @gateway.store(@credit_card, @options)
+    credit_card = credit_card(nil, { first_name: 'Jane', last_name: 'Smith' })
+
+    options = {
+      customer_token: store_response.params['customer_token'],
+      paymethod_token: store_response.params['paymethod']['paymethod_token']
+    }
+
+    response = @gateway.update(credit_card, options)
+    assert_success response
+    assert response.params['customer_token'].present?
+    assert response.params['default_paymethod_token'].present?
+  end
+
+  def test_successful_bank_account_update
+    store_response = @gateway.store(@check)
+    options = {
+      customer_token: store_response.params['customer_token'],
+      paymethod_token: store_response.params['paymethod']['paymethod_token']
+    }
+    check = ActiveMerchant::Billing::Check.new(first_name: 'Jane', last_name: 'Smith')
+
+    response = @gateway.update(check, options)
+    assert_success response
+    assert response.params['customer_token'].present?
+    assert response.params['default_paymethod_token'].present?
+  end
+
   def test_transcript_scrubbing
     @credit_card.verification_value = 789
     transcript = capture_transcript(@gateway) do

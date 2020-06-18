@@ -98,6 +98,48 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def update(payment_method, options = {})
+        MultiResponse.run do |r|
+          customer_token = options.delete(:customer_token)
+          paymethod_token = options.delete(:paymethod_token)
+          get_paymethod_response = nil
+
+          r.process do
+            params = {}
+            add_customer(params, payment_method, options)
+
+            update_customer(customer_token, params)
+          end
+
+          r.process do
+            params = {}
+            if payment_method.is_a?(Check)
+              add_echeck(params, payment_method, options)
+            else
+              add_credit_card(params, payment_method)
+            end
+
+            update_clientless_paymethod(paymethod_token, params)
+          end
+
+          r.process { get_paymethod_response = get_paymethod(paymethod_token) }
+          billing_address_token = get_paymethod_response.params['billing_address_token']
+
+          if billing_address_token.present?
+            address_options = {}
+            add_email(address_options, options)
+            if options[:billing_address].present?
+              add_physical_address(address_options, options)
+            end
+            r.process { update_address(billing_address_token, address_options) } if address_options.keys.present?
+          else
+            # TODO: add a new address and attach it to the paymethod
+          end
+
+          r.process { get_customer(customer_token) }
+        end
+      end
+
       def void(authorization, _options = {})
         post = {}
         post[:transaction_id] = transaction_id_from(authorization)
@@ -192,19 +234,48 @@ module ActiveMerchant #:nodoc:
         commit(:post, path, params)
       end
 
-      def update_paymethod_address(new_paymethod_token, new_address_token)
-        path = ['paymethods', new_paymethod_token].join('/')
+      def get_paymethod(paymethod_token)
+        path = ['paymethods', paymethod_token].join('/')
+
+        commit(:get, path)
+      end
+
+      def get_customer(customer_token)
+        path = ['customers', customer_token].join('/')
+
+        commit(:get, path)
+      end
+
+      def update_paymethod_address(paymethod_token, new_address_token)
+        path = ['paymethods', paymethod_token].join('/')
         params = { billing_address_token: new_address_token }
 
         commit(:put, path, params)
       end
 
+      def update_clientless_paymethod(paymethod_token, options)
+        path = ['paymethods', paymethod_token].join('/')
+        if options[:card].present?
+          options[:card].delete(:account_number)
+        elsif options[:echeck].present?
+          options[:echeck].delete(:account_number)
+        end
+
+        commit(:put, path, options)
+      end
+
       def update_customer(customer_token, options)
         path = ['customers', customer_token].join('/')
-        allowed_fields = %i[default_paymethod_token first_name last_name company_name status]
+        allowed_fields = %i[default_shipping_address_token default_billing_address_token default_paymethod_token paymethod_token first_name last_name company_name status]
         params = options.slice(*allowed_fields)
 
         commit(:put, path, params)
+      end
+
+      def update_address(address_token, options)
+        path = ['addresses', address_token].join('/')
+
+        commit(:put, path, options)
       end
 
       def add_invoice(post, options)
@@ -215,7 +286,7 @@ module ActiveMerchant #:nodoc:
         post[:authorization_amount] = amount(money)
       end
 
-      def add_customer(post, payment_method, _options)
+      def add_customer(post, payment_method, options)
         post[:first_name] = options.dig(:customer, :first_name) || payment_method.first_name
         post[:last_name] = options.dig(:customer, :last_name) || payment_method.last_name
       end
@@ -271,6 +342,10 @@ module ActiveMerchant #:nodoc:
         post[:billing_address][:last_name] = payment.last_name if empty?(post[:billing_address][:last_name]) && payment.last_name
       end
 
+      def add_email(params, options)
+        params[:email] = options[:email] if options[:email]
+      end
+
       def add_physical_address(params, options)
         address = options[:billing_address]
         return unless address.present?
@@ -312,10 +387,10 @@ module ActiveMerchant #:nodoc:
 
       def add_echeck(post, payment, options)
         post[:echeck] = {}
-        post[:echeck][:account_holder] = payment.name
-        post[:echeck][:account_number] = payment.account_number
-        post[:echeck][:routing_number] = payment.routing_number
-        post[:echeck][:account_type] = payment.account_type
+        post[:echeck][:account_holder] = payment.name if payment.name
+        post[:echeck][:account_number] = payment.account_number if payment.account_number
+        post[:echeck][:routing_number] = payment.routing_number if payment.routing_number
+        post[:echeck][:account_type] = payment.account_type if payment.account_type
         post[:echeck][:sec_code] = options[:sec_code] || 'WEB'
       end
 
@@ -327,14 +402,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_credit_card(params, payment_method)
-        params[:card] = {
-          card_type: format_card_brand(payment_method.brand),
-          name_on_card: payment_method.name,
-          account_number: payment_method.number,
-          expire_month: payment_method.month,
-          expire_year: payment_method.year,
-          card_verification_value: payment_method.verification_value
-        }
+        params[:card] = {}
+        params[:card][:card_type] = format_card_brand(payment_method.brand) if payment_method.brand
+        params[:card][:name_on_card] = payment_method.name if payment_method.name
+        params[:card][:account_number] = payment_method.number if payment_method.number
+        params[:card][:expire_month] = payment_method.month if payment_method.month
+        params[:card][:expire_year] = payment_method.year if payment_method.year
+        params[:card][:card_verification_value] = payment_method.verification_value if payment_method.verification_value
       end
 
       def add_first_and_last_name(params, payment_method)
@@ -368,9 +442,9 @@ module ActiveMerchant #:nodoc:
         post[:paymethod_token] = payment_method
       end
 
-      def commit(http_method, path, params)
+      def commit(http_method, path, params = {})
         url = URI.join(base_url, path)
-        body = http_method == :delete ? nil : params.to_json
+        body = %i[delete get].include?(http_method) ? nil : params.to_json
         response = JSON.parse(handle_response(raw_ssl_request(http_method, url, body, headers)))
 
         Response.new(
@@ -397,7 +471,8 @@ module ActiveMerchant #:nodoc:
         response['response']['response_code'] == 'A01' ||
           response['response']['response_desc'] == 'Create Successful.' ||
           response['response']['response_desc'] == 'Update Successful.' ||
-          response['response']['response_desc'] == 'Delete Successful.'
+          response['response']['response_desc'] == 'Delete Successful.' ||
+          response['response']['response_desc'] == 'Get Successful.'
       end
 
       def message_from(response)
@@ -405,6 +480,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response, parameters)
+        return unless response['transaction_id']
+
         if parameters[:action] == 'capture'
           [response['transaction_id'], response.dig('response', 'authorization_code'), parameters[:transaction_id], parameters[:authorization_code]].join('#')
         else
