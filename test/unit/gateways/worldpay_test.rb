@@ -506,6 +506,39 @@ class WorldpayTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
+  def test_state_sent_for_3ds_transactions_in_us_country
+    us_billing_address = address.merge(country: 'US')
+    stub_comms do
+      @gateway.authorize(100, @credit_card, @options.merge(billing_address: us_billing_address, execute_threed: true))
+    end.check_request do |endpoint, data, headers|
+      assert_match %r(firstName), data
+      assert_match %r(lastName), data
+      assert_match %r(<address1>456 My Street</address1>), data
+      assert_match %r(<address2>Apt 1</address2>), data
+      assert_match %r(<city>Ottawa</city>), data
+      assert_match %r(<postalCode>K1C2N6</postalCode>), data
+      assert_match %r(<state>ON</state>), data
+      assert_match %r(<countryCode>US</countryCode>), data
+      assert_match %r(<telephoneNumber>\(555\)555-5555</telephoneNumber>), data
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_state_not_sent_for_3ds_transactions_in_non_us_country
+    stub_comms do
+      @gateway.authorize(100, @credit_card, @options.merge(billing_address: address, execute_threed: true))
+    end.check_request do |endpoint, data, headers|
+      assert_match %r(firstName), data
+      assert_match %r(lastName), data
+      assert_match %r(<address1>456 My Street</address1>), data
+      assert_match %r(<address2>Apt 1</address2>), data
+      assert_match %r(<city>Ottawa</city>), data
+      assert_match %r(<postalCode>K1C2N6</postalCode>), data
+      assert_no_match %r(<state>ON</state>), data
+      assert_match %r(<countryCode>CA</countryCode>), data
+      assert_match %r(<telephoneNumber>\(555\)555-5555</telephoneNumber>), data
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_email
     stub_comms do
       @gateway.authorize(100, @credit_card, @options.merge(email: 'eggcellent@example.com'))
