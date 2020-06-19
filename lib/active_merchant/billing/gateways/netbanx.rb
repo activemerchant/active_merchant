@@ -218,18 +218,18 @@ module ActiveMerchant #:nodoc:
 
       def commit(method, uri, parameters)
         params = parameters.to_json unless parameters.nil?
-        response = 
-        begin
-          if method == :get
-            parse(ssl_request(method, get_url(uri), nil, headers))
-          else
-            parse(ssl_request(method, get_url(uri), params, headers))
-          end
-        rescue ResponseError => e
-          return Response.new(false, 'Invalid Login') if e.response.code == '401'
+        response =
+          begin
+            if method == :get
+              parse(ssl_request(method, get_url(uri), nil, headers))
+            else
+              parse(ssl_request(method, get_url(uri), params, headers))
+            end
+          rescue ResponseError => e
+            return Response.new(false, 'Invalid Login') if e.response.code == '401'
 
-          parse(e.response.body)
-        end
+            parse(e.response.body)
+          end
 
         success = success_from(response)
         Response.new(
@@ -286,7 +286,7 @@ module ActiveMerchant #:nodoc:
           'Content-type'  => 'application/json',
           'Authorization' => "Basic #{Base64.strict_encode64(@options[:api_key].to_s)}",
           'User-Agent'    => "Netbanx-Paysafe v1.0/ActiveMerchant #{ActiveMerchant::VERSION}"
-      }
+        }
       end
 
       def error_code_from(response)
