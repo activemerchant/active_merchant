@@ -56,7 +56,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(money, authorization, options={})
-
         # If the transactions that are pending, API call needs to be Cancellation
         settlement_data = get_settlement(authorization)
         return settlement_data if settlement_data.message != 'OK'
@@ -74,7 +73,6 @@ module ActiveMerchant #:nodoc:
 
           commit(:post, "settlements/#{authorization}/refunds", post)
         end
-
       end
 
       def get_settlement(authorization)
@@ -127,9 +125,9 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
-            gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
-            gsub(%r(("card\\?":{\\?"cardNum\\?":\\?")\d+), '\1[FILTERED]').
-            gsub(%r(("cvv\\?":\\?")\d+), '\1[FILTERED]')
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r(("card\\?":{\\?"cardNum\\?":\\?")\d+), '\1[FILTERED]').
+          gsub(%r(("cvv\\?":\\?")\d+), '\1[FILTERED]')
       end
 
       private
@@ -191,10 +189,10 @@ module ActiveMerchant #:nodoc:
 
         country = Country.find(address[:country]) if address[:country]
         mapped = {
-            street: address[:address1],
-            city: address[:city],
-            zip: address[:zip],
-            state: address[:state],
+          street: address[:address1],
+          city: address[:city],
+          zip: address[:zip],
+          state: address[:state],
         }
         mapped[:country] = country.code(:alpha2).value unless country.blank?
 
@@ -203,12 +201,12 @@ module ActiveMerchant #:nodoc:
 
       def map_3ds(three_d_secure_options)
         mapped = {
-            eci: three_d_secure_options[:eci],
-            cavv: three_d_secure_options[:cavv],
-            xid: three_d_secure_options[:xid],
-            threeDResult: three_d_secure_options[:directory_response_status],
-            threeDSecureVersion: three_d_secure_options[:version],
-            directoryServerTransactionId: three_d_secure_options[:ds_transaction_id]
+          eci: three_d_secure_options[:eci],
+          cavv: three_d_secure_options[:cavv],
+          xid: three_d_secure_options[:xid],
+          threeDResult: three_d_secure_options[:directory_response_status],
+          threeDSecureVersion: three_d_secure_options[:version],
+          directoryServerTransactionId: three_d_secure_options[:ds_transaction_id]
         }
 
         mapped
@@ -220,17 +218,18 @@ module ActiveMerchant #:nodoc:
 
       def commit(method, uri, parameters)
         params = parameters.to_json unless parameters.nil?
-        response = begin
-              if (method == :get)
-                parse(ssl_request(method, get_url(uri), nil, headers))
-              else
-                parse(ssl_request(method, get_url(uri), params, headers))
-              end
-            rescue ResponseError => e
-              return Response.new(false, 'Invalid Login') if e.response.code == '401'
+        response = 
+        begin
+          if method == :get
+            parse(ssl_request(method, get_url(uri), nil, headers))
+          else
+            parse(ssl_request(method, get_url(uri), params, headers))
+          end
+        rescue ResponseError => e
+          return Response.new(false, 'Invalid Login') if e.response.code == '401'
 
-              parse(e.response.body)
-            end
+          parse(e.response.body)
+        end
 
         success = success_from(response)
         Response.new(
@@ -240,9 +239,9 @@ module ActiveMerchant #:nodoc:
           test: test?,
           error_code: error_code_from(response),
           authorization: authorization_from(success, get_url(uri), method, response),
-          avs_result: AVSResult.new(code: response["avsResponse"]),
-          cvv_result: CVVResult.new(response["cvvVerification"])
-          )
+          avs_result: AVSResult.new(code: response['avsResponse']),
+          cvv_result: CVVResult.new(response['cvvVerification'])
+        )
       end
 
       def get_url(uri)
@@ -282,11 +281,11 @@ module ActiveMerchant #:nodoc:
 
       # Builds the auth and U-A headers for the request
       def headers
-      {
-        'Accept'        => 'application/json',
-        'Content-type'  => 'application/json',
-        'Authorization' => "Basic #{Base64.strict_encode64(@options[:api_key].to_s)}",
-        'User-Agent'    => "Netbanx-Paysafe v1.0/ActiveMerchant #{ActiveMerchant::VERSION}"
+        {
+          'Accept'        => 'application/json',
+          'Content-type'  => 'application/json',
+          'Authorization' => "Basic #{Base64.strict_encode64(@options[:api_key].to_s)}",
+          'User-Agent'    => "Netbanx-Paysafe v1.0/ActiveMerchant #{ActiveMerchant::VERSION}"
       }
       end
 

@@ -37,7 +37,7 @@ class RemoteNetbanxTest < Test::Unit::TestCase
     options = {
       order_id: SecureRandom.uuid,
       ip: '127.0.0.1',
-      billing_address:address,
+      billing_address: address,
       email: 'joe@example.com'
     }
 
@@ -150,8 +150,7 @@ class RemoteNetbanxTest < Test::Unit::TestCase
   #   assert_success refund
   #   assert_equal 'OK', refund.message
   # end
-
-
+  
   # We added the step. If the transactions that are pending, API call needs to be Cancellation
   # def test_failed_refund
   #   # Read comment in `test_successful_refund` method.
