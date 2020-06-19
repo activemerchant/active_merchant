@@ -11,7 +11,7 @@ class AafesTest < Test::Unit::TestCase
       expiration: 2210
     }
 
-    @milstar_card = ActiveMerchant::Billing::PaymentToken.new(
+    @milstar_token = ActiveMerchant::Billing::PaymentToken.new(
       '900PRPYIGCWDS4O2615',
       @metadata
     )
@@ -40,29 +40,23 @@ class AafesTest < Test::Unit::TestCase
     }
   end
 
-  def test_successful_purchase_with_milstar_card
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+  def test_successful_authorize_with_milstar_token
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
 
-    response = @gateway.purchase(@amount, @milstar_card, @options)
+    response = @gateway.authorize(@amount, @milstar_token, @options)
     assert_success response
     assert_equal 'Approved', response.message
     assert response.test?
   end
 
-  def test_failed_purchase
-    @gateway.expects(:ssl_post).returns(failed_purchase_response)
+  def test_failed_authorize
+    @gateway.expects(:ssl_post).returns(failed_authorize_response)
 
-    response = @gateway.purchase(@amount, @milstar_card, @options)
+    response = @gateway.authorize(@amount, @milstar_token, @options)
     assert_failure response
     assert_equal 'Decline', response.message
     assert response.test?
   end
-
-  # def test_successful_authorize
-  # end
-
-  # def test_failed_authorize
-  # end
 
   # def test_successful_capture
   # end
@@ -124,7 +118,7 @@ class AafesTest < Test::Unit::TestCase
   # def post_scrubbed
   # end
 
-  def successful_purchase_response
+  def successful_authorize_response
     <<-XML
     <Message TypeCode="Response" MajorVersion="3" MinorVersion="4" FixVersion="0" xmlns="http://www.aafes.com/credit">
       <Header>
@@ -150,7 +144,7 @@ class AafesTest < Test::Unit::TestCase
     XML
   end
 
-  def failed_purchase_response
+  def failed_authorize_response
     <<-XML
     <Message TypeCode="Response" MajorVersion="3" MinorVersion="4" FixVersion="0" xmlns="http://www.aafes.com/credit">
       <Header>

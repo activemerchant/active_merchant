@@ -10,7 +10,7 @@ class RemoteAafesTest < Test::Unit::TestCase
       expiration: 2210
     }
 
-    @milstar_card = ActiveMerchant::Billing::PaymentToken.new(
+    @milstar_token = ActiveMerchant::Billing::PaymentToken.new(
       '900PRPYIGCWDS4O2615',
       @metadata
     )
@@ -29,29 +29,17 @@ class RemoteAafesTest < Test::Unit::TestCase
     }
   end
 
-  def test_successful_purchase
-    response = @gateway.purchase(@amount, @milstar_card, @options)
+  def test_successful_authorize
+    response = @gateway.authorize(@amount, @milstar_token, @options)
 
     assert_success response
     assert_equal 'Approved', response.message
   end
 
-  # def test_successful_purchase_with_more_options
-  #   options = {
-  #     order_id: '1',
-  #     ip: "127.0.0.1",
-  #     email: "joe@example.com"
-  #   }
-
-  #   response = @gateway.purchase(@amount, @credit_card, options)
-  #   assert_success response
-  #   assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
-  # end
-
-  def test_failed_purchase
+  def test_failed_authorize
     bad_rrn = 'RRN1' # The RRN can be ANYTHING as long as it is 12 characters, base-64
     @options[:rrn] = bad_rrn
-    response = @gateway.purchase(@amount, @milstar_card, @options)
+    response = @gateway.authorize(@amount, @milstar_token, @options)
 
     assert_failure response
     assert_equal 'Decline', response.message
@@ -64,12 +52,6 @@ class RemoteAafesTest < Test::Unit::TestCase
   #   assert capture = @gateway.capture(@amount, auth.authorization)
   #   assert_success capture
   #   assert_equal 'REPLACE WITH SUCCESS MESSAGE', capture.message
-  # end
-
-  # def test_failed_authorize
-  #   response = @gateway.authorize(@amount, @declined_card, @options)
-  #   assert_failure response
-  #   assert_equal 'REPLACE WITH FAILED AUTHORIZE MESSAGE', response.message
   # end
 
   # def test_partial_capture

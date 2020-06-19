@@ -21,10 +21,19 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      def purchase(amount, payment, options={})
+      # def purchase(amount, payment, options={})
+      #   request = build_xml_request do |xml|
+      #     add_headers(xml, options)
+      #     add_milstar_purchase(xml, amount, payment, options)
+      #   end
+
+      #   commit(request)
+      # end
+
+      def authorize(amount, payment, options={})
         request = build_xml_request do |xml|
           add_headers(xml, options)
-          add_milstar_purchase(xml, amount, payment, options)
+          add_milstar_auth(xml, amount, payment, options)
         end
 
         commit(request)
@@ -140,7 +149,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_milstar_purchase(xml, amount, payment, options)
+      def add_milstar_auth(xml, amount, payment, options)
         xml['cm'].Request('RRN' => options[:rrn]) do
           xml['cm'].Media('Milstar')
           xml['cm'].RequestType('Sale')
