@@ -116,6 +116,13 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert !response.authorization.blank?
   end
 
+  def test_successful_authorization_with_reconciliation_id
+    options = @options.merge(reconciliation_id: '1936831')
+    assert response = @gateway.authorize(@amount, @credit_card, options)
+    assert_successful_response(response)
+    assert !response.authorization.blank?
+  end
+
   def test_successful_authorization_with_issuer_additional_data
     @options[:issuer_additional_data] = @issuer_additional_data
 
@@ -216,6 +223,12 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     @options[:merchant_descriptor] = 'Spreedly'
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_successful_response(response)
+  end
+
+  def test_successful_purchase_with_reconciliation_id
+    options = @options.merge(reconciliation_id: '1936831')
+    assert response = @gateway.purchase(@amount, @credit_card, options)
     assert_successful_response(response)
   end
 

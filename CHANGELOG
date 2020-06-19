@@ -18,6 +18,9 @@
 * Cybersource: Update supported countries [britth] #3683
 * Adyen: Allow for executeThreeD to be passed as false [naashton] #3681
 * WorldPay: Fix handling of `state` field for 3DS transactions [chinhle23] #3687
+* Alia: Skip Luhn validation [therufs] #3673
+* Diners Club: support 16 digit card numbers [therufs] #3682
+* Cybersource: pass reconciliation_id [therufs] #3688
 
 == Version 1.108.0 (Jun 9, 2020)
 * Cybersource: Send cavv as xid is xid is missing [pi3r] #3658

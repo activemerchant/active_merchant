@@ -604,6 +604,7 @@ module ActiveMerchant #:nodoc:
               indicator = options[:commerce_indicator] || stored_credential_commerce_indicator(options)
               xml.tag!('commerceIndicator', indicator) if indicator
             end
+            xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
           end
         end
       end
@@ -660,6 +661,7 @@ module ActiveMerchant #:nodoc:
             xml.tag!('cavv', payment_method.payment_cryptogram)
             xml.tag!('commerceIndicator', ECI_BRAND_MAPPING[brand])
             xml.tag!('xid', payment_method.payment_cryptogram)
+            xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
           end
         when :master
           xml.tag! 'ucaf' do
@@ -668,6 +670,7 @@ module ActiveMerchant #:nodoc:
           end
           xml.tag! 'ccAuthService', {'run' => 'true'} do
             xml.tag!('commerceIndicator', ECI_BRAND_MAPPING[brand])
+            xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
           end
         when :american_express
           cryptogram = Base64.decode64(payment_method.payment_cryptogram)
@@ -675,6 +678,7 @@ module ActiveMerchant #:nodoc:
             xml.tag!('cavv', Base64.encode64(cryptogram[0...20]))
             xml.tag!('commerceIndicator', ECI_BRAND_MAPPING[brand])
             xml.tag!('xid', Base64.encode64(cryptogram[20...40]))
+            xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
           end
         end
       end
@@ -689,15 +693,20 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'ccCaptureService', {'run' => 'true'} do
           xml.tag! 'authRequestID', request_id
           xml.tag! 'authRequestToken', request_token
+          xml.tag! 'reconciliationID', options[:reconciliation_id] if options[:reconciliation_id]
         end
       end
 
       def add_purchase_service(xml, payment_method, options)
         if options[:pinless_debit_card]
-          xml.tag! 'pinlessDebitService', {'run' => 'true'}
+          xml.tag! 'pinlessDebitService', {'run' => 'true'} do
+            xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
+          end
         else
           add_auth_service(xml, payment_method, options)
-          xml.tag! 'ccCaptureService', {'run' => 'true'}
+          xml.tag! 'ccCaptureService', {'run' => 'true'} do
+            xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
+          end
         end
       end
 

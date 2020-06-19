@@ -103,6 +103,14 @@ class CyberSourceTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_purchase_includes_reconciliation_id
+    stub_comms do
+      @gateway.purchase(100, @credit_card, order_id: '1', reconciliation_id: '181537')
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<reconciliationID>181537<\/reconciliationID>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_merchant_description
     stub_comms do
       @gateway.authorize(100, @credit_card, merchant_descriptor_name: 'Test Name', merchant_descriptor_address1: '123 Main Dr', merchant_descriptor_locality: 'Durham')
@@ -134,6 +142,14 @@ class CyberSourceTest < Test::Unit::TestCase
       @gateway.authorize(100, @credit_card, order_id: '1', mdd_field_2: 'CustomValue2', mdd_field_3: 'CustomValue3')
     end.check_request do |endpoint, data, headers|
       assert_match(/field2>CustomValue2.*field3>CustomValue3</m, data)
+    end.respond_with(successful_authorization_response)
+  end
+
+  def test_authorize_includes_reconciliation_id
+    stub_comms do
+      @gateway.authorize(100, @credit_card, order_id: '1', reconciliation_id: '181537')
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<reconciliationID>181537<\/reconciliationID>/, data)
     end.respond_with(successful_authorization_response)
   end
 
@@ -587,7 +603,7 @@ class CyberSourceTest < Test::Unit::TestCase
       @gateway.purchase(@amount, credit_card, @options)
     end.check_request do |_endpoint, body, _headers|
       assert_xml_valid_to_xsd(body)
-      assert_match %r'<ccAuthService run="true">.+?<ccCaptureService run="true"/>'m, body
+      assert_match %r'<ccAuthService run="true">.+?<ccCaptureService run="true">'m, body
     end.respond_with(successful_purchase_response)
 
     assert_success response
