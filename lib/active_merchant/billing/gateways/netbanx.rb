@@ -281,7 +281,8 @@ module ActiveMerchant #:nodoc:
       end
 
       # Builds the auth and U-A headers for the request
-      def headers {
+      def headers
+      {
         'Accept'        => 'application/json',
         'Content-type'  => 'application/json',
         'Authorization' => "Basic #{Base64.strict_encode64(@options[:api_key].to_s)}",
