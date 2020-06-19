@@ -418,10 +418,10 @@ module ActiveMerchant #:nodoc:
             post[:additionalData][:scaExemption] = options[:sca_exemption] if options[:sca_exemption]
           end
         else
-          return unless options[:execute_threed] || options[:threed_dynamic]
+          return unless !options[:execute_threed].nil? || !options[:threed_dynamic].nil?
 
-          post[:browserInfo] = { userAgent: options[:user_agent], acceptHeader: options[:accept_header] }
-          post[:additionalData] = { executeThreeD: 'true' } if options[:execute_threed]
+          post[:browserInfo] = { userAgent: options[:user_agent], acceptHeader: options[:accept_header] } if options[:execute_threed] || options[:threed_dynamic]
+          post[:additionalData] = { executeThreeD: options[:execute_threed] } if !options[:execute_threed].nil?
         end
       end
 
