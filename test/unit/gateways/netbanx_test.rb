@@ -7,10 +7,10 @@ class NetbanxTest < Test::Unit::TestCase
     @amount = 100
 
     @options = {
-        order_id: '1',
-        billing_address: address,
-        description: 'Store Purchase',
-        currency: 'CAD'
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase',
+      currency: 'CAD'
     }
   end
 
@@ -34,7 +34,7 @@ class NetbanxTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize
-    @gateway.expects(:ssl_request).returns(success_auth_varification_response)
+    @gateway.expects(:ssl_request).returns(auth_verification_response)
     @gateway.expects(:ssl_request).returns(successful_authorize_response)
 
     response = @gateway.authorize(@amount, @credit_card, @options)
@@ -76,7 +76,7 @@ class NetbanxTest < Test::Unit::TestCase
   end
 
   def test_successful_refund
-    @gateway.expects(:ssl_request).returns(success_varification_response)
+    @gateway.expects(:ssl_request).returns(success_verification_response)
     @gateway.expects(:ssl_request).returns(successful_capture_response)
 
     response = @gateway.refund(@amount, '056ff3a9-5274-4452-92ab-0e3b3e591c3b')
@@ -130,8 +130,8 @@ class NetbanxTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_purchase_with_token
-    @gateway.expects(:ssl_request).returns(successful_purchase_with_token_response)
+  def test_successful_purchase_token
+    @gateway.expects(:ssl_request).returns(purchase_with_token_response)
 
     response = @gateway.purchase(@amount, 'CL0RCSnrkREnfwA', @options)
     assert_success response
@@ -313,7 +313,7 @@ class NetbanxTest < Test::Unit::TestCase
     RESPONSE
   end
 
-  def successful_purchase_with_token_response
+  def purchase_with_token_response
     <<-RESPONSE
     {
       "links": [
@@ -418,7 +418,7 @@ class NetbanxTest < Test::Unit::TestCase
     RESPONSE
   end
 
-  def success_auth_varification_response
+  def auth_verification_response
     <<-RESPONSE
     {
       "id": "b8c53059-9da3-4054-8caf-3769161a3cdc",
@@ -428,7 +428,7 @@ class NetbanxTest < Test::Unit::TestCase
     RESPONSE
   end
 
-  def success_varification_response
+  def success_verification_response
     <<-RESPONSE
     {
       "id": "11e0906b-6596-4490-b0e3-825f71a82799",

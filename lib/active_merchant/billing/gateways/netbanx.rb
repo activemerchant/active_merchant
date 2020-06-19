@@ -38,8 +38,9 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, payment, options={})
         # Do a Verification with AVS prior to Auth + Settle
-        varificationResponse = verify(payment, options)
-        return varificationResponse if varificationResponse.message != 'OK'
+        verification_response = verify(payment, options)
+        return verification_response if verification_response.message != 'OK'
+
         post = {}
         add_invoice(post, money, options)
         add_payment(post, payment, options)
@@ -56,16 +57,15 @@ module ActiveMerchant #:nodoc:
 
       def refund(money, authorization, options={})
 
-        #If the transactions that are pending, API call needs to be Cancellation
-        settlementData = get_settlement(authorization)
-        return settlementData if settlementData.message != 'OK'
+        # If the transactions that are pending, API call needs to be Cancellation
+        settlement_data = get_settlement(authorization)
+        return settlement_data if settlement_data.message != 'OK'
 
-        if(settlementData.params['status'] == 'PENDING')
-          post = {}
+        post = {}
+        if settlement_data.params['status'] == 'PENDING'
           post[:status] = 'CANCELLED'
           commit(:put, "settlements/#{authorization}", post)
         else
-          post = {}
           add_invoice(post, money, options)
 
           # Setting merchantRefNumber to a unique id for each refund
@@ -159,14 +159,14 @@ module ActiveMerchant #:nodoc:
         add_order_id(post, options)
       end
 
-      def add_payment(post, credit_card_or_reference, options = {})
+      def add_payment(post, credit_card_reference, options = {})
         post[:card] ||= {}
-        if credit_card_or_reference.is_a?(String)
-          post[:card][:paymentToken] = credit_card_or_reference
+        if credit_card_reference.is_a?(String)
+          post[:card][:paymentToken] = credit_card_reference
         else
-          post[:card][:cardNum]    = credit_card_or_reference.number
-          post[:card][:cvv]        = credit_card_or_reference.verification_value
-          post[:card][:cardExpiry] = expdate(credit_card_or_reference)
+          post[:card][:cardNum]    = credit_card_reference.number
+          post[:card][:cvv]        = credit_card_reference.verification_value
+          post[:card][:cardExpiry] = expdate(credit_card_reference)
         end
 
         post[:currencyCode] = options[:currency] if options[:currency]
@@ -220,9 +220,8 @@ module ActiveMerchant #:nodoc:
 
       def commit(method, uri, parameters)
         params = parameters.to_json unless parameters.nil?
-        response =
-            begin
-              if(method == :get)
+        response = begin
+              if (method == :get)
                 parse(ssl_request(method, get_url(uri), nil, headers))
               else
                 parse(ssl_request(method, get_url(uri), params, headers))
@@ -235,15 +234,15 @@ module ActiveMerchant #:nodoc:
 
         success = success_from(response)
         Response.new(
-            success,
-            message_from(success, response),
-            response,
-            test: test?,
-            error_code: error_code_from(response),
-            authorization: authorization_from(success, get_url(uri), method, response),
-            avs_result: AVSResult.new(code: response["avsResponse"]),
-            cvv_result: CVVResult.new(response["cvvVerification"]),
-            )
+          success,
+          message_from(success, response),
+          response,
+          test: test?,
+          error_code: error_code_from(response),
+          authorization: authorization_from(success, get_url(uri), method, response),
+          avs_result: AVSResult.new(code: response["avsResponse"]),
+          cvv_result: CVVResult.new(response["cvvVerification"])
+          )
       end
 
       def get_url(uri)
@@ -282,13 +281,12 @@ module ActiveMerchant #:nodoc:
       end
 
       # Builds the auth and U-A headers for the request
-      def headers
-        {
-            'Accept'        => 'application/json',
-            'Content-type'  => 'application/json',
-            'Authorization' => "Basic #{Base64.strict_encode64(@options[:api_key].to_s)}",
-            'User-Agent'    => "Netbanx-Paysafe v1.0/ActiveMerchant #{ActiveMerchant::VERSION}"
-        }
+      def headers {
+        'Accept'        => 'application/json',
+        'Content-type'  => 'application/json',
+        'Authorization' => "Basic #{Base64.strict_encode64(@options[:api_key].to_s)}",
+        'User-Agent'    => "Netbanx-Paysafe v1.0/ActiveMerchant #{ActiveMerchant::VERSION}"
+      }
       end
 
       def error_code_from(response)

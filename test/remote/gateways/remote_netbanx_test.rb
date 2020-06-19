@@ -7,20 +7,20 @@ class RemoteNetbanxTest < Test::Unit::TestCase
     @credit_card = credit_card('4530910000012345')
     @declined_amount = 11
     @options = {
-        billing_address: address,
-        description: 'Store Purchase',
-        currency: 'CAD'
+      billing_address: address,
+      description: 'Store Purchase',
+      currency: 'CAD'
     }
 
     @options_3ds2 = @options.merge(
-        three_d_secure: {
-            version: '2.1.0',
-            eci: '05',
-            cavv: 'AAABCIEjYgAAAAAAlCNiENiWiV+=',
-            ds_transaction_id: 'a3a721f3-b6fa-4cb5-84ea-c7b5c39890a2',
-            xid: 'OU9rcTRCY1VJTFlDWTFESXFtTHU=',
-            directory_response_status: 'Y'
-        }
+      three_d_secure: {
+        version: '2.1.0',
+        eci: '05',
+        cavv: 'AAABCIEjYgAAAAAAlCNiENiWiV+=',
+        ds_transaction_id: 'a3a721f3-b6fa-4cb5-84ea-c7b5c39890a2',
+        xid: 'OU9rcTRCY1VJTFlDWTFESXFtTHU=',
+        directory_response_status: 'Y'
+      }
     )
   end
 
@@ -29,16 +29,16 @@ class RemoteNetbanxTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'OK', response.message
     assert_equal response.authorization, response.params['id']
-    assert_equal "MATCH", response.params['cvvVerification']
-    assert_equal "MATCH", response.params['avsResponse']
+    assert_equal 'MATCH', response.params['cvvVerification']
+    assert_equal 'MATCH', response.params['avsResponse']
   end
 
   def test_successful_purchase_with_more_options
     options = {
-        order_id: SecureRandom.uuid,
-        ip: '127.0.0.1',
-        billing_address: address,
-        email: 'joe@example.com'
+      order_id: SecureRandom.uuid,
+      ip: '127.0.0.1',
+      billing_address:address,
+      email: 'joe@example.com'
     }
 
     response = @gateway.purchase(@amount, @credit_card, options)
