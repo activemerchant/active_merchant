@@ -180,6 +180,13 @@ class RemoteAdyenTest < Test::Unit::TestCase
     refute response.params['paRequest'].blank?
   end
 
+  def test_successful_authorize_with_execute_threed_false
+    assert response = @gateway.authorize(@amount, @three_ds_enrolled_card, @options.merge(execute_threed: false, sca_exemption: 'lowValue'))
+    assert response.test?
+    refute response.authorization.blank?
+    assert_equal response.params['resultCode'], 'RedirectShopper'
+  end
+
   def test_successful_authorize_with_3ds_with_idempotency_key
     options = @options.merge(idempotency_key: SecureRandom.hex, execute_threed: true)
     assert response = @gateway.authorize(@amount, @three_ds_enrolled_card, options)
