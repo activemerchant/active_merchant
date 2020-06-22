@@ -5,7 +5,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :alelo]
+      self.supported_cardtypes = %i[visa master american_express discover alelo]
 
       self.homepage_url = 'https://www.mundipagg.com/'
       self.display_name = 'Mundipagg'
@@ -61,7 +61,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(money, authorization, options={})
-        add_invoice(post={}, money, options)
+        add_invoice(post = {}, money, options)
         commit('refund', post, authorization)
       end
 
@@ -198,6 +198,7 @@ module ActiveMerchant #:nodoc:
 
       def voucher?(payment)
         return false if payment.is_a?(String)
+
         %w[sodexo vr].include? card_brand(payment)
       end
 
@@ -301,6 +302,7 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(response, action)
         return "#{response['customer']['id']}|#{response['id']}" if action == 'store'
+
         response['id']
       end
 
@@ -315,6 +317,7 @@ module ActiveMerchant #:nodoc:
       def error_code_from(response)
         return if success_from(response)
         return response['last_transaction']['acquirer_return_code'] if response['last_transaction']
+
         STANDARD_ERROR_CODE[:processing_error]
       end
     end

@@ -4,15 +4,15 @@ class WebpayTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    @gateway = WebpayGateway.new(:login => 'login')
+    @gateway = WebpayGateway.new(login: 'login')
 
     @credit_card = credit_card()
     @amount = 40000
     @refund_amount = 20000
 
     @options = {
-      :billing_address => address(),
-      :description => 'Test Purchase'
+      billing_address: address(),
+      description: 'Test Purchase'
     }
   end
 
@@ -94,7 +94,7 @@ class WebpayTest < Test::Unit::TestCase
   end
 
   def test_successful_request_always_uses_live_mode_to_determine_test_request
-    @gateway.expects(:ssl_request).returns(successful_partially_refunded_response(:livemode => true))
+    @gateway.expects(:ssl_request).returns(successful_partially_refunded_response(livemode: true))
 
     assert response = @gateway.refund(@refund_amount, 'ch_test_charge')
     assert_success response
@@ -121,24 +121,24 @@ class WebpayTest < Test::Unit::TestCase
 
   def test_add_customer
     post = {}
-    @gateway.send(:add_customer, post, 'card_token', {:customer => 'test_customer'})
+    @gateway.send(:add_customer, post, 'card_token', {customer: 'test_customer'})
     assert_equal 'test_customer', post[:customer]
   end
 
   def test_doesnt_add_customer_if_card
     post = {}
-    @gateway.send(:add_customer, post, @credit_card, {:customer => 'test_customer'})
+    @gateway.send(:add_customer, post, @credit_card, {customer: 'test_customer'})
     assert !post[:customer]
   end
 
   def test_add_customer_data
     post = {}
-    @gateway.send(:add_customer_data, post, {:description => 'a test customer'})
+    @gateway.send(:add_customer_data, post, {description: 'a test customer'})
     assert_equal 'a test customer', post[:description]
   end
 
   def test_add_address
-    post = {:card => {}}
+    post = {card: {}}
     @gateway.send(:add_address, post, @options)
     assert_equal @options[:billing_address][:zip], post[:card][:address_zip]
     assert_equal @options[:billing_address][:state], post[:card][:address_state]
@@ -159,10 +159,10 @@ class WebpayTest < Test::Unit::TestCase
 
   def test_metadata_header
     @gateway.expects(:ssl_request).once.with { |method, url, post, headers|
-      headers && headers['X-Webpay-Client-User-Metadata'] == {:ip => '1.1.1.1'}.to_json
+      headers && headers['X-Webpay-Client-User-Metadata'] == {ip: '1.1.1.1'}.to_json
     }.returns(successful_purchase_response)
 
-    @gateway.purchase(@amount, @credit_card, @options.merge(:ip => '1.1.1.1'))
+    @gateway.purchase(@amount, @credit_card, @options.merge(ip: '1.1.1.1'))
   end
 
   private
@@ -342,7 +342,7 @@ class WebpayTest < Test::Unit::TestCase
   end
 
   def successful_partially_refunded_response(options = {})
-    options = {:livemode=>false}.merge!(options)
+    options = {livemode: false}.merge!(options)
     <<-RESPONSE
 {
   "id": "ch_test_charge",

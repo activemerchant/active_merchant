@@ -58,7 +58,7 @@ class RemoteCulqiTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@amount - 1, auth.authorization)
     assert_success capture
     assert_match %r{Transaction has been successfully captured}, capture.message
   end
@@ -97,7 +97,7 @@ class RemoteCulqiTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     capture = @gateway.capture(@amount, auth.authorization)
 
-    refund = @gateway.refund(@amount-1, capture.authorization)
+    refund = @gateway.refund(@amount - 1, capture.authorization)
     assert_success refund
     assert_match %r{reversed}, refund.message
   end

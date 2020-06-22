@@ -62,6 +62,7 @@ module ActiveMerchant
 
     def wiredump_device=(device)
       raise ArgumentError, "can't wiredump to frozen #{device.class}" if device&.frozen?
+
       @wiredump_device = device
     end
 
@@ -71,52 +72,51 @@ module ActiveMerchant
       headers = headers.dup
       headers['connection'] ||= 'close'
 
-      retry_exceptions(:max_retries => max_retries, :logger => logger, :tag => tag) do
-        begin
-          info "connection_http_method=#{method.to_s.upcase} connection_uri=#{endpoint}", tag
+      retry_exceptions(max_retries: max_retries, logger: logger, tag: tag) do
+        info "connection_http_method=#{method.to_s.upcase} connection_uri=#{endpoint}", tag
 
-          result = nil
+        result = nil
 
-          realtime = Benchmark.realtime do
-            http.start unless http.started?
-            @ssl_connection = http.ssl_connection
-            info "connection_ssl_version=#{ssl_connection[:version]} connection_ssl_cipher=#{ssl_connection[:cipher]}", tag
+        realtime = Benchmark.realtime do
+          http.start unless http.started?
+          @ssl_connection = http.ssl_connection
+          info "connection_ssl_version=#{ssl_connection[:version]} connection_ssl_cipher=#{ssl_connection[:cipher]}", tag
 
-            result =
-              case method
-              when :get
-                raise ArgumentError, 'GET requests do not support a request body' if body
-                http.get(endpoint.request_uri, headers)
-              when :post
+          result =
+            case method
+            when :get
+              raise ArgumentError, 'GET requests do not support a request body' if body
+
+              http.get(endpoint.request_uri, headers)
+            when :post
+              debug body
+              http.post(endpoint.request_uri, body, RUBY_184_POST_HEADERS.merge(headers))
+            when :put
+              debug body
+              http.put(endpoint.request_uri, body, headers)
+            when :patch
+              debug body
+              http.patch(endpoint.request_uri, body, headers)
+            when :delete
+              # It's kind of ambiguous whether the RFC allows bodies
+              # for DELETE requests. But Net::HTTP's delete method
+              # very unambiguously does not.
+              if body
                 debug body
-                http.post(endpoint.request_uri, body, RUBY_184_POST_HEADERS.merge(headers))
-              when :put
-                debug body
-                http.put(endpoint.request_uri, body, headers)
-              when :patch
-                debug body
-                http.patch(endpoint.request_uri, body, headers)
-              when :delete
-                # It's kind of ambiguous whether the RFC allows bodies
-                # for DELETE requests. But Net::HTTP's delete method
-                # very unambiguously does not.
-                if body
-                  debug body
-                  req = Net::HTTP::Delete.new(endpoint.request_uri, headers)
-                  req.body = body
-                  http.request(req)
-                else
-                  http.delete(endpoint.request_uri, headers)
-                end
+                req = Net::HTTP::Delete.new(endpoint.request_uri, headers)
+                req.body = body
+                http.request(req)
               else
-                raise ArgumentError, "Unsupported request method #{method.to_s.upcase}"
+                http.delete(endpoint.request_uri, headers)
               end
-          end
-
-          info '--> %d %s (%d %.4fs)' % [result.code, result.message, result.body ? result.body.length : 0, realtime], tag
-          debug result.body
-          result
+            else
+              raise ArgumentError, "Unsupported request method #{method.to_s.upcase}"
+            end
         end
+
+        info '--> %d %s (%d %.4fs)' % [result.code, result.message, result.body ? result.body.length : 0, realtime], tag
+        debug result.body
+        result
       end
     ensure
       info 'connection_request_total_time=%.4fs' % [Process.clock_gettime(Process::CLOCK_MONOTONIC) - request_start], tag

@@ -91,7 +91,7 @@ class TnsTest < Test::Unit::TestCase
 
   def test_passing_alpha3_country_code
     stub_comms(@gateway, :ssl_request) do
-      @gateway.authorize(@amount, @credit_card, :billing_address => {country: 'US'})
+      @gateway.authorize(@amount, @credit_card, billing_address: {country: 'US'})
     end.check_request do |method, endpoint, data, headers|
       assert_match(/USA/, data)
     end.respond_with(successful_authorize_response)
@@ -99,7 +99,7 @@ class TnsTest < Test::Unit::TestCase
 
   def test_non_existent_country
     stub_comms(@gateway, :ssl_request) do
-      @gateway.authorize(@amount, @credit_card, :billing_address => {country: 'Blah'})
+      @gateway.authorize(@amount, @credit_card, billing_address: {country: 'Blah'})
     end.check_request do |method, endpoint, data, headers|
       assert_match(/"country":null/, data)
     end.respond_with(successful_authorize_response)
@@ -115,7 +115,7 @@ class TnsTest < Test::Unit::TestCase
 
   def test_passing_billing_address
     stub_comms(@gateway, :ssl_request) do
-      @gateway.authorize(@amount, @credit_card, :billing_address => address)
+      @gateway.authorize(@amount, @credit_card, billing_address: address)
     end.check_request do |method, endpoint, data, headers|
       parsed = JSON.parse(data)
       assert_equal('456 My Street', parsed['billing']['address']['street'])
@@ -125,7 +125,7 @@ class TnsTest < Test::Unit::TestCase
 
   def test_passing_shipping_name
     stub_comms(@gateway, :ssl_request) do
-      @gateway.authorize(@amount, @credit_card, :shipping_address => address)
+      @gateway.authorize(@amount, @credit_card, shipping_address: address)
     end.check_request do |method, endpoint, data, headers|
       parsed = JSON.parse(data)
       assert_equal('Jim', parsed['shipping']['firstName'])

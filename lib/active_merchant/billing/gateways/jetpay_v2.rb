@@ -6,8 +6,8 @@ module ActiveMerchant #:nodoc:
 
       self.money_format = :cents
       self.default_currency = 'USD'
-      self.supported_countries = ['US', 'CA']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_countries = %w[US CA]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       self.homepage_url = 'http://www.jetpay.com'
       self.display_name = 'JetPay'
@@ -298,11 +298,11 @@ module ActiveMerchant #:nodoc:
         Response.new(success,
           success ? 'APPROVED' : message_from(response),
           response,
-          :test => test?,
-          :authorization => authorization_from(response, money, token),
-          :avs_result => AVSResult.new(:code => response[:avs]),
-          :cvv_result => CVVResult.new(response[:cvv2]),
-          :error_code => success ? nil : error_code_from(response)
+          test: test?,
+          authorization: authorization_from(response, money, token),
+          avs_result: AVSResult.new(code: response[:avs]),
+          cvv_result: CVVResult.new(response[:cvv2]),
+          error_code: success ? nil : error_code_from(response)
         )
       end
 

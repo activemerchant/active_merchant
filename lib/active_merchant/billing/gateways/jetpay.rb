@@ -8,10 +8,10 @@ module ActiveMerchant #:nodoc:
       self.live_ca_url = 'https://gateway17.jetpay.com/canada-bb'
 
       # The countries the gateway supports merchants from as 2 digit ISO country codes
-      self.supported_countries = ['US', 'CA']
+      self.supported_countries = %w[US CA]
 
       # The card types supported by the payment gateway
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       # The homepage URL of the gateway
       self.homepage_url = 'http://www.jetpay.com/'
@@ -287,10 +287,10 @@ module ActiveMerchant #:nodoc:
         Response.new(success,
           success ? 'APPROVED' : message_from(response),
           response,
-          :test => test?,
-          :authorization => authorization_from(response, money, token),
-          :avs_result => { :code => response[:avs] },
-          :cvv_result => response[:cvv2]
+          test: test?,
+          authorization: authorization_from(response, money, token),
+          avs_result: { code: response[:avs] },
+          cvv_result: response[:cvv2]
         )
       end
 

@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['DK']
       self.default_currency = 'EUR'
-      self.supported_cardtypes = [:visa, :master, :maestro]
+      self.supported_cardtypes = %i[visa master maestro]
 
       self.homepage_url = 'http://www.s5.dk/'
       self.display_name = 'S5'
@@ -143,6 +143,7 @@ module ActiveMerchant #:nodoc:
 
       def add_customer(xml, creditcard, options)
         return unless creditcard.respond_to?(:number)
+
         address = options[:billing_address]
         xml.Customer do
           xml.Contact do

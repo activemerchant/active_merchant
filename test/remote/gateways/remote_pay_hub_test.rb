@@ -7,14 +7,14 @@ class RemotePayHubTest < Test::Unit::TestCase
     @credit_card = credit_card('5466410004374507', verification_value: '998')
     @invalid_card = credit_card('371449635398431', verification_value: '9997')
     @options = {
-      :first_name => 'Garrya',
-      :last_name => 'Barrya',
-      :email => 'payhubtest@mailinator.com',
-      :address => {
-        :address1 => '123a ahappy St.',
-        :city => 'Happya City',
-        :state => 'CA',
-        :zip => '94901'
+      first_name: 'Garrya',
+      last_name: 'Barrya',
+      email: 'payhubtest@mailinator.com',
+      address: {
+        address1: '123a ahappy St.',
+        city: 'Happya City',
+        state: 'CA',
+        zip: '94901'
       }
     }
   end

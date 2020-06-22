@@ -23,32 +23,12 @@ Gemspec/OrderedDependencies:
 Layout/AlignHash:
   Enabled: false
 
-# Offense count: 167
-# Cop supports --auto-correct.
-Layout/EmptyLineAfterGuardClause:
-  Enabled: false
-
-# Offense count: 255
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, IndentationWidth.
-# SupportedStyles: special_inside_parentheses, consistent, align_braces
-Layout/IndentHash:
-  Enabled: false
-
 # Offense count: 392
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle.
 # SupportedStyles: auto_detection, squiggly, active_support, powerpack, unindent
 Layout/IndentHeredoc:
   Enabled: false
-
-# Offense count: 1
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: symmetrical, new_line, same_line
-Layout/MultilineArrayBraceLayout:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/optimal_payment.rb'
 
 # Offense count: 232
 # Cop supports --auto-correct.
@@ -62,17 +42,6 @@ Layout/MultilineMethodCallBraceLayout:
 # Configuration parameters: EnforcedStyle.
 # SupportedStyles: space, no_space
 Layout/SpaceAroundEqualsInParameterDefault:
-  Enabled: false
-
-# Offense count: 104
-# Cop supports --auto-correct.
-Layout/SpaceAroundKeyword:
-  Enabled: false
-
-# Offense count: 782
-# Cop supports --auto-correct.
-# Configuration parameters: AllowForAlignment.
-Layout/SpaceAroundOperators:
   Enabled: false
 
 # Offense count: 1186
@@ -613,13 +582,6 @@ Style/GlobalVars:
 Style/GuardClause:
   Enabled: false
 
-# Offense count: 7482
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, UseHashRocketsWithSymbolValues, PreferHashRocketsForNonAlnumEndingSymbols.
-# SupportedStyles: ruby19, hash_rockets, no_mixed_keys, ruby19_no_mixed_keys
-Style/HashSyntax:
-  Enabled: false
-
 # Offense count: 6
 Style/IdenticalConditionalBranches:
   Exclude:
@@ -920,41 +882,6 @@ Style/SingleLineMethods:
   Exclude:
     - 'test/unit/gateways/paypal/paypal_common_api_test.rb'
 
-# Offense count: 3
-# Cop supports --auto-correct.
-# Configuration parameters: .
-# SupportedStyles: use_perl_names, use_english_names
-Style/SpecialGlobalVars:
-  EnforcedStyle: use_perl_names
-
-# Offense count: 27
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: single_quotes, double_quotes
-Style/StringLiteralsInInterpolation:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/banwire.rb'
-    - 'lib/active_merchant/billing/gateways/cams.rb'
-    - 'lib/active_merchant/billing/gateways/checkout_v2.rb'
-    - 'lib/active_merchant/billing/gateways/credorax.rb'
-    - 'lib/active_merchant/billing/gateways/digitzs.rb'
-    - 'lib/active_merchant/billing/gateways/ebanx.rb'
-    - 'lib/active_merchant/billing/gateways/merchant_one.rb'
-    - 'lib/active_merchant/billing/gateways/micropayment.rb'
-    - 'lib/active_merchant/billing/gateways/pagarme.rb'
-    - 'lib/active_merchant/billing/gateways/quickpay/quickpay_v10.rb'
-    - 'lib/active_merchant/billing/gateways/stripe.rb'
-    - 'lib/active_merchant/billing/gateways/usa_epay_advanced.rb'
-    - 'lib/active_merchant/billing/gateways/worldpay.rb'
-    - 'test/unit/gateways/eway_managed_test.rb'
-
-# Offense count: 309
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, MinSize.
-# SupportedStyles: percent, brackets
-Style/SymbolArray:
-  Enabled: false
-
 # Offense count: 7
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyleForMultiline.
@@ -972,19 +899,6 @@ Style/TrailingCommaInArrayLiteral:
 Style/TrailingCommaInHashLiteral:
   Enabled: false
 
-# Offense count: 38
-# Cop supports --auto-correct.
-# Configuration parameters: AllowNamedUnderscoreVariables.
-Style/TrailingUnderscoreVariable:
-  Enabled: false
-
-# Offense count: 119
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, MinSize, WordRegex.
-# SupportedStyles: percent, brackets
-Style/WordArray:
-  Enabled: false
-
 # Offense count: 34
 # Cop supports --auto-correct.
 Style/ZeroLengthPredicate:
@@ -995,3 +909,4 @@ Style/ZeroLengthPredicate:
 # URISchemes: http, https
 Metrics/LineLength:
   Max: 2602
+

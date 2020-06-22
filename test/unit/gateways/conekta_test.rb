@@ -4,41 +4,41 @@ class ConektaTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    @gateway = ConektaGateway.new(:key => 'key_eYvWV7gSDkNYXsmr')
+    @gateway = ConektaGateway.new(key: 'key_eYvWV7gSDkNYXsmr')
 
     @amount = 300
 
     @credit_card = ActiveMerchant::Billing::CreditCard.new(
-      :number             => '4242424242424242',
-      :verification_value => '183',
-      :month              => '01',
-      :year               => '2018',
-      :first_name         => 'Mario F.',
-      :last_name          => 'Moreno Reyes'
+      number: '4242424242424242',
+      verification_value: '183',
+      month: '01',
+      year: '2018',
+      first_name: 'Mario F.',
+      last_name: 'Moreno Reyes'
     )
 
     @declined_card = ActiveMerchant::Billing::CreditCard.new(
-      :number             => '4000000000000002',
-      :verification_value => '183',
-      :month              => '01',
-      :year               => '2018',
-      :first_name         => 'Mario F.',
-      :last_name          => 'Moreno Reyes'
+      number: '4000000000000002',
+      verification_value: '183',
+      month: '01',
+      year: '2018',
+      first_name: 'Mario F.',
+      last_name: 'Moreno Reyes'
     )
 
     @options = {
-      :device_fingerprint => '41l9l92hjco6cuekf0c7dq68v4',
-      :description => 'Blue clip',
-      :success_url => 'https://www.example.com/success',
-      :failure_url => 'https://www.example.com/failure',
-      :address1 => 'Rio Missisipi #123',
-      :address2 => 'Paris',
-      :city => 'Guerrero',
-      :country => 'Mexico',
-      :zip => '5555',
-      :customer => 'Mario Reyes',
-      :phone => '12345678',
-      :carrier => 'Estafeta'
+      device_fingerprint: '41l9l92hjco6cuekf0c7dq68v4',
+      description: 'Blue clip',
+      success_url: 'https://www.example.com/success',
+      failure_url: 'https://www.example.com/failure',
+      address1: 'Rio Missisipi #123',
+      address2: 'Paris',
+      city: 'Guerrero',
+      country: 'Mexico',
+      zip: '5555',
+      customer: 'Mario Reyes',
+      phone: '12345678',
+      carrier: 'Estafeta'
     }
   end
 
@@ -139,7 +139,7 @@ class ConektaTest < Test::Unit::TestCase
   end
 
   def test_invalid_key
-    gateway = ConektaGateway.new(:key => 'invalid_token')
+    gateway = ConektaGateway.new(key: 'invalid_token')
     gateway.expects(:ssl_request).returns(failed_login_response)
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response

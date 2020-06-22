@@ -8,7 +8,9 @@ module ActiveMerchant
       self.supported_countries = %w(US CA GB AT BE BG HR CY CZ DK EE FI FR DE GR HU IE IT LV LT LU MT NL PL PT RO SK SI ES SE AR BO BR BZ CL CO CR DO EC GF GP GT HN HT MF MQ MX NI PA PE PR PY SV UY VE)
 
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club, :maestro, :naranja, :cabal]
+      self.supported_cardtypes = %i[visa master american_express discover jcb diners_club maestro naranja cabal]
+      self.currencies_without_fractions = %w(BYR CLP ILS JPY KRW VND XOF)
+      self.currencies_with_three_decimal_places = %w(BHD JOD KWD OMR TND)
 
       self.homepage_url = 'https://home.bluesnap.com/'
       self.display_name = 'BlueSnap'
@@ -188,8 +190,9 @@ module ActiveMerchant
       end
 
       def add_amount(doc, money, options)
-        doc.amount(amount(money))
-        doc.currency(options[:currency] || currency(money))
+        currency = options[:currency] || currency(money)
+        doc.amount(localized_amount(money, currency))
+        doc.currency(currency)
       end
 
       def add_personal_info(doc, payment_method, options)
@@ -256,6 +259,7 @@ module ActiveMerchant
 
       def add_level_3_data(doc, options)
         return unless options[:customer_reference_number]
+
         doc.send('level-3-data') do
           send_when_present(doc, :customer_reference_number, options)
           send_when_present(doc, :sales_tax_amount, options)
@@ -273,6 +277,7 @@ module ActiveMerchant
 
       def send_when_present(doc, options_key, options, xml_element_name = nil)
         return unless options[options_key]
+
         xml_element_name ||= options_key.to_s
 
         doc.send(xml_element_name.dasherize, options[options_key])
@@ -414,6 +419,7 @@ module ActiveMerchant
 
       def message_from(succeeded, response)
         return 'Success' if succeeded
+
         parsed = parse(response)
         if parsed.dig('error-name') == 'FRAUD_DETECTED'
           fraud_codes_from(response)
@@ -447,6 +453,7 @@ module ActiveMerchant
 
       def vaulted_shopper_id(parsed_response, payment_method_details)
         return nil unless parsed_response['content-location-header']
+
         vaulted_shopper_id = parsed_response['content-location-header'].split('/').last
         vaulted_shopper_id += "|#{payment_method_details.payment_method_type}" if payment_method_details.alt_transaction?
         vaulted_shopper_id

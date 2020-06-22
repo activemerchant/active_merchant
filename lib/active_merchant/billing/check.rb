@@ -29,7 +29,7 @@ module ActiveMerchant #:nodoc:
       def validate
         errors = []
 
-        [:name, :routing_number, :account_number].each do |attr|
+        %i[name routing_number account_number].each do |attr|
           errors << [attr, 'cannot be empty'] if empty?(self.send(attr))
         end
 

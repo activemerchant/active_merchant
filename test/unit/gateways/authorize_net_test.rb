@@ -207,18 +207,36 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal '508141794', response.authorization.split('#')[0]
   end
 
-  def test_successful_echeck_purchase
+  def test_successful_echeck_purchase_with_checking_account_type
     response = stub_comms do
       @gateway.purchase(@amount, @check)
     end.check_request do |endpoint, data, headers|
       parse(data) do |doc|
         assert_not_nil doc.at_xpath('//payment/bankAccount')
+        assert_equal 'checking', doc.at_xpath('//accountType').content
         assert_equal '244183602', doc.at_xpath('//routingNumber').content
         assert_equal '15378535', doc.at_xpath('//accountNumber').content
         assert_equal 'Bank of Elbonia', doc.at_xpath('//bankName').content
         assert_equal 'Jim Smith', doc.at_xpath('//nameOnAccount').content
         assert_equal '1', doc.at_xpath('//checkNumber').content
         assert_equal '1.00', doc.at_xpath('//transactionRequest/amount').content
+      end
+    end.respond_with(successful_purchase_response)
+
+    assert response
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '508141795', response.authorization.split('#')[0]
+  end
+
+  def test_successful_echeck_purchase_with_savings_account_type
+    savings_account = check(account_type: 'savings')
+    response = stub_comms do
+      @gateway.purchase(@amount, savings_account)
+    end.check_request do |endpoint, data, headers|
+      parse(data) do |doc|
+        assert_not_nil doc.at_xpath('//payment/bankAccount')
+        assert_equal 'savings', doc.at_xpath('//accountType').content
       end
     end.respond_with(successful_purchase_response)
 
@@ -952,11 +970,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal 4, (['US', 'CA', 'AU', 'VA'] & AuthorizeNetGateway.supported_countries).size
+    assert_equal 3, (%w[US CA AU] & AuthorizeNetGateway.supported_countries).size
   end
 
   def test_supported_card_types
-    assert_equal [:visa, :master, :american_express, :discover, :diners_club, :jcb, :maestro], AuthorizeNetGateway.supported_cardtypes
+    assert_equal %i[visa master american_express discover diners_club jcb maestro], AuthorizeNetGateway.supported_cardtypes
   end
 
   def test_failure_without_response_reason_text
@@ -1208,7 +1226,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
   def test_successful_apple_pay_authorization_with_network_tokenization
     credit_card = network_tokenization_credit_card('4242424242424242',
-      :payment_cryptogram => '111111111100cryptogram'
+      payment_cryptogram: '111111111100cryptogram'
     )
 
     response = stub_comms do
@@ -1228,7 +1246,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
   def test_failed_apple_pay_authorization_with_network_tokenization_not_supported
     credit_card = network_tokenization_credit_card('4242424242424242',
-      :payment_cryptogram => '111111111100cryptogram'
+      payment_cryptogram: '111111111100cryptogram'
     )
 
     response = stub_comms do

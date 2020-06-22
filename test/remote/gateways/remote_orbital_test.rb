@@ -10,18 +10,18 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     @declined_card = credit_card('4000300011112220')
 
     @options = {
-      :order_id => generate_unique_id,
-      :address => address,
-      :merchant_id => 'merchant1234'
+      order_id: generate_unique_id,
+      address: address,
+      merchant_id: 'merchant1234'
     }
 
     @cards = {
-      :visa => '4788250000028291',
-      :mc => '5454545454545454',
-      :amex => '371449635398431',
-      :ds => '6011000995500000',
-      :diners => '36438999960016',
-      :jcb => '3566002020140006'
+      visa: '4788250000028291',
+      mc: '5454545454545454',
+      amex: '371449635398431',
+      ds: '6011000995500000',
+      diners: '36438999960016',
+      jcb: '3566002020140006'
     }
 
     @level_2_options = {
@@ -40,16 +40,68 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
       zip: address[:zip],
     }
 
+    @level_3_options_visa = {
+      freight_amount: 1,
+      duty_amount: 1,
+      ship_from_zip: 27604,
+      dest_country: 'USA',
+      discount_amount: 1,
+      vat_tax: 1,
+      vat_rate: 25
+    }
+
+    @level_2_options_master = {
+      freight_amount: 1,
+      duty_amount: 1,
+      ship_from_zip: 27604,
+      dest_country: 'USA',
+      alt_tax: 1,
+      alt_ind: 25
+    }
+
+    @line_items_visa = [
+      {
+        desc: 'another item',
+        prod_cd: generate_unique_id[0, 11],
+        qty: 1,
+        u_o_m: 'LBR',
+        tax_amt: 250,
+        tax_rate: 10000,
+        line_tot: 2500,
+        disc: 250,
+        comm_cd: '00584',
+        unit_cost: 2500,
+        gross_net: 'Y',
+        tax_type: 'sale',
+        debit_ind: 'C'
+      },
+      {
+        desc: 'something else',
+        prod_cd: generate_unique_id[0, 11],
+        qty: 1,
+        u_o_m: 'LBR',
+        tax_amt: 125,
+        tax_rate: 5000,
+        line_tot: 2500,
+        disc: 250,
+        comm_cd: '00584',
+        unit_cost: 250000,
+        gross_net: 'Y',
+        tax_type: 'sale',
+        debit_ind: 'C'
+      }
+    ]
+
     @test_suite = [
-      {:card => :visa, :AVSzip => 11111, :CVD => 111,  :amount => 3000},
-      {:card => :visa, :AVSzip => 33333, :CVD => nil,  :amount => 3801},
-      {:card => :mc,   :AVSzip => 44444, :CVD => nil,  :amount => 4100},
-      {:card => :mc,   :AVSzip => 88888, :CVD => 666,  :amount => 1102},
-      {:card => :amex, :AVSzip => 55555, :CVD => nil,  :amount => 105500},
-      {:card => :amex, :AVSzip => 66666, :CVD => 2222, :amount => 7500},
-      {:card => :ds,   :AVSzip => 77777, :CVD => nil,  :amount => 1000},
-      {:card => :ds,   :AVSzip => 88888, :CVD => 444,  :amount => 6303},
-      {:card => :jcb,  :AVSzip => 33333, :CVD => nil,  :amount => 2900}
+      {card: :visa, AVSzip: 11111, CVD: 111,  amount: 3000},
+      {card: :visa, AVSzip: 33333, CVD: nil,  amount: 3801},
+      {card: :mc,   AVSzip: 44444, CVD: nil,  amount: 4100},
+      {card: :mc,   AVSzip: 88888, CVD: 666,  amount: 1102},
+      {card: :amex, AVSzip: 55555, CVD: nil,  amount: 105500},
+      {card: :amex, AVSzip: 66666, CVD: 2222, amount: 7500},
+      {card: :ds,   AVSzip: 77777, CVD: nil,  amount: 1000},
+      {card: :ds,   AVSzip: 88888, CVD: 444,  amount: 6303},
+      {card: :jcb,  AVSzip: 33333, CVD: nil,  amount: 2900}
     ]
   end
 
@@ -74,6 +126,13 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_level_2_data
     response = @gateway.purchase(@amount, @credit_card, @options.merge(level_2_data: @level_2_options))
+
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_level_3_data
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(level_2_data: @level_2_options, level_3_data: @level_3_options_visa, line_items: @line_items_visa))
 
     assert_success response
     assert_equal 'Approved', response.message
@@ -256,35 +315,30 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
-  def test_successful_purchase_with_normalized_mit_stored_credentials
-    stored_credential = {
-      stored_credential: {
-        initial_transaction: false,
-        initiator: 'merchant',
-        reason_type: 'unscheduled',
-        network_transaction_id: 'abcdefg12345678'
-      }
-    }
+  def test_purchase_using_stored_credential_recurring_cit
+    initial_options = stored_credential_options(:cardholder, :recurring, :initial)
+    assert purchase = @gateway.purchase(@amount, @credit_card, initial_options)
+    assert_success purchase
+    assert_equal 'Approved', purchase.message
+    assert network_transaction_id = purchase.params['mit_received_transaction_id']
 
-    response = @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential))
-
-    assert_success response
-    assert_equal 'Approved', response.message
+    used_options = stored_credential_options(:recurring, :cardholder, id: network_transaction_id)
+    assert purchase = @gateway.purchase(@amount, @credit_card, used_options)
+    assert_success purchase
+    assert_equal 'Approved', purchase.message
   end
 
-  def test_successful_purchase_with_normalized_cit_stored_credentials
-    stored_credential = {
-      stored_credential: {
-        initial_transaction: true,
-        initiator: 'customer',
-        reason_type: 'unscheduled'
-      }
-    }
+  def test_purchase_using_stored_credential_recurring_mit
+    initial_options = stored_credential_options(:merchant, :recurring, :initial)
+    assert purchase = @gateway.purchase(@amount, @credit_card, initial_options)
+    assert_success purchase
+    assert_equal 'Approved', purchase.message
+    assert network_transaction_id = purchase.params['mit_received_transaction_id']
 
-    response = @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential))
-
-    assert_success response
-    assert_equal 'Approved', response.message
+    used_options = stored_credential_options(:recurring, :merchant, id: network_transaction_id)
+    assert purchase = @gateway.purchase(@amount, @credit_card, used_options)
+    assert_success purchase
+    assert_equal 'Approved', purchase.message
   end
 
   def test_successful_purchase_with_overridden_normalized_stored_credentials
@@ -313,11 +367,11 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
 
   def test_authorize_and_capture
     amount = @amount
-    assert auth = @gateway.authorize(amount, @credit_card, @options.merge(:order_id => '2'))
+    assert auth = @gateway.authorize(amount, @credit_card, @options.merge(order_id: '2'))
     assert_success auth
     assert_equal 'Approved', auth.message
     assert auth.authorization
-    assert capture = @gateway.capture(amount, auth.authorization, :order_id => '2')
+    assert capture = @gateway.capture(amount, auth.authorization, order_id: '2')
     assert_success capture
   end
 
@@ -331,11 +385,11 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
   end
 
   def test_authorize_and_void
-    assert auth = @gateway.authorize(@amount, @credit_card, @options.merge(:order_id => '2'))
+    assert auth = @gateway.authorize(@amount, @credit_card, @options.merge(order_id: '2'))
     assert_success auth
     assert_equal 'Approved', auth.message
     assert auth.authorization
-    assert void = @gateway.void(auth.authorization, :order_id => '2')
+    assert void = @gateway.void(auth.authorization, order_id: '2')
     assert_success void
   end
 
@@ -369,7 +423,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
   def test_auth_only_transactions
     for suite in @test_suite do
       amount = suite[:amount]
-      card = credit_card(@cards[suite[:card]], :verification_value => suite[:CVD])
+      card = credit_card(@cards[suite[:card]], verification_value: suite[:CVD])
       @options[:address][:zip] = suite[:AVSzip]
       assert response = @gateway.authorize(amount, card, @options)
       assert_kind_of Response, response
@@ -387,7 +441,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
   def test_auth_capture_transactions
     for suite in @test_suite do
       amount = suite[:amount]
-      card = credit_card(@cards[suite[:card]], :verification_value => suite[:CVD])
+      card = credit_card(@cards[suite[:card]], verification_value: suite[:CVD])
       options = @options; options[:address][:zip] = suite[:AVSzip]
       assert response = @gateway.purchase(amount, card, options)
       assert_kind_of Response, response
@@ -437,7 +491,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
   def test_void_transactions
     [3000, 105500, 2900].each do |amount|
       assert auth_response = @gateway.authorize(amount, @credit_card, @options)
-      assert void_response = @gateway.void(auth_response.authorization, @options.merge(:transaction_index => 1))
+      assert void_response = @gateway.void(auth_response.authorization, @options.merge(transaction_index: 1))
       assert_kind_of Response, void_response
 
       # Makes it easier to fill in cert sheet if you print these to the command line
@@ -482,5 +536,12 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_scrubbed(@gateway.options[:password], transcript)
     assert_scrubbed(@gateway.options[:login], transcript)
     assert_scrubbed(@gateway.options[:merchant_id], transcript)
+  end
+
+  private
+
+  def stored_credential_options(*args, id: nil)
+    @options.merge(order_id: generate_unique_id,
+                   stored_credential: stored_credential(*args, id: id))
   end
 end

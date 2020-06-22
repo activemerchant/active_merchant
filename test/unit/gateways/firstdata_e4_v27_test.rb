@@ -7,18 +7,18 @@ class FirstdataE4V27Test < Test::Unit::TestCase
 
   def setup
     @gateway = FirstdataE4V27Gateway.new(
-      :login    => 'A00427-01',
-      :password => 'testus',
-      :key_id   => '12345',
-      :hmac_key => 'hexkey'
+      login: 'A00427-01',
+      password: 'testus',
+      key_id: '12345',
+      hmac_key: 'hexkey'
     )
 
     @credit_card = credit_card
     @amount = 100
     @options = {
-      :order_id => '1',
-      :billing_address => address,
-      :description => 'Store Purchase'
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase'
     }
     @authorization = 'ET1700;106625152;4738'
   end
@@ -73,6 +73,7 @@ class FirstdataE4V27Test < Test::Unit::TestCase
       assert_match(/Indicator>1</, data)
       assert_match(/Schedule>U</, data)
       assert_match(/TransactionId>new</, data)
+      assert_match(/Initiation>C/, data)
     end.respond_with(successful_purchase_response_with_stored_credentials)
 
     assert_success response
@@ -138,11 +139,11 @@ class FirstdataE4V27Test < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal ['CA', 'US'], FirstdataE4V27Gateway.supported_countries
+    assert_equal %w[CA US], FirstdataE4V27Gateway.supported_countries
   end
 
   def test_supported_cardtypes
-    assert_equal [:visa, :master, :american_express, :jcb, :discover], FirstdataE4V27Gateway.supported_cardtypes
+    assert_equal %i[visa master american_express jcb discover], FirstdataE4V27Gateway.supported_cardtypes
   end
 
   def test_avs_result

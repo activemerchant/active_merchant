@@ -274,6 +274,22 @@ class CredoraxTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_adds_3d2_secure_fields_with_3ds_transtype_specified
+    options_with_3ds = @normalized_3ds_2_options.merge(three_ds_transtype: '03')
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options_with_3ds)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/3ds_channel=02/, data)
+      assert_match(/3ds_transtype=03/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+
+    assert_equal '8a82944a5351570601535955efeb513c;006596;02617cf5f02ccaed239b6521748298c5;purchase', response.authorization
+    assert response.test?
+  end
+
   def test_purchase_adds_3d_secure_fields
     options_with_3ds = @options.merge({eci: 'sample-eci', cavv: 'sample-cavv', xid: 'sample-xid', three_ds_version: '1'})
 
@@ -810,6 +826,33 @@ class CredoraxTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       assert_match(/a4=2&a1=/, data)
     end.respond_with(successful_authorize_response)
+  end
+
+  def test_3ds_2_optional_fields_adds_fields_to_the_root_of_the_post
+    post = { }
+    options = { three_ds_2: { optional: { '3ds_optional_field_1': :a, '3ds_optional_field_2': :b } } }
+
+    @gateway.add_3ds_2_optional_fields(post, options)
+
+    assert_equal post, { '3ds_optional_field_1': :a, '3ds_optional_field_2': :b }
+  end
+
+  def test_3ds_2_optional_fields_does_not_overwrite_fields
+    post = { '3ds_optional_field_1': :existing_value }
+    options = { three_ds_2: { optional: { '3ds_optional_field_1': :a, '3ds_optional_field_2': :b } } }
+
+    @gateway.add_3ds_2_optional_fields(post, options)
+
+    assert_equal post, { '3ds_optional_field_1': :existing_value, '3ds_optional_field_2': :b }
+  end
+
+  def test_3ds_2_optional_fields_does_not_empty_fields
+    post = { }
+    options = { three_ds_2: { optional: { '3ds_optional_field_1': '', '3ds_optional_field_2': 'null', '3ds_optional_field_3': nil } } }
+
+    @gateway.add_3ds_2_optional_fields(post, options)
+
+    assert_equal post, { }
   end
 
   private

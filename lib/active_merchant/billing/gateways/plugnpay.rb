@@ -3,8 +3,8 @@ module ActiveMerchant
     class PlugnpayGateway < Gateway
       class PlugnpayPostData < PostData
         # Fields that will be sent even if they are blank
-        self.required_fields = [:publisher_name, :publisher_password,
-                                :card_amount, :card_name, :card_number, :card_exp, :orderID]
+        self.required_fields = %i[publisher_name publisher_password
+                                  card_amount card_name card_number card_exp orderID]
       end
       self.live_url = self.test_url = 'https://pay1.plugnpay.com/payment/pnpremote.cgi'
 
@@ -80,20 +80,20 @@ module ActiveMerchant
       }
 
       TRANSACTIONS = {
-        :authorization => 'auth',
-        :purchase => 'auth',
-        :capture => 'mark',
-        :void => 'void',
-        :refund => 'return',
-        :credit => 'newreturn'
+        authorization: 'auth',
+        purchase: 'auth',
+        capture: 'mark',
+        void: 'void',
+        refund: 'return',
+        credit: 'newreturn'
       }
 
-      SUCCESS_CODES = ['pending', 'success']
-      FAILURE_CODES = ['badcard', 'fraud']
+      SUCCESS_CODES = %w[pending success]
+      FAILURE_CODES = %w[badcard fraud]
 
       self.default_currency = 'USD'
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.homepage_url = 'http://www.plugnpay.com/'
       self.display_name = "Plug'n Pay"
 
@@ -179,10 +179,10 @@ module ActiveMerchant
         message = success ? 'Success' : message_from(response)
 
         Response.new(success, message, response,
-          :test => test?,
-          :authorization => response[:orderid],
-          :avs_result => { :code => response[:avs_code] },
-          :cvv_result => response[:cvvresp]
+          test: test?,
+          authorization: response[:orderid],
+          avs_result: { code: response[:avs_code] },
+          cvv_result: response[:cvvresp]
         )
       end
 

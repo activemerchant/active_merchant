@@ -35,12 +35,12 @@ class MultiResponseTest < Test::Unit::TestCase
       true,
       '1',
       {'one' => 1},
-      :test => true,
-      :authorization => 'auth1',
-      :avs_result => {:code => 'AVS1'},
-      :cvv_result => 'CVV1',
-      :error_code => :card_declined,
-      :fraud_review => true
+      test: true,
+      authorization: 'auth1',
+      avs_result: {code: 'AVS1'},
+      cvv_result: 'CVV1',
+      error_code: :card_declined,
+      fraud_review: true
     )
     m.process { r1 }
     assert_equal({'one' => 1}, m.params)
@@ -57,11 +57,11 @@ class MultiResponseTest < Test::Unit::TestCase
       true,
       '2',
       {'two' => 2},
-      :test => false,
-      :authorization => 'auth2',
-      :avs_result => {:code => 'AVS2'},
-      :cvv_result => 'CVV2',
-      :fraud_review => false
+      test: false,
+      authorization: 'auth2',
+      avs_result: {code: 'AVS2'},
+      cvv_result: 'CVV2',
+      fraud_review: false
     )
     m.process { r2 }
     assert_equal({'two' => 2}, m.params)
@@ -81,11 +81,11 @@ class MultiResponseTest < Test::Unit::TestCase
       true,
       '1',
       {'one' => 1},
-      :test => true,
-      :authorization => 'auth1',
-      :avs_result => {:code => 'AVS1'},
-      :cvv_result => 'CVV1',
-      :fraud_review => true
+      test: true,
+      authorization: 'auth1',
+      avs_result: {code: 'AVS1'},
+      cvv_result: 'CVV1',
+      fraud_review: true
     )
     m.process { r1 }
     assert_equal({'one' => 1}, m.params)
@@ -101,11 +101,11 @@ class MultiResponseTest < Test::Unit::TestCase
       true,
       '2',
       {'two' => 2},
-      :test => false,
-      :authorization => 'auth2',
-      :avs_result => {:code => 'AVS2'},
-      :cvv_result => 'CVV2',
-      :fraud_review => false
+      test: false,
+      authorization: 'auth2',
+      avs_result: {code: 'AVS2'},
+      cvv_result: 'CVV2',
+      fraud_review: false
     )
     m.process { r2 }
     assert_equal({'one' => 1}, m.params)

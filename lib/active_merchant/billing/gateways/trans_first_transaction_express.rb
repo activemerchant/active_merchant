@@ -12,7 +12,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['US']
       self.default_currency = 'USD'
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club]
 
       V1_NAMESPACE = 'http://postilion/realtime/merchantframework/xsd/v1/'
       SOAPENV_NAMESPACE = 'http://schemas.xmlsoap.org/soap/envelope/'
@@ -291,6 +291,7 @@ module ActiveMerchant #:nodoc:
         MultiResponse.run do |r|
           r.process { commit(:store, store_customer_request) }
           return r unless r.success? && r.params['custId']
+
           customer_id = r.params['custId']
 
           store_payment_method_request = build_xml_payment_storage_request do |doc|
@@ -384,6 +385,7 @@ module ActiveMerchant #:nodoc:
 
       def error_code_from(succeeded, response)
         return if succeeded
+
         response['errorCode'] || response['rspCode']
       end
 

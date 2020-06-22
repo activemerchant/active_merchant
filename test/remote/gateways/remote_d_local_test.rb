@@ -110,6 +110,12 @@ class RemoteDLocalTest < Test::Unit::TestCase
     assert_match 'The payment was paid', response.message
   end
 
+  def test_successful_purchase_partial_address
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(billing_address: address(address1: 'My Street', country: 'Brazil')))
+    assert_success response
+    assert_match 'The payment was paid', response.message
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @credit_card, @options.merge(description: '300'))
     assert_failure response
@@ -159,7 +165,7 @@ class RemoteDLocalTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization, @options)
+    assert capture = @gateway.capture(@amount - 1, auth.authorization, @options)
     assert_success capture
   end
 
@@ -184,7 +190,7 @@ class RemoteDLocalTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount-1, purchase.authorization, @options.merge(notification_url: 'http://example.com'))
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization, @options.merge(notification_url: 'http://example.com'))
     assert_success refund
   end
 
@@ -192,7 +198,7 @@ class RemoteDLocalTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    response = @gateway.refund(@amount+1, purchase.authorization, @options.merge(notification_url: 'http://example.com'))
+    response = @gateway.refund(@amount + 1, purchase.authorization, @options.merge(notification_url: 'http://example.com'))
     assert_failure response
     assert_match 'Amount exceeded', response.message
   end

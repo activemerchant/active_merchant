@@ -21,12 +21,12 @@ class AxcessmsTest < Test::Unit::TestCase
       ip: '0.0.0.0',
       mode: @mode,
       billing_address: {
-        :address1 => '10 Marklar St',
-        :address2 => 'Musselburgh',
-        :city => 'Dunedin',
-        :zip => '9013',
-        :state => 'Otago',
-        :country => 'NZ'
+        address1: '10 Marklar St',
+        address2: 'Musselburgh',
+        city: 'Dunedin',
+        zip: '9013',
+        state: 'Otago',
+        country: 'NZ'
       }
     }
   end

@@ -7,10 +7,10 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://gateway.l19tech.com/payments/'
       self.test_url = 'https://gateway-sb.l19tech.com/payments/'
 
-      self.supported_countries = ['US', 'CA']
+      self.supported_countries = %w[US CA]
       self.default_currency = 'USD'
       self.money_format = :dollars
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club jcb]
 
       RESPONSE_CODE_MAPPING = {
         '100' => 'Approved',
@@ -324,7 +324,7 @@ module ActiveMerchant #:nodoc:
 
       def headers
         {
-          'Content-Type'  => 'application/json'
+          'Content-Type' => 'application/json'
         }
       end
 
@@ -364,6 +364,7 @@ module ActiveMerchant #:nodoc:
       def error_from(response)
         return response['error'] if response['error']
         return 'Failed' unless response.key?('result')
+
         return response['result']['pgwResponseCode'] || response['result']['processor']['responseCode'] || 'Failed'
       end
 
@@ -397,7 +398,7 @@ module ActiveMerchant #:nodoc:
           false,
           message_from(response),
           response,
-          :test => test?
+          test: test?
         )
       end
 

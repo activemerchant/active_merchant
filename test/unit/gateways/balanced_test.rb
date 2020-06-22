@@ -211,7 +211,7 @@ class BalancedTest < Test::Unit::TestCase
 
     new_email_address = '%d@example.org' % Time.now
     assert response = @gateway.store(@credit_card, {
-        email: new_email_address
+      email: new_email_address
     })
     assert_instance_of String, response.authorization
   end
@@ -277,6 +277,7 @@ class BalancedTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, address: a)
     end.check_request do |method, endpoint, data, headers|
       next if endpoint =~ /debits/
+
       clean = proc { |s| Regexp.escape(CGI.escape(s)) }
       assert_match(%r{address\[line1\]=#{clean[a[:address1]]}}, data)
       assert_match(%r{address\[line2\]=#{clean[a[:address2]]}}, data)
@@ -294,6 +295,7 @@ class BalancedTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, address: address(zip: nil))
     end.check_request do |method, endpoint, data, headers|
       next if endpoint =~ /debits/
+
       assert_no_match(%r{address}, data)
     end.respond_with(cards_response, debits_response)
 
@@ -305,6 +307,7 @@ class BalancedTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, address: address(zip: '   '))
     end.check_request do |method, endpoint, data, headers|
       next if endpoint =~ /debits/
+
       assert_no_match(%r{address}, data)
     end.respond_with(cards_response, debits_response)
 

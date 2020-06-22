@@ -4,9 +4,9 @@ class TrustCommerceTest < Test::Unit::TestCase
   include CommStub
   def setup
     @gateway = TrustCommerceGateway.new(
-      :login => 'TestMerchant',
-      :password => 'password',
-      :aggregator_id => 'abc123'
+      login: 'TestMerchant',
+      password: 'password',
+      aggregator_id: 'abc123'
     )
     # Force SSL post
     @gateway.stubs(:tclink?).returns(false)
@@ -146,7 +146,7 @@ class TrustCommerceTest < Test::Unit::TestCase
   end
 
   def test_supported_card_types
-    assert_equal [:visa, :master, :discover, :american_express, :diners_club, :jcb], TrustCommerceGateway.supported_cardtypes
+    assert_equal %i[visa master discover american_express diners_club jcb], TrustCommerceGateway.supported_cardtypes
   end
 
   def test_test_flag_should_be_set_when_using_test_login_in_production

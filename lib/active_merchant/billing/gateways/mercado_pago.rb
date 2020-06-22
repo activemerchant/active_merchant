@@ -3,8 +3,8 @@ module ActiveMerchant #:nodoc:
     class MercadoPagoGateway < Gateway
       self.live_url = self.test_url = 'https://api.mercadopago.com/v1'
 
-      self.supported_countries = ['AR', 'BR', 'CL', 'CO', 'MX', 'PE', 'UY']
-      self.supported_cardtypes = [:visa, :master, :american_express, :elo, :cabal, :naranja]
+      self.supported_countries = %w[AR BR CL CO MX PE UY]
+      self.supported_cardtypes = %i[visa master american_express elo cabal naranja]
 
       self.homepage_url = 'https://www.mercadopago.com/'
       self.display_name = 'Mercado Pago'
@@ -33,7 +33,7 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, authorization, options={})
         post = {}
-        authorization, _ = authorization.split('|')
+        authorization, = authorization.split('|')
         post[:capture] = true
         post[:transaction_amount] = amount(money).to_f
         commit('capture', "payments/#{authorization}", post)
@@ -47,7 +47,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def void(authorization, options={})
-        authorization, _ = authorization.split('|')
+        authorization, = authorization.split('|')
         post = { status: 'cancelled' }
         commit('void', "payments/#{authorization}", post)
       end
@@ -96,6 +96,8 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, payment, options)
         add_address(post, options)
         add_processing_mode(post, options)
+        add_net_amount(post, options)
+        add_taxes(post, options)
         post[:binary_mode] = (options[:binary_mode].nil? ? true : options[:binary_mode])
         post
       end
@@ -108,13 +110,16 @@ module ActiveMerchant #:nodoc:
 
       def add_processing_mode(post, options)
         return unless options[:processing_mode]
+
         post[:processing_mode] = options[:processing_mode]
         post[:merchant_account_id] = options[:merchant_account_id] if options[:merchant_account_id]
+        post[:payment_method_option_id] = options[:payment_method_option_id] if options[:payment_method_option_id]
         add_merchant_services(post, options)
       end
 
       def add_merchant_services(post, options)
         return unless options[:fraud_scoring] || options[:fraud_manual_review]
+
         merchant_services = {}
         merchant_services[:fraud_scoring] = options[:fraud_scoring] if options[:fraud_scoring]
         merchant_services[:fraud_manual_review] = options[:fraud_manual_review] if options[:fraud_manual_review]
@@ -194,6 +199,47 @@ module ActiveMerchant #:nodoc:
         post[:payment_method_id] = options[:payment_method_id] if options[:payment_method_id]
       end
 
+      def add_net_amount(post, options)
+        post[:net_amount] = Float(options[:net_amount]) if options[:net_amount]
+      end
+
+      def add_taxes(post, options)
+        return unless (tax_object = options[:taxes])
+
+        if tax_object.is_a?(Array)
+          post[:taxes] = process_taxes_array(tax_object)
+        elsif tax_object.is_a?(Hash)
+          post[:taxes] = process_taxes_hash(tax_object)
+        else
+          raise taxes_error
+        end
+      end
+
+      def process_taxes_hash(tax_object)
+        [sanitize_taxes_hash(tax_object)]
+      end
+
+      def process_taxes_array(taxes_array)
+        taxes_array.map do |tax_object|
+          raise taxes_error unless tax_object.is_a?(Hash)
+
+          sanitize_taxes_hash(tax_object)
+        end
+      end
+
+      def sanitize_taxes_hash(tax_object)
+        tax_value = tax_object['value'] || tax_object[:value]
+        tax_type = tax_object['type'] || tax_object[:type]
+
+        raise taxes_error if tax_value.nil? || tax_type.nil?
+
+        { value: Float(tax_value), type: tax_type }
+      end
+
+      def taxes_error
+        ArgumentError.new("Taxes should be a single object or array of objects with the shape: { value: 500, type: 'IVA' }")
+      end
+
       def parse(body)
         JSON.parse(body)
       rescue JSON::ParserError
@@ -205,7 +251,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, path, parameters)
-        if ['capture', 'void'].include?(action)
+        if %w[capture void].include?(action)
           response = parse(ssl_request(:put, url(path), post_data(parameters), headers))
         else
           response = parse(ssl_post(url(path), post_data(parameters), headers(parameters)))
@@ -225,7 +271,7 @@ module ActiveMerchant #:nodoc:
         if action == 'refund'
           response['status'] != 404 && response['error'].nil?
         else
-          ['active', 'approved', 'authorized', 'cancelled', 'in_process'].include?(response['status'])
+          %w[active approved authorized cancelled in_process].include?(response['status'])
         end
       end
 

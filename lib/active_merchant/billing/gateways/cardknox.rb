@@ -3,9 +3,9 @@ module ActiveMerchant #:nodoc:
     class CardknoxGateway < Gateway
       self.live_url = 'https://x1.cardknox.com/gateway'
 
-      self.supported_countries = ['US', 'CA', 'GB']
+      self.supported_countries = %w[US CA GB]
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club jcb]
 
       self.homepage_url = 'https://www.cardknox.com/'
       self.display_name = 'Cardknox'
@@ -116,7 +116,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_reference(post, reference)
-        reference, _, _ = split_authorization(reference)
+        reference, = split_authorization(reference)
         post[:Refnum] = reference
       end
 
@@ -247,7 +247,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_cardknox_token(post, authorization)
-        _, token, _ = split_authorization(authorization)
+        _, token, = split_authorization(authorization)
 
         post[:Token] = token
       end

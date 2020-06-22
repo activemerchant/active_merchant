@@ -4,11 +4,11 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://pal-test.barclaycardsmartpay.com/pal/servlet'
       self.live_url = 'https://pal-live.barclaycardsmartpay.com/pal/servlet'
 
-      self.supported_countries = ['AL', 'AD', 'AM', 'AT', 'AZ', 'BY', 'BE', 'BA', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IS', 'IE', 'IT', 'KZ', 'LV', 'LI', 'LT', 'LU', 'MK', 'MT', 'MD', 'MC', 'ME', 'NL', 'NO', 'PL', 'PT', 'RO', 'RU', 'SM', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH', 'TR', 'UA', 'GB', 'VA']
+      self.supported_countries = %w[AL AD AM AT AZ BY BE BA BG HR CY CZ DK EE FI FR DE GR HU IS IE IT KZ LV LI LT LU MK MT MD MC ME NL NO PL PT RO RU SM RS SK SI ES SE CH TR UA GB VA]
       self.default_currency = 'EUR'
       self.currencies_with_three_decimal_places = %w(BHD KWD OMR RSD TND)
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb, :dankort, :maestro]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club jcb dankort maestro]
 
       self.homepage_url = 'https://www.barclaycardsmartpay.com/'
       self.display_name = 'Barclaycard Smartpay'
@@ -108,7 +108,7 @@ module ActiveMerchant #:nodoc:
       def store(creditcard, options = {})
         post = store_request(options)
         post[:card] = credit_card_hash(creditcard)
-        post[:recurring] = {:contract => 'RECURRING'}
+        post[:recurring] = {contract: 'RECURRING'}
 
         commit('store', post)
       end
@@ -161,20 +161,20 @@ module ActiveMerchant #:nodoc:
           message_from(response),
           response,
           test: test?,
-          avs_result: AVSResult.new(:code => parse_avs_code(response)),
+          avs_result: AVSResult.new(code: parse_avs_code(response)),
           authorization: response['recurringDetailReference'] || authorization_from(post, response)
         )
       rescue ResponseError => e
         case e.response.code
         when '401'
-          return Response.new(false, 'Invalid credentials', {}, :test => test?)
+          return Response.new(false, 'Invalid credentials', {}, test: test?)
         when '403'
-          return Response.new(false, 'Not allowed', {}, :test => test?)
+          return Response.new(false, 'Not allowed', {}, test: test?)
         when '422', '500'
           if e.response.body.split(/\W+/).any? { |word| %w(validation configuration security).include?(word) }
             error_message = e.response.body[/#{Regexp.escape('message=')}(.*?)#{Regexp.escape('&')}/m, 1].tr('+', ' ')
             error_code = e.response.body[/#{Regexp.escape('errorCode=')}(.*?)#{Regexp.escape('&')}/m, 1]
-            return Response.new(false, error_code + ': ' + error_message, {}, :test => test?)
+            return Response.new(false, error_code + ': ' + error_message, {}, test: test?)
           end
         end
         raise
@@ -184,6 +184,7 @@ module ActiveMerchant #:nodoc:
         authorization = [parameters[:originalReference], response['pspReference']].compact
 
         return nil if authorization.empty?
+
         return authorization.join('#')
       end
 
@@ -238,6 +239,7 @@ module ActiveMerchant #:nodoc:
         return response['resultCode'] if response.has_key?('resultCode') # Payment request
         return response['response'] if response['response'] # Modification request
         return response['result'] if response.has_key?('result') # Store/Recurring request
+
         'Failure' # Negative fallback in case of error
       end
 
@@ -367,6 +369,7 @@ module ActiveMerchant #:nodoc:
           end
         else
           return unless options[:execute_threed] || options[:threed_dynamic]
+
           post[:browserInfo] = { userAgent: options[:user_agent], acceptHeader: options[:accept_header] }
           post[:additionalData] = { executeThreeD: 'true' } if options[:execute_threed]
         end
@@ -374,6 +377,7 @@ module ActiveMerchant #:nodoc:
 
       def add_browser_info(browser_info, post)
         return unless browser_info
+
         post[:browserInfo] = {
           acceptHeader: browser_info[:accept_header],
           colorDepth: browser_info[:depth],

@@ -13,12 +13,12 @@ module ActiveMerchant #:nodoc:
       # VISA, Mastercard, Diners Club and Farmers cards are supported
       #
       # However, regular accounts with DPS only support VISA and Mastercard
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
+      self.supported_cardtypes = %i[visa master american_express diners_club jcb]
 
       self.supported_countries = %w[AU FJ GB HK IE MY NZ PG SG US]
 
-      self.homepage_url = 'http://www.paymentexpress.com/'
-      self.display_name = 'PaymentExpress'
+      self.homepage_url = 'https://www.windcave.com/'
+      self.display_name = 'Windcave (formerly PaymentExpress)'
 
       self.live_url = 'https://sec.paymentexpress.com/pxpost.aspx'
       self.test_url = 'https://uat.paymentexpress.com/pxpost.aspx'
@@ -26,11 +26,11 @@ module ActiveMerchant #:nodoc:
       APPROVED = '1'
 
       TRANSACTIONS = {
-        :purchase       => 'Purchase',
-        :credit         => 'Refund',
-        :authorization  => 'Auth',
-        :capture        => 'Complete',
-        :validate       => 'Validate'
+        purchase: 'Purchase',
+        credit: 'Refund',
+        authorization: 'Auth',
+        capture: 'Complete',
+        validate: 'Validate'
       }
 
       # We require the DPS gateway username and password when the object is created.
@@ -302,8 +302,8 @@ module ActiveMerchant #:nodoc:
 
         # Return a response
         PaymentExpressResponse.new(response[:success] == APPROVED, message_from(response), response,
-          :test => response[:test_mode] == '1',
-          :authorization => authorization_from(action, response)
+          test: response[:test_mode] == '1',
+          authorization: authorization_from(action, response)
         )
       end
 

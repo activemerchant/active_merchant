@@ -8,22 +8,23 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = %w(AU BR CA CH DE DK ES FI FR GR HK IE IT NL NO PT SE SG TR GB US TH ID PH BE)
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       self.homepage_url = 'http://home.iatspayments.com/'
       self.display_name = 'iATS Payments'
 
       ACTIONS = {
-        purchase: 'ProcessCreditCardV1',
-        purchase_check: 'ProcessACHEFTV1',
-        refund: 'ProcessCreditCardRefundWithTransactionIdV1',
-        refund_check: 'ProcessACHEFTRefundWithTransactionIdV1',
-        store: 'CreateCreditCardCustomerCodeV1',
-        unstore: 'DeleteCustomerCodeV1'
+        purchase: 'ProcessCreditCard',
+        purchase_check: 'ProcessACHEFT',
+        purchase_customer_code: 'ProcessCreditCardWithCustomerCode',
+        refund: 'ProcessCreditCardRefundWithTransactionId',
+        refund_check: 'ProcessACHEFTRefundWithTransactionId',
+        store: 'CreateCreditCardCustomerCode',
+        unstore: 'DeleteCustomerCode'
       }
 
       def initialize(options={})
-        if(options[:login])
+        if options[:login]
           ActiveMerchant.deprecated("The 'login' option is deprecated in favor of 'agent_code' and will be removed in a future version.")
           options[:agent_code] = options[:login]
         end
@@ -42,7 +43,7 @@ module ActiveMerchant #:nodoc:
         add_ip(post, options)
         add_description(post, options)
 
-        commit((payment.is_a?(Check) ? :purchase_check : :purchase), post)
+        commit(determine_purchase_type(payment), post)
       end
 
       def refund(money, authorization, options={})
@@ -90,17 +91,30 @@ module ActiveMerchant #:nodoc:
 
       private
 
+      def determine_purchase_type(payment)
+        if payment.is_a?(String)
+          :purchase_customer_code
+        elsif payment.is_a?(Check)
+          :purchase_check
+        else
+          :purchase
+        end
+      end
+
       def add_ip(post, options)
         post[:customer_ip_address] = options[:ip] if options.has_key?(:ip)
       end
 
       def add_address(post, options)
         billing_address = options[:billing_address] || options[:address]
-        if(billing_address)
+        if billing_address
           post[:address] = billing_address[:address1]
           post[:city] = billing_address[:city]
           post[:state] = billing_address[:state]
           post[:zip_code] = billing_address[:zip]
+          post[:phone] = billing_address[:phone] if billing_address[:phone]
+          post[:email] = billing_address[:email] if billing_address[:email]
+          post[:country] = billing_address[:country] if billing_address[:country]
         end
       end
 
@@ -114,7 +128,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment(post, payment)
-        if payment.is_a?(Check)
+        if payment.is_a?(String)
+          post[:customer_code] = payment
+        elsif payment.is_a?(Check)
           add_check(post, payment)
         else
           add_credit_card(post, payment)
@@ -178,12 +194,13 @@ module ActiveMerchant #:nodoc:
 
       def endpoints
         {
-          purchase: 'ProcessLink.asmx',
-          purchase_check: 'ProcessLink.asmx',
-          refund: 'ProcessLink.asmx',
-          refund_check: 'ProcessLink.asmx',
-          store: 'CustomerLink.asmx',
-          unstore: 'CustomerLink.asmx'
+          purchase: 'ProcessLinkv3.asmx',
+          purchase_check: 'ProcessLinkv3.asmx',
+          purchase_customer_code: 'ProcessLinkv3.asmx',
+          refund: 'ProcessLinkv3.asmx',
+          refund_check: 'ProcessLinkv3.asmx',
+          store: 'CustomerLinkv3.asmx',
+          unstore: 'CustomerLinkv3.asmx'
         }
       end
 
@@ -217,7 +234,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def recursively_parse_element(node, response)
-        if(node.has_elements?)
+        if node.has_elements?
           node.elements.each { |n| recursively_parse_element(n, response) }
         else
           response[dexmlize_param_name(node.name)] = (node.text ? node.text.strip : nil)
@@ -235,7 +252,7 @@ module ActiveMerchant #:nodoc:
       def message_from(response)
         if !successful_result_message?(response) && response[:authorization_result]
           return response[:authorization_result].strip
-        elsif(response[:status] == 'Failure')
+        elsif response[:status] == 'Failure'
           return response[:errors]
         else
           response[:status]
@@ -243,7 +260,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(action, response)
-        if [:store, :unstore].include?(action)
+        if %i[store unstore].include?(action)
           response[:customercode]
         elsif [:purchase_check].include?(action)
           response[:transaction_id] ? "#{response[:transaction_id]}|check" : nil
@@ -266,7 +283,7 @@ module ActiveMerchant #:nodoc:
 
       def post_data(action, parameters = {})
         xml = Builder::XmlMarkup.new
-        xml.instruct!(:xml, :version => '1.0', :encoding => 'utf-8')
+        xml.instruct!(:xml, version: '1.0', encoding: 'utf-8')
         xml.tag! 'soap12:Envelope', envelope_namespaces do
           xml.tag! 'soap12:Body' do
             xml.tag! ACTIONS[action], { 'xmlns' => 'https://www.iatspayments.com/NetGate/' } do

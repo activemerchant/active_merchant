@@ -24,11 +24,11 @@ module ActiveMerchant
           r.process {
             post = authorization_params(money, credit_card_or_reference, options)
             add_autocapture(post, false)
-            commit(synchronized_path("/payments/#{r.responses.last.params["id"]}/authorize"), post)
+            commit(synchronized_path("/payments/#{r.responses.last.params['id']}/authorize"), post)
           }
           r.process {
             post = capture_params(money, credit_card_or_reference, options)
-            commit(synchronized_path("/payments/#{r.responses.last.params["id"]}/capture"), post)
+            commit(synchronized_path("/payments/#{r.responses.last.params['id']}/capture"), post)
           }
         end
       end
@@ -42,7 +42,7 @@ module ActiveMerchant
           r.process { create_payment(money, options) }
           r.process {
             post = authorization_params(money, credit_card_or_reference, options)
-            commit(synchronized_path("/payments/#{r.responses.last.params["id"]}/authorize"), post)
+            commit(synchronized_path("/payments/#{r.responses.last.params['id']}/authorize"), post)
           }
         end
       end
@@ -154,8 +154,8 @@ module ActiveMerchant
         end
 
         Response.new(success, message_from(success, response), response,
-          :test => test?,
-          :authorization => authorization_from(response)
+          test: test?,
+          authorization: authorization_from(response)
         )
       end
 
@@ -191,7 +191,7 @@ module ActiveMerchant
 
         post[:shipping_address] = map_address(options[:shipping_address]) if options[:shipping_address]
 
-        [:metadata, :branding_id, :variables].each do |field|
+        %i[metadata branding_id variables].each do |field|
           post[field] = options[field] if options[field]
         end
       end
@@ -215,7 +215,7 @@ module ActiveMerchant
         end
 
         if options[:three_d_secure]
-          post[:card][:cavv]= options.dig(:three_d_secure, :cavv)
+          post[:card][:cavv] = options.dig(:three_d_secure, :cavv)
           post[:card][:eci] = options.dig(:three_d_secure, :eci)
           post[:card][:xav] = options.dig(:three_d_secure, :xid)
         end
@@ -249,15 +249,16 @@ module ActiveMerchant
 
       def map_address(address)
         return {} if address.nil?
+
         requires!(address, :name, :address1, :city, :zip, :country)
         country = Country.find(address[:country])
         mapped = {
-          :name         => address[:name],
-          :street       => address[:address1],
-          :city         => address[:city],
-          :region       => address[:address2],
-          :zip_code     => address[:zip],
-          :country_code => country.code(:alpha3).value
+          name: address[:name],
+          street: address[:address1],
+          city: address[:city],
+          region: address[:address2],
+          zip_code: address[:zip],
+          country_code: country.code(:alpha3).value
         }
         mapped
       end

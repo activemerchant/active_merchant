@@ -13,7 +13,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['NZ']
 
       # TODO: check this with paystation (amex and diners need to be enabled)
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express diners_club]
 
       self.homepage_url        = 'http://paystation.co.nz'
       self.display_name        = 'Paystation'
@@ -178,8 +178,8 @@ module ActiveMerchant #:nodoc:
         message  = message_from(response)
 
         PaystationResponse.new(success?(response), message, response,
-          :test          => (response[:tm]&.casecmp('t')&.zero?),
-          :authorization => response[:paystation_transaction_id]
+          test: (response[:tm]&.casecmp('t')&.zero?),
+          authorization: response[:paystation_transaction_id]
         )
       end
 

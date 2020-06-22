@@ -14,7 +14,7 @@ module ActiveMerchant #:nodoc:
                                     MT MU MV MX MY NL NO NZ OM PH PL PT QA RO SA SE SG SI SK SM
                                     TR TT UM US VA VN ZA)
 
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.homepage_url = 'https://spreedly.com'
       self.display_name = 'Spreedly'
       self.money_format = :cents
@@ -228,6 +228,7 @@ module ActiveMerchant #:nodoc:
 
       def extra_options_to_doc(doc, value)
         return doc.text value unless value.kind_of? Hash
+
         value.each do |k, v|
           doc.send(k) do
             extra_options_to_doc(doc, v)
@@ -282,10 +283,10 @@ module ActiveMerchant #:nodoc:
       def response_from(raw_response, authorization_field)
         parsed = parse(raw_response)
         options = {
-          :authorization => parsed[authorization_field],
-          :test => (parsed[:on_test_gateway] == 'true'),
-          :avs_result => { :code => parsed[:response_avs_code] },
-          :cvv_result => parsed[:response_cvv_code]
+          authorization: parsed[authorization_field],
+          test: (parsed[:on_test_gateway] == 'true'),
+          avs_result: { code: parsed[:response_avs_code] },
+          cvv_result: parsed[:response_cvv_code]
         }
 
         Response.new(parsed[:succeeded] == 'true', parsed[:message] || parsed[:error], parsed, options)

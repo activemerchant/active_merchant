@@ -330,6 +330,7 @@ module ActiveMerchant #:nodoc:
         country = COUNTRIES.detect { |c| c[:name].casecmp(name).zero? }
       end
       raise InvalidCountryCodeError, "No country could be found for the country #{name}" if country.nil?
+
       Country.new(country.dup)
     end
   end

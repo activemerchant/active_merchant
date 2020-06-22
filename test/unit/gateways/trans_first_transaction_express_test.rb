@@ -28,13 +28,13 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
 
   def test_strip_hyphens_from_zip
     options = {
-      :billing_address => {
-        :name => 'John & Mary Smith',
-        :address1 => '1 Main St.',
-        :city => 'Burlington',
-        :state => 'MA',
-        :zip => '01803-3747',
-        :country => 'US'
+      billing_address: {
+        name: 'John & Mary Smith',
+        address1: '1 Main St.',
+        city: 'Burlington',
+        state: 'MA',
+        zip: '01803-3747',
+        country: 'US'
       }
     }
 

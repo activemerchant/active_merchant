@@ -7,25 +7,25 @@ class MercadoPagoTest < Test::Unit::TestCase
     @gateway = MercadoPagoGateway.new(access_token: 'access_token')
     @credit_card = credit_card
     @elo_credit_card = credit_card('5067268650517446',
-      :month => 10,
-      :year => 2020,
-      :first_name => 'John',
-      :last_name => 'Smith',
-      :verification_value => '737'
+      month: 10,
+      year: 2020,
+      first_name: 'John',
+      last_name: 'Smith',
+      verification_value: '737'
     )
     @cabal_credit_card = credit_card('6035227716427021',
-      :month => 10,
-      :year => 2020,
-      :first_name => 'John',
-      :last_name => 'Smith',
-      :verification_value => '737'
+      month: 10,
+      year: 2020,
+      first_name: 'John',
+      last_name: 'Smith',
+      verification_value: '737'
     )
     @naranja_credit_card = credit_card('5895627823453005',
-      :month => 10,
-      :year => 2020,
-      :first_name => 'John',
-      :last_name => 'Smith',
-      :verification_value => '123'
+      month: 10,
+      year: 2020,
+      first_name: 'John',
+      last_name: 'Smith',
+      verification_value: '123'
     )
     @amount = 100
 
@@ -309,7 +309,7 @@ class MercadoPagoTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
-      if data =~ /payment_method_id/
+      if /payment_method_id/.match?(data)
         assert_match(/"foo":"bar"/, data)
         assert_match(/"baz":"quux"/, data)
       end
@@ -327,6 +327,106 @@ class MercadoPagoTest < Test::Unit::TestCase
 
     assert_success response
     assert_equal '4141491|1.0', response.authorization
+  end
+
+  def test_purchase_includes_taxes_array
+    taxes_type = 'IVA'
+    taxes_value = 500.0
+    taxes_object = { value: taxes_value, type: taxes_type }
+    taxes_array = [taxes_object, taxes_object]
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(taxes: taxes_array))
+    end.check_request do |endpoint, data, headers|
+      single_pattern = "{\"value\":#{taxes_value},\"type\":\"#{taxes_type}\"}"
+      pattern = "\"taxes\":[#{single_pattern},#{single_pattern}]"
+      assert_match(pattern, data) if endpoint =~ /payments/
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_includes_taxes_hash
+    taxes_type = 'IVA'
+    taxes_value = 500.0
+    taxes_object = { value: taxes_value, type: taxes_type }
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(taxes: taxes_object))
+    end.check_request do |endpoint, data, headers|
+      pattern = "\"taxes\":[{\"value\":#{taxes_value},\"type\":\"#{taxes_type}\"}]"
+      assert_match(pattern, data) if endpoint =~ /payments/
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_includes_net_amount
+    net_amount = 9500
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(net_amount: net_amount))
+    end.check_request do |endpoint, data, headers|
+      assert_match("\"net_amount\":#{net_amount}", data) if endpoint =~ /payments/
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_authorize_includes_taxes_array
+    taxes_type = 'IVA'
+    taxes_value = 500.0
+    taxes_object = { value: taxes_value, type: taxes_type }
+    taxes_array = [taxes_object, taxes_object]
+
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(taxes: taxes_array))
+    end.check_request do |endpoint, data, headers|
+      single_pattern = "{\"value\":#{taxes_value},\"type\":\"#{taxes_type}\"}"
+      pattern = "\"taxes\":[#{single_pattern},#{single_pattern}]"
+      assert_match(pattern, data) if endpoint =~ /payments/
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_authorize_includes_taxes_hash
+    taxes_type = 'IVA'
+    taxes_value = 500.0
+    taxes_object = { value: taxes_value, type: taxes_type }
+
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(taxes: taxes_object))
+    end.check_request do |endpoint, data, headers|
+      pattern = "\"taxes\":[{\"value\":#{taxes_value},\"type\":\"#{taxes_type}\"}]"
+      assert_match(pattern, data) if endpoint =~ /payments/
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_authorize_includes_net_amount
+    net_amount = 9500
+
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(net_amount: net_amount))
+    end.check_request do |endpoint, data, headers|
+      assert_match("\"net_amount\":#{net_amount}", data) if endpoint =~ /payments/
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_invalid_taxes_type
+    assert_raises(ArgumentError) do
+      stub_comms do
+        @gateway.purchase(@amount, @credit_card, @options.merge(taxes: 10))
+      end.respond_with(successful_purchase_response)
+    end
+  end
+
+  def test_invalid_taxes_embedded_type
+    assert_raises(ArgumentError) do
+      stub_comms do
+        @gateway.purchase(@amount, @credit_card, @options.merge(taxes: [{ value: 500, type: 'IVA' }, 10]))
+      end.respond_with(successful_purchase_response)
+    end
+  end
+
+  def test_invalid_taxes_shape
+    assert_raises(ArgumentError) do
+      stub_comms do
+        @gateway.purchase(@amount, @credit_card, @options.merge(taxes: [{ amount: 500, type: 'IVA' }]))
+      end.respond_with(successful_purchase_response)
+    end
   end
 
   private

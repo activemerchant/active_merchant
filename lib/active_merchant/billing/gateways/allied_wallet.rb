@@ -9,8 +9,8 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['US']
       self.default_currency = 'USD'
       self.money_format = :dollars
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover,
-                                  :diners_club, :jcb, :maestro]
+      self.supported_cardtypes = %i[visa master american_express discover
+                                    diners_club jcb maestro]
 
       def initialize(options={})
         requires!(options, :site_id, :merchant_id, :token)
@@ -141,7 +141,8 @@ module ActiveMerchant #:nodoc:
           raw_response = ssl_post(url(action), post.to_json, headers)
           response = parse(raw_response)
         rescue ResponseError => e
-          raise unless(e.response.code.to_s =~ /4\d\d/)
+          raise unless e.response.code.to_s =~ /4\d\d/
+
           response = parse(e.response.body)
         end
 
@@ -151,8 +152,8 @@ module ActiveMerchant #:nodoc:
           message_from(succeeded, response),
           response,
           authorization: response['id'],
-          :avs_result => AVSResult.new(code: response['avs_response']),
-          :cvv_result => CVVResult.new(response['cvv2_response']),
+          avs_result: AVSResult.new(code: response['avs_response']),
+          cvv_result: CVVResult.new(response['cvv2_response']),
           test: test?
         )
       rescue JSON::ParserError

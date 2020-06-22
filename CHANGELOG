@@ -1,6 +1,149 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* DLocal: Handle nil address1 [molbrown] #3661
+* Braintree: Add travel and lodging fields [leila-alderman] #3668
+* Stripe: strict_encode64 api key [britth] #3672
+* Stripe PI: Implement verify action [leila-alderman] #3662
+* RuboCop: Fix Style/TrailingUnderscoreVariable [leila-alderman] #3663
+* RuboCop: Fix Style/WordArray [leila-alderman] #3664
+* RuboCop: Fix Style/SymbolArray [leila-alderman] #3665
+* Forte: Use underscore for unused arguments in test [wsmoak] #3605
+* Add Alia card type [therufs] #3673
+* Element: Fix unit tests [leila-alderman] #3676
+* RuboCop: Fix Style/SpecialGlobalVars [leila-alderman] #3669
+* RuboCop: Fix Style/StringLiteralsInInterpolation [leila-alderman] #3670
+* PayU Latam: Fix store method [ccarruitero] #2590
+
+== Version 1.108.0 (Jun 9, 2020)
+* Cybersource: Send cavv as xid is xid is missing [pi3r] #3658
+* Forte: Change default sec_code value to PPD [molbrown] #3653
+* Elavon: Add merchant initiated unscheduled field [leila-alderman] #3647
+* Decidir: Add aggregate data fields [leila-alderman] #3648
+* Vantiv: Vantiv(Element): add option to send terminal id in transactions [cdmackeyfree] #3654
+* Update supported Ruby and Rails versions [leila-alderman] #3656
+* CI: Drop unused sudo: false Travis directive [olleolleolle] #3616
+* PayU Latam: Prevent blank country in billing_address [britth] #3657
+* DLocal: Fix address field names [molbrown] #3651
+
+== Version 1.107.4 (Jun 2, 2020)
+* Elavon: Implement true verify action [leila-alderman] #3610
+* Vantiv Express: Implement true verify [leila-alderman] #3617
+* Litle: Pass expiration data for basis payment method [therufs] #3606
+* Stripe Payment Intents: Error handling and backwards compatibility within refund [britth] #3627
+* HPS: Prevent errors when account_type or account_holder_type are nil [britth] #3628
+* D Local: Handle invalid country code errors [curiousepic] #3626
+* Stripe Payment Intents: Utilize execute_threed flag to determine success [britth] #3625
+* Elavon: Add Level 3 fields [leila-alderman] #3632
+* CyberSource: Stored Credential fixes [curiousepic] #3624
+* CyberSource: Fix invalid and missing field tests [curiousepic] #3634
+* CyberSource: Pass stored credentials with purchase [curiousepic] #3636
+* Mercado Pago: Add payment_method_option_id field [schwarzgeist] #3635
+* Stripe: Provide error when attempting an authorize with ACH [britth] #3633
+* EBANX: Send original order id as merchant_payment_code metadata [miguelxpn] #3637
+* Element: Add card_present_code field [schwarzgeist] #3623
+* Orbital: Add support for Level 3 fields [leila-alderman] #3639
+* Firstdata: Strip newline characters from address [bittercoder] #3643
+* Forte: add sec_code attribute for echeck [wsmoak] #3640
+
+== Version 1.107.3 (May 8, 2020)
+* Realex: Ignore IPv6 unsupported addresses [elfassy] #3622
+* Cybersource: Set partnerSolutionID after the business rules, fixes 500 error [pi3r] #3621
+
+== Version 1.107.2 (May 7, 2020)
+* Cybersource: Send a specific card brand commerceIndicator for 3DS [pi3r] #3620
+* Cybersource: Send application_id as partnerSolutionID [pi3r] #3620
+* Iridium: Localize zero-decimal currencies [chinhle23] #3587
+* iVeri: Fix `verify` action [chinhle23] #3588
+* Ixopay: Properly support three-decimal currencies [chinhle23] #3589
+* Kushki: support `auth` and `capture` [therufs] #3591
+* PaymentExpress: Update references to Windcave to reflect rebranding [britth] #3595
+* Decidir: Improve handling of error responses from the gateway [naashton] #3594
+* CyberSource: Added support for MerchantInformation CyberSource-specific fields [apfranzen] #3592
+* ePay: Send unique order ids for remote tests [curiousepic] #3593
+* Checkout V2: Send more informative error messages for 4xx errors [britth] #3601
+* Elavon: Add ssl_dynamic_dba field [apfranzen] #3600
+* iATS Payments: Update gateway to v3 and add support for additional GSFs [naashton] #3599
+* Remove deprecated `rubyforge_project` attribute and tidy up unit test output [fatcatt316] #3598
+* Elavon: Cleanup inadvertant field removal (avs_address) in #3600 [apfranzen] #3602
+* EBANX: Fix transaction amount for verify transaction [miguelxpn] #3603
+* iATS Payments: Update gateway to accept `email`, `phone`, and `country` fields [naashton] #3607
+* Braintree: Fix response for failed refunds when falling back to voids [jasonwebster] #3608
+* Worldpay: Fix response for failed refunds when falling back to voids [jasonwebster] #3609
+* iATS Payments: Add support for Customer Code payment method [molbrown] #3611
+* HPS: Add Google Pay support [MSmedal] #3597
+* Adyen: Parse appropriate message for 3DS2 authorization calls [britth] #3619
+* CyberSource: Add error details response fields [schwarzgeist] #3629
+
+== Version 1.107.1 (Apr 1, 2020)
+* Add `allowed_push_host` to gemspec [mdeloupy]
+
+== Version 1.107.0 (Apr 1, 2020)
+* Stripe Payment Intents: Early return failed `payment_methods` response [chinhle23] #3570
+* Borgun: Support `passengerItineraryData` [therufs] #3572
+* Ingenico GlobalCollect: support optional `requires_approval` field [fatcatt316] #3571
+* CenPOS: Update failing remote tests [britth] #3575
+* Realex: Update remote tests [britth] #3576
+* FirstData e4 v27: Properly tag stored credential initiation field in request [britth] #3578
+* Orbital: Fix stored credentials [chinhle23] #3579
+* Acapture(Opp): Update gateway credentials [molbrown] #3574
+* Ingenico GlobalCollect: support `requires_approval` field [fatcatt316] #3577
+* CyberSource: Fix `void` for `purchase` transactions [chinhle23] #3581
+* Checkout V2: Begin to add support for using network tokens for transactions. [arbianchi] #3580
+* Opp: Update remote test fixtures [ccarruitero] #3582
+* Optimal Payment: Add support for store [britth] #3585
+* SecurePay Australia : Update test URL (#3586)
+
+== Version 1.106.0 (Mar 10, 2020)
+* PayJunctionV2: Send billing address in `auth` and `purchase` transactions [naashton] #3538
+* Adyen: Fix some remote tests [curiousepic] #3541
+* Redsys: Properly escape cardholder name and description fields in 3DS requests [britth] #3537
+* RuboCop: Fix Style/HashSyntax [leila-alderman] #3540
+* Paypal: Fix OrderTotal elements in `add_payment_details` [chinhle23] #3544
+* Stripe Payment Intents: Add tests for "Idempotency-Key" header [fatcatt316] #3542
+* Paypal: Fix RuboCop Style/HashSyntax violations [chinhle23] #3547
+* Rubocop corrections for space around operators [cdmackeyfree] #3543
+* Fat Zebra: Add `is_billing` in post for `store` call [chinhle23] #3551
+* SafeCharge: Adds four supported countries [carrigan] #3550
+* Ixopay: Support stored credentials [leila-alderman] #3549
+* BlueSnap: Adds localized currency support [carrigan] #3552
+* CheckoutV2: Use status as message for 3DS txns in progress [britth] #3545
+* Stripe Payment Intents: Prevent idempotency key errors for compound actions [britth] #3554
+* Adyen: Add tests for voiding with idempotency keys [jknipp] #3553
+* Fat Zebra: Fix `store` call [chinhle23] #3556
+* Update README to include Adyen [haolime] #3452
+* PayJunctionv2: Fix billing address fields [leila-alderman] #3557
+* Adyen: Fail unexpected 3DS responses [curiousepic] #3546
+* Merchant Warrior: Add support for setting soft descriptors [daBayrus] #3558
+* Adyen: Fix stored credentials [chinhle23] #3560
+* Update BIN ranges for Alelo and Maestro cards [leila-alderman] #3559
+* EBANX: Fix declines if order id is bigger than 40 chars [miguelxpn] #3563
+* Moneris US: Remove gateway [chinhle23] #3561
+* Decidir: Decidir: Improving the response message when encountering errors [naashton] #3564
+* PayBox: Added USERTrust RSA Certification Authority and Sectigo RSA Organization Validation Secure Server CA [baldowl] #3567
+
+== Version 1.105.0 (Feb 20, 2020)
+* Credorax: Fix `3ds_transtype` setting in post [chinhle23] #3531
+* Bambora Apac: Send void amount in options [leila-alderman] #3532
+* RuboCop: Fix Layout/IndentHash [leila-alderman] #3529
+* Stripe: Add connected account support [Carrigan] #3535
+* Redsys: Update scrub method to account for 3DS error responses [britth] #3534
+* Authorize.Net: Pass `account_type` to `check` payment types [chinhle23] #3530
+* Merchant Warrior: Send void amount in options [leila-alderman] #3525
+* Stripe: Add support for `statement_descriptor_suffix` field [Carrigan] #3528
+* Decidir: Add support for fraud_detection, site_id, and establishment_name [fatcatt316] #3527
+* HPS: support eCheck [therufs] #3500
+* EBANX: Add metadata information in post [miguelxpn] #3522
+* Worldpay: Add `riskData` GSF [fatcatt316] #3514
+* EBANX: Fix `scrub` [chinhle23] #3521
+* Worldpay: Remove unnecessary .tag! methods [leila-alderman] #3519
+* BPoint: Remove amount from void requests [leila-alderman] #3518
+* Authorize.net: Trim supported countries to AU, CA, US [fatcatt316] #3516
+* Credorax: Allow optional 3DS 2 fields [jeremywrowe] #3515
+* Stripe: Remove outdated 'customer options' deprecation [alexdunae] #3401
+* Added support for fraud review in CyberSource gateway [greg-burgoon] #3536
+
+== Version 1.104.0 (Jan 29, 2020)
 * Adyen: add `recurring_contract_type` GSF [therufs] #3460
 * Credorax: Only pass `3ds_version` parameter when required [britth] #3458
 * EBANX: Include Peru in supported countries [Ruanito] #3443
@@ -14,7 +157,7 @@
 * CyberSource: add several GSFs [therufs] #3465
 * Adyen: add `recurring_contract_type` GSF to auth [therufs] #3471
 * Stripe Payment Intents: Use localized_amount on capture [molbrown] #3475
-* Add support for dLocal installments [kdelemme] #3456
+* dLocal: Add support for installments [kdelemme] #3456
 * Merchant Warrior: Add void operation [leila-alderman] #3474
 * Decidir: Update payment method IDs [leila-alderman] #3476
 * Adyen: Add delivery address [leila-alderman] #3477
@@ -26,13 +169,21 @@
 * EBANX: Add additional data in post [Ruanito] #3482
 * Credorax: Omit phone when nil [leila-alderman] #3490
 * TransFirst TrExp: Remove hyphens from zip [leila-alderman] #3483
-* RuboCop: Layout/SpaceInsideArrayPercentLiteral fix [leila-alderman] #3484
-* RuboCop: Layout/SpaceInsidePercentLiteralDelimiter [leila-alderman] #3485
-* RuboCop: Layout/SpaceInsideArrayLiteralBrackets [leila-alderman] #3486
-* RuboCop: Layout/EmptyLinesAroundClassBody fix [leila-alderman] #3487
 * Mundipagg: Return acquirer code as the error code [leila-alderman] #3492
-* RuboCop: Fix Layout/FirstParameterIndentation [leila-alderman] #3489
+* Braintree Blue: Remove customer hash when using a payment_method_nonce #3495
 * Credorax: Update non-standard currencies list [chinhle23] #3499
+* Redsys: Update production URL [britth] #3505
+* Moneris: include AVS and CoF fields when storing vault records [alexdunae] #3446
+* Moneris: Add support for temporary vault storage [alexdunae] #3446
+* Clearhaus: Update currencies without fractions list [chinhle23] #3506
+* Merchant Warrior: Add recurringFlag to purchase & authorize [carrigan] #3504
+* CardConnect: Remove domain port validation [leila-alderman] #3494
+* Paymentez: Correct refund and void message parsing [carrigan] #3509
+* Mercado Pago: Add taxes and net_amount gateway specific fields [carrigan] #3512
+* Moneris: use dedicated card_verification methods [alexdunae] #3428
+* Authorize.net: Trim down supported countries [fatcatt316] #3511
+* Stripe: Add support for `statement_descriptor_suffix` field [carrigan] #3528
+* Stripe: Add connected account support [carrigan] #3535
 
 == Version 1.103.0 (Dec 2, 2019)
 * Quickbooks: Mark transactions that returned `AuthorizationFailed` as failures [britth] #3447

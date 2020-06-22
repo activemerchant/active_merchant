@@ -2,37 +2,37 @@ require 'test_helper'
 
 class RemoteMerchantWarriorTest < Test::Unit::TestCase
   def setup
-    @gateway = MerchantWarriorGateway.new(fixtures(:merchant_warrior).merge(:test => true))
+    @gateway = MerchantWarriorGateway.new(fixtures(:merchant_warrior).merge(test: true))
 
     @success_amount = 100
     @failure_amount = 205
 
     @credit_card = credit_card(
       '4564710000000004',
-      :month => '2',
-      :year => '29',
-      :verification_value => '847',
-      :brand => 'visa'
+      month: '2',
+      year: '29',
+      verification_value: '847',
+      brand: 'visa'
     )
 
     @expired_card = credit_card(
       '4564710000000012',
-      :month => '2',
-      :year => '05',
-      :verification_value => '963',
-      :brand => 'visa'
+      month: '2',
+      year: '05',
+      verification_value: '963',
+      brand: 'visa'
     )
 
     @options = {
-      :billing_address => {
-        :name => 'Longbob Longsen',
-        :country => 'AU',
-        :state => 'Queensland',
-        :city => 'Brisbane',
-        :address1 => '123 test st',
-        :zip => '4000'
+      billing_address: {
+        name: 'Longbob Longsen',
+        country: 'AU',
+        state: 'Queensland',
+        city: 'Brisbane',
+        address1: '123 test st',
+        zip: '4000'
       },
-      :description => 'TestProduct'
+      description: 'TestProduct'
     }
   end
 
@@ -84,13 +84,13 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
     assert purchase = @gateway.purchase(@success_amount, @credit_card, @options)
     assert_success purchase
 
-    assert void = @gateway.void(@success_amount, purchase.authorization)
+    assert void = @gateway.void(purchase.authorization, amount: @success_amount)
     assert_success void
     assert_equal 'Transaction approved', void.message
   end
 
   def test_failed_void
-    assert void = @gateway.void(@success_amount, 'invalid-transaction-id')
+    assert void = @gateway.void('invalid-transaction-id', amount: @success_amount)
     assert_match %r{'transactionID' not found}, void.message
     assert_failure void
   end
@@ -135,6 +135,37 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
     assert purchase = @gateway.purchase(@success_amount, @credit_card, @options)
     assert_equal 'Transaction approved', purchase.message
     assert_success purchase
+  end
+
+  def test_successful_purchase_with_recurring_flag
+    @options[:recurring_flag] = 1
+    test_successful_purchase
+  end
+
+  def test_successful_authorize_with_recurring_flag
+    @options[:recurring_flag] = 1
+    test_successful_authorize
+  end
+
+  def test_successful_authorize_with_soft_descriptors
+    @options[:descriptor_name] = 'FOO*Test'
+    @options[:descriptor_city] = 'Melbourne'
+    @options[:descriptor_state] = 'VIC'
+    test_successful_authorize
+  end
+
+  def test_successful_purchase_with_soft_descriptors
+    @options[:descriptor_name] = 'FOO*Test'
+    @options[:descriptor_city] = 'Melbourne'
+    @options[:descriptor_state] = 'VIC'
+    test_successful_purchase
+  end
+
+  def test_successful_refund_with_soft_descriptors
+    @options[:descriptor_name] = 'FOO*Test'
+    @options[:descriptor_city] = 'Melbourne'
+    @options[:descriptor_state] = 'VIC'
+    test_successful_refund
   end
 
   def test_transcript_scrubbing

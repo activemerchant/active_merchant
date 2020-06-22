@@ -5,16 +5,16 @@ class RemoteSoEasyPayTest < Test::Unit::TestCase
     @gateway = SoEasyPayGateway.new(fixtures(:so_easy_pay))
 
     @amount = 100
-    @credit_card = credit_card('4111111111111111', {:verification_value => '000', :month => '12', :year => '2015'})
+    @credit_card = credit_card('4111111111111111', {verification_value: '000', month: '12', year: '2015'})
     @declined_card = credit_card('4000300011112220')
 
     @options = {
-      :currency => 'EUR',
-      :ip => '192.168.19.123',
-      :email => 'test@blaha.com',
-      :order_id => generate_unique_id,
-      :billing_address => address,
-      :description => 'Store Purchase'
+      currency: 'EUR',
+      ip: '192.168.19.123',
+      email: 'test@blaha.com',
+      order_id: generate_unique_id,
+      billing_address: address,
+      description: 'Store Purchase'
     }
   end
 
@@ -53,8 +53,8 @@ class RemoteSoEasyPayTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = SoEasyPayGateway.new(
-      :login => 'one',
-      :password => 'wrong'
+      login: 'one',
+      password: 'wrong'
     )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response

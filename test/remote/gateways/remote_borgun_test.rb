@@ -54,6 +54,27 @@ class RemoteBorgunTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_successful_authorize_airline_data
+    passenger_itinerary_data = {
+      'MessageNumber' => '1111111',
+      'TrDate' => '20120222',
+      'TrTime' => '151515',
+      'PassengerName' => 'Jane Doe',
+      'ServiceClassCode_1' => '100',
+      'FlightNumber_1' => '111111',
+      'TravelDate_1' => '20120222',
+      'DepartureAirport_1' => 'KEF',
+      'CarrierCode_1' => 'CC',
+      'TravelAgencyCode' => 'A7654321',
+      'TravelAgencyName' => 'Spreedly Inc',
+      'TicketNumber' => '900.123.222'
+    }
+
+    options = @options.merge(passenger_itinerary_data: passenger_itinerary_data)
+    auth = @gateway.authorize(@amount, @credit_card, options)
+    assert_success auth
+  end
+
   def test_successful_authorize_and_capture_usd
     auth = @gateway.authorize(@amount, @credit_card, @options.merge(currency: 'USD'))
     assert_success auth
@@ -71,7 +92,7 @@ class RemoteBorgunTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@amount - 1, auth.authorization)
     assert_success capture
   end
 
@@ -100,7 +121,7 @@ class RemoteBorgunTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount-1, purchase.authorization)
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization)
     assert_success refund
   end
 

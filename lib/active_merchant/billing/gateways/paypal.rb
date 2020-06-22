@@ -8,8 +8,8 @@ module ActiveMerchant #:nodoc:
       include PaypalCommonAPI
       include PaypalRecurringApi
 
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
-      self.supported_countries = ['CA', 'NZ', 'GB', 'US']
+      self.supported_countries = %w[CA NZ GB US]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.homepage_url = 'https://www.paypal.com/us/webapps/mpp/paypal-payments-pro'
       self.display_name = 'PayPal Payments Pro (US)'
 
@@ -55,7 +55,7 @@ module ActiveMerchant #:nodoc:
         billing_address = options[:billing_address] || options[:address]
         currency_code = options[:currency] || currency(money)
 
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.tag! transaction_type + 'Req', 'xmlns' => PAYPAL_NAMESPACE do
           xml.tag! transaction_type + 'Request', 'xmlns:n2' => EBAY_NAMESPACE do
             xml.tag! 'n2:Version', API_VERSION

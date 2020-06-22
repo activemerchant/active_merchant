@@ -5,7 +5,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://pgw.ceca.es'
 
       self.supported_countries = ['ES']
-      self.supported_cardtypes = [:visa, :master, :american_express]
+      self.supported_cardtypes = %i[visa master american_express]
       self.homepage_url = 'http://www.ceca.es/es/'
       self.display_name = 'Cecabank'
       self.default_currency = 'EUR'
@@ -173,9 +173,9 @@ module ActiveMerchant #:nodoc:
           response[:success],
           message_from(response),
           response,
-          :test => test?,
-          :authorization => build_authorization(response),
-          :error_code => response[:error_code]
+          test: test?,
+          authorization: build_authorization(response),
+          error_code: response[:error_code]
         )
       end
 
@@ -194,6 +194,7 @@ module ActiveMerchant #:nodoc:
 
         params.map do |key, value|
           next if value.blank?
+
           if value.is_a?(Hash)
             h = {}
             value.each do |k, v|

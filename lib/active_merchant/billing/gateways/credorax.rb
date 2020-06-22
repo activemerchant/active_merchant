@@ -25,7 +25,7 @@ module ActiveMerchant #:nodoc:
       self.currencies_with_three_decimal_places = %w(BHD IQD JOD KWD LYD OMR TND)
 
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :maestro]
+      self.supported_cardtypes = %i[visa master maestro]
 
       RESPONSE_MESSAGES = {
         '00' => 'Approved or completed successfully',
@@ -132,6 +132,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_email(post, options)
         add_3d_secure(post, options)
+        add_3ds_2_optional_fields(post, options)
         add_echo(post, options)
         add_submerchant_id(post, options)
         add_stored_credential(post, options)
@@ -147,6 +148,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_email(post, options)
         add_3d_secure(post, options)
+        add_3ds_2_optional_fields(post, options)
         add_echo(post, options)
         add_submerchant_id(post, options)
         add_stored_credential(post, options)
@@ -228,6 +230,21 @@ module ActiveMerchant #:nodoc:
           gsub(%r((b5=)\d+), '\1[FILTERED]')
       end
 
+      def add_3ds_2_optional_fields(post, options)
+        three_ds = options[:three_ds_2] || {}
+
+        if three_ds.has_key?(:optional)
+          three_ds[:optional].each do |key, value|
+            normalized_value = normalize(value)
+            next if normalized_value.nil?
+
+            post[key] = normalized_value unless post[key]
+          end
+        end
+
+        post
+      end
+
       private
 
       def add_invoice(post, money, options)
@@ -259,6 +276,7 @@ module ActiveMerchant #:nodoc:
         add_transaction_type(post, options)
         # if :transaction_type option is not passed, then check for :stored_credential options
         return unless (stored_credential = options[:stored_credential]) && options.dig(:transaction_type).nil?
+
         if stored_credential[:initiator] == 'merchant'
           case stored_credential[:reason_type]
           when 'recurring'
@@ -307,7 +325,7 @@ module ActiveMerchant #:nodoc:
           post[:'3ds_redirect_url'] = three_ds_2_options[:notification_url]
           post[:'3ds_challengewindowsize'] = options[:three_ds_challenge_window_size] || '03'
           post[:d5] = browser_info[:user_agent]
-          post[:'3ds_transtype'] = options[:transaction_type] || '01'
+          post[:'3ds_transtype'] = options[:three_ds_transtype] || '01'
           post[:'3ds_browsertz'] = browser_info[:timezone]
           post[:'3ds_browserscreenwidth'] = browser_info[:width]
           post[:'3ds_browserscreenheight'] = browser_info[:height]
@@ -395,7 +413,7 @@ module ActiveMerchant #:nodoc:
           success_from(response),
           message_from(response),
           response,
-          authorization: "#{response["Z1"]};#{response["Z4"]};#{response["A1"]};#{action}",
+          authorization: "#{response['Z1']};#{response['Z4']};#{response['A1']};#{action}",
           avs_result: AVSResult.new(code: response['Z9']),
           cvv_result: CVVResult.new(response['Z14']),
           test: test?
@@ -404,8 +422,10 @@ module ActiveMerchant #:nodoc:
 
       def sign_request(params)
         params = params.sort
-        params.each { |param| param[1].gsub!(/[<>()\\]/, ' ') }
-        values = params.map { |param| param[1].strip }
+        values = params.map do |param|
+          value = param[1].gsub(/[<>()\\]/, ' ')
+          value.strip
+        end
         Digest::MD5.hexdigest(values.join + @options[:cipher_key])
       end
 

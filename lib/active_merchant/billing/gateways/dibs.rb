@@ -6,10 +6,10 @@ module ActiveMerchant #:nodoc:
 
       self.live_url = 'https://api.dibspayment.com/merchant/v1/JSON/Transaction/'
 
-      self.supported_countries = ['US', 'FI', 'NO', 'SE', 'GB']
+      self.supported_countries = %w[US FI NO SE GB]
       self.default_currency = 'USD'
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       def initialize(options={})
         requires!(options, :merchant_id, :secret_key)

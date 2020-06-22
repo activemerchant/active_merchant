@@ -8,26 +8,26 @@ class RemotePayflowTest < Test::Unit::TestCase
 
     @credit_card = credit_card(
       '5105105105105100',
-      :brand => 'master'
+      brand: 'master'
     )
 
     @options = {
-      :billing_address => address,
-      :email => 'cody@example.com',
-      :customer => 'codyexample'
+      billing_address: address,
+      email: 'cody@example.com',
+      customer: 'codyexample'
     }
 
     @extra_options = {
-      :order_id => '123',
-      :description => 'Description string',
-      :order_desc => 'OrderDesc string',
-      :comment => 'Comment string',
-      :comment2 => 'Comment2 string'
+      order_id: '123',
+      description: 'Description string',
+      order_desc: 'OrderDesc string',
+      comment: 'Comment string',
+      comment2: 'Comment2 string'
     }
 
     @check = check(
-      :routing_number => '111111118',
-      :account_number => '1111111111'
+      routing_number: '111111118',
+      account_number: '1111111111'
     )
 
     @l2_json = '{
@@ -192,7 +192,7 @@ class RemotePayflowTest < Test::Unit::TestCase
     assert_equal 'Approved', auth.message
     assert auth.authorization
 
-    assert capture = @gateway.capture(100, auth.authorization, :capture_complete => 'Y')
+    assert capture = @gateway.capture(100, auth.authorization, capture_complete: 'Y')
     assert_success capture
 
     assert capture = @gateway.capture(100, auth.authorization)
@@ -205,7 +205,7 @@ class RemotePayflowTest < Test::Unit::TestCase
     assert_equal 'Approved', auth.message
     assert auth.authorization
 
-    assert capture = @gateway.capture(100, auth.authorization, :capture_complete => 'N')
+    assert capture = @gateway.capture(100, auth.authorization, capture_complete: 'N')
     assert_success capture
 
     assert capture = @gateway.capture(100, auth.authorization)
@@ -236,7 +236,7 @@ class RemotePayflowTest < Test::Unit::TestCase
   def test_successful_verify_amex
     @amex_credit_card = credit_card(
       '378282246310005',
-      :brand => 'american_express'
+      brand: 'american_express'
     )
     assert response = @gateway.verify(@amex_credit_card, @options)
     assert_success response
@@ -251,8 +251,8 @@ class RemotePayflowTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = PayflowGateway.new(
-      :login => '',
-      :password => ''
+      login: '',
+      password: ''
     )
     assert response = gateway.purchase(100, @credit_card, @options)
     assert_equal 'Invalid vendor account', response.message
@@ -274,7 +274,7 @@ class RemotePayflowTest < Test::Unit::TestCase
 
   def test_create_recurring_profile
     response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
-      @gateway.recurring(1000, @credit_card, :periodicity => :monthly)
+      @gateway.recurring(1000, @credit_card, periodicity: :monthly)
     end
     assert_success response
     assert !response.params['profile_id'].blank?
@@ -283,7 +283,7 @@ class RemotePayflowTest < Test::Unit::TestCase
 
   def test_create_recurring_profile_with_invalid_date
     response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
-      @gateway.recurring(1000, @credit_card, :periodicity => :monthly, :starting_at => Time.now)
+      @gateway.recurring(1000, @credit_card, periodicity: :monthly, starting_at: Time.now)
     end
     assert_failure response
     assert_equal 'Field format error: Start or next payment date must be a valid future date', response.message
@@ -293,7 +293,7 @@ class RemotePayflowTest < Test::Unit::TestCase
 
   def test_create_and_cancel_recurring_profile
     response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
-      @gateway.recurring(1000, @credit_card, :periodicity => :monthly)
+      @gateway.recurring(1000, @credit_card, periodicity: :monthly)
     end
     assert_success response
     assert !response.params['profile_id'].blank?
@@ -309,10 +309,10 @@ class RemotePayflowTest < Test::Unit::TestCase
   def test_full_feature_set_for_recurring_profiles
     # Test add
     @options.update(
-      :periodicity => :weekly,
-      :payments => '12',
-      :starting_at => Time.now + 1.day,
-      :comment => 'Test Profile'
+      periodicity: :weekly,
+      payments: '12',
+      starting_at: Time.now + 1.day,
+      comment: 'Test Profile'
     )
     response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
       @gateway.recurring(100, @credit_card, @options)
@@ -326,10 +326,10 @@ class RemotePayflowTest < Test::Unit::TestCase
 
     # Test modify
     @options.update(
-      :periodicity => :monthly,
-      :starting_at => Time.now + 1.day,
-      :payments => '4',
-      :profile_id => @recurring_profile_id
+      periodicity: :monthly,
+      starting_at: Time.now + 1.day,
+      payments: '4',
+      profile_id: @recurring_profile_id
     )
     response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
       @gateway.recurring(400, @credit_card, @options)
@@ -349,7 +349,7 @@ class RemotePayflowTest < Test::Unit::TestCase
 
     # Test payment history inquiry
     response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
-      @gateway.recurring_inquiry(@recurring_profile_id, :history => true)
+      @gateway.recurring_inquiry(@recurring_profile_id, history: true)
     end
     assert_equal '0', response.params['result']
     assert_success response
@@ -383,10 +383,10 @@ class RemotePayflowTest < Test::Unit::TestCase
   def test_recurring_with_initial_authorization
     response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
       @gateway.recurring(1000, @credit_card,
-        :periodicity => :monthly,
-        :initial_transaction => {
-          :type => :purchase,
-          :amount => 500
+        periodicity: :monthly,
+        initial_transaction: {
+          type: :purchase,
+          amount: 500
         }
       )
     end
@@ -455,13 +455,13 @@ class RemotePayflowTest < Test::Unit::TestCase
 
   def three_d_secure_option
     {
-        :three_d_secure => {
-            :authentication_id => 'QvDbSAxSiaQs241899E0',
-            :authentication_response_status => 'Y',
-            :eci => '02',
-            :cavv => 'jGvQIvG/5UhjAREALGYa6Vu/hto=',
-            :xid => 'UXZEYlNBeFNpYVFzMjQxODk5RTA='
-        }
+      three_d_secure: {
+        authentication_id: 'QvDbSAxSiaQs241899E0',
+        authentication_response_status: 'Y',
+        eci: '02',
+        cavv: 'jGvQIvG/5UhjAREALGYa6Vu/hto=',
+        xid: 'UXZEYlNBeFNpYVFzMjQxODk5RTA='
+      }
     }
   end
 
