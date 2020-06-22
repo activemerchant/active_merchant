@@ -121,99 +121,99 @@ class MerchantWareTest < Test::Unit::TestCase
   private
 
   def successful_authorization_response
-    <<-XML
-<?xml version="1.0" encoding="utf-8"?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <soap:Body>
-    <IssueKeyedPreAuthResponse xmlns="http://merchantwarehouse.com/MerchantWARE/Client/TransactionRetail">
-      <IssueKeyedPreAuthResult>
-        <ReferenceID>4706382</ReferenceID>
-        <OrderNumber>1</OrderNumber>
-        <TXDate>7/3/2009 2:05:04 AM</TXDate>
-        <ApprovalStatus>APPROVED</ApprovalStatus>
-        <AuthCode>VI0100</AuthCode>
-        <CardHolder>Longbob Longsen</CardHolder>
-        <Amount>1.00</Amount>
-        <Type>5</Type>
-        <CardNumber>************4242</CardNumber>
-        <CardType>0</CardType>
-        <AVSResponse>N</AVSResponse>
-        <CVResponse>M</CVResponse>
-        <POSEntryType>1</POSEntryType>
-      </IssueKeyedPreAuthResult>
-    </IssueKeyedPreAuthResponse>
-  </soap:Body>
-</soap:Envelope>
+    <<~XML
+      <?xml version="1.0" encoding="utf-8"?>
+      <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        <soap:Body>
+          <IssueKeyedPreAuthResponse xmlns="http://merchantwarehouse.com/MerchantWARE/Client/TransactionRetail">
+            <IssueKeyedPreAuthResult>
+              <ReferenceID>4706382</ReferenceID>
+              <OrderNumber>1</OrderNumber>
+              <TXDate>7/3/2009 2:05:04 AM</TXDate>
+              <ApprovalStatus>APPROVED</ApprovalStatus>
+              <AuthCode>VI0100</AuthCode>
+              <CardHolder>Longbob Longsen</CardHolder>
+              <Amount>1.00</Amount>
+              <Type>5</Type>
+              <CardNumber>************4242</CardNumber>
+              <CardType>0</CardType>
+              <AVSResponse>N</AVSResponse>
+              <CVResponse>M</CVResponse>
+              <POSEntryType>1</POSEntryType>
+            </IssueKeyedPreAuthResult>
+          </IssueKeyedPreAuthResponse>
+        </soap:Body>
+      </soap:Envelope>
     XML
   end
 
   def fault_authorization_response
-    <<-XML
-<?xml version="1.0" encoding="utf-8"?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <soap:Body>
-    <soap:Fault>
-      <faultcode>soap:Server</faultcode>
-      <faultstring>Server was unable to process request. ---&gt; strPAN should be at least 13 to at most 19 characters in size.
-Parameter name: strPAN</faultstring>
-      <detail/>
-    </soap:Fault>
-  </soap:Body>
-</soap:Envelope>
+    <<~XML
+      <?xml version="1.0" encoding="utf-8"?>
+      <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        <soap:Body>
+          <soap:Fault>
+            <faultcode>soap:Server</faultcode>
+            <faultstring>Server was unable to process request. ---&gt; strPAN should be at least 13 to at most 19 characters in size.
+      Parameter name: strPAN</faultstring>
+            <detail/>
+          </soap:Fault>
+        </soap:Body>
+      </soap:Envelope>
     XML
   end
 
   def failed_authorization_response
-    <<-XML
-<?xml version="1.0" encoding="utf-8"?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <soap:Body>
-    <IssueKeyedPreAuthResponse xmlns="http://merchantwarehouse.com/MerchantWARE/Client/TransactionRetail">
-      <IssueKeyedPreAuthResult>
-        <ReferenceID/>
-        <OrderNumber>1</OrderNumber>
-        <TXDate>7/3/2009 3:04:33 AM</TXDate>
-        <ApprovalStatus>FAILED;1014;transaction type not supported by version</ApprovalStatus>
-        <AuthCode/>
-        <CardHolder>Longbob Longsen</CardHolder>
-        <Amount>1.00</Amount>
-        <Type>5</Type>
-        <CardNumber>*********0123</CardNumber>
-        <CardType>0</CardType>
-        <AVSResponse/>
-        <CVResponse/>
-        <POSEntryType>1</POSEntryType>
-      </IssueKeyedPreAuthResult>
-    </IssueKeyedPreAuthResponse>
-  </soap:Body>
-</soap:Envelope>
+    <<~XML
+      <?xml version="1.0" encoding="utf-8"?>
+      <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        <soap:Body>
+          <IssueKeyedPreAuthResponse xmlns="http://merchantwarehouse.com/MerchantWARE/Client/TransactionRetail">
+            <IssueKeyedPreAuthResult>
+              <ReferenceID/>
+              <OrderNumber>1</OrderNumber>
+              <TXDate>7/3/2009 3:04:33 AM</TXDate>
+              <ApprovalStatus>FAILED;1014;transaction type not supported by version</ApprovalStatus>
+              <AuthCode/>
+              <CardHolder>Longbob Longsen</CardHolder>
+              <Amount>1.00</Amount>
+              <Type>5</Type>
+              <CardNumber>*********0123</CardNumber>
+              <CardType>0</CardType>
+              <AVSResponse/>
+              <CVResponse/>
+              <POSEntryType>1</POSEntryType>
+            </IssueKeyedPreAuthResult>
+          </IssueKeyedPreAuthResponse>
+        </soap:Body>
+      </soap:Envelope>
     XML
   end
 
   def failed_void_response
-    <<-XML
-<?xml version="1.0" encoding="utf-8"?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <soap:Body>
-    <VoidPreAuthorizationResponse xmlns="http://merchantwarehouse.com/MerchantWARE/Client/TransactionRetail">
-      <VoidPreAuthorizationResult>
-        <ReferenceID>4707277</ReferenceID>
-        <OrderNumber/>
-        <TXDate>7/3/2009 3:28:38 AM</TXDate>
-        <ApprovalStatus>DECLINED;1012;decline</ApprovalStatus>
-        <AuthCode/>
-        <CardHolder/>
-        <Amount/>
-        <Type>3</Type>
-        <CardNumber/>
-        <CardType>0</CardType>
-        <AVSResponse/>
-        <CVResponse/>
-        <POSEntryType>0</POSEntryType>
-      </VoidPreAuthorizationResult>
-    </VoidPreAuthorizationResponse>
-  </soap:Body>
-</soap:Envelope>
+    <<~XML
+      <?xml version="1.0" encoding="utf-8"?>
+      <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        <soap:Body>
+          <VoidPreAuthorizationResponse xmlns="http://merchantwarehouse.com/MerchantWARE/Client/TransactionRetail">
+            <VoidPreAuthorizationResult>
+              <ReferenceID>4707277</ReferenceID>
+              <OrderNumber/>
+              <TXDate>7/3/2009 3:28:38 AM</TXDate>
+              <ApprovalStatus>DECLINED;1012;decline</ApprovalStatus>
+              <AuthCode/>
+              <CardHolder/>
+              <Amount/>
+              <Type>3</Type>
+              <CardNumber/>
+              <CardType>0</CardType>
+              <AVSResponse/>
+              <CVResponse/>
+              <POSEntryType>0</POSEntryType>
+            </VoidPreAuthorizationResult>
+          </VoidPreAuthorizationResponse>
+        </soap:Body>
+      </soap:Envelope>
     XML
   end
 end

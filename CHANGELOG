@@ -21,6 +21,7 @@
 * Alia: Skip Luhn validation [therufs] #3673
 * Diners Club: support 16 digit card numbers [therufs] #3682
 * Cybersource: pass reconciliation_id [therufs] #3688
+* RuboCop: Fix Layout/HeredocIndentation [leila-alderman] #3685
 
 == Version 1.108.0 (Jun 9, 2020)
 * Cybersource: Send cavv as xid is xid is missing [pi3r] #3658

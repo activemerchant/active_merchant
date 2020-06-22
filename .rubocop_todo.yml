@@ -23,13 +23,6 @@ Gemspec/OrderedDependencies:
 Layout/AlignHash:
   Enabled: false
 
-# Offense count: 392
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: auto_detection, squiggly, active_support, powerpack, unindent
-Layout/IndentHeredoc:
-  Enabled: false
-
 # Offense count: 232
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle.
