@@ -150,21 +150,23 @@ class RemoteNetbanxTest < Test::Unit::TestCase
   #   assert_success refund
   #   assert_equal 'OK', refund.message
   # end
-  # We added the step. If the transactions that are pending, API call needs to be Cancellation
-  # def test_failed_refund
-  #   # Read comment in `test_successful_refund` method.
-  #   auth = @gateway.authorize(@amount, @credit_card, @options)
-  #   assert_success auth
-  #
-  #   assert capture = @gateway.capture(@amount, auth.authorization, @options)
-  #   assert_success capture
-  #
-  #   # the following shall fail if you run it immediately after the capture
-  #   # as noted in the comment from `test_successful_refund`
-  #   assert refund = @gateway.refund(@amount, capture.authorization)
-  #   assert_failure refund
-  #   assert_equal 'The settlement you are attempting to refund has not been batched yet. There are no settled funds available to refund.', refund.message
-  # end
+
+  # Changed test_failed_refund to test_cancelled_refund
+  # Because We added the checking status. If the transactions that are pending, API call needs to be Cancellation
+  def test_cancelled_refund
+    # Read comment in `test_successful_refund` method.
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    assert capture = @gateway.capture(@amount, auth.authorization, @options)
+    assert_success capture
+
+    # The settlement you are attempting to refund has not been batched yet. There are no settled funds available to refund.
+    # So the following refund shall be cancelled if you run it immediately after the capture
+    assert cancelled_response = @gateway.refund(@amount, capture.authorization)
+    assert_success cancelled_response
+    assert_equal 'CANCELLED', cancelled_response.params['status']
+  end
 
   def test_successful_void
     auth = @gateway.authorize(@amount, @credit_card, @options)
@@ -232,7 +234,7 @@ class RemoteNetbanxTest < Test::Unit::TestCase
     assert_equal 'OK', response.message
   end
 
-  def test_successful_varify
+  def test_successful_verify
     verify = @gateway.verify(@credit_card, @options)
     assert_success verify
   end
@@ -241,8 +243,8 @@ class RemoteNetbanxTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     authorization = response.authorization
 
-    assert cancel = @gateway.refund(@amount, authorization)
-    assert_success cancel
-    assert_equal 'OK', cancel.message
+    assert cancelled_response = @gateway.refund(@amount, authorization)
+    assert_success cancelled_response
+    assert_equal 'CANCELLED', cancelled_response.params['status']
   end
 end
