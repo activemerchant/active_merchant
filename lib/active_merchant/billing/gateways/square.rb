@@ -4,9 +4,9 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://connect.squareupsandbox.com/v2'
       self.live_url = 'https://connect.squareup.com/v2'
 
-      self.supported_countries = ['US', 'CA', 'GB', 'AU', 'JP']
+      self.supported_countries = %w[US CA GB AU JP]
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :union_pay]
+      self.supported_cardtypes = %i[visa master american_express discover jcb union_pay]
       self.money_format = :cents
 
       self.homepage_url = 'https://squareup.com/'
@@ -298,7 +298,7 @@ module ActiveMerchant #:nodoc:
         msg += "  (The raw response returned by the API was #{raw_response.inspect})"
 
         {
-          'errors' => [ { 'message' => msg } ]
+          'errors' => [{ 'message' => msg }]
         }
       end
     end

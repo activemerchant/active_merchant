@@ -163,5 +163,4 @@ class RemoteSquareTest < Test::Unit::TestCase
     assert_scrubbed(@gateway.options[:access_token], transcript)
     assert_scrubbed(@card_nonce, transcript)
   end
-
 end
