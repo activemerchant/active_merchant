@@ -25,7 +25,7 @@ class RemoteConektaTest < Test::Unit::TestCase
     )
 
     @options = {
-      :device_fingerprint => '41l9l92hjco6cuekf0c7dq68v4',
+      device_fingerprint: '41l9l92hjco6cuekf0c7dq68v4',
       description: 'Blue clip',
       billing_address: {
         address1: 'Rio Missisipi #123',
@@ -39,13 +39,13 @@ class RemoteConektaTest < Test::Unit::TestCase
       carrier: 'Estafeta',
       email: 'bob@something.com',
       line_items: [{
-      name: 'Box of Cohiba S1s',
-      description: 'Imported From Mex.',
-      unit_price: 20000,
-      quantity: 1,
-      sku: '7500244909',
-      type: 'food'
-     }]
+        name: 'Box of Cohiba S1s',
+        description: 'Imported From Mex.',
+        unit_price: 20000,
+        quantity: 1,
+        sku: '7500244909',
+        type: 'food'
+      }]
     }
   end
 

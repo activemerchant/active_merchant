@@ -12,8 +12,8 @@ class PayeezyGateway < Test::Unit::TestCase
     @check = check
     @amount = 100
     @options = {
-      :billing_address => address,
-      :ta_token => '123'
+      billing_address: address,
+      ta_token: '123'
     }
     @options_stored_credentials = {
       cardbrand_original_transaction_id: 'abc123',
@@ -244,11 +244,11 @@ class PayeezyGateway < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal ['CA', 'US'].sort, PayeezyGateway.supported_countries.sort
+    assert_equal %w[CA US].sort, PayeezyGateway.supported_countries.sort
   end
 
   def test_supported_cardtypes
-    assert_equal [:visa, :master, :american_express, :discover, :jcb, :diners_club], PayeezyGateway.supported_cardtypes
+    assert_equal %i[visa master american_express discover jcb diners_club], PayeezyGateway.supported_cardtypes
   end
 
   def test_avs_result

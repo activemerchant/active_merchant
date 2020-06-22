@@ -11,64 +11,60 @@ class AdyenTest < Test::Unit::TestCase
     )
 
     @credit_card = credit_card('4111111111111111',
-      :month => 8,
-      :year => 2018,
-      :first_name => 'Test',
-      :last_name => 'Card',
-      :verification_value => '737',
-      :brand => 'visa'
+      month: 8,
+      year: 2018,
+      first_name: 'Test',
+      last_name: 'Card',
+      verification_value: '737',
+      brand: 'visa'
     )
 
     @elo_credit_card = credit_card('5066 9911 1111 1118',
-      :month => 10,
-      :year => 2020,
-      :first_name => 'John',
-      :last_name => 'Smith',
-      :verification_value => '737',
-      :brand => 'elo'
+      month: 10,
+      year: 2020,
+      first_name: 'John',
+      last_name: 'Smith',
+      verification_value: '737',
+      brand: 'elo'
     )
 
     @cabal_credit_card = credit_card('6035 2277 1642 7021',
-      :month => 10,
-      :year => 2020,
-      :first_name => 'John',
-      :last_name => 'Smith',
-      :verification_value => '737',
-      :brand => 'cabal'
+      month: 10,
+      year: 2020,
+      first_name: 'John',
+      last_name: 'Smith',
+      verification_value: '737',
+      brand: 'cabal'
+    )
+
+    @unionpay_credit_card = credit_card('8171 9999 0000 0000 021',
+      month: 10,
+      year: 2030,
+      first_name: 'John',
+      last_name: 'Smith',
+      verification_value: '737',
+      brand: 'unionpay'
     )
 
     @three_ds_enrolled_card = credit_card('4212345678901237', brand: :visa)
 
     @apple_pay_card = network_tokenization_credit_card('4111111111111111',
-      :payment_cryptogram => 'YwAAAAAABaYcCMX/OhNRQAAAAAA=',
-      :month              => '08',
-      :year               => '2018',
-      :source             => :apple_pay,
-      :verification_value => nil
+      payment_cryptogram: 'YwAAAAAABaYcCMX/OhNRQAAAAAA=',
+      month: '08',
+      year: '2018',
+      source: :apple_pay,
+      verification_value: nil
     )
 
     @amount = 100
 
     @options = {
       billing_address: address(),
+      shipping_address: address(),
       shopper_reference: 'John Smith',
       order_id: '345123',
       installments: 2,
       stored_credential: {reason_type: 'unscheduled'}
-    }
-
-    @normalized_initial_stored_credential = {
-      stored_credential: {
-        initial_transaction: true,
-        reason_type: 'unscheduled'
-      }
-    }
-
-    @normalized_stored_credential = {
-      stored_credential: {
-        initial_transaction: false,
-        reason_type: 'recurring'
-      }
     }
 
     @normalized_3ds_2_options = {
@@ -137,6 +133,21 @@ class AdyenTest < Test::Unit::TestCase
     refute response.params['issuerUrl'].blank?
     refute response.params['md'].blank?
     refute response.params['paRequest'].blank?
+  end
+
+  def test_failed_authorize_with_unexpected_3ds
+    @gateway.expects(:ssl_post).returns(successful_authorize_with_3ds_response)
+    response = @gateway.authorize(@amount, @three_ds_enrolled_card, @options)
+    assert_failure response
+    assert_match 'Received unexpected 3DS authentication response', response.message
+  end
+
+  def test_successful_authorize_with_recurring_contract_type
+    stub_comms do
+      @gateway.authorize(100, @credit_card, @options.merge({recurring_contract_type: 'ONECLICK'}))
+    end.check_request do |endpoint, data, headers|
+      assert_equal 'ONECLICK', JSON.parse(data)['recurring']['contract']
+    end.respond_with(successful_authorize_response)
   end
 
   def test_adds_3ds1_standalone_fields
@@ -214,6 +225,15 @@ class AdyenTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_failed_authorise3ds2
+    @gateway.expects(:ssl_post).returns(failed_authorize_3ds2_response)
+
+    response = @gateway.send(:commit, 'authorise3ds2', {}, {})
+
+    assert_equal '3D Not Authenticated', response.message
+    assert_failure response
+  end
+
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
     response = @gateway.capture(@amount, '7914775043909934')
@@ -242,7 +262,7 @@ class AdyenTest < Test::Unit::TestCase
   def test_successful_purchase_with_elo_card
     response = stub_comms do
       @gateway.purchase(@amount, @elo_credit_card, @options)
-    end.respond_with(successful_authorize_with_elo_response, successful_capture_with_elo_repsonse)
+    end.respond_with(simple_successful_authorize_response, simple_successful_capture_repsonse)
     assert_success response
     assert_equal '8835511210681145#8835511210689965#', response.authorization
     assert response.test?
@@ -251,9 +271,18 @@ class AdyenTest < Test::Unit::TestCase
   def test_successful_purchase_with_cabal_card
     response = stub_comms do
       @gateway.purchase(@amount, @cabal_credit_card, @options)
-    end.respond_with(successful_authorize_with_cabal_response, successful_capture_with_cabal_repsonse)
+    end.respond_with(simple_successful_authorize_response, simple_successful_capture_repsonse)
     assert_success response
-    assert_equal '883567090118045A#883567090119063C#', response.authorization
+    assert_equal '8835511210681145#8835511210689965#', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_purchase_with_unionpay_card
+    response = stub_comms do
+      @gateway.purchase(@amount, @unionpay_credit_card, @options)
+    end.respond_with(simple_successful_authorize_response, simple_successful_capture_repsonse)
+    assert_success response
+    assert_equal '8835511210681145#8835511210689965#', response.authorization
     assert response.test?
   end
 
@@ -261,7 +290,7 @@ class AdyenTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge({selected_brand: 'maestro', overwrite_brand: 'true'}))
     end.check_request do |endpoint, data, headers|
-      if endpoint =~ /authorise/
+      if /authorise/.match?(endpoint)
         assert_match(/"overwriteBrand":true/, data)
         assert_match(/"selectedBrand":"maestro"/, data)
       end
@@ -317,7 +346,7 @@ class AdyenTest < Test::Unit::TestCase
       'amount' => {
         'currency' => 'USD',
         'value' => 50
-        },
+      },
       'type' => 'MarketPlace',
       'account' => '163298747',
       'reference' => 'QXhlbFN0b2x0ZW5iZXJnCg'
@@ -325,7 +354,7 @@ class AdyenTest < Test::Unit::TestCase
       'amount' => {
         'currency' => 'USD',
         'value' => 50
-        },
+      },
       'type' => 'Commission',
       'reference' => 'THVjYXNCbGVkc29lCg'
     }]
@@ -425,23 +454,104 @@ class AdyenTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
-  def test_successful_authorize_with_normalized_stored_credentials
+  def test_stored_credential_recurring_cit_initial
+    options = stored_credential_options(:cardholder, :recurring, :initial)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/"shopperInteraction":"Ecommerce"/, data)
+      assert_match(/"recurringProcessingModel":"Subscription"/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_recurring_cit_used
     @credit_card.verification_value = nil
-    stub_comms do
-      @gateway.authorize(50, @credit_card, @options.merge(@normalized_stored_credential))
+    options = stored_credential_options(:cardholder, :recurring, id: 'abc123')
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |endpoint, data, headers|
       assert_match(/"shopperInteraction":"ContAuth"/, data)
       assert_match(/"recurringProcessingModel":"Subscription"/, data)
     end.respond_with(successful_authorize_response)
+
+    assert_success response
   end
 
-  def test_successful_initial_authorize_with_normalized_stored_credentials
-    stub_comms do
-      @gateway.authorize(50, @credit_card, @options.merge(@normalized_initial_stored_credential))
+  def test_stored_credential_recurring_mit_initial
+    options = stored_credential_options(:merchant, :recurring, :initial)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/"shopperInteraction":"ContAuth"/, data)
+      assert_match(/"recurringProcessingModel":"Subscription"/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_recurring_mit_used
+    @credit_card.verification_value = nil
+    options = stored_credential_options(:merchant, :recurring, id: 'abc123')
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/"shopperInteraction":"ContAuth"/, data)
+      assert_match(/"recurringProcessingModel":"Subscription"/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_unscheduled_cit_initial
+    options = stored_credential_options(:cardholder, :unscheduled, :initial)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |endpoint, data, headers|
       assert_match(/"shopperInteraction":"Ecommerce"/, data)
       assert_match(/"recurringProcessingModel":"CardOnFile"/, data)
     end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_unscheduled_cit_used
+    @credit_card.verification_value = nil
+    options = stored_credential_options(:cardholder, :unscheduled, id: 'abc123')
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/"shopperInteraction":"ContAuth"/, data)
+      assert_match(/"recurringProcessingModel":"CardOnFile"/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_unscheduled_mit_initial
+    options = stored_credential_options(:merchant, :unscheduled, :initial)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/"shopperInteraction":"ContAuth"/, data)
+      assert_match(/"recurringProcessingModel":"UnscheduledCardOnFile"/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_unscheduled_mit_used
+    @credit_card.verification_value = nil
+    options = stored_credential_options(:merchant, :unscheduled, id: 'abc123')
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/"shopperInteraction":"ContAuth"/, data)
+      assert_match(/"recurringProcessingModel":"UnscheduledCardOnFile"/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
   end
 
   def test_nonfractional_currency_handling
@@ -548,7 +658,6 @@ class AdyenTest < Test::Unit::TestCase
       @gateway.store(@credit_card, @options)
     end.check_request do |endpoint, data, headers|
       assert_equal 'CardOnFile', JSON.parse(data)['recurringProcessingModel']
-      assert_equal 'RECURRING', JSON.parse(data)['recurring']['contract']
     end.respond_with(successful_store_response)
     assert_success response
     assert_equal '#8835205392522157#8315202663743702', response.authorization
@@ -559,6 +668,14 @@ class AdyenTest < Test::Unit::TestCase
       @gateway.store(@credit_card, @options.merge({recurring_contract_type: 'ONECLICK'}))
     end.check_request do |endpoint, data, headers|
       assert_equal 'ONECLICK', JSON.parse(data)['recurring']['contract']
+    end.respond_with(successful_store_response)
+  end
+
+  def test_recurring_contract_type_set_for_reference_purchase
+    stub_comms do
+      @gateway.store('123', @options)
+    end.check_request do |endpoint, data, headers|
+      assert_equal 'RECURRING', JSON.parse(data)['recurring']['contract']
     end.respond_with(successful_store_response)
   end
 
@@ -574,6 +691,7 @@ class AdyenTest < Test::Unit::TestCase
       @gateway.unstore(shopper_reference: 'shopper_reference',
                        recurring_detail_reference: 'detail_reference')
     end.respond_with(successful_unstore_response)
+    assert_success response
     assert_equal '[detail-successfully-disabled]', response.message
   end
 
@@ -624,17 +742,26 @@ class AdyenTest < Test::Unit::TestCase
   end
 
   def test_add_address
-    post = {:card => {:billingAddress => {}}}
+    post = {card: {billingAddress: {}}}
     @options[:billing_address].delete(:address1)
     @options[:billing_address].delete(:address2)
     @options[:billing_address].delete(:state)
+    @options[:shipping_address].delete(:state)
     @gateway.send(:add_address, post, @options)
+    # Billing Address
     assert_equal 'NA', post[:billingAddress][:street]
     assert_equal 'NA', post[:billingAddress][:houseNumberOrName]
     assert_equal 'NA', post[:billingAddress][:stateOrProvince]
     assert_equal @options[:billing_address][:zip], post[:billingAddress][:postalCode]
     assert_equal @options[:billing_address][:city], post[:billingAddress][:city]
     assert_equal @options[:billing_address][:country], post[:billingAddress][:country]
+    # Shipping Address
+    assert_equal 'NA', post[:deliveryAddress][:stateOrProvince]
+    assert_equal @options[:shipping_address][:address1], post[:deliveryAddress][:street]
+    assert_equal @options[:shipping_address][:address2], post[:deliveryAddress][:houseNumberOrName]
+    assert_equal @options[:shipping_address][:zip], post[:deliveryAddress][:postalCode]
+    assert_equal @options[:shipping_address][:city], post[:deliveryAddress][:city]
+    assert_equal @options[:shipping_address][:country], post[:deliveryAddress][:country]
   end
 
   def test_authorize_with_network_tokenization_credit_card_no_name
@@ -668,7 +795,7 @@ class AdyenTest < Test::Unit::TestCase
   end
 
   def test_optional_idempotency_key_header
-    options = @options.merge(:idempotency_key => 'test123')
+    options = @options.merge(idempotency_key: 'test123')
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |endpoint, data, headers|
@@ -678,6 +805,16 @@ class AdyenTest < Test::Unit::TestCase
   end
 
   private
+
+  def stored_credential_options(*args, id: nil)
+    {
+      order_id: '#1001',
+      description: 'AM test',
+      currency: 'GBP',
+      customer: '123',
+      stored_credential: stored_credential(*args, id: id)
+    }
+  end
 
   def pre_scrubbed
     <<-PRE_SCRUBBED
@@ -823,7 +960,7 @@ class AdyenTest < Test::Unit::TestCase
     RESPONSE
   end
 
-  def successful_authorize_with_elo_response
+  def simple_successful_authorize_response
     <<-RESPONSE
     {
       "pspReference":"8835511210681145",
@@ -833,29 +970,10 @@ class AdyenTest < Test::Unit::TestCase
     RESPONSE
   end
 
-  def successful_capture_with_elo_repsonse
+  def simple_successful_capture_repsonse
     <<-RESPONSE
     {
       "pspReference":"8835511210689965",
-      "response":"[capture-received]"
-    }
-    RESPONSE
-  end
-
-  def successful_authorize_with_cabal_response
-    <<-RESPONSE
-    {
-      "pspReference":"883567090118045A",
-      "resultCode":"Authorised",
-      "authCode":"77651"
-    }
-    RESPONSE
-  end
-
-  def successful_capture_with_cabal_repsonse
-    <<-RESPONSE
-    {
-      "pspReference":"883567090119063C",
       "response":"[capture-received]"
     }
     RESPONSE
@@ -887,6 +1005,26 @@ class AdyenTest < Test::Unit::TestCase
       "refusalReason": "Expired Card",
       "resultCode": "Refused"
     }
+    RESPONSE
+  end
+
+  def failed_authorize_3ds2_response
+    <<-RESPONSE
+    {
+      "additionalData":
+      {
+        "threeds2.threeDS2Result.dsTransID": "1111-abc-234",
+        "threeds2.threeDS2Result.eci":"07",
+        "threeds2.threeDS2Result.threeDSServerTransID":"222-cde-321",
+        "threeds2.threeDS2Result.transStatusReason":"01",
+        "threeds2.threeDS2Result.messageVersion":"2.1.0",
+        "threeds2.threeDS2Result.authenticationValue":"ABCDEFG",
+        "threeds2.threeDS2Result.transStatus":"N"
+       },
+       "pspReference":"8514775559925128",
+       "refusalReason":"3D Not Authenticated",
+       "resultCode":"Refused"
+     }
     RESPONSE
   end
 

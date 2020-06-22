@@ -12,90 +12,90 @@ class RemoteSagePayTest < Test::Unit::TestCase
     @gateway = SagePayGateway.new(fixtures(:sage_pay))
 
     @amex = CreditCard.new(
-      :number => '374200000000004',
-      :month => 12,
-      :year => next_year,
-      :verification_value => 4887,
-      :first_name => 'Tekin',
-      :last_name => 'Suleyman',
-      :brand => 'american_express'
+      number: '374200000000004',
+      month: 12,
+      year: next_year,
+      verification_value: 4887,
+      first_name: 'Tekin',
+      last_name: 'Suleyman',
+      brand: 'american_express'
     )
 
     @maestro = CreditCard.new(
-      :number => '5641820000000005',
-      :month => 12,
-      :year => next_year,
-      :issue_number => '01',
-      :start_month => 12,
-      :start_year => next_year - 2,
-      :verification_value => 123,
-      :first_name => 'Tekin',
-      :last_name => 'Suleyman',
-      :brand => 'maestro'
+      number: '5641820000000005',
+      month: 12,
+      year: next_year,
+      issue_number: '01',
+      start_month: 12,
+      start_year: next_year - 2,
+      verification_value: 123,
+      first_name: 'Tekin',
+      last_name: 'Suleyman',
+      brand: 'maestro'
     )
 
     @visa = CreditCard.new(
-      :number => '4929000000006',
-      :month => 6,
-      :year => next_year,
-      :verification_value => 123,
-      :first_name => 'Tekin',
-      :last_name => 'Suleyman',
-      :brand => 'visa'
+      number: '4929000000006',
+      month: 6,
+      year: next_year,
+      verification_value: 123,
+      first_name: 'Tekin',
+      last_name: 'Suleyman',
+      brand: 'visa'
     )
 
     @mastercard = CreditCard.new(
-      :number => '5404000000000001',
-      :month => 12,
-      :year => next_year,
-      :verification_value => 419,
-      :first_name => 'Tekin',
-      :last_name => 'Suleyman',
-      :brand => 'master'
+      number: '5404000000000001',
+      month: 12,
+      year: next_year,
+      verification_value: 419,
+      first_name: 'Tekin',
+      last_name: 'Suleyman',
+      brand: 'master'
     )
 
     @electron = CreditCard.new(
-      :number => '4917300000000008',
-      :month => 12,
-      :year => next_year,
-      :verification_value => 123,
-      :first_name => 'Tekin',
-      :last_name => 'Suleyman',
-      :brand => 'electron'
+      number: '4917300000000008',
+      month: 12,
+      year: next_year,
+      verification_value: 123,
+      first_name: 'Tekin',
+      last_name: 'Suleyman',
+      brand: 'electron'
     )
 
     @declined_card = CreditCard.new(
-      :number => '4111111111111111',
-      :month => 9,
-      :year => next_year,
-      :first_name => 'Tekin',
-      :last_name => 'Suleyman',
-      :brand => 'visa'
+      number: '4111111111111111',
+      month: 9,
+      year: next_year,
+      first_name: 'Tekin',
+      last_name: 'Suleyman',
+      brand: 'visa'
     )
 
     @options = {
-      :billing_address => {
-        :name => 'Tekin Suleyman',
-        :address1 => 'Flat 10 Lapwing Court',
-        :address2 => 'West Didsbury',
-        :city => 'Manchester',
-        :county => 'Greater Manchester',
-        :country => 'GB',
-        :zip => 'M20 2PS'
+      billing_address: {
+        name: 'Tekin Suleyman',
+        address1: 'Flat 10 Lapwing Court',
+        address2: 'West Didsbury',
+        city: 'Manchester',
+        county: 'Greater Manchester',
+        country: 'GB',
+        zip: 'M20 2PS'
       },
-      :shipping_address => {
-        :name => 'Tekin Suleyman',
-        :address1 => '120 Grosvenor St',
-        :city => 'Manchester',
-        :county => 'Greater Manchester',
-        :country => 'GB',
-        :zip => 'M1 7QW'
+      shipping_address: {
+        name: 'Tekin Suleyman',
+        address1: '120 Grosvenor St',
+        city: 'Manchester',
+        county: 'Greater Manchester',
+        country: 'GB',
+        zip: 'M1 7QW'
       },
-      :order_id => generate_unique_id,
-      :description => 'Store purchase',
-      :ip => '86.150.65.37',
-      :email => 'tekin@tekin.co.uk',
-      :phone => '0161 123 4567'
+      order_id: generate_unique_id,
+      description: 'Store purchase',
+      ip: '86.150.65.37',
+      email: 'tekin@tekin.co.uk',
+      phone: '0161 123 4567'
     }
 
     @amount = 100
@@ -132,8 +132,8 @@ class RemoteSagePayTest < Test::Unit::TestCase
     assert_success capture
 
     assert refund = @gateway.refund(@amount, capture.authorization,
-      :description => 'Crediting trx',
-      :order_id => generate_unique_id
+      description: 'Crediting trx',
+      order_id: generate_unique_id
     )
     assert_success refund
   end
@@ -159,8 +159,8 @@ class RemoteSagePayTest < Test::Unit::TestCase
     assert_success purchase
 
     assert refund = @gateway.refund(@amount, purchase.authorization,
-      :description => 'Crediting trx',
-      :order_id => generate_unique_id
+      description: 'Crediting trx',
+      order_id: generate_unique_id
     )
 
     assert_success refund
@@ -331,7 +331,7 @@ class RemoteSagePayTest < Test::Unit::TestCase
     message = SagePayGateway.simulate ? 'VSP Simulator cannot find your vendor name.  Ensure you have have supplied a Vendor field with your VSP Vendor name assigned to it.' : '3034 : The Vendor or VendorName value is required.'
 
     gateway = SagePayGateway.new(
-      :login => ''
+      login: ''
     )
     assert response = gateway.purchase(@amount, @mastercard, @options)
     assert_equal message, response.message
@@ -364,13 +364,13 @@ class RemoteSagePayTest < Test::Unit::TestCase
   end
 
   def test_successful_token_creation_from_purchase
-    assert response = @gateway.purchase(@amount, @visa, @options.merge(:store => true))
+    assert response = @gateway.purchase(@amount, @visa, @options.merge(store: true))
     assert_success response
     assert !response.authorization.blank?
   end
 
   def test_successful_token_creation_from_authorize
-    assert response = @gateway.authorize(@amount, @visa, @options.merge(:store => true))
+    assert response = @gateway.authorize(@amount, @visa, @options.merge(store: true))
     assert_success response
     assert !response.authorization.blank?
   end

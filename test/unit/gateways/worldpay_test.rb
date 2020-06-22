@@ -5,23 +5,23 @@ class WorldpayTest < Test::Unit::TestCase
 
   def setup
     @gateway = WorldpayGateway.new(
-       :login => 'testlogin',
-       :password => 'testpassword'
-     )
+      login: 'testlogin',
+      password: 'testpassword'
+    )
 
     @amount = 100
     @credit_card = credit_card('4242424242424242')
     @token = '|99411111780163871111|shopper|59424549c291397379f30c5c082dbed8'
     @elo_credit_card = credit_card('4514 1600 0000 0008',
-      :month => 10,
-      :year => 2020,
-      :first_name => 'John',
-      :last_name => 'Smith',
-      :verification_value => '737',
-      :brand => 'elo'
+      month: 10,
+      year: 2020,
+      first_name: 'John',
+      last_name: 'Smith',
+      verification_value: '737',
+      brand: 'elo'
     )
     @sodexo_voucher = credit_card('6060704495764400', brand: 'sodexo')
-    @options = {:order_id => 1}
+    @options = {order_id: 1}
     @store_options = {
       customer: '59424549c291397379f30c5c082dbed8',
       email: 'wow@example.com'
@@ -54,6 +54,63 @@ class WorldpayTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       assert_match(/exemption/, data)
       assert_match(/AUTHENTICATION/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_risk_data_in_request
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(risk_data: risk_data))
+    end.check_request do |endpoint, data, headers|
+      doc = Nokogiri::XML(data)
+
+      authentication_risk_data = doc.at_xpath('//riskData//authenticationRiskData')
+      assert_equal(risk_data[:authentication_risk_data][:authentication_method], authentication_risk_data.attribute('authenticationMethod').value)
+
+      timestamp = doc.at_xpath('//riskData//authenticationRiskData//authenticationTimestamp//date')
+      assert_equal(risk_data[:authentication_risk_data][:authentication_date][:day_of_month], timestamp.attribute('dayOfMonth').value)
+      assert_equal(risk_data[:authentication_risk_data][:authentication_date][:month], timestamp.attribute('month').value)
+      assert_equal(risk_data[:authentication_risk_data][:authentication_date][:year], timestamp.attribute('year').value)
+      assert_equal(risk_data[:authentication_risk_data][:authentication_date][:hour], timestamp.attribute('hour').value)
+      assert_equal(risk_data[:authentication_risk_data][:authentication_date][:minute], timestamp.attribute('minute').value)
+      assert_equal(risk_data[:authentication_risk_data][:authentication_date][:second], timestamp.attribute('second').value)
+
+      shopper_account_risk_data_xml = doc.at_xpath('//riskData//shopperAccountRiskData')
+      shopper_account_risk_data = risk_data[:shopper_account_risk_data]
+      assert_equal(shopper_account_risk_data[:transactions_attempted_last_day], shopper_account_risk_data_xml.attribute('transactionsAttemptedLastDay').value)
+      assert_equal(shopper_account_risk_data[:transactions_attempted_last_year], shopper_account_risk_data_xml.attribute('transactionsAttemptedLastYear').value)
+      assert_equal(shopper_account_risk_data[:purchases_completed_last_six_months], shopper_account_risk_data_xml.attribute('purchasesCompletedLastSixMonths').value)
+      assert_equal(shopper_account_risk_data[:add_card_attempts_last_day], shopper_account_risk_data_xml.attribute('addCardAttemptsLastDay').value)
+      assert_equal(shopper_account_risk_data[:previous_suspicious_activity], shopper_account_risk_data_xml.attribute('previousSuspiciousActivity').value)
+      assert_equal(shopper_account_risk_data[:shipping_name_matches_account_name], shopper_account_risk_data_xml.attribute('shippingNameMatchesAccountName').value)
+      assert_equal(shopper_account_risk_data[:shopper_account_age_indicator], shopper_account_risk_data_xml.attribute('shopperAccountAgeIndicator').value)
+      assert_equal(shopper_account_risk_data[:shopper_account_change_indicator], shopper_account_risk_data_xml.attribute('shopperAccountChangeIndicator').value)
+      assert_equal(shopper_account_risk_data[:shopper_account_password_change_indicator], shopper_account_risk_data_xml.attribute('shopperAccountPasswordChangeIndicator').value)
+      assert_equal(shopper_account_risk_data[:shopper_account_shipping_address_usage_indicator], shopper_account_risk_data_xml.attribute('shopperAccountShippingAddressUsageIndicator').value)
+      assert_equal(shopper_account_risk_data[:shopper_account_payment_account_indicator], shopper_account_risk_data_xml.attribute('shopperAccountPaymentAccountIndicator').value)
+      assert_date_element(shopper_account_risk_data[:shopper_account_creation_date], shopper_account_risk_data_xml.at_xpath('//shopperAccountCreationDate//date'))
+      assert_date_element(shopper_account_risk_data[:shopper_account_modification_date], shopper_account_risk_data_xml.at_xpath('//shopperAccountModificationDate//date'))
+      assert_date_element(shopper_account_risk_data[:shopper_account_password_change_date], shopper_account_risk_data_xml.at_xpath('//shopperAccountPasswordChangeDate//date'))
+      assert_date_element(shopper_account_risk_data[:shopper_account_shipping_address_first_use_date], shopper_account_risk_data_xml.at_xpath('//shopperAccountShippingAddressFirstUseDate//date'))
+      assert_date_element(shopper_account_risk_data[:shopper_account_payment_account_first_use_date], shopper_account_risk_data_xml.at_xpath('//shopperAccountPaymentAccountFirstUseDate//date'))
+
+      transaction_risk_data_xml = doc.at_xpath('//riskData//transactionRiskData')
+      transaction_risk_data = risk_data[:transaction_risk_data]
+      assert_equal(transaction_risk_data[:shipping_method], transaction_risk_data_xml.attribute('shippingMethod').value)
+      assert_equal(transaction_risk_data[:delivery_timeframe], transaction_risk_data_xml.attribute('deliveryTimeframe').value)
+      assert_equal(transaction_risk_data[:delivery_email_address], transaction_risk_data_xml.attribute('deliveryEmailAddress').value)
+      assert_equal(transaction_risk_data[:reordering_previous_purchases], transaction_risk_data_xml.attribute('reorderingPreviousPurchases').value)
+      assert_equal(transaction_risk_data[:pre_order_purchase], transaction_risk_data_xml.attribute('preOrderPurchase').value)
+      assert_equal(transaction_risk_data[:gift_card_count], transaction_risk_data_xml.attribute('giftCardCount').value)
+
+      amount_xml = doc.at_xpath('//riskData//transactionRiskData//transactionRiskDataGiftCardAmount//amount')
+      amount_data = transaction_risk_data[:transaction_risk_data_gift_card_amount]
+      assert_equal(amount_data[:value], amount_xml.attribute('value').value)
+      assert_equal(amount_data[:currency], amount_xml.attribute('currencyCode').value)
+      assert_equal(amount_data[:exponent], amount_xml.attribute('exponent').value)
+      assert_equal(amount_data[:debit_credit_indicator], amount_xml.attribute('debitCreditIndicator').value)
+
+      assert_date_element(transaction_risk_data[:transaction_risk_data_pre_order_date], transaction_risk_data_xml.at_xpath('//transactionRiskDataPreOrderDate//date'))
     end.respond_with(successful_authorize_response)
     assert_success response
   end
@@ -180,12 +237,8 @@ class WorldpayTest < Test::Unit::TestCase
       authorization = "#{@options[:order_id]}|99411111780163871111|shopper|59424549c291397379f30c5c082dbed8"
       @gateway.void(authorization, @options)
     end.check_request do |endpoint, data, headers|
-      if %r(<orderInquiry .*?>) =~ data
-        assert_tag_with_attributes('orderInquiry', {'orderCode' => @options[:order_id].to_s}, data)
-      end
-      if %r(<orderModification .*?>) =~ data
-        assert_tag_with_attributes('orderModification', {'orderCode' => @options[:order_id].to_s}, data)
-      end
+      assert_tag_with_attributes('orderInquiry', {'orderCode' => @options[:order_id].to_s}, data) if %r(<orderInquiry .*?>).match?(data)
+      assert_tag_with_attributes('orderModification', {'orderCode' => @options[:order_id].to_s}, data) if %r(<orderModification .*?>).match?(data)
     end.respond_with(successful_void_inquiry_response, successful_void_response)
     assert_success response
     assert_equal 'SUCCESS', response.message
@@ -231,17 +284,21 @@ class WorldpayTest < Test::Unit::TestCase
     assert 'cancel', response.responses.last.params['action']
   end
 
+  def test_refund_failure_with_force_full_refund_if_unsettled_does_not_force_void
+    response = stub_comms do
+      @gateway.refund(@amount, @options[:order_id], @options.merge(force_full_refund_if_unsettled: true))
+    end.respond_with('total garbage')
+
+    assert_failure response
+  end
+
   def test_refund_using_order_id_embedded_with_token
     response = stub_comms do
       authorization = "#{@options[:order_id]}|99411111780163871111|shopper|59424549c291397379f30c5c082dbed8"
       @gateway.refund(@amount, authorization, @options)
     end.check_request do |endpoint, data, headers|
-      if %r(<orderInquiry .*?>) =~ data
-        assert_tag_with_attributes('orderInquiry', {'orderCode' => @options[:order_id].to_s}, data)
-      end
-      if %r(<orderModification .*?>) =~ data
-        assert_tag_with_attributes('orderModification', {'orderCode' => @options[:order_id].to_s}, data)
-      end
+      assert_tag_with_attributes('orderInquiry', {'orderCode' => @options[:order_id].to_s}, data) if %r(<orderInquiry .*?>).match?(data)
+      assert_tag_with_attributes('orderModification', {'orderCode' => @options[:order_id].to_s}, data) if %r(<orderModification .*?>).match?(data)
     end.respond_with(successful_refund_inquiry_response('CAPTURED'), successful_refund_response)
     assert_success response
   end
@@ -260,9 +317,7 @@ class WorldpayTest < Test::Unit::TestCase
       authorization = "#{response.authorization}|99411111780163871111|shopper|59424549c291397379f30c5c082dbed8"
       @gateway.capture(@amount, authorization, @options)
     end.check_request do |endpoint, data, headers|
-      if %r(<orderModification .*?>) =~ data
-        assert_tag_with_attributes('orderModification', {'orderCode' => response.authorization}, data)
-      end
+      assert_tag_with_attributes('orderModification', {'orderCode' => response.authorization}, data) if %r(<orderModification .*?>).match?(data)
     end.respond_with(successful_authorize_response, successful_capture_response)
     assert_success response
   end
@@ -319,7 +374,7 @@ class WorldpayTest < Test::Unit::TestCase
     stub_comms do
       @gateway.capture(@amount, 'bogus', @options)
     end.check_request do |endpoint, data, headers|
-      if data =~ /capture/
+      if /capture/.match?(data)
         t = Time.now
         assert_tag_with_attributes 'date',
           {'dayOfMonth' => t.day.to_s, 'month' => t.month.to_s, 'year' => t.year.to_s},
@@ -469,7 +524,7 @@ class WorldpayTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(100, @credit_card, @options.merge(instalments: 3))
     end.check_request do |endpoint, data, headers|
-      unless /<capture>/ =~ data
+      unless /<capture>/.match?(data)
         assert_match %r(<instalments>3</instalments>), data
         assert_no_match %r(cpf), data
       end
@@ -478,7 +533,7 @@ class WorldpayTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(100, @credit_card, @options.merge(instalments: 3, cpf: 12341234))
     end.check_request do |endpoint, data, headers|
-      unless /<capture>/ =~ data
+      unless /<capture>/.match?(data)
         assert_match %r(<instalments>3</instalments>), data
         assert_match %r(<cpf>12341234</cpf>), data
       end
@@ -505,27 +560,27 @@ class WorldpayTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
 
     assert_equal({
-        'action'=>'authorize',
-        'amount_currency_code'=>'HKD',
-        'amount_debit_credit_indicator'=>'credit',
-        'amount_exponent'=>'2',
-        'amount_value'=>'15000',
-        'avs_result_code_description'=>'UNKNOWN',
-        'balance'=>true,
-        'balance_account_type'=>'IN_PROCESS_AUTHORISED',
-        'card_number'=>'4111********1111',
-        'cvc_result_code_description'=>'UNKNOWN',
-        'last_event'=>'AUTHORISED',
-        'order_status'=>true,
-        'order_status_order_code'=>'R50704213207145707',
-        'payment'=>true,
-        'payment_method'=>'VISA-SSL',
-        'payment_service'=>true,
-        'payment_service_merchant_code'=>'XXXXXXXXXXXXXXX',
-        'payment_service_version'=>'1.4',
-        'reply'=>true,
-        'risk_score_value'=>'1',
-      }, response.params)
+      'action' => 'authorize',
+      'amount_currency_code' => 'HKD',
+      'amount_debit_credit_indicator' => 'credit',
+      'amount_exponent' => '2',
+      'amount_value' => '15000',
+      'avs_result_code_description' => 'UNKNOWN',
+      'balance' => true,
+      'balance_account_type' => 'IN_PROCESS_AUTHORISED',
+      'card_number' => '4111********1111',
+      'cvc_result_code_description' => 'UNKNOWN',
+      'last_event' => 'AUTHORISED',
+      'order_status' => true,
+      'order_status_order_code' => 'R50704213207145707',
+      'payment' => true,
+      'payment_method' => 'VISA-SSL',
+      'payment_service' => true,
+      'payment_service_merchant_code' => 'XXXXXXXXXXXXXXX',
+      'payment_service_version' => '1.4',
+      'reply' => true,
+      'risk_score_value' => '1',
+    }, response.params)
   end
 
   def test_auth
@@ -540,9 +595,9 @@ class WorldpayTest < Test::Unit::TestCase
     ActiveMerchant::Billing::Base.mode = :production
 
     @gateway = WorldpayGateway.new(
-      :login => 'testlogin',
-      :password => 'testpassword',
-      :test => true
+      login: 'testlogin',
+      password: 'testpassword',
+      test: true
     )
 
     stub_comms do
@@ -558,7 +613,7 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.refund(@amount, @options[:order_id], @options)
     end.check_request do |endpoint, data, headers|
-      if data =~ /<refund>/
+      if /<refund>/.match?(data)
         request_hash = Hash.from_xml(data)
         assert_equal 'credit', request_hash['paymentService']['modify']['orderModification']['refund']['amount']['debitCreditIndicator']
       end
@@ -599,9 +654,7 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
-      if /<submit>/ =~ data
-        assert_match %r{<cardHolderName>3D</cardHolderName>}, data
-      end
+      assert_match %r{<cardHolderName>3D</cardHolderName>}, data if /<submit>/.match?(data)
     end.respond_with(successful_authorize_response, successful_capture_response)
     assert_success response
   end
@@ -612,9 +665,7 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
-      if /<submit>/ =~ data
-        assert_match %r{<cardHolderName>Longbob Longsen</cardHolderName>}, data
-      end
+      assert_match %r{<cardHolderName>Longbob Longsen</cardHolderName>}, data if /<submit>/.match?(data)
     end.respond_with(successful_authorize_response, successful_capture_response)
     assert_success response
 
@@ -622,9 +673,7 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
-      if /<submit>/ =~ data
-        assert_match %r{<cardHolderName>Longbob Longsen</cardHolderName>}, data
-      end
+      assert_match %r{<cardHolderName>Longbob Longsen</cardHolderName>}, data if /<submit>/.match?(data)
     end.respond_with(successful_authorize_response, successful_capture_response)
     assert_success response
 
@@ -632,9 +681,7 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
-      if /<submit>/ =~ data
-        assert_match %r{<cardHolderName>3D</cardHolderName>}, data
-      end
+      assert_match %r{<cardHolderName>3D</cardHolderName>}, data if /<submit>/.match?(data)
     end.respond_with(successful_authorize_response, successful_capture_response)
     assert_success response
   end
@@ -735,9 +782,7 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @token, @options)
     end.check_request do |endpoint, data, headers|
-      if %r(<order .*?>) =~ data
-        assert_tag_with_attributes('order', {'orderCode' => @options[:order_id].to_s}, data)
-      end
+      assert_tag_with_attributes('order', {'orderCode' => @options[:order_id].to_s}, data) if %r(<order .*?>).match?(data)
     end.respond_with(successful_authorize_response, successful_capture_response)
 
     assert_success response
@@ -748,9 +793,7 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.verify(@token, @options)
     end.check_request do |endpoint, data, headers|
-      if %r(<order .*?>) =~ data
-        assert_tag_with_attributes('order', {'orderCode' => @options[:order_id].to_s}, data)
-      end
+      assert_tag_with_attributes('order', {'orderCode' => @options[:order_id].to_s}, data) if %r(<order .*?>).match?(data)
     end.respond_with(successful_authorize_response, successful_void_response)
 
     assert_success response
@@ -829,9 +872,7 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @token, @options)
     end.check_request do |endpoint, data, headers|
-      if %r(<order .*?>) =~ data
-        assert_tag_with_attributes('order', {'orderCode' => @options[:order_id].to_s}, data)
-      end
+      assert_tag_with_attributes('order', {'orderCode' => @options[:order_id].to_s}, data) if %r(<order .*?>).match?(data)
     end.respond_with(successful_authorize_response, successful_capture_response)
 
     assert_success response
@@ -843,9 +884,7 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.verify(@token, @options)
     end.check_request do |endpoint, data, headers|
-      if %r(<order .*?>) =~ data
-        assert_tag_with_attributes('order', {'orderCode' => @options[:order_id].to_s}, data)
-      end
+      assert_tag_with_attributes('order', {'orderCode' => @options[:order_id].to_s}, data) if %r(<order .*?>).match?(data)
     end.respond_with(successful_authorize_response, successful_void_response)
 
     assert_success response
@@ -879,6 +918,12 @@ class WorldpayTest < Test::Unit::TestCase
 
   private
 
+  def assert_date_element(expected_date_hash, date_element)
+    assert_equal(expected_date_hash[:day_of_month], date_element.attribute('dayOfMonth').value)
+    assert_equal(expected_date_hash[:month], date_element.attribute('month').value)
+    assert_equal(expected_date_hash[:year], date_element.attribute('year').value)
+  end
+
   def assert_tag_with_attributes(tag, attributes, string)
     assert(m = %r(<#{tag}([^>]+)/?>).match(string))
     attributes.each do |attribute, value|
@@ -894,6 +939,89 @@ class WorldpayTest < Test::Unit::TestCase
         xid: xid,
         ds_transaction_id: ds_transaction_id,
         version: version,
+      }
+    }
+  end
+
+  def risk_data
+    return @risk_data if defined?(@risk_data)
+
+    authentication_time = Time.now
+    shopper_account_creation_date = Date.today
+    shopper_account_modification_date = Date.today - 1.day
+    shopper_account_password_change_date = Date.today - 2.days
+    shopper_account_shipping_address_first_use_date = Date.today - 3.day
+    shopper_account_payment_account_first_use_date = Date.today - 4.day
+    transaction_risk_data_pre_order_date = Date.today + 1.day
+
+    @risk_data = {
+      authentication_risk_data: {
+        authentication_method: 'localAccount',
+        authentication_date: {
+          day_of_month: authentication_time.strftime('%d'),
+          month: authentication_time.strftime('%m'),
+          year: authentication_time.strftime('%Y'),
+          hour: authentication_time.strftime('%H'),
+          minute: authentication_time.strftime('%M'),
+          second: authentication_time.strftime('%S')
+        }
+      },
+      shopper_account_risk_data: {
+        transactions_attempted_last_day: '1',
+        transactions_attempted_last_year: '2',
+        purchases_completed_last_six_months: '3',
+        add_card_attempts_last_day: '4',
+        previous_suspicious_activity: 'false', # Boolean (true or false)
+        shipping_name_matches_account_name: 'true', #	Boolean (true or false)
+        shopper_account_age_indicator: 'lessThanThirtyDays', # Possible Values: noAccount, createdDuringTransaction, lessThanThirtyDays, thirtyToSixtyDays, moreThanSixtyDays
+        shopper_account_change_indicator: 'thirtyToSixtyDays', # Possible values: changedDuringTransaction, lessThanThirtyDays, thirtyToSixtyDays, moreThanSixtyDays
+        shopper_account_password_change_indicator: 'noChange', # Possible Values: noChange, changedDuringTransaction, lessThanThirtyDays, thirtyToSixtyDays, moreThanSixtyDays
+        shopper_account_shipping_address_usage_indicator: 'moreThanSixtyDays', # Possible Values: thisTransaction, lessThanThirtyDays, thirtyToSixtyDays, moreThanSixtyDays
+        shopper_account_payment_account_indicator: 'thirtyToSixtyDays', # Possible Values: noAccount, duringTransaction, lessThanThirtyDays, thirtyToSixtyDays, moreThanSixtyDays
+        shopper_account_creation_date: {
+          day_of_month: shopper_account_creation_date.strftime('%d'),
+          month: shopper_account_creation_date.strftime('%m'),
+          year: shopper_account_creation_date.strftime('%Y'),
+        },
+        shopper_account_modification_date: {
+          day_of_month: shopper_account_modification_date.strftime('%d'),
+          month: shopper_account_modification_date.strftime('%m'),
+          year: shopper_account_modification_date.strftime('%Y'),
+        },
+        shopper_account_password_change_date: {
+          day_of_month: shopper_account_password_change_date.strftime('%d'),
+          month: shopper_account_password_change_date.strftime('%m'),
+          year: shopper_account_password_change_date.strftime('%Y'),
+        },
+        shopper_account_shipping_address_first_use_date: {
+          day_of_month: shopper_account_shipping_address_first_use_date.strftime('%d'),
+          month: shopper_account_shipping_address_first_use_date.strftime('%m'),
+          year: shopper_account_shipping_address_first_use_date.strftime('%Y'),
+        },
+        shopper_account_payment_account_first_use_date: {
+          day_of_month: shopper_account_payment_account_first_use_date.strftime('%d'),
+          month: shopper_account_payment_account_first_use_date.strftime('%m'),
+          year: shopper_account_payment_account_first_use_date.strftime('%Y'),
+        }
+      },
+      transaction_risk_data: {
+        shipping_method: 'digital',
+        delivery_timeframe: 'electronicDelivery',
+        delivery_email_address: 'abe@lincoln.gov',
+        reordering_previous_purchases: 'false',
+        pre_order_purchase: 'false',
+        gift_card_count: '0',
+        transaction_risk_data_gift_card_amount: {
+          value: '123',
+          currency: 'EUR',
+          exponent: '2',
+          debit_credit_indicator: 'credit'
+        },
+        transaction_risk_data_pre_order_date: {
+          day_of_month: transaction_risk_data_pre_order_date.strftime('%d'),
+          month: transaction_risk_data_pre_order_date.strftime('%m'),
+          year: transaction_risk_data_pre_order_date.strftime('%Y'),
+        }
       }
     }
   end

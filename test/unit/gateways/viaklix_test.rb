@@ -1,19 +1,18 @@
 require 'test_helper'
 
 class ViaklixTest < Test::Unit::TestCase
-
   def setup
     @gateway = ViaklixGateway.new(
-      :login => 'LOGIN',
-      :password => 'PIN'
+      login: 'LOGIN',
+      password: 'PIN'
     )
 
     @credit_card = credit_card
     @options = {
-      :order_id => '37',
-      :email => 'paul@domain.com',
-      :description => 'Test Transaction',
-      :billing_address => address
+      order_id: '37',
+      email: 'paul@domain.com',
+      description: 'Test Transaction',
+      billing_address: address
     }
     @amount = 100
   end

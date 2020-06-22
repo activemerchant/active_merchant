@@ -1,4 +1,4 @@
-$:.unshift File.expand_path('../../lib', __FILE__)
+$LOAD_PATH.unshift File.expand_path('../../lib', __FILE__)
 
 require 'bundler/setup'
 
@@ -131,12 +131,12 @@ module ActiveMerchant
       yield
     rescue AssertionClass => e
       path = File.expand_path(__FILE__)
-      raise AssertionClass, e.message, (e.backtrace.reject { |line| File.expand_path(line) =~ /#{path}/ })
+      raise AssertionClass, e.message, (e.backtrace.reject { |line| File.expand_path(line).match?(/#{path}/) })
     end
   end
 
   module Fixtures
-    HOME_DIR = RUBY_PLATFORM =~ /mswin32/ ? ENV['HOMEPATH'] : ENV['HOME'] unless defined?(HOME_DIR)
+    HOME_DIR = RUBY_PLATFORM.match?('mswin32') ? ENV['HOMEPATH'] : ENV['HOME'] unless defined?(HOME_DIR)
     LOCAL_CREDENTIALS = File.join(HOME_DIR.to_s, '.active_merchant/fixtures.yml') unless defined?(LOCAL_CREDENTIALS)
     DEFAULT_CREDENTIALS = File.join(File.dirname(__FILE__), 'fixtures.yml') unless defined?(DEFAULT_CREDENTIALS)
 
@@ -152,13 +152,13 @@ module ActiveMerchant
 
     def credit_card(number = '4242424242424242', options = {})
       defaults = {
-        :number => number,
-        :month => default_expiration_date.month,
-        :year => default_expiration_date.year,
-        :first_name => 'Longbob',
-        :last_name => 'Longsen',
-        :verification_value => options[:verification_value] || '123',
-        :brand => 'visa'
+        number: number,
+        month: default_expiration_date.month,
+        year: default_expiration_date.year,
+        first_name: 'Longbob',
+        last_name: 'Longsen',
+        verification_value: options[:verification_value] || '123',
+        brand: 'visa'
       }.update(options)
 
       Billing::CreditCard.new(defaults)
@@ -168,7 +168,7 @@ module ActiveMerchant
       exp_date = default_expiration_date.strftime('%y%m')
 
       defaults = {
-        :track_data => "%B#{number}^LONGSEN/L. ^#{exp_date}1200000000000000**123******?",
+        track_data: "%B#{number}^LONGSEN/L. ^#{exp_date}1200000000000000**123******?",
       }.update(options)
 
       Billing::CreditCard.new(defaults)
@@ -176,13 +176,13 @@ module ActiveMerchant
 
     def network_tokenization_credit_card(number = '4242424242424242', options = {})
       defaults = {
-        :number => number,
-        :month => default_expiration_date.month,
-        :year => default_expiration_date.year,
-        :first_name => 'Longbob',
-        :last_name => 'Longsen',
-        :verification_value => '123',
-        :brand => 'visa'
+        number: number,
+        month: default_expiration_date.month,
+        year: default_expiration_date.year,
+        first_name: 'Longbob',
+        last_name: 'Longsen',
+        verification_value: '123',
+        brand: 'visa'
       }.update(options)
 
       Billing::NetworkTokenizationCreditCard.new(defaults)
@@ -190,13 +190,13 @@ module ActiveMerchant
 
     def check(options = {})
       defaults = {
-        :name => 'Jim Smith',
-        :bank_name => 'Bank of Elbonia',
-        :routing_number => '244183602',
-        :account_number => '15378535',
-        :account_holder_type => 'personal',
-        :account_type => 'checking',
-        :number => '1'
+        name: 'Jim Smith',
+        bank_name: 'Bank of Elbonia',
+        routing_number: '244183602',
+        account_number: '15378535',
+        account_holder_type: 'personal',
+        account_type: 'checking',
+        number: '1'
       }.update(options)
 
       Billing::Check.new(defaults)

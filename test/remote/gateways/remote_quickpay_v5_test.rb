@@ -4,15 +4,15 @@ class RemoteQuickpayV5Test < Test::Unit::TestCase
   # These test assumes that you have not added your development IP in
   # the Quickpay Manager.
   def setup
-    @gateway = QuickpayGateway.new(fixtures(:quickpay_with_api_key).merge(:version => 5))
+    @gateway = QuickpayGateway.new(fixtures(:quickpay_with_api_key).merge(version: 5))
 
     @amount = 100
     @options = {
-      :order_id => generate_unique_id[0...10],
-      :billing_address => address
+      order_id: generate_unique_id[0...10],
+      billing_address: address
     }
 
-    @visa_no_cvv2   = credit_card('4000300011112220', :verification_value => nil)
+    @visa_no_cvv2   = credit_card('4000300011112220', verification_value: nil)
     @visa           = credit_card('4000100011112224')
     @dankort        = credit_card('5019717010103742')
     @visa_dankort   = credit_card('4571100000000000')
@@ -52,7 +52,7 @@ class RemoteQuickpayV5Test < Test::Unit::TestCase
   end
 
   def test_successful_usd_purchase
-    assert response = @gateway.purchase(@amount, @visa, @options.update(:currency => 'USD'))
+    assert response = @gateway.purchase(@amount, @visa, @options.update(currency: 'USD'))
     assert_equal 'OK', response.message
     assert_equal 'USD', response.params['currency']
     assert_success response
@@ -189,16 +189,16 @@ class RemoteQuickpayV5Test < Test::Unit::TestCase
   end
 
   def test_successful_store_and_reference_purchase
-    assert store = @gateway.store(@visa, @options.merge(:description => 'New subscription'))
+    assert store = @gateway.store(@visa, @options.merge(description: 'New subscription'))
     assert_success store
-    assert purchase = @gateway.purchase(@amount, store.authorization, @options.merge(:order_id => generate_unique_id[0...10]))
+    assert purchase = @gateway.purchase(@amount, store.authorization, @options.merge(order_id: generate_unique_id[0...10]))
     assert_success purchase
   end
 
   def test_invalid_login
     gateway = QuickpayGateway.new(
-      :login => '999999999',
-      :password => ''
+      login: '999999999',
+      password: ''
     )
     assert response = gateway.purchase(@amount, @visa, @options)
     assert_equal 'Invalid merchant id', response.message

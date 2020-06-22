@@ -4,10 +4,12 @@ class HpsTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    @gateway = HpsGateway.new({:secret_api_key => '12'})
+    @gateway = HpsGateway.new({secret_api_key: '12'})
 
     @credit_card = credit_card
     @amount = 100
+    @check = check(account_number: '1357902468', routing_number: '122000030', number: '1234', account_type: 'SAVINGS')
+    @check_amount = 2000
 
     @options = {
       order_id: '1',
@@ -33,6 +35,40 @@ class HpsTest < Test::Unit::TestCase
     }
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_instance_of Response, response
+    assert_success response
+  end
+
+  def test_successful_check_purchase
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@check_amount, @check, @options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/<hps:CheckSale><hps:Block1><hps:CheckAction>SALE<\/hps:CheckAction>/, data)
+    end.respond_with(successful_check_purchase_response)
+
+    assert_success response
+  end
+
+  def test_check_purchase_does_not_raise_no_method_error_when_account_type_missing
+    check = @check.dup
+    check.account_type = nil
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@check_amount, check, @options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/<hps:CheckSale><hps:Block1><hps:CheckAction>SALE<\/hps:CheckAction>/, data)
+    end.respond_with(successful_check_purchase_response)
+
+    assert_success response
+  end
+
+  def test_check_purchase_does_not_raise_no_method_error_when_account_holder_type_missing
+    check = @check.dup
+    check.account_holder_type = nil
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@check_amount, check, @options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/<hps:CheckSale><hps:Block1><hps:CheckAction>SALE<\/hps:CheckAction>/, data)
+    end.respond_with(successful_check_purchase_response)
+
     assert_success response
   end
 
@@ -111,6 +147,16 @@ class HpsTest < Test::Unit::TestCase
 
     void = @gateway.void('169054')
     assert_instance_of Response, void
+    assert_success void
+  end
+
+  def test_successful_check_void
+    void = stub_comms(@gateway, :ssl_request) do
+      @gateway.void('169054', check_void: true)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/<hps:Transaction><hps:CheckVoid>/, data)
+    end.respond_with(successful_check_void_response)
+
     assert_success void
   end
 
@@ -305,15 +351,231 @@ class HpsTest < Test::Unit::TestCase
     assert_equal 'The card was declined.', response.message
   end
 
+  def test_successful_purchase_with_android_pay_raw_cryptogram_with_eci
+    @gateway.expects(:ssl_post).returns(successful_charge_response)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      eci: '05',
+      source: :android_pay
+    )
+    assert response = @gateway.purchase(@amount, credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_failed_purchase_with_android_pay_raw_cryptogram_with_eci
+    @gateway.expects(:ssl_post).returns(failed_charge_response_decline)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      eci: '05',
+      source: :android_pay
+    )
+    assert response = @gateway.purchase(@amount, credit_card, @options)
+    assert_failure response
+    assert_equal 'The card was declined.', response.message
+  end
+
+  def test_successful_purchase_with_android_pay_raw_cryptogram_without_eci
+    @gateway.expects(:ssl_post).returns(successful_charge_response)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      source: :android_pay
+    )
+    assert response = @gateway.purchase(@amount, credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_failed_purchase_with_android_pay_raw_cryptogram_without_eci
+    @gateway.expects(:ssl_post).returns(failed_charge_response_decline)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      source: :android_pay
+    )
+    assert response = @gateway.purchase(@amount, credit_card, @options)
+    assert_failure response
+    assert_equal 'The card was declined.', response.message
+  end
+
+  def test_successful_auth_with_android_pay_raw_cryptogram_with_eci
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      eci: '05',
+      source: :android_pay
+    )
+    assert response = @gateway.authorize(@amount, credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_failed_auth_with_android_pay_raw_cryptogram_with_eci
+    @gateway.expects(:ssl_post).returns(failed_authorize_response_decline)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      eci: '05',
+      source: :android_pay
+    )
+    assert response = @gateway.authorize(@amount, credit_card, @options)
+    assert_failure response
+    assert_equal 'The card was declined.', response.message
+  end
+
+  def test_successful_auth_with_android_pay_raw_cryptogram_without_eci
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      source: :android_pay
+    )
+    assert response = @gateway.authorize(@amount, credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_failed_auth_with_android_pay_raw_cryptogram_without_eci
+    @gateway.expects(:ssl_post).returns(failed_authorize_response_decline)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      source: :android_pay
+    )
+    assert response = @gateway.authorize(@amount, credit_card, @options)
+    assert_failure response
+    assert_equal 'The card was declined.', response.message
+  end
+
+  def test_successful_purchase_with_google_pay_raw_cryptogram_with_eci
+    @gateway.expects(:ssl_post).returns(successful_charge_response)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      eci: '05',
+      source: :google_pay
+    )
+    assert response = @gateway.purchase(@amount, credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_failed_purchase_with_google_pay_raw_cryptogram_with_eci
+    @gateway.expects(:ssl_post).returns(failed_charge_response_decline)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      eci: '05',
+      source: :google_pay
+    )
+    assert response = @gateway.purchase(@amount, credit_card, @options)
+    assert_failure response
+    assert_equal 'The card was declined.', response.message
+  end
+
+  def test_successful_purchase_with_google_pay_raw_cryptogram_without_eci
+    @gateway.expects(:ssl_post).returns(successful_charge_response)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      source: :google_pay
+    )
+    assert response = @gateway.purchase(@amount, credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_failed_purchase_with_google_pay_raw_cryptogram_without_eci
+    @gateway.expects(:ssl_post).returns(failed_charge_response_decline)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      source: :google_pay
+    )
+    assert response = @gateway.purchase(@amount, credit_card, @options)
+    assert_failure response
+    assert_equal 'The card was declined.', response.message
+  end
+
+  def test_successful_auth_with_google_pay_raw_cryptogram_with_eci
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      eci: '05',
+      source: :google_pay
+    )
+    assert response = @gateway.authorize(@amount, credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_failed_auth_with_google_pay_raw_cryptogram_with_eci
+    @gateway.expects(:ssl_post).returns(failed_authorize_response_decline)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      eci: '05',
+      source: :google_pay
+    )
+    assert response = @gateway.authorize(@amount, credit_card, @options)
+    assert_failure response
+    assert_equal 'The card was declined.', response.message
+  end
+
+  def test_successful_auth_with_google_pay_raw_cryptogram_without_eci
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      source: :google_pay
+    )
+    assert response = @gateway.authorize(@amount, credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_failed_auth_with_google_pay_raw_cryptogram_without_eci
+    @gateway.expects(:ssl_post).returns(failed_authorize_response_decline)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      source: :google_pay
+    )
+    assert response = @gateway.authorize(@amount, credit_card, @options)
+    assert_failure response
+    assert_equal 'The card was declined.', response.message
+  end
+
   def test_three_d_secure_visa
     @credit_card.number = '4012002000060016'
     @credit_card.brand = 'visa'
 
     options = {
-      :three_d_secure => {
-        :cavv => 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
-        :eci => '05',
-        :xid => 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
+      three_d_secure: {
+        cavv: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+        eci: '05',
+        xid: 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
       }
     }
 
@@ -337,10 +599,10 @@ class HpsTest < Test::Unit::TestCase
     @credit_card.brand = 'master'
 
     options = {
-      :three_d_secure => {
-        :cavv => 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
-        :eci => '05',
-        :xid => 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
+      three_d_secure: {
+        cavv: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+        eci: '05',
+        xid: 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
       }
     }
 
@@ -364,10 +626,10 @@ class HpsTest < Test::Unit::TestCase
     @credit_card.brand = 'discover'
 
     options = {
-      :three_d_secure => {
-        :cavv => 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
-        :eci => '5',
-        :xid => 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
+      three_d_secure: {
+        cavv: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+        eci: '5',
+        xid: 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
       }
     }
 
@@ -391,10 +653,10 @@ class HpsTest < Test::Unit::TestCase
     @credit_card.brand = 'american_express'
 
     options = {
-      :three_d_secure => {
-        :cavv => 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
-        :eci => '05',
-        :xid => 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
+      three_d_secure: {
+        cavv: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+        eci: '05',
+        xid: 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
       }
     }
 
@@ -418,10 +680,10 @@ class HpsTest < Test::Unit::TestCase
     @credit_card.brand = 'jcb'
 
     options = {
-      :three_d_secure => {
-        :cavv => 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
-        :eci => '5',
-        :xid => 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
+      three_d_secure: {
+        cavv: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+        eci: '5',
+        xid: 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
       }
     }
 
@@ -475,6 +737,35 @@ class HpsTest < Test::Unit::TestCase
            </Transaction>
         </Ver1.0>
      </PosResponse>
+  </soap:Body>
+</soap:Envelope>
+    RESPONSE
+  end
+
+  def successful_check_purchase_response
+    <<-RESPONSE
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <soap:Body>
+    <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+      <Ver1.0>
+        <Header>
+          <LicenseId>144379</LicenseId>
+          <SiteId>144474</SiteId>
+          <DeviceId>6407594</DeviceId>
+          <GatewayTxnId>1284694345</GatewayTxnId>
+          <GatewayRspCode>0</GatewayRspCode>
+          <GatewayRspMsg>Success</GatewayRspMsg>
+          <RspDT>2020-01-13T15:11:24.735047</RspDT>
+        </Header>
+        <Transaction>
+          <CheckSale>
+            <RspCode>0</RspCode>
+            <RspMessage>Transaction Approved. BatchID:31796</RspMessage>
+          </CheckSale>
+        </Transaction>
+      </Ver1.0>
+    </PosResponse>
   </soap:Body>
 </soap:Envelope>
     RESPONSE
@@ -780,6 +1071,35 @@ class HpsTest < Test::Unit::TestCase
     RESPONSE
   end
 
+  def successful_check_void_response
+    <<-RESPONSE
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <soap:Body>
+    <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+      <Ver1.0>
+        <Header>
+          <LicenseId>144379</LicenseId>
+          <SiteId>144474</SiteId>
+          <DeviceId>6407594</DeviceId>
+          <GatewayTxnId>1284696436</GatewayTxnId>
+          <GatewayRspCode>0</GatewayRspCode>
+          <GatewayRspMsg>Success</GatewayRspMsg>
+          <RspDT>2020-01-13T15:44:24.3568038</RspDT>
+        </Header>
+        <Transaction>
+          <CheckVoid>
+            <RspCode>0</RspCode>
+            <RspMessage>Transaction Approved.</RspMessage>
+          </CheckVoid>
+        </Transaction>
+      </Ver1.0>
+    </PosResponse>
+  </soap:Body>
+</soap:Envelope>
+    RESPONSE
+  end
+
   def failed_void_response
     <<-RESPONSE
 <?xml version="1.0" encoding="UTF-8"?>
@@ -981,5 +1301,4 @@ read 1067 bytes
 Conn close
     }
   end
-
 end

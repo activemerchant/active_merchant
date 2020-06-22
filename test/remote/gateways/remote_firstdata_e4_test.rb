@@ -8,9 +8,9 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
     @credit_card_with_track_data = credit_card_with_track_data('4003000123456781')
     @amount = 100
     @options = {
-      :order_id => '1',
-      :billing_address => address,
-      :description => 'Store Purchase'
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase'
     }
     @options_with_authentication_data = @options.merge({
       eci: '5',
@@ -178,8 +178,8 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = FirstdataE4Gateway.new(:login    => 'NotARealUser',
-                                     :password => 'NotARealPassword')
+    gateway = FirstdataE4Gateway.new(login: 'NotARealUser',
+                                     password: 'NotARealPassword')
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_match %r{Unauthorized Request}, response.message
     assert_failure response
@@ -248,5 +248,4 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
     assert_scrubbed(cc_with_different_cvc.verification_value, transcript)
     assert_scrubbed(@gateway.options[:password], transcript)
   end
-
 end

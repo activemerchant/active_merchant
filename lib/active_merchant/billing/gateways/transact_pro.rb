@@ -12,7 +12,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['US']
       self.default_currency = 'USD'
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       self.homepage_url = 'https://www.transactpro.lv/business/online-payments-acceptance'
       self.display_name = 'Transact Pro'
@@ -162,7 +162,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        if body =~ /^ID:/
+        if /^ID:/.match?(body)
           body.split('~').reduce(Hash.new) { |h, v|
             m = v.match('(.*?):(.*)')
             h.merge!(m[1].underscore.to_sym => m[2])
@@ -197,7 +197,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def split_authorization(authorization)
-        if authorization =~ /|/
+        if /|/.match?(authorization)
           identifier, amount = authorization.split('|')
           [identifier, amount.to_i]
         else

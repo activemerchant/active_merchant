@@ -2,15 +2,15 @@ require 'test_helper'
 
 class ExactTest < Test::Unit::TestCase
   def setup
-    @gateway = ExactGateway.new(:login    => 'A00427-01',
-                                :password => 'testus')
+    @gateway = ExactGateway.new(login: 'A00427-01',
+                                password: 'testus')
 
     @credit_card = credit_card
     @amount = 100
     @options = {
-      :order_id => '1',
-      :billing_address => address,
-      :description => 'Store Purchase'
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase'
     }
   end
 
@@ -49,8 +49,8 @@ class ExactTest < Test::Unit::TestCase
   end
 
   def test_expdate
-    assert_equal('%02d%s' % [ @credit_card.month,
-                              @credit_card.year.to_s[-2..-1] ],
+    assert_equal('%02d%s' % [@credit_card.month,
+                             @credit_card.year.to_s[-2..-1]],
       @gateway.send(:expdate, @credit_card))
   end
 
@@ -63,11 +63,11 @@ class ExactTest < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal ['CA', 'US'], ExactGateway.supported_countries
+    assert_equal %w[CA US], ExactGateway.supported_countries
   end
 
   def test_supported_card_types
-    assert_equal [:visa, :master, :american_express, :jcb, :discover], ExactGateway.supported_cardtypes
+    assert_equal %i[visa master american_express jcb discover], ExactGateway.supported_cardtypes
   end
 
   def test_avs_result

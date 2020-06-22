@@ -7,9 +7,9 @@ class Flo2cashTest < Test::Unit::TestCase
     Base.mode = :test
 
     @gateway = Flo2cashGateway.new(
-      :username => 'username',
-      :password => 'password',
-      :account_id => 'account_id'
+      username: 'username',
+      password: 'password',
+      account_id: 'account_id'
     )
 
     @credit_card = credit_card

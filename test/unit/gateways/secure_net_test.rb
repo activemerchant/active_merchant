@@ -5,17 +5,17 @@ class SecureNetTest < Test::Unit::TestCase
 
   def setup
     @gateway = SecureNetGateway.new(
-                 :login => 'X',
-                 :password => 'Y'
-               )
+      login: 'X',
+      password: 'Y'
+    )
 
     @credit_card = credit_card
     @amount = 100
 
     @options = {
-      :order_id => '1',
-      :billing_address => address,
-      :description => 'Store Purchase'
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase'
     }
   end
 

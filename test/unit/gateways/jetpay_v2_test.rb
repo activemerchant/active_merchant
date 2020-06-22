@@ -1,22 +1,21 @@
 require 'test_helper'
 
 class JetpayV2Test < Test::Unit::TestCase
-
   def setup
-    @gateway = JetpayV2Gateway.new(:login => 'login')
+    @gateway = JetpayV2Gateway.new(login: 'login')
 
     @credit_card = credit_card
     @amount = 100
 
     @options = {
-      :device => 'spreedly',
-      :application => 'spreedly',
-      :developer_id => 'GenkID',
-      :billing_address => address(:country => 'US'),
-      :shipping_address => address(:country => 'US'),
-      :email => 'test@test.com',
-      :ip => '127.0.0.1',
-      :order_id => '12345'
+      device: 'spreedly',
+      application: 'spreedly',
+      developer_id: 'GenkID',
+      billing_address: address(country: 'US'),
+      shipping_address: address(country: 'US'),
+      email: 'test@test.com',
+      ip: '127.0.0.1',
+      order_id: '12345'
     }
   end
 
@@ -89,7 +88,7 @@ class JetpayV2Test < Test::Unit::TestCase
   end
 
   def test_successful_credit
-    card = credit_card('4242424242424242', :verification_value => nil)
+    card = credit_card('4242424242424242', verification_value: nil)
 
     @gateway.expects(:ssl_post).returns(successful_credit_response)
 
@@ -98,7 +97,7 @@ class JetpayV2Test < Test::Unit::TestCase
   end
 
   def test_failed_credit
-    card = credit_card('2424242424242424', :verification_value => nil)
+    card = credit_card('2424242424242424', verification_value: nil)
 
     @gateway.expects(:ssl_post).returns(failed_credit_response)
 
@@ -133,7 +132,7 @@ class JetpayV2Test < Test::Unit::TestCase
   end
 
   def test_failed_verify
-    card = credit_card('2424242424242424', :verification_value => nil)
+    card = credit_card('2424242424242424', verification_value: nil)
 
     @gateway.expects(:ssl_post).returns(failed_credit_response)
 
@@ -169,7 +168,7 @@ class JetpayV2Test < Test::Unit::TestCase
       with(anything, regexp_matches(/<UDField3>Value3<\/UDField3>/)).
       returns(successful_purchase_response)
 
-    @gateway.purchase(@amount, @credit_card, {:tax => '777', :ud_field_1 => 'Value1', :ud_field_2 => 'Value2', :ud_field_3 => 'Value3'})
+    @gateway.purchase(@amount, @credit_card, {tax: '777', ud_field_1: 'Value1', ud_field_2: 'Value2', ud_field_3: 'Value3'})
   end
 
   private

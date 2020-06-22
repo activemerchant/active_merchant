@@ -21,13 +21,13 @@ module ActiveMerchant #:nodoc:
 
       # Country supported by Omise
       # * Thailand
-      self.supported_countries = %w( TH JP )
+      self.supported_countries = %w(TH JP)
 
       # Credit cards supported by Omise
       # * VISA
       # * MasterCard
       # * JCB
-      self.supported_cardtypes = [:visa, :master, :jcb]
+      self.supported_cardtypes = %i[visa master jcb]
 
       # Omise main page
       self.homepage_url = 'https://www.omise.co/'
@@ -318,7 +318,6 @@ module ActiveMerchant #:nodoc:
         post[:currency]    = (options[:currency] || currency(money))
         post[:description] = options[:description] if options.key?(:description)
       end
-
     end
   end
 end

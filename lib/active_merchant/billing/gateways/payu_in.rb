@@ -11,7 +11,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['IN']
       self.default_currency = 'INR'
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :maestro]
+      self.supported_cardtypes = %i[visa master american_express diners_club maestro]
 
       self.homepage_url = 'https://www.payu.in/'
       self.display_name = 'PayU India'
@@ -33,7 +33,7 @@ module ActiveMerchant #:nodoc:
 
         MultiResponse.run do |r|
           r.process { commit(url('purchase'), post) }
-          if(r.params['enrolled'].to_s == '0')
+          if r.params['enrolled'].to_s == '0'
             r.process { commit(r.params['post_uri'], r.params['form_post_vars']) }
           else
             r.process { handle_3dsecure(r) }

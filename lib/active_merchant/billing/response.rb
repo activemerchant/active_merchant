@@ -60,7 +60,7 @@ module ActiveMerchant #:nodoc:
         self << response
 
         unless ignore_result
-          if(@use_first_response && response.success?)
+          if @use_first_response && response.success?
             @primary_response ||= response
           else
             @primary_response = response

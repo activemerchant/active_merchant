@@ -26,6 +26,25 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_strip_hyphens_from_zip
+    options = {
+      billing_address: {
+        name: 'John & Mary Smith',
+        address1: '1 Main St.',
+        city: 'Burlington',
+        state: 'MA',
+        zip: '01803-3747',
+        country: 'US'
+      }
+    }
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/018033747/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_failed_purchase
     response = stub_comms do
       @gateway.purchase(@declined_amount, @credit_card)

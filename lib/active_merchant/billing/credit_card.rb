@@ -22,6 +22,8 @@ module ActiveMerchant #:nodoc:
     # * Alelo
     # * Cabal
     # * Naranja
+    # * UnionPay
+    # * Alia
     #
     # For testing purposes, use the 'bogus' credit card brand. This skips the vast majority of
     # validations, allowing you to focus on your core concerns until you're ready to be more concerned
@@ -96,6 +98,8 @@ module ActiveMerchant #:nodoc:
       # * +'alelo'+
       # * +'cabal'+
       # * +'naranja'+
+      # * +'union_pay'+
+      # * +'alia'+
       #
       # Or, if you wish to test your implementation, +'bogus'+.
       #
@@ -327,7 +331,7 @@ module ActiveMerchant #:nodoc:
           errors << [:last_name,  'cannot be empty'] if last_name.blank?
         end
 
-        if(empty?(month) || empty?(year))
+        if empty?(month) || empty?(year)
           errors << [:month, 'is required'] if empty?(month)
           errors << [:year,  'is required'] if empty?(year)
         else

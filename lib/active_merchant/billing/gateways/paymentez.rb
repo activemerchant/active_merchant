@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = %w[MX EC CO BR CL PE]
       self.default_currency = 'USD'
-      self.supported_cardtypes = %i[visa master american_express diners_club elo]
+      self.supported_cardtypes = %i[visa master american_express diners_club elo alia]
 
       self.homepage_url = 'https://secure.paymentez.com/'
       self.display_name = 'Paymentez'
@@ -72,7 +72,7 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, authorization, _options = {})
         post = {
-            transaction: { id: authorization }
+          transaction: { id: authorization }
         }
         post[:order] = {amount: amount(money).to_f} if money
 
@@ -236,10 +236,13 @@ module ActiveMerchant #:nodoc:
       def card_success_from(response)
         return false if response.include?('error')
         return true if response['message'] == 'card deleted'
+
         response['card']['status'] == 'valid'
       end
 
       def message_from(response)
+        return response['detail'] if response['detail'].present?
+
         if !success_from(response) && response['error']
           response['error'] && response['error']['type']
         else
@@ -274,6 +277,7 @@ module ActiveMerchant #:nodoc:
 
       def error_code_from(response)
         return if success_from(response)
+
         if response['transaction']
           detail = response['transaction']['status_detail']
           return STANDARD_ERROR_CODE[STANDARD_ERROR_CODE_MAPPING[detail]] if STANDARD_ERROR_CODE_MAPPING.include?(detail)

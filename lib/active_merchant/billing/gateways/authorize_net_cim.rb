@@ -33,55 +33,55 @@ module ActiveMerchant #:nodoc:
       AUTHORIZE_NET_CIM_NAMESPACE = 'AnetApi/xml/v1/schema/AnetApiSchema.xsd'
 
       CIM_ACTIONS = {
-        :create_customer_profile => 'createCustomerProfile',
-        :create_customer_payment_profile => 'createCustomerPaymentProfile',
-        :create_customer_shipping_address => 'createCustomerShippingAddress',
-        :get_customer_profile => 'getCustomerProfile',
-        :get_customer_profile_ids => 'getCustomerProfileIds',
-        :get_customer_payment_profile => 'getCustomerPaymentProfile',
-        :get_customer_shipping_address => 'getCustomerShippingAddress',
-        :delete_customer_profile => 'deleteCustomerProfile',
-        :delete_customer_payment_profile => 'deleteCustomerPaymentProfile',
-        :delete_customer_shipping_address => 'deleteCustomerShippingAddress',
-        :update_customer_profile => 'updateCustomerProfile',
-        :update_customer_payment_profile => 'updateCustomerPaymentProfile',
-        :update_customer_shipping_address => 'updateCustomerShippingAddress',
-        :create_customer_profile_transaction => 'createCustomerProfileTransaction',
-        :validate_customer_payment_profile => 'validateCustomerPaymentProfile'
+        create_customer_profile: 'createCustomerProfile',
+        create_customer_payment_profile: 'createCustomerPaymentProfile',
+        create_customer_shipping_address: 'createCustomerShippingAddress',
+        get_customer_profile: 'getCustomerProfile',
+        get_customer_profile_ids: 'getCustomerProfileIds',
+        get_customer_payment_profile: 'getCustomerPaymentProfile',
+        get_customer_shipping_address: 'getCustomerShippingAddress',
+        delete_customer_profile: 'deleteCustomerProfile',
+        delete_customer_payment_profile: 'deleteCustomerPaymentProfile',
+        delete_customer_shipping_address: 'deleteCustomerShippingAddress',
+        update_customer_profile: 'updateCustomerProfile',
+        update_customer_payment_profile: 'updateCustomerPaymentProfile',
+        update_customer_shipping_address: 'updateCustomerShippingAddress',
+        create_customer_profile_transaction: 'createCustomerProfileTransaction',
+        validate_customer_payment_profile: 'validateCustomerPaymentProfile'
       }
 
       CIM_TRANSACTION_TYPES = {
-        :auth_capture => 'profileTransAuthCapture',
-        :auth_only => 'profileTransAuthOnly',
-        :capture_only => 'profileTransCaptureOnly',
-        :prior_auth_capture => 'profileTransPriorAuthCapture',
-        :refund => 'profileTransRefund',
-        :void => 'profileTransVoid'
+        auth_capture: 'profileTransAuthCapture',
+        auth_only: 'profileTransAuthOnly',
+        capture_only: 'profileTransCaptureOnly',
+        prior_auth_capture: 'profileTransPriorAuthCapture',
+        refund: 'profileTransRefund',
+        void: 'profileTransVoid'
       }
 
       CIM_VALIDATION_MODES = {
-        :none => 'none',
-        :test => 'testMode',
-        :live => 'liveMode',
-        :old => 'oldLiveMode'
+        none: 'none',
+        test: 'testMode',
+        live: 'liveMode',
+        old: 'oldLiveMode'
       }
 
       BANK_ACCOUNT_TYPES = {
-        :checking => 'checking',
-        :savings => 'savings',
-        :business_checking => 'businessChecking'
+        checking: 'checking',
+        savings: 'savings',
+        business_checking: 'businessChecking'
       }
 
       ECHECK_TYPES = {
-        :ccd => 'CCD',
-        :ppd => 'PPD',
-        :web => 'WEB'
+        ccd: 'CCD',
+        ppd: 'PPD',
+        web: 'WEB'
       }
 
       self.homepage_url = 'http://www.authorize.net/'
       self.display_name = 'Authorize.Net CIM'
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       # Creates a new AuthorizeNetCimGateway
       #
@@ -487,9 +487,9 @@ module ActiveMerchant #:nodoc:
       def build_request(action, options = {})
         raise StandardError, "Invalid Customer Information Manager Action: #{action}" unless CIM_ACTIONS.include?(action)
 
-        xml = Builder::XmlMarkup.new(:indent => 2)
-        xml.instruct!(:xml, :version => '1.0', :encoding => 'utf-8')
-        xml.tag!("#{CIM_ACTIONS[action]}Request", :xmlns => AUTHORIZE_NET_CIM_NAMESPACE) do
+        xml = Builder::XmlMarkup.new(indent: 2)
+        xml.instruct!(:xml, version: '1.0', encoding: 'utf-8')
+        xml.tag!("#{CIM_ACTIONS[action]}Request", xmlns: AUTHORIZE_NET_CIM_NAMESPACE) do
           add_merchant_authentication(xml)
           # Merchant-assigned reference ID for the request
           xml.tag!('refId', options[:ref_id]) if options[:ref_id]
@@ -691,10 +691,10 @@ module ActiveMerchant #:nodoc:
               add_order(xml, transaction[:order]) if transaction[:order].present?
 
             end
-            if [:auth_capture, :auth_only, :capture_only].include?(transaction[:type])
+            if %i[auth_capture auth_only capture_only].include?(transaction[:type])
               xml.tag!('recurringBilling', transaction[:recurring_billing]) if transaction.has_key?(:recurring_billing)
             end
-            tag_unless_blank(xml, 'cardCode', transaction[:card_code]) unless [:void, :refund, :prior_auth_capture].include?(transaction[:type])
+            tag_unless_blank(xml, 'cardCode', transaction[:card_code]) unless %i[void refund prior_auth_capture].include?(transaction[:type])
           end
         end
       end
@@ -791,6 +791,7 @@ module ActiveMerchant #:nodoc:
       # when the payment method is credit card.
       def add_credit_card(xml, credit_card)
         return unless credit_card
+
         xml.tag!('creditCard') do
           # The credit card number used for payment of the subscription
           xml.tag!('cardNumber', full_or_masked_card_number(credit_card.number))
@@ -851,7 +852,7 @@ module ActiveMerchant #:nodoc:
 
         response_params = parse(action, xml)
 
-        message_element= response_params['messages']['message']
+        message_element = response_params['messages']['message']
         first_error = message_element.is_a?(Array) ? message_element.first : message_element
         message = first_error['text']
         test_mode = @options[:test_requests] || message =~ /Test Mode/

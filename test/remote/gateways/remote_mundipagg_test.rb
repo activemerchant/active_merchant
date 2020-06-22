@@ -282,7 +282,7 @@ class RemoteMundipaggTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@amount - 1, auth.authorization)
     assert_success capture
   end
 

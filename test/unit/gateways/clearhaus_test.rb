@@ -266,6 +266,14 @@ class ClearhausTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
+  def test_nonfractional_currency_handling
+    stub_comms do
+      @gateway.authorize(200, @credit_card, @options.merge(currency: 'JPY'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/amount=2&card/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
   private
 
   def pre_scrubbed
@@ -366,11 +374,11 @@ Conn close
     {
       'id'     => '84412a34-fa29-4369-a098-0165a80e8fda',
       'status' => {
-          'code' => 20000
+        'code' => 20000
       },
       'processed_at' => '2014-07-09T09:53:41+00:00',
       '_links' => {
-          'captures' => { 'href' => '/authorizations/84412a34-fa29-4369-a098-0165a80e8fda/captures' }
+        'captures' => { 'href' => '/authorizations/84412a34-fa29-4369-a098-0165a80e8fda/captures' }
       }
     }.to_json
   end
@@ -381,20 +389,20 @@ Conn close
 
   def successful_capture_response
     {
-        'id' => 'd8e92a70-3030-4d4d-8ad2-684b230c1bed',
-        'status' => {
-            'code' => 20000
+      'id' => 'd8e92a70-3030-4d4d-8ad2-684b230c1bed',
+      'status' => {
+        'code' => 20000
+      },
+      'processed_at' => '2014-07-09T11:47:28+00:00',
+      'amount' => 1000,
+      '_links' => {
+        'authorization' => {
+          'href' => '/authorizations/84412a34-fa29-4369-a098-0165a80e8fda'
         },
-        'processed_at' => '2014-07-09T11:47:28+00:00',
-        'amount' => 1000,
-        '_links' => {
-            'authorization' => {
-                'href' => '/authorizations/84412a34-fa29-4369-a098-0165a80e8fda'
-            },
-            'refunds' => {
-                'href' => '/authorizations/84412a34-fa29-4369-a098-0165a80e8fda/refunds'
-            }
+        'refunds' => {
+          'href' => '/authorizations/84412a34-fa29-4369-a098-0165a80e8fda/refunds'
         }
+      }
     }.to_json
   end
 
@@ -406,12 +414,12 @@ Conn close
     {
       'id' => 'f04c0872-47ce-4683-8d8c-e154221bba14',
       'status' => {
-          'code' => 20000
+        'code' => 20000
       },
       'processed_at' => '2014-07-09T11:57:58+00:00',
       'amount' => 500,
       '_links' => {
-          'authorization' => { 'href' => '/authorizations/84412a34-fa29-4369-a098-0165a80e8fda' }
+        'authorization' => { 'href' => '/authorizations/84412a34-fa29-4369-a098-0165a80e8fda' }
       }
     }.to_json
   end
@@ -451,14 +459,14 @@ Conn close
     {
       'id' => '58dabba0-e9ea-4133-8c38-bfa1028c1ed2',
       'status' => {
-          'code'=> 20000
+        'code' => 20000
       },
       'processed_at' => '2014-07-09T12:14:31+00:00',
       'last4' => '0004',
       'scheme' => 'mastercard',
       '_links' => {
-          'authorizations' => { 'href' => '/cards/58dabba0-e9ea-4133-8c38-bfa1028c1ed2/authorizations' },
-          'credits'=> { 'href' => '/cards/58dabba0-e9ea-4133-8c38-bfa1028c1ed2/credits' }
+        'authorizations' => { 'href' => '/cards/58dabba0-e9ea-4133-8c38-bfa1028c1ed2/authorizations' },
+          'credits' => { 'href' => '/cards/58dabba0-e9ea-4133-8c38-bfa1028c1ed2/credits' }
       }
     }.to_json
   end
@@ -470,5 +478,4 @@ Conn close
   def failed_ch_response
     { 'status' => { 'code' => 40000, 'message' => 'General input error' }}.to_json
   end
-
 end

@@ -7,13 +7,13 @@ class MonerisTest < Test::Unit::TestCase
     Base.mode = :test
 
     @gateway = MonerisGateway.new(
-      :login => 'store3',
-      :password => 'yesguy'
+      login: 'store3',
+      password: 'yesguy'
     )
 
     @amount = 100
     @credit_card = credit_card('4242424242424242')
-    @options = { :order_id => '1', :customer => '1', :billing_address => address}
+    @options = { order_id: '1', customer: '1', billing_address: address}
   end
 
   def test_default_options
@@ -32,8 +32,8 @@ class MonerisTest < Test::Unit::TestCase
 
   def test_successful_first_purchase_with_credential_on_file
     gateway = MonerisGateway.new(
-      :login => 'store3',
-      :password => 'yesguy'
+      login: 'store3',
+      password: 'yesguy'
     )
     gateway.expects(:ssl_post).returns(successful_first_cof_purchase_response)
     assert response = gateway.purchase(
@@ -53,8 +53,8 @@ class MonerisTest < Test::Unit::TestCase
 
   def test_successful_subsequent_purchase_with_credential_on_file
     gateway = MonerisGateway.new(
-      :login => 'store3',
-      :password => 'yesguy'
+      login: 'store3',
+      password: 'yesguy'
     )
     gateway.expects(:ssl_post).returns(successful_first_cof_authorize_response)
     assert response = gateway.authorize(
@@ -129,11 +129,11 @@ class MonerisTest < Test::Unit::TestCase
 
   def test_preauth_is_valid_xml
     params = {
-      :order_id => 'order1',
-      :amount => '1.01',
-      :pan => '4242424242424242',
-      :expdate => '0303',
-      :crypt_type => 7,
+      order_id: 'order1',
+      amount: '1.01',
+      pan: '4242424242424242',
+      expdate: '0303',
+      crypt_type: 7,
     }
 
     assert data = @gateway.send(:post_data, 'preauth', params)
@@ -143,11 +143,11 @@ class MonerisTest < Test::Unit::TestCase
 
   def test_purchase_is_valid_xml
     params = {
-      :order_id => 'order1',
-      :amount => '1.01',
-      :pan => '4242424242424242',
-      :expdate => '0303',
-      :crypt_type => 7,
+      order_id: 'order1',
+      amount: '1.01',
+      pan: '4242424242424242',
+      expdate: '0303',
+      crypt_type: 7,
     }
 
     assert data = @gateway.send(:post_data, 'purchase', params)
@@ -157,11 +157,11 @@ class MonerisTest < Test::Unit::TestCase
 
   def test_capture_is_valid_xml
     params = {
-      :order_id => 'order1',
-      :amount => '1.01',
-      :pan => '4242424242424242',
-      :expdate => '0303',
-      :crypt_type => 7,
+      order_id: 'order1',
+      amount: '1.01',
+      pan: '4242424242424242',
+      expdate: '0303',
+      crypt_type: 7,
     }
 
     assert data = @gateway.send(:post_data, 'preauth', params)
@@ -170,10 +170,11 @@ class MonerisTest < Test::Unit::TestCase
   end
 
   def test_successful_verify
-    response = stub_comms do
-      @gateway.verify(@credit_card, @options)
-    end.respond_with(successful_authorize_response, failed_void_response)
+    @gateway.expects(:ssl_post).returns(successful_verify_response)
+
+    assert response = @gateway.verify(@credit_card, @options)
     assert_success response
+    assert_equal '125-0_14;93565164-01571', response.authorization
     assert_equal 'Approved', response.message
   end
 
@@ -182,7 +183,7 @@ class MonerisTest < Test::Unit::TestCase
   end
 
   def test_supported_card_types
-    assert_equal [:visa, :master, :american_express, :diners_club, :discover], MonerisGateway.supported_cardtypes
+    assert_equal %i[visa master american_express diners_club discover], MonerisGateway.supported_cardtypes
   end
 
   def test_should_raise_error_if_transaction_param_empty_on_credit_request
@@ -194,6 +195,15 @@ class MonerisTest < Test::Unit::TestCase
   def test_successful_store
     @gateway.expects(:ssl_post).returns(successful_store_response)
     assert response = @gateway.store(@credit_card)
+    assert_success response
+    assert_equal 'Successfully registered cc details', response.message
+    assert response.params['data_key'].present?
+    @data_key = response.params['data_key']
+  end
+
+  def test_successful_store_with_duration
+    @gateway.expects(:ssl_post).returns(successful_store_with_duration_response)
+    assert response = @gateway.store(@credit_card, duration: 600)
     assert_success response
     assert_equal 'Successfully registered cc details', response.message
     assert response.params['data_key'].present?
@@ -221,7 +231,7 @@ class MonerisTest < Test::Unit::TestCase
   def test_successful_purchase_with_vault
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     test_successful_store
-    assert response = @gateway.purchase(100, @data_key, {:order_id => generate_unique_id, :customer => generate_unique_id})
+    assert response = @gateway.purchase(100, @data_key, {order_id: generate_unique_id, customer: generate_unique_id})
     assert_success response
     assert_equal 'Approved', response.message
     assert response.authorization.present?
@@ -241,7 +251,7 @@ class MonerisTest < Test::Unit::TestCase
   def test_successful_authorization_with_vault
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     test_successful_store
-    assert response = @gateway.authorize(100, @data_key, {:order_id => generate_unique_id, :customer => generate_unique_id})
+    assert response = @gateway.authorize(100, @data_key, {order_id: generate_unique_id, customer: generate_unique_id})
     assert_success response
     assert_equal 'Approved', response.message
     assert response.authorization.present?
@@ -839,6 +849,41 @@ class MonerisTest < Test::Unit::TestCase
     RESPONSE
   end
 
+  def successful_store_with_duration_response
+    <<-RESPONSE
+<?xml version="1.0"?>
+<response>
+  <receipt>
+    <DataKey>1234567890</DataKey>
+    <ReceiptId>null</ReceiptId>
+    <ReferenceNum>null</ReferenceNum>
+    <ResponseCode>001</ResponseCode>
+    <ISO>null</ISO>
+    <AuthCode>null</AuthCode>
+    <Message>Successfully registered CC details.</Message>
+    <TransType>null</TransType>
+    <Complete>true</Complete>
+    <TransAmount>null</TransAmount>
+    <CardType>null</CardType>
+    <TransID>null</TransID>
+    <TimedOut>false</TimedOut>
+    <CorporateCard>null</CorporateCard>
+    <RecurSuccess>null</RecurSuccess>
+    <AvsResultCode>null</AvsResultCode>
+    <CvdResultCode>null</CvdResultCode>
+    <ResSuccess>true</ResSuccess>
+    <PaymentType>cc</PaymentType>
+    <IsVisaDebit>null</IsVisaDebit>
+    <ResolveData>
+      <anc1/>
+      <masked_pan>4242***4242</masked_pan>
+      <expdate>2010</expdate>
+    </ResolveData>
+  </receipt>
+</response>
+    RESPONSE
+  end
+
   def successful_unstore_response
     <<-RESPONSE
 <?xml version="1.0"?>
@@ -891,6 +936,37 @@ class MonerisTest < Test::Unit::TestCase
           <IsVisaDebit>false</IsVisaDebit>
         </receipt>
       </response>
+    RESPONSE
+  end
+
+  def successful_verify_response
+    <<-RESPONSE
+    <?xml version="1.0" standalone="yes"?>
+    <response>
+      <receipt>
+        <ReceiptId>93565164-01571</ReceiptId>
+        <ReferenceNum>660158360010251110</ReferenceNum>
+        <ResponseCode>027</ResponseCode>
+        <ISO>01</ISO>
+        <AuthCode>000000</AuthCode>
+        <TransTime>16:06:11</TransTime>
+        <TransDate>2019-11-04</TransDate>
+        <TransType>06</TransType>
+        <Complete>true</Complete>
+        <Message>APPROVED           *                    =</Message>
+        <TransAmount>0.00</TransAmount>
+        <CardType>V</CardType>
+        <TransID>125-0_14</TransID>
+        <TimedOut>false</TimedOut>
+        <BankTotals>null</BankTotals>
+        <Ticket>null</Ticket>
+        <AvsResultCode>null</AvsResultCode>
+        <ITDResponse>null</ITDResponse>
+        <CvdResultCode>1M</CvdResultCode>
+        <CavvResultCode>2</CavvResultCode>
+        <IsVisaDebit>false</IsVisaDebit>
+      </receipt>
+    </response>
     RESPONSE
   end
 

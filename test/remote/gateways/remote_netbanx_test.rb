@@ -81,7 +81,7 @@ class RemoteNetbanxTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization, @options)
+    assert capture = @gateway.capture(@amount - 1, auth.authorization, @options)
     assert_success capture
   end
 
@@ -229,5 +229,4 @@ class RemoteNetbanxTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'OK', response.message
   end
-
 end

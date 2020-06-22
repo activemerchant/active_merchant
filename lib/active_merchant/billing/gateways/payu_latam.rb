@@ -9,10 +9,10 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://sandbox.api.payulatam.com/payments-api/4.0/service.cgi'
       self.live_url = 'https://api.payulatam.com/payments-api/4.0/service.cgi'
 
-      self.supported_countries = ['AR', 'BR', 'CL', 'CO', 'MX', 'PA', 'PE']
+      self.supported_countries = %w[AR BR CL CO MX PA PE]
       self.default_currency = 'USD'
       self.money_format = :dollars
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :naranja, :cabal]
+      self.supported_cardtypes = %i[visa master american_express diners_club naranja cabal]
 
       BRAND_MAP = {
         'visa' => 'VISA',
@@ -96,7 +96,7 @@ module ActiveMerchant #:nodoc:
         post = {}
 
         add_credentials(post, 'CREATE_TOKEN')
-        add_payment_method_to_be_tokenized(post, payment_method)
+        add_payment_method_to_be_tokenized(post, payment_method, options)
 
         commit('store', post)
       end
@@ -180,12 +180,13 @@ module ActiveMerchant #:nodoc:
 
       def billing_address_fields(options)
         return unless address = options[:billing_address]
+
         billing_address = {}
         billing_address[:street1] = address[:address1]
         billing_address[:street2] = address[:address2]
         billing_address[:city] = address[:city]
         billing_address[:state] = address[:state]
-        billing_address[:country] = address[:country]
+        billing_address[:country] = address[:country] unless address[:country].blank?
         billing_address[:postalCode] = address[:zip] if @options[:payment_country] == 'MX'
         billing_address[:phone] = address[:phone]
         billing_address
@@ -217,6 +218,7 @@ module ActiveMerchant #:nodoc:
 
       def shipping_address_fields(options)
         return unless address = options[:shipping_address]
+
         shipping_address = {}
         shipping_address[:street1] = address[:address1]
         shipping_address[:street2] = address[:address2]
@@ -292,6 +294,7 @@ module ActiveMerchant #:nodoc:
 
       def add_process_without_cvv2(payment_method, options)
         return true if payment_method.verification_value.blank? && options[:cvv].blank?
+
         false
       end
 
@@ -310,15 +313,14 @@ module ActiveMerchant #:nodoc:
         post[:transaction][:reason] = 'n/a'
       end
 
-      def add_payment_method_to_be_tokenized(post, payment_method)
+      def add_payment_method_to_be_tokenized(post, payment_method, options)
         credit_card_token = {}
-        credit_card_token[:payerId] = generate_unique_id
+        credit_card_token[:payerId] = options[:payer_id] || generate_unique_id
         credit_card_token[:name] = payment_method.name.strip
-        credit_card_token[:identificationNumber] = generate_unique_id
+        credit_card_token[:identificationNumber] = options[:dni_number]
         credit_card_token[:paymentMethod] = BRAND_MAP[payment_method.brand.to_s]
         credit_card_token[:number] = payment_method.number
         credit_card_token[:expirationDate] = format(payment_method.year, :four_digits).to_s + '/' + format(payment_method.month, :two_digits).to_s
-        credit_card_token[:securityCode] = payment_method.verification_value
         post[:creditCardToken] = credit_card_token
       end
 
@@ -344,8 +346,8 @@ module ActiveMerchant #:nodoc:
 
       def headers
         {
-          'Content-Type'  => 'application/json',
-          'Accept'  => 'application/json'
+          'Content-Type' => 'application/json',
+          'Accept' => 'application/json'
         }
       end
 
@@ -379,10 +381,12 @@ module ActiveMerchant #:nodoc:
         case action
         when 'store'
           return response['code'] if success
+
           error_description = response['creditCardToken']['errorDescription'] if response['creditCardToken']
           response['error'] || error_description || 'FAILED'
         when 'verify_credentials'
           return 'VERIFIED' if success
+
           'FAILED'
         else
           if response['transactionResponse']
@@ -390,6 +394,7 @@ module ActiveMerchant #:nodoc:
             response_code = response['transactionResponse']['responseCode'] || response['transactionResponse']['pendingReason']
           end
           return response_code if success
+
           response['error'] || response_message || response_code || 'FAILED'
         end
       end
@@ -435,7 +440,7 @@ module ActiveMerchant #:nodoc:
           false,
           message_from('', false, response),
           response,
-          :test => test?
+          test: test?
         )
       end
 

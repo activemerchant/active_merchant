@@ -3,7 +3,6 @@ require File.join(File.dirname(__FILE__), '..', 'check.rb')
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class SmartPs < Gateway #:nodoc:
-
       ##
       # This is the base gateway for processors who use the smartPS processing system
 
@@ -48,13 +47,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options = {})
-        post ={}
+        post = {}
         post[:transactionid] = authorization
         commit('capture', money, post)
       end
 
       def void(authorization, options = {})
-        post ={}
+        post = {}
         post[:transactionid] = authorization
         commit('void', nil, post)
       end
@@ -118,7 +117,7 @@ module ActiveMerchant #:nodoc:
       def store(payment_source, options = {})
         post = {}
         billing_id = options.delete(:billing_id).to_s || true
-        add_payment_source(post, payment_source, :store => billing_id)
+        add_payment_source(post, payment_source, store: billing_id)
         add_address(post, options[:billing_address] || options[:address])
         add_customer_data(post, options)
         commit(nil, nil, post)
@@ -135,16 +134,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(post, address, prefix='')
-        prefix +='_' unless prefix.blank?
+        prefix += '_' unless prefix.blank?
         unless address.blank? or address.values.blank?
-          post[prefix+'address1']    = address[:address1].to_s
-          post[prefix+'address2']    = address[:address2].to_s unless address[:address2].blank?
-          post[prefix+'company']    = address[:company].to_s
-          post[prefix+'phone']      = address[:phone].to_s
-          post[prefix+'zip']        = address[:zip].to_s
-          post[prefix+'city']       = address[:city].to_s
-          post[prefix+'country']    = address[:country].to_s
-          post[prefix+'state']      = address[:state].blank? ? 'n/a' : address[:state]
+          post[prefix + 'address1']    = address[:address1].to_s
+          post[prefix + 'address2']    = address[:address2].to_s unless address[:address2].blank?
+          post[prefix + 'company']    = address[:company].to_s
+          post[prefix + 'phone']      = address[:phone].to_s
+          post[prefix + 'zip']        = address[:zip].to_s
+          post[prefix + 'city']       = address[:city].to_s
+          post[prefix + 'country']    = address[:country].to_s
+          post[prefix + 'state']      = address[:state].blank? ? 'n/a' : address[:state]
         end
       end
 
@@ -228,10 +227,10 @@ module ActiveMerchant #:nodoc:
         parameters[:amount] = localized_amount(money, parameters[:currency] || default_currency) if money
         response = parse(ssl_post(self.live_url, post_data(action, parameters)))
         Response.new(response['response'] == '1', message_from(response), response,
-          :authorization => (response['transactionid'] || response['customer_vault_id']),
-          :test => test?,
-          :cvv_result => response['cvvresponse'],
-          :avs_result => { :code => response['avsresponse'] }
+          authorization: (response['transactionid'] || response['customer_vault_id']),
+          test: test?,
+          cvv_result: response['cvvresponse'],
+          avs_result: { code: response['avsresponse'] }
         )
       end
 

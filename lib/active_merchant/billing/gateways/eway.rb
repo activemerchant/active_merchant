@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
 
       self.money_format = :cents
       self.supported_countries = ['AU']
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express diners_club]
       self.homepage_url = 'http://www.eway.com.au/'
       self.display_name = 'eWAY'
 
@@ -71,7 +71,7 @@ module ActiveMerchant #:nodoc:
 
       def add_creditcard(post, creditcard)
         post[:CardNumber] = creditcard.number
-        post[:CardExpiryMonth]  = sprintf('%.2i', creditcard.month)
+        post[:CardExpiryMonth] = sprintf('%.2i', creditcard.month)
         post[:CardExpiryYear] = sprintf('%.4i', creditcard.year)[-2..-1]
         post[:CustomerFirstName] = creditcard.first_name
         post[:CustomerLastName]  = creditcard.last_name
@@ -82,7 +82,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(post, options)
         if address = options[:billing_address] || options[:address]
-          post[:CustomerAddress]    = [ address[:address1], address[:address2], address[:city], address[:state], address[:country] ].compact.join(', ')
+          post[:CustomerAddress]    = [address[:address1], address[:address2], address[:city], address[:state], address[:country]].compact.join(', ')
           post[:CustomerPostcode]   = address[:zip]
         end
       end
@@ -114,8 +114,8 @@ module ActiveMerchant #:nodoc:
         Response.new(success?(response),
           message_from(response[:ewaytrxnerror]),
           response,
-          :authorization => response[:ewaytrxnnumber],
-          :test => test?
+          authorization: response[:ewaytrxnnumber],
+          test: test?
         )
       end
 
@@ -145,6 +145,7 @@ module ActiveMerchant #:nodoc:
 
       def message_from(message)
         return '' if message.blank?
+
         MESSAGES[message[0, 2]] || message
       end
 

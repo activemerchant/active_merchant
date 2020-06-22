@@ -36,7 +36,7 @@ module ActiveMerchant #:nodoc:
     #
     #
     class RedsysGateway < Gateway
-      self.live_url = 'https://sis.sermepa.es/sis/operaciones'
+      self.live_url = 'https://sis.redsys.es/sis/operaciones'
       self.test_url = 'https://sis-t.redsys.es:25443/sis/operaciones'
 
       self.supported_countries = ['ES']
@@ -44,7 +44,7 @@ module ActiveMerchant #:nodoc:
       self.money_format        = :cents
 
       # Not all card types may be activated by the bank!
-      self.supported_cardtypes = [:visa, :master, :american_express, :jcb, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express jcb diners_club unionpay]
       self.homepage_url        = 'http://www.redsys.es/'
       self.display_name        = 'Redsys'
 
@@ -91,11 +91,11 @@ module ActiveMerchant #:nodoc:
       # More operations are supported by the gateway itself, but
       # are not supported in this library.
       SUPPORTED_TRANSACTIONS = {
-        :purchase   => 'A',
-        :authorize  => '1',
-        :capture    => '2',
-        :refund     => '3',
-        :cancel     => '9'
+        purchase:   'A',
+        authorize:  '1',
+        capture:    '2',
+        refund:     '3',
+        cancel:     '9'
       }
 
       # These are the text meanings sent back by the acquirer when
@@ -225,7 +225,7 @@ module ActiveMerchant #:nodoc:
         data = {}
         add_action(data, :capture)
         add_amount(data, money, options)
-        order_id, _, _ = split_authorization(authorization)
+        order_id, = split_authorization(authorization)
         add_order(data, order_id)
         data[:description] = options[:description]
 
@@ -236,7 +236,7 @@ module ActiveMerchant #:nodoc:
         data = {}
         add_action(data, :cancel)
         order_id, amount, currency = split_authorization(authorization)
-        add_amount(data, amount, :currency => currency)
+        add_amount(data, amount, currency: currency)
         add_order(data, order_id)
         data[:description] = options[:description]
 
@@ -247,7 +247,7 @@ module ActiveMerchant #:nodoc:
         data = {}
         add_action(data, :refund)
         add_amount(data, money, options)
-        order_id, _, _ = split_authorization(authorization)
+        order_id, = split_authorization(authorization)
         add_order(data, order_id)
         data[:description] = options[:description]
 
@@ -270,8 +270,10 @@ module ActiveMerchant #:nodoc:
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
           gsub(%r((%3CDS_MERCHANT_PAN%3E)\d+(%3C%2FDS_MERCHANT_PAN%3E))i, '\1[FILTERED]\2').
           gsub(%r((%3CDS_MERCHANT_CVV2%3E)\d+(%3C%2FDS_MERCHANT_CVV2%3E))i, '\1[FILTERED]\2').
+          gsub(%r((&lt;DS_MERCHANT_PAN&gt;)\d+(&lt;/DS_MERCHANT_PAN&gt;))i, '\1[FILTERED]\2').
           gsub(%r((<DS_MERCHANT_PAN>)\d+(</DS_MERCHANT_PAN>))i, '\1[FILTERED]\2').
           gsub(%r((<DS_MERCHANT_CVV2>)\d+(</DS_MERCHANT_CVV2>))i, '\1[FILTERED]\2').
+          gsub(%r((&lt;DS_MERCHANT_CVV2&gt;)\d+(&lt;/DS_MERCHANT_CVV2&gt;))i, '\1[FILTERED]\2').
           gsub(%r((DS_MERCHANT_CVV2)%2F%3E%0A%3C%2F)i, '\1[BLANK]').
           gsub(%r((DS_MERCHANT_CVV2)%2F%3E%3C)i, '\1[BLANK]').
           gsub(%r((DS_MERCHANT_CVV2%3E)(%3C%2FDS_MERCHANT_CVV2))i, '\1[BLANK]\2').
@@ -300,7 +302,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def threeds_url
-        test? ? 'https://sis-t.redsys.es:25443/sis/services/SerClsWSEntradaV2': 'https://sis.redsys.es/sis/services/SerClsWSEntradaV2'
+        test? ? 'https://sis-t.redsys.es:25443/sis/services/SerClsWSEntradaV2' : 'https://sis.redsys.es/sis/services/SerClsWSEntradaV2'
       end
 
       def add_payment(data, card)
@@ -311,10 +313,10 @@ module ActiveMerchant #:nodoc:
           year  = sprintf('%.4i', card.year)
           month = sprintf('%.2i', card.month)
           data[:card] = {
-            :name => name,
-            :pan  => card.number,
-            :date => "#{year[2..3]}#{month}",
-            :cvv  => card.verification_value
+            name: name,
+            pan: card.number,
+            date: "#{year[2..3]}#{month}",
+            cvv: card.verification_value
           }
         end
       end
@@ -354,7 +356,7 @@ module ActiveMerchant #:nodoc:
         if action
           {
             'Content-Type' => 'text/xml',
-            'SOAPAction'    => action
+            'SOAPAction' => action
           }
         else
           {
@@ -405,7 +407,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_sha1_xml_request(data, options = {})
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         build_merchant_data(xml, data, options)
         xml.target!
       end
@@ -424,7 +426,11 @@ module ActiveMerchant #:nodoc:
           xml.DS_MERCHANT_AMOUNT             data[:amount]
           xml.DS_MERCHANT_ORDER              data[:order_id]
           xml.DS_MERCHANT_TRANSACTIONTYPE    data[:action]
-          xml.DS_MERCHANT_PRODUCTDESCRIPTION data[:description]
+          if data[:description] && data[:threeds]
+            xml.DS_MERCHANT_PRODUCTDESCRIPTION CGI.escape(data[:description])
+          else
+            xml.DS_MERCHANT_PRODUCTDESCRIPTION data[:description]
+          end
           xml.DS_MERCHANT_TERMINAL           options[:terminal] || @options[:terminal]
           xml.DS_MERCHANT_MERCHANTCODE       @options[:login]
           xml.DS_MERCHANT_MERCHANTSIGNATURE  build_signature(data) unless sha256_authentication?
@@ -432,7 +438,11 @@ module ActiveMerchant #:nodoc:
 
           # Only when card is present
           if data[:card]
-            xml.DS_MERCHANT_TITULAR    data[:card][:name]
+            if data[:card][:name] && data[:threeds]
+              xml.DS_MERCHANT_TITULAR    CGI.escape(data[:card][:name])
+            else
+              xml.DS_MERCHANT_TITULAR    data[:card][:name]
+            end
             xml.DS_MERCHANT_PAN        data[:card][:pan]
             xml.DS_MERCHANT_EXPIRYDATE data[:card][:date]
             xml.DS_MERCHANT_CVV2       data[:card][:cvv]
@@ -454,7 +464,7 @@ module ActiveMerchant #:nodoc:
         params  = {}
         success = false
         message = ''
-        options = @options.merge(:test => test?)
+        options = @options.merge(test: test?)
         xml     = Nokogiri::XML(data)
         code    = xml.xpath('//RETORNOXML/CODIGO').text
 
@@ -470,7 +480,7 @@ module ActiveMerchant #:nodoc:
           else
             message = 'Response failed validation check'
           end
-        elsif ['iniciaPeticion', 'trataPeticion'].include?(action)
+        elsif %w[iniciaPeticion trataPeticion].include?(action)
           vxml = Nokogiri::XML(data).remove_namespaces!.xpath("//Envelope/Body/#{action}Response/#{action}Return").inner_text
           xml = Nokogiri::XML(vxml)
           node = (action == 'iniciaPeticion' ? 'INFOTARJETA' : 'OPERACION')
@@ -521,6 +531,7 @@ module ActiveMerchant #:nodoc:
       def currency_code(currency)
         return currency if currency =~ /^\d+$/
         raise ArgumentError, "Unknown currency #{currency}" unless CURRENCY_CODES[currency]
+
         CURRENCY_CODES[currency]
       end
 
@@ -554,7 +565,7 @@ module ActiveMerchant #:nodoc:
 
       def clean_order_id(order_id)
         cleansed = order_id.gsub(/[^\da-zA-Z]/, '')
-        if cleansed =~ /^\d{4}/
+        if /^\d{4}/.match?(cleansed)
           cleansed[0..11]
         else
           '%04d%s' % [rand(0..9999), cleansed[0...8]]

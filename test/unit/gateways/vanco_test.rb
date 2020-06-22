@@ -180,5 +180,4 @@ class VancoTest < Test::Unit::TestCase
       <?xml version="1.0" encoding="UTF-8"  ?><VancoWS><Auth><RequestID>dc9a5e2b620eee5d248e1b33cc1f33</RequestID><RequestTime>2015-05-01 16:19:33 -0400</RequestTime><RequestType>EFTAddCredit</RequestType><Signature></Signature><SessionID>67a731057f821413155033bc23551aef3ba0b204</SessionID><Version>2</Version></Auth><Response><Errors><Error><ErrorCode>575</ErrorCode><ErrorDescription>Amount Cannot Be Greater Than $100.05</ErrorDescription></Error></Errors></Response></VancoWS>
      )
   end
-
 end

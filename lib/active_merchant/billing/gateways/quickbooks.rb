@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners]
+      self.supported_cardtypes = %i[visa master american_express discover diners]
 
       self.homepage_url = 'http://payments.intuit.com'
       self.display_name = 'QuickBooks Payments'
@@ -83,7 +83,7 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, authorization, options = {})
         post = {}
-        authorization, _ = split_authorization(authorization)
+        authorization, = split_authorization(authorization)
         post[:amount] = localized_amount(money, currency(money))
         add_context(post, options)
 
@@ -95,7 +95,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         post[:amount] = localized_amount(money, currency(money))
         add_context(post, options)
-        authorization, _ = split_authorization(authorization)
+        authorization, = split_authorization(authorization)
 
         response = commit(refund_uri(authorization), post)
         check_token_response(response, refund_uri(authorization), post, options)
@@ -239,7 +239,8 @@ module ActiveMerchant #:nodoc:
       def headers(method, uri)
         return oauth_v2_headers if @options[:refresh_token]
 
-        raise ArgumentError, "Invalid HTTP method: #{method}. Valid methods are :post and :get" unless [:post, :get].include?(method)
+        raise ArgumentError, "Invalid HTTP method: #{method}. Valid methods are :post and :get" unless %i[post get].include?(method)
+
         request_uri = URI.parse(uri)
 
         # Following the guidelines from http://nouncer.com/oauth/authentication.html
@@ -285,6 +286,7 @@ module ActiveMerchant #:nodoc:
         return response unless @options[:refresh_token]
         return response unless options[:allow_refresh]
         return response unless response.params['code'] == 'AuthenticationFailed'
+
         refresh_access_token
         commit(endpoint, body)
       end
@@ -321,7 +323,7 @@ module ActiveMerchant #:nodoc:
       def success?(response)
         return FRAUD_WARNING_CODES.concat(['0']).include?(response['errors'].first['code']) if response['errors']
 
-        !['DECLINED', 'CANCELLED'].include?(response['status']) && !['AuthenticationFailed', 'AuthorizationFailed'].include?(response['code'])
+        !%w[DECLINED CANCELLED].include?(response['status']) && !%w[AuthenticationFailed AuthorizationFailed].include?(response['code'])
       end
 
       def message_from(response)
@@ -329,7 +331,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def errors_from(response)
-        if ['AuthenticationFailed', 'AuthorizationFailed'].include?(response['code'])
+        if %w[AuthenticationFailed AuthorizationFailed].include?(response['code'])
           response['code']
         else
           response['errors'].present? ? STANDARD_ERROR_CODE_MAPPING[response['errors'].first['code']] : ''

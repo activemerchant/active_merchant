@@ -5,9 +5,9 @@ class CenposTest < Test::Unit::TestCase
 
   def setup
     @gateway = CenposGateway.new(
-      :merchant_id => 'merchant_id',
-      :password => 'password',
-      :user_id => 'user_id'
+      merchant_id: 'merchant_id',
+      password: 'password',
+      user_id: 'user_id'
     )
 
     @credit_card = credit_card

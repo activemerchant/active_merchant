@@ -1,18 +1,17 @@
 require 'test_helper'
 
 class PaySecureTest < Test::Unit::TestCase
-
   def setup
     @gateway = PaySecureGateway.new(
-                 :login => 'login',
-                 :password => 'password'
-               )
+      login: 'login',
+      password: 'password'
+    )
 
     @credit_card = credit_card
     @options = {
-      :order_id => '1000',
-      :billing_address => address,
-      :description => 'Test purchase'
+      order_id: '1000',
+      billing_address: address,
+      description: 'Test purchase'
     }
     @amount = 100
   end

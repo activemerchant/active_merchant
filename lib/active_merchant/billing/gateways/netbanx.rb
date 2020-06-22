@@ -7,14 +7,14 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = %w(AF AX AL DZ AS AD AO AI AQ AG AR AM AW AU AT AZ BS BH BD BB BY BE BZ BJ BM BT BO BQ BA BW BV BR IO BN BG BF BI KH CM CA CV KY CF TD CL CN CX CC CO KM CG CD CK CR CI HR CU CW CY CZ DK DJ DM DO EC EG SV GQ ER EE ET FK FO FJ FI FR GF PF TF GA GM GE DE GH GI GR GL GD GP GU GT GG GN GW GY HT HM HN HK HU IS IN ID IR IQ IE IM IL IT JM JP JE JO KZ KE KI KP KR KW KG LA LV LB LS LR LY LI LT LU MO MK MG MW MY MV ML MT MH MQ MR MU YT MX FM MD MC MN ME MS MA MZ MM NA NR NP NC NZ NI NE NG NU NF MP NO OM PK PW PS PA PG PY PE PH PN PL PT PR QA RE RO RU RW BL SH KN LC MF VC WS SM ST SA SN RS SC SL SG SX SK SI SB SO ZA GS SS ES LK PM SD SR SJ SZ SE CH SY TW TJ TZ TH NL TL TG TK TO TT TN TR TM TC TV UG UA AE GB US UM UY UZ VU VA VE VN VG VI WF EH YE ZM ZW)
       self.default_currency = 'CAD'
-      self.supported_cardtypes = [
-        :american_express,
-        :diners_club,
-        :discover,
-        :jcb,
-        :master,
-        :maestro,
-        :visa
+      self.supported_cardtypes = %i[
+        american_express
+        diners_club
+        discover
+        jcb
+        master
+        maestro
+        visa
       ]
 
       self.money_format = :cents
@@ -159,7 +159,7 @@ module ActiveMerchant #:nodoc:
         month = format(credit_card.month, :two_digits)
 
         # returns a hash (necessary in the card JSON object)
-        { :month => month, :year => year }
+        { month: month, year: year }
       end
 
       def add_order_id(post, options)
@@ -168,12 +168,13 @@ module ActiveMerchant #:nodoc:
 
       def map_address(address)
         return {} if address.nil?
+
         country = Country.find(address[:country]) if address[:country]
         mapped = {
-          :street => address[:address1],
-          :city   => address[:city],
-          :zip    => address[:zip],
-          :state  => address[:state],
+          street: address[:address1],
+          city: address[:city],
+          zip: address[:zip],
+          state: address[:state],
         }
         mapped[:country] = country.code(:alpha2).value unless country.blank?
 
@@ -182,12 +183,12 @@ module ActiveMerchant #:nodoc:
 
       def map_3ds(three_d_secure_options)
         mapped = {
-          :eci => three_d_secure_options[:eci],
-          :cavv => three_d_secure_options[:cavv],
-          :xid => three_d_secure_options[:xid],
-          :threeDResult => three_d_secure_options[:directory_response_status],
-          :threeDSecureVersion => three_d_secure_options[:version],
-          :directoryServerTransactionId => three_d_secure_options[:ds_transaction_id]
+          eci: three_d_secure_options[:eci],
+          cavv: three_d_secure_options[:cavv],
+          xid: three_d_secure_options[:xid],
+          threeDResult: three_d_secure_options[:directory_response_status],
+          threeDSecureVersion: three_d_secure_options[:version],
+          directoryServerTransactionId: three_d_secure_options[:ds_transaction_id]
         }
 
         mapped
@@ -203,7 +204,8 @@ module ActiveMerchant #:nodoc:
           begin
             parse(ssl_request(method, get_url(uri), params, headers))
           rescue ResponseError => e
-            return Response.new(false, 'Invalid Login') if(e.response.code == '401')
+            return Response.new(false, 'Invalid Login') if e.response.code == '401'
+
             parse(e.response.body)
           end
 
@@ -212,15 +214,15 @@ module ActiveMerchant #:nodoc:
           success,
           message_from(success, response),
           response,
-          :test => test?,
-          :error_code => error_code_from(response),
-          :authorization => authorization_from(success, get_url(uri), method, response)
+          test: test?,
+          error_code: error_code_from(response),
+          authorization: authorization_from(success, get_url(uri), method, response)
         )
       end
 
       def get_url(uri)
         url = (test? ? test_url : live_url)
-        if uri =~ /^customervault/
+        if /^customervault/.match?(uri)
           "#{url}#{uri}"
         else
           "#{url}cardpayments/v1/accounts/#{@options[:account_number]}/#{uri}"

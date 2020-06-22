@@ -4,19 +4,19 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://www.usaepay.com/gate'
       self.test_url = 'https://sandbox.usaepay.com/gate'
 
-      self.supported_cardtypes  = [:visa, :master, :american_express]
+      self.supported_cardtypes  = %i[visa master american_express]
       self.supported_countries  = ['US']
       self.homepage_url         = 'http://www.usaepay.com/'
       self.display_name         = 'USA ePay'
 
       TRANSACTIONS = {
-        :authorization  => 'cc:authonly',
-        :purchase       => 'cc:sale',
-        :capture        => 'cc:capture',
-        :refund         => 'cc:refund',
-        :void           => 'cc:void',
-        :void_release   => 'cc:void:release',
-        :check_purchase => 'check:sale'
+        authorization: 'cc:authonly',
+        purchase: 'cc:sale',
+        capture: 'cc:capture',
+        refund: 'cc:refund',
+        void: 'cc:void',
+        void_release: 'cc:void:release',
+        check_purchase: 'check:sale'
       }
 
       STANDARD_ERROR_CODE_MAPPING = {
@@ -82,7 +82,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options = {})
-        post = { :refNum => authorization }
+        post = { refNum: authorization }
 
         add_amount(post, money)
         add_test_mode(post, options)
@@ -90,7 +90,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(money, authorization, options = {})
-        post = { :refNum => authorization }
+        post = { refNum: authorization }
 
         add_amount(post, money)
         add_test_mode(post, options)
@@ -107,7 +107,7 @@ module ActiveMerchant #:nodoc:
       # Pass `no_release: true` to keep the void from immediately settling
       def void(authorization, options = {})
         command = (options[:no_release] ? :void : :void_release)
-        post = { :refNum => authorization }
+        post = { refNum: authorization }
         add_test_mode(post, options)
         commit(command, post)
       end
@@ -204,6 +204,7 @@ module ActiveMerchant #:nodoc:
           if payment.account_type
             account_type = payment.account_type.to_s.capitalize
             raise ArgumentError, 'account_type must be checking or savings' unless %w(Checking Savings).include?(account_type)
+
             post[:accounttype] = account_type
           end
           post[:account] = payment.account_number
@@ -228,6 +229,7 @@ module ActiveMerchant #:nodoc:
       # see: http://wiki.usaepay.com/developer/transactionapi#split_payments
       def add_split_payments(post, options)
         return unless options[:split_payments].is_a?(Array)
+
         options[:split_payments].each_with_index do |payment, index|
           prefix = '%02d' % (index + 2)
           post["#{prefix}key"]         = payment[:key]
@@ -241,6 +243,7 @@ module ActiveMerchant #:nodoc:
 
       def add_recurring_fields(post, options)
         return unless options[:recurring_fields].is_a?(Hash)
+
         options[:recurring_fields].each do |key, value|
           if value == true
             value = 'yes'
@@ -268,6 +271,7 @@ module ActiveMerchant #:nodoc:
       # see: https://wiki.usaepay.com/developer/transactionapi#line_item_details
       def add_line_items(post, options)
         return unless options[:line_items].is_a?(Array)
+
         options[:line_items].each_with_index do |line_item, index|
           %w(product_ref_num sku qty name description taxable tax_rate tax_amount commodity_code discount_rate discount_amount).each do |key|
             post["line#{index}#{key.delete('_')}"] = line_item[key.to_sym] if line_item.has_key?(key.to_sym)
@@ -292,20 +296,20 @@ module ActiveMerchant #:nodoc:
         end
 
         {
-          :status           => fields['UMstatus'],
-          :auth_code        => fields['UMauthCode'],
-          :ref_num          => fields['UMrefNum'],
-          :batch            => fields['UMbatch'],
-          :avs_result       => fields['UMavsResult'],
-          :avs_result_code  => fields['UMavsResultCode'],
-          :cvv2_result      => fields['UMcvv2Result'],
-          :cvv2_result_code => fields['UMcvv2ResultCode'],
-          :vpas_result_code => fields['UMvpasResultCode'],
-          :result           => fields['UMresult'],
-          :error            => fields['UMerror'],
-          :error_code       => fields['UMerrorcode'],
-          :acs_url          => fields['UMacsurl'],
-          :payload          => fields['UMpayload']
+          status: fields['UMstatus'],
+          auth_code: fields['UMauthCode'],
+          ref_num: fields['UMrefNum'],
+          batch: fields['UMbatch'],
+          avs_result: fields['UMavsResult'],
+          avs_result_code: fields['UMavsResultCode'],
+          cvv2_result: fields['UMcvv2Result'],
+          cvv2_result_code: fields['UMcvv2ResultCode'],
+          vpas_result_code: fields['UMvpasResultCode'],
+          result: fields['UMresult'],
+          error: fields['UMerror'],
+          error_code: fields['UMerrorcode'],
+          acs_url: fields['UMacsurl'],
+          payload: fields['UMpayload']
         }.delete_if { |k, v| v.nil? }
       end
 
@@ -316,11 +320,11 @@ module ActiveMerchant #:nodoc:
         error_code = nil
         error_code = (STANDARD_ERROR_CODE_MAPPING[response[:error_code]] || STANDARD_ERROR_CODE[:processing_error]) unless approved
         Response.new(approved, message_from(response), response,
-          :test           => test?,
-          :authorization  => response[:ref_num],
-          :cvv_result     => response[:cvv2_result_code],
-          :avs_result     => { :code => response[:avs_result_code] },
-          :error_code     => error_code
+          test: test?,
+          authorization: response[:ref_num],
+          cvv_result: response[:cvv2_result_code],
+          avs_result: { code: response[:avs_result_code] },
+          error_code: error_code
         )
       end
 
@@ -329,6 +333,7 @@ module ActiveMerchant #:nodoc:
           return 'Success'
         else
           return 'Unspecified error' if response[:error].blank?
+
           return response[:error]
         end
       end

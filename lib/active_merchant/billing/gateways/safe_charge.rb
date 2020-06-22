@@ -6,9 +6,9 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://process.sandbox.safecharge.com/service.asmx/Process'
       self.live_url = 'https://process.safecharge.com/service.asmx/Process'
 
-      self.supported_countries = ['AT', 'BE', 'BG', 'CY', 'CZ', 'DE', 'DK', 'EE', 'GR', 'ES', 'FI', 'FR', 'HR', 'HU', 'IE', 'IS', 'IT', 'LI', 'LT', 'LU', 'LV', 'MT', 'NL', 'NO', 'PL', 'PT', 'RO', 'SE', 'SI', 'SK', 'GB', 'US']
+      self.supported_countries = %w[AT BE BG CY CZ DE DK EE GR ES FI FR GI HK HR HU IE IS IT LI LT LU LV MT MX NL NO PL PT RO SE SG SI SK GB US]
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master]
+      self.supported_cardtypes = %i[visa master]
 
       self.homepage_url = 'https://www.safecharge.com'
       self.display_name = 'SafeCharge'
@@ -207,6 +207,7 @@ module ActiveMerchant #:nodoc:
 
       def message_from(response)
         return 'Success' if success_from(response)
+
         response[:reason_codes] || response[:reason]
       end
 
@@ -240,6 +241,7 @@ module ActiveMerchant #:nodoc:
 
         params.map do |key, value|
           next if value != false && value.blank?
+
           "#{key}=#{CGI.escape(value.to_s)}"
         end.compact.join('&')
       end

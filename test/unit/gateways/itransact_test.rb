@@ -3,21 +3,21 @@ require 'test_helper'
 class ItransactTest < Test::Unit::TestCase
   def setup
     @gateway = ItransactGateway.new(
-                 :login => 'login',
-                 :password => 'password',
-                 :gateway_id => '09999'
-               )
+      login: 'login',
+      password: 'password',
+      gateway_id: '09999'
+    )
 
     @credit_card = credit_card
     @check = check
     @amount = 1014 # = $10.14
 
     @options = {
-      :email => 'name@domain.com',
-      :order_id => '1',
-      :billing_address => address,
-      :description => 'Store Purchase',
-      :email_text => ['line1', 'line2', 'line3']
+      email: 'name@domain.com',
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase',
+      email_text: %w[line1 line2 line3]
     }
   end
 
@@ -67,5 +67,4 @@ class ItransactTest < Test::Unit::TestCase
     "<?xml version=\"1.0\" standalone=\"yes\"?>
 <GatewayInterface><TransactionResponse><TransactionResult><Status>ok</Status><ErrorCategory></ErrorCategory><ErrorMessage></ErrorMessage><WarningMessage></WarningMessage><TimeStamp>20081216141214</TimeStamp><TestMode>TRUE</TestMode><Total>1.0</Total><XID>9999999999</XID><CustomerData><BillingAddress><Address1>1234 My Street</Address1><City>Ottawa</City><FirstName>Longbob</FirstName><LastName>Longsen</LastName><State>ON</State><Zip>K1C2N6</Zip><Country>CA</Country><Phone>(555)555-5555</Phone></BillingAddress><ShippingAddress><Address1></Address1><City></City><FirstName></FirstName><LastName></LastName><State></State><Zip></Zip><Country></Country><Phone></Phone></ShippingAddress></CustomerData></TransactionResult></TransactionResponse></GatewayInterface>"
   end
-
 end

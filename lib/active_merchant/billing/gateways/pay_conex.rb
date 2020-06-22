@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = %w(US CA)
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express discover jcb diners_club]
 
       self.homepage_url = 'http://www.bluefincommerce.com/'
       self.display_name = 'PayConex'
@@ -86,6 +86,7 @@ module ActiveMerchant #:nodoc:
 
       def force_utf8(string)
         return nil unless string
+
         binary = string.encode('BINARY', invalid: :replace, undef: :replace, replace: '?') # Needed for Ruby 2.0 since #encode is a no-op if the string is already UTF-8. It's not needed for Ruby 2.1 and up since it's not a no-op there.
         binary.encode('UTF-8', invalid: :replace, undef: :replace, replace: '?')
       end
@@ -207,8 +208,8 @@ module ActiveMerchant #:nodoc:
           message_from(response),
           response,
           authorization: response['transaction_id'],
-          :avs_result => AVSResult.new(code: response['avs_response']),
-          :cvv_result => CVVResult.new(response['cvv2_response']),
+          avs_result: AVSResult.new(code: response['avs_response']),
+          cvv_result: CVVResult.new(response['cvv2_response']),
           test: test?
         )
       rescue JSON::ParserError
@@ -237,7 +238,6 @@ module ActiveMerchant #:nodoc:
         message += " (The raw response returned by the API was #{raw_response.inspect})"
         return Response.new(false, message)
       end
-
     end
   end
 end

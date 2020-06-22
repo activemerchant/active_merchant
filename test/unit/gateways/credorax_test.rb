@@ -265,6 +265,23 @@ class CredoraxTest < Test::Unit::TestCase
       assert_match(/3ds_shipaddrline1=456\+My\+Street/, data)
       assert_match(/3ds_shipaddrcountry=CA/, data)
       assert_match(/3ds_shipaddrcity=Ottawa/, data)
+      refute_match(/3ds_version/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+
+    assert_equal '8a82944a5351570601535955efeb513c;006596;02617cf5f02ccaed239b6521748298c5;purchase', response.authorization
+    assert response.test?
+  end
+
+  def test_adds_3d2_secure_fields_with_3ds_transtype_specified
+    options_with_3ds = @normalized_3ds_2_options.merge(three_ds_transtype: '03')
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options_with_3ds)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/3ds_channel=02/, data)
+      assert_match(/3ds_transtype=03/, data)
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -274,12 +291,13 @@ class CredoraxTest < Test::Unit::TestCase
   end
 
   def test_purchase_adds_3d_secure_fields
-    options_with_3ds = @options.merge({eci: 'sample-eci', cavv: 'sample-cavv', xid: 'sample-xid'})
+    options_with_3ds = @options.merge({eci: 'sample-eci', cavv: 'sample-cavv', xid: 'sample-xid', three_ds_version: '1'})
 
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, options_with_3ds)
     end.check_request do |endpoint, data, headers|
       assert_match(/i8=sample-eci%3Asample-cavv%3Asample-xid/, data)
+      assert_match(/3ds_version=1.0/, data)
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -294,7 +312,6 @@ class CredoraxTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, options_with_3ds)
     end.check_request do |endpoint, data, headers|
-      p data
       assert_match(/3ds_channel=03/, data)
     end.respond_with(successful_purchase_response)
 
@@ -311,6 +328,7 @@ class CredoraxTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @credit_card, options_with_3ds)
     end.check_request do |endpoint, data, headers|
       assert_match(/i8=sample-eci%3Asample-cavv%3Asample-xid/, data)
+      assert_match(/3ds_version=1.0/, data)
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -335,7 +353,7 @@ class CredoraxTest < Test::Unit::TestCase
   end
 
   def test_adds_3ds2_fields_via_normalized_hash
-    version = '2.0'
+    version = '2'
     eci = '05'
     cavv = '637574652070757070792026206b697474656e73'
     ds_transaction_id = '97267598-FAE6-48F2-8083-C23433990FBC'
@@ -352,7 +370,7 @@ class CredoraxTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, options_with_normalized_3ds)
     end.check_request do |endpoint, data, headers|
       assert_match(/i8=#{eci}%3A#{cavv}%3Anone/, data)
-      assert_match(/3ds_version=#{version}/, data)
+      assert_match(/3ds_version=2.0/, data)
       assert_match(/3ds_dstrxid=#{ds_transaction_id}/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -403,6 +421,16 @@ class CredoraxTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       assert_match(/a9=8/, data)
     end.respond_with(successful_credit_response)
+  end
+
+  def test_authorize_adds_authorization_details
+    options_with_auth_details = @options.merge({authorization_type: '2', multiple_capture_count: '5' })
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, options_with_auth_details)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/a10=2/, data)
+      assert_match(/a11=5/, data)
+    end.respond_with(successful_authorize_response)
   end
 
   def test_purchase_adds_submerchant_id
@@ -620,6 +648,24 @@ class CredoraxTest < Test::Unit::TestCase
     end.respond_with(successful_credit_response)
   end
 
+  def test_purchase_omits_phone_when_nil
+    # purchase passes the phone number when provided
+    @options[:billing_address][:phone] = '555-444-3333'
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/c2=555-444-3333/, data)
+    end.respond_with(successful_purchase_response)
+
+    # purchase doesn't pass the phone number when nil
+    @options[:billing_address][:phone] = nil
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_not_match(/c2=/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_stored_credential_recurring_cit_initial
     options = stored_credential_options(:cardholder, :recurring, :initial)
     response = stub_comms do
@@ -772,6 +818,41 @@ class CredoraxTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
 
     assert_success response
+  end
+
+  def test_nonfractional_currency_handling
+    stub_comms do
+      @gateway.authorize(200, @credit_card, @options.merge(currency: 'JPY'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/a4=2&a1=/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_3ds_2_optional_fields_adds_fields_to_the_root_of_the_post
+    post = { }
+    options = { three_ds_2: { optional: { '3ds_optional_field_1': :a, '3ds_optional_field_2': :b } } }
+
+    @gateway.add_3ds_2_optional_fields(post, options)
+
+    assert_equal post, { '3ds_optional_field_1': :a, '3ds_optional_field_2': :b }
+  end
+
+  def test_3ds_2_optional_fields_does_not_overwrite_fields
+    post = { '3ds_optional_field_1': :existing_value }
+    options = { three_ds_2: { optional: { '3ds_optional_field_1': :a, '3ds_optional_field_2': :b } } }
+
+    @gateway.add_3ds_2_optional_fields(post, options)
+
+    assert_equal post, { '3ds_optional_field_1': :existing_value, '3ds_optional_field_2': :b }
+  end
+
+  def test_3ds_2_optional_fields_does_not_empty_fields
+    post = { }
+    options = { three_ds_2: { optional: { '3ds_optional_field_1': '', '3ds_optional_field_2': 'null', '3ds_optional_field_3': nil } } }
+
+    @gateway.add_3ds_2_optional_fields(post, options)
+
+    assert_equal post, { }
   end
 
   private

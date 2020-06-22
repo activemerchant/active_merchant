@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class RemoteOppTest < Test::Unit::TestCase
-
   def setup
     @gateway = OppGateway.new(fixtures(:opp))
     @amount = 100
@@ -140,7 +139,7 @@ class RemoteOppTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @valid_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@amount - 1, auth.authorization)
     assert_success capture
     assert_match %r{Request successfully processed}, capture.message
   end
@@ -150,7 +149,7 @@ class RemoteOppTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @valid_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount-1, purchase.authorization)
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization)
     assert_success refund
     assert_match %r{Request successfully processed}, refund.message
   end
@@ -211,6 +210,6 @@ class RemoteOppTest < Test::Unit::TestCase
 
     assert_scrubbed(@valid_card.number, transcript)
     assert_scrubbed(@valid_card.verification_value, transcript)
-    assert_scrubbed(@gateway.options[:password], transcript)
+    assert_scrubbed(@gateway.options[:access_token], transcript)
   end
 end

@@ -5,10 +5,10 @@ module ActiveMerchant #:nodoc:
     class IveriGateway < Gateway
       self.live_url = self.test_url = 'https://portal.nedsecure.co.za/iVeriWebService/Service.asmx'
 
-      self.supported_countries = ['US', 'ZA', 'GB']
+      self.supported_countries = %w[US ZA GB]
       self.default_currency = 'ZAR'
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express]
+      self.supported_cardtypes = %i[visa master american_express]
 
       self.homepage_url = 'http://www.iveri.com'
       self.display_name = 'iVeri'
@@ -60,12 +60,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify(credit_card, options={})
-        authorize(0, credit_card, options)
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { authorize(100, credit_card, options) }
+          r.process(:ignore_result) { void(r.authorization, options) }
+        end
       end
 
       def verify_credentials
         void = void('', options)
         return true if void.message == 'Missing OriginalMerchantTrace'
+
         false
       end
 
@@ -83,7 +87,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def build_xml_envelope(vxml)
-        builder = Nokogiri::XML::Builder.new(:encoding => 'UTF-8') do |xml|
+        builder = Nokogiri::XML::Builder.new(encoding: 'UTF-8') do |xml|
           xml[:soap].Envelope 'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance', 'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema', 'xmlns:soap' => 'http://schemas.xmlsoap.org/soap/envelope/' do
             xml[:soap].Body do
               xml.Execute 'xmlns' => 'http://iveri.com/' do
@@ -202,7 +206,7 @@ module ActiveMerchant #:nodoc:
       def parse_element(parsed, node)
         if !node.attributes.empty?
           node.attributes.each do |a|
-            parsed[underscore(node.name)+ '_' + underscore(a[1].name)] = a[1].value
+            parsed[underscore(node.name) + '_' + underscore(a[1].name)] = a[1].value
           end
         end
 

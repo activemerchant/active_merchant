@@ -5,10 +5,10 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://sanalposprovtest.garanti.com.tr/VPServlet'
 
       # The countries the gateway supports merchants from as 2 digit ISO country codes
-      self.supported_countries = ['US', 'TR']
+      self.supported_countries = %w[US TR]
 
       # The card types supported by the payment gateway
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       # The homepage URL of the gateway
       self.homepage_url = 'https://sanalposweb.garanti.com.tr'
@@ -36,17 +36,17 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, credit_card, options = {})
-        options = options.merge(:gvp_order_type => 'sales')
+        options = options.merge(gvp_order_type: 'sales')
         commit(money, build_sale_request(money, credit_card, options))
       end
 
       def authorize(money, credit_card, options = {})
-        options = options.merge(:gvp_order_type => 'preauth')
+        options = options.merge(gvp_order_type: 'preauth')
         commit(money, build_authorize_request(money, credit_card, options))
       end
 
       def capture(money, ref_id, options = {})
-        options = options.merge(:gvp_order_type => 'postauth')
+        options = options.merge(gvp_order_type: 'postauth')
         commit(money, build_capture_request(money, ref_id, options))
       end
 
@@ -66,8 +66,8 @@ module ActiveMerchant #:nodoc:
         card_number = credit_card.respond_to?(:number) ? credit_card.number : ''
         hash_data   = generate_hash_data(format_order_id(options[:order_id]), @options[:terminal_id], card_number, amount(money), security_data)
 
-        xml = Builder::XmlMarkup.new(:indent => 2)
-        xml.instruct! :xml, :version => '1.0', :encoding => 'UTF-8'
+        xml = Builder::XmlMarkup.new(indent: 2)
+        xml.instruct! :xml, version: '1.0', encoding: 'UTF-8'
 
         xml.tag! 'GVPSRequest' do
           xml.tag! 'Mode', test? ? 'TEST' : 'PROD'
@@ -115,7 +115,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_capture_request(money, ref_id, options)
-        options = options.merge(:order_id => ref_id)
+        options = options.merge(order_id: ref_id)
         build_xml_request(money, ref_id, options) do |xml|
           add_customer_data(xml, options)
           add_order_data(xml, options)
@@ -222,8 +222,8 @@ module ActiveMerchant #:nodoc:
         Response.new(success,
           success ? 'Approved' : "Declined (Reason: #{response[:reason_code]} - #{response[:error_msg]} - #{response[:sys_err_msg]})",
           response,
-          :test => test?,
-          :authorization => response[:order_id])
+          test: test?,
+          authorization: response[:order_id])
       end
 
       def parse(body)
@@ -251,7 +251,6 @@ module ActiveMerchant #:nodoc:
       def strip_invalid_xml_chars(xml)
         xml.gsub(/&(?!(?:[a-z]+|#[0-9]+|x[a-zA-Z0-9]+);)/, '&amp;')
       end
-
     end
   end
 end

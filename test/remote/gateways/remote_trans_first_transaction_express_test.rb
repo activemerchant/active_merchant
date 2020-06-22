@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
-
   def setup
     @gateway = TransFirstTransactionExpressGateway.new(fixtures(:trans_first_transaction_express))
 
@@ -98,12 +97,12 @@ class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
 
   def test_successful_purchase_without_cvv
     credit_card_opts = {
-      :number => 4485896261017708,
-      :month => Date.new((Time.now.year + 1), 9, 30).month,
-      :year => Date.new((Time.now.year + 1), 9, 30).year,
-      :first_name => 'Longbob',
-      :last_name => 'Longsen',
-      :brand => 'visa'
+      number: 4485896261017708,
+      month: Date.new((Time.now.year + 1), 9, 30).month,
+      year: Date.new((Time.now.year + 1), 9, 30).year,
+      first_name: 'Longbob',
+      last_name: 'Longsen',
+      brand: 'visa'
     }
 
     credit_card = CreditCard.new(credit_card_opts)
@@ -114,13 +113,13 @@ class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_empty_string_cvv
     credit_card_opts = {
-      :number => 4485896261017708,
-      :month => Date.new((Time.now.year + 1), 9, 30).month,
-      :year => Date.new((Time.now.year + 1), 9, 30).year,
-      :first_name => 'Longbob',
-      :last_name => 'Longsen',
-      :verification_value => '',
-      :brand => 'visa'
+      number: 4485896261017708,
+      month: Date.new((Time.now.year + 1), 9, 30).month,
+      year: Date.new((Time.now.year + 1), 9, 30).year,
+      first_name: 'Longbob',
+      last_name: 'Longsen',
+      verification_value: '',
+      brand: 'visa'
     }
 
     credit_card = CreditCard.new(credit_card_opts)
@@ -131,11 +130,11 @@ class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
 
   def test_successful_purchase_without_name
     credit_card_opts = {
-      :number => 4485896261017708,
-      :month => Date.new((Time.now.year + 1), 9, 30).month,
-      :year => Date.new((Time.now.year + 1), 9, 30).year,
-      :first_name => '',
-      :last_name => ''
+      number: 4485896261017708,
+      month: Date.new((Time.now.year + 1), 9, 30).month,
+      year: Date.new((Time.now.year + 1), 9, 30).year,
+      first_name: '',
+      last_name: ''
     }
 
     credit_card = CreditCard.new(credit_card_opts)
@@ -144,9 +143,9 @@ class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
 
     credit_card_opts = {
-      :number => 4485896261017708,
-      :month => Date.new((Time.now.year + 1), 9, 30).month,
-      :year => Date.new((Time.now.year + 1), 9, 30).year
+      number: 4485896261017708,
+      month: Date.new((Time.now.year + 1), 9, 30).month,
+      year: Date.new((Time.now.year + 1), 9, 30).year
     }
 
     credit_card = CreditCard.new(credit_card_opts)

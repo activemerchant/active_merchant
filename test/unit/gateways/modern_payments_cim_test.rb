@@ -5,17 +5,17 @@ class ModernPaymentsCimTest < Test::Unit::TestCase
     Base.mode = :test
 
     @gateway = ModernPaymentsCimGateway.new(
-                 :login => 'login',
-                 :password => 'password'
-               )
+      login: 'login',
+      password: 'password'
+    )
 
     @credit_card = credit_card
     @amount = 100
 
     @options = {
-      :order_id => '1',
-      :billing_address => address,
-      :description => 'Store Purchase'
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase'
     }
   end
 

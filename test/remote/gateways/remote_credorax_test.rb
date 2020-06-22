@@ -8,7 +8,7 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     @credit_card = credit_card('4176661000001015', verification_value: '281', month: '12', year: '2022')
     @fully_auth_card = credit_card('5223450000000007', brand: 'mastercard', verification_value: '090', month: '12', year: '2025')
     @declined_card = credit_card('4176661000001111', verification_value: '681', month: '12', year: '2022')
-    @three_ds_card = credit_card('5185520050000010', verification_value: '737', month: '12', year: '2022')
+    @three_ds_card = credit_card('5455330200000016', verification_value: '737', month: '12', year: '2022')
     @options = {
       order_id: '1',
       currency: 'EUR',
@@ -57,6 +57,13 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  def test_successful_purchase_and_amount_for_non_decimal_currency
+    response = @gateway.purchase(14200, @credit_card, @options.merge(currency: 'JPY'))
+    assert_success response
+    assert_equal '142', response.params['A4']
+    assert_equal 'Succeeded', response.message
+  end
+
   def test_successful_purchase_with_extra_options
     response = @gateway.purchase(@amount, @credit_card, @options.merge(transaction_type: '10'))
     assert_success response
@@ -71,6 +78,22 @@ class RemoteCredoraxTest < Test::Unit::TestCase
       xid: '00000000000000000501',
       # Having processor-specification enabled in Credorax test account causes 3DS tests to fail without a r1 (processor) parameter.
       processor: 'CREDORAX'
+    )
+
+    response = @gateway.purchase(@amount, @fully_auth_card, options)
+    assert_success response
+    assert_equal '1', response.params['H9']
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_purchase_with_auth_data_via_3ds1_fields_passing_3ds_version
+    options = @options.merge(
+      eci: '02',
+      cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA=',
+      xid: '00000000000000000501',
+      # Having processor-specification enabled in Credorax test account causes 3DS tests to fail without a r1 (processor) parameter.
+      processor: 'CREDORAX',
+      three_ds_version: '1.0'
     )
 
     response = @gateway.purchase(@amount, @fully_auth_card, options)
@@ -164,6 +187,14 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     capture = @gateway.capture(@amount, response.authorization)
     assert_success capture
     assert_equal 'Succeeded', capture.message
+  end
+
+  def test_successful_authorize_with_authorization_details
+    options_with_auth_details = @options.merge({authorization_type: '2', multiple_capture_count: '5' })
+    response = @gateway.authorize(@amount, @credit_card, options_with_auth_details)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert response.authorization
   end
 
   def test_successful_authorize_with_auth_data_via_3ds1_fields

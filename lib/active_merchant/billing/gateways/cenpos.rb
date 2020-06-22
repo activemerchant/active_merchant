@@ -11,7 +11,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = %w(AD AI AG AR AU AT BS BB BE BZ BM BR BN BG CA HR CY CZ DK DM EE FI FR DE GR GD GY HK HU IS IL IT JP LV LI LT LU MY MT MX MC MS NL PA PL PT KN LC MF VC SM SG SK SI ZA ES SR SE CH TR GB US UY)
       self.default_currency = 'USD'
       self.money_format = :dollars
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       def initialize(options={})
         requires!(options, :merchant_id, :password, :user_id)
@@ -112,7 +112,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, options)
-        if(billing_address = (options[:billing_address] || options[:address]))
+        if (billing_address = (options[:billing_address] || options[:address]))
           post[:CustomerEmailAddress] = billing_address[:email]
           post[:CustomerPhone] = billing_address[:phone]
           post[:CustomerBillingAddress] = billing_address[:address1]
@@ -156,7 +156,7 @@ module ActiveMerchant #:nodoc:
           xml = ssl_post(self.live_url, data, headers)
           raw = parse(xml)
         rescue ActiveMerchant::ResponseError => e
-          if(e.response.code == '500' && e.response.body.start_with?('<s:Envelope'))
+          if e.response.code == '500' && e.response.body.start_with?('<s:Envelope')
             raw = {
               message: 'See transcript for detailed error description.'
             }
@@ -181,13 +181,13 @@ module ActiveMerchant #:nodoc:
       def headers
         {
           'Accept-Encoding' => 'identity',
-          'Content-Type'  => 'text/xml;charset=UTF-8',
-          'SOAPAction'  => 'http://tempuri.org/Transactional/ProcessCreditCard'
+          'Content-Type' => 'text/xml;charset=UTF-8',
+          'SOAPAction' => 'http://tempuri.org/Transactional/ProcessCreditCard'
         }
       end
 
       def build_request(post)
-        xml = Builder::XmlMarkup.new :indent => 8
+        xml = Builder::XmlMarkup.new indent: 8
         xml.tag!('acr:MerchantId', post.delete(:MerchantId))
         xml.tag!('acr:Password', post.delete(:Password))
         xml.tag!('acr:UserId', post.delete(:UserId))
@@ -254,7 +254,7 @@ module ActiveMerchant #:nodoc:
       }
 
       def authorization_from(request, response)
-        [ response[:reference_number], request[:CardLastFourDigits], request[:Amount] ].join('|')
+        [response[:reference_number], request[:CardLastFourDigits], request[:Amount]].join('|')
       end
 
       def split_authorization(authorization)
@@ -277,6 +277,7 @@ module ActiveMerchant #:nodoc:
       def cvv_result_code(xml)
         cvv = validation_result_element(xml, 'CVV')
         return nil unless cvv
+
         validation_result_matches?(*validation_result_element_text(cvv.parent)) ? 'M' : 'N'
       end
 

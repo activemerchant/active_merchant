@@ -9,9 +9,9 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://test.ctpe.io/payment/ctpe'
       self.live_url = 'https://ctpe.io/payment/ctpe'
 
-      self.supported_countries = ['LI', 'US']
+      self.supported_countries = %w[LI US]
       self.default_currency = 'EUR'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       self.homepage_url = 'http://www.bankfrickacquiring.com/'
       self.display_name = 'Bank Frick'
@@ -166,7 +166,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_xml_request(action, data)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.Request(version: '1.0') do
           xml.Header do
             xml.Security(sender: @options[:sender], type: 'MERCHANT')

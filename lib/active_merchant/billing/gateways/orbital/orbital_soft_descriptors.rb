@@ -32,9 +32,9 @@ module ActiveMerchant #:nodoc:
 
         errors << [:merchant_phone, 'is required to follow "NNN-NNN-NNNN" or "NNN-AAAAAAA" format'] if !empty?(self.merchant_phone) && !self.merchant_phone.match(PHONE_FORMAT_1) && !self.merchant_phone.match(PHONE_FORMAT_2)
 
-        [:merchant_email, :merchant_url].each do |attr|
+        %i[merchant_email merchant_url].each do |attr|
           unless self.send(attr).blank?
-            errors << [attr, 'is required to be 13 bytes or less'] if(self.send(attr).bytesize > 13)
+            errors << [attr, 'is required to be 13 bytes or less'] if self.send(attr).bytesize > 13
           end
         end
 

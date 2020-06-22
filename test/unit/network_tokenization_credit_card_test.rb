@@ -1,10 +1,9 @@
 require 'test_helper'
 
 class NetworkTokenizationCreditCardTest < Test::Unit::TestCase
-
   def setup
     @tokenized_card = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
-      number: '4242424242424242', :brand => 'visa',
+      number: '4242424242424242', brand: 'visa',
       month: default_expiration_date.month, year: default_expiration_date.year,
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=', eci: '05'
     })
@@ -16,6 +15,9 @@ class NetworkTokenizationCreditCardTest < Test::Unit::TestCase
     })
     @tokenized_google_pay_card = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
       source: :google_pay
+    })
+    @existing_network_token = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
+      source: :network_token
     })
     @tokenized_bogus_pay_card = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
       source: :bogus_pay
@@ -44,5 +46,6 @@ class NetworkTokenizationCreditCardTest < Test::Unit::TestCase
     assert_equal @tokenized_android_pay_card.source, :android_pay
     assert_equal @tokenized_google_pay_card.source, :google_pay
     assert_equal @tokenized_bogus_pay_card.source, :apple_pay
+    assert_equal @existing_network_token.source, :network_token
   end
 end

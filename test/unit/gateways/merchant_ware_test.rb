@@ -5,17 +5,17 @@ class MerchantWareTest < Test::Unit::TestCase
 
   def setup
     @gateway = MerchantWareGateway.new(
-                 :login => 'login',
-                 :password => 'password',
-                 :name => 'name'
-               )
+      login: 'login',
+      password: 'password',
+      name: 'name'
+    )
 
     @credit_card = credit_card
     @amount = 100
 
     @options = {
-      :order_id => '1',
-      :billing_address => address
+      order_id: '1',
+      billing_address: address
     }
   end
 
@@ -32,7 +32,7 @@ class MerchantWareTest < Test::Unit::TestCase
   end
 
   def test_soap_fault_during_authorization
-    response_500 = stub(:code => '500', :message => 'Internal Server Error', :body => fault_authorization_response)
+    response_500 = stub(code: '500', message: 'Internal Server Error', body: fault_authorization_response)
     @gateway.expects(:ssl_post).raises(ActiveMerchant::ResponseError.new(response_500))
 
     assert response = @gateway.authorize(@amount, @credit_card, @options)
@@ -110,7 +110,7 @@ class MerchantWareTest < Test::Unit::TestCase
 
   def test_add_swipe_data_with_creditcard
     @credit_card.track_data = 'Track Data'
-    options = {:order_id => '1'}
+    options = {order_id: '1'}
     stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |endpoint, data, headers|
@@ -216,5 +216,4 @@ Parameter name: strPAN</faultstring>
 </soap:Envelope>
     XML
   end
-
 end

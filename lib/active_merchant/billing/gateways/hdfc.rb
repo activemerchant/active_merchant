@@ -12,7 +12,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['IN']
       self.default_currency = 'INR'
       self.money_format = :dollars
-      self.supported_cardtypes = [:visa, :master, :discover, :diners_club]
+      self.supported_cardtypes = %i[visa master discover diners_club]
 
       def initialize(options={})
         requires!(options, :login, :password)
@@ -149,13 +149,13 @@ EOA
           succeeded,
           message_from(succeeded, raw),
           raw,
-          :authorization => authorization_from(post, raw),
-          :test => test?
+          authorization: authorization_from(post, raw),
+          test: test?
         )
       end
 
       def build_request(post)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.instruct!
         post.each do |field, value|
           xml.tag!(field, value)
@@ -196,6 +196,7 @@ EOA
 
       def escape(string, max_length=250)
         return '' unless string
+
         string = string[0...max_length] if max_length
         string.gsub(/[^A-Za-z0-9 \-_@\.\n]/, '')
       end

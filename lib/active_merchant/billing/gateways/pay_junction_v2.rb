@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['US']
       self.default_currency = 'USD'
       self.money_format = :dollars
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       def initialize(options={})
         requires!(options, :api_login, :api_password, :api_key)
@@ -21,6 +21,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)
+        add_address(post, options)
 
         commit('purchase', post)
       end
@@ -30,6 +31,7 @@ module ActiveMerchant #:nodoc:
         post[:status] = 'HOLD'
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)
+        add_address(post, options)
 
         commit('authorize', post)
       end
@@ -110,6 +112,20 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_address(post, options)
+        if address = options[:billing_address]
+          post[:billingFirstName] = address[:first_name] if address[:first_name]
+          post[:billingLastName] = address[:last_name] if address[:last_name]
+          post[:billingCompanyName] = address[:company] if address[:company]
+          post[:billingPhone] = address[:phone_number] if address[:phone_number]
+          post[:billingAddress] = address[:address1] if address[:address1]
+          post[:billingCity] = address[:city] if address[:city]
+          post[:billingState] = address[:state] if address[:state]
+          post[:billingCountry] = address[:country] if address[:country]
+          post[:billingZip] = address[:zip] if address[:zip]
+        end
+      end
+
       def commit(action, params)
         response =
           begin
@@ -130,7 +146,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def ssl_invoke(action, params)
-        if ['purchase', 'authorize', 'refund', 'credit'].include?(action)
+        if %w[purchase authorize refund credit].include?(action)
           ssl_post(url(), post_data(params), headers)
         else
           ssl_request(:put, url(params), post_data(params), headers)
@@ -141,8 +157,8 @@ module ActiveMerchant #:nodoc:
         {
           'Authorization' => 'Basic ' + Base64.encode64("#{@options[:api_login]}:#{@options[:api_password]}").strip,
           'Content-Type'  => 'application/x-www-form-urlencoded;charset=UTF-8',
-          'Accept'  => 'application/json',
-          'X-PJ-Application-Key'  => @options[:api_key].to_s
+          'Accept' => 'application/json',
+          'X-PJ-Application-Key' => @options[:api_key].to_s
         }
       end
 
@@ -168,6 +184,7 @@ module ActiveMerchant #:nodoc:
 
       def success_from(response)
         return response['response']['approved'] if response['response']
+
         false
       end
 

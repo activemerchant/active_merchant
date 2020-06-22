@@ -95,9 +95,8 @@ class RemoteOmiseTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
     assert_equal purchase.params['amount'], @amount
-    response = @gateway.refund(@amount-1000, purchase.authorization)
+    response = @gateway.refund(@amount - 1000, purchase.authorization)
     assert_success response
-    assert_equal @amount-1000, response.params['amount']
+    assert_equal @amount - 1000, response.params['amount']
   end
-
 end

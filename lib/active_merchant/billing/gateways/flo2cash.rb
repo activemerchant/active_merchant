@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['NZ']
       self.default_currency = 'NZD'
       self.money_format = :dollars
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express diners_club]
 
       BRAND_MAP = {
         'visa' => 'VISA',
@@ -89,7 +89,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, options)
-        if(billing_address = (options[:billing_address] || options[:address]))
+        if (billing_address = (options[:billing_address] || options[:address]))
           post[:Email] = billing_address[:email]
         end
       end
@@ -107,7 +107,7 @@ module ActiveMerchant #:nodoc:
         begin
           raw = parse(ssl_post(url, data, headers(action)), action)
         rescue ActiveMerchant::ResponseError => e
-          if(e.response.code == '500' && e.response.body.start_with?('<?xml'))
+          if e.response.code == '500' && e.response.body.start_with?('<?xml')
             raw = parse(e.response.body, action)
           else
             raise
@@ -119,9 +119,9 @@ module ActiveMerchant #:nodoc:
           succeeded,
           message_from(succeeded, raw),
           raw,
-          :authorization => authorization_from(action, raw[:transaction_id], post[:OriginalTransactionId]),
-          :error_code => error_code_from(succeeded, raw),
-          :test => test?
+          authorization: authorization_from(action, raw[:transaction_id], post[:OriginalTransactionId]),
+          error_code: error_code_from(succeeded, raw),
+          test: test?
         )
       end
 
@@ -133,7 +133,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_request(action, post)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         post.each do |field, value|
           xml.tag!(field, value)
         end

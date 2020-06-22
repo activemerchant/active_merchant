@@ -5,29 +5,29 @@ class SageGatewayTest < Test::Unit::TestCase
 
   def setup
     @gateway = SageGateway.new(
-                 :login => 'login',
-                 :password => 'password'
-               )
+      login: 'login',
+      password: 'password'
+    )
 
     @credit_card = credit_card
     @check = check
     @amount = 100
 
     @options = {
-      :order_id => '1',
-      :billing_address => address,
-      :description => 'Store Purchase'
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase'
     }
 
     @check_options = {
-      :order_id => generate_unique_id,
-      :billing_address => address,
-      :shipping_address => address,
-      :email => 'longbob@example.com',
-      :drivers_license_state => 'CA',
-      :drivers_license_number => '12345689',
-      :date_of_birth => Date.new(1978, 8, 11),
-      :ssn => '078051120'
+      order_id: generate_unique_id,
+      billing_address: address,
+      shipping_address: address,
+      email: 'longbob@example.com',
+      drivers_license_state: 'CA',
+      drivers_license_number: '12345689',
+      date_of_birth: Date.new(1978, 8, 11),
+      ssn: '078051120'
     }
   end
 
@@ -157,7 +157,7 @@ class SageGatewayTest < Test::Unit::TestCase
 
   def test_include_customer_number_for_numeric_values
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge({:customer => '123'}))
+      @gateway.purchase(@amount, @credit_card, @options.merge({customer: '123'}))
     end.check_request do |method, data|
       assert data =~ /T_customer_number=123/
     end.respond_with(successful_authorization_response)
@@ -165,7 +165,7 @@ class SageGatewayTest < Test::Unit::TestCase
 
   def test_dont_include_customer_number_for_numeric_values
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge({:customer => 'bob@test.com'}))
+      @gateway.purchase(@amount, @credit_card, @options.merge({customer: 'bob@test.com'}))
     end.check_request do |method, data|
       assert data !~ /T_customer_number/
     end.respond_with(successful_authorization_response)
@@ -188,7 +188,7 @@ class SageGatewayTest < Test::Unit::TestCase
   def test_address_with_state
     post = {}
     options = {
-      :billing_address => { :country => 'US', :state => 'CA'}
+      billing_address: { country: 'US', state: 'CA'}
     }
     @gateway.send(:add_addresses, post, options)
 
@@ -199,7 +199,7 @@ class SageGatewayTest < Test::Unit::TestCase
   def test_address_without_state
     post = {}
     options = {
-      :billing_address => { :country => 'NZ', :state => ''}
+      billing_address: { country: 'NZ', state: ''}
     }
     @gateway.send(:add_addresses, post, options)
 
