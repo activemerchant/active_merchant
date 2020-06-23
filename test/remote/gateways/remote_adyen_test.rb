@@ -184,7 +184,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert response = @gateway.authorize(@amount, @three_ds_enrolled_card, @options.merge(execute_threed: false, sca_exemption: 'lowValue'))
     assert response.test?
     refute response.authorization.blank?
-    assert_equal response.params['resultCode'], 'RedirectShopper'
+    assert_equal response.params['resultCode'], 'Authorised'
   end
 
   def test_successful_authorize_with_3ds_with_idempotency_key

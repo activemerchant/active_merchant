@@ -421,7 +421,7 @@ module ActiveMerchant #:nodoc:
           return unless !options[:execute_threed].nil? || !options[:threed_dynamic].nil?
 
           post[:browserInfo] = { userAgent: options[:user_agent], acceptHeader: options[:accept_header] } if options[:execute_threed] || options[:threed_dynamic]
-          post[:additionalData] = { executeThreeD: options[:execute_threed] } if options[:execute_threed]
+          post[:additionalData] = { executeThreeD: options[:execute_threed] } if !options[:execute_threed].nil?
         end
       end
 
