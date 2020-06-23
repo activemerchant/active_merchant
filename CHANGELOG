@@ -15,6 +15,7 @@
 * RuboCop: Fix Style/StringLiteralsInInterpolation [leila-alderman] #3670
 * PayU Latam: Fix store method [ccarruitero] #2590
 * Stripe, Stripe Payment Intents: Update supported countries [britth] #3684
+* Cybersource: Update supported countries [britth] #3683
 
 == Version 1.108.0 (Jun 9, 2020)
 * Cybersource: Send cavv as xid is xid is missing [pi3r] #3658
