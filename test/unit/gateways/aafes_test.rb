@@ -122,7 +122,7 @@ class AafesTest < Test::Unit::TestCase
     <<-XML
     <Message TypeCode="Response" MajorVersion="3" MinorVersion="4" FixVersion="0" xmlns="http://www.aafes.com/credit">
       <Header>
-          <IdentityUUID>9765830b-38ec-4154-b349-15ef4a302489</IdentityUUID>
+          <IdentityUUID></IdentityUUID>
           <LocalDateTime>2020-06-11T19:20:10Z</LocalDateTime>
           <SettleIndicator>false</SettleIndicator>
           <OrderNumber>ONP3951033</OrderNumber>
@@ -148,7 +148,7 @@ class AafesTest < Test::Unit::TestCase
     <<-XML
     <Message TypeCode="Response" MajorVersion="3" MinorVersion="4" FixVersion="0" xmlns="http://www.aafes.com/credit">
       <Header>
-          <IdentityUUID>9765830b-38ec-4154-b349-15ef4a302489</IdentityUUID>
+          <IdentityUUID></IdentityUUID>
           <LocalDateTime>2020-06-11T19:13:34Z</LocalDateTime>
           <SettleIndicator>false</SettleIndicator>
           <OrderNumber>ONP3951033</OrderNumber>
