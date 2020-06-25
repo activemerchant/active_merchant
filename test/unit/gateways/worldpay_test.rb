@@ -650,8 +650,11 @@ class WorldpayTest < Test::Unit::TestCase
   end
 
   def test_empty_inst_id_is_stripped
-    @gateway.expects(:ssl_post).with { |_, request, _| request !~ /installationId/ }.returns(successful_authorize_response)
-    @gateway.authorize(@amount, @credit_card, @options.merge({ inst_id: '' }))
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ inst_id: '' }))
+    end.check_request do |_, data, _|
+      assert_not_match(/installationId/, data)
+    end.respond_with(successful_authorize_response)
   end
 
   def test_3ds_name_coersion
