@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Cybersource: Add fields to override stored creds [leila-alderman] #3689
 
 == Version 1.109.0
 * Remove reference to `Billing::Integrations` [pi3r] #3692
@@ -26,7 +27,6 @@
 * RuboCop: Fix Style/TrailingUnderscoreVariable [leila-alderman] #3663
 * RuboCop: Fix Style/WordArray [leila-alderman] #3664
 * RuboCop: Fix Style/SymbolArray [leila-alderman] #3665
-
 * Mercado-Pago: Notification url GSF [cdmackeyfree] #3678
 * Credorax: Update logic for setting 3ds_homephonecountry [britth] #3691
 

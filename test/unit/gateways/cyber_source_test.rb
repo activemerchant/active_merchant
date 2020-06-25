@@ -758,6 +758,32 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response.success?
   end
 
+  def test_cof_first_with_overrides
+    @options[:stored_credential] = {
+      initiator: 'cardholder',
+      reason_type: '',
+      initial_transaction: true,
+      network_transaction_id: ''
+    }
+    @options[:stored_credential_overrides] = {
+      subsequent_auth: 'true',
+      subsequent_auth_first: 'false',
+      subsequent_auth_stored_credential: 'true',
+      subsequent_auth_transaction_id: '54321'
+    }
+    @options[:commerce_indicator] = 'internet'
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/\<subsequentAuthFirst\>false/, data)
+      assert_match(/\<subsequentAuthStoredCredential\>true/, data)
+      assert_match(/\<subsequentAuth\>true/, data)
+      assert_match(/\<subsequentAuthTransactionID\>54321/, data)
+      assert_match(/\<commerceIndicator\>internet/, data)
+    end.respond_with(successful_authorization_response)
+    assert response.success?
+  end
+
   def test_nonfractional_currency_handling
     @gateway.expects(:ssl_post).with do |host, request_body|
       assert_match %r(<grandTotalAmount>1</grandTotalAmount>), request_body
