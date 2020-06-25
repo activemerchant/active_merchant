@@ -207,7 +207,7 @@ module ActiveMerchant #:nodoc:
           when 'refunded'
             'Transação estornada'
           else
-            "Transação com status '#{response["status"]}'"
+            "Transação com status '#{response['status']}'"
           end
         elsif failure_from(response)
           'Transação recusada'

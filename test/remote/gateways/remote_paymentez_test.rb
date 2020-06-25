@@ -187,7 +187,8 @@ class RemotePaymentezTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
     assert capture = @gateway.capture(@amount - 1, auth.authorization)
-    assert_failure capture # Paymentez explicitly does not support partial capture; only GREATER than auth capture
+    assert_success capture
+    assert_equal 'Response by mock', capture.message
   end
 
   def test_failed_capture

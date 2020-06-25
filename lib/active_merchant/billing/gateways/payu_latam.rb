@@ -96,7 +96,7 @@ module ActiveMerchant #:nodoc:
         post = {}
 
         add_credentials(post, 'CREATE_TOKEN')
-        add_payment_method_to_be_tokenized(post, payment_method)
+        add_payment_method_to_be_tokenized(post, payment_method, options)
 
         commit('store', post)
       end
@@ -313,15 +313,14 @@ module ActiveMerchant #:nodoc:
         post[:transaction][:reason] = 'n/a'
       end
 
-      def add_payment_method_to_be_tokenized(post, payment_method)
+      def add_payment_method_to_be_tokenized(post, payment_method, options)
         credit_card_token = {}
-        credit_card_token[:payerId] = generate_unique_id
+        credit_card_token[:payerId] = options[:payer_id] || generate_unique_id
         credit_card_token[:name] = payment_method.name.strip
-        credit_card_token[:identificationNumber] = generate_unique_id
+        credit_card_token[:identificationNumber] = options[:dni_number]
         credit_card_token[:paymentMethod] = BRAND_MAP[payment_method.brand.to_s]
         credit_card_token[:number] = payment_method.number
         credit_card_token[:expirationDate] = format(payment_method.year, :four_digits).to_s + '/' + format(payment_method.month, :two_digits).to_s
-        credit_card_token[:securityCode] = payment_method.verification_value
         post[:creditCardToken] = credit_card_token
       end
 
