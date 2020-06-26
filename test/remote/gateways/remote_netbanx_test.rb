@@ -59,6 +59,15 @@ class RemoteNetbanxTest < Test::Unit::TestCase
     assert_equal 'The card has been declined due to insufficient funds.', response.message
   end
 
+  def test_failed_verify_before_purchase
+    options = {
+        verification_value: ''
+    }
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_failure response
+    assert_equal 'The zip/postal code must be provided for an AVS check request.', response.message
+  end
+
   def test_successful_authorize
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
@@ -237,6 +246,15 @@ class RemoteNetbanxTest < Test::Unit::TestCase
   def test_successful_verify
     verify = @gateway.verify(@credit_card, @options)
     assert_success verify
+  end
+
+  def test_failed_verify
+    options = {
+        verification_value: ''
+    }
+    verify = @gateway.verify(@credit_card, options)
+    assert_failure verify
+    assert_equal 'The zip/postal code must be provided for an AVS check request.', verify.message
   end
 
   def test_successful_cancel_settlement

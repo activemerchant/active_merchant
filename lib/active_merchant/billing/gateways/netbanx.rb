@@ -28,6 +28,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, payment, options={})
+        # Do a Verification with AVS prior to purchase
+        verification_response = verify(payment, options)
+        return verification_response if verification_response.message != 'OK'
+
         post = {}
         add_invoice(post, money, options)
         add_settle_with_auth(post)
