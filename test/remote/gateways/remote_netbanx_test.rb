@@ -61,7 +61,7 @@ class RemoteNetbanxTest < Test::Unit::TestCase
 
   def test_failed_verify_before_purchase
     options = {
-        verification_value: ''
+      verification_value: ''
     }
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_failure response
@@ -250,7 +250,7 @@ class RemoteNetbanxTest < Test::Unit::TestCase
 
   def test_failed_verify
     options = {
-        verification_value: ''
+      verification_value: ''
     }
     verify = @gateway.verify(@credit_card, options)
     assert_failure verify
