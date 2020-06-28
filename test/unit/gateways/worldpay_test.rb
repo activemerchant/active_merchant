@@ -682,6 +682,14 @@ class WorldpayTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_empty_inst_id_is_stripped
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ inst_id: '' }))
+    end.check_request do |_, data, _|
+      assert_not_match(/installationId/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_3ds_name_coersion
     @options[:execute_threed] = true
     response = stub_comms do
