@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Remove reference to `Billing::Integrations` [pi3r] #3692
 * DLocal: Handle nil address1 [molbrown] #3661
 * Braintree: Add travel and lodging fields [leila-alderman] #3668
 * Stripe: strict_encode64 api key [britth] #3672
