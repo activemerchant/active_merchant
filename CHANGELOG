@@ -2,6 +2,7 @@
 
 == HEAD
 * Cybersource: Add fields to override stored creds [leila-alderman] #3689
+* FirstData e4 v27+: Strip linebreaks from address [curiousepic] #3693
 
 == Version 1.109.0
 * Remove reference to `Billing::Integrations` [pi3r] #3692

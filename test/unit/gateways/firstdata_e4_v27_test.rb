@@ -168,6 +168,15 @@ class FirstdataE4V27Test < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_requests_scrub_newline_and_return_characters_from_verification_string_components
+    stub_comms do
+      options_with_newline_and_return_characters_in_address = @options.merge({billing_address: address({ address1: "456 My\nStreet", address2: "Apt 1\r", city: "Ottawa\r\n", state: 'ON', country: 'CA', zip: 'K1C2N6' })})
+      @gateway.purchase(@amount, @credit_card, options_with_newline_and_return_characters_in_address)
+    end.check_request do |endpoint, data, headers|
+      assert_match '<Address><Address1>456 My Street</Address1><Address2>Apt 1</Address2><City>Ottawa</City><State>ON</State><Zip>K1C2N6</Zip><CountryCode>CA</CountryCode></Address>', data
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_tax_fields_are_sent
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(tax1_amount: 830, tax1_number: 'Br59a'))
