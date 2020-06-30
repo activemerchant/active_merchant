@@ -1,29 +1,32 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+
+== Version 1.109.0
 * Remove reference to `Billing::Integrations` [pi3r] #3692
 * DLocal: Handle nil address1 [molbrown] #3661
 * Braintree: Add travel and lodging fields [leila-alderman] #3668
 * Stripe: strict_encode64 api key [britth] #3672
 * Stripe PI: Implement verify action [leila-alderman] #3662
-* RuboCop: Fix Style/TrailingUnderscoreVariable [leila-alderman] #3663
-* RuboCop: Fix Style/WordArray [leila-alderman] #3664
-* RuboCop: Fix Style/SymbolArray [leila-alderman] #3665
+* Stripe, Stripe Payment Intents: Update supported countries [britth] #3684
 * Forte: Use underscore for unused arguments in test [wsmoak] #3605
 * Add Alia card type [therufs] #3673
 * Element: Fix unit tests [leila-alderman] #3676
-* RuboCop: Fix Style/SpecialGlobalVars [leila-alderman] #3669
-* RuboCop: Fix Style/StringLiteralsInInterpolation [leila-alderman] #3670
 * PayU Latam: Fix store method [ccarruitero] #2590
-* Stripe, Stripe Payment Intents: Update supported countries [britth] #3684
-* Cybersource: Update supported countries [britth] #3683
 * Adyen: Allow for executeThreeD to be passed as false [naashton] #3681
 * WorldPay: Fix handling of `state` field for 3DS transactions [chinhle23] #3687
 * Alia: Skip Luhn validation [therufs] #3673
 * Diners Club: support 16 digit card numbers [therufs] #3682
+* Cybersource: Update supported countries [britth] #3683
 * Cybersource: pass reconciliation_id [therufs] #3688
+* RuboCop: Fix Style/SpecialGlobalVars [leila-alderman] #3669
+* RuboCop: Fix Style/StringLiteralsInInterpolation [leila-alderman] #3670
 * RuboCop: Fix Layout/HeredocIndentation [leila-alderman] #3685
 * RuboCop: Fix Gemspec/OrderedDependencies [leila-alderman] #3679
+* RuboCop: Fix Style/TrailingUnderscoreVariable [leila-alderman] #3663
+* RuboCop: Fix Style/WordArray [leila-alderman] #3664
+* RuboCop: Fix Style/SymbolArray [leila-alderman] #3665
+
 * Mercado-Pago: Notification url GSF [cdmackeyfree] #3678
 * Credorax: Update logic for setting 3ds_homephonecountry [britth] #3691
 
