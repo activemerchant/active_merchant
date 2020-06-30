@@ -666,6 +666,28 @@ class CredoraxTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_purchase_omits_3ds_homephonecountry_when_phone_is_nil
+    # purchase passes 3ds_homephonecountry when it and phone number are provided
+    @options[:billing_address][:phone] = '555-444-3333'
+    @options[:three_ds_2] = { optional: { '3ds_homephonecountry': 'US' } }
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/c2=555-444-3333/, data)
+      assert_match(/3ds_homephonecountry=US/, data)
+    end.respond_with(successful_purchase_response)
+
+    # purchase doesn't pass 3ds_homephonecountry when phone number is nil
+    @options[:billing_address][:phone] = nil
+    @options[:three_ds_2] = { optional: { '3ds_homephonecountry': 'US' } }
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_not_match(/c2=/, data)
+      assert_not_match(/3ds_homephonecountry=/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_stored_credential_recurring_cit_initial
     options = stored_credential_options(:cardholder, :recurring, :initial)
     response = stub_comms do

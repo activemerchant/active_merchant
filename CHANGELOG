@@ -25,6 +25,7 @@
 * RuboCop: Fix Layout/HeredocIndentation [leila-alderman] #3685
 * RuboCop: Fix Gemspec/OrderedDependencies [leila-alderman] #3679
 * Mercado-Pago: Notification url GSF [cdmackeyfree] #3678
+* Credorax: Update logic for setting 3ds_homephonecountry [britth] #3691
 
 == Version 1.108.0 (Jun 9, 2020)
 * Cybersource: Send cavv as xid is xid is missing [pi3r] #3658

@@ -238,6 +238,10 @@ module ActiveMerchant #:nodoc:
             normalized_value = normalize(value)
             next if normalized_value.nil?
 
+            if key == :'3ds_homephonecountry'
+              next unless options[:billing_address] && options[:billing_address][:phone]
+            end
+
             post[key] = normalized_value unless post[key]
           end
         end
