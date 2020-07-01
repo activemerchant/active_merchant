@@ -124,6 +124,15 @@ class RemoteSquareTest < Test::Unit::TestCase
     assert store.test?
   end
 
+  def test_unsuccessful_store_invalid_card
+    @options[:idempotency_key] = SecureRandom.hex(10)
+
+    assert store = @gateway.store(@declined_card_nonce, @options)
+
+    assert_failure store
+    assert_equal 'INVALID_CARD', store.params['errors'][0]['code']
+  end
+
   def test_successful_store_then_unstore
     @options[:idempotency_key] = SecureRandom.hex(10)
 

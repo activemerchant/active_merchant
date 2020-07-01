@@ -25,7 +25,7 @@ module ActiveMerchant #:nodoc:
         'AVS_NOT_CHECKED' => 'I' # 'I' => 'Address not verified.',
       }.freeze
 
-      DEFAULT_API_VERSION = '2019-10-23'.freeze
+      DEFAULT_API_VERSION = '2020-06-25'.freeze
 
       STANDARD_ERROR_CODE_MAPPING = {
         'BAD_EXPIRATION' => STANDARD_ERROR_CODE[:invalid_expiry_date],
@@ -110,7 +110,7 @@ module ActiveMerchant #:nodoc:
         MultiResponse.run(:first) do |r|
           r.process { commit(:post, 'customers', post, options) }
 
-          r.process { commit(:post, "customers/#{r.params['customer']['id']}/cards", { card_nonce: payment }, options) } if r.success? && !r.params['customer']['id'].blank?
+          r.process { commit(:post, "customers/#{r.params['customer']['id']}/cards", { card_nonce: payment }, options) } if r.success? && r.params && r.params['customer'] && r.params['customer']['id']
         end
       end
 
@@ -137,7 +137,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_idempotency_key(post, options)
-        post[:idempotency_key] = options[:idempotency_key] unless options[:idempotency_key].nil? || options[:idempotency_key].blank?
+        post[:idempotency_key] = options[:idempotency_key] unless options.nil? || options[:idempotency_key].nil? || options[:idempotency_key].blank?
       end
 
       def add_amount(post, money, options)
@@ -244,6 +244,8 @@ module ActiveMerchant #:nodoc:
       def authorization_from(success, url, method, response)
         # errors.detail is a vague string -- returning the actual transaction ID here makes more sense
         # return response.fetch('errors', [])[0]['detail'] unless success
+
+        return nil if !success
 
         if method == :post && (url == 'payments' || url.match(/payments\/.*\/complete/) || url.match(/payments\/.*\/cancel/))
           return response['payment']['id']
