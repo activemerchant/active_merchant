@@ -245,7 +245,7 @@ module ActiveMerchant #:nodoc:
         # errors.detail is a vague string -- returning the actual transaction ID here makes more sense
         # return response.fetch('errors', [])[0]['detail'] unless success
 
-        return nil if !success
+        return nil unless success
 
         if method == :post && (url == 'payments' || url.match(/payments\/.*\/complete/) || url.match(/payments\/.*\/cancel/))
           return response['payment']['id']
