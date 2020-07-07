@@ -463,7 +463,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'firstName',             payment_method.first_name             if payment_method
           xml.tag! 'lastName',              payment_method.last_name              if payment_method
           xml.tag! 'street1',               address[:address1]
-          xml.tag! 'street2',               address[:address2]                unless address[:address2].blank?
+          xml.tag! 'street2',               address[:address2]
           xml.tag! 'city',                  address[:city]
           xml.tag! 'state',                 address[:state]
           xml.tag! 'postalCode',            address[:zip]
