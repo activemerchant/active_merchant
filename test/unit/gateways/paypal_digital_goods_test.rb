@@ -8,9 +8,9 @@ class PaypalDigitalGoodsTest < Test::Unit::TestCase
 
   def setup
     @gateway = PaypalDigitalGoodsGateway.new(
-      :login => 'cody',
-      :password => 'test',
-      :pem => 'PEM'
+      login: 'cody',
+      password: 'test',
+      pem: 'PEM'
     )
 
     Base.mode = :test
@@ -35,42 +35,42 @@ class PaypalDigitalGoodsTest < Test::Unit::TestCase
   def test_setup_request_invalid_requests
     assert_raise ArgumentError do
       @gateway.setup_purchase(100,
-        :ip                => '127.0.0.1',
-        :description       => 'Test Title',
-        :return_url        => 'http://return.url',
-        :cancel_return_url => 'http://cancel.url')
+        ip: '127.0.0.1',
+        description: 'Test Title',
+        return_url: 'http://return.url',
+        cancel_return_url: 'http://cancel.url')
     end
 
     assert_raise ArgumentError do
       @gateway.setup_purchase(100,
-        :ip                => '127.0.0.1',
-        :description       => 'Test Title',
-        :return_url        => 'http://return.url',
-        :cancel_return_url => 'http://cancel.url',
-        :items             => [ ])
+        ip: '127.0.0.1',
+        description: 'Test Title',
+        return_url: 'http://return.url',
+        cancel_return_url: 'http://cancel.url',
+        items: [])
     end
 
     assert_raise ArgumentError do
       @gateway.setup_purchase(100,
-        :ip                => '127.0.0.1',
-        :description       => 'Test Title',
-        :return_url        => 'http://return.url',
-        :cancel_return_url => 'http://cancel.url',
-        :items             => [ Hash.new ])
+        ip: '127.0.0.1',
+        description: 'Test Title',
+        return_url: 'http://return.url',
+        cancel_return_url: 'http://cancel.url',
+        items: [Hash.new])
     end
 
     assert_raise ArgumentError do
       @gateway.setup_purchase(100,
-        :ip                => '127.0.0.1',
-        :description       => 'Test Title',
-        :return_url        => 'http://return.url',
-        :cancel_return_url => 'http://cancel.url',
-        :items             => [ { :name => 'Charge',
-                                  :number => '1',
-                                  :quantity => '1',
-                                  :amount   => 100,
-                                  :description => 'Description',
-                                  :category => 'Physical' } ])
+        ip: '127.0.0.1',
+        description: 'Test Title',
+        return_url: 'http://return.url',
+        cancel_return_url: 'http://cancel.url',
+        items: [{ name: 'Charge',
+                  number: '1',
+                  quantity: '1',
+                  amount: 100,
+                  description: 'Description',
+                  category: 'Physical' }])
     end
   end
 
@@ -78,16 +78,16 @@ class PaypalDigitalGoodsTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_setup_response)
 
     @gateway.setup_purchase(100,
-      :ip                => '127.0.0.1',
-      :description       => 'Test Title',
-      :return_url        => 'http://return.url',
-      :cancel_return_url => 'http://cancel.url',
-      :items             => [ { :name => 'Charge',
-                                :number => '1',
-                                :quantity => '1',
-                                :amount   => 100,
-                                :description => 'Description',
-                                :category => 'Digital' } ])
+      ip: '127.0.0.1',
+      description: 'Test Title',
+      return_url: 'http://return.url',
+      cancel_return_url: 'http://cancel.url',
+      items: [{ name: 'Charge',
+                number: '1',
+                quantity: '1',
+                amount: 100,
+                description: 'Description',
+                category: 'Digital' }])
   end
 
   private
@@ -118,5 +118,4 @@ class PaypalDigitalGoodsTest < Test::Unit::TestCase
     		</SOAP-ENV:Body>
     	</SOAP-ENV:Envelope>"
   end
-
 end

@@ -13,8 +13,7 @@ module ActiveMerchant #:nodoc:
       # == Usage
       #
       #   gateway = ActiveMerchant::Billing::OppGateway.new(
-      #      user_id: 'merchant user id',
-      #      password: 'password',
+      #      access_token: 'access_token',
       #      entity_id: 'entity id',
       #   )
       #
@@ -113,20 +112,20 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = %w(AD AI AG AR AU AT BS BB BE BZ BM BR BN BG CA HR CY CZ DK DM EE FI FR DE GR GD GY HK HU IS IN IL IT JP LV LI LT LU MY MT MX MC MS NL PA PL PT KN LC MF VC SM SG SK SI ZA ES SR SE CH TR GB US UY)
       self.default_currency = 'EUR'
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :discover, :jcb, :maestro, :dankort]
+      self.supported_cardtypes = %i[visa master american_express diners_club discover jcb maestro dankort]
 
       self.homepage_url = 'https://docs.oppwa.com'
       self.display_name = 'Open Payment Platform'
 
       def initialize(options={})
-        requires!(options, :user_id, :password, :entity_id)
+        requires!(options, :access_token, :entity_id)
         super
       end
 
       def purchase(money, payment, options={})
         # debit
         options[:registrationId] = payment if payment.is_a?(String)
-        execute_dbpa(options[:risk_workflow] ? 'PA.CP': 'DB',
+        execute_dbpa(options[:risk_workflow] ? 'PA.CP' : 'DB',
           money, payment, options)
       end
 
@@ -167,7 +166,7 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
-          gsub(%r((authentication\.password=)\w+), '\1[FILTERED]').
+          gsub(%r((Authorization: Bearer )\w+)i, '\1[FILTERED]').
           gsub(%r((card\.number=)\d+), '\1[FILTERED]').
           gsub(%r((card\.cvv=)\d+), '\1[FILTERED]')
       end
@@ -203,7 +202,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_authentication(post)
-        post[:authentication] = { entityId: @options[:entity_id], password: @options[:password], userId: @options[:user_id]}
+        post[:authentication] = { entityId: @options[:entity_id] }
       end
 
       def add_customer_data(post, payment, options)
@@ -258,6 +257,7 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_method(post, payment, options)
         return if payment.is_a?(String)
+
         if options[:registrationId]
           post[:card] = {
             cvv: payment.verification_value,
@@ -309,17 +309,18 @@ module ActiveMerchant #:nodoc:
         add_authentication(post)
         post = flatten_hash(post)
 
-        response = begin
-          parse(
-            ssl_post(
-              url,
-              post.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&'),
-              'Content-Type' => 'application/x-www-form-urlencoded;charset=UTF-8'
+        response =
+          begin
+            parse(
+              ssl_post(
+                url,
+                post.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&'),
+                headers
+              )
             )
-          )
-        rescue ResponseError => e
-          parse(e.response.body)
-        end
+          rescue ResponseError => e
+            parse(e.response.body)
+          end
 
         success = success_from(response)
 
@@ -331,6 +332,13 @@ module ActiveMerchant #:nodoc:
           test: test?,
           error_code: success ? nil : error_code_from(response)
         )
+      end
+
+      def headers
+        {
+          'Content-Type' => 'application/x-www-form-urlencoded;charset=UTF-8',
+          'Authorization' => "Bearer #{@options[:access_token]}"
+        }
       end
 
       def parse(body)
@@ -349,7 +357,7 @@ module ActiveMerchant #:nodoc:
 
         success_regex = /^(000\.000\.|000\.100\.1|000\.[36])/
 
-        if success_regex =~ response['result']['code']
+        if success_regex.match?(response['result']['code'])
           true
         else
           false

@@ -7,10 +7,10 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
 
     @amount = 100
     @error_amount = 1_000_000_000_000_000_000_000
-    @credit_card = credit_card('4111111111111111', :month => 10, :year => 2020, :verification_value => 737)
-    @declined_card = credit_card('4000300011112220', :month => 3, :year => 2030, :verification_value => 737)
+    @credit_card = credit_card('4111111111111111', month: 10, year: 2020, verification_value: 737)
+    @declined_card = credit_card('4000300011112220', month: 3, year: 2030, verification_value: 737)
     @three_ds_enrolled_card = credit_card('4212345678901237', brand: :visa)
-    @three_ds_2_enrolled_card = credit_card('4917610000000000', brand: :visa)
+    @three_ds_2_enrolled_card = credit_card('4917610000000000', month: 10, year: 2020, verification_value: '737', brand: :visa)
 
     @options = {
       order_id: '1',
@@ -101,9 +101,9 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
     }
 
     @avs_credit_card = credit_card('4400000000000008',
-      :month => 8,
-      :year => 2018,
-      :verification_value => 737)
+      month: 8,
+      year: 2018,
+      verification_value: 737)
 
     @avs_address = @options.clone
     @avs_address.update(billing_address: {
@@ -218,6 +218,28 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
     assert response = @gateway.authorize(@amount, @three_ds_2_enrolled_card, @normalized_3ds_2_options)
     assert response.test?
     refute response.authorization.blank?
+    assert_equal response.params['resultCode'], 'IdentifyShopper'
+    refute response.params['additionalData']['threeds2.threeDS2Token'].blank?
+    refute response.params['additionalData']['threeds2.threeDSServerTransID'].blank?
+    refute response.params['additionalData']['threeds2.threeDSMethodURL'].blank?
+  end
+
+  def test_successful_purchase_with_3ds2_exemption_requested_and_execute_threed_false
+    assert response = @gateway.authorize(@amount, @three_ds_2_enrolled_card, @normalized_3ds_2_options.merge(execute_threed: false, sca_exemption: 'lowValue'))
+    assert response.test?
+    refute response.authorization.blank?
+
+    assert_equal response.params['resultCode'], 'Authorised'
+  end
+
+  # According to Adyen documentation, if execute_threed is set to true and an exemption provided
+  # the gateway will apply and request for the specified exemption in the authentication request,
+  # after the device fingerprint is submitted to the issuer.
+  def test_successful_purchase_with_3ds2_exemption_requested_and_execute_threed_true
+    assert response = @gateway.authorize(@amount, @three_ds_2_enrolled_card, @normalized_3ds_2_options.merge(execute_threed: true, sca_exemption: 'lowValue'))
+    assert response.test?
+    refute response.authorization.blank?
+
     assert_equal response.params['resultCode'], 'IdentifyShopper'
     refute response.params['additionalData']['threeds2.threeDS2Token'].blank?
     refute response.params['additionalData']['threeds2.threeDSServerTransID'].blank?
@@ -368,7 +390,7 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
   end
 
   def test_failed_store
-    response = @gateway.store(credit_card('4111111111111111', :month => '', :year => '', :verification_value => ''), @options)
+    response = @gateway.store(credit_card('4111111111111111', month: '', year: '', verification_value: ''), @options)
     assert_failure response
     assert_equal '129: Expiry Date Invalid', response.message
   end
@@ -387,17 +409,17 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
   end
 
   def test_nonfractional_currency
-    response = @gateway.authorize(1234, @credit_card, @options.merge(:currency => 'JPY'))
+    response = @gateway.authorize(1234, @credit_card, @options.merge(currency: 'JPY'))
     assert_success response
-    response = @gateway.purchase(1234, @credit_card, @options.merge(:currency => 'JPY'))
+    response = @gateway.purchase(1234, @credit_card, @options.merge(currency: 'JPY'))
     assert_success response
   end
 
   def test_three_decimal_currency
-    response = @gateway.authorize(1234, @credit_card, @options.merge(:currency => 'OMR'))
+    response = @gateway.authorize(1234, @credit_card, @options.merge(currency: 'OMR'))
     assert_success response
 
-    response = @gateway.purchase(1234, @credit_card, @options.merge(:currency => 'OMR'))
+    response = @gateway.purchase(1234, @credit_card, @options.merge(currency: 'OMR'))
     assert_success response
   end
 

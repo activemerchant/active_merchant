@@ -5,15 +5,15 @@ class RemoteTransaxTest < Test::Unit::TestCase
     @gateway = TransaxGateway.new(fixtures(:transax))
 
     @amount = 100
-    @credit_card = credit_card('4111111111111111', :year => 10, :month => 10)
+    @credit_card = credit_card('4111111111111111', year: 10, month: 10)
     @declined_card = credit_card(0xDEADBEEF_0000.to_s)
 
     @check = check()
 
     @options = {
-      :order_id => '1',
-      :billing_address => address,
-      :description => 'Store Purchase'
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase'
     }
   end
 
@@ -76,13 +76,13 @@ class RemoteTransaxTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'This transaction has been approved', response.message
     assert response.authorization
-    assert update = @gateway.amend(response.authorization, :shipping_carrier => 'usps')
+    assert update = @gateway.amend(response.authorization, shipping_carrier: 'usps')
     assert_equal 'This transaction has been approved', update.message
     assert_success update
   end
 
   def test_successful_purchase_with_sku
-    @options['product_sku_#']='123456'
+    @options['product_sku_#'] = '123456'
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'This transaction has been approved', response.message
@@ -115,9 +115,9 @@ class RemoteTransaxTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = TransaxGateway.new(
-                :login => '',
-                :password => ''
-              )
+      login: '',
+      password: ''
+    )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Invalid Username', response.message

@@ -4,13 +4,13 @@ module ActiveMerchant #:nodoc:
       self.live_url = self.test_url = 'https://secure.soeasypay.com/gateway.asmx'
       self.money_format = :cents
 
-      self.supported_countries = [
-        'US', 'CA', 'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE',
-        'FI', 'FR', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU',
-        'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE', 'GB',
-        'IS', 'NO', 'CH'
+      self.supported_countries = %w[
+        US CA AT BE BG HR CY CZ DK EE
+        FI FR DE GR HU IE IT LV LT LU
+        MT NL PL PT RO SK SI ES SE GB
+        IS NO CH
       ]
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :maestro, :jcb, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express discover maestro jcb diners_club]
       self.homepage_url = 'http://www.soeasypay.com/'
       self.display_name = 'SoEasyPay'
 
@@ -149,7 +149,7 @@ module ActiveMerchant #:nodoc:
       def parse(response, action)
         result = {}
         document = REXML::Document.new(response)
-        response_element = document.root.get_elements("//[@xsi:type='tns:#{action}Response']").first
+        response_element = document.root.get_elements("//*[@xsi:type='tns:#{action}Response']").first
         response_element.elements.each do |element|
           result[element.name.underscore] = element.text
         end
@@ -164,24 +164,24 @@ module ActiveMerchant #:nodoc:
         return Response.new(response['errorcode'] == '000',
           response['errormessage'],
           response,
-          :test => test?,
-          :authorization => response['transaction_id'])
+          test: test?,
+          authorization: response['transaction_id'])
       end
 
       def build_soap(request)
-        retval = Builder::XmlMarkup.new(:indent => 2)
-        retval.instruct!(:xml, :version => '1.0', :encoding => 'utf-8')
+        retval = Builder::XmlMarkup.new(indent: 2)
+        retval.instruct!(:xml, version: '1.0', encoding: 'utf-8')
         retval.tag!('soap:Envelope', {
-            'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance',
-            'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema',
-            'xmlns:soapenc' => 'http://schemas.xmlsoap.org/soap/encoding/',
-            'xmlns:tns' => 'urn:Interface',
-            'xmlns:types' => 'urn:Interface/encodedTypes',
-            'xmlns:soap' => 'http://schemas.xmlsoap.org/soap/envelope/'
+          'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance',
+          'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema',
+          'xmlns:soapenc' => 'http://schemas.xmlsoap.org/soap/encoding/',
+          'xmlns:tns' => 'urn:Interface',
+          'xmlns:types' => 'urn:Interface/encodedTypes',
+          'xmlns:soap' => 'http://schemas.xmlsoap.org/soap/envelope/'
         }) do
-          retval.tag!('soap:Body', {'soap:encodingStyle'=>'http://schemas.xmlsoap.org/soap/encoding/'}) do
+          retval.tag!('soap:Body', {'soap:encodingStyle' => 'http://schemas.xmlsoap.org/soap/encoding/'}) do
             retval.tag!("tns:#{request}") do
-              retval.tag!("#{request}Request", {'xsi:type'=>"tns:#{request}Request"}) do
+              retval.tag!("#{request}Request", {'xsi:type' => "tns:#{request}Request"}) do
                 yield retval
               end
             end
@@ -189,7 +189,6 @@ module ActiveMerchant #:nodoc:
         end
         retval.target!
       end
-
     end
   end
 end

@@ -20,12 +20,12 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     response = @gateway.purchase(@accepted_amount, @credit_card, @options)
     assert_success response
     assert_equal 'Succeeded', response.message
+    assert_equal 'CAPTURE_REQUESTED', response.params['payment']['status']
   end
 
   def test_successful_purchase_with_fraud_fields
     options = @options.merge(
-      fraud_fields:
-      {
+      fraud_fields: {
         'website' => 'www.example.com',
         'giftMessage' => 'Happy Day!'
       }
@@ -53,6 +53,73 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert_equal 'Succeeded', response.message
+  end
+
+  # When requires_approval is true (or not present),
+  # `purchase` will make both an `auth` and a `capture` call
+  def test_successful_purchase_with_requires_approval_true
+    options = @options.merge(requires_approval: true)
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal 'CAPTURE_REQUESTED', response.params['payment']['status']
+  end
+
+  # When requires_approval is false, `purchase` will only make an `auth` call
+  # to request capture (and no subsequent `capture` call).
+  def test_successful_purchase_with_requires_approval_false
+    options = @options.merge(requires_approval: false)
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal 'CAPTURE_REQUESTED', response.params['payment']['status']
+  end
+
+  def test_successful_purchase_with_airline_data
+    options = @options.merge(
+      airline_data: {
+        code: 111,
+        name: 'Spreedly Airlines',
+        flight_date: '20190810',
+        passenger_name: 'Randi Smith',
+        flight_legs: [
+          { arrival_airport: 'BDL',
+            origin_airport: 'RDU',
+            date: '20190810',
+            carrier_code: 'SA',
+            number: 596,
+            airline_class: 'ZZ'},
+          { arrival_airport: 'RDU',
+            origin_airport: 'BDL',
+            date: '20190817',
+            carrier_code: 'SA',
+            number: 597,
+            airline_class: 'ZZ'}
+        ]
+      }
+    )
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_failed_purchase_with_insufficient_airline_data
+    options = @options.merge(
+      airline_data: {
+        flight_date: '20190810',
+        passenger_name: 'Randi Smith'
+      }
+    )
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_failure response
+    assert_equal 'PARAMETER_NOT_FOUND_IN_REQUEST', response.message
+    property_names = response.params['errors'].collect { |e| e['propertyName'] }
+    assert property_names.include? 'order.additionalInput.airlineData.code'
+    assert property_names.include? 'order.additionalInput.airlineData.name'
   end
 
   def test_successful_purchase_with_very_long_name
@@ -175,5 +242,4 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@gateway.options[:secret_api_key], transcript)
   end
-
 end

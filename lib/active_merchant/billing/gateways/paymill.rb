@@ -5,7 +5,7 @@ module ActiveMerchant #:nodoc:
                                     GI GR HR HU IE IL IM IS IT LI LT LU LV MC MT
                                     NL NO PL PT RO SE SI SK TR VA)
 
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :discover, :union_pay, :jcb]
+      self.supported_cardtypes = %i[visa master american_express diners_club discover union_pay jcb]
       self.homepage_url = 'https://paymill.com'
       self.display_name = 'PAYMILL'
       self.money_format = :cents
@@ -86,7 +86,7 @@ module ActiveMerchant #:nodoc:
         post['account.expiry.year'] = sprintf('%.4i', credit_card.year)
         post['account.verification'] = credit_card.verification_value
         post['account.email'] = (options[:email] || nil)
-        post['presentation.amount3D'] =  (options[:money] || nil)
+        post['presentation.amount3D'] = (options[:money] || nil)
         post['presentation.currency3D'] = (options[:currency] || currency(options[:money]))
       end
 
@@ -112,8 +112,8 @@ module ActiveMerchant #:nodoc:
       def response_from(raw_response)
         parsed = JSON.parse(raw_response)
         options = {
-          :authorization => authorization_from(parsed),
-          :test => (parsed['mode'] == 'test'),
+          authorization: authorization_from(parsed),
+          test: (parsed['mode'] == 'test'),
         }
 
         succeeded = (parsed['data'] == []) || (parsed['data']['response_code'].to_i == 20000)
@@ -181,7 +181,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def response_for_save_from(raw_response)
-        options = { :test => test? }
+        options = { test: test? }
 
         parser = ResponseParser.new(raw_response, options)
         parser.generate_response

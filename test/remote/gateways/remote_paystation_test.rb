@@ -1,11 +1,10 @@
 require 'test_helper'
 
 class RemotePaystationTest < Test::Unit::TestCase
-
   def setup
     @gateway = PaystationGateway.new(fixtures(:paystation))
 
-    @credit_card = credit_card('5123456789012346', :month => 5, :year => 13, :verification_value => 123)
+    @credit_card = credit_card('5123456789012346', month: 5, year: 13, verification_value: 123)
 
     @successful_amount          = 10000
     @insufficient_funds_amount  = 10051
@@ -14,8 +13,8 @@ class RemotePaystationTest < Test::Unit::TestCase
     @bank_error_amount          = 10091
 
     @options = {
-      :billing_address => address,
-      :description     => 'Store Purchase'
+      billing_address: address,
+      description: 'Store Purchase'
     }
   end
 
@@ -27,7 +26,7 @@ class RemotePaystationTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_in_gbp
-    assert response = @gateway.purchase(@successful_amount, @credit_card, @options.merge(:currency => 'GBP'))
+    assert response = @gateway.purchase(@successful_amount, @credit_card, @options.merge(currency: 'GBP'))
     assert_success response
 
     assert_equal 'Transaction successful', response.message
@@ -48,7 +47,7 @@ class RemotePaystationTest < Test::Unit::TestCase
 
   def test_storing_token
     time = Time.now.to_i
-    assert response = @gateway.store(@credit_card, @options.merge(:token => "justatest#{time}"))
+    assert response = @gateway.store(@credit_card, @options.merge(token: "justatest#{time}"))
     assert_success response
 
     assert_equal 'Future Payment Saved Ok', response.message
@@ -70,7 +69,7 @@ class RemotePaystationTest < Test::Unit::TestCase
     assert_success auth
     assert auth.authorization
 
-    assert capture = @gateway.capture(@successful_amount, auth.authorization, @options.merge(:credit_card_verification => 123))
+    assert capture = @gateway.capture(@successful_amount, auth.authorization, @options.merge(credit_card_verification: 123))
     assert_success capture
   end
 

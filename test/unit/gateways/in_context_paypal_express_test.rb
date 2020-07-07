@@ -8,9 +8,9 @@ class InContextPaypalExpressTest < Test::Unit::TestCase
 
   def setup
     @gateway = InContextPaypalExpressGateway.new(
-      :login => 'cody',
-      :password => 'test',
-      :pem => 'PEM'
+      login: 'cody',
+      password: 'test',
+      pem: 'PEM'
     )
 
     Base.mode = :test

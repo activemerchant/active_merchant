@@ -3,8 +3,8 @@ module ActiveMerchant
     class PaywayGateway < Gateway
       self.live_url = self.test_url = 'https://ccapi.client.qvalent.com/payway/ccapi'
 
-      self.supported_countries = [ 'AU' ]
-      self.supported_cardtypes = [ :visa, :master, :diners_club, :american_express, :bankcard ]
+      self.supported_countries = ['AU']
+      self.supported_cardtypes = %i[visa master diners_club american_express bankcard]
       self.display_name        = 'Pay Way'
       self.homepage_url        = 'http://www.payway.com.au'
       self.default_currency    = 'AUD'
@@ -17,7 +17,7 @@ module ActiveMerchant
         '3' => 'Rejected'
       }
 
-      RESPONSE_CODES= {
+      RESPONSE_CODES = {
         '00' => 'Completed Successfully',
         '01' => 'Refer to card issuer',
         '03' => 'Invalid merchant',
@@ -74,13 +74,13 @@ module ActiveMerchant
         'QZ' => 'Zero value transaction'
       }
 
-      TRANSACTIONS  = {
-        :authorize  => 'preauth',
-        :purchase   => 'capture',
-        :capture    => 'captureWithoutAuth',
-        :status     => 'query',
-        :refund     => 'refund',
-        :store      => 'registerAccount'
+      TRANSACTIONS = {
+        authorize: 'preauth',
+        purchase: 'capture',
+        capture: 'captureWithoutAuth',
+        status: 'query',
+        refund: 'refund',
+        store: 'registerAccount'
       }
 
       def initialize(options={})
@@ -193,14 +193,15 @@ module ActiveMerchant
         success = (params[:summary_code] ? (params[:summary_code] == '0') : (params[:response_code] == '00'))
 
         Response.new(success, message, params,
-          :test => (@options[:merchant].to_s == 'TEST'),
-          :authorization => post[:order_number]
+          test: (@options[:merchant].to_s == 'TEST'),
+          authorization: post[:order_number]
         )
       rescue ActiveMerchant::ResponseError => e
         raise unless e.response.code == '403'
-        return Response.new(false, 'Invalid credentials', {}, :test => test?)
+
+        return Response.new(false, 'Invalid credentials', {}, test: test?)
       rescue ActiveMerchant::ClientCertificateError
-        return Response.new(false, 'Invalid certificate', {}, :test => test?)
+        return Response.new(false, 'Invalid certificate', {}, test: test?)
       end
     end
   end

@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['AU']
       self.default_currency = 'AUD'
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners]
+      self.supported_cardtypes = %i[visa master american_express discover jcb diners]
 
       CVV_CODE_MAPPING = {
         'S' => 'D'
@@ -147,6 +147,7 @@ module ActiveMerchant #:nodoc:
 
       def stored_credential_usage(post, payment_method, options)
         return unless payment_method.brand == 'visa'
+
         stored_credential = options[:stored_credential]
         if stored_credential[:initial_transaction]
           post['card.storedCredentialUsage'] = 'INITIAL_STORAGE'
@@ -222,13 +223,14 @@ module ActiveMerchant #:nodoc:
 
       def cvv_result(succeeded, raw)
         return unless succeeded
+
         code = CVV_CODE_MAPPING[raw['response.cvnResponse']] || raw['response.cvnResponse']
         CVVResult.new(code)
       end
 
       def headers
         {
-          'Content-Type'  => 'application/x-www-form-urlencoded'
+          'Content-Type' => 'application/x-www-form-urlencoded'
         }
       end
 

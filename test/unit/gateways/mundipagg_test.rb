@@ -40,6 +40,7 @@ class MundipaggTest < Test::Unit::TestCase
     }
 
     @gateway_response_error = 'Esta loja n??o possui um meio de pagamento configurado para a bandeira VR'
+    @acquirer_message = 'Simulator|Transação de simulada negada por falta de crédito, utilizado para realizar simulação de autorização parcial.'
   end
 
   def test_successful_purchase
@@ -80,7 +81,8 @@ class MundipaggTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
+    assert_equal @acquirer_message, response.message
+    assert_equal '92', response.error_code
   end
 
   def test_failed_purchase_with_top_level_errors
@@ -98,6 +100,16 @@ class MundipaggTest < Test::Unit::TestCase
 
     assert_success response
     assert_equal @gateway_response_error, response.message
+  end
+
+  def test_failed_purchase_with_acquirer_return_code
+    @gateway.expects(:ssl_post).returns(failed_response_with_acquirer_return_code)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_failure response
+    assert_equal 'VR|', response.message
+    assert_equal '14', response.error_code
   end
 
   def test_successful_authorize
@@ -129,7 +141,8 @@ class MundipaggTest < Test::Unit::TestCase
 
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
+    assert_equal @acquirer_message, response.message
+    assert_equal '92', response.error_code
   end
 
   def test_failed_authorize_with_top_level_errors
@@ -606,6 +619,79 @@ class MundipaggTest < Test::Unit::TestCase
               }
             ]
           }
+        }
+      }
+    )
+  end
+
+  def failed_response_with_acquirer_return_code
+    %(
+      {
+        "id": "ch_9qY3lpeCJyTe2Gxz",
+        "code": "3Y4ZFENCK4",
+        "gateway_id": "db9a46cb-2c59-4663-a658-e7817302d97c",
+        "amount": 2946,
+        "status": "failed",
+        "currency": "BRL",
+        "payment_method": "credit_card",
+        "created_at": "2019-11-15T16:21:58Z",
+        "updated_at": "2019-11-15T16:21:59Z",
+        "customer": {
+          "id": "cus_KD14bY1F51UR1GrX",
+          "name": "JOSE NETO",
+          "email": "jose_bar@uol.com.br",
+          "delinquent": false,
+          "created_at": "2019-11-15T16:21:58Z",
+          "updated_at": "2019-11-15T16:21:58Z",
+          "phones": {}
+        },
+        "last_transaction": {
+          "id": "tran_P2zwvPztdVCg6pvA",
+          "transaction_type": "credit_card",
+          "gateway_id": "174a1d12-cbea-4c09-a27a-23bbad992cc9",
+          "amount": 2946,
+          "status": "not_authorized",
+          "success": false,
+          "installments": 1,
+          "acquirer_name": "vr",
+          "acquirer_affiliation_code": "",
+          "acquirer_tid": "28128131916",
+          "acquirer_nsu": "281281",
+          "acquirer_message": "VR|",
+          "acquirer_return_code": "14",
+          "operation_type": "auth_and_capture",
+          "card": {
+            "id": "card_V2pQo2IbjtPqaXRZ",
+            "first_six_digits": "627416",
+            "last_four_digits": "7116",
+            "brand": "VR",
+            "holder_name": "JOSE NETO",
+            "holder_document": "27207590822",
+            "exp_month": 8,
+            "exp_year": 2029,
+            "status": "active",
+            "type": "voucher",
+            "created_at": "2019-11-15T16:21:58Z",
+            "updated_at": "2019-11-15T16:21:58Z",
+            "billing_address": {
+              "street": "R.Dr.Eduardo de Souza Aranha,",
+              "number": "67",
+              "zip_code": "04530030",
+              "neighborhood": "Av Das Nacoes Unidas 6873",
+              "city": "Sao Paulo",
+              "state": "SP",
+              "country": "BR",
+              "line_1": "67, R.Dr.Eduardo de Souza Aranha,, Av Das Nacoes Unidas 6873"
+            }
+          },
+          "created_at": "2019-11-15T16:21:58Z",
+          "updated_at": "2019-11-15T16:21:58Z",
+          "gateway_response": {
+            "code": "201",
+            "errors": []
+          },
+          "antifraud_response": {},
+          "metadata": {}
         }
       }
     )

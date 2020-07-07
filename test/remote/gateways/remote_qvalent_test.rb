@@ -238,5 +238,4 @@ class RemoteQvalentTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'Succeeded', response.message
   end
-
 end

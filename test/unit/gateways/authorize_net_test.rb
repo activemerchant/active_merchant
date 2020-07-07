@@ -207,18 +207,36 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal '508141794', response.authorization.split('#')[0]
   end
 
-  def test_successful_echeck_purchase
+  def test_successful_echeck_purchase_with_checking_account_type
     response = stub_comms do
       @gateway.purchase(@amount, @check)
     end.check_request do |endpoint, data, headers|
       parse(data) do |doc|
         assert_not_nil doc.at_xpath('//payment/bankAccount')
+        assert_equal 'checking', doc.at_xpath('//accountType').content
         assert_equal '244183602', doc.at_xpath('//routingNumber').content
         assert_equal '15378535', doc.at_xpath('//accountNumber').content
         assert_equal 'Bank of Elbonia', doc.at_xpath('//bankName').content
         assert_equal 'Jim Smith', doc.at_xpath('//nameOnAccount').content
         assert_equal '1', doc.at_xpath('//checkNumber').content
         assert_equal '1.00', doc.at_xpath('//transactionRequest/amount').content
+      end
+    end.respond_with(successful_purchase_response)
+
+    assert response
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '508141795', response.authorization.split('#')[0]
+  end
+
+  def test_successful_echeck_purchase_with_savings_account_type
+    savings_account = check(account_type: 'savings')
+    response = stub_comms do
+      @gateway.purchase(@amount, savings_account)
+    end.check_request do |endpoint, data, headers|
+      parse(data) do |doc|
+        assert_not_nil doc.at_xpath('//payment/bankAccount')
+        assert_equal 'savings', doc.at_xpath('//accountType').content
       end
     end.respond_with(successful_purchase_response)
 
@@ -465,6 +483,23 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert response.avs_result['postal_match']
     assert_equal 'Street address and 5-digit postal code match.', response.avs_result['message']
     assert_equal 'description, with, commas', response.params['order_description']
+  end
+
+  def test_successful_purchase_using_stored_card_and_custom_delimiter_with_quotes
+    @gateway.expects(:ssl_post).returns(successful_store_response)
+    store = @gateway.store(@credit_card, @options)
+    assert_success store
+
+    @gateway.expects(:ssl_post).returns(successful_purchase_using_stored_card_response_with_pipe_delimiter_and_quotes)
+
+    response = @gateway.purchase(@amount, store.authorization, {delimiter: '|', description: 'description, with, commas'})
+    assert_success response
+
+    assert_equal '12345667#XXXX1111#cim_purchase', response.authorization
+    assert_equal 'Y', response.avs_result['code']
+    assert response.avs_result['street_match']
+    assert response.avs_result['postal_match']
+    assert_equal 'Street address and 5-digit postal code match.', response.avs_result['message']
   end
 
   def test_failed_purchase_using_stored_card
@@ -935,11 +970,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal 4, (['US', 'CA', 'AU', 'VA'] & AuthorizeNetGateway.supported_countries).size
+    assert_equal 3, (%w[US CA AU] & AuthorizeNetGateway.supported_countries).size
   end
 
   def test_supported_card_types
-    assert_equal [:visa, :master, :american_express, :discover, :diners_club, :jcb, :maestro], AuthorizeNetGateway.supported_cardtypes
+    assert_equal %i[visa master american_express discover diners_club jcb maestro], AuthorizeNetGateway.supported_cardtypes
   end
 
   def test_failure_without_response_reason_text
@@ -1191,7 +1226,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
   def test_successful_apple_pay_authorization_with_network_tokenization
     credit_card = network_tokenization_credit_card('4242424242424242',
-      :payment_cryptogram => '111111111100cryptogram'
+      payment_cryptogram: '111111111100cryptogram'
     )
 
     response = stub_comms do
@@ -1211,7 +1246,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
   def test_failed_apple_pay_authorization_with_network_tokenization_not_supported
     credit_card = network_tokenization_credit_card('4242424242424242',
-      :payment_cryptogram => '111111111100cryptogram'
+      payment_cryptogram: '111111111100cryptogram'
     )
 
     response = stub_comms do
@@ -2211,6 +2246,10 @@ class AuthorizeNetTest < Test::Unit::TestCase
       <directResponse>1|1|1|This transaction has been approved.|8HUT72|Y|2235700270|1|description, with, commas|1.01|CC|auth_capture|e385c780422f4bd182c4|Longbob|Longsen||||n/a|||||||||||||||||||4A20EEAF89018FF075899DDB332E9D35||2|||||||||||XXXX2224|Visa||||||||||||||||</directResponse>
       </createCustomerProfileTransactionResponse>
     eos
+  end
+
+  def successful_purchase_using_stored_card_response_with_pipe_delimiter_and_quotes
+    "\xEF\xBB\xBF<?xml version=\"1.0\" encoding=\"utf-8\"?><createCustomerProfileTransactionResponse xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns=\"AnetApi/xml/v1/schema/AnetApiSchema.xsd\"><refId>12345</refId><messages><resultCode>Ok</resultCode><message><code>I00001</code><text>Successful.</text></message></messages><directResponse>\"1\"|\"1\"|\"1\"|\"This transaction has been approved.\"|\"001234\"|\"Y\"|\"12345667\"|\"654321\"|\"\"|\"39.95\"|\"CC\"|\"auth_capture\"|\"54321\"|\"Jane\"|\"Doe\"|\"\"|\"1 Main St.\"|\"Durham\"|\"NC\"|\"27707\"|\"US\"|\"\"|\"\"|\"test@example.com\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"XXXX1111\"|\"Visa\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"</directResponse></createCustomerProfileTransactionResponse>"
   end
 
   def failed_purchase_using_stored_card_response

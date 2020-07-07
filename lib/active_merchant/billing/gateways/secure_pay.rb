@@ -17,12 +17,12 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'USD'
 
       self.supported_countries = %w(US CA GB AU)
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club jcb]
       self.homepage_url = 'http://www.securepay.com/'
       self.display_name = 'SecurePay'
 
-      CARD_CODE_ERRORS = %w( N S )
-      AVS_ERRORS = %w( A E N R W Z )
+      CARD_CODE_ERRORS = %w(N S)
+      AVS_ERRORS = %w(A E N R W Z)
       AVS_REASON_CODES = %w(27 45)
       TRANSACTION_ALREADY_ACTIONED = %w(310 311)
 
@@ -57,11 +57,11 @@ module ActiveMerchant #:nodoc:
         message = message_from(response)
 
         Response.new(success?(response), message, response,
-          :test => test?,
-          :authorization => response[:transaction_id],
-          :fraud_review => fraud_review?(response),
-          :avs_result => { :code => response[:avs_result_code] },
-          :cvv_result => response[:card_code]
+          test: test?,
+          authorization: response[:transaction_id],
+          fraud_review: fraud_review?(response),
+          avs_result: { code: response[:avs_result_code] },
+          cvv_result: response[:card_code]
         )
       end
 
@@ -77,14 +77,14 @@ module ActiveMerchant #:nodoc:
         fields = split(body)
 
         results = {
-          :response_code => fields[RESPONSE_CODE].to_i,
-          :response_reason_code => fields[RESPONSE_REASON_CODE],
-          :response_reason_text => fields[RESPONSE_REASON_TEXT],
-          :avs_result_code => fields[AVS_RESULT_CODE],
-          :transaction_id => fields[TRANSACTION_ID],
-          :card_code => fields[CARD_CODE_RESPONSE_CODE],
-          :authorization_code => fields[AUTHORIZATION_CODE],
-          :cardholder_authentication_code => fields[CARDHOLDER_AUTH_CODE]
+          response_code: fields[RESPONSE_CODE].to_i,
+          response_reason_code: fields[RESPONSE_REASON_CODE],
+          response_reason_text: fields[RESPONSE_REASON_TEXT],
+          avs_result_code: fields[AVS_RESULT_CODE],
+          transaction_id: fields[TRANSACTION_ID],
+          card_code: fields[CARD_CODE_RESPONSE_CODE],
+          authorization_code: fields[AUTHORIZATION_CODE],
+          cardholder_authentication_code: fields[CARDHOLDER_AUTH_CODE]
         }
         results
       end
@@ -159,7 +159,7 @@ module ActiveMerchant #:nodoc:
           post[:zip]     = address[:zip].to_s
           post[:city]    = address[:city].to_s
           post[:country] = address[:country].to_s
-          post[:state]   = address[:state].blank?  ? 'n/a' : address[:state]
+          post[:state]   = address[:state].blank? ? 'n/a' : address[:state]
         end
 
         if address = options[:shipping_address]
@@ -171,7 +171,7 @@ module ActiveMerchant #:nodoc:
           post[:ship_to_zip]     = address[:zip].to_s
           post[:ship_to_city]    = address[:city].to_s
           post[:ship_to_country] = address[:country].to_s
-          post[:ship_to_state]   = address[:state].blank?  ? 'n/a' : address[:state]
+          post[:ship_to_state]   = address[:state].blank? ? 'n/a' : address[:state]
         end
       end
 

@@ -10,13 +10,13 @@ class RemoteForteTest < Test::Unit::TestCase
 
     @check = check
     @bad_check = check({
-      :name => 'Jim Smith',
-      :bank_name => 'Bank of Elbonia',
-      :routing_number => '1234567890',
-      :account_number => '0987654321',
-      :account_holder_type => '',
-      :account_type => 'checking',
-      :number => '0'
+      name: 'Jim Smith',
+      bank_name: 'Bank of Elbonia',
+      routing_number: '1234567890',
+      account_number: '0987654321',
+      account_holder_type: '',
+      account_type: 'checking',
+      number: '0'
     })
 
     @options = {
@@ -43,6 +43,18 @@ class RemoteForteTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @check, @options)
     assert_success response
     assert_equal 'APPROVED', response.message
+    assert_equal 'PPD', response.params['echeck']['sec_code']
+  end
+
+  def test_successful_purchase_with_echeck_with_more_options
+    options = {
+      sec_code: 'WEB'
+    }
+
+    response = @gateway.purchase(@amount, @check, options)
+    assert_success response
+    assert_equal 'APPROVED', response.message
+    assert_equal 'WEB', response.params['echeck']['sec_code']
   end
 
   def test_failed_purchase_with_echeck
@@ -111,7 +123,7 @@ class RemoteForteTest < Test::Unit::TestCase
 
     wait_for_authorization_to_clear
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization, @options)
+    assert capture = @gateway.capture(@amount - 1, auth.authorization, @options)
     assert_success capture
   end
 
@@ -134,7 +146,7 @@ class RemoteForteTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.credit(@amount-1, @credit_card, @options)
+    assert refund = @gateway.credit(@amount - 1, @credit_card, @options)
     assert_success refund
   end
 
@@ -207,5 +219,4 @@ class RemoteForteTest < Test::Unit::TestCase
   def wait_for_authorization_to_clear
     sleep(10)
   end
-
 end

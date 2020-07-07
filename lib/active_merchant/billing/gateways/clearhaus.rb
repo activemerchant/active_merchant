@@ -4,12 +4,12 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://gateway.test.clearhaus.com'
       self.live_url = 'https://gateway.clearhaus.com'
 
-      self.supported_countries = ['DK', 'NO', 'SE', 'FI', 'DE', 'CH', 'NL', 'AD', 'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'FO', 'GL', 'EE', 'FR', 'GR',
-                                  'HU', 'IS', 'IE', 'IT', 'LV', 'LI', 'LT', 'LU', 'MT', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'GB']
+      self.supported_countries = %w[DK NO SE FI DE CH NL AD AT BE BG HR CY CZ FO GL EE FR GR
+                                    HU IS IE IT LV LI LT LU MT PL PT RO SK SI ES GB]
 
       self.default_currency    = 'EUR'
-      self.currencies_without_fractions = %w(BIF BYR DJF GNF JPY KMF KRW PYG RWF VND VUV XAF XOF XPF)
-      self.supported_cardtypes = [:visa, :master]
+      self.currencies_without_fractions = %w(BIF CLP DJF GNF JPY KMF KRW PYG RWF UGX VND VUV XAF XOF XPF)
+      self.supported_cardtypes = %i[visa master]
 
       self.homepage_url = 'https://www.clearhaus.com'
       self.display_name = 'Clearhaus'
@@ -53,14 +53,15 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, amount, options)
 
-        action = if payment.respond_to?(:number)
-                   add_payment(post, payment)
-                   '/authorizations'
-                 elsif payment.kind_of?(String)
-                   "/cards/#{payment}/authorizations"
-                 else
-                   raise ArgumentError.new("Unknown payment type #{payment.inspect}")
-        end
+        action =
+          if payment.respond_to?(:number)
+            add_payment(post, payment)
+            '/authorizations'
+          elsif payment.kind_of?(String)
+            "/cards/#{payment}/authorizations"
+          else
+            raise ArgumentError.new("Unknown payment type #{payment.inspect}")
+          end
 
         post[:recurring] = options[:recurring] if options[:recurring]
         post[:card][:pares] = options[:pares] if options[:pares]
@@ -127,7 +128,7 @@ module ActiveMerchant #:nodoc:
       def add_payment(post, payment)
         card = {}
         card[:pan]          = payment.number
-        card[:expire_month] = '%02d'% payment.month
+        card[:expire_month] = '%02d' % payment.month
         card[:expire_year]  = payment.year
 
         card[:csc] = payment.verification_value if payment.verification_value?
@@ -159,12 +160,14 @@ module ActiveMerchant #:nodoc:
           end
         end
 
-        response = begin
-          parse(ssl_post(url, body, headers))
-        rescue ResponseError => e
-          raise unless(e.response.code.to_s =~ /400/)
-          parse(e.response.body)
-        end
+        response =
+          begin
+            parse(ssl_post(url, body, headers))
+          rescue ResponseError => e
+            raise unless e.response.code.to_s =~ /400/
+
+            parse(e.response.body)
+          end
 
         Response.new(
           success_from(response),
@@ -203,7 +206,7 @@ module ActiveMerchant #:nodoc:
 
       def generate_signature(body)
         key = OpenSSL::PKey::RSA.new(@options[:private_key])
-        hex = key.sign(OpenSSL::Digest.new('sha256'), body).unpack('H*').first
+        hex = key.sign(OpenSSL::Digest.new('sha256'), body).unpack1('H*')
 
         "#{@options[:signing_key]} RS256-hex #{hex}"
       end

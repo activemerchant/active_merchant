@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
       self.v4_live_url = 'https://ps1.merchantware.net/Merchantware/ws/RetailTransaction/v4/Credit.asmx'
 
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.homepage_url = 'http://merchantwarehouse.com/merchantware'
       self.display_name = 'MerchantWARE'
 
@@ -22,12 +22,12 @@ module ActiveMerchant #:nodoc:
       TX_NAMESPACE_V4 = 'http://schemas.merchantwarehouse.com/merchantware/40/Credit/'
 
       ACTIONS = {
-        :purchase  => 'IssueKeyedSale',
-        :authorize => 'IssueKeyedPreAuth',
-        :capture   => 'IssuePostAuth',
-        :void      => 'VoidPreAuthorization',
-        :credit    => 'IssueKeyedRefund',
-        :reference_credit => 'IssueRefundByReference'
+        purchase: 'IssueKeyedSale',
+        authorize: 'IssueKeyedPreAuth',
+        capture: 'IssuePostAuth',
+        void: 'VoidPreAuthorization',
+        credit: 'IssueKeyedRefund',
+        reference_credit: 'IssueRefundByReference'
       }
 
       # Creates a new MerchantWareGateway
@@ -117,7 +117,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def soap_request(action)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.instruct!
         xml.tag! 'env:Envelope', ENV_NAMESPACES do
           xml.tag! 'env:Body' do
@@ -131,7 +131,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def v4_soap_request(action)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.instruct!
         xml.tag! 'soap:Envelope', ENV_NAMESPACES_V4 do
           xml.tag! 'soap:Body' do
@@ -300,15 +300,15 @@ module ActiveMerchant #:nodoc:
         end
 
         Response.new(response[:success], response[:message], response,
-          :test => test?,
-          :authorization => authorization_from(response),
-          :avs_result => { :code => response['AVSResponse'] },
-          :cvv_result => response['CVResponse']
+          test: test?,
+          authorization: authorization_from(response),
+          avs_result: { code: response['AVSResponse'] },
+          cvv_result: response['CVResponse']
         )
       end
 
       def authorization_from(response)
-        [ response['ReferenceID'], response['OrderNumber'] ].join(';') if response[:success]
+        [response['ReferenceID'], response['OrderNumber']].join(';') if response[:success]
       end
     end
   end

@@ -4,9 +4,9 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://test.ctpaiement.ca/v1/'
       self.live_url = 'https://www.ctpaiement.com/v1/'
 
-      self.supported_countries = ['US', 'CA']
+      self.supported_countries = %w[US CA]
       self.default_currency = 'CAD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club]
 
       self.homepage_url = 'http://www.ct-payment.com/'
       self.display_name = 'CT Payment'
@@ -177,7 +177,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_invoice(post, money,  options)
+      def add_invoice(post, money, options)
         post[:CurrencyCode] = options[:currency] || (currency(money) if money)
         post[:InvoiceNumber] = options[:order_id].rjust(12, '0')
         post[:InputType] = 'I'
@@ -227,7 +227,7 @@ module ActiveMerchant #:nodoc:
             r.process { commit_raw(action, parameters) }
             r.process {
               split_auth = split_authorization(r.authorization)
-              auth =  (action.include?('recur')? split_auth[4] : split_auth[0])
+              auth = (action.include?('recur') ? split_auth[4] : split_auth[0])
               action.include?('recur') ? commit_raw('recur/ack', {ID: auth}) : commit_raw('ack', {TransactionNumber: auth})
             }
           end
@@ -238,6 +238,7 @@ module ActiveMerchant #:nodoc:
         return true if response['returnCode'] == '  00'
         return true if response['returnCode'] == 'true'
         return true if response['recurReturnCode'] == '  00'
+
         return false
       end
 

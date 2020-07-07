@@ -5,7 +5,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       self.homepage_url = 'https://www.centralams.com/'
       self.display_name = 'CAMS: Central Account Management System'
@@ -167,7 +167,7 @@ module ActiveMerchant #:nodoc:
 
       def add_payment(post, payment)
         post[:ccnumber] = payment.number
-        post[:ccexp] = "#{payment.month.to_s.rjust(2, "0")}#{payment.year.to_s[-2..-1]}"
+        post[:ccexp] = "#{payment.month.to_s.rjust(2, '0')}#{payment.year.to_s[-2..-1]}"
         post[:cvv] = payment.verification_value
       end
 

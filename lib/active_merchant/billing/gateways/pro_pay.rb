@@ -6,10 +6,10 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://xmltest.propay.com/API/PropayAPI.aspx'
       self.live_url = 'https://epay.propay.com/api/propayapi.aspx'
 
-      self.supported_countries = ['US', 'CA']
+      self.supported_countries = %w[US CA]
       self.default_currency = 'USD'
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       self.homepage_url = 'https://www.propay.com/'
       self.display_name = 'ProPay'
@@ -253,7 +253,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        results  = {}
+        results = {}
         xml = Nokogiri::XML(body)
         resp = xml.xpath('//XMLResponse/XMLTrans')
         resp.children.each do |element|
@@ -284,6 +284,7 @@ module ActiveMerchant #:nodoc:
 
       def message_from(response)
         return 'Success' if success_from(response)
+
         message = STATUS_RESPONSE_CODES[response[:status]]
         message += " - #{TRANSACTION_RESPONSE_CODES[response[:response_code]]}" if response[:response_code]
 

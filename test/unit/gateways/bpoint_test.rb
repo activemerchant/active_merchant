@@ -88,13 +88,23 @@ class BpointTest < Test::Unit::TestCase
 
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_void_response)
-    response = @gateway.void(@amount, '')
+    response = @gateway.void('', amount: 300)
     assert_success response
+  end
+
+  def test_void_passes_correct_transaction_reference
+    stub_comms do
+      # transaction number from successful authorize response
+      @gateway.void('219388558', amount: 300)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r(<OriginalTransactionNumber>219388558</OriginalTransactionNumber>)m, data)
+      assert_match(%r(<Amount>300</Amount>)m, data)
+    end.respond_with(successful_void_response)
   end
 
   def test_failed_void
     @gateway.expects(:ssl_post).returns(failed_void_response)
-    response = @gateway.void(@amount, '')
+    response = @gateway.void('')
     assert_failure response
   end
 

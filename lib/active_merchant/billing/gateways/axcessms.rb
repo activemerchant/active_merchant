@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
                                     GI GR HR HU IE IL IM IS IT LI LT LU LV MC MT MX NL
                                     NO PL PT RO RU SE SI SK TR US VA)
 
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :maestro]
+      self.supported_cardtypes = %i[visa master american_express discover jcb maestro]
 
       self.homepage_url = 'http://www.axcessms.com/'
       self.display_name = 'Axcess MS'
@@ -72,8 +72,8 @@ module ActiveMerchant #:nodoc:
         authorization = response[:unique_id]
 
         Response.new(success, message, response,
-          :authorization => authorization,
-          :test => (response[:mode] != 'LIVE')
+          authorization: authorization,
+          test: (response[:mode] != 'LIVE')
         )
       end
 
@@ -103,7 +103,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_request(payment_code, money, payment, options)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.instruct!
         xml.tag! 'Request', 'version' => API_VERSION do
           xml.tag! 'Header' do
@@ -166,6 +166,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(xml, address)
         raise ArgumentError.new('Address is required') unless address
+
         xml.tag! 'Address' do
           xml.tag! 'Street', "#{address[:address1]} #{address[:address2]}".strip
           xml.tag! 'City', address[:city]

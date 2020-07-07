@@ -5,7 +5,7 @@ module ActiveMerchant
 
       self.supported_countries = %w(AU CA CN FR DE GI IL MT MU MX NL NZ PA PH RU SG KR ES KN GB US)
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express discover jcb diners_club]
 
       self.homepage_url = 'http://www.ezic.com/'
       self.display_name = 'Ezic'
