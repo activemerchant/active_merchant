@@ -170,10 +170,10 @@ class FirstdataE4V27Test < Test::Unit::TestCase
 
   def test_requests_scrub_newline_and_return_characters_from_verification_string_components
     stub_comms do
-      options_with_newline_and_return_characters_in_address = @options.merge({billing_address: address({ address1: "456 My\nStreet", address2: "Apt 1\r", city: "Ottawa\r\n", state: 'ON', country: 'CA', zip: 'K1C2N6' })})
+      options_with_newline_and_return_characters_in_address = @options.merge({billing_address: address({ address1: "456 My\nStreet", address2: nil, city: "Ottawa\r\n", state: 'ON', country: 'CA', zip: 'K1C2N6' })})
       @gateway.purchase(@amount, @credit_card, options_with_newline_and_return_characters_in_address)
     end.check_request do |endpoint, data, headers|
-      assert_match '<Address><Address1>456 My Street</Address1><Address2>Apt 1</Address2><City>Ottawa</City><State>ON</State><Zip>K1C2N6</Zip><CountryCode>CA</CountryCode></Address>', data
+      assert_match '<Address><Address1>456 My Street</Address1><City>Ottawa</City><State>ON</State><Zip>K1C2N6</Zip><CountryCode>CA</CountryCode></Address>', data
     end.respond_with(successful_purchase_response)
   end
 
