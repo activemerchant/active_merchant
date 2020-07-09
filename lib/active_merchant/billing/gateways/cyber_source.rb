@@ -838,10 +838,15 @@ module ActiveMerchant #:nodoc:
         stored_credential_transaction_id = options.dig(:stored_credential, :network_transaction_id) if options.dig(:stored_credential, :initiator) == 'merchant'
         stored_credential_subsequent_auth_stored_cred = 'true' if options.dig(:stored_credential, :initiator) == 'cardholder' && !options.dig(:stored_credential, :initial_transaction) || options.dig(:stored_credential, :initiator) == 'merchant' && options.dig(:stored_credential, :reason_type) == 'unscheduled'
 
-        xml.subsequentAuth options.dig(:stored_credential_overrides, :subsequent_auth) || stored_credential_subsequent_auth
-        xml.subsequentAuthFirst options.dig(:stored_credential_overrides, :subsequent_auth_first) || stored_credential_subsequent_auth_first
-        xml.subsequentAuthTransactionID options.dig(:stored_credential_overrides, :subsequent_auth_transaction_id) || stored_credential_transaction_id
-        xml.subsequentAuthStoredCredential options.dig(:stored_credential_overrides, :subsequent_auth_stored_credential) || stored_credential_subsequent_auth_stored_cred
+        override_subsequent_auth = options.dig(:stored_credential_overrides, :subsequent_auth)
+        override_subsequent_auth_first = options.dig(:stored_credential_overrides, :subsequent_auth_first)
+        override_subsequent_auth_transaction_id = options.dig(:stored_credential_overrides, :subsequent_auth_transaction_id)
+        override_subsequent_auth_stored_cred = options.dig(:stored_credential_overrides, :subsequent_auth_stored_credential)
+
+        xml.subsequentAuth override_subsequent_auth.nil? ? stored_credential_subsequent_auth : override_subsequent_auth
+        xml.subsequentAuthFirst override_subsequent_auth_first.nil? ? stored_credential_subsequent_auth_first : override_subsequent_auth_first
+        xml.subsequentAuthTransactionID override_subsequent_auth_transaction_id.nil? ? stored_credential_transaction_id : override_subsequent_auth_transaction_id
+        xml.subsequentAuthStoredCredential override_subsequent_auth_stored_cred.nil? ? stored_credential_subsequent_auth_stored_cred : override_subsequent_auth_stored_cred
       end
 
       def add_partner_solution_id(xml)
