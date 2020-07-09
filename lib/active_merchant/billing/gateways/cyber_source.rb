@@ -833,10 +833,10 @@ module ActiveMerchant #:nodoc:
       def add_stored_credential_options(xml, options={})
         return unless options[:stored_credential] || options[:stored_credential_overrides]
 
-        stored_credential_subsequent_auth = 'true' if options[:stored_credential][:initiator] == 'merchant'
-        stored_credential_subsequent_auth_first = 'true' if options[:stored_credential][:initial_transaction]
-        stored_credential_transaction_id = options[:stored_credential][:network_transaction_id] if options[:stored_credential][:initiator] == 'merchant'
-        stored_credential_subsequent_auth_stored_cred = 'true' if options[:stored_credential][:initiator] == 'cardholder' && !options[:stored_credential][:initial_transaction] || options[:stored_credential][:initiator] == 'merchant' && options[:stored_credential][:reason_type] == 'unscheduled'
+        stored_credential_subsequent_auth = 'true' if options.dig(:stored_credential, :initiator) == 'merchant'
+        stored_credential_subsequent_auth_first = 'true' if options.dig(:stored_credential, :initial_transaction)
+        stored_credential_transaction_id = options.dig(:stored_credential, :network_transaction_id) if options.dig(:stored_credential, :initiator) == 'merchant'
+        stored_credential_subsequent_auth_stored_cred = 'true' if options.dig(:stored_credential, :initiator) == 'cardholder' && !options.dig(:stored_credential, :initial_transaction) || options.dig(:stored_credential, :initiator) == 'merchant' && options.dig(:stored_credential, :reason_type) == 'unscheduled'
 
         xml.subsequentAuth options.dig(:stored_credential_overrides, :subsequent_auth) || stored_credential_subsequent_auth
         xml.subsequentAuthFirst options.dig(:stored_credential_overrides, :subsequent_auth_first) || stored_credential_subsequent_auth_first
