@@ -132,7 +132,10 @@ module ActiveMerchant #:nodoc:
       def void(identification, options = {})
         post = {}
         post[:expand] = [:charge]
-        commit(:post, "charges/#{CGI.escape(payment_intent_id_to_charge_id(identification))}/refunds", post, options)
+        pi = payment_intent_id_to_charge_id(identification)
+        return pi.response unless pi.charge_id
+
+        commit(:post, "charges/#{CGI.escape(pi.charge_id)}/refunds", post, options)
       end
 
       def refund(money, identification, options = {})
@@ -144,7 +147,10 @@ module ActiveMerchant #:nodoc:
         post[:expand] = [:charge]
 
         MultiResponse.run(:first) do |r|
-          r.process { commit(:post, "charges/#{CGI.escape(payment_intent_id_to_charge_id(identification))}/refunds", post, options) }
+          pi = payment_intent_id_to_charge_id(identification)
+          return pi.response unless pi.charge_id
+
+          r.process { commit(:post, "charges/#{CGI.escape(pi.charge_id)}/refunds", post, options) }
 
           return r unless options[:refund_fee_amount]
 
@@ -589,10 +595,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def payment_intent_id_to_charge_id(identification)
-        return identification unless identification =~ /\Api_/
+        payment_intent_response = Struct.new(:charge_id, :response).new(identification, nil)
+        return payment_intent_response unless identification =~ /\Api_/
 
         result = commit(:get, "payment_intents/#{CGI.escape(identification)}", nil, options)
-        result.params["charges"]["data"].first["id"]
+
+        payment_intent_response.tap do |pi|
+          pi.response = result
+          pi.charge_id = result.params["charges"] && result.params["charges"]["data"].first["id"]
+        end
       end
 
       def authorization_from(success, url, method, response)
