@@ -611,16 +611,22 @@ module ActiveMerchant #:nodoc:
 
       def add_normalized_threeds_2_data(xml, payment_method, options)
         threeds_2_options = options[:three_d_secure]
+        cc_brand = card_brand(payment_method).to_sym
+        xid = threeds_2_options[:xid]
 
-        xml.tag!('cavv', threeds_2_options[:cavv]) if threeds_2_options[:cavv] && card_brand(payment_method).to_sym != :master
+        xml.tag!('cavv', threeds_2_options[:cavv]) if threeds_2_options[:cavv] && cc_brand != :master
         xml.tag!('cavvAlgorithm', threeds_2_options[:cavv_algorithm]) if threeds_2_options[:cavv_algorithm]
         xml.tag!('paSpecificationVersion', threeds_2_options[:version]) if threeds_2_options[:version]
         xml.tag!('directoryServerTransactionID', threeds_2_options[:ds_transaction_id]) if threeds_2_options[:ds_transaction_id]
-        xml.tag!('commerceIndicator', options[:commerce_indicator] || ECI_BRAND_MAPPING[card_brand(payment_method).to_sym])
+        xml.tag!('commerceIndicator', options[:commerce_indicator] || ECI_BRAND_MAPPING[cc_brand])
         xml.tag!('eciRaw', threeds_2_options[:eci]) if threeds_2_options[:eci]
 
-        xid = threeds_2_options[:xid] || threeds_2_options[:cavv]
-        xml.tag!('xid', xid) if xid
+        if xid.present?
+          xml.tag!('xid', xid)
+        elsif threeds_2_options[:version]&.start_with?('2') && cc_brand != :master
+          cavv = threeds_2_options[:cavv]
+          xml.tag!('xid', cavv) if cavv.present?
+        end
 
         xml.tag!('veresEnrolled', threeds_2_options[:enrolled]) if threeds_2_options[:enrolled]
         xml.tag!('paresStatus', threeds_2_options[:authentication_response_status]) if threeds_2_options[:authentication_response_status]
