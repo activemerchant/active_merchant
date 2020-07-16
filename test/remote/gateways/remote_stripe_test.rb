@@ -24,6 +24,16 @@ class RemoteStripeTest < Test::Unit::TestCase
     }
   end
 
+  def test_correct_header_encoding
+    stripe = {
+      login: "sk_test_3OD4TdKSIOhDOL2146JJcC79AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    }
+    headers = StripeGateway.new(stripe).send(:headers)
+    basic_auth_encoding = headers['Authorization']
+
+    assert_false basic_auth_encoding.include?("\n")
+  end
+
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card, @options)
