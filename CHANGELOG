@@ -6,6 +6,7 @@
 * Adyen: Change shopper_email to email and shopper_ip to ip [rikterbeek] #3675
 * FirstData e4 v27+ Fix strip_line_breaks method [carrigan] #3695
 * Cybersource: Conditionally find stored credentials [therufs] #3696 #3697
+* Credorax: Default 3ds_browsercolordepth to 32 when passed as 30 [britth] #3700
 
 == Version 1.109.0
 * Remove reference to `Billing::Integrations` [pi3r] #3692

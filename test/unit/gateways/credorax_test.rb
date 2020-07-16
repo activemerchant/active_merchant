@@ -274,6 +274,21 @@ class CredoraxTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_adds_correct_3ds_browsercolordepth_when_color_depth_is_30
+    @normalized_3ds_2_options[:three_ds_2][:browser_info][:depth] = 30
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @normalized_3ds_2_options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/3ds_browsercolordepth=32/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+
+    assert_equal '8a82944a5351570601535955efeb513c;006596;02617cf5f02ccaed239b6521748298c5;purchase', response.authorization
+    assert response.test?
+  end
+
   def test_adds_3d2_secure_fields_with_3ds_transtype_specified
     options_with_3ds = @normalized_3ds_2_options.merge(three_ds_transtype: '03')
 
