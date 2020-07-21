@@ -903,8 +903,7 @@ module ActiveMerchant #:nodoc:
 
         success = success?(response)
         message = message_from(response)
-
-        authorization = success ? authorization_from(response, action, amount, options) : nil
+        authorization = success || in_fraud_review?(response) ? authorization_from(response, action, amount, options) : nil
 
         Response.new(success, message, response,
           test: test?,
