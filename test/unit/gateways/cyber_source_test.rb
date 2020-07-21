@@ -442,6 +442,7 @@ class CyberSourceTest < Test::Unit::TestCase
 
     assert_failure(response = @gateway.authorize(@amount, @credit_card, @options))
     assert response.fraud_review?
+    assert_equal(response.authorization, "#{@options[:order_id]};#{response.params['requestID']};#{response.params['requestToken']};authorize;100;USD;")
   end
 
   def test_successful_credit_to_subscription_request
