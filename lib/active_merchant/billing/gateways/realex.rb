@@ -316,6 +316,7 @@ module ActiveMerchant
           else
             xml.tag! 'cavv', three_d_secure[:cavv]
             xml.tag! 'xid', three_d_secure[:xid]
+            version = '1'
           end
           xml.tag! 'eci', three_d_secure[:eci]
           xml.tag! 'message_version', version
