@@ -287,6 +287,8 @@ module ActiveMerchant #:nodoc:
 
       def add_address(xml, options)
         if (address = options[:billing_address] || options[:address])
+          address = strip_line_breaks(address)
+
           xml.tag! 'Address' do
             xml.tag! 'Address1', address[:address1]
             xml.tag! 'Address2', address[:address2] if address[:address2]
@@ -297,6 +299,12 @@ module ActiveMerchant #:nodoc:
           end
           xml.tag! 'ZipCode', address[:zip]
         end
+      end
+
+      def strip_line_breaks(address)
+        return unless address.is_a?(Hash)
+
+        Hash[address.map { |k, s| [k, s&.tr("\r\n", ' ')&.strip] }]
       end
 
       def add_invoice(xml, options)

@@ -24,11 +24,11 @@ module ActiveMerchant
           r.process {
             post = authorization_params(money, credit_card_or_reference, options)
             add_autocapture(post, false)
-            commit(synchronized_path("/payments/#{r.responses.last.params["id"]}/authorize"), post)
+            commit(synchronized_path("/payments/#{r.responses.last.params['id']}/authorize"), post)
           }
           r.process {
             post = capture_params(money, credit_card_or_reference, options)
-            commit(synchronized_path("/payments/#{r.responses.last.params["id"]}/capture"), post)
+            commit(synchronized_path("/payments/#{r.responses.last.params['id']}/capture"), post)
           }
         end
       end
@@ -42,7 +42,7 @@ module ActiveMerchant
           r.process { create_payment(money, options) }
           r.process {
             post = authorization_params(money, credit_card_or_reference, options)
-            commit(synchronized_path("/payments/#{r.responses.last.params["id"]}/authorize"), post)
+            commit(synchronized_path("/payments/#{r.responses.last.params['id']}/authorize"), post)
           }
         end
       end

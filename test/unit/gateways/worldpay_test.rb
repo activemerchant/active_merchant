@@ -506,6 +506,39 @@ class WorldpayTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
+  def test_state_sent_for_3ds_transactions_in_us_country
+    us_billing_address = address.merge(country: 'US')
+    stub_comms do
+      @gateway.authorize(100, @credit_card, @options.merge(billing_address: us_billing_address, execute_threed: true))
+    end.check_request do |endpoint, data, headers|
+      assert_match %r(firstName), data
+      assert_match %r(lastName), data
+      assert_match %r(<address1>456 My Street</address1>), data
+      assert_match %r(<address2>Apt 1</address2>), data
+      assert_match %r(<city>Ottawa</city>), data
+      assert_match %r(<postalCode>K1C2N6</postalCode>), data
+      assert_match %r(<state>ON</state>), data
+      assert_match %r(<countryCode>US</countryCode>), data
+      assert_match %r(<telephoneNumber>\(555\)555-5555</telephoneNumber>), data
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_state_not_sent_for_3ds_transactions_in_non_us_country
+    stub_comms do
+      @gateway.authorize(100, @credit_card, @options.merge(billing_address: address, execute_threed: true))
+    end.check_request do |endpoint, data, headers|
+      assert_match %r(firstName), data
+      assert_match %r(lastName), data
+      assert_match %r(<address1>456 My Street</address1>), data
+      assert_match %r(<address2>Apt 1</address2>), data
+      assert_match %r(<city>Ottawa</city>), data
+      assert_match %r(<postalCode>K1C2N6</postalCode>), data
+      assert_no_match %r(<state>ON</state>), data
+      assert_match %r(<countryCode>CA</countryCode>), data
+      assert_match %r(<telephoneNumber>\(555\)555-5555</telephoneNumber>), data
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_email
     stub_comms do
       @gateway.authorize(100, @credit_card, @options.merge(email: 'eggcellent@example.com'))
@@ -647,6 +680,14 @@ class WorldpayTest < Test::Unit::TestCase
 
     response = @gateway.verify(@credit_card, @options)
     assert_failure response
+  end
+
+  def test_empty_inst_id_is_stripped
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ inst_id: '' }))
+    end.check_request do |_, data, _|
+      assert_not_match(/installationId/, data)
+    end.respond_with(successful_authorize_response)
   end
 
   def test_3ds_name_coersion
@@ -1027,7 +1068,7 @@ class WorldpayTest < Test::Unit::TestCase
   end
 
   def successful_authorize_response
-    <<-RESPONSE
+    <<~RESPONSE
       <?xml version="1.0" encoding="UTF-8"?>
       <!DOCTYPE paymentService PUBLIC "-//Bibit//DTD Bibit PaymentService v1//EN"
                                       "http://dtd.bibit.com/paymentService_v1.dtd">
@@ -1053,7 +1094,7 @@ class WorldpayTest < Test::Unit::TestCase
   end
 
   def failed_authorize_response
-    <<-RESPONSE
+    <<~RESPONSE
       <?xml version="1.0" encoding="UTF-8"?>
       <!DOCTYPE paymentService PUBLIC "-//Bibit//DTD Bibit PaymentService v1//EN"
                                       "http://dtd.bibit.com/paymentService_v1.dtd">
@@ -1073,19 +1114,19 @@ class WorldpayTest < Test::Unit::TestCase
   # more recent captured response from remote tests where the reply is
   # contained the error directly (no <orderStatus>)
   def failed_authorize_response_2
-    <<-RESPONSE
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN" "http://dtd.worldpay.com/paymentService_v1.dtd">
-    <paymentService version="1.4" merchantCode="SPREEDLY">
-      <reply>
-        <error code="5"><![CDATA[XML failed validation: Invalid payment details : Card number not recognised: 606070******4400]]></error>
-      </reply>
-    </paymentService>
+    <<~RESPONSE
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN" "http://dtd.worldpay.com/paymentService_v1.dtd">
+      <paymentService version="1.4" merchantCode="SPREEDLY">
+        <reply>
+          <error code="5"><![CDATA[XML failed validation: Invalid payment details : Card number not recognised: 606070******4400]]></error>
+        </reply>
+      </paymentService>
     RESPONSE
   end
 
   def successful_capture_response
-    <<-RESPONSE
+    <<~RESPONSE
       <?xml version="1.0" encoding="UTF-8"?>
       <!DOCTYPE paymentService PUBLIC "-//Bibit//DTD Bibit PaymentService v1//EN"
                                       "http://dtd.bibit.com/paymentService_v1.dtd">
@@ -1102,7 +1143,7 @@ class WorldpayTest < Test::Unit::TestCase
   end
 
   def successful_authorize_with_elo_response
-    <<-RESPONSE
+    <<~RESPONSE
       <?xml version="1.0" encoding="UTF-8"?>
       <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN" "http://dtd.worldpay.com/paymentService_v1.dtd">
       <paymentService version="1.4" merchantCode="SPREEDLY">
@@ -1127,7 +1168,7 @@ class WorldpayTest < Test::Unit::TestCase
   end
 
   def successful_capture_with_elo_response
-    <<-RESPONSE
+    <<~RESPONSE
       <?xml version="1.0" encoding="UTF-8"?>
       <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN" "http://dtd.worldpay.com/paymentService_v1.dtd">
       <paymentService version="1.4" merchantCode="SPREEDLY">
@@ -1143,46 +1184,46 @@ class WorldpayTest < Test::Unit::TestCase
   end
 
   def successful_void_inquiry_with_elo_response
-    <<-RESPONSE
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN" "http://dtd.worldpay.com/paymentService_v1.dtd">
-    <paymentService version="1.4" merchantCode="SPREEDLY">
-      <reply>
-        <orderStatus orderCode="eda0b101428892fdb32e2fc617a7f5e0">
-          <payment>
-            <paymentMethod>ELO-SSL</paymentMethod>
-            <amount value="100" currencyCode="BRL" exponent="2" debitCreditIndicator="credit" />
-            <lastEvent>AUTHORISED</lastEvent>
-            <CVCResultCode description="C" />
-            <AVSResultCode description="H" />
-            <balance accountType="IN_PROCESS_AUTHORISED">
+    <<~RESPONSE
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN" "http://dtd.worldpay.com/paymentService_v1.dtd">
+      <paymentService version="1.4" merchantCode="SPREEDLY">
+        <reply>
+          <orderStatus orderCode="eda0b101428892fdb32e2fc617a7f5e0">
+            <payment>
+              <paymentMethod>ELO-SSL</paymentMethod>
               <amount value="100" currencyCode="BRL" exponent="2" debitCreditIndicator="credit" />
-            </balance>
-            <cardNumber>4514********0008</cardNumber>
-            <riskScore value="21" />
-          </payment>
-        </orderStatus>
-      </reply>
-    </paymentService>
+              <lastEvent>AUTHORISED</lastEvent>
+              <CVCResultCode description="C" />
+              <AVSResultCode description="H" />
+              <balance accountType="IN_PROCESS_AUTHORISED">
+                <amount value="100" currencyCode="BRL" exponent="2" debitCreditIndicator="credit" />
+              </balance>
+              <cardNumber>4514********0008</cardNumber>
+              <riskScore value="21" />
+            </payment>
+          </orderStatus>
+        </reply>
+      </paymentService>
     RESPONSE
   end
 
   def successful_void_with_elo_response
-    <<-RESPONSE
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN" "http://dtd.worldpay.com/paymentService_v1.dtd">
-    <paymentService version="1.4" merchantCode="SPREEDLY">
-      <reply>
-        <ok>
-          <cancelReceived orderCode="3a10f83fb9bb765488d0b3eb153879d7" />
-        </ok>
-      </reply>
-    </paymentService>
+    <<~RESPONSE
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN" "http://dtd.worldpay.com/paymentService_v1.dtd">
+      <paymentService version="1.4" merchantCode="SPREEDLY">
+        <reply>
+          <ok>
+            <cancelReceived orderCode="3a10f83fb9bb765488d0b3eb153879d7" />
+          </ok>
+        </reply>
+      </paymentService>
     RESPONSE
   end
 
   def successful_inquiry_response
-    <<-RESPONSE
+    <<~RESPONSE
       <?xml version="1.0" encoding="UTF-8"?>
       <!DOCTYPE paymentService PUBLIC "-//Bibit//DTD Bibit PaymentService v1//EN"
                                       "http://dtd.bibit.com/paymentService_v1.dtd">
@@ -1209,7 +1250,7 @@ class WorldpayTest < Test::Unit::TestCase
   end
 
   def successful_void_inquiry_response
-    <<-RESPONSE
+    <<~RESPONSE
       <?xml version="1.0" encoding="UTF-8"?>
       <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN"
                                       "http://dtd.worldpay.com/paymentService_v1.dtd">
@@ -1236,7 +1277,7 @@ class WorldpayTest < Test::Unit::TestCase
   end
 
   def successful_void_response
-    <<-RESPONSE
+    <<~RESPONSE
       <?xml version="1.0" encoding="UTF-8"?>
       <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN"
                                       "http://dtd.worldpay.com/paymentService_v1.dtd">
@@ -1251,7 +1292,7 @@ class WorldpayTest < Test::Unit::TestCase
   end
 
   def failed_void_inquiry_response
-    <<-RESPONSE
+    <<~RESPONSE
       <?xml version="1.0" encoding="UTF-8"?>
       <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN"
                                       "http://dtd.worldpay.com/paymentService_v1.dtd">
@@ -1279,34 +1320,34 @@ class WorldpayTest < Test::Unit::TestCase
   end
 
   def successful_refund_inquiry_response(last_event='CAPTURED')
-    <<-RESPONSE
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE paymentService PUBLIC "-//Bibit//DTD Bibit PaymentService v1//EN"
-                                "http://dtd.bibit.com/paymentService_v1.dtd">
-<paymentService version="1.4" merchantCode="SPREEDLY">
-  <reply>
-    <orderStatus orderCode="d192c159d5730d339c03fa1a8dc796eb">
-      <payment>
-        <paymentMethod>VISA-SSL</paymentMethod>
-        <amount value="100" currencyCode="GBP" exponent="2" debitCreditIndicator="credit"/>
-        <lastEvent>#{last_event}</lastEvent>
-        <CVCResultCode description="UNKNOWN"/>
-        <AVSResultCode description="NOT SUPPLIED BY SHOPPER"/>
-        <balance accountType="IN_PROCESS_AUTHORISED">
-          <amount value="100" currencyCode="GBP" exponent="2" debitCreditIndicator="credit"/>
-        </balance>
-        <cardNumber>4111********1111</cardNumber>
-        <riskScore value="1"/>
-      </payment>
-      <date dayOfMonth="20" month="04" year="2011" hour="22" minute="24" second="0"/>
-    </orderStatus>
-  </reply>
-</paymentService>
+    <<~RESPONSE
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE paymentService PUBLIC "-//Bibit//DTD Bibit PaymentService v1//EN"
+                                      "http://dtd.bibit.com/paymentService_v1.dtd">
+      <paymentService version="1.4" merchantCode="SPREEDLY">
+        <reply>
+          <orderStatus orderCode="d192c159d5730d339c03fa1a8dc796eb">
+            <payment>
+              <paymentMethod>VISA-SSL</paymentMethod>
+              <amount value="100" currencyCode="GBP" exponent="2" debitCreditIndicator="credit"/>
+              <lastEvent>#{last_event}</lastEvent>
+              <CVCResultCode description="UNKNOWN"/>
+              <AVSResultCode description="NOT SUPPLIED BY SHOPPER"/>
+              <balance accountType="IN_PROCESS_AUTHORISED">
+                <amount value="100" currencyCode="GBP" exponent="2" debitCreditIndicator="credit"/>
+              </balance>
+              <cardNumber>4111********1111</cardNumber>
+              <riskScore value="1"/>
+            </payment>
+            <date dayOfMonth="20" month="04" year="2011" hour="22" minute="24" second="0"/>
+          </orderStatus>
+        </reply>
+      </paymentService>
     RESPONSE
   end
 
   def successful_refund_response
-    <<-RESPONSE
+    <<~RESPONSE
       <?xml version="1.0" encoding="UTF-8"?>
       <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN"
                                       "http://dtd.worldpay.com/paymentService_v1.dtd">
@@ -1323,7 +1364,7 @@ class WorldpayTest < Test::Unit::TestCase
   end
 
   def failed_refund_inquiry_response
-    <<-RESPONSE
+    <<~RESPONSE
       <?xml version="1.0" encoding="UTF-8"?>
       <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN"
                                       "http://dtd.worldpay.com/paymentService_v1.dtd">
@@ -1352,7 +1393,7 @@ class WorldpayTest < Test::Unit::TestCase
   end
 
   def failed_void_response
-    <<-REQUEST
+    <<~REQUEST
       <?xml version="1.0" encoding="UTF-8"?>
       <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN" "http://dtd.worldpay.com/paymentService_v1.dtd">
       <paymentService version="1.4" merchantCode="CHARGEBEEM1">
@@ -1368,7 +1409,7 @@ class WorldpayTest < Test::Unit::TestCase
   end
 
   def successful_visa_credit_response
-    <<-RESPONSE
+    <<~RESPONSE
       <?xml version="1.0" encoding="UTF-8"?>
       <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN"
                                       "http://dtd.worldpay.com/paymentService_v1.dtd">
@@ -1386,29 +1427,29 @@ class WorldpayTest < Test::Unit::TestCase
 
   def successful_mastercard_credit_response
     <<~RESPONSE
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN"
-                                    "http://dtd.worldpay.com/paymentService_v1.dtd">
-    <paymentService version="1.4" merchantCode="YOUR_MERCHANT_CODE">
-      <reply>
-        <orderStatus orderCode="f25257d251b81fb1fd9c210973c941ff\">
-          <payment>
-            <paymentMethod>ECMC_DEBIT-SSL</paymentMethod>
-            <amount value="1110" currencyCode="GBP" exponent="2" debitCreditIndicator="credit"/>
-            <lastEvent>SENT_FOR_REFUND</lastEvent>
-            <AuthorisationId id="987654"/>
-            <balance accountType="IN_PROCESS_CAPTURED">
-              <amount value="1110" currencyCode="GBP" exponent="2" debitCreditIndicator="debit"/>
-            </balance>
-          </payment>
-        </orderStatus>
-      </reply>
-    </paymentService>
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN"
+                                      "http://dtd.worldpay.com/paymentService_v1.dtd">
+      <paymentService version="1.4" merchantCode="YOUR_MERCHANT_CODE">
+        <reply>
+          <orderStatus orderCode="f25257d251b81fb1fd9c210973c941ff\">
+            <payment>
+              <paymentMethod>ECMC_DEBIT-SSL</paymentMethod>
+              <amount value="1110" currencyCode="GBP" exponent="2" debitCreditIndicator="credit"/>
+              <lastEvent>SENT_FOR_REFUND</lastEvent>
+              <AuthorisationId id="987654"/>
+              <balance accountType="IN_PROCESS_CAPTURED">
+                <amount value="1110" currencyCode="GBP" exponent="2" debitCreditIndicator="debit"/>
+              </balance>
+            </payment>
+          </orderStatus>
+        </reply>
+      </paymentService>
     RESPONSE
   end
 
   def sample_authorization_request
-    <<-REQUEST
+    <<~REQUEST
       <?xml version="1.0" encoding="UTF-8"?>
       <!DOCTYPE paymentService PUBLIC "-//RBS WorldPay//DTD RBS WorldPay PaymentService v1//EN" "http://dtd.wp3.rbsworldpay.com/paymentService_v1.dtd">
       <paymentService merchantCode="XXXXXXXXXXXXXXX" version="1.4">
@@ -1454,134 +1495,134 @@ class WorldpayTest < Test::Unit::TestCase
   end
 
   def transcript
-    <<-TRANSCRIPT
-    <paymentService version="1.4" merchantCode="CHARGEBEEM1">
-      <submit>
-        <order orderCode="4efd348dbe6708b9ec9c118322e0954f">
-          <description>Purchase</description>
-          <amount value="100" currencyCode="GBP" exponent="2"/>
-          <paymentDetails>
-            <VISA-SSL>
-              <cardNumber>4111111111111111</cardNumber>
-              <expiryDate>
-                <date month="09" year="2016"/>
-              </expiryDate>
-              <cardHolderName>Longbob Longsen</cardHolderName>
-              <cvc>123</cvc>
-              <cardAddress>
-                <address>
-                  <address1>N/A</address1>
-                  <postalCode>0000</postalCode>
-                  <city>N/A</city>
-                  <state>N/A</state>
-                  <countryCode>US</countryCode>
-                </address>
-              </cardAddress>
-            </VISA-SSL>
-          </paymentDetails>
-          <shopper>
-            <shopperEmailAddress>wow@example.com</shopperEmailAddress>
-          </shopper>
-        </order>
-      </submit>
-    </paymentService>
+    <<~TRANSCRIPT
+      <paymentService version="1.4" merchantCode="CHARGEBEEM1">
+        <submit>
+          <order orderCode="4efd348dbe6708b9ec9c118322e0954f">
+            <description>Purchase</description>
+            <amount value="100" currencyCode="GBP" exponent="2"/>
+            <paymentDetails>
+              <VISA-SSL>
+                <cardNumber>4111111111111111</cardNumber>
+                <expiryDate>
+                  <date month="09" year="2016"/>
+                </expiryDate>
+                <cardHolderName>Longbob Longsen</cardHolderName>
+                <cvc>123</cvc>
+                <cardAddress>
+                  <address>
+                    <address1>N/A</address1>
+                    <postalCode>0000</postalCode>
+                    <city>N/A</city>
+                    <state>N/A</state>
+                    <countryCode>US</countryCode>
+                  </address>
+                </cardAddress>
+              </VISA-SSL>
+            </paymentDetails>
+            <shopper>
+              <shopperEmailAddress>wow@example.com</shopperEmailAddress>
+            </shopper>
+          </order>
+        </submit>
+      </paymentService>
     TRANSCRIPT
   end
 
   def scrubbed_transcript
-    <<-TRANSCRIPT
-    <paymentService version="1.4" merchantCode="CHARGEBEEM1">
-      <submit>
-        <order orderCode="4efd348dbe6708b9ec9c118322e0954f">
-          <description>Purchase</description>
-          <amount value="100" currencyCode="GBP" exponent="2"/>
-          <paymentDetails>
-            <VISA-SSL>
-              <cardNumber>[FILTERED]</cardNumber>
-              <expiryDate>
-                <date month="09" year="2016"/>
-              </expiryDate>
-              <cardHolderName>Longbob Longsen</cardHolderName>
-              <cvc>[FILTERED]</cvc>
-              <cardAddress>
-                <address>
-                  <address1>N/A</address1>
-                  <postalCode>0000</postalCode>
-                  <city>N/A</city>
-                  <state>N/A</state>
-                  <countryCode>US</countryCode>
-                </address>
-              </cardAddress>
-            </VISA-SSL>
-          </paymentDetails>
-          <shopper>
-            <shopperEmailAddress>wow@example.com</shopperEmailAddress>
-          </shopper>
-        </order>
-      </submit>
-    </paymentService>
+    <<~TRANSCRIPT
+      <paymentService version="1.4" merchantCode="CHARGEBEEM1">
+        <submit>
+          <order orderCode="4efd348dbe6708b9ec9c118322e0954f">
+            <description>Purchase</description>
+            <amount value="100" currencyCode="GBP" exponent="2"/>
+            <paymentDetails>
+              <VISA-SSL>
+                <cardNumber>[FILTERED]</cardNumber>
+                <expiryDate>
+                  <date month="09" year="2016"/>
+                </expiryDate>
+                <cardHolderName>Longbob Longsen</cardHolderName>
+                <cvc>[FILTERED]</cvc>
+                <cardAddress>
+                  <address>
+                    <address1>N/A</address1>
+                    <postalCode>0000</postalCode>
+                    <city>N/A</city>
+                    <state>N/A</state>
+                    <countryCode>US</countryCode>
+                  </address>
+                </cardAddress>
+              </VISA-SSL>
+            </paymentDetails>
+            <shopper>
+              <shopperEmailAddress>wow@example.com</shopperEmailAddress>
+            </shopper>
+          </order>
+        </submit>
+      </paymentService>
     TRANSCRIPT
   end
 
   def failed_with_unknown_card_response
-    <<-RESPONSE
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN" "http://dtd.worldpay.com/paymentService_v1.dtd">
-    <paymentService version="1.4" merchantCode="SPREEDLY">
-      <reply>
-        <error code="5">
-          <![CDATA[XML failed validation: Invalid payment details : Card number not recognised: 606070******4400]]>
-        </error>
-      </reply>
-    </paymentService>
+    <<~RESPONSE
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN" "http://dtd.worldpay.com/paymentService_v1.dtd">
+      <paymentService version="1.4" merchantCode="SPREEDLY">
+        <reply>
+          <error code="5">
+            <![CDATA[XML failed validation: Invalid payment details : Card number not recognised: 606070******4400]]>
+          </error>
+        </reply>
+      </paymentService>
     RESPONSE
   end
 
   def successful_store_response
-    <<-RESPONSE
-    <?xml version="1.0"?>
-    <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN" "http://dtd.worldpay.com/paymentService_v1.dtd">
-    <paymentService version="1.4" merchantCode="SPREEDLY">
-      <reply>
-        <token>
-          <authenticatedShopperID>59424549c291397379f30c5c082dbed8</authenticatedShopperID>
-          <tokenDetails tokenEvent="NEW">
-            <paymentTokenID>99411111780163871111</paymentTokenID>
-            <paymentTokenExpiry>
-              <date dayOfMonth="30" month="05" year="2019" hour="22" minute="54" second="47"/>
-            </paymentTokenExpiry>
-            <tokenReason>Created token without payment on 2019-05-23</tokenReason>
-          </tokenDetails>
-          <paymentInstrument>
-            <cardDetails>
-              <expiryDate>
-                <date month="09" year="2020"/>
-              </expiryDate>
-              <cardHolderName><![CDATA[Longbob Longsen]]></cardHolderName>
-              <derived>
-                <cardBrand>VISA</cardBrand>
-                <cardSubBrand>VISA_CREDIT</cardSubBrand>
-                <issuerCountryCode>N/A</issuerCountryCode>
-                <issuerName>TARGOBANK AG & CO. KGAA</issuerName>
-                <obfuscatedPAN>4111********1111</obfuscatedPAN>
-              </derived>
-            </cardDetails>
-          </paymentInstrument>
-        </token>
-      </reply>
-    </paymentService>
+    <<~RESPONSE
+      <?xml version="1.0"?>
+      <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN" "http://dtd.worldpay.com/paymentService_v1.dtd">
+      <paymentService version="1.4" merchantCode="SPREEDLY">
+        <reply>
+          <token>
+            <authenticatedShopperID>59424549c291397379f30c5c082dbed8</authenticatedShopperID>
+            <tokenDetails tokenEvent="NEW">
+              <paymentTokenID>99411111780163871111</paymentTokenID>
+              <paymentTokenExpiry>
+                <date dayOfMonth="30" month="05" year="2019" hour="22" minute="54" second="47"/>
+              </paymentTokenExpiry>
+              <tokenReason>Created token without payment on 2019-05-23</tokenReason>
+            </tokenDetails>
+            <paymentInstrument>
+              <cardDetails>
+                <expiryDate>
+                  <date month="09" year="2020"/>
+                </expiryDate>
+                <cardHolderName><![CDATA[Longbob Longsen]]></cardHolderName>
+                <derived>
+                  <cardBrand>VISA</cardBrand>
+                  <cardSubBrand>VISA_CREDIT</cardSubBrand>
+                  <issuerCountryCode>N/A</issuerCountryCode>
+                  <issuerName>TARGOBANK AG & CO. KGAA</issuerName>
+                  <obfuscatedPAN>4111********1111</obfuscatedPAN>
+                </derived>
+              </cardDetails>
+            </paymentInstrument>
+          </token>
+        </reply>
+      </paymentService>
     RESPONSE
   end
 
   def failed_store_response
-    <<-RESPONSE
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN" "http://dtd.worldpay.com/paymentService_v1.dtd">
-    <paymentService version="1.4" merchantCode="SPREEDLY">
-      <reply>
-        <error code="2"><![CDATA[authenticatedShopperID cannot start with an underscore]]></error>
-      </reply>
-    </paymentService>
+    <<~RESPONSE
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN" "http://dtd.worldpay.com/paymentService_v1.dtd">
+      <paymentService version="1.4" merchantCode="SPREEDLY">
+        <reply>
+          <error code="2"><![CDATA[authenticatedShopperID cannot start with an underscore]]></error>
+        </reply>
+      </paymentService>
     RESPONSE
   end
 end

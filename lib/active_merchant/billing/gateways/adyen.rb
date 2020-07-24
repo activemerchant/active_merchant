@@ -196,9 +196,6 @@ module ActiveMerchant #:nodoc:
 
       def add_extra_data(post, payment, options)
         post[:telephoneNumber] = options[:billing_address][:phone] if options.dig(:billing_address, :phone)
-        post[:shopperEmail] = options[:shopper_email] if options[:shopper_email]
-        post[:shopperIP] = options[:shopper_ip] if options[:shopper_ip]
-        post[:shopperStatement] = options[:shopper_statement] if options[:shopper_statement]
         post[:fraudOffset] = options[:fraud_offset] if options[:fraud_offset]
         post[:selectedBrand] = options[:selected_brand] if options[:selected_brand]
         post[:selectedBrand] ||= NETWORK_TOKENIZATION_CARD_SOURCE[payment.source.to_s] if payment.is_a?(NetworkTokenizationCreditCard)
@@ -212,11 +209,20 @@ module ActiveMerchant #:nodoc:
         post[:additionalData][:authorisationType] = options[:authorisation_type] if options[:authorisation_type]
         post[:additionalData][:adjustAuthorisationData] = options[:adjust_authorisation_data] if options[:adjust_authorisation_data]
         post[:additionalData][:industryUsage] = options[:industry_usage] if options[:industry_usage]
-        post[:additionalData][:updateShopperStatement] = options[:update_shopper_statement] if options[:update_shopper_statement]
         post[:additionalData][:RequestedTestAcquirerResponseCode] = options[:requested_test_acquirer_response_code] if options[:requested_test_acquirer_response_code] && test?
         post[:deviceFingerprint] = options[:device_fingerprint] if options[:device_fingerprint]
+        add_shopper_data(post, options)
         add_risk_data(post, options)
         add_shopper_reference(post, options)
+      end
+
+      def add_shopper_data(post, options)
+        post[:shopperEmail] = options[:email] if options[:email]
+        post[:shopperEmail] = options[:shopper_email] if options[:shopper_email]
+        post[:shopperIP] = options[:ip] if options[:ip]
+        post[:shopperIP] = options[:shopper_ip] if options[:shopper_ip]
+        post[:shopperStatement] = options[:shopper_statement] if options[:shopper_statement]
+        post[:additionalData][:updateShopperStatement] = options[:update_shopper_statement] if options[:update_shopper_statement]
       end
 
       def add_risk_data(post, options)
@@ -418,10 +424,10 @@ module ActiveMerchant #:nodoc:
             post[:additionalData][:scaExemption] = options[:sca_exemption] if options[:sca_exemption]
           end
         else
-          return unless options[:execute_threed] || options[:threed_dynamic]
+          return unless !options[:execute_threed].nil? || !options[:threed_dynamic].nil?
 
-          post[:browserInfo] = { userAgent: options[:user_agent], acceptHeader: options[:accept_header] }
-          post[:additionalData] = { executeThreeD: 'true' } if options[:execute_threed]
+          post[:browserInfo] = { userAgent: options[:user_agent], acceptHeader: options[:accept_header] } if options[:execute_threed] || options[:threed_dynamic]
+          post[:additionalData] = { executeThreeD: options[:execute_threed] } if !options[:execute_threed].nil?
         end
       end
 

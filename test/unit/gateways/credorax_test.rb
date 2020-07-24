@@ -274,6 +274,21 @@ class CredoraxTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_adds_correct_3ds_browsercolordepth_when_color_depth_is_30
+    @normalized_3ds_2_options[:three_ds_2][:browser_info][:depth] = 30
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @normalized_3ds_2_options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/3ds_browsercolordepth=32/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+
+    assert_equal '8a82944a5351570601535955efeb513c;006596;02617cf5f02ccaed239b6521748298c5;purchase', response.authorization
+    assert response.test?
+  end
+
   def test_adds_3d2_secure_fields_with_3ds_transtype_specified
     options_with_3ds = @normalized_3ds_2_options.merge(three_ds_transtype: '03')
 
@@ -663,6 +678,28 @@ class CredoraxTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
       assert_not_match(/c2=/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_omits_3ds_homephonecountry_when_phone_is_nil
+    # purchase passes 3ds_homephonecountry when it and phone number are provided
+    @options[:billing_address][:phone] = '555-444-3333'
+    @options[:three_ds_2] = { optional: { '3ds_homephonecountry': 'US' } }
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/c2=555-444-3333/, data)
+      assert_match(/3ds_homephonecountry=US/, data)
+    end.respond_with(successful_purchase_response)
+
+    # purchase doesn't pass 3ds_homephonecountry when phone number is nil
+    @options[:billing_address][:phone] = nil
+    @options[:three_ds_2] = { optional: { '3ds_homephonecountry': 'US' } }
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_not_match(/c2=/, data)
+      assert_not_match(/3ds_homephonecountry=/, data)
     end.respond_with(successful_purchase_response)
   end
 

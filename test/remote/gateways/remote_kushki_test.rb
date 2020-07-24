@@ -67,7 +67,7 @@ class RemoteKushkiTest < Test::Unit::TestCase
     }
     response = @gateway.authorize(@amount, @credit_card, options)
     assert_failure response
-    assert_equal '220', response.responses.last.error_code
+    assert_equal 'K220', response.responses.last.error_code
     assert_equal 'Monto de la transacción es diferente al monto de la venta inicial', response.message
   end
 

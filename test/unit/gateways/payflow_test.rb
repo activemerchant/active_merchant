@@ -513,252 +513,252 @@ class PayflowTest < Test::Unit::TestCase
   private
 
   def pre_scrubbed
-    <<-EOS
-opening connection to pilot-payflowpro.paypal.com:443...
-opened
-starting SSL for pilot-payflowpro.paypal.com:443...
-SSL established
-<- "POST / HTTP/1.1\r\nContent-Type: text/xml\r\nContent-Length: 1017\r\nX-Vps-Client-Timeout: 60\r\nX-Vps-Vit-Integration-Product: ActiveMerchant\r\nX-Vps-Vit-Runtime-Version: 2.1.7\r\nX-Vps-Request-Id: 3b2f9831949b48b4b0b89a33a60f9b0c\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: pilot-payflowpro.paypal.com\r\n\r\n"
-<- "<?xml version=\"1.0\" encoding=\"UTF-8\"?><XMLPayRequest Timeout=\"60\" version=\"2.1\" xmlns=\"http://www.paypal.com/XMLPay\"><RequestData><Vendor>spreedlyIntegrations</Vendor><Partner>PayPal</Partner><Transactions><Transaction CustRef=\"codyexample\"><Verbosity>MEDIUM</Verbosity><Sale><PayData><Invoice><EMail>cody@example.com</EMail><BillTo><Name>Jim Smith</Name><EMail>cody@example.com</EMail><Phone>(555)555-5555</Phone><CustCode>codyexample</CustCode><Address><Street>456 My Street</Street><City>Ottawa</City><State>ON</State><Country>CA</Country><Zip>K1C2N6</Zip></Address></BillTo><TotalAmt Currency=\"USD\"/></Invoice><Tender><Card><CardType>MasterCard</CardType><CardNum>5105105105105100</CardNum><ExpDate>201909</ExpDate><NameOnCard>Longbob</NameOnCard><CVNum>123</CVNum><ExtData Name=\"LASTNAME\" Value=\"Longsen\"/></Card></Tender></PayData></Sale></Transaction></Transactions></RequestData><RequestAuth><UserPass><User>spreedlyIntegrations</User><Password>L9DjqEKjXCkU</Password></UserPass></RequestAuth></XMLPayRequest>"
--> "HTTP/1.1 200 OK\r\n"
--> "Connection: close\r\n"
--> "Server: VPS-3.033.00\r\n"
--> "X-VPS-Request-ID: 3b2f9831949b48b4b0b89a33a60f9b0c\r\n"
--> "Date: Thu, 01 Mar 2018 15:42:15 GMT\r\n"
--> "Content-type: text/xml\r\n"
--> "Content-length:    267\r\n"
--> "\r\n"
-reading 267 bytes...
--> "<XMLPayResponse  xmlns=\"http://www.paypal.com/XMLPay\"><ResponseData><Vendor></Vendor><Partner></Partner><TransactionResults><TransactionResult><Result>4</Result><Message>Invalid amount</Message></TransactionResult></TransactionResults></ResponseData></XMLPayResponse>"
-read 267 bytes
-Conn close
+    <<~EOS
+      opening connection to pilot-payflowpro.paypal.com:443...
+      opened
+      starting SSL for pilot-payflowpro.paypal.com:443...
+      SSL established
+      <- "POST / HTTP/1.1\r\nContent-Type: text/xml\r\nContent-Length: 1017\r\nX-Vps-Client-Timeout: 60\r\nX-Vps-Vit-Integration-Product: ActiveMerchant\r\nX-Vps-Vit-Runtime-Version: 2.1.7\r\nX-Vps-Request-Id: 3b2f9831949b48b4b0b89a33a60f9b0c\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: pilot-payflowpro.paypal.com\r\n\r\n"
+      <- "<?xml version=\"1.0\" encoding=\"UTF-8\"?><XMLPayRequest Timeout=\"60\" version=\"2.1\" xmlns=\"http://www.paypal.com/XMLPay\"><RequestData><Vendor>spreedlyIntegrations</Vendor><Partner>PayPal</Partner><Transactions><Transaction CustRef=\"codyexample\"><Verbosity>MEDIUM</Verbosity><Sale><PayData><Invoice><EMail>cody@example.com</EMail><BillTo><Name>Jim Smith</Name><EMail>cody@example.com</EMail><Phone>(555)555-5555</Phone><CustCode>codyexample</CustCode><Address><Street>456 My Street</Street><City>Ottawa</City><State>ON</State><Country>CA</Country><Zip>K1C2N6</Zip></Address></BillTo><TotalAmt Currency=\"USD\"/></Invoice><Tender><Card><CardType>MasterCard</CardType><CardNum>5105105105105100</CardNum><ExpDate>201909</ExpDate><NameOnCard>Longbob</NameOnCard><CVNum>123</CVNum><ExtData Name=\"LASTNAME\" Value=\"Longsen\"/></Card></Tender></PayData></Sale></Transaction></Transactions></RequestData><RequestAuth><UserPass><User>spreedlyIntegrations</User><Password>L9DjqEKjXCkU</Password></UserPass></RequestAuth></XMLPayRequest>"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Connection: close\r\n"
+      -> "Server: VPS-3.033.00\r\n"
+      -> "X-VPS-Request-ID: 3b2f9831949b48b4b0b89a33a60f9b0c\r\n"
+      -> "Date: Thu, 01 Mar 2018 15:42:15 GMT\r\n"
+      -> "Content-type: text/xml\r\n"
+      -> "Content-length:    267\r\n"
+      -> "\r\n"
+      reading 267 bytes...
+      -> "<XMLPayResponse  xmlns=\"http://www.paypal.com/XMLPay\"><ResponseData><Vendor></Vendor><Partner></Partner><TransactionResults><TransactionResult><Result>4</Result><Message>Invalid amount</Message></TransactionResult></TransactionResults></ResponseData></XMLPayResponse>"
+      read 267 bytes
+      Conn close
     EOS
   end
 
   def post_scrubbed
-    <<-EOS
-opening connection to pilot-payflowpro.paypal.com:443...
-opened
-starting SSL for pilot-payflowpro.paypal.com:443...
-SSL established
-<- "POST / HTTP/1.1\r\nContent-Type: text/xml\r\nContent-Length: 1017\r\nX-Vps-Client-Timeout: 60\r\nX-Vps-Vit-Integration-Product: ActiveMerchant\r\nX-Vps-Vit-Runtime-Version: 2.1.7\r\nX-Vps-Request-Id: 3b2f9831949b48b4b0b89a33a60f9b0c\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: pilot-payflowpro.paypal.com\r\n\r\n"
-<- "<?xml version=\"1.0\" encoding=\"UTF-8\"?><XMLPayRequest Timeout=\"60\" version=\"2.1\" xmlns=\"http://www.paypal.com/XMLPay\"><RequestData><Vendor>spreedlyIntegrations</Vendor><Partner>PayPal</Partner><Transactions><Transaction CustRef=\"codyexample\"><Verbosity>MEDIUM</Verbosity><Sale><PayData><Invoice><EMail>cody@example.com</EMail><BillTo><Name>Jim Smith</Name><EMail>cody@example.com</EMail><Phone>(555)555-5555</Phone><CustCode>codyexample</CustCode><Address><Street>456 My Street</Street><City>Ottawa</City><State>ON</State><Country>CA</Country><Zip>K1C2N6</Zip></Address></BillTo><TotalAmt Currency=\"USD\"/></Invoice><Tender><Card><CardType>MasterCard</CardType><CardNum>[FILTERED]</CardNum><ExpDate>201909</ExpDate><NameOnCard>Longbob</NameOnCard><CVNum>[FILTERED]</CVNum><ExtData Name=\"LASTNAME\" Value=\"Longsen\"/></Card></Tender></PayData></Sale></Transaction></Transactions></RequestData><RequestAuth><UserPass><User>spreedlyIntegrations</User><Password>[FILTERED]</Password></UserPass></RequestAuth></XMLPayRequest>"
--> "HTTP/1.1 200 OK\r\n"
--> "Connection: close\r\n"
--> "Server: VPS-3.033.00\r\n"
--> "X-VPS-Request-ID: 3b2f9831949b48b4b0b89a33a60f9b0c\r\n"
--> "Date: Thu, 01 Mar 2018 15:42:15 GMT\r\n"
--> "Content-type: text/xml\r\n"
--> "Content-length:    267\r\n"
--> "\r\n"
-reading 267 bytes...
--> "<XMLPayResponse  xmlns=\"http://www.paypal.com/XMLPay\"><ResponseData><Vendor></Vendor><Partner></Partner><TransactionResults><TransactionResult><Result>4</Result><Message>Invalid amount</Message></TransactionResult></TransactionResults></ResponseData></XMLPayResponse>"
-read 267 bytes
-Conn close
+    <<~EOS
+      opening connection to pilot-payflowpro.paypal.com:443...
+      opened
+      starting SSL for pilot-payflowpro.paypal.com:443...
+      SSL established
+      <- "POST / HTTP/1.1\r\nContent-Type: text/xml\r\nContent-Length: 1017\r\nX-Vps-Client-Timeout: 60\r\nX-Vps-Vit-Integration-Product: ActiveMerchant\r\nX-Vps-Vit-Runtime-Version: 2.1.7\r\nX-Vps-Request-Id: 3b2f9831949b48b4b0b89a33a60f9b0c\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: pilot-payflowpro.paypal.com\r\n\r\n"
+      <- "<?xml version=\"1.0\" encoding=\"UTF-8\"?><XMLPayRequest Timeout=\"60\" version=\"2.1\" xmlns=\"http://www.paypal.com/XMLPay\"><RequestData><Vendor>spreedlyIntegrations</Vendor><Partner>PayPal</Partner><Transactions><Transaction CustRef=\"codyexample\"><Verbosity>MEDIUM</Verbosity><Sale><PayData><Invoice><EMail>cody@example.com</EMail><BillTo><Name>Jim Smith</Name><EMail>cody@example.com</EMail><Phone>(555)555-5555</Phone><CustCode>codyexample</CustCode><Address><Street>456 My Street</Street><City>Ottawa</City><State>ON</State><Country>CA</Country><Zip>K1C2N6</Zip></Address></BillTo><TotalAmt Currency=\"USD\"/></Invoice><Tender><Card><CardType>MasterCard</CardType><CardNum>[FILTERED]</CardNum><ExpDate>201909</ExpDate><NameOnCard>Longbob</NameOnCard><CVNum>[FILTERED]</CVNum><ExtData Name=\"LASTNAME\" Value=\"Longsen\"/></Card></Tender></PayData></Sale></Transaction></Transactions></RequestData><RequestAuth><UserPass><User>spreedlyIntegrations</User><Password>[FILTERED]</Password></UserPass></RequestAuth></XMLPayRequest>"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Connection: close\r\n"
+      -> "Server: VPS-3.033.00\r\n"
+      -> "X-VPS-Request-ID: 3b2f9831949b48b4b0b89a33a60f9b0c\r\n"
+      -> "Date: Thu, 01 Mar 2018 15:42:15 GMT\r\n"
+      -> "Content-type: text/xml\r\n"
+      -> "Content-length:    267\r\n"
+      -> "\r\n"
+      reading 267 bytes...
+      -> "<XMLPayResponse  xmlns=\"http://www.paypal.com/XMLPay\"><ResponseData><Vendor></Vendor><Partner></Partner><TransactionResults><TransactionResult><Result>4</Result><Message>Invalid amount</Message></TransactionResult></TransactionResults></ResponseData></XMLPayResponse>"
+      read 267 bytes
+      Conn close
     EOS
   end
 
   def pre_scrubbed_check
-    <<-EOS
-opening connection to pilot-payflowpro.paypal.com:443...
-opened
-starting SSL for pilot-payflowpro.paypal.com:443...
-SSL established
-<- "POST / HTTP/1.1\r\nContent-Type: text/xml\r\nContent-Length: 658\r\nX-Vps-Client-Timeout: 60\r\nX-Vps-Vit-Integration-Product: ActiveMerchant\r\nX-Vps-Vit-Runtime-Version: 2.1.7\r\nX-Vps-Request-Id: 863021e6890a0660238ef22d0a21c5f2\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: pilot-payflowpro.paypal.com\r\n\r\n"
-<- "<?xml version=\"1.0\" encoding=\"UTF-8\"?><XMLPayRequest Timeout=\"60\" version=\"2.1\" xmlns=\"http://www.paypal.com/XMLPay\"><RequestData><Vendor>spreedlyIntegrations</Vendor><Partner>PayPal</Partner><Transactions><Transaction CustRef=\"codyexample\"><Verbosity>MEDIUM</Verbosity><Sale><PayData><Invoice><BillTo><Name>Jim Smith</Name></BillTo><TotalAmt Currency=\"USD\"/></Invoice><Tender><ACH><AcctType>C</AcctType><AcctNum>1234567801</AcctNum><ABA>111111118</ABA></ACH></Tender></PayData></Sale></Transaction></Transactions></RequestData><RequestAuth><UserPass><User>spreedlyIntegrations</User><Password>L9DjqEKjXCkU</Password></UserPass></RequestAuth></XMLPayRequest>"
--> "HTTP/1.1 200 OK\r\n"
--> "Connection: close\r\n"
--> "Server: VPS-3.033.00\r\n"
--> "X-VPS-Request-ID: 863021e6890a0660238ef22d0a21c5f2\r\n"
--> "Date: Thu, 01 Mar 2018 15:45:59 GMT\r\n"
--> "Content-type: text/xml\r\n"
--> "Content-length:    267\r\n"
--> "\r\n"
-reading 267 bytes...
--> "<XMLPayResponse  xmlns=\"http://www.paypal.com/XMLPay\"><ResponseData><Vendor></Vendor><Partner></Partner><TransactionResults><TransactionResult><Result>4</Result><Message>Invalid amount</Message></TransactionResult></TransactionResults></ResponseData></XMLPayResponse>"
-read 267 bytes
-Conn close
+    <<~EOS
+      opening connection to pilot-payflowpro.paypal.com:443...
+      opened
+      starting SSL for pilot-payflowpro.paypal.com:443...
+      SSL established
+      <- "POST / HTTP/1.1\r\nContent-Type: text/xml\r\nContent-Length: 658\r\nX-Vps-Client-Timeout: 60\r\nX-Vps-Vit-Integration-Product: ActiveMerchant\r\nX-Vps-Vit-Runtime-Version: 2.1.7\r\nX-Vps-Request-Id: 863021e6890a0660238ef22d0a21c5f2\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: pilot-payflowpro.paypal.com\r\n\r\n"
+      <- "<?xml version=\"1.0\" encoding=\"UTF-8\"?><XMLPayRequest Timeout=\"60\" version=\"2.1\" xmlns=\"http://www.paypal.com/XMLPay\"><RequestData><Vendor>spreedlyIntegrations</Vendor><Partner>PayPal</Partner><Transactions><Transaction CustRef=\"codyexample\"><Verbosity>MEDIUM</Verbosity><Sale><PayData><Invoice><BillTo><Name>Jim Smith</Name></BillTo><TotalAmt Currency=\"USD\"/></Invoice><Tender><ACH><AcctType>C</AcctType><AcctNum>1234567801</AcctNum><ABA>111111118</ABA></ACH></Tender></PayData></Sale></Transaction></Transactions></RequestData><RequestAuth><UserPass><User>spreedlyIntegrations</User><Password>L9DjqEKjXCkU</Password></UserPass></RequestAuth></XMLPayRequest>"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Connection: close\r\n"
+      -> "Server: VPS-3.033.00\r\n"
+      -> "X-VPS-Request-ID: 863021e6890a0660238ef22d0a21c5f2\r\n"
+      -> "Date: Thu, 01 Mar 2018 15:45:59 GMT\r\n"
+      -> "Content-type: text/xml\r\n"
+      -> "Content-length:    267\r\n"
+      -> "\r\n"
+      reading 267 bytes...
+      -> "<XMLPayResponse  xmlns=\"http://www.paypal.com/XMLPay\"><ResponseData><Vendor></Vendor><Partner></Partner><TransactionResults><TransactionResult><Result>4</Result><Message>Invalid amount</Message></TransactionResult></TransactionResults></ResponseData></XMLPayResponse>"
+      read 267 bytes
+      Conn close
     EOS
   end
 
   def post_scrubbed_check
-    <<-EOS
-opening connection to pilot-payflowpro.paypal.com:443...
-opened
-starting SSL for pilot-payflowpro.paypal.com:443...
-SSL established
-<- "POST / HTTP/1.1\r\nContent-Type: text/xml\r\nContent-Length: 658\r\nX-Vps-Client-Timeout: 60\r\nX-Vps-Vit-Integration-Product: ActiveMerchant\r\nX-Vps-Vit-Runtime-Version: 2.1.7\r\nX-Vps-Request-Id: 863021e6890a0660238ef22d0a21c5f2\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: pilot-payflowpro.paypal.com\r\n\r\n"
-<- "<?xml version=\"1.0\" encoding=\"UTF-8\"?><XMLPayRequest Timeout=\"60\" version=\"2.1\" xmlns=\"http://www.paypal.com/XMLPay\"><RequestData><Vendor>spreedlyIntegrations</Vendor><Partner>PayPal</Partner><Transactions><Transaction CustRef=\"codyexample\"><Verbosity>MEDIUM</Verbosity><Sale><PayData><Invoice><BillTo><Name>Jim Smith</Name></BillTo><TotalAmt Currency=\"USD\"/></Invoice><Tender><ACH><AcctType>C</AcctType><AcctNum>[FILTERED]</AcctNum><ABA>111111118</ABA></ACH></Tender></PayData></Sale></Transaction></Transactions></RequestData><RequestAuth><UserPass><User>spreedlyIntegrations</User><Password>[FILTERED]</Password></UserPass></RequestAuth></XMLPayRequest>"
--> "HTTP/1.1 200 OK\r\n"
--> "Connection: close\r\n"
--> "Server: VPS-3.033.00\r\n"
--> "X-VPS-Request-ID: 863021e6890a0660238ef22d0a21c5f2\r\n"
--> "Date: Thu, 01 Mar 2018 15:45:59 GMT\r\n"
--> "Content-type: text/xml\r\n"
--> "Content-length:    267\r\n"
--> "\r\n"
-reading 267 bytes...
--> "<XMLPayResponse  xmlns=\"http://www.paypal.com/XMLPay\"><ResponseData><Vendor></Vendor><Partner></Partner><TransactionResults><TransactionResult><Result>4</Result><Message>Invalid amount</Message></TransactionResult></TransactionResults></ResponseData></XMLPayResponse>"
-read 267 bytes
-Conn close
+    <<~EOS
+      opening connection to pilot-payflowpro.paypal.com:443...
+      opened
+      starting SSL for pilot-payflowpro.paypal.com:443...
+      SSL established
+      <- "POST / HTTP/1.1\r\nContent-Type: text/xml\r\nContent-Length: 658\r\nX-Vps-Client-Timeout: 60\r\nX-Vps-Vit-Integration-Product: ActiveMerchant\r\nX-Vps-Vit-Runtime-Version: 2.1.7\r\nX-Vps-Request-Id: 863021e6890a0660238ef22d0a21c5f2\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: pilot-payflowpro.paypal.com\r\n\r\n"
+      <- "<?xml version=\"1.0\" encoding=\"UTF-8\"?><XMLPayRequest Timeout=\"60\" version=\"2.1\" xmlns=\"http://www.paypal.com/XMLPay\"><RequestData><Vendor>spreedlyIntegrations</Vendor><Partner>PayPal</Partner><Transactions><Transaction CustRef=\"codyexample\"><Verbosity>MEDIUM</Verbosity><Sale><PayData><Invoice><BillTo><Name>Jim Smith</Name></BillTo><TotalAmt Currency=\"USD\"/></Invoice><Tender><ACH><AcctType>C</AcctType><AcctNum>[FILTERED]</AcctNum><ABA>111111118</ABA></ACH></Tender></PayData></Sale></Transaction></Transactions></RequestData><RequestAuth><UserPass><User>spreedlyIntegrations</User><Password>[FILTERED]</Password></UserPass></RequestAuth></XMLPayRequest>"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Connection: close\r\n"
+      -> "Server: VPS-3.033.00\r\n"
+      -> "X-VPS-Request-ID: 863021e6890a0660238ef22d0a21c5f2\r\n"
+      -> "Date: Thu, 01 Mar 2018 15:45:59 GMT\r\n"
+      -> "Content-type: text/xml\r\n"
+      -> "Content-length:    267\r\n"
+      -> "\r\n"
+      reading 267 bytes...
+      -> "<XMLPayResponse  xmlns=\"http://www.paypal.com/XMLPay\"><ResponseData><Vendor></Vendor><Partner></Partner><TransactionResults><TransactionResult><Result>4</Result><Message>Invalid amount</Message></TransactionResult></TransactionResults></ResponseData></XMLPayResponse>"
+      read 267 bytes
+      Conn close
     EOS
   end
 
   def successful_recurring_response
-    <<-XML
-<ResponseData>
-  <Result>0</Result>
-  <Message>Approved</Message>
-  <Partner>paypal</Partner>
-  <RPRef>R7960E739F80</RPRef>
-  <Vendor>ActiveMerchant</Vendor>
-  <ProfileId>RT0000000009</ProfileId>
-</ResponseData>
+    <<~XML
+      <ResponseData>
+        <Result>0</Result>
+        <Message>Approved</Message>
+        <Partner>paypal</Partner>
+        <RPRef>R7960E739F80</RPRef>
+        <Vendor>ActiveMerchant</Vendor>
+        <ProfileId>RT0000000009</ProfileId>
+      </ResponseData>
     XML
   end
 
   def start_date_error_recurring_response
-    <<-XML
-  <ResponseData>
-    <Result>0</Result>
-    <Message>Field format error: START or NEXTPAYMENTDATE older than last payment date</Message>
-    <Partner>paypal</Partner>
-    <RPRef>R7960E739F80</RPRef>
-    <Vendor>ActiveMerchant</Vendor>
-    <ProfileId>RT0000000009</ProfileId>
-  </ResponseData>
+    <<~XML
+      <ResponseData>
+        <Result>0</Result>
+        <Message>Field format error: START or NEXTPAYMENTDATE older than last payment date</Message>
+        <Partner>paypal</Partner>
+        <RPRef>R7960E739F80</RPRef>
+        <Vendor>ActiveMerchant</Vendor>
+        <ProfileId>RT0000000009</ProfileId>
+      </ResponseData>
     XML
   end
 
   def start_date_missing_recurring_response
-    <<-XML
-  <ResponseData>
-    <Result>0</Result>
-    <Message>Field format error: START field missing</Message>
-    <Partner>paypal</Partner>
-    <RPRef>R7960E739F80</RPRef>
-    <Vendor>ActiveMerchant</Vendor>
-    <ProfileId>RT0000000009</ProfileId>
-  </ResponseData>
+    <<~XML
+      <ResponseData>
+        <Result>0</Result>
+        <Message>Field format error: START field missing</Message>
+        <Partner>paypal</Partner>
+        <RPRef>R7960E739F80</RPRef>
+        <Vendor>ActiveMerchant</Vendor>
+        <ProfileId>RT0000000009</ProfileId>
+      </ResponseData>
     XML
   end
 
   def successful_payment_history_recurring_response
-    <<-XML
-<ResponseData>
-  <Result>0</Result>
-  <Partner>paypal</Partner>
-  <RPRef>R7960E739F80</RPRef>
-  <Vendor>ActiveMerchant</Vendor>
-  <ProfileId>RT0000000009</ProfileId>
-  <RPPaymentResult>
-    <PaymentNum>1</PaymentNum>
-    <PNRef>V18A0D3048AF</PNRef>
-    <TransTime>12-Jan-08 04:30 AM</TransTime>
-    <Result>0</Result>
-    <Tender>C</Tender>
-    <Amt Currency="7.25"></Amt>
-    <TransState>6</TransState>
-  </RPPaymentResult>
-</ResponseData>
+    <<~XML
+      <ResponseData>
+        <Result>0</Result>
+        <Partner>paypal</Partner>
+        <RPRef>R7960E739F80</RPRef>
+        <Vendor>ActiveMerchant</Vendor>
+        <ProfileId>RT0000000009</ProfileId>
+        <RPPaymentResult>
+          <PaymentNum>1</PaymentNum>
+          <PNRef>V18A0D3048AF</PNRef>
+          <TransTime>12-Jan-08 04:30 AM</TransTime>
+          <Result>0</Result>
+          <Tender>C</Tender>
+          <Amt Currency="7.25"></Amt>
+          <TransState>6</TransState>
+        </RPPaymentResult>
+      </ResponseData>
     XML
   end
 
   def successful_authorization_response
-    <<-XML
-<ResponseData>
-    <Result>0</Result>
-    <Message>Approved</Message>
-    <Partner>verisign</Partner>
-    <HostCode>000</HostCode>
-    <ResponseText>AP</ResponseText>
-    <PnRef>VUJN1A6E11D9</PnRef>
-    <IavsResult>N</IavsResult>
-    <ZipMatch>Match</ZipMatch>
-    <AuthCode>094016</AuthCode>
-    <Vendor>ActiveMerchant</Vendor>
-    <AvsResult>Y</AvsResult>
-    <StreetMatch>Match</StreetMatch>
-    <CvResult>Match</CvResult>
-</ResponseData>
+    <<~XML
+      <ResponseData>
+          <Result>0</Result>
+          <Message>Approved</Message>
+          <Partner>verisign</Partner>
+          <HostCode>000</HostCode>
+          <ResponseText>AP</ResponseText>
+          <PnRef>VUJN1A6E11D9</PnRef>
+          <IavsResult>N</IavsResult>
+          <ZipMatch>Match</ZipMatch>
+          <AuthCode>094016</AuthCode>
+          <Vendor>ActiveMerchant</Vendor>
+          <AvsResult>Y</AvsResult>
+          <StreetMatch>Match</StreetMatch>
+          <CvResult>Match</CvResult>
+      </ResponseData>
     XML
   end
 
   def successful_l3_response
-    <<-XML
-<ResponseData>
-  <Vendor>spreedlyIntegrations</Vendor>
-  <Partner>paypal</Partner>
-  <TransactionResults>
-    <TransactionResult>
-      <Result>0</Result>
-      <ProcessorResult>
-        <AVSResult>Z</AVSResult>
-        <CVResult>M</CVResult>
-        <HostCode>A</HostCode>
-      </ProcessorResult>
-      <FraudPreprocessResult>
-        <Message>No Rules Triggered</Message>
-      </FraudPreprocessResult>
-      <FraudPostprocessResult>
-        <Message>No Rules Triggered</Message>
-      </FraudPostprocessResult>
-      <IAVSResult>N</IAVSResult>
-      <AVSResult>
-        <StreetMatch>No Match</StreetMatch>
-        <ZipMatch>Match</ZipMatch>
-      </AVSResult>
-      <CVResult>Match</CVResult>
-      <Message>Approved</Message>
-      <PNRef>A71AAC3B60A1</PNRef>
-      <AuthCode>240PNI</AuthCode>
-    </TransactionResult>
-  </TransactionResults>
-</ResponseData>
+    <<~XML
+      <ResponseData>
+        <Vendor>spreedlyIntegrations</Vendor>
+        <Partner>paypal</Partner>
+        <TransactionResults>
+          <TransactionResult>
+            <Result>0</Result>
+            <ProcessorResult>
+              <AVSResult>Z</AVSResult>
+              <CVResult>M</CVResult>
+              <HostCode>A</HostCode>
+            </ProcessorResult>
+            <FraudPreprocessResult>
+              <Message>No Rules Triggered</Message>
+            </FraudPreprocessResult>
+            <FraudPostprocessResult>
+              <Message>No Rules Triggered</Message>
+            </FraudPostprocessResult>
+            <IAVSResult>N</IAVSResult>
+            <AVSResult>
+              <StreetMatch>No Match</StreetMatch>
+              <ZipMatch>Match</ZipMatch>
+            </AVSResult>
+            <CVResult>Match</CVResult>
+            <Message>Approved</Message>
+            <PNRef>A71AAC3B60A1</PNRef>
+            <AuthCode>240PNI</AuthCode>
+          </TransactionResult>
+        </TransactionResults>
+      </ResponseData>
     XML
   end
 
   def successful_l2_response
-    <<-XML
-<ResponseData>
-  <Vendor>spreedlyIntegrations</Vendor>
-  <Partner>paypal</Partner>
-  <TransactionResults>
-    <TransactionResult>
-      <Result>0</Result>
-      <ProcessorResult>
-        <HostCode>A</HostCode>
-      </ProcessorResult>
-      <Message>Approved</Message>
-      <PNRef>A1ADADCE9B12</PNRef>
-    </TransactionResult>
-  </TransactionResults>
-</ResponseData>
+    <<~XML
+      <ResponseData>
+        <Vendor>spreedlyIntegrations</Vendor>
+        <Partner>paypal</Partner>
+        <TransactionResults>
+          <TransactionResult>
+            <Result>0</Result>
+            <ProcessorResult>
+              <HostCode>A</HostCode>
+            </ProcessorResult>
+            <Message>Approved</Message>
+            <PNRef>A1ADADCE9B12</PNRef>
+          </TransactionResult>
+        </TransactionResults>
+      </ResponseData>
     XML
   end
 
   def failed_authorization_response
-    <<-XML
-<ResponseData>
-    <Result>12</Result>
-    <Message>Declined</Message>
-    <Partner>verisign</Partner>
-    <HostCode>000</HostCode>
-    <ResponseText>AP</ResponseText>
-    <PnRef>VUJN1A6E11D9</PnRef>
-    <IavsResult>N</IavsResult>
-    <ZipMatch>Match</ZipMatch>
-    <AuthCode>094016</AuthCode>
-    <Vendor>ActiveMerchant</Vendor>
-    <AvsResult>Y</AvsResult>
-    <StreetMatch>Match</StreetMatch>
-    <CvResult>Match</CvResult>
-</ResponseData>
+    <<~XML
+      <ResponseData>
+          <Result>12</Result>
+          <Message>Declined</Message>
+          <Partner>verisign</Partner>
+          <HostCode>000</HostCode>
+          <ResponseText>AP</ResponseText>
+          <PnRef>VUJN1A6E11D9</PnRef>
+          <IavsResult>N</IavsResult>
+          <ZipMatch>Match</ZipMatch>
+          <AuthCode>094016</AuthCode>
+          <Vendor>ActiveMerchant</Vendor>
+          <AvsResult>Y</AvsResult>
+          <StreetMatch>Match</StreetMatch>
+          <CvResult>Match</CvResult>
+      </ResponseData>
     XML
   end
 
   def successful_purchase_with_fraud_review_response
-    <<-XML
+    <<~XML
       <XMLPayResponse  xmlns="http://www.paypal.com/XMLPay">
         <ResponseData>
           <Vendor>spreedly</Vendor>
@@ -798,82 +798,82 @@ Conn close
   end
 
   def successful_duplicate_response
-    <<-XML
-<?xml version="1.0"?>
-<XMLPayResponse xmlns="http://www.verisign.com/XMLPay">
-	<ResponseData>
-		<Vendor>ActiveMerchant</Vendor>
-		<Partner>paypal</Partner>
-		<TransactionResults>
-			<TransactionResult Duplicate="true">
-				<Result>0</Result>
-				<ProcessorResult>
-					<AVSResult>A</AVSResult>
-					<CVResult>M</CVResult>
-					<HostCode>A</HostCode>
-				</ProcessorResult>
-				<IAVSResult>N</IAVSResult>
-				<AVSResult>
-					<StreetMatch>Match</StreetMatch>
-					<ZipMatch>No Match</ZipMatch>
-				</AVSResult>
-				<CVResult>Match</CVResult>
-				<Message>Approved</Message>
-				<PNRef>V18A0CBB04CF</PNRef>
-				<AuthCode>692PNI</AuthCode>
-				<ExtData Name="DATE_TO_SETTLE" Value="2007-11-28 10:53:50"/>
-			</TransactionResult>
-		</TransactionResults>
-	</ResponseData>
-</XMLPayResponse>
+    <<~XML
+      <?xml version="1.0"?>
+      <XMLPayResponse xmlns="http://www.verisign.com/XMLPay">
+      	<ResponseData>
+      		<Vendor>ActiveMerchant</Vendor>
+      		<Partner>paypal</Partner>
+      		<TransactionResults>
+      			<TransactionResult Duplicate="true">
+      				<Result>0</Result>
+      				<ProcessorResult>
+      					<AVSResult>A</AVSResult>
+      					<CVResult>M</CVResult>
+      					<HostCode>A</HostCode>
+      				</ProcessorResult>
+      				<IAVSResult>N</IAVSResult>
+      				<AVSResult>
+      					<StreetMatch>Match</StreetMatch>
+      					<ZipMatch>No Match</ZipMatch>
+      				</AVSResult>
+      				<CVResult>Match</CVResult>
+      				<Message>Approved</Message>
+      				<PNRef>V18A0CBB04CF</PNRef>
+      				<AuthCode>692PNI</AuthCode>
+      				<ExtData Name="DATE_TO_SETTLE" Value="2007-11-28 10:53:50"/>
+      			</TransactionResult>
+      		</TransactionResults>
+      	</ResponseData>
+      </XMLPayResponse>
     XML
   end
 
   def verbose_transaction_response
-    <<-XML
-<?xml version="1.0" encoding="UTF-8"?>
-<XMLPayResponse  xmlns="http://www.paypal.com/XMLPay">
-  <ResponseData>
-    <Vendor>ActiveMerchant</Vendor>
-    <Partner>paypal</Partner>
-    <TransactionResults>
-      <TransactionResult>
-        <Result>0</Result>
-        <ProcessorResult>
-          <AVSResult>U</AVSResult>
-          <CVResult>M</CVResult>
-          <HostCode>A</HostCode>
-        </ProcessorResult>
-        <FraudPreprocessResult>
-          <Message>No Rules Triggered</Message>
-        </FraudPreprocessResult>
-        <FraudPostprocessResult>
-          <Message>No Rules Triggered</Message>
-        </FraudPostprocessResult>
-        <IAVSResult>X</IAVSResult>
-        <AVSResult>
-          <StreetMatch>Service Not Available</StreetMatch>
-          <ZipMatch>Service Not Available</ZipMatch>
-        </AVSResult>
-        <CVResult>Match</CVResult>
-        <Message>Approved</Message>
-        <PNRef>A70A6C93C4C8</PNRef>
-        <AuthCode>242PNI</AuthCode>
-        <Amount>1.00</Amount>
-        <VisaCardLevel>12</VisaCardLevel>
-        <TransactionTime>2014-06-25 09:33:41</TransactionTime>
-        <Account>4242</Account>
-        <ExpirationDate>0714</ExpirationDate>
-        <CardType>0</CardType>
-        <PayPalResult>
-          <FeeAmount>0</FeeAmount>
-          <Name>Longbob</Name>
-          <Lastname>Longsen</Lastname>
-        </PayPalResult>
-      </TransactionResult>
-    </TransactionResults>
-  </ResponseData>
-</XMLPayResponse>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <XMLPayResponse  xmlns="http://www.paypal.com/XMLPay">
+        <ResponseData>
+          <Vendor>ActiveMerchant</Vendor>
+          <Partner>paypal</Partner>
+          <TransactionResults>
+            <TransactionResult>
+              <Result>0</Result>
+              <ProcessorResult>
+                <AVSResult>U</AVSResult>
+                <CVResult>M</CVResult>
+                <HostCode>A</HostCode>
+              </ProcessorResult>
+              <FraudPreprocessResult>
+                <Message>No Rules Triggered</Message>
+              </FraudPreprocessResult>
+              <FraudPostprocessResult>
+                <Message>No Rules Triggered</Message>
+              </FraudPostprocessResult>
+              <IAVSResult>X</IAVSResult>
+              <AVSResult>
+                <StreetMatch>Service Not Available</StreetMatch>
+                <ZipMatch>Service Not Available</ZipMatch>
+              </AVSResult>
+              <CVResult>Match</CVResult>
+              <Message>Approved</Message>
+              <PNRef>A70A6C93C4C8</PNRef>
+              <AuthCode>242PNI</AuthCode>
+              <Amount>1.00</Amount>
+              <VisaCardLevel>12</VisaCardLevel>
+              <TransactionTime>2014-06-25 09:33:41</TransactionTime>
+              <Account>4242</Account>
+              <ExpirationDate>0714</ExpirationDate>
+              <CardType>0</CardType>
+              <PayPalResult>
+                <FeeAmount>0</FeeAmount>
+                <Name>Longbob</Name>
+                <Lastname>Longsen</Lastname>
+              </PayPalResult>
+            </TransactionResult>
+          </TransactionResults>
+        </ResponseData>
+      </XMLPayResponse>
     XML
   end
 

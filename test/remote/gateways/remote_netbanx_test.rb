@@ -29,6 +29,8 @@ class RemoteNetbanxTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'OK', response.message
     assert_equal response.authorization, response.params['id']
+    assert_equal 'MATCH', response.params['cvvVerification']
+    assert_equal 'MATCH', response.params['avsResponse']
   end
 
   def test_successful_purchase_with_more_options
@@ -55,6 +57,15 @@ class RemoteNetbanxTest < Test::Unit::TestCase
     response = @gateway.purchase(@declined_amount, @credit_card, @options)
     assert_failure response
     assert_equal 'The card has been declined due to insufficient funds.', response.message
+  end
+
+  def test_failed_verify_before_purchase
+    options = {
+      verification_value: ''
+    }
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_failure response
+    assert_equal 'The zip/postal code must be provided for an AVS check request.', response.message
   end
 
   def test_successful_authorize
@@ -149,7 +160,9 @@ class RemoteNetbanxTest < Test::Unit::TestCase
   #   assert_equal 'OK', refund.message
   # end
 
-  def test_failed_refund
+  # Changed test_failed_refund to test_cancelled_refund
+  # Because We added the checking status. If the transactions that are pending, API call needs to be Cancellation
+  def test_cancelled_refund
     # Read comment in `test_successful_refund` method.
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
@@ -157,11 +170,11 @@ class RemoteNetbanxTest < Test::Unit::TestCase
     assert capture = @gateway.capture(@amount, auth.authorization, @options)
     assert_success capture
 
-    # the following shall fail if you run it immediately after the capture
-    # as noted in the comment from `test_successful_refund`
-    assert refund = @gateway.refund(@amount, capture.authorization)
-    assert_failure refund
-    assert_equal 'The settlement you are attempting to refund has not been batched yet. There are no settled funds available to refund.', refund.message
+    # The settlement you are attempting to refund has not been batched yet. There are no settled funds available to refund.
+    # So the following refund shall be cancelled if you run it immediately after the capture
+    assert cancelled_response = @gateway.refund(@amount, capture.authorization)
+    assert_success cancelled_response
+    assert_equal 'CANCELLED', cancelled_response.params['status']
   end
 
   def test_successful_void
@@ -228,5 +241,28 @@ class RemoteNetbanxTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, store.authorization.split('|').last)
     assert_success response
     assert_equal 'OK', response.message
+  end
+
+  def test_successful_verify
+    verify = @gateway.verify(@credit_card, @options)
+    assert_success verify
+  end
+
+  def test_failed_verify
+    options = {
+      verification_value: ''
+    }
+    verify = @gateway.verify(@credit_card, options)
+    assert_failure verify
+    assert_equal 'The zip/postal code must be provided for an AVS check request.', verify.message
+  end
+
+  def test_successful_cancel_settlement
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    authorization = response.authorization
+
+    assert cancelled_response = @gateway.refund(@amount, authorization)
+    assert_success cancelled_response
+    assert_equal 'CANCELLED', cancelled_response.params['status']
   end
 end

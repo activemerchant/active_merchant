@@ -214,58 +214,58 @@ class FatZebraTest < Test::Unit::TestCase
   private
 
   def pre_scrubbed
-    <<-'PRE_SCRUBBED'
-opening connection to gateway.sandbox.fatzebra.com.au:443...
-opened
-starting SSL for gateway.sandbox.fatzebra.com.au:443...
-SSL established
-<- "POST /v1.0/credit_cards HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic VEVTVDpURVNU\r\nUser-Agent: Fat Zebra v1.0/ActiveMerchant 1.56.0\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: gateway.sandbox.fatzebra.com.au\r\nContent-Length: 93\r\n\r\n"
-<- "{\"card_number\":\"5123456789012346\",\"card_expiry\":\"5/2017\",\"cvv\":\"111\",\"card_holder\":\"Foo Bar\"}"
--> "HTTP/1.1 200 OK\r\n"
--> "Content-Type: application/json; charset=utf-8\r\n"
--> "Connection: close\r\n"
--> "Status: 200 OK\r\n"
--> "Cache-control: no-store\r\n"
--> "Pragma: no-cache\r\n"
--> "X-Request-Id: 3BA78272_F214_AC10001D_01BB_566A58EC_222F1D_49F4\r\n"
--> "X-Runtime: 0.142463\r\n"
--> "Date: Fri, 11 Dec 2015 05:02:36 GMT\r\n"
--> "X-Rack-Cache: invalidate, pass\r\n"
--> "X-Sandbox: true\r\n"
--> "X-Backend-Server: app-3\r\n"
--> "\r\n"
-reading all...
--> "{\"successful\":true,\"response\":{\"token\":\"nkk9rhwu\",\"card_holder\":\"Foo Bar\",\"card_number\":\"512345XXXXXX2346\",\"card_expiry\":\"2017-05-31T23:59:59+10:00\",\"authorized\":true,\"transaction_count\":0},\"errors\":[],\"test\":true}"
-read 214 bytes
-Conn close
+    <<~'PRE_SCRUBBED'
+      opening connection to gateway.sandbox.fatzebra.com.au:443...
+      opened
+      starting SSL for gateway.sandbox.fatzebra.com.au:443...
+      SSL established
+      <- "POST /v1.0/credit_cards HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic VEVTVDpURVNU\r\nUser-Agent: Fat Zebra v1.0/ActiveMerchant 1.56.0\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: gateway.sandbox.fatzebra.com.au\r\nContent-Length: 93\r\n\r\n"
+      <- "{\"card_number\":\"5123456789012346\",\"card_expiry\":\"5/2017\",\"cvv\":\"111\",\"card_holder\":\"Foo Bar\"}"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Content-Type: application/json; charset=utf-8\r\n"
+      -> "Connection: close\r\n"
+      -> "Status: 200 OK\r\n"
+      -> "Cache-control: no-store\r\n"
+      -> "Pragma: no-cache\r\n"
+      -> "X-Request-Id: 3BA78272_F214_AC10001D_01BB_566A58EC_222F1D_49F4\r\n"
+      -> "X-Runtime: 0.142463\r\n"
+      -> "Date: Fri, 11 Dec 2015 05:02:36 GMT\r\n"
+      -> "X-Rack-Cache: invalidate, pass\r\n"
+      -> "X-Sandbox: true\r\n"
+      -> "X-Backend-Server: app-3\r\n"
+      -> "\r\n"
+      reading all...
+      -> "{\"successful\":true,\"response\":{\"token\":\"nkk9rhwu\",\"card_holder\":\"Foo Bar\",\"card_number\":\"512345XXXXXX2346\",\"card_expiry\":\"2017-05-31T23:59:59+10:00\",\"authorized\":true,\"transaction_count\":0},\"errors\":[],\"test\":true}"
+      read 214 bytes
+      Conn close
     PRE_SCRUBBED
   end
 
   def post_scrubbed
-    <<-'POST_SCRUBBED'
-opening connection to gateway.sandbox.fatzebra.com.au:443...
-opened
-starting SSL for gateway.sandbox.fatzebra.com.au:443...
-SSL established
-<- "POST /v1.0/credit_cards HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic [FILTERED]\r\nUser-Agent: Fat Zebra v1.0/ActiveMerchant 1.56.0\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: gateway.sandbox.fatzebra.com.au\r\nContent-Length: 93\r\n\r\n"
-<- "{\"card_number\":\"[FILTERED]\",\"card_expiry\":\"5/2017\",\"cvv\":\"[FILTERED]\",\"card_holder\":\"Foo Bar\"}"
--> "HTTP/1.1 200 OK\r\n"
--> "Content-Type: application/json; charset=utf-8\r\n"
--> "Connection: close\r\n"
--> "Status: 200 OK\r\n"
--> "Cache-control: no-store\r\n"
--> "Pragma: no-cache\r\n"
--> "X-Request-Id: 3BA78272_F214_AC10001D_01BB_566A58EC_222F1D_49F4\r\n"
--> "X-Runtime: 0.142463\r\n"
--> "Date: Fri, 11 Dec 2015 05:02:36 GMT\r\n"
--> "X-Rack-Cache: invalidate, pass\r\n"
--> "X-Sandbox: true\r\n"
--> "X-Backend-Server: app-3\r\n"
--> "\r\n"
-reading all...
--> "{\"successful\":true,\"response\":{\"token\":\"nkk9rhwu\",\"card_holder\":\"Foo Bar\",\"card_number\":\"[FILTERED]\",\"card_expiry\":\"2017-05-31T23:59:59+10:00\",\"authorized\":true,\"transaction_count\":0},\"errors\":[],\"test\":true}"
-read 214 bytes
-Conn close
+    <<~'POST_SCRUBBED'
+      opening connection to gateway.sandbox.fatzebra.com.au:443...
+      opened
+      starting SSL for gateway.sandbox.fatzebra.com.au:443...
+      SSL established
+      <- "POST /v1.0/credit_cards HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic [FILTERED]\r\nUser-Agent: Fat Zebra v1.0/ActiveMerchant 1.56.0\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: gateway.sandbox.fatzebra.com.au\r\nContent-Length: 93\r\n\r\n"
+      <- "{\"card_number\":\"[FILTERED]\",\"card_expiry\":\"5/2017\",\"cvv\":\"[FILTERED]\",\"card_holder\":\"Foo Bar\"}"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Content-Type: application/json; charset=utf-8\r\n"
+      -> "Connection: close\r\n"
+      -> "Status: 200 OK\r\n"
+      -> "Cache-control: no-store\r\n"
+      -> "Pragma: no-cache\r\n"
+      -> "X-Request-Id: 3BA78272_F214_AC10001D_01BB_566A58EC_222F1D_49F4\r\n"
+      -> "X-Runtime: 0.142463\r\n"
+      -> "Date: Fri, 11 Dec 2015 05:02:36 GMT\r\n"
+      -> "X-Rack-Cache: invalidate, pass\r\n"
+      -> "X-Sandbox: true\r\n"
+      -> "X-Backend-Server: app-3\r\n"
+      -> "\r\n"
+      reading all...
+      -> "{\"successful\":true,\"response\":{\"token\":\"nkk9rhwu\",\"card_holder\":\"Foo Bar\",\"card_number\":\"[FILTERED]\",\"card_expiry\":\"2017-05-31T23:59:59+10:00\",\"authorized\":true,\"transaction_count\":0},\"errors\":[],\"test\":true}"
+      read 214 bytes
+      Conn close
     POST_SCRUBBED
   end
 

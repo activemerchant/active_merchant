@@ -293,120 +293,120 @@ class MerchantWarriorTest < Test::Unit::TestCase
   private
 
   def successful_purchase_response
-    <<-XML
-<?xml version="1.0" encoding="UTF-8"?>
-<mwResponse>
-  <responseCode>0</responseCode>
-  <responseMessage>Transaction approved</responseMessage>
-  <transactionID>30-98a79008-dae8-11df-9322-0022198101cd</transactionID>
-  <authCode>44639</authCode>
-  <authMessage>Approved</authMessage>
-  <authResponseCode>0</authResponseCode>
-  <authSettledDate>2010-10-19</authSettledDate>
-  <custom1></custom1>
-  <custom2></custom2>
-  <custom3></custom3>
-  <customHash>c0aca5a0d9573322c79cc323d6cc8050</customHash>
-</mwResponse>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <mwResponse>
+        <responseCode>0</responseCode>
+        <responseMessage>Transaction approved</responseMessage>
+        <transactionID>30-98a79008-dae8-11df-9322-0022198101cd</transactionID>
+        <authCode>44639</authCode>
+        <authMessage>Approved</authMessage>
+        <authResponseCode>0</authResponseCode>
+        <authSettledDate>2010-10-19</authSettledDate>
+        <custom1></custom1>
+        <custom2></custom2>
+        <custom3></custom3>
+        <customHash>c0aca5a0d9573322c79cc323d6cc8050</customHash>
+      </mwResponse>
     XML
   end
 
   def failed_purchase_response
-    <<-XML
-<?xml version="1.0" encoding="UTF-8"?>
-<mwResponse>
-  <responseCode>4</responseCode>
-  <responseMessage>Card has expired</responseMessage>
-  <transactionID>30-69433444-af1-11df-9322-0022198101cd</transactionID>
-  <authCode>44657</authCode>
-  <authMessage>Expired+Card</authMessage>
-  <authResponseCode>4</authResponseCode>
-  <authSettledDate>2010-10-19</authSettledDate>
-  <custom1></custom1>
-  <custom2></custom2>
-  <custom3></custom3>
-  <customHash>c0aca5a0d9573322c79cc323d6cc8050</customHash>
-</mwResponse>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <mwResponse>
+        <responseCode>4</responseCode>
+        <responseMessage>Card has expired</responseMessage>
+        <transactionID>30-69433444-af1-11df-9322-0022198101cd</transactionID>
+        <authCode>44657</authCode>
+        <authMessage>Expired+Card</authMessage>
+        <authResponseCode>4</authResponseCode>
+        <authSettledDate>2010-10-19</authSettledDate>
+        <custom1></custom1>
+        <custom2></custom2>
+        <custom3></custom3>
+        <customHash>c0aca5a0d9573322c79cc323d6cc8050</customHash>
+      </mwResponse>
     XML
   end
 
   def successful_refund_response
-    <<-XML
-<?xml version="1.0" encoding="UTF-8"?>
-<mwResponse>
-  <responseCode>0</responseCode>
-  <responseMessage>Transaction approved</responseMessage>
-  <transactionID>30-d4d19f4-db17-11df-9322-0022198101cd</transactionID>
-  <authCode>44751</authCode>
-  <authMessage>Approved</authMessage>
-  <authResponseCode>0</authResponseCode>
-  <authSettledDate>2010-10-19</authSettledDate>
-</mwResponse>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <mwResponse>
+        <responseCode>0</responseCode>
+        <responseMessage>Transaction approved</responseMessage>
+        <transactionID>30-d4d19f4-db17-11df-9322-0022198101cd</transactionID>
+        <authCode>44751</authCode>
+        <authMessage>Approved</authMessage>
+        <authResponseCode>0</authResponseCode>
+        <authSettledDate>2010-10-19</authSettledDate>
+      </mwResponse>
     XML
   end
 
   def failed_refund_response
-    <<-XML
-<?xml version="1.0" encoding="UTF-8"?>
-  <mwResponse>
-  <responseCode>-2</responseCode>
-  <responseMessage>MW -016:transactionID has already been reversed</responseMessage>
-</mwResponse>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+        <mwResponse>
+        <responseCode>-2</responseCode>
+        <responseMessage>MW -016:transactionID has already been reversed</responseMessage>
+      </mwResponse>
     XML
   end
 
   def successful_store_response
-    <<-XML
-<?xml version="1.0" encoding="UTF-8"?>
-<mwResponse>
-  <responseCode>0</responseCode>
-  <responseMessage>Operation successful</responseMessage>
-  <cardID>KOCI10023982</cardID>
-  <cardKey>s5KQIxsZuiyvs3Sc</cardKey>
-  <ivrCardID>10023982</ivrCardID>
-</mwResponse>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <mwResponse>
+        <responseCode>0</responseCode>
+        <responseMessage>Operation successful</responseMessage>
+        <cardID>KOCI10023982</cardID>
+        <cardKey>s5KQIxsZuiyvs3Sc</cardKey>
+        <ivrCardID>10023982</ivrCardID>
+      </mwResponse>
     XML
   end
 
   def successful_authorize_response
-    <<-XML
-<?xml version="1.0" encoding="UTF-8"?>
-<mwResponse>
-  <responseCode>0</responseCode>
-  <responseMessage>Transaction approved</responseMessage>
-  <transactionID>1336-20be3569-b600-11e6-b9c3-005056b209e0</transactionID>
-  <transactionReferenceID>12345</transactionReferenceID>
-  <authCode>731357421</authCode>
-  <receiptNo>731357421</receiptNo>
-  <authMessage>Honour with identification</authMessage>
-  <authResponseCode>08</authResponseCode>
-  <authSettledDate>2016-11-29</authSettledDate>
-  <paymentCardNumber>512345XXXXXX2346</paymentCardNumber>
-  <transactionAmount>1.00</transactionAmount>
-  <cardType>mc</cardType>
-  <cardExpiryMonth>05</cardExpiryMonth>
-  <cardExpiryYear>21</cardExpiryYear>
-  <custom1/>
-  <custom2/>
-  <custom3/>
-  <customHash>65b172551b7d3a0706c0ce5330c98470</customHash>
-</mwResponse>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <mwResponse>
+        <responseCode>0</responseCode>
+        <responseMessage>Transaction approved</responseMessage>
+        <transactionID>1336-20be3569-b600-11e6-b9c3-005056b209e0</transactionID>
+        <transactionReferenceID>12345</transactionReferenceID>
+        <authCode>731357421</authCode>
+        <receiptNo>731357421</receiptNo>
+        <authMessage>Honour with identification</authMessage>
+        <authResponseCode>08</authResponseCode>
+        <authSettledDate>2016-11-29</authSettledDate>
+        <paymentCardNumber>512345XXXXXX2346</paymentCardNumber>
+        <transactionAmount>1.00</transactionAmount>
+        <cardType>mc</cardType>
+        <cardExpiryMonth>05</cardExpiryMonth>
+        <cardExpiryYear>21</cardExpiryYear>
+        <custom1/>
+        <custom2/>
+        <custom3/>
+        <customHash>65b172551b7d3a0706c0ce5330c98470</customHash>
+      </mwResponse>
     XML
   end
 
   def successful_capture_response
-    <<-XML
-<?xml version="1.0" encoding="UTF-8"?>
-<mwResponse>
-  <responseCode>0</responseCode>
-  <responseMessage>Transaction approved</responseMessage>
-  <transactionID>1336-fe4d3be6-b604-11e6-b9c3-005056b209e0</transactionID>
-  <authCode>731357526</authCode>
-  <receiptNo>731357526</receiptNo>
-  <authMessage>Approved or completed successfully</authMessage>
-  <authResponseCode>00</authResponseCode>
-  <authSettledDate>2016-11-30</authSettledDate>
-</mwResponse>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <mwResponse>
+        <responseCode>0</responseCode>
+        <responseMessage>Transaction approved</responseMessage>
+        <transactionID>1336-fe4d3be6-b604-11e6-b9c3-005056b209e0</transactionID>
+        <authCode>731357526</authCode>
+        <receiptNo>731357526</receiptNo>
+        <authMessage>Approved or completed successfully</authMessage>
+        <authResponseCode>00</authResponseCode>
+        <authSettledDate>2016-11-30</authSettledDate>
+      </mwResponse>
     XML
   end
 

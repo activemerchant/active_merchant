@@ -291,11 +291,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def auth_digest(action, post, authorization = nil)
-        data = <<-EOS
-POST
-#{content_type}
-#{date}
-#{uri(action, authorization)}
+        data = <<~EOS
+          POST
+          #{content_type}
+          #{date}
+          #{uri(action, authorization)}
         EOS
         digest = OpenSSL::Digest.new('sha256')
         key = @options[:secret_api_key]
