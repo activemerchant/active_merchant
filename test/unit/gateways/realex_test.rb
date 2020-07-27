@@ -533,7 +533,7 @@ class RealexTest < Test::Unit::TestCase
           <cavv>1234</cavv>
           <xid>1234</xid>
           <eci>1234</eci>
-          <message_version>1.0.2</message_version>
+          <message_version>1</message_version>
         </mpi>
       </request>
     SRC
