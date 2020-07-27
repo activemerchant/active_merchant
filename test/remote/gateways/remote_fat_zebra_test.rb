@@ -188,6 +188,24 @@ class RemoteFatZebraTest < Test::Unit::TestCase
     assert_match %r{Extra/cavv is required for SLI 05}, response.message
   end
 
+  def test_successful_purchase_with_3DS_information_using_standard_fields
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(three_d_secure: { cavv: 'MDRjN2MxZTAxYjllNTBkNmM2MTA=', xid: 'MGVmMmNlMzI4NjAyOWU2ZDgwNTQ=', eci: '05' }))
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_failed_purchase_with_incomplete_3DS_information_using_standard_fields
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(three_d_secure: { xid: 'MGVmMmNlMzI4NjAyOWU2ZDgwNTQ=', eci: '05' }))
+    assert_failure response
+    assert_match %r{Extra/cavv is required for SLI 05}, response.message
+  end
+
+  def test_successful_purchase_with_card_on_file_information
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(recurring: true, extra: { card_on_file: true, auth_reason: 'U' }))
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
   def test_invalid_login
     gateway = FatZebraGateway.new(
       username: 'invalid',

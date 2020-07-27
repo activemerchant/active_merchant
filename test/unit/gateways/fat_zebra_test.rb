@@ -15,7 +15,8 @@ class FatZebraTest < Test::Unit::TestCase
     @options = {
       order_id: rand(10000),
       billing_address: address,
-      description: 'Store Purchase'
+      description: 'Store Purchase',
+      extra: { card_on_file: false }
     }
   end
 
@@ -81,7 +82,7 @@ class FatZebraTest < Test::Unit::TestCase
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options.merge(recurring: true))
     end.check_request do |method, endpoint, data, headers|
-      assert_match(%r("extra":{"ecm":"32"}), data)
+      assert_match(%r("extra":{"ecm":"32"), data)
     end.respond_with(successful_purchase_response)
   end
 
