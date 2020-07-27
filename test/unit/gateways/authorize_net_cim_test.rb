@@ -636,6 +636,22 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert_equal 'E00027', response.error_code
   end
 
+  def test_html_error_response
+    @gateway.expects(:ssl_post).returns(html_error_page)
+    assert response = @gateway.create_customer_profile_transaction(
+      :transaction => {
+        :type => :refund,
+        :amount => 1,
+
+        :customer_profile_id => @customer_profile_id,
+        :customer_payment_profile_id => @customer_payment_profile_id,
+        :trans_id => 1
+      }
+    )
+    assert_equal 'Unable to parse response.', response.message
+    assert_nil response.error_code
+  end
+
   private
 
   def get_auth_only_response
@@ -1095,5 +1111,18 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
         <directResponse>#{UNSUCCESSUL_DIRECT_RESPONSE[transaction_type]}</directResponse>
       </createCustomerProfileTransactionResponse>
     XML
+  end
+
+  def html_error_page
+    <<-HTML
+      <html>
+        <head>
+          <title>Error</title>
+        </head>
+        <body>
+          <H2>Error</H2>
+        </body>
+      </html>
+    HTML
   end
 end

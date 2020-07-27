@@ -858,6 +858,8 @@ module ActiveMerchant #:nodoc:
 
         response_params = parse(action, xml)
 
+        return Response.new(false, "Unable to parse response.", {}, {}) if response_params.blank?
+
         message_element= response_params["messages"]["message"]
         first_error = message_element.is_a?(Array) ? message_element.first : message_element
         message = first_error['text']
