@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Fat Zebra: standardized 3DS fields and card on file extra data for Visa scheme rules [montdidier] #3409
 
 == Version 1.110.0
 * FirstData e4 v27+: Strip linebreaks from address [curiousepic] #3693
