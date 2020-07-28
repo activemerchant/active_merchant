@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Realex: Change 3DSecure v1 message_version to a valid format #3702
 
 == Version 1.110.0
 * FirstData e4 v27+: Strip linebreaks from address [curiousepic] #3693

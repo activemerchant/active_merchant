@@ -30,6 +30,7 @@ When submitting a pull request to resolve an issue:
 3. Commit your changes (`git add my/awesome/file.rb; git commit -m "Added my awesome feature"`)
 4. Push your changes to your fork (`git push origin my_awesome_feature`)
 5. Open a [Pull Request](https://github.com/activemerchant/active_merchant/pulls)
+6. Add a line for your PR in CHANGELOG
 
 ## Version/Release Management
 
