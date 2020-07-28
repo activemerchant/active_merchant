@@ -1,13 +1,12 @@
 require 'test_helper'
 
 class ConnectionTest < Test::Unit::TestCase
-
   def setup
-    @ok = stub(:code => 200, :message => 'OK', :body => 'success')
+    @ok = stub(code: 200, message: 'OK', body: 'success')
 
     @endpoint   = 'https://example.com/tx.php'
     @connection = ActiveMerchant::Connection.new(@endpoint)
-    @connection.logger = stub(:info => nil, :debug => nil, :error => nil)
+    @connection.logger = stub(info: nil, debug: nil, error: nil)
   end
 
   def test_connection_endpoint_parses_string_to_uri
@@ -244,5 +243,4 @@ class ConnectionTest < Test::Unit::TestCase
       @connection.wiredump_device = transcript
     end
   end
-
 end

@@ -36,7 +36,7 @@ module ActiveMerchant #:nodoc:
     #
     #
     class RedsysGateway < Gateway
-      self.live_url = 'https://sis.sermepa.es/sis/operaciones'
+      self.live_url = 'https://sis.redsys.es/sis/operaciones'
       self.test_url = 'https://sis-t.redsys.es:25443/sis/operaciones'
 
       self.supported_countries = ['ES']
@@ -44,7 +44,7 @@ module ActiveMerchant #:nodoc:
       self.money_format        = :cents
 
       # Not all card types may be activated by the bank!
-      self.supported_cardtypes = [:visa, :master, :american_express, :jcb, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express jcb diners_club unionpay]
       self.homepage_url        = 'http://www.redsys.es/'
       self.display_name        = 'Redsys'
 
@@ -91,11 +91,11 @@ module ActiveMerchant #:nodoc:
       # More operations are supported by the gateway itself, but
       # are not supported in this library.
       SUPPORTED_TRANSACTIONS = {
-        :purchase   => 'A',
-        :authorize  => '1',
-        :capture    => '2',
-        :refund     => '3',
-        :cancel     => '9'
+        purchase:   'A',
+        authorize:  '1',
+        capture:    '2',
+        refund:     '3',
+        cancel:     '9'
       }
 
       # These are the text meanings sent back by the acquirer when
@@ -193,61 +193,65 @@ module ActiveMerchant #:nodoc:
         requires!(options, :order_id)
 
         data = {}
-        add_action(data, :purchase)
+        add_action(data, :purchase, options)
         add_amount(data, money, options)
         add_order(data, options[:order_id])
         add_payment(data, payment)
+        add_threeds(data, options) if options[:execute_threed]
         data[:description] = options[:description]
         data[:store_in_vault] = options[:store]
+        data[:sca_exemption] = options[:sca_exemption]
 
-        commit data
+        commit data, options
       end
 
       def authorize(money, payment, options = {})
         requires!(options, :order_id)
 
         data = {}
-        add_action(data, :authorize)
+        add_action(data, :authorize, options)
         add_amount(data, money, options)
         add_order(data, options[:order_id])
         add_payment(data, payment)
+        add_threeds(data, options) if options[:execute_threed]
         data[:description] = options[:description]
         data[:store_in_vault] = options[:store]
+        data[:sca_exemption] = options[:sca_exemption]
 
-        commit data
+        commit data, options
       end
 
       def capture(money, authorization, options = {})
         data = {}
         add_action(data, :capture)
         add_amount(data, money, options)
-        order_id, _, _ = split_authorization(authorization)
+        order_id, = split_authorization(authorization)
         add_order(data, order_id)
         data[:description] = options[:description]
 
-        commit data
+        commit data, options
       end
 
       def void(authorization, options = {})
         data = {}
         add_action(data, :cancel)
         order_id, amount, currency = split_authorization(authorization)
-        add_amount(data, amount, :currency => currency)
+        add_amount(data, amount, currency: currency)
         add_order(data, order_id)
         data[:description] = options[:description]
 
-        commit data
+        commit data, options
       end
 
       def refund(money, authorization, options = {})
         data = {}
         add_action(data, :refund)
         add_amount(data, money, options)
-        order_id, _, _ = split_authorization(authorization)
+        order_id, = split_authorization(authorization)
         add_order(data, order_id)
         data[:description] = options[:description]
 
-        commit data
+        commit data, options
       end
 
       def verify(creditcard, options = {})
@@ -266,8 +270,10 @@ module ActiveMerchant #:nodoc:
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
           gsub(%r((%3CDS_MERCHANT_PAN%3E)\d+(%3C%2FDS_MERCHANT_PAN%3E))i, '\1[FILTERED]\2').
           gsub(%r((%3CDS_MERCHANT_CVV2%3E)\d+(%3C%2FDS_MERCHANT_CVV2%3E))i, '\1[FILTERED]\2').
+          gsub(%r((&lt;DS_MERCHANT_PAN&gt;)\d+(&lt;/DS_MERCHANT_PAN&gt;))i, '\1[FILTERED]\2').
           gsub(%r((<DS_MERCHANT_PAN>)\d+(</DS_MERCHANT_PAN>))i, '\1[FILTERED]\2').
           gsub(%r((<DS_MERCHANT_CVV2>)\d+(</DS_MERCHANT_CVV2>))i, '\1[FILTERED]\2').
+          gsub(%r((&lt;DS_MERCHANT_CVV2&gt;)\d+(&lt;/DS_MERCHANT_CVV2&gt;))i, '\1[FILTERED]\2').
           gsub(%r((DS_MERCHANT_CVV2)%2F%3E%0A%3C%2F)i, '\1[BLANK]').
           gsub(%r((DS_MERCHANT_CVV2)%2F%3E%3C)i, '\1[BLANK]').
           gsub(%r((DS_MERCHANT_CVV2%3E)(%3C%2FDS_MERCHANT_CVV2))i, '\1[BLANK]\2').
@@ -278,8 +284,8 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def add_action(data, action)
-        data[:action] = transaction_code(action)
+      def add_action(data, action, options = {})
+        data[:action] = options[:execute_threed].present? ? '0' : transaction_code(action)
       end
 
       def add_amount(data, money, options)
@@ -295,6 +301,10 @@ module ActiveMerchant #:nodoc:
         test? ? test_url : live_url
       end
 
+      def threeds_url
+        test? ? 'https://sis-t.redsys.es:25443/sis/services/SerClsWSEntradaV2' : 'https://sis.redsys.es/sis/services/SerClsWSEntradaV2'
+      end
+
       def add_payment(data, card)
         if card.is_a?(String)
           data[:credit_card_token] = card
@@ -303,37 +313,71 @@ module ActiveMerchant #:nodoc:
           year  = sprintf('%.4i', card.year)
           month = sprintf('%.2i', card.month)
           data[:card] = {
-            :name => name,
-            :pan  => card.number,
-            :date => "#{year[2..3]}#{month}",
-            :cvv  => card.verification_value
+            name: name,
+            pan: card.number,
+            date: "#{year[2..3]}#{month}",
+            cvv: card.verification_value
           }
         end
       end
 
-      def commit(data)
-        parse(ssl_post(url, "entrada=#{CGI.escape(xml_request_from(data))}", headers))
+      def add_threeds(data, options)
+        data[:threeds] = {threeDSInfo: 'CardData'} if options[:execute_threed] == true
       end
 
-      def headers
-        {
-          'Content-Type' => 'application/x-www-form-urlencoded'
-        }
+      def determine_3ds_action(threeds_hash)
+        return 'iniciaPeticion' if threeds_hash[:threeDSInfo] == 'CardData'
+        return 'trataPeticion' if threeds_hash[:threeDSInfo] == 'AuthenticationData' ||
+                                  threeds_hash[:threeDSInfo] == 'ChallengeResponse'
       end
 
-      def xml_request_from(data)
-        if sha256_authentication?
-          build_sha256_xml_request(data)
+      def commit(data, options = {})
+        if data[:threeds]
+          action = determine_3ds_action(data[:threeds])
+          request = <<-EOS
+            <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:apachesoap="http://xml.apache.org/xml-soap" xmlns:impl="http://webservice.sis.sermepa.es" xmlns:intf="http://webservice.sis.sermepa.es" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:wsdlsoap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" >
+            <soapenv:Header/>
+            <soapenv:Body>
+              <intf:#{action} xmlns:intf="http://webservice.sis.sermepa.es">
+                <intf:datoEntrada>
+                <![CDATA[#{xml_request_from(data, options)}]]>
+                </intf:datoEntrada>
+              </intf:#{action}>
+            </soapenv:Body>
+          </soapenv:Envelope>
+          EOS
+          parse(ssl_post(threeds_url, request, headers(action)), action)
         else
-          build_sha1_xml_request(data)
+          parse(ssl_post(url, "entrada=#{CGI.escape(xml_request_from(data, options))}", headers), action)
+        end
+      end
+
+      def headers(action=nil)
+        if action
+          {
+            'Content-Type' => 'text/xml',
+            'SOAPAction' => action
+          }
+        else
+          {
+            'Content-Type' => 'application/x-www-form-urlencoded'
+          }
+        end
+      end
+
+      def xml_request_from(data, options = {})
+        if sha256_authentication?
+          build_sha256_xml_request(data, options)
+        else
+          build_sha1_xml_request(data, options)
         end
       end
 
       def build_signature(data)
         str = data[:amount] +
-          data[:order_id].to_s +
-          @options[:login].to_s +
-          data[:currency]
+              data[:order_id].to_s +
+              @options[:login].to_s +
+              data[:currency]
 
         if card = data[:card]
           str << card[:pan]
@@ -351,30 +395,30 @@ module ActiveMerchant #:nodoc:
         Digest::SHA1.hexdigest(str)
       end
 
-      def build_sha256_xml_request(data)
+      def build_sha256_xml_request(data, options = {})
         xml = Builder::XmlMarkup.new
         xml.instruct!
         xml.REQUEST do
-          build_merchant_data(xml, data)
+          build_merchant_data(xml, data, options)
           xml.DS_SIGNATUREVERSION 'HMAC_SHA256_V1'
-          xml.DS_SIGNATURE sign_request(merchant_data_xml(data), data[:order_id])
+          xml.DS_SIGNATURE sign_request(merchant_data_xml(data, options), data[:order_id])
         end
         xml.target!
       end
 
-      def build_sha1_xml_request(data)
-        xml = Builder::XmlMarkup.new :indent => 2
-        build_merchant_data(xml, data)
+      def build_sha1_xml_request(data, options = {})
+        xml = Builder::XmlMarkup.new indent: 2
+        build_merchant_data(xml, data, options)
         xml.target!
       end
 
-      def merchant_data_xml(data)
+      def merchant_data_xml(data, options = {})
         xml = Builder::XmlMarkup.new
-        build_merchant_data(xml, data)
+        build_merchant_data(xml, data, options)
         xml.target!
       end
 
-      def build_merchant_data(xml, data)
+      def build_merchant_data(xml, data, options = {})
         xml.DATOSENTRADA do
           # Basic elements
           xml.DS_Version 0.1
@@ -382,14 +426,23 @@ module ActiveMerchant #:nodoc:
           xml.DS_MERCHANT_AMOUNT             data[:amount]
           xml.DS_MERCHANT_ORDER              data[:order_id]
           xml.DS_MERCHANT_TRANSACTIONTYPE    data[:action]
-          xml.DS_MERCHANT_PRODUCTDESCRIPTION data[:description]
-          xml.DS_MERCHANT_TERMINAL           @options[:terminal]
+          if data[:description] && data[:threeds]
+            xml.DS_MERCHANT_PRODUCTDESCRIPTION CGI.escape(data[:description])
+          else
+            xml.DS_MERCHANT_PRODUCTDESCRIPTION data[:description]
+          end
+          xml.DS_MERCHANT_TERMINAL           options[:terminal] || @options[:terminal]
           xml.DS_MERCHANT_MERCHANTCODE       @options[:login]
           xml.DS_MERCHANT_MERCHANTSIGNATURE  build_signature(data) unless sha256_authentication?
+          xml.DS_MERCHANT_EXCEP_SCA          data[:sca_exemption] if data[:sca_exemption]
 
           # Only when card is present
           if data[:card]
-            xml.DS_MERCHANT_TITULAR    data[:card][:name]
+            if data[:card][:name] && data[:threeds]
+              xml.DS_MERCHANT_TITULAR    CGI.escape(data[:card][:name])
+            else
+              xml.DS_MERCHANT_TITULAR    data[:card][:name]
+            end
             xml.DS_MERCHANT_PAN        data[:card][:pan]
             xml.DS_MERCHANT_EXPIRYDATE data[:card][:date]
             xml.DS_MERCHANT_CVV2       data[:card][:cvv]
@@ -398,22 +451,28 @@ module ActiveMerchant #:nodoc:
             xml.DS_MERCHANT_IDENTIFIER data[:credit_card_token]
             xml.DS_MERCHANT_DIRECTPAYMENT 'true'
           end
+
+          # Set moto flag only if explicitly requested via moto field
+          # Requires account configuration to be able to use
+          xml.DS_MERCHANT_DIRECTPAYMENT 'moto' if options.dig(:moto) && options.dig(:metadata, :manual_entry)
+
+          xml.DS_MERCHANT_EMV3DS data[:threeds].to_json if data[:threeds]
         end
       end
 
-      def parse(data)
+      def parse(data, action)
         params  = {}
         success = false
         message = ''
-        options = @options.merge(:test => test?)
+        options = @options.merge(test: test?)
         xml     = Nokogiri::XML(data)
         code    = xml.xpath('//RETORNOXML/CODIGO').text
-        if code == '0'
+
+        if code == '0' && xml.xpath('//RETORNOXML/OPERACION').present?
           op = xml.xpath('//RETORNOXML/OPERACION')
           op.children.each do |element|
             params[element.name.downcase.to_sym] = element.text
           end
-
           if validate_signature(params)
             message = response_text(params[:ds_response])
             options[:authorization] = build_authorization(params)
@@ -421,6 +480,17 @@ module ActiveMerchant #:nodoc:
           else
             message = 'Response failed validation check'
           end
+        elsif %w[iniciaPeticion trataPeticion].include?(action)
+          vxml = Nokogiri::XML(data).remove_namespaces!.xpath("//Envelope/Body/#{action}Response/#{action}Return").inner_text
+          xml = Nokogiri::XML(vxml)
+          node = (action == 'iniciaPeticion' ? 'INFOTARJETA' : 'OPERACION')
+          op = xml.xpath("//RETORNOXML/#{node}")
+          op.children.each do |element|
+            params[element.name.downcase.to_sym] = element.text
+          end
+          message = response_text_3ds(xml, params)
+          options[:authorization] = build_authorization(params)
+          success = params.size > 0 && is_success_response?(params[:ds_response])
         else
           # Some kind of programmer error with the request!
           message = "#{code} ERROR"
@@ -435,14 +505,14 @@ module ActiveMerchant #:nodoc:
           sig.casecmp(data[:ds_signature].to_s).zero?
         else
           str = data[:ds_amount] +
-            data[:ds_order].to_s +
-            data[:ds_merchantcode] +
-            data[:ds_currency] +
-            data[:ds_response] +
-            data[:ds_cardnumber].to_s +
-            data[:ds_transactiontype].to_s +
-            data[:ds_securepayment].to_s +
-            @options[:secret_key]
+                data[:ds_order].to_s +
+                data[:ds_merchantcode] +
+                data[:ds_currency] +
+                data[:ds_response] +
+                data[:ds_cardnumber].to_s +
+                data[:ds_transactiontype].to_s +
+                data[:ds_securepayment].to_s +
+                @options[:secret_key]
 
           sig = Digest::SHA1.hexdigest(str)
           data[:ds_signature].to_s.downcase == sig
@@ -461,6 +531,7 @@ module ActiveMerchant #:nodoc:
       def currency_code(currency)
         return currency if currency =~ /^\d+$/
         raise ArgumentError, "Unknown currency #{currency}" unless CURRENCY_CODES[currency]
+
         CURRENCY_CODES[currency]
       end
 
@@ -474,13 +545,27 @@ module ActiveMerchant #:nodoc:
         RESPONSE_TEXTS[code] || 'Unkown code, please check in manual'
       end
 
+      def response_text_3ds(xml, params)
+        code = xml.xpath('//RETORNOXML/CODIGO').text
+        message = ''
+        if code != '0'
+          message = "#{code} ERROR"
+        elsif params[:ds_emv3ds]
+          three_ds_data = JSON.parse(params[:ds_emv3ds])
+          message = three_ds_data['threeDSInfo']
+        elsif params[:ds_response]
+          message = response_text(params[:ds_response])
+        end
+        message
+      end
+
       def is_success_response?(code)
         (code.to_i < 100) || [400, 481, 500, 900].include?(code.to_i)
       end
 
       def clean_order_id(order_id)
         cleansed = order_id.gsub(/[^\da-zA-Z]/, '')
-        if cleansed =~ /^\d{4}/
+        if /^\d{4}/.match?(cleansed)
           cleansed[0..11]
         else
           '%04d%s' % [rand(0..9999), cleansed[0...8]]
@@ -517,11 +602,11 @@ module ActiveMerchant #:nodoc:
 
       def xml_signed_fields(data)
         xml_signed_fields = data[:ds_amount] + data[:ds_order] + data[:ds_merchantcode] +
-          data[:ds_currency] + data[:ds_response]
+                            data[:ds_currency] + data[:ds_response]
 
-        if data[:ds_cardnumber]
-          xml_signed_fields += data[:ds_cardnumber]
-        end
+        xml_signed_fields += data[:ds_cardnumber] if data[:ds_cardnumber]
+
+        xml_signed_fields += data[:ds_emv3ds] if data[:ds_emv3ds]
 
         xml_signed_fields + data[:ds_transactiontype] + data[:ds_securepayment]
       end

@@ -73,34 +73,34 @@ module ActiveMerchant #:nodoc:
       FAILURE_MESSAGE = 'Default Failure' #:nodoc:
 
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club jcb]
       self.homepage_url = 'http://www.usaepay.com/'
       self.display_name = 'USA ePay Advanced SOAP Interface'
 
       CUSTOMER_PROFILE_OPTIONS = {
-        :id => [:string, 'CustomerID'], # merchant assigned number
-        :notes => [:string, 'Notes'],
-        :data => [:string, 'CustomData'],
-        :url => [:string, 'URL']
+        id: [:string, 'CustomerID'], # merchant assigned number
+        notes: [:string, 'Notes'],
+        data: [:string, 'CustomData'],
+        url: [:string, 'URL']
       } #:nodoc:
 
       CUSTOMER_RECURRING_BILLING_OPTIONS = {
-        :enabled => [:boolean, 'Enabled'],
-        :schedule => [:string, 'Schedule'],
-        :number_left => [:integer, 'NumLeft'],
-        :currency => [:string, 'Currency'],
-        :description => [:string, 'Description'],
-        :order_id => [:string, 'OrderID'],
-        :user => [:string, 'User'],
-        :source => [:string, 'Source'],
-        :send_receipt => [:boolean, 'SendReceipt'],
-        :receipt_note => [:string, 'ReceiptNote']
+        enabled: [:boolean, 'Enabled'],
+        schedule: [:string, 'Schedule'],
+        number_left: [:integer, 'NumLeft'],
+        currency: [:string, 'Currency'],
+        description: [:string, 'Description'],
+        order_id: [:string, 'OrderID'],
+        user: [:string, 'User'],
+        source: [:string, 'Source'],
+        send_receipt: [:boolean, 'SendReceipt'],
+        receipt_note: [:string, 'ReceiptNote']
       } #:nodoc:
 
       CUSTOMER_POINT_OF_SALE_OPTIONS = {
-        :price_tier => [:string, 'PriceTier'],
-        :tax_class => [:string, 'TaxClass'],
-        :lookup_code => [:string, 'LookupCode']
+        price_tier: [:string, 'PriceTier'],
+        tax_class: [:string, 'TaxClass'],
+        lookup_code: [:string, 'LookupCode']
       } #:nodoc:
 
       CUSTOMER_OPTIONS = [
@@ -110,23 +110,23 @@ module ActiveMerchant #:nodoc:
       ].inject(:merge) #:nodoc:
 
       COMMON_ADDRESS_OPTIONS = {
-        :first_name => [:string, 'FirstName'],
-        :last_name => [:string, 'LastName'],
-        :city => [:string, 'City'],
-        :state => [:string, 'State'],
-        :zip => [:string, 'Zip'],
-        :country => [:string, 'Country'],
-        :phone => [:string, 'Phone'],
-        :email => [:string, 'Email'],
-        :fax => [:string, 'Fax'],
-        :company => [:string, 'Company']
+        first_name: [:string, 'FirstName'],
+        last_name: [:string, 'LastName'],
+        city: [:string, 'City'],
+        state: [:string, 'State'],
+        zip: [:string, 'Zip'],
+        country: [:string, 'Country'],
+        phone: [:string, 'Phone'],
+        email: [:string, 'Email'],
+        fax: [:string, 'Fax'],
+        company: [:string, 'Company']
       } #:nodoc:
 
       ADDRESS_OPTIONS = [
         COMMON_ADDRESS_OPTIONS,
         {
-          :address1 => [:string, 'Street'],
-          :address2 => [:string, 'Street2'],
+          address1: [:string, 'Street'],
+          address2: [:string, 'Street2'],
         }
       ].inject(:merge) #:nodoc
 
@@ -135,116 +135,116 @@ module ActiveMerchant #:nodoc:
         CUSTOMER_RECURRING_BILLING_OPTIONS,
         COMMON_ADDRESS_OPTIONS,
         {
-          :address1 => [:string, 'Address'],
-          :address2 => [:string, 'Address2'],
+          address1: [:string, 'Address'],
+          address2: [:string, 'Address2'],
         },
         {
-          :card_number => [:string, 'CardNumber'],
-          :card_exp => [:string, 'CardExp'],
-          :account => [:string, 'Account'],
-          :routing => [:string, 'Routing'],
-          :check_format => [:string, 'CheckFormat'],
-          :record_type => [:string, 'RecordType'],
+          card_number: [:string, 'CardNumber'],
+          card_exp: [:string, 'CardExp'],
+          account: [:string, 'Account'],
+          routing: [:string, 'Routing'],
+          check_format: [:string, 'CheckFormat'],
+          record_type: [:string, 'RecordType'],
         }
       ].inject(:merge) #:nodoc
 
       CUSTOMER_TRANSACTION_REQUEST_OPTIONS = {
-        :command => [:string, 'Command'],
-        :ignore_duplicate => [:boolean, 'IgnoreDuplicate'],
-        :client_ip => [:string, 'ClientIP'],
-        :customer_receipt => [:boolean, 'CustReceipt'],
-        :customer_email => [:boolean, 'CustReceiptEmail'],
-        :customer_template => [:boolean, 'CustReceiptName'],
-        :merchant_receipt => [:boolean, 'MerchReceipt'],
-        :merchant_email => [:boolean, 'MerchReceiptEmail'],
-        :merchant_template => [:boolean, 'MerchReceiptName'],
-        :recurring => [:boolean, 'isRecurring'],
-        :verification_value => [:string, 'CardCode'],
-        :software => [:string, 'Software']
+        command: [:string, 'Command'],
+        ignore_duplicate: [:boolean, 'IgnoreDuplicate'],
+        client_ip: [:string, 'ClientIP'],
+        customer_receipt: [:boolean, 'CustReceipt'],
+        customer_email: [:boolean, 'CustReceiptEmail'],
+        customer_template: [:boolean, 'CustReceiptName'],
+        merchant_receipt: [:boolean, 'MerchReceipt'],
+        merchant_email: [:boolean, 'MerchReceiptEmail'],
+        merchant_template: [:boolean, 'MerchReceiptName'],
+        recurring: [:boolean, 'isRecurring'],
+        verification_value: [:string, 'CardCode'],
+        software: [:string, 'Software']
       } #:nodoc:
 
       TRANSACTION_REQUEST_OBJECT_OPTIONS = {
-        :command => [:string, 'Command'],
-        :ignore_duplicate => [:boolean, 'IgnoreDuplicate'],
-        :authorization_code => [:string, 'AuthCode'],
-        :reference_number => [:string, 'RefNum'],
-        :account_holder => [:string, 'AccountHolder'],
-        :client_ip => [:string, 'ClientIP'],
-        :customer_id => [:string, 'CustomerID'],
-        :customer_receipt => [:boolean, 'CustReceipt'],
-        :customer_template => [:boolean, 'CustReceiptName'],
-        :software => [:string, 'Software']
+        command: [:string, 'Command'],
+        ignore_duplicate: [:boolean, 'IgnoreDuplicate'],
+        authorization_code: [:string, 'AuthCode'],
+        reference_number: [:string, 'RefNum'],
+        account_holder: [:string, 'AccountHolder'],
+        client_ip: [:string, 'ClientIP'],
+        customer_id: [:string, 'CustomerID'],
+        customer_receipt: [:boolean, 'CustReceipt'],
+        customer_template: [:boolean, 'CustReceiptName'],
+        software: [:string, 'Software']
       } #:nodoc:
 
       TRANSACTION_DETAIL_OPTIONS = {
-        :invoice  => [:string, 'Invoice'],
-        :po_number => [:string, 'PONum'],
-        :order_id => [:string, 'OrderID'],
-        :clerk => [:string, 'Clerk'],
-        :terminal  => [:string, 'Terminal'],
-        :table => [:string, 'Table'],
-        :description => [:string, 'Description'],
-        :comments => [:string, 'Comments'],
-        :allow_partial_auth => [:boolean, 'AllowPartialAuth'],
-        :currency => [:string, 'Currency'],
-        :non_tax => [:boolean, 'NonTax'],
+        invoice: [:string, 'Invoice'],
+        po_number: [:string, 'PONum'],
+        order_id: [:string, 'OrderID'],
+        clerk: [:string, 'Clerk'],
+        terminal: [:string, 'Terminal'],
+        table: [:string, 'Table'],
+        description: [:string, 'Description'],
+        comments: [:string, 'Comments'],
+        allow_partial_auth: [:boolean, 'AllowPartialAuth'],
+        currency: [:string, 'Currency'],
+        non_tax: [:boolean, 'NonTax'],
       } #:nodoc:
 
       TRANSACTION_DETAIL_MONEY_OPTIONS = {
-        :amount => [:double, 'Amount'],
-        :tax => [:double, 'Tax'],
-        :tip => [:double, 'Tip'],
-        :non_tax => [:boolean, 'NonTax'],
-        :shipping => [:double, 'Shipping'],
-        :discount => [:double, 'Discount'],
-        :subtotal => [:double, 'Subtotal']
+        amount: [:double, 'Amount'],
+        tax: [:double, 'Tax'],
+        tip: [:double, 'Tip'],
+        non_tax: [:boolean, 'NonTax'],
+        shipping: [:double, 'Shipping'],
+        discount: [:double, 'Discount'],
+        subtotal: [:double, 'Subtotal']
       } #:nodoc:
 
       CREDIT_CARD_DATA_OPTIONS = {
-        :magnetic_stripe => [:string, 'MagStripe'],
-        :dukpt => [:string, 'DUKPT'],
-        :signature => [:string, 'Signature'],
-        :terminal_type => [:string, 'TermType'],
-        :magnetic_support => [:string, 'MagSupport'],
-        :xid => [:string, 'XID'],
-        :cavv => [:string, 'CAVV'],
-        :eci => [:integer, 'ECI'],
-        :internal_card_authorization => [:boolean, 'InternalCardAuth'],
-        :pares => [:string, 'Pares']
+        magnetic_stripe: [:string, 'MagStripe'],
+        dukpt: [:string, 'DUKPT'],
+        signature: [:string, 'Signature'],
+        terminal_type: [:string, 'TermType'],
+        magnetic_support: [:string, 'MagSupport'],
+        xid: [:string, 'XID'],
+        cavv: [:string, 'CAVV'],
+        eci: [:integer, 'ECI'],
+        internal_card_authorization: [:boolean, 'InternalCardAuth'],
+        pares: [:string, 'Pares']
       } #:nodoc:
 
       CHECK_DATA_OPTIONS = {
-        :drivers_license => [:string, 'DriversLicense'],
-        :drivers_license_state => [:string, 'DriversLicenseState'],
-        :record_type => [:string, 'RecordType'],
-        :aux_on_us => [:string, 'AuxOnUS'],
-        :epc_code => [:string, 'EpcCode'],
-        :front_image => [:string, 'FrontImage'],
-        :back_image => [:string, 'BackImage']
+        drivers_license: [:string, 'DriversLicense'],
+        drivers_license_state: [:string, 'DriversLicenseState'],
+        record_type: [:string, 'RecordType'],
+        aux_on_us: [:string, 'AuxOnUS'],
+        epc_code: [:string, 'EpcCode'],
+        front_image: [:string, 'FrontImage'],
+        back_image: [:string, 'BackImage']
       } #:nodoc:
 
       RECURRING_BILLING_OPTIONS = {
-        :schedule => [:string, 'Schedule'],
-        :number_left => [:integer, 'NumLeft'],
-        :enabled => [:boolean, 'Enabled']
+        schedule: [:string, 'Schedule'],
+        number_left: [:integer, 'NumLeft'],
+        enabled: [:boolean, 'Enabled']
       } #:nodoc:
 
       AVS_RESULTS = {
-        'Y' => %w( YYY Y YYA YYD ),
-        'Z' => %w( NYZ Z ),
-        'A' => %w( YNA A YNY ),
-        'N' => %w( NNN N NN ),
-        'X' => %w( YYX X ),
-        'W' => %w( NYW W ),
-        'XXW' => %w( XXW ),
-        'XXU' => %w( XXU ),
-        'R' => %w( XXR R U E ),
-        'S' => %w( XXS S ),
-        'XXE' => %w( XXE ),
-        'G' => %w( XXG G C I ),
-        'B' => %w( YYG B M ),
-        'D' => %w( GGG D ),
-        'P' => %w( YGG P )
+        'Y' => %w(YYY Y YYA YYD),
+        'Z' => %w(NYZ Z),
+        'A' => %w(YNA A YNY),
+        'N' => %w(NNN N NN),
+        'X' => %w(YYX X),
+        'W' => %w(NYW W),
+        'XXW' => %w(XXW),
+        'XXU' => %w(XXU),
+        'R' => %w(XXR R U E),
+        'S' => %w(XXS S),
+        'XXE' => %w(XXE),
+        'G' => %w(XXG G C I),
+        'B' => %w(YYG B M),
+        'D' => %w(GGG D),
+        'P' => %w(YGG P)
       }.inject({}) do |map, (type, codes)|
         codes.each { |code| map[code] = type }
         map
@@ -290,7 +290,7 @@ module ActiveMerchant #:nodoc:
       # Note: See run_transaction for additional options.
       #
       def purchase(money, creditcard, options={})
-        run_sale(options.merge!(:amount => money, :payment_method => creditcard))
+        run_sale(options.merge!(amount: money, payment_method: creditcard))
       end
 
       # Authorize an amount on a credit card or account.
@@ -298,7 +298,7 @@ module ActiveMerchant #:nodoc:
       # Note: See run_transaction for additional options.
       #
       def authorize(money, creditcard, options={})
-        run_auth_only(options.merge!(:amount => money, :payment_method => creditcard))
+        run_auth_only(options.merge!(amount: money, payment_method: creditcard))
       end
 
       # Capture an authorized transaction.
@@ -306,7 +306,7 @@ module ActiveMerchant #:nodoc:
       # Note: See run_transaction for additional options.
       #
       def capture(money, identification, options={})
-        capture_transaction(options.merge!(:amount => money, :reference_number => identification))
+        capture_transaction(options.merge!(amount: money, reference_number: identification))
       end
 
       # Void a previous transaction that has not been settled.
@@ -314,7 +314,7 @@ module ActiveMerchant #:nodoc:
       # Note: See run_transaction for additional options.
       #
       def void(identification, options={})
-        void_transaction(options.merge!(:reference_number => identification))
+        void_transaction(options.merge!(reference_number: identification))
       end
 
       # Refund a previous transaction.
@@ -322,7 +322,7 @@ module ActiveMerchant #:nodoc:
       # Note: See run_transaction for additional options.
       #
       def refund(money, identification, options={})
-        refund_transaction(options.merge!(:amount => money, :reference_number => identification))
+        refund_transaction(options.merge!(amount: money, reference_number: identification))
       end
 
       def credit(money, identification, options={})
@@ -676,9 +676,9 @@ module ActiveMerchant #:nodoc:
         commit(__method__, request)
       end
 
-      TRANSACTION_METHODS = [
-        :run_sale, :run_auth_only, :run_credit,
-        :run_check_sale, :run_check_credit
+      TRANSACTION_METHODS = %i[
+        run_sale run_auth_only run_credit
+        run_check_sale run_check_credit
       ] #:nodoc:
 
       TRANSACTION_METHODS.each do |method|
@@ -1031,7 +1031,7 @@ module ActiveMerchant #:nodoc:
       # Build soap header, etc.
       def build_request(action, options = {})
         soap = Builder::XmlMarkup.new
-        soap.instruct!(:xml, :version => '1.0', :encoding => 'utf-8')
+        soap.instruct!(:xml, version: '1.0', encoding: 'utf-8')
         soap.tag! 'SOAP-ENV:Envelope',
           'xmlns:SOAP-ENV' => 'http://schemas.xmlsoap.org/soap/envelope/',
           'xmlns:ns1' => 'urn:usaepay',
@@ -1310,7 +1310,7 @@ module ActiveMerchant #:nodoc:
         if options[:payment_methods]
           length = options[:payment_methods].length
           soap.PaymentMethods 'SOAP-ENC:arrayType' => "ns1:PaymentMethod[#{length}]",
-                              'xsi:type' =>'ns1:PaymentMethodArray' do
+                              'xsi:type' => 'ns1:PaymentMethodArray' do
             build_customer_payment_methods soap, options
           end
         end
@@ -1336,7 +1336,7 @@ module ActiveMerchant #:nodoc:
         when payment_method[:method].kind_of?(ActiveMerchant::Billing::CreditCard)
           build_tag soap, :string, 'CardNumber', payment_method[:method].number
           build_tag soap, :string, 'CardExpiration',
-            "#{"%02d" % payment_method[:method].month}#{payment_method[:method].year.to_s[-2..-1]}"
+            "#{'%02d' % payment_method[:method].month}#{payment_method[:method].year.to_s[-2..-1]}"
           if options[:billing_address]
             build_tag soap, :string, 'AvsStreet', options[:billing_address][:address1]
             build_tag soap, :string, 'AvsZip', options[:billing_address][:zip]
@@ -1345,9 +1345,7 @@ module ActiveMerchant #:nodoc:
         when payment_method[:method].kind_of?(ActiveMerchant::Billing::Check)
           build_tag soap, :string, 'Account', payment_method[:method].account_number
           build_tag soap, :string, 'Routing', payment_method[:method].routing_number
-          unless payment_method[:method].account_type.nil?
-            build_tag soap, :string, 'AccountType', payment_method[:method].account_type.capitalize
-          end
+          build_tag soap, :string, 'AccountType', payment_method[:method].account_type.capitalize unless payment_method[:method].account_type.nil?
           build_tag soap, :string, 'DriversLicense', options[:drivers_license]
           build_tag soap, :string, 'DriversLicenseState', options[:drivers_license_state]
           build_tag soap, :string, 'RecordType', options[:record_type]
@@ -1434,9 +1432,7 @@ module ActiveMerchant #:nodoc:
       def build_card_expiration(options)
         month = options[:payment_method].month
         year  = options[:payment_method].year
-        unless month.nil? || year.nil?
-          "#{"%02d" % month}#{year.to_s[-2..-1]}"
-        end
+        "#{'%02d' % month}#{year.to_s[-2..-1]}" unless month.nil? || year.nil?
       end
 
       def build_check_data(soap, options)
@@ -1476,9 +1472,7 @@ module ActiveMerchant #:nodoc:
 
       def build_billing_address(soap, options)
         if options[:billing_address]
-          if options[:billing_address][:name]
-            options[:billing_address][:first_name], options[:billing_address][:last_name] = split_names(options[:billing_address][:name])
-          end
+          options[:billing_address][:first_name], options[:billing_address][:last_name] = split_names(options[:billing_address][:name]) if options[:billing_address][:name]
           soap.BillingAddress 'xsi:type' => 'ns1:Address' do
             ADDRESS_OPTIONS.each do |k, v|
               build_tag soap, v[0], v[1], options[:billing_address][k]
@@ -1489,9 +1483,7 @@ module ActiveMerchant #:nodoc:
 
       def build_shipping_address(soap, options)
         if options[:shipping_address]
-          if options[:shipping_address][:name]
-            options[:shipping_address][:first_name], options[:shipping_address][:last_name] = split_names(options[:shipping_address][:name])
-          end
+          options[:shipping_address][:first_name], options[:shipping_address][:last_name] = split_names(options[:shipping_address][:name]) if options[:shipping_address][:name]
           soap.ShippingAddress 'xsi:type' => 'ns1:Address' do
             ADDRESS_OPTIONS.each do |k, v|
               build_tag soap, v[0], v[1], options[:shipping_address][k]
@@ -1544,15 +1536,15 @@ module ActiveMerchant #:nodoc:
           success,
           message,
           response_params,
-          :test => test?,
-          :authorization => authorization,
-          :avs_result => avs_from(avs),
-          :cvv_result => cvv
+          test: test?,
+          authorization: authorization,
+          avs_result: avs_from(avs),
+          cvv_result: cvv
         )
       end
 
       def avs_from(avs)
-        avs_params = { :code => avs }
+        avs_params = { code: avs }
         avs_params[:message] = AVS_CUSTOM_MESSAGES[avs] if AVS_CUSTOM_MESSAGES.key?(avs)
         avs_params
       end
@@ -1560,7 +1552,7 @@ module ActiveMerchant #:nodoc:
       def parse(action, soap)
         xml = REXML::Document.new(soap)
         root = REXML::XPath.first(xml, '//SOAP-ENV:Body')
-        response = root ? parse_element(root[0]) : { :response => soap }
+        response = root ? parse_element(root[0]) : { response: soap }
 
         success, message, authorization, avs, cvv = false, FAILURE_MESSAGE, nil, nil, nil
 
@@ -1576,15 +1568,16 @@ module ActiveMerchant #:nodoc:
           else
             success = true
           end
-          message = case action
-          when :get_customer_payment_methods
-            p['item']
-          when :get_transaction_custom
-            items = p['item'].kind_of?(Array) ? p['item'] : [p['item']]
-            items.inject({}) { |hash, item| hash[item['field']] = item['value']; hash }
-          else
-            p
-          end
+          message =
+            case action
+            when :get_customer_payment_methods
+              p['item']
+            when :get_transaction_custom
+              items = p['item'].kind_of?(Array) ? p['item'] : [p['item']]
+              items.inject({}) { |hash, item| hash[item['field']] = item['value']; hash }
+            else
+              p
+            end
         elsif response.respond_to?(:[]) && p = response[:response]
           message = p # when response is html
         end
@@ -1614,7 +1607,6 @@ module ActiveMerchant #:nodoc:
 
         response
       end
-
     end
   end
 end

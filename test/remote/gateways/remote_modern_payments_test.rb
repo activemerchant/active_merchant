@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class RemoteModernPaymentTest < Test::Unit::TestCase
-
   def setup
     @gateway = ModernPaymentsGateway.new(fixtures(:modern_payments))
 
@@ -10,9 +9,9 @@ class RemoteModernPaymentTest < Test::Unit::TestCase
     @declined_card = credit_card('4000000000000000')
 
     @options = {
-      :order_id => '1',
-      :billing_address => address,
-      :description => 'Store Purchase'
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase'
     }
   end
 
@@ -34,9 +33,9 @@ class RemoteModernPaymentTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = ModernPaymentsGateway.new(
-                :login => '',
-                :password => ''
-              )
+      login: '',
+      password: ''
+    )
 
     assert_raises(ActiveMerchant::ResponseError) do
       gateway.purchase(@amount, @credit_card, @options)

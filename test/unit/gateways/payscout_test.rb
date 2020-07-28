@@ -3,17 +3,17 @@ require 'test_helper'
 class PayscoutTest < Test::Unit::TestCase
   def setup
     @gateway = PayscoutGateway.new(
-                 :username => 'xxx',
-                 :password => 'xxx'
-               )
+      username: 'xxx',
+      password: 'xxx'
+    )
 
     @credit_card = credit_card
     @amount = 100
 
     @options = {
-      :order_id => '1',
-      :billing_address => address,
-      :description => 'Store Purchase'
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase'
     }
   end
 

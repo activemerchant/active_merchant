@@ -35,6 +35,56 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  # When requires_approval is true (or not present),
+  # a `purchase` makes two calls (`auth` and `capture`).
+  def test_successful_purchase_with_requires_approval_true
+    stub_comms do
+      @gateway.purchase(@accepted_amount, @credit_card, @options.merge(requires_approval: true))
+    end.check_request do |endpoint, data, headers|
+    end.respond_with(successful_authorize_response, successful_capture_response)
+  end
+
+  # When requires_approval is false, a `purchase` makes one call (`auth`).
+  def test_successful_purchase_with_requires_approval_false
+    stub_comms do
+      @gateway.purchase(@accepted_amount, @credit_card, @options.merge(requires_approval: false))
+    end.check_request do |endpoint, data, headers|
+      assert_equal false, JSON.parse(data)['cardPaymentMethodSpecificInput']['requiresApproval']
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_successful_purchase_airline_fields
+    options = @options.merge(
+      airline_data: {
+        code: 111,
+        name: 'Spreedly Airlines',
+        flight_date: '20190810',
+        passenger_name: 'Randi Smith',
+        flight_legs: [
+          { arrival_airport: 'BDL',
+            origin_airport: 'RDU',
+            date: '20190810',
+            carrier_code: 'SA',
+            number: 596,
+            airline_class: 'ZZ'},
+          { arrival_airport: 'RDU',
+            origin_airport: 'BDL',
+            date: '20190817',
+            carrier_code: 'SA',
+            number: 597,
+            airline_class: 'ZZ'}
+        ]
+      }
+    )
+    stub_comms do
+      @gateway.purchase(@accepted_amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_equal 111, JSON.parse(data)['order']['additionalInput']['airlineData']['code']
+      assert_equal '20190810', JSON.parse(data)['order']['additionalInput']['airlineData']['flightDate']
+      assert_equal 2, JSON.parse(data)['order']['additionalInput']['airlineData']['flightLegs'].length
+    end.respond_with(successful_authorize_response, successful_capture_response)
+  end
+
   def test_purchase_does_not_run_capture_if_authorize_auto_captured
     response = stub_comms do
       @gateway.purchase(@accepted_amount, @credit_card, @options)
@@ -91,7 +141,7 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert_success response
   end
 
-  def test_trucates_first_name_to_15_chars
+  def test_truncates_first_name_to_15_chars
     credit_card = credit_card('4567350000427977', { first_name: 'thisisaverylongfirstname' })
 
     response = stub_comms do
@@ -359,7 +409,7 @@ class GlobalCollectTest < Test::Unit::TestCase
   end
 
   def successful_authorize_response
-    %({\n   \"creationOutput\" : {\n      \"additionalReference\" : \"00000014280000000092\",\n      \"externalReference\" : \"000000142800000000920000100001\"\n   },\n   \"payment\" : {\n      \"id\" : \"000000142800000000920000100001\",\n      \"paymentOutput\" : {\n         \"amountOfMoney\" : {\n            \"amount\" : 100,\n            \"currencyCode\" : \"USD\"\n         },\n         \"references\" : {\n            \"paymentReference\" : \"0\"\n         },\n         \"paymentMethod\" : \"card\",\n         \"cardPaymentMethodSpecificOutput\" : {\n            \"paymentProductId\" : 1,\n            \"authorisationCode\" : \"OK1131\",\n            \"card\" : {\n               \"cardNumber\" : \"************7977\",\n               \"expiryDate\" : \"0917\"\n            },\n            \"fraudResults\" : {\n               \"fraudServiceResult\" : \"no-advice\",\n               \"avsResult\" : \"0\",\n               \"cvvResult\" : \"0\"\n            }\n         }\n      },\n      \"status\" : \"PENDING_APPROVAL\",\n      \"statusOutput\" : {\n         \"isCancellable\" : true,\n         \"statusCode\" : 600,\n         \"statusCodeChangeDateTime\" : \"20160316205952\",\n         \"isAuthorized\" : true\n      }\n   }\n})
+    "{\n   \"creationOutput\" : {\n      \"additionalReference\" : \"00000014280000000092\",\n      \"externalReference\" : \"000000142800000000920000100001\"\n   },\n   \"payment\" : {\n      \"id\" : \"000000142800000000920000100001\",\n      \"paymentOutput\" : {\n         \"amountOfMoney\" : {\n            \"amount\" : 4005,\n            \"currencyCode\" : \"USD\"\n         },\n         \"references\" : {\n            \"paymentReference\" : \"0\"\n         },\n         \"paymentMethod\" : \"card\",\n         \"cardPaymentMethodSpecificOutput\" : {\n            \"paymentProductId\" : 1,\n            \"authorisationCode\" : \"OK1131\",\n            \"fraudResults\" : {\n               \"fraudServiceResult\" : \"no-advice\",\n               \"avsResult\" : \"0\",\n               \"cvvResult\" : \"0\"\n            },\n            \"card\" : {\n               \"cardNumber\" : \"************7977\",\n               \"expiryDate\" : \"0920\"\n            }\n         }\n      },\n      \"status\" : \"PENDING_APPROVAL\",\n      \"statusOutput\" : {\n         \"isCancellable\" : true,\n         \"statusCategory\" : \"PENDING_MERCHANT\",\n         \"statusCode\" : 600,\n         \"statusCodeChangeDateTime\" : \"20191203162910\",\n         \"isAuthorized\" : true,\n         \"isRefundable\" : false\n      }\n   }\n}"
   end
 
   def failed_authorize_response
@@ -367,7 +417,7 @@ class GlobalCollectTest < Test::Unit::TestCase
   end
 
   def successful_capture_response
-    %({\n   \"payment\" : {\n      \"id\" : \"000000142800000000920000100001\",\n      \"paymentOutput\" : {\n         \"amountOfMoney\" : {\n            \"amount\" : 100,\n            \"currencyCode\" : \"USD\"\n         },\n         \"references\" : {\n            \"paymentReference\" : \"0\"\n         },\n         \"paymentMethod\" : \"card\",\n         \"cardPaymentMethodSpecificOutput\" : {\n            \"paymentProductId\" : 1,\n            \"authorisationCode\" : \"OK1131\",\n            \"card\" : {\n               \"cardNumber\" : \"************7977\",\n               \"expiryDate\" : \"0917\"\n            },\n            \"fraudResults\" : {\n               \"fraudServiceResult\" : \"no-advice\",\n               \"avsResult\" : \"0\",\n               \"cvvResult\" : \"0\"\n            }\n         }\n      },\n      \"status\" : \"CAPTURE_REQUESTED\",\n      \"statusOutput\" : {\n         \"isCancellable\" : true,\n         \"statusCode\" : 800,\n         \"statusCodeChangeDateTime\" : \"20160317191047\",\n         \"isAuthorized\" : true\n      }\n   }\n})
+    "{\n   \"payment\" : {\n      \"id\" : \"000000142800000000920000100001\",\n      \"paymentOutput\" : {\n         \"amountOfMoney\" : {\n            \"amount\" : 4005,\n            \"currencyCode\" : \"USD\"\n         },\n         \"references\" : {\n            \"paymentReference\" : \"0\"\n         },\n         \"paymentMethod\" : \"card\",\n         \"cardPaymentMethodSpecificOutput\" : {\n            \"paymentProductId\" : 1,\n            \"authorisationCode\" : \"OK1131\",\n            \"fraudResults\" : {\n               \"fraudServiceResult\" : \"no-advice\",\n               \"avsResult\" : \"0\",\n               \"cvvResult\" : \"0\"\n            },\n            \"card\" : {\n               \"cardNumber\" : \"************7977\",\n               \"expiryDate\" : \"0920\"\n            }\n         }\n      },\n      \"status\" : \"CAPTURE_REQUESTED\",\n      \"statusOutput\" : {\n         \"isCancellable\" : true,\n         \"statusCategory\" : \"PENDING_CONNECT_OR_3RD_PARTY\",\n         \"statusCode\" : 800,\n         \"statusCodeChangeDateTime\" : \"20191203163030\",\n         \"isAuthorized\" : true,\n         \"isRefundable\" : false\n      }\n   }\n}"
   end
 
   def failed_capture_response

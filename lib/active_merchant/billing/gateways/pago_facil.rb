@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['MX']
       self.default_currency = 'MXN'
-      self.supported_cardtypes = [:visa, :master, :american_express, :jcb]
+      self.supported_cardtypes = %i[visa master american_express jcb]
 
       self.homepage_url = 'http://www.pagofacil.net/'
       self.display_name = 'PagoFacil'
@@ -53,9 +53,7 @@ module ActiveMerchant #:nodoc:
 
       def add_currency(post, money, options)
         currency = options.fetch(:currency, currency(money))
-        unless currency == self.class.default_currency
-          post[:divisa] = currency
-        end
+        post[:divisa] = currency unless currency == self.class.default_currency
       end
 
       def add_payment(post, credit_card)

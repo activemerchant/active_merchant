@@ -5,25 +5,25 @@ class ElavonTest < Test::Unit::TestCase
 
   def setup
     @gateway = ElavonGateway.new(
-                 :login => 'login',
-                 :user => 'user',
-                 :password => 'password'
-               )
+      login: 'login',
+      user: 'user',
+      password: 'password'
+    )
 
     @multi_currency_gateway = ElavonGateway.new(
-                                :login => 'login',
-                                :user => 'user',
-                                :password => 'password',
-                                :multi_currency => true
-                              )
+      login: 'login',
+      user: 'user',
+      password: 'password',
+      multi_currency: true
+    )
 
     @credit_card = credit_card
     @amount = 100
 
     @options = {
-      :order_id => '1',
-      :billing_address => address,
-      :description => 'Store Purchase'
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase'
     }
   end
 
@@ -60,7 +60,7 @@ class ElavonTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_capture_response)
     authorization = '123456;00000000-0000-0000-0000-00000000000'
 
-    assert response = @gateway.capture(@amount, authorization, :credit_card => @credit_card)
+    assert response = @gateway.capture(@amount, authorization, credit_card: @credit_card)
     assert_instance_of Response, response
     assert_success response
 
@@ -85,7 +85,7 @@ class ElavonTest < Test::Unit::TestCase
   def test_successful_capture_with_additional_options
     authorization = '123456;00000000-0000-0000-0000-00000000000'
     response = stub_comms do
-      @gateway.capture(@amount, authorization, :test_mode => true, :partial_shipment_flag => true)
+      @gateway.capture(@amount, authorization, test_mode: true, partial_shipment_flag: true)
     end.check_request do |endpoint, data, headers|
       assert_match(/ssl_transaction_type=CCCOMPLETE/, data)
       assert_match(/ssl_test_mode=TRUE/, data)
@@ -122,6 +122,39 @@ class ElavonTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_dynamic_dba
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(dba: 'MANYMAG*BAKERS MONTHLY'))
+    end.check_request do |_endpoint, data, _headers|
+      parsed = CGI.parse(data)
+      assert_equal ['MANYMAG*BAKERS MONTHLY'], parsed['ssl_dynamic_dba']
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_unscheduled
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(merchant_initiated_unscheduled: 'Y'))
+    end.check_request do |_endpoint, data, _headers|
+      parsed = CGI.parse(data)
+      assert_equal ['Y'], parsed['ssl_merchant_initiated_unscheduled']
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_authorization_with_dynamic_dba
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(dba: 'MANYMAG*BAKERS MONTHLY'))
+    end.check_request do |_endpoint, data, _headers|
+      parsed = CGI.parse(data)
+      assert_equal ['MANYMAG*BAKERS MONTHLY'], parsed['ssl_dynamic_dba']
+    end.respond_with(successful_authorization_response)
+
+    assert_success response
+  end
+
   def test_successful_purchase_with_multi_currency
     response = stub_comms(@multi_currency_gateway) do
       @multi_currency_gateway.purchase(@amount, @credit_card, @options.merge(currency: 'EUR'))
@@ -146,7 +179,7 @@ class ElavonTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(failed_authorization_response)
     authorization = '123456INVALID;00000000-0000-0000-0000-00000000000'
 
-    assert response = @gateway.capture(@amount, authorization, :credit_card => @credit_card)
+    assert response = @gateway.capture(@amount, authorization, credit_card: @credit_card)
     assert_instance_of Response, response
     assert_failure response
   end
@@ -194,22 +227,14 @@ class ElavonTest < Test::Unit::TestCase
   def test_successful_verify
     response = stub_comms do
       @gateway.verify(@credit_card)
-    end.respond_with(successful_authorization_response, successful_void_response)
+    end.respond_with(successful_verify_response)
     assert_success response
-  end
-
-  def test_successful_verify_failed_void
-    response = stub_comms do
-      @gateway.verify(@credit_card, @options)
-    end.respond_with(successful_authorization_response, failed_void_response)
-    assert_success response
-    assert_equal 'APPROVED', response.message
   end
 
   def test_unsuccessful_verify
     response = stub_comms do
       @gateway.verify(@credit_card, @options)
-    end.respond_with(failed_authorization_response, successful_void_response)
+    end.respond_with(failed_verify_response)
     assert_failure response
     assert_equal 'The Credit Card Number supplied in the authorization request appears to be invalid.', response.message
   end
@@ -225,7 +250,7 @@ class ElavonTest < Test::Unit::TestCase
   end
 
   def test_supported_card_types
-    assert_equal [:visa, :master, :american_express, :discover], ElavonGateway.supported_cardtypes
+    assert_equal %i[visa master american_express discover], ElavonGateway.supported_cardtypes
   end
 
   def test_avs_result
@@ -279,7 +304,7 @@ class ElavonTest < Test::Unit::TestCase
 
     @options[:billing_address][:zip] = bad_zip
 
-    @gateway.expects(:commit).with(anything, anything, has_entries(:avs_zip => stripped_zip), anything)
+    @gateway.expects(:commit).with(anything, anything, has_entries(avs_zip: stripped_zip), anything)
 
     @gateway.purchase(@amount, @credit_card, @options)
   end
@@ -287,18 +312,124 @@ class ElavonTest < Test::Unit::TestCase
   def test_zip_codes_with_letters_are_left_intact
     @options[:billing_address][:zip] = '.K1%Z_5E3-'
 
-    @gateway.expects(:commit).with(anything, anything, has_entries(:avs_zip => 'K1Z5E3'), anything)
+    @gateway.expects(:commit).with(anything, anything, has_entries(avs_zip: 'K1Z5E3'), anything)
 
     @gateway.purchase(@amount, @credit_card, @options)
   end
 
   def test_custom_fields_in_request
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(:customer_number => '123', :custom_fields => {:a_key => 'a value'}))
+      @gateway.purchase(@amount, @credit_card, @options.merge(customer_number: '123', custom_fields: {a_key: 'a value'}))
     end.check_request do |endpoint, data, headers|
       assert_match(/customer_number=123/, data)
       assert_match(/a_key/, data)
       refute_match(/ssl_a_key/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_level_3_fields_in_request
+    level_3_data = {
+      customer_code: 'bob',
+      salestax: '3.45',
+      salestax_indicator: 'Y',
+      level3_indicator: 'Y',
+      ship_to_zip: '12345',
+      ship_to_country: 'US',
+      shipping_amount: '1234',
+      ship_from_postal_code: '54321',
+      discount_amount: '5',
+      duty_amount: '2',
+      national_tax_indicator: '0',
+      national_tax_amount: '10',
+      order_date: '280810',
+      other_tax: '3',
+      summary_commodity_code: '123',
+      merchant_vat_number: '222',
+      customer_vat_number: '333',
+      freight_tax_amount: '4',
+      vat_invoice_number: '26',
+      tracking_number: '45',
+      shipping_company: 'UFedzon',
+      other_fees: '2',
+      line_items: [
+        {
+          description: 'thing',
+          product_code: '23',
+          commodity_code: '444',
+          quantity: '15',
+          unit_of_measure: 'kropogs',
+          unit_cost: '4.5',
+          discount_indicator: 'Y',
+          tax_indicator: 'Y',
+          discount_amount: '1',
+          tax_rate: '8.25',
+          tax_amount: '12',
+          tax_type: 'state',
+          extended_total: '500',
+          total: '525',
+          alternative_tax: '111'
+        },
+        {
+          description: 'thing2',
+          product_code: '23',
+          commodity_code: '444',
+          quantity: '15',
+          unit_of_measure: 'kropogs',
+          unit_cost: '4.5',
+          discount_indicator: 'Y',
+          tax_indicator: 'Y',
+          discount_amount: '1',
+          tax_rate: '8.25',
+          tax_amount: '12',
+          tax_type: 'state',
+          extended_total: '500',
+          total: '525',
+          alternative_tax: '111'
+        }
+      ]
+    }
+
+    options = @options.merge(level_3_data: level_3_data)
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/ssl_customer_code=bob/, data)
+      assert_match(/ssl_salestax=3.45/, data)
+      assert_match(/ssl_salestax_indicator=Y/, data)
+      assert_match(/ssl_level3_indicator=Y/, data)
+      assert_match(/ssl_ship_to_zip=12345/, data)
+      assert_match(/ssl_ship_to_country=US/, data)
+      assert_match(/ssl_shipping_amount=1234/, data)
+      assert_match(/ssl_ship_from_postal_code=54321/, data)
+      assert_match(/ssl_discount_amount=5/, data)
+      assert_match(/ssl_duty_amount=2/, data)
+      assert_match(/ssl_national_tax_indicator=0/, data)
+      assert_match(/ssl_national_tax_amount=10/, data)
+      assert_match(/ssl_order_date=280810/, data)
+      assert_match(/ssl_other_tax=3/, data)
+      assert_match(/ssl_summary_commodity_code=123/, data)
+      assert_match(/ssl_merchant_vat_number=222/, data)
+      assert_match(/ssl_customer_vat_number=333/, data)
+      assert_match(/ssl_freight_tax_amount=4/, data)
+      assert_match(/ssl_vat_invoice_number=26/, data)
+      assert_match(/ssl_tracking_number=45/, data)
+      assert_match(/ssl_shipping_company=UFedzon/, data)
+      assert_match(/ssl_other_fees=2/, data)
+      assert_match(/ssl_line_Item_description/, data)
+      assert_match(/ssl_line_Item_product_code/, data)
+      assert_match(/ssl_line_Item_commodity_code/, data)
+      assert_match(/ssl_line_Item_quantity/, data)
+      assert_match(/ssl_line_Item_unit_of_measure/, data)
+      assert_match(/ssl_line_Item_unit_cost/, data)
+      assert_match(/ssl_line_Item_discount_indicator/, data)
+      assert_match(/ssl_line_Item_tax_indicator/, data)
+      assert_match(/ssl_line_Item_discount_amount/, data)
+      assert_match(/ssl_line_Item_tax_rate/, data)
+      assert_match(/ssl_line_Item_tax_amount/, data)
+      assert_match(/ssl_line_Item_tax_type/, data)
+      assert_match(/ssl_line_Item_extended_total/, data)
+      assert_match(/ssl_line_Item_total/, data)
+      assert_match(/ssl_line_Item_alternative_tax/, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -397,6 +528,23 @@ class ElavonTest < Test::Unit::TestCase
     ssl_txn_time=08/21/2012 05:37:19 PM"
   end
 
+  def successful_verify_response
+    "ssl_card_number=41**********9990
+    ssl_exp_date=0921
+    ssl_card_short_description=VISA
+    ssl_result=0
+    ssl_result_message=APPROVAL
+    ssl_transaction_type=CARDVERIFICATION
+    ssl_txn_id=010520ED3-56D114FC-B7D0-4ACF-BB3E-B1F0DA5A1EC7
+    ssl_approval_code=401169
+    ssl_cvv2_response=M
+    ssl_avs_response=M
+    ssl_account_balance=0.00
+    ssl_txn_time=05/01/2020 11:30:56 AM
+    ssl_card_type=CREDITCARD
+    ssl_partner_app_id=VM"
+  end
+
   def failed_purchase_response
     "errorCode=5000
     errorName=Credit Card Number Invalid
@@ -415,11 +563,17 @@ class ElavonTest < Test::Unit::TestCase
     errorMessage=The transaction ID is invalid for this transaction type"
   end
 
+  def failed_verify_response
+    "errorCode=5000
+    errorName=Credit Card Number Invalid
+    errorMessage=The Credit Card Number supplied in the authorization request appears to be invalid."
+  end
+
   def invalid_login_response
     <<-RESPONSE
     ssl_result=7000\r
     ssl_result_message=The VirtualMerchant ID and/or User ID supplied in the authorization request is invalid.\r
-        RESPONSE
+    RESPONSE
   end
 
   def successful_authorization_response

@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class RemoteMerchantOneTest < Test::Unit::TestCase
-
   def setup
     @gateway = MerchantOneGateway.new(fixtures(:merchant_one))
 
@@ -10,9 +9,9 @@ class RemoteMerchantOneTest < Test::Unit::TestCase
     @declined_card = credit_card('1111111111111111')
 
     @options = {
-      :order_id => '1',
-      :description => 'Store Purchase',
-      :billing_address => {
+      order_id: '1',
+      description: 'Store Purchase',
+      billing_address: {
         name: 'Jim Smith',
         address1: '1234 My Street',
         address2: 'Apt 1',
@@ -54,9 +53,9 @@ class RemoteMerchantOneTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = MerchantOneGateway.new(
-                :username => 'nnn',
-                :password => 'nnn'
-              )
+      username: 'nnn',
+      password: 'nnn'
+    )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Authentication Failed', response.message

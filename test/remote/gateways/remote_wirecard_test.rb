@@ -190,13 +190,13 @@ class RemoteWirecardTest < Test::Unit::TestCase
   end
 
   def test_successful_authorization_as_recurring_transaction_type_initial
-    assert response = @gateway.authorize(@amount, @credit_card, @options.merge(:recurring => 'Initial'))
+    assert response = @gateway.authorize(@amount, @credit_card, @options.merge(recurring: 'Initial'))
     assert_success response
     assert response.authorization
   end
 
   def test_successful_purchase_as_recurring_transaction_type_initial
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:recurring => 'Initial'))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(recurring: 'Initial'))
     assert_success response
     assert response.authorization
   end
@@ -258,7 +258,7 @@ class RemoteWirecardTest < Test::Unit::TestCase
 
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
-      @gateway.purchase(@amount, @credit_card,  @options)
+      @gateway.purchase(@amount, @credit_card, @options)
     end
     clean_transcript = @gateway.scrub(transcript)
 

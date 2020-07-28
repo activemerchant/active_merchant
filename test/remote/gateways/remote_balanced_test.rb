@@ -144,7 +144,7 @@ class RemoteBalancedTest < Test::Unit::TestCase
   def test_store
     new_email_address = '%d@example.org' % Time.now
     store = @gateway.store(@credit_card, {
-        email: new_email_address
+      email: new_email_address
     })
     assert_instance_of String, store.authorization
   end

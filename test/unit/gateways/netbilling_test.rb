@@ -4,11 +4,11 @@ class NetbillingTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    @gateway = NetbillingGateway.new(:login => 'login')
+    @gateway = NetbillingGateway.new(login: 'login')
 
     @credit_card = credit_card('4242424242424242')
     @amount = 100
-    @options = { :billing_address => address }
+    @options = { billing_address: address }
   end
 
   def test_successful_request
@@ -43,7 +43,7 @@ class NetbillingTest < Test::Unit::TestCase
   end
 
   def test_site_tag_sent_if_provided
-    @gateway = NetbillingGateway.new(:login => 'login', :site_tag => 'dummy-site-tag')
+    @gateway = NetbillingGateway.new(login: 'login', site_tag: 'dummy-site-tag')
 
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)

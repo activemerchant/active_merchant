@@ -8,9 +8,9 @@ module ActiveMerchant #:nodoc:
     class PayflowGateway < Gateway
       include PayflowCommonAPI
 
-      RECURRING_ACTIONS = Set.new([:add, :modify, :cancel, :inquiry, :reactivate, :payment])
+      RECURRING_ACTIONS = Set.new(%i[add modify cancel inquiry reactivate payment])
 
-      self.supported_cardtypes = [:visa, :master, :american_express, :jcb, :discover, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express jcb discover diners_club]
       self.homepage_url = 'https://www.paypal.com/cgi-bin/webscr?cmd=_payflow-pro-overview-outside'
       self.display_name = 'PayPal Payflow Pro'
 
@@ -80,21 +80,21 @@ module ActiveMerchant #:nodoc:
         request = build_recurring_request(options[:profile_id] ? :modify : :add, money, options) do |xml|
           add_credit_card(xml, credit_card, options) if credit_card
         end
-        commit(request, options.merge(:request_type => :recurring))
+        commit(request, options.merge(request_type: :recurring))
       end
 
       def cancel_recurring(profile_id)
         ActiveMerchant.deprecated RECURRING_DEPRECATION_MESSAGE
 
-        request = build_recurring_request(:cancel, 0, :profile_id => profile_id)
-        commit(request, options.merge(:request_type => :recurring))
+        request = build_recurring_request(:cancel, 0, profile_id: profile_id)
+        commit(request, options.merge(request_type: :recurring))
       end
 
       def recurring_inquiry(profile_id, options = {})
         ActiveMerchant.deprecated RECURRING_DEPRECATION_MESSAGE
 
-        request = build_recurring_request(:inquiry, nil, options.update(:profile_id => profile_id))
-        commit(request, options.merge(:request_type => :recurring))
+        request = build_recurring_request(:inquiry, nil, options.update(profile_id: profile_id))
+        commit(request, options.merge(request_type: :recurring))
       end
 
       def express
@@ -136,7 +136,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'Description', options[:description] unless options[:description].blank?
               xml.tag! 'OrderDesc', options[:order_desc] unless options[:order_desc].blank?
               xml.tag! 'Comment', options[:comment] unless options[:comment].blank?
-              xml.tag!('ExtData', 'Name'=> 'COMMENT2', 'Value'=> options[:comment2]) unless options[:comment2].blank?
+              xml.tag!('ExtData', 'Name' => 'COMMENT2', 'Value' => options[:comment2]) unless options[:comment2].blank?
               xml.tag! 'TaxAmt', options[:taxamt] unless options[:taxamt].blank?
               xml.tag! 'FreightAmt', options[:freightamt] unless options[:freightamt].blank?
               xml.tag! 'DutyAmt', options[:dutyamt] unless options[:dutyamt].blank?
@@ -150,7 +150,7 @@ module ActiveMerchant #:nodoc:
             end
             xml.tag! 'Tender' do
               xml.tag! 'Card' do
-                xml.tag! 'ExtData', 'Name' => 'ORIGID', 'Value' =>  reference
+                xml.tag! 'ExtData', 'Name' => 'ORIGID', 'Value' => reference
               end
             end
           end
@@ -169,7 +169,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'OrderDesc', options[:order_desc] unless options[:order_desc].blank?
               # Comment and Comment2 will show up in manager.paypal.com as Comment1 and Comment2
               xml.tag! 'Comment', options[:comment] unless options[:comment].blank?
-              xml.tag!('ExtData', 'Name'=> 'COMMENT2', 'Value'=> options[:comment2]) unless options[:comment2].blank?
+              xml.tag!('ExtData', 'Name' => 'COMMENT2', 'Value' => options[:comment2]) unless options[:comment2].blank?
               xml.tag! 'TaxAmt', options[:taxamt] unless options[:taxamt].blank?
               xml.tag! 'FreightAmt', options[:freightamt] unless options[:freightamt].blank?
               xml.tag! 'DutyAmt', options[:dutyamt] unless options[:dutyamt].blank?
@@ -262,20 +262,32 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'NameOnCard', credit_card.first_name
           xml.tag! 'CVNum', credit_card.verification_value if credit_card.verification_value?
 
-          if options[:three_d_secure]
-            three_d_secure = options[:three_d_secure]
-            xml.tag! 'BuyerAuthResult' do
-              xml.tag! 'Status', three_d_secure[:status] unless three_d_secure[:status].blank?
-              xml.tag! 'AuthenticationId', three_d_secure[:authentication_id] unless three_d_secure[:authentication_id].blank?
-              xml.tag! 'PAReq', three_d_secure[:pareq] unless three_d_secure[:pareq].blank?
-              xml.tag! 'ACSUrl', three_d_secure[:acs_url] unless three_d_secure[:acs_url].blank?
-              xml.tag! 'ECI', three_d_secure[:eci] unless three_d_secure[:eci].blank?
-              xml.tag! 'CAVV', three_d_secure[:cavv] unless three_d_secure[:cavv].blank?
-              xml.tag! 'XID', three_d_secure[:xid] unless three_d_secure[:xid].blank?
-            end
-          end
+          add_three_d_secure(options, xml)
 
-          xml.tag! 'ExtData', 'Name' => 'LASTNAME', 'Value' =>  credit_card.last_name
+          xml.tag! 'ExtData', 'Name' => 'LASTNAME', 'Value' => credit_card.last_name
+        end
+      end
+
+      def add_three_d_secure(options, xml)
+        if options[:three_d_secure]
+          three_d_secure = options[:three_d_secure]
+          xml.tag! 'BuyerAuthResult' do
+            authentication_status(three_d_secure, xml)
+            xml.tag! 'AuthenticationId', three_d_secure[:authentication_id] unless three_d_secure[:authentication_id].blank?
+            xml.tag! 'PAReq', three_d_secure[:pareq] unless three_d_secure[:pareq].blank?
+            xml.tag! 'ACSUrl', three_d_secure[:acs_url] unless three_d_secure[:acs_url].blank?
+            xml.tag! 'ECI', three_d_secure[:eci] unless three_d_secure[:eci].blank?
+            xml.tag! 'CAVV', three_d_secure[:cavv] unless three_d_secure[:cavv].blank?
+            xml.tag! 'XID', three_d_secure[:xid] unless three_d_secure[:xid].blank?
+          end
+        end
+      end
+
+      def authentication_status(three_d_secure, xml)
+        if three_d_secure[:authentication_response_status].present?
+          xml.tag! 'Status', three_d_secure[:authentication_response_status]
+        elsif three_d_secure[:directory_response_status].present?
+          xml.tag! 'Status', three_d_secure[:directory_response_status]
         end
       end
 
@@ -300,15 +312,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_recurring_request(action, money, options)
-        unless RECURRING_ACTIONS.include?(action)
-          raise StandardError, "Invalid Recurring Profile Action: #{action}"
-        end
+        raise StandardError, "Invalid Recurring Profile Action: #{action}" unless RECURRING_ACTIONS.include?(action)
 
         xml = Builder::XmlMarkup.new
         xml.tag! 'RecurringProfiles' do
           xml.tag! 'RecurringProfile' do
             xml.tag! action.to_s.capitalize do
-              unless [:cancel, :inquiry].include?(action)
+              unless %i[cancel inquiry].include?(action)
                 xml.tag! 'RPData' do
                   xml.tag! 'Name', options[:name] unless options[:name].nil?
                   xml.tag! 'TotalAmt', amount(money), 'Currency' => options[:currency] || currency(money)
@@ -319,7 +329,7 @@ module ActiveMerchant #:nodoc:
                   xml.tag! 'MaxFailPayments', options[:max_fail_payments] unless options[:max_fail_payments].nil?
 
                   if initial_tx = options[:initial_transaction]
-                    requires!(initial_tx, [:type, :authorization, :purchase])
+                    requires!(initial_tx, %i[type authorization purchase])
                     requires!(initial_tx, :amount) if initial_tx[:type] == :purchase
 
                     xml.tag! 'OptionalTrans', TRANSACTIONS[initial_tx[:type]]
@@ -342,9 +352,7 @@ module ActiveMerchant #:nodoc:
                   yield xml
                 end
               end
-              if action != :add
-                xml.tag! 'ProfileID', options[:profile_id]
-              end
+              xml.tag! 'ProfileID', options[:profile_id] if action != :add
               if action == :inquiry
                 xml.tag! 'PaymentHistory', (options[:history] ? 'Y' : 'N')
               end
@@ -354,7 +362,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def get_pay_period(options)
-        requires!(options, [:periodicity, :bimonthly, :monthly, :biweekly, :weekly, :yearly, :daily, :semimonthly, :quadweekly, :quarterly, :semiyearly])
+        requires!(options, %i[periodicity bimonthly monthly biweekly weekly yearly daily semimonthly quadweekly quarterly semiyearly])
         case options[:periodicity]
         when :weekly then 'Weekly'
         when :biweekly then 'Bi-weekly'

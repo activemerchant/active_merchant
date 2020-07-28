@@ -6,8 +6,8 @@ module ActiveMerchant #:nodoc:
 
       self.money_format = :cents
       self.default_currency = 'USD'
-      self.supported_countries = ['US', 'CA']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_countries = %w[US CA]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       self.homepage_url = 'http://www.jetpay.com'
       self.display_name = 'JetPay'
@@ -298,11 +298,11 @@ module ActiveMerchant #:nodoc:
         Response.new(success,
           success ? 'APPROVED' : message_from(response),
           response,
-          :test => test?,
-          :authorization => authorization_from(response, money, token),
-          :avs_result => AVSResult.new(:code => response[:avs]),
-          :cvv_result => CVVResult.new(response[:cvv2]),
-          :error_code => success ? nil : error_code_from(response)
+          test: test?,
+          authorization: authorization_from(response, money, token),
+          avs_result: AVSResult.new(code: response[:avs]),
+          cvv_result: CVVResult.new(response[:cvv2]),
+          error_code: success ? nil : error_code_from(response)
         )
       end
 
@@ -344,7 +344,7 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(response, money, previous_token)
         original_amount = amount(money) if money
-        [ response[:transaction_id], response[:approval], original_amount, (response[:token] || previous_token)].join(';')
+        [response[:transaction_id], response[:approval], original_amount, (response[:token] || previous_token)].join(';')
       end
 
       def error_code_from(response)
@@ -368,13 +368,9 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'CardExpMonth', format_exp(credit_card.month)
         xml.tag! 'CardExpYear', format_exp(credit_card.year)
 
-        if credit_card.first_name || credit_card.last_name
-          xml.tag! 'CardName', [credit_card.first_name, credit_card.last_name].compact.join(' ')
-        end
+        xml.tag! 'CardName', [credit_card.first_name, credit_card.last_name].compact.join(' ') if credit_card.first_name || credit_card.last_name
 
-        unless credit_card.verification_value.nil? || (credit_card.verification_value.length == 0)
-          xml.tag! 'CVV2', credit_card.verification_value
-        end
+        xml.tag! 'CVV2', credit_card.verification_value unless credit_card.verification_value.nil? || (credit_card.verification_value.length == 0)
       end
 
       def add_addresses(xml, options)

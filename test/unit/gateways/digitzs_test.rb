@@ -39,7 +39,7 @@ class DigitzsTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options_with_split)
     end.check_request do |endpoint, data, headers|
-      if data =~ /"cardSplit"/
+      if /"cardSplit"/.match?(data)
         assert_match(%r(split), data)
         assert_match(%r("merchantId":"spreedly-susanswidg-32270590-2095203-148657924"), data)
       end
@@ -53,7 +53,7 @@ class DigitzsTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options_with_split)
     end.check_request do |endpoint, data, headers|
-      if data =~ /"tokenSplit"/
+      if /"tokenSplit"/.match?(data)
         assert_match(%r(split), data)
         assert_match(%r("merchantId":"spreedly-susanswidg-32270590-2095203-148657924"), data)
       end

@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       self.homepage_url = 'https://www.creditcall.com'
       self.display_name = 'Creditcall'
@@ -24,19 +24,19 @@ module ActiveMerchant #:nodoc:
 
       AVS_CODE = {
         'matched;matched' => 'D',
-        'matched;notchecked' =>'B',
+        'matched;notchecked' => 'B',
         'matched;notmatched' => 'A',
         'matched;partialmatch' => 'A',
         'notchecked;matched' => 'P',
-        'notchecked;notchecked' =>'I',
+        'notchecked;notchecked' => 'I',
         'notchecked;notmatched' => 'I',
         'notchecked;partialmatch' => 'I',
         'notmatched;matched' => 'W',
-        'notmatched;notchecked' =>'C',
+        'notmatched;notchecked' => 'C',
         'notmatched;notmatched' => 'C',
         'notmatched;partialmatch' => 'C',
         'partialmatched;matched' => 'W',
-        'partialmatched;notchecked' =>'C',
+        'partialmatched;notchecked' => 'C',
         'partialmatched;notmatched' => 'C',
         'partialmatched;partialmatch' => 'C'
       }
@@ -175,10 +175,11 @@ module ActiveMerchant #:nodoc:
 
       def add_additional_verification(xml, options)
         return unless (options[:verify_zip].to_s == 'true') || (options[:verify_address].to_s == 'true')
+
         if address = options[:billing_address]
           xml.AdditionalVerification do
-            xml.Zip address[:zip] if options[:verify_zip].to_s  == 'true'
-            xml.Address address[:address1] if options[:verify_address].to_s  == 'true'
+            xml.Zip address[:zip] if options[:verify_zip].to_s == 'true'
+            xml.Address address[:address1] if options[:verify_address].to_s == 'true'
           end
         end
       end

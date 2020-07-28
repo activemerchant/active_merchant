@@ -9,7 +9,7 @@ class RemoteNetpayTest < Test::Unit::TestCase
     @declined_card = credit_card('4000300011112220')
 
     @options = {
-      :description => 'Store Purchase'
+      description: 'Store Purchase'
     }
   end
 

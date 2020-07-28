@@ -22,6 +22,8 @@ module ActiveMerchant #:nodoc:
     # * Alelo
     # * Cabal
     # * Naranja
+    # * UnionPay
+    # * Alia
     #
     # For testing purposes, use the 'bogus' credit card brand. This skips the vast majority of
     # validations, allowing you to focus on your core concerns until you're ready to be more concerned
@@ -96,6 +98,8 @@ module ActiveMerchant #:nodoc:
       # * +'alelo'+
       # * +'cabal'+
       # * +'naranja'+
+      # * +'union_pay'+
+      # * +'alia'+
       #
       # Or, if you wish to test your implementation, +'bogus'+.
       #
@@ -327,7 +331,7 @@ module ActiveMerchant #:nodoc:
           errors << [:last_name,  'cannot be empty'] if last_name.blank?
         end
 
-        if(empty?(month) || empty?(year))
+        if empty?(month) || empty?(year)
           errors << [:month, 'is required'] if empty?(month)
           errors << [:year,  'is required'] if empty?(year)
         else
@@ -336,7 +340,7 @@ module ActiveMerchant #:nodoc:
           if expired?
             errors << [:year,  'expired']
           else
-            errors << [:year,  'is not a valid year']  if !valid_expiry_year?(year)
+            errors << [:year,  'is not a valid year'] if !valid_expiry_year?(year)
           end
         end
 
@@ -347,7 +351,7 @@ module ActiveMerchant #:nodoc:
         errors = []
 
         if !empty?(brand)
-          errors << [:brand, 'is invalid']  if !CreditCard.card_companies.include?(brand)
+          errors << [:brand, 'is invalid'] if !CreditCard.card_companies.include?(brand)
         end
 
         if empty?(number)
@@ -367,9 +371,7 @@ module ActiveMerchant #:nodoc:
         errors = []
 
         if verification_value?
-          unless valid_card_verification_value?(verification_value, brand)
-            errors << [:verification_value, "should be #{card_verification_value_length(brand)} digits"]
-          end
+          errors << [:verification_value, "should be #{card_verification_value_length(brand)} digits"] unless valid_card_verification_value?(verification_value, brand)
         elsif requires_verification_value? && !valid_card_verification_value?(verification_value, brand)
           errors << [:verification_value, 'is required']
         end

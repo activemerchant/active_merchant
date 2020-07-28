@@ -5,7 +5,6 @@ module ActiveMerchant #:nodoc:
     # depending on options passed to new.
     #
     class UsaEpayGateway < Gateway
-
       self.abstract_class = true
 
       ##

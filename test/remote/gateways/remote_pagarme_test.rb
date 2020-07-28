@@ -14,7 +14,7 @@ class RemotePagarmeTest < Test::Unit::TestCase
     @declined_card = credit_card('4242424242424242', {
       first_name: 'Richard',
       last_name: 'Deschamps',
-      :verification_value => '688'
+      verification_value: '688'
     })
 
     @options = {
@@ -153,5 +153,4 @@ class RemotePagarmeTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:api_key], transcript)
   end
-
 end

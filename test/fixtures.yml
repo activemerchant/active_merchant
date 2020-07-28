@@ -411,6 +411,9 @@ hdfc:
 hps:
   secret_api_key: "skapi_cert_MYl2AQAowiQAbLp5JesGKh7QFkcizOP2jcX9BrEMqQ"
 
+hps_echeck:
+  secret_api_key:
+
 iats_payments:
   agent_code: TEST88
   password: TEST88
@@ -442,6 +445,12 @@ itransact:
 iveri:
   cert_id: CB69E68D-C7E7-46B9-9B7A-025DCABAD6EF
   app_id: d10a603d-4ade-405b-93f1-826dfc0181e8
+
+ixopay:
+  username: USERNAME
+  api_key: API_KEY
+  password: PASSWORD
+  secret: SHARED_SECRET
 
 jetpay:
   login: TESTTERMINAL
@@ -551,10 +560,6 @@ moneris:
   login: store3
   password: yesguy
 
-moneris_us:
-  login: monusqa002
-  password: qatoken
-
 money_movers:
   login: demo
   password: password
@@ -628,8 +633,7 @@ openpay:
   merchant_id: 'mzdtln0bmtms6o3kck8f'
 
 opp:
-  user_id: '8a8294174b7ecb28014b9699220015cc'
-  password: 'sy6KJsT8'
+  access_token: 'OGE4Mjk0MTc0YjdlY2IyODAxNGI5Njk5MjIwMDE1Y2N8c3k2S0pzVDg='
   entity_id: '8a8294174d0a8edd014d242337942575'
 
 optimal_payment:
@@ -875,8 +879,17 @@ quantum:
   password: Y
 
 # You will need to create a developer sandbox at https://developer.intuit.com/ and
-# successfully generate an OAuth 1.0a access token and token secret.
+# successfully generate an OAuth 2.0 access token and refresh_token. Access token
+# expires every 60 minutes
 quickbooks:
+  client_id:
+  client_secret:
+  refresh_token:
+  access_token:
+
+# You will need to create a developer sandbox at https://developer.intuit.com/ and
+# successfully generate an OAuth 1.0a access token and token secret.
+quickbooks_oauth_1:
   consumer_key:
   consumer_secret:
   access_token:
@@ -1184,9 +1197,14 @@ tns:
   userid: TESTSPREEDLY01
   password: 3f34fe50334fbe6cbe04c283411a5860
 
+# This account seem to have expired
 tns_ap:
   userid: TESTUNISOLMAA01
   password: b7f8119fda3bd27c17656badb52c95bb
+
+tns_pay_mode:
+  userid: USERID
+  password: password
 
 trans_first:
   login: 45567

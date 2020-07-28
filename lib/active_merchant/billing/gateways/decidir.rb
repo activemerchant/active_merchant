@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['AR']
       self.money_format = :cents
       self.default_currency = 'ARS'
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :naranja, :cabal]
+      self.supported_cardtypes = %i[visa master american_express diners_club naranja cabal]
 
       self.homepage_url = 'http://www.decidir.com'
       self.display_name = 'Decidir'
@@ -37,6 +37,7 @@ module ActiveMerchant #:nodoc:
         56 => STANDARD_ERROR_CODE[:card_declined],
         57 => STANDARD_ERROR_CODE[:card_declined],
         76 => STANDARD_ERROR_CODE[:call_issuer],
+        91 => STANDARD_ERROR_CODE[:call_issuer],
         96 => STANDARD_ERROR_CODE[:processing_error],
         97 => STANDARD_ERROR_CODE[:processing_error],
       }
@@ -106,17 +107,49 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_auth_purchase_params(post, money, credit_card, options)
-        post[:payment_method_id] =  options[:payment_method_id] ? options[:payment_method_id].to_i : 1
+        post[:payment_method_id] = add_payment_method_id(credit_card, options)
         post[:site_transaction_id] = options[:order_id]
         post[:bin] = credit_card.number[0..5]
         post[:payment_type] = options[:payment_type] || 'single'
         post[:installments] = options[:installments] ? options[:installments].to_i : 1
         post[:description] = options[:description] if options[:description]
         post[:email] = options[:email] if options[:email]
+        post[:establishment_name] = options[:establishment_name] if options[:establishment_name]
+        post[:fraud_detection] = add_fraud_detection(options[:fraud_detection]) if options[:fraud_detection].present?
+        post[:site_id] = options[:site_id] if options[:site_id]
         post[:sub_payments] = []
 
         add_invoice(post, money, options)
         add_payment(post, credit_card, options)
+        add_aggregate_data(post, options) if options[:aggregate_data]
+      end
+
+      def add_payment_method_id(credit_card, options)
+        if options[:payment_method_id]
+          options[:payment_method_id].to_i
+        elsif options[:debit]
+          if CreditCard.brand?(credit_card.number) == 'visa'
+            31
+          elsif CreditCard.brand?(credit_card.number) == 'master'
+            105
+          elsif CreditCard.brand?(credit_card.number) == 'maestro'
+            106
+          elsif CreditCard.brand?(credit_card.number) == 'cabal'
+            108
+          end
+        elsif CreditCard.brand?(credit_card.number) == 'master'
+          104
+        elsif CreditCard.brand?(credit_card.number) == 'american_express'
+          65
+        elsif CreditCard.brand?(credit_card.number) == 'diners_club'
+          8
+        elsif CreditCard.brand?(credit_card.number) == 'cabal'
+          63
+        elsif CreditCard.brand?(credit_card.number) == 'naranja'
+          24
+        else
+          1
+        end
       end
 
       def add_invoice(post, money, options)
@@ -146,6 +179,42 @@ module ActiveMerchant #:nodoc:
         card_data[:card_holder_identification][:number] = options[:card_holder_identification_number] if options[:card_holder_identification_number]
 
         post[:card_data] = card_data
+      end
+
+      def add_aggregate_data(post, options)
+        aggregate_data = {}
+        data = options[:aggregate_data]
+        aggregate_data[:indicator] = data[:indicator] if data[:indicator]
+        aggregate_data[:identification_number] = data[:identification_number] if data[:identification_number]
+        aggregate_data[:bill_to_pay] = data[:bill_to_pay] if data[:bill_to_pay]
+        aggregate_data[:bill_to_refund] = data[:bill_to_refund] if data[:bill_to_refund]
+        aggregate_data[:merchant_name] = data[:merchant_name] if data[:merchant_name]
+        aggregate_data[:street] = data[:street] if data[:street]
+        aggregate_data[:number] = data[:number] if data[:number]
+        aggregate_data[:postal_code] = data[:postal_code] if data[:postal_code]
+        aggregate_data[:category] = data[:category] if data[:category]
+        aggregate_data[:channel] = data[:channel] if data[:channel]
+        aggregate_data[:geographic_code] = data[:geographic_code] if data[:geographic_code]
+        aggregate_data[:city] = data[:city] if data[:city]
+        aggregate_data[:merchant_id] = data[:merchant_id] if data[:merchant_id]
+        aggregate_data[:province] = data[:province] if data[:province]
+        aggregate_data[:country] = data[:country] if data[:country]
+        aggregate_data[:merchant_email] = data[:merchant_email] if data[:merchant_email]
+        aggregate_data[:merchant_phone] = data[:merchant_phone] if data[:merchant_phone]
+        post[:aggregate_data] = aggregate_data
+      end
+
+      def add_fraud_detection(options = {})
+        {}.tap do |hsh|
+          hsh[:send_to_cs] = options[:send_to_cs] if valid_fraud_detection_option?(options[:send_to_cs]) # true/false
+          hsh[:channel] = options[:channel] if valid_fraud_detection_option?(options[:channel])
+          hsh[:dispatch_method] = options[:dispatch_method] if valid_fraud_detection_option?(options[:dispatch_method])
+        end
+      end
+
+      # Avoid sending fields with empty or null when not populated.
+      def valid_fraud_detection_option?(val)
+        !val.nil? && val != ''
       end
 
       def headers(options = {})
@@ -195,13 +264,10 @@ module ActiveMerchant #:nodoc:
         return response['message'] if response['message']
 
         message = nil
-
         if error = response.dig('status_details', 'error')
-          message = error.dig('reason', 'description')
+          message = "#{error.dig('reason', 'description')} | #{error['type']}"
         elsif response['error_type']
-          if response['validation_errors']
-            message = response['validation_errors'].map { |errors| "#{errors['code']}: #{errors['param']}" }.join(', ')
-          end
+          message = response['validation_errors'].map { |errors| "#{errors['code']}: #{errors['param']}" }.join(', ') if response['validation_errors']
           message ||= response['error_type']
         end
 
@@ -224,6 +290,11 @@ module ActiveMerchant #:nodoc:
           error_code ||= error['type']
         elsif response['error_type']
           error_code = response['error_type'] if response['validation_errors']
+        elsif error = response.dig('error')
+          validation_errors = error.dig('validation_errors', 0)
+          code = validation_errors['code'] if validation_errors && validation_errors['code']
+          param = validation_errors['param'] if validation_errors && validation_errors['param']
+          error_code = "#{error['error_type']} | #{code} | #{param}" if error['error_type']
         end
 
         error_code || STANDARD_ERROR_CODE[:processing_error]

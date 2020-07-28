@@ -6,15 +6,15 @@ class RemoteBarclaysEpdqExtraPlusTest < Test::Unit::TestCase
   def setup
     @gateway = BarclaysEpdqExtraPlusGateway.new(fixtures(:barclays_epdq_extra_plus))
     @amount = 100
-    @credit_card     = credit_card('4000100011112224', :verification_value => '987')
-    @mastercard      = credit_card('5399999999999999', :brand => 'mastercard')
+    @credit_card     = credit_card('4000100011112224', verification_value: '987')
+    @mastercard      = credit_card('5399999999999999', brand: 'mastercard')
     @declined_card   = credit_card('1111111111111111')
-    @credit_card_d3d = credit_card('4000000000000002', :verification_value => '111')
+    @credit_card_d3d = credit_card('4000000000000002', verification_value: '111')
     @options = {
-      :order_id => generate_unique_id[0...30],
-      :billing_address => address,
-      :description => 'Store Purchase',
-      :currency => fixtures(:barclays_epdq_extra_plus)[:currency] || 'GBP'
+      order_id: generate_unique_id[0...30],
+      billing_address: address,
+      description: 'Store Purchase',
+      currency: fixtures(:barclays_epdq_extra_plus)[:currency] || 'GBP'
     }
   end
 
@@ -37,13 +37,13 @@ class RemoteBarclaysEpdqExtraPlusTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_utf8_encoding_1
-    assert response = @gateway.purchase(@amount, credit_card('4000100011112224', :first_name => 'Rémy', :last_name => 'Fröåïør'), @options)
+    assert response = @gateway.purchase(@amount, credit_card('4000100011112224', first_name: 'Rémy', last_name: 'Fröåïør'), @options)
     assert_success response
     assert_equal BarclaysEpdqExtraPlusGateway::SUCCESS_MESSAGE, response.message
   end
 
   def test_successful_purchase_with_utf8_encoding_2
-    assert response = @gateway.purchase(@amount, credit_card('4000100011112224', :first_name => 'ワタシ', :last_name => 'ёжзийклмнопрсуфхцч'), @options)
+    assert response = @gateway.purchase(@amount, credit_card('4000100011112224', first_name: 'ワタシ', last_name: 'ёжзийклмнопрсуфхцч'), @options)
     assert_success response
     assert_equal BarclaysEpdqExtraPlusGateway::SUCCESS_MESSAGE, response.message
   end
@@ -51,7 +51,7 @@ class RemoteBarclaysEpdqExtraPlusTest < Test::Unit::TestCase
   # NOTE: You have to set the "Hash algorithm" to "SHA-1" in the "Technical information"->"Global security parameters"
   #       section of your account admin before running this test
   def test_successful_purchase_with_signature_encryptor_to_sha1
-    gateway = BarclaysEpdqExtraPlusGateway.new(fixtures(:barclays_epdq_extra_plus).merge(:signature_encryptor => 'sha1'))
+    gateway = BarclaysEpdqExtraPlusGateway.new(fixtures(:barclays_epdq_extra_plus).merge(signature_encryptor: 'sha1'))
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal BarclaysEpdqExtraPlusGateway::SUCCESS_MESSAGE, response.message
@@ -60,7 +60,7 @@ class RemoteBarclaysEpdqExtraPlusTest < Test::Unit::TestCase
   # NOTE: You have to set the "Hash algorithm" to "SHA-256" in the "Technical information"->"Global security parameters"
   #       section of your account admin before running this test
   def test_successful_purchase_with_signature_encryptor_to_sha256
-    gateway = BarclaysEpdqExtraPlusGateway.new(fixtures(:barclays_epdq_extra_plus).merge(:signature_encryptor => 'sha256'))
+    gateway = BarclaysEpdqExtraPlusGateway.new(fixtures(:barclays_epdq_extra_plus).merge(signature_encryptor: 'sha256'))
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal BarclaysEpdqExtraPlusGateway::SUCCESS_MESSAGE, response.message
@@ -69,7 +69,7 @@ class RemoteBarclaysEpdqExtraPlusTest < Test::Unit::TestCase
   # NOTE: You have to set the "Hash algorithm" to "SHA-512" in the "Technical information"->"Global security parameters"
   #       section of your account admin before running this test
   def test_successful_purchase_with_signature_encryptor_to_sha512
-    gateway = BarclaysEpdqExtraPlusGateway.new(fixtures(:barclays_epdq_extra_plus).merge(:signature_encryptor => 'sha512'))
+    gateway = BarclaysEpdqExtraPlusGateway.new(fixtures(:barclays_epdq_extra_plus).merge(signature_encryptor: 'sha512'))
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal BarclaysEpdqExtraPlusGateway::SUCCESS_MESSAGE, response.message
@@ -208,7 +208,7 @@ class RemoteBarclaysEpdqExtraPlusTest < Test::Unit::TestCase
   def test_unsuccessful_refund
     assert purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
-    assert refund = @gateway.refund(@amount+1, purchase.authorization, @options) # too much refund requested
+    assert refund = @gateway.refund(@amount + 1, purchase.authorization, @options) # too much refund requested
     assert_failure refund
     assert refund.authorization
     assert_equal 'Overflow in refunds requests', refund.message
@@ -216,11 +216,11 @@ class RemoteBarclaysEpdqExtraPlusTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = BarclaysEpdqExtraPlusGateway.new(
-                :login => '',
-                :user => '',
-                :password => '',
-                :signature_encryptor => 'none'
-              )
+      login: '',
+      user: '',
+      password: '',
+      signature_encryptor: 'none'
+    )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Some of the data entered is incorrect. please retry.', response.message

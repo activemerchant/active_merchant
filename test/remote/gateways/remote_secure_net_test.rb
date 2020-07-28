@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class SecureNetTest < Test::Unit::TestCase
-
   def setup
     Base.mode = :test
     @gateway = SecureNetGateway.new(fixtures(:secure_net))
@@ -29,9 +28,9 @@ class SecureNetTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = SecureNetGateway.new(
-                :login => '9988776',
-                :password => 'RabbitEarsPo'
-              )
+      login: '9988776',
+      password: 'RabbitEarsPo'
+    )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'SECURE KEY IS INVALID FOR SECURENET ID PROVIDED', response.message
@@ -135,5 +134,4 @@ class SecureNetTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:password], transcript)
   end
-
 end

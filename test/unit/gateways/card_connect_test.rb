@@ -16,9 +16,19 @@ class CardConnectTest < Test::Unit::TestCase
     }
   end
 
-  def test_incorrect_domain
+  def test_allow_domains_without_ports
+    assert CardConnectGateway.new(username: 'username', password: 'password', merchant_id: 'merchand_id', domain: 'https://vendor.cardconnect.com/test')
+  end
+
+  def test_reject_domains_without_card_connect
     assert_raise(ArgumentError) {
-      CardConnectGateway.new(username: 'username', password: 'password', merchant_id: 'merchand_id', domain: 'www.google.com')
+      CardConnectGateway.new(username: 'username', password: 'password', merchant_id: 'merchand_id', domain: 'https://www.google.com')
+    }
+  end
+
+  def test_reject_domains_without_https
+    assert_raise(ArgumentError) {
+      CardConnectGateway.new(username: 'username', password: 'password', merchant_id: 'merchand_id', domain: 'ttps://cardconnect.com')
     }
   end
 

@@ -8,10 +8,10 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://devapi.vnforapps.com/api.tokenization/api/v2/merchant'
       self.live_url = 'https://api.vnforapps.com/api.tokenization/api/v2/merchant'
 
-      self.supported_countries = ['US', 'PE']
+      self.supported_countries = %w[US PE]
       self.default_currency = 'PEN'
       self.money_format = :dollars
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       def initialize(options={})
         requires!(options, :access_key_id, :secret_access_key, :merchant_id)
@@ -21,7 +21,7 @@ module ActiveMerchant #:nodoc:
       def purchase(amount, payment_method, options={})
         MultiResponse.run() do |r|
           r.process { authorize(amount, payment_method, options) }
-          r.process { capture(r.authorization, options) }
+          r.process { capture(amount, r.authorization, options) }
         end
       end
 
@@ -37,7 +37,7 @@ module ActiveMerchant #:nodoc:
         commit('authorize', params, options)
       end
 
-      def capture(authorization, options={})
+      def capture(amount, authorization, options={})
         params = {}
         options[:id_unico] = split_authorization(authorization)[1]
         add_auth_order_id(params, authorization, options)
@@ -98,7 +98,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_auth_order_id(params, authorization, options)
-        purchase_number, _ = split_authorization(authorization)
+        purchase_number, = split_authorization(authorization)
         params[:purchaseNumber] = purchase_number
         params[:externalTransactionId] = options[:order_id]
       end
@@ -155,9 +155,9 @@ module ActiveMerchant #:nodoc:
           success_from(response),
           message_from(response, options, action),
           response,
-          :test => test?,
-          :authorization => authorization_from(params, response, options),
-          :error_code => response['errorCode']
+          test: test?,
+          authorization: authorization_from(params, response, options),
+          error_code: response['errorCode']
         )
       end
 
@@ -213,6 +213,7 @@ module ActiveMerchant #:nodoc:
 
       def action_code_description(response)
         return nil unless response['data']
+
         response['data']['DSC_COD_ACCION']
       end
 
@@ -229,9 +230,9 @@ module ActiveMerchant #:nodoc:
           false,
           message_from(response, options, action),
           response,
-          :test => test?,
-          :authorization => response['transactionUUID'],
-          :error_code => response['errorCode']
+          test: test?,
+          authorization: response['transactionUUID'],
+          error_code: response['errorCode']
         )
       end
 

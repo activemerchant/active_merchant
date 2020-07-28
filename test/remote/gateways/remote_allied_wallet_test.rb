@@ -32,11 +32,12 @@ class RemoteAlliedWalletTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_more_options
-    response = @gateway.purchase(@amount, @credit_card, @options.merge(
+    options = @options.merge(
       order_id: generate_unique_id,
       ip: '127.0.0.1',
       email: 'jim_smith@example.com'
-    ))
+    )
+    response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert_equal 'Succeeded', response.message
   end
