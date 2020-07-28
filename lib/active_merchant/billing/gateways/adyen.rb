@@ -447,26 +447,29 @@ module ActiveMerchant #:nodoc:
           eci: three_d_secure_options[:eci],
           xid: three_d_secure_options[:xid],
           directoryResponse: three_d_secure_options[:enrolled],
-          authenticationResponse: three_d_secure_options[:authentication_response_status]
+          authenticationResponse: authentication_response(three_d_secure_options)
         }
       end
 
       def add_3ds2_authenticated_data(post, options)
         three_d_secure_options = options[:three_d_secure]
-        # If the transaction was authenticated in a frictionless flow, send the transStatus from the ARes.
-        if three_d_secure_options[:authentication_response_status].nil?
-          authentication_response = three_d_secure_options[:directory_response_status]
-        else
-          authentication_response = three_d_secure_options[:authentication_response_status]
-        end
         post[:mpiData] = {
           threeDSVersion: three_d_secure_options[:version],
           eci: three_d_secure_options[:eci],
           cavv: three_d_secure_options[:cavv],
           dsTransID: three_d_secure_options[:ds_transaction_id],
           directoryResponse: three_d_secure_options[:directory_response_status],
-          authenticationResponse: authentication_response
+          authenticationResponse: authentication_response(three_d_secure_options)
         }
+      end
+
+      def authentication_response(three_d_secure_options)
+        # If the transaction was authenticated in a frictionless flow, send the transStatus from the ARes.
+        if three_d_secure_options[:authentication_response_status].nil?
+          three_d_secure_options[:directory_response_status]
+        else
+          three_d_secure_options[:authentication_response_status]
+        end
       end
 
       def parse(body)

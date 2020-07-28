@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Adyen: use directory_response if authentication_response is missing in 3DS 1.x
 
 == Version 1.110.0
 * FirstData e4 v27+: Strip linebreaks from address [curiousepic] #3693
