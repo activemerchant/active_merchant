@@ -759,10 +759,6 @@ module ActiveMerchant #:nodoc:
               add_soft_descriptors_from_hash(xml, parameters[:soft_descriptors])
             end
 
-            add_dpanind(xml, creditcard)
-            add_aevv(xml, creditcard, three_d_secure)
-            add_digital_token_cryptogram(xml, creditcard)
-
             set_recurring_ind(xml, parameters)
 
             # Append Transaction Reference Number at the end for Refund transactions
@@ -775,6 +771,11 @@ module ActiveMerchant #:nodoc:
             add_level_3_purchase(xml, parameters)
             add_level_3_tax(xml, parameters)
             add_line_items(xml, parameters) if parameters[:line_items]
+
+            add_dpanind(xml, creditcard)
+            add_aevv(xml, creditcard, three_d_secure)
+            add_digital_token_cryptogram(xml, creditcard)
+
             add_stored_credentials(xml, parameters)
             add_pymt_brand_program_code(xml, creditcard, three_d_secure)
             add_mc_program_protocol(xml, creditcard, three_d_secure)

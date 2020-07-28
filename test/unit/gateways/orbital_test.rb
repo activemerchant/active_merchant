@@ -181,9 +181,11 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_network_tokenization_credit_card_data_with_soft_descriptor_hash
+  def test_network_tokenization_credit_card_data_with_soft_descriptor_hash_level_2_data_and_line_items
     stub_comms do
       @gateway.authorize(50, network_tokenization_credit_card(nil, eci: '5', transaction_id: 'BwABB4JRdgAAAAAAiFF2AAAAAAA='), @options.merge(
+        level_2_data: @level_2,
+        line_items: @line_items,
         soft_descriptors: {
           merchant_name: 'Merch',
           product_description: 'Description',
