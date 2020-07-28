@@ -365,9 +365,9 @@ module ActiveMerchant #:nodoc:
       def add_level_3_tax(xml, options={})
         if (level_3 = options[:level_3_data])
           xml.tag! :PC3VATtaxAmt, byte_limit(level_3[:vat_tax], 12) if level_3[:vat_tax]
-          xml.tag! :PC3AltTaxAmt, byte_limit(level_3[:alt_tax], 9) if level_3[:alt_tax]
           xml.tag! :PC3VATtaxRate, byte_limit(level_3[:vat_rate], 4) if level_3[:vat_rate]
           xml.tag! :PC3AltTaxInd, byte_limit(level_3[:alt_ind], 15) if level_3[:alt_ind]
+          xml.tag! :PC3AltTaxAmt, byte_limit(level_3[:alt_tax], 9) if level_3[:alt_tax]
         end
       end
 

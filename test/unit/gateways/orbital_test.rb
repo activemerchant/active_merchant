@@ -144,8 +144,9 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_match %{<PC3DiscAmt>#{@level_3[:discount_amount].to_i}</PC3DiscAmt>}, data
       assert_match %{<PC3VATtaxAmt>#{@level_3[:vat_tax].to_i}</PC3VATtaxAmt>}, data
       assert_match %{<PC3VATtaxRate>#{@level_3[:vat_rate].to_i}</PC3VATtaxRate>}, data
-      assert_match %{<PC3AltTaxAmt>#{@level_3[:alt_tax].to_i}</PC3AltTaxAmt>}, data
       assert_match %{<PC3AltTaxInd>#{@level_3[:alt_ind]}</PC3AltTaxInd>}, data
+      assert_match %{<PC3AltTaxAmt>#{@level_3[:alt_tax].to_i}</PC3AltTaxAmt>}, data
+      assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
   end
 
