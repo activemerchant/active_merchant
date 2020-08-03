@@ -235,7 +235,7 @@ module ActiveMerchant #:nodoc:
       def add_number_of_installments(post, options)
         post['order']['additionalInput']['numberOfInstallments'] = options[:number_of_installments] if options[:number_of_installments]
       end
-        
+
       def parse(body)
         JSON.parse(body)
       end
