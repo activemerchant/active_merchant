@@ -830,7 +830,7 @@ class CyberSourceTest < Test::Unit::TestCase
   end
 
   def test_adds_3ds_brand_based_commerce_indicator
-    %w(visa master american_express jcb discover).each do |brand|
+    %w(visa maestro master american_express jcb discover diners_club).each do |brand|
       @credit_card.brand = brand
 
       stub_comms do
