@@ -214,6 +214,7 @@ module ActiveMerchant #:nodoc:
         add_shopper_data(post, options)
         add_risk_data(post, options)
         add_shopper_reference(post, options)
+        add_merchant_data(post, options)
       end
 
       def add_shopper_data(post, options)
@@ -223,6 +224,10 @@ module ActiveMerchant #:nodoc:
         post[:shopperIP] = options[:shopper_ip] if options[:shopper_ip]
         post[:shopperStatement] = options[:shopper_statement] if options[:shopper_statement]
         post[:additionalData][:updateShopperStatement] = options[:update_shopper_statement] if options[:update_shopper_statement]
+      end
+
+      def add_merchant_data(post, options)
+        post[:additionalData][:subMerchantId] = options[:sub_merchant_id] if options[:sub_merchant_id]
       end
 
       def add_risk_data(post, options)

@@ -1035,6 +1035,23 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_success purchase
   end
 
+  def test_successful_authorize_with_sub_merchant_data
+    options = @options.update({
+      billing_address: {
+        address1: 'Infinite Loop',
+        address2: 1,
+        country: 'US',
+        city: 'Cupertino',
+        state: 'CA',
+        zip: '95014'
+      }
+    })
+    assert response = @gateway.authorize(@amount, @avs_credit_card, options.merge({sub_merchant_id: '123451234512345'}))
+    assert response.test?
+    refute response.authorization.blank?
+    assert_success response
+  end
+
   private
 
   def stored_credential_options(*args, id: nil)

@@ -810,6 +810,16 @@ class AdyenTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_authorize_with_sub_merchant_id
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(sub_merchant_id: '12345abcde67890'))
+    end.check_request do |endpoint, data, headers|
+      parsed = JSON.parse(data)
+      assert parsed['additionalData']['subMerchantId']
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
   def test_extended_avs_response
     response = stub_comms do
       @gateway.verify(@credit_card, @options)
