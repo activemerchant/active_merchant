@@ -4,7 +4,8 @@
 
 == Version 1.111.0
 * Fat Zebra: standardized 3DS fields and card on file extra data for Visa scheme rules [montdidier] #3409
-* Realex: Change 3DSecure v1 message_version to a valid format [bbraschi] #3702
+* Realex: Change 3DSecure v1 message_version to a valid format [shuhala] #3702
+* Ingenico/ GlobalCollect: Add field for installments [cdmackeyfree] #3707
 * Cybersource: do not send 3DS fields if 'cavv` is missing and `commerceIndicator` is inferred [bbraschi] #3712
 
 == Version 1.110.0
@@ -16,7 +17,6 @@
 * Cybersource: Conditionally find stored credentials [therufs] #3696 #3697
 * Cybersource: Update logic to send cavv as xid for 3DS2 [douglas] #3699
 * Credorax: Default 3ds_browsercolordepth to 32 when passed as 30 [britth] #3700
-* Ingenico/ GlobalCollect: Add field for installments [cdmackeyfree] #3707
 
 == Version 1.109.0
 * Remove reference to `Billing::Integrations` [pi3r] #3692
