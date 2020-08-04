@@ -834,9 +834,9 @@ class CyberSourceTest < Test::Unit::TestCase
       @credit_card.brand = brand
 
       stub_comms do
-        @gateway.purchase(@amount, @credit_card, @options.merge(three_d_secure: {}))
+        @gateway.purchase(@amount, @credit_card, @options.merge(three_d_secure: { cavv: 'anything but empty' }))
       end.check_request do |endpoint, data, headers|
-        assert_match(/commerceIndicator\>#{CyberSourceGateway::ECI_BRAND_MAPPING[brand.to_sym]}/, data)
+        assert_match(/commerceIndicator\>#{CyberSourceGateway::ECI_BRAND_MAPPING[brand.to_sym]}</, data)
       end.respond_with(successful_purchase_response)
     end
   end
@@ -874,6 +874,69 @@ class CyberSourceTest < Test::Unit::TestCase
       assert_match(/<cavvAlgorithm\>#{cavv_algorithm}/, data)
       assert_match(/<commerceIndicator\>#{commerce_indicator}/, data)
       assert_match(/<veresEnrolled\>#{enrolled}/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_does_not_add_3ds2_fields_via_normalized_hash_when_cavv_and_commerce_indicator_absent
+    options = options_with_normalized_3ds(cavv: nil, commerce_indicator: nil)
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_, data, _|
+      assert_not_match(/<eciRaw\>#{options[:three_d_secure][:eci]}</, data)
+      assert_not_match(/<cavv\>#{options[:three_d_secure][:cavv]}</, data)
+      assert_not_match(/<paSpecificationVersion\>#{options[:three_d_secure][:version]}</, data)
+      assert_not_match(/<directoryServerTransactionID\>#{options[:three_d_secure][:ds_transaction_id]}</, data)
+      assert_not_match(/<paresStatus\>#{options[:three_d_secure][:authentication_response_status]}</, data)
+      assert_not_match(/<cavvAlgorithm\>#{options[:three_d_secure][:cavv_algorithm]}</, data)
+      assert_not_match(/<veresEnrolled\>#{options[:three_d_secure][:enrolled]}</, data)
+      assert_not_match(/<commerceIndicator\>#{options[:commerce_indicator]}</, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_adds_3ds2_fields_via_normalized_hash_when_cavv_and_commerce_indicator_absent_and_commerce_indicator_not_inferred
+    @credit_card.brand = supported_cc_brand_without_inferred_commerce_indicator
+    assert_not_nil @credit_card.brand
+
+    options = options_with_normalized_3ds(cavv: nil, commerce_indicator: nil)
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_, data, _|
+      assert_match(/<eciRaw\>#{options[:three_d_secure][:eci]}</, data)
+      assert_match(/<paSpecificationVersion\>#{options[:three_d_secure][:version]}</, data)
+      assert_match(/<directoryServerTransactionID\>#{options[:three_d_secure][:ds_transaction_id]}</, data)
+      assert_match(/<paresStatus\>#{options[:three_d_secure][:authentication_response_status]}</, data)
+      assert_match(/<cavvAlgorithm\>#{options[:three_d_secure][:cavv_algorithm]}</, data)
+      assert_match(/<veresEnrolled\>#{options[:three_d_secure][:enrolled]}</, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_adds_3ds2_fields_via_normalized_hash_when_cavv_absent_and_commerce_indicator_present
+    options = options_with_normalized_3ds(cavv: nil)
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_, data, _|
+      assert_match(/<eciRaw\>#{options[:three_d_secure][:eci]}</, data)
+      assert_match(/<paSpecificationVersion\>#{options[:three_d_secure][:version]}</, data)
+      assert_match(/<directoryServerTransactionID\>#{options[:three_d_secure][:ds_transaction_id]}</, data)
+      assert_match(/<paresStatus\>#{options[:three_d_secure][:authentication_response_status]}</, data)
+      assert_match(/<cavvAlgorithm\>#{options[:three_d_secure][:cavv_algorithm]}</, data)
+      assert_match(/<veresEnrolled\>#{options[:three_d_secure][:enrolled]}</, data)
+      assert_match(/<commerceIndicator\>#{options[:commerce_indicator]}</, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_adds_3ds2_fields_via_normalized_hash_when_cavv_present_and_commerce_indicator_absent
+    options = options_with_normalized_3ds(commerce_indicator: nil)
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_, data, _|
+      assert_match(/<eciRaw\>#{options[:three_d_secure][:eci]}</, data)
+      assert_match(/<cavv\>#{options[:three_d_secure][:cavv]}</, data)
+      assert_match(/<paSpecificationVersion\>#{options[:three_d_secure][:version]}</, data)
+      assert_match(/<directoryServerTransactionID\>#{options[:three_d_secure][:ds_transaction_id]}</, data)
+      assert_match(/<paresStatus\>#{options[:three_d_secure][:authentication_response_status]}</, data)
+      assert_match(/<cavvAlgorithm\>#{options[:three_d_secure][:cavv_algorithm]}</, data)
+      assert_match(/<veresEnrolled\>#{options[:three_d_secure][:enrolled]}</, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -1066,6 +1129,39 @@ class CyberSourceTest < Test::Unit::TestCase
   end
 
   private
+
+  def options_with_normalized_3ds(
+    cavv: '637574652070757070792026206b697474656e73',
+    commerce_indicator: 'commerce_indicator'
+  )
+    xid = 'Y2FyZGluYWxjb21tZXJjZWF1dGg='
+    authentication_response_status = 'Y'
+    cavv_algorithm = 2
+    collection_indicator = 2
+    ds_transaction_id = '97267598-FAE6-48F2-8083-C23433990FBC'
+    eci = '05'
+    enrolled = 'Y'
+    version = '2.0'
+    @options.merge(
+      three_d_secure: {
+        version: version,
+        eci: eci,
+        xid: xid,
+        cavv: cavv,
+        ds_transaction_id: ds_transaction_id,
+        cavv_algorithm: cavv_algorithm,
+        enrolled: enrolled,
+        authentication_response_status: authentication_response_status
+      },
+      commerce_indicator: commerce_indicator,
+      collection_indicator: collection_indicator
+    ).compact
+  end
+
+  def supported_cc_brand_without_inferred_commerce_indicator
+    (ActiveMerchant::Billing::CyberSourceGateway.supported_cardtypes -
+      ActiveMerchant::Billing::CyberSourceGateway::ECI_BRAND_MAPPING.keys).first
+  end
 
   def pre_scrubbed
     <<-PRE_SCRUBBED

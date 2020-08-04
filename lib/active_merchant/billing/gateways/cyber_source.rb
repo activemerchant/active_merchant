@@ -612,6 +612,9 @@ module ActiveMerchant #:nodoc:
       def add_normalized_threeds_2_data(xml, payment_method, options)
         threeds_2_options = options[:three_d_secure]
         cc_brand = card_brand(payment_method).to_sym
+
+        return if threeds_2_options[:cavv].blank? && infer_commerce_indicator?(options, cc_brand)
+
         xid = threeds_2_options[:xid]
 
         xml.tag!('cavv', threeds_2_options[:cavv]) if threeds_2_options[:cavv] && cc_brand != :master
@@ -630,6 +633,10 @@ module ActiveMerchant #:nodoc:
 
         xml.tag!('veresEnrolled', threeds_2_options[:enrolled]) if threeds_2_options[:enrolled]
         xml.tag!('paresStatus', threeds_2_options[:authentication_response_status]) if threeds_2_options[:authentication_response_status]
+      end
+
+      def infer_commerce_indicator?(options, cc_brand)
+        options[:commerce_indicator].blank? && ECI_BRAND_MAPPING[cc_brand].present?
       end
 
       def add_threeds_2_ucaf_data(xml, payment_method, options)

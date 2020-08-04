@@ -2,6 +2,7 @@
 
 == HEAD
 * Fat Zebra: standardized 3DS fields and card on file extra data for Visa scheme rules [montdidier] #3409
+* Cybersource: do not send 3DS fields if 'cavv` is missing and `commerceIndicator` is inferred #3712
 
 == Version 1.110.0
 * FirstData e4 v27+: Strip linebreaks from address [curiousepic] #3693
