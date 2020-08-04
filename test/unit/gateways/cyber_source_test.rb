@@ -836,7 +836,7 @@ class CyberSourceTest < Test::Unit::TestCase
       stub_comms do
         @gateway.purchase(@amount, @credit_card, @options.merge(three_d_secure: { cavv: 'anything but empty' }))
       end.check_request do |endpoint, data, headers|
-        assert_match(/commerceIndicator\>#{CyberSourceGateway::ECI_BRAND_MAPPING[brand.to_sym]}/, data)
+        assert_match(/commerceIndicator\>#{CyberSourceGateway::ECI_BRAND_MAPPING[brand.to_sym]}</, data)
       end.respond_with(successful_purchase_response)
     end
   end
@@ -882,14 +882,14 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
     end.check_request do |_, data, _|
-      assert_not_match(/<eciRaw\>#{options[:three_d_secure][:eci]}/, data)
-      assert_not_match(/<cavv\>#{options[:three_d_secure][:cavv]}/, data)
-      assert_not_match(/<paSpecificationVersion\>#{options[:three_d_secure][:version]}/, data)
-      assert_not_match(/<directoryServerTransactionID\>#{options[:three_d_secure][:ds_transaction_id]}/, data)
-      assert_not_match(/<paresStatus\>#{options[:three_d_secure][:authentication_response_status]}/, data)
-      assert_not_match(/<cavvAlgorithm\>#{options[:three_d_secure][:cavv_algorithm]}/, data)
-      assert_not_match(/<veresEnrolled\>#{options[:three_d_secure][:enrolled]}/, data)
-      assert_not_match(/<commerceIndicator\>#{options[:commerce_indicator]}/, data)
+      assert_not_match(/<eciRaw\>#{options[:three_d_secure][:eci]}</, data)
+      assert_not_match(/<cavv\>#{options[:three_d_secure][:cavv]}</, data)
+      assert_not_match(/<paSpecificationVersion\>#{options[:three_d_secure][:version]}</, data)
+      assert_not_match(/<directoryServerTransactionID\>#{options[:three_d_secure][:ds_transaction_id]}</, data)
+      assert_not_match(/<paresStatus\>#{options[:three_d_secure][:authentication_response_status]}</, data)
+      assert_not_match(/<cavvAlgorithm\>#{options[:three_d_secure][:cavv_algorithm]}</, data)
+      assert_not_match(/<veresEnrolled\>#{options[:three_d_secure][:enrolled]}</, data)
+      assert_not_match(/<commerceIndicator\>#{options[:commerce_indicator]}</, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -901,12 +901,12 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
     end.check_request do |_, data, _|
-      assert_match(/<eciRaw\>#{options[:three_d_secure][:eci]}/, data)
-      assert_match(/<paSpecificationVersion\>#{options[:three_d_secure][:version]}/, data)
-      assert_match(/<directoryServerTransactionID\>#{options[:three_d_secure][:ds_transaction_id]}/, data)
-      assert_match(/<paresStatus\>#{options[:three_d_secure][:authentication_response_status]}/, data)
-      assert_match(/<cavvAlgorithm\>#{options[:three_d_secure][:cavv_algorithm]}/, data)
-      assert_match(/<veresEnrolled\>#{options[:three_d_secure][:enrolled]}/, data)
+      assert_match(/<eciRaw\>#{options[:three_d_secure][:eci]}</, data)
+      assert_match(/<paSpecificationVersion\>#{options[:three_d_secure][:version]}</, data)
+      assert_match(/<directoryServerTransactionID\>#{options[:three_d_secure][:ds_transaction_id]}</, data)
+      assert_match(/<paresStatus\>#{options[:three_d_secure][:authentication_response_status]}</, data)
+      assert_match(/<cavvAlgorithm\>#{options[:three_d_secure][:cavv_algorithm]}</, data)
+      assert_match(/<veresEnrolled\>#{options[:three_d_secure][:enrolled]}</, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -915,13 +915,13 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
     end.check_request do |_, data, _|
-      assert_match(/<eciRaw\>#{options[:three_d_secure][:eci]}/, data)
-      assert_match(/<paSpecificationVersion\>#{options[:three_d_secure][:version]}/, data)
-      assert_match(/<directoryServerTransactionID\>#{options[:three_d_secure][:ds_transaction_id]}/, data)
-      assert_match(/<paresStatus\>#{options[:three_d_secure][:authentication_response_status]}/, data)
-      assert_match(/<cavvAlgorithm\>#{options[:three_d_secure][:cavv_algorithm]}/, data)
-      assert_match(/<veresEnrolled\>#{options[:three_d_secure][:enrolled]}/, data)
-      assert_match(/<commerceIndicator\>#{options[:commerce_indicator]}/, data)
+      assert_match(/<eciRaw\>#{options[:three_d_secure][:eci]}</, data)
+      assert_match(/<paSpecificationVersion\>#{options[:three_d_secure][:version]}</, data)
+      assert_match(/<directoryServerTransactionID\>#{options[:three_d_secure][:ds_transaction_id]}</, data)
+      assert_match(/<paresStatus\>#{options[:three_d_secure][:authentication_response_status]}</, data)
+      assert_match(/<cavvAlgorithm\>#{options[:three_d_secure][:cavv_algorithm]}</, data)
+      assert_match(/<veresEnrolled\>#{options[:three_d_secure][:enrolled]}</, data)
+      assert_match(/<commerceIndicator\>#{options[:commerce_indicator]}</, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -930,13 +930,13 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
     end.check_request do |_, data, _|
-      assert_match(/<eciRaw\>#{options[:three_d_secure][:eci]}/, data)
-      assert_match(/<cavv\>#{options[:three_d_secure][:cavv]}/, data)
-      assert_match(/<paSpecificationVersion\>#{options[:three_d_secure][:version]}/, data)
-      assert_match(/<directoryServerTransactionID\>#{options[:three_d_secure][:ds_transaction_id]}/, data)
-      assert_match(/<paresStatus\>#{options[:three_d_secure][:authentication_response_status]}/, data)
-      assert_match(/<cavvAlgorithm\>#{options[:three_d_secure][:cavv_algorithm]}/, data)
-      assert_match(/<veresEnrolled\>#{options[:three_d_secure][:enrolled]}/, data)
+      assert_match(/<eciRaw\>#{options[:three_d_secure][:eci]}</, data)
+      assert_match(/<cavv\>#{options[:three_d_secure][:cavv]}</, data)
+      assert_match(/<paSpecificationVersion\>#{options[:three_d_secure][:version]}</, data)
+      assert_match(/<directoryServerTransactionID\>#{options[:three_d_secure][:ds_transaction_id]}</, data)
+      assert_match(/<paresStatus\>#{options[:three_d_secure][:authentication_response_status]}</, data)
+      assert_match(/<cavvAlgorithm\>#{options[:three_d_secure][:cavv_algorithm]}</, data)
+      assert_match(/<veresEnrolled\>#{options[:three_d_secure][:enrolled]}</, data)
     end.respond_with(successful_purchase_response)
   end
 
