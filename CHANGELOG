@@ -3,13 +3,13 @@
 == HEAD
 * Cybersource: add `maestro` and `diners_club` eci brand mapping [bbraschi] #3708
 * Cybersource: Ensure Partner Solution Id placement conforms to schema [britth] #3715
+* Adyen: Adyen: Pass `subMerchantId` as `additionalData` [naashton] #3714
 
 == Version 1.111.0
 * Fat Zebra: standardized 3DS fields and card on file extra data for Visa scheme rules [montdidier] #3409
 * Realex: Change 3DSecure v1 message_version to a valid format [shuhala] #3702
 * Ingenico/ GlobalCollect: Add field for installments [cdmackeyfree] #3707
 * Cybersource: do not send 3DS fields if 'cavv` is missing and `commerceIndicator` is inferred [bbraschi] #3712
-* Adyen: Adyen: Pass `subMerchantId` as `additionalData` [naashton] #3714
 
 == Version 1.110.0
 * FirstData e4 v27+: Strip linebreaks from address [curiousepic] #3693
