@@ -30,9 +30,11 @@ module ActiveMerchant #:nodoc:
       ECI_BRAND_MAPPING = {
         visa: 'vbv',
         master: 'spa',
+        maestro: 'spa',
         american_express: 'aesk',
         jcb: 'js',
         discover: 'pb',
+        diners_club: 'pb',
       }.freeze
       DEFAULT_COLLECTION_INDICATOR = 2
 
