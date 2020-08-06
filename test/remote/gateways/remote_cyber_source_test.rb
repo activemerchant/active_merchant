@@ -123,6 +123,32 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert !response.authorization.blank?
   end
 
+  def test_successful_authorize_with_solution_id
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = 'A1000000'
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_successful_response(response)
+    assert !response.authorization.blank?
+  ensure
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = nil
+  end
+
+  def test_successful_authorize_with_solution_id_and_stored_creds
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = 'A1000000'
+    @options[:stored_credential] = {
+      initiator: 'cardholder',
+      reason_type: '',
+      initial_transaction: true,
+      network_transaction_id: ''
+    }
+    @options[:commerce_indicator] = 'internet'
+
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_successful_response(response)
+    assert !response.authorization.blank?
+  ensure
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = nil
+  end
+
   def test_successful_authorization_with_issuer_additional_data
     @options[:issuer_additional_data] = @issuer_additional_data
 
@@ -200,6 +226,18 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_successful_response(void)
   end
 
+  def test_successful_void_with_solution_id
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = 'A1000000'
+
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_successful_response(auth)
+
+    assert void = @gateway.void(auth.authorization, @options)
+    assert_successful_response(void)
+  ensure
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = nil
+  end
+
   def test_successful_tax_calculation
     assert response = @gateway.calculate_tax(@credit_card, @options)
     assert response.params['totalTaxAmount']
@@ -274,6 +312,32 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_successful_response(response)
   end
 
+  def test_successful_purchase_with_solution_id
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = 'A1000000'
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_successful_response(response)
+    assert !response.authorization.blank?
+  ensure
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = nil
+  end
+
+  def test_successful_purchase_with_solution_id_and_stored_creds
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = 'A1000000'
+    @options[:stored_credential] = {
+      initiator: 'cardholder',
+      reason_type: '',
+      initial_transaction: true,
+      network_transaction_id: ''
+    }
+    @options[:commerce_indicator] = 'internet'
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_successful_response(response)
+    assert !response.authorization.blank?
+  ensure
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = nil
+  end
+
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_equal 'Invalid account number', response.message
@@ -304,6 +368,18 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert response = @gateway.capture(@amount, auth.authorization)
     assert_successful_response(response)
     assert !response.authorization.blank?
+  end
+
+  def test_successful_capture_with_solution_id
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = 'A1000000'
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_successful_response(auth)
+
+    assert response = @gateway.capture(@amount, auth.authorization, @options)
+    assert_successful_response(response)
+    assert !response.authorization.blank?
+  ensure
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = nil
   end
 
   def test_successful_authorization_and_failed_capture
@@ -338,6 +414,18 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
 
     assert response = @gateway.refund(@amount, response.authorization)
     assert_successful_response(response)
+  end
+
+  def test_successful_refund_with_solution_id
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = 'A1000000'
+
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_successful_response(purchase)
+
+    assert refund = @gateway.refund(@amount, purchase.authorization, @options)
+    assert_successful_response(refund)
+  ensure
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = nil
   end
 
   def test_successful_validate_pinless_debit_card

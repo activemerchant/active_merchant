@@ -280,10 +280,11 @@ module ActiveMerchant #:nodoc:
         add_threeds_services(xml, options)
         add_payment_network_token(xml) if network_tokenization?(creditcard_or_reference)
         add_business_rules_data(xml, creditcard_or_reference, options)
+        add_stored_credential_subsequent_auth(xml, options)
+        add_partner_solution_id(xml)
         add_stored_credential_options(xml, options)
         add_issuer_additional_data(xml, options)
         add_merchant_description(xml, options)
-        add_partner_solution_id(xml)
 
         xml.target!
       end
@@ -324,17 +325,19 @@ module ActiveMerchant #:nodoc:
         add_mdd_fields(xml, options)
         if !payment_method_or_reference.is_a?(String) && card_brand(payment_method_or_reference) == 'check'
           add_check_service(xml)
+          add_partner_solution_id(xml)
         else
           add_purchase_service(xml, payment_method_or_reference, options)
           add_threeds_services(xml, options)
           add_payment_network_token(xml) if network_tokenization?(payment_method_or_reference)
           add_business_rules_data(xml, payment_method_or_reference, options) unless options[:pinless_debit_card]
+          add_stored_credential_subsequent_auth(xml, options)
+          add_partner_solution_id(xml)
           add_stored_credential_options(xml, options)
         end
 
         add_issuer_additional_data(xml, options)
         add_merchant_description(xml, options)
-        add_partner_solution_id(xml)
 
         xml.target!
       end
@@ -845,20 +848,27 @@ module ActiveMerchant #:nodoc:
         country_code&.code(:alpha2)
       end
 
-      def add_stored_credential_options(xml, options={})
+      def add_stored_credential_subsequent_auth(xml, options={})
         return unless options[:stored_credential] || options[:stored_credential_overrides]
 
         stored_credential_subsequent_auth = 'true' if options.dig(:stored_credential, :initiator) == 'merchant'
+
+        override_subsequent_auth = options.dig(:stored_credential_overrides, :subsequent_auth)
+
+        xml.subsequentAuth override_subsequent_auth.nil? ? stored_credential_subsequent_auth : override_subsequent_auth
+      end
+
+      def add_stored_credential_options(xml, options={})
+        return unless options[:stored_credential] || options[:stored_credential_overrides]
+
         stored_credential_subsequent_auth_first = 'true' if options.dig(:stored_credential, :initial_transaction)
         stored_credential_transaction_id = options.dig(:stored_credential, :network_transaction_id) if options.dig(:stored_credential, :initiator) == 'merchant'
         stored_credential_subsequent_auth_stored_cred = 'true' if options.dig(:stored_credential, :initiator) == 'cardholder' && !options.dig(:stored_credential, :initial_transaction) || options.dig(:stored_credential, :initiator) == 'merchant' && options.dig(:stored_credential, :reason_type) == 'unscheduled'
 
-        override_subsequent_auth = options.dig(:stored_credential_overrides, :subsequent_auth)
         override_subsequent_auth_first = options.dig(:stored_credential_overrides, :subsequent_auth_first)
         override_subsequent_auth_transaction_id = options.dig(:stored_credential_overrides, :subsequent_auth_transaction_id)
         override_subsequent_auth_stored_cred = options.dig(:stored_credential_overrides, :subsequent_auth_stored_credential)
 
-        xml.subsequentAuth override_subsequent_auth.nil? ? stored_credential_subsequent_auth : override_subsequent_auth
         xml.subsequentAuthFirst override_subsequent_auth_first.nil? ? stored_credential_subsequent_auth_first : override_subsequent_auth_first
         xml.subsequentAuthTransactionID override_subsequent_auth_transaction_id.nil? ? stored_credential_transaction_id : override_subsequent_auth_transaction_id
         xml.subsequentAuthStoredCredential override_subsequent_auth_stored_cred.nil? ? stored_credential_subsequent_auth_stored_cred : override_subsequent_auth_stored_cred

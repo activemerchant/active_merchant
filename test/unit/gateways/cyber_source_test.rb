@@ -1110,6 +1110,27 @@ class CyberSourceTest < Test::Unit::TestCase
     CyberSourceGateway.application_id = nil
   end
 
+  def test_partner_solution_id_position_follows_schema
+    partner_id = 'partner_id'
+    CyberSourceGateway.application_id = partner_id
+
+    @options[:stored_credential] = {
+      initiator: 'cardholder',
+      reason_type: '',
+      initial_transaction: true,
+      network_transaction_id: ''
+    }
+    @options[:commerce_indicator] = 'internet'
+
+    stub_comms do
+      @gateway.authorize(100, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match("<subsequentAuth/>\n<partnerSolutionID>#{partner_id}</partnerSolutionID>\n<subsequentAuthFirst>true</subsequentAuthFirst>\n<subsequentAuthTransactionID/>\n<subsequentAuthStoredCredential/>", data)
+    end.respond_with(successful_capture_response)
+  ensure
+    CyberSourceGateway.application_id = nil
+  end
+
   def test_missing_field
     @gateway.expects(:ssl_post).returns(missing_field_response)
 
