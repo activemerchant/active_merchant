@@ -391,11 +391,17 @@ module ActiveMerchant #:nodoc:
         else
           if response['transactionResponse']
             response_message = response['transactionResponse']['responseMessage']
+
             response_code = response['transactionResponse']['responseCode'] || response['transactionResponse']['pendingReason']
+
+            unless response['transactionResponse']['paymentNetworkResponseErrorMessage'].nil?
+              response_message = response_code + ' | ' + response['transactionResponse']['paymentNetworkResponseErrorMessage']
+            end
+
           end
           return response_code if success
 
-          response['error'] || response_message || response_code || 'FAILED'
+          response_message || response['error'] || response_code || 'FAILED'
         end
       end
 
