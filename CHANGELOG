@@ -5,6 +5,7 @@
 * Cybersource: Ensure Partner Solution Id placement conforms to schema [britth] #3715
 * Adyen: Adyen: Pass `subMerchantId` as `additionalData` [naashton] #3714
 * Litle: Omit checkNum when nil [leila-alderman] #3719
+* PayU Latam: Improve error response #3717
 
 == Version 1.111.0
 * Fat Zebra: standardized 3DS fields and card on file extra data for Visa scheme rules [montdidier] #3409
