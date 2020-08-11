@@ -58,7 +58,7 @@ module ActiveMerchant
         'line1: N, zip: M, name: N' => 'W',
         'line1: N, zip: N, name: U' => 'N',
         'line1: N, zip: N, name: M' => 'K',
-        'line1: N, zip: N, name: N' => 'N',
+        'line1: N, zip: N, name: N' => 'N'
       }
 
       BANK_ACCOUNT_TYPE_MAPPING = {
@@ -476,7 +476,7 @@ module ActiveMerchant
       def headers
         {
           'Content-Type' => 'application/xml',
-          'Authorization' => ('Basic ' + Base64.strict_encode64("#{@options[:api_username]}:#{@options[:api_password]}").strip),
+          'Authorization' => ('Basic ' + Base64.strict_encode64("#{@options[:api_username]}:#{@options[:api_password]}").strip)
         }
       end
 

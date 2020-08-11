@@ -56,7 +56,7 @@ class EfsnetTest < Test::Unit::TestCase
       transaction_amount: '1.01',
       account_number: '4242424242424242',
       expiration_month: '12',
-      expiration_year: '2029',
+      expiration_year: '2029'
     }
 
     assert data = @gateway.send(:post_data, :credit_card_authorize, params)
@@ -68,7 +68,7 @@ class EfsnetTest < Test::Unit::TestCase
       order_id: 'order1',
       transaction_amount: '1.01',
       original_transaction_amount: '1.01',
-      original_transaction_id: '1',
+      original_transaction_id: '1'
     }
 
     assert data = @gateway.send(:post_data, :credit_card_settle, params)

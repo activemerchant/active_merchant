@@ -37,7 +37,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
       address2: address[:address2],
       city: address[:city],
       state: address[:state],
-      zip: address[:zip],
+      zip: address[:zip]
     }
 
     @level_3_options_visa = {
@@ -205,12 +205,12 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
       card: {
         number: '4112344112344113',
         verification_value: '411',
-        brand: 'visa',
+        brand: 'visa'
       },
       three_d_secure: {
         eci: '5',
         cavv: 'AAABAIcJIoQDIzAgVAkiAAAAAAA=',
-        xid: 'AAABAIcJIoQDIzAgVAkiAAAAAAA=',
+        xid: 'AAABAIcJIoQDIzAgVAkiAAAAAAA='
       },
       address: {
         address1: '55 Forever Ave',
@@ -218,19 +218,19 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
         city: 'Concord',
         state: 'NH',
         zip: '03301',
-        country: 'US',
-      },
+        country: 'US'
+      }
     },
     {
       card: {
         number: '5112345112345114',
         verification_value: '823',
-        brand: 'master',
+        brand: 'master'
       },
       three_d_secure: {
         eci: '6',
         cavv: 'Asju1ljfl86bAAAAAACm9zU6aqY=',
-        xid: 'Asju1ljfl86bAAAAAACm9zU6aqY=',
+        xid: 'Asju1ljfl86bAAAAAACm9zU6aqY='
       },
       address: {
         address1: 'Byway Street',
@@ -238,19 +238,19 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
         city: 'Portsmouth',
         state: 'MA',
         zip: '',
-        country: 'US',
-      },
+        country: 'US'
+      }
     },
     {
       card: {
         number: '371144371144376',
         verification_value: '1234',
-        brand: 'american_express',
+        brand: 'american_express'
       },
       three_d_secure: {
         eci: '5',
         cavv: 'AAABBWcSNIdjeUZThmNHAAAAAAA=',
-        xid: 'AAABBWcSNIdjeUZThmNHAAAAAAA=',
+        xid: 'AAABBWcSNIdjeUZThmNHAAAAAAA='
       },
       address: {
         address1: '4 Northeastern Blvd',
@@ -258,8 +258,8 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
         city: 'Salem',
         state: 'NH',
         zip: '03105',
-        country: 'US',
-      },
+        country: 'US'
+      }
     }
   ].each do |fixture|
     define_method("test_successful_#{fixture[:card][:brand]}_authorization_with_3ds") do

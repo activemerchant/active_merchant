@@ -650,7 +650,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
       with(has_entries(three_d_secure_pass_thru: {
         cavv: 'cavv',
         eci_flag: 'eci',
-        xid: 'xid',
+        xid: 'xid'
       })).
       returns(braintree_result)
 
@@ -1247,7 +1247,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
         cvv: '123',
         expiration_month: '09',
         expiration_year: (Time.now.year + 1).to_s,
-        cardholder_name: 'Longbob Longsen',
+        cardholder_name: 'Longbob Longsen'
       }
     }
   end

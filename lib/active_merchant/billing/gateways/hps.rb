@@ -232,7 +232,7 @@ module ActiveMerchant #:nodoc:
             source: card_or_token.source,
             cavv: card_or_token.payment_cryptogram,
             eci: card_or_token.eci,
-            xid: card_or_token.transaction_id,
+            xid: card_or_token.transaction_id
           })
         elsif options[:three_d_secure]
           options[:three_d_secure][:source] ||= card_brand(card_or_token)

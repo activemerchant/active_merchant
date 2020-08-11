@@ -123,7 +123,7 @@ class RemoteRealexTest < Test::Unit::TestCase
         eci: '05',
         cavv: 'AgAAAAAAAIR8CQrXcIhbQAAAAAA',
         xid: 'MDAwMDAwMDAwMDAwMDAwMzIyNzY=',
-        version: '1.0.2',
+        version: '1.0.2'
       },
       order_id: generate_unique_id,
       description: 'Test Realex with 3DS'
@@ -141,7 +141,7 @@ class RemoteRealexTest < Test::Unit::TestCase
         eci: '05',
         cavv: 'AgAAAAAAAIR8CQrXcIhbQAAAAAA',
         ds_transaction_id: 'bDE9Aa1A-C5Ac-AD3a-4bBC-aC918ab1de3E',
-        version: '2.1.0',
+        version: '2.1.0'
       },
       order_id: generate_unique_id,
       description: 'Test Realex with 3DS'

@@ -250,7 +250,7 @@ module ActiveMerchant #:nodoc:
         '257' => STANDARD_ERROR_CODE[:invalid_cvc],
         '333' => STANDARD_ERROR_CODE[:expired_card],
         '1' => STANDARD_ERROR_CODE[:card_declined],
-        '99' => STANDARD_ERROR_CODE[:processing_error],
+        '99' => STANDARD_ERROR_CODE[:processing_error]
       }
 
       def authorization_from(request, response)

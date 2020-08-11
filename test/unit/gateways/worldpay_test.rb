@@ -612,7 +612,7 @@ class WorldpayTest < Test::Unit::TestCase
       'payment_service_merchant_code' => 'XXXXXXXXXXXXXXX',
       'payment_service_version' => '1.4',
       'reply' => true,
-      'risk_score_value' => '1',
+      'risk_score_value' => '1'
     }, response.params)
   end
 
@@ -979,7 +979,7 @@ class WorldpayTest < Test::Unit::TestCase
         cavv: 'cavv',
         xid: xid,
         ds_transaction_id: ds_transaction_id,
-        version: version,
+        version: version
       }
     }
   end
@@ -1022,27 +1022,27 @@ class WorldpayTest < Test::Unit::TestCase
         shopper_account_creation_date: {
           day_of_month: shopper_account_creation_date.strftime('%d'),
           month: shopper_account_creation_date.strftime('%m'),
-          year: shopper_account_creation_date.strftime('%Y'),
+          year: shopper_account_creation_date.strftime('%Y')
         },
         shopper_account_modification_date: {
           day_of_month: shopper_account_modification_date.strftime('%d'),
           month: shopper_account_modification_date.strftime('%m'),
-          year: shopper_account_modification_date.strftime('%Y'),
+          year: shopper_account_modification_date.strftime('%Y')
         },
         shopper_account_password_change_date: {
           day_of_month: shopper_account_password_change_date.strftime('%d'),
           month: shopper_account_password_change_date.strftime('%m'),
-          year: shopper_account_password_change_date.strftime('%Y'),
+          year: shopper_account_password_change_date.strftime('%Y')
         },
         shopper_account_shipping_address_first_use_date: {
           day_of_month: shopper_account_shipping_address_first_use_date.strftime('%d'),
           month: shopper_account_shipping_address_first_use_date.strftime('%m'),
-          year: shopper_account_shipping_address_first_use_date.strftime('%Y'),
+          year: shopper_account_shipping_address_first_use_date.strftime('%Y')
         },
         shopper_account_payment_account_first_use_date: {
           day_of_month: shopper_account_payment_account_first_use_date.strftime('%d'),
           month: shopper_account_payment_account_first_use_date.strftime('%m'),
-          year: shopper_account_payment_account_first_use_date.strftime('%Y'),
+          year: shopper_account_payment_account_first_use_date.strftime('%Y')
         }
       },
       transaction_risk_data: {
@@ -1061,7 +1061,7 @@ class WorldpayTest < Test::Unit::TestCase
         transaction_risk_data_pre_order_date: {
           day_of_month: transaction_risk_data_pre_order_date.strftime('%d'),
           month: transaction_risk_data_pre_order_date.strftime('%m'),
-          year: transaction_risk_data_pre_order_date.strftime('%Y'),
+          year: transaction_risk_data_pre_order_date.strftime('%Y')
         }
       }
     }

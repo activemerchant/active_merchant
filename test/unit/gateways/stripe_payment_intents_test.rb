@@ -14,7 +14,7 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
 
     @options = {
       currency: 'GBP',
-      confirmation_method: 'manual',
+      confirmation_method: 'manual'
     }
   end
 

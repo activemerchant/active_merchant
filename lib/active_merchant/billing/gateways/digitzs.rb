@@ -175,7 +175,7 @@ module ActiveMerchant #:nodoc:
         post[:data][:attributes] = {
           tokenType: 'card',
           customerId: options[:customer_id],
-          label: 'Credit Card',
+          label: 'Credit Card'
         }
         add_payment(post, payment, options)
         add_address(post, options)

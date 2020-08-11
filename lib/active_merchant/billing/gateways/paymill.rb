@@ -113,7 +113,7 @@ module ActiveMerchant #:nodoc:
         parsed = JSON.parse(raw_response)
         options = {
           authorization: authorization_from(parsed),
-          test: (parsed['mode'] == 'test'),
+          test: (parsed['mode'] == 'test')
         }
 
         succeeded = (parsed['data'] == []) || (parsed['data']['response_code'].to_i == 20000)

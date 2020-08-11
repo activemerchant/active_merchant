@@ -126,7 +126,7 @@ module ActiveMerchant #:nodoc:
         COMMON_ADDRESS_OPTIONS,
         {
           address1: [:string, 'Street'],
-          address2: [:string, 'Street2'],
+          address2: [:string, 'Street2']
         }
       ].inject(:merge) #:nodoc
 
@@ -136,7 +136,7 @@ module ActiveMerchant #:nodoc:
         COMMON_ADDRESS_OPTIONS,
         {
           address1: [:string, 'Address'],
-          address2: [:string, 'Address2'],
+          address2: [:string, 'Address2']
         },
         {
           card_number: [:string, 'CardNumber'],
@@ -144,7 +144,7 @@ module ActiveMerchant #:nodoc:
           account: [:string, 'Account'],
           routing: [:string, 'Routing'],
           check_format: [:string, 'CheckFormat'],
-          record_type: [:string, 'RecordType'],
+          record_type: [:string, 'RecordType']
         }
       ].inject(:merge) #:nodoc
 
@@ -187,7 +187,7 @@ module ActiveMerchant #:nodoc:
         comments: [:string, 'Comments'],
         allow_partial_auth: [:boolean, 'AllowPartialAuth'],
         currency: [:string, 'Currency'],
-        non_tax: [:boolean, 'NonTax'],
+        non_tax: [:boolean, 'NonTax']
       } #:nodoc:
 
       TRANSACTION_DETAIL_MONEY_OPTIONS = {

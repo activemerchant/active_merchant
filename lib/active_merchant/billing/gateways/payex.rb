@@ -25,7 +25,7 @@ module ActiveMerchant #:nodoc:
         authorize:  '3',
         cancel:     '4',
         failure:    '5',
-        capture:    '6',
+        capture:    '6'
       }
 
       SOAP_ACTIONS = {
@@ -36,7 +36,7 @@ module ActiveMerchant #:nodoc:
         credit: { name: 'Credit5', url: 'pxorder/pxorder.asmx', xmlns: 'http://external.payex.com/PxOrder/' },
         create_agreement: { name: 'CreateAgreement3', url: 'pxagreement/pxagreement.asmx', xmlns: 'http://external.payex.com/PxAgreement/' },
         delete_agreement: { name: 'DeleteAgreement', url: 'pxagreement/pxagreement.asmx', xmlns: 'http://external.payex.com/PxAgreement/' },
-        autopay: { name: 'AutoPay3', url: 'pxagreement/pxagreement.asmx', xmlns: 'http://external.payex.com/PxAgreement/' },
+        autopay: { name: 'AutoPay3', url: 'pxagreement/pxagreement.asmx', xmlns: 'http://external.payex.com/PxAgreement/' }
       }
 
       def initialize(options = {})
@@ -231,7 +231,7 @@ module ActiveMerchant #:nodoc:
           description: options[:description] || options[:order_id],
           orderId: options[:order_id],
           purchaseOperation: is_auth ? 'AUTHORIZATION' : 'SALE',
-          currency: (options[:currency] || default_currency),
+          currency: (options[:currency] || default_currency)
         }
         hash_fields = %i[accountNumber agreementRef price productNumber description orderId purchaseOperation currency]
         add_request_hash(properties, hash_fields)
@@ -278,7 +278,7 @@ module ActiveMerchant #:nodoc:
       def send_cancel(transaction_number)
         properties = {
           accountNumber: @options[:account],
-          transactionNumber: transaction_number,
+          transactionNumber: transaction_number
         }
         hash_fields = %i[accountNumber transactionNumber]
         add_request_hash(properties, hash_fields)
@@ -310,7 +310,7 @@ module ActiveMerchant #:nodoc:
       def send_delete_agreement(authorization)
         properties = {
           accountNumber: @options[:account],
-          agreementRef: authorization,
+          agreementRef: authorization
         }
         hash_fields = %i[accountNumber agreementRef]
         add_request_hash(properties, hash_fields)

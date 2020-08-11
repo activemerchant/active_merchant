@@ -31,7 +31,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
       shipping: {
         amount: '300',
         name: 'shipping name',
-        description: 'shipping description',
+        description: 'shipping description'
       },
       tax_exempt: 'false',
       po_number: '123'

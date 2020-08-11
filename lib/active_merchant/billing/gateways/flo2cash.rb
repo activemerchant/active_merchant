@@ -204,7 +204,7 @@ module ActiveMerchant #:nodoc:
         'Bank Declined Transaction' => STANDARD_ERROR_CODE[:card_declined],
         'Insufficient Funds' => STANDARD_ERROR_CODE[:card_declined],
         'Transaction Declined - Bank Error' => STANDARD_ERROR_CODE[:processing_error],
-        'No Reply from Bank' => STANDARD_ERROR_CODE[:processing_error],
+        'No Reply from Bank' => STANDARD_ERROR_CODE[:processing_error]
       }
 
       def error_code_from(succeeded, response)

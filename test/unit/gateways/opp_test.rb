@@ -27,7 +27,7 @@ class OppTest < Test::Unit::TestCase
         city:     'Istambul',
         state:    'IS',
         zip:      'H12JK2354',
-        country:  'TR',
+        country:  'TR'
       },
       shipping_address: {
         name:     '',
@@ -35,7 +35,7 @@ class OppTest < Test::Unit::TestCase
         city:     'Moskau',
         state:    'MO',
         zip:      'MO2342432',
-        country:  'RU',
+        country:  'RU'
       },
       customer: {
         merchant_customer_id:  "merchantCustomerId #{ip}",
@@ -48,13 +48,13 @@ class OppTest < Test::Unit::TestCase
         company_name:  'No such deal Ltd.',
         identification_doctype:  'PASSPORT',
         identification_docid:  'FakeID2342431234123',
-        ip:  ip,
-      },
+        ip:  ip
+      }
     }
 
     @minimal_request_options = {
       order_id: "Order #{time}",
-      description: 'Store Purchase - Books',
+      description: 'Store Purchase - Books'
     }
 
     @complete_request_options['customParameters[SHOPPER_test124TestName009]'] = 'customParameters_test'

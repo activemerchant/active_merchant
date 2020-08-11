@@ -312,7 +312,7 @@ module ActiveMerchant #:nodoc:
           Version: '4.5.4',
           SoftwareName: 'Active Merchant',
           SoftwareVersion: ActiveMerchant::VERSION.to_s,
-          Command: command,
+          Command: command
         }
 
         seed = SecureRandom.hex(32).upcase

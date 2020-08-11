@@ -565,7 +565,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
         merchantDescriptor: {
           name: 'Test Name',
           address1: '123 Main Dr',
-          locality: 'Durham',
+          locality: 'Durham'
         }
       }
     }

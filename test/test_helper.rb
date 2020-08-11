@@ -168,7 +168,7 @@ module ActiveMerchant
       exp_date = default_expiration_date.strftime('%y%m')
 
       defaults = {
-        track_data: "%B#{number}^LONGSEN/L. ^#{exp_date}1200000000000000**123******?",
+        track_data: "%B#{number}^LONGSEN/L. ^#{exp_date}1200000000000000**123******?"
       }.update(options)
 
       Billing::CreditCard.new(defaults)

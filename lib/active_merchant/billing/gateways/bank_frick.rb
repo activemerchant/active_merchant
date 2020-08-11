@@ -24,7 +24,7 @@ module ActiveMerchant #:nodoc:
         'authonly'  => 'CC.PA',
         'capture'   => 'CC.CP',
         'refund'    => 'CC.RF',
-        'void'      => 'CC.RV',
+        'void'      => 'CC.RV'
       }
 
       def initialize(options={})

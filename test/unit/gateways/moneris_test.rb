@@ -133,7 +133,7 @@ class MonerisTest < Test::Unit::TestCase
       amount: '1.01',
       pan: '4242424242424242',
       expdate: '0303',
-      crypt_type: 7,
+      crypt_type: 7
     }
 
     assert data = @gateway.send(:post_data, 'preauth', params)
@@ -147,7 +147,7 @@ class MonerisTest < Test::Unit::TestCase
       amount: '1.01',
       pan: '4242424242424242',
       expdate: '0303',
-      crypt_type: 7,
+      crypt_type: 7
     }
 
     assert data = @gateway.send(:post_data, 'purchase', params)
@@ -161,7 +161,7 @@ class MonerisTest < Test::Unit::TestCase
       amount: '1.01',
       pan: '4242424242424242',
       expdate: '0303',
-      crypt_type: 7,
+      crypt_type: 7
     }
 
     assert data = @gateway.send(:post_data, 'preauth', params)

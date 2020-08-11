@@ -27,7 +27,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       address2: address[:address2],
       city: address[:city],
       state: address[:state],
-      zip: address[:zip],
+      zip: address[:zip]
     }
 
     @level_3 = {
@@ -94,7 +94,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       three_d_secure: {
         eci: '5',
         xid: 'TESTXID',
-        cavv: 'TESTCAVV',
+        cavv: 'TESTCAVV'
       }
     }
   end

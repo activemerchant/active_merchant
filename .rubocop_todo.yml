@@ -877,13 +877,6 @@ Style/TrailingCommaInArrayLiteral:
     - 'test/unit/gateways/netaxept_test.rb'
     - 'test/unit/gateways/usa_epay_transaction_test.rb'
 
-# Offense count: 160
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyleForMultiline.
-# SupportedStylesForMultiline: comma, consistent_comma, no_comma
-Style/TrailingCommaInHashLiteral:
-  Enabled: false
-
 # Offense count: 34
 # Cop supports --auto-correct.
 Style/ZeroLengthPredicate:

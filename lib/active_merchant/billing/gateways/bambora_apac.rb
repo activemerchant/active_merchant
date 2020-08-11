@@ -18,7 +18,7 @@ module ActiveMerchant #:nodoc:
         '05' => STANDARD_ERROR_CODE[:card_declined],
         '06' => STANDARD_ERROR_CODE[:processing_error],
         '14' => STANDARD_ERROR_CODE[:invalid_number],
-        '54' => STANDARD_ERROR_CODE[:expired_card],
+        '54' => STANDARD_ERROR_CODE[:expired_card]
       }
 
       def initialize(options={})

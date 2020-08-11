@@ -32,7 +32,7 @@ class WirecardTest < Test::Unit::TestCase
       city:      'Ottawa',
       zip:       'K12 P2A',
       country:   'CA',
-      state:     nil,
+      state:     nil
     }
 
     @address_avs = {
@@ -40,7 +40,7 @@ class WirecardTest < Test::Unit::TestCase
       city:      'London',
       zip:       'W8 2TE',
       country:   'GB',
-      state:     'London',
+      state:     'London'
     }
   end
 

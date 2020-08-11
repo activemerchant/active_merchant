@@ -209,7 +209,7 @@ module ActiveMerchant #:nodoc:
         credit_card_refund: %w(ReferenceNumber TransactionAmount OriginalTransactionAmount OriginalTransactionID ClientIpAddress),
         void_transaction: %w(ReferenceNumber TransactionID),
         credit_card_settle: %w(ReferenceNumber TransactionAmount OriginalTransactionAmount OriginalTransactionID ClientIpAddress),
-        system_check: %w(SystemCheck),
+        system_check: %w(SystemCheck)
       }
     end
   end

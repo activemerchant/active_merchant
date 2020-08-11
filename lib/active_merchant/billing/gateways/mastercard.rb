@@ -105,7 +105,7 @@ module ActiveMerchant
           billing: {},
           device: {},
           shipping: {},
-          transaction: {},
+          transaction: {}
         }
       end
 
@@ -190,7 +190,7 @@ module ActiveMerchant
       def headers
         {
           'Authorization' => 'Basic ' + Base64.encode64("merchant.#{@options[:userid]}:#{@options[:password]}").strip.delete("\r\n"),
-          'Content-Type' => 'application/json',
+          'Content-Type' => 'application/json'
         }
       end
 

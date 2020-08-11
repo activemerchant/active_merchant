@@ -134,7 +134,7 @@ module ActiveMerchant #:nodoc:
         'purchase' => '1',
         'refund' => '2',
         'authorize' => '4',
-        'capture' => '5',
+        'capture' => '5'
       }
 
       def commit(action, post)

@@ -351,7 +351,7 @@ module ActiveMerchant #:nodoc:
           authorization: authorization_from(response, parameters, action),
           avs_result: {
             street_match: AVS_CODE[response['AddressResult']],
-            postal_match: AVS_CODE[response['PostCodeResult']],
+            postal_match: AVS_CODE[response['PostCodeResult']]
           },
           cvv_result: CVV_CODE[response['CV2Result']]
         )

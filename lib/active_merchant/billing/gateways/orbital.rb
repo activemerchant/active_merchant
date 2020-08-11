@@ -981,7 +981,7 @@ module ActiveMerchant #:nodoc:
           'R'  => 'Issuer does not participate in AVS',
           'UK' => 'Unknown',
           'X'  => 'Zip Match/Zip 4 Match/Address Match',
-          'Z'  => 'Zip Match/Locale no match',
+          'Z'  => 'Zip Match/Locale no match'
         }
 
         # Map vendor's AVS result code to a postal match code

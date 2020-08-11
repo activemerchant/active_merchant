@@ -679,27 +679,27 @@ class RemoteWorldpayTest < Test::Unit::TestCase
         shopper_account_creation_date: {
           day_of_month: shopper_account_creation_date.strftime('%d'),
           month: shopper_account_creation_date.strftime('%m'),
-          year: shopper_account_creation_date.strftime('%Y'),
+          year: shopper_account_creation_date.strftime('%Y')
         },
         shopper_account_modification_date: {
           day_of_month: shopper_account_modification_date.strftime('%d'),
           month: shopper_account_modification_date.strftime('%m'),
-          year: shopper_account_modification_date.strftime('%Y'),
+          year: shopper_account_modification_date.strftime('%Y')
         },
         shopper_account_password_change_date: {
           day_of_month: shopper_account_password_change_date.strftime('%d'),
           month: shopper_account_password_change_date.strftime('%m'),
-          year: shopper_account_password_change_date.strftime('%Y'),
+          year: shopper_account_password_change_date.strftime('%Y')
         },
         shopper_account_shipping_address_first_use_date: {
           day_of_month: shopper_account_shipping_address_first_use_date.strftime('%d'),
           month: shopper_account_shipping_address_first_use_date.strftime('%m'),
-          year: shopper_account_shipping_address_first_use_date.strftime('%Y'),
+          year: shopper_account_shipping_address_first_use_date.strftime('%Y')
         },
         shopper_account_payment_account_first_use_date: {
           day_of_month: shopper_account_payment_account_first_use_date.strftime('%d'),
           month: shopper_account_payment_account_first_use_date.strftime('%m'),
-          year: shopper_account_payment_account_first_use_date.strftime('%Y'),
+          year: shopper_account_payment_account_first_use_date.strftime('%Y')
         }
       },
       transaction_risk_data: {
@@ -718,7 +718,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
         transaction_risk_data_pre_order_date: {
           day_of_month: transaction_risk_data_pre_order_date.strftime('%d'),
           month: transaction_risk_data_pre_order_date.strftime('%m'),
-          year: transaction_risk_data_pre_order_date.strftime('%Y'),
+          year: transaction_risk_data_pre_order_date.strftime('%Y')
         }
       }
     }
