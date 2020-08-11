@@ -100,14 +100,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_metadata(post, options={})
-        post[:metadata] = {}
-        post[:metadata][:order_id] = options[:order_id]
-        post[:metadata][:ip] = options[:ip]
-        post[:metadata][:customer] = options[:customer]
-        post[:metadata][:invoice] = options[:invoice]
-        post[:metadata][:merchant] = options[:merchant]
-        post[:metadata][:description] = options[:description]
-        post[:metadata][:email] = options[:email]
+        metadata = options.each { |key, value| "#{key}: #{value}" }
+        post[:metadata] = metadata
       end
 
       def parse(body)
