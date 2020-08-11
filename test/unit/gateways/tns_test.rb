@@ -167,7 +167,7 @@ class TnsTest < Test::Unit::TestCase
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |method, endpoint, data, headers|
-      assert_match(/secure.na.tnspayments.com/, endpoint)
+      assert_match(/na-gateway.mastercard.com/, endpoint)
     end.respond_with(successful_capture_response)
 
     assert_success response
@@ -183,7 +183,7 @@ class TnsTest < Test::Unit::TestCase
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |method, endpoint, data, headers|
-      assert_match(/secure.ap.tnspayments.com/, endpoint)
+      assert_match(/ap-gateway.mastercard.com/, endpoint)
     end.respond_with(successful_capture_response)
 
     assert_success response
@@ -199,7 +199,7 @@ class TnsTest < Test::Unit::TestCase
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |method, endpoint, data, headers|
-      assert_match(/secure.eu.tnspayments.com/, endpoint)
+      assert_match(/eu-gateway.mastercard.com/, endpoint)
     end.respond_with(successful_capture_response)
 
     assert_success response
