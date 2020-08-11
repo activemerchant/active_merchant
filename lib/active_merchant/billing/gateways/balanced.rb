@@ -99,7 +99,7 @@ module ActiveMerchant #:nodoc:
         commit('refunds', "debits/#{reference_identifier_from(identifier)}/refunds", post)
       end
 
-      def store(credit_card, options={})
+      def store(credit_card, options = {})
         post = {}
 
         post[:number] = credit_card.number
@@ -156,7 +156,7 @@ module ActiveMerchant #:nodoc:
         post[:meta] = options[:meta]
       end
 
-      def commit(entity_name, path, post, method=:post)
+      def commit(entity_name, path, post, method = :post)
         raw_response =
           begin
             parse(

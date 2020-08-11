@@ -22,13 +22,6 @@ Layout/AlignHash:
 Layout/MultilineMethodCallBraceLayout:
   Enabled: false
 
-# Offense count: 649
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: space, no_space
-Layout/SpaceAroundEqualsInParameterDefault:
-  Enabled: false
-
 # Offense count: 1186
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle, EnforcedStyleForEmptyBraces.

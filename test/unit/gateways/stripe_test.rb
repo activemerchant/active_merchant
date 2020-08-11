@@ -2249,7 +2249,7 @@ class StripeTest < Test::Unit::TestCase
     RESPONSE
   end
 
-  def successful_purchase_response(refunded=false)
+  def successful_purchase_response(refunded = false)
     <<-RESPONSE
     {
       "amount": 400,

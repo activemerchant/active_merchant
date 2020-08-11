@@ -28,12 +28,12 @@ module ActiveMerchant #:nodoc:
         '500' => 'An internal error occurred;'
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :api_key)
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         post = {}
         add_invoice(post, money, options)
         add_customer_data(post, options) unless payment.is_a?(String)
@@ -43,7 +43,7 @@ module ActiveMerchant #:nodoc:
         commit('sale', post)
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         post = {}
         add_invoice(post, money, options)
         add_customer_data(post, options) unless payment.is_a?(String)
@@ -53,23 +53,23 @@ module ActiveMerchant #:nodoc:
         commit('authonly', post)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         post = {}
         post[:code] = authorization
         add_invoice(post, money, options)
         commit('capture', post, authorization)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         add_invoice(post = {}, money, options)
         commit('refund', post, authorization)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         commit('void', nil, authorization)
       end
 
-      def store(payment, options={})
+      def store(payment, options = {})
         post = {}
         options.update(name: payment.name)
         options = add_customer(options) unless options[:customer_id]
@@ -77,7 +77,7 @@ module ActiveMerchant #:nodoc:
         commit('store', post, options[:customer_id])
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }

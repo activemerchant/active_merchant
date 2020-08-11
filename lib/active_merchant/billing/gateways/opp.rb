@@ -117,39 +117,39 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://docs.oppwa.com'
       self.display_name = 'Open Payment Platform'
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :access_token, :entity_id)
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         # debit
         options[:registrationId] = payment if payment.is_a?(String)
         execute_dbpa(options[:risk_workflow] ? 'PA.CP' : 'DB',
           money, payment, options)
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         # preauthorization PA
         execute_dbpa('PA', money, payment, options)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         # capture CP
         execute_referencing('CP', money, authorization, options)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         # refund RF
         execute_referencing('RF', money, authorization, options)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         # reversal RV
         execute_referencing('RV', nil, authorization, options)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }

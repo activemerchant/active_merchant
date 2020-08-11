@@ -16,7 +16,7 @@ class PayuInTest < Test::Unit::TestCase
     }
   end
 
-  def assert_parameter(parameter, expected_value, data, options={})
+  def assert_parameter(parameter, expected_value, data, options = {})
     assert (data =~ %r{(?:^|&)#{parameter}=([^&]*)(?:&|$)}), "Unable to find #{parameter} in #{data}"
     value = CGI.unescape($1 || '')
     case expected_value

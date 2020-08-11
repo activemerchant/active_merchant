@@ -68,20 +68,20 @@ module ActiveMerchant
     #
     # A message will automatically show the inspection of the response
     # object if things go afoul.
-    def assert_success(response, message=nil)
+    def assert_success(response, message = nil)
       clean_backtrace do
         assert response.success?, build_message(nil, "#{message + "\n" if message}Response expected to succeed: <?>", response)
       end
     end
 
     # The negative of +assert_success+
-    def assert_failure(response, message=nil)
+    def assert_failure(response, message = nil)
       clean_backtrace do
         assert !response.success?, build_message(nil, "#{message + "\n" if message}Response expected to fail: <?>", response)
       end
     end
 
-    def assert_valid(model, message=nil)
+    def assert_valid(model, message = nil)
       errors = model.validate
 
       clean_backtrace do
@@ -101,7 +101,7 @@ module ActiveMerchant
       errors
     end
 
-    def assert_deprecation_warning(message=nil)
+    def assert_deprecation_warning(message = nil)
       ActiveMerchant.expects(:deprecated).with(message || anything)
       yield
     end
@@ -326,15 +326,15 @@ class MockResponse
   attr_reader   :code, :body, :message
   attr_accessor :headers
 
-  def self.succeeded(body, message='')
+  def self.succeeded(body, message = '')
     MockResponse.new(200, body, message)
   end
 
-  def self.failed(body, http_status_code=422, message='')
+  def self.failed(body, http_status_code = 422, message = '')
     MockResponse.new(http_status_code, body, message)
   end
 
-  def initialize(code, body, message='', headers={})
+  def initialize(code, body, message = '', headers = {})
     @code, @body, @message, @headers = code, body, message, headers
   end
 

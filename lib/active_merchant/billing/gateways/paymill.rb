@@ -17,7 +17,7 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      def purchase(money, payment_method, options={})
+      def purchase(money, payment_method, options = {})
         action_with_token(:purchase, money, payment_method, options)
       end
 
@@ -35,7 +35,7 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'transactions', post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         post = {}
 
         post[:amount] = amount(money)
@@ -43,11 +43,11 @@ module ActiveMerchant #:nodoc:
         commit(:post, "refunds/#{transaction_id(authorization)}", post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         commit(:delete, "preauthorizations/#{preauth(authorization)}")
       end
 
-      def store(credit_card, options={})
+      def store(credit_card, options = {})
         # The store request requires a currency and amount of at least $1 USD.
         # This is used for an authorization that is handled internally by Paymill.
         options[:currency] = 'USD'
@@ -94,7 +94,7 @@ module ActiveMerchant #:nodoc:
         { 'Authorization' => ('Basic ' + Base64.strict_encode64("#{@options[:private_key]}:X").chomp) }
       end
 
-      def commit(method, action, parameters=nil)
+      def commit(method, action, parameters = nil)
         begin
           raw_response = ssl_request(method, live_url + action, post_data(parameters), headers)
         rescue ResponseError => e
@@ -328,7 +328,7 @@ module ActiveMerchant #:nodoc:
       class ResponseParser
         attr_reader :raw_response, :parsed, :succeeded, :message, :options
 
-        def initialize(raw_response='', options={})
+        def initialize(raw_response = '', options = {})
           @raw_response = raw_response
           @options = options
         end

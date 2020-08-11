@@ -19,19 +19,19 @@ module ActiveMerchant #:nodoc:
         'diners_club' => 'DINERS'
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :username, :password, :account_id)
         super
       end
 
-      def purchase(amount, payment_method, options={})
+      def purchase(amount, payment_method, options = {})
         MultiResponse.run do |r|
           r.process { authorize(amount, payment_method, options) }
           r.process { capture(amount, r.authorization, options) }
         end
       end
 
-      def authorize(amount, payment_method, options={})
+      def authorize(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)
@@ -40,7 +40,7 @@ module ActiveMerchant #:nodoc:
         commit('ProcessAuthorise', post)
       end
 
-      def capture(amount, authorization, options={})
+      def capture(amount, authorization, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_reference(post, authorization)
@@ -49,7 +49,7 @@ module ActiveMerchant #:nodoc:
         commit('ProcessCapture', post)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_reference(post, authorization)

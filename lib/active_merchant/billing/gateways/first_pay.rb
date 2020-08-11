@@ -13,12 +13,12 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://1stpaygateway.net/'
       self.display_name = '1stPayGateway.Net'
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :transaction_center_id, :gateway_id)
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         post = {}
         add_invoice(post, money, options)
         add_payment(post, payment, options)
@@ -28,7 +28,7 @@ module ActiveMerchant #:nodoc:
         commit('sale', post)
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         post = {}
         add_invoice(post, money, options)
         add_payment(post, payment, options)
@@ -38,19 +38,19 @@ module ActiveMerchant #:nodoc:
         commit('auth', post)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         post = {}
         add_reference(post, 'settle', money, authorization)
         commit('settle', post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         post = {}
         add_reference(post, 'credit', money, authorization)
         commit('credit', post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = {}
         add_reference(post, 'void', nil, authorization)
         commit('void', post)

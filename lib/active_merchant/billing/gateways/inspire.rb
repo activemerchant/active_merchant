@@ -124,7 +124,7 @@ module ActiveMerchant #:nodoc:
         post[:orderdescription] = options[:description]
       end
 
-      def add_payment_source(params, source, options={})
+      def add_payment_source(params, source, options = {})
         case determine_funding_source(source)
         when :vault       then add_customer_vault_id(params, source)
         when :credit_card then add_creditcard(params, source, options)

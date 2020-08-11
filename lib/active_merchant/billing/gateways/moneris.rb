@@ -133,7 +133,7 @@ module ActiveMerchant #:nodoc:
         commit 'refund', crediting_params(authorization, amount: amount(money))
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         requires!(options, :order_id)
         post = {}
         add_payment_source(post, credit_card, options)

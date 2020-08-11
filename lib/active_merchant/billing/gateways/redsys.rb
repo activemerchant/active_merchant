@@ -352,7 +352,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def headers(action=nil)
+      def headers(action = nil)
         if action
           {
             'Content-Type' => 'text/xml',

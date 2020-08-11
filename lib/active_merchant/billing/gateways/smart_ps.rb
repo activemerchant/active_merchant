@@ -133,7 +133,7 @@ module ActiveMerchant #:nodoc:
         post[:ipaddress] = options[:ip] if options.has_key? :ip
       end
 
-      def add_address(post, address, prefix='')
+      def add_address(post, address, prefix = '')
         prefix += '_' unless prefix.blank?
         unless address.blank? or address.values.blank?
           post[prefix + 'address1']    = address[:address1].to_s
@@ -163,7 +163,7 @@ module ActiveMerchant #:nodoc:
         post[:orderid] = options[:order_id].to_s.gsub(/[^\w.]/, '')
       end
 
-      def add_payment_source(params, source, options={})
+      def add_payment_source(params, source, options = {})
         case determine_funding_source(source)
         when :vault       then add_customer_vault_id(params, source)
         when :credit_card then add_creditcard(params, source, options)

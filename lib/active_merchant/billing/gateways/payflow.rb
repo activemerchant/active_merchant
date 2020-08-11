@@ -45,7 +45,7 @@ module ActiveMerchant #:nodoc:
         commit(build_reference_request(:credit, money, reference, options), options)
       end
 
-      def verify(payment, options={})
+      def verify(payment, options = {})
         if credit_card_type(payment) == 'Amex'
           MultiResponse.run(:use_first_response) do |r|
             r.process { authorize(100, payment, options) }

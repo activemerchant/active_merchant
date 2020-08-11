@@ -250,7 +250,7 @@ class OppTest < Test::Unit::TestCase
     )
   end
 
-  def failed_response(type, id, code='100.100.101')
+  def failed_response(type, id, code = '100.100.101')
     OppMockResponse.new(400,
       JSON.generate({
         'id' => id,
@@ -274,7 +274,7 @@ class OppTest < Test::Unit::TestCase
     )
   end
 
-  def failed_store_response(id, code='100.100.101')
+  def failed_store_response(id, code = '100.100.101')
     OppMockResponse.new(400,
       JSON.generate({
         'id' => id,

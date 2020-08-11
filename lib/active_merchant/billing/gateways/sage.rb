@@ -77,7 +77,7 @@ module ActiveMerchant #:nodoc:
         commit(:credit, post, source)
       end
 
-      def refund(money, reference, options={})
+      def refund(money, reference, options = {})
         post = {}
         add_reference(post, reference)
         add_transaction_data(post, money, options)

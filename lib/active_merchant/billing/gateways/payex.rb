@@ -117,7 +117,7 @@ module ActiveMerchant #:nodoc:
       # options        - A standard ActiveMerchant options hash
       #
       # Returns an ActiveMerchant::Billing::Response object
-      def void(authorization, options={})
+      def void(authorization, options = {})
         send_cancel(authorization)
       end
 

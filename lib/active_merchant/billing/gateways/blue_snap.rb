@@ -70,12 +70,12 @@ module ActiveMerchant
 
       STATE_CODE_COUNTRIES = %w(US CA)
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :api_username, :api_password)
         super
       end
 
-      def purchase(money, payment_method, options={})
+      def purchase(money, payment_method, options = {})
         payment_method_details = PaymentMethodDetails.new(payment_method)
 
         commit(:purchase, :post, payment_method_details) do |doc|
@@ -87,13 +87,13 @@ module ActiveMerchant
         end
       end
 
-      def authorize(money, payment_method, options={})
+      def authorize(money, payment_method, options = {})
         commit(:authorize) do |doc|
           add_auth_purchase(doc, money, payment_method, options)
         end
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         commit(:capture, :put) do |doc|
           add_authorization(doc, authorization)
           add_order(doc, options)
@@ -101,7 +101,7 @@ module ActiveMerchant
         end
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         commit(:refund, :put) do |doc|
           add_authorization(doc, authorization)
           add_amount(doc, money, options)
@@ -109,14 +109,14 @@ module ActiveMerchant
         end
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         commit(:void, :put) do |doc|
           add_authorization(doc, authorization)
           add_order(doc, options)
         end
       end
 
-      def verify(payment_method, options={})
+      def verify(payment_method, options = {})
         authorize(0, payment_method, options)
       end
 

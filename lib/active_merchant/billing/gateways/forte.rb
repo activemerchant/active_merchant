@@ -15,12 +15,12 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://www.forte.net'
       self.display_name = 'Forte'
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :api_key, :secret, :location_id, :account_id)
         super
       end
 
-      def purchase(money, payment_method, options={})
+      def purchase(money, payment_method, options = {})
         post = {}
         add_amount(post, money, options)
         add_invoice(post, options)
@@ -32,7 +32,7 @@ module ActiveMerchant #:nodoc:
         commit(:post, post)
       end
 
-      def authorize(money, payment_method, options={})
+      def authorize(money, payment_method, options = {})
         post = {}
         add_amount(post, money, options)
         add_invoice(post, options)
@@ -44,7 +44,7 @@ module ActiveMerchant #:nodoc:
         commit(:post, post)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         post = {}
         post[:transaction_id] = transaction_id_from(authorization)
         post[:authorization_code] = authorization_code_from(authorization) || ''
@@ -53,7 +53,7 @@ module ActiveMerchant #:nodoc:
         commit(:put, post)
       end
 
-      def credit(money, payment_method, options={})
+      def credit(money, payment_method, options = {})
         post = {}
         add_amount(post, money, options)
         add_invoice(post, options)
@@ -64,7 +64,7 @@ module ActiveMerchant #:nodoc:
         commit(:post, post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         post = {}
         add_amount(post, money, options)
         post[:original_transaction_id] = transaction_id_from(authorization)
@@ -74,7 +74,7 @@ module ActiveMerchant #:nodoc:
         commit(:post, post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = {}
         post[:transaction_id] = transaction_id_from(authorization)
         post[:authorization_code] = authorization_code_from(authorization)
@@ -83,7 +83,7 @@ module ActiveMerchant #:nodoc:
         commit(:put, post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }

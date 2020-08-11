@@ -68,7 +68,7 @@ module ActiveMerchant
         commit(synchronized_path("/payments/#{identification}/refund"), post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }

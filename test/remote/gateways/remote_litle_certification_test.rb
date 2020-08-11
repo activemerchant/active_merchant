@@ -1161,7 +1161,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
 
   private
 
-  def auth_assertions(amount, card, options, assertions={})
+  def auth_assertions(amount, card, options, assertions = {})
     # 1: authorize
     assert response = @gateway.authorize(amount, card, options)
     assert_success response
@@ -1183,7 +1183,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
-  def authorize_avs_assertions(credit_card, options, assertions={})
+  def authorize_avs_assertions(credit_card, options, assertions = {})
     assert response = @gateway.authorize(000, credit_card, options)
     assert_equal assertions.key?(:success) ? assertions[:success] : true, response.success?
     assert_equal assertions[:message] || 'Approved', response.message
@@ -1191,7 +1191,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert_equal assertions[:cvv], response.cvv_result['code'], caller.inspect if assertions[:cvv]
   end
 
-  def sale_assertions(amount, card, options, assertions={})
+  def sale_assertions(amount, card, options, assertions = {})
     # 1: sale
     assert response = @gateway.purchase(amount, card, options)
     assert_success response

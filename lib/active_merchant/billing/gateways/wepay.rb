@@ -168,7 +168,7 @@ module ActiveMerchant #:nodoc:
         JSON.parse(response)
       end
 
-      def commit(action, params, options={})
+      def commit(action, params, options = {})
         begin
           response = parse(
             ssl_post(

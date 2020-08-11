@@ -192,7 +192,7 @@ module ActiveMerchant #:nodoc:
         )
       end
 
-      def http_request(method, resource, parameters={}, options={})
+      def http_request(method, resource, parameters = {}, options = {})
         url = (test? ? self.test_url : self.live_url) + @merchant_id + '/' + resource
         raw_response = nil
         begin

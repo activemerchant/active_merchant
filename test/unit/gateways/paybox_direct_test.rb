@@ -113,7 +113,7 @@ class PayboxDirectTest < Test::Unit::TestCase
   private
 
   # Place raw successful response from gateway here
-  def purchase_response(code='00000')
+  def purchase_response(code = '00000')
     "NUMTRANS=0720248861&NUMAPPEL=0713790302&NUMQUESTION=0000790217&SITE=1999888&RANG=99&AUTORISATION=XXXXXX&CODEREPONSE=#{code}&COMMENTAIRE=Demande trait?e avec succ?s ✔漢"
   end
 

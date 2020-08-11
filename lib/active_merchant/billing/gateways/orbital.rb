@@ -237,7 +237,7 @@ module ActiveMerchant #:nodoc:
         commit(order, :refund, options[:trace_number])
       end
 
-      def credit(money, authorization, options= {})
+      def credit(money, authorization, options = {})
         ActiveMerchant.deprecated CREDIT_DEPRECATION_MESSAGE
         refund(money, authorization, options)
       end
@@ -355,14 +355,14 @@ module ActiveMerchant #:nodoc:
         xml.tag! :SDMerchantEmail, soft_desc[:merchant_email] || nil
       end
 
-      def add_level_2_tax(xml, options={})
+      def add_level_2_tax(xml, options = {})
         if (level_2 = options[:level_2_data])
           xml.tag! :TaxInd, level_2[:tax_indicator] if [TAX_NOT_PROVIDED, TAX_INCLUDED, NON_TAXABLE_TRANSACTION].include?(level_2[:tax_indicator].to_i)
           xml.tag! :Tax, level_2[:tax].to_i if level_2[:tax]
         end
       end
 
-      def add_level_3_tax(xml, options={})
+      def add_level_3_tax(xml, options = {})
         if (level_3 = options[:level_3_data])
           xml.tag! :PC3VATtaxAmt, byte_limit(level_3[:vat_tax], 12) if level_3[:vat_tax]
           xml.tag! :PC3AltTaxAmt, byte_limit(level_3[:alt_tax], 9) if level_3[:alt_tax]
@@ -371,7 +371,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_level_2_advice_addendum(xml, options={})
+      def add_level_2_advice_addendum(xml, options = {})
         if (level_2 = options[:level_2_data])
           xml.tag! :AMEXTranAdvAddn1, byte_limit(level_2[:advice_addendum_1], 40) if level_2[:advice_addendum_1]
           xml.tag! :AMEXTranAdvAddn2, byte_limit(level_2[:advice_addendum_2], 40) if level_2[:advice_addendum_2]
@@ -380,7 +380,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_level_2_purchase(xml, options={})
+      def add_level_2_purchase(xml, options = {})
         if (level_2 = options[:level_2_data])
           xml.tag! :PCOrderNum,       byte_limit(level_2[:purchase_order], 17) if level_2[:purchase_order]
           xml.tag! :PCDestZip,        byte_limit(format_address_field(level_2[:zip]), 10) if level_2[:zip]
@@ -392,7 +392,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_level_3_purchase(xml, options={})
+      def add_level_3_purchase(xml, options = {})
         if (level_3 = options[:level_3_data])
           xml.tag! :PC3FreightAmt,    byte_limit(level_3[:freight_amount], 12) if level_3[:freight_amount]
           xml.tag! :PC3DutyAmt,       byte_limit(level_3[:duty_amount], 12) if level_3[:duty_amount]
@@ -402,7 +402,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_line_items(xml, options={})
+      def add_line_items(xml, options = {})
         xml.tag! :PC3LineItemCount, byte_limit(options[:line_items].count, 2)
         xml.tag! :PC3LineItemArray do
           options[:line_items].each_with_index do |line_item, index|
@@ -478,7 +478,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_creditcard(xml, creditcard, currency=nil)
+      def add_creditcard(xml, creditcard, currency = nil)
         unless creditcard.nil?
           xml.tag! :AccountNum, creditcard.number
           xml.tag! :Exp, expiry_date(creditcard)
@@ -560,7 +560,7 @@ module ActiveMerchant #:nodoc:
         xml.tag!(:PymtBrandProgramCode, 'ASK')
       end
 
-      def add_refund(xml, currency=nil)
+      def add_refund(xml, currency = nil)
         xml.tag! :AccountNum, nil
 
         xml.tag! :CurrencyCode, currency_code(currency)
@@ -647,7 +647,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def commit(order, message_type, trace_number=nil)
+      def commit(order, message_type, trace_number = nil)
         headers = POST_HEADERS.merge('Content-length' => order.size.to_s)
         if @options[:retry_logic] && trace_number
           headers['Trace-number'] = trace_number.to_s
@@ -673,7 +673,7 @@ module ActiveMerchant #:nodoc:
         )
       end
 
-      def remote_url(url=:primary)
+      def remote_url(url = :primary)
         if url == :primary
           (self.test? ? self.test_url : self.live_url)
         else

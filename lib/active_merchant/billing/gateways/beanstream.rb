@@ -104,7 +104,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def verify(source, options={})
+      def verify(source, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, source, options) }
           r.process(:ignore_result) { void(r.authorization, options) }

@@ -15,12 +15,12 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://www.vantiv.com/'
       self.display_name = 'Vantiv eCommerce'
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :login, :password, :merchant_id)
         super
       end
 
-      def purchase(money, payment_method, options={})
+      def purchase(money, payment_method, options = {})
         request = build_xml_request do |doc|
           add_authentication(doc)
           if check?(payment_method)
@@ -36,7 +36,7 @@ module ActiveMerchant #:nodoc:
         check?(payment_method) ? commit(:echeckSales, request, money) : commit(:sale, request, money)
       end
 
-      def authorize(money, payment_method, options={})
+      def authorize(money, payment_method, options = {})
         request = build_xml_request do |doc|
           add_authentication(doc)
           if check?(payment_method)
@@ -52,7 +52,7 @@ module ActiveMerchant #:nodoc:
         check?(payment_method) ? commit(:echeckVerification, request, money) : commit(:authorization, request, money)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         transaction_id, = split_authorization(authorization)
 
         request = build_xml_request do |doc|
@@ -72,7 +72,7 @@ module ActiveMerchant #:nodoc:
         refund(money, authorization, options)
       end
 
-      def refund(money, payment, options={})
+      def refund(money, payment, options = {})
         request = build_xml_request do |doc|
           add_authentication(doc)
           add_descriptor(doc, options)
@@ -99,7 +99,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         transaction_id, kind, money = split_authorization(authorization)
 
         request = build_xml_request do |doc|
@@ -227,7 +227,7 @@ module ActiveMerchant #:nodoc:
         add_stored_credential_params(doc, options)
       end
 
-      def add_merchant_data(doc, options={})
+      def add_merchant_data(doc, options = {})
         if options[:affiliate] || options[:campaign] || options[:merchant_grouping_id]
           doc.merchantData do
             doc.affiliate(options[:affiliate]) if options[:affiliate]
@@ -296,7 +296,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_stored_credential_params(doc, options={})
+      def add_stored_credential_params(doc, options = {})
         return unless options[:stored_credential]
 
         if options[:stored_credential][:initial_transaction]
@@ -381,7 +381,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def order_source(options={})
+      def order_source(options = {})
         return options[:order_source] unless options[:stored_credential]
 
         order_source = nil
@@ -448,7 +448,7 @@ module ActiveMerchant #:nodoc:
         parsed
       end
 
-      def commit(kind, request, money=nil)
+      def commit(kind, request, money = nil)
         parsed = parse(kind, ssl_post(url, request, headers))
 
         options = {

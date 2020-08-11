@@ -39,11 +39,11 @@ module ActiveMerchant #:nodoc:
         commit('CaptureTransaction', do_capture(money, authorization, options), options)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         commit('RefundTransaction', do_refund(money, authorization, options), options)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         commit('CancelTransaction', do_void(authorization, options), options)
       end
 
@@ -139,7 +139,7 @@ module ActiveMerchant #:nodoc:
         soap.tag!('cardExpireYear', card.year.to_s)
       end
 
-      def fill_order_info(soap, money, options, skip_currency=false)
+      def fill_order_info(soap, money, options, skip_currency = false)
         soap.tag!('orderID', options[:order_id].to_s)
         soap.tag!('orderDescription', "Order #{options[:order_id]}")
         soap.tag!('amount', amount(money).to_s)

@@ -123,7 +123,7 @@ module ActiveMerchant #:nodoc:
         refund(money, authorization, options)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }

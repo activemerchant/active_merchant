@@ -11,12 +11,12 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://www.pagofacil.net/'
       self.display_name = 'PagoFacil'
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :branch_id, :merchant_id, :service_id)
         super
       end
 
-      def purchase(money, credit_card, options={})
+      def purchase(money, credit_card, options = {})
         post = {}
         add_invoice(post, money, options)
         add_payment(post, credit_card)

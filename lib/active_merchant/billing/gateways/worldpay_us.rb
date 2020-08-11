@@ -17,12 +17,12 @@ module ActiveMerchant #:nodoc:
       self.money_format = :dollars
       self.supported_cardtypes = %i[visa master american_express discover jcb]
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :acctid, :subid, :merchantpin)
         super
       end
 
-      def purchase(money, payment_method, options={})
+      def purchase(money, payment_method, options = {})
         post = {}
         add_invoice(post, money, options)
         add_payment_method(post, payment_method)
@@ -31,7 +31,7 @@ module ActiveMerchant #:nodoc:
         commit('purchase', options, post)
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         post = {}
         add_invoice(post, money, options)
         add_credit_card(post, payment)
@@ -40,7 +40,7 @@ module ActiveMerchant #:nodoc:
         commit('authorize', options, post)
       end
 
-      def capture(amount, authorization, options={})
+      def capture(amount, authorization, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_reference(post, authorization)
@@ -49,7 +49,7 @@ module ActiveMerchant #:nodoc:
         commit('capture', options, post)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_reference(post, authorization)
@@ -58,14 +58,14 @@ module ActiveMerchant #:nodoc:
         commit('refund', options, post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = {}
         add_reference(post, authorization)
 
         commit('void', options, post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }

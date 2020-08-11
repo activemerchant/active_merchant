@@ -69,14 +69,14 @@ module ActiveMerchant #:nodoc:
         commit('Return', request)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         requires!(options, :credit_card) unless @use_tokenization
 
         request = build_authorized_request('VoidSale', nil, authorization, options[:credit_card], options)
         commit('VoidSale', request)
       end
 
-      def store(credit_card, options={})
+      def store(credit_card, options = {})
         request = build_card_lookup_request(credit_card, options)
         commit('CardLookup', request)
       end

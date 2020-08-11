@@ -464,7 +464,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def customer_hash(customer, include_credit_cards=false)
+      def customer_hash(customer, include_credit_cards = false)
         hash = {
           'email' => customer.email,
           'phone' => customer.phone,

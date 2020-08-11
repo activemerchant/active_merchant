@@ -23,7 +23,7 @@ module ActiveMerchant #:nodoc:
         unstore: 'DeleteCustomerCode'
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         if options[:login]
           ActiveMerchant.deprecated("The 'login' option is deprecated in favor of 'agent_code' and will be removed in a future version.")
           options[:agent_code] = options[:login]
@@ -35,7 +35,7 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         post = {}
         add_invoice(post, money, options)
         add_payment(post, payment)
@@ -46,7 +46,7 @@ module ActiveMerchant #:nodoc:
         commit(determine_purchase_type(payment), post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         post = {}
         transaction_id, payment_type = split_authorization(authorization)
         post[:transaction_id] = transaction_id

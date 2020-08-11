@@ -120,12 +120,12 @@ module ActiveMerchant #:nodoc:
         'R3' => 'Revocation of all Authorisations Order'
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :merchant_id, :cipher_key)
         super
       end
 
-      def purchase(amount, payment_method, options={})
+      def purchase(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)
@@ -141,7 +141,7 @@ module ActiveMerchant #:nodoc:
         commit(:purchase, post)
       end
 
-      def authorize(amount, payment_method, options={})
+      def authorize(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)
@@ -158,7 +158,7 @@ module ActiveMerchant #:nodoc:
         commit(:authorize, post)
       end
 
-      def capture(amount, authorization, options={})
+      def capture(amount, authorization, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_reference(post, authorization)
@@ -170,7 +170,7 @@ module ActiveMerchant #:nodoc:
         commit(:capture, post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = {}
         add_customer_data(post, options)
         reference_action = add_reference(post, authorization)
@@ -182,7 +182,7 @@ module ActiveMerchant #:nodoc:
         commit(:void, post, reference_action)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_reference(post, authorization)
@@ -200,7 +200,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def credit(amount, payment_method, options={})
+      def credit(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)
@@ -214,7 +214,7 @@ module ActiveMerchant #:nodoc:
         commit(:credit, post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -372,7 +372,7 @@ module ActiveMerchant #:nodoc:
         post[:'3ds_dstrxid'] = three_d_secure_options[:ds_transaction_id]
       end
 
-      def build_i8(eci, cavv=nil, xid=nil)
+      def build_i8(eci, cavv = nil, xid = nil)
         "#{eci}:#{cavv || 'none'}:#{xid || 'none'}"
       end
 

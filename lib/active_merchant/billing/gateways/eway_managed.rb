@@ -49,7 +49,7 @@ module ActiveMerchant #:nodoc:
         commit('CreateCustomer', post)
       end
 
-      def update(billing_id, creditcard, options={})
+      def update(billing_id, creditcard, options = {})
         post = {}
 
         # Handle our required fields
@@ -80,7 +80,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>:order_id</tt> -- The order number, passed to eWay as the "Invoice Reference"
       # * <tt>:invoice</tt> -- The invoice number, passed to eWay as the "Invoice Reference" unless :order_id is also given
       # * <tt>:description</tt> -- A description of the payment, passed to eWay as the "Invoice Description"
-      def purchase(money, billing_id, options={})
+      def purchase(money, billing_id, options = {})
         post = {}
         post[:managedCustomerID] = billing_id.to_s
         post[:amount] = money

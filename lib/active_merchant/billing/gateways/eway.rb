@@ -38,7 +38,7 @@ module ActiveMerchant #:nodoc:
         commit(purchase_url(post[:CVN]), money, post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         post = {}
 
         add_customer_id(post)

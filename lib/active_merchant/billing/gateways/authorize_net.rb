@@ -94,7 +94,7 @@ module ActiveMerchant
       PAYMENT_METHOD_NOT_SUPPORTED_ERROR = '155'
       INELIGIBLE_FOR_ISSUING_CREDIT_ERROR = '54'
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :login, :password)
         super
       end
@@ -111,7 +111,7 @@ module ActiveMerchant
         end
       end
 
-      def authorize(amount, payment, options={})
+      def authorize(amount, payment, options = {})
         if payment.is_a?(String)
           commit(:cim_authorize, options) do |xml|
             add_cim_auth_purchase(xml, 'profileTransAuthOnly', amount, payment, options)
@@ -123,7 +123,7 @@ module ActiveMerchant
         end
       end
 
-      def capture(amount, authorization, options={})
+      def capture(amount, authorization, options = {})
         if auth_was_for_cim?(authorization)
           cim_capture(amount, authorization, options)
         else
@@ -131,7 +131,7 @@ module ActiveMerchant
         end
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, options = {})
         response =
           if auth_was_for_cim?(authorization)
             cim_refund(amount, authorization, options)
@@ -149,7 +149,7 @@ module ActiveMerchant
         end
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         if auth_was_for_cim?(authorization)
           cim_void(authorization, options)
         else
@@ -157,7 +157,7 @@ module ActiveMerchant
         end
       end
 
-      def credit(amount, payment, options={})
+      def credit(amount, payment, options = {})
         raise ArgumentError, 'Reference credits are not supported. Please supply the original credit card or use the #refund method.' if payment.is_a?(String)
 
         commit(:credit) do |xml|
@@ -595,7 +595,7 @@ module ActiveMerchant
         end
       end
 
-      def add_shipping_address(xml, options, root_node='shipTo')
+      def add_shipping_address(xml, options, root_node = 'shipTo')
         address = options[:shipping_address] || options[:address]
         return unless address
 
@@ -619,7 +619,7 @@ module ActiveMerchant
         end
       end
 
-      def add_ship_from_address(xml, options, root_node='shipFrom')
+      def add_ship_from_address(xml, options, root_node = 'shipFrom')
         address = options[:ship_from_address]
         return unless address
 

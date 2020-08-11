@@ -410,7 +410,7 @@ module ActiveMerchant #:nodoc:
         recurring_post(post_data(params, false))
       end
 
-      def post(data, use_profile_api=nil)
+      def post(data, use_profile_api = nil)
         response = parse(ssl_post((use_profile_api ? SECURE_PROFILE_URL : self.live_url), data))
         response[:customer_vault_id] = response[:customerCode] if response[:customerCode]
         build_response(success?(response), message_from(response), response,

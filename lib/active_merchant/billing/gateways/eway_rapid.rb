@@ -47,7 +47,7 @@ module ActiveMerchant #:nodoc:
       #                                      (default: "https://github.com/activemerchant/active_merchant")
       #
       # Returns an ActiveMerchant::Billing::Response object where authorization is the Transaction ID on success
-      def purchase(amount, payment_method, options={})
+      def purchase(amount, payment_method, options = {})
         params = {}
         add_metadata(params, options)
         add_invoice(params, amount, options)
@@ -57,7 +57,7 @@ module ActiveMerchant #:nodoc:
         commit(url_for('Transaction'), params)
       end
 
-      def authorize(amount, payment_method, options={})
+      def authorize(amount, payment_method, options = {})
         params = {}
         add_metadata(params, options)
         add_invoice(params, amount, options)
@@ -251,7 +251,7 @@ module ActiveMerchant #:nodoc:
           payment_method.first_name.present? && payment_method.last_name.present?
       end
 
-      def add_address(params, address, options={})
+      def add_address(params, address, options = {})
         return unless address
 
         params['Title'] = address[:title]

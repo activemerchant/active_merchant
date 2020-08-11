@@ -166,7 +166,7 @@ module ActiveMerchant #:nodoc:
       # :threshold              Tells how many times to retry the transaction (if it fails) before contacting the merchant.
       # :comments               Uh... comments
       #
-      def recurring(money, creditcard, options={})
+      def recurring(money, creditcard, options = {})
         ActiveMerchant.deprecated RECURRING_DEPRECATION_MESSAGE
 
         requires!(options, %i[periodicity bimonthly monthly biweekly weekly yearly daily], :installments, :order_id)
@@ -184,7 +184,7 @@ module ActiveMerchant #:nodoc:
       end
 
       # Buy the thing
-      def purchase(money, creditcard, options={})
+      def purchase(money, creditcard, options = {})
         requires!(options, :order_id)
         options.update(
           ordertype: 'SALE'

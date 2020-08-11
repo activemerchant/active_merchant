@@ -111,14 +111,14 @@ module ActiveMerchant #:nodoc:
         credit_request(money, payment_method, payment_details.merge(credit: true, **options))
       end
 
-      def verify(payment_method, options={})
+      def verify(payment_method, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, payment_method, options) }
           r.process(:ignore_result) { void(r.authorization, options.merge(authorization_validated: true)) }
         end
       end
 
-      def store(credit_card, options={})
+      def store(credit_card, options = {})
         requires!(options, :customer)
         store_request(credit_card, options)
       end
@@ -432,7 +432,7 @@ module ActiveMerchant #:nodoc:
         add_address(xml, (options[:billing_address] || options[:address]), options)
       end
 
-      def add_stored_credential_options(xml, options={})
+      def add_stored_credential_options(xml, options = {})
         if options[:stored_credential]
           add_stored_credential_using_normalized_fields(xml, options)
         else
@@ -687,7 +687,7 @@ module ActiveMerchant #:nodoc:
         (pair ? pair.last : nil)
       end
 
-      def authorization_from_token_details(options={})
+      def authorization_from_token_details(options = {})
         [options[:order_id], options[:token_id], options[:token_scope], options[:customer]].join('|')
       end
 

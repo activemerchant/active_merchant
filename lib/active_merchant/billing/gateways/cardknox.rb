@@ -27,7 +27,7 @@ module ActiveMerchant #:nodoc:
         }
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :api_key)
         super
       end
@@ -37,7 +37,7 @@ module ActiveMerchant #:nodoc:
       # - check
       # - cardknox token, which is returned in the the authorization string "ref_num;token;command"
 
-      def purchase(amount, source, options={})
+      def purchase(amount, source, options = {})
         post = {}
         add_amount(post, amount, options)
         add_invoice(post, options)
@@ -48,7 +48,7 @@ module ActiveMerchant #:nodoc:
         commit(:purchase, source_type(source), post)
       end
 
-      def authorize(amount, source, options={})
+      def authorize(amount, source, options = {})
         post = {}
         add_amount(post, amount)
         add_invoice(post, options)
@@ -66,7 +66,7 @@ module ActiveMerchant #:nodoc:
         commit(:capture, source_type(authorization), post)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, options = {})
         post = {}
         add_reference(post, authorization)
         add_amount(post, amount)
@@ -79,7 +79,7 @@ module ActiveMerchant #:nodoc:
         commit(:void, source_type(authorization), post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }

@@ -1319,7 +1319,7 @@ class WorldpayTest < Test::Unit::TestCase
     RESPONSE
   end
 
-  def successful_refund_inquiry_response(last_event='CAPTURED')
+  def successful_refund_inquiry_response(last_event = 'CAPTURED')
     <<~RESPONSE
       <?xml version="1.0" encoding="UTF-8"?>
       <!DOCTYPE paymentService PUBLIC "-//Bibit//DTD Bibit PaymentService v1//EN"

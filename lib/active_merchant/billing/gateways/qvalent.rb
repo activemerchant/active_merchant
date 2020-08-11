@@ -16,12 +16,12 @@ module ActiveMerchant #:nodoc:
         'S' => 'D'
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :username, :password, :merchant, :pem, :pem_password)
         super
       end
 
-      def purchase(amount, payment_method, options={})
+      def purchase(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_order_number(post, options)
@@ -34,7 +34,7 @@ module ActiveMerchant #:nodoc:
         commit('capture', post)
       end
 
-      def authorize(amount, payment_method, options={})
+      def authorize(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_order_number(post, options)
@@ -47,7 +47,7 @@ module ActiveMerchant #:nodoc:
         commit('preauth', post)
       end
 
-      def capture(amount, authorization, options={})
+      def capture(amount, authorization, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_reference(post, authorization, options)
@@ -57,7 +57,7 @@ module ActiveMerchant #:nodoc:
         commit('captureWithoutAuth', post)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_reference(post, authorization, options)
@@ -69,7 +69,7 @@ module ActiveMerchant #:nodoc:
       end
 
       # Credit requires the merchant account to be enabled for "Adhoc Refunds"
-      def credit(amount, payment_method, options={})
+      def credit(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_order_number(post, options)
@@ -80,7 +80,7 @@ module ActiveMerchant #:nodoc:
         commit('refund', post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = {}
         add_reference(post, authorization, options)
         add_customer_data(post, options)

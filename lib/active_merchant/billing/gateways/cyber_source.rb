@@ -512,7 +512,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_purchase_data(xml, money = 0, include_grand_total = false, options={})
+      def add_purchase_data(xml, money = 0, include_grand_total = false, options = {})
         xml.tag! 'purchaseTotals' do
           xml.tag! 'currency', options[:currency] || currency(money)
           xml.tag!('grandTotalAmount', localized_amount(money.to_i, options[:currency] || default_currency)) if include_grand_total
@@ -851,7 +851,7 @@ module ActiveMerchant #:nodoc:
         country_code&.code(:alpha2)
       end
 
-      def add_stored_credential_subsequent_auth(xml, options={})
+      def add_stored_credential_subsequent_auth(xml, options = {})
         return unless options[:stored_credential] || options[:stored_credential_overrides]
 
         stored_credential_subsequent_auth = 'true' if options.dig(:stored_credential, :initiator) == 'merchant'
@@ -861,7 +861,7 @@ module ActiveMerchant #:nodoc:
         xml.subsequentAuth override_subsequent_auth.nil? ? stored_credential_subsequent_auth : override_subsequent_auth
       end
 
-      def add_stored_credential_options(xml, options={})
+      def add_stored_credential_options(xml, options = {})
         return unless options[:stored_credential] || options[:stored_credential_overrides]
 
         stored_credential_subsequent_auth_first = 'true' if options.dig(:stored_credential, :initial_transaction)
