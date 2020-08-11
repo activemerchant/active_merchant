@@ -93,6 +93,15 @@ class OrbitalGatewayTest < Test::Unit::TestCase
         cavv: 'TESTCAVV',
       }
     }
+    @three_d_secure_2_options = {
+      three_d_secure: {
+        eci: '5',
+        cavv: 'TESTCAVV',
+        ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC',
+        ucaf_collection_ind: '1',
+        version: '2.1.0',
+      }
+    }
   end
 
   def test_successful_purchase
@@ -135,8 +144,9 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_match %{<PC3DiscAmt>#{@level_3[:discount_amount].to_i}</PC3DiscAmt>}, data
       assert_match %{<PC3VATtaxAmt>#{@level_3[:vat_tax].to_i}</PC3VATtaxAmt>}, data
       assert_match %{<PC3VATtaxRate>#{@level_3[:vat_rate].to_i}</PC3VATtaxRate>}, data
-      assert_match %{<PC3AltTaxAmt>#{@level_3[:alt_tax].to_i}</PC3AltTaxAmt>}, data
       assert_match %{<PC3AltTaxInd>#{@level_3[:alt_ind]}</PC3AltTaxInd>}, data
+      assert_match %{<PC3AltTaxAmt>#{@level_3[:alt_tax].to_i}</PC3AltTaxAmt>}, data
+      assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -171,7 +181,23 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_three_d_secure_data_on_visa_purchase
+  def test_network_tokenization_credit_card_data_with_soft_descriptor_hash_level_2_data_and_line_items
+    stub_comms do
+      @gateway.authorize(50, network_tokenization_credit_card(nil, eci: '5', transaction_id: 'BwABB4JRdgAAAAAAiFF2AAAAAAA='), @options.merge(
+        level_2_data: @level_2,
+        line_items: @line_items,
+        soft_descriptors: {
+          merchant_name: 'Merch',
+          product_description: 'Description',
+          merchant_email: 'email@example',
+        }
+      ))
+    end.check_request do |endpoint, data, headers|
+      assert_xml_valid_to_xsd(data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_three_d_secure_1_data_on_visa_purchase
     stub_comms do
       @gateway.purchase(50, credit_card, @options.merge(@three_d_secure_options))
     end.check_request do |endpoint, data, headers|
@@ -181,17 +207,37 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_three_d_secure_data_on_visa_authorization
+  def test_three_d_secure_1_data_on_visa_authorization
     stub_comms do
       @gateway.authorize(50, credit_card, @options.merge(@three_d_secure_options))
     end.check_request do |endpoint, data, headers|
       assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
       assert_match %{<CAVV>TESTCAVV</CAVV>}, data
       assert_match %{<XID>TESTXID</XID>}, data
+      assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
   end
 
-  def test_three_d_secure_data_on_master_purchase
+  def test_three_d_secure_2_data_on_visa_purchase
+    stub_comms do
+      @gateway.purchase(50, credit_card, @options.merge(@three_d_secure_2_options))
+    end.check_request do |endpoint, data, headers|
+      assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
+      assert_match %{<CAVV>TESTCAVV</CAVV>}, data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_three_d_secure_2_data_on_visa_authorization
+    stub_comms do
+      @gateway.authorize(50, credit_card, @options.merge(@three_d_secure_2_options))
+    end.check_request do |endpoint, data, headers|
+      assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
+      assert_match %{<CAVV>TESTCAVV</CAVV>}, data
+      assert_xml_valid_to_xsd(data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_three_d_secure_1_data_on_master_purchase
     stub_comms do
       @gateway.purchase(50, credit_card(nil, brand: 'master'), @options.merge(@three_d_secure_options))
     end.check_request do |endpoint, data, headers|
@@ -200,16 +246,42 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_three_d_secure_data_on_master_authorization
+  def test_three_d_secure_1_data_on_master_authorization
     stub_comms do
       @gateway.authorize(50, credit_card(nil, brand: 'master'), @options.merge(@three_d_secure_options))
     end.check_request do |endpoint, data, headers|
       assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
       assert_match %{<AAV>TESTCAVV</AAV>}, data
+      assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
   end
 
-  def test_three_d_secure_data_on_american_express_purchase
+  def test_three_d_secure_2_data_on_master_purchase
+    stub_comms do
+      @gateway.purchase(50, credit_card(nil, brand: 'master'), @options.merge(@three_d_secure_2_options))
+    end.check_request do |endpoint, data, headers|
+      assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
+      assert_match %{<AAV>TESTCAVV</AAV>}, data
+      assert_match %{<MCProgramProtocol>2</MCProgramProtocol>}, data
+      assert_match %{<MCDirectoryTransID>97267598-FAE6-48F2-8083-C23433990FBC</MCDirectoryTransID>}, data
+      assert_match %{<UCAFInd>1</UCAFInd>}, data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_three_d_secure_2_data_on_master_authorization
+    stub_comms do
+      @gateway.authorize(50, credit_card(nil, brand: 'master'), @options.merge(@three_d_secure_2_options))
+    end.check_request do |endpoint, data, headers|
+      assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
+      assert_match %{<AAV>TESTCAVV</AAV>}, data
+      assert_match %{<MCProgramProtocol>2</MCProgramProtocol>}, data
+      assert_match %{<MCDirectoryTransID>97267598-FAE6-48F2-8083-C23433990FBC</MCDirectoryTransID>}, data
+      assert_match %{<UCAFInd>1</UCAFInd>}, data
+      assert_xml_valid_to_xsd(data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_three_d_secure_1_data_on_american_express_purchase
     stub_comms do
       @gateway.purchase(50, credit_card(nil, brand: 'american_express'), @options.merge(@three_d_secure_options))
     end.check_request do |endpoint, data, headers|
@@ -219,13 +291,14 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_three_d_secure_data_on_american_express_authorization
+  def test_three_d_secure_1_data_on_american_express_authorization
     stub_comms do
       @gateway.authorize(50, credit_card(nil, brand: 'american_express'), @options.merge(@three_d_secure_options))
     end.check_request do |endpoint, data, headers|
       assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
       assert_match %{<AEVV>TESTCAVV</AEVV>}, data
       assert_match %{<PymtBrandProgramCode>ASK</PymtBrandProgramCode>}, data
+      assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -898,10 +971,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1, billing_address: address)
     end.check_request do |endpoint, data, headers|
-      schema_file = File.read("#{File.dirname(__FILE__)}/../../schema/orbital/Request_PTI77.xsd")
-      doc = Nokogiri::XML(data)
-      xsd = Nokogiri::XML::Schema(schema_file)
-      assert xsd.valid?(doc), 'Request does not adhere to DTD'
+      assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
     assert_success response
   end
@@ -910,10 +980,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1, billing_address: address(country: 'DE'))
     end.check_request do |endpoint, data, headers|
-      schema_file = File.read("#{File.dirname(__FILE__)}/../../schema/orbital/Request_PTI77.xsd")
-      doc = Nokogiri::XML(data)
-      xsd = Nokogiri::XML::Schema(schema_file)
-      assert xsd.valid?(doc), 'Request does not adhere to DTD'
+      assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
     assert_success response
   end
@@ -1095,6 +1162,14 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   end
 
   private
+
+  def assert_xml_valid_to_xsd(data)
+    schema_file = File.read("#{File.dirname(__FILE__)}/../../schema/orbital/Request_PTI79.xsd")
+    xsd = Nokogiri::XML::Schema(schema_file)
+    doc = Nokogiri::XML(data)
+    errors = xsd.validate(doc)
+    assert_empty errors, "XSD validation errors in the following XML:\n#{doc}"
+  end
 
   def stored_credential_options(*args, id: nil)
     {

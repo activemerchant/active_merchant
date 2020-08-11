@@ -30,7 +30,7 @@ module ActiveMerchant #:nodoc:
     class OrbitalGateway < Gateway
       include Empty
 
-      API_VERSION = '7.7'
+      API_VERSION = '7.9'
 
       POST_HEADERS = {
         'MIME-Version' => '1.1',
@@ -365,9 +365,9 @@ module ActiveMerchant #:nodoc:
       def add_level_3_tax(xml, options={})
         if (level_3 = options[:level_3_data])
           xml.tag! :PC3VATtaxAmt, byte_limit(level_3[:vat_tax], 12) if level_3[:vat_tax]
-          xml.tag! :PC3AltTaxAmt, byte_limit(level_3[:alt_tax], 9) if level_3[:alt_tax]
           xml.tag! :PC3VATtaxRate, byte_limit(level_3[:vat_rate], 4) if level_3[:vat_rate]
           xml.tag! :PC3AltTaxInd, byte_limit(level_3[:alt_ind], 15) if level_3[:alt_ind]
+          xml.tag! :PC3AltTaxAmt, byte_limit(level_3[:alt_tax], 9) if level_3[:alt_tax]
         end
       end
 
@@ -556,6 +556,24 @@ module ActiveMerchant #:nodoc:
         xml.tag!(:PymtBrandProgramCode, 'ASK')
       end
 
+      def add_mc_program_protocol(xml, creditcard, three_d_secure)
+        return unless three_d_secure && creditcard.brand == 'master'
+
+        xml.tag!(:MCProgramProtocol, three_d_secure[:version].to_i) if three_d_secure[:version]
+      end
+
+      def add_mc_directory_trans_id(xml, creditcard, three_d_secure)
+        return unless three_d_secure && creditcard.brand == 'master'
+
+        xml.tag!(:MCDirectoryTransID, three_d_secure[:ds_transaction_id]) if three_d_secure[:ds_transaction_id]
+      end
+
+      def add_ucaf_ind(xml, creditcard, three_d_secure)
+        return unless three_d_secure && creditcard.brand == 'master'
+
+        xml.tag!(:UCAFInd, three_d_secure[:ucaf_collection_ind]) if three_d_secure[:ucaf_collection_ind]
+      end
+
       def add_refund(xml, currency=nil)
         xml.tag! :AccountNum, nil
 
@@ -735,10 +753,6 @@ module ActiveMerchant #:nodoc:
             add_aav(xml, creditcard, three_d_secure)
             # CustomerAni, AVSPhoneType and AVSDestPhoneType could be added here.
 
-            add_dpanind(xml, creditcard)
-            add_aevv(xml, creditcard, three_d_secure)
-            add_digital_token_cryptogram(xml, creditcard)
-
             if parameters[:soft_descriptors].is_a?(OrbitalSoftDescriptors)
               add_soft_descriptors(xml, parameters[:soft_descriptors])
             elsif parameters[:soft_descriptors].is_a?(Hash)
@@ -757,8 +771,16 @@ module ActiveMerchant #:nodoc:
             add_level_3_purchase(xml, parameters)
             add_level_3_tax(xml, parameters)
             add_line_items(xml, parameters) if parameters[:line_items]
+
+            add_dpanind(xml, creditcard)
+            add_aevv(xml, creditcard, three_d_secure)
+            add_digital_token_cryptogram(xml, creditcard)
+
             add_stored_credentials(xml, parameters)
             add_pymt_brand_program_code(xml, creditcard, three_d_secure)
+            add_mc_program_protocol(xml, creditcard, three_d_secure)
+            add_mc_directory_trans_id(xml, creditcard, three_d_secure)
+            add_ucaf_ind(xml, creditcard, three_d_secure)
           end
         end
         xml.target!

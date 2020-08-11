@@ -352,7 +352,21 @@
             <xs:element name="PinlessDebitMerchantUrl" type="xs:string" minOccurs="0"/>
             <xs:element name="RtauOptOutInd" type="xs:string" minOccurs="0"/>  
             <xs:element name="PymtBrandProgramCode" type="xs:string" minOccurs="0"/>
-		</xs:sequence>
+            <xs:element name="TokenTxnType" type="xs:string" minOccurs="0"/>
+            <xs:element name="SCATrustedMerchant" type="xs:string" minOccurs="0"/>
+            <xs:element name="SCASecureCorporatePayment" type="xs:string" minOccurs="0"/>
+            <xs:element name="SCATransactionRiskAnalysis" type="xs:string" minOccurs="0"/>
+            <xs:element name="SCALowValuePayment" type="xs:string" minOccurs="0"/>
+            <xs:element name="SCAMerchantInitiatedTransaction" type="xs:string" minOccurs="0"/>
+            <xs:element name="SCARecurringPayment" type="xs:string" minOccurs="0"/>
+            <xs:element name="SCADelegation" type="xs:string" minOccurs="0"/>
+            <xs:element name="DeferredAuth" type="xs:string" minOccurs="0"/>
+            <xs:element name="MCProgramProtocol" type="xs:string" minOccurs="0"/>
+            <xs:element name="MCDirectoryTransID" type="xs:string" minOccurs="0"/>
+            <xs:element name="UCAFInd" type="xs:string" minOccurs="0"/>
+            <!-- ?&AUTO_ADD_FIELD_NewOrder -->
+            <!-- DONOT TOUCH THE ABOVE LINE -->
+        </xs:sequence>
 	</xs:complexType>
 	<xs:complexType name="PC3LineItemArray">
 		<xs:sequence>
@@ -425,7 +439,20 @@
 			<xs:element name="PCardDtlTaxAmount1" type="xs:string" minOccurs="0"/>
 			<xs:element name="PCardDtlTaxAmount2Ind" type="xs:string" minOccurs="0"/>
 			<xs:element name="PCardDtlTaxAmount2" type="xs:string" minOccurs="0"/>
-			<xs:element name="PinlessDebitTotalShpmnt" type="xs:string" minOccurs="0"/>
+			<xs:element name="PinlessDebitTotalShpmnt" type="xs:string" minOccurs="0"/>			
+			<xs:element name="AuthenticationECIInd" type="xs:string" minOccurs="0"/>
+			<xs:element name="DigitalTokenCryptogram" type="xs:string" minOccurs="0"/>
+			<xs:element name="XID" type="xs:string" minOccurs="0"/>
+			<xs:element name="SCATrustedMerchant" type="xs:string" minOccurs="0"/>
+			<xs:element name="SCASecureCorporatePayment" type="xs:string" minOccurs="0"/>
+			<xs:element name="SCATransactionRiskAnalysis" type="xs:string" minOccurs="0"/>
+			<xs:element name="SCALowValuePayment" type="xs:string" minOccurs="0"/>
+			<xs:element name="SCAMerchantInitiatedTransaction" type="xs:string" minOccurs="0"/>
+			<xs:element name="SCARecurringPayment" type="xs:string" minOccurs="0"/>
+			<xs:element name="SCADelegation" type="xs:string" minOccurs="0"/>
+			<xs:element name="MCProgramProtocol" type="xs:string" minOccurs="0"/>
+			<xs:element name="MCDirectoryTransID" type="xs:string" minOccurs="0"/>
+			<xs:element name="UCAFInd" type="xs:string" minOccurs="0"/>
 		</xs:sequence>
 	</xs:complexType>
 	<xs:complexType name="reversalType">
@@ -543,6 +570,7 @@
 			<xs:element name="MITSubmittedTransactionID" type="xs:string" minOccurs="0"/>
 			<xs:element name="PinlessDebitTxnType" type="xs:string" minOccurs="0"/>
             <xs:element name="PinlessDebitMerchantUrl" type="xs:string" minOccurs="0"/>
+			<xs:element name="CardBrand" type="valid-card-brands" minOccurs="0"/>
 		</xs:sequence>
 	</xs:complexType>
 	<xs:complexType name="flexCacheType">
@@ -934,17 +962,22 @@
 					</xs:enumeration>
 					<xs:enumeration value="CZ">
 						<xs:annotation>
-							<xs:documentation>International Maestro</xs:documentation>
+							<xs:documentation>Chasenet Credit</xs:documentation>
 						</xs:annotation>
 					</xs:enumeration>
 					<xs:enumeration value="CR">
 						<xs:annotation>
-							<xs:documentation>International Maestro</xs:documentation>
+							<xs:documentation>Chasenet Signature Debit</xs:documentation>
 						</xs:annotation>
 					</xs:enumeration>
 					<xs:enumeration value="AA">
 						<xs:annotation>
-							<xs:documentation>International Maestro</xs:documentation>
+							<xs:documentation>Auto Assign</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="TK">
+						<xs:annotation>
+							<xs:documentation>Use Token as Account Number</xs:documentation>
 						</xs:annotation>
 					</xs:enumeration>
 				</xs:restriction>
