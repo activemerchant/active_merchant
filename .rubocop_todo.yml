@@ -119,13 +119,6 @@ Naming/HeredocDelimiterCase:
 Naming/HeredocDelimiterNaming:
   Enabled: false
 
-# Offense count: 1
-# Configuration parameters: EnforcedStyleForLeadingUnderscores.
-# SupportedStylesForLeadingUnderscores: disallowed, required, optional
-Naming/MemoizedInstanceVariableName:
-  Exclude:
-    - 'lib/active_merchant/billing/compatibility.rb'
-
 # Offense count: 15
 # Configuration parameters: EnforcedStyle.
 # SupportedStyles: snake_case, camelCase

@@ -56,7 +56,7 @@ module ActiveMerchant
         private
 
         def internal_errors
-          @errors ||= Errors.new
+          @internal_errors ||= Errors.new
         end
 
         class Errors < Hash

@@ -9,6 +9,7 @@
 * WorldPay: Add support for idempotency_key[cdmackeyfree] #3759
 * Orbital: Handle line_tot key as a string [naashton] #3760
 * RuboCop: Fix Lint/UnusedMethodArgument [leila-alderman] #3721
+* RuboCop: Fix Naming/MemoizedInstanceVariableName [leila-alderman] #3722
 
 == Version 1.114.0
 * BlueSnap: Add address1,address2,phone,shipping_* support #3749
