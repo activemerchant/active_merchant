@@ -31,7 +31,7 @@ end
 
 module ActiveMerchant
   module Assertions
-    AssertionClass = defined?(Minitest) ? MiniTest::Assertion : Test::Unit::AssertionFailedError
+    ASSERTION_CLASS = defined?(Minitest) ? MiniTest::Assertion : Test::Unit::AssertionFailedError
 
     def assert_field(field, value)
       clean_backtrace do
@@ -129,9 +129,9 @@ module ActiveMerchant
 
     def clean_backtrace(&block)
       yield
-    rescue AssertionClass => e
+    rescue ASSERTION_CLASS => e
       path = File.expand_path(__FILE__)
-      raise AssertionClass, e.message, (e.backtrace.reject { |line| File.expand_path(line).match?(/#{path}/) })
+      raise ASSERTION_CLASS, e.message, (e.backtrace.reject { |line| File.expand_path(line).match?(/#{path}/) })
     end
   end
 

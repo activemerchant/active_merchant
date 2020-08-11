@@ -97,11 +97,6 @@ Naming/AccessorMethodName:
     - 'test/remote/gateways/remote_authorize_net_cim_test.rb'
     - 'test/unit/gateways/authorize_net_cim_test.rb'
 
-# Offense count: 1
-Naming/ConstantName:
-  Exclude:
-    - 'test/test_helper.rb'
-
 # Offense count: 46
 # Configuration parameters: EnforcedStyle.
 # SupportedStyles: lowercase, uppercase
