@@ -153,21 +153,6 @@ Naming/MethodName:
     - 'test/remote/gateways/remote_sage_pay_test.rb'
     - 'test/unit/gateways/sage_pay_test.rb'
 
-# Offense count: 5
-# Configuration parameters: NamePrefix, NamePrefixBlacklist, NameWhitelist, MethodDefinitionMacros.
-# NamePrefix: is_, has_, have_
-# NamePrefixBlacklist: is_, has_, have_
-# NameWhitelist: is_a?
-# MethodDefinitionMacros: define_method, define_singleton_method
-Naming/PredicateName:
-  Exclude:
-    - 'spec/**/*'
-    - 'lib/active_merchant/billing/gateways/authorize_net.rb'
-    - 'lib/active_merchant/billing/gateways/payeezy.rb'
-    - 'lib/active_merchant/billing/gateways/paymill.rb'
-    - 'lib/active_merchant/billing/gateways/redsys.rb'
-    - 'lib/active_merchant/billing/gateways/sage_pay.rb'
-
 # Offense count: 14
 # Configuration parameters: MinNameLength, AllowNamesEndingInNumbers, AllowedNames, ForbiddenNames.
 # AllowedNames: io, id, to, by, on, in, at, ip, db

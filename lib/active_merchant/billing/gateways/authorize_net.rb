@@ -771,7 +771,7 @@ module ActiveMerchant
       end
 
       def parse(action, raw_response, options = {})
-        if is_cim_action?(action) || action == :verify_credentials
+        if cim_action?(action) || action == :verify_credentials
           parse_cim(raw_response, options)
         else
           parse_normal(action, raw_response)
@@ -802,7 +802,7 @@ module ActiveMerchant
         end
       end
 
-      def is_cim_action?(action)
+      def cim_action?(action)
         action.to_s.start_with?('cim')
       end
 
@@ -824,7 +824,7 @@ module ActiveMerchant
           'deleteCustomerProfileRequest'
         elsif action == :verify_credentials
           'authenticateTestRequest'
-        elsif is_cim_action?(action)
+        elsif cim_action?(action)
           'createCustomerProfileTransactionRequest'
         else
           'createTransactionRequest'
@@ -1006,7 +1006,7 @@ module ActiveMerchant
 
       def auth_was_for_cim?(authorization)
         _, _, action = split_authorization(authorization)
-        action && is_cim_action?(action)
+        action && cim_action?(action)
       end
 
       def parse_direct_response_elements(response, options)
