@@ -310,7 +310,7 @@ module ActiveMerchant #:nodoc:
           error_code: fields['UMerrorcode'],
           acs_url: fields['UMacsurl'],
           payload: fields['UMpayload']
-        }.delete_if { |k, v| v.nil? }
+        }.delete_if { |_k, v| v.nil? }
       end
 
       def commit(action, parameters)

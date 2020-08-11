@@ -60,7 +60,7 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
 
     stub_comms(@gateway, :ssl_request) do
       @gateway.create_intent(@amount, @visa_token, options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/statement_descriptor_suffix=suffix/, data)
     end.respond_with(successful_create_intent_response)
   end
@@ -80,7 +80,7 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
 
     stub_comms(@gateway, :ssl_request) do
       @gateway.create_intent(@amount, @visa_token, options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, _data, headers|
       assert_equal idempotency_key, headers['Idempotency-Key']
     end.respond_with(successful_create_intent_response)
   end
@@ -123,7 +123,7 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
 
     stub_comms(@gateway, :ssl_request) do
       @gateway.create_intent(@amount, @visa_token, options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/transfer_data\[destination\]=#{destination}/, data)
       assert_match(/transfer_data\[amount\]=#{amount}/, data)
       assert_match(/on_behalf_of=#{on_behalf_of}/, data)

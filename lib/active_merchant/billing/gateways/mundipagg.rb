@@ -275,7 +275,7 @@ module ActiveMerchant #:nodoc:
         parsed_response_body = parse(error.response.body)
         message = parsed_response_body['message']
 
-        parsed_response_body['errors']&.each do |type, descriptions|
+        parsed_response_body['errors']&.each do |_type, descriptions|
           message += ' | '
           message += descriptions.join(', ')
         end
@@ -291,7 +291,7 @@ module ActiveMerchant #:nodoc:
         error_string = ''
 
         response['last_transaction']['gateway_response']['errors']&.each do |error|
-          error.each do |key, value|
+          error.each do |_key, value|
             error_string += ' | ' unless error_string.blank?
             error_string += value
           end

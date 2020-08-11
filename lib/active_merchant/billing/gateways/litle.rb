@@ -481,7 +481,7 @@ module ActiveMerchant #:nodoc:
         attributes[:id] = truncate(options[:id] || options[:order_id], 24)
         attributes[:reportGroup] = options[:merchant] || 'Default Report Group'
         attributes[:customerId] = options[:customer]
-        attributes.delete_if { |key, value| value == nil }
+        attributes.delete_if { |_key, value| value == nil }
         attributes
       end
 

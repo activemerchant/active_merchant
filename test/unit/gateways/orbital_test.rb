@@ -111,7 +111,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   def test_level_2_data
     stub_comms do
       @gateway.purchase(50, credit_card, @options.merge(level_2_data: @level_2))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match %{<TaxInd>#{@level_2[:tax_indicator].to_i}</TaxInd>}, data
       assert_match %{<Tax>#{@level_2[:tax].to_i}</Tax>}, data
       assert_match %{<AMEXTranAdvAddn1>#{@level_2[:advice_addendum_1]}</AMEXTranAdvAddn1>}, data
@@ -131,7 +131,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   def test_level_3_data
     stub_comms do
       @gateway.purchase(50, credit_card, @options.merge(level_3_data: @level_3))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match %{<PC3FreightAmt>#{@level_3[:freight_amount].to_i}</PC3FreightAmt>}, data
       assert_match %{<PC3DutyAmt>#{@level_3[:duty_amount].to_i}</PC3DutyAmt>}, data
       assert_match %{<PC3DestCountryCd>#{@level_3[:dest_country]}</PC3DestCountryCd>}, data
@@ -147,7 +147,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   def test_line_items_data
     stub_comms do
       @gateway.purchase(50, credit_card, @options.merge(line_items: @line_items))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match %{<PC3DtlIndex>1</PC3DtlIndex>}, data
       assert_match %{<PC3DtlDesc>#{@line_items[1][:desc]}</PC3DtlDesc>}, data
       assert_match %{<PC3DtlProdCd>#{@line_items[1][:prod_cd]}</PC3DtlProdCd>}, data
@@ -167,7 +167,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   def test_network_tokenization_credit_card_data
     stub_comms do
       @gateway.purchase(50, network_tokenization_credit_card(nil, eci: '5', transaction_id: 'BwABB4JRdgAAAAAAiFF2AAAAAAA='), @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
       assert_match %{<DPANInd>Y</DPANInd>}, data
       assert_match %{DigitalTokenCryptogram}, data
@@ -177,7 +177,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   def test_three_d_secure_data_on_visa_purchase
     stub_comms do
       @gateway.purchase(50, credit_card, @options.merge(@three_d_secure_options))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
       assert_match %{<CAVV>TESTCAVV</CAVV>}, data
       assert_match %{<XID>TESTXID</XID>}, data
@@ -187,7 +187,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   def test_three_d_secure_data_on_visa_authorization
     stub_comms do
       @gateway.authorize(50, credit_card, @options.merge(@three_d_secure_options))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
       assert_match %{<CAVV>TESTCAVV</CAVV>}, data
       assert_match %{<XID>TESTXID</XID>}, data
@@ -197,7 +197,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   def test_three_d_secure_data_on_master_purchase
     stub_comms do
       @gateway.purchase(50, credit_card(nil, brand: 'master'), @options.merge(@three_d_secure_options))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
       assert_match %{<AAV>TESTCAVV</AAV>}, data
     end.respond_with(successful_purchase_response)
@@ -206,7 +206,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   def test_three_d_secure_data_on_master_authorization
     stub_comms do
       @gateway.authorize(50, credit_card(nil, brand: 'master'), @options.merge(@three_d_secure_options))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
       assert_match %{<AAV>TESTCAVV</AAV>}, data
     end.respond_with(successful_purchase_response)
@@ -215,7 +215,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   def test_three_d_secure_data_on_american_express_purchase
     stub_comms do
       @gateway.purchase(50, credit_card(nil, brand: 'american_express'), @options.merge(@three_d_secure_options))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
       assert_match %{<AEVV>TESTCAVV</AEVV>}, data
       assert_match %{<PymtBrandProgramCode>ASK</PymtBrandProgramCode>}, data
@@ -225,7 +225,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   def test_three_d_secure_data_on_american_express_authorization
     stub_comms do
       @gateway.authorize(50, credit_card(nil, brand: 'american_express'), @options.merge(@three_d_secure_options))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
       assert_match %{<AEVV>TESTCAVV</AEVV>}, data
       assert_match %{<PymtBrandProgramCode>ASK</PymtBrandProgramCode>}, data
@@ -235,19 +235,19 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   def test_currency_exponents
     stub_comms do
       @gateway.purchase(50, credit_card, order_id: '1')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match %r{<CurrencyExponent>2<\/CurrencyExponent>}, data
     end.respond_with(successful_purchase_response)
 
     stub_comms do
       @gateway.purchase(50, credit_card, order_id: '1', currency: 'CAD')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match %r{<CurrencyExponent>2<\/CurrencyExponent>}, data
     end.respond_with(successful_purchase_response)
 
     stub_comms do
       @gateway.purchase(50, credit_card, order_id: '1', currency: 'JPY')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match %r{<CurrencyExponent>0<\/CurrencyExponent>}, data
     end.respond_with(successful_purchase_response)
   end
@@ -297,7 +297,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   def test_order_id_format
     response = stub_comms do
       @gateway.purchase(101, credit_card, order_id: ' #101.23,56 $Hi &thére@Friends')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<OrderID>101-23,56 \$Hi &amp;thre@Fr<\/OrderID>/, data)
     end.respond_with(successful_purchase_response)
     assert_success response
@@ -306,7 +306,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   def test_order_id_format_for_capture
     response = stub_comms do
       @gateway.capture(101, '4A5398CF9B87744GG84A1D30F2F2321C66249416;1001.1', order_id: '#1001.1')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<OrderID>1001-1<\/OrderID>/, data)
     end.respond_with(successful_purchase_response)
     assert_success response
@@ -321,7 +321,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
     response = stub_comms(gateway) do
       gateway.capture(101, '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<MerchantID>700000123456<\/MerchantID>/, data)
     end.respond_with(successful_purchase_response)
     assert_success response
@@ -335,7 +335,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   def test_phone_number
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1, billing_address: address(phone: '123-456-7890'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/1234567890/, data)
     end.respond_with(successful_purchase_response)
     assert_success response
@@ -346,7 +346,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1, billing_address: address(address1: long_address))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/1850 Treebeard Drive/, data)
       assert_no_match(/Fields of Rohan/, data)
     end.respond_with(successful_purchase_response)
@@ -360,7 +360,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.purchase(50, card, order_id: 1, billing_address: address)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/John Jacob/, data)
       assert_no_match(/Jones/, data)
     end.respond_with(successful_purchase_response)
@@ -372,7 +372,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1, billing_address: address(city: long_city))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/Friendly Village/, data)
       assert_no_match(/Creek/, data)
     end.respond_with(successful_purchase_response)
@@ -384,7 +384,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1, billing_address: address(phone: long_phone))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/12345678901234</, data)
     end.respond_with(successful_purchase_response)
     assert_success response
@@ -395,7 +395,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1, billing_address: address(zip: long_zip))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/1234567890</, data)
     end.respond_with(successful_purchase_response)
     assert_success response
@@ -417,7 +417,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1,
                                          billing_address: address_with_invalid_chars)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/456 Main Street</, data)
       assert_match(/Apt. Number One</, data)
       assert_match(/Rise of the Phoenix</, data)
@@ -434,7 +434,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
         @gateway.add_customer_profile(credit_card,
           billing_address: address_with_invalid_chars)
       end
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/456 Main Street</, data)
       assert_match(/Apt. Number One</, data)
       assert_match(/Rise of the Phoenix</, data)
@@ -464,7 +464,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(50, card, order_id: 1,
                                   billing_address: long_address)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/456 Stréêt Name is Really Lo</, data)
       assert_match(/Apårtmeñt 123456789012345678</, data)
       assert_match(/¡Vancouver-by-the-s</, data)
@@ -484,7 +484,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
         @gateway.add_customer_profile(credit_card,
           billing_address: long_address)
       end
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/456 Stréêt Name is Really Lo</, data)
       assert_match(/Apårtmeñt 123456789012345678</, data)
       assert_match(/¡Vancouver-by-the-s</, data)
@@ -525,7 +525,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1,
                                          billing_address: billing_address)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<AVSDestzip>90001/, data)
       assert_match(/<AVSDestaddress1>456 Main St./, data)
       assert_match(/<AVSDestaddress2/, data)
@@ -541,7 +541,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1,
                                          billing_address: billing_address.merge(dest_country: 'BR'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<AVSDestcountryCode></, data)
     end.respond_with(successful_purchase_response)
     assert_success response
@@ -550,7 +550,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   def test_successful_purchase_with_negative_stored_credentials_indicator
     stub_comms do
       @gateway.purchase(50, credit_card, @options.merge(mit_stored_credential_ind: 'N'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_no_match(/<MITMsgType>/, data)
       assert_no_match(/<MITStoredCredentialInd>/, data)
     end.respond_with(successful_purchase_response)
@@ -559,7 +559,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   def test_successful_purchase_with_stored_credentials
     stub_comms do
       @gateway.purchase(50, credit_card, @options.merge(@options_stored_credentials))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match %{<MITMsgType>#{@options_stored_credentials[:mit_msg_type]}</MITMsgType>}, data
       assert_match %{<MITStoredCredentialInd>#{@options_stored_credentials[:mit_stored_credential_ind]}</MITStoredCredentialInd>}, data
       assert_match %{<MITSubmittedTransactionID>#{@options_stored_credentials[:mit_submitted_transaction_id]}</MITSubmittedTransactionID>}, data
@@ -570,7 +570,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     options = stored_credential_options(:cardholder, :recurring, :initial)
     response = stub_comms do
       @gateway.purchase(50, credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<MITMsgType>CSTO</, data)
       assert_match(/<MITStoredCredentialInd>Y</, data)
     end.respond_with(successful_purchase_response)
@@ -583,7 +583,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     options = stored_credential_options(:cardholder, :recurring, id: 'abc123')
     response = stub_comms do
       @gateway.purchase(50, credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<MITMsgType>CREC</, data)
       assert_match(/<MITStoredCredentialInd>Y</, data)
     end.respond_with(successful_purchase_response)
@@ -595,7 +595,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     options = stored_credential_options(:merchant, :recurring, :initial)
     response = stub_comms do
       @gateway.purchase(50, credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<MITMsgType>CSTO</, data)
       assert_match(/<MITStoredCredentialInd>Y</, data)
     end.respond_with(successful_purchase_response)
@@ -608,7 +608,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     options = stored_credential_options(:merchant, :recurring, id: 'abc123')
     response = stub_comms do
       @gateway.purchase(50, credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<MITMsgType>MREC</, data)
       assert_match(/<MITStoredCredentialInd>Y</, data)
       assert_match(/<MITSubmittedTransactionID>abc123</, data)
@@ -621,7 +621,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     options = stored_credential_options(:cardholder, :unscheduled, :initial)
     response = stub_comms do
       @gateway.purchase(50, credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<MITMsgType>CSTO</, data)
       assert_match(/<MITStoredCredentialInd>Y</, data)
     end.respond_with(successful_purchase_response)
@@ -634,7 +634,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     options = stored_credential_options(:cardholder, :unscheduled, id: 'abc123')
     response = stub_comms do
       @gateway.purchase(50, credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<MITMsgType>CUSE</, data)
       assert_match(/<MITStoredCredentialInd>Y</, data)
     end.respond_with(successful_purchase_response)
@@ -646,7 +646,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     options = stored_credential_options(:merchant, :unscheduled, :initial)
     response = stub_comms do
       @gateway.purchase(50, credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<MITMsgType>CSTO</, data)
       assert_match(/<MITStoredCredentialInd>Y</, data)
     end.respond_with(successful_purchase_response)
@@ -659,7 +659,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     options = stored_credential_options(:merchant, :unscheduled, id: 'abc123')
     response = stub_comms do
       @gateway.purchase(50, credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<MITMsgType>MUSE</, data)
       assert_match(/<MITStoredCredentialInd>Y</, data)
       assert_match(/<MITSubmittedTransactionID>abc123</, data)
@@ -672,7 +672,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     options = stored_credential_options(:cardholder, :installment, :initial)
     response = stub_comms do
       @gateway.purchase(50, credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<MITMsgType>CSTO</, data)
       assert_match(/<MITStoredCredentialInd>Y</, data)
     end.respond_with(successful_purchase_response)
@@ -685,7 +685,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     options = stored_credential_options(:cardholder, :installment, id: 'abc123')
     response = stub_comms do
       @gateway.purchase(50, credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<MITMsgType>CINS</, data)
       assert_match(/<MITStoredCredentialInd>Y</, data)
     end.respond_with(successful_purchase_response)
@@ -697,7 +697,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     options = stored_credential_options(:merchant, :installment, :initial)
     response = stub_comms do
       @gateway.purchase(50, credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<MITMsgType>CSTO</, data)
       assert_match(/<MITStoredCredentialInd>Y</, data)
     end.respond_with(successful_purchase_response)
@@ -710,7 +710,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     options = stored_credential_options(:merchant, :installment, id: 'abc123')
     response = stub_comms do
       @gateway.purchase(50, credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<MITMsgType>MINS</, data)
       assert_match(/<MITStoredCredentialInd>Y</, data)
       assert_match(/<MITSubmittedTransactionID>abc123</, data)
@@ -722,7 +722,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   def test_successful_purchase_with_overridden_normalized_stored_credentials
     stub_comms do
       @gateway.purchase(50, credit_card, @options.merge(@normalized_mit_stored_credential).merge(@options_stored_credentials))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match %{<MITMsgType>MRSB</MITMsgType>}, data
       assert_match %{<MITStoredCredentialInd>Y</MITStoredCredentialInd>}, data
       assert_match %{<MITSubmittedTransactionID>123456abcdef</MITSubmittedTransactionID>}, data
@@ -736,7 +736,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
           @gateway.add_customer_profile(credit_card, managed_billing: {start_date: '10-10-2014' })
         end
       end
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<MBType>R/, data)
       assert_match(/<MBOrderIdGenerationMethod>IO/, data)
       assert_match(/<MBRecurringStartDate>10102014/, data)
@@ -758,7 +758,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
             })
         end
       end
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<MBType>R/, data)
       assert_match(/<MBOrderIdGenerationMethod>IO/, data)
       assert_match(/<MBRecurringStartDate>10102014/, data)
@@ -772,7 +772,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   def test_dont_send_customer_data_by_default
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_no_match(/<CustomerRefNum>K1C2N6/, data)
       assert_no_match(/<CustomerProfileFromOrderInd>456 My Street/, data)
       assert_no_match(/<CustomerProfileOrderOverrideInd>Apt 1/, data)
@@ -784,7 +784,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     @gateway.options[:customer_profiles] = true
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<CustomerProfileFromOrderInd>A/, data)
       assert_match(/<CustomerProfileOrderOverrideInd>NO/, data)
     end.respond_with(successful_purchase_response)
@@ -795,7 +795,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     @gateway.options[:customer_profiles] = true
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1, customer_ref_num: @customer_ref_num)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<CustomerRefNum>ABC/, data)
       assert_match(/<CustomerProfileFromOrderInd>S/, data)
       assert_match(/<CustomerProfileOrderOverrideInd>NO/, data)
@@ -806,7 +806,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   def test_send_card_indicators_when_provided_purchase
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1, card_indicators: @options[:card_indicators])
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<CardIndicators>y/, data)
     end.respond_with(successful_purchase_response)
     assert_success response
@@ -815,7 +815,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   def test_send_card_indicators_when_provided_authorize
     response = stub_comms do
       @gateway.authorize(50, credit_card, order_id: 1, card_indicators: @options[:card_indicators])
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<CardIndicators>y/, data)
     end.respond_with(successful_purchase_response)
     assert_success response
@@ -825,7 +825,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     @gateway.options[:customer_profiles] = true
     response = stub_comms do
       @gateway.purchase(50, nil, order_id: 1, customer_ref_num: @customer_ref_num)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_no_match(/<CustomerProfileFromOrderInd>/, data)
     end.respond_with(successful_purchase_response)
     assert_success response
@@ -835,7 +835,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     @gateway.options[:customer_profiles] = true
     response = stub_comms do
       @gateway.authorize(50, nil, order_id: 1, customer_ref_num: @customer_ref_num)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_no_match(/<CustomerProfileFromOrderInd>/, data)
     end.respond_with(successful_purchase_response)
     assert_success response
@@ -845,7 +845,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     @gateway.options[:customer_profiles] = true
     response = stub_comms do
       @gateway.purchase(50, nil, order_id: 1, customer_ref_num: @customer_ref_num)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<CustomerRefNum>ABC/, data)
       assert_match(/<CurrencyCode>124/, data)
       assert_match(/<CurrencyExponent>2/, data)
@@ -857,7 +857,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     @gateway.options[:customer_profiles] = true
     response = stub_comms do
       @gateway.authorize(50, nil, order_id: 1, customer_ref_num: @customer_ref_num)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<CustomerRefNum>ABC/, data)
       assert_match(/<CurrencyCode>124/, data)
       assert_match(/<CurrencyExponent>2/, data)
@@ -868,7 +868,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   def test_send_address_details_for_united_states
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1, billing_address: address)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<AVSzip>K1C2N6/, data)
       assert_match(/<AVSaddress1>456 My Street/, data)
       assert_match(/<AVSaddress2>Apt 1/, data)
@@ -886,7 +886,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   def test_dont_send_address_details_for_germany
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1, billing_address: address(country: 'DE'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_no_match(/<AVSzip>K1C2N6/, data)
       assert_no_match(/<AVSaddress1>456 My Street/, data)
       assert_no_match(/<AVSaddress2>Apt 1/, data)
@@ -902,7 +902,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   def test_allow_sending_avs_parts_when_no_country_specified
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1, billing_address: address(country: nil))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<AVSzip>K1C2N6/, data)
       assert_match(/<AVSaddress1>456 My Street/, data)
       assert_match(/<AVSaddress2>Apt 1/, data)
@@ -918,7 +918,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   def test_american_requests_adhere_to_xml_schema
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1, billing_address: address)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       schema_file = File.read("#{File.dirname(__FILE__)}/../../schema/orbital/Request_PTI77.xsd")
       doc = Nokogiri::XML(data)
       xsd = Nokogiri::XML::Schema(schema_file)
@@ -930,7 +930,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   def test_german_requests_adhere_to_xml_schema
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1, billing_address: address(country: 'DE'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       schema_file = File.read("#{File.dirname(__FILE__)}/../../schema/orbital/Request_PTI77.xsd")
       doc = Nokogiri::XML(data)
       xsd = Nokogiri::XML::Schema(schema_file)
@@ -944,7 +944,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_deprecation_warning do
         @gateway.add_customer_profile(credit_card)
       end
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<CustomerProfileAction>C/, data)
       assert_match(/<CustomerName>Longbob Longsen/, data)
     end.respond_with(successful_profile_response)
@@ -956,7 +956,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_deprecation_warning do
         @gateway.add_customer_profile(credit_card, { billing_address: { email: 'xiaobozzz@example.com' } })
       end
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<CustomerProfileAction>C/, data)
       assert_match(/<CustomerEmail>xiaobozzz@example.com/, data)
     end.respond_with(successful_profile_response)
@@ -968,7 +968,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_deprecation_warning do
         @gateway.update_customer_profile(credit_card)
       end
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<CustomerProfileAction>U/, data)
       assert_match(/<CustomerName>Longbob Longsen/, data)
     end.respond_with(successful_profile_response)
@@ -980,7 +980,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_deprecation_warning do
         @gateway.retrieve_customer_profile(@customer_ref_num)
       end
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_no_match(/<CustomerName>Longbob Longsen/, data)
       assert_match(/<CustomerProfileAction>R/, data)
       assert_match(/<CustomerRefNum>ABC/, data)
@@ -993,7 +993,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_deprecation_warning do
         @gateway.delete_customer_profile(@customer_ref_num)
       end
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_no_match(/<CustomerName>Longbob Longsen/, data)
       assert_match(/<CustomerProfileAction>D/, data)
       assert_match(/<CustomerRefNum>ABC/, data)
@@ -1014,7 +1014,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     @gateway.options[:retry_logic] = true
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1, trace_number: 1)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, _data, headers|
       assert_equal('1', headers['Trace-number'])
       assert_equal('merchant_id', headers['Merchant-Id'])
     end.respond_with(successful_purchase_response)
@@ -1025,7 +1025,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     @gateway.options[:retry_logic] = false
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1, trace_number: 1)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, _data, headers|
       assert_equal(false, headers.has_key?('Trace-number'))
       assert_equal(false, headers.has_key?('Merchant-Id'))
     end.respond_with(successful_purchase_response)

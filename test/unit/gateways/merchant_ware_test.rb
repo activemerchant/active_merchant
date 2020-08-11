@@ -113,7 +113,7 @@ class MerchantWareTest < Test::Unit::TestCase
     options = {order_id: '1'}
     stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match '<trackData>Track Data</trackData>', data
     end.respond_with(successful_authorization_response)
   end

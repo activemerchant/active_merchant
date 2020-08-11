@@ -126,7 +126,7 @@ class RedsysSHA256Test < Test::Unit::TestCase
   def test_3ds_data_passed
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(100, credit_card, { execute_threed: true, order_id: '156270437866', terminal: 12, sca_exemption: 'LWV' })
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/iniciaPeticion/, data)
       assert_match(/<DS_MERCHANT_TERMINAL>12<\/DS_MERCHANT_TERMINAL>/, data)
       assert_match(/\"threeDSInfo\":\"CardData\"/, data)
@@ -138,7 +138,7 @@ class RedsysSHA256Test < Test::Unit::TestCase
     @credit_card.first_name = 'Julián'
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(100, @credit_card, { execute_threed: true, order_id: '156270437866', terminal: 12, sca_exemption: 'LWV', description: 'esta es la descripción' })
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/iniciaPeticion/, data)
       assert_match(/<DS_MERCHANT_TERMINAL>12<\/DS_MERCHANT_TERMINAL>/, data)
       assert_match(/\"threeDSInfo\":\"CardData\"/, data)
@@ -151,7 +151,7 @@ class RedsysSHA256Test < Test::Unit::TestCase
   def test_moto_flag_passed
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(100, credit_card, { order_id: '156270437866', moto: true, metadata: { manual_entry: true } })
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/DS_MERCHANT_DIRECTPAYMENT%3Emoto%3C%2FDS_MERCHANT_DIRECTPAYMENT/, data)
     end.respond_with(successful_authorize_with_3ds_response)
   end
@@ -159,7 +159,7 @@ class RedsysSHA256Test < Test::Unit::TestCase
   def test_moto_flag_not_passed_if_not_explicitly_requested
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(100, credit_card, { order_id: '156270437866', metadata: { manual_entry: true } })
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       refute_match(/DS_MERCHANT_DIRECTPAYMENT%3Emoto%3C%2FDS_MERCHANT_DIRECTPAYMENT/, data)
     end.respond_with(successful_authorize_with_3ds_response)
   end
@@ -167,7 +167,7 @@ class RedsysSHA256Test < Test::Unit::TestCase
   def test_bad_order_id_format
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(100, credit_card, order_id: 'Una#cce-ptable44Format')
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/MERCHANT_ORDER%3E\d\d\d\dUnaccept%3C/, data)
     end.respond_with(successful_authorize_response)
   end
@@ -175,7 +175,7 @@ class RedsysSHA256Test < Test::Unit::TestCase
   def test_order_id_numeric_start_but_too_long
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(100, credit_card, order_id: '1234ThisIs]FineButTooLong')
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/MERCHANT_ORDER%3E1234ThisIsFi%3C/, data)
     end.respond_with(successful_authorize_response)
   end

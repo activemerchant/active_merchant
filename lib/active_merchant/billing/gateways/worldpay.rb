@@ -687,7 +687,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def order_id_from(raw)
-        pair = raw.detect { |k, v| k.to_s =~ /_order_code$/ }
+        pair = raw.detect { |k, _v| k.to_s =~ /_order_code$/ }
         (pair ? pair.last : nil)
       end
 

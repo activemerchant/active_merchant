@@ -53,7 +53,7 @@ class PayuLatamTest < Test::Unit::TestCase
   def test_successful_purchase_with_specified_language
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(language: 'es'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/"language":"es"/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -104,7 +104,7 @@ class PayuLatamTest < Test::Unit::TestCase
   def test_successful_authorize_with_specified_language
     stub_comms do
       @gateway.authorize(@amount, @credit_card, @options.merge(language: 'es'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/"language":"es"/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -138,7 +138,7 @@ class PayuLatamTest < Test::Unit::TestCase
   def test_pending_refund_with_specified_language
     stub_comms do
       @gateway.refund(@amount, '7edbaf68-8f3a-4ae7-b9c7-d1e27e314999', @options.merge(language: 'es'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/"language":"es"/, data)
     end.respond_with(pending_refund_response)
   end
@@ -162,7 +162,7 @@ class PayuLatamTest < Test::Unit::TestCase
   def test_successful_void_with_specified_language
     stub_comms do
       @gateway.void('7edbaf68-8f3a-4ae7-b9c7-d1e27e314999', @options.merge(language: 'es'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/"language":"es"/, data)
     end.respond_with(successful_void_response)
   end
@@ -178,7 +178,7 @@ class PayuLatamTest < Test::Unit::TestCase
   def test_successful_purchase_with_dni_number
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/"dniNumber":"5415668464654"/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -186,7 +186,7 @@ class PayuLatamTest < Test::Unit::TestCase
   def test_successful_purchase_with_merchant_buyer_id
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/"merchantBuyerId":"1"/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -202,7 +202,7 @@ class PayuLatamTest < Test::Unit::TestCase
   end
 
   def test_request_using_visa_card_with_no_cvv
-    @gateway.expects(:ssl_post).with { |url, body, headers|
+    @gateway.expects(:ssl_post).with { |_url, body, _headers|
       body.match '"securityCode":"000"'
       body.match '"processWithoutCvv2":true'
     }.returns(successful_purchase_response)
@@ -213,7 +213,7 @@ class PayuLatamTest < Test::Unit::TestCase
   end
 
   def test_request_using_amex_card_with_no_cvv
-    @gateway.expects(:ssl_post).with { |url, body, headers|
+    @gateway.expects(:ssl_post).with { |_url, body, _headers|
       body.match '"securityCode":"0000"'
       body.match '"processWithoutCvv2":true'
     }.returns(successful_purchase_response)
@@ -224,7 +224,7 @@ class PayuLatamTest < Test::Unit::TestCase
   end
 
   def test_request_passes_cvv_option
-    @gateway.expects(:ssl_post).with { |url, body, headers|
+    @gateway.expects(:ssl_post).with { |_url, body, _headers|
       body.match '"securityCode":"777"'
       !body.match '"processWithoutCvv2"'
     }.returns(successful_purchase_response)
@@ -246,7 +246,7 @@ class PayuLatamTest < Test::Unit::TestCase
   def test_successful_capture_with_specified_language
     stub_comms do
       @gateway.capture(@amount, '4000|authorization', @options.merge(language: 'es'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/"language":"es"/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -254,7 +254,7 @@ class PayuLatamTest < Test::Unit::TestCase
   def test_successful_partial_capture
     stub_comms do
       @gateway.capture(@amount - 1, '4000|authorization', @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_equal '39.99', JSON.parse(data)['transaction']['additionalValues']['TX_VALUE']['value']
     end.respond_with(successful_purchase_response)
   end
@@ -288,7 +288,7 @@ class PayuLatamTest < Test::Unit::TestCase
 
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.update(options_buyer))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/\"buyer\":{\"fullName\":\"Jorge Borges\",\"dniNumber\":\"5415668464456\",\"dniType\":null,\"merchantBuyerId\":\"1\",\"emailAddress\":\"axaxaxas@mlo.org\",\"contactPhone\":\"7563126\",\"shippingAddress\":{\"street1\":\"Calle 200\",\"street2\":\"N107\",\"city\":\"Sao Paulo\",\"state\":\"SP\",\"country\":\"BR\",\"postalCode\":\"01019-030\",\"phone\":\"\(11\)756312345\"}}/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -296,7 +296,7 @@ class PayuLatamTest < Test::Unit::TestCase
   def test_buyer_fields_default_to_payer
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/\"buyer\":{\"fullName\":\"APPROVED\",\"dniNumber\":\"5415668464654\",\"dniType\":\"TI\",\"merchantBuyerId\":\"1\",\"emailAddress\":\"username@domain.com\",\"contactPhone\":\"7563126\"/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -322,7 +322,7 @@ class PayuLatamTest < Test::Unit::TestCase
 
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/"merchantBuyerId":"1"/, data)
       assert_match(/"street2":null/, data)
       refute_match(/"country"/, data)
@@ -359,7 +359,7 @@ class PayuLatamTest < Test::Unit::TestCase
 
     stub_comms(gateway) do
       gateway.purchase(@amount, @credit_card, @options.update(options_brazil))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/\"cnpj\":\"32593371000110\"/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -393,7 +393,7 @@ class PayuLatamTest < Test::Unit::TestCase
 
     stub_comms(gateway) do
       gateway.purchase(@amount, @credit_card, @options.update(options_colombia))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/\"additionalValues\":{\"TX_VALUE\":{\"value\":\"40.00\",\"currency\":\"COP\"},\"TX_TAX\":{\"value\":0,\"currency\":\"COP\"},\"TX_TAX_RETURN_BASE\":{\"value\":0,\"currency\":\"COP\"}}/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -426,7 +426,7 @@ class PayuLatamTest < Test::Unit::TestCase
 
     stub_comms(gateway) do
       gateway.purchase(@amount, @credit_card, @options.update(options_mexico))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/\"birthdate\":\"1985-05-25\"/, data)
     end.respond_with(successful_purchase_response)
   end

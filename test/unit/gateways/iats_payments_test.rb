@@ -115,7 +115,7 @@ class IatsPaymentsTest < Test::Unit::TestCase
     @options[:email] = 'jsmith2@example.com'
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<email>#{@options[:email]}<\/email>/, data)
     end.respond_with(successful_purchase_response)
 
@@ -137,7 +137,7 @@ class IatsPaymentsTest < Test::Unit::TestCase
   def test_successful_refund
     response = stub_comms do
       @gateway.refund(@amount, '1234', @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<transactionId>1234<\/transactionId>/, data)
       assert_match(/<total>-1.00<\/total>/, data)
     end.respond_with(successful_refund_response)
@@ -183,7 +183,7 @@ class IatsPaymentsTest < Test::Unit::TestCase
   def test_failed_refund
     response = stub_comms do
       @gateway.refund(@amount, '1234', @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<transactionId>1234<\/transactionId>/, data)
       assert_match(/<total>-1.00<\/total>/, data)
     end.respond_with(failed_refund_response)
@@ -196,7 +196,7 @@ class IatsPaymentsTest < Test::Unit::TestCase
   def test_successful_store
     response = stub_comms do
       @gateway.store(@credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/beginDate/, data)
       assert_match(/endDate/, data)
       assert_match(%r{<creditCardNum>#{@credit_card.number}</creditCardNum>}, data)
@@ -213,7 +213,7 @@ class IatsPaymentsTest < Test::Unit::TestCase
   def test_successful_purchase_with_customer_code
     response = stub_comms do
       @gateway.purchase(@amount, 'CustomerCode', @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{<customerCode>CustomerCode</customerCode>}, data)
     end.respond_with(successful_purchase_response)
 
@@ -235,7 +235,7 @@ class IatsPaymentsTest < Test::Unit::TestCase
   def test_successful_unstore
     response = stub_comms do
       @gateway.unstore('TheAuthorization', @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{<customerCode>TheAuthorization</customerCode>}, data)
     end.respond_with(successful_unstore_response)
 
@@ -254,7 +254,7 @@ class IatsPaymentsTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |endpoint, data, _headers|
       assert_match(/<agentCode>login<\/agentCode>/, data)
       assert_match(/<password>password<\/password>/, data)
       assert_equal endpoint, 'https://www.iatspayments.com/NetGate/ProcessLinkv3.asmx?op=ProcessCreditCard'
@@ -272,7 +272,7 @@ class IatsPaymentsTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |endpoint, _data, _headers|
       assert_equal endpoint, 'https://www.iatspayments.com/NetGate/ProcessLinkv3.asmx?op=ProcessCreditCard'
     end.respond_with(successful_purchase_response)
 

@@ -41,7 +41,7 @@ class HpsTest < Test::Unit::TestCase
   def test_successful_check_purchase
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@check_amount, @check, @options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/<hps:CheckSale><hps:Block1><hps:CheckAction>SALE<\/hps:CheckAction>/, data)
     end.respond_with(successful_check_purchase_response)
 
@@ -53,7 +53,7 @@ class HpsTest < Test::Unit::TestCase
     check.account_type = nil
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@check_amount, check, @options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/<hps:CheckSale><hps:Block1><hps:CheckAction>SALE<\/hps:CheckAction>/, data)
     end.respond_with(successful_check_purchase_response)
 
@@ -65,7 +65,7 @@ class HpsTest < Test::Unit::TestCase
     check.account_holder_type = nil
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@check_amount, check, @options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/<hps:CheckSale><hps:Block1><hps:CheckAction>SALE<\/hps:CheckAction>/, data)
     end.respond_with(successful_check_purchase_response)
 
@@ -153,7 +153,7 @@ class HpsTest < Test::Unit::TestCase
   def test_successful_check_void
     void = stub_comms(@gateway, :ssl_request) do
       @gateway.void('169054', check_void: true)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/<hps:Transaction><hps:CheckVoid>/, data)
     end.respond_with(successful_check_void_response)
 
@@ -581,7 +581,7 @@ class HpsTest < Test::Unit::TestCase
 
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/<hps:SecureECommerce>(.*)<\/hps:SecureECommerce>/, data)
       assert_match(/<hps:PaymentDataSource>Visa 3DSecure<\/hps:PaymentDataSource>/, data)
       assert_match(/<hps:TypeOfPaymentData>3DSecure<\/hps:TypeOfPaymentData>/, data)
@@ -608,7 +608,7 @@ class HpsTest < Test::Unit::TestCase
 
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/<hps:SecureECommerce>(.*)<\/hps:SecureECommerce>/, data)
       assert_match(/<hps:PaymentDataSource>MasterCard 3DSecure<\/hps:PaymentDataSource>/, data)
       assert_match(/<hps:TypeOfPaymentData>3DSecure<\/hps:TypeOfPaymentData>/, data)
@@ -635,7 +635,7 @@ class HpsTest < Test::Unit::TestCase
 
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/<hps:SecureECommerce>(.*)<\/hps:SecureECommerce>/, data)
       assert_match(/<hps:PaymentDataSource>Discover 3DSecure<\/hps:PaymentDataSource>/, data)
       assert_match(/<hps:TypeOfPaymentData>3DSecure<\/hps:TypeOfPaymentData>/, data)
@@ -662,7 +662,7 @@ class HpsTest < Test::Unit::TestCase
 
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/<hps:SecureECommerce>(.*)<\/hps:SecureECommerce>/, data)
       assert_match(/<hps:PaymentDataSource>AMEX 3DSecure<\/hps:PaymentDataSource>/, data)
       assert_match(/<hps:TypeOfPaymentData>3DSecure<\/hps:TypeOfPaymentData>/, data)
@@ -689,7 +689,7 @@ class HpsTest < Test::Unit::TestCase
 
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       refute_match(/<hps:SecureECommerce>(.*)<\/hps:SecureECommerce>/, data)
       refute_match(/<hps:PaymentDataSource>(.*)<\/hps:PaymentDataSource>/, data)
       refute_match(/<hps:TypeOfPaymentData>3DSecure<\/hps:TypeOfPaymentData>/, data)

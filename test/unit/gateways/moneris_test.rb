@@ -270,7 +270,7 @@ class MonerisTest < Test::Unit::TestCase
     @credit_card.verification_value = '452'
     stub_comms(gateway) do
       gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{cvd_indicator>1<}, data)
       assert_match(%r{cvd_value>452<}, data)
     end.respond_with(successful_purchase_response)
@@ -282,7 +282,7 @@ class MonerisTest < Test::Unit::TestCase
     @credit_card.verification_value = ''
     stub_comms(gateway) do
       gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{cvd_indicator>0<}, data)
       assert_no_match(%r{cvd_value>}, data)
     end.respond_with(successful_purchase_response)
@@ -292,7 +292,7 @@ class MonerisTest < Test::Unit::TestCase
     @credit_card.verification_value = '452'
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_no_match(%r{cvd_value>}, data)
       assert_no_match(%r{cvd_indicator>}, data)
     end.respond_with(successful_purchase_response)
@@ -302,7 +302,7 @@ class MonerisTest < Test::Unit::TestCase
     @credit_card.verification_value = ''
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_no_match(%r{cvd_value>}, data)
       assert_no_match(%r{cvd_indicator>}, data)
     end.respond_with(successful_purchase_response)
@@ -314,7 +314,7 @@ class MonerisTest < Test::Unit::TestCase
     billing_address = address(address1: '1234 Anystreet', address2: '')
     stub_comms(gateway) do
       gateway.purchase(@amount, @credit_card, billing_address: billing_address, order_id: '1')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{avs_street_number>1234<}, data)
       assert_match(%r{avs_street_name>Anystreet<}, data)
       assert_match(%r{avs_zipcode>#{billing_address[:zip]}<}, data)
@@ -326,7 +326,7 @@ class MonerisTest < Test::Unit::TestCase
 
     stub_comms(gateway) do
       gateway.purchase(@amount, @credit_card, @options.tap { |x| x.delete(:billing_address) })
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_no_match(%r{avs_street_number>}, data)
       assert_no_match(%r{avs_street_name>}, data)
       assert_no_match(%r{avs_zipcode>}, data)
@@ -337,7 +337,7 @@ class MonerisTest < Test::Unit::TestCase
     billing_address = address(address1: '1234 Anystreet', address2: '')
     stub_comms do
       @gateway.purchase(@amount, @credit_card, billing_address: billing_address, order_id: '1')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_no_match(%r{avs_street_number>}, data)
       assert_no_match(%r{avs_street_name>}, data)
       assert_no_match(%r{avs_zipcode>}, data)
@@ -347,7 +347,7 @@ class MonerisTest < Test::Unit::TestCase
   def test_avs_disabled_and_not_provided
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.tap { |x| x.delete(:billing_address) })
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_no_match(%r{avs_street_number>}, data)
       assert_no_match(%r{avs_street_name>}, data)
       assert_no_match(%r{avs_zipcode>}, data)
@@ -368,7 +368,7 @@ class MonerisTest < Test::Unit::TestCase
   def test_customer_can_be_specified
     stub_comms do
       @gateway.purchase(@amount, @credit_card, order_id: '3', customer: 'Joe Jones')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{cust_id>Joe Jones}, data)
     end.respond_with(successful_purchase_response)
   end
@@ -376,7 +376,7 @@ class MonerisTest < Test::Unit::TestCase
   def test_customer_not_specified_card_name_used
     stub_comms do
       @gateway.purchase(@amount, @credit_card, order_id: '3')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{cust_id>Longbob Longsen}, data)
     end.respond_with(successful_purchase_response)
   end
@@ -386,7 +386,7 @@ class MonerisTest < Test::Unit::TestCase
 
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match '<pos_code>00</pos_code>', data
       assert_match '<track2>Track Data</track2>', data
     end.respond_with(successful_purchase_response)
@@ -404,7 +404,7 @@ class MonerisTest < Test::Unit::TestCase
     options = stored_credential_options(:cardholder, :recurring, :initial)
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<issuer_id><\/issuer_id>/, data)
       assert_match(/<payment_indicator>C<\/payment_indicator>/, data)
       assert_match(/<payment_information>0<\/payment_information>/, data)
@@ -417,7 +417,7 @@ class MonerisTest < Test::Unit::TestCase
     options = stored_credential_options(:cardholder, :recurring, id: 'abc123')
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<issuer_id>abc123<\/issuer_id>/, data)
       assert_match(/<payment_indicator>Z<\/payment_indicator>/, data)
       assert_match(/<payment_information>2<\/payment_information>/, data)
@@ -430,7 +430,7 @@ class MonerisTest < Test::Unit::TestCase
     options = stored_credential_options(:merchant, :recurring, :initial)
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<issuer_id><\/issuer_id>/, data)
       assert_match(/<payment_indicator>R<\/payment_indicator>/, data)
       assert_match(/<payment_information>0<\/payment_information>/, data)
@@ -443,7 +443,7 @@ class MonerisTest < Test::Unit::TestCase
     options = stored_credential_options(:merchant, :recurring, id: 'abc123')
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<issuer_id>abc123<\/issuer_id>/, data)
       assert_match(/<payment_indicator>R<\/payment_indicator>/, data)
       assert_match(/<payment_information>2<\/payment_information>/, data)
@@ -456,7 +456,7 @@ class MonerisTest < Test::Unit::TestCase
     options = stored_credential_options(:cardholder, :installment, :initial)
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<issuer_id><\/issuer_id>/, data)
       assert_match(/<payment_indicator>C<\/payment_indicator>/, data)
       assert_match(/<payment_information>0<\/payment_information>/, data)
@@ -469,7 +469,7 @@ class MonerisTest < Test::Unit::TestCase
     options = stored_credential_options(:cardholder, :installment, id: 'abc123')
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<issuer_id>abc123<\/issuer_id>/, data)
       assert_match(/<payment_indicator>Z<\/payment_indicator>/, data)
       assert_match(/<payment_information>2<\/payment_information>/, data)
@@ -482,7 +482,7 @@ class MonerisTest < Test::Unit::TestCase
     options = stored_credential_options(:merchant, :installment, :initial)
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<issuer_id><\/issuer_id>/, data)
       assert_match(/<payment_indicator>R<\/payment_indicator>/, data)
       assert_match(/<payment_information>0<\/payment_information>/, data)
@@ -495,7 +495,7 @@ class MonerisTest < Test::Unit::TestCase
     options = stored_credential_options(:merchant, :installment, id: 'abc123')
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<issuer_id>abc123<\/issuer_id>/, data)
       assert_match(/<payment_indicator>R<\/payment_indicator>/, data)
       assert_match(/<payment_information>2<\/payment_information>/, data)
@@ -508,7 +508,7 @@ class MonerisTest < Test::Unit::TestCase
     options = stored_credential_options(:cardholder, :unscheduled, :initial)
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<issuer_id><\/issuer_id>/, data)
       assert_match(/<payment_indicator>C<\/payment_indicator>/, data)
       assert_match(/<payment_information>0<\/payment_information>/, data)
@@ -521,7 +521,7 @@ class MonerisTest < Test::Unit::TestCase
     options = stored_credential_options(:cardholder, :unscheduled, id: 'abc123')
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<issuer_id>abc123<\/issuer_id>/, data)
       assert_match(/<payment_indicator>Z<\/payment_indicator>/, data)
       assert_match(/<payment_information>2<\/payment_information>/, data)
@@ -534,7 +534,7 @@ class MonerisTest < Test::Unit::TestCase
     options = stored_credential_options(:merchant, :unscheduled, :initial)
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<issuer_id><\/issuer_id>/, data)
       assert_match(/<payment_indicator>C<\/payment_indicator>/, data)
       assert_match(/<payment_information>0<\/payment_information>/, data)
@@ -547,7 +547,7 @@ class MonerisTest < Test::Unit::TestCase
     options = stored_credential_options(:merchant, :unscheduled, id: 'abc123')
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<issuer_id>abc123<\/issuer_id>/, data)
       assert_match(/<payment_indicator>U<\/payment_indicator>/, data)
       assert_match(/<payment_information>2<\/payment_information>/, data)
@@ -560,7 +560,7 @@ class MonerisTest < Test::Unit::TestCase
     options = stored_credential_options(:merchant, :unscheduled, id: 'abc123').merge(issuer_id: 'xyz987', payment_indicator: 'R', payment_information: '0')
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<issuer_id>xyz987<\/issuer_id>/, data)
       assert_match(/<payment_indicator>R<\/payment_indicator>/, data)
       assert_match(/<payment_information>0<\/payment_information>/, data)

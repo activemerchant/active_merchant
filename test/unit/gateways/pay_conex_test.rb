@@ -140,7 +140,7 @@ class PayConexTest < Test::Unit::TestCase
   def test_card_present_purchase_passes_track_data
     stub_comms do
       @gateway.purchase(@amount, credit_card_with_track_data('4000100011112224'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/card_tracks/, data)
     end.respond_with(successful_card_present_purchase_response)
   end

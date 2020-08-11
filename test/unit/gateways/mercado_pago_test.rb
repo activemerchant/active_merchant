@@ -274,7 +274,7 @@ class MercadoPagoTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.purchase(@amount, credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |endpoint, data, _headers|
       assert_not_match(%r("payment_method_id":"amex"), data) if endpoint =~ /payments/
     end.respond_with(successful_purchase_response)
 
@@ -287,7 +287,7 @@ class MercadoPagoTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.purchase(@amount, credit_card, @options.merge(payment_method_id: 'diners'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |endpoint, data, _headers|
       assert_match(%r("payment_method_id":"diners"), data) if endpoint =~ /payments/
     end.respond_with(successful_purchase_response)
 
@@ -298,7 +298,7 @@ class MercadoPagoTest < Test::Unit::TestCase
   def test_successful_purchase_with_notification_url
     response = stub_comms do
       @gateway.purchase(@amount, credit_card, @options.merge(notification_url: 'www.mercado-pago.com'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |endpoint, data, _headers|
       assert_match(%r("notification_url":"www.mercado-pago.com"), data) if endpoint =~ /payments/
     end.respond_with(successful_purchase_response)
 
@@ -318,7 +318,7 @@ class MercadoPagoTest < Test::Unit::TestCase
     @options[:additional_info] = {'foo' => 'bar', 'baz' => 'quux'}
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       if /payment_method_id/.match?(data)
         assert_match(/"foo":"bar"/, data)
         assert_match(/"baz":"quux"/, data)
@@ -331,7 +331,7 @@ class MercadoPagoTest < Test::Unit::TestCase
   def test_includes_issuer_id
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(issuer_id: '1a2b3c4d'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |endpoint, data, _headers|
       assert_match(%r("issuer_id":"1a2b3c4d"), data) if endpoint =~ /payments/
     end.respond_with(successful_purchase_response)
 
@@ -347,7 +347,7 @@ class MercadoPagoTest < Test::Unit::TestCase
 
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(taxes: taxes_array))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |endpoint, data, _headers|
       single_pattern = "{\"value\":#{taxes_value},\"type\":\"#{taxes_type}\"}"
       pattern = "\"taxes\":[#{single_pattern},#{single_pattern}]"
       assert_match(pattern, data) if endpoint =~ /payments/
@@ -361,7 +361,7 @@ class MercadoPagoTest < Test::Unit::TestCase
 
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(taxes: taxes_object))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |endpoint, data, _headers|
       pattern = "\"taxes\":[{\"value\":#{taxes_value},\"type\":\"#{taxes_type}\"}]"
       assert_match(pattern, data) if endpoint =~ /payments/
     end.respond_with(successful_purchase_response)
@@ -372,7 +372,7 @@ class MercadoPagoTest < Test::Unit::TestCase
 
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(net_amount: net_amount))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |endpoint, data, _headers|
       assert_match("\"net_amount\":#{net_amount}", data) if endpoint =~ /payments/
     end.respond_with(successful_purchase_response)
   end
@@ -385,7 +385,7 @@ class MercadoPagoTest < Test::Unit::TestCase
 
     stub_comms do
       @gateway.authorize(@amount, @credit_card, @options.merge(taxes: taxes_array))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |endpoint, data, _headers|
       single_pattern = "{\"value\":#{taxes_value},\"type\":\"#{taxes_type}\"}"
       pattern = "\"taxes\":[#{single_pattern},#{single_pattern}]"
       assert_match(pattern, data) if endpoint =~ /payments/
@@ -399,7 +399,7 @@ class MercadoPagoTest < Test::Unit::TestCase
 
     stub_comms do
       @gateway.authorize(@amount, @credit_card, @options.merge(taxes: taxes_object))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |endpoint, data, _headers|
       pattern = "\"taxes\":[{\"value\":#{taxes_value},\"type\":\"#{taxes_type}\"}]"
       assert_match(pattern, data) if endpoint =~ /payments/
     end.respond_with(successful_authorize_response)
@@ -410,7 +410,7 @@ class MercadoPagoTest < Test::Unit::TestCase
 
     stub_comms do
       @gateway.authorize(@amount, @credit_card, @options.merge(net_amount: net_amount))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |endpoint, data, _headers|
       assert_match("\"net_amount\":#{net_amount}", data) if endpoint =~ /payments/
     end.respond_with(successful_authorize_response)
   end

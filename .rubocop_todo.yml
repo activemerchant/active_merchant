@@ -51,12 +51,6 @@ Lint/RescueException:
   Exclude:
     - 'lib/active_merchant/billing/gateways/quantum.rb'
 
-# Offense count: 1502
-# Cop supports --auto-correct.
-# Configuration parameters: IgnoreEmptyBlocks, AllowUnusedKeywordArguments.
-Lint/UnusedBlockArgument:
-  Enabled: false
-
 # Offense count: 284
 # Cop supports --auto-correct.
 # Configuration parameters: AllowUnusedKeywordArguments, IgnoreEmptyMethods.

@@ -56,7 +56,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
   def test_successful_purchase_with_echeck_and_extra_options
     response = stub_comms do
       @gateway.purchase(@amount, check(account_type: 'savings'), @options.merge(check_format: 'ARC'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/UMcheckformat=ARC/, data)
       assert_match(/UMaccounttype=Savings/, data)
     end.respond_with(successful_purchase_response_echeck)
@@ -79,7 +79,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
   def test_successful_purchase_passing_extra_info
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(invoice: '1337', description: 'socool'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/UMinvoice=1337/, data)
       assert_match(/UMdescription=socool/, data)
       assert_match(/UMtestmode=0/, data)
@@ -90,7 +90,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
   def test_successful_purchase_passing_extra_test_mode
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(test_mode: true))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/UMtestmode=1/, data)
     end.respond_with(successful_purchase_response)
     assert_success response
@@ -99,7 +99,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
   def test_successful_purchase_email_receipt
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(email: 'bobby@hill.com', cust_receipt: 'Yes', cust_receipt_name: 'socool'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/UMcustreceipt=Yes/, data)
       assert_match(/UMcustreceiptname=socool/, data)
       assert_match(/UMtestmode=0/, data)
@@ -116,7 +116,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
     )
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match %r{UM02key=abc123},                data
       assert_match %r{UM02amount=1.99},               data
       assert_match %r{UM02description=Second\+payee}, data
@@ -139,7 +139,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
     )
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match %r{UMonError=Continue}, data
     end.respond_with(successful_purchase_response)
     assert_success response
@@ -159,7 +159,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
     )
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match %r{UMaddcustomer=yes},                 data
       assert_match %r{UMschedule=quarterly},              data
       assert_match %r{UMbillsourcekey=bill\+source\+key}, data
@@ -181,7 +181,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
     )
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match %r{UMcustom1=diablo},   data
       assert_match %r{UMcustom2=mephisto}, data
       assert_match %r{UMcustom3=baal},     data
@@ -225,7 +225,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
     )
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match %r{UMline0sku=abc123},    data
       assert_match %r{UMline0cost=1.19},     data
       assert_match %r{UMline0qty=1},         data
@@ -253,7 +253,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
   def test_successful_authorize_passing_extra_info
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options.merge(invoice: '1337', order_id: 'w00t', description: 'socool'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/UMinvoice=1337/, data)
       assert_match(/UMorderid=w00t/, data)
       assert_match(/UMdescription=socool/, data)
@@ -265,7 +265,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
   def test_successful_authorize_passing_extra_test_mode
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options.merge(test_mode: true))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/UMtestmode=1/, data)
     end.respond_with(successful_authorize_response)
     assert_success response
@@ -283,7 +283,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
   def test_successful_capture_passing_extra_info
     response = stub_comms do
       @gateway.capture(@amount, '65074409', @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/UMamount=1.00/, data)
       assert_match(/UMtestmode=0/, data)
     end.respond_with(successful_capture_response)
@@ -293,7 +293,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
   def test_successful_capture_passing_extra_test_mode
     response = stub_comms do
       @gateway.capture(@amount, '65074409', @options.merge(test_mode: true))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/UMtestmode=1/, data)
     end.respond_with(successful_capture_response)
     assert_success response
@@ -320,7 +320,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
   def test_successful_refund_passing_extra_info
     response = stub_comms do
       @gateway.refund(@amount, '65074409', @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/UMamount=1.00/, data)
       assert_match(/UMtestmode=0/, data)
     end.respond_with(successful_refund_response)
@@ -330,7 +330,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
   def test_successful_refund_passing_extra_test_mode
     response = stub_comms do
       @gateway.refund(@amount, '65074409', @options.merge(test_mode: true))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/UMtestmode=1/, data)
     end.respond_with(successful_refund_response)
     assert_success response
@@ -357,7 +357,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
   def test_successful_void_passing_extra_info
     response = stub_comms do
       @gateway.void('65074409', @options.merge(no_release: true))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/UMcommand=cc%3Avoid/, data)
       assert_match(/UMtestmode=0/, data)
     end.respond_with(successful_void_response)
@@ -367,7 +367,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
   def test_successful_void_passing_extra_test_mode
     response = stub_comms do
       @gateway.refund(@amount, '65074409', @options.merge(test_mode: true))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/UMtestmode=1/, data)
     end.respond_with(successful_void_response)
     assert_success response
@@ -508,7 +508,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
     @credit_card.manual_entry = true
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match %r{UMcard=4242424242424242},  data
       assert_match %r{UMcardpresent=true},       data
     end.respond_with(successful_purchase_response)

@@ -306,7 +306,7 @@ module ActiveMerchant
       def post_data(params)
         return nil unless params
 
-        params.reject { |k, v| v.blank? }.collect { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join('&')
+        params.reject { |_k, v| v.blank? }.collect { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join('&')
       end
 
       def generate_hmac(nonce, current_timestamp, payload)

@@ -198,7 +198,7 @@ module ActiveMerchant #:nodoc:
       def post_data(params)
         return nil unless params
 
-        no_blanks = params.reject { |key, value| value.blank? }
+        no_blanks = params.reject { |_key, value| value.blank? }
         no_blanks.map { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 

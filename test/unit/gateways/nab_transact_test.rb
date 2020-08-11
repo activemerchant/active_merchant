@@ -139,7 +139,7 @@ class NabTransactTest < Test::Unit::TestCase
   def test_request_timeout_default
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/<timeoutValue>60/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -148,7 +148,7 @@ class NabTransactTest < Test::Unit::TestCase
     gateway = NabTransactGateway.new(login: 'login', password: 'password', request_timeout: 44)
     stub_comms(gateway, :ssl_request) do
       gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/<timeoutValue>44/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -156,7 +156,7 @@ class NabTransactTest < Test::Unit::TestCase
   def test_nonfractional_currencies
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(10000, @credit_card, @options.merge(currency: 'JPY'))
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/<amount>100<\/amount>/, data)
     end.respond_with(successful_authorize_response)
   end
@@ -215,7 +215,7 @@ class NabTransactTest < Test::Unit::TestCase
   end
 
   def check_transaction_type(type)
-    Proc.new do |endpoint, data, headers|
+    Proc.new do |_endpoint, data, _headers|
       request_hash = Hash.from_xml(data)
       request_hash['NABTransactMessage']['Payment']['TxnList']['Txn']['txnType'] == NabTransactGateway::TRANSACTIONS[type].to_s
     end
@@ -230,7 +230,7 @@ class NabTransactTest < Test::Unit::TestCase
   def assert_metadata(name, location, &block)
     stub_comms(@gateway, :ssl_request) do
       yield
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       metadata_matcher = Regexp.escape(valid_metadata(name, location))
       assert_match %r{#{metadata_matcher}}, data
     end.respond_with(successful_purchase_response)

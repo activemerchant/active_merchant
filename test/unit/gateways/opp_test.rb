@@ -177,7 +177,7 @@ class OppTest < Test::Unit::TestCase
 
     response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.purchase(@amount, @valid_card, options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/threeDSecure.eci=eci/, data)
       assert_match(/threeDSecure.verificationId=cavv/, data)
       assert_match(/threeDSecure.xid=xid/, data)

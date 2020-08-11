@@ -37,7 +37,7 @@ class SafeChargeTest < Test::Unit::TestCase
   def test_successful_purchase_with_merchant_options
     purchase = stub_comms do
       @gateway.purchase(@amount, @credit_card, @merchant_options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/sg_Descriptor/, data)
       assert_match(/sg_MerchantPhoneNumber/, data)
       assert_match(/sg_MerchantName/, data)
@@ -53,7 +53,7 @@ class SafeChargeTest < Test::Unit::TestCase
   def test_successful_purchase_with_truthy_stored_credential_mode
     purchase = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential_mode: true))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/sg_StoredCredentialMode=1/, data)
     end.respond_with(successful_purchase_response)
 
@@ -67,7 +67,7 @@ class SafeChargeTest < Test::Unit::TestCase
   def test_successful_purchase_with_falsey_stored_credential_mode
     purchase = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential_mode: false))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/sg_StoredCredentialMode=0/, data)
     end.respond_with(successful_purchase_response)
 
@@ -214,7 +214,7 @@ class SafeChargeTest < Test::Unit::TestCase
   def test_3ds_response
     purchase = stub_comms do
       @gateway.purchase(@amount, @three_ds_enrolled_card, @three_ds_options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/Sale3D/, data)
       assert_match(/sg_APIType/, data)
     end.respond_with(successful_3ds_purchase_response)

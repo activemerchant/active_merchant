@@ -397,7 +397,7 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.run_check_sale(@options.merge(payment_method: @check))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/123456789012/, data)
     end.respond_with(successful_transaction_response('runCheckSale'))
 
