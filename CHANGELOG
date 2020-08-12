@@ -6,6 +6,7 @@
 * Orbital: Fix typo in PC3DtlLineTot field [naashton] #3736
 * RuboCop: Fix Style/TrailingCommaInHashLiteral [leila-alderman] #3718
 * RuboCop: Fix Naming/PredicateName [leila-alderman] #3724
+* RuboCop: Fix Style/Attr [leila-alderman] #3728
 
 == Version 1.112.0
 * Cybersource: add `maestro` and `diners_club` eci brand mapping [bbraschi] #3708

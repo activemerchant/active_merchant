@@ -277,12 +277,6 @@ Style/AsciiComments:
     - 'test/remote/gateways/remote_data_cash_test.rb'
     - 'test/remote/gateways/remote_nab_transact_test.rb'
 
-# Offense count: 1
-# Cop supports --auto-correct.
-Style/Attr:
-  Exclude:
-    - 'test/unit/gateways/forte_test.rb'
-
 # Offense count: 2
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle.
