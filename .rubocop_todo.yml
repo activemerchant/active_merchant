@@ -266,14 +266,6 @@ Style/BarePercentLiterals:
     - 'test/unit/gateways/eway_rapid_test.rb'
     - 'test/unit/gateways/orbital_test.rb'
 
-# Offense count: 3
-# Cop supports --auto-correct.
-Style/BlockComments:
-  Exclude:
-    - 'test/remote/gateways/remote_barclays_epdq_extra_plus_test.rb'
-    - 'test/remote/gateways/remote_netpay_test.rb'
-    - 'test/remote/gateways/remote_payu_in_test.rb'
-
 # Offense count: 77
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle, ProceduralMethods, FunctionalMethods, IgnoredMethods.
