@@ -96,7 +96,7 @@ module ActiveMerchant #:nodoc:
         authorize(100, creditcard, options.merge(store: billing_id))
       end
 
-      alias_method :unstore, :delete
+      alias unstore delete
 
       private
 

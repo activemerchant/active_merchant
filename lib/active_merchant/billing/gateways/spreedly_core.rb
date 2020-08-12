@@ -117,7 +117,7 @@ module ActiveMerchant #:nodoc:
         commit("transactions/#{transaction_token}.xml", nil, :get)
       end
 
-      alias_method :status, :find
+      alias status find
 
       def supports_scrubbing?
         true

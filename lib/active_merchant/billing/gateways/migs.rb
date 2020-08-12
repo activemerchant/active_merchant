@@ -70,7 +70,7 @@ module ActiveMerchant #:nodoc:
 
       # MiGS works by merchants being either purchase only or authorize/capture
       # So authorize is the same as purchase when in authorize mode
-      alias_method :authorize, :purchase
+      alias authorize purchase
 
       # ==== Options
       #
