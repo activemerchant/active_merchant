@@ -14,7 +14,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     )
     @customer_ref_num = 'ABC'
 
-    @level_2 = {
+    @level2 = {
       tax_indicator: '1',
       tax: '10',
       advice_addendum_1: 'taa1 - test',
@@ -30,7 +30,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       zip: address[:zip]
     }
 
-    @level_3 = {
+    @level3 = {
       freight_amount: '15',
       duty_amount: '10',
       dest_country: 'US',
@@ -108,39 +108,39 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', response.authorization
   end
 
-  def test_level_2_data
+  def test_level2_data
     stub_comms do
-      @gateway.purchase(50, credit_card, @options.merge(level_2_data: @level_2))
+      @gateway.purchase(50, credit_card, @options.merge(level_2_data: @level2))
     end.check_request do |_endpoint, data, _headers|
-      assert_match %{<TaxInd>#{@level_2[:tax_indicator].to_i}</TaxInd>}, data
-      assert_match %{<Tax>#{@level_2[:tax].to_i}</Tax>}, data
-      assert_match %{<AMEXTranAdvAddn1>#{@level_2[:advice_addendum_1]}</AMEXTranAdvAddn1>}, data
-      assert_match %{<AMEXTranAdvAddn2>#{@level_2[:advice_addendum_2]}</AMEXTranAdvAddn2>}, data
-      assert_match %{<AMEXTranAdvAddn3>#{@level_2[:advice_addendum_3]}</AMEXTranAdvAddn3>}, data
-      assert_match %{<AMEXTranAdvAddn4>#{@level_2[:advice_addendum_4]}</AMEXTranAdvAddn4>}, data
-      assert_match %{<PCOrderNum>#{@level_2[:purchase_order]}</PCOrderNum>}, data
-      assert_match %{<PCDestZip>#{@level_2[:zip]}</PCDestZip>}, data
-      assert_match %{<PCDestName>#{@level_2[:name]}</PCDestName>}, data
-      assert_match %{<PCDestAddress1>#{@level_2[:address1]}</PCDestAddress1>}, data
-      assert_match %{<PCDestAddress2>#{@level_2[:address2]}</PCDestAddress2>}, data
-      assert_match %{<PCDestCity>#{@level_2[:city]}</PCDestCity>}, data
-      assert_match %{<PCDestState>#{@level_2[:state]}</PCDestState>}, data
+      assert_match %{<TaxInd>#{@level2[:tax_indicator].to_i}</TaxInd>}, data
+      assert_match %{<Tax>#{@level2[:tax].to_i}</Tax>}, data
+      assert_match %{<AMEXTranAdvAddn1>#{@level2[:advice_addendum_1]}</AMEXTranAdvAddn1>}, data
+      assert_match %{<AMEXTranAdvAddn2>#{@level2[:advice_addendum_2]}</AMEXTranAdvAddn2>}, data
+      assert_match %{<AMEXTranAdvAddn3>#{@level2[:advice_addendum_3]}</AMEXTranAdvAddn3>}, data
+      assert_match %{<AMEXTranAdvAddn4>#{@level2[:advice_addendum_4]}</AMEXTranAdvAddn4>}, data
+      assert_match %{<PCOrderNum>#{@level2[:purchase_order]}</PCOrderNum>}, data
+      assert_match %{<PCDestZip>#{@level2[:zip]}</PCDestZip>}, data
+      assert_match %{<PCDestName>#{@level2[:name]}</PCDestName>}, data
+      assert_match %{<PCDestAddress1>#{@level2[:address1]}</PCDestAddress1>}, data
+      assert_match %{<PCDestAddress2>#{@level2[:address2]}</PCDestAddress2>}, data
+      assert_match %{<PCDestCity>#{@level2[:city]}</PCDestCity>}, data
+      assert_match %{<PCDestState>#{@level2[:state]}</PCDestState>}, data
     end.respond_with(successful_purchase_response)
   end
 
-  def test_level_3_data
+  def test_level3_data
     stub_comms do
-      @gateway.purchase(50, credit_card, @options.merge(level_3_data: @level_3))
+      @gateway.purchase(50, credit_card, @options.merge(level_3_data: @level3))
     end.check_request do |_endpoint, data, _headers|
-      assert_match %{<PC3FreightAmt>#{@level_3[:freight_amount].to_i}</PC3FreightAmt>}, data
-      assert_match %{<PC3DutyAmt>#{@level_3[:duty_amount].to_i}</PC3DutyAmt>}, data
-      assert_match %{<PC3DestCountryCd>#{@level_3[:dest_country]}</PC3DestCountryCd>}, data
-      assert_match %{<PC3ShipFromZip>#{@level_3[:ship_from_zip].to_i}</PC3ShipFromZip>}, data
-      assert_match %{<PC3DiscAmt>#{@level_3[:discount_amount].to_i}</PC3DiscAmt>}, data
-      assert_match %{<PC3VATtaxAmt>#{@level_3[:vat_tax].to_i}</PC3VATtaxAmt>}, data
-      assert_match %{<PC3VATtaxRate>#{@level_3[:vat_rate].to_i}</PC3VATtaxRate>}, data
-      assert_match %{<PC3AltTaxAmt>#{@level_3[:alt_tax].to_i}</PC3AltTaxAmt>}, data
-      assert_match %{<PC3AltTaxInd>#{@level_3[:alt_ind]}</PC3AltTaxInd>}, data
+      assert_match %{<PC3FreightAmt>#{@level3[:freight_amount].to_i}</PC3FreightAmt>}, data
+      assert_match %{<PC3DutyAmt>#{@level3[:duty_amount].to_i}</PC3DutyAmt>}, data
+      assert_match %{<PC3DestCountryCd>#{@level3[:dest_country]}</PC3DestCountryCd>}, data
+      assert_match %{<PC3ShipFromZip>#{@level3[:ship_from_zip].to_i}</PC3ShipFromZip>}, data
+      assert_match %{<PC3DiscAmt>#{@level3[:discount_amount].to_i}</PC3DiscAmt>}, data
+      assert_match %{<PC3VATtaxAmt>#{@level3[:vat_tax].to_i}</PC3VATtaxAmt>}, data
+      assert_match %{<PC3VATtaxRate>#{@level3[:vat_rate].to_i}</PC3VATtaxRate>}, data
+      assert_match %{<PC3AltTaxAmt>#{@level3[:alt_tax].to_i}</PC3AltTaxAmt>}, data
+      assert_match %{<PC3AltTaxInd>#{@level3[:alt_ind]}</PC3AltTaxInd>}, data
     end.respond_with(successful_purchase_response)
   end
 

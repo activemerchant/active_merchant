@@ -149,10 +149,10 @@ class PaypalTest < Test::Unit::TestCase
     assert_success response
     assert response.params['transaction_id']
     assert_equal '0.60', response.params['gross_amount']
-    response_2 = @gateway.capture(40, auth.authorization)
-    assert_success response_2
-    assert response_2.params['transaction_id']
-    assert_equal '0.40', response_2.params['gross_amount']
+    response2 = @gateway.capture(40, auth.authorization)
+    assert_success response2
+    assert response2.params['transaction_id']
+    assert_equal '0.40', response2.params['gross_amount']
   end
 
   def test_successful_capture_updating_the_invoice_id

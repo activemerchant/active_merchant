@@ -111,9 +111,9 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_method(post, payment_method)
         if payment_method.is_a?(String)
-          user_profile_id, last_4 = split_authorization(payment_method)
+          user_profile_id, last4 = split_authorization(payment_method)
           post[:userprofileid] = user_profile_id
-          post[:last4digits] = last_4
+          post[:last4digits] = last4
         else
           post[:ccname] = payment_method.name
           post[:ccnum] = payment_method.number

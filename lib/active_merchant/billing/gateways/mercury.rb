@@ -211,11 +211,11 @@ module ActiveMerchant #:nodoc:
             # handle with the validation error as it sees fit.
             # Track 2 requires having the STX and ETX stripped. Track 1 does not.
             # Max-length track 1s require having the STX and ETX stripped. Max is 79 bytes including LRC.
-            is_track_2 = credit_card.track_data[0] == ';'
+            is_track2 = credit_card.track_data[0] == ';'
             etx_index = credit_card.track_data.rindex('?') || credit_card.track_data.length
             is_max_track1 = etx_index >= 77
 
-            if is_track_2
+            if is_track2
               xml.tag! 'Track2', credit_card.track_data[1...etx_index]
             elsif is_max_track1
               xml.tag! 'Track1', credit_card.track_data[1...etx_index]

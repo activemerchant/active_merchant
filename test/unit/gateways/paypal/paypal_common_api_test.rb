@@ -135,19 +135,19 @@ class PaypalCommonApiTest < Test::Unit::TestCase
     assert_equal '1', REXML::XPath.first(request, '//GetBalanceReq/GetBalanceRequest/ReturnAllCurrencies').text
   end
 
-  def test_balance_cleans_up_currencies_values_like_1
+  def test_balance_cleans_up_currencies_values_like_one
     @gateway.stubs(:commit)
-    [1, '1', true].each do |values_like_1|
+    [1, '1', true].each do |values_like_one|
       @gateway.expects(:build_get_balance).with('1')
-      @gateway.balance(values_like_1)
+      @gateway.balance(values_like_one)
     end
   end
 
-  def test_balance_cleans_up_currencies_values_like_0
+  def test_balance_cleans_up_currencies_values_like_zero
     @gateway.stubs(:commit)
-    [0, '0', false, nil, :foo].each do |values_like_0|
+    [0, '0', false, nil, :foo].each do |values_like_zero|
       @gateway.expects(:build_get_balance).with('0')
-      @gateway.balance(values_like_0)
+      @gateway.balance(values_like_zero)
     end
   end
 

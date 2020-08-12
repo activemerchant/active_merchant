@@ -16,6 +16,7 @@
 * Orbital: Fix schema errors [britth] #3766
 * Checkout V2: Start testing via amount code [curiousepic] #3767
 * CyberSource: Don't include empty `mdd_` fields [arbianchi] #3758
+* RuboCop: Fix Naming/VariableNumber [leila-alderman] #3725
 
 == Version 1.114.0
 * BlueSnap: Add address1,address2,phone,shipping_* support #3749
