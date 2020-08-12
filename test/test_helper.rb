@@ -322,36 +322,6 @@ Test::Unit::TestCase.class_eval do
   end
 end
 
-module ActionViewHelperTestHelper
-  def self.included(base)
-    base.send(:include, ActiveMerchant::Billing::Integrations::ActionViewHelper)
-    base.send(:include, ActionView::Helpers::FormHelper)
-    base.send(:include, ActionView::Helpers::FormTagHelper)
-    base.send(:include, ActionView::Helpers::UrlHelper)
-    base.send(:include, ActionView::Helpers::TagHelper)
-    base.send(:include, ActionView::Helpers::CaptureHelper)
-    base.send(:include, ActionView::Helpers::TextHelper)
-    base.send(:attr_accessor, :output_buffer)
-  end
-
-  def setup
-    @controller = Class.new do
-      attr_reader :url_for_options
-      def url_for(options, *parameters_for_method_reference)
-        @url_for_options = options
-      end
-    end
-    @controller = @controller.new
-    @output_buffer = ''
-  end
-
-  protected
-
-  def protect_against_forgery?
-    false
-  end
-end
-
 class MockResponse
   attr_reader   :code, :body, :message
   attr_accessor :headers

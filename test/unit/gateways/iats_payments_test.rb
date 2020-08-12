@@ -295,196 +295,196 @@ class IatsPaymentsTest < Test::Unit::TestCase
   private
 
   def successful_purchase_response
-    <<-XML
-<?xml version="1.0" encoding="utf-8"?>
-<soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
-  <soap12:Body>
-    <ProcessCreditCardResponse xmlns="https://www.iatspayments.com/NetGate/">
-      <ProcessCreditCardResult>
-        <IATSRESPONSE>
-          <STATUS>Success</STATUS>
-          <ERRORS />
-          <PROCESSRESULT>
-            <AUTHORIZATIONRESULT> OK</AUTHORIZATIONRESULT>
-            <CUSTOMERCODE />
-            <SETTLEMENTBATCHDATE> 04/22/2014</SETTLEMENTBATCHDATE>
-            <SETTLEMENTDATE> 04/23/2014</SETTLEMENTDATE>
-            <TRANSACTIONID>A6DE6F24</TRANSACTIONID>
-          </PROCESSRESULT>
-        </IATSRESPONSE>
-      </ProcessCreditCardResult>
-    </ProcessCreditCardResponse>
-  </soap12:Body>
-</soap12:Envelope>
+    <<~XML
+      <?xml version="1.0" encoding="utf-8"?>
+      <soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
+        <soap12:Body>
+          <ProcessCreditCardResponse xmlns="https://www.iatspayments.com/NetGate/">
+            <ProcessCreditCardResult>
+              <IATSRESPONSE>
+                <STATUS>Success</STATUS>
+                <ERRORS />
+                <PROCESSRESULT>
+                  <AUTHORIZATIONRESULT> OK</AUTHORIZATIONRESULT>
+                  <CUSTOMERCODE />
+                  <SETTLEMENTBATCHDATE> 04/22/2014</SETTLEMENTBATCHDATE>
+                  <SETTLEMENTDATE> 04/23/2014</SETTLEMENTDATE>
+                  <TRANSACTIONID>A6DE6F24</TRANSACTIONID>
+                </PROCESSRESULT>
+              </IATSRESPONSE>
+            </ProcessCreditCardResult>
+          </ProcessCreditCardResponse>
+        </soap12:Body>
+      </soap12:Envelope>
     XML
   end
 
   def failed_purchase_response
-    <<-XML
-<?xml version="1.0" encoding="utf-8"?>
-<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <soap:Body>
-    <ProcessCreditCardResponse xmlns="https://www.iatspayments.com/NetGate/">
-      <ProcessCreditCardResult>
-        <IATSRESPONSE xmlns="">
-          <STATUS>Success</STATUS>
-          <ERRORS />
-          <PROCESSRESULT>
-            <AUTHORIZATIONRESULT> REJECT: 15</AUTHORIZATIONRESULT>
-            <CUSTOMERCODE />
-            <SETTLEMENTBATCHDATE> 04/22/2014</SETTLEMENTBATCHDATE>
-            <SETTLEMENTDATE> 04/23/2014</SETTLEMENTDATE>
-            <TRANSACTIONID>A6DE6F24</TRANSACTIONID>
-          </PROCESSRESULT>
-        </IATSRESPONSE>
-      </ProcessCreditCardResult>
-    </ProcessCreditCardResponse>
-  </soap:Body>
-</soap:Envelope>
+    <<~XML
+      <?xml version="1.0" encoding="utf-8"?>
+      <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        <soap:Body>
+          <ProcessCreditCardResponse xmlns="https://www.iatspayments.com/NetGate/">
+            <ProcessCreditCardResult>
+              <IATSRESPONSE xmlns="">
+                <STATUS>Success</STATUS>
+                <ERRORS />
+                <PROCESSRESULT>
+                  <AUTHORIZATIONRESULT> REJECT: 15</AUTHORIZATIONRESULT>
+                  <CUSTOMERCODE />
+                  <SETTLEMENTBATCHDATE> 04/22/2014</SETTLEMENTBATCHDATE>
+                  <SETTLEMENTDATE> 04/23/2014</SETTLEMENTDATE>
+                  <TRANSACTIONID>A6DE6F24</TRANSACTIONID>
+                </PROCESSRESULT>
+              </IATSRESPONSE>
+            </ProcessCreditCardResult>
+          </ProcessCreditCardResponse>
+        </soap:Body>
+      </soap:Envelope>
     XML
   end
 
   def successful_check_purchase_response
-    <<-XML
-<?xml version="1.0" encoding="utf-8"?>
-<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <soap:Body>
-    <ProcessACHEFTResponse xmlns="https://www.iatspayments.com/NetGate/">
-      <ProcessACHEFTResult>
-        <IATSRESPONSE xmlns="">
-          <STATUS>Success</STATUS>
-          <ERRORS />
-          <PROCESSRESULT>
-            <AUTHORIZATIONRESULT> OK: 555555</AUTHORIZATIONRESULT>
-            <CUSTOMERCODE />
-            <TRANSACTIONID>A7F8B8B3</TRANSACTIONID>
-          </PROCESSRESULT>
-        </IATSRESPONSE>
-      </ProcessACHEFTResult>
-    </ProcessACHEFTResponse>
-  </soap:Body>
-</soap:Envelope>
+    <<~XML
+      <?xml version="1.0" encoding="utf-8"?>
+      <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        <soap:Body>
+          <ProcessACHEFTResponse xmlns="https://www.iatspayments.com/NetGate/">
+            <ProcessACHEFTResult>
+              <IATSRESPONSE xmlns="">
+                <STATUS>Success</STATUS>
+                <ERRORS />
+                <PROCESSRESULT>
+                  <AUTHORIZATIONRESULT> OK: 555555</AUTHORIZATIONRESULT>
+                  <CUSTOMERCODE />
+                  <TRANSACTIONID>A7F8B8B3</TRANSACTIONID>
+                </PROCESSRESULT>
+              </IATSRESPONSE>
+            </ProcessACHEFTResult>
+          </ProcessACHEFTResponse>
+        </soap:Body>
+      </soap:Envelope>
     XML
   end
 
   def failed_check_purchase_response
-    <<-XML
-<?xml version="1.0" encoding="utf-8"?>
-<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <soap:Body>
-    <ProcessACHEFTResponse xmlns="https://www.iatspayments.com/NetGate/">
-      <ProcessACHEFTResult>
-        <IATSRESPONSE xmlns="">
-          <STATUS>Success</STATUS>
-          <ERRORS />
-          <PROCESSRESULT>
-            <AUTHORIZATIONRESULT> REJECT: 40</AUTHORIZATIONRESULT>
-            <CUSTOMERCODE />
-            <TRANSACTIONID />
-          </PROCESSRESULT>
-        </IATSRESPONSE>
-      </ProcessACHEFTResult>
-    </ProcessACHEFTResponse>
-  </soap:Body>
-</soap:Envelope>
+    <<~XML
+      <?xml version="1.0" encoding="utf-8"?>
+      <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        <soap:Body>
+          <ProcessACHEFTResponse xmlns="https://www.iatspayments.com/NetGate/">
+            <ProcessACHEFTResult>
+              <IATSRESPONSE xmlns="">
+                <STATUS>Success</STATUS>
+                <ERRORS />
+                <PROCESSRESULT>
+                  <AUTHORIZATIONRESULT> REJECT: 40</AUTHORIZATIONRESULT>
+                  <CUSTOMERCODE />
+                  <TRANSACTIONID />
+                </PROCESSRESULT>
+              </IATSRESPONSE>
+            </ProcessACHEFTResult>
+          </ProcessACHEFTResponse>
+        </soap:Body>
+      </soap:Envelope>
     XML
   end
 
   def successful_refund_response
-    <<-XML
-<?xml version="1.0" encoding="utf-8"?>
-<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <soap:Body>
-    <ProcessCreditCardResponse xmlns="https://www.iatspayments.com/NetGate/">
-      <ProcessCreditCardResult>
-        <IATSRESPONSE xmlns="">
-          <STATUS>Success</STATUS>
-          <ERRORS />
-          <PROCESSRESULT>
-            <AUTHORIZATIONRESULT> OK: 678594: </AUTHORIZATIONRESULT>
-            <CUSTOMERCODE />
-            <SETTLEMENTBATCHDATE> 04/22/2014 </SETTLEMENTBATCHDATE>
-            <SETTLEMENTDATE> 04/23/2014 </SETTLEMENTDATE>
-            <TRANSACTIONID>A6DEA654</TRANSACTIONID>
-          </PROCESSRESULT>
-        </IATSRESPONSE>
-      </ProcessCreditCardResult>
-    </ProcessCreditCardResponse>
-  </soap:Body>
-</soap:Envelope>
+    <<~XML
+      <?xml version="1.0" encoding="utf-8"?>
+      <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        <soap:Body>
+          <ProcessCreditCardResponse xmlns="https://www.iatspayments.com/NetGate/">
+            <ProcessCreditCardResult>
+              <IATSRESPONSE xmlns="">
+                <STATUS>Success</STATUS>
+                <ERRORS />
+                <PROCESSRESULT>
+                  <AUTHORIZATIONRESULT> OK: 678594: </AUTHORIZATIONRESULT>
+                  <CUSTOMERCODE />
+                  <SETTLEMENTBATCHDATE> 04/22/2014 </SETTLEMENTBATCHDATE>
+                  <SETTLEMENTDATE> 04/23/2014 </SETTLEMENTDATE>
+                  <TRANSACTIONID>A6DEA654</TRANSACTIONID>
+                </PROCESSRESULT>
+              </IATSRESPONSE>
+            </ProcessCreditCardResult>
+          </ProcessCreditCardResponse>
+        </soap:Body>
+      </soap:Envelope>
     XML
   end
 
   def successful_check_refund_response
-    <<-XML
-<?xml version="1.0" encoding="utf-8"?>
-<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <soap:Body>
-    <ProcessACHEFTRefundWithTransactionIdResponse xmlns="https://www.iatspayments.com/NetGate/">
-      <ProcessACHEFTRefundWithTransactionIdResult>
-        <IATSRESPONSE xmlns="">
-          <STATUS>Success</STATUS>
-          <ERRORS />
-          <PROCESSRESULT>
-            <AUTHORIZATIONRESULT> OK: 555555</AUTHORIZATIONRESULT>
-            <CUSTOMERCODE />
-            <TRANSACTIONID>A7F8B8B3</TRANSACTIONID>
-          </PROCESSRESULT>
-        </IATSRESPONSE>
-      </ProcessACHEFTRefundWithTransactionIdResult>
-    </ProcessACHEFTRefundWithTransactionIdResponse>
-  </soap:Body>
-</soap:Envelope>
+    <<~XML
+      <?xml version="1.0" encoding="utf-8"?>
+      <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        <soap:Body>
+          <ProcessACHEFTRefundWithTransactionIdResponse xmlns="https://www.iatspayments.com/NetGate/">
+            <ProcessACHEFTRefundWithTransactionIdResult>
+              <IATSRESPONSE xmlns="">
+                <STATUS>Success</STATUS>
+                <ERRORS />
+                <PROCESSRESULT>
+                  <AUTHORIZATIONRESULT> OK: 555555</AUTHORIZATIONRESULT>
+                  <CUSTOMERCODE />
+                  <TRANSACTIONID>A7F8B8B3</TRANSACTIONID>
+                </PROCESSRESULT>
+              </IATSRESPONSE>
+            </ProcessACHEFTRefundWithTransactionIdResult>
+          </ProcessACHEFTRefundWithTransactionIdResponse>
+        </soap:Body>
+      </soap:Envelope>
     XML
   end
 
   def failed_check_refund_response
-    <<-XML
-<?xml version="1.0" encoding="utf-8"?>
-<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <soap:Body>
-    <ProcessACHEFTRefundWithTransactionIdResponse xmlns="https://www.iatspayments.com/NetGate/">
-      <ProcessACHEFTRefundWithTransactionIdResult>
-        <IATSRESPONSE xmlns="">
-          <STATUS>Success</STATUS>
-          <ERRORS />
-          <PROCESSRESULT>
-            <AUTHORIZATIONRESULT> REJECT: 39</AUTHORIZATIONRESULT>
-            <CUSTOMERCODE />
-            <SETTLEMENTBATCHDATE> 06/11/2015</SETTLEMENTBATCHDATE>
-            <SETTLEMENTDATE> 06/12/2015</SETTLEMENTDATE>
-            <TRANSACTIONID></TRANSACTIONID>
-          </PROCESSRESULT>
-        </IATSRESPONSE>
-      </ProcessACHEFTRefundWithTransactionIdResult>
-    </ProcessACHEFTRefundWithTransactionIdResponse>
-  </soap:Body>
-</soap:Envelope>
+    <<~XML
+      <?xml version="1.0" encoding="utf-8"?>
+      <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        <soap:Body>
+          <ProcessACHEFTRefundWithTransactionIdResponse xmlns="https://www.iatspayments.com/NetGate/">
+            <ProcessACHEFTRefundWithTransactionIdResult>
+              <IATSRESPONSE xmlns="">
+                <STATUS>Success</STATUS>
+                <ERRORS />
+                <PROCESSRESULT>
+                  <AUTHORIZATIONRESULT> REJECT: 39</AUTHORIZATIONRESULT>
+                  <CUSTOMERCODE />
+                  <SETTLEMENTBATCHDATE> 06/11/2015</SETTLEMENTBATCHDATE>
+                  <SETTLEMENTDATE> 06/12/2015</SETTLEMENTDATE>
+                  <TRANSACTIONID></TRANSACTIONID>
+                </PROCESSRESULT>
+              </IATSRESPONSE>
+            </ProcessACHEFTRefundWithTransactionIdResult>
+          </ProcessACHEFTRefundWithTransactionIdResponse>
+        </soap:Body>
+      </soap:Envelope>
     XML
   end
 
   def failed_refund_response
-    <<-XML
-<?xml version="1.0" encoding="utf-8"?>
-<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <soap:Body>
-    <ProcessCreditCardResponse xmlns="https://www.iatspayments.com/NetGate/">
-      <ProcessCreditCardResult>
-        <IATSRESPONSE xmlns="">
-          <STATUS>Success</STATUS>
-          <ERRORS />
-          <PROCESSRESULT>
-            <AUTHORIZATIONRESULT> REJECT: 15 </AUTHORIZATIONRESULT>
-            <CUSTOMERCODE />
-            <SETTLEMENTBATCHDATE> 04/22/2014 </SETTLEMENTBATCHDATE>
-            <SETTLEMENTDATE> 04/23/2014 </SETTLEMENTDATE>
-            <TRANSACTIONID>A6DEA654</TRANSACTIONID>
-          </PROCESSRESULT>
-        </IATSRESPONSE>
-      </ProcessCreditCardResult>
-    </ProcessCreditCardResponse>
-  </soap:Body>
-</soap:Envelope>
+    <<~XML
+      <?xml version="1.0" encoding="utf-8"?>
+      <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        <soap:Body>
+          <ProcessCreditCardResponse xmlns="https://www.iatspayments.com/NetGate/">
+            <ProcessCreditCardResult>
+              <IATSRESPONSE xmlns="">
+                <STATUS>Success</STATUS>
+                <ERRORS />
+                <PROCESSRESULT>
+                  <AUTHORIZATIONRESULT> REJECT: 15 </AUTHORIZATIONRESULT>
+                  <CUSTOMERCODE />
+                  <SETTLEMENTBATCHDATE> 04/22/2014 </SETTLEMENTBATCHDATE>
+                  <SETTLEMENTDATE> 04/23/2014 </SETTLEMENTDATE>
+                  <TRANSACTIONID>A6DEA654</TRANSACTIONID>
+                </PROCESSRESULT>
+              </IATSRESPONSE>
+            </ProcessCreditCardResult>
+          </ProcessCreditCardResponse>
+        </soap:Body>
+      </soap:Envelope>
     XML
   end
 

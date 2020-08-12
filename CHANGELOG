@@ -1,23 +1,53 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Cybersource: add `maestro` and `diners_club` eci brand mapping [bbraschi] #3708
+* Cybersource: Ensure Partner Solution Id placement conforms to schema [britth] #3715
+* Adyen: Adyen: Pass `subMerchantId` as `additionalData` [naashton] #3714
+* Litle: Omit checkNum when nil [leila-alderman] #3719
+
+== Version 1.111.0
+* Fat Zebra: standardized 3DS fields and card on file extra data for Visa scheme rules [montdidier] #3409
+* Realex: Change 3DSecure v1 message_version to a valid format [shuhala] #3702
+* Ingenico/ GlobalCollect: Add field for installments [cdmackeyfree] #3707
+* Cybersource: do not send 3DS fields if 'cavv` is missing and `commerceIndicator` is inferred [bbraschi] #3712
+
+== Version 1.110.0
+* FirstData e4 v27+: Strip linebreaks from address [curiousepic] #3693
+* Adyen: Change shopper_email to email and shopper_ip to ip [rikterbeek] #3675
+* FirstData e4 v27+ Fix strip_line_breaks method [carrigan] #3695
+* Cybersource: Set authorization on the response even when in fraud review [pi3r] #3701
+* Cybersource: Add fields to override stored creds [leila-alderman] #3689
+* Cybersource: Conditionally find stored credentials [therufs] #3696 #3697
+* Cybersource: Update logic to send cavv as xid for 3DS2 [douglas] #3699
+* Credorax: Default 3ds_browsercolordepth to 32 when passed as 30 [britth] #3700
+
+== Version 1.109.0
+* Remove reference to `Billing::Integrations` [pi3r] #3692
 * DLocal: Handle nil address1 [molbrown] #3661
 * Braintree: Add travel and lodging fields [leila-alderman] #3668
 * Stripe: strict_encode64 api key [britth] #3672
 * Stripe PI: Implement verify action [leila-alderman] #3662
-* RuboCop: Fix Style/TrailingUnderscoreVariable [leila-alderman] #3663
-* RuboCop: Fix Style/WordArray [leila-alderman] #3664
-* RuboCop: Fix Style/SymbolArray [leila-alderman] #3665
+* Stripe, Stripe Payment Intents: Update supported countries [britth] #3684
 * Forte: Use underscore for unused arguments in test [wsmoak] #3605
 * Add Alia card type [therufs] #3673
 * Element: Fix unit tests [leila-alderman] #3676
-* RuboCop: Fix Style/SpecialGlobalVars [leila-alderman] #3669
-* RuboCop: Fix Style/StringLiteralsInInterpolation [leila-alderman] #3670
 * PayU Latam: Fix store method [ccarruitero] #2590
-* Stripe, Stripe Payment Intents: Update supported countries [britth] #3684
-* Cybersource: Update supported countries [britth] #3683
 * Adyen: Allow for executeThreeD to be passed as false [naashton] #3681
 * WorldPay: Fix handling of `state` field for 3DS transactions [chinhle23] #3687
+* Alia: Skip Luhn validation [therufs] #3673
+* Diners Club: support 16 digit card numbers [therufs] #3682
+* Cybersource: Update supported countries [britth] #3683
+* Cybersource: pass reconciliation_id [therufs] #3688
+* RuboCop: Fix Style/SpecialGlobalVars [leila-alderman] #3669
+* RuboCop: Fix Style/StringLiteralsInInterpolation [leila-alderman] #3670
+* RuboCop: Fix Layout/HeredocIndentation [leila-alderman] #3685
+* RuboCop: Fix Gemspec/OrderedDependencies [leila-alderman] #3679
+* RuboCop: Fix Style/TrailingUnderscoreVariable [leila-alderman] #3663
+* RuboCop: Fix Style/WordArray [leila-alderman] #3664
+* RuboCop: Fix Style/SymbolArray [leila-alderman] #3665
+* Mercado-Pago: Notification url GSF [cdmackeyfree] #3678
+* Credorax: Update logic for setting 3ds_homephonecountry [britth] #3691
 
 == Version 1.108.0 (Jun 9, 2020)
 * Cybersource: Send cavv as xid is xid is missing [pi3r] #3658

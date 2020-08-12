@@ -55,6 +55,13 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  def test_successful_purchase_with_installments
+    options = @options.merge(number_of_installments: 2)
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
   # When requires_approval is true (or not present),
   # `purchase` will make both an `auth` and a `capture` call
   def test_successful_purchase_with_requires_approval_true
@@ -227,7 +234,6 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = GlobalCollectGateway.new(merchant_id: '', api_key_id: '', secret_api_key: '')
-
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_match %r{MISSING_OR_INVALID_AUTHORIZATION}, response.message

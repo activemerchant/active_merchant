@@ -161,212 +161,212 @@ class MerchantWareVersionFourTest < Test::Unit::TestCase
   end
 
   def successful_authorize_response
-    <<-XML
-<?xml version="1.0" encoding="utf-8"?>
-<soap:Envelope
- xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
- xmlns:xsd="http://www.w3.org/2001/XMLSchema"
- xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-  <soap:Body>
-    <PreAuthorizationKeyedResponse xmlns="http://schemas.merchantwarehouse.com/merchantware/40/Credit/">
-      <PreAuthorizationKeyedResult>
-        <Amount>1.00</Amount>
-        <ApprovalStatus>APPROVED</ApprovalStatus>
-        <AuthorizationCode>MC0110</AuthorizationCode>
-        <AvsResponse>N</AvsResponse>
-        <Cardholder></Cardholder>
-        <CardNumber></CardNumber>
-        <CardType>0</CardType>
-        <CvResponse>M</CvResponse>
-        <EntryMode>0</EntryMode>
-        <ErrorMessage></ErrorMessage>
-        <ExtraData></ExtraData>
-        <InvoiceNumber></InvoiceNumber>
-        <Token>1236564</Token>
-        <TransactionDate>10/10/2008 1:13:55 PM</TransactionDate>
-        <TransactionType>7</TransactionType>
-      </PreAuthorizationKeyedResult>
-    </PreAuthorizationKeyedResponse>
-  </soap:Body>
-</soap:Envelope>
+    <<~XML
+      <?xml version="1.0" encoding="utf-8"?>
+      <soap:Envelope
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+       xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+        <soap:Body>
+          <PreAuthorizationKeyedResponse xmlns="http://schemas.merchantwarehouse.com/merchantware/40/Credit/">
+            <PreAuthorizationKeyedResult>
+              <Amount>1.00</Amount>
+              <ApprovalStatus>APPROVED</ApprovalStatus>
+              <AuthorizationCode>MC0110</AuthorizationCode>
+              <AvsResponse>N</AvsResponse>
+              <Cardholder></Cardholder>
+              <CardNumber></CardNumber>
+              <CardType>0</CardType>
+              <CvResponse>M</CvResponse>
+              <EntryMode>0</EntryMode>
+              <ErrorMessage></ErrorMessage>
+              <ExtraData></ExtraData>
+              <InvoiceNumber></InvoiceNumber>
+              <Token>1236564</Token>
+              <TransactionDate>10/10/2008 1:13:55 PM</TransactionDate>
+              <TransactionType>7</TransactionType>
+            </PreAuthorizationKeyedResult>
+          </PreAuthorizationKeyedResponse>
+        </soap:Body>
+      </soap:Envelope>
     XML
   end
 
   def failed_authorize_response
-    <<-XML
-<?xml version="1.0" encoding="utf-8"?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <soap:Body>
-    <PreAuthorizationKeyedResponse xmlns="http://schemas.merchantwarehouse.com/merchantware/40/Credit/">
-      <PreAuthorizationKeyedResult>
-        <Amount />
-        <ApprovalStatus />
-        <AuthorizationCode />
-        <AvsResponse />
-        <Cardholder />
-        <CardNumber />
-        <CardType>0</CardType>
-        <CvResponse />
-        <EntryMode>0</EntryMode>
-        <ErrorMessage>amount cannot be null. Parameter name: amount</ErrorMessage>
-        <ExtraData />
-        <InvoiceNumber />
-        <Token />
-        <TransactionDate />
-        <TransactionType>0</TransactionType>
-      </PreAuthorizationKeyedResult>
-    </PreAuthorizationKeyedResponse>
-  </soap:Body>
-</soap:Envelope>
+    <<~XML
+      <?xml version="1.0" encoding="utf-8"?>
+      <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        <soap:Body>
+          <PreAuthorizationKeyedResponse xmlns="http://schemas.merchantwarehouse.com/merchantware/40/Credit/">
+            <PreAuthorizationKeyedResult>
+              <Amount />
+              <ApprovalStatus />
+              <AuthorizationCode />
+              <AvsResponse />
+              <Cardholder />
+              <CardNumber />
+              <CardType>0</CardType>
+              <CvResponse />
+              <EntryMode>0</EntryMode>
+              <ErrorMessage>amount cannot be null. Parameter name: amount</ErrorMessage>
+              <ExtraData />
+              <InvoiceNumber />
+              <Token />
+              <TransactionDate />
+              <TransactionType>0</TransactionType>
+            </PreAuthorizationKeyedResult>
+          </PreAuthorizationKeyedResponse>
+        </soap:Body>
+      </soap:Envelope>
     XML
   end
 
   def failed_authorization_response
-    <<-XML
-<?xml version="1.0" encoding="utf-8"?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <soap:Body>
-    <PreAuthorizationKeyedResponse xmlns="http://schemas.merchantwarehouse.com/merchantware/40/Credit/">
-      <PreAuthorizationKeyedResult>
-        <Amount>1.00</Amount>
-        <ApprovalStatus>DECLINED;1024;invalid exp date</ApprovalStatus>
-        <AuthorizationCode />
-        <AvsResponse />
-        <Cardholder>Visa Test Card</Cardholder>
-        <CardNumber>************0019</CardNumber>
-        <CardType>4</CardType>
-        <CvResponse />
-        <EntryMode>1</EntryMode>
-        <ErrorMessage />
-        <ExtraData />
-        <InvoiceNumber>TT0017</InvoiceNumber>
-        <Token />
-        <TransactionDate>5/15/2013 8:47:14 AM</TransactionDate>
-        <TransactionType>5</TransactionType>
-      </PreAuthorizationKeyedResult>
-    </PreAuthorizationKeyedResponse>
-  </soap:Body>
-</soap:Envelope>
+    <<~XML
+      <?xml version="1.0" encoding="utf-8"?>
+      <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        <soap:Body>
+          <PreAuthorizationKeyedResponse xmlns="http://schemas.merchantwarehouse.com/merchantware/40/Credit/">
+            <PreAuthorizationKeyedResult>
+              <Amount>1.00</Amount>
+              <ApprovalStatus>DECLINED;1024;invalid exp date</ApprovalStatus>
+              <AuthorizationCode />
+              <AvsResponse />
+              <Cardholder>Visa Test Card</Cardholder>
+              <CardNumber>************0019</CardNumber>
+              <CardType>4</CardType>
+              <CvResponse />
+              <EntryMode>1</EntryMode>
+              <ErrorMessage />
+              <ExtraData />
+              <InvoiceNumber>TT0017</InvoiceNumber>
+              <Token />
+              <TransactionDate>5/15/2013 8:47:14 AM</TransactionDate>
+              <TransactionType>5</TransactionType>
+            </PreAuthorizationKeyedResult>
+          </PreAuthorizationKeyedResponse>
+        </soap:Body>
+      </soap:Envelope>
     XML
   end
 
   def successful_void_response
-    <<-XML
-<?xml version="1.0" encoding="utf-8"?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <soap:Body>
-    <VoidResponse xmlns="http://schemas.merchantwarehouse.com/merchantware/40/Credit/">
-      <VoidResult>
-        <Amount />
-        <ApprovalStatus>APPROVED</ApprovalStatus>
-        <AuthorizationCode>VOID</AuthorizationCode>
-        <AvsResponse />
-        <Cardholder />
-        <CardNumber />
-        <CardType>0</CardType>
-        <CvResponse />
-        <EntryMode>0</EntryMode>
-        <ErrorMessage />
-        <ExtraData />
-        <InvoiceNumber />
-        <Token>266783537</Token>
-        <TransactionDate>7/9/2015 3:13:51 PM</TransactionDate>
-        <TransactionType>3</TransactionType>
-      </VoidResult>
-    </VoidResponse>
-  </soap:Body>
-</soap:Envelope>
+    <<~XML
+      <?xml version="1.0" encoding="utf-8"?>
+      <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        <soap:Body>
+          <VoidResponse xmlns="http://schemas.merchantwarehouse.com/merchantware/40/Credit/">
+            <VoidResult>
+              <Amount />
+              <ApprovalStatus>APPROVED</ApprovalStatus>
+              <AuthorizationCode>VOID</AuthorizationCode>
+              <AvsResponse />
+              <Cardholder />
+              <CardNumber />
+              <CardType>0</CardType>
+              <CvResponse />
+              <EntryMode>0</EntryMode>
+              <ErrorMessage />
+              <ExtraData />
+              <InvoiceNumber />
+              <Token>266783537</Token>
+              <TransactionDate>7/9/2015 3:13:51 PM</TransactionDate>
+              <TransactionType>3</TransactionType>
+            </VoidResult>
+          </VoidResponse>
+        </soap:Body>
+      </soap:Envelope>
     XML
   end
 
   def failed_void_response
-    <<-XML
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <soap:Body>
-    <VoidResponse xmlns="http://schemas.merchantwarehouse.com/merchantware/40/Credit/">
-      <VoidResult>
-        <Amount />
-        <ApprovalStatus>DECLINED;1019;original transaction id not found</ApprovalStatus>
-        <AuthorizationCode />
-        <AvsResponse />
-        <Cardholder />
-        <CardNumber />
-        <CardType>0</CardType>
-        <CvResponse />
-        <EntryMode>0</EntryMode>
-        <ErrorMessage />
-        <ExtraData />
-        <InvoiceNumber />
-        <Token />
-        <TransactionDate>5/15/2013 9:37:04 AM</TransactionDate>
-        <TransactionType>3</TransactionType>
-      </VoidResult>
-    </VoidResponse>
-  </soap:Body>
-</soap:Envelope>
+    <<~XML
+      <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        <soap:Body>
+          <VoidResponse xmlns="http://schemas.merchantwarehouse.com/merchantware/40/Credit/">
+            <VoidResult>
+              <Amount />
+              <ApprovalStatus>DECLINED;1019;original transaction id not found</ApprovalStatus>
+              <AuthorizationCode />
+              <AvsResponse />
+              <Cardholder />
+              <CardNumber />
+              <CardType>0</CardType>
+              <CvResponse />
+              <EntryMode>0</EntryMode>
+              <ErrorMessage />
+              <ExtraData />
+              <InvoiceNumber />
+              <Token />
+              <TransactionDate>5/15/2013 9:37:04 AM</TransactionDate>
+              <TransactionType>3</TransactionType>
+            </VoidResult>
+          </VoidResponse>
+        </soap:Body>
+      </soap:Envelope>
     XML
   end
 
   def successful_purchase_using_prior_transaction_response
-    <<-XML
-<?xml version="1.0" encoding="utf-8"?>
-<soap:Envelope
- xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
- xmlns:xsd="http://www.w3.org/2001/XMLSchema"
- xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-  <soap:Body>
-    <RepeatSaleResponse xmlns="http://schemas.merchantwarehouse.com/merchantware/40/Credit/">
-      <RepeatSaleResult>
-        <Amount>5.00</Amount>
-        <ApprovalStatus>APPROVED</ApprovalStatus>
-        <AuthorizationCode>MC0110</AuthorizationCode>
-        <AvsResponse></AvsResponse>
-        <Cardholder></Cardholder>
-        <CardNumber></CardNumber>
-        <CardType>0</CardType>
-        <CvResponse></CvResponse>
-        <EntryMode>0</EntryMode>
-        <ErrorMessage></ErrorMessage>
-        <ExtraData></ExtraData>
-        <InvoiceNumber></InvoiceNumber>
-        <Token>1236564</Token>
-        <TransactionDate>10/10/2008 1:13:55 PM</TransactionDate>
-        <TransactionType>7</TransactionType>
-      </RepeatSaleResult>
-    </RepeatSaleResponse>
-  </soap:Body>
-</soap:Envelope>
+    <<~XML
+      <?xml version="1.0" encoding="utf-8"?>
+      <soap:Envelope
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+       xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+        <soap:Body>
+          <RepeatSaleResponse xmlns="http://schemas.merchantwarehouse.com/merchantware/40/Credit/">
+            <RepeatSaleResult>
+              <Amount>5.00</Amount>
+              <ApprovalStatus>APPROVED</ApprovalStatus>
+              <AuthorizationCode>MC0110</AuthorizationCode>
+              <AvsResponse></AvsResponse>
+              <Cardholder></Cardholder>
+              <CardNumber></CardNumber>
+              <CardType>0</CardType>
+              <CvResponse></CvResponse>
+              <EntryMode>0</EntryMode>
+              <ErrorMessage></ErrorMessage>
+              <ExtraData></ExtraData>
+              <InvoiceNumber></InvoiceNumber>
+              <Token>1236564</Token>
+              <TransactionDate>10/10/2008 1:13:55 PM</TransactionDate>
+              <TransactionType>7</TransactionType>
+            </RepeatSaleResult>
+          </RepeatSaleResponse>
+        </soap:Body>
+      </soap:Envelope>
     XML
   end
 
   def invalid_credit_card_number_response
-    <<-XML
-<?xml version="1.0" encoding="utf-8"?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <soap:Body>
-    <PreAuthorizationKeyedResponse xmlns="http://schemas.merchantwarehouse.com/merchantware/40/Credit/">
-      <PreAuthorizationKeyedResult>
-        <Amount />
-        <ApprovalStatus />
-        <AuthorizationCode />
-        <AvsResponse />
-        <Cardholder />
-        <CardNumber />
-        <CardType>0</CardType>
-        <CvResponse />
-        <EntryMode>0</EntryMode>
-        <ErrorMessage>Invalid card number.</ErrorMessage>
-        <ExtraData />
-        <InvoiceNumber />
-        <Token />
-        <TransactionDate />
-        <TransactionType>0</TransactionType>
-      </PreAuthorizationKeyedResult>
-    </PreAuthorizationKeyedResponse>
-  </soap:Body>
-</soap:Envelope>
+    <<~XML
+      <?xml version="1.0" encoding="utf-8"?>
+      <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        <soap:Body>
+          <PreAuthorizationKeyedResponse xmlns="http://schemas.merchantwarehouse.com/merchantware/40/Credit/">
+            <PreAuthorizationKeyedResult>
+              <Amount />
+              <ApprovalStatus />
+              <AuthorizationCode />
+              <AvsResponse />
+              <Cardholder />
+              <CardNumber />
+              <CardType>0</CardType>
+              <CvResponse />
+              <EntryMode>0</EntryMode>
+              <ErrorMessage>Invalid card number.</ErrorMessage>
+              <ExtraData />
+              <InvoiceNumber />
+              <Token />
+              <TransactionDate />
+              <TransactionType>0</TransactionType>
+            </PreAuthorizationKeyedResult>
+          </PreAuthorizationKeyedResponse>
+        </soap:Body>
+      </soap:Envelope>
     XML
   end
 end

@@ -238,6 +238,10 @@ module ActiveMerchant #:nodoc:
             normalized_value = normalize(value)
             next if normalized_value.nil?
 
+            if key == :'3ds_homephonecountry'
+              next unless options[:billing_address] && options[:billing_address][:phone]
+            end
+
             post[key] = normalized_value unless post[key]
           end
         end
@@ -329,7 +333,7 @@ module ActiveMerchant #:nodoc:
           post[:'3ds_browsertz'] = browser_info[:timezone]
           post[:'3ds_browserscreenwidth'] = browser_info[:width]
           post[:'3ds_browserscreenheight'] = browser_info[:height]
-          post[:'3ds_browsercolordepth'] = browser_info[:depth]
+          post[:'3ds_browsercolordepth'] = browser_info[:depth].to_s == '30' ? '32' : browser_info[:depth]
           post[:d6] = browser_info[:language]
           post[:'3ds_browserjavaenabled'] = browser_info[:java]
           post[:'3ds_browseracceptheader'] = browser_info[:accept_header]

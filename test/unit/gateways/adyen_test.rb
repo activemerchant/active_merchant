@@ -64,13 +64,22 @@ class AdyenTest < Test::Unit::TestCase
       shopper_reference: 'John Smith',
       order_id: '345123',
       installments: 2,
-      stored_credential: {reason_type: 'unscheduled'}
+      stored_credential: {reason_type: 'unscheduled'},
+      email: 'john.smith@test.com',
+      ip: '77.110.174.153'
+    }
+
+    @options_shopper_data = {
+      email: 'john.smith@test.com',
+      ip: '77.110.174.153',
+      shopper_email: 'john2.smith@test.com',
+      shopper_ip: '192.168.100.100'
     }
 
     @normalized_3ds_2_options = {
       reference: '345123',
-      shopper_email: 'john.smith@test.com',
-      shopper_ip: '77.110.174.153',
+      email: 'john.smith@test.com',
+      ip: '77.110.174.153',
       shopper_reference: 'John Smith',
       billing_address: address(),
       order_id: '123',
@@ -741,6 +750,20 @@ class AdyenTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
+  def test_shopper_data
+    post = {card: {billingAddress: {}}}
+    @gateway.send(:add_shopper_data, post, @options)
+    assert_equal 'john.smith@test.com', post[:shopperEmail]
+    assert_equal '77.110.174.153', post[:shopperIP]
+  end
+
+  def test_shopper_data_backwards_compatibility
+    post = {card: {billingAddress: {}}}
+    @gateway.send(:add_shopper_data, post, @options_shopper_data)
+    assert_equal 'john2.smith@test.com', post[:shopperEmail]
+    assert_equal '192.168.100.100', post[:shopperIP]
+  end
+
   def test_add_address
     post = {card: {billingAddress: {}}}
     @options[:billing_address].delete(:address1)
@@ -783,6 +806,16 @@ class AdyenTest < Test::Unit::TestCase
       assert_equal 'YwAAAAAABaYcCMX/OhNRQAAAAAA=', parsed['mpiData']['cavv']
       assert_equal '07', parsed['mpiData']['eci']
       assert_equal 'applepay', parsed['additionalData']['paymentdatasource.type']
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_authorize_with_sub_merchant_id
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(sub_merchant_id: '12345abcde67890'))
+    end.check_request do |endpoint, data, headers|
+      parsed = JSON.parse(data)
+      assert parsed['additionalData']['subMerchantId']
     end.respond_with(successful_authorize_response)
     assert_success response
   end

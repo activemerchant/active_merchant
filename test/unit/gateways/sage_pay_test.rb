@@ -340,156 +340,156 @@ class SagePayTest < Test::Unit::TestCase
   end
 
   def successful_purchase_response
-    <<-RESP
-VPSProtocol=2.23
-Status=OK
-StatusDetail=0000 : The Authorisation was Successful.
-VPSTxId=B8AE1CF6-9DEF-C876-1BB4-9B382E6CE520
-SecurityKey=OHMETD7DFK
-TxAuthNo=4193753
-AVSCV2=NO DATA MATCHES
-AddressResult=NOTMATCHED
-PostCodeResult=MATCHED
-CV2Result=NOTMATCHED
-3DSecureStatus=NOTCHECKED
-Token=1
+    <<~RESP
+      VPSProtocol=2.23
+      Status=OK
+      StatusDetail=0000 : The Authorisation was Successful.
+      VPSTxId=B8AE1CF6-9DEF-C876-1BB4-9B382E6CE520
+      SecurityKey=OHMETD7DFK
+      TxAuthNo=4193753
+      AVSCV2=NO DATA MATCHES
+      AddressResult=NOTMATCHED
+      PostCodeResult=MATCHED
+      CV2Result=NOTMATCHED
+      3DSecureStatus=NOTCHECKED
+      Token=1
     RESP
   end
 
   def unsuccessful_purchase_response
-    <<-RESP
-VPSProtocol=2.23
-Status=NOTAUTHED
-StatusDetail=VSP Direct transaction from VSP Simulator.
-VPSTxId=7BBA9078-8489-48CD-BF0D-10B0E6B0EF30
-SecurityKey=DKDYLDYLXV
-AVSCV2=ALL MATCH
-AddressResult=MATCHED
-PostCodeResult=MATCHED
-CV2Result=MATCHED
+    <<~RESP
+      VPSProtocol=2.23
+      Status=NOTAUTHED
+      StatusDetail=VSP Direct transaction from VSP Simulator.
+      VPSTxId=7BBA9078-8489-48CD-BF0D-10B0E6B0EF30
+      SecurityKey=DKDYLDYLXV
+      AVSCV2=ALL MATCH
+      AddressResult=MATCHED
+      PostCodeResult=MATCHED
+      CV2Result=MATCHED
     RESP
   end
 
   def successful_authorize_response
-    <<-RESP
-VPSProtocol=2.23
-Status=OK
-StatusDetail=0000 : The Authorisation was Successful.
-VPSTxId=B8AE1CF6-9DEF-C876-1BB4-9B382E6CE520
-SecurityKey=OHMETD7DFK
-TxAuthNo=4193753
-AVSCV2=NO DATA MATCHES
-AddressResult=NOTMATCHED
-PostCodeResult=MATCHED
-CV2Result=NOTMATCHED
-3DSecureStatus=NOTCHECKED
-Token=1
+    <<~RESP
+      VPSProtocol=2.23
+      Status=OK
+      StatusDetail=0000 : The Authorisation was Successful.
+      VPSTxId=B8AE1CF6-9DEF-C876-1BB4-9B382E6CE520
+      SecurityKey=OHMETD7DFK
+      TxAuthNo=4193753
+      AVSCV2=NO DATA MATCHES
+      AddressResult=NOTMATCHED
+      PostCodeResult=MATCHED
+      CV2Result=NOTMATCHED
+      3DSecureStatus=NOTCHECKED
+      Token=1
     RESP
   end
 
   def successful_refund_response
-    <<-RESP
-VPSProtocol=3.00
-Status=OK
-StatusDetail=0000 : The Authorisation was Successful.
-SecurityKey=KUMJBP02HM
-TxAuthNo=15282432
-VPSTxId={08C870A9-1E53-3852-BA44-CBC91612CBCA}
+    <<~RESP
+      VPSProtocol=3.00
+      Status=OK
+      StatusDetail=0000 : The Authorisation was Successful.
+      SecurityKey=KUMJBP02HM
+      TxAuthNo=15282432
+      VPSTxId={08C870A9-1E53-3852-BA44-CBC91612CBCA}
     RESP
   end
 
   def successful_capture_response
-    <<-RESP
-VPSProtocol=3.00
-Status=OK
-StatusDetail=2004 : The Release was Successful.
+    <<~RESP
+      VPSProtocol=3.00
+      Status=OK
+      StatusDetail=2004 : The Release was Successful.
     RESP
   end
 
   def unsuccessful_authorize_response
-    <<-RESP
-VPSProtocol=2.23
-Status=NOTAUTHED
-StatusDetail=VSP Direct transaction from VSP Simulator.
-VPSTxId=7BBA9078-8489-48CD-BF0D-10B0E6B0EF30
-SecurityKey=DKDYLDYLXV
-AVSCV2=ALL MATCH
-AddressResult=MATCHED
-PostCodeResult=MATCHED
-CV2Result=MATCHED
+    <<~RESP
+      VPSProtocol=2.23
+      Status=NOTAUTHED
+      StatusDetail=VSP Direct transaction from VSP Simulator.
+      VPSTxId=7BBA9078-8489-48CD-BF0D-10B0E6B0EF30
+      SecurityKey=DKDYLDYLXV
+      AVSCV2=ALL MATCH
+      AddressResult=MATCHED
+      PostCodeResult=MATCHED
+      CV2Result=MATCHED
     RESP
   end
 
   def successful_void_response
-    <<-RESP
-VPSProtocol=2.23
-Status=OK
-StatusDetail=2006 : The Abort was Successful.
-VPSTxId=B8AE1CF6-9DEF-C876-1BB4-9B382E6CE520
-SecurityKey=OHMETD7DFK
-TxAuthNo=4193753
-AVSCV2=NO DATA MATCHES
-AddressResult=NOTMATCHED
-PostCodeResult=MATCHED
-CV2Result=NOTMATCHED
-3DSecureStatus=NOTCHECKED
-Token=1
+    <<~RESP
+      VPSProtocol=2.23
+      Status=OK
+      StatusDetail=2006 : The Abort was Successful.
+      VPSTxId=B8AE1CF6-9DEF-C876-1BB4-9B382E6CE520
+      SecurityKey=OHMETD7DFK
+      TxAuthNo=4193753
+      AVSCV2=NO DATA MATCHES
+      AddressResult=NOTMATCHED
+      PostCodeResult=MATCHED
+      CV2Result=NOTMATCHED
+      3DSecureStatus=NOTCHECKED
+      Token=1
     RESP
   end
 
   def unsuccessful_void_response
-    <<-RESP
-VPSProtocol=2.23
-Status=MALFORMED
-StatusDetail=3046 : The VPSTxId field is missing.
-VPSTxId=7BBA9078-8489-48CD-BF0D-10B0E6B0EF30
-SecurityKey=DKDYLDYLXV
-AVSCV2=ALL MATCH
-AddressResult=MATCHED
-PostCodeResult=MATCHED
-CV2Result=MATCHED
+    <<~RESP
+      VPSProtocol=2.23
+      Status=MALFORMED
+      StatusDetail=3046 : The VPSTxId field is missing.
+      VPSTxId=7BBA9078-8489-48CD-BF0D-10B0E6B0EF30
+      SecurityKey=DKDYLDYLXV
+      AVSCV2=ALL MATCH
+      AddressResult=MATCHED
+      PostCodeResult=MATCHED
+      CV2Result=MATCHED
     RESP
   end
 
   def transcript
-    <<-TRANSCRIPT
-    Amount=1.00&Currency=GBP&VendorTxCode=9094108b21f7b917e68d3e84b49ce9c4&Description=Store+purchase&CardHolder=Tekin+Suleyman&CardNumber=4929000000006&ExpiryDate=0616&CardType=VISA&CV2=123&BillingSurname=Suleyman&BillingFirstnames=Tekin&BillingAddress1=Flat+10+Lapwing+Court&BillingAddress2=West+Didsbury&BillingCity=Manchester&BillingCountry=GB&BillingPostCode=M20+2PS&DeliverySurname=Suleyman&DeliveryFirstnames=Tekin&DeliveryAddress1=120+Grosvenor+St&DeliveryCity=Manchester&DeliveryCountry=GB&DeliveryPostCode=M1+7QW&CustomerEMail=tekin%40tekin.co.uk&ClientIPAddress=86.150.65.37&Vendor=spreedly&TxType=PAYMENT&VPSProtocol=3.00
-I, [2015-07-22T17:16:49.292774 #97998]  INFO -- : [ActiveMerchant::Billing::SagePayGateway] --> 200 OK (356 1.8635s)
-D, [2015-07-22T17:16:49.292836 #97998] DEBUG -- : VPSProtocol=3.00
-Status=OK
-StatusDetail=0000 : The Authorisation was Successful.
-VPSTxId={D5B43220-E93C-ED13-6643-D22224BD1CDB}
-SecurityKey=7OYK4OHM7Y
-TxAuthNo=8769237
-AVSCV2=DATA NOT CHECKED
-AddressResult=NOTPROVIDED
-PostCodeResult=NOTPROVIDED
-CV2Result=NOTPROVIDED
-3DSecureStatus=NOTCHECKED
-DeclineCode=00
-ExpiryDate=0616
-BankAuthCode=999777
+    <<~TRANSCRIPT
+          Amount=1.00&Currency=GBP&VendorTxCode=9094108b21f7b917e68d3e84b49ce9c4&Description=Store+purchase&CardHolder=Tekin+Suleyman&CardNumber=4929000000006&ExpiryDate=0616&CardType=VISA&CV2=123&BillingSurname=Suleyman&BillingFirstnames=Tekin&BillingAddress1=Flat+10+Lapwing+Court&BillingAddress2=West+Didsbury&BillingCity=Manchester&BillingCountry=GB&BillingPostCode=M20+2PS&DeliverySurname=Suleyman&DeliveryFirstnames=Tekin&DeliveryAddress1=120+Grosvenor+St&DeliveryCity=Manchester&DeliveryCountry=GB&DeliveryPostCode=M1+7QW&CustomerEMail=tekin%40tekin.co.uk&ClientIPAddress=86.150.65.37&Vendor=spreedly&TxType=PAYMENT&VPSProtocol=3.00
+      I, [2015-07-22T17:16:49.292774 #97998]  INFO -- : [ActiveMerchant::Billing::SagePayGateway] --> 200 OK (356 1.8635s)
+      D, [2015-07-22T17:16:49.292836 #97998] DEBUG -- : VPSProtocol=3.00
+      Status=OK
+      StatusDetail=0000 : The Authorisation was Successful.
+      VPSTxId={D5B43220-E93C-ED13-6643-D22224BD1CDB}
+      SecurityKey=7OYK4OHM7Y
+      TxAuthNo=8769237
+      AVSCV2=DATA NOT CHECKED
+      AddressResult=NOTPROVIDED
+      PostCodeResult=NOTPROVIDED
+      CV2Result=NOTPROVIDED
+      3DSecureStatus=NOTCHECKED
+      DeclineCode=00
+      ExpiryDate=0616
+      BankAuthCode=999777
     TRANSCRIPT
   end
 
   def scrubbed_transcript
-    <<-TRANSCRIPT
-    Amount=1.00&Currency=GBP&VendorTxCode=9094108b21f7b917e68d3e84b49ce9c4&Description=Store+purchase&CardHolder=Tekin+Suleyman&CardNumber=[FILTERED]&ExpiryDate=0616&CardType=VISA&CV2=[FILTERED]&BillingSurname=Suleyman&BillingFirstnames=Tekin&BillingAddress1=Flat+10+Lapwing+Court&BillingAddress2=West+Didsbury&BillingCity=Manchester&BillingCountry=GB&BillingPostCode=M20+2PS&DeliverySurname=Suleyman&DeliveryFirstnames=Tekin&DeliveryAddress1=120+Grosvenor+St&DeliveryCity=Manchester&DeliveryCountry=GB&DeliveryPostCode=M1+7QW&CustomerEMail=tekin%40tekin.co.uk&ClientIPAddress=86.150.65.37&Vendor=spreedly&TxType=PAYMENT&VPSProtocol=3.00
-I, [2015-07-22T17:16:49.292774 #97998]  INFO -- : [ActiveMerchant::Billing::SagePayGateway] --> 200 OK (356 1.8635s)
-D, [2015-07-22T17:16:49.292836 #97998] DEBUG -- : VPSProtocol=3.00
-Status=OK
-StatusDetail=0000 : The Authorisation was Successful.
-VPSTxId={D5B43220-E93C-ED13-6643-D22224BD1CDB}
-SecurityKey=7OYK4OHM7Y
-TxAuthNo=8769237
-AVSCV2=DATA NOT CHECKED
-AddressResult=NOTPROVIDED
-PostCodeResult=NOTPROVIDED
-CV2Result=NOTPROVIDED
-3DSecureStatus=NOTCHECKED
-DeclineCode=00
-ExpiryDate=0616
-BankAuthCode=999777
+    <<~TRANSCRIPT
+          Amount=1.00&Currency=GBP&VendorTxCode=9094108b21f7b917e68d3e84b49ce9c4&Description=Store+purchase&CardHolder=Tekin+Suleyman&CardNumber=[FILTERED]&ExpiryDate=0616&CardType=VISA&CV2=[FILTERED]&BillingSurname=Suleyman&BillingFirstnames=Tekin&BillingAddress1=Flat+10+Lapwing+Court&BillingAddress2=West+Didsbury&BillingCity=Manchester&BillingCountry=GB&BillingPostCode=M20+2PS&DeliverySurname=Suleyman&DeliveryFirstnames=Tekin&DeliveryAddress1=120+Grosvenor+St&DeliveryCity=Manchester&DeliveryCountry=GB&DeliveryPostCode=M1+7QW&CustomerEMail=tekin%40tekin.co.uk&ClientIPAddress=86.150.65.37&Vendor=spreedly&TxType=PAYMENT&VPSProtocol=3.00
+      I, [2015-07-22T17:16:49.292774 #97998]  INFO -- : [ActiveMerchant::Billing::SagePayGateway] --> 200 OK (356 1.8635s)
+      D, [2015-07-22T17:16:49.292836 #97998] DEBUG -- : VPSProtocol=3.00
+      Status=OK
+      StatusDetail=0000 : The Authorisation was Successful.
+      VPSTxId={D5B43220-E93C-ED13-6643-D22224BD1CDB}
+      SecurityKey=7OYK4OHM7Y
+      TxAuthNo=8769237
+      AVSCV2=DATA NOT CHECKED
+      AddressResult=NOTPROVIDED
+      PostCodeResult=NOTPROVIDED
+      CV2Result=NOTPROVIDED
+      3DSecureStatus=NOTCHECKED
+      DeclineCode=00
+      ExpiryDate=0616
+      BankAuthCode=999777
     TRANSCRIPT
   end
 end

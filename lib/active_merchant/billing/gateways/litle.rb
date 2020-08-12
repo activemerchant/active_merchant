@@ -274,7 +274,7 @@ module ActiveMerchant #:nodoc:
             doc.accType(payment_method.account_type.capitalize)
             doc.accNum(payment_method.account_number)
             doc.routingNum(payment_method.routing_number)
-            doc.checkNum(payment_method.number)
+            doc.checkNum(payment_method.number) if payment_method.number
           end
         else
           doc.card do

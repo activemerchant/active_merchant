@@ -65,93 +65,93 @@ class PayflowExpressUkTest < Test::Unit::TestCase
   private
 
   def successful_get_express_details_response
-    <<-RESPONSE
-<?xml version="1.0"?>
-<XMLPayResponse xmlns="http://www.paypal.com/XMLPay">
-  <ResponseData>
-    <Vendor>markcoop</Vendor>
-    <Partner>paypaluk</Partner>
-    <TransactionResults>
-      <TransactionResult>
-        <Result>0</Result>
-        <AVSResult>
-          <StreetMatch>Match</StreetMatch>
-          <ZipMatch>Match</ZipMatch>
-        </AVSResult>
-        <Message>Approved</Message>
-        <PayPalResult>
-          <EMail>paul@test.com</EMail>
-          <PayerID>LYWCMEN4FA7ZQ</PayerID>
-          <Token>EC-2OPN7UJGFWK9OYFV</Token>
-          <FeeAmount>0</FeeAmount>
-          <PayerStatus>unverified</PayerStatus>
-          <Name>paul</Name>
-          <ShipTo>
-            <Address>
-              <Street>10 keyworth avenue</Street>
-              <City>hinterland</City>
-              <State>Tyne and Wear</State>
-              <Zip>sr5 2uh</Zip>
-              <Country>GB</Country>
-            </Address>
-          </ShipTo>
-          <CorrelationID>1ea22ef3873ba</CorrelationID>
-        </PayPalResult>
-        <ExtData Name="LASTNAME" Value="smith"/>
-        <ExtData Name="SHIPTOSTREET2" Value="grangetown"/>
-        <ExtData Name="STREET2" Value="ALLAWAY AVENUE"/>
-        <ExtData Name="COUNTRYCODE" Value="GB"/>
-        <ExtData Name="ADDRESSSTATUS" Value="Y"/>
-      </TransactionResult>
-    </TransactionResults>
-  </ResponseData>
-</XMLPayResponse>
+    <<~RESPONSE
+      <?xml version="1.0"?>
+      <XMLPayResponse xmlns="http://www.paypal.com/XMLPay">
+        <ResponseData>
+          <Vendor>markcoop</Vendor>
+          <Partner>paypaluk</Partner>
+          <TransactionResults>
+            <TransactionResult>
+              <Result>0</Result>
+              <AVSResult>
+                <StreetMatch>Match</StreetMatch>
+                <ZipMatch>Match</ZipMatch>
+              </AVSResult>
+              <Message>Approved</Message>
+              <PayPalResult>
+                <EMail>paul@test.com</EMail>
+                <PayerID>LYWCMEN4FA7ZQ</PayerID>
+                <Token>EC-2OPN7UJGFWK9OYFV</Token>
+                <FeeAmount>0</FeeAmount>
+                <PayerStatus>unverified</PayerStatus>
+                <Name>paul</Name>
+                <ShipTo>
+                  <Address>
+                    <Street>10 keyworth avenue</Street>
+                    <City>hinterland</City>
+                    <State>Tyne and Wear</State>
+                    <Zip>sr5 2uh</Zip>
+                    <Country>GB</Country>
+                  </Address>
+                </ShipTo>
+                <CorrelationID>1ea22ef3873ba</CorrelationID>
+              </PayPalResult>
+              <ExtData Name="LASTNAME" Value="smith"/>
+              <ExtData Name="SHIPTOSTREET2" Value="grangetown"/>
+              <ExtData Name="STREET2" Value="ALLAWAY AVENUE"/>
+              <ExtData Name="COUNTRYCODE" Value="GB"/>
+              <ExtData Name="ADDRESSSTATUS" Value="Y"/>
+            </TransactionResult>
+          </TransactionResults>
+        </ResponseData>
+      </XMLPayResponse>
     RESPONSE
   end
 
   def successful_get_express_details_response_with_ship_to_name
-    <<-RESPONSE
-<?xml version="1.0"?>
-<XMLPayResponse xmlns="http://www.paypal.com/XMLPay">
-  <ResponseData>
-    <Vendor>markcoop</Vendor>
-    <Partner>paypaluk</Partner>
-    <TransactionResults>
-      <TransactionResult>
-        <Result>0</Result>
-        <AVSResult>
-          <StreetMatch>Match</StreetMatch>
-          <ZipMatch>Match</ZipMatch>
-        </AVSResult>
-        <Message>Approved</Message>
-        <PayPalResult>
-          <EMail>paul@test.com</EMail>
-          <PayerID>LYWCMEN4FA7ZQ</PayerID>
-          <Token>EC-2OPN7UJGFWK9OYFV</Token>
-          <FeeAmount>0</FeeAmount>
-          <PayerStatus>unverified</PayerStatus>
-          <Name>paul</Name>
-          <ShipTo>
-            <Address>
-              <Street>10 keyworth avenue</Street>
-              <City>hinterland</City>
-              <State>Tyne and Wear</State>
-              <Zip>sr5 2uh</Zip>
-              <Country>GB</Country>
-            </Address>
-          </ShipTo>
-          <CorrelationID>1ea22ef3873ba</CorrelationID>
-        </PayPalResult>
-        <ExtData Name="LASTNAME" Value="smith"/>
-        <ExtData Name="SHIPTOSTREET2" Value="grangetown"/>
-        <ExtData Name="SHIPTONAME" Value="John Joseph"/>
-        <ExtData Name="STREET2" Value="ALLAWAY AVENUE"/>
-        <ExtData Name="COUNTRYCODE" Value="GB"/>
-        <ExtData Name="ADDRESSSTATUS" Value="Y"/>
-      </TransactionResult>
-    </TransactionResults>
-  </ResponseData>
-</XMLPayResponse>
+    <<~RESPONSE
+      <?xml version="1.0"?>
+      <XMLPayResponse xmlns="http://www.paypal.com/XMLPay">
+        <ResponseData>
+          <Vendor>markcoop</Vendor>
+          <Partner>paypaluk</Partner>
+          <TransactionResults>
+            <TransactionResult>
+              <Result>0</Result>
+              <AVSResult>
+                <StreetMatch>Match</StreetMatch>
+                <ZipMatch>Match</ZipMatch>
+              </AVSResult>
+              <Message>Approved</Message>
+              <PayPalResult>
+                <EMail>paul@test.com</EMail>
+                <PayerID>LYWCMEN4FA7ZQ</PayerID>
+                <Token>EC-2OPN7UJGFWK9OYFV</Token>
+                <FeeAmount>0</FeeAmount>
+                <PayerStatus>unverified</PayerStatus>
+                <Name>paul</Name>
+                <ShipTo>
+                  <Address>
+                    <Street>10 keyworth avenue</Street>
+                    <City>hinterland</City>
+                    <State>Tyne and Wear</State>
+                    <Zip>sr5 2uh</Zip>
+                    <Country>GB</Country>
+                  </Address>
+                </ShipTo>
+                <CorrelationID>1ea22ef3873ba</CorrelationID>
+              </PayPalResult>
+              <ExtData Name="LASTNAME" Value="smith"/>
+              <ExtData Name="SHIPTOSTREET2" Value="grangetown"/>
+              <ExtData Name="SHIPTONAME" Value="John Joseph"/>
+              <ExtData Name="STREET2" Value="ALLAWAY AVENUE"/>
+              <ExtData Name="COUNTRYCODE" Value="GB"/>
+              <ExtData Name="ADDRESSSTATUS" Value="Y"/>
+            </TransactionResult>
+          </TransactionResults>
+        </ResponseData>
+      </XMLPayResponse>
     RESPONSE
   end
 end
