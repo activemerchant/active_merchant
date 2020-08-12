@@ -182,7 +182,7 @@ module ActiveMerchant #:nodoc:
           Response.new(true, 'OK')
         end
       end
-      alias_method :delete, :unstore
+      alias delete unstore
 
       def supports_network_tokenization?
         true

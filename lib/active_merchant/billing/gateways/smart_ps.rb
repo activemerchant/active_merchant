@@ -123,7 +123,7 @@ module ActiveMerchant #:nodoc:
         commit(nil, nil, post)
       end
 
-      alias_method :unstore, :delete
+      alias unstore delete
 
       private
 

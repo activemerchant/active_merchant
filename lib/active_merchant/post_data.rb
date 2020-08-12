@@ -15,7 +15,7 @@ module ActiveMerchant
       collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
     end
 
-    alias_method :to_s, :to_post_data
+    alias to_s to_post_data
 
     private
 

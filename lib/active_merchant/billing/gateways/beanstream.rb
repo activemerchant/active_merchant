@@ -178,7 +178,7 @@ module ActiveMerchant #:nodoc:
         update(vault_id, false, {status: 'C'})
       end
 
-      alias_method :unstore, :delete
+      alias unstore delete
 
       # Update the values (such as CC expiration) stored at
       # the gateway.  The CC number must be supplied in the

@@ -190,22 +190,6 @@ Style/AccessModifierDeclarations:
     - 'test/unit/gateways/metrics_global_test.rb'
     - 'test/unit/gateways/optimal_payment_test.rb'
 
-# Offense count: 11
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: prefer_alias, prefer_alias_method
-Style/Alias:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/beanstream.rb'
-    - 'lib/active_merchant/billing/gateways/braintree_blue.rb'
-    - 'lib/active_merchant/billing/gateways/inspire.rb'
-    - 'lib/active_merchant/billing/gateways/migs.rb'
-    - 'lib/active_merchant/billing/gateways/smart_ps.rb'
-    - 'lib/active_merchant/billing/gateways/spreedly_core.rb'
-    - 'lib/active_merchant/post_data.rb'
-    - 'test/unit/gateways/bpoint_test.rb'
-    - 'test/unit/gateways/paymentez_test.rb'
-
 # Offense count: 12
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle.

@@ -23,6 +23,7 @@
 * Adyen: Add subMerchant fields [naashton] #3772
 * PayPal Express: reduce param requirements [shasum] #3773
 * PayU Latam: Support partial refunds [leila-alderman] #3774
+* RuboCop: Fix Style/Alias [leila-alderman] #3727
 
 == Version 1.114.0
 * BlueSnap: Add address1,address2,phone,shipping_* support #3749
