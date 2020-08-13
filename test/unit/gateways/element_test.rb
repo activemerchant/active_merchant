@@ -199,7 +199,6 @@ class ElementTest < Test::Unit::TestCase
 
     assert_success response
 
-
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_check_disable_flag: 'xxx'))
     end.check_request do |endpoint, data, headers|
