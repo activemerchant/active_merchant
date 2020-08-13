@@ -6,7 +6,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     @gateway = ActiveMerchant::Billing::OrbitalGateway.new(fixtures(:orbital_gateway))
 
     @amount = 100
-    @credit_card = credit_card('4112344112344113')
+    @credit_card = credit_card('4556761029983886')
     @declined_card = credit_card('4000300011112220')
 
     @options = {
@@ -16,7 +16,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     }
 
     @cards = {
-      visa: '4788250000028291',
+      visa: '4556761029983886',
       mc: '5454545454545454',
       amex: '371449635398431',
       ds: '6011000995500000',
@@ -118,6 +118,15 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
         product_description: 'Description',
         merchant_email: 'email@example'
       }
+    )
+    assert response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_card_indicators
+    options = @options.merge(
+      card_indicators: 'y'
     )
     assert response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response

@@ -199,6 +199,7 @@ module ActiveMerchant #:nodoc:
             add_customer_data(xml, creditcard, options)
             add_managed_billing(xml, options)
           end
+          add_card_indicators(xml, options) if @options[:card_indicators]
         end
         commit(order, :authorize, options[:trace_number])
       end
@@ -219,6 +220,7 @@ module ActiveMerchant #:nodoc:
             add_customer_data(xml, creditcard, options)
             add_managed_billing(xml, options)
           end
+          add_card_indicators(xml, options) if @options[:card_indicators]
         end
         commit(order, :purchase, options[:trace_number])
       end
@@ -419,6 +421,10 @@ module ActiveMerchant #:nodoc:
             end
           end
         end
+      end
+
+      def add_card_indicators(xml, options)
+        xml.tag! :cardIndicators, options[:card_indicators] if options[:card_indicators]
       end
 
       def add_address(xml, creditcard, options)
