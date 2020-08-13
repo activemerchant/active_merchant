@@ -117,6 +117,12 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def create_stored_subscription(options = {})
+        post = add_new_stored_subscription({}, options)
+
+        commit('ADDSTOREDSUBSCRIPTION', post)
+      end
+
       def supports_scrubbing?
         true
       end
@@ -134,7 +140,12 @@ module ActiveMerchant #:nodoc:
         post[:merchantref] = options[:order_id]
         add_card_reference(post, card_reference)
         post[:startdate] = options[:start_date]
-        add_new_stored_subscription(post, options)
+
+        if options[:stored_subscription_ref].present?
+          post[:storedsubscriptionref] = options[:stored_subscription_ref]
+        else
+          post[:newstoredsubscriptioninfo] = add_new_stored_subscription(post, options)
+        end
 
         commit('ADDSUBSCRIPTION', post)
       end
@@ -197,7 +208,7 @@ module ActiveMerchant #:nodoc:
         sub_info[:type] = options[:type]
         sub_info[:onupdate] = options[:on_update] || 'CONTINUE'
         sub_info[:ondelete] = options[:on_delete] || 'CANCEL'
-        post[:newstoredsubscriptioninfo] = sub_info
+        sub_info
       end
 
       def parse(action, body)
@@ -277,6 +288,8 @@ module ActiveMerchant #:nodoc:
                                           build_unstore_signature(parameters)
                                         when 'ADDSUBSCRIPTION'
                                           build_subscription_signature(parameters)
+                                        when 'ADDSTOREDSUBSCRIPTION'
+                                          build_stored_subscription_signature(parameters)
                                         else
                                           build_signature(parameters)
                                         end
@@ -302,6 +315,15 @@ module ActiveMerchant #:nodoc:
         str += parameters[:cardexpiry]
         str += parameters[:cardtype]
         str += parameters[:cardholdername]
+        Digest::MD5.hexdigest(str + @options[:secret])
+      end
+
+      def build_stored_subscription_signature(parameters)
+        str = parameters[:terminalid]
+        str += parameters[:merchantref]
+        str += parameters[:datetime]
+
+
         Digest::MD5.hexdigest(str + @options[:secret])
       end
 
@@ -380,6 +402,23 @@ module ActiveMerchant #:nodoc:
             :initialamount,
             :startdate,
             :newstoredsubscriptioninfo,
+            :hash
+          ]
+        when 'ADDSTOREDSUBSCRIPTION'
+          [
+            :merchantref,
+            :terminalid,
+            :datetime,
+            :name,
+            :description,
+            :periodtype,
+            :length,
+            :currency,
+            :recurringamount,
+            :initialamount,
+            :type,
+            :onupdate,
+            :ondelete,
             :hash
           ]
         when 'NEWSTOREDSUBSCRIPTIONINFO'
