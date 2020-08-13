@@ -188,6 +188,10 @@ module ActiveMerchant #:nodoc:
           xml.TransactionAmount amount(money.to_i) if money
           xml.MarketCode 'Default' if money
           xml.ReferenceNumber options[:order_id] || SecureRandom.hex(20)
+
+          xml.PaymentType options[:payment_type] if options[:payment_type]
+          xml.SubmissionType options[:submission_type] if options[:submission_type]
+          xml.DuplicateCheckDisableFlag options[:duplicate_check_disable_flag].to_s == 'true' ? 'True' : 'False' unless options[:duplicate_check_disable_flag].nil?
         end
       end
 
