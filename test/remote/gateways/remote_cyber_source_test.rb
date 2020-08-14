@@ -157,6 +157,53 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert !response.authorization.blank?
   end
 
+  def test_successful_authorization_with_issuer_additional_data_and_partner_solution_id
+    @options[:issuer_additional_data] = @issuer_additional_data
+
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = 'A1000000'
+
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_successful_response(auth)
+
+    assert void = @gateway.void(auth.authorization, @options)
+    assert_successful_response(void)
+  ensure
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = nil
+  end
+
+  def test_successful_authorize_with_merchant_descriptor_and_partner_solution_id
+    @options[:merchant_descriptor] = 'Spreedly'
+
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = 'A1000000'
+
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_successful_response(auth)
+
+    assert void = @gateway.void(auth.authorization, @options)
+    assert_successful_response(void)
+  ensure
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = nil
+  end
+
+  def test_successful_authorize_with_issuer_additional_data_stored_creds_merchant_desc_and_partner_solution_id
+    @options[:issuer_additional_data] = @issuer_additional_data
+    @options[:stored_credential] = {
+      initiator: 'cardholder',
+      reason_type: '',
+      initial_transaction: true,
+      network_transaction_id: ''
+    }
+    @options[:commerce_indicator] = 'internet'
+    @options[:merchant_descriptor] = 'Spreedly'
+
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = 'A1000000'
+
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_successful_response(auth)
+  ensure
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = nil
+  end
+
   def test_successful_authorization_with_elo
     assert response = @gateway.authorize(@amount, @elo_credit_card, @options)
     assert_successful_response(response)
@@ -262,6 +309,47 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_successful_response(response)
+  end
+
+  def test_successful_purchase_with_issuer_additional_data_and_partner_solution_id
+    @options[:issuer_additional_data] = @issuer_additional_data
+
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = 'A1000000'
+
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_successful_response(purchase)
+  ensure
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = nil
+  end
+
+  def test_successful_purchase_with_merchant_descriptor_and_partner_solution_id
+    @options[:merchant_descriptor] = 'Spreedly'
+
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = 'A1000000'
+
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_successful_response(purchase)
+  ensure
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = nil
+  end
+
+  def test_successful_purchase_with_issuer_additional_data_stored_creds_merchant_desc_and_partner_solution_id
+    @options[:issuer_additional_data] = @issuer_additional_data
+    @options[:stored_credential] = {
+      initiator: 'cardholder',
+      reason_type: '',
+      initial_transaction: true,
+      network_transaction_id: ''
+    }
+    @options[:commerce_indicator] = 'internet'
+    @options[:merchant_descriptor] = 'Spreedly'
+
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = 'A1000000'
+
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_successful_response(purchase)
+  ensure
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = nil
   end
 
   def test_successful_purchase_with_reconciliation_id

@@ -281,9 +281,9 @@ module ActiveMerchant #:nodoc:
         add_payment_network_token(xml) if network_tokenization?(creditcard_or_reference)
         add_business_rules_data(xml, creditcard_or_reference, options)
         add_stored_credential_subsequent_auth(xml, options)
+        add_issuer_additional_data(xml, options)
         add_partner_solution_id(xml)
         add_stored_credential_options(xml, options)
-        add_issuer_additional_data(xml, options)
         add_merchant_description(xml, options)
 
         xml.target!
@@ -325,6 +325,7 @@ module ActiveMerchant #:nodoc:
         add_mdd_fields(xml, options)
         if !payment_method_or_reference.is_a?(String) && card_brand(payment_method_or_reference) == 'check'
           add_check_service(xml)
+          add_issuer_additional_data(xml, options)
           add_partner_solution_id(xml)
         else
           add_purchase_service(xml, payment_method_or_reference, options)
@@ -332,11 +333,11 @@ module ActiveMerchant #:nodoc:
           add_payment_network_token(xml) if network_tokenization?(payment_method_or_reference)
           add_business_rules_data(xml, payment_method_or_reference, options) unless options[:pinless_debit_card]
           add_stored_credential_subsequent_auth(xml, options)
+          add_issuer_additional_data(xml, options)
           add_partner_solution_id(xml)
           add_stored_credential_options(xml, options)
         end
 
-        add_issuer_additional_data(xml, options)
         add_merchant_description(xml, options)
 
         xml.target!
