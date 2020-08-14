@@ -68,7 +68,7 @@ module ActiveMerchant #:nodoc:
         if settlement_data.params['status'] == 'PENDING' && money == settlement_data.params['amount']
           post[:status] = 'CANCELLED'
           commit(:put, "settlements/#{authorization}", post)
-        elsif settlement_data.params['status'] == 'PENDING' && money < settlement_data.params['amount']
+        elsif settlement_data.params['status'] == 'PENDING' && ( money < settlement_data.params['amount'] ||  money > settlement_data.params['amount'] )
           return Response.new(false, 'Transaction not settled. Either do a full refund or try partial refund after settlement.')
         else
           add_invoice(post, money, options)
