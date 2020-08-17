@@ -1,6 +1,8 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+
+== Version 1.112.0
 * Cybersource: add `maestro` and `diners_club` eci brand mapping [bbraschi] #3708
 * Cybersource: Ensure Partner Solution Id placement conforms to schema [britth] #3715
 * Adyen: Adyen: Pass `subMerchantId` as `additionalData` [naashton] #3714
