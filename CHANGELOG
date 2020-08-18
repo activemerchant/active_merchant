@@ -3,6 +3,7 @@
 == HEAD
 * Orbital: Add cardIndicators field [meagabeth] #3734
 * Openpay: Add Colombia to supported countries [molbrown] #3740
+* Orbital: Fix typo in PC3DtlLineTot field [naashton] #3736
 
 == Version 1.112.0
 * Cybersource: add `maestro` and `diners_club` eci brand mapping [bbraschi] #3708

@@ -155,7 +155,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_match %{<PC3DtlUOM>#{@line_items[1][:u_o_m]}</PC3DtlUOM>}, data
       assert_match %{<PC3DtlTaxAmt>#{@line_items[1][:tax_amt].to_i}</PC3DtlTaxAmt>}, data
       assert_match %{<PC3DtlTaxRate>#{@line_items[1][:tax_rate]}</PC3DtlTaxRate>}, data
-      assert_match %{<PC3Dtllinetot>#{@line_items[1][:line_tot].to_i}</PC3Dtllinetot>}, data
+      assert_match %{<PC3DtlLineTot>#{@line_items[1][:line_tot].to_i}</PC3DtlLineTot>}, data
       assert_match %{<PC3DtlDisc>#{@line_items[1][:disc].to_i}</PC3DtlDisc>}, data
       assert_match %{<PC3DtlUnitCost>#{@line_items[1][:unit_cost].to_i}</PC3DtlUnitCost>}, data
       assert_match %{<PC3DtlGrossNet>#{@line_items[1][:gross_net]}</PC3DtlGrossNet>}, data
