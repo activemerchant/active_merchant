@@ -1,6 +1,8 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Orbital: Add cardIndicators field [meagabeth] #3734
+* Openpay: Add Colombia to supported countries [molbrown] #3740
 
 == Version 1.112.0
 * Cybersource: add `maestro` and `diners_club` eci brand mapping [bbraschi] #3708
@@ -10,7 +12,6 @@
 * PayU Latam: Improve error response [esmitperez] #3717
 * Vantiv: Vantiv Express - CardPresentCode, PaymentType, SubmissionType, DuplicateCheckDisableFlag [esmitperez] #3730,#3731
 * Cybersource: Ensure issueradditionaldata comes before partnerSolutionId [britth] #3733
-* Orbital: Add cardIndicators field [meagabeth] #3734
 
 == Version 1.111.0
 * Fat Zebra: standardized 3DS fields and card on file extra data for Visa scheme rules [montdidier] #3409

@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://api.openpay.mx/v1/'
       self.test_url = 'https://sandbox-api.openpay.mx/v1/'
 
-      self.supported_countries = ['MX']
+      self.supported_countries = %w(CO MX)
       self.supported_cardtypes = %i[visa master american_express carnet]
       self.homepage_url = 'http://www.openpay.mx/'
       self.display_name = 'Openpay'
