@@ -14,12 +14,20 @@ class SafeChargeTest < Test::Unit::TestCase
       billing_address: address,
       description: 'Store Purchase'
     }
+
     @merchant_options = @options.merge(
       merchant_descriptor: 'Test Descriptor',
       merchant_phone_number: '(555)555-5555',
       merchant_name: 'Test Merchant'
     )
+
     @three_ds_options = @options.merge(three_d_secure: true)
+
+    @mpi_options = @three_ds_options.merge({
+      ds_transaction_id: 'c5b808e7-1de1-4069-a17b-f70d3b3b1645',
+      eci: '05',
+      cavv: 'MAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    })
   end
 
   def test_successful_purchase
@@ -225,6 +233,34 @@ class SafeChargeTest < Test::Unit::TestCase
     assert_equal 'https://pit.3dsecure.net/VbVTestSuiteService/pit1/acsService/paReq?summary=MjRlZGYwY2EtZTk5Zi00NDJjLTljOTAtNWUxZmRhMjEwODg3', purchase.params['acsurl']
   end
 
+  def test_mpi_response_fail
+    purchase = stub_comms do
+      @gateway.purchase(@amount, @three_ds_enrolled_card, @mpi_options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/sg_eci/, data)
+      assert_match(/sg_cavv/, data)
+      assert_match(/sg_IsExternalMPI/, data)
+      assert_match(/sg_dsTransID/, data)
+    end.respond_with(failed_mpi_response)
+
+    assert_failure purchase
+    assert_equal 'DECLINED', purchase.params['status']
+  end
+
+  def test_mpi_response_success
+    purchase = stub_comms do
+      @gateway.purchase(@amount, @three_ds_enrolled_card, @mpi_options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/sg_eci/, data)
+      assert_match(/sg_cavv/, data)
+      assert_match(/sg_IsExternalMPI/, data)
+      assert_match(/sg_dsTransID/, data)
+    end.respond_with(successful_mpi_response)
+
+    assert_success purchase
+    assert_equal 'APPROVED', purchase.params['status']
+  end
+
   private
 
   def pre_scrubbed
@@ -358,6 +394,18 @@ reading 727 bytes...
   def successful_3ds_purchase_response
     %(
       <Response><Version>4.1.0</Version><ClientLoginID>SpreedlyManTestTRX</ClientLoginID><ClientUniqueID>98bd80c8c9534088311153ad6a67d108</ClientUniqueID><TransactionID>101510108310</TransactionID><Status>APPROVED</Status><AuthCode></AuthCode><AVSCode></AVSCode><CVV2Reply></CVV2Reply><ReasonCodes><Reason code="0"></Reason></ReasonCodes><ErrCode>0</ErrCode><ExErrCode>0</ExErrCode><Token>ZQBpAFAAMwBTAEcAMQBZAHcASQA4ADoAPQBlACQAZAB3ACMAWwAyAFoAWQBLAFUAPwBTAHYAKQAnAHQAUAA2AHYAYwAoAG0ARgBNAEEAcAAlAGEAMwA=</Token><CustomData></CustomData><ThreeDResponse><Auth3DResponse><Result>Y</Result><PaReq>eJxVUdtuwjAM/ZWK95GYgijIjVTWaUNTGdqQ4DUKFq2gF9J0A75+SVcuixTF59g+sY5xlWqi+ItUo0lgQnUtd+Rl27BXyScYAQce+MB7ApfRJx0FfpOus7IQ0Of9AbIrtK1apbIwAqU6zuYLMQSY8ABZBzEnPY8FfzhjGCH7o7GQOYlIq9J4K6qNd5VD1mZQlU1h9FkEQ47sCrDRB5EaU00ZO5RKHtKyth2ORXYfaNm4qLYqp2wrkjj6ud8XSFbRKYl3F/uGyFwFbqUhMeAwBvC5B6Opz6c+IGt5lLn73hlgR+kAVu6PqMu4xCOB1l1NhTqLydg6ckNIp6osyFZYJ28xsvvAz2/OT2WsRa+bdf2+X6cXtd9oHxZNPks+ojB0DrcFTi2zrkDAJ62cA8icBOuWx7oF2+jf4n8B</PaReq><MerchantID>000000000000715</MerchantID><ACSurl>https://pit.3dsecure.net/VbVTestSuiteService/pit1/acsService/paReq?summary=MjRlZGYwY2EtZTk5Zi00NDJjLTljOTAtNWUxZmRhMjEwODg3</ACSurl><XID>MDAwMDAwMDAwMDE1MTAxMDgzMTA=</XID><ThreeDReason></ThreeDReason></Auth3DResponse></ThreeDResponse><AcquirerID>19</AcquirerID><IssuerBankName>Visa Production Support Client Bid 1</IssuerBankName><IssuerBankCountry>us</IssuerBankCountry><Reference></Reference><AGVCode></AGVCode><AGVError></AGVError><UniqueCC>rDNDlh6XR8R6CVdGQyqDkZzdqE0=</UniqueCC><CustomData2></CustomData2><ThreeDFlow>1</ThreeDFlow><CreditCardInfo><IsPrepaid>0</IsPrepaid><CardType>Debit</CardType><CardProgram></CardProgram><CardProduct></CardProduct></CreditCardInfo><IsPartialApproval>0</IsPartialApproval><AmountInfo><RequestedAmount>1</RequestedAmount><RequestedCurrency>EUR</RequestedCurrency><ProcessedAmount>1</ProcessedAmount><ProcessedCurrency>EUR</ProcessedCurrency></AmountInfo><RRN></RRN><ICC></ICC><CVVReply></CVVReply></Response>
+    )
+  end
+
+  def successful_mpi_response
+    %(
+      <Response><Version>4.1.0</Version><ClientLoginID>testSworld2.TRX</ClientLoginID><ClientUniqueID /><TransactionID>1110000000007383613</TransactionID><Status>APPROVED</Status><AuthCode>111946</AuthCode><AVSCode /><CVV2Reply /><ReasonCodes><Reason code="0" /></ReasonCodes><ErrCode>0</ErrCode><ExErrCode>0</ExErrCode><Token>MQBLAGUANQBJAG0ANgB0AFEAMABXAFsAXABdAFYAPgApAGsASwBwAE8AVwBCAHYANgBYAHkAXgA+AD0AQABEAGIALwBdAD4AVwAlADMAKgBvAGsAMwA=</Token><CustomData /><AcquirerID>19</AcquirerID><IssuerBankName>River Valley Credit Union</IssuerBankName><IssuerBankCountry>gb</IssuerBankCountry><Reference /><AGVCode /><AGVError /><UniqueCC>yKHZK4vGCyf0c/Se7rujEvNQtN8=</UniqueCC><CustomData2 /><ThreeDFlow>1</ThreeDFlow><CreditCardInfo><IsPrepaid>0</IsPrepaid><CardType>Credit</CardType><CardProgram /><CardProduct /></CreditCardInfo><IsPartialApproval>0</IsPartialApproval><AmountInfo><RequestedAmount>200</RequestedAmount><RequestedCurrency>USD</RequestedCurrency><ProcessedAmount>200</ProcessedAmount><ProcessedCurrency>USD</ProcessedCurrency></AmountInfo><RRN /><ICC /><CVVReply /><FraudResponse /></Response>
+    )
+  end
+
+  def failed_mpi_response
+    %(
+      <Response><Version>4.1.0</Version><ClientLoginID>testSworld2.TRX</ClientLoginID><ClientUniqueID></ClientUniqueID><TransactionID>1110000000007383719</TransactionID><Status>DECLINED</Status><AuthCode></AuthCode><AVSCode></AVSCode><CVV2Reply></CVV2Reply><ReasonCodes><Reason code="0">Decline</Reason></ReasonCodes><ErrCode>-1</ErrCode><ExErrCode>0</ExErrCode><Token>ZQBVAEcAcwBxAE8AVwBpAEcAZAA8AFMAVwBPAFsALwBEAEgAWABJACMAdQBaAFMAVgB6AEsAJwAqACUAegBoAFYAYgBUADsAVABcAGQAewBrAEIAMwA=</Token><CustomData></CustomData><AcquirerID>19</AcquirerID><IssuerBankName>R Raphael &amp; Sons PLC</IssuerBankName><IssuerBankCountry>gb</IssuerBankCountry><Reference></Reference><AGVCode></AGVCode><AGVError></AGVError><UniqueCC>adHQpo22N7Jw85jUAsLu0+Q5ZPs=</UniqueCC><CustomData2></CustomData2><ThreeDFlow>1</ThreeDFlow><CreditCardInfo><IsPrepaid>1</IsPrepaid><CardType>Debit</CardType><CardProgram></CardProgram><CardProduct></CardProduct></CreditCardInfo><IsPartialApproval>0</IsPartialApproval><AmountInfo><RequestedAmount>200</RequestedAmount><RequestedCurrency>USD</RequestedCurrency><ProcessedAmount>200</ProcessedAmount><ProcessedCurrency>USD</ProcessedCurrency></AmountInfo><RRN></RRN><ICC></ICC><CVVReply></CVVReply><FraudResponse /></Response>
     )
   end
 end
