@@ -1,9 +1,9 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-    class PaypalCustomer < PaypalExpressRest
+    class PaypalCustomerGateway < PaypalExpressRestGateway
 
       def register_partner(options)
-        post('customer/partner-referrals', options)
+        post('/customer/partner-referrals', options)
       end
     end
   end
