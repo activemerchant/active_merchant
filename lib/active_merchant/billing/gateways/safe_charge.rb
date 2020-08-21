@@ -24,6 +24,8 @@ module ActiveMerchant #:nodoc:
         post = {}
         post[:sg_APIType] = 1 if options[:three_d_secure]
         trans_type = options[:three_d_secure] ? 'Sale3D' : 'Sale'
+
+        add_external_mpi_data(post, options) if options[:three_d_secure]
         add_transaction_data(trans_type, post, money, options)
         add_payment(post, payment, options)
         add_customer_details(post, payment, options)
@@ -33,6 +35,7 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, payment, options = {})
         post = {}
+
         add_transaction_data('Auth', post, money, options)
         add_payment(post, payment, options)
         add_customer_details(post, payment, options)
@@ -69,8 +72,10 @@ module ActiveMerchant #:nodoc:
 
       def credit(money, payment, options = {})
         post = {}
+
         add_payment(post, payment, options)
         add_transaction_data('Credit', post, money, options)
+
         post[:sg_CreditType] = 1
 
         commit(post)
@@ -152,6 +157,15 @@ module ActiveMerchant #:nodoc:
         end
 
         post[:sg_Email] = options[:email]
+      end
+
+      def add_external_mpi_data(post, options)
+        post[:sg_eci] = options[:eci]
+        post[:sg_cavv] = options[:cavv]
+        post[:sg_dsTransID] = options[:ds_transaction_id]
+        post[:sg_threeDSProtocolVersion] = options[:ds_transaction_id] ? '2' : '1'
+        post[:sg_xid] = options[:xid]
+        post[:sg_IsExternalMPI] = 1
       end
 
       def parse(xml)
