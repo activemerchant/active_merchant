@@ -5,7 +5,7 @@ module ActiveMerchant #:nodoc:
     class SafeChargeGateway < Gateway
       self.test_url = 'https://process.sandbox.safecharge.com/service.asmx/Process'
       self.live_url = 'https://process.safecharge.com/service.asmx/Process'
-
+      
       self.supported_countries = %w[AT BE BG CY CZ DE DK EE GR ES FI FR GI HK HR HU IE IS IT LI LT LU LV MT MX NL NO PL PT RO SE SG SI SK GB US]
       self.default_currency = 'USD'
       self.supported_cardtypes = %i[visa master]
@@ -24,6 +24,8 @@ module ActiveMerchant #:nodoc:
         post = {}
         post[:sg_APIType] = 1 if options[:three_d_secure]
         trans_type = options[:three_d_secure] ? 'Sale3D' : 'Sale'
+
+		    add_externalMpi_data(post, options) if options[:three_d_secure]
         add_transaction_data(trans_type, post, money, options)
         add_payment(post, payment, options)
         add_customer_details(post, payment, options)
@@ -33,6 +35,7 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, payment, options={})
         post = {}
+
         add_transaction_data('Auth', post, money, options)
         add_payment(post, payment, options)
         add_customer_details(post, payment, options)
@@ -43,7 +46,9 @@ module ActiveMerchant #:nodoc:
       def capture(money, authorization, options={})
         post = {}
         auth, transaction_id, token, exp_month, exp_year, _, original_currency = authorization.split('|')
+
         add_transaction_data('Settle', post, money, options.merge!({currency: original_currency}))
+
         post[:sg_AuthCode] = auth
         post[:sg_TransactionID] = transaction_id
         post[:sg_CCToken] = token
@@ -56,7 +61,9 @@ module ActiveMerchant #:nodoc:
       def refund(money, authorization, options={})
         post = {}
         auth, transaction_id, token, exp_month, exp_year, _, original_currency = authorization.split('|')
+
         add_transaction_data('Credit', post, money, options.merge!({currency: original_currency}))
+
         post[:sg_CreditType] = 2
         post[:sg_AuthCode] = auth
         post[:sg_TransactionID] = transaction_id
@@ -69,8 +76,10 @@ module ActiveMerchant #:nodoc:
 
       def credit(money, payment, options={})
         post = {}
+
         add_payment(post, payment, options)
         add_transaction_data('Credit', post, money, options)
+
         post[:sg_CreditType] = 1
 
         commit(post)
@@ -79,7 +88,9 @@ module ActiveMerchant #:nodoc:
       def void(authorization, options={})
         post = {}
         auth, transaction_id, token, exp_month, exp_year, original_amount, original_currency = authorization.split('|')
+
         add_transaction_data('Void', post, (original_amount.to_f * 100), options.merge!({currency: original_currency}))
+        
         post[:sg_CreditType] = 2
         post[:sg_AuthCode] = auth
         post[:sg_TransactionID] = transaction_id
@@ -154,9 +165,18 @@ module ActiveMerchant #:nodoc:
         post[:sg_Email] = options[:email]
       end
 
+      def add_externalMpi_data(post, options)
+        post[:sg_eci] = options[:eci]
+        post[:sg_cavv] = options[:cavv]
+        post[:sg_dsTransID] = options[:ds_transaction_id]
+        post[:sg_threeDSProtocolVersion] = options[:ds_transaction_id] ? '2' : '1'
+        post[:sg_xid] = options[:xid]
+        post[:sg_IsExternalMPI] = 1
+      end
+
       def parse(xml)
         response = {}
-
+        
         doc = Nokogiri::XML(xml)
         doc.root.xpath('*').each do |node|
           if node.elements.size == 0
@@ -225,7 +245,7 @@ module ActiveMerchant #:nodoc:
 
       def split_authorization(authorization)
         auth_code, transaction_id, token, month, year, original_amount = authorization.split('|')
-
+        
         {
           auth_code: auth_code,
           transaction_id: transaction_id,
