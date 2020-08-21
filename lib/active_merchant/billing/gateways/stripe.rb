@@ -26,6 +26,7 @@ module ActiveMerchant #:nodoc:
       DEFAULT_API_VERSION = '2015-04-07'
       STATEMENT_DESC_API_VERSION = '2019-02-19'
       CHARGE_REQ_API_VERSION = '2019-09-09'
+      CONNECTED_ACCOUNT_PREFIX = 'acct_'
 
       self.supported_countries = %w(AT AU BE BR CA CH DE DK EE ES FI FR GB GR HK IE IT JP LT LU LV MX NL NO NZ PL PT SE SG SI SK US)
       self.default_currency = 'USD'
@@ -349,6 +350,8 @@ module ActiveMerchant #:nodoc:
 
         if payment.is_a?(StripePaymentToken)
           add_payment_token(post, payment, options)
+        elsif connected_account?(payment)
+          add_source(post, payment)
         else
           add_creditcard(post, payment, options)
         end
@@ -529,6 +532,10 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_token(post, token, options = {})
         post[:card] = token.payment_data['id']
+      end
+
+      def add_source(post, token)
+        post[:source] = token
       end
 
       def add_customer(post, payment, options)
@@ -795,6 +802,10 @@ module ActiveMerchant #:nodoc:
         return 100 unless options[:currency]
 
         return MINIMUM_AUTHORIZE_AMOUNTS[options[:currency].upcase] || 100
+      end
+
+      def connected_account?(token)
+        token.kind_of?(String) && token.start_with?(CONNECTED_ACCOUNT_PREFIX)
       end
 
       def copy_when_present(dest, dest_path, source, source_path = nil)
