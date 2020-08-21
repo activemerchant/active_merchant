@@ -6,7 +6,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     Base.mode = :test
 
     # @gateway = PaypalExpressRestGateway.new(fixtures(:paypal_certificate))
-    @bearer_token = "Ad3tDTnAAINpRD577-xGh_Rqyyz5kKQGkKVe5ZGF9zRpvGhqgefvlYdfYxnoehEMGXDPJncTRbWe68qW:EBDHIuoWkpLXftdNSu_agIzEyc1Te5URa012dB295_ZobvRgkvNGJYVBna5BQkEpjdu_WmpRj-wOpaCN"
+    @bearer_token = "A21AAGynk5olOMTJUaG-zE4Rt8Xz0vIKNuawTbhjRLG9nXTa85A8RWdJRAXa2VoPfKD1__rPLy5v5-rHJhh586Co3_MahLKPQ"
     @headers = { "Authorization": "Bearer #{ @bearer_token }", "Content-Type": "application/json" }
 
     @body = {
@@ -289,13 +289,22 @@ class PaypalExpressRestTest < Test::Unit::TestCase
         ]
     }
     @options = { headers: @headers, body: @body }
+    paypal_customer = ActiveMerchant::Billing::PaypalCustomerGateway.new
+
+    response = paypal_customer.register_partner(@options)
   end
 
   def test_set_customer_creation_as_partner_referrals
-    paypal_customer = ActiveMerchant::Billing::PaypalCustomerGateway.new(@options)
+    assert response.success?
+    assert response.test?
+    assert !response.params['links'].blank?
+  end
+
+  def create_order
+    paypal_customer = ActiveMerchant::Billing::PaypalCustomerGateway.new
 
 
-    response = paypal_customer.register_partner({})
+    response = paypal_customer.create_order(@options)
     assert response.success?
     assert response.test?
     assert !response.params['links'].blank?
