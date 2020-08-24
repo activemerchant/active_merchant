@@ -151,8 +151,9 @@ module ActiveMerchant #:nodoc:
         if address = options[:billing_address] || options[:address]
           card_address[:streetAddress] = address[:address1]
           card_address[:city] = address[:city]
-          card_address[:region] = address[:state] || address[:region]
-          card_address[:country] = address[:country]
+          region = address[:state] || address[:region]
+          card_address[:region] = region if region.present?
+          card_address[:country] = address[:country] if address[:country].present?
           card_address[:postalCode] = address[:zip] if address[:zip]
         end
         post[:card][:address] = card_address
