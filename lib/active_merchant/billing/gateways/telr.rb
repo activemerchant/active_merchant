@@ -8,10 +8,10 @@ module ActiveMerchant #:nodoc:
 
       self.live_url = 'https://secure.telr.com/gateway/remote.xml'
 
-      self.supported_countries = ['AE', 'IN', 'SA']
+      self.supported_countries = %w[AE IN SA]
       self.default_currency = 'AED'
       self.money_format = :dollars
-      self.supported_cardtypes = [:visa, :master, :american_express, :maestro, :jcb]
+      self.supported_cardtypes = %i[visa master american_express maestro jcb]
 
       CVC_CODE_TRANSLATOR = {
         'Y' => 'M',
@@ -78,7 +78,7 @@ module ActiveMerchant #:nodoc:
 
       def verify_credentials
         response = void('0')
-        !['01', '04'].include?(response.error_code)
+        !%w[01 04].include?(response.error_code)
       end
 
       def supports_scrubbing?
@@ -109,6 +109,7 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_method(doc, payment_method, options)
         return if payment_method.is_a?(String)
+
         doc.card do
           doc.number(payment_method.number)
           doc.cvv(payment_method.verification_value)
@@ -121,6 +122,7 @@ module ActiveMerchant #:nodoc:
 
       def add_customer_data(doc, payment_method, options)
         return if payment_method.is_a?(String)
+
         doc.billing do
           doc.name do
             doc.first(payment_method.first_name)
@@ -140,15 +142,14 @@ module ActiveMerchant #:nodoc:
         doc.city(address[:city] || 'City')
         doc.line1(address[:address1] || 'Address')
         return unless address
+
         doc.line2(address[:address2]) if address[:address2]
         doc.zip(address[:zip]) if address[:zip]
         doc.region(address[:state]) if address[:state]
       end
 
       def add_ref(doc, action, payment_method)
-        if ['capture', 'refund', 'void'].include?(action) || payment_method.is_a?(String)
-          doc.ref(split_authorization(payment_method)[0])
-        end
+        doc.ref(split_authorization(payment_method)[0]) if %w[capture refund void].include?(action) || payment_method.is_a?(String)
       end
 
       def add_authentication(doc)
@@ -251,9 +252,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_code_from(succeeded, response)
-        unless succeeded
-          response[:code]
-        end
+        response[:code] unless succeeded
       end
 
       def cvv_result(parsed)

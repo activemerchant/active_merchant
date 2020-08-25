@@ -7,12 +7,12 @@ class PaymentezTest < Test::Unit::TestCase
     @gateway = PaymentezGateway.new(application_code: 'foo', app_key: 'bar')
     @credit_card = credit_card
     @elo_credit_card = credit_card('6362970000457013',
-      :month => 10,
-      :year => 2020,
-      :first_name => 'John',
-      :last_name => 'Smith',
-      :verification_value => '737',
-      :brand => 'elo'
+      month: 10,
+      year: 2020,
+      first_name: 'John',
+      last_name: 'Smith',
+      verification_value: '737',
+      brand: 'elo'
     )
     @amount = 100
 
@@ -157,6 +157,7 @@ class PaymentezTest < Test::Unit::TestCase
       assert_match(/"amount":1.0/, data)
     end.respond_with(successful_refund_response)
     assert_success response
+    assert_equal 'Completed', response.message
     assert response.test?
   end
 
@@ -165,6 +166,7 @@ class PaymentezTest < Test::Unit::TestCase
 
     response = @gateway.refund(@amount, '1234', @options)
     assert_failure response
+    assert_equal 'Invalid Status', response.message
     assert response.test?
   end
 
@@ -173,6 +175,7 @@ class PaymentezTest < Test::Unit::TestCase
 
     response = @gateway.void('1234', @options)
     assert_success response
+    assert_equal 'Completed', response.message
     assert response.test?
   end
 
@@ -180,6 +183,7 @@ class PaymentezTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(failed_void_response)
 
     response = @gateway.void('1234', @options)
+    assert_equal 'Invalid Status', response.message
     assert_failure response
   end
 
@@ -508,7 +512,7 @@ Conn close
   end
 
   def failed_void_response
-    '{"error": {"type": "Carrier not supported", "help": "", "description": "{}"}}'
+    '{"status": "failure", "detail": "Invalid Status"}'
   end
 
   alias_method :successful_refund_response, :successful_void_response

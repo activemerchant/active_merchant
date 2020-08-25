@@ -9,9 +9,9 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://gatewaystage.itstgate.com/SmartPayments/transact3.asmx'
       self.live_url = 'https://gateway.itstgate.com/SmartPayments/transact3.asmx'
 
-      self.supported_countries = ['CA', 'US']
+      self.supported_countries = %w[CA US]
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club jcb]
 
       def initialize(options={})
         requires!(options, :user_name, :password)
@@ -77,7 +77,7 @@ module ActiveMerchant #:nodoc:
       def store(creditcard, options={})
         post = initialize_required_fields('')
         post[:transaction] = 'Create'
-        post[:CardNumber]    = creditcard.number
+        post[:CardNumber] = creditcard.number
         post[:CustomerPaymentInfoKey] = ''
         post[:token] = ''
         add_payment_method(post, creditcard)
@@ -147,7 +147,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, options)
-        if(billing_address = (options[:billing_address] || options[:address]))
+        if (billing_address = (options[:billing_address] || options[:address]))
           post[:Street] = billing_address[:address1]
           post[:Zip]    = billing_address[:zip]
         end
@@ -235,8 +235,8 @@ module ActiveMerchant #:nodoc:
 
       def post_data(post)
         {
-          :UserName => @options[:user_name],
-          :Password => @options[:password]
+          UserName: @options[:user_name],
+          Password: @options[:password]
         }.merge(post).collect { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join('&')
       end
     end

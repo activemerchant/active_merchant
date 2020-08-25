@@ -67,7 +67,7 @@ module ActiveMerchant #:nodoc:
     class TrustCommerceGateway < Gateway
       self.live_url = self.test_url = 'https://vault.trustcommerce.com/trans/'
 
-      SUCCESS_TYPES = ['approved', 'accepted']
+      SUCCESS_TYPES = %w[approved accepted]
 
       DECLINE_CODES = {
         'decline'       => 'The credit card was declined',
@@ -107,7 +107,7 @@ module ActiveMerchant #:nodoc:
       VOIDABLE_ACTIONS = %w(preauth sale postauth credit)
 
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :discover, :american_express, :diners_club, :jcb]
+      self.supported_cardtypes = %i[visa master discover american_express diners_club jcb]
       self.supported_countries = ['US']
       self.homepage_url = 'http://www.trustcommerce.com/'
       self.display_name = 'TrustCommerce'
@@ -151,7 +151,7 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, creditcard_or_billing_id, options = {})
         parameters = {
-          :amount => amount(money),
+          amount: amount(money),
         }
 
         add_order_id(parameters, options)
@@ -168,7 +168,7 @@ module ActiveMerchant #:nodoc:
       # to process a purchase are an amount in cents or a money object and a creditcard object or billingid string.
       def purchase(money, creditcard_or_billing_id, options = {})
         parameters = {
-          :amount => amount(money),
+          amount: amount(money),
         }
 
         add_order_id(parameters, options)
@@ -185,10 +185,10 @@ module ActiveMerchant #:nodoc:
       # postauth, we preserve active_merchant's nomenclature of capture() for consistency with the rest of the library. To process
       # a postauthorization with TC, you need an amount in cents or a money object, and a TC transid.
       def capture(money, authorization, options = {})
-        transaction_id, _ = split_authorization(authorization)
+        transaction_id, = split_authorization(authorization)
         parameters = {
-          :amount => amount(money),
-          :transid => transaction_id,
+          amount: amount(money),
+          transid: transaction_id,
         }
         add_aggregator(parameters, options)
         add_custom_fields(parameters, options)
@@ -199,11 +199,11 @@ module ActiveMerchant #:nodoc:
       # refund() allows you to return money to a card that was previously billed. You need to supply the amount, in cents or a money object,
       # that you want to refund, and a TC transid for the transaction that you are refunding.
       def refund(money, identification, options = {})
-        transaction_id, _ = split_authorization(identification)
+        transaction_id, = split_authorization(identification)
 
         parameters = {
-          :amount => amount(money),
-          :transid => transaction_id
+          amount: amount(money),
+          transid: transaction_id
         }
 
         add_aggregator(parameters, options)
@@ -239,7 +239,7 @@ module ActiveMerchant #:nodoc:
         action = (VOIDABLE_ACTIONS - ['preauth']).include?(original_action) ? 'void' : 'reversal'
 
         parameters = {
-          :transid => transaction_id,
+          transid: transaction_id,
         }
 
         add_aggregator(parameters, options)
@@ -262,29 +262,30 @@ module ActiveMerchant #:nodoc:
       def recurring(money, creditcard, options = {})
         ActiveMerchant.deprecated RECURRING_DEPRECATION_MESSAGE
 
-        requires!(options, [:periodicity, :bimonthly, :monthly, :biweekly, :weekly, :yearly, :daily])
+        requires!(options, %i[periodicity bimonthly monthly biweekly weekly yearly daily])
 
-        cycle = case options[:periodicity]
-        when :monthly
-          '1m'
-        when :bimonthly
-          '2m'
-        when :weekly
-          '1w'
-        when :biweekly
-          '2w'
-        when :yearly
-          '1y'
-        when :daily
-          '1d'
-        end
+        cycle =
+          case options[:periodicity]
+          when :monthly
+            '1m'
+          when :bimonthly
+            '2m'
+          when :weekly
+            '1w'
+          when :biweekly
+            '2w'
+          when :yearly
+            '1y'
+          when :daily
+            '1d'
+          end
 
         parameters = {
-          :amount => amount(money),
-          :cycle => cycle,
-          :verify => options[:verify] || 'y',
-          :billingid => options[:billingid] || nil,
-          :payments => options[:payments] || nil,
+          amount: amount(money),
+          cycle: cycle,
+          verify: options[:verify] || 'y',
+          billingid: options[:billingid] || nil,
+          payments: options[:payments] || nil,
         }
 
         add_creditcard(parameters, creditcard)
@@ -298,8 +299,8 @@ module ActiveMerchant #:nodoc:
 
       def store(creditcard, options = {})
         parameters = {
-          :verify => options[:verify] || 'y',
-          :billingid => options[:billingid] || options[:billing_id] || nil,
+          verify: options[:verify] || 'y',
+          billingid: options[:billingid] || options[:billing_id] || nil,
         }
 
         add_creditcard(parameters, creditcard)
@@ -313,7 +314,7 @@ module ActiveMerchant #:nodoc:
       # unstore() the information will be removed and a Response object will be returned indicating the success of the action.
       def unstore(identification, options = {})
         parameters = {
-          :billingid => identification,
+          billingid: identification,
         }
 
         add_custom_fields(parameters, options)
@@ -416,9 +417,7 @@ module ActiveMerchant #:nodoc:
         # symbol keys. Before sending our input to TCLink, we convert all our keys to strings and dump the symbol keys.
         # We also remove any pairs with nil values, as these confuse TCLink.
         parameters.keys.reverse_each do |key|
-          if parameters[key]
-            parameters[key.to_s] = parameters[key]
-          end
+          parameters[key.to_s] = parameters[key] if parameters[key]
           parameters.delete(key)
         end
       end
@@ -445,10 +444,10 @@ module ActiveMerchant #:nodoc:
         success = SUCCESS_TYPES.include?(data['status'])
         message = message_from(data)
         Response.new(success, message, data,
-          :test => test?,
-          :authorization => authorization_from(action, data),
-          :cvv_result => data['cvv'],
-          :avs_result => { :code => data['avs'] }
+          test: test?,
+          authorization: authorization_from(action, data),
+          cvv_result: data['cvv'],
+          avs_result: { code: data['avs'] }
         )
       end
 

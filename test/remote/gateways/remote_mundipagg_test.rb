@@ -21,6 +21,9 @@ class RemoteMundipaggTest < Test::Unit::TestCase
       billing_address: address({neighborhood: 'Sesame Street'}),
       description: 'Store Purchase'
     }
+
+    @excess_length_neighborhood = address({neighborhood: 'Super Long Neighborhood Name' * 5})
+    @neighborhood_length_error = 'Invalid parameters; The request is invalid. | The field neighborhood must be a string with a maximum length of 64.'
   end
 
   def test_successful_purchase
@@ -68,6 +71,15 @@ class RemoteMundipaggTest < Test::Unit::TestCase
     test_failed_purchase_with(@declined_card)
   end
 
+  def test_failed_purchase_with_top_level_errors
+    @options[:billing_address] = @excess_length_neighborhood
+
+    response = @gateway.purchase(105200, @credit_card, @options)
+
+    assert_failure response
+    assert_equal @neighborhood_length_error, response.message
+  end
+
   def test_failed_purchase_with_alelo_card
     test_failed_purchase_with(@declined_alelo_voucher)
   end
@@ -86,6 +98,15 @@ class RemoteMundipaggTest < Test::Unit::TestCase
 
   def test_failed_authorize_with_alelo_card
     test_failed_authorize_with(@declined_alelo_voucher)
+  end
+
+  def test_failed_authorize_with_top_level_errors
+    @options[:billing_address] = @excess_length_neighborhood
+
+    response = @gateway.authorize(@amount, @credit_card, @options)
+
+    assert_failure response
+    assert_equal @neighborhood_length_error, response.message
   end
 
   def test_partial_capture
@@ -190,6 +211,15 @@ class RemoteMundipaggTest < Test::Unit::TestCase
     test_successful_store_and_purchase_with(@alelo_voucher)
   end
 
+  def test_failed_store_with_top_level_errors
+    @options[:billing_address] = @excess_length_neighborhood
+
+    response = @gateway.store(@credit_card, @options)
+
+    assert_failure response
+    assert_equal @neighborhood_length_error, response.message
+  end
+
   def test_invalid_login
     gateway = MundipaggGateway.new(api_key: '')
 
@@ -252,7 +282,7 @@ class RemoteMundipaggTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@amount - 1, auth.authorization)
     assert_success capture
   end
 

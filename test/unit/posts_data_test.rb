@@ -1,12 +1,11 @@
 require 'test_helper'
 
 class PostsDataTests < Test::Unit::TestCase
-
   def setup
     @url = 'http://example.com'
     @gateway = SimpleTestGateway.new
-    @ok = stub(:body => '', :code => '200', :message => 'OK')
-    @error = stub(:code => 500, :message => 'Internal Server Error', :body => 'failure')
+    @ok = stub(body: '', code: '200', message: 'OK')
+    @error = stub(code: 500, message: 'Internal Server Error', body: 'failure')
   end
 
   def teardown

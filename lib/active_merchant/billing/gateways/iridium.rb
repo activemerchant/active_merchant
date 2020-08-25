@@ -10,12 +10,12 @@ module ActiveMerchant #:nodoc:
       self.live_url = self.test_url = 'https://gw1.iridiumcorp.net/'
 
       # The countries the gateway supports merchants from as 2 digit ISO country codes
-      self.supported_countries = ['GB', 'ES']
+      self.supported_countries = %w[GB ES]
       self.default_currency = 'EUR'
       self.money_format = :cents
 
       # The card types supported by the payment gateway
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :maestro, :jcb, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express discover maestro jcb diners_club]
 
       # The homepage URL of the gateway
       self.homepage_url = 'http://www.iridiumcorp.co.uk/'
@@ -288,10 +288,11 @@ module ActiveMerchant #:nodoc:
 
       def build_reference_request(type, money, authorization, options)
         options[:action] = 'CrossReferenceTransaction'
-        order_id, cross_reference, _ = authorization.split(';')
+        order_id, cross_reference, = authorization.split(';')
         build_request(options) do |xml|
           if money
-            details = {'CurrencyCode' => currency_code(options[:currency] || default_currency), 'Amount' => amount(money)}
+            currency = options[:currency] || currency(money)
+            details = {'CurrencyCode' => currency_code(currency), 'Amount' => localized_amount(money, currency)}
           else
             details = {'CurrencyCode' => currency_code(default_currency), 'Amount' => '0'}
           end
@@ -304,8 +305,8 @@ module ActiveMerchant #:nodoc:
 
       def build_request(options)
         requires!(options, :action)
-        xml = Builder::XmlMarkup.new :indent => 2
-        xml.instruct!(:xml, :version => '1.0', :encoding => 'utf-8')
+        xml = Builder::XmlMarkup.new indent: 2
+        xml.instruct!(:xml, version: '1.0', encoding: 'utf-8')
         xml.tag! 'soap:Envelope', { 'xmlns:soap' => 'http://schemas.xmlsoap.org/soap/envelope/',
                                     'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance',
                                     'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema'} do
@@ -327,8 +328,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_purchase_data(xml, type, money, options)
+        currency = options[:currency] || currency(money)
         requires!(options, :order_id)
-        xml.tag! 'TransactionDetails', {'Amount' => amount(money), 'CurrencyCode' => currency_code(options[:currency] || currency(money))} do
+        xml.tag! 'TransactionDetails', {'Amount' => localized_amount(money, currency), 'CurrencyCode' => currency_code(currency)} do
           xml.tag! 'MessageDetails', {'TransactionType' => type}
           xml.tag! 'OrderID', options[:order_id]
           xml.tag! 'TransactionControl' do
@@ -342,9 +344,7 @@ module ActiveMerchant #:nodoc:
       def add_customerdetails(xml, creditcard, address, options, shipTo = false)
         xml.tag! 'CustomerDetails' do
           if address
-            unless address[:country].blank?
-              country_code = Country.find(address[:country]).code(:numeric)
-            end
+            country_code = Country.find(address[:country]).code(:numeric) unless address[:country].blank?
             xml.tag! 'BillingAddress' do
               xml.tag! 'Address1', address[:address1]
               xml.tag! 'Address2', address[:address2]
@@ -382,16 +382,16 @@ module ActiveMerchant #:nodoc:
 
         success = response[:transaction_result][:status_code] == '0'
         message = response[:transaction_result][:message]
-        authorization = success ? [ options[:order_id], response[:transaction_output_data][:cross_reference], response[:transaction_output_data][:auth_code] ].compact.join(';') : nil
+        authorization = success ? [options[:order_id], response[:transaction_output_data][:cross_reference], response[:transaction_output_data][:auth_code]].compact.join(';') : nil
 
         Response.new(success, message, response,
-          :test => test?,
-          :authorization => authorization,
-          :avs_result => {
-            :street_match => AVS_CODE[ response[:transaction_output_data][:address_numeric_check_result] ],
-            :postal_match => AVS_CODE[ response[:transaction_output_data][:post_code_check_result] ],
+          test: test?,
+          authorization: authorization,
+          avs_result: {
+            street_match: AVS_CODE[ response[:transaction_output_data][:address_numeric_check_result] ],
+            postal_match: AVS_CODE[ response[:transaction_output_data][:post_code_check_result] ],
           },
-          :cvv_result => CVV_CODE[ response[:transaction_output_data][:cv2_check_result] ]
+          cvv_result: CVV_CODE[ response[:transaction_output_data][:cv2_check_result] ]
         )
       end
 
@@ -399,7 +399,7 @@ module ActiveMerchant #:nodoc:
         reply = {}
         xml = REXML::Document.new(xml)
         if (root = REXML::XPath.first(xml, '//CardDetailsTransactionResponse')) or
-              (root = REXML::XPath.first(xml, '//CrossReferenceTransactionResponse'))
+           (root = REXML::XPath.first(xml, '//CrossReferenceTransactionResponse'))
           root.elements.to_a.each do |node|
             case node.name
             when 'Message'

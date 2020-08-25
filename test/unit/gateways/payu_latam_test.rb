@@ -12,7 +12,7 @@ class PayuLatamTest < Test::Unit::TestCase
     @pending_card = credit_card('4097440000000004', verification_value: '222', first_name: 'PENDING', last_name: '')
     @no_cvv_visa_card = credit_card('4097440000000004', verification_value: ' ')
     @no_cvv_amex_card = credit_card('4097440000000004', verification_value: ' ', brand: 'american_express')
-    @cabal_credit_card = credit_card('5896570000000004', :verification_value => '123', :first_name => 'APPROVED', :last_name => '', :brand => 'cabal')
+    @cabal_credit_card = credit_card('5896570000000004', verification_value: '123', first_name: 'APPROVED', last_name: '', brand: 'cabal')
 
     @options = {
       dni_number: '5415668464654',
@@ -74,6 +74,22 @@ class PayuLatamTest < Test::Unit::TestCase
     assert_failure response
     assert_equal 'ANTIFRAUD_REJECTED', response.message
     assert_equal 'DECLINED', response.params['transactionResponse']['state']
+  end
+
+  def test_failed_purchase_correct_message_when_payment_network_response_error_present
+    @gateway.expects(:ssl_post).returns(failed_purchase_response_when_payment_network_response_error_expected)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'CONTACT_THE_ENTITY | Contactar con entidad emisora', response.message
+    assert_equal 'Contactar con entidad emisora', response.params['transactionResponse']['paymentNetworkResponseErrorMessage']
+
+    @gateway.expects(:ssl_post).returns(failed_purchase_response_when_payment_network_response_error_not_expected)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'CONTACT_THE_ENTITY', response.message
+    assert_nil response.params['transactionResponse']['paymentNetworkResponseErrorMessage']
   end
 
   def test_successful_authorize
@@ -282,6 +298,34 @@ class PayuLatamTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
       assert_match(/\"buyer\":{\"fullName\":\"APPROVED\",\"dniNumber\":\"5415668464654\",\"dniType\":\"TI\",\"merchantBuyerId\":\"1\",\"emailAddress\":\"username@domain.com\",\"contactPhone\":\"7563126\"/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_request_with_blank_billing_address_fields
+    options = {
+      dni_number: '5415668464654',
+      dni_type: 'TI',
+      merchant_buyer_id: '1',
+      currency: 'ARS',
+      order_id: generate_unique_id,
+      description: 'Active Merchant Transaction',
+      billing_address: address(
+        address1: 'Viamonte',
+        address2: nil,
+        city: 'Plata',
+        state: 'Buenos Aires',
+        country: '',
+        zip: '64000',
+        phone: '7563126'
+      )
+    }
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/"merchantBuyerId":"1"/, data)
+      assert_match(/"street2":null/, data)
+      refute_match(/"country"/, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -526,6 +570,60 @@ class PayuLatamTest < Test::Unit::TestCase
         "authorizationCode": null,
         "pendingReason": null,
         "responseCode": "ANTIFRAUD_REJECTED",
+        "errorCode": null,
+        "responseMessage": null,
+        "transactionDate": null,
+        "transactionTime": null,
+        "operationDate": null,
+        "referenceQuestionnaire": null,
+        "extraParameters": null
+      }
+    }
+    RESPONSE
+  end
+
+  def failed_purchase_response_when_payment_network_response_error_expected
+    <<-RESPONSE
+    {
+      "code": "SUCCESS",
+      "error": null,
+      "transactionResponse": {
+        "orderId": 7354347,
+        "transactionId": "15b6cec0-9eec-4564-b6b9-c846b868203e",
+        "state": "DECLINED",
+        "paymentNetworkResponseCode": "290",
+        "paymentNetworkResponseErrorMessage": "Contactar con entidad emisora",
+        "trazabilityCode": null,
+        "authorizationCode": null,
+        "pendingReason": null,
+        "responseCode": "CONTACT_THE_ENTITY",
+        "errorCode": null,
+        "responseMessage": null,
+        "transactionDate": null,
+        "transactionTime": null,
+        "operationDate": null,
+        "referenceQuestionnaire": null,
+        "extraParameters": null
+      }
+    }
+    RESPONSE
+  end
+
+  def failed_purchase_response_when_payment_network_response_error_not_expected
+    <<-RESPONSE
+    {
+      "code": "SUCCESS",
+      "error": null,
+      "transactionResponse": {
+        "orderId": 7354347,
+        "transactionId": "15b6cec0-9eec-4564-b6b9-c846b868203e",
+        "state": "DECLINED",
+        "paymentNetworkResponseCode": null,
+        "paymentNetworkResponseErrorMessage": null,
+        "trazabilityCode": null,
+        "authorizationCode": null,
+        "pendingReason": null,
+        "responseCode": "CONTACT_THE_ENTITY",
         "errorCode": null,
         "responseMessage": null,
         "transactionDate": null,

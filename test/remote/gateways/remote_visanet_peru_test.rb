@@ -58,7 +58,7 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
     assert_equal @options[:order_id], response.params['externalTransactionId']
     assert_equal '1.00', response.params['data']['IMP_AUTORIZADO']
 
-    capture = @gateway.capture(response.authorization, @options)
+    capture = @gateway.capture(@amount, response.authorization, @options)
     assert_success capture
     assert_equal 'OK', capture.message
     assert capture.authorization
@@ -91,7 +91,7 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
   end
 
   def test_failed_capture
-    response = @gateway.capture('900000044')
+    response = @gateway.capture(@amount, '900000044')
     assert_failure response
     assert_match(/NUMORDEN 900000044 no se encuentra registrado/, response.message)
     assert_equal 400, response.error_code

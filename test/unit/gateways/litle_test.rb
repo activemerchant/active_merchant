@@ -153,6 +153,29 @@ class LitleTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_passing_basis_date
+    stub_comms do
+      @gateway.purchase(@amount, 'token', {basis_expiration_month: '04', basis_expiration_year: '2027'})
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<expDate>0427<\/expDate>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_does_not_pass_empty_checknum
+    check = check(
+      name: 'Tom Black',
+      routing_number:  '011075150',
+      account_number: '4099999992',
+      number: nil,
+      account_type: 'checking'
+    )
+    stub_comms do
+      @gateway.purchase(@amount, check)
+    end.check_request do |endpoint, data, headers|
+      assert_not_match(/<checkNum\/>/m, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_add_applepay_order_source
     stub_comms do
       @gateway.purchase(@amount, @decrypted_apple_pay)
@@ -922,5 +945,4 @@ class LitleTest < Test::Unit::TestCase
       Conn close
     post_scrub
   end
-
 end

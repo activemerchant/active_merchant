@@ -8,6 +8,15 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     @credit_card = credit_card('4242424242424242', verification_value: '100', month: '6', year: '2025')
     @expired_card = credit_card('4242424242424242', verification_value: '100', month: '6', year: '2010')
     @declined_card = credit_card('42424242424242424', verification_value: '234', month: '6', year: '2025')
+    @threeds_card = credit_card('4485040371536584', verification_value: '100', month: '12', year: '2020')
+
+    @network_token = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'AgAAAAAAAIR8CQrXcIhbQAAAAAA',
+      month:              '10',
+      year:               '2025',
+      source:             :network_token,
+      verification_value: nil
+    )
 
     @options = {
       order_id: '1',
@@ -57,6 +66,13 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  def test_successful_purchase_with_network_token
+    response = @gateway.purchase(100, @network_token, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_not_nil response.params['source']['payment_account_reference']
+  end
+
   def test_successful_purchase_with_additional_options
     response = @gateway.purchase(@amount, @credit_card, @additional_options)
     assert_success response
@@ -65,6 +81,13 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
 
   def test_successful_purchase_with_moto_flag
     response = @gateway.authorize(@amount, @credit_card, @options.merge(transaction_indicator: 3))
+
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_purchase_with_manual_entry_flag
+    response = @gateway.authorize(@amount, @credit_card, @options.merge(metadata: { manual_entry: true}))
 
     assert_success response
     assert_equal 'Succeeded', response.message
@@ -175,6 +198,14 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_direct_3ds_authorize
+    auth = @gateway.authorize(@amount, @threeds_card, @options.merge(execute_threed: true))
+
+    assert_equal 'Pending', auth.message
+    assert_equal 'Y', auth.params['3ds']['enrolled']
+    assert auth.params['_links']['redirect']
+  end
+
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
@@ -184,7 +215,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@amount - 1, auth.authorization)
     assert_success capture
   end
 
@@ -205,7 +236,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount-1, purchase.authorization)
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization)
     assert_success refund
   end
 

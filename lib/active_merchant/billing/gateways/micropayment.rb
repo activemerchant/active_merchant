@@ -1,7 +1,6 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class MicropaymentGateway < Gateway
-
       self.display_name = 'micropayment'
       self.homepage_url = 'https://www.micropayment.de/'
 
@@ -10,7 +9,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = %w(DE)
       self.default_currency = 'EUR'
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express]
+      self.supported_cardtypes = %i[visa master american_express]
 
       def initialize(options={})
         requires!(options, :access_key)
@@ -136,7 +135,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def headers
-        { 'Content-Type'  => 'application/x-www-form-urlencoded;charset=UTF-8' }
+        { 'Content-Type' => 'application/x-www-form-urlencoded;charset=UTF-8' }
       end
 
       def post_data(action, params)
@@ -176,7 +175,7 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(response, request_params)
         session_id = response['sessionId'] || request_params[:sessionId]
-        "#{session_id}|#{response["transactionId"]}"
+        "#{session_id}|#{response['transactionId']}"
       end
     end
   end

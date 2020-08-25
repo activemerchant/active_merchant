@@ -5,7 +5,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://pgw.ceca.es'
 
       self.supported_countries = ['ES']
-      self.supported_cardtypes = [:visa, :master, :american_express]
+      self.supported_cardtypes = %i[visa master american_express]
       self.homepage_url = 'http://www.ceca.es/es/'
       self.display_name = 'Cecabank'
       self.default_currency = 'EUR'
@@ -130,7 +130,7 @@ module ActiveMerchant #:nodoc:
 
         if root.elements['OPERACION']
           response[:operation_type] = root.elements['OPERACION'].attributes['tipo']
-          response[:amount] =  root.elements['OPERACION/importe'].text.strip
+          response[:amount] = root.elements['OPERACION/importe'].text.strip
         end
 
         response[:description] = root.elements['OPERACION/descripcion'].text if root.elements['OPERACION/descripcion']
@@ -143,9 +143,7 @@ module ActiveMerchant #:nodoc:
           response[:error_message] = root.elements['ERROR/descripcion'].text
         else
           if root.elements['OPERACION'].attributes['numeroOperacion'] == '000'
-            if(root.elements['OPERACION/numeroAutorizacion'])
-              response[:authorization] = root.elements['OPERACION/numeroAutorizacion'].text
-            end
+            response[:authorization] = root.elements['OPERACION/numeroAutorizacion'].text if root.elements['OPERACION/numeroAutorizacion']
           else
             response[:authorization] = root.attributes['numeroOperacion']
           end
@@ -175,9 +173,9 @@ module ActiveMerchant #:nodoc:
           response[:success],
           message_from(response),
           response,
-          :test => test?,
-          :authorization => build_authorization(response),
-          :error_code => response[:error_code]
+          test: test?,
+          authorization: build_authorization(response),
+          error_code: response[:error_code]
         )
       end
 
@@ -196,6 +194,7 @@ module ActiveMerchant #:nodoc:
 
         params.map do |key, value|
           next if value.blank?
+
           if value.is_a?(Hash)
             h = {}
             value.each do |k, v|
@@ -217,31 +216,32 @@ module ActiveMerchant #:nodoc:
       end
 
       def generate_signature(action, parameters)
-        signature_fields = case action
-        when CECA_ACTION_REFUND
-          options[:key].to_s +
-          options[:merchant_id].to_s +
-          options[:acquirer_bin].to_s +
-          options[:terminal_id].to_s +
-          parameters['Num_operacion'].to_s +
-          parameters['Importe'].to_s +
-          parameters['TipoMoneda'].to_s +
-          CECA_DECIMALS +
-          parameters['Referencia'].to_s +
-          CECA_ENCRIPTION
-        else
-          options[:key].to_s +
-          options[:merchant_id].to_s +
-          options[:acquirer_bin].to_s +
-          options[:terminal_id].to_s +
-          parameters['Num_operacion'].to_s +
-          parameters['Importe'].to_s +
-          parameters['TipoMoneda'].to_s +
-          CECA_DECIMALS +
-          CECA_ENCRIPTION +
-          CECA_NOTIFICATIONS_URL +
-          CECA_NOTIFICATIONS_URL
-        end
+        signature_fields =
+          case action
+          when CECA_ACTION_REFUND
+            options[:key].to_s +
+            options[:merchant_id].to_s +
+            options[:acquirer_bin].to_s +
+            options[:terminal_id].to_s +
+            parameters['Num_operacion'].to_s +
+            parameters['Importe'].to_s +
+            parameters['TipoMoneda'].to_s +
+            CECA_DECIMALS +
+            parameters['Referencia'].to_s +
+            CECA_ENCRIPTION
+          else
+            options[:key].to_s +
+            options[:merchant_id].to_s +
+            options[:acquirer_bin].to_s +
+            options[:terminal_id].to_s +
+            parameters['Num_operacion'].to_s +
+            parameters['Importe'].to_s +
+            parameters['TipoMoneda'].to_s +
+            CECA_DECIMALS +
+            CECA_ENCRIPTION +
+            CECA_NOTIFICATIONS_URL +
+            CECA_NOTIFICATIONS_URL
+          end
         Digest::SHA2.hexdigest(signature_fields)
       end
     end

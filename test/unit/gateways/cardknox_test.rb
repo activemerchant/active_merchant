@@ -131,7 +131,7 @@ class CardknoxTest < Test::Unit::TestCase
   def test_failed_capture
     @gateway.expects(:ssl_post).returns(failed_capture_response)
 
-    assert capture = @gateway.capture(@amount-1, '')
+    assert capture = @gateway.capture(@amount - 1, '')
     assert_failure capture
     assert_equal 'Original transaction not specified', capture.message
   end

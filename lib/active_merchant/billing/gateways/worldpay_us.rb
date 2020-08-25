@@ -15,7 +15,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['US']
       self.default_currency = 'USD'
       self.money_format = :dollars
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb]
+      self.supported_cardtypes = %i[visa master american_express discover jcb]
 
       def initialize(options={})
         requires!(options, :acctid, :subid, :merchantpin)
@@ -91,7 +91,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, options)
-        if(billing_address = (options[:billing_address] || options[:address]))
+        if (billing_address = (options[:billing_address] || options[:address]))
           post[:ci_companyname] = billing_address[:company]
           post[:ci_billaddr1]   = billing_address[:address1]
           post[:ci_billaddr2]   = billing_address[:address2]
@@ -105,13 +105,13 @@ module ActiveMerchant #:nodoc:
           post[:ci_ipaddress]   = billing_address[:ip]
         end
 
-        if(shipping_address = options[:shipping_address])
+        if (shipping_address = options[:shipping_address])
           post[:ci_shipaddr1] = shipping_address[:address1]
           post[:ci_shipaddr2] = shipping_address[:address2]
           post[:ci_shipcity] = shipping_address[:city]
           post[:ci_shipstate] = shipping_address[:state]
-          post[:ci_shipzip]    = shipping_address[:zip]
-          post[:ci_shipcountry]    = shipping_address[:country]
+          post[:ci_shipzip] = shipping_address[:zip]
+          post[:ci_shipcountry] = shipping_address[:country]
         end
       end
 
@@ -196,8 +196,8 @@ module ActiveMerchant #:nodoc:
           succeeded,
           message_from(succeeded, raw),
           raw,
-          :authorization => authorization_from(raw),
-          :test => test?
+          authorization: authorization_from(raw),
+          test: test?
         )
       end
 

@@ -98,7 +98,8 @@ module ActiveMerchant
             result = []
 
             self.each do |key, messages|
-              next unless(messages && !messages.empty?)
+              next unless messages && !messages.empty?
+
               if key == 'base'
                 result << messages.first.to_s
               else

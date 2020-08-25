@@ -4,8 +4,8 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://api.openpay.mx/v1/'
       self.test_url = 'https://sandbox-api.openpay.mx/v1/'
 
-      self.supported_countries = ['MX']
-      self.supported_cardtypes = [:visa, :master, :american_express, :carnet]
+      self.supported_countries = %w(CO MX)
+      self.supported_cardtypes = %i[visa master american_express carnet]
       self.homepage_url = 'http://www.openpay.mx/'
       self.display_name = 'Openpay'
       self.default_currency = 'MXN'
@@ -75,7 +75,7 @@ module ActiveMerchant #:nodoc:
           MultiResponse.run(:first) do |r|
             r.process { commit(:post, 'customers', post, options) }
 
-            if(r.success? && !r.params['id'].blank?)
+            if r.success? && !r.params['id'].blank?
               customer_id = r.params['id']
               r.process { commit(:post, "customers/#{customer_id}/cards", card, options) }
             end
@@ -151,6 +151,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(card, options)
         return unless card.kind_of?(Hash)
+
         if address = (options[:billing_address] || options[:address])
           card[:address] = {
             line1: address[:address1],
@@ -175,6 +176,7 @@ module ActiveMerchant #:nodoc:
 
       def parse(body)
         return {} unless body
+
         JSON.parse(body)
       end
 
@@ -185,8 +187,8 @@ module ActiveMerchant #:nodoc:
         Response.new(success,
           (success ? response['error_code'] : response['description']),
           response,
-          :test => test?,
-          :authorization => response['id']
+          test: test?,
+          authorization: response['id']
         )
       end
 
@@ -218,9 +220,9 @@ module ActiveMerchant #:nodoc:
         msg = 'Invalid response received from the Openpay API.  Please contact soporte@openpay.mx if you continue to receive this message.'
         msg += "  (The raw response returned by the API was #{raw_response.inspect})"
         {
-            'category' => 'request',
-            'error_code' => '9999',
-            'description' => msg
+          'category' => 'request',
+          'error_code' => '9999',
+          'description' => msg
         }
       end
     end

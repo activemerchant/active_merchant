@@ -8,26 +8,26 @@ class RemotePayflowUkTest < Test::Unit::TestCase
     @gateway = PayflowUkGateway.new(fixtures(:payflow_uk))
 
     @creditcard = CreditCard.new(
-      :number => '5105105105105100',
-      :month => 11,
-      :year => 2009,
-      :first_name => 'Cody',
-      :last_name => 'Fauser',
-      :verification_value => '000',
-      :brand => 'master'
+      number: '5105105105105100',
+      month: 11,
+      year: 2009,
+      first_name: 'Cody',
+      last_name: 'Fauser',
+      verification_value: '000',
+      brand: 'master'
     )
 
     @options = {
-      :billing_address => {
-         :name => 'Cody Fauser',
-         :address1 => '1234 Shady Brook Lane',
-         :city => 'Ottawa',
-         :state => 'ON',
-         :country => 'CA',
-         :zip => '90210',
-         :phone => '555-555-5555'
+      billing_address: {
+        name: 'Cody Fauser',
+        address1: '1234 Shady Brook Lane',
+        city: 'Ottawa',
+        state: 'ON',
+        country: 'CA',
+        zip: '90210',
+        phone: '555-555-5555'
       },
-      :email => 'cody@example.com'
+      email: 'cody@example.com'
     }
   end
 
@@ -128,8 +128,8 @@ class RemotePayflowUkTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = PayflowGateway.new(
-      :login => '',
-      :password => ''
+      login: '',
+      password: ''
     )
     assert response = gateway.purchase(100, @creditcard, @options)
     assert_equal 'Invalid vendor account', response.message
@@ -138,8 +138,8 @@ class RemotePayflowUkTest < Test::Unit::TestCase
 
   def test_duplicate_request_id
     gateway = PayflowUkGateway.new(
-      :login => @login,
-      :password => @password
+      login: @login,
+      password: @password
     )
 
     request_id = Digest::SHA1.hexdigest(rand.to_s).slice(0, 32)

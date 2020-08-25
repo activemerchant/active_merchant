@@ -1,19 +1,18 @@
 require 'test_helper'
 
 class ViaklixTest < Test::Unit::TestCase
-
   def setup
     @gateway = ViaklixGateway.new(
-      :login => 'LOGIN',
-      :password => 'PIN'
+      login: 'LOGIN',
+      password: 'PIN'
     )
 
     @credit_card = credit_card
     @options = {
-      :order_id => '37',
-      :email => 'paul@domain.com',
-      :description => 'Test Transaction',
-      :billing_address => address
+      order_id: '37',
+      email: 'paul@domain.com',
+      description: 'Test Transaction',
+      billing_address: address
     }
     @amount = 100
   end
@@ -70,9 +69,9 @@ class ViaklixTest < Test::Unit::TestCase
   end
 
   def invalid_login_response
-    <<-RESPONSE
-ssl_result=7000\r
-ssl_result_message=The viaKLIX ID and/or User ID supplied in the authorization request is invalid.\r
+    <<~RESPONSE
+      ssl_result=7000\r
+      ssl_result_message=The viaKLIX ID and/or User ID supplied in the authorization request is invalid.\r
     RESPONSE
   end
 end

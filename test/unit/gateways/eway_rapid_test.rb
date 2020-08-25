@@ -6,8 +6,8 @@ class EwayRapidTest < Test::Unit::TestCase
   def setup
     ActiveMerchant::Billing::EwayRapidGateway.partner_id = nil
     @gateway = EwayRapidGateway.new(
-      :login => 'login',
-      :password => 'password'
+      login: 'login',
+      password: 'password'
     )
 
     @credit_card = credit_card
@@ -106,13 +106,13 @@ class EwayRapidTest < Test::Unit::TestCase
 
   def test_localized_currency
     stub_comms do
-      @gateway.purchase(100, @credit_card, :currency => 'CAD')
+      @gateway.purchase(100, @credit_card, currency: 'CAD')
     end.check_request do |endpoint, data, headers|
       assert_match '"TotalAmount":"100"', data
     end.respond_with(successful_purchase_response)
 
     stub_comms do
-      @gateway.purchase(100, @credit_card, :currency => 'JPY')
+      @gateway.purchase(100, @credit_card, currency: 'JPY')
     end.check_request do |endpoint, data, headers|
       assert_match '"TotalAmount":"1"', data
     end.respond_with(successful_purchase_response)
@@ -154,41 +154,41 @@ class EwayRapidTest < Test::Unit::TestCase
   def test_purchase_with_all_options
     response = stub_comms do
       @gateway.purchase(200, @credit_card,
-        :transaction_type => 'CustomTransactionType',
-        :redirect_url => 'http://awesomesauce.com',
-        :ip => '0.0.0.0',
-        :application_id => 'Woohoo',
-        :partner_id => 'SomePartner',
-        :description => 'The Really Long Description More Than Sixty Four Characters Gets Truncated',
-        :order_id => 'orderid1',
-        :invoice => 'I1234',
-        :currency => 'INR',
-        :email => 'jim@example.com',
-        :billing_address => {
-          :title    => 'Mr.',
-          :name     => 'Jim Awesome Smith',
-          :company  => 'Awesome Co',
-          :address1 => '1234 My Street',
-          :address2 => 'Apt 1',
-          :city     => 'Ottawa',
-          :state    => 'ON',
-          :zip      => 'K1C2N6',
-          :country  => 'CA',
-          :phone    => '(555)555-5555',
-          :fax      => '(555)555-6666'
+        transaction_type: 'CustomTransactionType',
+        redirect_url: 'http://awesomesauce.com',
+        ip: '0.0.0.0',
+        application_id: 'Woohoo',
+        partner_id: 'SomePartner',
+        description: 'The Really Long Description More Than Sixty Four Characters Gets Truncated',
+        order_id: 'orderid1',
+        invoice: 'I1234',
+        currency: 'INR',
+        email: 'jim@example.com',
+        billing_address: {
+          title: 'Mr.',
+          name: 'Jim Awesome Smith',
+          company: 'Awesome Co',
+          address1: '1234 My Street',
+          address2: 'Apt 1',
+          city: 'Ottawa',
+          state: 'ON',
+          zip: 'K1C2N6',
+          country: 'CA',
+          phone: '(555)555-5555',
+          fax: '(555)555-6666'
         },
-        :shipping_address => {
-          :title    => 'Ms.',
-          :name     => 'Baker',
-          :company  => 'Elsewhere Inc.',
-          :address1 => '4321 Their St.',
-          :address2 => 'Apt 2',
-          :city     => 'Chicago',
-          :state    => 'IL',
-          :zip      => '60625',
-          :country  => 'US',
-          :phone    => '1115555555',
-          :fax      => '1115556666'
+        shipping_address: {
+          title: 'Ms.',
+          name: 'Baker',
+          company: 'Elsewhere Inc.',
+          address1: '4321 Their St.',
+          address2: 'Apt 2',
+          city: 'Chicago',
+          state: 'IL',
+          zip: '60625',
+          country: 'US',
+          phone: '1115555555',
+          fax: '1115556666'
         }
       )
     end.check_request do |endpoint, data, headers|
@@ -383,19 +383,19 @@ class EwayRapidTest < Test::Unit::TestCase
 
   def test_successful_store
     response = stub_comms do
-      @gateway.store(@credit_card, :billing_address => {
-          :title    => 'Mr.',
-          :name     => 'Jim Awesome Smith',
-          :company  => 'Awesome Co',
-          :address1 => '1234 My Street',
-          :address2 => 'Apt 1',
-          :city     => 'Ottawa',
-          :state    => 'ON',
-          :zip      => 'K1C2N6',
-          :country  => 'CA',
-          :phone    => '(555)555-5555',
-          :fax      => '(555)555-6666'
-        })
+      @gateway.store(@credit_card, billing_address: {
+        title: 'Mr.',
+        name: 'Jim Awesome Smith',
+        company: 'Awesome Co',
+        address1: '1234 My Street',
+        address2: 'Apt 1',
+        city: 'Ottawa',
+        state: 'ON',
+        zip: 'K1C2N6',
+        country: 'CA',
+        phone: '(555)555-5555',
+        fax: '(555)555-6666'
+      })
     end.check_request do |endpoint, data, headers|
       assert_match '"Method":"CreateTokenCustomer"', data
     end.respond_with(successful_store_response)
@@ -433,7 +433,7 @@ class EwayRapidTest < Test::Unit::TestCase
 
   def test_failed_store
     response = stub_comms do
-      @gateway.store(@credit_card, :billing_address => {})
+      @gateway.store(@credit_card, billing_address: {})
     end.respond_with(failed_store_response)
 
     assert_failure response
@@ -548,7 +548,7 @@ class EwayRapidTest < Test::Unit::TestCase
   def test_verification_results
     response = stub_comms do
       @gateway.purchase(100, @credit_card)
-    end.respond_with(successful_purchase_response(:verification_status => 'Valid'))
+    end.respond_with(successful_purchase_response(verification_status: 'Valid'))
 
     assert_success response
     assert_equal 'M', response.cvv_result['code']
@@ -556,7 +556,7 @@ class EwayRapidTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.purchase(100, @credit_card)
-    end.respond_with(successful_purchase_response(:verification_status => 'Invalid'))
+    end.respond_with(successful_purchase_response(verification_status: 'Invalid'))
 
     assert_success response
     assert_equal 'N', response.cvv_result['code']
@@ -564,7 +564,7 @@ class EwayRapidTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.purchase(100, @credit_card)
-    end.respond_with(successful_purchase_response(:verification_status => 'Unchecked'))
+    end.respond_with(successful_purchase_response(verification_status: 'Unchecked'))
 
     assert_success response
     assert_equal 'P', response.cvv_result['code']

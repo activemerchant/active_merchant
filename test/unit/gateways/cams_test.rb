@@ -7,8 +7,8 @@ class CamsTest < Test::Unit::TestCase
       password: 'password9'
     )
 
-    @credit_card = credit_card('4111111111111111', :month => 5, :year => 10)
-    @bad_credit_card = credit_card('4242424245555555', :month => 5, :year => 10)
+    @credit_card = credit_card('4111111111111111', month: 5, year: 10)
+    @bad_credit_card = credit_card('4242424245555555', month: 5, year: 10)
     @amount = 100
 
     @options = {
@@ -116,46 +116,46 @@ class CamsTest < Test::Unit::TestCase
   private
 
   def pre_scrubbed
-    <<-PRE_SCRUBBED
-opening connection to secure.centralams.com:443...
-opened
-starting SSL for secure.centralams.com:443...
-SSL established
-<- "POST /gw/api/transact.php HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: secure.centralams.com\r\nContent-Length: 249\r\n\r\n"
-<- "amount=1.03&currency=USD&ccnumber=4111111111111111&ccexp=0916&firstname=Longbob&lastname=Longsen&address1=1234 My Street&address2=Apt 1&city=Ottawa&state=ON&zip=K1C2N6&country=US&phone=(555)555-5555&type=&password=password9&username=testintegrationc"
--> "HTTP/1.1 200 OK\r\n"
--> "Date: Tue, 21 Apr 2015 23:27:05 GMT\r\n"
--> "Server: Apache\r\n"
--> "Content-Length: 132\r\n"
--> "Connection: close\r\n"
--> "Content-Type: text/html; charset=UTF-8\r\n"
--> "\r\n"
-reading 132 bytes...
--> "response=1&responsetext=SUCCESS&authcode=123456&transactionid=2654605773&avsresponse=N&cvvresponse=&orderid=&type=&response_code=100"
-read 132 bytes
-Conn close
+    <<~PRE_SCRUBBED
+      opening connection to secure.centralams.com:443...
+      opened
+      starting SSL for secure.centralams.com:443...
+      SSL established
+      <- "POST /gw/api/transact.php HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: secure.centralams.com\r\nContent-Length: 249\r\n\r\n"
+      <- "amount=1.03&currency=USD&ccnumber=4111111111111111&ccexp=0916&firstname=Longbob&lastname=Longsen&address1=1234 My Street&address2=Apt 1&city=Ottawa&state=ON&zip=K1C2N6&country=US&phone=(555)555-5555&type=&password=password9&username=testintegrationc"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Date: Tue, 21 Apr 2015 23:27:05 GMT\r\n"
+      -> "Server: Apache\r\n"
+      -> "Content-Length: 132\r\n"
+      -> "Connection: close\r\n"
+      -> "Content-Type: text/html; charset=UTF-8\r\n"
+      -> "\r\n"
+      reading 132 bytes...
+      -> "response=1&responsetext=SUCCESS&authcode=123456&transactionid=2654605773&avsresponse=N&cvvresponse=&orderid=&type=&response_code=100"
+      read 132 bytes
+      Conn close
     PRE_SCRUBBED
   end
 
   def post_scrubbed
-    <<-POST_SCRUBBED
-opening connection to secure.centralams.com:443...
-opened
-starting SSL for secure.centralams.com:443...
-SSL established
-<- "POST /gw/api/transact.php HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: secure.centralams.com\r\nContent-Length: 249\r\n\r\n"
-<- "amount=1.03&currency=USD&ccnumber=[FILTERED]&ccexp=0916&firstname=Longbob&lastname=Longsen&address1=1234 My Street&address2=Apt 1&city=Ottawa&state=ON&zip=K1C2N6&country=US&phone=(555)555-5555&type=&password=[FILTERED]&username=testintegrationc"
--> "HTTP/1.1 200 OK\r\n"
--> "Date: Tue, 21 Apr 2015 23:27:05 GMT\r\n"
--> "Server: Apache\r\n"
--> "Content-Length: 132\r\n"
--> "Connection: close\r\n"
--> "Content-Type: text/html; charset=UTF-8\r\n"
--> "\r\n"
-reading 132 bytes...
--> "response=1&responsetext=SUCCESS&authcode=123456&transactionid=2654605773&avsresponse=N&cvvresponse=&orderid=&type=&response_code=100"
-read 132 bytes
-Conn close
+    <<~POST_SCRUBBED
+      opening connection to secure.centralams.com:443...
+      opened
+      starting SSL for secure.centralams.com:443...
+      SSL established
+      <- "POST /gw/api/transact.php HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: secure.centralams.com\r\nContent-Length: 249\r\n\r\n"
+      <- "amount=1.03&currency=USD&ccnumber=[FILTERED]&ccexp=0916&firstname=Longbob&lastname=Longsen&address1=1234 My Street&address2=Apt 1&city=Ottawa&state=ON&zip=K1C2N6&country=US&phone=(555)555-5555&type=&password=[FILTERED]&username=testintegrationc"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Date: Tue, 21 Apr 2015 23:27:05 GMT\r\n"
+      -> "Server: Apache\r\n"
+      -> "Content-Length: 132\r\n"
+      -> "Connection: close\r\n"
+      -> "Content-Type: text/html; charset=UTF-8\r\n"
+      -> "\r\n"
+      reading 132 bytes...
+      -> "response=1&responsetext=SUCCESS&authcode=123456&transactionid=2654605773&avsresponse=N&cvvresponse=&orderid=&type=&response_code=100"
+      read 132 bytes
+      Conn close
     POST_SCRUBBED
   end
 

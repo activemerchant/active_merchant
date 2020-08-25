@@ -6,12 +6,20 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card('4263982640269299')
-    @cabal_credit_card = credit_card('6271701225979642')
+    @cabal_card = credit_card('6271701225979642', month: 3, year: 2020)
+    @naranja_card = credit_card('5895626746595650', month: 11, year: 2020)
     @declined_card = credit_card('4917484589897107', month: 1, year: 2023)
     @invalid_card = credit_card('4917484589897106', month: 1, year: 2023)
     @three_ds_visa_card = credit_card('4000000000001091', month: 1)
     @three_ds_master_card = credit_card('5200000000001096', month: 1)
     @invalid_cabal_card = credit_card('5896 5700 0000 0000', month: 1, year: 2023)
+
+    # BlueSnap may require support contact to activate fraud checking on sandbox accounts.
+    # Specific merchant-configurable thresholds can be set as follows:
+    # Order Total Amount Decline Threshold = 3728
+    # Payment Country Decline List = Brazil
+    @fraudulent_amount = 3729
+    @fraudulent_card = credit_card('4007702835532454')
 
     @options = { billing_address: address }
     @options_3ds2 = @options.merge(
@@ -25,7 +33,7 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     )
 
     @check = check
-    @invalid_check = check(:routing_number => '123456', :account_number => '123456789')
+    @invalid_check = check(routing_number: '123456', account_number: '123456789')
     @valid_check_options = {
       billing_address: {
         address1: '123 Street',
@@ -40,6 +48,38 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_fractionless_currency_purchase
+    options = @options.merge(currency: 'JPY')
+    response = @gateway.purchase(12300, @credit_card, options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_three_decimal_currency_purchase
+    options = @options.merge(currency: 'BHD')
+    response = @gateway.purchase(1234, @credit_card, options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_purchase_with_cabal_card
+    options = @options.merge({
+      email: 'joe@example.com'
+    })
+    response = @gateway.purchase(@amount, @cabal_card, options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_purchase_with_naranja_card
+    options = @options.merge({
+      email: 'joe@example.com'
+    })
+    response = @gateway.purchase(@amount, @naranja_card, options)
     assert_success response
     assert_equal 'Success', response.message
   end
@@ -152,6 +192,16 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     assert_equal 'Success', response.message
   end
 
+  def test_fraudulent_purchase
+    # Reflects specific settings on Bluesnap sandbox account.
+    response = @gateway.purchase(@fraudulent_amount, @fraudulent_card, @options)
+    assert_failure response
+    assert_match(/fraud-reference-id/, response.message)
+    assert_match(/fraud-event/, response.message)
+    assert_match(/blacklistPaymentCountryDecline/, response.message)
+    assert_match(/orderTotalDecline/, response.message)
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
@@ -231,7 +281,7 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@amount - 1, auth.authorization)
     assert_success capture
   end
 
@@ -254,7 +304,7 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount-1, purchase.authorization)
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization)
     assert_success refund
   end
 
@@ -391,5 +441,4 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     assert_scrubbed(@check.routing_number, transcript)
     assert_scrubbed(@gateway.options[:api_password], transcript)
   end
-
 end

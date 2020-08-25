@@ -38,6 +38,9 @@ class MundipaggTest < Test::Unit::TestCase
       billing_address: address,
       description: 'Store Purchase'
     }
+
+    @gateway_response_error = 'Esta loja n??o possui um meio de pagamento configurado para a bandeira VR'
+    @acquirer_message = 'Simulator|Transação de simulada negada por falta de crédito, utilizado para realizar simulação de autorização parcial.'
   end
 
   def test_successful_purchase
@@ -78,7 +81,35 @@ class MundipaggTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
+    assert_equal @acquirer_message, response.message
+    assert_equal '92', response.error_code
+  end
+
+  def test_failed_purchase_with_top_level_errors
+    @gateway.expects(:ssl_post).raises(mock_response_error)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_invalid_parameter_errors(response)
+  end
+
+  def test_failed_purchase_with_gateway_response_errors
+    @gateway.expects(:ssl_post).returns(failed_response_with_gateway_response_errors)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_success response
+    assert_equal @gateway_response_error, response.message
+  end
+
+  def test_failed_purchase_with_acquirer_return_code
+    @gateway.expects(:ssl_post).returns(failed_response_with_acquirer_return_code)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_failure response
+    assert_equal 'VR|', response.message
+    assert_equal '14', response.error_code
   end
 
   def test_successful_authorize
@@ -110,7 +141,25 @@ class MundipaggTest < Test::Unit::TestCase
 
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
+    assert_equal @acquirer_message, response.message
+    assert_equal '92', response.error_code
+  end
+
+  def test_failed_authorize_with_top_level_errors
+    @gateway.expects(:ssl_post).raises(mock_response_error)
+
+    response = @gateway.authorize(@amount, @credit_card, @options)
+
+    assert_invalid_parameter_errors(response)
+  end
+
+  def test_failed_authorize_with_gateway_response_errors
+    @gateway.expects(:ssl_post).returns(failed_response_with_gateway_response_errors)
+
+    response = @gateway.authorize(@amount, @credit_card, @options)
+
+    assert_success response
+    assert_equal @gateway_response_error, response.message
   end
 
   def test_successful_capture
@@ -196,6 +245,23 @@ class MundipaggTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_failed_store_with_top_level_errors
+    @gateway.expects(:ssl_post).times(2).raises(mock_response_error)
+
+    response = @gateway.store(@credit_card, @options)
+
+    assert_invalid_parameter_errors(response)
+  end
+
+  def test_failed_store_with_gateway_response_errors
+    @gateway.expects(:ssl_post).times(2).returns(failed_response_with_gateway_response_errors)
+
+    response = @gateway.store(@credit_card, @options)
+
+    assert_success response
+    assert_equal @gateway_response_error, response.message
+  end
+
   def test_gateway_id_fallback
     gateway = MundipaggGateway.new(api_key: 'my_api_key', gateway_id: 'abc123')
     options = {
@@ -225,6 +291,22 @@ class MundipaggTest < Test::Unit::TestCase
 
     assert_equal 'ch_90Vjq8TrwfP74XJO', response.authorization
     assert response.test?
+  end
+
+  def mock_response_error
+    mock_response = Net::HTTPUnprocessableEntity.new('1.1', '422', 'Unprocessable Entity')
+    mock_response.stubs(:body).returns(failed_response_with_top_level_errors)
+
+    ActiveMerchant::ResponseError.new(mock_response)
+  end
+
+  def assert_invalid_parameter_errors(response)
+    assert_failure response
+
+    assert_equal(
+      'Invalid parameters; The request is invalid. | The field neighborhood must be a string with a maximum length of 64. | The field line_1 must be a string with a maximum length of 256.',
+      response.message
+    )
   end
 
   def pre_scrubbed
@@ -413,6 +495,203 @@ class MundipaggTest < Test::Unit::TestCase
           "gateway_response": {
             "code": "201"
           }
+        }
+      }
+    )
+  end
+
+  def failed_response_with_top_level_errors
+    %(
+      {
+        "message": "The request is invalid.",
+        "errors": {
+          "charge.payment.credit_card.card.billing_address.neighborhood": [
+            "The field neighborhood must be a string with a maximum length of 64."
+          ],
+          "charge.payment.credit_card.card.billing_address.line_1": [
+            "The field line_1 must be a string with a maximum length of 256."
+          ]
+        },
+        "request": {
+          "currency": "USD",
+          "amount": 100,
+          "customer": {
+            "name": "Longbob Longsen",
+            "phones": {},
+            "metadata": {}
+          },
+          "payment": {
+            "gateway_affiliation_id": "d76dffc8-c3e5-4d80-b9ee-dc8fb6c56c83",
+            "payment_method": "credit_card",
+            "credit_card": {
+              "installments": 1,
+              "capture": true,
+              "card": {
+                "last_four_digits": "2224",
+                "brand": "Visa",
+                "holder_name": "Longbob Longsen",
+                "exp_month": 9,
+                "exp_year": 2020,
+                "billing_address": {
+                  "street": "My Street",
+                  "number": "456",
+                  "zip_code": "K1C2N6",
+                  "neighborhood": "Sesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame Street",
+                  "city": "Ottawa",
+                  "state": "ON",
+                  "country": "CA",
+                  "line_1": "456, My Street, Sesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame StreetSesame Street"
+                },
+                "options": {}
+              }
+            },
+            "metadata": {
+              "mundipagg_payment_method_code": "1"
+            }
+          }
+        }
+      }
+    )
+  end
+
+  def failed_response_with_gateway_response_errors
+    %(
+      {
+        "id": "ch_90Vjq8TrwfP74XJO",
+        "code": "ME0KIN4A0O",
+        "gateway_id": "162bead8-23a0-4708-b687-078a69a1aa7c",
+        "amount": 100,
+        "paid_amount": 100,
+        "status": "paid",
+        "currency": "USD",
+        "payment_method": "credit_card",
+        "paid_at": "2018-02-01T18:41:05Z",
+        "created_at": "2018-02-01T18:41:04Z",
+        "updated_at": "2018-02-01T18:41:04Z",
+        "customer": {
+          "id": "cus_VxJX2NmTqyUnXgL9",
+          "name": "Longbob Longsen",
+          "email": "",
+          "delinquent": false,
+          "created_at": "2018-02-01T18:41:04Z",
+          "updated_at": "2018-02-01T18:41:04Z",
+          "phones": {}
+        },
+        "last_transaction": {
+          "id": "tran_JNzjzadcVZHlG8K2",
+          "transaction_type": "credit_card",
+          "gateway_id": "c579c8fa-53d7-41a8-b4cc-a03c712ebbb7",
+          "amount": 100,
+          "status": "captured",
+          "success": true,
+          "installments": 1,
+          "operation_type": "auth_and_capture",
+          "card": {
+            "id": "card_pD02Q6WtOTB7a3kE",
+            "first_six_digits": "400010",
+            "last_four_digits": "2224",
+            "brand": "Visa",
+            "holder_name": "Longbob Longsen",
+            "exp_month": 9,
+            "exp_year": 2019,
+            "status": "active",
+            "created_at": "2018-02-01T18:41:04Z",
+            "updated_at": "2018-02-01T18:41:04Z",
+            "billing_address": {
+              "street": "My Street",
+              "number": "456",
+              "zip_code": "K1C2N6",
+              "neighborhood": "Sesame Street",
+              "city": "Ottawa",
+              "state": "ON",
+              "country": "CA",
+              "line_1": "456, My Street, Sesame Street"
+            },
+            "type": "credit"
+          },
+          "created_at": "2018-02-01T18:41:04Z",
+          "updated_at": "2018-02-01T18:41:04Z",
+          "gateway_response": {
+            "code": "400",
+            "errors": [
+              {
+                "message": "Esta loja n??o possui um meio de pagamento configurado para a bandeira VR"
+              }
+            ]
+          }
+        }
+      }
+    )
+  end
+
+  def failed_response_with_acquirer_return_code
+    %(
+      {
+        "id": "ch_9qY3lpeCJyTe2Gxz",
+        "code": "3Y4ZFENCK4",
+        "gateway_id": "db9a46cb-2c59-4663-a658-e7817302d97c",
+        "amount": 2946,
+        "status": "failed",
+        "currency": "BRL",
+        "payment_method": "credit_card",
+        "created_at": "2019-11-15T16:21:58Z",
+        "updated_at": "2019-11-15T16:21:59Z",
+        "customer": {
+          "id": "cus_KD14bY1F51UR1GrX",
+          "name": "JOSE NETO",
+          "email": "jose_bar@uol.com.br",
+          "delinquent": false,
+          "created_at": "2019-11-15T16:21:58Z",
+          "updated_at": "2019-11-15T16:21:58Z",
+          "phones": {}
+        },
+        "last_transaction": {
+          "id": "tran_P2zwvPztdVCg6pvA",
+          "transaction_type": "credit_card",
+          "gateway_id": "174a1d12-cbea-4c09-a27a-23bbad992cc9",
+          "amount": 2946,
+          "status": "not_authorized",
+          "success": false,
+          "installments": 1,
+          "acquirer_name": "vr",
+          "acquirer_affiliation_code": "",
+          "acquirer_tid": "28128131916",
+          "acquirer_nsu": "281281",
+          "acquirer_message": "VR|",
+          "acquirer_return_code": "14",
+          "operation_type": "auth_and_capture",
+          "card": {
+            "id": "card_V2pQo2IbjtPqaXRZ",
+            "first_six_digits": "627416",
+            "last_four_digits": "7116",
+            "brand": "VR",
+            "holder_name": "JOSE NETO",
+            "holder_document": "27207590822",
+            "exp_month": 8,
+            "exp_year": 2029,
+            "status": "active",
+            "type": "voucher",
+            "created_at": "2019-11-15T16:21:58Z",
+            "updated_at": "2019-11-15T16:21:58Z",
+            "billing_address": {
+              "street": "R.Dr.Eduardo de Souza Aranha,",
+              "number": "67",
+              "zip_code": "04530030",
+              "neighborhood": "Av Das Nacoes Unidas 6873",
+              "city": "Sao Paulo",
+              "state": "SP",
+              "country": "BR",
+              "line_1": "67, R.Dr.Eduardo de Souza Aranha,, Av Das Nacoes Unidas 6873"
+            }
+          },
+          "created_at": "2019-11-15T16:21:58Z",
+          "updated_at": "2019-11-15T16:21:58Z",
+          "gateway_response": {
+            "code": "201",
+            "errors": []
+          },
+          "antifraud_response": {},
+          "metadata": {}
         }
       }
     )

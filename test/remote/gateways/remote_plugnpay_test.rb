@@ -6,8 +6,8 @@ class PlugnpayTest < Test::Unit::TestCase
     @good_card = credit_card('4111111111111111', first_name: 'cardtest')
     @bad_card = credit_card('1234123412341234')
     @options = {
-      :billing_address => address,
-      :description => 'Store purchaes'
+      billing_address: address,
+      description: 'Store purchaes'
     }
     @amount = 100
   end

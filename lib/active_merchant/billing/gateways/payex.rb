@@ -12,8 +12,8 @@ module ActiveMerchant #:nodoc:
       self.test_confined_url = 'https://test-confined.payex.com/'
 
       self.money_format = :cents
-      self.supported_countries = ['DK', 'FI', 'NO', 'SE']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_countries = %w[DK FI NO SE]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.homepage_url = 'http://payex.com/'
       self.display_name = 'Payex'
       self.default_currency = 'EUR'
@@ -193,9 +193,9 @@ module ActiveMerchant #:nodoc:
           cancelUrl: nil,
           clientLanguage: nil
         }
-        hash_fields = [:accountNumber, :purchaseOperation, :price, :priceArgList, :currency, :vat, :orderID,
-                       :productNumber, :description, :clientIPAddress, :clientIdentifier, :additionalValues,
-                       :externalID, :returnUrl, :view, :agreementRef, :cancelUrl, :clientLanguage]
+        hash_fields = %i[accountNumber purchaseOperation price priceArgList currency vat orderID
+                         productNumber description clientIPAddress clientIdentifier additionalValues
+                         externalID returnUrl view agreementRef cancelUrl clientLanguage]
         add_request_hash(properties, hash_fields)
         soap_action = SOAP_ACTIONS[:initialize]
         request = build_xml_request(soap_action, properties)
@@ -213,8 +213,8 @@ module ActiveMerchant #:nodoc:
           cardHolderName: payment_method.name,
           cardNumberCVC: payment_method.verification_value
         }
-        hash_fields = [:accountNumber, :orderRef, :transactionType, :cardNumber, :cardNumberExpireMonth,
-                       :cardNumberExpireYear, :cardNumberCVC, :cardHolderName]
+        hash_fields = %i[accountNumber orderRef transactionType cardNumber cardNumberExpireMonth
+                         cardNumberExpireYear cardNumberCVC cardHolderName]
         add_request_hash(properties, hash_fields)
 
         soap_action = SOAP_ACTIONS[:purchasecc]
@@ -233,7 +233,7 @@ module ActiveMerchant #:nodoc:
           purchaseOperation: is_auth ? 'AUTHORIZATION' : 'SALE',
           currency: (options[:currency] || default_currency),
         }
-        hash_fields = [:accountNumber, :agreementRef, :price, :productNumber, :description, :orderId, :purchaseOperation, :currency]
+        hash_fields = %i[accountNumber agreementRef price productNumber description orderId purchaseOperation currency]
         add_request_hash(properties, hash_fields)
 
         soap_action = SOAP_ACTIONS[:autopay]
@@ -250,7 +250,7 @@ module ActiveMerchant #:nodoc:
           vatAmount: options[:vat_amount] || 0,
           additionalValues: ''
         }
-        hash_fields = [:accountNumber, :transactionNumber, :amount, :orderId, :vatAmount, :additionalValues]
+        hash_fields = %i[accountNumber transactionNumber amount orderId vatAmount additionalValues]
         add_request_hash(properties, hash_fields)
 
         soap_action = SOAP_ACTIONS[:capture]
@@ -267,7 +267,7 @@ module ActiveMerchant #:nodoc:
           vatAmount: options[:vat_amount] || 0,
           additionalValues: ''
         }
-        hash_fields = [:accountNumber, :transactionNumber, :amount, :orderId, :vatAmount, :additionalValues]
+        hash_fields = %i[accountNumber transactionNumber amount orderId vatAmount additionalValues]
         add_request_hash(properties, hash_fields)
 
         soap_action = SOAP_ACTIONS[:credit]
@@ -280,7 +280,7 @@ module ActiveMerchant #:nodoc:
           accountNumber: @options[:account],
           transactionNumber: transaction_number,
         }
-        hash_fields = [:accountNumber, :transactionNumber]
+        hash_fields = %i[accountNumber transactionNumber]
         add_request_hash(properties, hash_fields)
 
         soap_action = SOAP_ACTIONS[:cancel]
@@ -299,7 +299,7 @@ module ActiveMerchant #:nodoc:
           startDate: options[:startDate] || '',
           stopDate: options[:stopDate] || ''
         }
-        hash_fields = [:accountNumber, :merchantRef, :description, :purchaseOperation, :maxAmount, :notifyUrl, :startDate, :stopDate]
+        hash_fields = %i[accountNumber merchantRef description purchaseOperation maxAmount notifyUrl startDate stopDate]
         add_request_hash(properties, hash_fields)
 
         soap_action = SOAP_ACTIONS[:create_agreement]
@@ -312,7 +312,7 @@ module ActiveMerchant #:nodoc:
           accountNumber: @options[:account],
           agreementRef: authorization,
         }
-        hash_fields = [:accountNumber, :agreementRef]
+        hash_fields = %i[accountNumber agreementRef]
         add_request_hash(properties, hash_fields)
 
         soap_action = SOAP_ACTIONS[:delete_agreement]

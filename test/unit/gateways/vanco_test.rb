@@ -30,9 +30,7 @@ class VancoTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(fund_id: 'MyEggcellentFund'))
     end.check_request do |endpoint, data, headers|
-      if data =~ /<RequestType>EFTAdd/
-        assert_match(%r(<FundID>MyEggcellentFund<\/FundID>), data)
-      end
+      assert_match(%r(<FundID>MyEggcellentFund<\/FundID>), data) if data =~ /<RequestType>EFTAdd/
     end.respond_with(successful_login_response, successful_purchase_with_fund_id_response)
 
     assert_success response
@@ -44,9 +42,7 @@ class VancoTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(ip: '192.168.0.1'))
     end.check_request do |endpoint, data, headers|
-      if data =~ /<RequestType>EFTAdd/
-        assert_match(%r(<CustomerIPAddress>192), data)
-      end
+      assert_match(%r(<CustomerIPAddress>192), data) if data =~ /<RequestType>EFTAdd/
     end.respond_with(successful_login_response, successful_purchase_response)
     assert_success response
   end
@@ -184,5 +180,4 @@ class VancoTest < Test::Unit::TestCase
       <?xml version="1.0" encoding="UTF-8"  ?><VancoWS><Auth><RequestID>dc9a5e2b620eee5d248e1b33cc1f33</RequestID><RequestTime>2015-05-01 16:19:33 -0400</RequestTime><RequestType>EFTAddCredit</RequestType><Signature></Signature><SessionID>67a731057f821413155033bc23551aef3ba0b204</SessionID><Version>2</Version></Auth><Response><Errors><Error><ErrorCode>575</ErrorCode><ErrorDescription>Amount Cannot Be Greater Than $100.05</ErrorDescription></Error></Errors></Response></VancoWS>
      )
   end
-
 end

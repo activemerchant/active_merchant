@@ -41,6 +41,17 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_equal 'Y', response.cvv_result['code']
   end
 
+  def test_successful_purchase_using_network_token
+    network_token = network_tokenization_credit_card({source: :network_token})
+    response = stub_comms do
+      @gateway.purchase(@amount, network_token)
+    end.respond_with(successful_purchase_with_network_token_response)
+
+    assert_success response
+    assert_equal '2FCFE326D92D4C27EDD699560F484', response.params['source']['payment_account_reference']
+    assert response.test?
+  end
+
   def test_successful_authorize_includes_avs_result
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card)
@@ -115,6 +126,19 @@ class CheckoutV2Test < Test::Unit::TestCase
     end.respond_with(successful_capture_response)
 
     assert_success capture
+  end
+
+  def test_moto_transaction_is_properly_set
+    response = stub_comms do
+      options = {
+        metadata: { manual_entry: true}
+      }
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{"payment_type":"MOTO"}, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
   end
 
   def test_3ds_passed
@@ -286,7 +310,7 @@ class CheckoutV2Test < Test::Unit::TestCase
     end.respond_with(invalid_json_response)
 
     assert_failure response
-    assert_match %r{Unable to read error message}, response.message
+    assert_match %r{Invalid JSON response received from Checkout.com Unified Payments Gateway. Please contact Checkout.com if you continue to receive this message.}, response.message
   end
 
   def test_error_code_returned
@@ -298,8 +322,17 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_match(/request_invalid: card_expired/, response.error_code)
   end
 
+  def test_4xx_error_message
+    @gateway.expects(:ssl_post).raises(error_4xx_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card)
+
+    assert_failure response
+    assert_match(/401: Unauthorized/, response.message)
+  end
+
   def test_supported_countries
-    assert_equal ['AD', 'AE', 'AT', 'BE', 'BG', 'CH', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FO', 'FI', 'FR', 'GB', 'GI', 'GL', 'GR', 'HR', 'HU', 'IE', 'IS', 'IL', 'IT', 'LI', 'LT', 'LU', 'LV', 'MC', 'MT', 'NL', 'NO', 'PL', 'PT', 'RO', 'SE', 'SI', 'SM', 'SK', 'SJ', 'TR', 'VA'], @gateway.supported_countries
+    assert_equal %w[AD AE AR AT AU BE BG BH BR CH CL CN CO CY CZ DE DK EE EG ES FI FR GB GR HK HR HU IE IS IT JO JP KW LI LT LU LV MC MT MX MY NL NO NZ OM PE PL PT QA RO SA SE SG SI SK SM TR US], @gateway.supported_countries
   end
 
   private
@@ -338,6 +371,12 @@ class CheckoutV2Test < Test::Unit::TestCase
        }
       }
     )
+  end
+
+  def successful_purchase_with_network_token_response
+    purchase_response = JSON.parse(successful_purchase_response)
+    purchase_response['source']['payment_account_reference'] = '2FCFE326D92D4C27EDD699560F484'
+    purchase_response.to_json
   end
 
   def failed_purchase_response
@@ -496,6 +535,13 @@ class CheckoutV2Test < Test::Unit::TestCase
         "request_id": "e5a3ce6f-a4e9-4445-9ec7-e5975e9a6213","error_type": "request_invalid","error_codes": ["card_expired"]
       }
     )
+  end
+
+  def error_4xx_response
+    mock_response = Net::HTTPUnauthorized.new('1.1', '401', 'Unauthorized')
+    mock_response.stubs(:body).returns('')
+
+    ActiveMerchant::ResponseError.new(mock_response)
   end
 
   def successful_verify_payment_response
