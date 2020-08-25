@@ -86,7 +86,9 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, options)
         add_creditcard(post, creditcard)
-        add_3dsecure(post, options)
+        if (options[:three_d_secure] == true)
+          add_3dsecure(post, options)
+        end
         add_amount(post, money, options)
 
         commit('authorization', money, post)
@@ -96,7 +98,9 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, options)
         add_creditcard(post, creditcard)
-        add_3dsecure(post, options)
+        if (options[:three_d_secure] == true)
+          add_3dsecure(post, options)
+        end
         add_amount(post, money, options)
 
         commit('purchase', money, post)
