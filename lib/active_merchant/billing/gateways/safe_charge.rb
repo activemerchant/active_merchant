@@ -25,7 +25,7 @@ module ActiveMerchant #:nodoc:
         post[:sg_APIType] = 1 if options[:three_d_secure]
         trans_type = options[:three_d_secure] ? 'Sale3D' : 'Sale'
 
-		    add_externalMpi_data(post, options) if options[:three_d_secure]
+		    add_external_mpi_data(post, options) if options[:three_d_secure]
         add_transaction_data(trans_type, post, money, options)
         add_payment(post, payment, options)
         add_customer_details(post, payment, options)
@@ -165,7 +165,7 @@ module ActiveMerchant #:nodoc:
         post[:sg_Email] = options[:email]
       end
 
-      def add_externalMpi_data(post, options)
+      def add_external_mpi_data(post, options)
         post[:sg_eci] = options[:eci]
         post[:sg_cavv] = options[:cavv]
         post[:sg_dsTransID] = options[:ds_transaction_id]
