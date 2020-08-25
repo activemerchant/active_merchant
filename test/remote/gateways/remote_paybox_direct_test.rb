@@ -4,11 +4,12 @@ require 'test_helper'
 
 class RemotePayboxDirectTest < Test::Unit::TestCase
   def setup
-    @gateway = PayboxDirectGateway.new(fixtures(:paybox_direct))
+    fixtures = fixtures(:paybox_direct)
+    @gateway = PayboxDirectGateway.new(fixtures)
 
     @amount = 100
-    @credit_card = credit_card('1111222233334444')
-    @declined_card = credit_card('1111222233334445')
+    @credit_card = credit_card(fixtures[:credit_card_ok])
+    @declined_card = credit_card(fixtures[:credit_card_nok])
 
     @options = {
       order_id: '1',

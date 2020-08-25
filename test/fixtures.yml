@@ -692,6 +692,11 @@ paybox_direct:
   login: 1999888
   password: 1999888I
   rang: 222
+  credit_card_ok_3ds: 4012001037141112
+  credit_card_nok_3ds: 4012001037141113
+  credit_card_ok_3ds_not_enrolled: 4012001038443335
+  credit_card_ok: 1111222233334444
+  credit_card_nok: 1111222233334445
 
 # Working credentials, no need to replace
 payeezy:
