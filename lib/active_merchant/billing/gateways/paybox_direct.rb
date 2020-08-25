@@ -68,17 +68,17 @@ module ActiveMerchant #:nodoc:
         # ECI=02 => MasterCard success
         # ECI=05 => Visa, Amex or JCB success
         if options[:eci] == '02' || options[:eci] == '05'
-            post[:"3DSTATUS"]  = 'Y'
-            post[:"3DENROLLED"]  = 'Y'
-            post[:"3DSIGNVAL"] = 'Y'
-            post[:"3DERROR"] = '0'
+          post[:"3DSTATUS"] = 'Y'
+          post[:"3DENROLLED"] = 'Y'
+          post[:"3DSIGNVAL"] = 'Y'
+          post[:"3DERROR"] = '0'
         else
-            post[:"3DSTATUS"]  = 'N'
-            post[:"3DENROLLED"]  = 'N'
-            post[:"3DSIGNVAL"] = 'N'
-            post[:"3DERROR"] = '10000'
+          post[:"3DSTATUS"] = 'N'
+          post[:"3DENROLLED"] = 'N'
+          post[:"3DSIGNVAL"] = 'N'
+          post[:"3DERROR"] = '10000'
         end
-        post[:"3DECI"]  = options[:eci]
+        post[:"3DECI"] = options[:eci]
         post[:"3DXID"] = options[:xid]
         post[:"3DCAVV"] = options[:cavv]
         post[:"3DCAVVALGO"] = options[:cavv_algorithm]
@@ -88,9 +88,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, options)
         add_creditcard(post, creditcard)
-        if (options[:three_d_secure] == true)
-          add_3dsecure(post, options)
-        end
+        add_3dsecure(post, options) if options[:three_d_secure] == true
         add_amount(post, money, options)
 
         commit('authorization', money, post)
@@ -100,9 +98,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, options)
         add_creditcard(post, creditcard)
-        if (options[:three_d_secure] == true)
-          add_3dsecure(post, options)
-        end
+        add_3dsecure(post, options) if options[:three_d_secure] == true
         add_amount(post, money, options)
 
         commit('purchase', money, post)

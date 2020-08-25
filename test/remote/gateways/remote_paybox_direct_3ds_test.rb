@@ -32,7 +32,7 @@ class RemotePayboxDirect3DSTest < Test::Unit::TestCase
 
   def test_successful_purchase_other_eci
     options = @options.merge(
-        eci: '05',
+      eci: '05'
     )
     assert response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
@@ -112,7 +112,7 @@ class RemotePayboxDirect3DSTest < Test::Unit::TestCase
 
   def test_failed_purchase_invalid_eci
     options = @options.merge(
-        eci: '00',
+      eci: '00'
     )
     assert purchase = @gateway.purchase(@amount, @credit_card, options)
     assert_failure purchase
@@ -121,21 +121,21 @@ class RemotePayboxDirect3DSTest < Test::Unit::TestCase
 
   def test_failed_purchase_invalid_cavv
     options = @options.merge(
-        cavv: 'jJ81HADVRtXfCBATEp01CJUAAAAVZQGY=',
+      cavv: 'jJ81HADVRtXfCBATEp01CJUAAAAVZQGY='
     )
 
     assert purchase = @gateway.purchase(@amount, @credit_card, options)
     assert_failure purchase
-    assert_equal "Some values exceed max length", purchase.message
+    assert_equal 'Some values exceed max length', purchase.message
   end
 
   def test_failed_purchase_invalid_xid
     options = @options.merge(
-        xid: '00000000000000000510123123123456789',
+      xid: '00000000000000000510123123123456789'
     )
 
     assert purchase = @gateway.purchase(@amount, @credit_card, options)
     assert_failure purchase
-    assert_equal "Some values exceed max length", purchase.message
+    assert_equal 'Some values exceed max length', purchase.message
   end
 end
