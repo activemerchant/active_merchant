@@ -25,7 +25,7 @@ module ActiveMerchant #:nodoc:
         post[:sg_APIType] = 1 if options[:three_d_secure]
         trans_type = options[:three_d_secure] ? 'Sale3D' : 'Sale'
 
-		    add_external_mpi_data(post, options) if options[:three_d_secure]
+        add_external_mpi_data(post, options) if options[:three_d_secure]
         add_transaction_data(trans_type, post, money, options)
         add_payment(post, payment, options)
         add_customer_details(post, payment, options)
