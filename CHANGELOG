@@ -7,6 +7,7 @@
 * RuboCop: Fix Style/TrailingCommaInHashLiteral [leila-alderman] #3718
 * RuboCop: Fix Naming/PredicateName [leila-alderman] #3724
 * RuboCop: Fix Style/Attr [leila-alderman] #3728
+* Payflow: Use application_id to set buttonsource [britth] #3737
 
 == Version 1.112.0
 * Cybersource: add `maestro` and `diners_club` eci brand mapping [bbraschi] #3708
