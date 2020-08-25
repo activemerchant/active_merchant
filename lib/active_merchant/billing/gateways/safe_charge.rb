@@ -5,7 +5,7 @@ module ActiveMerchant #:nodoc:
     class SafeChargeGateway < Gateway
       self.test_url = 'https://process.sandbox.safecharge.com/service.asmx/Process'
       self.live_url = 'https://process.safecharge.com/service.asmx/Process'
-      
+
       self.supported_countries = %w[AT BE BG CY CZ DE DK EE GR ES FI FR GI HK HR HU IE IS IT LI LT LU LV MT MX NL NO PL PT RO SE SG SI SK GB US]
       self.default_currency = 'USD'
       self.supported_cardtypes = %i[visa master]
@@ -90,7 +90,7 @@ module ActiveMerchant #:nodoc:
         auth, transaction_id, token, exp_month, exp_year, original_amount, original_currency = authorization.split('|')
 
         add_transaction_data('Void', post, (original_amount.to_f * 100), options.merge!({currency: original_currency}))
-        
+
         post[:sg_CreditType] = 2
         post[:sg_AuthCode] = auth
         post[:sg_TransactionID] = transaction_id
@@ -176,7 +176,7 @@ module ActiveMerchant #:nodoc:
 
       def parse(xml)
         response = {}
-        
+
         doc = Nokogiri::XML(xml)
         doc.root.xpath('*').each do |node|
           if node.elements.size == 0
@@ -245,7 +245,7 @@ module ActiveMerchant #:nodoc:
 
       def split_authorization(authorization)
         auth_code, transaction_id, token, month, year, original_amount = authorization.split('|')
-        
+
         {
           auth_code: auth_code,
           transaction_id: transaction_id,
