@@ -411,7 +411,11 @@ module ActiveMerchant #:nodoc:
             xml.tag! :PC3LineItem do
               xml.tag! :PC3DtlIndex,  byte_limit(index + 1, 2)
               line_item.each do |key, value|
-                formatted_key = "PC3Dtl#{key.to_s.camelize}".to_sym
+                if key == :line_tot
+                  formatted_key = :PC3Dtllinetot
+                else
+                  formatted_key = "PC3Dtl#{key.to_s.camelize}".to_sym
+                end
                 xml.tag! formatted_key, value
               end
             end
@@ -790,6 +794,8 @@ module ActiveMerchant #:nodoc:
             xml.tag! :TxRefNum, tx_ref_num
             add_level_2_purchase(xml, parameters)
             add_level_2_advice_addendum(xml, parameters)
+            add_level_3_purchase(xml, parameters)
+            add_level_3_tax(xml, parameters)
           end
         end
         xml.target!

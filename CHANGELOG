@@ -3,7 +3,6 @@
 == HEAD
 * Orbital: Add cardIndicators field [meagabeth] #3734
 * Openpay: Add Colombia to supported countries [molbrown] #3740
-* Orbital: Fix typo in PC3DtlLineTot field [naashton] #3736
 * RuboCop: Fix Style/TrailingCommaInHashLiteral [leila-alderman] #3718
 * RuboCop: Fix Naming/PredicateName [leila-alderman] #3724
 * RuboCop: Fix Style/Attr [leila-alderman] #3728
@@ -11,6 +10,7 @@
 * HPS: Enable refunds using capture transaction [britth] #3738
 * Quickbooks: Omit empty strings in address [leila-alderman] #3743
 * BlueSnap: Add transactionMetaData support #3745
+* Orbital: Fix typo in PC3DtlLineTot field [naashton] #3736
 
 == Version 1.112.0
 * Cybersource: add `maestro` and `diners_club` eci brand mapping [bbraschi] #3708

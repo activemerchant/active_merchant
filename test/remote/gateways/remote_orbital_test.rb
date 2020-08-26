@@ -393,6 +393,15 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_successful_authorize_and_capture_with_level_3_data
+    auth = @gateway.authorize(@amount, @credit_card, @options.merge(level_3_data: @level_3_options))
+    assert_success auth
+    assert_equal 'Approved', auth.message
+
+    capture = @gateway.capture(@amount, auth.authorization, @options.merge(level_3_data: @level_3_options))
+    assert_success capture
+  end
+
   def test_authorize_and_void
     assert auth = @gateway.authorize(@amount, @credit_card, @options.merge(order_id: '2'))
     assert_success auth
