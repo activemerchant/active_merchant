@@ -212,12 +212,28 @@ module ActiveMerchant
         end
       end
 
-      def add_description(doc, description)
+      def add_metadata(doc, options)
+        transaction_meta_data = options.fetch(:transaction_meta_data, {})
+        return if transaction_meta_data.empty? && !options[:description]
+
         doc.send('transaction-meta-data') do
-          doc.send('meta-data') do
-            doc.send('meta-key', 'description')
-            doc.send('meta-value', truncate(description, 500))
-            doc.send('meta-description', 'Description')
+          # ensure backwards compatibility for calls expecting :description
+          # to become meta-data fields.
+          if options[:description]
+            doc.send('meta-data') do
+              doc.send('meta-key', 'description')
+              doc.send('meta-value', truncate(options[:description], 500))
+              doc.send('meta-description', 'Description')
+            end
+          end
+
+          # https://developers.bluesnap.com/v8976-XML/docs/meta-data
+          transaction_meta_data.each do |entry|
+            doc.send('meta-data') do
+              doc.send('meta-key', truncate(entry[:meta_key], 40))
+              doc.send('meta-value', truncate(entry[:meta_value], 500))
+              doc.send('meta-description', truncate(entry[:meta_description], 40))
+            end
           end
         end
       end
@@ -225,7 +241,7 @@ module ActiveMerchant
       def add_order(doc, options)
         doc.send('merchant-transaction-id', truncate(options[:order_id], 50)) if options[:order_id]
         doc.send('soft-descriptor', options[:soft_descriptor]) if options[:soft_descriptor]
-        add_description(doc, options[:description]) if options[:description]
+        add_metadata(doc, options)
         add_3ds(doc, options[:three_d_secure]) if options[:three_d_secure]
         add_level_3_data(doc, options)
       end
@@ -315,7 +331,7 @@ module ActiveMerchant
         add_echeck_transaction(doc, payment_method_details.payment_method, options, vaulted_shopper_id.present?) if payment_method_details.check?
 
         add_fraud_info(doc, options)
-        add_description(doc, options)
+        add_metadata(doc, options)
       end
 
       def add_echeck_transaction(doc, check, options, vaulted_shopper)
@@ -350,17 +366,38 @@ module ActiveMerchant
         parsed = {}
         doc = Nokogiri::XML(response.body)
         doc.root.xpath('*').each do |node|
+          name = node.name.downcase
+
           if node.elements.empty?
-            parsed[node.name.downcase] = node.text
+            parsed[name] = node.text
+          elsif name == 'transaction-meta-data'
+            metadata = []
+            node.elements.each { |m|
+              metadata.push parse_metadata_entry(m)
+            }
+
+            parsed['transaction-meta-data'] = metadata
           else
-            node.elements.each do |childnode|
+            node.elements.each { |childnode|
               parse_element(parsed, childnode)
-            end
+            }
           end
         end
 
         parsed['content-location-header'] = response['content-location']
         parsed
+      end
+
+      def parse_metadata_entry(node)
+        entry = {}
+
+        node.elements.each { |e|
+          entry = entry.merge({
+            e.name => e.text
+          })
+        }
+
+        entry
       end
 
       def parse_element(parsed, node)
