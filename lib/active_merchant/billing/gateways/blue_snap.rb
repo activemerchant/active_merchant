@@ -177,7 +177,7 @@ module ActiveMerchant
         add_order(doc, options)
         doc.send('store-card', options[:store_card] || false)
         add_amount(doc, money, options)
-        add_fraud_info(doc, options)
+        add_fraud_info(doc, payment_method, options)
 
         if payment_method.is_a?(String)
           doc.send('vaulted-shopper-id', payment_method)
@@ -200,6 +200,7 @@ module ActiveMerchant
         doc.send('last-name', payment_method.last_name)
         doc.send('personal-identification-number', options[:personal_identification_number]) if options[:personal_identification_number]
         doc.email(options[:email]) if options[:email]
+        doc.phone(options[:phone_number]) if options[:phone_number]
         add_address(doc, options)
       end
 
@@ -252,7 +253,8 @@ module ActiveMerchant
 
         doc.country(address[:country]) if address[:country]
         doc.state(address[:state]) if address[:state] && STATE_CODE_COUNTRIES.include?(address[:country])
-        doc.address(address[:address]) if address[:address]
+        doc.address(address[:address1]) if address[:address1]
+        doc.address2(address[:address2]) if address[:address2]
         doc.city(address[:city]) if address[:city]
         doc.zip(address[:zip]) if address[:zip]
       end
@@ -314,10 +316,29 @@ module ActiveMerchant
         doc.send('transaction-id', authorization)
       end
 
-      def add_fraud_info(doc, options)
+      def add_fraud_info(doc, payment_method, options)
         doc.send('transaction-fraud-info') do
           doc.send('shopper-ip-address', options[:ip]) if options[:ip]
+
+          unless payment_method.is_a? String
+            doc.send('shipping-contact-info') do
+              add_shipping_contact_info(doc, payment_method, options)
+            end
+          end
         end
+      end
+
+      def add_shipping_contact_info(doc, payment_method, options)
+        # https://developers.bluesnap.com/v8976-XML/docs/shipping-contact-info
+        doc.send('first-name', payment_method.first_name)
+        doc.send('last-name', payment_method.last_name)
+
+        doc.country(options[:shipping_country]) if options[:shipping_country]
+        doc.state(options[:shipping_state]) if options[:shipping_state] && STATE_CODE_COUNTRIES.include?(options[:shipping_country])
+        doc.address1(options[:shipping_address1]) if options[:shipping_address1]
+        doc.address2(options[:shipping_address2]) if options[:shipping_address2]
+        doc.city(options[:shipping_city]) if options[:shipping_city]
+        doc.zip(options[:shipping_zip]) if options[:shipping_zip]
       end
 
       def add_alt_transaction_purchase(doc, money, payment_method_details, options)
@@ -330,7 +351,7 @@ module ActiveMerchant
 
         add_echeck_transaction(doc, payment_method_details.payment_method, options, vaulted_shopper_id.present?) if payment_method_details.check?
 
-        add_fraud_info(doc, options)
+        add_fraud_info(doc, payment_method_details.payment_method, options)
         add_metadata(doc, options)
       end
 
