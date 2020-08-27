@@ -266,7 +266,9 @@ module ActiveMerchant #:nodoc:
           zip: '00000',
           country: 'US'
         }
-        options[:billing_address] = options[:billing_address] || options[:address] || default_address
+
+        submitted_address = options[:billing_address] || options[:address] || default_address
+        options[:billing_address] = default_address.merge(submitted_address) { |_k, default, submitted| submitted.blank? ? default : submitted }
         options[:shipping_address] = options[:shipping_address] || {}
       end
 

@@ -426,6 +426,12 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     ActiveMerchant::Billing::CyberSourceGateway.application_id = nil
   end
 
+  def test_successful_purchase_with_country_submitted_as_empty_string
+    @options[:billing_address] = { country: '' }
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_successful_response(response)
+  end
+
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_equal 'Invalid account number', response.message
@@ -918,22 +924,6 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     }
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_successful_response(response)
-  end
-
-  def test_missing_field
-    @options = @options.merge({
-      address: {
-        address1: 'Unspecified',
-        city: 'Unspecified',
-        state: 'NC',
-        zip: '00000',
-        country: ''
-      }
-    })
-
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_failure response
-    assert_equal 'Request is missing one or more required fields: c:billTo/c:country', response.message
   end
 
   def test_invalid_field

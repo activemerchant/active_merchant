@@ -1097,6 +1097,14 @@ class CyberSourceTest < Test::Unit::TestCase
     end.respond_with(successful_capture_response)
   end
 
+  def test_country_code_sent_as_default_when_submitted_as_empty_string
+    stub_comms do
+      @gateway.authorize(100, @credit_card, billing_address: { country: '' })
+    end.check_request do |endpoint, data, headers|
+      assert_match('<country>US</country>', data)
+    end.respond_with(successful_capture_response)
+  end
+
   def test_adds_application_id_as_partner_solution_id
     partner_id = 'partner_id'
     CyberSourceGateway.application_id = partner_id
