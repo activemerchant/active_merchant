@@ -1268,6 +1268,11 @@ trust_commerce:
   password: 'password'
 
 # Working credentials, no need to replace
+two_c_two_p:
+  merchant_id: JT01
+  secret_key: 7jYcp4FxFdf0
+
+# Working credentials, no need to replace
 usa_epay:
   login: '4EoZ5U2Q55j976W7eplC71i6b7kn4pcV'
 
