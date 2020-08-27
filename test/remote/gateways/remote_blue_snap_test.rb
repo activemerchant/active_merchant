@@ -185,6 +185,42 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     assert_nil response.params['transaction-meta-data']
   end
 
+  def test_successful_purchase_with_card_holder_info
+    more_options = @options.merge({
+      order_id: '1',
+      ip: '127.0.0.1',
+      email: 'joe@example.com',
+      soft_descriptor: 'OnCardStatement',
+      personal_identification_number: 'CNPJ',
+      billing_address: {
+        address1: '123 Street',
+        address2: 'Apt 1',
+        city: 'Happy City',
+        state: 'CA',
+        zip: '94901'
+      },
+      phone_number: '555 888 0000'
+    })
+
+    response = @gateway.purchase(@amount, @credit_card, more_options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_purchase_with_shipping_contact_info
+    more_options = @options.merge({
+      shipping_address1: '123 Main St',
+      shipping_city: 'Springfield',
+      shipping_state: 'NC',
+      shipping_country: 'US',
+      shipping_zip: '27701'
+    })
+
+    response = @gateway.purchase(@amount, @credit_card, more_options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
   def test_successful_purchase_with_3ds2_auth
     response = @gateway.purchase(@amount, @three_ds_visa_card, @options_3ds2)
     assert_success response

@@ -59,6 +59,53 @@ class BlueSnapTest < Test::Unit::TestCase
     assert_equal '1012082839', response.authorization
   end
 
+  def test_successful_purchase_with_shipping_contact_info
+    more_options = @options.merge({
+      shipping_address1: '123 Main St',
+      shipping_city: 'Springfield',
+      shipping_state: 'NC',
+      shipping_country: 'US',
+      shipping_zip: '27701'
+    })
+    response = stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.purchase(@amount, @credit_card, more_options)
+    end.check_request do |method, url, data|
+      assert_match(/shipping-contact-info/, data)
+      assert_match(/<address1>123 Main St/, data)
+      assert_match(/<city>Springfield/, data)
+      assert_match(/<state>NC/, data)
+      assert_match(/<country>US/, data)
+      assert_match(/<zip>27701/, data)
+    end.respond_with(successful_purchase_response_with_metadata)
+
+    assert_success response
+    assert_equal '1012082839', response.authorization
+  end
+
+  def test_successful_purchase_with_card_holder_info
+    more_options = @options.merge({
+      billing_address: {
+        address1: '123 Street',
+        address2: 'Apt 1',
+        city: 'Happy City',
+        state: 'CA',
+        zip: '94901'
+      },
+      phone_number: '555 888 0000'
+    })
+    response = stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.purchase(@amount, @credit_card, more_options)
+    end.check_request do |method, url, data|
+      assert_match(/card-holder-info/, data)
+      assert_match(/<address>123 Street/, data)
+      assert_match(/<address2>Apt 1/, data)
+      assert_match(/<phone>555 888 0000/, data)
+    end.respond_with(successful_purchase_response_with_metadata)
+
+    assert_success response
+    assert_equal '1012082839', response.authorization
+  end
+
   def test_successful_purchase_with_metadata
     # description option should become meta-data field
 
