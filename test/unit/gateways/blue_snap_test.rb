@@ -204,9 +204,9 @@ class BlueSnapTest < Test::Unit::TestCase
   def test_successful_refund
     @gateway.expects(:raw_ssl_request).returns(successful_refund_response)
 
-    response = @gateway.refund(@amount, 'Authorization')
+    response = @gateway.refund(@amount, '1012082907')
     assert_success response
-    assert_equal '1012082907', response.authorization
+    assert_equal '1012082907', response.params["transaction-id"]
   end
 
   def test_failed_refund
@@ -220,9 +220,9 @@ class BlueSnapTest < Test::Unit::TestCase
   def test_successful_void
     @gateway.expects(:raw_ssl_request).returns(successful_void_response)
 
-    response = @gateway.void('Authorization')
+    response = @gateway.void('1012082919')
     assert_success response
-    assert_equal '1012082919', response.authorization
+    assert_equal '1012082919', response.params["transaction-id"]
   end
 
   def test_failed_void
@@ -250,11 +250,11 @@ class BlueSnapTest < Test::Unit::TestCase
   end
 
   def test_successful_store
-    @gateway.expects(:raw_ssl_request).returns(successful_store_response)
+    @gateway.expects(:raw_ssl_request).twice.returns(successful_store_response)
 
     response = @gateway.store(@credit_card, @options)
     assert_success response
-    assert_equal '20936441', response.authorization
+    assert_equal '1021172268', response.authorization
   end
 
   def test_successful_echeck_store
@@ -353,11 +353,6 @@ class BlueSnapTest < Test::Unit::TestCase
     # Check all 0 decimal currencies
     ActiveMerchant::Billing::BlueSnapGateway.currencies_without_fractions.each do |currency|
       assert_equal '12', check_amount_registered(amount, currency)
-    end
-
-    # Check all 3 decimal currencies
-    ActiveMerchant::Billing::BlueSnapGateway.currencies_with_three_decimal_places.each do |currency|
-      assert_equal '1.234', check_amount_registered(amount, currency)
     end
   end
 
@@ -898,37 +893,48 @@ class BlueSnapTest < Test::Unit::TestCase
 
   def successful_store_response
     response = MockResponse.succeeded <<-XML
-      <?xml version="1.0" encoding="UTF-8"?>
-      <vaulted-shopper xmlns="http://ws.plimus.com">
-        <first-name>Longbob</first-name>
-        <last-name>Longsen</last-name>
-        <country>ca</country>
-        <state>ON</state>
-        <city>Ottawa</city>
-        <zip>K1C2N6</zip>
-        <personal-identification-number>CNPJ</personal-identification-number>
-        <shopper-currency>USD</shopper-currency>
-        <payment-sources>
-          <credit-card-info>
-            <billing-contact-info>
-              <first-name>Longbob</first-name>
-              <last-name>Longsen</last-name>
-              <city />
-            </billing-contact-info>
-            <credit-card>
-              <card-last-four-digits>9299</card-last-four-digits>
-              <card-type>VISA</card-type>
-              <card-sub-type>CREDIT</card-sub-type>
+    <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+    <charge xmlns="http://ws.plimus.com">
+      <charge-id>2356652</charge-id>
+      <subscription-id>16574412</subscription-id>
+      <vaulted-shopper-id>29886250</vaulted-shopper-id>
+      <transaction-id>1021172268</transaction-id>
+      <transaction-date>2020-08-25</transaction-date>
+      <amount>0.00</amount>
+      <currency>USD</currency>
+      <soft-descriptor>BLS&#x2a;onboardingDefault</soft-descriptor>
+      <payment-source>
+        <credit-card-info>
+          <billing-contact-info>
+            <first-name>Jim</first-name>
+            <last-name>Smith</last-name>
+            <city>Happy City</city>
+            <state>AL</state>
+            <zip>12345</zip>
+            <country>us</country>
+          </billing-contact-info>
+          <credit-card>
+            <card-last-four-digits>4242</card-last-four-digits>
+            <card-type>VISA</card-type>
+            <card-sub-type>CREDIT</card-sub-type>
+            <card-category>CLASSIC</card-category>
+            <bin-category>CONSUMER</bin-category>
+            <card-regulated>N</card-regulated>
+            <expiration-month>03</expiration-month>
+            <expiration-year>2024</expiration-year>
+            <issuing-country-code>gb</issuing-country-code>
             </credit-card>
-            <processing-info>
-              <cvv-response-code>ND</cvv-response-code>
-              <avs-response-code-zip>U</avs-response-code-zip>
-              <avs-response-code-address>U</avs-response-code-address>
-              <avs-response-code-name>U</avs-response-code-name>
-            </processing-info>
           </credit-card-info>
-        </payment-sources>
-      </vaulted-shopper>
+        </payment-source>
+        <charge-info>
+          <charge-type>INITIAL</charge-type>
+        </charge-info>
+        <processing-info>
+          <processing-status>SUCCESS</processing-status>
+          <authorization-code>654321</authorization-code>
+        </processing-info>
+        <fraud-result-info/>
+    </charge>
     XML
 
     response.headers = { 'content-location' => 'https://sandbox.bluesnap.com/services/2/vaulted-shoppers/20936441' }
