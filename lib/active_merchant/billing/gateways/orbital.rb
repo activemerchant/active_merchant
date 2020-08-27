@@ -199,7 +199,6 @@ module ActiveMerchant #:nodoc:
             add_customer_data(xml, creditcard, options)
             add_managed_billing(xml, options)
           end
-          add_card_indicators(xml, options) if @options[:card_indicators]
         end
         commit(order, :authorize, options[:trace_number])
       end
@@ -220,7 +219,6 @@ module ActiveMerchant #:nodoc:
             add_customer_data(xml, creditcard, options)
             add_managed_billing(xml, options)
           end
-          add_card_indicators(xml, options) if @options[:card_indicators]
         end
         commit(order, :purchase, options[:trace_number])
       end
@@ -424,7 +422,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_card_indicators(xml, options)
-        xml.tag! :cardIndicators, options[:card_indicators] if options[:card_indicators]
+        xml.tag! :CardIndicators, options[:card_indicators] if options[:card_indicators]
       end
 
       def add_address(xml, creditcard, options)
@@ -762,6 +760,7 @@ module ActiveMerchant #:nodoc:
             add_level_2_purchase(xml, parameters)
             add_level_3_purchase(xml, parameters)
             add_level_3_tax(xml, parameters)
+            add_card_indicators(xml, parameters)
             add_line_items(xml, parameters) if parameters[:line_items]
             add_stored_credentials(xml, parameters)
             add_pymt_brand_program_code(xml, creditcard, three_d_secure)
