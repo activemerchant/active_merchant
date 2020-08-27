@@ -12,6 +12,7 @@
 * BlueSnap: Add transactionMetaData support #3745
 * Orbital: Fix typo in PC3DtlLineTot field [naashton] #3736
 * Credorax: Send first and last name parameters for CFT transactions [britth] #3748
+* Orbital: Update CardIndicators field to fix bug [meagabeth] #3746
 
 == Version 1.112.0
 * Cybersource: add `maestro` and `diners_club` eci brand mapping [bbraschi] #3708

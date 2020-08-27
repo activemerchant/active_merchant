@@ -805,21 +805,19 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   end
 
   def test_send_card_indicators_when_provided_purchase
-    @gateway.options[:card_indicators] = 'y'
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1, card_indicators: @options[:card_indicators])
     end.check_request do |endpoint, data, headers|
-      assert_match(/<cardIndicators>y/, data)
+      assert_match(/<CardIndicators>y/, data)
     end.respond_with(successful_purchase_response)
     assert_success response
   end
 
   def test_send_card_indicators_when_provided_authorize
-    @gateway.options[:card_indicators] = 'y'
     response = stub_comms do
       @gateway.authorize(50, credit_card, order_id: 1, card_indicators: @options[:card_indicators])
     end.check_request do |endpoint, data, headers|
-      assert_match(/<cardIndicators>y/, data)
+      assert_match(/<CardIndicators>y/, data)
     end.respond_with(successful_purchase_response)
     assert_success response
   end
