@@ -330,6 +330,19 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     assert_equal '34', referral_cft.params['O']
   end
 
+  def test_successful_referral_cft_with_first_and_last_name
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+
+    cft_options = { referral_cft: true, email: 'john.smith@test.com', first_name: 'John', last_name: 'Smith' }
+    referral_cft = @gateway.refund(@amount, response.authorization, cft_options)
+    assert_success referral_cft
+    assert_equal 'Succeeded', referral_cft.message
+    # Confirm that the operation code was `referral_cft`
+    assert_equal '34', referral_cft.params['O']
+  end
+
   def test_failed_referral_cft
     options = @options.merge(@normalized_3ds_2_options)
     response = @gateway.purchase(@amount, @three_ds_card, options)

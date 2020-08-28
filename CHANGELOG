@@ -11,6 +11,7 @@
 * Quickbooks: Omit empty strings in address [leila-alderman] #3743
 * BlueSnap: Add transactionMetaData support #3745
 * Orbital: Fix typo in PC3DtlLineTot field [naashton] #3736
+* Credorax: Send first and last name parameters for CFT transactions [britth] #3748
 
 == Version 1.112.0
 * Cybersource: add `maestro` and `diners_club` eci brand mapping [bbraschi] #3708
