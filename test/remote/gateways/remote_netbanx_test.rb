@@ -177,6 +177,18 @@ class RemoteNetbanxTest < Test::Unit::TestCase
     assert_equal 'CANCELLED', cancelled_response.params['status']
   end
 
+  def test_reject_partial_refund_on_pending_status
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    assert capture = @gateway.capture(@amount, auth.authorization, @options)
+    assert_success capture
+
+    assert rejected_response = @gateway.refund(90, capture.authorization)
+    assert_failure rejected_response
+    assert_equal 'Transaction not settled. Either do a full refund or try partial refund after settlement.', rejected_response.message
+  end
+
   def test_successful_void
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
