@@ -48,6 +48,13 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert !response.params['token'].blank?
   end
 
+  def test_setup_order
+    response = @gateway.setup_order(500, @options)
+    assert response.success?
+    assert response.test?
+    assert_not_nil response,token
+  end
+
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
       @gateway.setup_authorization(500, @options)

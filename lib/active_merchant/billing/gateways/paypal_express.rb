@@ -38,6 +38,12 @@ module ActiveMerchant #:nodoc:
         commit 'SetExpressCheckout', build_setup_request('Authorization', money, options)
       end
 
+      def setup_order(money, options = {})
+        requires!(options, :return_url, :cancel_return_url)
+
+        commit 'SetExpressCheckout', build_setup_request('Order', money, options)
+      end
+
       def setup_purchase(money, options = {})
         requires!(options, :return_url, :cancel_return_url)
 
@@ -52,6 +58,12 @@ module ActiveMerchant #:nodoc:
         requires!(options, :token, :payer_id)
 
         commit 'DoExpressCheckoutPayment', build_sale_or_authorization_request('Authorization', money, options)
+      end
+
+      def order(money, options = {})
+        requires!(options, :token, :payer_id)
+
+        commit 'DoExpressCheckoutPayment', build_sale_or_authorization_request('Order', money, options)
       end
 
       def purchase(money, options = {})
