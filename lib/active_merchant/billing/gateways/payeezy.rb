@@ -155,7 +155,7 @@ module ActiveMerchant
         params[:auth] = 'false'
       end
 
-      def is_store_action?(params)
+      def store_action?(params)
         params[:transaction_type] == 'store'
       end
 
@@ -295,7 +295,7 @@ module ActiveMerchant
       end
 
       def endpoint(params)
-        is_store_action?(params) ? '/transactions/tokens' : '/transactions'
+        store_action?(params) ? '/transactions/tokens' : '/transactions'
       end
 
       def api_request(url, params)
@@ -373,7 +373,7 @@ module ActiveMerchant
       end
 
       def authorization_from(params, response)
-        if is_store_action?(params)
+        if store_action?(params)
           if success_from(response)
             [
               response['token']['type'],

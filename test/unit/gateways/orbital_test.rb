@@ -27,7 +27,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       address2: address[:address2],
       city: address[:city],
       state: address[:state],
-      zip: address[:zip],
+      zip: address[:zip]
     }
 
     @level_3 = {
@@ -72,7 +72,11 @@ class OrbitalGatewayTest < Test::Unit::TestCase
         }
       ]
 
-    @options = { order_id: '1'}
+    @options = {
+      order_id: '1',
+      card_indicators: 'y'
+    }
+
     @options_stored_credentials = {
       mit_msg_type: 'MRSB',
       mit_stored_credential_ind: 'Y',
@@ -90,7 +94,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       three_d_secure: {
         eci: '5',
         xid: 'TESTXID',
-        cavv: 'TESTCAVV',
+        cavv: 'TESTCAVV'
       }
     }
   end
@@ -796,6 +800,24 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_match(/<CustomerRefNum>ABC/, data)
       assert_match(/<CustomerProfileFromOrderInd>S/, data)
       assert_match(/<CustomerProfileOrderOverrideInd>NO/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
+  def test_send_card_indicators_when_provided_purchase
+    response = stub_comms do
+      @gateway.purchase(50, credit_card, order_id: 1, card_indicators: @options[:card_indicators])
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<CardIndicators>y/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
+  def test_send_card_indicators_when_provided_authorize
+    response = stub_comms do
+      @gateway.authorize(50, credit_card, order_id: 1, card_indicators: @options[:card_indicators])
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<CardIndicators>y/, data)
     end.respond_with(successful_purchase_response)
     assert_success response
   end

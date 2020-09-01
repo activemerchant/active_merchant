@@ -13,7 +13,7 @@ module ActiveMerchant #:nodoc:
 
       STANDARD_ERROR_CODE_MAPPING = {
         'refused' => STANDARD_ERROR_CODE[:card_declined],
-        'processing_error' => STANDARD_ERROR_CODE[:processing_error],
+        'processing_error' => STANDARD_ERROR_CODE[:processing_error]
       }
 
       def initialize(options={})

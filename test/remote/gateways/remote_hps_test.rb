@@ -116,7 +116,7 @@ class RemoteHpsTest < Test::Unit::TestCase
     assert_failure response
   end
 
-  def test_successful_refund
+  def test_successful_purchase_refund
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
@@ -126,11 +126,37 @@ class RemoteHpsTest < Test::Unit::TestCase
     assert_equal '0', refund.params['GatewayRspCode']
   end
 
-  def test_partial_refund
+  def test_successful_capture_refund
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    assert capture = @gateway.capture(nil, auth.authorization)
+    assert_success capture
+
+    assert refund = @gateway.refund(@amount, capture.authorization)
+    assert_success refund
+    assert_equal 'Success', refund.params['GatewayRspMsg']
+    assert_equal '0', refund.params['GatewayRspCode']
+  end
+
+  def test_partial_purchase_refund
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
     assert refund = @gateway.refund(@amount - 1, purchase.authorization)
+    assert_success refund
+    assert_equal 'Success', refund.params['GatewayRspMsg']
+    assert_equal '0', refund.params['GatewayRspCode']
+  end
+
+  def test_partial_capture_refund
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    assert capture = @gateway.capture(nil, auth.authorization)
+    assert_success capture
+
+    assert refund = @gateway.refund(@amount - 1, capture.authorization)
     assert_success refund
     assert_equal 'Success', refund.params['GatewayRspMsg']
     assert_equal '0', refund.params['GatewayRspCode']

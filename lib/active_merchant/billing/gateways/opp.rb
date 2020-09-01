@@ -243,7 +243,7 @@ module ActiveMerchant #:nodoc:
           city: address[:city],
           state: address[:state],
           postcode: address[:zip],
-          country: address[:country],
+          country: address[:country]
         }
       end
 
@@ -260,7 +260,7 @@ module ActiveMerchant #:nodoc:
 
         if options[:registrationId]
           post[:card] = {
-            cvv: payment.verification_value,
+            cvv: payment.verification_value
           }
         else
           post[:paymentBrand] = payment.brand.upcase
@@ -269,7 +269,7 @@ module ActiveMerchant #:nodoc:
             number: payment.number,
             expiryMonth: '%02d' % payment.month,
             expiryYear: payment.year,
-            cvv: payment.verification_value,
+            cvv: payment.verification_value
           }
         end
       end

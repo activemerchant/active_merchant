@@ -311,7 +311,7 @@ module ActiveMerchant #:nodoc:
         headers = {
           'Content-Type' => 'application/json'
         }
-        headers['X-Device-Session-ID'] = options[:device_id] if options[:device_id]
+        headers['X-meli-session-id'] = options[:device_id] if options[:device_id]
         headers
       end
 

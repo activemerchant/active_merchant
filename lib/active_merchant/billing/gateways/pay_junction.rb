@@ -165,7 +165,7 @@ module ActiveMerchant #:nodoc:
       # transaction_id that can be used later to postauthorize (capture) the funds.
       def authorize(money, payment_source, options = {})
         parameters = {
-          transaction_amount: amount(money),
+          transaction_amount: amount(money)
         }
 
         add_payment_source(parameters, payment_source)
@@ -178,7 +178,7 @@ module ActiveMerchant #:nodoc:
       # Execute authorization and capture in a single step.
       def purchase(money, payment_source, options = {})
         parameters = {
-          transaction_amount: amount(money),
+          transaction_amount: amount(money)
         }
 
         add_payment_source(parameters, payment_source)

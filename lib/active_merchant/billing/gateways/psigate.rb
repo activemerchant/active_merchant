@@ -163,7 +163,7 @@ module ActiveMerchant #:nodoc:
           SubTotal: amount(money),
           Tax1: options[:tax1],
           Tax2: options[:tax2],
-          ShippingTotal: options[:shipping_total],
+          ShippingTotal: options[:shipping_total]
         }
 
         if creditcard

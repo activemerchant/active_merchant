@@ -78,7 +78,7 @@ class RemoteCardStreamTest < Test::Unit::TestCase
       order_id: generate_unique_id,
       merchant_name: 'merchant',
       dynamic_descriptor: 'product',
-      ip: '1.1.1.1',
+      ip: '1.1.1.1'
     }
 
     @visacredit_reference_options = {

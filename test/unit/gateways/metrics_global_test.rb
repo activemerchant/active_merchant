@@ -101,7 +101,7 @@ class MetricsGlobalTest < Test::Unit::TestCase
 
   def test_purchase_meets_minimum_requirements
     params = {
-      amount: '1.01',
+      amount: '1.01'
     }
 
     @gateway.send(:add_creditcard, params, @credit_card)
@@ -193,7 +193,7 @@ class MetricsGlobalTest < Test::Unit::TestCase
       card_code: 'N',
       avs_result_code: 'A',
       response_reason_code: '27',
-      response_reason_text: 'Failure.',
+      response_reason_text: 'Failure.'
     }
     assert_equal 'CVV does not match', @gateway.message_from(result)
 

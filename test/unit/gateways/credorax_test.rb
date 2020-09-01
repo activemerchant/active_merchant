@@ -167,9 +167,13 @@ class CredoraxTest < Test::Unit::TestCase
     assert_equal '8a82944a5351570601535955efeb513c;006596;02617cf5f02ccaed239b6521748298c5;purchase', response.authorization
 
     referral_cft = stub_comms do
-      @gateway.refund(@amount, response.authorization, referral_cft: true)
+      @gateway.refund(@amount, response.authorization, { referral_cft: true, first_name: 'John', last_name: 'Smith' })
     end.check_request do |endpoint, data, headers|
       assert_match(/8a82944a5351570601535955efeb513c/, data)
+      # Confirm that `j5` (first name) and `j13` (surname) parameters are present
+      # These fields are required for CFT payouts as of Sept 1, 2020
+      assert_match(/j5=John/, data)
+      assert_match(/j13=Smith/, data)
       # Confirm that the transaction type is `referral_cft`
       assert_match(/O=34/, data)
     end.respond_with(successful_referral_cft_response)

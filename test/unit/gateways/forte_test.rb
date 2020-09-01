@@ -171,7 +171,7 @@ class ForteTest < Test::Unit::TestCase
   private
 
   class MockedResponse
-    attr :code, :body
+    attr_reader :code, :body
     def initialize(body, code = 200)
       @code = code
       @body = body

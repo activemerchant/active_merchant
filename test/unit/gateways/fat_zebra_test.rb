@@ -296,7 +296,7 @@ class FatZebraTest < Test::Unit::TestCase
         rrn: '000000000000',
         cvv_match: 'U',
         metadata: {
-        },
+        }
       },
       test: true,
       errors: []
@@ -328,8 +328,8 @@ class FatZebraTest < Test::Unit::TestCase
         rrn: '000000000000',
         cvv_match: 'U',
         metadata: {
-          'foo' => 'bar',
-        },
+          'foo' => 'bar'
+        }
       },
       test: true,
       errors: []
@@ -391,7 +391,7 @@ class FatZebraTest < Test::Unit::TestCase
         metadata: {
         },
         standalone: false,
-        rrn: '000000000002',
+        rrn: '000000000002'
       },
       errors: [],
       test: true

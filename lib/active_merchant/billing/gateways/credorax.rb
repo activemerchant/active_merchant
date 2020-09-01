@@ -193,6 +193,7 @@ module ActiveMerchant #:nodoc:
         add_email(post, options)
 
         if options[:referral_cft]
+          add_customer_name(post, options)
           commit(:referral_cft, post)
         else
           commit(:refund, post)
@@ -315,6 +316,11 @@ module ActiveMerchant #:nodoc:
 
       def add_email(post, options)
         post[:c3] = options[:email] || 'unspecified@example.com'
+      end
+
+      def add_customer_name(post, options)
+        post[:j5] = options[:first_name] if options[:first_name]
+        post[:j13] = options[:last_name] if options[:last_name]
       end
 
       def add_3d_secure(post, options)

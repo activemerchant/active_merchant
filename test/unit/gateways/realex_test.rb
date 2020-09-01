@@ -189,7 +189,7 @@ class RealexTest < Test::Unit::TestCase
   def test_purchase_xml
     options = {
       order_id: '1',
-      ip: '123.456.789.0',
+      ip: '123.456.789.0'
     }
 
     @gateway.expects(:new_timestamp).returns('20090824160201')
@@ -225,7 +225,7 @@ class RealexTest < Test::Unit::TestCase
   def test_purchase_xml_with_ipv6
     options = {
       order_id: '1',
-      ip: '2a02:c7d:da18:ac00:6d10:4f13:1795:4890',
+      ip: '2a02:c7d:da18:ac00:6d10:4f13:1795:4890'
     }
 
     @gateway.expects(:new_timestamp).returns('20090824160201')
@@ -489,7 +489,7 @@ class RealexTest < Test::Unit::TestCase
         cavv: '1234',
         eci: '1234',
         xid: '1234',
-        version: '1.0.2',
+        version: '1.0.2'
       }
     }
 
@@ -504,7 +504,7 @@ class RealexTest < Test::Unit::TestCase
         cavv: '1234',
         eci: '1234',
         xid: '1234',
-        version: '1.0.2',
+        version: '1.0.2'
       }
     }
 
@@ -548,7 +548,7 @@ class RealexTest < Test::Unit::TestCase
         cavv: '1234',
         eci: '1234',
         ds_transaction_id: '1234',
-        version: '2.1.0',
+        version: '2.1.0'
       }
     }
 

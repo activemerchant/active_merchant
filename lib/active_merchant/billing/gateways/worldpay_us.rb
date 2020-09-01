@@ -139,7 +139,7 @@ module ActiveMerchant #:nodoc:
 
       ACCOUNT_TYPES = {
         'checking' => '1',
-        'savings' => '2',
+        'savings' => '2'
       }
 
       def add_check(post, payment_method)
@@ -178,7 +178,7 @@ module ActiveMerchant #:nodoc:
         'refund' => 'ns_credit',
         'authorize' => 'ns_quicksale_cc',
         'capture' => 'ns_quicksale_cc',
-        'void' => 'ns_void',
+        'void' => 'ns_void'
       }
 
       def commit(action, options, post)

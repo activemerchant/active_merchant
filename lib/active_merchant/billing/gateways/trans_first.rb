@@ -18,7 +18,7 @@ module ActiveMerchant #:nodoc:
         purchase_echeck: 'ACHDebit',
         refund: 'CreditCardCredit',
         refund_echeck: 'ACHVoidTransaction',
-        void: 'CreditCardAutoRefundorVoid',
+        void: 'CreditCardAutoRefundorVoid'
       }
 
       ENDPOINTS = {

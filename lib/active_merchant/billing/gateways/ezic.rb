@@ -187,7 +187,7 @@ module ActiveMerchant
 
       def headers
         {
-          'User-Agent' => "ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
+          'User-Agent' => "ActiveMerchantBindings/#{ActiveMerchant::VERSION}"
         }
       end
     end

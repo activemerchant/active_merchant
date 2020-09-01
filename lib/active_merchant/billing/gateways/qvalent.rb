@@ -280,7 +280,7 @@ module ActiveMerchant #:nodoc:
         '12' => STANDARD_ERROR_CODE[:card_declined],
         '06' => STANDARD_ERROR_CODE[:processing_error],
         '01' => STANDARD_ERROR_CODE[:call_issuer],
-        '04' => STANDARD_ERROR_CODE[:pickup_card],
+        '04' => STANDARD_ERROR_CODE[:pickup_card]
       }
 
       def error_code_from(succeeded, response)

@@ -421,6 +421,10 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_card_indicators(xml, options)
+        xml.tag! :CardIndicators, options[:card_indicators] if options[:card_indicators]
+      end
+
       def add_address(xml, creditcard, options)
         if (address = (options[:billing_address] || options[:address]))
           avs_supported = AVS_SUPPORTED_COUNTRIES.include?(address[:country].to_s) || empty?(address[:country])
@@ -756,6 +760,7 @@ module ActiveMerchant #:nodoc:
             add_level_2_purchase(xml, parameters)
             add_level_3_purchase(xml, parameters)
             add_level_3_tax(xml, parameters)
+            add_card_indicators(xml, parameters)
             add_line_items(xml, parameters) if parameters[:line_items]
             add_stored_credentials(xml, parameters)
             add_pymt_brand_program_code(xml, creditcard, three_d_secure)
@@ -788,6 +793,8 @@ module ActiveMerchant #:nodoc:
             xml.tag! :TxRefNum, tx_ref_num
             add_level_2_purchase(xml, parameters)
             add_level_2_advice_addendum(xml, parameters)
+            add_level_3_purchase(xml, parameters)
+            add_level_3_tax(xml, parameters)
           end
         end
         xml.target!
@@ -979,7 +986,7 @@ module ActiveMerchant #:nodoc:
           'R'  => 'Issuer does not participate in AVS',
           'UK' => 'Unknown',
           'X'  => 'Zip Match/Zip 4 Match/Address Match',
-          'Z'  => 'Zip Match/Locale no match',
+          'Z'  => 'Zip Match/Locale no match'
         }
 
         # Map vendor's AVS result code to a postal match code

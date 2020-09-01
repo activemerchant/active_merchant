@@ -113,7 +113,7 @@ module ActiveMerchant #:nodoc:
         parsed = JSON.parse(raw_response)
         options = {
           authorization: authorization_from(parsed),
-          test: (parsed['mode'] == 'test'),
+          test: (parsed['mode'] == 'test')
         }
 
         succeeded = (parsed['data'] == []) || (parsed['data']['response_code'].to_i == 20000)
@@ -357,10 +357,10 @@ module ActiveMerchant #:nodoc:
 
         def handle_response_correct_parsing
           @message = parsed['transaction']['processing']['return']['message']
-          @options[:authorization] = parsed['transaction']['identification']['uniqueId'] if @succeeded = is_ack?
+          @options[:authorization] = parsed['transaction']['identification']['uniqueId'] if @succeeded = ack?
         end
 
-        def is_ack?
+        def ack?
           parsed['transaction']['processing']['result'] == 'ACK'
         end
       end

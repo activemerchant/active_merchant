@@ -279,7 +279,7 @@ module ActiveMerchant #:nodoc:
 
           {
             quantity: 'qty',
-            unit: 'um',
+            unit: 'um'
           }.each do |key, umkey|
             post["line#{index}#{umkey}"] = line_item[key.to_sym] if line_item.has_key?(key.to_sym)
           end

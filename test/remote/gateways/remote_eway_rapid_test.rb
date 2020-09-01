@@ -122,12 +122,12 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
       billing_address: {
         address1: 'The Billing Address 1 Cannot Be More Than Fifty Characters.',
         address2: 'The Billing Address 2 Cannot Be More Than Fifty Characters.',
-        city: 'TheCityCannotBeMoreThanFiftyCharactersOrItAllFallsApart',
+        city: 'TheCityCannotBeMoreThanFiftyCharactersOrItAllFallsApart'
       },
       shipping_address: {
         address1: 'The Shipping Address 1 Cannot Be More Than Fifty Characters.',
         address2: 'The Shipping Address 2 Cannot Be More Than Fifty Characters.',
-        city: 'TheCityCannotBeMoreThanFiftyCharactersOrItAllFallsApart',
+        city: 'TheCityCannotBeMoreThanFiftyCharactersOrItAllFallsApart'
       }
     }
     @credit_card.first_name = 'FullNameOnACardMustBeLessThanFiftyCharacters'

@@ -205,7 +205,7 @@ module ActiveMerchant #:nodoc:
         refund: 'SingleCallGenericReverse',
         tokenize: 'SingleCallTokenServlet',
         invalidate: 'SingleCallInvalidateToken',
-        tokenpay: 'SingleCallTokenTransaction',
+        tokenpay: 'SingleCallTokenTransaction'
       }
 
       def commit(action, params)

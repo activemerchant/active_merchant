@@ -8,7 +8,7 @@ class RedsysTest < Test::Unit::TestCase
     @credentials = {
       login: '091952713',
       secret_key: 'qwertyasdf0123456789',
-      terminal: '1',
+      terminal: '1'
     }
     @gateway = RedsysGateway.new(@credentials)
     @headers = {

@@ -11,7 +11,7 @@ class PayexTest < Test::Unit::TestCase
     @amount = 1000
 
     @options = {
-      order_id: '1234',
+      order_id: '1234'
     }
   end
 

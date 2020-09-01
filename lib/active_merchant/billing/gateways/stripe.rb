@@ -53,7 +53,7 @@ module ActiveMerchant #:nodoc:
 
       BANK_ACCOUNT_HOLDER_TYPE_MAPPING = {
         'personal' => 'individual',
-        'business' => 'company',
+        'business' => 'company'
       }
 
       MINIMUM_AUTHORIZE_AMOUNTS = {
@@ -755,7 +755,7 @@ module ActiveMerchant #:nodoc:
             currency: 'usd',
             routing_number: bank_account.routing_number,
             name: bank_account.name,
-            account_holder_type: account_holder_type,
+            account_holder_type: account_holder_type
           }
         }
 

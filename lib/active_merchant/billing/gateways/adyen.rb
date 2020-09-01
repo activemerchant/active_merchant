@@ -26,7 +26,7 @@ module ActiveMerchant #:nodoc:
         '132' => STANDARD_ERROR_CODE[:incorrect_address],
         '133' => STANDARD_ERROR_CODE[:incorrect_address],
         '134' => STANDARD_ERROR_CODE[:incorrect_address],
-        '135' => STANDARD_ERROR_CODE[:incorrect_address],
+        '135' => STANDARD_ERROR_CODE[:incorrect_address]
       }
 
       def initialize(options={})
@@ -243,7 +243,7 @@ module ActiveMerchant #:nodoc:
         splits = []
         split_data.each do |split|
           amount = {
-            value: split['amount']['value'],
+            value: split['amount']['value']
           }
           amount[:currency] = split['amount']['currency'] if split['amount']['currency']
 

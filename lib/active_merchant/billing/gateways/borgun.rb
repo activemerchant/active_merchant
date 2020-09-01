@@ -176,7 +176,7 @@ module ActiveMerchant #:nodoc:
 
       def headers
         {
-          'Authorization' => 'Basic ' + Base64.strict_encode64(@options[:username].to_s + ':' + @options[:password].to_s),
+          'Authorization' => 'Basic ' + Base64.strict_encode64(@options[:username].to_s + ':' + @options[:password].to_s)
         }
       end
 

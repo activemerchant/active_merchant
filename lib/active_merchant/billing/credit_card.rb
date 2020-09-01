@@ -190,7 +190,7 @@ module ActiveMerchant #:nodoc:
         'contactless' => 'Data was read by a Contactless EMV kernel. Issuer script results are not available.',
         'contactless_magstripe' => 'Contactless data was read with a non-EMV protocol.',
         'contact' => 'Data was read using the EMV protocol. Issuer script results may follow.',
-        'contact_quickchip' => 'Data was read by the Quickchip EMV kernel. Issuer script results are not available.',
+        'contact_quickchip' => 'Data was read by the Quickchip EMV kernel. Issuer script results are not available.'
       }
 
       # Returns the ciphertext of the card's encrypted PIN.

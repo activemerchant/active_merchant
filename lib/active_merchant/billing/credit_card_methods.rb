@@ -329,7 +329,7 @@ module ActiveMerchant #:nodoc:
           54 => 3, # 6 * 2 - 9
           55 => 5, # etc ...
           56 => 7,
-          57 => 9,
+          57 => 9
         }.freeze
 
         # Checks the validity of a card number by use of the Luhn Algorithm.

@@ -325,7 +325,7 @@ module ActiveMerchant #:nodoc:
           'master'          => 'MC',
           'american_express' => 'AM',
           'discover'        => 'DI',
-          'diners_club'     => 'DC', }[key]
+          'diners_club'     => 'DC' }[key]
       end
     end
   end

@@ -203,7 +203,7 @@ module ActiveMerchant #:nodoc:
         'YER' => '886',
         'ZAR' => '710',
         'ZMK' => '894',
-        'ZWD' => '716',
+        'ZWD' => '716'
       }
 
       AVS_CODE = {
@@ -389,7 +389,7 @@ module ActiveMerchant #:nodoc:
           authorization: authorization,
           avs_result: {
             street_match: AVS_CODE[ response[:transaction_output_data][:address_numeric_check_result] ],
-            postal_match: AVS_CODE[ response[:transaction_output_data][:post_code_check_result] ],
+            postal_match: AVS_CODE[ response[:transaction_output_data][:post_code_check_result] ]
           },
           cvv_result: CVV_CODE[ response[:transaction_output_data][:cv2_check_result] ]
         )

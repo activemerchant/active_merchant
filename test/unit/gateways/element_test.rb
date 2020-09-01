@@ -154,6 +154,77 @@ class ElementTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_payment_type
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(payment_type: 'NotUsed'))
+    end.check_request do |endpoint, data, headers|
+      assert_match '<PaymentType>NotUsed</PaymentType>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_submission_type
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(submission_type: 'NotUsed'))
+    end.check_request do |endpoint, data, headers|
+      assert_match '<SubmissionType>NotUsed</SubmissionType>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_duplicate_check_disable_flag
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_check_disable_flag: true))
+    end.check_request do |endpoint, data, headers|
+      assert_match '<DuplicateCheckDisableFlag>True</DuplicateCheckDisableFlag>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_check_disable_flag: 'true'))
+    end.check_request do |endpoint, data, headers|
+      assert_match '<DuplicateCheckDisableFlag>True</DuplicateCheckDisableFlag>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_check_disable_flag: false))
+    end.check_request do |endpoint, data, headers|
+      assert_match '<DuplicateCheckDisableFlag>False</DuplicateCheckDisableFlag>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_check_disable_flag: 'xxx'))
+    end.check_request do |endpoint, data, headers|
+      assert_match '<DuplicateCheckDisableFlag>False</DuplicateCheckDisableFlag>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_check_disable_flag: 'False'))
+    end.check_request do |endpoint, data, headers|
+      assert_match '<DuplicateCheckDisableFlag>False</DuplicateCheckDisableFlag>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+
+    # when duplicate_check_disable_flag is NOT passed, should not be in XML at all
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.check_request do |endpoint, data, headers|
+      assert_no_match %r(<DuplicateCheckDisableFlag>False</DuplicateCheckDisableFlag>), data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_successful_purchase_with_terminal_id
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(terminal_id: '02'))

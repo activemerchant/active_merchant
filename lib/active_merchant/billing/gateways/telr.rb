@@ -17,7 +17,7 @@ module ActiveMerchant #:nodoc:
         'Y' => 'M',
         'N' => 'N',
         'X' => 'P',
-        'E' => 'U',
+        'E' => 'U'
       }
 
       AVS_CODE_TRANSLATOR = {

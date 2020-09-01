@@ -69,6 +69,9 @@ class PayflowTest < Test::Unit::TestCase
   end
 
   def test_successful_authorization_with_more_options
+    partner_id = 'partner_id'
+    PayflowGateway.application_id = partner_id
+
     options = @options.merge(
       {
         order_id: '123',
@@ -87,6 +90,7 @@ class PayflowTest < Test::Unit::TestCase
       assert_match %r(<OrderDesc>OrderDesc string</OrderDesc>), data
       assert_match %r(<Comment>Comment string</Comment>), data
       assert_match %r(<ExtData Name=\"COMMENT2\" Value=\"Comment2 string\"/>), data
+      assert_match %r(</PayData><ExtData Name=\"BUTTONSOURCE\" Value=\"partner_id\"/></Authorization>), data
     end.respond_with(successful_authorization_response)
     assert_equal 'Approved', response.message
     assert_success response

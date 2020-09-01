@@ -364,7 +364,7 @@ module ActiveMerchant #:nodoc:
             dlstate: options[:telecheck_dlstate],
             void: options[:telecheck_void],
             accounttype: options[:telecheck_accounttype],
-            ssn: options[:telecheck_ssn],
+            ssn: options[:telecheck_ssn]
           }
         }
 

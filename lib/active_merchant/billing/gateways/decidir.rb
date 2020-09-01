@@ -39,7 +39,7 @@ module ActiveMerchant #:nodoc:
         76 => STANDARD_ERROR_CODE[:call_issuer],
         91 => STANDARD_ERROR_CODE[:call_issuer],
         96 => STANDARD_ERROR_CODE[:processing_error],
-        97 => STANDARD_ERROR_CODE[:processing_error],
+        97 => STANDARD_ERROR_CODE[:processing_error]
       }
 
       def initialize(options={})

@@ -153,21 +153,6 @@ Naming/MethodName:
     - 'test/remote/gateways/remote_sage_pay_test.rb'
     - 'test/unit/gateways/sage_pay_test.rb'
 
-# Offense count: 5
-# Configuration parameters: NamePrefix, NamePrefixBlacklist, NameWhitelist, MethodDefinitionMacros.
-# NamePrefix: is_, has_, have_
-# NamePrefixBlacklist: is_, has_, have_
-# NameWhitelist: is_a?
-# MethodDefinitionMacros: define_method, define_singleton_method
-Naming/PredicateName:
-  Exclude:
-    - 'spec/**/*'
-    - 'lib/active_merchant/billing/gateways/authorize_net.rb'
-    - 'lib/active_merchant/billing/gateways/payeezy.rb'
-    - 'lib/active_merchant/billing/gateways/paymill.rb'
-    - 'lib/active_merchant/billing/gateways/redsys.rb'
-    - 'lib/active_merchant/billing/gateways/sage_pay.rb'
-
 # Offense count: 14
 # Configuration parameters: MinNameLength, AllowNamesEndingInNumbers, AllowedNames, ForbiddenNames.
 # AllowedNames: io, id, to, by, on, in, at, ip, db
@@ -291,12 +276,6 @@ Style/AsciiComments:
     - 'lib/active_merchant/billing/gateways/sage.rb'
     - 'test/remote/gateways/remote_data_cash_test.rb'
     - 'test/remote/gateways/remote_nab_transact_test.rb'
-
-# Offense count: 1
-# Cop supports --auto-correct.
-Style/Attr:
-  Exclude:
-    - 'test/unit/gateways/forte_test.rb'
 
 # Offense count: 2
 # Cop supports --auto-correct.
@@ -876,13 +855,6 @@ Style/TrailingCommaInArrayLiteral:
     - 'lib/active_merchant/billing/credit_card_methods.rb'
     - 'test/unit/gateways/netaxept_test.rb'
     - 'test/unit/gateways/usa_epay_transaction_test.rb'
-
-# Offense count: 160
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyleForMultiline.
-# SupportedStylesForMultiline: comma, consistent_comma, no_comma
-Style/TrailingCommaInHashLiteral:
-  Enabled: false
 
 # Offense count: 34
 # Cop supports --auto-correct.

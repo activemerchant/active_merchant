@@ -13,7 +13,7 @@ class RemoteStripeTest < Test::Unit::TestCase
     @check = check({
       bank_name: 'STRIPE TEST BANK',
       account_number: '000123456789',
-      routing_number: '110000000',
+      routing_number: '110000000'
     })
     @verified_bank_account = fixtures(:stripe_verified_bank_account)
 
@@ -109,7 +109,7 @@ class RemoteStripeTest < Test::Unit::TestCase
         'product_description' => 'A totes different item',
         'tax_amount' => 10,
         'unit_cost' => 50,
-        'quantity' => 1,
+        'quantity' => 1
       }
     ]
 

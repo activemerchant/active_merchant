@@ -70,6 +70,19 @@ class RemotePayflowTest < Test::Unit::TestCase
     assert !response.fraud_review?
   end
 
+  def test_successful_purchase_with_application_id
+    ActiveMerchant::Billing::PayflowGateway.application_id = 'partner_id'
+
+    assert response = @gateway.purchase(100000, @credit_card, @options)
+    assert_equal 'Approved', response.message
+    assert_success response
+    assert response.test?
+    assert_not_nil response.authorization
+    assert !response.fraud_review?
+  ensure
+    ActiveMerchant::Billing::PayflowGateway.application_id = nil
+  end
+
   # In order for this remote test to pass, you must go into your Payflow test
   # backend and enable the correct filter. Once logged in:
   # "Service Settings" ->
@@ -117,6 +130,20 @@ class RemotePayflowTest < Test::Unit::TestCase
     assert_success response
     assert response.test?
     assert_not_nil response.authorization
+  end
+
+  def test_successful_purchase_with_l3_fields_and_application_id
+    ActiveMerchant::Billing::PayflowGateway.application_id = 'partner_id'
+
+    options = @options.merge(level_three_fields: @l3_json)
+
+    assert response = @gateway.purchase(100000, @credit_card, options)
+    assert_equal 'Approved', response.message
+    assert_success response
+    assert response.test?
+    assert_not_nil response.authorization
+  ensure
+    ActiveMerchant::Billing::PayflowGateway.application_id = nil
   end
 
   def test_declined_purchase
@@ -174,6 +201,19 @@ class RemotePayflowTest < Test::Unit::TestCase
     assert auth.authorization
     assert capture = @gateway.capture(100, auth.authorization)
     assert_success capture
+  end
+
+  def test_successful_authorize_with_application_id
+    ActiveMerchant::Billing::PayflowGateway.application_id = 'partner_id'
+
+    assert response = @gateway.authorize(100000, @credit_card, @options)
+    assert_equal 'Approved', response.message
+    assert_success response
+    assert response.test?
+    assert_not_nil response.authorization
+    assert !response.fraud_review?
+  ensure
+    ActiveMerchant::Billing::PayflowGateway.application_id = nil
   end
 
   def test_authorize_and_partial_capture

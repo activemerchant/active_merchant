@@ -106,7 +106,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
       shopper_reference: 'John Smith',
       billing_address: address(),
       order_id: '123',
-      stored_credential: {reason_type: 'unscheduled'},
+      stored_credential: {reason_type: 'unscheduled'}
     }
 
     @normalized_3ds_2_options = {
@@ -260,7 +260,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
       order_id: '123',
       stored_credential: {reason_type: 'unscheduled'},
       three_ds_2: {
-        channel: 'app',
+        channel: 'app'
       }
     }
 
