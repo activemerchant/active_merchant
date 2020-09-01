@@ -14,9 +14,9 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://test.monei-api.net/payment/ctpe'
       self.live_url = 'https://monei-api.net/payment/ctpe'
 
-      self.supported_countries = ['AD', 'AT', 'BE', 'BG', 'CA', 'CH', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FO', 'FR', 'GB', 'GI', 'GR', 'HU', 'IE', 'IL', 'IS', 'IT', 'LI', 'LT', 'LU', 'LV', 'MT', 'NL', 'NO', 'PL', 'PT', 'RO', 'SE', 'SI', 'SK', 'TR', 'US', 'VA']
+      self.supported_countries = %w[AD AT BE BG CA CH CY CZ DE DK EE ES FI FO FR GB GI GR HU IE IL IS IT LI LT LU LV MT NL NO PL PT RO SE SI SK TR US VA]
       self.default_currency = 'EUR'
-      self.supported_cardtypes = [:visa, :master, :maestro, :jcb, :american_express]
+      self.supported_cardtypes = %i[visa master maestro jcb american_express]
 
       self.homepage_url = 'http://www.monei.net/'
       self.display_name = 'Monei'

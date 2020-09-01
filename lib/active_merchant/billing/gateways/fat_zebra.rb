@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['AU']
       self.default_currency = 'AUD'
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express, :jcb]
+      self.supported_cardtypes = %i[visa master american_express jcb]
 
       self.homepage_url = 'https://www.fatzebra.com.au/'
       self.display_name = 'Fat Zebra'
@@ -48,7 +48,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options = {})
-        txn_id, _ = authorization.to_s.split('|')
+        txn_id, = authorization.to_s.split('|')
         post = {}
 
         add_amount(post, money, options)
@@ -58,7 +58,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(money, authorization, options={})
-        txn_id, _ = authorization.to_s.split('|')
+        txn_id, = authorization.to_s.split('|')
         post = {}
 
         add_extra_options(post, options)
@@ -110,7 +110,7 @@ module ActiveMerchant #:nodoc:
           post[:cvv] = creditcard.verification_value if creditcard.verification_value?
           post[:card_holder] = creditcard.name if creditcard.name
         elsif creditcard.is_a?(String)
-          id, _ = creditcard.to_s.split('|')
+          id, = creditcard.to_s.split('|')
           post[:card_token] = id
           post[:cvv] = options[:cvv]
         elsif creditcard.is_a?(Hash)
@@ -125,11 +125,13 @@ module ActiveMerchant #:nodoc:
       def add_extra_options(post, options)
         extra = {}
         extra[:ecm] = '32' if options[:recurring]
-        extra[:cavv] = options[:cavv] if options[:cavv]
-        extra[:xid] = options[:xid] if options[:xid]
-        extra[:sli] = options[:sli] if options[:sli]
+        extra[:cavv] = options[:cavv] || options.dig(:three_d_secure, :cavv) if options[:cavv] || options.dig(:three_d_secure, :cavv)
+        extra[:xid] = options[:xid] || options.dig(:three_d_secure, :xid) if options[:xid] || options.dig(:three_d_secure, :xid)
+        extra[:sli] = options[:sli] || options.dig(:three_d_secure, :eci) if options[:sli] || options.dig(:three_d_secure, :eci)
         extra[:name] = options[:merchant] if options[:merchant]
         extra[:location] = options[:merchant_location] if options[:merchant_location]
+        extra[:card_on_file] = options.dig(:extra, :card_on_file) if options.dig(:extra, :card_on_file)
+        extra[:auth_reason]  = options.dig(:extra, :auth_reason) if options.dig(:extra, :auth_reason)
         post[:extra] = extra if extra.any?
       end
 

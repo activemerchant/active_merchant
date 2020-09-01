@@ -48,7 +48,7 @@ class FederatedCanadaTest < Test::Unit::TestCase
   def test_add_address
     result = {}
     @gateway.send(:add_address, result, billing_address: {address1: '123 Happy Town Road', address2: 'apt 13', country: 'CA', state: 'SK', phone: '1234567890'})
-    assert_equal ['address1', 'address2', 'city', 'company', 'country', 'phone', 'state', 'zip'], result.stringify_keys.keys.sort
+    assert_equal %w[address1 address2 city company country phone state zip], result.stringify_keys.keys.sort
     assert_equal 'SK', result[:state]
     assert_equal '123 Happy Town Road', result[:address1]
     assert_equal 'apt 13', result[:address2]
@@ -89,7 +89,7 @@ class FederatedCanadaTest < Test::Unit::TestCase
   end
 
   def test_supported_card_types
-    assert_equal @gateway.supported_cardtypes, [:visa, :master, :american_express, :discover]
+    assert_equal @gateway.supported_cardtypes, %i[visa master american_express discover]
   end
 
   def test_avs_result

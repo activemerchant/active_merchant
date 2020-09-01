@@ -7,8 +7,8 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'Sage Payment Solutions'
       self.live_url = 'https://www.sagepayments.net/cgi-bin'
 
-      self.supported_countries = ['US', 'CA']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club]
+      self.supported_countries = %w[US CA]
+      self.supported_cardtypes = %i[visa master american_express discover jcb diners_club]
 
       TRANSACTIONS = {
         purchase:       '01',
@@ -215,7 +215,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_reference(post, reference)
-        ref, _ = reference.to_s.split(';')
+        ref, = reference.to_s.split(';')
         post[:T_reference] = ref
       end
 

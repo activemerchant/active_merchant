@@ -5,12 +5,12 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://webservices.optimalpayments.com/creditcardWS/CreditCardServlet/v1'
 
       # The countries the gateway supports merchants from as 2 digit ISO country codes
-      self.supported_countries = ['CA', 'US', 'GB', 'AU', 'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK',
-                                  'EE', 'FI', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT',
-                                  'NL', 'NO', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE', 'CH']
+      self.supported_countries = %w[CA US GB AU AT BE BG HR CY CZ DK
+                                    EE FI DE GR HU IE IT LV LT LU MT
+                                    NL NO PL PT RO SK SI ES SE CH]
 
       # The card types supported by the payment gateway
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club]
 
       # The homepage URL of the gateway
       self.homepage_url = 'http://www.optimalpayments.com/'
@@ -325,7 +325,7 @@ module ActiveMerchant #:nodoc:
           'master'          => 'MC',
           'american_express' => 'AM',
           'discover'        => 'DI',
-          'diners_club'     => 'DC', }[key]
+          'diners_club'     => 'DC' }[key]
       end
     end
   end

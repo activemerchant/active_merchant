@@ -130,7 +130,7 @@ module ActiveMerchant #:nodoc:
       self.live_url  = 'https://secure.linkpt.net:1129/'
 
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express discover jcb diners_club]
       self.homepage_url = 'http://www.linkpoint.com/'
       self.display_name = 'LinkPoint'
 
@@ -169,7 +169,7 @@ module ActiveMerchant #:nodoc:
       def recurring(money, creditcard, options={})
         ActiveMerchant.deprecated RECURRING_DEPRECATION_MESSAGE
 
-        requires!(options, [:periodicity, :bimonthly, :monthly, :biweekly, :weekly, :yearly, :daily], :installments, :order_id)
+        requires!(options, %i[periodicity bimonthly monthly biweekly weekly yearly daily], :installments, :order_id)
 
         options.update(
           ordertype: 'SALE',
@@ -364,7 +364,7 @@ module ActiveMerchant #:nodoc:
             dlstate: options[:telecheck_dlstate],
             void: options[:telecheck_void],
             accounttype: options[:telecheck_accounttype],
-            ssn: options[:telecheck_ssn],
+            ssn: options[:telecheck_ssn]
           }
         }
 

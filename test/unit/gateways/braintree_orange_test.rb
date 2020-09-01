@@ -87,7 +87,7 @@ class BraintreeOrangeTest < Test::Unit::TestCase
     result = {}
 
     @gateway.send(:add_address, result, {address1: '164 Waverley Street', country: 'US', state: 'CO'})
-    assert_equal ['address1', 'city', 'company', 'country', 'phone', 'state', 'zip'], result.stringify_keys.keys.sort
+    assert_equal %w[address1 city company country phone state zip], result.stringify_keys.keys.sort
     assert_equal 'CO', result['state']
     assert_equal '164 Waverley Street', result['address1']
     assert_equal 'US', result['country']
@@ -97,7 +97,7 @@ class BraintreeOrangeTest < Test::Unit::TestCase
     result = {}
 
     @gateway.send(:add_address, result, {address1: '164 Waverley Street', country: 'US', state: 'CO'}, 'shipping')
-    assert_equal ['shipping_address1', 'shipping_city', 'shipping_company', 'shipping_country', 'shipping_phone', 'shipping_state', 'shipping_zip'], result.stringify_keys.keys.sort
+    assert_equal %w[shipping_address1 shipping_city shipping_company shipping_country shipping_phone shipping_state shipping_zip], result.stringify_keys.keys.sort
     assert_equal 'CO', result['shipping_state']
     assert_equal '164 Waverley Street', result['shipping_address1']
     assert_equal 'US', result['shipping_country']
@@ -107,7 +107,7 @@ class BraintreeOrangeTest < Test::Unit::TestCase
     result = {}
 
     @gateway.send(:add_creditcard, result, @credit_card, store: true)
-    assert_equal ['ccexp', 'ccnumber', 'customer_vault', 'cvv', 'firstname', 'lastname'], result.stringify_keys.keys.sort
+    assert_equal %w[ccexp ccnumber customer_vault cvv firstname lastname], result.stringify_keys.keys.sort
     assert_equal 'add_customer', result[:customer_vault]
   end
 
@@ -115,7 +115,7 @@ class BraintreeOrangeTest < Test::Unit::TestCase
     result = {}
 
     @gateway.send(:add_creditcard, result, @credit_card, {})
-    assert_equal ['ccexp', 'ccnumber', 'cvv', 'firstname', 'lastname'], result.stringify_keys.keys.sort
+    assert_equal %w[ccexp ccnumber cvv firstname lastname], result.stringify_keys.keys.sort
     assert_nil result[:customer_vault]
   end
 

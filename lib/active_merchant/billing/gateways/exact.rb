@@ -28,10 +28,10 @@ module ActiveMerchant #:nodoc:
 
       SUCCESS = 'true'
 
-      SENSITIVE_FIELDS = [:verification_str2, :expiry_date, :card_number]
+      SENSITIVE_FIELDS = %i[verification_str2 expiry_date card_number]
 
-      self.supported_cardtypes = [:visa, :master, :american_express, :jcb, :discover]
-      self.supported_countries = ['CA', 'US']
+      self.supported_countries = %w[CA US]
+      self.supported_cardtypes = %i[visa master american_express jcb discover]
       self.homepage_url = 'http://www.e-xact.com'
       self.display_name = 'E-xact'
 

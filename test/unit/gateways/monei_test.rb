@@ -150,287 +150,287 @@ class MoneiTest < Test::Unit::TestCase
   private
 
   def successful_purchase_response
-    return <<-XML
-<?xml version="1.0" encoding="UTF-8"?>
-<Response version="1.0">
-    <Transaction mode="CONNECTOR_TEST" channel="8a82941746287806014698a0e3240575" response="SYNC">
-        <Identification>
-            <ShortID>7621.0198.1858</ShortID>
-            <UniqueID>8a829449488d79090148996c441551fb</UniqueID>
-            <TransactionID>1</TransactionID>
-        </Identification>
-        <Payment code="CC.DB">
-            <Clearing>
-                <Amount>1.00</Amount>
-                <Currency>EUR</Currency>
-                <Descriptor>7621.0198.1858 DEFAULT Store Purchase</Descriptor>
-                <FxRate>1.0</FxRate>
-                <FxSource>INTERN</FxSource>
-                <FxDate>2014-09-21 18:14:42</FxDate>
-            </Clearing>
-        </Payment>
-        <Processing code="CC.DB.90.00">
-            <Timestamp>2014-09-21 18:14:42</Timestamp>
-            <Result>ACK</Result>
-            <Status code="90">NEW</Status>
-            <Reason code="00">Successful Processing</Reason>
-            <Return code="000.100.112">Request successfully processed in 'Merchant in Connector Test Mode'</Return>
-            <Risk score="0" />
-        </Processing>
-    </Transaction>
-</Response>
+    return <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <Response version="1.0">
+          <Transaction mode="CONNECTOR_TEST" channel="8a82941746287806014698a0e3240575" response="SYNC">
+              <Identification>
+                  <ShortID>7621.0198.1858</ShortID>
+                  <UniqueID>8a829449488d79090148996c441551fb</UniqueID>
+                  <TransactionID>1</TransactionID>
+              </Identification>
+              <Payment code="CC.DB">
+                  <Clearing>
+                      <Amount>1.00</Amount>
+                      <Currency>EUR</Currency>
+                      <Descriptor>7621.0198.1858 DEFAULT Store Purchase</Descriptor>
+                      <FxRate>1.0</FxRate>
+                      <FxSource>INTERN</FxSource>
+                      <FxDate>2014-09-21 18:14:42</FxDate>
+                  </Clearing>
+              </Payment>
+              <Processing code="CC.DB.90.00">
+                  <Timestamp>2014-09-21 18:14:42</Timestamp>
+                  <Result>ACK</Result>
+                  <Status code="90">NEW</Status>
+                  <Reason code="00">Successful Processing</Reason>
+                  <Return code="000.100.112">Request successfully processed in 'Merchant in Connector Test Mode'</Return>
+                  <Risk score="0" />
+              </Processing>
+          </Transaction>
+      </Response>
     XML
   end
 
   def failed_purchase_response
-    <<-XML
-<?xml version="1.0" encoding="UTF-8"?>
-<Response version="1.0">
-    <Transaction mode="CONNECTOR_TEST" channel="8a82943746287806014628a0e3240575" response="SYNC">
-        <Identification>
-            <ShortID>9086.6774.0834</ShortID>
-            <UniqueID>8a82944a488d36c101489972b0ee6ace</UniqueID>
-            <TransactionID>1</TransactionID>
-        </Identification>
-        <Payment code="CC.DB" />
-        <Processing code="CC.DB.70.40">
-            <Timestamp>2014-09-21 18:21:43</Timestamp>
-            <Result>NOK</Result>
-            <Status code="70">REJECTED_VALIDATION</Status>
-            <Reason code="40">Account Validation</Reason>
-            <Return code="100.100.700">invalid cc number/brand combination</Return>
-        </Processing>
-    </Transaction>
-</Response>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <Response version="1.0">
+          <Transaction mode="CONNECTOR_TEST" channel="8a82943746287806014628a0e3240575" response="SYNC">
+              <Identification>
+                  <ShortID>9086.6774.0834</ShortID>
+                  <UniqueID>8a82944a488d36c101489972b0ee6ace</UniqueID>
+                  <TransactionID>1</TransactionID>
+              </Identification>
+              <Payment code="CC.DB" />
+              <Processing code="CC.DB.70.40">
+                  <Timestamp>2014-09-21 18:21:43</Timestamp>
+                  <Result>NOK</Result>
+                  <Status code="70">REJECTED_VALIDATION</Status>
+                  <Reason code="40">Account Validation</Reason>
+                  <Return code="100.100.700">invalid cc number/brand combination</Return>
+              </Processing>
+          </Transaction>
+      </Response>
     XML
   end
 
   def successful_authorize_response
-    <<-XML
-<?xml version="1.0" encoding="UTF-8"?>
-<Response version="1.0">
-    <Transaction mode="CONNECTOR_TEST" channel="8a82941746487806014628a0e3240575" response="SYNC">
-        <Identification>
-            <ShortID>6853.2944.1442</ShortID>
-            <UniqueID>8a82944a488d36c101489976f0cc6b1c</UniqueID>
-            <TransactionID>1</TransactionID>
-        </Identification>
-        <Payment code="CC.PA">
-            <Clearing>
-                <Amount>1.00</Amount>
-                <Currency>EUR</Currency>
-                <Descriptor>6853.2944.1442 DEFAULT Store Purchase</Descriptor>
-                <FxRate>1.0</FxRate>
-                <FxSource>INTERN</FxSource>
-                <FxDate>2014-09-21 18:26:22</FxDate>
-            </Clearing>
-        </Payment>
-        <Processing code="CC.PA.90.00">
-            <Timestamp>2014-09-21 18:26:22</Timestamp>
-            <Result>ACK</Result>
-            <Status code="90">NEW</Status>
-            <Reason code="00">Successful Processing</Reason>
-            <Return code="000.100.112">Request successfully processed in 'Merchant in Connector Test Mode'</Return>
-            <Risk score="0" />
-        </Processing>
-    </Transaction>
-</Response>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <Response version="1.0">
+          <Transaction mode="CONNECTOR_TEST" channel="8a82941746487806014628a0e3240575" response="SYNC">
+              <Identification>
+                  <ShortID>6853.2944.1442</ShortID>
+                  <UniqueID>8a82944a488d36c101489976f0cc6b1c</UniqueID>
+                  <TransactionID>1</TransactionID>
+              </Identification>
+              <Payment code="CC.PA">
+                  <Clearing>
+                      <Amount>1.00</Amount>
+                      <Currency>EUR</Currency>
+                      <Descriptor>6853.2944.1442 DEFAULT Store Purchase</Descriptor>
+                      <FxRate>1.0</FxRate>
+                      <FxSource>INTERN</FxSource>
+                      <FxDate>2014-09-21 18:26:22</FxDate>
+                  </Clearing>
+              </Payment>
+              <Processing code="CC.PA.90.00">
+                  <Timestamp>2014-09-21 18:26:22</Timestamp>
+                  <Result>ACK</Result>
+                  <Status code="90">NEW</Status>
+                  <Reason code="00">Successful Processing</Reason>
+                  <Return code="000.100.112">Request successfully processed in 'Merchant in Connector Test Mode'</Return>
+                  <Risk score="0" />
+              </Processing>
+          </Transaction>
+      </Response>
     XML
   end
 
   def failed_authorize_response
-    <<-XML
-<?xml version="1.0" encoding="UTF-8"?>
-<Response version="1.0">
-    <Transaction mode="CONNECTOR_TEST" channel="8a82941746287806014628a0e3240575" response="SYNC">
-        <Identification>
-            <ShortID>4727.2856.0290</ShortID>
-            <UniqueID>8a829449488d79090148998943a853f6</UniqueID>
-            <TransactionID>1</TransactionID>
-        </Identification>
-        <Payment code="CC.PA" />
-        <Processing code="CC.PA.70.40">
-            <Timestamp>2014-09-21 18:46:22</Timestamp>
-            <Result>NOK</Result>
-            <Status code="70">REJECTED_VALIDATION</Status>
-            <Reason code="40">Account Validation</Reason>
-            <Return code="100.100.700">invalid cc number/brand combination</Return>
-        </Processing>
-    </Transaction>
-</Response>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <Response version="1.0">
+          <Transaction mode="CONNECTOR_TEST" channel="8a82941746287806014628a0e3240575" response="SYNC">
+              <Identification>
+                  <ShortID>4727.2856.0290</ShortID>
+                  <UniqueID>8a829449488d79090148998943a853f6</UniqueID>
+                  <TransactionID>1</TransactionID>
+              </Identification>
+              <Payment code="CC.PA" />
+              <Processing code="CC.PA.70.40">
+                  <Timestamp>2014-09-21 18:46:22</Timestamp>
+                  <Result>NOK</Result>
+                  <Status code="70">REJECTED_VALIDATION</Status>
+                  <Reason code="40">Account Validation</Reason>
+                  <Return code="100.100.700">invalid cc number/brand combination</Return>
+              </Processing>
+          </Transaction>
+      </Response>
     XML
   end
 
   def successful_capture_response
-    <<-XML
-<?xml version="1.0" encoding="UTF-8"?>
-<Response version="1.0">
-    <Transaction mode="CONNECTOR_TEST" channel="8a82941746287806014628a0e3240575" response="SYNC">
-        <Identification>
-            <ShortID>1269.8369.2962</ShortID>
-            <UniqueID>8a82944a488d36c10148998d9b316cc6</UniqueID>
-            <TransactionID />
-            <ReferenceID>8a829449488d79090148998d97f05439</ReferenceID>
-        </Identification>
-        <Payment code="CC.CP">
-            <Clearing>
-                <Amount>1.00</Amount>
-                <Currency>EUR</Currency>
-                <Descriptor>1269.8369.2962 DEFAULT Store Purchase</Descriptor>
-                <FxRate>1.0</FxRate>
-                <FxSource>INTERN</FxSource>
-                <FxDate>2014-09-21 18:51:07</FxDate>
-            </Clearing>
-        </Payment>
-        <Processing code="CC.CP.90.00">
-            <Timestamp>2014-09-21 18:51:07</Timestamp>
-            <Result>ACK</Result>
-            <Status code="90">NEW</Status>
-            <Reason code="00">Successful Processing</Reason>
-            <Return code="000.100.112">Request successfully processed in 'Merchant in Connector Test Mode'</Return>
-            <Risk score="0" />
-        </Processing>
-    </Transaction>
-</Response>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <Response version="1.0">
+          <Transaction mode="CONNECTOR_TEST" channel="8a82941746287806014628a0e3240575" response="SYNC">
+              <Identification>
+                  <ShortID>1269.8369.2962</ShortID>
+                  <UniqueID>8a82944a488d36c10148998d9b316cc6</UniqueID>
+                  <TransactionID />
+                  <ReferenceID>8a829449488d79090148998d97f05439</ReferenceID>
+              </Identification>
+              <Payment code="CC.CP">
+                  <Clearing>
+                      <Amount>1.00</Amount>
+                      <Currency>EUR</Currency>
+                      <Descriptor>1269.8369.2962 DEFAULT Store Purchase</Descriptor>
+                      <FxRate>1.0</FxRate>
+                      <FxSource>INTERN</FxSource>
+                      <FxDate>2014-09-21 18:51:07</FxDate>
+                  </Clearing>
+              </Payment>
+              <Processing code="CC.CP.90.00">
+                  <Timestamp>2014-09-21 18:51:07</Timestamp>
+                  <Result>ACK</Result>
+                  <Status code="90">NEW</Status>
+                  <Reason code="00">Successful Processing</Reason>
+                  <Return code="000.100.112">Request successfully processed in 'Merchant in Connector Test Mode'</Return>
+                  <Risk score="0" />
+              </Processing>
+          </Transaction>
+      </Response>
     XML
   end
 
   def failed_capture_response
-    <<-XML
-<?xml version="1.0" encoding="UTF-8"?>
-<Response version="1.0">
-    <Transaction mode="CONNECTOR_TEST" channel="8a82941746287806014628a0e3240575" response="SYNC">
-        <Identification>
-            <ShortID>0239.0447.7858</ShortID>
-            <UniqueID>8a82944a488d36c10148998fc4b66cfc</UniqueID>
-            <TransactionID />
-            <ReferenceID />
-        </Identification>
-        <Payment code="CC.CP" />
-        <Processing code="CC.CP.70.20">
-            <Timestamp>2014-09-21 18:53:29</Timestamp>
-            <Result>NOK</Result>
-            <Status code="70">REJECTED_VALIDATION</Status>
-            <Reason code="20">Format Error</Reason>
-            <Return code="200.100.302">invalid Request/Transaction/Payment/Presentation tag (not present or [partially] empty)</Return>
-        </Processing>
-    </Transaction>
-</Response>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <Response version="1.0">
+          <Transaction mode="CONNECTOR_TEST" channel="8a82941746287806014628a0e3240575" response="SYNC">
+              <Identification>
+                  <ShortID>0239.0447.7858</ShortID>
+                  <UniqueID>8a82944a488d36c10148998fc4b66cfc</UniqueID>
+                  <TransactionID />
+                  <ReferenceID />
+              </Identification>
+              <Payment code="CC.CP" />
+              <Processing code="CC.CP.70.20">
+                  <Timestamp>2014-09-21 18:53:29</Timestamp>
+                  <Result>NOK</Result>
+                  <Status code="70">REJECTED_VALIDATION</Status>
+                  <Reason code="20">Format Error</Reason>
+                  <Return code="200.100.302">invalid Request/Transaction/Payment/Presentation tag (not present or [partially] empty)</Return>
+              </Processing>
+          </Transaction>
+      </Response>
     XML
   end
 
   def successful_refund_response
-    <<-XML
-<?xml version="1.0" encoding="UTF-8"?>
-<Response version="1.0">
-    <Transaction mode="CONNECTOR_TEST" channel="8a82941746287806014628a0e3240575" response="SYNC">
-        <Identification>
-            <ShortID>3009.2986.8450</ShortID>
-            <UniqueID>8a829449488d790901489992a493546f</UniqueID>
-            <TransactionID />
-            <ReferenceID>8a82944a488d36c101489992a10f6d21</ReferenceID>
-        </Identification>
-        <Payment code="CC.RF">
-            <Clearing>
-                <Amount>1.00</Amount>
-                <Currency>EUR</Currency>
-                <Descriptor>3009.2986.8450 DEFAULT Store Purchase</Descriptor>
-                <FxRate>1.0</FxRate>
-                <FxSource>INTERN</FxSource>
-                <FxDate>2014-09-21 18:56:37</FxDate>
-            </Clearing>
-        </Payment>
-        <Processing code="CC.RF.90.00">
-            <Timestamp>2014-09-21 18:56:37</Timestamp>
-            <Result>ACK</Result>
-            <Status code="90">NEW</Status>
-            <Reason code="00">Successful Processing</Reason>
-            <Return code="000.100.112">Request successfully processed in 'Merchant in Connector Test Mode'</Return>
-        </Processing>
-    </Transaction>
-</Response>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <Response version="1.0">
+          <Transaction mode="CONNECTOR_TEST" channel="8a82941746287806014628a0e3240575" response="SYNC">
+              <Identification>
+                  <ShortID>3009.2986.8450</ShortID>
+                  <UniqueID>8a829449488d790901489992a493546f</UniqueID>
+                  <TransactionID />
+                  <ReferenceID>8a82944a488d36c101489992a10f6d21</ReferenceID>
+              </Identification>
+              <Payment code="CC.RF">
+                  <Clearing>
+                      <Amount>1.00</Amount>
+                      <Currency>EUR</Currency>
+                      <Descriptor>3009.2986.8450 DEFAULT Store Purchase</Descriptor>
+                      <FxRate>1.0</FxRate>
+                      <FxSource>INTERN</FxSource>
+                      <FxDate>2014-09-21 18:56:37</FxDate>
+                  </Clearing>
+              </Payment>
+              <Processing code="CC.RF.90.00">
+                  <Timestamp>2014-09-21 18:56:37</Timestamp>
+                  <Result>ACK</Result>
+                  <Status code="90">NEW</Status>
+                  <Reason code="00">Successful Processing</Reason>
+                  <Return code="000.100.112">Request successfully processed in 'Merchant in Connector Test Mode'</Return>
+              </Processing>
+          </Transaction>
+      </Response>
     XML
   end
 
   def failed_refund_response
-    <<-XML
-<?xml version="1.0" encoding="UTF-8"?>
-<Response version="1.0">
-    <Transaction mode="CONNECTOR_TEST" channel="8a82941746287806014628a0e3240575" response="SYNC">
-        <Identification>
-            <ShortID>5070.8829.8658</ShortID>
-            <UniqueID>8a829449488d790901489994b2c65481</UniqueID>
-            <TransactionID />
-            <ReferenceID />
-        </Identification>
-        <Payment code="CC.RF" />
-        <Processing code="CC.RF.70.20">
-            <Timestamp>2014-09-21 18:58:52</Timestamp>
-            <Result>NOK</Result>
-            <Status code="70">REJECTED_VALIDATION</Status>
-            <Reason code="20">Format Error</Reason>
-            <Return code="200.100.302">invalid Request/Transaction/Payment/Presentation tag (not present or [partially] empty)</Return>
-        </Processing>
-    </Transaction>
-</Response>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <Response version="1.0">
+          <Transaction mode="CONNECTOR_TEST" channel="8a82941746287806014628a0e3240575" response="SYNC">
+              <Identification>
+                  <ShortID>5070.8829.8658</ShortID>
+                  <UniqueID>8a829449488d790901489994b2c65481</UniqueID>
+                  <TransactionID />
+                  <ReferenceID />
+              </Identification>
+              <Payment code="CC.RF" />
+              <Processing code="CC.RF.70.20">
+                  <Timestamp>2014-09-21 18:58:52</Timestamp>
+                  <Result>NOK</Result>
+                  <Status code="70">REJECTED_VALIDATION</Status>
+                  <Reason code="20">Format Error</Reason>
+                  <Return code="200.100.302">invalid Request/Transaction/Payment/Presentation tag (not present or [partially] empty)</Return>
+              </Processing>
+          </Transaction>
+      </Response>
     XML
   end
 
   def successful_void_response
-    <<-XML
-<?xml version="1.0" encoding="UTF-8"?>
-<Response version="1.0">
-    <Transaction mode="CONNECTOR_TEST" channel="8a82941746287806014628a0e3240575" response="SYNC">
-        <Identification>
-            <ShortID>4587.6991.6578</ShortID>
-            <UniqueID>8a82944a488d36c1014899957fff6d49</UniqueID>
-            <TransactionID />
-            <ReferenceID>8a829449488d7909014899957cb45486</ReferenceID>
-        </Identification>
-        <Payment code="CC.RV">
-            <Clearing>
-                <Amount>1.00</Amount>
-                <Currency>EUR</Currency>
-                <Descriptor>4587.6991.6578 DEFAULT Store Purchase</Descriptor>
-                <FxRate>1.0</FxRate>
-                <FxSource>INTERN</FxSource>
-                <FxDate>2014-09-21 18:59:44</FxDate>
-            </Clearing>
-        </Payment>
-        <Processing code="CC.RV.90.00">
-            <Timestamp>2014-09-21 18:59:44</Timestamp>
-            <Result>ACK</Result>
-            <Status code="90">NEW</Status>
-            <Reason code="00">Successful Processing</Reason>
-            <Return code="000.100.112">Request successfully processed in 'Merchant in Connector Test Mode'</Return>
-            <Risk score="0" />
-        </Processing>
-    </Transaction>
-</Response>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <Response version="1.0">
+          <Transaction mode="CONNECTOR_TEST" channel="8a82941746287806014628a0e3240575" response="SYNC">
+              <Identification>
+                  <ShortID>4587.6991.6578</ShortID>
+                  <UniqueID>8a82944a488d36c1014899957fff6d49</UniqueID>
+                  <TransactionID />
+                  <ReferenceID>8a829449488d7909014899957cb45486</ReferenceID>
+              </Identification>
+              <Payment code="CC.RV">
+                  <Clearing>
+                      <Amount>1.00</Amount>
+                      <Currency>EUR</Currency>
+                      <Descriptor>4587.6991.6578 DEFAULT Store Purchase</Descriptor>
+                      <FxRate>1.0</FxRate>
+                      <FxSource>INTERN</FxSource>
+                      <FxDate>2014-09-21 18:59:44</FxDate>
+                  </Clearing>
+              </Payment>
+              <Processing code="CC.RV.90.00">
+                  <Timestamp>2014-09-21 18:59:44</Timestamp>
+                  <Result>ACK</Result>
+                  <Status code="90">NEW</Status>
+                  <Reason code="00">Successful Processing</Reason>
+                  <Return code="000.100.112">Request successfully processed in 'Merchant in Connector Test Mode'</Return>
+                  <Risk score="0" />
+              </Processing>
+          </Transaction>
+      </Response>
     XML
   end
 
   def failed_void_response
-    <<-XML
-<Response version="1.0">
-    <Transaction mode="CONNECTOR_TEST" channel="8a82941746287806014628a0e3240575" response="SYNC">
-        <Identification>
-            <ShortID>5843.9770.9986</ShortID>
-            <UniqueID>8a829449488d7909014899965cd354b6</UniqueID>
-            <TransactionID />
-            <ReferenceID />
-        </Identification>
-        <Payment code="CC.RV" />
-        <Processing code="CC.RV.70.30">
-            <Timestamp>2014-09-21 19:00:41</Timestamp>
-            <Result>NOK</Result>
-            <Status code="70">REJECTED_VALIDATION</Status>
-            <Reason code="30">Reference Error</Reason>
-            <Return code="700.400.530">reversal needs at least one successful transaction of type (CP or DB or RB or PA)</Return>
-            <Risk score="0" />
-        </Processing>
-    </Transaction>
-</Response>
+    <<~XML
+      <Response version="1.0">
+          <Transaction mode="CONNECTOR_TEST" channel="8a82941746287806014628a0e3240575" response="SYNC">
+              <Identification>
+                  <ShortID>5843.9770.9986</ShortID>
+                  <UniqueID>8a829449488d7909014899965cd354b6</UniqueID>
+                  <TransactionID />
+                  <ReferenceID />
+              </Identification>
+              <Payment code="CC.RV" />
+              <Processing code="CC.RV.70.30">
+                  <Timestamp>2014-09-21 19:00:41</Timestamp>
+                  <Result>NOK</Result>
+                  <Status code="70">REJECTED_VALIDATION</Status>
+                  <Reason code="30">Reference Error</Reason>
+                  <Return code="700.400.530">reversal needs at least one successful transaction of type (CP or DB or RB or PA)</Return>
+                  <Risk score="0" />
+              </Processing>
+          </Transaction>
+      </Response>
     XML
   end
 end

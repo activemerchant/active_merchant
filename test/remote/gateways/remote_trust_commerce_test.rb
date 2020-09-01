@@ -52,9 +52,9 @@ class TrustCommerceTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
 
     assert_equal Response, response.class
-    assert_equal ['error',
-                  'offenders',
-                  'status'], response.params.keys.sort
+    assert_equal %w[error
+                    offenders
+                    status], response.params.keys.sort
 
     assert_match %r{A field was improperly formatted, such as non-digit characters in a number field}, response.message
 

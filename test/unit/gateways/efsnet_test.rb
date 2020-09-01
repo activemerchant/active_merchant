@@ -56,7 +56,7 @@ class EfsnetTest < Test::Unit::TestCase
       transaction_amount: '1.01',
       account_number: '4242424242424242',
       expiration_month: '12',
-      expiration_year: '2029',
+      expiration_year: '2029'
     }
 
     assert data = @gateway.send(:post_data, :credit_card_authorize, params)
@@ -68,7 +68,7 @@ class EfsnetTest < Test::Unit::TestCase
       order_id: 'order1',
       transaction_amount: '1.01',
       original_transaction_amount: '1.01',
-      original_transaction_id: '1',
+      original_transaction_id: '1'
     }
 
     assert data = @gateway.send(:post_data, :credit_card_settle, params)
@@ -92,48 +92,48 @@ class EfsnetTest < Test::Unit::TestCase
   private
 
   def successful_purchase_response
-    <<-XML
-<?xml version="1.0"?>
-<Reply>
-  <TransactionReply>
-    <ResponseCode>0</ResponseCode>
-    <ResultCode>00</ResultCode>
-    <ResultMessage>APPROVED</ResultMessage>
-    <TransactionID>100018347764</TransactionID>
-    <AVSResponseCode>N</AVSResponseCode>
-    <CVVResponseCode>M</CVVResponseCode>
-    <ApprovalNumber>123456</ApprovalNumber>
-    <AuthorizationNumber>123456</AuthorizationNumber>
-    <TransactionDate>080117</TransactionDate>
-    <TransactionTime>163222</TransactionTime>
-    <ReferenceNumber>1</ReferenceNumber>
-    <AccountNumber>XXXXXXXXXXXX2224</AccountNumber>
-    <TransactionAmount>1.00</TransactionAmount>
-  </TransactionReply>
-</Reply>
+    <<~XML
+      <?xml version="1.0"?>
+      <Reply>
+        <TransactionReply>
+          <ResponseCode>0</ResponseCode>
+          <ResultCode>00</ResultCode>
+          <ResultMessage>APPROVED</ResultMessage>
+          <TransactionID>100018347764</TransactionID>
+          <AVSResponseCode>N</AVSResponseCode>
+          <CVVResponseCode>M</CVVResponseCode>
+          <ApprovalNumber>123456</ApprovalNumber>
+          <AuthorizationNumber>123456</AuthorizationNumber>
+          <TransactionDate>080117</TransactionDate>
+          <TransactionTime>163222</TransactionTime>
+          <ReferenceNumber>1</ReferenceNumber>
+          <AccountNumber>XXXXXXXXXXXX2224</AccountNumber>
+          <TransactionAmount>1.00</TransactionAmount>
+        </TransactionReply>
+      </Reply>
     XML
   end
 
   def unsuccessful_purchase_response
-    <<-XML
-<?xml version="1.0"?>
-<Reply>
-  <TransactionReply>
-    <ResponseCode>256</ResponseCode>
-    <ResultCode>04</ResultCode>
-    <ResultMessage>DECLINED</ResultMessage>
-    <TransactionID>100018347784</TransactionID>
-    <AVSResponseCode>N</AVSResponseCode>
-    <CVVResponseCode/>
-    <ApprovalNumber/>
-    <AuthorizationNumber/>
-    <TransactionDate>080117</TransactionDate>
-    <TransactionTime>163946</TransactionTime>
-    <ReferenceNumber>1</ReferenceNumber>
-    <AccountNumber>XXXXXXXXXXXX2224</AccountNumber>
-    <TransactionAmount>1.56</TransactionAmount>
-  </TransactionReply>
-</Reply>
+    <<~XML
+      <?xml version="1.0"?>
+      <Reply>
+        <TransactionReply>
+          <ResponseCode>256</ResponseCode>
+          <ResultCode>04</ResultCode>
+          <ResultMessage>DECLINED</ResultMessage>
+          <TransactionID>100018347784</TransactionID>
+          <AVSResponseCode>N</AVSResponseCode>
+          <CVVResponseCode/>
+          <ApprovalNumber/>
+          <AuthorizationNumber/>
+          <TransactionDate>080117</TransactionDate>
+          <TransactionTime>163946</TransactionTime>
+          <ReferenceNumber>1</ReferenceNumber>
+          <AccountNumber>XXXXXXXXXXXX2224</AccountNumber>
+          <TransactionAmount>1.56</TransactionAmount>
+        </TransactionReply>
+      </Reply>
     XML
   end
 end

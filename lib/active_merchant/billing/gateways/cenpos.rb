@@ -11,7 +11,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = %w(AD AI AG AR AU AT BS BB BE BZ BM BR BN BG CA HR CY CZ DK DM EE FI FR DE GR GD GY HK HU IS IL IT JP LV LI LT LU MY MT MX MC MS NL PA PL PT KN LC MF VC SM SG SK SI ZA ES SR SE CH TR GB US UY)
       self.default_currency = 'USD'
       self.money_format = :dollars
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       def initialize(options={})
         requires!(options, :merchant_id, :password, :user_id)
@@ -198,17 +198,17 @@ module ActiveMerchant #:nodoc:
       end
 
       def envelope(body)
-        <<-EOS
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/" xmlns:acr="http://schemas.datacontract.org/2004/07/Acriter.ABI.CenPOS.EPayment.VirtualTerminal.Common" xmlns:acr1="http://schemas.datacontract.org/2004/07/Acriter.ABI.CenPOS.EPayment.VirtualTerminal.v6.Common" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-<soapenv:Header/>
-   <soapenv:Body>
-      <tem:ProcessCreditCard>
-         <tem:request>
-           #{body}
-         </tem:request>
-      </tem:ProcessCreditCard>
-   </soapenv:Body>
-</soapenv:Envelope>
+        <<~EOS
+          <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/" xmlns:acr="http://schemas.datacontract.org/2004/07/Acriter.ABI.CenPOS.EPayment.VirtualTerminal.Common" xmlns:acr1="http://schemas.datacontract.org/2004/07/Acriter.ABI.CenPOS.EPayment.VirtualTerminal.v6.Common" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+          <soapenv:Header/>
+             <soapenv:Body>
+                <tem:ProcessCreditCard>
+                   <tem:request>
+                     #{body}
+                   </tem:request>
+                </tem:ProcessCreditCard>
+             </soapenv:Body>
+          </soapenv:Envelope>
         EOS
       end
 
@@ -250,7 +250,7 @@ module ActiveMerchant #:nodoc:
         '257' => STANDARD_ERROR_CODE[:invalid_cvc],
         '333' => STANDARD_ERROR_CODE[:expired_card],
         '1' => STANDARD_ERROR_CODE[:card_declined],
-        '99' => STANDARD_ERROR_CODE[:processing_error],
+        '99' => STANDARD_ERROR_CODE[:processing_error]
       }
 
       def authorization_from(request, response)

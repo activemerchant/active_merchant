@@ -330,7 +330,7 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.credit(@amount, @credit_card, @options_with_credit_fields.merge({third_party_payout: true}))
     end.check_request do |endpoint, data, headers|
-      if /storeDetailAndSubmitThirdParty/ =~ endpoint
+      if /storeDetailAndSubmitThirdParty/.match?(endpoint)
         assert_match(%r{/storeDetailAndSubmitThirdParty}, endpoint)
         assert_match(/dateOfBirth=1990-10-11&/, data)
         assert_match(/entityType=NaturalPerson&/, data)

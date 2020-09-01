@@ -8,7 +8,7 @@ class RedsysTest < Test::Unit::TestCase
     @credentials = {
       login: '091952713',
       secret_key: 'qwertyasdf0123456789',
-      terminal: '1',
+      terminal: '1'
     }
     @gateway = RedsysGateway.new(@credentials)
     @headers = {
@@ -199,7 +199,7 @@ class RedsysTest < Test::Unit::TestCase
   end
 
   def test_supported_cardtypes
-    assert_equal [:visa, :master, :american_express, :jcb, :diners_club, :unionpay], RedsysGateway.supported_cardtypes
+    assert_equal %i[visa master american_express jcb diners_club unionpay], RedsysGateway.supported_cardtypes
   end
 
   def test_using_test_mode

@@ -73,7 +73,7 @@ module ActiveMerchant #:nodoc:
       FAILURE_MESSAGE = 'Default Failure' #:nodoc:
 
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club jcb]
       self.homepage_url = 'http://www.usaepay.com/'
       self.display_name = 'USA ePay Advanced SOAP Interface'
 
@@ -126,7 +126,7 @@ module ActiveMerchant #:nodoc:
         COMMON_ADDRESS_OPTIONS,
         {
           address1: [:string, 'Street'],
-          address2: [:string, 'Street2'],
+          address2: [:string, 'Street2']
         }
       ].inject(:merge) #:nodoc
 
@@ -136,7 +136,7 @@ module ActiveMerchant #:nodoc:
         COMMON_ADDRESS_OPTIONS,
         {
           address1: [:string, 'Address'],
-          address2: [:string, 'Address2'],
+          address2: [:string, 'Address2']
         },
         {
           card_number: [:string, 'CardNumber'],
@@ -144,7 +144,7 @@ module ActiveMerchant #:nodoc:
           account: [:string, 'Account'],
           routing: [:string, 'Routing'],
           check_format: [:string, 'CheckFormat'],
-          record_type: [:string, 'RecordType'],
+          record_type: [:string, 'RecordType']
         }
       ].inject(:merge) #:nodoc
 
@@ -187,7 +187,7 @@ module ActiveMerchant #:nodoc:
         comments: [:string, 'Comments'],
         allow_partial_auth: [:boolean, 'AllowPartialAuth'],
         currency: [:string, 'Currency'],
-        non_tax: [:boolean, 'NonTax'],
+        non_tax: [:boolean, 'NonTax']
       } #:nodoc:
 
       TRANSACTION_DETAIL_MONEY_OPTIONS = {
@@ -676,9 +676,9 @@ module ActiveMerchant #:nodoc:
         commit(__method__, request)
       end
 
-      TRANSACTION_METHODS = [
-        :run_sale, :run_auth_only, :run_credit,
-        :run_check_sale, :run_check_credit
+      TRANSACTION_METHODS = %i[
+        run_sale run_auth_only run_credit
+        run_check_sale run_check_credit
       ] #:nodoc:
 
       TRANSACTION_METHODS.each do |method|
@@ -1336,7 +1336,7 @@ module ActiveMerchant #:nodoc:
         when payment_method[:method].kind_of?(ActiveMerchant::Billing::CreditCard)
           build_tag soap, :string, 'CardNumber', payment_method[:method].number
           build_tag soap, :string, 'CardExpiration',
-            "#{"%02d" % payment_method[:method].month}#{payment_method[:method].year.to_s[-2..-1]}"
+            "#{'%02d' % payment_method[:method].month}#{payment_method[:method].year.to_s[-2..-1]}"
           if options[:billing_address]
             build_tag soap, :string, 'AvsStreet', options[:billing_address][:address1]
             build_tag soap, :string, 'AvsZip', options[:billing_address][:zip]
@@ -1432,7 +1432,7 @@ module ActiveMerchant #:nodoc:
       def build_card_expiration(options)
         month = options[:payment_method].month
         year  = options[:payment_method].year
-        "#{"%02d" % month}#{year.to_s[-2..-1]}" unless month.nil? || year.nil?
+        "#{'%02d' % month}#{year.to_s[-2..-1]}" unless month.nil? || year.nil?
       end
 
       def build_check_data(soap, options)

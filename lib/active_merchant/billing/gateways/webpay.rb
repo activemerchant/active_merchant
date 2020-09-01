@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['JP']
       self.default_currency = 'JPY'
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express, :jcb, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express jcb diners_club]
 
       self.homepage_url = 'https://webpay.jp/'
       self.display_name = 'WebPay'

@@ -56,6 +56,42 @@ class RemoteElementTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_purchase_with_payment_type
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(payment_type: 'NotUsed'))
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_submission_type
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(submission_type: 'NotUsed'))
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_duplicate_check_disable_flag
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_check_disable_flag: true))
+    assert_success response
+    assert_equal 'Approved', response.message
+
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_check_disable_flag: false))
+    assert_success response
+    assert_equal 'Approved', response.message
+
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_check_disable_flag: 'true'))
+    assert_success response
+    assert_equal 'Approved', response.message
+
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_check_disable_flag: 'xxx'))
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_terminal_id
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(terminal_id: '02'))
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
   def test_successful_authorize_and_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth

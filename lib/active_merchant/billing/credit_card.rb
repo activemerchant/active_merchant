@@ -23,6 +23,7 @@ module ActiveMerchant #:nodoc:
     # * Cabal
     # * Naranja
     # * UnionPay
+    # * Alia
     #
     # For testing purposes, use the 'bogus' credit card brand. This skips the vast majority of
     # validations, allowing you to focus on your core concerns until you're ready to be more concerned
@@ -98,6 +99,7 @@ module ActiveMerchant #:nodoc:
       # * +'cabal'+
       # * +'naranja'+
       # * +'union_pay'+
+      # * +'alia'+
       #
       # Or, if you wish to test your implementation, +'bogus'+.
       #
@@ -188,7 +190,7 @@ module ActiveMerchant #:nodoc:
         'contactless' => 'Data was read by a Contactless EMV kernel. Issuer script results are not available.',
         'contactless_magstripe' => 'Contactless data was read with a non-EMV protocol.',
         'contact' => 'Data was read using the EMV protocol. Issuer script results may follow.',
-        'contact_quickchip' => 'Data was read by the Quickchip EMV kernel. Issuer script results are not available.',
+        'contact_quickchip' => 'Data was read by the Quickchip EMV kernel. Issuer script results are not available.'
       }
 
       # Returns the ciphertext of the card's encrypted PIN.

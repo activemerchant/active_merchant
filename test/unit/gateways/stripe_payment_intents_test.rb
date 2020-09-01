@@ -14,7 +14,7 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
 
     @options = {
       currency: 'GBP',
-      confirmation_method: 'manual',
+      confirmation_method: 'manual'
     }
   end
 
@@ -146,7 +146,7 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
 
     assert refund = @gateway.refund(@amount, 'pi_123')
     assert_failure refund
-    assert_match /Error while communicating with one of our backends/, refund.params.dig('error', 'message')
+    assert_match(/Error while communicating with one of our backends/, refund.params.dig('error', 'message'))
   end
 
   def test_failed_refund_due_to_pending_3ds_auth
@@ -155,7 +155,14 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     assert refund = @gateway.refund(@amount, 'pi_123')
     assert_failure refund
     assert_equal 'requires_action', refund.params['status']
-    assert_match /payment_intent has a status of requires_action/, refund.message
+    assert_match(/payment_intent has a status of requires_action/, refund.message)
+  end
+
+  def test_successful_verify
+    @gateway.expects(:ssl_request).returns(successful_verify_response)
+    assert verify = @gateway.verify(@visa_token)
+    assert_success verify
+    assert_equal 'succeeded', verify.params['status']
   end
 
   private
@@ -346,6 +353,40 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
   def failed_service_response
     <<-RESPONSE
       {"error": {"message": "Error while communicating with one of our backends.  Sorry about that!  We have been notified of the problem.  If you have any questions, we can help at https://support.stripe.com/.", "type": "api_error"  }}
+    RESPONSE
+  end
+
+  def successful_verify_response
+    <<-RESPONSE
+      {
+        "id": "seti_1Gsw0aAWOtgoysog0XjSBPVX",
+        "object": "setup_intent",
+        "application": null,
+        "cancellation_reason": null,
+        "client_secret": "seti_1Gsw0aAWOtgoysog0XjSBPVX_secret_HRpfHkvewAdYQJgee27ihJfm4E4zWmW",
+        "created": 1591903456,
+        "customer": "cus_GkjsDZC58SgUcY",
+        "description": null,
+        "last_setup_error": null,
+        "livemode": false,
+        "mandate": null,
+        "metadata": {
+        },
+        "next_action": null,
+        "on_behalf_of": null,
+        "payment_method": "pm_1Gsw0aAWOtgoysog304wX4J9",
+        "payment_method_options": {
+          "card": {
+            "request_three_d_secure": "automatic"
+          }
+        },
+        "payment_method_types": [
+          "card"
+        ],
+        "single_use_mandate": null,
+        "status": "succeeded",
+        "usage": "off_session"
+      }
     RESPONSE
   end
 end

@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
       TEST_XMLNS = 'https://secure.modpay.com/netservices/test/'
 
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.homepage_url = 'http://www.modpay.com'
       self.display_name = 'Modern Payments'
 

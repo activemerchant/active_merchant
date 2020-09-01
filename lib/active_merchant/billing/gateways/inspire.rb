@@ -5,7 +5,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = self.test_url = 'https://secure.inspiregateway.net/api/transact.php'
 
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express]
+      self.supported_cardtypes = %i[visa master american_express]
       self.homepage_url = 'http://www.inspiregateway.com'
       self.display_name = 'Inspire Commerce'
 

@@ -71,16 +71,16 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://orbital1.chasepaymentech.com/authorize'
       self.secondary_live_url = 'https://orbital2.chasepaymentech.com/authorize'
 
-      self.supported_countries = ['US', 'CA']
+      self.supported_countries = %w[US CA]
       self.default_currency = 'CAD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club jcb]
 
       self.display_name = 'Orbital Paymentech'
       self.homepage_url = 'http://chasepaymentech.com/'
 
       self.money_format = :cents
 
-      AVS_SUPPORTED_COUNTRIES = ['US', 'CA', 'UK', 'GB']
+      AVS_SUPPORTED_COUNTRIES = %w[US CA UK GB]
 
       CURRENCY_CODES = {
         'AUD' => '036',
@@ -181,7 +181,7 @@ module ActiveMerchant #:nodoc:
       USE_ORDER_ID         = 'O' #  Use OrderID field
       USE_COMMENTS         = 'D' #  Use Comments field
 
-      SENSITIVE_FIELDS = [:account_num, :cc_account_num]
+      SENSITIVE_FIELDS = %i[account_num cc_account_num]
 
       def initialize(options = {})
         requires!(options, :merchant_id)
@@ -419,6 +419,10 @@ module ActiveMerchant #:nodoc:
             end
           end
         end
+      end
+
+      def add_card_indicators(xml, options)
+        xml.tag! :CardIndicators, options[:card_indicators] if options[:card_indicators]
       end
 
       def add_address(xml, creditcard, options)
@@ -678,7 +682,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success?(response, message_type)
-        if [:refund, :void].include?(message_type)
+        if %i[refund void].include?(message_type)
           response[:proc_status] == SUCCESS
         elsif response[:customer_profile_action]
           response[:profile_proc_status] == SUCCESS
@@ -749,13 +753,14 @@ module ActiveMerchant #:nodoc:
 
             # Append Transaction Reference Number at the end for Refund transactions
             if action == REFUND
-              tx_ref_num, _ = split_authorization(parameters[:authorization])
+              tx_ref_num, = split_authorization(parameters[:authorization])
               xml.tag! :TxRefNum, tx_ref_num
             end
 
             add_level_2_purchase(xml, parameters)
             add_level_3_purchase(xml, parameters)
             add_level_3_tax(xml, parameters)
+            add_card_indicators(xml, parameters)
             add_line_items(xml, parameters) if parameters[:line_items]
             add_stored_credentials(xml, parameters)
             add_pymt_brand_program_code(xml, creditcard, three_d_secure)
@@ -788,6 +793,8 @@ module ActiveMerchant #:nodoc:
             xml.tag! :TxRefNum, tx_ref_num
             add_level_2_purchase(xml, parameters)
             add_level_2_advice_addendum(xml, parameters)
+            add_level_3_purchase(xml, parameters)
+            add_level_3_tax(xml, parameters)
           end
         end
         xml.target!
@@ -979,7 +986,7 @@ module ActiveMerchant #:nodoc:
           'R'  => 'Issuer does not participate in AVS',
           'UK' => 'Unknown',
           'X'  => 'Zip Match/Zip 4 Match/Address Match',
-          'Z'  => 'Zip Match/Locale no match',
+          'Z'  => 'Zip Match/Locale no match'
         }
 
         # Map vendor's AVS result code to a postal match code

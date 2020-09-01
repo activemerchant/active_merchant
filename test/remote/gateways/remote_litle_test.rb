@@ -123,7 +123,7 @@ class RemoteLitleTest < Test::Unit::TestCase
           state: 'NH',
           zip: '03038',
           country: 'US'
-        },
+        }
       }
     )
     assert_failure response
@@ -207,7 +207,7 @@ class RemoteLitleTest < Test::Unit::TestCase
         state: 'NH',
         zip: '03038',
         country: 'US'
-      },
+      }
     })
     assert_failure response
     assert_equal 'Insufficient Funds', response.message

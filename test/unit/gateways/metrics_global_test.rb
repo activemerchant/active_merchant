@@ -1,4 +1,5 @@
 require 'test_helper'
+require 'active_support/core_ext/kernel/singleton_class'
 
 class MetricsGlobalTest < Test::Unit::TestCase
   include CommStub
@@ -46,7 +47,7 @@ class MetricsGlobalTest < Test::Unit::TestCase
 
     @gateway.send(:add_address, result, billing_address: {address1: '164 Waverley Street', country: 'DE', state: ''})
 
-    assert_equal ['address', 'city', 'company', 'country', 'phone', 'state', 'zip'], result.stringify_keys.keys.sort
+    assert_equal %w[address city company country phone state zip], result.stringify_keys.keys.sort
     assert_equal 'n/a', result[:state]
     assert_equal '164 Waverley Street', result[:address]
     assert_equal 'DE', result[:country]
@@ -57,7 +58,7 @@ class MetricsGlobalTest < Test::Unit::TestCase
 
     @gateway.send(:add_address, result, billing_address: {address1: '164 Waverley Street', country: 'US', state: 'CO'})
 
-    assert_equal ['address', 'city', 'company', 'country', 'phone', 'state', 'zip'], result.stringify_keys.keys.sort
+    assert_equal %w[address city company country phone state zip], result.stringify_keys.keys.sort
     assert_equal 'CO', result[:state]
     assert_equal '164 Waverley Street', result[:address]
     assert_equal 'US', result[:country]
@@ -100,7 +101,7 @@ class MetricsGlobalTest < Test::Unit::TestCase
 
   def test_purchase_meets_minimum_requirements
     params = {
-      amount: '1.01',
+      amount: '1.01'
     }
 
     @gateway.send(:add_creditcard, params, @credit_card)
@@ -151,7 +152,7 @@ class MetricsGlobalTest < Test::Unit::TestCase
   end
 
   def test_supported_card_types
-    assert_equal [:visa, :master, :american_express, :discover, :diners_club, :jcb], MetricsGlobalGateway.supported_cardtypes
+    assert_equal %i[visa master american_express discover diners_club jcb], MetricsGlobalGateway.supported_cardtypes
   end
 
   def test_failure_without_response_reason_text
@@ -192,7 +193,7 @@ class MetricsGlobalTest < Test::Unit::TestCase
       card_code: 'N',
       avs_result_code: 'A',
       response_reason_code: '27',
-      response_reason_text: 'Failure.',
+      response_reason_text: 'Failure.'
     }
     assert_equal 'CVV does not match', @gateway.message_from(result)
 

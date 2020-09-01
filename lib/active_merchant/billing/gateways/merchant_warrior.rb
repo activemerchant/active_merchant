@@ -11,8 +11,8 @@ module ActiveMerchant #:nodoc:
       POST_LIVE_URL = 'https://api.merchantwarrior.com/post/'
 
       self.supported_countries = ['AU']
-      self.supported_cardtypes = [:visa, :master, :american_express,
-                                  :diners_club, :discover, :jcb]
+      self.supported_cardtypes = %i[visa master american_express
+                                    diners_club discover jcb]
       self.homepage_url = 'https://www.merchantwarrior.com/'
       self.display_name = 'Merchant Warrior'
 

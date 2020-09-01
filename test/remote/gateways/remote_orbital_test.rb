@@ -6,7 +6,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     @gateway = ActiveMerchant::Billing::OrbitalGateway.new(fixtures(:orbital_gateway))
 
     @amount = 100
-    @credit_card = credit_card('4112344112344113')
+    @credit_card = credit_card('4556761029983886')
     @declined_card = credit_card('4000300011112220')
 
     @options = {
@@ -16,7 +16,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     }
 
     @cards = {
-      visa: '4788250000028291',
+      visa: '4556761029983886',
       mc: '5454545454545454',
       amex: '371449635398431',
       ds: '6011000995500000',
@@ -37,7 +37,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
       address2: address[:address2],
       city: address[:city],
       state: address[:state],
-      zip: address[:zip],
+      zip: address[:zip]
     }
 
     @level_3_options_visa = {
@@ -124,6 +124,15 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_purchase_with_card_indicators
+    options = @options.merge(
+      card_indicators: 'y'
+    )
+    assert response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
   def test_successful_purchase_with_level_2_data
     response = @gateway.purchase(@amount, @credit_card, @options.merge(level_2_data: @level_2_options))
 
@@ -196,12 +205,12 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
       card: {
         number: '4112344112344113',
         verification_value: '411',
-        brand: 'visa',
+        brand: 'visa'
       },
       three_d_secure: {
         eci: '5',
         cavv: 'AAABAIcJIoQDIzAgVAkiAAAAAAA=',
-        xid: 'AAABAIcJIoQDIzAgVAkiAAAAAAA=',
+        xid: 'AAABAIcJIoQDIzAgVAkiAAAAAAA='
       },
       address: {
         address1: '55 Forever Ave',
@@ -209,19 +218,19 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
         city: 'Concord',
         state: 'NH',
         zip: '03301',
-        country: 'US',
-      },
+        country: 'US'
+      }
     },
     {
       card: {
         number: '5112345112345114',
         verification_value: '823',
-        brand: 'master',
+        brand: 'master'
       },
       three_d_secure: {
         eci: '6',
         cavv: 'Asju1ljfl86bAAAAAACm9zU6aqY=',
-        xid: 'Asju1ljfl86bAAAAAACm9zU6aqY=',
+        xid: 'Asju1ljfl86bAAAAAACm9zU6aqY='
       },
       address: {
         address1: 'Byway Street',
@@ -229,19 +238,19 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
         city: 'Portsmouth',
         state: 'MA',
         zip: '',
-        country: 'US',
-      },
+        country: 'US'
+      }
     },
     {
       card: {
         number: '371144371144376',
         verification_value: '1234',
-        brand: 'american_express',
+        brand: 'american_express'
       },
       three_d_secure: {
         eci: '5',
         cavv: 'AAABBWcSNIdjeUZThmNHAAAAAAA=',
-        xid: 'AAABBWcSNIdjeUZThmNHAAAAAAA=',
+        xid: 'AAABBWcSNIdjeUZThmNHAAAAAAA='
       },
       address: {
         address1: '4 Northeastern Blvd',
@@ -249,8 +258,8 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
         city: 'Salem',
         state: 'NH',
         zip: '03105',
-        country: 'US',
-      },
+        country: 'US'
+      }
     }
   ].each do |fixture|
     define_method("test_successful_#{fixture[:card][:brand]}_authorization_with_3ds") do
@@ -381,6 +390,15 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_equal 'Approved', auth.message
 
     capture = @gateway.capture(@amount, auth.authorization, @options.merge(level_2_data: @level_2_options))
+    assert_success capture
+  end
+
+  def test_successful_authorize_and_capture_with_level_3_data
+    auth = @gateway.authorize(@amount, @credit_card, @options.merge(level_3_data: @level_3_options))
+    assert_success auth
+    assert_equal 'Approved', auth.message
+
+    capture = @gateway.capture(@amount, auth.authorization, @options.merge(level_3_data: @level_3_options))
     assert_success capture
   end
 

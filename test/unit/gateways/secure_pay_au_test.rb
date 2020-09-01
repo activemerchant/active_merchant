@@ -24,7 +24,7 @@ class SecurePayAuTest < Test::Unit::TestCase
   end
 
   def test_supported_card_types
-    assert_equal [:visa, :master, :american_express, :diners_club, :jcb], SecurePayAuGateway.supported_cardtypes
+    assert_equal %i[visa master american_express diners_club jcb], SecurePayAuGateway.supported_cardtypes
   end
 
   def test_successful_purchase_with_live_data

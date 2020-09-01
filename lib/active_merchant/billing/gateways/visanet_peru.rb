@@ -8,10 +8,10 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://devapi.vnforapps.com/api.tokenization/api/v2/merchant'
       self.live_url = 'https://api.vnforapps.com/api.tokenization/api/v2/merchant'
 
-      self.supported_countries = ['US', 'PE']
+      self.supported_countries = %w[US PE]
       self.default_currency = 'PEN'
       self.money_format = :dollars
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       def initialize(options={})
         requires!(options, :access_key_id, :secret_access_key, :merchant_id)
@@ -98,7 +98,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_auth_order_id(params, authorization, options)
-        purchase_number, _ = split_authorization(authorization)
+        purchase_number, = split_authorization(authorization)
         params[:purchaseNumber] = purchase_number
         params[:externalTransactionId] = options[:order_id]
       end

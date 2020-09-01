@@ -31,8 +31,8 @@ module ActiveMerchant #:nodoc:
 
       self.default_currency = 'USD'
 
-      self.supported_countries = ['US', 'CA', 'GB']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
+      self.supported_countries = %w[US CA GB]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club jcb]
       self.homepage_url = 'http://www.authorize.net/'
       self.display_name = 'Authorize.Net'
 
@@ -84,7 +84,7 @@ module ActiveMerchant #:nodoc:
       #   initial billing occurs) and the total number of billing <tt>:occurrences</tt> or payments for the subscription. (REQUIRED)
       def recurring(money, creditcard, options={})
         requires!(options, :interval, :duration, :billing_address)
-        requires!(options[:interval], :length, [:unit, :days, :months])
+        requires!(options[:interval], :length, %i[unit days months])
         requires!(options[:duration], :start_date, :occurrences)
         requires!(options[:billing_address], :first_name, :last_name)
 

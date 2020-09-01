@@ -16,7 +16,7 @@ module ActiveMerchant #:nodoc:
       self.live_periodic_url = 'https://transact.nab.com.au/xmlapi/periodic'
 
       self.supported_countries = ['AU']
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
+      self.supported_cardtypes = %i[visa master american_express diners_club jcb]
 
       self.homepage_url = 'http://transact.nab.com.au'
       self.display_name = 'NAB Transact'
@@ -39,7 +39,7 @@ module ActiveMerchant #:nodoc:
         trigger: 8
       }
 
-      SUCCESS_CODES = ['00', '08', '11', '16', '77']
+      SUCCESS_CODES = %w[00 08 11 16 77]
 
       def initialize(options = {})
         requires!(options, :login, :password)

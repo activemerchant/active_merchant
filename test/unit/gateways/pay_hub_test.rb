@@ -137,7 +137,7 @@ class PayHubTest < Test::Unit::TestCase
   end
 
   def test_card_declined
-    ['05', '61', '62', '65', '93'].each do |error_code|
+    %w[05 61 62 65 93].each do |error_code|
       @gateway.expects(:ssl_request).returns(response_for_error_codes(error_code))
 
       response = @gateway.purchase(@amount, @credit_card, @options)
@@ -147,7 +147,7 @@ class PayHubTest < Test::Unit::TestCase
   end
 
   def test_call_issuer
-    ['01', '02'].each do |error_code|
+    %w[01 02].each do |error_code|
       @gateway.expects(:ssl_request).returns(response_for_error_codes(error_code))
 
       response = @gateway.purchase(@amount, @credit_card, @options)
@@ -157,7 +157,7 @@ class PayHubTest < Test::Unit::TestCase
   end
 
   def test_pickup_card
-    ['04', '07', '41', '43'].each do |error_code|
+    %w[04 07 41 43].each do |error_code|
       @gateway.expects(:ssl_request).returns(response_for_error_codes(error_code))
 
       response = @gateway.purchase(@amount, @credit_card, @options)

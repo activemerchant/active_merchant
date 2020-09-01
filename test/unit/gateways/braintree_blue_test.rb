@@ -342,7 +342,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
     result = Braintree::SuccessfulResult.new(customer: customer)
     Braintree::CustomerGateway.any_instance.expects(:create).with do |params|
       assert_not_nil params[:credit_card][:billing_address]
-      [:street_address, :extended_address, :locality, :region, :postal_code, :country_name].each do |billing_attribute|
+      %i[street_address extended_address locality region postal_code country_name].each do |billing_attribute|
         params[:credit_card][:billing_address].has_key?(billing_attribute) if params[:billing_address]
       end
       params
@@ -650,7 +650,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
       with(has_entries(three_d_secure_pass_thru: {
         cavv: 'cavv',
         eci_flag: 'eci',
-        xid: 'xid',
+        xid: 'xid'
       })).
       returns(braintree_result)
 
@@ -719,7 +719,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
     )
 
     Braintree::TransactionGateway.any_instance.expects(:sale).
-      with(has_entries(recurring: true)).
+      with(has_entries(transaction_source: 'recurring')).
       returns(braintree_result)
 
     @gateway.purchase(100, credit_card('41111111111111111111'), recurring: true)
@@ -837,6 +837,46 @@ class BraintreeBlueTest < Test::Unit::TestCase
     assert_equal 'Decline', transaction['risk_data']['decision']
     assert_equal true, transaction['risk_data']['device_data_captured']
     assert_equal 'kount', transaction['risk_data']['fraud_service_provider']
+  end
+
+  def test_successful_purchase_with_travel_data
+    Braintree::TransactionGateway.any_instance.expects(:sale).with do |params|
+      (params[:industry][:industry_type] == Braintree::Transaction::IndustryType::TravelAndCruise) &&
+        (params[:industry][:data][:travel_package] == 'flight') &&
+        (params[:industry][:data][:departure_date] == '2050-07-22') &&
+        (params[:industry][:data][:lodging_check_in_date] == '2050-07-22') &&
+        (params[:industry][:data][:lodging_check_out_date] == '2050-07-25') &&
+        (params[:industry][:data][:lodging_name] == 'Best Hotel Ever')
+    end.returns(braintree_result)
+
+    @gateway.purchase(100, credit_card('41111111111111111111'),
+      travel_data: {
+        travel_package: 'flight',
+        departure_date: '2050-07-22',
+        lodging_check_in_date: '2050-07-22',
+        lodging_check_out_date: '2050-07-25',
+        lodging_name: 'Best Hotel Ever'
+      }
+    )
+  end
+
+  def test_successful_purchase_with_lodging_data
+    Braintree::TransactionGateway.any_instance.expects(:sale).with do |params|
+      (params[:industry][:industry_type] == Braintree::Transaction::IndustryType::Lodging) &&
+        (params[:industry][:data][:folio_number] == 'ABC123') &&
+        (params[:industry][:data][:check_in_date] == '2050-12-22') &&
+        (params[:industry][:data][:check_out_date] == '2050-12-25') &&
+        (params[:industry][:data][:room_rate] == '80.00')
+    end.returns(braintree_result)
+
+    @gateway.purchase(100, credit_card('41111111111111111111'),
+      lodging_data: {
+        folio_number: 'ABC123',
+        check_in_date: '2050-12-22',
+        check_out_date: '2050-12-25',
+        room_rate: '80.00'
+      }
+    )
   end
 
   def test_apple_pay_card
@@ -1207,7 +1247,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
         cvv: '123',
         expiration_month: '09',
         expiration_year: (Time.now.year + 1).to_s,
-        cardholder_name: 'Longbob Longsen',
+        cardholder_name: 'Longbob Longsen'
       }
     }
   end

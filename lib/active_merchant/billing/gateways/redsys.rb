@@ -44,7 +44,7 @@ module ActiveMerchant #:nodoc:
       self.money_format        = :cents
 
       # Not all card types may be activated by the bank!
-      self.supported_cardtypes = [:visa, :master, :american_express, :jcb, :diners_club, :unionpay]
+      self.supported_cardtypes = %i[visa master american_express jcb diners_club unionpay]
       self.homepage_url        = 'http://www.redsys.es/'
       self.display_name        = 'Redsys'
 
@@ -225,7 +225,7 @@ module ActiveMerchant #:nodoc:
         data = {}
         add_action(data, :capture)
         add_amount(data, money, options)
-        order_id, _, _ = split_authorization(authorization)
+        order_id, = split_authorization(authorization)
         add_order(data, order_id)
         data[:description] = options[:description]
 
@@ -247,7 +247,7 @@ module ActiveMerchant #:nodoc:
         data = {}
         add_action(data, :refund)
         add_amount(data, money, options)
-        order_id, _, _ = split_authorization(authorization)
+        order_id, = split_authorization(authorization)
         add_order(data, order_id)
         data[:description] = options[:description]
 
@@ -476,11 +476,11 @@ module ActiveMerchant #:nodoc:
           if validate_signature(params)
             message = response_text(params[:ds_response])
             options[:authorization] = build_authorization(params)
-            success = is_success_response?(params[:ds_response])
+            success = success_response?(params[:ds_response])
           else
             message = 'Response failed validation check'
           end
-        elsif ['iniciaPeticion', 'trataPeticion'].include?(action)
+        elsif %w[iniciaPeticion trataPeticion].include?(action)
           vxml = Nokogiri::XML(data).remove_namespaces!.xpath("//Envelope/Body/#{action}Response/#{action}Return").inner_text
           xml = Nokogiri::XML(vxml)
           node = (action == 'iniciaPeticion' ? 'INFOTARJETA' : 'OPERACION')
@@ -490,7 +490,7 @@ module ActiveMerchant #:nodoc:
           end
           message = response_text_3ds(xml, params)
           options[:authorization] = build_authorization(params)
-          success = params.size > 0 && is_success_response?(params[:ds_response])
+          success = params.size > 0 && success_response?(params[:ds_response])
         else
           # Some kind of programmer error with the request!
           message = "#{code} ERROR"
@@ -559,13 +559,13 @@ module ActiveMerchant #:nodoc:
         message
       end
 
-      def is_success_response?(code)
+      def success_response?(code)
         (code.to_i < 100) || [400, 481, 500, 900].include?(code.to_i)
       end
 
       def clean_order_id(order_id)
         cleansed = order_id.gsub(/[^\da-zA-Z]/, '')
-        if cleansed =~ /^\d{4}/
+        if /^\d{4}/.match?(cleansed)
           cleansed[0..11]
         else
           '%04d%s' % [rand(0..9999), cleansed[0...8]]

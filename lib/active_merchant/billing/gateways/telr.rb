@@ -8,16 +8,16 @@ module ActiveMerchant #:nodoc:
 
       self.live_url = 'https://secure.telr.com/gateway/remote.xml'
 
-      self.supported_countries = ['AE', 'IN', 'SA']
+      self.supported_countries = %w[AE IN SA]
       self.default_currency = 'AED'
       self.money_format = :dollars
-      self.supported_cardtypes = [:visa, :master, :american_express, :maestro, :jcb]
+      self.supported_cardtypes = %i[visa master american_express maestro jcb]
 
       CVC_CODE_TRANSLATOR = {
         'Y' => 'M',
         'N' => 'N',
         'X' => 'P',
-        'E' => 'U',
+        'E' => 'U'
       }
 
       AVS_CODE_TRANSLATOR = {
@@ -78,7 +78,7 @@ module ActiveMerchant #:nodoc:
 
       def verify_credentials
         response = void('0')
-        !['01', '04'].include?(response.error_code)
+        !%w[01 04].include?(response.error_code)
       end
 
       def supports_scrubbing?
@@ -149,7 +149,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_ref(doc, action, payment_method)
-        doc.ref(split_authorization(payment_method)[0]) if ['capture', 'refund', 'void'].include?(action) || payment_method.is_a?(String)
+        doc.ref(split_authorization(payment_method)[0]) if %w[capture refund void].include?(action) || payment_method.is_a?(String)
       end
 
       def add_authentication(doc)

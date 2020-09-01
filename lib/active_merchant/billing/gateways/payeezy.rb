@@ -11,7 +11,7 @@ module ActiveMerchant
       self.money_format = :cents
       self.supported_countries = %w(US CA)
 
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express discover jcb diners_club]
 
       self.homepage_url = 'https://developer.payeezy.com/'
       self.display_name = 'Payeezy'
@@ -136,7 +136,7 @@ module ActiveMerchant
       end
 
       def add_authorization_info(params, authorization, options = {})
-        transaction_id, transaction_tag, method, _ = authorization.split('|')
+        transaction_id, transaction_tag, method, = authorization.split('|')
         params[:method] = method == 'token' ? 'credit_card' : method
 
         if options[:reversal_id]
@@ -155,7 +155,7 @@ module ActiveMerchant
         params[:auth] = 'false'
       end
 
-      def is_store_action?(params)
+      def store_action?(params)
         params[:transaction_type] == 'store'
       end
 
@@ -295,7 +295,7 @@ module ActiveMerchant
       end
 
       def endpoint(params)
-        is_store_action?(params) ? '/transactions/tokens' : '/transactions'
+        store_action?(params) ? '/transactions/tokens' : '/transactions'
       end
 
       def api_request(url, params)
@@ -373,7 +373,7 @@ module ActiveMerchant
       end
 
       def authorization_from(params, response)
-        if is_store_action?(params)
+        if store_action?(params)
           if success_from(response)
             [
               response['token']['type'],

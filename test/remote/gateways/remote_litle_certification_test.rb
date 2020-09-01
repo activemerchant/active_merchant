@@ -1048,7 +1048,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
 
   def test_apple_pay_purchase
     options = {
-      order_id: transaction_id,
+      order_id: transaction_id
     }
     decrypted_apple_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
       {
@@ -1066,7 +1066,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
 
   def test_android_pay_purchase
     options = {
-      order_id: transaction_id,
+      order_id: transaction_id
     }
     decrypted_android_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
       {

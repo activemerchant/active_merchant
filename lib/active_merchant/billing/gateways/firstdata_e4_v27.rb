@@ -16,7 +16,7 @@ module ActiveMerchant #:nodoc:
 
       SUCCESS = 'true'
 
-      SENSITIVE_FIELDS = [:cvdcode, :expiry_date, :card_number]
+      SENSITIVE_FIELDS = %i[cvdcode expiry_date card_number]
 
       BRANDS = {
         visa: 'Visa',
@@ -29,7 +29,7 @@ module ActiveMerchant #:nodoc:
       DEFAULT_ECI = '07'
 
       self.supported_cardtypes = BRANDS.keys
-      self.supported_countries = ['CA', 'US']
+      self.supported_countries = %w[CA US]
       self.default_currency = 'USD'
       self.homepage_url = 'http://www.firstdata.com'
       self.display_name = 'FirstData Global Gateway e4 v27'
@@ -191,7 +191,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_identification(xml, identification)
-        authorization_num, transaction_tag, _ = identification.split(';')
+        authorization_num, transaction_tag, = identification.split(';')
 
         xml.tag! 'Authorization_Num', authorization_num
         xml.tag! 'Transaction_Tag', transaction_tag
@@ -229,7 +229,7 @@ module ActiveMerchant #:nodoc:
                 (credit_card.respond_to?(:eci) ? credit_card.eci : nil) || options[:eci] || DEFAULT_ECI
               end
 
-        xml.tag! 'Ecommerce_Flag', eci.to_s =~ /^[0-9]+$/ ? eci.to_s.rjust(2, '0') : eci
+        xml.tag! 'Ecommerce_Flag', /^[0-9]+$/.match?(eci.to_s) ? eci.to_s.rjust(2, '0') : eci
       end
 
       def add_credit_card_verification_strings(xml, credit_card, options)
@@ -287,6 +287,8 @@ module ActiveMerchant #:nodoc:
 
       def add_address(xml, options)
         if (address = options[:billing_address] || options[:address])
+          address = strip_line_breaks(address)
+
           xml.tag! 'Address' do
             xml.tag! 'Address1', address[:address1]
             xml.tag! 'Address2', address[:address2] if address[:address2]
@@ -297,6 +299,12 @@ module ActiveMerchant #:nodoc:
           end
           xml.tag! 'ZipCode', address[:zip]
         end
+      end
+
+      def strip_line_breaks(address)
+        return unless address.is_a?(Hash)
+
+        Hash[address.map { |k, s| [k, s&.tr("\r\n", ' ')&.strip] }]
       end
 
       def add_invoice(xml, options)

@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
       self.money_format = :dollars
       self.default_currency = 'USD'
       # The card types supported by the payment gateway
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       # The homepage URL of the gateway
       self.homepage_url = 'http://www.instapayllc.com'

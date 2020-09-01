@@ -101,18 +101,18 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
     @options = {
       reference: '345123',
-      shopper_email: 'john.smith@test.com',
-      shopper_ip: '77.110.174.153',
+      email: 'john.smith@test.com',
+      ip: '77.110.174.153',
       shopper_reference: 'John Smith',
       billing_address: address(),
       order_id: '123',
-      stored_credential: {reason_type: 'unscheduled'},
+      stored_credential: {reason_type: 'unscheduled'}
     }
 
     @normalized_3ds_2_options = {
       reference: '345123',
-      shopper_email: 'john.smith@test.com',
-      shopper_ip: '77.110.174.153',
+      email: 'john.smith@test.com',
+      ip: '77.110.174.153',
       shopper_reference: 'John Smith',
       billing_address: address(),
       order_id: '123',
@@ -178,6 +178,13 @@ class RemoteAdyenTest < Test::Unit::TestCase
     refute response.params['issuerUrl'].blank?
     refute response.params['md'].blank?
     refute response.params['paRequest'].blank?
+  end
+
+  def test_successful_authorize_with_execute_threed_false
+    assert response = @gateway.authorize(@amount, @three_ds_enrolled_card, @options.merge(execute_threed: false, sca_exemption: 'lowValue'))
+    assert response.test?
+    refute response.authorization.blank?
+    assert_equal response.params['resultCode'], 'Authorised'
   end
 
   def test_successful_authorize_with_3ds_with_idempotency_key
@@ -246,14 +253,14 @@ class RemoteAdyenTest < Test::Unit::TestCase
   def test_successful_authorize_with_3ds2_app_based_request
     three_ds_app_based_options = {
       reference: '345123',
-      shopper_email: 'john.smith@test.com',
-      shopper_ip: '77.110.174.153',
+      email: 'john.smith@test.com',
+      ip: '77.110.174.153',
       shopper_reference: 'John Smith',
       billing_address: address(),
       order_id: '123',
       stored_credential: {reason_type: 'unscheduled'},
       three_ds_2: {
-        channel: 'app',
+        channel: 'app'
       }
     }
 
@@ -355,8 +362,8 @@ class RemoteAdyenTest < Test::Unit::TestCase
   def test_successful_authorize_with_no_address
     options = {
       reference: '345123',
-      shopper_email: 'john.smith@test.com',
-      shopper_ip: '77.110.174.153',
+      email: 'john.smith@test.com',
+      ip: '77.110.174.153',
       shopper_reference: 'John Smith',
       order_id: '123',
       recurring_processing_model: 'CardOnFile'
@@ -1026,6 +1033,23 @@ class RemoteAdyenTest < Test::Unit::TestCase
     used_options = stored_credential_options(:unscheduled, :cardholder, id: network_transaction_id)
     assert purchase = @gateway.purchase(@amount, @credit_card, used_options)
     assert_success purchase
+  end
+
+  def test_successful_authorize_with_sub_merchant_data
+    options = @options.update({
+      billing_address: {
+        address1: 'Infinite Loop',
+        address2: 1,
+        country: 'US',
+        city: 'Cupertino',
+        state: 'CA',
+        zip: '95014'
+      }
+    })
+    assert response = @gateway.authorize(@amount, @avs_credit_card, options.merge({sub_merchant_id: '123451234512345'}))
+    assert response.test?
+    refute response.authorization.blank?
+    assert_success response
   end
 
   private

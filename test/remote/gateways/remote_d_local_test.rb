@@ -110,6 +110,12 @@ class RemoteDLocalTest < Test::Unit::TestCase
     assert_match 'The payment was paid', response.message
   end
 
+  def test_successful_purchase_partial_address
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(billing_address: address(address1: 'My Street', country: 'Brazil')))
+    assert_success response
+    assert_match 'The payment was paid', response.message
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @credit_card, @options.merge(description: '300'))
     assert_failure response

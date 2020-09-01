@@ -295,10 +295,20 @@ class MercadoPagoTest < Test::Unit::TestCase
     assert_equal '4141491|1.0', response.authorization
   end
 
+  def test_successful_purchase_with_notification_url
+    response = stub_comms do
+      @gateway.purchase(@amount, credit_card, @options.merge(notification_url: 'www.mercado-pago.com'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r("notification_url":"www.mercado-pago.com"), data) if endpoint =~ /payments/
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_includes_deviceid_header
     @options[:device_id] = '1a2b3c'
     @gateway.expects(:ssl_post).with(anything, anything, {'Content-Type' => 'application/json'}).returns(successful_purchase_response)
-    @gateway.expects(:ssl_post).with(anything, anything, {'Content-Type' => 'application/json', 'X-Device-Session-ID' => '1a2b3c'}).returns(successful_purchase_response)
+    @gateway.expects(:ssl_post).with(anything, anything, {'Content-Type' => 'application/json', 'X-meli-session-id' => '1a2b3c'}).returns(successful_purchase_response)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
@@ -309,7 +319,7 @@ class MercadoPagoTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
-      if data =~ /payment_method_id/
+      if /payment_method_id/.match?(data)
         assert_match(/"foo":"bar"/, data)
         assert_match(/"baz":"quux"/, data)
       end

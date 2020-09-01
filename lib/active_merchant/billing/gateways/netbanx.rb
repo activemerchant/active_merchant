@@ -7,14 +7,14 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = %w(AF AX AL DZ AS AD AO AI AQ AG AR AM AW AU AT AZ BS BH BD BB BY BE BZ BJ BM BT BO BQ BA BW BV BR IO BN BG BF BI KH CM CA CV KY CF TD CL CN CX CC CO KM CG CD CK CR CI HR CU CW CY CZ DK DJ DM DO EC EG SV GQ ER EE ET FK FO FJ FI FR GF PF TF GA GM GE DE GH GI GR GL GD GP GU GT GG GN GW GY HT HM HN HK HU IS IN ID IR IQ IE IM IL IT JM JP JE JO KZ KE KI KP KR KW KG LA LV LB LS LR LY LI LT LU MO MK MG MW MY MV ML MT MH MQ MR MU YT MX FM MD MC MN ME MS MA MZ MM NA NR NP NC NZ NI NE NG NU NF MP NO OM PK PW PS PA PG PY PE PH PN PL PT PR QA RE RO RU RW BL SH KN LC MF VC WS SM ST SA SN RS SC SL SG SX SK SI SB SO ZA GS SS ES LK PM SD SR SJ SZ SE CH SY TW TJ TZ TH NL TL TG TK TO TT TN TR TM TC TV UG UA AE GB US UM UY UZ VU VA VE VN VG VI WF EH YE ZM ZW)
       self.default_currency = 'CAD'
-      self.supported_cardtypes = [
-        :american_express,
-        :diners_club,
-        :discover,
-        :jcb,
-        :master,
-        :maestro,
-        :visa
+      self.supported_cardtypes = %i[
+        american_express
+        diners_club
+        discover
+        jcb
+        master
+        maestro
+        visa
       ]
 
       self.money_format = :cents
@@ -28,6 +28,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, payment, options={})
+        # Do a Verification with AVS prior to purchase
+        verification_response = verify(payment, options)
+        return verification_response if verification_response.message != 'OK'
+
         post = {}
         add_invoice(post, money, options)
         add_settle_with_auth(post)
@@ -37,6 +41,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(money, payment, options={})
+        # Do a Verification with AVS prior to Auth + Settle
+        verification_response = verify(payment, options)
+        return verification_response if verification_response.message != 'OK'
+
         post = {}
         add_invoice(post, money, options)
         add_payment(post, payment, options)
@@ -52,14 +60,30 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(money, authorization, options={})
+        # If the transactions that are pending, API call needs to be Cancellation
+        settlement_data = get_settlement(authorization)
+        return settlement_data if settlement_data.message != 'OK'
+
         post = {}
-        add_invoice(post, money, options)
+        if settlement_data.params['status'] == 'PENDING' && money == settlement_data.params['amount']
+          post[:status] = 'CANCELLED'
+          commit(:put, "settlements/#{authorization}", post)
+        elsif settlement_data.params['status'] == 'PENDING' && (money < settlement_data.params['amount'] || money > settlement_data.params['amount'])
+          return Response.new(false, 'Transaction not settled. Either do a full refund or try partial refund after settlement.')
+        else
+          add_invoice(post, money, options)
 
-        # Setting merchantRefNumber to a unique id for each refund
-        # This is to support multiple partial refunds for the same order
-        post[:merchantRefNum] = SecureRandom.uuid
+          # Setting merchantRefNumber to a unique id for each refund
+          # This is to support multiple partial refunds for the same order
+          post[:merchantRefNum] = SecureRandom.uuid
 
-        commit(:post, "settlements/#{authorization}/refunds", post)
+          commit(:post, "settlements/#{authorization}/refunds", post)
+        end
+      end
+
+      def get_settlement(authorization)
+        post = {}
+        commit(:get, "settlements/#{authorization}", post)
       end
 
       def void(authorization, options={})
@@ -71,7 +95,7 @@ module ActiveMerchant #:nodoc:
 
       def verify(credit_card, options={})
         post = {}
-        add_payment(post, credit_card)
+        add_payment(post, credit_card, options)
         add_order_id(post, options)
 
         commit(:post, 'verifications', post)
@@ -139,14 +163,14 @@ module ActiveMerchant #:nodoc:
         add_order_id(post, options)
       end
 
-      def add_payment(post, credit_card_or_reference, options = {})
+      def add_payment(post, credit_card_reference, options = {})
         post[:card] ||= {}
-        if credit_card_or_reference.is_a?(String)
-          post[:card][:paymentToken] = credit_card_or_reference
+        if credit_card_reference.is_a?(String)
+          post[:card][:paymentToken] = credit_card_reference
         else
-          post[:card][:cardNum]    = credit_card_or_reference.number
-          post[:card][:cvv]        = credit_card_or_reference.verification_value
-          post[:card][:cardExpiry] = expdate(credit_card_or_reference)
+          post[:card][:cardNum]    = credit_card_reference.number
+          post[:card][:cvv]        = credit_card_reference.verification_value
+          post[:card][:cardExpiry] = expdate(credit_card_reference)
         end
 
         post[:currencyCode] = options[:currency] if options[:currency]
@@ -174,7 +198,7 @@ module ActiveMerchant #:nodoc:
           street: address[:address1],
           city: address[:city],
           zip: address[:zip],
-          state: address[:state],
+          state: address[:state]
         }
         mapped[:country] = country.code(:alpha2).value unless country.blank?
 
@@ -202,7 +226,11 @@ module ActiveMerchant #:nodoc:
         params = parameters.to_json unless parameters.nil?
         response =
           begin
-            parse(ssl_request(method, get_url(uri), params, headers))
+            if method == :get
+              parse(ssl_request(method, get_url(uri), nil, headers))
+            else
+              parse(ssl_request(method, get_url(uri), params, headers))
+            end
           rescue ResponseError => e
             return Response.new(false, 'Invalid Login') if e.response.code == '401'
 
@@ -216,13 +244,15 @@ module ActiveMerchant #:nodoc:
           response,
           test: test?,
           error_code: error_code_from(response),
-          authorization: authorization_from(success, get_url(uri), method, response)
+          authorization: authorization_from(success, get_url(uri), method, response),
+          avs_result: AVSResult.new(code: response['avsResponse']),
+          cvv_result: CVVResult.new(response['cvvVerification'])
         )
       end
 
       def get_url(uri)
         url = (test? ? test_url : live_url)
-        if uri =~ /^customervault/
+        if /^customervault/.match?(uri)
           "#{url}#{uri}"
         else
           "#{url}cardpayments/v1/accounts/#{@options[:account_number]}/#{uri}"

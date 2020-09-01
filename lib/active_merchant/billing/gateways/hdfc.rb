@@ -12,7 +12,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['IN']
       self.default_currency = 'INR'
       self.money_format = :dollars
-      self.supported_cardtypes = [:visa, :master, :discover, :diners_club]
+      self.supported_cardtypes = %i[visa master discover diners_club]
 
       def initialize(options={})
         requires!(options, :login, :password)
@@ -81,14 +81,14 @@ module ActiveMerchant #:nodoc:
         post[:udf2] = escape(options[:email]) if options[:email]
         if address = (options[:billing_address] || options[:address])
           post[:udf3] = escape(address[:phone]) if address[:phone]
-          post[:udf4] = escape(<<EOA)
-#{address[:name]}
-#{address[:company]}
-#{address[:address1]}
-#{address[:address2]}
-#{address[:city]} #{address[:state]} #{address[:zip]}
-#{address[:country]}
-EOA
+          post[:udf4] = escape(<<~EOA)
+            #{address[:name]}
+            #{address[:company]}
+            #{address[:address1]}
+            #{address[:address2]}
+            #{address[:city]} #{address[:state]} #{address[:zip]}
+            #{address[:country]}
+          EOA
         end
       end
 
@@ -134,7 +134,7 @@ EOA
         'purchase' => '1',
         'refund' => '2',
         'authorize' => '4',
-        'capture' => '5',
+        'capture' => '5'
       }
 
       def commit(action, post)

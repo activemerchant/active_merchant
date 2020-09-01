@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'AUD'
       self.money_format = :cents
       self.supported_countries = ['AU']
-      self.supported_cardtypes = [:visa, :master, :american_express]
+      self.supported_cardtypes = %i[visa master american_express]
       self.homepage_url = 'http://www.pinpayments.com/'
       self.display_name = 'Pin Payments'
 
@@ -138,7 +138,7 @@ module ActiveMerchant #:nodoc:
             name: creditcard.name
           )
         elsif creditcard.kind_of?(String)
-          if creditcard =~ /^card_/
+          if /^card_/.match?(creditcard)
             post[:card_token] = get_card_token(creditcard)
           else
             post[:customer_token] = creditcard

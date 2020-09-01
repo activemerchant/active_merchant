@@ -10,11 +10,11 @@ class GatewayTest < Test::Unit::TestCase
   end
 
   def test_should_detect_if_a_card_is_supported
-    Gateway.supported_cardtypes = [:visa, :bogus]
-    assert([:visa, :bogus].all? { |supported_cardtype| Gateway.supports?(supported_cardtype) })
+    Gateway.supported_cardtypes = %i[visa bogus]
+    assert(%i[visa bogus].all? { |supported_cardtype| Gateway.supports?(supported_cardtype) })
 
     Gateway.supported_cardtypes = []
-    assert_false([:visa, :bogus].all? { |invalid_cardtype| Gateway.supports?(invalid_cardtype) })
+    assert_false(%i[visa bogus].all? { |invalid_cardtype| Gateway.supports?(invalid_cardtype) })
   end
 
   def test_should_validate_supported_countries
@@ -103,7 +103,7 @@ class GatewayTest < Test::Unit::TestCase
   end
 
   def test_split_names
-    assert_equal ['Longbob', 'Longsen'], @gateway.send(:split_names, 'Longbob Longsen')
+    assert_equal %w[Longbob Longsen], @gateway.send(:split_names, 'Longbob Longsen')
   end
 
   def test_split_names_with_single_name
@@ -163,7 +163,7 @@ EOF
     post = { }
     options = { order_id: order_id, transaction_number: transaction_number, do_not_add: 24 }
 
-    @gateway.add_fields_to_post_if_present(post, options, [:order_id, :transaction_number])
+    @gateway.add_fields_to_post_if_present(post, options, %i[order_id transaction_number])
 
     assert_equal post[:order_id], order_id
     assert_equal post[:transaction_number], transaction_number

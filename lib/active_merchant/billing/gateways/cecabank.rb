@@ -5,7 +5,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://pgw.ceca.es'
 
       self.supported_countries = ['ES']
-      self.supported_cardtypes = [:visa, :master, :american_express]
+      self.supported_cardtypes = %i[visa master american_express]
       self.homepage_url = 'http://www.ceca.es/es/'
       self.display_name = 'Cecabank'
       self.default_currency = 'EUR'

@@ -6,8 +6,8 @@ module ActiveMerchant #:nodoc:
 
       self.money_format = :cents
       self.default_currency = 'USD'
-      self.supported_countries = ['US', 'CA']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_countries = %w[US CA]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       self.homepage_url = 'http://www.jetpay.com'
       self.display_name = 'JetPay'

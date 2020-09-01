@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'GBP'
       self.money_format = :cents
       self.supported_countries = %w(HK GB AU AD AR BE BR CA CH CN CO CR CY CZ DE DK ES FI FR GI GR HU IE IN IT JP LI LU MC MT MY MX NL NO NZ PA PE PL PT SE SG SI SM TR UM VA)
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :maestro, :elo, :naranja, :cabal]
+      self.supported_cardtypes = %i[visa master american_express discover jcb maestro elo naranja cabal]
       self.currencies_without_fractions = %w(HUF IDR ISK JPY KRW)
       self.currencies_with_three_decimal_places = %w(BHD KWD OMR RSD TND)
       self.homepage_url = 'http://www.worldpay.com/'
@@ -217,7 +217,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def order_tag_attributes(options)
-        { 'orderCode' => options[:order_id], 'installationId' => options[:inst_id] || @options[:inst_id] }.reject { |_, v| !v }
+        { 'orderCode' => options[:order_id], 'installationId' => options[:inst_id] || @options[:inst_id] }.reject { |_, v| !v.present? }
       end
 
       def build_capture_request(money, authorization, options)
@@ -406,7 +406,7 @@ module ActiveMerchant #:nodoc:
       def add_three_d_secure(three_d_secure, xml)
         xml.info3DSecure do
           xml.threeDSVersion three_d_secure[:version]
-          if three_d_secure[:version] =~ /^2/
+          if /^2/.match?(three_d_secure[:version])
             xml.dsTransactionId three_d_secure[:ds_transaction_id]
           else
             xml.xid three_d_secure[:xid]
@@ -429,7 +429,7 @@ module ActiveMerchant #:nodoc:
         xml.cardHolderName card_holder_name
         xml.cvc payment_method.verification_value
 
-        add_address(xml, (options[:billing_address] || options[:address]))
+        add_address(xml, (options[:billing_address] || options[:address]), options)
       end
 
       def add_stored_credential_options(xml, options={})
@@ -485,7 +485,7 @@ module ActiveMerchant #:nodoc:
         xml.authenticatedShopperID options[:customer] if options[:customer]
       end
 
-      def add_address(xml, address)
+      def add_address(xml, address, options)
         return unless address
 
         address = address_with_defaults(address)
@@ -500,7 +500,7 @@ module ActiveMerchant #:nodoc:
             xml.address2 address[:address2] if address[:address2]
             xml.postalCode address[:zip]
             xml.city address[:city]
-            xml.state address[:state]
+            xml.state address[:state] unless address[:country] != 'US' && options[:execute_threed]
             xml.countryCode address[:country]
             xml.telephoneNumber address[:phone] if address[:phone]
           end
@@ -663,7 +663,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def required_status_message(raw, success_criteria)
-        "A transaction status of #{success_criteria.collect { |c| "'#{c}'" }.join(" or ")} is required." if !success_criteria.include?(raw[:last_event])
+        "A transaction status of #{success_criteria.collect { |c| "'#{c}'" }.join(' or ')} is required." if !success_criteria.include?(raw[:last_event])
       end
 
       def authorization_from(action, raw, options)

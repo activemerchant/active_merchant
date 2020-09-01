@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
 
       self.money_format = :cents
       self.supported_countries = ['AU']
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express diners_club]
       self.homepage_url = 'http://www.eway.com.au/'
       self.display_name = 'eWAY'
 

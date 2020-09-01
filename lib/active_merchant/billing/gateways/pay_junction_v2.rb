@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['US']
       self.default_currency = 'USD'
       self.money_format = :dollars
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       def initialize(options={})
         requires!(options, :api_login, :api_password, :api_key)
@@ -146,7 +146,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def ssl_invoke(action, params)
-        if ['purchase', 'authorize', 'refund', 'credit'].include?(action)
+        if %w[purchase authorize refund credit].include?(action)
           ssl_post(url(), post_data(params), headers)
         else
           ssl_request(:put, url(params), post_data(params), headers)

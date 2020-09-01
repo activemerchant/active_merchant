@@ -28,7 +28,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = self.live_url
 
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master]
+      self.supported_cardtypes = %i[visa master]
       self.money_format = :cents
       self.default_currency = 'USD'
       self.homepage_url = 'https://www.deepcovelabs.com/raven'

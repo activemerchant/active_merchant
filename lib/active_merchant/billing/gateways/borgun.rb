@@ -9,10 +9,10 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://gatewaytest.borgun.is/ws/Heimir.pub.ws:Authorization'
       self.live_url = 'https://gateway01.borgun.is/ws/Heimir.pub.ws:Authorization'
 
-      self.supported_countries = ['IS', 'GB', 'HU', 'CZ', 'DE', 'DK', 'SE']
+      self.supported_countries = %w[IS GB HU CZ DE DK SE]
       self.default_currency = 'ISK'
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :discover, :jcb]
+      self.supported_cardtypes = %i[visa master american_express diners_club discover jcb]
 
       self.homepage_url = 'https://www.borgun.is/'
 
@@ -96,7 +96,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_reference(post, authorization)
-        dateandtime, _batch, transaction, rrn, authcode, _, _, _ = split_authorization(authorization)
+        dateandtime, _batch, transaction, rrn, authcode, = split_authorization(authorization)
         post[:DateAndTime] = dateandtime
         post[:Transaction] = transaction
         post[:RRN] = rrn
@@ -176,7 +176,7 @@ module ActiveMerchant #:nodoc:
 
       def headers
         {
-          'Authorization' => 'Basic ' + Base64.strict_encode64(@options[:username].to_s + ':' + @options[:password].to_s),
+          'Authorization' => 'Basic ' + Base64.strict_encode64(@options[:username].to_s + ':' + @options[:password].to_s)
         }
       end
 

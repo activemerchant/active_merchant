@@ -10,12 +10,12 @@ module ActiveMerchant #:nodoc:
       self.live_url = self.test_url = 'https://gw1.iridiumcorp.net/'
 
       # The countries the gateway supports merchants from as 2 digit ISO country codes
-      self.supported_countries = ['GB', 'ES']
+      self.supported_countries = %w[GB ES]
       self.default_currency = 'EUR'
       self.money_format = :cents
 
       # The card types supported by the payment gateway
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :maestro, :jcb, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express discover maestro jcb diners_club]
 
       # The homepage URL of the gateway
       self.homepage_url = 'http://www.iridiumcorp.co.uk/'
@@ -203,7 +203,7 @@ module ActiveMerchant #:nodoc:
         'YER' => '886',
         'ZAR' => '710',
         'ZMK' => '894',
-        'ZWD' => '716',
+        'ZWD' => '716'
       }
 
       AVS_CODE = {
@@ -288,7 +288,7 @@ module ActiveMerchant #:nodoc:
 
       def build_reference_request(type, money, authorization, options)
         options[:action] = 'CrossReferenceTransaction'
-        order_id, cross_reference, _ = authorization.split(';')
+        order_id, cross_reference, = authorization.split(';')
         build_request(options) do |xml|
           if money
             currency = options[:currency] || currency(money)
@@ -389,7 +389,7 @@ module ActiveMerchant #:nodoc:
           authorization: authorization,
           avs_result: {
             street_match: AVS_CODE[ response[:transaction_output_data][:address_numeric_check_result] ],
-            postal_match: AVS_CODE[ response[:transaction_output_data][:post_code_check_result] ],
+            postal_match: AVS_CODE[ response[:transaction_output_data][:post_code_check_result] ]
           },
           cvv_result: CVV_CODE[ response[:transaction_output_data][:cv2_check_result] ]
         )

@@ -133,7 +133,7 @@ class MonerisTest < Test::Unit::TestCase
       amount: '1.01',
       pan: '4242424242424242',
       expdate: '0303',
-      crypt_type: 7,
+      crypt_type: 7
     }
 
     assert data = @gateway.send(:post_data, 'preauth', params)
@@ -147,7 +147,7 @@ class MonerisTest < Test::Unit::TestCase
       amount: '1.01',
       pan: '4242424242424242',
       expdate: '0303',
-      crypt_type: 7,
+      crypt_type: 7
     }
 
     assert data = @gateway.send(:post_data, 'purchase', params)
@@ -161,7 +161,7 @@ class MonerisTest < Test::Unit::TestCase
       amount: '1.01',
       pan: '4242424242424242',
       expdate: '0303',
-      crypt_type: 7,
+      crypt_type: 7
     }
 
     assert data = @gateway.send(:post_data, 'preauth', params)
@@ -183,7 +183,7 @@ class MonerisTest < Test::Unit::TestCase
   end
 
   def test_supported_card_types
-    assert_equal [:visa, :master, :american_express, :diners_club, :discover], MonerisGateway.supported_cardtypes
+    assert_equal %i[visa master american_express diners_club discover], MonerisGateway.supported_cardtypes
   end
 
   def test_should_raise_error_if_transaction_param_empty_on_credit_request
@@ -583,141 +583,141 @@ class MonerisTest < Test::Unit::TestCase
   end
 
   def successful_purchase_response
-    <<-RESPONSE
-<?xml version="1.0"?>
-<response>
-  <receipt>
-    <ReceiptId>1026.1</ReceiptId>
-    <ReferenceNum>661221050010170010</ReferenceNum>
-    <ResponseCode>027</ResponseCode>
-    <ISO>01</ISO>
-    <AuthCode>013511</AuthCode>
-    <TransTime>18:41:13</TransTime>
-    <TransDate>2008-01-05</TransDate>
-    <TransType>00</TransType>
-    <Complete>true</Complete>
-    <Message>APPROVED * =</Message>
-    <TransAmount>1.00</TransAmount>
-    <CardType>V</CardType>
-    <TransID>58-0_3</TransID>
-    <TimedOut>false</TimedOut>
-  </receipt>
-</response>
+    <<~RESPONSE
+      <?xml version="1.0"?>
+      <response>
+        <receipt>
+          <ReceiptId>1026.1</ReceiptId>
+          <ReferenceNum>661221050010170010</ReferenceNum>
+          <ResponseCode>027</ResponseCode>
+          <ISO>01</ISO>
+          <AuthCode>013511</AuthCode>
+          <TransTime>18:41:13</TransTime>
+          <TransDate>2008-01-05</TransDate>
+          <TransType>00</TransType>
+          <Complete>true</Complete>
+          <Message>APPROVED * =</Message>
+          <TransAmount>1.00</TransAmount>
+          <CardType>V</CardType>
+          <TransID>58-0_3</TransID>
+          <TimedOut>false</TimedOut>
+        </receipt>
+      </response>
 
     RESPONSE
   end
 
   def successful_first_cof_purchase_response
-    <<-RESPONSE
-<?xml version=\"1.0\" standalone=\"yes\"?>
-<?xml version=“1.0” standalone=“yes”?>
-<response>
- <receipt>
-   <ReceiptId>a33ba7edd448b91ef8d2f85fea614b8d</ReceiptId>
-   <ReferenceNum>660114080015099160</ReferenceNum>
-   <ResponseCode>027</ResponseCode>
-   <ISO>01</ISO>
-   <AuthCode>822665</AuthCode>
-   <TransTime>07:43:28</TransTime>
-   <TransDate>2018-11-11</TransDate>
-   <TransType>00</TransType>
-   <Complete>true</Complete>
-   <Message>APPROVED           *                    =</Message>
-   <TransAmount>1.00</TransAmount>
-   <CardType>V</CardType>
-   <TransID>799655-0_11</TransID>
-   <TimedOut>false</TimedOut>
-   <BankTotals>null</BankTotals>
-   <Ticket>null</Ticket>
-   <IssuerId>355689484440192</IssuerId>
-   <IsVisaDebit>false</IsVisaDebit>
- </receipt>
-</response>
+    <<~RESPONSE
+      <?xml version=\"1.0\" standalone=\"yes\"?>
+      <?xml version=“1.0” standalone=“yes”?>
+      <response>
+       <receipt>
+         <ReceiptId>a33ba7edd448b91ef8d2f85fea614b8d</ReceiptId>
+         <ReferenceNum>660114080015099160</ReferenceNum>
+         <ResponseCode>027</ResponseCode>
+         <ISO>01</ISO>
+         <AuthCode>822665</AuthCode>
+         <TransTime>07:43:28</TransTime>
+         <TransDate>2018-11-11</TransDate>
+         <TransType>00</TransType>
+         <Complete>true</Complete>
+         <Message>APPROVED           *                    =</Message>
+         <TransAmount>1.00</TransAmount>
+         <CardType>V</CardType>
+         <TransID>799655-0_11</TransID>
+         <TimedOut>false</TimedOut>
+         <BankTotals>null</BankTotals>
+         <Ticket>null</Ticket>
+         <IssuerId>355689484440192</IssuerId>
+         <IsVisaDebit>false</IsVisaDebit>
+       </receipt>
+      </response>
     RESPONSE
   end
 
   def successful_first_cof_authorize_response
-    <<-RESPONSE
-<?xml version=\"1.0\" standalone=\"yes\"?>
-<response>
-  <receipt>
-    <ReceiptId>8dbc28468af2007779bbede7ec1bab6c</ReceiptId>
-    <ReferenceNum>660109300018229130</ReferenceNum>
-    <ResponseCode>027</ResponseCode>
-    <ISO>01</ISO>
-    <AuthCode>718280</AuthCode>
-    <TransTime>07:50:53</TransTime>
-    <TransDate>2018-11-11</TransDate>
-    <TransType>01</TransType>
-    <Complete>true</Complete>
-    <Message>APPROVED           *                    =</Message>
-    <TransAmount>1.00</TransAmount>
-    <CardType>V</CardType>
-    <TransID>830724-0_11</TransID>
-    <TimedOut>false</TimedOut>
-    <BankTotals>null</BankTotals>
-    <Ticket>null</Ticket>
-    <MessageId>1A8315282537312</MessageId>
-    <IssuerId>550923784451193</IssuerId>
-    <IsVisaDebit>false</IsVisaDebit>
-  </receipt>
-</response>
+    <<~RESPONSE
+      <?xml version=\"1.0\" standalone=\"yes\"?>
+      <response>
+        <receipt>
+          <ReceiptId>8dbc28468af2007779bbede7ec1bab6c</ReceiptId>
+          <ReferenceNum>660109300018229130</ReferenceNum>
+          <ResponseCode>027</ResponseCode>
+          <ISO>01</ISO>
+          <AuthCode>718280</AuthCode>
+          <TransTime>07:50:53</TransTime>
+          <TransDate>2018-11-11</TransDate>
+          <TransType>01</TransType>
+          <Complete>true</Complete>
+          <Message>APPROVED           *                    =</Message>
+          <TransAmount>1.00</TransAmount>
+          <CardType>V</CardType>
+          <TransID>830724-0_11</TransID>
+          <TimedOut>false</TimedOut>
+          <BankTotals>null</BankTotals>
+          <Ticket>null</Ticket>
+          <MessageId>1A8315282537312</MessageId>
+          <IssuerId>550923784451193</IssuerId>
+          <IsVisaDebit>false</IsVisaDebit>
+        </receipt>
+      </response>
     RESPONSE
   end
 
   def successful_subsequent_cof_purchase_response
-    <<-RESPONSE
-<?xml version="1.0" standalone="yes"?>
-<response>
-  <receipt>
-    <ReceiptId>830724-0_11;8dbc28468af2007779bbede7ec1bab6c</ReceiptId>
-    <ReferenceNum>660109490014038930</ReferenceNum>
-    <ResponseCode>027</ResponseCode>
-    <ISO>01</ISO>
-    <AuthCode>111234</AuthCode>
-    <TransTime>07:50:54</TransTime>
-    <TransDate>2018-11-11</TransDate>
-    <TransType>00</TransType>
-    <Complete>true</Complete>
-    <Message>APPROVED           *                    =</Message>
-    <TransAmount>1.00</TransAmount>
-    <CardType>V</CardType>
-    <TransID>455422-0_11</TransID>
-    <TimedOut>false</TimedOut>
-    <BankTotals>null</BankTotals>
-    <Ticket>null</Ticket>
-    <IssuerId>762097792112819</IssuerId>
-    <IsVisaDebit>false</IsVisaDebit>
-  </receipt>
-</response>
+    <<~RESPONSE
+      <?xml version="1.0" standalone="yes"?>
+      <response>
+        <receipt>
+          <ReceiptId>830724-0_11;8dbc28468af2007779bbede7ec1bab6c</ReceiptId>
+          <ReferenceNum>660109490014038930</ReferenceNum>
+          <ResponseCode>027</ResponseCode>
+          <ISO>01</ISO>
+          <AuthCode>111234</AuthCode>
+          <TransTime>07:50:54</TransTime>
+          <TransDate>2018-11-11</TransDate>
+          <TransType>00</TransType>
+          <Complete>true</Complete>
+          <Message>APPROVED           *                    =</Message>
+          <TransAmount>1.00</TransAmount>
+          <CardType>V</CardType>
+          <TransID>455422-0_11</TransID>
+          <TimedOut>false</TimedOut>
+          <BankTotals>null</BankTotals>
+          <Ticket>null</Ticket>
+          <IssuerId>762097792112819</IssuerId>
+          <IsVisaDebit>false</IsVisaDebit>
+        </receipt>
+      </response>
     RESPONSE
   end
 
   def successful_purchase_network_tokenization
-    <<-RESPONSE
-<?xml version="1.0"?>
-<response>
-   <receipt>
-      <ReceiptId>0bbb277b543a17b6781243889a689573</ReceiptId>
-      <ReferenceNum>660110910011133780</ReferenceNum>
-      <ResponseCode>027</ResponseCode>
-      <ISO>01</ISO>
-      <AuthCode>368269</AuthCode>
-      <TransTime>22:54:10</TransTime>
-      <TransDate>2015-07-05</TransDate>
-      <TransType>00</TransType>
-      <Complete>true</Complete>
-      <Message>APPROVED           *                    =</Message>
-      <TransAmount>1.00</TransAmount>
-      <CardType>V</CardType>
-      <TransID>101965-0_10</TransID>
-      <TimedOut>false</TimedOut>
-      <BankTotals>null</BankTotals>
-      <Ticket>null</Ticket>
-      <CorporateCard>false</CorporateCard>
-      <IsVisaDebit>false</IsVisaDebit>
-   </receipt>
-</response>
+    <<~RESPONSE
+      <?xml version="1.0"?>
+      <response>
+         <receipt>
+            <ReceiptId>0bbb277b543a17b6781243889a689573</ReceiptId>
+            <ReferenceNum>660110910011133780</ReferenceNum>
+            <ResponseCode>027</ResponseCode>
+            <ISO>01</ISO>
+            <AuthCode>368269</AuthCode>
+            <TransTime>22:54:10</TransTime>
+            <TransDate>2015-07-05</TransDate>
+            <TransType>00</TransType>
+            <Complete>true</Complete>
+            <Message>APPROVED           *                    =</Message>
+            <TransAmount>1.00</TransAmount>
+            <CardType>V</CardType>
+            <TransID>101965-0_10</TransID>
+            <TimedOut>false</TimedOut>
+            <BankTotals>null</BankTotals>
+            <Ticket>null</Ticket>
+            <CorporateCard>false</CorporateCard>
+            <IsVisaDebit>false</IsVisaDebit>
+         </receipt>
+      </response>
 
     RESPONSE
   end
@@ -752,163 +752,163 @@ class MonerisTest < Test::Unit::TestCase
   end
 
   def successful_authorization_network_tokenization
-    <<-RESPONSE
-<?xml version="1.0"?>
-<response>
-   <receipt>
-      <ReceiptId>d88d9f5f3472898832c54d6b5572757e</ReceiptId>
-      <ReferenceNum>660110910011139740</ReferenceNum>
-      <ResponseCode>027</ResponseCode>
-      <ISO>01</ISO>
-      <AuthCode>873534</AuthCode>
-      <TransTime>09:31:41</TransTime>
-      <TransDate>2015-07-09</TransDate>
-      <TransType>01</TransType>
-      <Complete>true</Complete>
-      <Message>APPROVED           *                    =</Message>
-      <TransAmount>1.00</TransAmount>
-      <CardType>V</CardType>
-      <TransID>109232-0_10</TransID>
-      <TimedOut>false</TimedOut>
-      <BankTotals>null</BankTotals>
-      <Ticket>null</Ticket>
-      <CorporateCard>false</CorporateCard>
-      <IsVisaDebit>false</IsVisaDebit>
-   </receipt>
-</response>
+    <<~RESPONSE
+      <?xml version="1.0"?>
+      <response>
+         <receipt>
+            <ReceiptId>d88d9f5f3472898832c54d6b5572757e</ReceiptId>
+            <ReferenceNum>660110910011139740</ReferenceNum>
+            <ResponseCode>027</ResponseCode>
+            <ISO>01</ISO>
+            <AuthCode>873534</AuthCode>
+            <TransTime>09:31:41</TransTime>
+            <TransDate>2015-07-09</TransDate>
+            <TransType>01</TransType>
+            <Complete>true</Complete>
+            <Message>APPROVED           *                    =</Message>
+            <TransAmount>1.00</TransAmount>
+            <CardType>V</CardType>
+            <TransID>109232-0_10</TransID>
+            <TimedOut>false</TimedOut>
+            <BankTotals>null</BankTotals>
+            <Ticket>null</Ticket>
+            <CorporateCard>false</CorporateCard>
+            <IsVisaDebit>false</IsVisaDebit>
+         </receipt>
+      </response>
 
     RESPONSE
   end
 
   def successful_purchase_response_with_avs_result
-    <<-RESPONSE
-<?xml version="1.0"?>
-<response>
-  <receipt>
-    <ReceiptId>9c7189ec64b58f541335be1ca6294d09</ReceiptId>
-    <ReferenceNum>660110910011136190</ReferenceNum>
-    <ResponseCode>027</ResponseCode>
-    <ISO>01</ISO>
-    <AuthCode>115497</AuthCode>
-    <TransTime>15:20:51</TransTime>
-    <TransDate>2014-06-18</TransDate>
-    <TransType>00</TransType>
-    <Complete>true</Complete><Message>APPROVED * =</Message>
-    <TransAmount>10.10</TransAmount>
-    <CardType>V</CardType>
-    <TransID>491573-0_9</TransID>
-    <TimedOut>false</TimedOut>
-    <BankTotals>null</BankTotals>
-    <Ticket>null</Ticket>
-    <CorporateCard>false</CorporateCard>
-    <AvsResultCode>A</AvsResultCode>
-    <ITDResponse>null</ITDResponse>
-    <IsVisaDebit>false</IsVisaDebit>
-  </receipt>
-</response>
+    <<~RESPONSE
+      <?xml version="1.0"?>
+      <response>
+        <receipt>
+          <ReceiptId>9c7189ec64b58f541335be1ca6294d09</ReceiptId>
+          <ReferenceNum>660110910011136190</ReferenceNum>
+          <ResponseCode>027</ResponseCode>
+          <ISO>01</ISO>
+          <AuthCode>115497</AuthCode>
+          <TransTime>15:20:51</TransTime>
+          <TransDate>2014-06-18</TransDate>
+          <TransType>00</TransType>
+          <Complete>true</Complete><Message>APPROVED * =</Message>
+          <TransAmount>10.10</TransAmount>
+          <CardType>V</CardType>
+          <TransID>491573-0_9</TransID>
+          <TimedOut>false</TimedOut>
+          <BankTotals>null</BankTotals>
+          <Ticket>null</Ticket>
+          <CorporateCard>false</CorporateCard>
+          <AvsResultCode>A</AvsResultCode>
+          <ITDResponse>null</ITDResponse>
+          <IsVisaDebit>false</IsVisaDebit>
+        </receipt>
+      </response>
 
     RESPONSE
   end
 
   def failed_purchase_response
-    <<-RESPONSE
-<?xml version="1.0"?>
-<response>
-  <receipt>
-    <ReceiptId>1026.1</ReceiptId>
-    <ReferenceNum>661221050010170010</ReferenceNum>
-    <ResponseCode>481</ResponseCode>
-    <ISO>01</ISO>
-    <AuthCode>013511</AuthCode>
-    <TransTime>18:41:13</TransTime>
-    <TransDate>2008-01-05</TransDate>
-    <TransType>00</TransType>
-    <Complete>true</Complete>
-    <Message>DECLINED * =</Message>
-    <TransAmount>1.00</TransAmount>
-    <CardType>V</CardType>
-    <TransID>97-2-0</TransID>
-    <TimedOut>false</TimedOut>
-  </receipt>
-</response>
+    <<~RESPONSE
+      <?xml version="1.0"?>
+      <response>
+        <receipt>
+          <ReceiptId>1026.1</ReceiptId>
+          <ReferenceNum>661221050010170010</ReferenceNum>
+          <ResponseCode>481</ResponseCode>
+          <ISO>01</ISO>
+          <AuthCode>013511</AuthCode>
+          <TransTime>18:41:13</TransTime>
+          <TransDate>2008-01-05</TransDate>
+          <TransType>00</TransType>
+          <Complete>true</Complete>
+          <Message>DECLINED * =</Message>
+          <TransAmount>1.00</TransAmount>
+          <CardType>V</CardType>
+          <TransID>97-2-0</TransID>
+          <TimedOut>false</TimedOut>
+        </receipt>
+      </response>
 
     RESPONSE
   end
 
   def successful_store_response
-    <<-RESPONSE
-<?xml version="1.0"?>
-<response>
-  <receipt>
-    <DataKey>1234567890</DataKey>
-    <ResponseCode>027</ResponseCode>
-    <Complete>true</Complete>
-    <Message>Successfully registered cc details * =</Message>
-  </receipt>
-</response>
+    <<~RESPONSE
+      <?xml version="1.0"?>
+      <response>
+        <receipt>
+          <DataKey>1234567890</DataKey>
+          <ResponseCode>027</ResponseCode>
+          <Complete>true</Complete>
+          <Message>Successfully registered cc details * =</Message>
+        </receipt>
+      </response>
     RESPONSE
   end
 
   def successful_store_with_duration_response
-    <<-RESPONSE
-<?xml version="1.0"?>
-<response>
-  <receipt>
-    <DataKey>1234567890</DataKey>
-    <ReceiptId>null</ReceiptId>
-    <ReferenceNum>null</ReferenceNum>
-    <ResponseCode>001</ResponseCode>
-    <ISO>null</ISO>
-    <AuthCode>null</AuthCode>
-    <Message>Successfully registered CC details.</Message>
-    <TransType>null</TransType>
-    <Complete>true</Complete>
-    <TransAmount>null</TransAmount>
-    <CardType>null</CardType>
-    <TransID>null</TransID>
-    <TimedOut>false</TimedOut>
-    <CorporateCard>null</CorporateCard>
-    <RecurSuccess>null</RecurSuccess>
-    <AvsResultCode>null</AvsResultCode>
-    <CvdResultCode>null</CvdResultCode>
-    <ResSuccess>true</ResSuccess>
-    <PaymentType>cc</PaymentType>
-    <IsVisaDebit>null</IsVisaDebit>
-    <ResolveData>
-      <anc1/>
-      <masked_pan>4242***4242</masked_pan>
-      <expdate>2010</expdate>
-    </ResolveData>
-  </receipt>
-</response>
+    <<~RESPONSE
+      <?xml version="1.0"?>
+      <response>
+        <receipt>
+          <DataKey>1234567890</DataKey>
+          <ReceiptId>null</ReceiptId>
+          <ReferenceNum>null</ReferenceNum>
+          <ResponseCode>001</ResponseCode>
+          <ISO>null</ISO>
+          <AuthCode>null</AuthCode>
+          <Message>Successfully registered CC details.</Message>
+          <TransType>null</TransType>
+          <Complete>true</Complete>
+          <TransAmount>null</TransAmount>
+          <CardType>null</CardType>
+          <TransID>null</TransID>
+          <TimedOut>false</TimedOut>
+          <CorporateCard>null</CorporateCard>
+          <RecurSuccess>null</RecurSuccess>
+          <AvsResultCode>null</AvsResultCode>
+          <CvdResultCode>null</CvdResultCode>
+          <ResSuccess>true</ResSuccess>
+          <PaymentType>cc</PaymentType>
+          <IsVisaDebit>null</IsVisaDebit>
+          <ResolveData>
+            <anc1/>
+            <masked_pan>4242***4242</masked_pan>
+            <expdate>2010</expdate>
+          </ResolveData>
+        </receipt>
+      </response>
     RESPONSE
   end
 
   def successful_unstore_response
-    <<-RESPONSE
-<?xml version="1.0"?>
-<response>
-  <receipt>
-    <DataKey>1234567890</DataKey>
-    <ResponseCode>027</ResponseCode>
-    <Complete>true</Complete>
-    <Message>Successfully deleted cc details * =</Message>
-  </receipt>
-</response>
+    <<~RESPONSE
+      <?xml version="1.0"?>
+      <response>
+        <receipt>
+          <DataKey>1234567890</DataKey>
+          <ResponseCode>027</ResponseCode>
+          <Complete>true</Complete>
+          <Message>Successfully deleted cc details * =</Message>
+        </receipt>
+      </response>
     RESPONSE
   end
 
   def successful_update_response
-    <<-RESPONSE
-<?xml version="1.0"?>
-<response>
-  <receipt>
-    <DataKey>1234567890</DataKey>
-    <ResponseCode>027</ResponseCode>
-    <Complete>true</Complete>
-    <Message>Successfully updated cc details * =</Message>
-  </receipt>
-</response>
+    <<~RESPONSE
+      <?xml version="1.0"?>
+      <response>
+        <receipt>
+          <DataKey>1234567890</DataKey>
+          <ResponseCode>027</ResponseCode>
+          <Complete>true</Complete>
+          <Message>Successfully updated cc details * =</Message>
+        </receipt>
+      </response>
     RESPONSE
   end
 

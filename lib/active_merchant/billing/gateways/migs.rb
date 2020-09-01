@@ -20,7 +20,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = %w(AU AE BD BN EG HK ID JO KW LB LK MU MV MY NZ OM PH QA SA SG TT VN)
 
       # The card types supported by the payment gateway
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
+      self.supported_cardtypes = %i[visa master american_express diners_club jcb]
 
       self.money_format = :cents
       self.currencies_without_fractions = %w(IDR)

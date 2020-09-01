@@ -25,10 +25,10 @@ module ActiveMerchant #:nodoc:
 
       DEFAULT_API_VERSION = '2015-04-07'
 
-      self.supported_countries = %w(AT AU BE BR CA CH DE DK EE ES FI FR GB GR HK IE IT JP LT LU LV MX NL NO NZ PL PT SE SG SI SK US)
+      self.supported_countries = %w(AT AU BE BG BR CA CH CY CZ DE DK EE ES FI FR GB GR HK IE IT JP LT LU LV MT MX NL NO NZ PL PT RO SE SG SI SK US)
       self.default_currency = 'USD'
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club, :maestro]
+      self.supported_cardtypes = %i[visa master american_express discover jcb diners_club maestro]
       self.currencies_without_fractions = %w(BIF CLP DJF GNF JPY KMF KRW MGA PYG RWF VND VUV XAF XOF XPF UGX)
 
       self.homepage_url = 'https://stripe.com/'
@@ -53,7 +53,7 @@ module ActiveMerchant #:nodoc:
 
       BANK_ACCOUNT_HOLDER_TYPE_MAPPING = {
         'personal' => 'individual',
-        'business' => 'company',
+        'business' => 'company'
       }
 
       MINIMUM_AUTHORIZE_AMOUNTS = {
@@ -430,7 +430,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, options)
-        metadata_options = [:description, :ip, :user_agent, :referrer]
+        metadata_options = %i[description ip user_agent referrer]
         post.update(options.slice(*metadata_options))
 
         post[:external_id] = options[:order_id]
@@ -452,7 +452,7 @@ module ActiveMerchant #:nodoc:
 
       def add_statement_address(post, options)
         return unless statement_address = options[:statement_address]
-        return unless [:address1, :city, :zip, :state].all? { |key| statement_address[key].present? }
+        return unless %i[address1 city zip state].all? { |key| statement_address[key].present? }
 
         post[:statement_address] = {}
         post[:statement_address][:line1] = statement_address[:address1]
@@ -613,7 +613,7 @@ module ActiveMerchant #:nodoc:
         idempotency_key = options[:idempotency_key]
 
         headers = {
-          'Authorization' => 'Basic ' + Base64.encode64(key.to_s + ':').strip,
+          'Authorization' => 'Basic ' + Base64.strict_encode64(key.to_s + ':').strip,
           'User-Agent' => "Stripe/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
           'Stripe-Version' => api_version(options),
           'X-Stripe-Client-User-Agent' => stripe_client_user_agent(options),
@@ -655,7 +655,7 @@ module ActiveMerchant #:nodoc:
         success = success_from(response, options)
 
         card = card_from_response(response)
-        avs_code = AVS_CODE_TRANSLATOR["line1: #{card["address_line1_check"]}, zip: #{card["address_zip_check"]}"]
+        avs_code = AVS_CODE_TRANSLATOR["line1: #{card['address_line1_check']}, zip: #{card['address_zip_check']}"]
         cvc_code = CVC_CODE_TRANSLATOR[card['cvc_check']]
 
         Response.new(success,
@@ -755,7 +755,7 @@ module ActiveMerchant #:nodoc:
             currency: 'usd',
             routing_number: bank_account.routing_number,
             name: bank_account.name,
-            account_holder_type: account_holder_type,
+            account_holder_type: account_holder_type
           }
         }
 

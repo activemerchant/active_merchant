@@ -12,7 +12,7 @@ class RemoteBanwireTest < Test::Unit::TestCase
 
     @declined_card = credit_card('4000300011112220')
     @options = {
-      billing_address: address,
+      billing_address: address
     }
   end
 

@@ -859,6 +859,31 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_success auth
   end
 
+  def test_authorize_with_travel_data
+    assert auth = @gateway.authorize(@amount, @credit_card,
+      travel_data: {
+        travel_package: 'flight',
+        departure_date: '2050-07-22',
+        lodging_check_in_date: '2050-07-22',
+        lodging_check_out_date: '2050-07-25',
+        lodging_name: 'Best Hotel Ever'
+      }
+    )
+    assert_success auth
+  end
+
+  def test_authorize_with_lodging_data
+    assert auth = @gateway.authorize(@amount, @credit_card,
+      lodging_data: {
+        folio_number: 'ABC123',
+        check_in_date: '2050-12-22',
+        check_out_date: '2050-12-25',
+        room_rate: '80.00'
+      }
+    )
+    assert_success auth
+  end
+
   def test_successful_validate_on_store_with_verification_merchant_account
     card = credit_card('4111111111111111', verification_value: '101')
     assert response = @gateway.store(card, verify_card: true, verification_merchant_account_id: fixtures(:braintree_blue)[:merchant_account_id])

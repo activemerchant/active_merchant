@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       self.homepage_url = 'http://www.ncrretailonline.com'
       self.display_name = 'NCR Secure Pay'

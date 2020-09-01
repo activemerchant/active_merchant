@@ -6,14 +6,14 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['BR']
       self.default_currency = 'BRL'
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club]
 
       self.homepage_url = 'https://pagar.me/'
       self.display_name = 'Pagar.me'
 
       STANDARD_ERROR_CODE_MAPPING = {
         'refused' => STANDARD_ERROR_CODE[:card_declined],
-        'processing_error' => STANDARD_ERROR_CODE[:processing_error],
+        'processing_error' => STANDARD_ERROR_CODE[:processing_error]
       }
 
       def initialize(options={})
@@ -207,7 +207,7 @@ module ActiveMerchant #:nodoc:
           when 'refunded'
             'Transação estornada'
           else
-            "Transação com status '#{response["status"]}'"
+            "Transação com status '#{response['status']}'"
           end
         elsif failure_from(response)
           'Transação recusada'

@@ -146,7 +146,7 @@ class TrustCommerceTest < Test::Unit::TestCase
   end
 
   def test_supported_card_types
-    assert_equal [:visa, :master, :discover, :american_express, :diners_club, :jcb], TrustCommerceGateway.supported_cardtypes
+    assert_equal %i[visa master discover american_express diners_club jcb], TrustCommerceGateway.supported_cardtypes
   end
 
   def test_test_flag_should_be_set_when_using_test_login_in_production
@@ -166,80 +166,80 @@ class TrustCommerceTest < Test::Unit::TestCase
   private
 
   def successful_authorize_response
-    <<-RESPONSE
-authcode=123456
-transid=026-0193338367,
-status=approved
-avs=Y
-cvv=M
+    <<~RESPONSE
+      authcode=123456
+      transid=026-0193338367,
+      status=approved
+      avs=Y
+      cvv=M
     RESPONSE
   end
 
   def successful_purchase_response
-    <<-RESPONSE
-transid=025-0007423614
-status=approved
-avs=Y
-cvv=P
+    <<~RESPONSE
+      transid=025-0007423614
+      status=approved
+      avs=Y
+      cvv=P
     RESPONSE
   end
 
   def successful_capture_response
-    <<-RESPONSE
-transid=026-0193338993
-status=accepted
+    <<~RESPONSE
+      transid=026-0193338993
+      status=accepted
     RESPONSE
   end
 
   def unsuccessful_purchase_response
-    <<-RESPONSE
-transid=025-0007423827
-declinetype=cvv
-status=decline
-cvv=N
+    <<~RESPONSE
+      transid=025-0007423827
+      declinetype=cvv
+      status=decline
+      cvv=N
     RESPONSE
   end
 
   def successful_void_response
-    <<-RESPONSE
-transid=025-0007423828
-status=accpeted
+    <<~RESPONSE
+      transid=025-0007423828
+      status=accpeted
     RESPONSE
   end
 
   def successful_refund_response
-    <<-RESPONSE
-transid=026-0193345407
-status=accepted
+    <<~RESPONSE
+      transid=026-0193345407
+      status=accepted
     RESPONSE
   end
 
   def successful_store_response
-    <<-RESPONSE
-transid=026-0193346109
-status=approved,
-cvv=M,
-avs=0
-billingid=Q5T7PT
+    <<~RESPONSE
+      transid=026-0193346109
+      status=approved,
+      cvv=M,
+      avs=0
+      billingid=Q5T7PT
     RESPONSE
   end
 
   def successful_unstore_response
-    <<-RESPONSE
-transid=026-0193346231
-status=rejected
+    <<~RESPONSE
+      transid=026-0193346231
+      status=rejected
     RESPONSE
   end
 
   def transcript
-    <<-TRANSCRIPT
-action=sale&demo=y&password=password&custid=TestMerchant&shipto_zip=90001&shipto_state=CA&shipto_city=Somewhere&shipto_address1=123+Test+St.&avs=n&zip=90001&state=CA&city=Somewhere&address1=123+Test+St.&cvv=1234&exp=0916&cc=4111111111111111&name=Longbob+Longsen&media=cc&ip=10.10.10.10&email=cody%40example.com&ticket=%231000.1&amount=100
+    <<~TRANSCRIPT
+      action=sale&demo=y&password=password&custid=TestMerchant&shipto_zip=90001&shipto_state=CA&shipto_city=Somewhere&shipto_address1=123+Test+St.&avs=n&zip=90001&state=CA&city=Somewhere&address1=123+Test+St.&cvv=1234&exp=0916&cc=4111111111111111&name=Longbob+Longsen&media=cc&ip=10.10.10.10&email=cody%40example.com&ticket=%231000.1&amount=100
     TRANSCRIPT
   end
 
   def scrubbed_transcript
-    <<-TRANSCRIPT
-action=sale&demo=y&password=[FILTERED]&custid=TestMerchant&shipto_zip=90001&shipto_state=CA&shipto_city=Somewhere&shipto_address1=123+Test+St.&avs=n&zip=90001&state=CA&city=Somewhere&address1=123+Test+St.&cvv=[FILTERED]&exp=0916&cc=[FILTERED]&name=Longbob+Longsen&media=cc&ip=10.10.10.10&email=cody%40example.com&ticket=%231000.1&amount=100
+    <<~TRANSCRIPT
+      action=sale&demo=y&password=[FILTERED]&custid=TestMerchant&shipto_zip=90001&shipto_state=CA&shipto_city=Somewhere&shipto_address1=123+Test+St.&avs=n&zip=90001&state=CA&city=Somewhere&address1=123+Test+St.&cvv=[FILTERED]&exp=0916&cc=[FILTERED]&name=Longbob+Longsen&media=cc&ip=10.10.10.10&email=cody%40example.com&ticket=%231000.1&amount=100
     TRANSCRIPT
   end
 end

@@ -4,11 +4,11 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://pal-test.barclaycardsmartpay.com/pal/servlet'
       self.live_url = 'https://pal-live.barclaycardsmartpay.com/pal/servlet'
 
-      self.supported_countries = ['AL', 'AD', 'AM', 'AT', 'AZ', 'BY', 'BE', 'BA', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IS', 'IE', 'IT', 'KZ', 'LV', 'LI', 'LT', 'LU', 'MK', 'MT', 'MD', 'MC', 'ME', 'NL', 'NO', 'PL', 'PT', 'RO', 'RU', 'SM', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH', 'TR', 'UA', 'GB', 'VA']
+      self.supported_countries = %w[AL AD AM AT AZ BY BE BA BG HR CY CZ DK EE FI FR DE GR HU IS IE IT KZ LV LI LT LU MK MT MD MC ME NL NO PL PT RO RU SM RS SK SI ES SE CH TR UA GB VA]
       self.default_currency = 'EUR'
       self.currencies_with_three_decimal_places = %w(BHD KWD OMR RSD TND)
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb, :dankort, :maestro]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club jcb dankort maestro]
 
       self.homepage_url = 'https://www.barclaycardsmartpay.com/'
       self.display_name = 'Barclaycard Smartpay'

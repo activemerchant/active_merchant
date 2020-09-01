@@ -27,7 +27,7 @@ class OmiseTest < Test::Unit::TestCase
   end
 
   def test_supported_cardtypes
-    assert_equal @gateway.supported_cardtypes, [:visa, :master, :jcb]
+    assert_equal @gateway.supported_cardtypes, %i[visa master jcb]
   end
 
   def test_supports_scrubbing

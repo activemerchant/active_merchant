@@ -95,7 +95,7 @@ class RemoteNmiTest < Test::Unit::TestCase
     options = @options.merge({
       customer_id: '234',
       vendor_id: '456',
-      recurring: true,
+      recurring: true
     })
     assert response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response

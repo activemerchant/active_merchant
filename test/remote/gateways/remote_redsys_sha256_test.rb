@@ -8,7 +8,7 @@ class RemoteRedsysSHA256Test < Test::Unit::TestCase
     @declined_card = credit_card
     @threeds2_credit_card = credit_card('4918019199883839')
     @options = {
-      order_id: generate_order_id,
+      order_id: generate_order_id
     }
   end
 

@@ -1,4 +1,4 @@
-$:.unshift File.expand_path('../../lib', __FILE__)
+$LOAD_PATH.unshift File.expand_path('../../lib', __FILE__)
 
 require 'bundler/setup'
 
@@ -131,12 +131,12 @@ module ActiveMerchant
       yield
     rescue AssertionClass => e
       path = File.expand_path(__FILE__)
-      raise AssertionClass, e.message, (e.backtrace.reject { |line| File.expand_path(line) =~ /#{path}/ })
+      raise AssertionClass, e.message, (e.backtrace.reject { |line| File.expand_path(line).match?(/#{path}/) })
     end
   end
 
   module Fixtures
-    HOME_DIR = RUBY_PLATFORM =~ /mswin32/ ? ENV['HOMEPATH'] : ENV['HOME'] unless defined?(HOME_DIR)
+    HOME_DIR = RUBY_PLATFORM.match?('mswin32') ? ENV['HOMEPATH'] : ENV['HOME'] unless defined?(HOME_DIR)
     LOCAL_CREDENTIALS = File.join(HOME_DIR.to_s, '.active_merchant/fixtures.yml') unless defined?(LOCAL_CREDENTIALS)
     DEFAULT_CREDENTIALS = File.join(File.dirname(__FILE__), 'fixtures.yml') unless defined?(DEFAULT_CREDENTIALS)
 
@@ -168,7 +168,7 @@ module ActiveMerchant
       exp_date = default_expiration_date.strftime('%y%m')
 
       defaults = {
-        track_data: "%B#{number}^LONGSEN/L. ^#{exp_date}1200000000000000**123******?",
+        track_data: "%B#{number}^LONGSEN/L. ^#{exp_date}1200000000000000**123******?"
       }.update(options)
 
       Billing::CreditCard.new(defaults)
@@ -319,36 +319,6 @@ Test::Unit::TestCase.class_eval do
 
     File.open('transcript.log', 'w') { |f| f.write(transcript) }
     assert false, 'A purchase transcript has been written to transcript.log for you to test scrubbing with.'
-  end
-end
-
-module ActionViewHelperTestHelper
-  def self.included(base)
-    base.send(:include, ActiveMerchant::Billing::Integrations::ActionViewHelper)
-    base.send(:include, ActionView::Helpers::FormHelper)
-    base.send(:include, ActionView::Helpers::FormTagHelper)
-    base.send(:include, ActionView::Helpers::UrlHelper)
-    base.send(:include, ActionView::Helpers::TagHelper)
-    base.send(:include, ActionView::Helpers::CaptureHelper)
-    base.send(:include, ActionView::Helpers::TextHelper)
-    base.send(:attr_accessor, :output_buffer)
-  end
-
-  def setup
-    @controller = Class.new do
-      attr_reader :url_for_options
-      def url_for(options, *parameters_for_method_reference)
-        @url_for_options = options
-      end
-    end
-    @controller = @controller.new
-    @output_buffer = ''
-  end
-
-  protected
-
-  def protect_against_forgery?
-    false
   end
 end
 

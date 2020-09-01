@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club jcb]
 
       self.homepage_url = 'http://www.elementps.com'
       self.display_name = 'Element'
@@ -53,7 +53,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options={})
-        trans_id, _ = split_authorization(authorization)
+        trans_id, = split_authorization(authorization)
         options[:trans_id] = trans_id
 
         request = build_soap_request do |xml|
@@ -68,7 +68,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(money, authorization, options={})
-        trans_id, _ = split_authorization(authorization)
+        trans_id, = split_authorization(authorization)
         options[:trans_id] = trans_id
 
         request = build_soap_request do |xml|
@@ -188,12 +188,16 @@ module ActiveMerchant #:nodoc:
           xml.TransactionAmount amount(money.to_i) if money
           xml.MarketCode 'Default' if money
           xml.ReferenceNumber options[:order_id] || SecureRandom.hex(20)
+
+          xml.PaymentType options[:payment_type] if options[:payment_type]
+          xml.SubmissionType options[:submission_type] if options[:submission_type]
+          xml.DuplicateCheckDisableFlag options[:duplicate_check_disable_flag].to_s == 'true' ? 'True' : 'False' unless options[:duplicate_check_disable_flag].nil?
         end
       end
 
       def add_terminal(xml, options)
         xml.terminal do
-          xml.TerminalID '01'
+          xml.TerminalID options[:terminal_id] || '01'
           xml.CardPresentCode options[:card_present_code] || 'UseDefault'
           xml.CardholderPresentCode 'UseDefault'
           xml.CardInputCode 'UseDefault'

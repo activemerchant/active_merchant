@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://www.usaepay.com/gate'
       self.test_url = 'https://sandbox.usaepay.com/gate'
 
-      self.supported_cardtypes  = [:visa, :master, :american_express]
+      self.supported_cardtypes  = %i[visa master american_express]
       self.supported_countries  = ['US']
       self.homepage_url         = 'http://www.usaepay.com/'
       self.display_name         = 'USA ePay'
@@ -279,7 +279,7 @@ module ActiveMerchant #:nodoc:
 
           {
             quantity: 'qty',
-            unit: 'um',
+            unit: 'um'
           }.each do |key, umkey|
             post["line#{index}#{umkey}"] = line_item[key.to_sym] if line_item.has_key?(key.to_sym)
           end

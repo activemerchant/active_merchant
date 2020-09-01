@@ -25,7 +25,7 @@ module ActiveMerchant #:nodoc:
       self.currencies_with_three_decimal_places = %w(BHD IQD JOD KWD LYD OMR TND)
 
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :maestro]
+      self.supported_cardtypes = %i[visa master maestro]
 
       RESPONSE_MESSAGES = {
         '00' => 'Approved or completed successfully',
@@ -193,6 +193,7 @@ module ActiveMerchant #:nodoc:
         add_email(post, options)
 
         if options[:referral_cft]
+          add_customer_name(post, options)
           commit(:referral_cft, post)
         else
           commit(:refund, post)
@@ -237,6 +238,10 @@ module ActiveMerchant #:nodoc:
           three_ds[:optional].each do |key, value|
             normalized_value = normalize(value)
             next if normalized_value.nil?
+
+            if key == :'3ds_homephonecountry'
+              next unless options[:billing_address] && options[:billing_address][:phone]
+            end
 
             post[key] = normalized_value unless post[key]
           end
@@ -313,6 +318,11 @@ module ActiveMerchant #:nodoc:
         post[:c3] = options[:email] || 'unspecified@example.com'
       end
 
+      def add_customer_name(post, options)
+        post[:j5] = options[:first_name] if options[:first_name]
+        post[:j13] = options[:last_name] if options[:last_name]
+      end
+
       def add_3d_secure(post, options)
         if options[:eci] && options[:xid]
           add_3d_secure_1_data(post, options)
@@ -329,7 +339,7 @@ module ActiveMerchant #:nodoc:
           post[:'3ds_browsertz'] = browser_info[:timezone]
           post[:'3ds_browserscreenwidth'] = browser_info[:width]
           post[:'3ds_browserscreenheight'] = browser_info[:height]
-          post[:'3ds_browsercolordepth'] = browser_info[:depth]
+          post[:'3ds_browsercolordepth'] = browser_info[:depth].to_s == '30' ? '32' : browser_info[:depth]
           post[:d6] = browser_info[:language]
           post[:'3ds_browserjavaenabled'] = browser_info[:java]
           post[:'3ds_browseracceptheader'] = browser_info[:accept_header]
@@ -413,7 +423,7 @@ module ActiveMerchant #:nodoc:
           success_from(response),
           message_from(response),
           response,
-          authorization: "#{response["Z1"]};#{response["Z4"]};#{response["A1"]};#{action}",
+          authorization: "#{response['Z1']};#{response['Z4']};#{response['A1']};#{action}",
           avs_result: AVSResult.new(code: response['Z9']),
           cvv_result: CVVResult.new(response['Z14']),
           test: test?

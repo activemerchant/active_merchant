@@ -44,8 +44,8 @@ module ActiveMerchant #:nodoc:
         'CUST_TOKEN' => :cust_token
       }
 
-      self.supported_countries = ['US', 'CA']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
+      self.supported_countries = %w[US CA]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club jcb]
       self.homepage_url        = 'http://www.bluepay.com/'
       self.display_name        = 'BluePay'
       self.money_format        = :dollars
@@ -382,9 +382,9 @@ module ActiveMerchant #:nodoc:
           end
         elsif message == 'Missing ACCOUNT_ID'
           message = 'The merchant login ID or password is invalid'
-        elsif message =~ /Approved/
+        elsif /Approved/.match?(message)
           message = 'This transaction has been approved'
-        elsif message =~  /Expired/
+        elsif /Expired/.match?(message)
           message = 'The credit card has expired'
         end
         message

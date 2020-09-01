@@ -1,6 +1,6 @@
 # Active Merchant
-[![Build Status](https://travis-ci.org/activemerchant/active_merchant.png?branch=master)](https://travis-ci.org/activemerchant/active_merchant)
-[![Code Climate](https://codeclimate.com/github/activemerchant/active_merchant.png)](https://codeclimate.com/github/activemerchant/active_merchant)
+[![Build Status](https://travis-ci.org/activemerchant/active_merchant.svg?branch=master)](https://travis-ci.org/activemerchant/active_merchant)
+[![Code Climate](https://codeclimate.com/github/activemerchant/active_merchant.svg)](https://codeclimate.com/github/activemerchant/active_merchant)
 
 Active Merchant is an extraction from the ecommerce system [Shopify](http://www.shopify.com).
 Shopify's requirements for a simple and unified API to access dozens of different payment
@@ -244,4 +244,4 @@ Functionality or APIs that are deprecated will be marked as such. Deprecated fun
 
 ## Ruby and Rails compatibility policies
 
-Because Active Merchant is a payment library, it needs to take security seriously. For this reason, Active Merchant guarantees compatibility only with actively supported versions of Ruby and Rails. At the time of this writing, that means that Ruby 2.3+ and Rails 4.2+ are supported.
+Because Active Merchant is a payment library, it needs to take security seriously. For this reason, Active Merchant guarantees compatibility only with actively supported versions of Ruby and Rails. At the time of this writing, that means that Ruby 2.5+ and Rails 5.0+ are supported.

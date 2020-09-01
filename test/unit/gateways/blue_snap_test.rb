@@ -59,6 +59,91 @@ class BlueSnapTest < Test::Unit::TestCase
     assert_equal '1012082839', response.authorization
   end
 
+  def test_successful_purchase_with_metadata
+    # description option should become meta-data field
+
+    more_options = @options.merge({
+      order_id: '1',
+      ip: '127.0.0.1',
+      email: 'joe@example.com',
+      transaction_meta_data: [
+        {
+          meta_key: 'stateTaxAmount',
+          meta_value: '20.00',
+          meta_description: 'State Tax Amount'
+        },
+        {
+          meta_key: 'cityTaxAmount',
+          meta_value: 10.00,
+          meta_description: 'City Tax Amount'
+        },
+        {
+          meta_key: 'websiteInfo',
+          meta_value: 'www.info.com',
+          meta_description: 'Website'
+        }
+      ],
+      description: 'Legacy Product Desc',
+      soft_descriptor: 'OnCardStatement',
+      personal_identification_number: 'CNPJ'
+    })
+
+    response = stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.purchase(@amount, @credit_card, more_options)
+    end.check_request do |method, url, data|
+      assert_match(/transaction-meta-data/, data)
+      assert_match(/<meta-value>Legacy Product Desc<\/meta-value>/, data)
+      assert_match(/<meta-key>description<\/meta-key>/, data)
+      assert_match(/<meta-key>cityTaxAmount<\/meta-key>/, data)
+      assert_match(/<meta-key>stateTaxAmount<\/meta-key>/, data)
+      assert_match(/<meta-key>websiteInfo<\/meta-key>/, data)
+    end.respond_with(successful_purchase_response_with_metadata)
+
+    assert_success response
+    assert_equal '1012082839', response.authorization
+
+    assert_equal 4, response.params['transaction-meta-data'].length
+
+    response.params['transaction-meta-data'].each { |m|
+      assert_true m['meta-key'].length > 0
+      assert_true m['meta-value'].length > 0
+      assert_true m['meta-description'].length > 0
+
+      case m['meta-key']
+      when 'description'
+        assert_equal 'Product ABC', m['meta-value']
+        assert_equal 'Product Description', m['meta-description']
+      when 'cityTaxAmount'
+        assert_equal '10.00', m['meta-value']
+        assert_equal 'City Tax Amount', m['meta-description']
+      when 'stateTaxAmount'
+        assert_equal '20.00', m['meta-value']
+        assert_equal 'State Tax Amount', m['meta-description']
+      end
+    }
+  end
+
+  def test_successful_purchase_with_metadata_empty
+    more_options = @options.merge({
+      order_id: '1',
+      ip: '127.0.0.1',
+      email: 'joe@example.com',
+      transaction_meta_data: [],
+      soft_descriptor: 'OnCardStatement',
+      personal_identification_number: 'CNPJ'
+    })
+
+    response = stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.purchase(@amount, @credit_card, more_options)
+    end.check_request do |method, url, data|
+      assert_not_match(/transaction-meta-data/, data)
+      assert_not_match(/meta-key/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert_nil response.params['transaction-meta-data']
+  end
+
   def test_successful_purchase_with_unused_state_code
     unrecognized_state_code_options = {
       billing_address: {
@@ -451,6 +536,63 @@ class BlueSnapTest < Test::Unit::TestCase
           <card-type>VISA</card-type>
           <card-sub-type>CREDIT</card-sub-type>
       </credit-card>
+      <processing-info>
+          <processing-status>success</processing-status>
+          <cvv-response-code>ND</cvv-response-code>
+          <avs-response-code-zip>U</avs-response-code-zip>
+          <avs-response-code-address>U</avs-response-code-address>
+          <avs-response-code-name>U</avs-response-code-name>
+      </processing-info>
+      </card-transaction>
+    XML
+  end
+
+  def successful_purchase_response_with_metadata
+    MockResponse.succeeded <<-XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <card-transaction xmlns="http://ws.plimus.com">
+      <card-transaction-type>AUTH_CAPTURE</card-transaction-type>
+      <transaction-id>1012082839</transaction-id>
+      <recurring-transaction>ECOMMERCE</recurring-transaction>
+      <soft-descriptor>BLS*Spreedly</soft-descriptor>
+      <amount>1.00</amount>
+      <currency>USD</currency>
+      <card-holder-info>
+          <first-name>Longbob</first-name>
+          <last-name>Longsen</last-name>
+          <country>CA</country>
+          <state>ON</state>
+          <city>Ottawa</city>
+          <zip>K1C2N6</zip>
+          <personal-identification-number>CNPJ</personal-identification-number>
+      </card-holder-info>
+      <credit-card>
+          <card-last-four-digits>9299</card-last-four-digits>
+          <card-type>VISA</card-type>
+          <card-sub-type>CREDIT</card-sub-type>
+      </credit-card>
+      <transaction-meta-data>
+        <meta-data>
+            <meta-key>stateTaxAmount</meta-key>
+            <meta-value>20.00</meta-value>
+            <meta-description>State Tax Amount</meta-description>
+        </meta-data>
+        <meta-data>
+            <meta-key>cityTaxAmount</meta-key>
+            <meta-value>10.00</meta-value>
+            <meta-description>City Tax Amount</meta-description>
+        </meta-data>
+        <meta-data>
+            <meta-key>shippingAmount</meta-key>
+            <meta-value>150.00</meta-value>
+            <meta-description>Shipping Amount</meta-description>
+        </meta-data>
+        <meta-data>
+            <meta-key>websiteInfo</meta-key>
+            <meta-value>www.info.com</meta-value>
+            <meta-description>Website</meta-description>
+        </meta-data>
+      </transaction-meta-data>
       <processing-info>
           <processing-status>success</processing-status>
           <cvv-response-code>ND</cvv-response-code>

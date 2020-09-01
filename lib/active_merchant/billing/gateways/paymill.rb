@@ -5,7 +5,7 @@ module ActiveMerchant #:nodoc:
                                     GI GR HR HU IE IL IM IS IT LI LT LU LV MC MT
                                     NL NO PL PT RO SE SI SK TR VA)
 
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :discover, :union_pay, :jcb]
+      self.supported_cardtypes = %i[visa master american_express diners_club discover union_pay jcb]
       self.homepage_url = 'https://paymill.com'
       self.display_name = 'PAYMILL'
       self.money_format = :cents
@@ -113,7 +113,7 @@ module ActiveMerchant #:nodoc:
         parsed = JSON.parse(raw_response)
         options = {
           authorization: authorization_from(parsed),
-          test: (parsed['mode'] == 'test'),
+          test: (parsed['mode'] == 'test')
         }
 
         succeeded = (parsed['data'] == []) || (parsed['data']['response_code'].to_i == 20000)
@@ -357,10 +357,10 @@ module ActiveMerchant #:nodoc:
 
         def handle_response_correct_parsing
           @message = parsed['transaction']['processing']['return']['message']
-          @options[:authorization] = parsed['transaction']['identification']['uniqueId'] if @succeeded = is_ack?
+          @options[:authorization] = parsed['transaction']['identification']['uniqueId'] if @succeeded = ack?
         end
 
-        def is_ack?
+        def ack?
           parsed['transaction']['processing']['result'] == 'ACK'
         end
       end

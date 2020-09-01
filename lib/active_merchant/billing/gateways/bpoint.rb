@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['AU']
       self.default_currency = 'AUD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express diners_club]
 
       self.homepage_url = 'https://www.bpoint.com.au/bpoint'
       self.display_name = 'BPoint'

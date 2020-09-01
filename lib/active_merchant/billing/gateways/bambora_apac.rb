@@ -6,8 +6,8 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://www.bambora.co.nz/interface/api'
       self.test_url = 'https://demo.bambora.co.nz/interface/api'
 
-      self.supported_countries = ['AU', 'NZ']
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
+      self.supported_countries = %w[AU NZ]
+      self.supported_cardtypes = %i[visa master american_express diners_club jcb]
 
       self.homepage_url = 'http://www.bambora.com/'
       self.display_name = 'Bambora Asia-Pacific'
@@ -18,7 +18,7 @@ module ActiveMerchant #:nodoc:
         '05' => STANDARD_ERROR_CODE[:card_declined],
         '06' => STANDARD_ERROR_CODE[:processing_error],
         '14' => STANDARD_ERROR_CODE[:invalid_number],
-        '54' => STANDARD_ERROR_CODE[:expired_card],
+        '54' => STANDARD_ERROR_CODE[:expired_card]
       }
 
       def initialize(options={})

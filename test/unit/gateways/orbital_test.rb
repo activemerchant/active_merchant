@@ -27,7 +27,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       address2: address[:address2],
       city: address[:city],
       state: address[:state],
-      zip: address[:zip],
+      zip: address[:zip]
     }
 
     @level_3 = {
@@ -72,7 +72,11 @@ class OrbitalGatewayTest < Test::Unit::TestCase
         }
       ]
 
-    @options = { order_id: '1'}
+    @options = {
+      order_id: '1',
+      card_indicators: 'y'
+    }
+
     @options_stored_credentials = {
       mit_msg_type: 'MRSB',
       mit_stored_credential_ind: 'Y',
@@ -90,7 +94,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       three_d_secure: {
         eci: '5',
         xid: 'TESTXID',
-        cavv: 'TESTCAVV',
+        cavv: 'TESTCAVV'
       }
     }
   end
@@ -800,6 +804,24 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_send_card_indicators_when_provided_purchase
+    response = stub_comms do
+      @gateway.purchase(50, credit_card, order_id: 1, card_indicators: @options[:card_indicators])
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<CardIndicators>y/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
+  def test_send_card_indicators_when_provided_authorize
+    response = stub_comms do
+      @gateway.authorize(50, credit_card, order_id: 1, card_indicators: @options[:card_indicators])
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<CardIndicators>y/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
   def test_dont_send_customer_profile_from_order_ind_for_profile_purchase
     @gateway.options[:customer_profiles] = true
     response = stub_comms do
@@ -1123,62 +1145,62 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   end
 
   def pre_scrubbed
-    <<-EOS
-opening connection to orbitalvar1.paymentech.net:443...
-opened
-starting SSL for orbitalvar1.paymentech.net:443...
-SSL established
-<- "POST /authorize HTTP/1.1\r\nContent-Type: application/PTI71\r\nMime-Version: 1.1\r\nContent-Transfer-Encoding: text\r\nRequest-Number: 1\r\nDocument-Type: Request\r\nInterface-Version: Ruby|ActiveMerchant|Proprietary Gateway\r\nContent-Length: 964\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: orbitalvar1.paymentech.net\r\n\r\n"
-<- "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Request>\n  <NewOrder>\n    <OrbitalConnectionUsername>T16WAYSACT</OrbitalConnectionUsername>\n    <OrbitalConnectionPassword>zbp8X1ykGZ</OrbitalConnectionPassword>\n    <IndustryType>EC</IndustryType>\n    <MessageType>AC</MessageType>\n    <BIN>000001</BIN>\n    <MerchantID>041756</MerchantID>\n    <TerminalID>001</TerminalID>\n    <AccountNum>4112344112344113</AccountNum>\n    <Exp>0917</Exp>\n    <CurrencyCode>840</CurrencyCode>\n    <CurrencyExponent>2</CurrencyExponent>\n    <CardSecValInd>1</CardSecValInd>\n    <CardSecVal>123</CardSecVal>\n    <AVSzip>K1C2N6</AVSzip>\n    <AVSaddress1>456 My Street</AVSaddress1>\n    <AVSaddress2>Apt 1</AVSaddress2>\n    <AVScity>Ottawa</AVScity>\n    <AVSstate>ON</AVSstate>\n    <AVSphoneNum>5555555555</AVSphoneNum>\n    <AVSname>Longbob Longsen</AVSname>\n    <AVScountryCode>CA</AVScountryCode>\n    <OrderID>b141cf3ce2a442732e1906</OrderID>\n    <Amount>100</Amount>\n  </NewOrder>\n</Request>\n"
--> "HTTP/1.1 200 OK\r\n"
--> "Date: Thu, 02 Jun 2016 07:04:44 GMT\r\n"
--> "content-type: text/plain; charset=ISO-8859-1\r\n"
--> "content-length: 1200\r\n"
--> "content-transfer-encoding: text/xml\r\n"
--> "document-type: Response\r\n"
--> "mime-version: 1.0\r\n"
--> "Connection: close\r\n"
--> "\r\n"
-reading 1200 bytes...
--> "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response><NewOrderResp><IndustryType></IndustryType><MessageType>AC</MessageType><MerchantID>041756</MerchantID><TerminalID>001</TerminalID><CardBrand>VI</CardBrand><AccountNum>4112344112344113</AccountNum><OrderID>b141cf3ce2a442732e1906</OrderID><TxRefNum>574FDA8CECFBC3DA073FF74A7E6DE4E0BA87545B</TxRefNum><TxRefIdx>2</TxRefIdx><ProcStatus>0</ProcStatus><ApprovalStatus>1</ApprovalStatus><RespCode>00</RespCode><AVSRespCode>7 </AVSRespCode><CVV2RespCode>M</CVV2RespCode><AuthCode>tst595</AuthCode><RecurringAdviceCd></RecurringAdviceCd><CAVVRespCode></CAVVRespCode><StatusMsg>Approved</StatusMsg><RespMsg></RespMsg><HostRespCode>100</HostRespCode><HostAVSRespCode>IU</HostAVSRespCode><HostCVV2RespCode>M</HostCVV2RespCode><CustomerRefNum></CustomerRefNum><CustomerName></CustomerName><ProfileProcStatus></ProfileProcStatus><CustomerProfileMessage></CustomerProfileMessage><RespTime>030444</RespTime><PartialAuthOccurred></PartialAuthOccurred><RequestedAmount></RequestedAmount><RedeemedAmount></RedeemedAmount><RemainingBalance></RemainingBalance><CountryFraudFilterStatus></CountryFraudFilterStatus><IsoCountryCode></IsoCountryCode></NewOrderResp></Response>"
-read 1200 bytes
-Conn close
+    <<~EOS
+      opening connection to orbitalvar1.paymentech.net:443...
+      opened
+      starting SSL for orbitalvar1.paymentech.net:443...
+      SSL established
+      <- "POST /authorize HTTP/1.1\r\nContent-Type: application/PTI71\r\nMime-Version: 1.1\r\nContent-Transfer-Encoding: text\r\nRequest-Number: 1\r\nDocument-Type: Request\r\nInterface-Version: Ruby|ActiveMerchant|Proprietary Gateway\r\nContent-Length: 964\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: orbitalvar1.paymentech.net\r\n\r\n"
+      <- "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Request>\n  <NewOrder>\n    <OrbitalConnectionUsername>T16WAYSACT</OrbitalConnectionUsername>\n    <OrbitalConnectionPassword>zbp8X1ykGZ</OrbitalConnectionPassword>\n    <IndustryType>EC</IndustryType>\n    <MessageType>AC</MessageType>\n    <BIN>000001</BIN>\n    <MerchantID>041756</MerchantID>\n    <TerminalID>001</TerminalID>\n    <AccountNum>4112344112344113</AccountNum>\n    <Exp>0917</Exp>\n    <CurrencyCode>840</CurrencyCode>\n    <CurrencyExponent>2</CurrencyExponent>\n    <CardSecValInd>1</CardSecValInd>\n    <CardSecVal>123</CardSecVal>\n    <AVSzip>K1C2N6</AVSzip>\n    <AVSaddress1>456 My Street</AVSaddress1>\n    <AVSaddress2>Apt 1</AVSaddress2>\n    <AVScity>Ottawa</AVScity>\n    <AVSstate>ON</AVSstate>\n    <AVSphoneNum>5555555555</AVSphoneNum>\n    <AVSname>Longbob Longsen</AVSname>\n    <AVScountryCode>CA</AVScountryCode>\n    <OrderID>b141cf3ce2a442732e1906</OrderID>\n    <Amount>100</Amount>\n  </NewOrder>\n</Request>\n"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Date: Thu, 02 Jun 2016 07:04:44 GMT\r\n"
+      -> "content-type: text/plain; charset=ISO-8859-1\r\n"
+      -> "content-length: 1200\r\n"
+      -> "content-transfer-encoding: text/xml\r\n"
+      -> "document-type: Response\r\n"
+      -> "mime-version: 1.0\r\n"
+      -> "Connection: close\r\n"
+      -> "\r\n"
+      reading 1200 bytes...
+      -> "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response><NewOrderResp><IndustryType></IndustryType><MessageType>AC</MessageType><MerchantID>041756</MerchantID><TerminalID>001</TerminalID><CardBrand>VI</CardBrand><AccountNum>4112344112344113</AccountNum><OrderID>b141cf3ce2a442732e1906</OrderID><TxRefNum>574FDA8CECFBC3DA073FF74A7E6DE4E0BA87545B</TxRefNum><TxRefIdx>2</TxRefIdx><ProcStatus>0</ProcStatus><ApprovalStatus>1</ApprovalStatus><RespCode>00</RespCode><AVSRespCode>7 </AVSRespCode><CVV2RespCode>M</CVV2RespCode><AuthCode>tst595</AuthCode><RecurringAdviceCd></RecurringAdviceCd><CAVVRespCode></CAVVRespCode><StatusMsg>Approved</StatusMsg><RespMsg></RespMsg><HostRespCode>100</HostRespCode><HostAVSRespCode>IU</HostAVSRespCode><HostCVV2RespCode>M</HostCVV2RespCode><CustomerRefNum></CustomerRefNum><CustomerName></CustomerName><ProfileProcStatus></ProfileProcStatus><CustomerProfileMessage></CustomerProfileMessage><RespTime>030444</RespTime><PartialAuthOccurred></PartialAuthOccurred><RequestedAmount></RequestedAmount><RedeemedAmount></RedeemedAmount><RemainingBalance></RemainingBalance><CountryFraudFilterStatus></CountryFraudFilterStatus><IsoCountryCode></IsoCountryCode></NewOrderResp></Response>"
+      read 1200 bytes
+      Conn close
     EOS
   end
 
   def post_scrubbed
-    <<-EOS
-opening connection to orbitalvar1.paymentech.net:443...
-opened
-starting SSL for orbitalvar1.paymentech.net:443...
-SSL established
-<- "POST /authorize HTTP/1.1\r\nContent-Type: application/PTI71\r\nMime-Version: 1.1\r\nContent-Transfer-Encoding: text\r\nRequest-Number: 1\r\nDocument-Type: Request\r\nInterface-Version: Ruby|ActiveMerchant|Proprietary Gateway\r\nContent-Length: 964\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: orbitalvar1.paymentech.net\r\n\r\n"
-<- "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Request>\n  <NewOrder>\n    <OrbitalConnectionUsername>[FILTERED]</OrbitalConnectionUsername>\n    <OrbitalConnectionPassword>[FILTERED]</OrbitalConnectionPassword>\n    <IndustryType>EC</IndustryType>\n    <MessageType>AC</MessageType>\n    <BIN>000001</BIN>\n    <MerchantID>[FILTERED]</MerchantID>\n    <TerminalID>001</TerminalID>\n    <AccountNum>[FILTERED]</AccountNum>\n    <Exp>0917</Exp>\n    <CurrencyCode>840</CurrencyCode>\n    <CurrencyExponent>2</CurrencyExponent>\n    <CardSecValInd>1</CardSecValInd>\n    <CardSecVal>[FILTERED]</CardSecVal>\n    <AVSzip>K1C2N6</AVSzip>\n    <AVSaddress1>456 My Street</AVSaddress1>\n    <AVSaddress2>Apt 1</AVSaddress2>\n    <AVScity>Ottawa</AVScity>\n    <AVSstate>ON</AVSstate>\n    <AVSphoneNum>5555555555</AVSphoneNum>\n    <AVSname>Longbob Longsen</AVSname>\n    <AVScountryCode>CA</AVScountryCode>\n    <OrderID>b141cf3ce2a442732e1906</OrderID>\n    <Amount>100</Amount>\n  </NewOrder>\n</Request>\n"
--> "HTTP/1.1 200 OK\r\n"
--> "Date: Thu, 02 Jun 2016 07:04:44 GMT\r\n"
--> "content-type: text/plain; charset=ISO-8859-1\r\n"
--> "content-length: 1200\r\n"
--> "content-transfer-encoding: text/xml\r\n"
--> "document-type: Response\r\n"
--> "mime-version: 1.0\r\n"
--> "Connection: close\r\n"
--> "\r\n"
-reading 1200 bytes...
--> "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response><NewOrderResp><IndustryType></IndustryType><MessageType>AC</MessageType><MerchantID>[FILTERED]</MerchantID><TerminalID>001</TerminalID><CardBrand>VI</CardBrand><AccountNum>[FILTERED]</AccountNum><OrderID>b141cf3ce2a442732e1906</OrderID><TxRefNum>574FDA8CECFBC3DA073FF74A7E6DE4E0BA87545B</TxRefNum><TxRefIdx>2</TxRefIdx><ProcStatus>0</ProcStatus><ApprovalStatus>1</ApprovalStatus><RespCode>00</RespCode><AVSRespCode>7 </AVSRespCode><CVV2RespCode>M</CVV2RespCode><AuthCode>tst595</AuthCode><RecurringAdviceCd></RecurringAdviceCd><CAVVRespCode></CAVVRespCode><StatusMsg>Approved</StatusMsg><RespMsg></RespMsg><HostRespCode>100</HostRespCode><HostAVSRespCode>IU</HostAVSRespCode><HostCVV2RespCode>M</HostCVV2RespCode><CustomerRefNum></CustomerRefNum><CustomerName></CustomerName><ProfileProcStatus></ProfileProcStatus><CustomerProfileMessage></CustomerProfileMessage><RespTime>030444</RespTime><PartialAuthOccurred></PartialAuthOccurred><RequestedAmount></RequestedAmount><RedeemedAmount></RedeemedAmount><RemainingBalance></RemainingBalance><CountryFraudFilterStatus></CountryFraudFilterStatus><IsoCountryCode></IsoCountryCode></NewOrderResp></Response>"
-read 1200 bytes
-Conn close
+    <<~EOS
+      opening connection to orbitalvar1.paymentech.net:443...
+      opened
+      starting SSL for orbitalvar1.paymentech.net:443...
+      SSL established
+      <- "POST /authorize HTTP/1.1\r\nContent-Type: application/PTI71\r\nMime-Version: 1.1\r\nContent-Transfer-Encoding: text\r\nRequest-Number: 1\r\nDocument-Type: Request\r\nInterface-Version: Ruby|ActiveMerchant|Proprietary Gateway\r\nContent-Length: 964\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: orbitalvar1.paymentech.net\r\n\r\n"
+      <- "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Request>\n  <NewOrder>\n    <OrbitalConnectionUsername>[FILTERED]</OrbitalConnectionUsername>\n    <OrbitalConnectionPassword>[FILTERED]</OrbitalConnectionPassword>\n    <IndustryType>EC</IndustryType>\n    <MessageType>AC</MessageType>\n    <BIN>000001</BIN>\n    <MerchantID>[FILTERED]</MerchantID>\n    <TerminalID>001</TerminalID>\n    <AccountNum>[FILTERED]</AccountNum>\n    <Exp>0917</Exp>\n    <CurrencyCode>840</CurrencyCode>\n    <CurrencyExponent>2</CurrencyExponent>\n    <CardSecValInd>1</CardSecValInd>\n    <CardSecVal>[FILTERED]</CardSecVal>\n    <AVSzip>K1C2N6</AVSzip>\n    <AVSaddress1>456 My Street</AVSaddress1>\n    <AVSaddress2>Apt 1</AVSaddress2>\n    <AVScity>Ottawa</AVScity>\n    <AVSstate>ON</AVSstate>\n    <AVSphoneNum>5555555555</AVSphoneNum>\n    <AVSname>Longbob Longsen</AVSname>\n    <AVScountryCode>CA</AVScountryCode>\n    <OrderID>b141cf3ce2a442732e1906</OrderID>\n    <Amount>100</Amount>\n  </NewOrder>\n</Request>\n"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Date: Thu, 02 Jun 2016 07:04:44 GMT\r\n"
+      -> "content-type: text/plain; charset=ISO-8859-1\r\n"
+      -> "content-length: 1200\r\n"
+      -> "content-transfer-encoding: text/xml\r\n"
+      -> "document-type: Response\r\n"
+      -> "mime-version: 1.0\r\n"
+      -> "Connection: close\r\n"
+      -> "\r\n"
+      reading 1200 bytes...
+      -> "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response><NewOrderResp><IndustryType></IndustryType><MessageType>AC</MessageType><MerchantID>[FILTERED]</MerchantID><TerminalID>001</TerminalID><CardBrand>VI</CardBrand><AccountNum>[FILTERED]</AccountNum><OrderID>b141cf3ce2a442732e1906</OrderID><TxRefNum>574FDA8CECFBC3DA073FF74A7E6DE4E0BA87545B</TxRefNum><TxRefIdx>2</TxRefIdx><ProcStatus>0</ProcStatus><ApprovalStatus>1</ApprovalStatus><RespCode>00</RespCode><AVSRespCode>7 </AVSRespCode><CVV2RespCode>M</CVV2RespCode><AuthCode>tst595</AuthCode><RecurringAdviceCd></RecurringAdviceCd><CAVVRespCode></CAVVRespCode><StatusMsg>Approved</StatusMsg><RespMsg></RespMsg><HostRespCode>100</HostRespCode><HostAVSRespCode>IU</HostAVSRespCode><HostCVV2RespCode>M</HostCVV2RespCode><CustomerRefNum></CustomerRefNum><CustomerName></CustomerName><ProfileProcStatus></ProfileProcStatus><CustomerProfileMessage></CustomerProfileMessage><RespTime>030444</RespTime><PartialAuthOccurred></PartialAuthOccurred><RequestedAmount></RequestedAmount><RedeemedAmount></RedeemedAmount><RemainingBalance></RemainingBalance><CountryFraudFilterStatus></CountryFraudFilterStatus><IsoCountryCode></IsoCountryCode></NewOrderResp></Response>"
+      read 1200 bytes
+      Conn close
     EOS
   end
 
   def pre_scrubbed_profile
-    <<-EOS
-<?xml version="1.0" encoding="UTF-8"?><Response><ProfileResp><CustomerBin>000001</CustomerBin><CustomerMerchantID>253997</CustomerMerchantID><CustomerName>LONGBOB LONGSEN</CustomerName><CustomerRefNum>109273631</CustomerRefNum><CustomerProfileAction>CREATE</CustomerProfileAction><ProfileProcStatus>0</ProfileProcStatus><CustomerProfileMessage>Profile Request Processed</CustomerProfileMessage><CustomerAddress1>456 MY STREET</CustomerAddress1><CustomerAddress2>APT 1</CustomerAddress2><CustomerCity>OTTAWA</CustomerCity><CustomerState>ON</CustomerState><CustomerZIP>K1C2N6</CustomerZIP><CustomerEmail></CustomerEmail><CustomerPhone>5555555555</CustomerPhone><CustomerCountryCode>CA</CustomerCountryCode><CustomerProfileOrderOverrideInd>NO</CustomerProfileOrderOverrideInd><OrderDefaultDescription></OrderDefaultDescription><OrderDefaultAmount></OrderDefaultAmount><CustomerAccountType>CC</CustomerAccountType><Status>A</Status><CCAccountNum>4112344112344113</CCAccountNum><CCExpireDate>0919</CCExpireDate><ECPAccountDDA></ECPAccountDDA><ECPAccountType></ECPAccountType><ECPAccountRT></ECPAccountRT><ECPBankPmtDlv></ECPBankPmtDlv><SwitchSoloStartDate></SwitchSoloStartDate><SwitchSoloIssueNum></SwitchSoloIssueNum><RespTime></RespTime></ProfileResp></Response>
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?><Response><ProfileResp><CustomerBin>000001</CustomerBin><CustomerMerchantID>253997</CustomerMerchantID><CustomerName>LONGBOB LONGSEN</CustomerName><CustomerRefNum>109273631</CustomerRefNum><CustomerProfileAction>CREATE</CustomerProfileAction><ProfileProcStatus>0</ProfileProcStatus><CustomerProfileMessage>Profile Request Processed</CustomerProfileMessage><CustomerAddress1>456 MY STREET</CustomerAddress1><CustomerAddress2>APT 1</CustomerAddress2><CustomerCity>OTTAWA</CustomerCity><CustomerState>ON</CustomerState><CustomerZIP>K1C2N6</CustomerZIP><CustomerEmail></CustomerEmail><CustomerPhone>5555555555</CustomerPhone><CustomerCountryCode>CA</CustomerCountryCode><CustomerProfileOrderOverrideInd>NO</CustomerProfileOrderOverrideInd><OrderDefaultDescription></OrderDefaultDescription><OrderDefaultAmount></OrderDefaultAmount><CustomerAccountType>CC</CustomerAccountType><Status>A</Status><CCAccountNum>4112344112344113</CCAccountNum><CCExpireDate>0919</CCExpireDate><ECPAccountDDA></ECPAccountDDA><ECPAccountType></ECPAccountType><ECPAccountRT></ECPAccountRT><ECPBankPmtDlv></ECPBankPmtDlv><SwitchSoloStartDate></SwitchSoloStartDate><SwitchSoloIssueNum></SwitchSoloIssueNum><RespTime></RespTime></ProfileResp></Response>
     EOS
   end
 
   def post_scrubbed_profile
-    <<-EOS
-<?xml version="1.0" encoding="UTF-8"?><Response><ProfileResp><CustomerBin>000001</CustomerBin><CustomerMerchantID>[FILTERED]</CustomerMerchantID><CustomerName>LONGBOB LONGSEN</CustomerName><CustomerRefNum>109273631</CustomerRefNum><CustomerProfileAction>CREATE</CustomerProfileAction><ProfileProcStatus>0</ProfileProcStatus><CustomerProfileMessage>Profile Request Processed</CustomerProfileMessage><CustomerAddress1>456 MY STREET</CustomerAddress1><CustomerAddress2>APT 1</CustomerAddress2><CustomerCity>OTTAWA</CustomerCity><CustomerState>ON</CustomerState><CustomerZIP>K1C2N6</CustomerZIP><CustomerEmail></CustomerEmail><CustomerPhone>5555555555</CustomerPhone><CustomerCountryCode>CA</CustomerCountryCode><CustomerProfileOrderOverrideInd>NO</CustomerProfileOrderOverrideInd><OrderDefaultDescription></OrderDefaultDescription><OrderDefaultAmount></OrderDefaultAmount><CustomerAccountType>CC</CustomerAccountType><Status>A</Status><CCAccountNum>[FILTERED]</CCAccountNum><CCExpireDate>0919</CCExpireDate><ECPAccountDDA></ECPAccountDDA><ECPAccountType></ECPAccountType><ECPAccountRT></ECPAccountRT><ECPBankPmtDlv></ECPBankPmtDlv><SwitchSoloStartDate></SwitchSoloStartDate><SwitchSoloIssueNum></SwitchSoloIssueNum><RespTime></RespTime></ProfileResp></Response>
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?><Response><ProfileResp><CustomerBin>000001</CustomerBin><CustomerMerchantID>[FILTERED]</CustomerMerchantID><CustomerName>LONGBOB LONGSEN</CustomerName><CustomerRefNum>109273631</CustomerRefNum><CustomerProfileAction>CREATE</CustomerProfileAction><ProfileProcStatus>0</ProfileProcStatus><CustomerProfileMessage>Profile Request Processed</CustomerProfileMessage><CustomerAddress1>456 MY STREET</CustomerAddress1><CustomerAddress2>APT 1</CustomerAddress2><CustomerCity>OTTAWA</CustomerCity><CustomerState>ON</CustomerState><CustomerZIP>K1C2N6</CustomerZIP><CustomerEmail></CustomerEmail><CustomerPhone>5555555555</CustomerPhone><CustomerCountryCode>CA</CustomerCountryCode><CustomerProfileOrderOverrideInd>NO</CustomerProfileOrderOverrideInd><OrderDefaultDescription></OrderDefaultDescription><OrderDefaultAmount></OrderDefaultAmount><CustomerAccountType>CC</CustomerAccountType><Status>A</Status><CCAccountNum>[FILTERED]</CCAccountNum><CCExpireDate>0919</CCExpireDate><ECPAccountDDA></ECPAccountDDA><ECPAccountType></ECPAccountType><ECPAccountRT></ECPAccountRT><ECPBankPmtDlv></ECPBankPmtDlv><SwitchSoloStartDate></SwitchSoloStartDate><SwitchSoloIssueNum></SwitchSoloIssueNum><RespTime></RespTime></ProfileResp></Response>
     EOS
   end
 end

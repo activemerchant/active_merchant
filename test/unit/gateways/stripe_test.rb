@@ -31,7 +31,7 @@ class StripeTest < Test::Unit::TestCase
     @check = check({
       bank_name: 'STRIPE TEST BANK',
       account_number: '000123456789',
-      routing_number: '110000000',
+      routing_number: '110000000'
     })
   end
 
@@ -511,7 +511,7 @@ class StripeTest < Test::Unit::TestCase
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |_method, endpoint, data, _headers|
-      if %r{/charges} =~ endpoint
+      if %r{/charges}.match?(endpoint)
         assert_match('level3[merchant_reference]=123', data)
         assert_match('level3[customer_reference]=456', data)
         assert_match('level3[shipping_address_zip]=98765', data)
@@ -1121,7 +1121,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_add_statement_address_returns_nil_if_required_fields_missing
     post = {}
-    [:address1, :city, :zip, :state].each do |required_key|
+    %i[address1 city zip state].each do |required_key|
       missing_required = @options.tap do |options|
         options[:statement_address].delete_if { |k| k == required_key }
       end
@@ -1279,7 +1279,7 @@ class StripeTest < Test::Unit::TestCase
       post.include?('expand[0]=balance_transaction&expand[1]=customer')
     end.returns(successful_authorization_response)
 
-    @options[:expand] = [:balance_transaction, :customer]
+    @options[:expand] = %i[balance_transaction customer]
 
     @gateway.authorize(@amount, @credit_card, @options)
   end

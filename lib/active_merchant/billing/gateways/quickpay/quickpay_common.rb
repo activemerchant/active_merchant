@@ -168,9 +168,9 @@ module QuickpayCommon
     base.default_currency = 'DKK'
     base.money_format = :cents
 
-    base.supported_cardtypes = [:dankort, :forbrugsforeningen, :visa, :master,
-                                :american_express, :diners_club, :jcb, :maestro]
-    base.supported_countries = ['DE', 'DK', 'ES', 'FI', 'FR', 'FO', 'GB', 'IS', 'NO', 'SE']
+    base.supported_countries = %w[DE DK ES FI FR FO GB IS NO SE]
+    base.supported_cardtypes = %i[dankort forbrugsforeningen visa master
+                                  american_express diners_club jcb maestro]
     base.homepage_url = 'http://quickpay.net/'
     base.display_name = 'QuickPay'
   end

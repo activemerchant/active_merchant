@@ -7,10 +7,10 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://api-uat.kushkipagos.com/'
       self.live_url = 'https://api.kushkipagos.com/'
 
-      self.supported_countries = ['CL', 'CO', 'EC', 'MX', 'PE']
+      self.supported_countries = %w[CL CO EC MX PE]
       self.default_currency = 'USD'
       self.money_format = :dollars
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club alia]
 
       def initialize(options={})
         requires!(options, :public_merchant_id, :private_merchant_id)
@@ -184,7 +184,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def ssl_invoke(action, params)
-        if ['void', 'refund'].include?(action)
+        if %w[void refund].include?(action)
           ssl_request(:delete, url(action, params), nil, headers(action))
         else
           ssl_post(url(action, params), post_data(params), headers(action))
@@ -206,7 +206,7 @@ module ActiveMerchant #:nodoc:
       def url(action, params)
         base_url = test? ? test_url : live_url
 
-        if ['void', 'refund'].include?(action)
+        if %w[void refund].include?(action)
           base_url + 'v1/' + ENDPOINT[action] + '/' + params[:ticketNumber].to_s
         else
           base_url + 'card/v1/' + ENDPOINT[action]

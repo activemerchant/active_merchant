@@ -22,7 +22,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://api.balancedpayments.com'
 
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.homepage_url = 'https://www.balancedpayments.com/'
       self.display_name = 'Balanced'
       self.money_format = :cents
@@ -254,7 +254,7 @@ module ActiveMerchant #:nodoc:
           'Authorization' => 'Basic ' + Base64.encode64(@options[:login].to_s + ':').strip,
           'User-Agent' => "Balanced/v1.1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
           'Accept' => 'application/vnd.api+json;revision=1.1',
-          'X-Balanced-User-Agent' => @@ua,
+          'X-Balanced-User-Agent' => @@ua
         }
       end
     end

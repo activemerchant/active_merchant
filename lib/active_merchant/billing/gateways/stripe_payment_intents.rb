@@ -5,7 +5,7 @@ module ActiveMerchant #:nodoc:
     # This gateway uses the current Stripe {Payment Intents API}[https://stripe.com/docs/api/payment_intents].
     # For the legacy API, see the Stripe gateway
     class StripePaymentIntentsGateway < StripeGateway
-      self.supported_countries = %w(AT AU BE BR CA CH DE DK EE ES FI FR GB GR HK IE IT JP LT LU LV MX NL NO NZ PL PT SE SG SI SK US)
+      self.supported_countries = %w(AT AU BE BG BR CA CH CY CZ DE DK EE ES FI FR GB GR HK IE IT JP LT LU LV MT MX NL NO NZ PL PT RO SE SG SI SK US)
 
       ALLOWED_METHOD_STATES = %w[automatic manual].freeze
       ALLOWED_CANCELLATION_REASONS = %w[duplicate fraudulent requested_by_customer abandoned].freeze
@@ -84,6 +84,21 @@ module ActiveMerchant #:nodoc:
         commit(:post, "payment_intents/#{intent_id}", post, options)
       end
 
+      def create_setup_intent(payment_method, options = {})
+        post = {}
+        add_customer(post, options)
+        payment_method = add_payment_method_token(post, payment_method, options)
+        return payment_method if payment_method.is_a?(ActiveMerchant::Billing::Response)
+
+        add_metadata(post, options)
+        add_return_url(post, options)
+        post[:on_behalf_of] = options[:on_behalf_of] if options[:on_behalf_of]
+        post[:usage] = options[:usage] if %w(on_session off_session).include?(options[:usage])
+        post[:description] = options[:description] if options[:description]
+
+        commit(:post, 'setup_intents', post, options)
+      end
+
       def authorize(money, payment_method, options = {})
         create_intent(money, payment_method, options.merge!(confirm: true, capture_method: 'manual'))
       end
@@ -121,7 +136,7 @@ module ActiveMerchant #:nodoc:
 
           if charge_id.nil?
             error_message = "No associated charge for #{intent['id']}"
-            error_message <<  "; payment_intent has a status of #{intent['status']}" if intent.try(:[], 'status') && intent.try(:[], 'status') != 'succeeded'
+            error_message << "; payment_intent has a status of #{intent['status']}" if intent.try(:[], 'status') && intent.try(:[], 'status') != 'succeeded'
             return Response.new(false, error_message, intent)
           end
         else
@@ -168,6 +183,10 @@ module ActiveMerchant #:nodoc:
         else
           super(identification, options, deprecated_options)
         end
+      end
+
+      def verify(payment_method, options = {})
+        create_setup_intent(payment_method, options.merge!(confirm: true))
       end
 
       private

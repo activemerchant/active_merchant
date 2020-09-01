@@ -7,8 +7,8 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://api.ewaypayments.com/'
 
       self.money_format = :cents
-      self.supported_countries = ['AU', 'NZ', 'GB', 'SG', 'MY', 'HK']
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
+      self.supported_countries = %w[AU NZ GB SG MY HK]
+      self.supported_cardtypes = %i[visa master american_express diners_club jcb]
       self.homepage_url = 'http://www.eway.com.au/'
       self.display_name = 'eWAY Rapid 3.1'
       self.default_currency = 'AUD'
@@ -204,7 +204,7 @@ module ActiveMerchant #:nodoc:
           'InvoiceReference' => truncate(options[:order_id], 50),
           'InvoiceNumber' => truncate(options[:invoice] || options[:order_id], 12),
           'InvoiceDescription' => truncate(options[:description], 64),
-          'CurrencyCode' => currency_code,
+          'CurrencyCode' => currency_code
         }
       end
 
@@ -558,7 +558,7 @@ module ActiveMerchant #:nodoc:
         'V6150' => 'Invalid Refund Amount',
         'V6151' => 'Refund amount greater than original transaction',
         'V6152' => 'Original transaction already refunded for total amount',
-        'V6153' => 'Card type not support by merchant',
+        'V6153' => 'Card type not support by merchant'
       }
     end
   end

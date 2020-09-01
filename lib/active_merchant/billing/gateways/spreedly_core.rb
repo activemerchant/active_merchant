@@ -14,7 +14,7 @@ module ActiveMerchant #:nodoc:
                                     MT MU MV MX MY NL NO NZ OM PH PL PT QA RO SA SE SG SI SK SM
                                     TR TT UM US VA VN ZA)
 
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.homepage_url = 'https://spreedly.com'
       self.display_name = 'Spreedly'
       self.money_format = :cents

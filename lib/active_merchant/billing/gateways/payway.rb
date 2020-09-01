@@ -4,7 +4,7 @@ module ActiveMerchant
       self.live_url = self.test_url = 'https://ccapi.client.qvalent.com/payway/ccapi'
 
       self.supported_countries = ['AU']
-      self.supported_cardtypes = [:visa, :master, :diners_club, :american_express, :bankcard]
+      self.supported_cardtypes = %i[visa master diners_club american_express bankcard]
       self.display_name        = 'Pay Way'
       self.homepage_url        = 'http://www.payway.com.au'
       self.default_currency    = 'AUD'

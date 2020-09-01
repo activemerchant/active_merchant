@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       self.homepage_url = 'https://www.forte.net'
       self.display_name = 'Forte'
@@ -168,7 +168,8 @@ module ActiveMerchant #:nodoc:
         post[:echeck][:account_number] = payment.account_number
         post[:echeck][:routing_number] = payment.routing_number
         post[:echeck][:account_type] = payment.account_type
-        post[:echeck][:sec_code] = options[:sec_code] || "WEB"
+        post[:echeck][:check_number] = payment.number
+        post[:echeck][:sec_code] = options[:sec_code] || 'PPD'
       end
 
       def add_credit_card(post, payment)
@@ -262,7 +263,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def transaction_id_from(authorization)
-        transaction_id, _, original_auth_transaction_id, _ = split_authorization(authorization)
+        transaction_id, _, original_auth_transaction_id, = split_authorization(authorization)
         original_auth_transaction_id.present? ? original_auth_transaction_id : transaction_id
       end
 

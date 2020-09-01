@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class EfsnetGateway < Gateway
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.homepage_url = 'http://www.concordefsnet.com/'
       self.display_name = 'Efsnet'
 
@@ -53,7 +53,7 @@ module ActiveMerchant #:nodoc:
 
       def void(identification, options = {})
         requires!(options, :order_id)
-        original_transaction_id, _ = identification.split(';')
+        original_transaction_id, = identification.split(';')
         commit(:void_transaction, {reference_number: format_reference_number(options[:order_id]), transaction_id: original_transaction_id})
       end
 
@@ -209,7 +209,7 @@ module ActiveMerchant #:nodoc:
         credit_card_refund: %w(ReferenceNumber TransactionAmount OriginalTransactionAmount OriginalTransactionID ClientIpAddress),
         void_transaction: %w(ReferenceNumber TransactionID),
         credit_card_settle: %w(ReferenceNumber TransactionAmount OriginalTransactionAmount OriginalTransactionID ClientIpAddress),
-        system_check: %w(SystemCheck),
+        system_check: %w(SystemCheck)
       }
     end
   end

@@ -167,9 +167,13 @@ class CredoraxTest < Test::Unit::TestCase
     assert_equal '8a82944a5351570601535955efeb513c;006596;02617cf5f02ccaed239b6521748298c5;purchase', response.authorization
 
     referral_cft = stub_comms do
-      @gateway.refund(@amount, response.authorization, referral_cft: true)
+      @gateway.refund(@amount, response.authorization, { referral_cft: true, first_name: 'John', last_name: 'Smith' })
     end.check_request do |endpoint, data, headers|
       assert_match(/8a82944a5351570601535955efeb513c/, data)
+      # Confirm that `j5` (first name) and `j13` (surname) parameters are present
+      # These fields are required for CFT payouts as of Sept 1, 2020
+      assert_match(/j5=John/, data)
+      assert_match(/j13=Smith/, data)
       # Confirm that the transaction type is `referral_cft`
       assert_match(/O=34/, data)
     end.respond_with(successful_referral_cft_response)
@@ -266,6 +270,21 @@ class CredoraxTest < Test::Unit::TestCase
       assert_match(/3ds_shipaddrcountry=CA/, data)
       assert_match(/3ds_shipaddrcity=Ottawa/, data)
       refute_match(/3ds_version/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+
+    assert_equal '8a82944a5351570601535955efeb513c;006596;02617cf5f02ccaed239b6521748298c5;purchase', response.authorization
+    assert response.test?
+  end
+
+  def test_adds_correct_3ds_browsercolordepth_when_color_depth_is_30
+    @normalized_3ds_2_options[:three_ds_2][:browser_info][:depth] = 30
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @normalized_3ds_2_options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/3ds_browsercolordepth=32/, data)
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -663,6 +682,28 @@ class CredoraxTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
       assert_not_match(/c2=/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_omits_3ds_homephonecountry_when_phone_is_nil
+    # purchase passes 3ds_homephonecountry when it and phone number are provided
+    @options[:billing_address][:phone] = '555-444-3333'
+    @options[:three_ds_2] = { optional: { '3ds_homephonecountry': 'US' } }
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/c2=555-444-3333/, data)
+      assert_match(/3ds_homephonecountry=US/, data)
+    end.respond_with(successful_purchase_response)
+
+    # purchase doesn't pass 3ds_homephonecountry when phone number is nil
+    @options[:billing_address][:phone] = nil
+    @options[:three_ds_2] = { optional: { '3ds_homephonecountry': 'US' } }
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_not_match(/c2=/, data)
+      assert_not_match(/3ds_homephonecountry=/, data)
     end.respond_with(successful_purchase_response)
   end
 

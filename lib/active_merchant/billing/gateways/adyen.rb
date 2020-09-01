@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = %w(AT AU BE BG BR CH CY CZ DE DK EE ES FI FR GB GI GR HK HU IE IS IT LI LT LU LV MC MT MX NL NO PL PT RO SE SG SK SI US)
       self.default_currency = 'USD'
       self.currencies_without_fractions = %w(CVE DJF GNF IDR JPY KMF KRW PYG RWF UGX VND VUV XAF XOF XPF)
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb, :dankort, :maestro, :discover, :elo, :naranja, :cabal, :unionpay]
+      self.supported_cardtypes = %i[visa master american_express diners_club jcb dankort maestro discover elo naranja cabal unionpay]
 
       self.money_format = :cents
 
@@ -26,7 +26,7 @@ module ActiveMerchant #:nodoc:
         '132' => STANDARD_ERROR_CODE[:incorrect_address],
         '133' => STANDARD_ERROR_CODE[:incorrect_address],
         '134' => STANDARD_ERROR_CODE[:incorrect_address],
-        '135' => STANDARD_ERROR_CODE[:incorrect_address],
+        '135' => STANDARD_ERROR_CODE[:incorrect_address]
       }
 
       def initialize(options={})
@@ -196,9 +196,6 @@ module ActiveMerchant #:nodoc:
 
       def add_extra_data(post, payment, options)
         post[:telephoneNumber] = options[:billing_address][:phone] if options.dig(:billing_address, :phone)
-        post[:shopperEmail] = options[:shopper_email] if options[:shopper_email]
-        post[:shopperIP] = options[:shopper_ip] if options[:shopper_ip]
-        post[:shopperStatement] = options[:shopper_statement] if options[:shopper_statement]
         post[:fraudOffset] = options[:fraud_offset] if options[:fraud_offset]
         post[:selectedBrand] = options[:selected_brand] if options[:selected_brand]
         post[:selectedBrand] ||= NETWORK_TOKENIZATION_CARD_SOURCE[payment.source.to_s] if payment.is_a?(NetworkTokenizationCreditCard)
@@ -212,11 +209,25 @@ module ActiveMerchant #:nodoc:
         post[:additionalData][:authorisationType] = options[:authorisation_type] if options[:authorisation_type]
         post[:additionalData][:adjustAuthorisationData] = options[:adjust_authorisation_data] if options[:adjust_authorisation_data]
         post[:additionalData][:industryUsage] = options[:industry_usage] if options[:industry_usage]
-        post[:additionalData][:updateShopperStatement] = options[:update_shopper_statement] if options[:update_shopper_statement]
         post[:additionalData][:RequestedTestAcquirerResponseCode] = options[:requested_test_acquirer_response_code] if options[:requested_test_acquirer_response_code] && test?
         post[:deviceFingerprint] = options[:device_fingerprint] if options[:device_fingerprint]
+        add_shopper_data(post, options)
         add_risk_data(post, options)
         add_shopper_reference(post, options)
+        add_merchant_data(post, options)
+      end
+
+      def add_shopper_data(post, options)
+        post[:shopperEmail] = options[:email] if options[:email]
+        post[:shopperEmail] = options[:shopper_email] if options[:shopper_email]
+        post[:shopperIP] = options[:ip] if options[:ip]
+        post[:shopperIP] = options[:shopper_ip] if options[:shopper_ip]
+        post[:shopperStatement] = options[:shopper_statement] if options[:shopper_statement]
+        post[:additionalData][:updateShopperStatement] = options[:update_shopper_statement] if options[:update_shopper_statement]
+      end
+
+      def add_merchant_data(post, options)
+        post[:additionalData][:subMerchantId] = options[:sub_merchant_id] if options[:sub_merchant_id]
       end
 
       def add_risk_data(post, options)
@@ -232,7 +243,7 @@ module ActiveMerchant #:nodoc:
         splits = []
         split_data.each do |split|
           amount = {
-            value: split['amount']['value'],
+            value: split['amount']['value']
           }
           amount[:currency] = split['amount']['currency'] if split['amount']['currency']
 
@@ -366,12 +377,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_reference(post, authorization, options = {})
-        _, psp_reference, _ = authorization.split('#')
+        _, psp_reference, = authorization.split('#')
         post[:originalReference] = single_reference(authorization) || psp_reference
       end
 
       def add_original_reference(post, authorization, options = {})
-        original_psp_reference, _, _ = authorization.split('#')
+        original_psp_reference, = authorization.split('#')
         post[:originalReference] = single_reference(authorization) || original_psp_reference
       end
 
@@ -418,10 +429,10 @@ module ActiveMerchant #:nodoc:
             post[:additionalData][:scaExemption] = options[:sca_exemption] if options[:sca_exemption]
           end
         else
-          return unless options[:execute_threed] || options[:threed_dynamic]
+          return unless !options[:execute_threed].nil? || !options[:threed_dynamic].nil?
 
-          post[:browserInfo] = { userAgent: options[:user_agent], acceptHeader: options[:accept_header] }
-          post[:additionalData] = { executeThreeD: 'true' } if options[:execute_threed]
+          post[:browserInfo] = { userAgent: options[:user_agent], acceptHeader: options[:accept_header] } if options[:execute_threed] || options[:threed_dynamic]
+          post[:additionalData] = { executeThreeD: options[:execute_threed] } if !options[:execute_threed].nil?
         end
       end
 
@@ -527,14 +538,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(action, response, options)
-        if ['RedirectShopper', 'ChallengeShopper'].include?(response.dig('resultCode')) && !options[:execute_threed] && !options[:threed_dynamic]
+        if %w[RedirectShopper ChallengeShopper].include?(response.dig('resultCode')) && !options[:execute_threed] && !options[:threed_dynamic]
           response['refusalReason'] = 'Received unexpected 3DS authentication response. Use the execute_threed and/or threed_dynamic options to initiate a proper 3DS flow.'
           return false
         end
 
         case action.to_s
         when 'authorise', 'authorise3d'
-          ['Authorised', 'Received', 'RedirectShopper'].include?(response['resultCode'])
+          %w[Authorised Received RedirectShopper].include?(response['resultCode'])
         when 'capture', 'refund', 'cancel'
           response['response'] == "[#{action}-received]"
         when 'adjustAuthorisation'

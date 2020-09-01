@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'USD'
       self.money_format = :dollars
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.homepage_url = 'http://nmi.com/'
       self.display_name = 'NMI'
 
@@ -138,7 +138,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_level3_fields(post, options)
-        add_fields_to_post_if_present(post, options, [:tax, :shipping, :ponumber])
+        add_fields_to_post_if_present(post, options, %i[tax shipping ponumber])
       end
 
       def add_invoice(post, money, options)
@@ -154,7 +154,7 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_method(post, payment_method, options)
         if payment_method.is_a?(String)
-          customer_vault_id, _ = split_authorization(payment_method)
+          customer_vault_id, = split_authorization(payment_method)
           post[:customer_vault_id] = customer_vault_id
         elsif payment_method.is_a?(NetworkTokenizationCreditCard)
           post[:ccnumber] = payment_method.number
@@ -249,7 +249,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_reference(post, authorization)
-        transaction_id, _ = split_authorization(authorization)
+        transaction_id, = split_authorization(authorization)
         post[:transactionid] = transaction_id
       end
 

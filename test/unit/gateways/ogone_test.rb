@@ -254,11 +254,11 @@ class OgoneTest < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal ['BE', 'DE', 'FR', 'NL', 'AT', 'CH'], OgoneGateway.supported_countries
+    assert_equal %w[BE DE FR NL AT CH], OgoneGateway.supported_countries
   end
 
   def test_supported_card_types
-    assert_equal [:visa, :master, :american_express, :diners_club, :discover, :jcb, :maestro], OgoneGateway.supported_cardtypes
+    assert_equal %i[visa master american_express diners_club discover jcb maestro], OgoneGateway.supported_cardtypes
   end
 
   def test_default_currency

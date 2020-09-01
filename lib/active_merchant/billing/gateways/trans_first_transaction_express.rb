@@ -12,7 +12,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['US']
       self.default_currency = 'USD'
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club]
 
       V1_NAMESPACE = 'http://postilion/realtime/merchantframework/xsd/v1/'
       SOAPENV_NAMESPACE = 'http://schemas.xmlsoap.org/soap/envelope/'
@@ -152,7 +152,7 @@ module ActiveMerchant #:nodoc:
         'R1' => 'The transaction was declined or returned, because the cardholder requested that payment of all recurring or installment payment transactions for a specific merchant account be stopped/ Reserved for client-specific use (declined)',
         'Q1' => 'Card Authentication failed/ Reserved for client-specific use (declined)',
         'XA' => 'Forward to Issuer/ Reserved for client-specific use (declined)',
-        'XD' => 'Forward to Issuer/ Reserved for client-specific use (declined)',
+        'XD' => 'Forward to Issuer/ Reserved for client-specific use (declined)'
       }
 
       EXTENDED_RESPONSE_MESSAGES = {
@@ -179,7 +179,7 @@ module ActiveMerchant #:nodoc:
         refund_echeck: 16,
         void_echeck: 16,
 
-        wallet_sale: 14,
+        wallet_sale: 14
       }
 
       def initialize(options={})

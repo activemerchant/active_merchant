@@ -61,7 +61,7 @@ class InspireTest < Test::Unit::TestCase
     result = {}
 
     @gateway.send(:add_address, result, nil, billing_address: {address1: '164 Waverley Street', country: 'US', state: 'CO'})
-    assert_equal ['address1', 'city', 'company', 'country', 'phone', 'state', 'zip'], result.stringify_keys.keys.sort
+    assert_equal %w[address1 city company country phone state zip], result.stringify_keys.keys.sort
     assert_equal 'CO', result[:state]
     assert_equal '164 Waverley Street', result[:address1]
     assert_equal 'US', result[:country]
@@ -72,14 +72,14 @@ class InspireTest < Test::Unit::TestCase
   end
 
   def test_supported_card_types
-    assert_equal [:visa, :master, :american_express], InspireGateway.supported_cardtypes
+    assert_equal %i[visa master american_express], InspireGateway.supported_cardtypes
   end
 
   def test_adding_store_adds_vault_id_flag
     result = {}
 
     @gateway.send(:add_creditcard, result, @credit_card, store: true)
-    assert_equal ['ccexp', 'ccnumber', 'customer_vault', 'cvv', 'firstname', 'lastname'], result.stringify_keys.keys.sort
+    assert_equal %w[ccexp ccnumber customer_vault cvv firstname lastname], result.stringify_keys.keys.sort
     assert_equal 'add_customer', result[:customer_vault]
   end
 
@@ -87,7 +87,7 @@ class InspireTest < Test::Unit::TestCase
     result = {}
 
     @gateway.send(:add_creditcard, result, @credit_card, {})
-    assert_equal ['ccexp', 'ccnumber', 'cvv', 'firstname', 'lastname'], result.stringify_keys.keys.sort
+    assert_equal %w[ccexp ccnumber cvv firstname lastname], result.stringify_keys.keys.sort
     assert_nil result[:customer_vault]
   end
 

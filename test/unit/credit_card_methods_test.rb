@@ -101,6 +101,7 @@ class CreditCardMethodsTest < Test::Unit::TestCase
 
   def test_should_detect_diners_club
     assert_equal 'diners_club', CreditCard.brand?('36148010000000')
+    assert_equal 'diners_club', CreditCard.brand?('3000000000000004')
   end
 
   def test_should_detect_diners_club_dk
@@ -129,6 +130,22 @@ class CreditCardMethodsTest < Test::Unit::TestCase
 
   def test_should_detect_sodexo_card
     assert_equal 'sodexo', CreditCard.brand?('6060694495764400')
+  end
+
+  def test_should_detect_alia_card
+    assert_equal 'alia', CreditCard.brand?('5049970000000000')
+    assert_equal 'alia', CreditCard.brand?('5058780000000000')
+    assert_equal 'alia', CreditCard.brand?('6010300000000000')
+    assert_equal 'alia', CreditCard.brand?('6010730000000000')
+    assert_equal 'alia', CreditCard.brand?('5058740000000000')
+  end
+
+  def test_alia_number_not_validated
+    10.times do
+      number = rand(5058740000000001..5058749999999999).to_s
+      assert_equal 'alia', CreditCard.brand?(number)
+      assert CreditCard.valid_number?(number)
+    end
   end
 
   def test_should_detect_vr_card
@@ -251,11 +268,11 @@ class CreditCardMethodsTest < Test::Unit::TestCase
   end
 
   def test_carnet_cards
-    numbers = [
-      '5062280000000000',
-      '6046220312312312',
-      '6393889871239871',
-      '5022751231231231'
+    numbers = %w[
+      5062280000000000
+      6046220312312312
+      6393889871239871
+      5022751231231231
     ]
     numbers.each do |num|
       assert_equal 16, num.length

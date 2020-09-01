@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['NZ']
       self.default_currency = 'NZD'
       self.money_format = :dollars
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express diners_club]
 
       BRAND_MAP = {
         'visa' => 'VISA',
@@ -142,15 +142,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def envelope_wrap(action, body)
-        <<-EOS
-<?xml version="1.0" encoding="utf-8"?>
-<soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
-  <soap12:Body>
-    <#{action} xmlns="http://www.flo2cash.co.nz/webservices/paymentwebservice">
-      #{body}
-    </#{action}>
-  </soap12:Body>
-</soap12:Envelope>
+        <<~EOS
+          <?xml version="1.0" encoding="utf-8"?>
+          <soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
+            <soap12:Body>
+              <#{action} xmlns="http://www.flo2cash.co.nz/webservices/paymentwebservice">
+                #{body}
+              </#{action}>
+            </soap12:Body>
+          </soap12:Envelope>
         EOS
       end
 
@@ -204,7 +204,7 @@ module ActiveMerchant #:nodoc:
         'Bank Declined Transaction' => STANDARD_ERROR_CODE[:card_declined],
         'Insufficient Funds' => STANDARD_ERROR_CODE[:card_declined],
         'Transaction Declined - Bank Error' => STANDARD_ERROR_CODE[:processing_error],
-        'No Reply from Bank' => STANDARD_ERROR_CODE[:processing_error],
+        'No Reply from Bank' => STANDARD_ERROR_CODE[:processing_error]
       }
 
       def error_code_from(succeeded, response)

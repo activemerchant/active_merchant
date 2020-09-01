@@ -26,7 +26,7 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
   def test_authorization_and_void
     options = {
       currency: 'GBP',
-      customer: @customer,
+      customer: @customer
     }
     assert authorization = @gateway.authorize(@amount, @visa_payment_method, options)
 
@@ -40,7 +40,7 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
   def test_successful_purchase
     options = {
       currency: 'GBP',
-      customer: @customer,
+      customer: @customer
     }
     assert purchase = @gateway.purchase(@amount, @visa_payment_method, options)
 
@@ -115,7 +115,7 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
   def test_unsuccessful_purchase
     options = {
       currency: 'GBP',
-      customer: @customer,
+      customer: @customer
     }
     assert purchase = @gateway.purchase(@amount, @declined_payment_method, options)
 
@@ -166,7 +166,7 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
   def test_create_payment_intent_with_credit_card
     options = {
       currency: 'USD',
-      customer: @customer,
+      customer: @customer
     }
 
     assert response = @gateway.create_intent(@amount, @three_ds_credit_card, options)
@@ -250,7 +250,7 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     options = {
       currency: 'USD',
       customer: @customer,
-      off_session: true,
+      off_session: true
     }
 
     assert response = @gateway.authorize(@amount, @three_ds_credit_card, options)
@@ -334,7 +334,7 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
       customer: @customer,
       return_url: 'https://www.example.com',
       confirmation_method: 'manual',
-      capture_method: 'manual',
+      capture_method: 'manual'
     }
     assert create_response = @gateway.create_intent(@amount, @three_ds_payment_method, options)
     assert_equal 'requires_confirmation', create_response.params['status']
@@ -436,7 +436,7 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
       currency: 'XPF',
       customer: @customer,
       confirmation_method: 'manual',
-      capture_method: 'manual',
+      capture_method: 'manual'
     }
     assert create_response = @gateway.create_intent(amount, @visa_payment_method, options)
     intent_id = create_response.params['id']
@@ -557,12 +557,12 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
 
     refund = @gateway.refund(@amount - 20, intent_id)
     assert_failure refund
-    assert_match /has a status of requires_action/, refund.message
+    assert_match(/has a status of requires_action/, refund.message)
   end
 
   def test_successful_store_purchase_and_unstore
     options = {
-      currency: 'GBP',
+      currency: 'GBP'
     }
     assert store = @gateway.store(@visa_card, options)
     assert store.params['customer'].start_with?('cus_')
@@ -592,10 +592,28 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert_equal store1.params['id'], store2.params['id']
   end
 
+  def test_successful_verify
+    options = {
+      customer: @customer
+    }
+    assert verify = @gateway.verify(@visa_payment_method, options)
+
+    assert_equal 'succeeded', verify.params['status']
+  end
+
+  def test_failed_verify
+    options = {
+      customer: @customer
+    }
+    assert verify = @gateway.verify(@declined_payment_method, options)
+
+    assert_equal 'Your card was declined.', verify.message
+  end
+
   def test_moto_enabled_card_requires_action_when_not_marked
     options = {
       currency: 'GBP',
-      confirm: true,
+      confirm: true
     }
     assert purchase = @gateway.purchase(@amount, @three_ds_moto_enabled, options)
 
@@ -606,7 +624,7 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     options = {
       currency: 'GBP',
       confirm: true,
-      moto: true,
+      moto: true
     }
     assert purchase = @gateway.purchase(@amount, @three_ds_moto_enabled, options)
 
@@ -618,7 +636,7 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     options = {
       currency: 'GBP',
       confirm: true,
-      moto: true,
+      moto: true
     }
     assert purchase = @gateway.purchase(@amount, @three_ds_authentication_required, options)
 
@@ -631,7 +649,6 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
       currency: 'GBP',
       customer: @customer,
       confirmation_method: 'manual',
-      capture_method: 'manual',
       return_url: 'https://www.example.com/return',
       confirm: true
     }

@@ -38,7 +38,7 @@ module ActiveMerchant #:nodoc:
       self.test_url  = 'https://realtimestaging.psigate.com/xml'
       self.live_url  = 'https://realtime.psigate.com/xml'
 
-      self.supported_cardtypes = [:visa, :master, :american_express]
+      self.supported_cardtypes = %i[visa master american_express]
       self.supported_countries = ['CA']
       self.homepage_url = 'http://www.psigate.com/'
       self.display_name = 'Psigate'
@@ -163,7 +163,7 @@ module ActiveMerchant #:nodoc:
           SubTotal: amount(money),
           Tax1: options[:tax1],
           Tax2: options[:tax2],
-          ShippingTotal: options[:shipping_total],
+          ShippingTotal: options[:shipping_total]
         }
 
         if creditcard

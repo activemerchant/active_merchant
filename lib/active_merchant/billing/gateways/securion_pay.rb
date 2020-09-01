@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
 
       self.default_currency = 'USD'
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express discover jcb diners_club]
 
       self.homepage_url = 'https://securionpay.com/'
       self.display_name = 'SecurionPay'

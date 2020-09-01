@@ -6,10 +6,10 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://api.checkout.com'
       self.test_url = 'https://api.sandbox.checkout.com'
 
-      self.supported_countries = ['AD', 'AE', 'AR', 'AT', 'AU', 'BE', 'BG', 'BH', 'BR', 'CH', 'CL', 'CN', 'CO', 'CY', 'CZ', 'DE', 'DK', 'EE', 'EG', 'ES', 'FI', 'FR', 'GB', 'GR', 'HK', 'HR', 'HU', 'IE', 'IS', 'IT', 'JO', 'JP', 'KW', 'LI', 'LT', 'LU', 'LV', 'MC', 'MT', 'MX', 'MY', 'NL', 'NO', 'NZ', 'OM', 'PE', 'PL', 'PT', 'QA', 'RO', 'SA', 'SE', 'SG', 'SI', 'SK', 'SM', 'TR', 'US']
+      self.supported_countries = %w[AD AE AR AT AU BE BG BH BR CH CL CN CO CY CZ DE DK EE EG ES FI FR GB GR HK HR HU IE IS IT JO JP KW LI LT LU LV MC MT MX MY NL NO NZ OM PE PL PT QA RO SA SE SG SI SK SM TR US]
       self.default_currency = 'USD'
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :maestro, :discover]
+      self.supported_cardtypes = %i[visa master american_express diners_club maestro discover]
       self.currencies_without_fractions = %w(BIF DJF GNF ISK KMF XAF CLF XPF JPY PYG RWF KRW VUV VND XOF)
       self.currencies_with_three_decimal_places = %w(BHD LYD JOD KWD OMR TND)
 
@@ -194,7 +194,7 @@ module ActiveMerchant #:nodoc:
       def headers
         {
           'Authorization' => @options[:secret_key],
-          'Content-Type' => 'application/json;charset=UTF-8',
+          'Content-Type' => 'application/json;charset=UTF-8'
         }
       end
 

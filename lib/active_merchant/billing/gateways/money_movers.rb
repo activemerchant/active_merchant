@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://mmoa.us/'
       self.display_name = 'MoneyMovers'
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       def initialize(options = {})
         requires!(options, :login, :password)

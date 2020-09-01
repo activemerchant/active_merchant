@@ -133,9 +133,9 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://secure.ogone.com/ncol/test/'
       self.live_url = 'https://secure.ogone.com/ncol/prod/'
 
-      self.supported_countries = ['BE', 'DE', 'FR', 'NL', 'AT', 'CH']
+      self.supported_countries = %w[BE DE FR NL AT CH]
       # also supports Airplus and UATP
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :discover, :jcb, :maestro]
+      self.supported_cardtypes = %i[visa master american_express diners_club discover jcb maestro]
       self.homepage_url = 'http://www.ogone.com/'
       self.display_name = 'Ogone'
       self.default_currency = 'EUR'

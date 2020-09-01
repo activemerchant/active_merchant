@@ -9,7 +9,7 @@ class RemotePayexTest < Test::Unit::TestCase
     @declined_card = credit_card('4000300011112220')
 
     @options = {
-      order_id: '1234',
+      order_id: '1234'
     }
   end
 

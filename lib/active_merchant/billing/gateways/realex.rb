@@ -31,7 +31,7 @@ module ActiveMerchant
 
       self.money_format = :cents
       self.default_currency = 'EUR'
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express diners_club]
       self.supported_countries = %w(IE GB FR BE NL LU IT US CA ES)
       self.homepage_url = 'http://www.realexpayments.com/'
       self.display_name = 'Realex'
@@ -310,12 +310,13 @@ module ActiveMerchant
 
         version = three_d_secure.fetch(:version, '')
         xml.tag! 'mpi' do
-          if version =~ /^2/
+          if /^2/.match?(version)
             xml.tag! 'authentication_value', three_d_secure[:cavv]
             xml.tag! 'ds_trans_id', three_d_secure[:ds_transaction_id]
           else
             xml.tag! 'cavv', three_d_secure[:cavv]
             xml.tag! 'xid', three_d_secure[:xid]
+            version = '1'
           end
           xml.tag! 'eci', three_d_secure[:eci]
           xml.tag! 'message_version', version

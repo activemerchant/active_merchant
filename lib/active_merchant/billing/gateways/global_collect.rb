@@ -100,6 +100,7 @@ module ActiveMerchant #:nodoc:
           'invoiceNumber' => options[:invoice]
         }
         add_airline_data(post, options) if options[:airline_data]
+        add_number_of_installments(post, options) if options[:number_of_installments]
       end
 
       def add_airline_data(post, options)
@@ -231,6 +232,10 @@ module ActiveMerchant #:nodoc:
         post['fraudFields'] = fraud_fields unless fraud_fields.empty?
       end
 
+      def add_number_of_installments(post, options)
+        post['order']['additionalInput']['numberOfInstallments'] = options[:number_of_installments] if options[:number_of_installments]
+      end
+
       def parse(body)
         JSON.parse(body)
       end
@@ -291,11 +296,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def auth_digest(action, post, authorization = nil)
-        data = <<-EOS
-POST
-#{content_type}
-#{date}
-#{uri(action, authorization)}
+        data = <<~EOS
+          POST
+          #{content_type}
+          #{date}
+          #{uri(action, authorization)}
         EOS
         digest = OpenSSL::Digest.new('sha256')
         key = @options[:secret_api_key]

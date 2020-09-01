@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = %w(AU BR CA CH DE DK ES FI FR GR HK IE IT NL NO PT SE SG TR GB US TH ID PH BE)
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       self.homepage_url = 'http://home.iatspayments.com/'
       self.display_name = 'iATS Payments'
@@ -260,7 +260,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(action, response)
-        if [:store, :unstore].include?(action)
+        if %i[store unstore].include?(action)
           response[:customercode]
         elsif [:purchase_check].include?(action)
           response[:transaction_id] ? "#{response[:transaction_id]}|check" : nil

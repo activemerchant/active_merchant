@@ -31,7 +31,7 @@ module ActiveMerchant #:nodoc:
       AVS_RESULT_CODE, TRANSACTION_ID, CARD_CODE_RESPONSE_CODE  = 5, 6, 38
 
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club jcb]
       self.homepage_url = 'http://www.metricsglobal.com'
       self.display_name = 'Metrics Global'
 

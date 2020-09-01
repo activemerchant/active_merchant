@@ -22,7 +22,7 @@ module ActiveMerchant #:nodoc:
 
       SUCCESS = 'true'
 
-      SENSITIVE_FIELDS = [:verification_str2, :expiry_date, :card_number]
+      SENSITIVE_FIELDS = %i[verification_str2 expiry_date card_number]
 
       BRANDS = {
         visa: 'Visa',
@@ -37,7 +37,7 @@ module ActiveMerchant #:nodoc:
       DEFAULT_ECI = '07'
 
       self.supported_cardtypes = BRANDS.keys
-      self.supported_countries = ['CA', 'US']
+      self.supported_countries = %w[CA US]
       self.default_currency = 'USD'
       self.homepage_url = 'http://www.firstdata.com'
       self.display_name = 'FirstData Global Gateway e4'
@@ -217,7 +217,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_identification(xml, identification)
-        authorization_num, transaction_tag, _ = identification.split(';')
+        authorization_num, transaction_tag, = identification.split(';')
 
         xml.tag! 'Authorization_Num', authorization_num
         xml.tag! 'Transaction_Tag', transaction_tag
@@ -255,14 +255,14 @@ module ActiveMerchant #:nodoc:
             (credit_card.respond_to?(:eci) ? credit_card.eci : nil) || options[:eci] || DEFAULT_ECI
           end
 
-        xml.tag! 'Ecommerce_Flag', eci.to_s =~ /^[0-9]+$/ ? eci.to_s.rjust(2, '0') : eci
+        xml.tag! 'Ecommerce_Flag', /^[0-9]+$/.match?(eci.to_s) ? eci.to_s.rjust(2, '0') : eci
       end
 
       def add_credit_card_verification_strings(xml, credit_card, options)
         address = options[:billing_address] || options[:address]
         if address
           address_values = []
-          [:address1, :zip, :city, :state, :country].each { |part| address_values << address[part].to_s.tr("\r\n", ' ').strip }
+          %i[address1 zip city state country].each { |part| address_values << address[part].to_s.tr("\r\n", ' ').strip }
           xml.tag! 'VerificationStr1', address_values.join('|')
         end
 

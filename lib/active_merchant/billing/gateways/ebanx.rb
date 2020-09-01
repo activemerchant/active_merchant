@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = %w(BR MX CO CL AR PE)
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club]
 
       self.homepage_url = 'http://www.ebanx.com/'
       self.display_name = 'EBANX'
@@ -237,7 +237,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(action, response)
-        if [:purchase, :capture, :refund].include?(action)
+        if %i[purchase capture refund].include?(action)
           response.try(:[], 'payment').try(:[], 'status') == 'CO'
         elsif action == :authorize
           response.try(:[], 'payment').try(:[], 'status') == 'PE'
@@ -258,7 +258,7 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(action, parameters, response)
         if action == :store
-          "#{response.try(:[], "token")}|#{CARD_BRAND[parameters[:payment_type_code].to_sym]}"
+          "#{response.try(:[], 'token')}|#{CARD_BRAND[parameters[:payment_type_code].to_sym]}"
         else
           response.try(:[], 'payment').try(:[], 'hash')
         end
@@ -278,7 +278,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def requires_http_get(action)
-        return true if [:capture, :void].include?(action)
+        return true if %i[capture void].include?(action)
 
         false
       end
