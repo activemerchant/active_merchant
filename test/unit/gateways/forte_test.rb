@@ -61,6 +61,16 @@ class ForteTest < Test::Unit::TestCase
     assert_equal 'INVALID CREDIT CARD NUMBER', response.message
   end
 
+  def test_successful_purchase_with_service_fee
+    response = stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(MockedResponse.new(successful_purchase_with_service_fee_response))
+    assert_success response
+
+    assert_equal '.5', response.params['service_fee_amount']
+    assert response.test?
+  end
+
   def test_successful_authorize
     response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.authorize(@amount, @credit_card, @options)
@@ -342,6 +352,46 @@ class ForteTest < Test::Unit::TestCase
           "response_type":"D",
           "response_code":"U19",
           "response_desc":"INVALID CREDIT CARD NUMBER"
+        },
+        "links": {
+          "self":"https://sandbox.forte.net/API/v2/transactions/trn_bb7687a7-3d3a-40c2-8fa9-90727a814249",
+          "settlements":"https://sandbox.forte.net/API/v2/transactions/trn_bb7687a7-3d3a-40c2-8fa9-90727a814249/settlements"
+        }
+      }
+    '
+  end
+
+  def successful_purchase_with_service_fee_response
+    '
+      {
+        "transaction_id":"trn_bb7687a7-3d3a-40c2-8fa9-90727a814249",
+        "account_id":"act_300111",
+        "location_id":"loc_176008",
+        "action":"sale",
+        "authorization_amount": 1.0,
+        "service_fee_amount": ".5",
+        "subtotal_amount": ".5",
+        "authorization_code":"123456",
+        "billing_address":{
+          "first_name":"Jim",
+          "last_name":"Smith"
+        },
+        "card": {
+          "name_on_card":"Longbob Longsen",
+          "masked_account_number":"****2224",
+          "expire_month":9,
+          "expire_year":2016,
+          "card_verification_value":"***",
+          "card_type":"visa"
+        },
+        "response": {
+          "authorization_code":"123456",
+          "avs_result":"Y",
+          "cvv_code":"M",
+          "environment":"sandbox",
+          "response_type":"A",
+          "response_code":"A01",
+          "response_desc":"TEST APPROVAL"
         },
         "links": {
           "self":"https://sandbox.forte.net/API/v2/transactions/trn_bb7687a7-3d3a-40c2-8fa9-90727a814249",
