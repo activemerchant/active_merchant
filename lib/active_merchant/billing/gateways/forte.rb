@@ -23,6 +23,7 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment_method, options={})
         post = {}
         add_amount(post, money, options)
+        add_service_fee(post, options)
         add_invoice(post, options)
         add_payment_method(post, payment_method, options)
         add_billing_address(post, payment_method, options)
@@ -35,6 +36,7 @@ module ActiveMerchant #:nodoc:
       def authorize(money, payment_method, options={})
         post = {}
         add_amount(post, money, options)
+        add_service_fee(post, options)
         add_invoice(post, options)
         add_payment_method(post, payment_method, options)
         add_billing_address(post, payment_method, options)
@@ -114,6 +116,10 @@ module ActiveMerchant #:nodoc:
 
       def add_amount(post, money, options)
         post[:authorization_amount] = amount(money)
+      end
+
+      def add_service_fee(post, options)
+        post[:service_fee_amount] = options[:service_fee_amount] if options[:service_fee_amount]
       end
 
       def add_billing_address(post, payment, options)

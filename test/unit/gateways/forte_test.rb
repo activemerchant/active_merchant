@@ -61,6 +61,16 @@ class ForteTest < Test::Unit::TestCase
     assert_equal 'INVALID CREDIT CARD NUMBER', response.message
   end
 
+  def test_successful_purchase_with_service_fee
+    response = stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(MockedResponse.new(successful_purchase_response))
+    assert_success response
+
+    assert_equal '.05', response.params['service_fee_amount']
+    assert response.test?
+  end
+
   def test_successful_authorize
     response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.authorize(@amount, @credit_card, @options)
@@ -200,6 +210,7 @@ class ForteTest < Test::Unit::TestCase
         "location_id":"loc_176008",
         "action":"sale",
         "authorization_amount":1.0,
+        "service_fee_amount":".05",
         "authorization_code":"123456",
         "billing_address":{
           "first_name":"Jim",
