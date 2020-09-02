@@ -111,6 +111,17 @@ class IatsPaymentsTest < Test::Unit::TestCase
     assert_equal 'Success', response.message
   end
 
+  def test_successful_purchase_with_customer_details
+    @options[:email] = 'jsmith2@example.com'
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<email>#{@options[:email]}<\/email>/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert response
+  end
+
   def test_failed_check_purchase
     response = stub_comms do
       @gateway.purchase(@amount, @check, @options)

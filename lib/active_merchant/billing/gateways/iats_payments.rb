@@ -42,6 +42,7 @@ module ActiveMerchant #:nodoc:
         add_address(post, options)
         add_ip(post, options)
         add_description(post, options)
+        add_customer_details(post, options)
 
         commit(determine_purchase_type(payment), post)
       end
@@ -158,6 +159,10 @@ module ActiveMerchant #:nodoc:
         post[:begin_date] = Time.now.xmlschema
         post[:end_date] = Time.now.xmlschema
         post[:amount] = 0
+      end
+
+      def add_customer_details(post, options)
+        post[:email] = options[:email] if options[:email]
       end
 
       def expdate(creditcard)
