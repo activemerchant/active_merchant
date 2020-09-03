@@ -151,7 +151,7 @@ module ActiveMerchant #:nodoc:
 
       def add_customer_detail_data(post, options)
         post[:profile] ||= {}
-        post[:profile][:email]  = options[:email] if options[:email]
+        post[:profile][:email] = options[:email] if options[:email]
         post[:customerIp] = options[:ip] if options[:ip]
         if (billing_address = options[:billing_address])
           post[:profile][:firstName], post[:profile][:lastName] = split_names(billing_address[:name])

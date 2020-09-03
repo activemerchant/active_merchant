@@ -50,16 +50,15 @@ class RemoteNetbanxTest < Test::Unit::TestCase
       email: 'joe@example.com'
     }
 
-    firstName, lastName = split_names(address[:name])
+    first_name, last_name = split_names(address[:name])
 
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_equal 'OK', response.message
     assert_equal response.authorization, response.params['id']
-    assert_equal firstName, response.params['profile']['firstName']
-    assert_equal lastName, response.params['profile']['lastName']
+    assert_equal first_name, response.params['profile']['firstName']
+    assert_equal last_name, response.params['profile']['lastName']
     assert_equal options[:email], response.params['profile']['email']
     assert_equal options[:ip], response.params['customerIp']
-
   end
 
   def test_successful_purchase_with_3ds2_auth
