@@ -12,8 +12,8 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'SGD'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
 
-      self.homepage_url = 'http://www.example.net/'
-      self.display_name = 'New Gateway'
+      self.homepage_url = 'https://www.2c2p.com/'
+      self.display_name = '2C2P'
 
       VERSION = '9.9'
 
@@ -113,8 +113,6 @@ module ActiveMerchant #:nodoc:
           message_from(response),
           response,
           authorization: authorization_from(response),
-          avs_result: AVSResult.new(code: response["some_avs_response_key"]),
-          cvv_result: CVVResult.new(response["some_cvv_response_key"]),
           test: test?,
           error_code: error_code_from(response)
         )
