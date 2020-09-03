@@ -2,6 +2,7 @@
 
 == HEAD
 * BlueSnap: Add address1,address2,phone,shipping_* support #3749
+* BlueSnap: Protect against `nil` metadata [carrigan] #3752
 
 == Version 1.113.0
 * Orbital: Add cardIndicators field [meagabeth] #3734
@@ -19,7 +20,6 @@
 * Orbital: Update CardIndicators field to fix bug [meagabeth] #3746
 * CyberSource: Always send default address [leila-alderman] #3747
 * Netbanx: Reject partial refund on pending status [rockyhakjoong] #3735
-* BlueSnap: Protect against `nil` metadata [carrigan] #3752
 
 == Version 1.112.0
 * Cybersource: add `maestro` and `diners_club` eci brand mapping [bbraschi] #3708
