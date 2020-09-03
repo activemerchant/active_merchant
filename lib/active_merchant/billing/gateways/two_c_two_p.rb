@@ -45,15 +45,24 @@ module ActiveMerchant #:nodoc:
         commit('sale', post)
       end
 
-      # payload is an encoded string, there is no way to scrub something there
       def supports_scrubbing?
-        false
+        true
+      end
+
+      def scrub(transcript)
+        force_utf8(transcript).gsub(/(paymentRequest=).+/, '\1[FILTERED]')
       end
 
       private
 
       def encode64(payload)
         Base64.strict_encode64(payload)
+      end
+
+      def force_utf8(string)
+        return nil unless string
+        binary = string.encode("BINARY", invalid: :replace, undef: :replace, replace: "?")
+        binary.encode("UTF-8", invalid: :replace, undef: :replace, replace: "?")
       end
 
       def build_xml(parameters)
