@@ -214,7 +214,7 @@ module ActiveMerchant
       end
 
       def add_metadata(doc, options)
-        transaction_meta_data = options.fetch(:transaction_meta_data, {})
+        transaction_meta_data = options[:transaction_meta_data] || []
         return if transaction_meta_data.empty? && !options[:description]
 
         doc.send('transaction-meta-data') do

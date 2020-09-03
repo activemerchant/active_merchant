@@ -19,6 +19,7 @@
 * Orbital: Update CardIndicators field to fix bug [meagabeth] #3746
 * CyberSource: Always send default address [leila-alderman] #3747
 * Netbanx: Reject partial refund on pending status [rockyhakjoong] #3735
+* BlueSnap: Protect against `nil` metadata [carrigan] #3752
 
 == Version 1.112.0
 * Cybersource: add `maestro` and `diners_club` eci brand mapping [bbraschi] #3708

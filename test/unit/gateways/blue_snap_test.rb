@@ -191,6 +191,27 @@ class BlueSnapTest < Test::Unit::TestCase
     assert_nil response.params['transaction-meta-data']
   end
 
+  def test_successful_purchase_with_metadata_nil
+    more_options = @options.merge({
+      order_id: '1',
+      ip: '127.0.0.1',
+      email: 'joe@example.com',
+      transaction_meta_data: nil,
+      soft_descriptor: 'OnCardStatement',
+      personal_identification_number: 'CNPJ'
+    })
+
+    response = stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.purchase(@amount, @credit_card, more_options)
+    end.check_request do |method, url, data|
+      assert_not_match(/transaction-meta-data/, data)
+      assert_not_match(/meta-key/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert_nil response.params['transaction-meta-data']
+  end
+
   def test_successful_purchase_with_unused_state_code
     unrecognized_state_code_options = {
       billing_address: {
