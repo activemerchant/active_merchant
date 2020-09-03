@@ -33,6 +33,15 @@ class RemoteNetbanxTest < Test::Unit::TestCase
     assert_equal 'MATCH', response.params['avsResponse']
   end
 
+  def split_names(full_name)
+    names = (full_name || '').split
+    return [nil, nil] if names.size == 0
+
+    last_name  = names.pop
+    first_name = names.join(' ')
+    [first_name, last_name]
+  end
+
   def test_successful_purchase_with_more_options
     options = {
       order_id: SecureRandom.uuid,
@@ -41,9 +50,16 @@ class RemoteNetbanxTest < Test::Unit::TestCase
       email: 'joe@example.com'
     }
 
+    firstName, lastName = split_names(address[:name])
+
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_equal 'OK', response.message
     assert_equal response.authorization, response.params['id']
+    assert_equal firstName, response.params['profile']['firstName']
+    assert_equal lastName, response.params['profile']['lastName']
+    assert_equal options[:email], response.params['profile']['email']
+    assert_equal options[:ip], response.params['customerIp']
+
   end
 
   def test_successful_purchase_with_3ds2_auth
