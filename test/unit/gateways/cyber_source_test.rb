@@ -1105,6 +1105,22 @@ class CyberSourceTest < Test::Unit::TestCase
     end.respond_with(successful_capture_response)
   end
 
+  def test_default_address_does_not_override_when_hash_keys_are_strings
+    stub_comms do
+      @gateway.authorize(100, @credit_card, billing_address: {
+        'address1' => '221B Baker Street',
+        'city' => 'London',
+        'zip' => 'NW16XE',
+        'country' => 'GB'
+      })
+    end.check_request do |endpoint, data, headers|
+      assert_match('<street1>221B Baker Street</street1>', data)
+      assert_match('<city>London</city>', data)
+      assert_match('<postalCode>NW16XE</postalCode>', data)
+      assert_match('<country>GB</country>', data)
+    end.respond_with(successful_capture_response)
+  end
+
   def test_adds_application_id_as_partner_solution_id
     partner_id = 'partner_id'
     CyberSourceGateway.application_id = partner_id
