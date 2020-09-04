@@ -1,8 +1,11 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+
+== Version 1.114.0
 * BlueSnap: Add address1,address2,phone,shipping_* support #3749
 * BlueSnap: Protect against `nil` metadata [carrigan] #3752
+* Cybersource: [CyberSource] Ensure the default address doesn't override `ActionController::Parameters` [pi3r] #3755
 
 == Version 1.113.0
 * Orbital: Add cardIndicators field [meagabeth] #3734
