@@ -444,6 +444,12 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal '[capture-received]', response.message
   end
 
+  def test_succesful_purchase_with_brand_override_with_execute_threed_false
+    response = @gateway.purchase(@amount, @improperly_branded_maestro, @options.merge({execute_threed: false, overwrite_brand: true, selected_brand: 'maestro'}))
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
+
   def test_successful_purchase_with_google_pay
     response = @gateway.purchase(@amount, @google_pay_card, @options)
     assert_success response

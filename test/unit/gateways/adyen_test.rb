@@ -376,6 +376,15 @@ class AdyenTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
+  def test_execute_threed_false_with_additional_data
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({execute_threed: false, overwrite_brand: true, selected_brand: 'maestro'}))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/"additionalData":{"overwriteBrand":true,"executeThreeD":false}/, data)
+      assert_match(/"selectedBrand":"maestro"/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_execute_threed_false_sent_3ds2
     stub_comms do
       @gateway.authorize(@amount, '123', @normalized_3ds_2_options.merge({execute_threed: false}))
