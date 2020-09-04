@@ -797,6 +797,27 @@ payway:
 pin:
   api_key: "I_mo9BUUUXIwXF-avcs3LA"
 
+# Working credentials, no need to replace
+place_to_pay_col:
+  login: 8c94963bd435c7635826e6a34a4bb11a
+  secret_key: RYKUrC1567q2a086
+  country: COL
+
+place_to_pay_invalid_col:
+  login: 1863f8a3ba0e8d4290137c4b18fa4286
+  secret_key: RYKUrC1567q2a086
+  country: COL
+
+place_to_pay_ec:
+  login: 1863f8a3ba0e8d4290137c4b18fa4286
+  secret_key: 97d3E70wO36CoQjS
+  country: EC
+
+place_to_pay_invalid_ec:
+  login: 8c94963bd435c7635826e6a34a4bb11a
+  secret_key: 97d3E70wO36CoQjS
+  country: EC
+
 plugnpay:
   login: LOGIN
   password: PASSWORD
