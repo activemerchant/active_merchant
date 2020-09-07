@@ -90,10 +90,19 @@ module ActiveMerchant #:nodoc:
 
       def add_merchant_data(post, options)
         post[:merchantAttributes] = {}
-        post[:merchantAttributes][:skipConfirmationPage] = options[:skip_confirmation] || true
         post[:merchantAttributes][:skip3DS] = options[:skip3DS] || true
-        post[:merchantAttributes][:cancelUrl] = options[:cancel_url]
-        post[:merchantAttributes][:cancelText] = options [:cancel_text]
+
+        if options[:skip_confirmation].present?
+          post[:merchantAttributes][:skipConfirmationPage] = options[:skip_confirmation]
+        end
+
+        if options[:cancel_url].present?
+          post[:merchantAttributes][:cancelUrl] = options[:cancel_url]
+        end
+
+        if options[:cancel_text].present?
+          post[:merchantAttributes][:cancelText] = options[:cancel_text]
+        end
       end
 
       def add_payment(post, payment)
