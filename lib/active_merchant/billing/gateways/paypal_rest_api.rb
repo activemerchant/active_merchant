@@ -39,9 +39,11 @@ module ActiveMerchant #:nodoc:
         request.body = "grant_type=client_credentials"
         return_response(http, request)
       end
+
       def encoded_credentials
         Base64.encode64("#{ @options[:authorization][:username] }:#{ @options[:authorization][:password] }").gsub("\n", "")
       end
+
       def return_response(http, request)
         response = http.request(request)
         eval(response.body)
