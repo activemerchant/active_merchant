@@ -115,7 +115,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   def test_set_customer_order_creation
     paypal_customer = ActiveMerchant::Billing::PaypalCustomerGateway.new
     response = paypal_customer.create_order(@options)
-    debugger
     assert response.success?
     assert response.parsed_response["status"].eql?("CREATED")
     assert !response.parsed_response["id"].nil?
