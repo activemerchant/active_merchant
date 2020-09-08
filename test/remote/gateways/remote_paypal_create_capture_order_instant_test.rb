@@ -10,6 +10,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
     options = { "Content-Type": "application/json", authorization: params }
     bearer_token = @paypal_customer.get_token(options)
+
     @headers = { "Authorization": "Bearer #{ bearer_token[:access_token] }", "Content-Type": "application/json" }
 
     @body = {
