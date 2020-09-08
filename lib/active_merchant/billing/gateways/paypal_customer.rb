@@ -10,8 +10,12 @@ module ActiveMerchant #:nodoc:
         post('v2/checkout/orders', options)
       end
 
-      def require!(options)
+      def get_token(options)
         post('v1/oauth2/token', options)
+      end
+
+      def authorize(options, order_id)
+        post("v2/checkout/orders/#{ order_id }/authorize", options)
       end
     end
   end
