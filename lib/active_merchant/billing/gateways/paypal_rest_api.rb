@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
       include ActiveMerchant::PostsData
 
       def post(url, options)
-        url = "#{test_redirect_url}/#{url}"
+        url = "#{ test_redirect_url }/#{ url }"
         if options[:authorization].present?
           prepare_request_to_get_access_token(url, options)
         else
@@ -19,7 +19,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def patch(url, options)
-        url = "#{test_redirect_url}/#{url}"
+        url = "#{ test_redirect_url }/#{ url }"
         HTTParty.patch(url, { body: options[:body].to_json, headers: options[:headers] })
       end
 
@@ -40,7 +40,7 @@ module ActiveMerchant #:nodoc:
         return_response(http, request)
       end
       def encoded_credentials
-        Base64.encode64("#{@options[:authorization][:username]}:#{@options[:authorization][:password]}").gsub("\n", "")
+        Base64.encode64("#{ @options[:authorization][:username] }:#{ @options[:authorization][:password] }").gsub("\n", "")
       end
       def return_response(http, request)
         response = http.request(request)
