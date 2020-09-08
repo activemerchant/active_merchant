@@ -341,34 +341,4 @@ class RemotePlaceToPayTest < Test::Unit::TestCase
      assert_failure iternational_response
      assert_equal 'No se ha encontrado información con los datos proporcionados', iternational_response.message
    end
-
-  # Temporary removed until an external client issue gets resolved
-  # This test do not apply to the main country: Colombia
-  # def test_successful_lookup_card_another_country
-  #   options = @options.merge({
-  #     'returnUrl': 'https://www.placetopay.com',
-  #     'description': 'Testing Payment',
-  #   })
-  #   # special credit card number for this case
-  #   credit_card = credit_card('4147570010013074')
-  #   credit_card.verification_value = '237'
-  #   credit_card.month = '03'
-  #   credit_card.year = '22'
-  #   response = @international_gateway.lookup_card(@amount, credit_card, options)
-  #   assert_success response
-  #   assert_equal 'La petición se ha procesado correctamente', response.message
-  # end
-
-  # Temporary removed until an external client issue gets resolved
-  # def test_failled_lookup_card_method_card_does_not_apply_3ds
-  #   @options[:returnUrl] = 'https://www.placetopay.com'
-  #   @options[:description] = 'Testing Payment'
-  #   credit_card = credit_card('36545400000248')
-  #   credit_card.verification_value = '237'
-  #   credit_card.month = '03'
-  #   credit_card.year = '22'
-  #   response = @international_gateway.lookup_card(@amount, credit_card, @options)
-  #   assert_failure response
-  #   assert_equal 'El comercio no tiene configurados datos de 3DS', response.message
-  # end
 end

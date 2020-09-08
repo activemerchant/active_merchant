@@ -4,7 +4,6 @@ module ActiveMerchant #:nodoc:
       attr_accessor :login, :secret_key, :current_country
       self.test_url = 'https://test.placetopay.com/rest/gateway/'
       self.live_url = 'https://secure.placetopay.com/redirection/'
-
       self.supported_countries = ['COL', 'EC']
       self.default_currency = 'USD'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners]
