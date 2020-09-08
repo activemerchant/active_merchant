@@ -2,10 +2,6 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PaypalCustomerGateway < PaypalExpressRestGateway
 
-      def register_partner(options)
-        post('v2/customer/partner-referrals', options)
-      end
-
       def create_order(options)
         post('v2/checkout/orders', options)
       end

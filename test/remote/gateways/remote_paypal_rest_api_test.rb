@@ -204,6 +204,26 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @order_id = response["id"]
   end
 
+  def test_handle_approve_capture
+    @order_id = "6EU99348TG513694H"
+    @body = {}
+    options = { headers: @headers, body: @body }
+    response = @paypal_customer.handle_approve(@order_id,"capture",options)
+    assert response.success?
+    assert response.parsed_response["status"].eql?("COMPLETED")
+    assert !response.parsed_response["id"].nil?
+    assert !response.parsed_response['links'].blank?
+  end
+
+  def test_set_authorize_order
+    @order_id = "5KP79474T6549011V"
+    response = @paypal_customer.authorize(@order_id, { headers: @headers })
+    assert response.success?
+    assert response.parsed_response["status"].eql?("CREATED")
+    assert !response.parsed_response["id"].nil?
+    assert !response.parsed_response['links'].blank?
+  end
+
   def test_set_authorize_order
     test_create_authorize_order
     response = @paypal_customer.authorize(@order_id, { headers: @headers })
