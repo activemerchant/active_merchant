@@ -18,8 +18,8 @@ module ActiveMerchant #:nodoc:
         post("v2/checkout/orders/#{ order_id }/authorize", options)
       end
 
-      def handle_approve(order_id, operator, options)
-        operator == "authorize" ? authorize(order_id, options) : capture(order_id, options)
+      def handle_approve(operator_required_id, operator, options)
+        operator == "authorize" ? authorize(operator_required_id, options) : do_capture(operator_required_id, options)
       end
 
       def capture(order_id, options)
@@ -40,6 +40,10 @@ module ActiveMerchant #:nodoc:
 
       def disburse(options)
         post("v1/payments/referenced-payouts-items", options)
+      end
+
+      def do_capture(authorization_id, options)
+        post("v2/payments/authorizations/#{ authorization_id }/capture", options)
       end
     end
   end
