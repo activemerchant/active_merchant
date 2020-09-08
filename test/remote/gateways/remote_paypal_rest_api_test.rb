@@ -197,7 +197,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   def test_create_authorize_order
     @options = { headers: @headers, body: @authorize_body }
     response = @paypal_customer.create_order(@options)
-    debugger
     assert response.success?
     assert response.parsed_response["status"].eql?("CREATED")
     assert !response.parsed_response["id"].nil?
