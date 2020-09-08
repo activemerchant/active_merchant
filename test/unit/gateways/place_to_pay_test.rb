@@ -2,11 +2,19 @@ require 'test_helper'
 
 class PlaceToPayTest < Test::Unit::TestCase
   def setup
-    @invalid_gateway_col = PlaceToPayGateway.new(login: '963bd435c7635826e6a34a4bb11a', secret_key: '1567q2a086', country: 'COL')
-    @gateway_col = PlaceToPayGateway.new(login: '8c94963bd435c7635826e6a34a4bb11a', secret_key: 'RYKUrC1567q2a086', country: 'COL')
+    @wrong_default_gateway = PlaceToPayGateway.new(login: '963bd435c7635826e6a34a4bb11a', secret_key: '1567q2a086', country: 'COL')
+    @default_gateway = PlaceToPayGateway.new(login: '8c94963bd435c7635826e6a34a4bb11a', secret_key: 'RYKUrC1567q2a086', country: 'COL')
     @gateway_international = PlaceToPayGateway.new(login: '1863f8a3ba0e8d4290137c4b18fa4286', secret_key: '97d3E70wO36CoQjS', country: 'EC')
-    @amount = 8000
-    @valid_credit_card = credit_card('36545400000008',
+    @amount = 100
+    @valid_credit_card = credit_card('4005580000000040',
+      verification_value: '237',
+      month: '03',
+      year: '22')
+    @valid_credit_card_otp = credit_card('36545400000008',
+    verification_value: '237',
+    month: '03',
+    year: '22')
+    @valid_credit_card_for_colombia = credit_card('4111111111111111',
       verification_value: '237',
       month: '03',
       year: '22')
@@ -14,83 +22,114 @@ class PlaceToPayTest < Test::Unit::TestCase
       verification_value: '237',
       month: '03',
       year: '22')
+    @expired_credit_card = credit_card('4012888888881881',
+      verification_value: '237',
+      month: '03',
+      year: '22')
     @options = {
       'reference': 'Lucho_test_008',
       'currency': 'USD'
     }
+    @options_to_capture = @options.merge({
+      'payer': {
+        "document": "8467451900",
+        "documentType": "CC",
+        "name": "Miss Delia Schamberger Sr.",
+        "surname": "Wisozk",
+        "email": "tesst@gmail.com",
+        "mobile": "3006108300"
+      },
+      'otp': '000000'
+    })
+    @purchase_options = @options.merge({
+      'payer': {
+        "document": "8467451900",
+        "documentType": "CC",
+        "name": "Miss Delia Schamberger Sr.",
+        "surname": "Wisozk",
+        "email": "tesst@gmail.com",
+        "mobile": "3006108300"
+      },
+      "reference": "Lucho_test_#{rand(1000)}",
+      'description': 'some description',
+      'group_code': 'P',
+      'buyer': {
+        "document": "8467451900",
+        "documentType": "CC",
+        "name": "Miss Delia Schamberger Sr.",
+        "surname": "Wisozk",
+        "email": "tesst@gmail.com",
+        "mobile": "3006108300"
+      },
+      'code': 1,
+      'type': 22,
+      'groupCode': 'M',
+      'installment': 12,
+      'additional': {
+        "SOME_ADDITIONAL": "http://example.com/yourcheckout"
+      },
+      'taxes': [
+        {
+          "kind": "ice",
+          "amount": 4.8,
+          "base": 40
+        },
+        {
+          "kind": "valueAddedTax",
+          "amount": 7.6,
+          "base": 40
+        }
+      ],
+      'details': [
+        {
+          "kind": "shipping",
+          "amount": 2
+        },
+        {
+          "kind": "tip",
+          "amount": 2
+        },
+        {
+          "kind": "subtotal",
+          "amount": 40
+        }
+      ]
+    })
   end
 
-  def test_successful_authorize_col
-    @gateway_col.expects(:ssl_post).returns(successful_authorize_response)
-
-    response = @gateway_col.authorize(@amount, @valid_credit_card, @options)
-    assert_success response
-
-    assert_equal 'La petición se ha procesado correctamente', response.message
-    assert response.test?
-  end
-
-  def test_failed_authorize_col
-    @invalid_gateway_col.expects(:ssl_post).returns(failled_authorize_response)
-
-    response = @invalid_gateway_col.authorize(@amount, @invalid_credit_card, @options)
-    assert_failure response
-
-    assert_equal 'Autenticación fallida 101', response.message
-    assert response.test?
-  end
-
-  def test_successful_authorize_ec
+  def test_successful_authorize
+    @default_gateway.expects(:ssl_post).returns(successful_authorize_response)
     @gateway_international.expects(:ssl_post).returns(successful_authorize_response)
-
-    response = @gateway_international.authorize(@amount, @valid_credit_card, @options)
-    assert_success response
-
-    assert_equal 'La petición se ha procesado correctamente', response.message
-    assert response.test?
+    response_default_gateway = @default_gateway.authorize(@amount, @valid_credit_card, @options)
+    response_international_gateway = @gateway_international.authorize(@amount, @valid_credit_card, @options)
+    assert_success response_default_gateway
+    assert_success response_international_gateway
+    assert_equal 'La petición se ha procesado correctamente', response_default_gateway.message
+    assert_equal 'La petición se ha procesado correctamente', response_international_gateway.message
+    assert response_default_gateway.test?
+    assert response_international_gateway.test?
   end
 
-  def test_failed_authorize_ec
+  def test_failled_authorize_wrong_credentials
+    @wrong_default_gateway.expects(:ssl_post).returns(failled_authorize_response)
     @gateway_international.expects(:ssl_post).returns(failled_authorize_response)
+    response_default_gateway = @wrong_default_gateway.authorize(@amount, @invalid_credit_card,
+      @options)
+    response_international_gateway = @gateway_international.authorize(@amount, @valid_credit_card,
+      @options)
+    assert_failure response_default_gateway
+    assert_failure response_international_gateway
 
-    response = @gateway_international.authorize(@amount, @invalid_credit_card, @options)
-    assert_failure response
-
-    assert_equal 'Autenticación fallida 101', response.message
-    assert response.test?
-  end
-
-  def test_successful_lookup_card_ec
-    @options[:returnUrl] = 'https://www.placetopay.com'
-    @options[:description] = 'Testing Payment'
-    @gateway_international.expects(:ssl_post).returns(successful_lookup_card_response)
-    response = @gateway_international.lookup_card(@amount, @valid_credit_card, @options)
-    assert_success response
-
-    assert_equal 'La petición se ha procesado correctamente', response.message
-    assert response.test?
-  end
-
-  #verify this response
-  def test_failed_lookup_card_ec
-    @options[:returnUrl] = 'https://www.placetopay.com'
-    @options[:description] = 'Testing Payment'
-    @gateway_international.expects(:ssl_post).returns(failed_lookup_card_response)
-    response = @gateway_international.lookup_card(@amount, @invalid_credit_card, @options)
-    assert_failure response
-
-    assert_equal "Response from external service is invalid", response.message
-    assert response.test?
+    assert_equal 'Autenticación fallida 101', response_default_gateway.message
+    assert_equal 'Autenticación fallida 101', response_international_gateway.message
+    assert response_default_gateway.test?
+    assert response_international_gateway.test?
   end
 
   def test_successful_my_pi_query_card_ec
-    credit_card = credit_card('4110760000000008')
-    credit_card.verification_value = '237'
-    credit_card.month = '03'
-    credit_card.year = '22'
     options = {'id': 1}
     @gateway_international.expects(:ssl_post).returns(successful_my_pi_query_card_response)
-    response = @gateway_international.my_pi_query(@amount, credit_card, options)
+    response = @gateway_international.my_pi_query(@amount, @valid_credit_card, options)
     assert_success response
     assert_equal 'La petición se ha procesado correctamente', response.message
     assert response.test?
@@ -188,135 +227,29 @@ class PlaceToPayTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    options = @options.merge({
-      'payer': {
-        "document": "8467451900",
-        "documentType": "CC",
-        "name": "Miss Delia Schamberger Sr.",
-        "surname": "Wisozk",
-        "email": "tesst@gmail.com",
-        "mobile": "3006108300"
-      },
-      'group_code': 'P',
-      'buyer': {
-        "document": "8467451900",
-        "documentType": "CC",
-        "name": "Miss Delia Schamberger Sr.",
-        "surname": "Wisozk",
-        "email": "tesst@gmail.com",
-        "mobile": "3006108300"
-      },
-      'code': 1,
-      'type': 22,
-      'groupCode': 'M',
-      'installment': 12,
-      'additional': {
-        "SOME_ADDITIONAL": "http://example.com/yourcheckout"
-      },
-      'taxes': [
-        {
-          "kind": "ice",
-          "amount": 4.8,
-          "base": 40
-        },
-        {
-          "kind": "valueAddedTax",
-          "amount": 7.6,
-          "base": 40
-        }
-      ],
-      'details': [
-        {
-          "kind": "shipping",
-          "amount": 2
-        },
-        {
-          "kind": "tip",
-          "amount": 2
-        },
-        {
-          "kind": "subtotal",
-          "amount": 40
-        }
-      ],
-      'otp': 'a8ecc59c2510a8ae27e1724ebf4647b5'
-    })
     @gateway_international.expects(:ssl_post).returns(successful_purchase_response)
-    @gateway_col.expects(:ssl_post).returns(successful_purchase_response)
-    international_response = @gateway_international.purchase(@amount, @valid_credit_card, options)
-    response_col = @gateway_col.purchase(@amount, @valid_credit_card, options)
+    @default_gateway.expects(:ssl_post).returns(successful_purchase_response)
+    international_response = @gateway_international.purchase(@amount, @valid_credit_card, @purchase_options)
+    default_gateway = @default_gateway.purchase(@amount, @valid_credit_card, @purchase_options)
     assert_success international_response
-    assert_success response_col
+    assert_success default_gateway
     assert_equal 'Aprobada', international_response.message
-    assert_equal 'Aprobada', response_col.message
+    assert_equal 'Aprobada', default_gateway.message
     assert international_response.test?
-    assert response_col.test?
+    assert default_gateway.test?
   end
 
   def test_failed_purchase
-    options = @options.merge({
-      'payer': {
-        "document": "8467451900",
-        "documentType": "CC",
-        "name": "Miss Delia Schamberger Sr.",
-        "surname": "Wisozk",
-        "email": "tesst@gmail.com",
-        "mobile": "3006108300"
-      },
-      'group_code': 'P',
-      'buyer': {
-        "document": "8467451900",
-        "documentType": "CC",
-        "name": "Miss Delia Schamberger Sr.",
-        "surname": "Wisozk",
-        "email": "tesst@gmail.com",
-        "mobile": "3006108300"
-      },
-      'code': 1,
-      'type': 22,
-      'groupCode': 'M',
-      'installment': 12,
-      'additional': {
-        "SOME_ADDITIONAL": "http://example.com/yourcheckout"
-      },
-      'taxes': [
-        {
-          "kind": "ice",
-          "amount": 4.8,
-          "base": 40
-        },
-        {
-          "kind": "valueAddedTax",
-          "amount": 7.6,
-          "base": 40
-        }
-      ],
-      'details': [
-        {
-          "kind": "shipping",
-          "amount": 2
-        },
-        {
-          "kind": "tip",
-          "amount": 2
-        },
-        {
-          "kind": "subtotal",
-          "amount": 40
-        }
-      ],
-      'otp': 'a8ecc59c2510a8ae27e1724ebf4647b5'
-    })
     @gateway_international.expects(:ssl_post).returns(failed_purchase_response)
-    @gateway_col.expects(:ssl_post).returns(failed_purchase_response_col)
-    international_response = @gateway_international.purchase(@amount, @invalid_credit_card, options)
-    response_col = @gateway_col.purchase(@amount, @invalid_credit_card, options)
+    @default_gateway.expects(:ssl_post).returns(failed_purchase_response_col)
+    international_response = @gateway_international.purchase(@amount, @invalid_credit_card, @purchase_options)
+    default_gateway = @default_gateway.purchase(@amount, @invalid_credit_card, options)
     assert_failure international_response
-    assert_failure response_col
+    assert_failure default_gateway
     assert_equal 'Por favor comunicarse con el call center', international_response.message
-    assert_equal 'Código de moneda inválido o no soportado', response_col.message
+    assert_equal 'Código de moneda inválido o no soportado', default_gateway.message
     assert international_response.test?
-    assert response_col.test?
+    assert default_gateway.test?
   end
 
   def test_succesful_get_status_transaction
@@ -324,15 +257,15 @@ class PlaceToPayTest < Test::Unit::TestCase
       'internalReference': 34812
     }
     @gateway_international.expects(:ssl_post).returns(successful_get_query_transaction)
-    @gateway_col.expects(:ssl_post).returns(successful_get_query_transaction)
+    @default_gateway.expects(:ssl_post).returns(successful_get_query_transaction)
     iternational_response = @gateway_international.get_status_transaction(options)
-    response_col = @gateway_col.get_status_transaction(options)
+    default_gateway = @default_gateway.get_status_transaction(options)
     assert_success iternational_response
-    assert_success response_col
+    assert_success default_gateway
     assert_equal 'Aprobada', iternational_response.message
-    assert_equal 'Aprobada', response_col.message
+    assert_equal 'Aprobada', default_gateway.message
     assert iternational_response.test?
-    assert response_col.test?
+    assert default_gateway.test?
   end
 
   def test_failed_get_status_transaction_wrong_reference
@@ -340,27 +273,27 @@ class PlaceToPayTest < Test::Unit::TestCase
       'internalReference': 34812
     }
     @gateway_international.expects(:ssl_post).returns(failed_get_query_transaction_wrong_reference)
-    @gateway_col.expects(:ssl_post).returns(failed_get_query_transaction_wrong_reference)
+    @default_gateway.expects(:ssl_post).returns(failed_get_query_transaction_wrong_reference)
     iternational_response = @gateway_international.get_status_transaction(options)
-    response_col = @gateway_col.get_status_transaction(options)
+    default_gateway = @default_gateway.get_status_transaction(options)
     assert_failure iternational_response
-    assert_failure response_col
+    assert_failure default_gateway
     assert_equal 'No hay una transacción con el identificador provisto', iternational_response.message
-    assert_equal 'No hay una transacción con el identificador provisto', response_col.message
+    assert_equal 'No hay una transacción con el identificador provisto', default_gateway.message
     assert iternational_response.test?
-    assert response_col.test?
+    assert default_gateway.test?
   end
 
-  def test_succesful_reverse_transaction
+  def test_succesful_refund
     options = {
       'internalReference': 10446,
       'authorization': "000000",
       "action": "reverse"
     }
-    @gateway_international.expects(:ssl_post).returns(successful_reverse_transaction)
-    @gateway_col.expects(:ssl_post).returns(successful_reverse_transaction)
-    iternational_response = @gateway_international.reverse_transaction(options)
-    response_col = @gateway_col.reverse_transaction(options)
+    @gateway_international.expects(:ssl_post).returns(successful_refund)
+    @default_gateway.expects(:ssl_post).returns(successful_refund)
+    iternational_response = @gateway_international.refund(options)
+    response_col = @default_gateway.refund(options)
     assert_success iternational_response
     assert_success response_col
     assert_equal 'Aprobada', iternational_response.message
@@ -369,16 +302,16 @@ class PlaceToPayTest < Test::Unit::TestCase
     assert response_col.test?
   end
 
-  def test_failed_reverse_transaction
+  def test_failed_refund
     options = {
       'internalReference': 10446,
       'authorization': "000000",
       "action": "reverse"
     }
-    @gateway_international.expects(:ssl_post).returns(failed_reverse_transaction)
-    @gateway_col.expects(:ssl_post).returns(failed_reverse_transaction)
-    iternational_response = @gateway_international.reverse_transaction(options)
-    response_col = @gateway_col.reverse_transaction(options)
+    @gateway_international.expects(:ssl_post).returns(failed_refund)
+    @default_gateway.expects(:ssl_post).returns(failed_refund)
+    iternational_response = @gateway_international.refund(options)
+    response_col = @default_gateway.refund(options)
     assert_failure iternational_response
     assert_failure response_col
     assert_equal 'La referencia interna provista es inválida', iternational_response.message
@@ -387,7 +320,7 @@ class PlaceToPayTest < Test::Unit::TestCase
     assert response_col.test?
   end
 
-  def test_successful_tokenize
+  def test_successful_capture
     options = @options.merge({
        'payer': {
          "document": "8467451900",
@@ -399,10 +332,10 @@ class PlaceToPayTest < Test::Unit::TestCase
        },
        'otp': 'a8ecc59c2510a8ae27e1724ebf4647b5'
      })
-     @gateway_international.expects(:ssl_post).returns(successful_tokenize)
-    @gateway_col.expects(:ssl_post).returns(successful_tokenize)
-     iternational_response = @gateway_international.tokenize(@valid_credit_card, options)
-     response_col = @gateway_col.tokenize(@valid_credit_card, options)
+     @gateway_international.expects(:ssl_post).returns(successful_capture)
+     @default_gateway.expects(:ssl_post).returns(successful_capture)
+     iternational_response = @gateway_international.capture(@valid_credit_card, options)
+     response_col = @default_gateway.capture(@valid_credit_card, options)
      assert_success iternational_response
      assert_success response_col
      assert_equal 'La petición se ha procesado correctamente', iternational_response.message
@@ -418,9 +351,9 @@ class PlaceToPayTest < Test::Unit::TestCase
      }
      money = 3243
      @gateway_international.expects(:ssl_post).returns(failed_search_transaction)
-     @gateway_col.expects(:ssl_post).returns(failed_search_transaction)
+     @default_gateway.expects(:ssl_post).returns(failed_search_transaction)
      iternational_response = @gateway_international.search_transaction(money, options)
-     response_col = @gateway_col.search_transaction(money, options)
+     response_col = @default_gateway.search_transaction(money, options)
      assert_failure iternational_response
      assert_failure response_col
      assert_equal 'No se ha encontrado información con los datos proporcionados', iternational_response.message
@@ -451,32 +384,6 @@ class PlaceToPayTest < Test::Unit::TestCase
           "reason": 401,
           "message": "Autenticación fallida 101",
           "date": "2020-08-26T20:43:43-05:00"
-        }
-    }
-    RESPONSE
-  end
-
-  def successful_lookup_card_response
-    <<-RESPONSE
-    {
-        "status": {
-            "status": "OK",
-            "reason": "00",
-            "message": "La petición se ha procesado correctamente",
-            "date": "2020-08-16T10:52:12-05:00"
-        }
-    }
-    RESPONSE
-  end
-
-  def failed_lookup_card_response
-    <<-RESPONSE
-    {
-        "status": {
-          "status": "FAILED",
-          "reason": 0,
-          "message": "Response from external service is invalid",
-          "date": "2020-08-26T20:54:03-05:00"
         }
     }
     RESPONSE
@@ -652,7 +559,7 @@ class PlaceToPayTest < Test::Unit::TestCase
     RESPONSE
   end
 
-  def successful_reverse_transaction
+  def successful_refund
     <<-RESPONSE
     {
       "status": {
@@ -665,7 +572,7 @@ class PlaceToPayTest < Test::Unit::TestCase
     RESPONSE
   end
 
-  def failed_reverse_transaction
+  def failed_refund
     <<-RESPONSE
     {
       "status": {
@@ -678,7 +585,7 @@ class PlaceToPayTest < Test::Unit::TestCase
     RESPONSE
   end
 
-  def successful_tokenize
+  def successful_capture
     <<-RESPONSE
     {
       "status": {
