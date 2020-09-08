@@ -18,6 +18,11 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def patch(url, options)
+        url = "#{test_redirect_url}/#{url}"
+        HTTParty.patch(url, { body: options[:body].to_json, headers: options[:headers] })
+      end
+
       private
       def prepare_request_to_get_access_token(url, options)
         @options = options

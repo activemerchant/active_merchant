@@ -36,6 +36,7 @@ module ActiveMerchant #:nodoc:
 
 
       delegate :post, to: :api_adapter
+      delegate :patch, to: :api_adapter
     end
   end
 end
