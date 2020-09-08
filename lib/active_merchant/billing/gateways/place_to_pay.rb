@@ -3,7 +3,7 @@ module ActiveMerchant #:nodoc:
     class PlaceToPayGateway < Gateway
       attr_accessor :login, :secret_key, :current_country
       self.test_url = 'https://test.placetopay.com/rest/gateway/'
-      self.live_url = 'https://test.placetopay.com/rest/gateway/'
+      self.live_url = 'https://secure.placetopay.com/redirection/'
 
       self.supported_countries = ['COL', 'EC']
       self.default_currency = 'USD'
@@ -12,19 +12,18 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://www.placetopay.com/'
       self.display_name = 'PlaceToPay' 
 
-      ISO_FORMAT_DATE = '%Y-%m-%dT%H:%M:%S%:z'
       URL_FOR_COUNTRIES = {
         'EC': {
           'test': 'https://test.placetopay.ec/rest/gateway/',
-          'prod': 'https://test.placetopay.ec/rest/gateway/',
+          'prod': 'https://secure.placetopay.ec/redirection/',
         },
         'COL': {
           'test': 'https://test.placetopay.com/rest/gateway/',
-          'prod': 'https://test.placetopay.com/rest/gateway/',
+          'prod': 'https://secure.placetopay.com/redirection/',
         }
       }
       COMMON_MESSAGES = {
-        'missed': 'No se ha encontrado un mensaje de respuesta'
+        'missed': 'Missing error message'
       } 
       RESPONSES_STATUS = {
         'ok': 'OK',
@@ -35,12 +34,22 @@ module ActiveMerchant #:nodoc:
         'failed': 'FAILED',
         'rejected': 'REJECTED',
       }
+
       LIST_OF_SUPPORTED_COUNTRIES = {
-        'colombia': 'COL',
-        'ecuador': 'EC',
+        'colombia': {
+          'key': 'COL',
+          'locale': 'es_CO'
+        },
+        'ecuador': {
+          'key': 'EC',
+          'locale': 'es_EC'
+        },
+        'anotherCountry': {
+          'locale': 'en_US'
+        }
       }
       STANDARD_ERROR_CODE_MAPPING = {}
-      BASE_COUNTRY = LIST_OF_SUPPORTED_COUNTRIES[:colombia]
+      BASE_COUNTRY = LIST_OF_SUPPORTED_COUNTRIES[:colombia][:key]
       STANDARD_ERROR_FOR_AUTHORIZATION = {
         '100' => 'UsernameToken not provided (authorization header 100 malformed)',
         '101' => 'Site identifier does not exist (incorrect login or not found in the 101 environment)',
@@ -52,8 +61,10 @@ module ActiveMerchant #:nodoc:
         '107' => 'Bad definition of UsernameToken (Does not comply with header 107 WSSE)',
         '200' => 'Skip SOAP Authentication Header',
         '10001' => 'Contact Support',
-        'BR' => 'Contact Support', # Verify this at the meeting
+        'BR' => 'Contact Support',
       }
+
+      ISO_FORMAT_DATE = '%Y-%m-%dT%H:%M:%S%:z'
 
       def initialize(options={})
         requires!(options, :login, :secret_key, :country)
@@ -64,6 +75,7 @@ module ActiveMerchant #:nodoc:
       def authorize(money, payment, options={})
         post = {}
         add_auth(post, options)
+        add_additional_data(post, options)
         add_instrument(post, payment)
         add_payment(post, money, options)
         commit('authonly', post)
@@ -72,6 +84,7 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment, options={})
         post = {}
         add_auth(post, options)
+        add_additional_data(post, options)
         add_payment(post, money, options)
         add_instrument(post, payment)
         add_credit_information(post, options)
@@ -80,20 +93,12 @@ module ActiveMerchant #:nodoc:
         add_titular_data(post, options, 'buyer')
         add_additional(post, options)
         commit('sale', post)
-      end
-
-      def lookup_card(money, payment, options={})
-        post = {}
-        add_auth(post, options)
-        add_instrument(post, payment)
-        add_payment(post, money, options)
-        add_return_url(post, options)
-        commit('lookup', post)
-      end
+    end
 
       def my_pi_query(money, payment, options={})
         post = {}
         add_auth(post, options)
+        add_additional_data(post, options)
         add_instrument(post, payment)
         add_payment(post, money, options)
         add_mpi_id(post, options)
@@ -103,6 +108,7 @@ module ActiveMerchant #:nodoc:
       def calculate_interests(money, payment, options={})
         post = {}
         add_auth(post, options)
+        add_additional_data(post, options)
         add_instrument(post, payment)
         add_payment(post, money, options)
         add_credit_information(post, options)
@@ -112,6 +118,7 @@ module ActiveMerchant #:nodoc:
       def generate_otp(money, payment, options={})
         post = {}
         add_auth(post, options)
+        add_additional_data(post, options)
         add_instrument(post, payment)
         add_payment(post, money, options)
         commit('generate_otp', post)
@@ -120,6 +127,7 @@ module ActiveMerchant #:nodoc:
       def validate_otp(money, payment, options={})
         post = {}
         add_auth(post, options)
+        add_additional_data(post, options)
         add_instrument(post, payment)
         add_payment(post, money, options)
         post[:instrument][:otp] = options[:otp]
@@ -129,64 +137,54 @@ module ActiveMerchant #:nodoc:
       def get_status_transaction(options={})
         post = {}
         add_auth(post, options)
+        add_additional_data(post, options)
         add_internal_reference(post, options)
         commit('query_transaction', post)
       end
 
-      def reverse_transaction(options={})
+      def refund(options={})
         post = {}
         add_auth(post, options)
-        add_reverse_action(post, options)
-        commit('reverse', post)
+        add_additional_data(post, options)
+        add_refund_action(post, options)
+        commit('refund', post)
       end
 
-      def tokenize(payment, options={}) #capture
+      def capture(payment, options={})
         post = {}
         add_auth(post, options)
+        add_additional_data(post, options)
         add_titular_data(post, options)
         add_instrument(post, payment)
         post[:instrument][:otp] = options[:otp]
-        commit('tokenize', post)
+        commit('capture', post)
       end
 
       def search_transaction(money, options)
         post = {}
         add_auth(post, options)
+        add_additional_data(post, options)
         post[:reference] = options[:reference]
         post[:amount] = {
           'currency': options[:amount][:currency],
           'total': amount(money)
         }
-        puts post
         commit('search', post)
       end
 
-      def capture(money, authorization, options={})
-        commit('capture', post)
-      end
-
-      def refund(money, authorization, options={}) #reverse
-        commit('refund', post)
-      end
-
-      def void(authorization, options={})
-        commit('void', post)
-      end
-
-      def verify(credit_card, options={})
-        MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
-        end
-      end
-
       def supports_scrubbing?
-        true
+        false
       end
 
-      def scrub(transcript)
-        transcript
-      end
+      # Temporary comment until resolve bug with external client
+      # def lookup_card(money, payment, options={})
+      #   post = {}
+      #   add_auth(post, options)
+      #   add_instrument(post, payment)
+      #   add_payment(post, money, options)
+      #   add_return_url(post, options)
+      #   commit('lookup', post)
+      # end
 
       private
 
@@ -238,16 +236,10 @@ module ActiveMerchant #:nodoc:
         convert_to_Base64(key_to_digest)
       end
 
-      def add_reverse_action(post, options)
+      def add_refund_action(post, options)
         post[:internalReference] = options[:internalReference]
         post[:authorization] = options[:authorization]
         post[:action] = options[:action]
-      end
-
-      def add_customer_data(post, options)
-      end
-
-      def add_address(post, creditcard, options)
       end
 
       def add_instrument(post, payment)
@@ -320,9 +312,6 @@ module ActiveMerchant #:nodoc:
           success,
           message_from(response),
           response,
-          # authorization: authorization_from(response),
-          # avs_result: AVSResult.new(code: response['some_avs_response_key']),
-          # cvv_result: CVVResult.new(response['some_cvv_response_key']),
           test: test?,
           error_code: error_code_from(action, response, options)
         )
@@ -331,9 +320,9 @@ module ActiveMerchant #:nodoc:
       def success_from(action, response, options)
         case action
         when :authonly.to_s, :lookup.to_s, :mpiQuery.to_s, :interests.to_s, :generate_otp.to_s,
-          :validate_otp.to_s, :tokenize.to_s, :search.to_s
+          :validate_otp.to_s, :capture.to_s, :search.to_s
           return response['status'] && response['status']['status'] === RESPONSES_STATUS[:ok]
-        when :sale.to_s, :query_transaction.to_s, :reverse.to_s
+        when :sale.to_s, :query_transaction.to_s, :refund.to_s
           return response['status'] && response['status']['status'] === RESPONSES_STATUS[:approved]
         else
           return response['status']['status'];
@@ -343,9 +332,6 @@ module ActiveMerchant #:nodoc:
       def message_from(response)
         response['status'] && response['status']['message'] ? response['status']['message'] :
           COMMON_MESSAGES[:missed]
-      end
-
-      def authorization_from(response)
       end
 
       def post_data(action, parameters = {})
@@ -368,8 +354,8 @@ module ActiveMerchant #:nodoc:
           'validate_otp': "#{siteUrl}otp/validate",
           'sale': "#{siteUrl}process",
           'query_transaction': "#{siteUrl}query",
-          'reverse': "#{siteUrl}transaction",
-          'tokenize': "#{siteUrl}tokenize",
+          'refund': "#{siteUrl}transaction",
+          'capture': "#{siteUrl}tokenize",
           'search': "#{siteUrl}search"
         }
         routes[action.to_sym]
@@ -378,6 +364,10 @@ module ActiveMerchant #:nodoc:
       def request_headers(options)
         headers = {'Content-Type' => 'application/json'}
         headers
+      end
+
+      def add_additional_data(post, options)
+        post[:locale] = options[:locale] || LIST_OF_SUPPORTED_COUNTRIES[:colombia][:locale]
       end
     end
   end
