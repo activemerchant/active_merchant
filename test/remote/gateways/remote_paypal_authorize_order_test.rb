@@ -14,86 +14,24 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @headers = { "Authorization": "Bearer #{ bearer_token[:access_token] }", "Content-Type": "application/json" }
 
     @body = {
-            "intent": "AUTHORIZE",
-            "purchase_units": [
-                {
-                    "reference_id": "camera_shop_seller_#{ DateTime.now }",
-                    "description": "Camera Shop",
-                    "amount": {
-                        "currency_code": "USD",
-                        "value": "25.00",
-                        "breakdown": {
-                            "item_total": {
-                                "currency_code": "USD",
-                                "value": "25.00"
-                            },
-                            "shipping": {
-                                "currency_code": "USD",
-                                "value": "0"
-                            },
-                            "handling": {
-                                "currency_code": "USD",
-                                "value": "0"
-                            },
-                            "tax_total": {
-                                "currency_code": "USD",
-                                "value": "0"
-                            },
-                            "gift_wrap": {
-                                "currency_code": "USD",
-                                "value": "0"
-                            },
-                            "shipping_discount": {
-                                "currency_code": "USD",
-                                "value": "0"
-                            }
-                        }
-                    },
-                    "payee": {
-                        "email_address":"sb-jnxjj3033194@business.example.com"
-                    },
-                    "items": [
-                        {
-                            "name": "Levis 501 Selvedge STF",
-                            "sku": "5158936",
-                            "unit_amount": {
-                                "currency_code": "USD",
-                                "value": "25.00"
-                            },
-                            "tax": {
-                                "currency_code": "USD",
-                                "value": "0.00"
-                            },
-                            "quantity": "1",
-                            "category": "PHYSICAL_GOODS"
-                        }
-                    ],
-                    "shipping": {
-                        "address": {
-                            "address_line_1": "500 Hillside Street",
-                            "address_line_2": "#1000",
-                            "admin_area_1": "CA",
-                            "admin_area_2": "San Jose",
-                            "postal_code": "95131",
-                            "country_code": "US"
-                        }
-                    },
-                    "shipping_method": "United Postal Service",
-                    "payment_group_id": 1,
-                    "custom_id": "custom_value_#{ DateTime.now }",
-                    "invoice_id": "invoice_number_#{ DateTime.now }",
-                    "soft_descriptor": "Payment Camera Shop"
+        "intent": "AUTHORIZE",
+        "purchase_units": [
+            {
+                "reference_id": "camera_shop_seller_{{$timestamp}}",
+                "amount": {
+                    "currency_code": "USD",
+                    "value": "25.00"
+                },
+                "payee": {
+                    "email_address": "sb-feqsa3029697@personal.example.com"
                 }
-            ],
-            "application_context": {
-                "return_url": "https://google.com",
-                "cancel_url": "https://google.com"
             }
-        }
+        ]
+    }
 
     @options = { headers: @headers, body: @body }
     response = @paypal_customer.create_order(@options)
-    @order_id = response["id"]
+    @order_id = "5KP79474T6549011V"
   end
 
   def test_set_authorize_order
