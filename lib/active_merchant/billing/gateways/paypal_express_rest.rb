@@ -26,7 +26,7 @@ module ActiveMerchant #:nodoc:
      end
 
       def initialize
-        self.test_redirect_url = 'https://api.sandbox.paypal.com/v2'
+        self.test_redirect_url = 'https://api.sandbox.paypal.com'
       end
 
       self.supported_countries = ['US']

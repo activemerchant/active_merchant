@@ -3,17 +3,16 @@ module ActiveMerchant #:nodoc:
     class PaypalCustomerGateway < PaypalExpressRestGateway
 
       def register_partner(options)
-        post('customer/partner-referrals', options)
+        post('v2/customer/partner-referrals', options)
       end
 
       def create_order(options)
-        post('checkout/orders', options)
+        post('v2/checkout/orders', options)
       end
 
-      def get_token(options)
-        post('/ v1/oauth2/token', options)
+      def require!(options)
+        post('v1/oauth2/token', options)
       end
-
     end
   end
 end
