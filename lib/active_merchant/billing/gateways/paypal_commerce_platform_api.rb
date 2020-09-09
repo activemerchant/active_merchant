@@ -3,6 +3,7 @@ require 'net/http'
 require 'openssl'
 require 'httparty'
 require 'base64'
+require 'json'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -15,7 +16,7 @@ module ActiveMerchant #:nodoc:
           prepare_request_to_get_access_token(url, options)
         else
           ssl_post_request(url, options)
-          # HTTParty.post(url, { body: options[:body].to_json, headers: options[:headers] })
+          #HTTParty.post(url, { body: options[:body].to_json, headers: options[:headers] })
         end
       end
 
@@ -54,11 +55,10 @@ module ActiveMerchant #:nodoc:
 
         if @url.include?("token")
           request["content-type"]   = 'application/x-www-form-urlencoded'
-          request.body = "grant_type=client_credentials"
+          request["body"] = "grant_type=client_credentials"
         else
           request["content-type"]   = 'application/json'
-          request.body           = @options
-          request.headers = @options[:headers]
+          request.body = options[:body].to_json
         end
         return_response(http, request)
       end
