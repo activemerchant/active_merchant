@@ -16,7 +16,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
         "intent": "AUTHORIZE",
         "purchase_units": [
             {
-                "reference_id": "camera_shop_seller_{{$timestamp}}",
+                "reference_id": "camera_shop_seller_#{DateTime.now}",
                 "amount": {
                     "currency_code": "USD",
                     "value": "25.00"
