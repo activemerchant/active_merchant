@@ -14,7 +14,8 @@ module ActiveMerchant #:nodoc:
         if options[:authorization].present?
           prepare_request_to_get_access_token(url, options)
         else
-          HTTParty.post(url, { body: options[:body].to_json, headers: options[:headers] })
+          ssl_post_request(url, options)
+          # HTTParty.post(url, { body: options[:body].to_json, headers: options[:headers] })
         end
       end
 
@@ -26,6 +27,19 @@ module ActiveMerchant #:nodoc:
       private
       def prepare_request_to_get_access_token(url, options)
         @options = options
+        ssl_post_request(url, options)
+      end
+
+      def encoded_credentials
+        Base64.encode64("#{ @options[:authorization][:username] }:#{ @options[:authorization][:password] }").gsub("\n", "")
+      end
+
+      def return_response(http, request)
+        response = http.request(request)
+        eval(response.body)
+      end
+
+      def ssl_post_request(url, options={})
         url = URI(url)
         http = Net::HTTP.new(url.host, url.port)
         http.use_ssl = true
@@ -44,15 +58,6 @@ module ActiveMerchant #:nodoc:
           request["body"]           = @options
         end
         return_response(http, request)
-      end
-
-      def encoded_credentials
-        Base64.encode64("#{ @options[:authorization][:username] }:#{ @options[:authorization][:password] }").gsub("\n", "")
-      end
-
-      def return_response(http, request)
-        response = http.request(request)
-        eval(response.body)
       end
     end
   end
