@@ -77,4 +77,30 @@ class PaypalExpressRestTest < Test::Unit::TestCase
       @paypal_customer.get_token(options)
     end
   end
+
+  def test_missing_intent_argument_for_order_creation
+    @body.delete(
+        :intent
+    )
+    @options = { headers: @headers, body: @body }
+
+    assert_raise(ArgumentError) do
+      puts "*** ArgumentError Exception: Missing required parameter: intent"
+      @paypal_customer.create_order(@options)
+    end
+  end
+
+  def test_missing_purchase_units_argument_for_order_creation
+    @body.delete(
+        :purchase_units
+    )
+    @options = { headers: @headers, body: @body }
+
+    assert_raise(ArgumentError) do
+      puts "*** ArgumentError Exception: Missing required parameter: purchase_units"
+      @paypal_customer.create_order(@options)
+    end
+  end
+
+
 end
