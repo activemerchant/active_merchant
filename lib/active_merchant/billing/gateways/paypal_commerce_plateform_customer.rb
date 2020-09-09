@@ -23,7 +23,7 @@ module ActiveMerchant #:nodoc:
       def handle_approve(operator_required_id, operator, options)
         requires!({ operator_required_id: operator_required_id, operator: operator }, :operator_required_id, :operator)
 
-        operator == "authorize" ? authorize(operator_required_id, options) : do_capture(operator_required_id, options)
+        operator == "authorize" ? authorize(operator_required_id, options) : capture(operator_required_id, options)
       end
 
       def capture(order_id, options)
