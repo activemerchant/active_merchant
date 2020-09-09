@@ -171,7 +171,6 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
       assert_match %{<DPANInd>Y</DPANInd>}, data
       assert_match %{DigitalTokenCryptogram}, data
-      assert_match %{XID}, data
     end.respond_with(successful_purchase_response)
   end
 

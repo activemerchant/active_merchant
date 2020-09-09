@@ -515,13 +515,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_xid(xml, creditcard, three_d_secure)
-        xid = if three_d_secure && creditcard.brand == 'visa'
-                three_d_secure[:xid]
-              elsif creditcard.is_a?(NetworkTokenizationCreditCard)
-                creditcard.transaction_id
-              end
+        return unless three_d_secure && creditcard.brand == 'visa'
 
-        xml.tag!(:XID, xid) if xid
+        xml.tag!(:XID, three_d_secure[:xid]) if three_d_secure[:xid]
       end
 
       def add_cavv(xml, creditcard, three_d_secure)
