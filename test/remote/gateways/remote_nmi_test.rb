@@ -17,6 +17,7 @@ class RemoteNmiTest < Test::Unit::TestCase
       eci: '5',
       transaction_id: '123456789'
     )
+    @collect_js_payment_token = collect_js_payment_token
     @options = {
       order_id: generate_unique_id,
       billing_address: address,
@@ -91,6 +92,19 @@ class RemoteNmiTest < Test::Unit::TestCase
     assert_equal 'DECLINE', response.message
   end
 
+  def test_successful_purchase_with_collect_js
+    assert response = @gateway.purchase(@amount, @collect_js_payment_token, @options)
+    assert_success response
+    assert response.test?
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_failed_purchase_with_collect_js
+    assert response = @gateway.purchase(@amount, collect_js_payment_token(SecureRandom.hex), @options)
+    assert_failure response
+    assert response.test?
+  end
+
   def test_successful_purchase_with_additional_options
     options = @options.merge({
       customer_id: '234',
@@ -113,11 +127,24 @@ class RemoteNmiTest < Test::Unit::TestCase
     assert response.authorization
   end
 
+  def test_successful_authorization_with_collect_js
+    assert response = @gateway.authorize(@amount, @collect_js_payment_token, @options)
+    assert_success response
+    assert response.test?
+    assert_equal 'Succeeded', response.message
+  end
+
   def test_failed_authorization
     assert response = @gateway.authorize(99, @credit_card, @options)
     assert_failure response
     assert response.test?
     assert_equal 'DECLINE', response.message
+  end
+
+  def test_failed_authorization_with_collect_js
+    assert response = @gateway.authorize(@amount, collect_js_payment_token(SecureRandom.hex), @options)
+    assert_failure response
+    assert response.test?
   end
 
   def test_authorization_and_capture
