@@ -46,6 +46,7 @@ module ActiveMerchant #:nodoc:
           add_reference_num(xml, options)
           xml.payment do
             add_amount(xml, money, options)
+            add_soft_descriptor(xml, options)
           end
         end
       end
@@ -175,6 +176,8 @@ module ActiveMerchant #:nodoc:
           response,
           test: test?,
           authorization: authorization_from(response),
+          avs_result: AVSResult.new(code: response[:avs_response_code]),
+          cvv_result: CVVResult.new(response[:cvv_response_code]),
           error_code: success ? nil : error_code_from(response)
         )
       end
@@ -282,6 +285,7 @@ module ActiveMerchant #:nodoc:
         xml.payment do
           add_amount(xml, money, options)
           add_installments(xml, options)
+          add_soft_descriptor(xml, options)
         end
         add_billing_address(xml, payment, options)
       end
@@ -332,6 +336,12 @@ module ActiveMerchant #:nodoc:
             xml.numberOfInstallments options[:installments]
             xml.chargeInterest 'N'
           end
+        end
+      end
+
+      def add_soft_descriptor(xml, options)
+        if options.has_key?(:soft_descriptor)
+          xml.softDescriptor(options[:soft_descriptor])
         end
       end
 
