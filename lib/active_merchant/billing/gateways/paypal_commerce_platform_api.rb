@@ -40,7 +40,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def ssl_post_request(url, options={})
-        url = URI(url)
+        @url = url
+        url = URI(@url)
         http = Net::HTTP.new(url.host, url.port)
         http.use_ssl = true
         http.verify_mode = OpenSSL::SSL::VERIFY_PEER
@@ -48,14 +49,16 @@ module ActiveMerchant #:nodoc:
         request = Net::HTTP::Post.new(url)
         request["accept"]           = 'application/json'
         request["accept-language"]  = 'en_US'
+        ## Authorization header included encoded access token which is being used to hand shake
         request["authorization"]    = "basic #{ encoded_credentials }"
 
-        if url.include?("token")
+        if @url.include?("token")
           request["content-type"]   = 'application/x-www-form-urlencoded'
           request.body = "grant_type=client_credentials"
         else
           request["content-type"]   = 'application/json'
-          request["body"]           = @options
+          request.body           = @options
+          request.headers = @options[:headers]
         end
         return_response(http, request)
       end
