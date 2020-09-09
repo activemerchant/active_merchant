@@ -576,7 +576,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_mdd_fields(xml, options)
-        return unless options.keys.any? { |key| key.to_s.start_with?('mdd_field') }
+        return unless options.keys.any? { |key| key.to_s.start_with?('mdd_field') && options[key] }
 
         xml.tag! 'merchantDefinedData' do
           (1..100).each do |each|
