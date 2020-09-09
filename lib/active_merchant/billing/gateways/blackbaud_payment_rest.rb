@@ -61,6 +61,7 @@ module ActiveMerchant #:nodoc:
         post[:email] = options[:email]
         post[:phone] = options[:phone]
         post[:comment] = options[:comment]
+        post[:donor_ip] = options[:ip]
 
         add_payment(post, payment, options)
         add_billing_contact(post, options)

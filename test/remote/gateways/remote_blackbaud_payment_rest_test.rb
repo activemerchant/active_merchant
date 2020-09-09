@@ -10,7 +10,8 @@ class RemoteBlackbaudPaymentRestTest < Test::Unit::TestCase
     @options = {
         first_name: 'Longbob',
         last_name: 'Longsen',
-        address: address
+        address: address,
+        ip: '192.168.0.1'
     }
   end
 
