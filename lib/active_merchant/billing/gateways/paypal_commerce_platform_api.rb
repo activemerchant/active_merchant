@@ -32,11 +32,17 @@ module ActiveMerchant #:nodoc:
         http.verify_mode = OpenSSL::SSL::VERIFY_PEER
 
         request = Net::HTTP::Post.new(url)
-        request["accept"] = 'application/json'
-        request["accept-language"] = 'en_US'
-        request["content-type"] = 'application/x-www-form-urlencoded'
-        request["authorization"] = "basic #{ encoded_credentials }"
-        request.body = "grant_type=client_credentials"
+        request["accept"]           = 'application/json'
+        request["accept-language"]  = 'en_US'
+        request["authorization"]    = "basic #{ encoded_credentials }"
+
+        if url.include?("token")
+          request["content-type"]   = 'application/x-www-form-urlencoded'
+          request.body = "grant_type=client_credentials"
+        else
+          request["content-type"]   = 'application/json'
+          request["body"]           = @options
+        end
         return_response(http, request)
       end
 
