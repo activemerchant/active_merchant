@@ -6,7 +6,7 @@ require 'base64'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-    class PaypalRestApi < SimpleDelegator
+    class PaypalCommercePlatformApi < SimpleDelegator
       include ActiveMerchant::PostsData
 
       def post(url, options)

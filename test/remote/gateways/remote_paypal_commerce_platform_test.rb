@@ -4,7 +4,7 @@ require 'byebug'
 class PaypalExpressRestTest < Test::Unit::TestCase
   def setup
     Base.mode = :test
-    @paypal_customer = ActiveMerchant::Billing::PaypalCustomerGateway.new
+    @paypal_customer = ActiveMerchant::Billing::PaypalCommercePlateformCustomerGateway.new
     params = { username: "ASs8Osqge6KT3OdLtkNhD20VP8lsrqRUlRjLo-e5s75SHz-2ffMMzCos_odQGjGYpPcGlxJVQ5fXMz9q",
                password: "EKj_bMZn0CkOhOvFwJMX2WwhtCq2A0OtlOd5T-zUhKIf9WQxvgPasNX0Kr1U4TjFj8ZN6XCMF5NM30Z_" }
 

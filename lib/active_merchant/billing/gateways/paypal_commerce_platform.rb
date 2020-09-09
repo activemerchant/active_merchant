@@ -1,10 +1,10 @@
 
 require 'active_merchant/billing/gateways/paypal/paypal_common_api'
-require 'active_merchant/billing/gateways/paypal_rest_api'
+require 'active_merchant/billing/gateways/paypal_commerce_platform_api'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-    class PaypalExpressRestGateway < Gateway
+    class PaypalCommercePlatformGateway < Gateway
       attr_accessor :test_redirect_url
       NON_STANDARD_LOCALE_CODES = {
           'DK' => 'da_DK',
@@ -22,7 +22,7 @@ module ActiveMerchant #:nodoc:
           'TW' => 'zh_TW'
       }
      def api_adapter
-       @api_adapter ||= ActiveMerchant::Billing::PaypalRestApi.new(self)
+       @api_adapter ||= ActiveMerchant::Billing::PaypalCommercePlatformApi.new(self)
      end
 
       def initialize
