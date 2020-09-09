@@ -58,4 +58,23 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     assert !response.parsed_response['links'].blank?
   end
 
+  def test_missing_password_argument_to_get_access_token
+    params = { username: "ASs8Osqge6KT3OdLtkNhD20VP8lsrqRUlRjLo-e5s75SHz-2ffMMzCos_odQGjGYpPcGlxJVQ5fXMz9q" }
+    options = { "Content-Type": "application/json", authorization: params }
+
+    assert_raise(ArgumentError) do
+      puts "*** ArgumentError Exception: Missing required parameter: password"
+      @paypal_customer.get_token(options)
+    end
+  end
+
+  def test_missing_username_argument_to_get_access_token
+    params = { password: "ASs8Osqge6KT3OdLtkNhD20VP8lsrqRUlRjLo-e5s75SHz-2ffMMzCos_odQGjGYpPcGlxJVQ5fXMz9q" }
+    options = { "Content-Type": "application/json", authorization: params }
+
+    assert_raise(ArgumentError) do
+      puts "*** ArgumentError Exception: Missing required parameter: username"
+      @paypal_customer.get_token(options)
+    end
+  end
 end
