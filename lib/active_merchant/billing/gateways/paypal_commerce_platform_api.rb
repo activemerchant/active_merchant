@@ -15,8 +15,7 @@ module ActiveMerchant #:nodoc:
         if options[:authorization].present?
           prepare_request_to_get_access_token(url, options)
         else
-          ssl_post_request(url, options)
-          #HTTParty.post(url, { body: options[:body].to_json, headers: options[:headers] })
+          eval(ssl_request(:post, url, options[:body].to_json, options[:headers]))
         end
       end
 
@@ -28,7 +27,9 @@ module ActiveMerchant #:nodoc:
       private
       def prepare_request_to_get_access_token(url, options)
         @options = options
+
         ssl_post_request(url, options)
+        #ssl_request(:post, url, options[:body].to_json, options[:headers])
       end
 
       def encoded_credentials
@@ -46,20 +47,22 @@ module ActiveMerchant #:nodoc:
         http = Net::HTTP.new(url.host, url.port)
         http.use_ssl = true
         http.verify_mode = OpenSSL::SSL::VERIFY_PEER
-
+        params = {
+            :grant_type   => "client_credentials"
+        }
+        url.query = URI.encode_www_form(params)
         request = Net::HTTP::Post.new(url)
         request["accept"]           = 'application/json'
         request["accept-language"]  = 'en_US'
-        ## Authorization header included encoded access token which is being used to hand shake
-        request["authorization"]    = "basic #{ encoded_credentials }"
 
         if @url.include?("token")
+          request["authorization"]    = "basic #{ encoded_credentials }"
           request["content-type"]   = 'application/x-www-form-urlencoded'
-          request["body"] = "grant_type=client_credentials"
         else
           request["content-type"]   = 'application/json'
           request.body = options[:body].to_json
         end
+
         return_response(http, request)
       end
     end

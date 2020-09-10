@@ -4,7 +4,6 @@ module ActiveMerchant #:nodoc:
 
       def create_order(options)
         requires!(options[:body], :intent, :purchase_units)
-        
         post('v2/checkout/orders', options)
       end
 
