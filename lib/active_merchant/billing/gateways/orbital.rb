@@ -409,7 +409,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! :PC3LineItem do
               xml.tag! :PC3DtlIndex,  byte_limit(index + 1, 2)
               line_item.each do |key, value|
-                if key == :line_tot
+                if [:line_tot, 'line_tot'].include? key
                   formatted_key = :PC3Dtllinetot
                 else
                   formatted_key = "PC3Dtl#{key.to_s.camelize}".to_sym
