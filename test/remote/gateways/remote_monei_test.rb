@@ -24,10 +24,37 @@ class RemoteMoneiTest < Test::Unit::TestCase
     assert_equal 'Request successfully processed in \'Merchant in Connector Test Mode\'', response.message
   end
 
+  def test_successful_purchase_with_3ds
+    options = @options.merge!({
+      three_d_secure: {
+        eci: '05',
+        cavv: 'AAACAgSRBklmQCFgMpEGAAAAAAA=',
+        xid: 'CAACCVVUlwCXUyhQNlSXAAAAAAA='
+      }
+    })
+    response = @gateway.purchase(@amount, @credit_card, options)
+
+    assert_success response
+    assert_equal 'Request successfully processed in \'Merchant in Connector Test Mode\'', response.message
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
     assert_equal 'invalid cc number/brand combination', response.message
+  end
+
+  def test_failed_purchase_with_3ds
+    options = @options.merge!({
+      three_d_secure: {
+        eci: '05',
+        cavv: 'INVALID_Verification_ID',
+        xid: 'CAACCVVUlwCXUyhQNlSXAAAAAAA='
+      }
+    })
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_failure response
+    assert_equal 'Invalid 3DSecure Verification_ID. Must have Base64 encoding a Length of 28 digits', response.message
   end
 
   def test_successful_authorize_and_capture
@@ -47,7 +74,7 @@ class RemoteMoneiTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@amount - 1, auth.authorization)
     assert_success capture
   end
 
@@ -55,10 +82,10 @@ class RemoteMoneiTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@amount - 1, auth.authorization)
     assert_success capture
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@amount - 1, auth.authorization)
     assert_failure capture
   end
 
@@ -79,7 +106,7 @@ class RemoteMoneiTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount-1, purchase.authorization)
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization)
     assert_success refund
   end
 
@@ -87,10 +114,10 @@ class RemoteMoneiTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount-1, purchase.authorization)
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization)
     assert_success refund
 
-    assert refund = @gateway.refund(@amount-1, purchase.authorization)
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization)
     assert_failure refund
   end
 
@@ -127,13 +154,12 @@ class RemoteMoneiTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = MoneiGateway.new(
-      :sender_id => 'mother',
-      :channel_id => 'there is no other',
-      :login => 'like mother',
-      :pwd => 'so treat Her right'
+      sender_id: 'mother',
+      channel_id: 'there is no other',
+      login: 'like mother',
+      pwd: 'so treat Her right'
     )
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
   end
-
 end

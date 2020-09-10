@@ -8,11 +8,11 @@ class RemoteQuickpayTest < Test::Unit::TestCase
 
     @amount = 100
     @options = {
-      :order_id => generate_unique_id[0...10],
-      :billing_address => address
+      order_id: generate_unique_id[0...10],
+      billing_address: address
     }
 
-    @visa_no_cvv2   = credit_card('4000300011112220', :verification_value => nil)
+    @visa_no_cvv2   = credit_card('4000300011112220', verification_value: nil)
     @visa           = credit_card('4000100011112224')
     @dankort        = credit_card('5019717010103742')
     @visa_dankort   = credit_card('4571100000000000')
@@ -26,7 +26,7 @@ class RemoteQuickpayTest < Test::Unit::TestCase
     @amex           = credit_card('3700100000000000')
 
     # forbrugsforeningen doesn't use a verification value
-    @forbrugsforeningen = credit_card('6007221000000000', :verification_value => nil)
+    @forbrugsforeningen = credit_card('6007221000000000', verification_value: nil)
   end
 
   def test_successful_purchase
@@ -38,7 +38,7 @@ class RemoteQuickpayTest < Test::Unit::TestCase
   end
 
   def test_successful_usd_purchase
-    assert response = @gateway.purchase(@amount, @visa, @options.update(:currency => 'USD'))
+    assert response = @gateway.purchase(@amount, @visa, @options.update(currency: 'USD'))
     assert_equal 'OK', response.message
     assert_equal 'USD', response.params['currency']
     assert_success response
@@ -174,22 +174,22 @@ class RemoteQuickpayTest < Test::Unit::TestCase
   end
 
   def test_successful_store_and_reference_purchase
-    assert store = @gateway.store(@visa, @options.merge(:description => "New subscription"))
+    assert store = @gateway.store(@visa, @options.merge(description: 'New subscription'))
     assert_success store
-    assert purchase = @gateway.purchase(@amount, store.authorization, @options.merge(:order_id => generate_unique_id[0...10]))
+    assert purchase = @gateway.purchase(@amount, store.authorization, @options.merge(order_id: generate_unique_id[0...10]))
     assert_success purchase
   end
 
   def test_failed_store
-    assert store = @gateway.store(credit_card('4'), @options.merge(:description => "New subscription"))
+    assert store = @gateway.store(credit_card('4'), @options.merge(description: 'New subscription'))
     assert_failure store
-    assert_equal "Error in field: cardnumber", store.message
+    assert_equal 'Error in field: cardnumber', store.message
   end
 
   def test_invalid_login
     gateway = QuickpayGateway.new(
-        :login => '',
-        :password => ''
+      login: '',
+      password: ''
     )
     assert response = gateway.purchase(@amount, @visa, @options)
     assert_equal 'Invalid merchant id', response.message

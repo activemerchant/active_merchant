@@ -20,13 +20,13 @@ class RemoteMaxipagoTest < Test::Unit::TestCase
   def test_successful_authorize
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "AUTHORIZED", response.message
+    assert_equal 'AUTHORIZED', response.message
   end
 
   def test_failed_authorize
     assert response = @gateway.authorize(@amount, @invalid_card, @options)
     assert_failure response
-    assert_equal "The transaction has an expired credit card.", response.message
+    assert_equal 'The transaction has an expired credit card.', response.message
   end
 
   def test_successful_authorize_and_capture
@@ -49,7 +49,7 @@ class RemoteMaxipagoTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_currency
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(currency: "CLP"))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(currency: 'CLP'))
     assert_success response
   end
 
@@ -69,13 +69,13 @@ class RemoteMaxipagoTest < Test::Unit::TestCase
 
     void = @gateway.void(auth.authorization)
     assert_success void
-    assert_equal "VOIDED", void.message
+    assert_equal 'VOIDED', void.message
   end
 
   def test_failed_void
-    response = @gateway.void("NOAUTH|0000000")
+    response = @gateway.void('NOAUTH|0000000')
     assert_failure response
-    assert_equal "Unable to validate, original void transaction not found", response.message
+    assert_equal 'Unable to validate, original void transaction not found', response.message
   end
 
   def test_successful_refund
@@ -84,7 +84,7 @@ class RemoteMaxipagoTest < Test::Unit::TestCase
 
     refund = @gateway.refund(@amount, purchase.authorization, @options)
     assert_success refund
-    assert_equal "CAPTURED", refund.message
+    assert_equal 'CAPTURED', refund.message
   end
 
   def test_failed_refund
@@ -94,19 +94,19 @@ class RemoteMaxipagoTest < Test::Unit::TestCase
     refund_amount = @amount + 10
     refund = @gateway.refund(refund_amount, purchase.authorization, @options)
     assert_failure refund
-    assert_equal "The Return amount is greater than the amount that can be returned.", refund.message
+    assert_equal 'The Return amount is greater than the amount that can be returned.', refund.message
   end
 
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response
-    assert_equal "AUTHORIZED", response.message
+    assert_equal 'AUTHORIZED', response.message
   end
 
   def test_failed_verify
     response = @gateway.verify(@invalid_card, @options)
     assert_failure response
-    assert_equal "The transaction has an expired credit card.", response.message
+    assert_equal 'The transaction has an expired credit card.', response.message
   end
 
   def test_transcript_scrubbing

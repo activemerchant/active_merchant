@@ -1,25 +1,24 @@
 require 'test_helper'
 
 class RemoteSageTest < Test::Unit::TestCase
-
   def setup
     @gateway = SageGateway.new(fixtures(:sage))
 
     @amount = 100
 
-    @visa        = credit_card("4111111111111111")
+    @visa        = credit_card('4111111111111111')
     @check       = check
-    @mastercard  = credit_card("5499740000000057")
-    @discover    = credit_card("6011000993026909")
-    @amex        = credit_card("371449635392376")
+    @mastercard  = credit_card('5499740000000057')
+    @discover    = credit_card('6011000993026909')
+    @amex        = credit_card('371449635392376')
 
     @declined_card = credit_card('4000')
 
     @options = {
-      :order_id => generate_unique_id,
-      :billing_address => address,
-      :shipping_address => address,
-      :email => 'longbob@example.com'
+      order_id: generate_unique_id,
+      billing_address: address,
+      shipping_address: address,
+      email: 'longbob@example.com'
     }
   end
 
@@ -81,7 +80,7 @@ class RemoteSageTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_blank_state
-    assert response = @gateway.purchase(@amount, @visa, billing_address: address(state: ""))
+    assert response = @gateway.purchase(@amount, @visa, billing_address: address(state: ''))
     assert_success response
     assert response.test?
     assert_false response.authorization.blank?
@@ -141,32 +140,32 @@ class RemoteSageTest < Test::Unit::TestCase
 
     assert refund = @gateway.refund(@amount, purchase.authorization, @options)
     assert_success refund
-    assert_equal "APPROVED", refund.message
+    assert_equal 'APPROVED', refund.message
   end
 
   def test_visa_failed_refund
     purchase = @gateway.purchase(@amount, @visa, @options)
     assert_success purchase
 
-    response = @gateway.refund(@amount, "UnknownReference", @options)
+    response = @gateway.refund(@amount, 'UnknownReference', @options)
     assert_failure response
-    assert_equal "INVALID T_REFERENCE", response.message
+    assert_equal 'INVALID T_REFERENCE', response.message
   end
 
   def test_partial_refund
     purchase = @gateway.purchase(@amount, @visa, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount-1, purchase.authorization, @options)
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization, @options)
     assert_success refund
-    assert_equal "APPROVED", refund.message
+    assert_equal 'APPROVED', refund.message
   end
 
   def test_store_visa
     assert response = @gateway.store(@visa, @options)
     assert_success response
-    assert auth = response.authorization,
-      "Store card authorization should not be nil"
+    assert response.authorization,
+      'Store card authorization should not be nil'
     assert_not_nil response.message
   end
 
@@ -178,23 +177,23 @@ class RemoteSageTest < Test::Unit::TestCase
 
   def test_unstore_visa
     assert auth = @gateway.store(@visa, @options).authorization,
-      "Unstore card authorization should not be nil"
+      'Unstore card authorization should not be nil'
     assert response = @gateway.unstore(auth, @options)
     assert_success response
   end
 
   def test_failed_unstore_visa
     assert auth = @gateway.store(@visa, @options).authorization,
-      "Unstore card authorization should not be nil"
+      'Unstore card authorization should not be nil'
     assert response = @gateway.unstore(auth, @options)
     assert_success response
   end
 
   def test_invalid_login
     gateway = SageGateway.new(
-                :login => '',
-                :password => ''
-              )
+      login: '',
+      password: ''
+    )
     assert response = gateway.purchase(@amount, @visa, @options)
     assert_failure response
     assert_equal 'SECURITY VIOLATION', response.message
@@ -221,4 +220,14 @@ class RemoteSageTest < Test::Unit::TestCase
     assert_scrubbed(@gateway.options[:password], transcript)
   end
 
+  def test_echeck_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @check, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@check.account_number, transcript)
+    assert_scrubbed(@check.routing_number, transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
+  end
 end

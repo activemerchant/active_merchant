@@ -5,16 +5,16 @@ class RemotePinTest < Test::Unit::TestCase
     @gateway = PinGateway.new(fixtures(:pin))
 
     @amount = 100
-    @credit_card = credit_card('5520000000000000', :year => Time.now.year + 2)
-    @visa_credit_card = credit_card('4200000000000000', :year => Time.now.year + 3)
+    @credit_card = credit_card('5520000000000000', year: Time.now.year + 2)
+    @visa_credit_card = credit_card('4200000000000000', year: Time.now.year + 3)
     @declined_card = credit_card('4100000000000001')
 
     @options = {
-      :email => 'roland@pin.net.au',
-      :ip => '203.59.39.62',
-      :order_id => '1',
-      :billing_address => address,
-      :description => "Store Purchase #{DateTime.now.to_i}"
+      email: 'roland@pinpayments.com',
+      ip: '203.59.39.62',
+      order_id: '1',
+      billing_address: address,
+      description: "Store Purchase #{DateTime.now.to_i}"
     }
   end
 
@@ -38,6 +38,11 @@ class RemotePinTest < Test::Unit::TestCase
     assert_equal options_with_metadata[:metadata][:purchase_number], response.params['response']['metadata']['purchase_number']
   end
 
+  def test_successful_purchase_with_reference
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(reference: 'statement descriptor'))
+    assert_success response
+  end
+
   def test_successful_authorize_and_capture
     authorization = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorization
@@ -54,7 +59,7 @@ class RemotePinTest < Test::Unit::TestCase
   end
 
   def test_failed_capture_due_to_invalid_token
-    response = @gateway.capture(@amount, "bogus", @options)
+    response = @gateway.capture(@amount, 'bogus', @options)
     assert_failure response
   end
 
@@ -84,27 +89,27 @@ class RemotePinTest < Test::Unit::TestCase
   # falls outside of active merchant
   def test_store_and_charge_with_pinjs_card_token
     headers = {
-      "Content-Type" => "application/json",
-      "Authorization" => "Basic #{Base64.strict_encode64(@gateway.options[:api_key] + ':').strip}"
+      'Content-Type' => 'application/json',
+      'Authorization' => "Basic #{Base64.strict_encode64(@gateway.options[:api_key] + ':').strip}"
     }
     # Get a token equivalent to what is returned by Pin.js
     card_attrs = {
-      :number => @credit_card.number,
-      :expiry_month => @credit_card.month,
-      :expiry_year => @credit_card.year,
-      :cvc => @credit_card.verification_value,
-      :name => "#{@credit_card.first_name} #{@credit_card.last_name}",
-      :address_line1 => "42 Sevenoaks St",
-      :address_city => "Lathlain",
-      :address_postcode => "6454",
-      :address_start => "WA",
-      :address_country => "Australia"
+      number: @credit_card.number,
+      expiry_month: @credit_card.month,
+      expiry_year: @credit_card.year,
+      cvc: @credit_card.verification_value,
+      name: "#{@credit_card.first_name} #{@credit_card.last_name}",
+      address_line1: '42 Sevenoaks St',
+      address_city: 'Lathlain',
+      address_postcode: '6454',
+      address_start: 'WA',
+      address_country: 'Australia'
     }
-    url = @gateway.test_url + "/cards"
+    url = @gateway.test_url + '/cards'
 
     body = JSON.parse(@gateway.ssl_post(url, card_attrs.to_json, headers))
 
-    card_token = body["response"]["token"]
+    card_token = body['response']['token']
 
     store = @gateway.store(card_token, @options)
     assert_success store
@@ -136,7 +141,7 @@ class RemotePinTest < Test::Unit::TestCase
     assert_not_nil response.authorization
     assert_equal @credit_card.year, response.params['response']['card']['expiry_year']
 
-    response = @gateway.update(response.authorization, @visa_credit_card, :address => address)
+    response = @gateway.update(response.authorization, @visa_credit_card, address: address)
     assert_success response
     assert_not_nil response.authorization
     assert_equal @visa_credit_card.year, response.params['response']['card']['expiry_year']
@@ -166,7 +171,7 @@ class RemotePinTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = PinGateway.new(:api_key => '')
+    gateway = PinGateway.new(api_key: '')
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
   end

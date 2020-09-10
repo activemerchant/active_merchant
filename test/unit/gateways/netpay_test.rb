@@ -3,10 +3,10 @@ require 'test_helper'
 class NetpayTest < Test::Unit::TestCase
   def setup
     @gateway = NetpayGateway.new(
-                 :store_id => '12345',
-                 :login    => 'login',
-                 :password => 'password'
-               )
+      store_id: '12345',
+      login: 'login',
+      password: 'password'
+    )
 
     @credit_card = credit_card
     @amount = 1000
@@ -14,7 +14,7 @@ class NetpayTest < Test::Unit::TestCase
     @order_id = 'C3836048-631F-112B-001E-7C08C0406975'
 
     @options = {
-      :description => 'Store Purchase'
+      description: 'Store Purchase'
     }
   end
 
@@ -34,17 +34,17 @@ class NetpayTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).with(
       anything,
       all_of(
-        includes("StoreId=12345"),
-        includes("UserName=login"),
-        includes("Password=password"),
-        includes("ResourceName=Auth"),
-        includes("Total=10.00"),
+        includes('StoreId=12345'),
+        includes('UserName=login'),
+        includes('Password=password'),
+        includes('ResourceName=Auth'),
+        includes('Total=10.00'),
         includes("CardNumber=#{@credit_card.number}"),
-        includes("ExpDate=" + CGI.escape("09/#{@credit_card.year.to_s[-2..-1]}")),
+        includes('ExpDate=' + CGI.escape("09/#{@credit_card.year.to_s[-2..-1]}")),
         includes("CustomerName=#{CGI.escape(@credit_card.name)}"),
         includes("CVV2=#{@credit_card.verification_value}"),
         includes("Comments=#{CGI.escape(@options[:description])}"),
-        includes("CurrencyCode=484")
+        includes('CurrencyCode=484')
       )
     ).returns(successful_response)
 
@@ -64,7 +64,7 @@ class NetpayTest < Test::Unit::TestCase
       )
     ).returns(successful_response)
 
-    assert response = @gateway.purchase(@amount, @credit_card, :ip => '127.0.0.1')
+    assert response = @gateway.purchase(@amount, @credit_card, ip: '127.0.0.1')
     assert_success response
   end
 
@@ -76,22 +76,21 @@ class NetpayTest < Test::Unit::TestCase
     assert response.test?
   end
 
-
   def test_successful_authorize
     @gateway.expects(:ssl_post).with(
       anything,
       all_of(
-        includes("StoreId=12345"),
-        includes("UserName=login"),
-        includes("Password=password"),
-        includes("ResourceName=PreAuth"),
-        includes("Total=10.00"),
+        includes('StoreId=12345'),
+        includes('UserName=login'),
+        includes('Password=password'),
+        includes('ResourceName=PreAuth'),
+        includes('Total=10.00'),
         includes("CardNumber=#{@credit_card.number}"),
-        includes("ExpDate=" + CGI.escape("09/#{@credit_card.year.to_s[-2..-1]}")),
+        includes('ExpDate=' + CGI.escape("09/#{@credit_card.year.to_s[-2..-1]}")),
         includes("CustomerName=#{CGI.escape(@credit_card.name)}"),
         includes("CVV2=#{@credit_card.verification_value}"),
         includes("Comments=#{CGI.escape(@options[:description])}"),
-        includes("CurrencyCode=484")
+        includes('CurrencyCode=484')
       )
     ).returns(successful_response)
 
@@ -107,7 +106,7 @@ class NetpayTest < Test::Unit::TestCase
       anything,
       all_of(
         includes('ResourceName=PostAuth'),
-        includes("Total=10.00"),
+        includes('Total=10.00'),
         includes("OrderId=#{@order_id}")
       )
     ).returns(successful_response)
@@ -120,9 +119,9 @@ class NetpayTest < Test::Unit::TestCase
       anything,
       all_of(
         includes('ResourceName=Refund'),
-        includes("Total=10.00"),
+        includes('Total=10.00'),
         includes("OrderId=#{@order_id}"),
-        includes("CurrencyCode=484")
+        includes('CurrencyCode=484')
       )
     ).returns(successful_response)
     assert response = @gateway.void("#{@order_id}|10.00|484")
@@ -134,7 +133,7 @@ class NetpayTest < Test::Unit::TestCase
       anything,
       all_of(
         includes('ResourceName=Credit'),
-        includes("Total=10.00"),
+        includes('Total=10.00'),
         includes("OrderId=#{@order_id}")
       )
     ).returns(successful_response)
@@ -151,7 +150,7 @@ class NetpayTest < Test::Unit::TestCase
   end
 
   def test_supported_cardtypes
-    assert_equal [:visa, :master, :american_express, :diners_club], NetpayGateway.supported_cardtypes
+    assert_equal %i[visa master american_express diners_club], NetpayGateway.supported_cardtypes
   end
 
   private

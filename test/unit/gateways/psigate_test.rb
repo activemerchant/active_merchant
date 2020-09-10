@@ -3,13 +3,13 @@ require 'test_helper'
 class PsigateTest < Test::Unit::TestCase
   def setup
     @gateway = PsigateGateway.new(
-      :login => 'teststore',
-      :password => 'psigate1234'
+      login: 'teststore',
+      password: 'psigate1234'
     )
 
     @amount = 100
     @credit_card = credit_card('4111111111111111')
-    @options = { :order_id => "1", :billing_address => address }
+    @options = { order_id: '1', billing_address: address }
   end
 
   def test_successful_authorization
@@ -38,23 +38,23 @@ class PsigateTest < Test::Unit::TestCase
   end
 
   def test_deprecated_credit
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<OrderID>transaction_id<\//), anything).returns("")
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<OrderID>transaction_id<\//), anything).returns('')
     @gateway.expects(:parse).returns({})
     assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE) do
-      @gateway.credit(@amount, "transaction_id", @options)
+      @gateway.credit(@amount, 'transaction_id', @options)
     end
   end
 
   def test_refund
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<OrderID>transaction_id<\//), anything).returns("")
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<OrderID>transaction_id<\//), anything).returns('')
     @gateway.expects(:parse).returns({})
-    @gateway.refund(@amount, "transaction_id", @options)
+    @gateway.refund(@amount, 'transaction_id', @options)
   end
 
   def test_void
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<OrderID>transaction_id<\//), anything).returns("")
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<OrderID>transaction_id<\//), anything).returns('')
     @gateway.expects(:parse).returns({})
-    @gateway.void("transaction_id;1", @options)
+    @gateway.void('transaction_id;1', @options)
   end
 
   def test_amount_style
@@ -70,7 +70,7 @@ class PsigateTest < Test::Unit::TestCase
   end
 
   def test_supported_card_types
-    assert_equal [:visa, :master, :american_express], PsigateGateway.supported_cardtypes
+    assert_equal %i[visa master american_express], PsigateGateway.supported_cardtypes
   end
 
   def test_avs_result
@@ -87,95 +87,100 @@ class PsigateTest < Test::Unit::TestCase
     assert_equal 'M', response.cvv_result['code']
   end
 
+  def test_scrub
+    assert @gateway.supports_scrubbing?
+    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
   private
 
   def successful_authorization_response
-    <<-RESPONSE
-<?xml version="1.0" encoding="UTF-8"?>
-<Result>
-  <TransTime>Sun Jan 06 23:10:53 EST 2008</TransTime>
-  <OrderID>1000</OrderID>
-  <TransactionType>PREAUTH</TransactionType>
-  <Approved>APPROVED</Approved>
-  <ReturnCode>Y:123456:0abcdef:M:X:NNN</ReturnCode>
-  <ErrMsg/>
-  <TaxTotal>0.00</TaxTotal>
-  <ShipTotal>0.00</ShipTotal>
-  <SubTotal>24.00</SubTotal>
-  <FullTotal>24.00</FullTotal>
-  <PaymentType>CC</PaymentType>
-  <CardNumber>......4242</CardNumber>
-  <TransRefNumber>1bdde305d7658367</TransRefNumber>
-  <CardIDResult>M</CardIDResult>
-  <AVSResult>X</AVSResult>
-  <CardAuthNumber>123456</CardAuthNumber>
-  <CardRefNumber>0abcdef</CardRefNumber>
-  <CardType>VISA</CardType>
-  <IPResult>NNN</IPResult>
-  <IPCountry>UN</IPCountry>
-  <IPRegion>UNKNOWN</IPRegion>
-  <IPCity>UNKNOWN</IPCity>
-</Result>
+    <<~RESPONSE
+      <?xml version="1.0" encoding="UTF-8"?>
+      <Result>
+        <TransTime>Sun Jan 06 23:10:53 EST 2008</TransTime>
+        <OrderID>1000</OrderID>
+        <TransactionType>PREAUTH</TransactionType>
+        <Approved>APPROVED</Approved>
+        <ReturnCode>Y:123456:0abcdef:M:X:NNN</ReturnCode>
+        <ErrMsg/>
+        <TaxTotal>0.00</TaxTotal>
+        <ShipTotal>0.00</ShipTotal>
+        <SubTotal>24.00</SubTotal>
+        <FullTotal>24.00</FullTotal>
+        <PaymentType>CC</PaymentType>
+        <CardNumber>......4242</CardNumber>
+        <TransRefNumber>1bdde305d7658367</TransRefNumber>
+        <CardIDResult>M</CardIDResult>
+        <AVSResult>X</AVSResult>
+        <CardAuthNumber>123456</CardAuthNumber>
+        <CardRefNumber>0abcdef</CardRefNumber>
+        <CardType>VISA</CardType>
+        <IPResult>NNN</IPResult>
+        <IPCountry>UN</IPCountry>
+        <IPRegion>UNKNOWN</IPRegion>
+        <IPCity>UNKNOWN</IPCity>
+      </Result>
     RESPONSE
   end
 
   def successful_purchase_response
-    <<-RESPONSE
-<?xml version="1.0" encoding="UTF-8"?>
-<Result>
-  <TransTime>Sun Jan 06 23:15:30 EST 2008</TransTime>
-  <OrderID>1000</OrderID>
-  <TransactionType>SALE</TransactionType>
-  <Approved>APPROVED</Approved>
-  <ReturnCode>Y:123456:0abcdef:M:X:NNN</ReturnCode>
-  <ErrMsg/>
-  <TaxTotal>0.00</TaxTotal>
-  <ShipTotal>0.00</ShipTotal>
-  <SubTotal>24.00</SubTotal>
-  <FullTotal>24.00</FullTotal>
-  <PaymentType>CC</PaymentType>
-  <CardNumber>......4242</CardNumber>
-  <TransRefNumber>1bdde305da3ee234</TransRefNumber>
-  <CardIDResult>M</CardIDResult>
-  <AVSResult>X</AVSResult>
-  <CardAuthNumber>123456</CardAuthNumber>
-  <CardRefNumber>0abcdef</CardRefNumber>
-  <CardType>VISA</CardType>
-  <IPResult>NNN</IPResult>
-  <IPCountry>UN</IPCountry>
-  <IPRegion>UNKNOWN</IPRegion>
-  <IPCity>UNKNOWN</IPCity>
-</Result>
+    <<~RESPONSE
+      <?xml version="1.0" encoding="UTF-8"?>
+      <Result>
+        <TransTime>Sun Jan 06 23:15:30 EST 2008</TransTime>
+        <OrderID>1000</OrderID>
+        <TransactionType>SALE</TransactionType>
+        <Approved>APPROVED</Approved>
+        <ReturnCode>Y:123456:0abcdef:M:X:NNN</ReturnCode>
+        <ErrMsg/>
+        <TaxTotal>0.00</TaxTotal>
+        <ShipTotal>0.00</ShipTotal>
+        <SubTotal>24.00</SubTotal>
+        <FullTotal>24.00</FullTotal>
+        <PaymentType>CC</PaymentType>
+        <CardNumber>......4242</CardNumber>
+        <TransRefNumber>1bdde305da3ee234</TransRefNumber>
+        <CardIDResult>M</CardIDResult>
+        <AVSResult>X</AVSResult>
+        <CardAuthNumber>123456</CardAuthNumber>
+        <CardRefNumber>0abcdef</CardRefNumber>
+        <CardType>VISA</CardType>
+        <IPResult>NNN</IPResult>
+        <IPCountry>UN</IPCountry>
+        <IPRegion>UNKNOWN</IPRegion>
+        <IPCity>UNKNOWN</IPCity>
+      </Result>
     RESPONSE
   end
 
   def failed_purchase_response
-    <<-RESPONSE
-<?xml version="1.0" encoding="UTF-8"?>
-<Result>
-  <TransTime>Sun Jan 06 23:24:29 EST 2008</TransTime>
-  <OrderID>b3dca49e3ec77e42ab80a0f0f590fff0</OrderID>
-  <TransactionType>SALE</TransactionType>
-  <Approved>DECLINED</Approved>
-  <ReturnCode>N:TESTDECLINE</ReturnCode>
-  <ErrMsg/>
-  <TaxTotal>0.00</TaxTotal>
-  <ShipTotal>0.00</ShipTotal>
-  <SubTotal>24.00</SubTotal>
-  <FullTotal>24.00</FullTotal>
-  <PaymentType>CC</PaymentType>
-  <CardNumber>......4242</CardNumber>
-  <TransRefNumber>1bdde305df991f89</TransRefNumber>
-  <CardIDResult>M</CardIDResult>
-  <AVSResult>X</AVSResult>
-  <CardAuthNumber>TEST</CardAuthNumber>
-  <CardRefNumber>TESTTRANS</CardRefNumber>
-  <CardType>VISA</CardType>
-  <IPResult>NNN</IPResult>
-  <IPCountry>UN</IPCountry>
-  <IPRegion>UNKNOWN</IPRegion>
-  <IPCity>UNKNOWN</IPCity>
-</Result>
+    <<~RESPONSE
+      <?xml version="1.0" encoding="UTF-8"?>
+      <Result>
+        <TransTime>Sun Jan 06 23:24:29 EST 2008</TransTime>
+        <OrderID>b3dca49e3ec77e42ab80a0f0f590fff0</OrderID>
+        <TransactionType>SALE</TransactionType>
+        <Approved>DECLINED</Approved>
+        <ReturnCode>N:TESTDECLINE</ReturnCode>
+        <ErrMsg/>
+        <TaxTotal>0.00</TaxTotal>
+        <ShipTotal>0.00</ShipTotal>
+        <SubTotal>24.00</SubTotal>
+        <FullTotal>24.00</FullTotal>
+        <PaymentType>CC</PaymentType>
+        <CardNumber>......4242</CardNumber>
+        <TransRefNumber>1bdde305df991f89</TransRefNumber>
+        <CardIDResult>M</CardIDResult>
+        <AVSResult>X</AVSResult>
+        <CardAuthNumber>TEST</CardAuthNumber>
+        <CardRefNumber>TESTTRANS</CardRefNumber>
+        <CardType>VISA</CardType>
+        <IPResult>NNN</IPResult>
+        <IPCountry>UN</IPCountry>
+        <IPRegion>UNKNOWN</IPRegion>
+        <IPCity>UNKNOWN</IPCity>
+      </Result>
     RESPONSE
   end
 
@@ -185,5 +190,19 @@ class PsigateTest < Test::Unit::TestCase
 
   def xml_capture_fixture
     '<?xml version="1.0"?><Order><OrderID>1004</OrderID><CardAction>2</CardAction><StoreID>teststore</StoreID><PaymentType>CC</PaymentType><SubTotal>20.00</SubTotal><Passphrase>psigate1234</Passphrase></Order>'
+  end
+
+  def pre_scrubbed
+    <<~PRE_SCRUBBED
+      <?xml version='1.0'?><Order><StoreID>teststore</StoreID><Passphrase>psigate1234</Passphrase><OrderID>1b7b4b36bf61e972a9e6a6be8fff15d8</OrderID><Email>jack@example.com</Email><PaymentType>CC</PaymentType><CardAction>0</CardAction><SubTotal>24.00</SubTotal><CardNumber>4242424242424242</CardNumber><CardExpMonth>09</CardExpMonth><CardExpYear>14</CardExpYear><CardIDCode>1</CardIDCode><CardIDNumber>123</CardIDNumber><Bname>Jim Smith</Bname><Baddress1>1234 My Street</Baddress1><Baddress2>Apt 1</Baddress2><Bcity>Ottawa</Bcity><Bprovince>ON</Bprovince><Bpostalcode>K1C2N6</Bpostalcode><Bcountry>CA</Bcountry><Bcompany>Widgets Inc</Bcompany></Order>
+      <CardNumber>......4242</CardNumber>
+    PRE_SCRUBBED
+  end
+
+  def post_scrubbed
+    <<~POST_SCRUBBED
+      <?xml version='1.0'?><Order><StoreID>teststore</StoreID><Passphrase>[FILTERED]</Passphrase><OrderID>1b7b4b36bf61e972a9e6a6be8fff15d8</OrderID><Email>jack@example.com</Email><PaymentType>CC</PaymentType><CardAction>0</CardAction><SubTotal>24.00</SubTotal><CardNumber>[FILTERED]</CardNumber><CardExpMonth>09</CardExpMonth><CardExpYear>14</CardExpYear><CardIDCode>1</CardIDCode><CardIDNumber>[FILTERED]</CardIDNumber><Bname>Jim Smith</Bname><Baddress1>1234 My Street</Baddress1><Baddress2>Apt 1</Baddress2><Bcity>Ottawa</Bcity><Bprovince>ON</Bprovince><Bpostalcode>K1C2N6</Bpostalcode><Bcountry>CA</Bcountry><Bcompany>Widgets Inc</Bcompany></Order>
+      <CardNumber>[FILTERED]</CardNumber>
+    POST_SCRUBBED
   end
 end

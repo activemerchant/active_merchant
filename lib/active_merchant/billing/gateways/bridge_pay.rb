@@ -1,29 +1,28 @@
-require "nokogiri"
+require 'nokogiri'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class BridgePayGateway < Gateway
-      self.display_name = "BridgePay"
-      self.homepage_url = "http://www.bridgepaynetwork.com/"
+      self.display_name = 'BridgePay'
+      self.homepage_url = 'http://www.bridgepaynetwork.com/'
 
-      self.test_url = "https://gatewaystage.itstgate.com/SmartPayments/transact3.asmx"
-      self.live_url = "https://gateway.itstgate.com/SmartPayments/transact3.asmx"
+      self.test_url = 'https://gatewaystage.itstgate.com/SmartPayments/transact3.asmx'
+      self.live_url = 'https://gateway.itstgate.com/SmartPayments/transact3.asmx'
 
-      self.supported_countries = ["CA", "US"]
-      self.default_currency = "USD"
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
+      self.supported_countries = %w[CA US]
+      self.default_currency = 'USD'
+      self.supported_cardtypes = %i[visa master american_express discover diners_club jcb]
 
-
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :user_name, :password)
         super
       end
 
-      def purchase(amount, payment_method, options={})
-        post = initialize_required_fields("Sale")
+      def purchase(amount, payment_method, options = {})
+        post = initialize_required_fields('Sale')
 
         # Allow the same amount in multiple transactions.
-        post[:ExtData] = "<Force>T</Force>"
+        post[:ExtData] = '<Force>T</Force>'
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)
         add_customer_data(post, options)
@@ -31,8 +30,8 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
-      def authorize(amount, payment_method, options={})
-        post = initialize_required_fields("Auth")
+      def authorize(amount, payment_method, options = {})
+        post = initialize_required_fields('Auth')
 
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)
@@ -41,8 +40,8 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
-      def capture(amount, authorization, options={})
-        post = initialize_required_fields("Force")
+      def capture(amount, authorization, options = {})
+        post = initialize_required_fields('Force')
 
         add_invoice(post, amount, options)
         add_reference(post, authorization)
@@ -51,8 +50,8 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
-      def refund(amount, authorization, options={})
-        post = initialize_required_fields("Return")
+      def refund(amount, authorization, options = {})
+        post = initialize_required_fields('Return')
 
         add_invoice(post, amount, options)
         add_reference(post, authorization)
@@ -60,8 +59,8 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
-      def void(authorization, options={})
-        post = initialize_required_fields("Void")
+      def void(authorization, options = {})
+        post = initialize_required_fields('Void')
 
         add_reference(post, authorization)
 
@@ -75,10 +74,10 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def store(creditcard, options={})
+      def store(creditcard, options = {})
         post = initialize_required_fields('')
         post[:transaction] = 'Create'
-        post[:CardNumber]    = creditcard.number
+        post[:CardNumber] = creditcard.number
         post[:CustomerPaymentInfoKey] = ''
         post[:token] = ''
         add_payment_method(post, creditcard)
@@ -114,41 +113,41 @@ module ActiveMerchant #:nodoc:
           post[:TransitNum] = payment_method.routing_number
           post[:AccountNum] = payment_method.account_number
           post[:NameOnCheck] = payment_method.name
-          post[:ExtData] = "<AccountType>#{payment_method.account_type.capitalize}</AccountType>"
+          post[:ExtData] = "<AccountType>#{payment_method.account_type.capitalize}</AccountType>" if payment_method.account_type
         end
       end
 
       def add_token(post, payment_method)
-        payment_method = payment_method.split("|")
+        payment_method = payment_method.split('|')
         post[:ExtData] = "<Force>T</Force><CardVault><Transaction>Read</Transaction><CustomerPaymentInfoKey>#{payment_method[1]}</CustomerPaymentInfoKey><Token>#{payment_method[0]}</Token><ExpDate>#{payment_method[2]}</ExpDate></CardVault>"
       end
 
       def initialize_required_fields(transaction_type)
         post = {}
         post[:TransType] = transaction_type
-        post[:Amount] = ""
-        post[:PNRef] = ""
-        post[:InvNum] = ""
-        post[:CardNum] = ""
-        post[:ExpDate] = ""
-        post[:MagData] = ""
-        post[:NameOnCard] = ""
-        post[:Zip] = ""
-        post[:Street] = ""
-        post[:CVNum] = ""
-        post[:MagData] = ""
-        post[:ExtData] = ""
-        post[:MICR] = ""
-        post[:DL] = ""
-        post[:SS] = ""
-        post[:DOB] = ""
-        post[:StateCode] = ""
-        post[:CheckType] = ""
+        post[:Amount] = ''
+        post[:PNRef] = ''
+        post[:InvNum] = ''
+        post[:CardNum] = ''
+        post[:ExpDate] = ''
+        post[:MagData] = ''
+        post[:NameOnCard] = ''
+        post[:Zip] = ''
+        post[:Street] = ''
+        post[:CVNum] = ''
+        post[:MagData] = ''
+        post[:ExtData] = ''
+        post[:MICR] = ''
+        post[:DL] = ''
+        post[:SS] = ''
+        post[:DOB] = ''
+        post[:StateCode] = ''
+        post[:CheckType] = ''
         post
       end
 
       def add_customer_data(post, options)
-        if(billing_address = (options[:billing_address] || options[:address]))
+        if (billing_address = (options[:billing_address] || options[:address]))
           post[:Street] = billing_address[:address1]
           post[:Zip]    = billing_address[:zip]
         end
@@ -167,8 +166,8 @@ module ActiveMerchant #:nodoc:
         response = {}
 
         doc = Nokogiri::XML(xml)
-        doc.root.xpath("*").each do |node|
-          if (node.elements.size == 0)
+        doc.root&.xpath('*')&.each do |node|
+          if node.elements.size == 0
             response[node.name.downcase.to_sym] = node.text
           else
             node.elements.each do |childnode|
@@ -176,7 +175,7 @@ module ActiveMerchant #:nodoc:
               response[name.to_sym] = childnode.text
             end
           end
-        end unless doc.root.nil?
+        end
 
         response
       end
@@ -208,7 +207,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response[:result] == "0"
+        response[:result] == '0'
       end
 
       def message_from(response)
@@ -217,14 +216,14 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(response)
         if response[:token]
-          [response[:token], response[:customerpaymentinfokey], response[:expdate]].join("|")
+          [response[:token], response[:customerpaymentinfokey], response[:expdate]].join('|')
         else
-          [response[:authcode], response[:pnref]].join("|")
+          [response[:authcode], response[:pnref]].join('|')
         end
       end
 
       def split_authorization(authorization)
-        authcode, pnref = authorization.split("|")
+        authcode, pnref = authorization.split('|')
         [authcode, pnref]
       end
 
@@ -236,9 +235,9 @@ module ActiveMerchant #:nodoc:
 
       def post_data(post)
         {
-          :UserName => @options[:user_name],
-          :Password => @options[:password]
-        }.merge(post).collect{|k,v| "#{k}=#{CGI.escape(v.to_s)}"}.join("&")
+          UserName: @options[:user_name],
+          Password: @options[:password]
+        }.merge(post).collect { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join('&')
       end
     end
   end

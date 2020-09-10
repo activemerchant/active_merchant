@@ -7,7 +7,7 @@ class RemotePaymillTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card('5500000000000004')
     @options = {
-        :email => 'Longbob.Longse@example.com'
+      email: 'Longbob.Longse@example.com'
     }
     @declined_card = credit_card('5105105105105100', month: 5, year: 2020)
 
@@ -124,7 +124,7 @@ class RemotePaymillTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = PaymillGateway.new(public_key: fixtures(:paymill)[:public_key], private_key: "SomeBogusValue")
+    gateway = PaymillGateway.new(public_key: fixtures(:paymill)[:public_key], private_key: 'SomeBogusValue')
     response = gateway.purchase(@amount, @credit_card)
     assert_failure response
     assert_equal 'Access Denied', response.message
@@ -168,8 +168,7 @@ class RemotePaymillTest < Test::Unit::TestCase
   def test_verify_credentials
     assert @gateway.verify_credentials
 
-    gateway = PaymillGateway.new(public_key: "unknown_key", private_key: "unknown_key")
+    gateway = PaymillGateway.new(public_key: 'unknown_key', private_key: 'unknown_key')
     assert !gateway.verify_credentials
   end
-
 end

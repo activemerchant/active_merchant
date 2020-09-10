@@ -10,9 +10,9 @@ class VerifiTest < Test::Unit::TestCase
 
     #  Replace with your login and password for the Verifi test environment
     @options = {
-      :order_id => '37',
-      :email => "test@example.com",
-      :billing_address => address
+      order_id: '37',
+      email: 'test@example.com',
+      billing_address: address
     }
 
     @amount = 100
@@ -58,15 +58,6 @@ class VerifiTest < Test::Unit::TestCase
     assert_equal 'Transaction was Approved', capture.message
   end
 
-  def test_authorization_and_void
-    assert authorization = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success authorization
-    assert authorization
-    assert void = @gateway.void(authorization.authorization, @options)
-    assert_success void
-    assert_equal 'Transaction was Approved', void.message
-  end
-
   # Credits are not enabled on test accounts, so this should always fail
   def test_credit
     assert response = @gateway.credit(@amount, @credit_card, @options)
@@ -94,8 +85,8 @@ class VerifiTest < Test::Unit::TestCase
 
   def test_bad_login
     gateway = VerifiGateway.new(
-      :login => 'X',
-      :password => 'Y'
+      login: 'X',
+      password: 'Y'
     )
 
     assert response = gateway.purchase(@amount, @credit_card, @options)

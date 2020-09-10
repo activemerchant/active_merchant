@@ -5,17 +5,17 @@ module ActiveMerchant
 
       self.supported_countries = %w(AU CA CN FR DE GI IL MT MU MX NL NZ PA PH RU SG KR ES KN GB US)
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express discover jcb diners_club]
 
       self.homepage_url = 'http://www.ezic.com/'
       self.display_name = 'Ezic'
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :account_id)
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         post = {}
 
         add_account_id(post)
@@ -23,10 +23,10 @@ module ActiveMerchant
         add_payment(post, payment)
         add_customer_data(post, options)
 
-        commit("S", post)
+        commit('S', post)
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         post = {}
 
         add_account_id(post)
@@ -34,10 +34,10 @@ module ActiveMerchant
         add_payment(post, payment)
         add_customer_data(post, options)
 
-        commit("A", post)
+        commit('A', post)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         post = {}
 
         add_account_id(post)
@@ -45,10 +45,10 @@ module ActiveMerchant
         add_authorization(post, authorization)
         add_pay_type(post)
 
-        commit("D", post)
+        commit('D', post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         post = {}
 
         add_account_id(post)
@@ -56,20 +56,20 @@ module ActiveMerchant
         add_authorization(post, authorization)
         add_pay_type(post)
 
-        commit("R", post)
+        commit('R', post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = {}
 
         add_account_id(post)
         add_authorization(post, authorization)
         add_pay_type(post)
 
-        commit("U", post)
+        commit('U', post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -143,7 +143,7 @@ module ActiveMerchant
       end
 
       def add_pay_type(post)
-        post[:pay_type] = "C"
+        post[:pay_type] = 'C'
       end
 
       def parse(body)
@@ -160,8 +160,8 @@ module ActiveMerchant
             message_from(response),
             response,
             authorization: authorization_from(response),
-            avs_result: AVSResult.new(code: response["avs_code"]),
-            cvv_result: CVVResult.new(response["cvv2_code"]),
+            avs_result: AVSResult.new(code: response['avs_code']),
+            cvv_result: CVVResult.new(response['cvv2_code']),
             test: test?
           )
         rescue ResponseError => e
@@ -170,27 +170,26 @@ module ActiveMerchant
       end
 
       def success_from(response)
-        response["status_code"] == "1" || response["status_code"] == "T"
+        response['status_code'] == '1' || response['status_code'] == 'T'
       end
 
       def message_from(response)
-        response["auth_msg"]
+        response['auth_msg']
       end
 
       def authorization_from(response)
-        response["trans_id"]
+        response['trans_id']
       end
 
       def post_data(parameters = {})
-        parameters.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        parameters.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 
       def headers
         {
-          "User-Agent" => "ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
+          'User-Agent' => "ActiveMerchantBindings/#{ActiveMerchant::VERSION}"
         }
       end
     end
-
   end
 end

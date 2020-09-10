@@ -57,14 +57,14 @@ class RemoteTransactProTest < Test::Unit::TestCase
     assert_success auth
 
     assert_raise(ArgumentError) do
-      @gateway.capture(@amount-1, auth.authorization)
+      @gateway.capture(@amount - 1, auth.authorization)
     end
   end
 
   def test_failed_capture
     response = @gateway.capture(nil, 'bogus|100')
     assert_failure response
-    assert_equal "bogus|100", response.authorization
+    assert_equal 'bogus|100', response.authorization
   end
 
   def test_successful_refund
@@ -80,7 +80,7 @@ class RemoteTransactProTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    refund = @gateway.refund(@amount-1, purchase.authorization)
+    refund = @gateway.refund(@amount - 1, purchase.authorization)
     assert_success refund
     assert_equal 'Refund Success', refund.message
   end
@@ -89,7 +89,7 @@ class RemoteTransactProTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    refund = @gateway.refund(@amount+1, purchase.authorization)
+    refund = @gateway.refund(@amount + 1, purchase.authorization)
     assert_failure refund
   end
 

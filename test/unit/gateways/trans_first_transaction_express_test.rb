@@ -1,12 +1,12 @@
-require "test_helper"
+require 'test_helper'
 
 class TransFirstTransactionExpressTest < Test::Unit::TestCase
   include CommStub
 
   def setup
     @gateway = TransFirstTransactionExpressGateway.new(
-      gateway_id: "gateway_id",
-      reg_key: "reg_key"
+      gateway_id: 'gateway_id',
+      reg_key: 'reg_key'
     )
 
     @credit_card = credit_card
@@ -22,8 +22,27 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
 
     assert_success response
 
-    assert_equal "purchase|000015212561", response.authorization
+    assert_equal 'purchase|000015212561', response.authorization
     assert response.test?
+  end
+
+  def test_strip_hyphens_from_zip
+    options = {
+      billing_address: {
+        name: 'John & Mary Smith',
+        address1: '1 Main St.',
+        city: 'Burlington',
+        state: 'MA',
+        zip: '01803-3747',
+        country: 'US'
+      }
+    }
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/018033747/, data)
+    end.respond_with(successful_purchase_response)
   end
 
   def test_failed_purchase
@@ -32,8 +51,8 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
     end.respond_with(failed_purchase_response)
 
     assert_failure response
-    assert_equal "Not sufficient funds", response.message
-    assert_equal "51", response.error_code
+    assert_equal 'Not sufficient funds', response.message
+    assert_equal '51', response.error_code
     assert response.test?
   end
 
@@ -42,7 +61,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @check)
 
     assert_success response
-    assert_equal "purchase_echeck|000028705491", response.authorization
+    assert_equal 'purchase_echeck|000028705491', response.authorization
   end
 
   def test_failed_purchase_with_echeck
@@ -50,7 +69,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @check)
 
     assert_failure response
-    assert_equal "Error. Bank routing number validation negative (ABA).", response.message
+    assert_equal 'Error. Bank routing number validation negative (ABA).', response.message
   end
 
   def test_successful_authorize_and_capture
@@ -59,7 +78,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
 
     assert_success response
-    assert_equal "authorize|000015377801", response.authorization
+    assert_equal 'authorize|000015377801', response.authorization
 
     capture = stub_comms do
       @gateway.capture(@amount, response.authorization)
@@ -76,14 +95,14 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
     end.respond_with(failed_authorize_response)
 
     assert_failure response
-    assert_equal "Not sufficient funds", response.message
-    assert_equal "51", response.error_code
+    assert_equal 'Not sufficient funds', response.message
+    assert_equal '51', response.error_code
     assert response.test?
   end
 
   def test_failed_capture
     response = stub_comms do
-      @gateway.capture(100, "")
+      @gateway.capture(100, '')
     end.respond_with(failed_capture_response)
 
     assert_failure response
@@ -95,7 +114,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
-    assert_equal "purchase|000015212561", response.authorization
+    assert_equal 'purchase|000015212561', response.authorization
 
     void = stub_comms do
       @gateway.void(response.authorization)
@@ -108,13 +127,13 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
 
   def test_failed_void
     response = stub_comms do
-      @gateway.void("purchase|5d53a33d960c46d00f5dc061947d998c")
+      @gateway.void('purchase|5d53a33d960c46d00f5dc061947d998c')
     end.check_request do |endpoint, data, headers|
       assert_match(/5d53a33d960c46d00f5dc061947d998c/, data)
     end.respond_with(failed_void_response)
 
     assert_failure response
-    assert_equal "50011", response.error_code
+    assert_equal '50011', response.error_code
   end
 
   def test_successful_refund
@@ -123,7 +142,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
-    assert_equal "purchase|000015212561", response.authorization
+    assert_equal 'purchase|000015212561', response.authorization
 
     refund = stub_comms do
       @gateway.refund(@amount, response.authorization)
@@ -136,11 +155,11 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
 
   def test_failed_refund
     response = stub_comms do
-      @gateway.refund(nil, "")
+      @gateway.refund(nil, '')
     end.respond_with(failed_refund_response)
 
     assert_failure response
-    assert_equal "50011", response.error_code
+    assert_equal '50011', response.error_code
   end
 
   def test_successful_refund_with_echeck
@@ -149,7 +168,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_echeck_response)
 
     assert_success response
-    assert_equal "purchase_echeck|000028705491", response.authorization
+    assert_equal 'purchase_echeck|000028705491', response.authorization
 
     refund = stub_comms do
       @gateway.refund(@amount, response.authorization)
@@ -166,7 +185,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
     end.respond_with(failed_refund_response)
 
     assert_failure response
-    assert_equal "50011", response.error_code
+    assert_equal '50011', response.error_code
   end
 
   def test_successful_credit
@@ -176,7 +195,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
 
     assert_success response
 
-    assert_equal "credit|000001677461", response.authorization
+    assert_equal 'credit|000001677461', response.authorization
     assert response.test?
   end
 
@@ -186,8 +205,8 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
     end.respond_with(failed_credit_response)
 
     assert_failure response
-    assert_equal "Validation Error", response.message
-    assert_equal "51334", response.error_code
+    assert_equal 'Validation Error', response.message
+    assert_equal '51334', response.error_code
     assert response.test?
   end
 
@@ -196,7 +215,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
       @gateway.verify(@credit_card)
     end.respond_with(successful_authorize_response, failed_void_response)
     assert_success response
-    assert_equal "Succeeded", response.message
+    assert_equal 'Succeeded', response.message
   end
 
   def test_failed_verify
@@ -204,7 +223,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
       @gateway.verify(@credit_card)
     end.respond_with(failed_authorize_response, successful_void_response)
     assert_failure response
-    assert_equal "Not sufficient funds", response.message
+    assert_equal 'Not sufficient funds', response.message
   end
 
   def test_successful_store
@@ -214,8 +233,8 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
 
     assert_success response
 
-    assert_equal "Succeeded", response.message
-    assert_equal "store|1453495229881170023", response.authorization
+    assert_equal 'Succeeded', response.message
+    assert_equal 'store|1453495229881170023', response.authorization
     assert response.test?
   end
 
@@ -225,7 +244,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
     end.respond_with(failed_store_response)
 
     assert_failure response
-    assert_equal "Validation Failure", response.message
+    assert_equal 'Validation Failure', response.message
     assert response.test?
   end
 
@@ -321,62 +340,62 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
   end
 
   def transcript
-    <<-PRE_SCRUBBED
-opening connection to ws.cert.transactionexpress.com:443...
-opened
-starting SSL for ws.cert.transactionexpress.com:443...
-SSL established
-<- "POST /portal/merchantframework/MerchantWebServices-v1?wsdl HTTP/1.1\r\nContent-Type: text/xml\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: ws.cert.transactionexpress.com\r\nContent-Length: 1186\r\n\r\n"
-<- "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\"><soapenv:Body><v1:SendTranRequest xmlns:v1=\"http://postilion/realtime/merchantframework/xsd/v1/\"><v1:merc><v1:id>7777778764</v1:id><v1:regKey>M84PKPDMD5BY86HN</v1:regKey><v1:inType>1</v1:inType></v1:merc><v1:tranCode>1</v1:tranCode><v1:card><v1:pan>4485896261017708</v1:pan><v1:xprDt>1709</v1:xprDt></v1:card><v1:contact><v1:fullName>Longbob Longsen</v1:fullName><v1:coName>Acme</v1:coName><v1:title>QA Manager</v1:title><v1:phone><v1:type>4</v1:type><v1:nr>3334445555</v1:nr></v1:phone><v1:addrLn1>450 Main</v1:addrLn1><v1:addrLn2>Suite 100</v1:addrLn2><v1:city>Broomfield</v1:city><v1:state>CO</v1:state><v1:zipCode>85284</v1:zipCode><v1:ctry>US</v1:ctry><v1:email>example@example.com</v1:email><v1:ship><v1:fullName>Longbob Longsen</v1:fullName><v1:addrLn1>450 Main</v1:addrLn1><v1:addrLn2>Suite 100</v1:addrLn2><v1:city>Broomfield</v1:city><v1:state>CO</v1:state><v1:zipCode>85284</v1:zipCode><v1:phone>3334445555</v1:phone></v1:ship></v1:contact><v1:reqAmt>100</v1:reqAmt><v1:authReq><v1:ordNr>7a0f975b6e86aff44364360cbc6d0f00</v1:ordNr></v1:authReq></v1:SendTranRequest></soapenv:Body></soapenv:Envelope>"
--> "HTTP/1.1 200 OK\r\n"
--> "Content-Type: text/xml;charset=utf-8\r\n"
--> "Date: Thu, 21 Jan 2016 20:09:44 GMT\r\n"
--> "Server: WebServer\r\n"
--> "Set-Cookie: NSC_UMT12_DFSU-xt.dfsu.UYQ.dpn=ffffffff0918172545525d5f4f58455e445a4a42378b;expires=Thu, 21-Jan-2016 20:17:43 GMT;path=/;secure;httponly\r\n"
--> "Cache-Control: private\r\n"
--> "Content-Encoding: gzip\r\n"
--> "Transfer-Encoding: chunked\r\n"
--> "\r\n"
--> "1AA \r\n"
-reading 426 bytes...
--> ""
-read 426 bytes
-reading 2 bytes...
--> "\r\n"
-read 2 bytes
--> "0\r\n"
--> "\r\n"
-Conn close
+    <<~PRE_SCRUBBED
+      opening connection to ws.cert.transactionexpress.com:443...
+      opened
+      starting SSL for ws.cert.transactionexpress.com:443...
+      SSL established
+      <- "POST /portal/merchantframework/MerchantWebServices-v1?wsdl HTTP/1.1\r\nContent-Type: text/xml\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: ws.cert.transactionexpress.com\r\nContent-Length: 1186\r\n\r\n"
+      <- "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\"><soapenv:Body><v1:SendTranRequest xmlns:v1=\"http://postilion/realtime/merchantframework/xsd/v1/\"><v1:merc><v1:id>7777778764</v1:id><v1:regKey>M84PKPDMD5BY86HN</v1:regKey><v1:inType>1</v1:inType></v1:merc><v1:tranCode>1</v1:tranCode><v1:card><v1:pan>4485896261017708</v1:pan><v1:xprDt>1709</v1:xprDt></v1:card><v1:contact><v1:fullName>Longbob Longsen</v1:fullName><v1:coName>Acme</v1:coName><v1:title>QA Manager</v1:title><v1:phone><v1:type>4</v1:type><v1:nr>3334445555</v1:nr></v1:phone><v1:addrLn1>450 Main</v1:addrLn1><v1:addrLn2>Suite 100</v1:addrLn2><v1:city>Broomfield</v1:city><v1:state>CO</v1:state><v1:zipCode>85284</v1:zipCode><v1:ctry>US</v1:ctry><v1:email>example@example.com</v1:email><v1:ship><v1:fullName>Longbob Longsen</v1:fullName><v1:addrLn1>450 Main</v1:addrLn1><v1:addrLn2>Suite 100</v1:addrLn2><v1:city>Broomfield</v1:city><v1:state>CO</v1:state><v1:zipCode>85284</v1:zipCode><v1:phone>3334445555</v1:phone></v1:ship></v1:contact><v1:reqAmt>100</v1:reqAmt><v1:authReq><v1:ordNr>7a0f975b6e86aff44364360cbc6d0f00</v1:ordNr></v1:authReq></v1:SendTranRequest></soapenv:Body></soapenv:Envelope>"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Content-Type: text/xml;charset=utf-8\r\n"
+      -> "Date: Thu, 21 Jan 2016 20:09:44 GMT\r\n"
+      -> "Server: WebServer\r\n"
+      -> "Set-Cookie: NSC_UMT12_DFSU-xt.dfsu.UYQ.dpn=ffffffff0918172545525d5f4f58455e445a4a42378b;expires=Thu, 21-Jan-2016 20:17:43 GMT;path=/;secure;httponly\r\n"
+      -> "Cache-Control: private\r\n"
+      -> "Content-Encoding: gzip\r\n"
+      -> "Transfer-Encoding: chunked\r\n"
+      -> "\r\n"
+      -> "1AA \r\n"
+      reading 426 bytes...
+      -> ""
+      read 426 bytes
+      reading 2 bytes...
+      -> "\r\n"
+      read 2 bytes
+      -> "0\r\n"
+      -> "\r\n"
+      Conn close
     PRE_SCRUBBED
   end
 
   def scrubbed_transcript
-    <<-POST_SCRUBBED
-opening connection to ws.cert.transactionexpress.com:443...
-opened
-starting SSL for ws.cert.transactionexpress.com:443...
-SSL established
-<- "POST /portal/merchantframework/MerchantWebServices-v1?wsdl HTTP/1.1\r\nContent-Type: text/xml\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: ws.cert.transactionexpress.com\r\nContent-Length: 1186\r\n\r\n"
-<- "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\"><soapenv:Body><v1:SendTranRequest xmlns:v1=\"http://postilion/realtime/merchantframework/xsd/v1/\"><v1:merc><v1:id>[FILTERED]</v1:id><v1:regKey>[FILTERED]</v1:regKey><v1:inType>1</v1:inType></v1:merc><v1:tranCode>1</v1:tranCode><v1:card><v1:pan>[FILTERED]</v1:pan><v1:xprDt>1709</v1:xprDt></v1:card><v1:contact><v1:fullName>Longbob Longsen</v1:fullName><v1:coName>Acme</v1:coName><v1:title>QA Manager</v1:title><v1:phone><v1:type>4</v1:type><v1:nr>3334445555</v1:nr></v1:phone><v1:addrLn1>450 Main</v1:addrLn1><v1:addrLn2>Suite 100</v1:addrLn2><v1:city>Broomfield</v1:city><v1:state>CO</v1:state><v1:zipCode>85284</v1:zipCode><v1:ctry>US</v1:ctry><v1:email>example@example.com</v1:email><v1:ship><v1:fullName>Longbob Longsen</v1:fullName><v1:addrLn1>450 Main</v1:addrLn1><v1:addrLn2>Suite 100</v1:addrLn2><v1:city>Broomfield</v1:city><v1:state>CO</v1:state><v1:zipCode>85284</v1:zipCode><v1:phone>3334445555</v1:phone></v1:ship></v1:contact><v1:reqAmt>100</v1:reqAmt><v1:authReq><v1:ordNr>7a0f975b6e86aff44364360cbc6d0f00</v1:ordNr></v1:authReq></v1:SendTranRequest></soapenv:Body></soapenv:Envelope>"
--> "HTTP/1.1 200 OK\r\n"
--> "Content-Type: text/xml;charset=utf-8\r\n"
--> "Date: Thu, 21 Jan 2016 20:09:44 GMT\r\n"
--> "Server: WebServer\r\n"
--> "Set-Cookie: NSC_UMT12_DFSU-xt.dfsu.UYQ.dpn=ffffffff0918172545525d5f4f58455e445a4a42378b;expires=Thu, 21-Jan-2016 20:17:43 GMT;path=/;secure;httponly\r\n"
--> "Cache-Control: private\r\n"
--> "Content-Encoding: gzip\r\n"
--> "Transfer-Encoding: chunked\r\n"
--> "\r\n"
--> "1AA \r\n"
-reading 426 bytes...
--> ""
-read 426 bytes
-reading 2 bytes...
--> "\r\n"
-read 2 bytes
--> "0\r\n"
--> "\r\n"
-Conn close
+    <<~POST_SCRUBBED
+      opening connection to ws.cert.transactionexpress.com:443...
+      opened
+      starting SSL for ws.cert.transactionexpress.com:443...
+      SSL established
+      <- "POST /portal/merchantframework/MerchantWebServices-v1?wsdl HTTP/1.1\r\nContent-Type: text/xml\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: ws.cert.transactionexpress.com\r\nContent-Length: 1186\r\n\r\n"
+      <- "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\"><soapenv:Body><v1:SendTranRequest xmlns:v1=\"http://postilion/realtime/merchantframework/xsd/v1/\"><v1:merc><v1:id>[FILTERED]</v1:id><v1:regKey>[FILTERED]</v1:regKey><v1:inType>1</v1:inType></v1:merc><v1:tranCode>1</v1:tranCode><v1:card><v1:pan>[FILTERED]</v1:pan><v1:xprDt>1709</v1:xprDt></v1:card><v1:contact><v1:fullName>Longbob Longsen</v1:fullName><v1:coName>Acme</v1:coName><v1:title>QA Manager</v1:title><v1:phone><v1:type>4</v1:type><v1:nr>3334445555</v1:nr></v1:phone><v1:addrLn1>450 Main</v1:addrLn1><v1:addrLn2>Suite 100</v1:addrLn2><v1:city>Broomfield</v1:city><v1:state>CO</v1:state><v1:zipCode>85284</v1:zipCode><v1:ctry>US</v1:ctry><v1:email>example@example.com</v1:email><v1:ship><v1:fullName>Longbob Longsen</v1:fullName><v1:addrLn1>450 Main</v1:addrLn1><v1:addrLn2>Suite 100</v1:addrLn2><v1:city>Broomfield</v1:city><v1:state>CO</v1:state><v1:zipCode>85284</v1:zipCode><v1:phone>3334445555</v1:phone></v1:ship></v1:contact><v1:reqAmt>100</v1:reqAmt><v1:authReq><v1:ordNr>7a0f975b6e86aff44364360cbc6d0f00</v1:ordNr></v1:authReq></v1:SendTranRequest></soapenv:Body></soapenv:Envelope>"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Content-Type: text/xml;charset=utf-8\r\n"
+      -> "Date: Thu, 21 Jan 2016 20:09:44 GMT\r\n"
+      -> "Server: WebServer\r\n"
+      -> "Set-Cookie: NSC_UMT12_DFSU-xt.dfsu.UYQ.dpn=ffffffff0918172545525d5f4f58455e445a4a42378b;expires=Thu, 21-Jan-2016 20:17:43 GMT;path=/;secure;httponly\r\n"
+      -> "Cache-Control: private\r\n"
+      -> "Content-Encoding: gzip\r\n"
+      -> "Transfer-Encoding: chunked\r\n"
+      -> "\r\n"
+      -> "1AA \r\n"
+      reading 426 bytes...
+      -> ""
+      read 426 bytes
+      reading 2 bytes...
+      -> "\r\n"
+      read 2 bytes
+      -> "0\r\n"
+      -> "\r\n"
+      Conn close
     POST_SCRUBBED
   end
 end

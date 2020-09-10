@@ -1,23 +1,22 @@
 require 'test_helper'
 
 class MerchantOneTest < Test::Unit::TestCase
-
   def setup
     @gateway = MerchantOneGateway.new(fixtures(:merchant_one))
     @credit_card = credit_card
     @amount = 1000
     @options = {
-      :order_id => '1',
-      :description => 'Store Purchase',
-      :billing_address => {
-        :name =>'Jim Smith',
-        :address1 =>'1234 My Street',
-        :address2 =>'Apt 1',
-        :city =>'Tampa',
-        :state =>'FL',
-        :zip =>'33603',
-        :country =>'US',
-        :phone =>'(813)421-4331'
+      order_id: '1',
+      description: 'Store Purchase',
+      billing_address: {
+        name: 'Jim Smith',
+        address1: '1234 My Street',
+        address2: 'Apt 1',
+        city: 'Tampa',
+        state: 'FL',
+        zip: '33603',
+        country: 'US',
+        phone: '(813)421-4331'
       }
     }
   end
@@ -27,7 +26,7 @@ class MerchantOneTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_success response
-    assert_equal "281719471", response.authorization
+    assert_equal '281719471', response.authorization
     assert response.test?, response.test.to_s
   end
 
@@ -60,10 +59,10 @@ class MerchantOneTest < Test::Unit::TestCase
   private
 
   def successful_purchase_response
-    "response=1&responsetext=SUCCESS&authcode=123456&transactionid=281719471&avsresponse=&cvvresponse=M&orderid=&type=sale&response_code=100"
+    'response=1&responsetext=SUCCESS&authcode=123456&transactionid=281719471&avsresponse=&cvvresponse=M&orderid=&type=sale&response_code=100'
   end
 
   def failed_purchase_response
-    "response=3&responsetext=DECLINE&authcode=123456&transactionid=281719471&avsresponse=&cvvresponse=M&orderid=&type=sale&response_code=300"
+    'response=3&responsetext=DECLINE&authcode=123456&transactionid=281719471&avsresponse=&cvvresponse=M&orderid=&type=sale&response_code=300'
   end
 end

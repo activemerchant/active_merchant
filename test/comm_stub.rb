@@ -19,7 +19,7 @@ module CommStub
       singleton_class = (class << @gateway; self; end)
       singleton_class.send(:undef_method, @method_to_stub)
       singleton_class.send(:define_method, @method_to_stub) do |*args|
-        check.call(*args) if check
+        check&.call(*args)
         (responses.size == 1 ? responses.last : responses.shift)
       end
       @action.call
@@ -40,7 +40,7 @@ module CommStub
     @last_comm_stub ||= Stub::Complete.new
   end
 
-  def stub_comms(gateway=@gateway, method_to_stub=:ssl_post, &action)
+  def stub_comms(gateway = @gateway, method_to_stub = :ssl_post, &action)
     assert last_comm_stub.complete?, "Tried to stub communications when there's a stub already in progress."
     @last_comm_stub = Stub.new(gateway, method_to_stub, action)
   end

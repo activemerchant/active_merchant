@@ -11,31 +11,31 @@ class RemoteCommercegateTest < Test::Unit::TestCase
     }
 
     @credit_card = credit_card(fixtures(:commercegate)[:card_number])
-    @expired_credit_card = credit_card(fixtures(:commercegate)[:card_number], year: Time.now.year-1)
+    @expired_credit_card = credit_card(fixtures(:commercegate)[:card_number], year: Time.now.year - 1)
   end
 
   def test_successful_authorize
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
     assert_equal response.params['action'], 'AUTH'
-    assert_equal 'U', response.avs_result["code"]
-    assert_equal 'M', response.cvv_result["code"]
+    assert_equal 'U', response.avs_result['code']
+    assert_equal 'M', response.cvv_result['code']
   end
 
   def test_successful_authorize_without_options
     assert response = @gateway.authorize(@amount, @credit_card)
     assert_success response
     assert_equal response.params['action'], 'AUTH'
-    assert_nil response.avs_result["code"]
-    assert_equal 'M', response.cvv_result["code"]
+    assert_nil response.avs_result['code']
+    assert_equal 'M', response.cvv_result['code']
   end
 
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal response.params['action'], 'SALE'
-    assert_equal 'U', response.avs_result["code"]
-    assert_equal 'M', response.cvv_result["code"]
+    assert_equal 'U', response.avs_result['code']
+    assert_equal 'M', response.cvv_result['code']
   end
 
   def test_unsuccessful_purchase
