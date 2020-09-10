@@ -56,7 +56,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def do_capture(authorization_id, options)
-        requires!(options.merge!({ authorization_id: authorization_id }), :authorization_id, :amount)
+        requires!(options.merge!({ authorization_id: authorization_id  }), :authorization_id)
 
         post("v2/payments/authorizations/#{ authorization_id }/capture", options)
       end
