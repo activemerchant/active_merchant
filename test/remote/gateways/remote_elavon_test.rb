@@ -9,10 +9,10 @@ class RemoteElavonTest < Test::Unit::TestCase
     @bad_credit_card = credit_card('invalid')
 
     @options = {
-      :email => 'paul@domain.com',
-      :description => 'Test Transaction',
-      :billing_address => address,
-      :ip => '203.0.113.0'
+      email: 'paul@domain.com',
+      description: 'Test Transaction',
+      billing_address: address,
+      ip: '203.0.113.0'
     }
     @amount = 100
   end
@@ -40,7 +40,7 @@ class RemoteElavonTest < Test::Unit::TestCase
     assert_equal 'APPROVAL', auth.message
     assert auth.authorization
 
-    assert capture = @gateway.capture(@amount, auth.authorization, :credit_card => @credit_card)
+    assert capture = @gateway.capture(@amount, auth.authorization, credit_card: @credit_card)
     assert_success capture
   end
 
@@ -55,7 +55,7 @@ class RemoteElavonTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_capture
-    assert response = @gateway.capture(@amount, '', :credit_card => @credit_card)
+    assert response = @gateway.capture(@amount, '', credit_card: @credit_card)
     assert_failure response
     assert_equal 'The FORCE Approval Code supplied in the authorization request appears to be invalid or blank.  The FORCE Approval Code must be 6 or less alphanumeric characters.', response.message
   end
@@ -168,7 +168,7 @@ class RemoteElavonTest < Test::Unit::TestCase
   def test_successful_update
     store_response = @gateway.store(@credit_card, @options)
     token = store_response.params['token']
-    credit_card = credit_card('4124939999999990', :month => 10)
+    credit_card = credit_card('4124939999999990', month: 10)
     assert response = @gateway.update(token, credit_card, @options)
     assert_success response
     assert response.test?

@@ -14,12 +14,13 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'iATS Payments'
 
       ACTIONS = {
-        purchase: 'ProcessCreditCardV1',
-        purchase_check: 'ProcessACHEFTV1',
-        refund: 'ProcessCreditCardRefundWithTransactionIdV1',
-        refund_check: 'ProcessACHEFTRefundWithTransactionIdV1',
-        store: 'CreateCreditCardCustomerCodeV1',
-        unstore: 'DeleteCustomerCodeV1'
+        purchase: 'ProcessCreditCard',
+        purchase_check: 'ProcessACHEFT',
+        purchase_customer_code: 'ProcessCreditCardWithCustomerCode',
+        refund: 'ProcessCreditCardRefundWithTransactionId',
+        refund_check: 'ProcessACHEFTRefundWithTransactionId',
+        store: 'CreateCreditCardCustomerCode',
+        unstore: 'DeleteCustomerCode'
       }
 
       def initialize(options={})
@@ -42,7 +43,7 @@ module ActiveMerchant #:nodoc:
         add_ip(post, options)
         add_description(post, options)
 
-        commit((payment.is_a?(Check) ? :purchase_check : :purchase), post)
+        commit(determine_purchase_type(payment), post)
       end
 
       def refund(money, authorization, options={})
@@ -90,6 +91,16 @@ module ActiveMerchant #:nodoc:
 
       private
 
+      def determine_purchase_type(payment)
+        if payment.is_a?(String)
+          :purchase_customer_code
+        elsif payment.is_a?(Check)
+          :purchase_check
+        else
+          :purchase
+        end
+      end
+
       def add_ip(post, options)
         post[:customer_ip_address] = options[:ip] if options.has_key?(:ip)
       end
@@ -101,6 +112,9 @@ module ActiveMerchant #:nodoc:
           post[:city] = billing_address[:city]
           post[:state] = billing_address[:state]
           post[:zip_code] = billing_address[:zip]
+          post[:phone] = billing_address[:phone] if billing_address[:phone]
+          post[:email] = billing_address[:email] if billing_address[:email]
+          post[:country] = billing_address[:country] if billing_address[:country]
         end
       end
 
@@ -114,7 +128,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment(post, payment)
-        if payment.is_a?(Check)
+        if payment.is_a?(String)
+          post[:customer_code] = payment
+        elsif payment.is_a?(Check)
           add_check(post, payment)
         else
           add_credit_card(post, payment)
@@ -178,12 +194,13 @@ module ActiveMerchant #:nodoc:
 
       def endpoints
         {
-          purchase: 'ProcessLink.asmx',
-          purchase_check: 'ProcessLink.asmx',
-          refund: 'ProcessLink.asmx',
-          refund_check: 'ProcessLink.asmx',
-          store: 'CustomerLink.asmx',
-          unstore: 'CustomerLink.asmx'
+          purchase: 'ProcessLinkv3.asmx',
+          purchase_check: 'ProcessLinkv3.asmx',
+          purchase_customer_code: 'ProcessLinkv3.asmx',
+          refund: 'ProcessLinkv3.asmx',
+          refund_check: 'ProcessLinkv3.asmx',
+          store: 'CustomerLinkv3.asmx',
+          unstore: 'CustomerLinkv3.asmx'
         }
       end
 
@@ -266,7 +283,7 @@ module ActiveMerchant #:nodoc:
 
       def post_data(action, parameters = {})
         xml = Builder::XmlMarkup.new
-        xml.instruct!(:xml, :version => '1.0', :encoding => 'utf-8')
+        xml.instruct!(:xml, version: '1.0', encoding: 'utf-8')
         xml.tag! 'soap12:Envelope', envelope_namespaces do
           xml.tag! 'soap12:Body' do
             xml.tag! ACTIONS[action], { 'xmlns' => 'https://www.iatspayments.com/NetGate/' } do

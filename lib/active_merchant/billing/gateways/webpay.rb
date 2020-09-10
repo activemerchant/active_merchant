@@ -53,7 +53,7 @@ module ActiveMerchant #:nodoc:
 
             return r unless options[:set_default] and r.success? and !r.params['id'].blank?
 
-            r.process { update_customer(options[:customer], :default_card => r.params['id']) }
+            r.process { update_customer(options[:customer], default_card: r.params['id']) }
           end
         else
           commit(:post, 'customers', post, options)
@@ -89,7 +89,7 @@ module ActiveMerchant #:nodoc:
           'Authorization' => 'Basic ' + Base64.encode64(@api_key.to_s + ':').strip,
           'User-Agent' => "Webpay/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
           'X-Webpay-Client-User-Agent' => user_agent,
-          'X-Webpay-Client-User-Metadata' => {:ip => options[:ip]}.to_json
+          'X-Webpay-Client-User-Metadata' => {ip: options[:ip]}.to_json
         }
       end
     end

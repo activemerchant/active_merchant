@@ -102,13 +102,21 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_method(post, payment_method, options)
         post[:source] = {}
-        post[:source][:type] = 'card'
-        post[:source][:name] = payment_method.name
-        post[:source][:number] = payment_method.number
-        post[:source][:cvv] = payment_method.verification_value
+        if payment_method.is_a?(NetworkTokenizationCreditCard) && payment_method.source == :network_token
+          post[:source][:type] = 'network_token'
+          post[:source][:token] = payment_method.number
+          post[:source][:token_type] = payment_method.brand == 'visa' ? 'vts' : 'mdes'
+          post[:source][:cryptogram] = payment_method.payment_cryptogram
+          post[:source][:eci] = options[:eci] || '05'
+        else
+          post[:source][:type] = 'card'
+          post[:source][:name] = payment_method.name
+          post[:source][:number] = payment_method.number
+          post[:source][:cvv] = payment_method.verification_value
+          post[:source][:stored] = 'true' if options[:card_on_file] == true
+        end
         post[:source][:expiry_year] = format(payment_method.year, :four_digits)
         post[:source][:expiry_month] = format(payment_method.month, :two_digits)
-        post[:source][:stored] = 'true' if options[:card_on_file] == true
       end
 
       def add_customer_data(post, options)
@@ -158,7 +166,7 @@ module ActiveMerchant #:nodoc:
         rescue ResponseError => e
           raise unless e.response.code.to_s =~ /4\d\d/
 
-          response = parse(e.response.body)
+          response = parse(e.response.body, error: e.response)
         end
 
         succeeded = success_from(response)
@@ -216,13 +224,16 @@ module ActiveMerchant #:nodoc:
         response['source'] && response['source']['cvv_check'] ? CVVResult.new(response['source']['cvv_check']) : nil
       end
 
-      def parse(body)
+      def parse(body, error: nil)
         JSON.parse(body)
       rescue JSON::ParserError
-        {
+        response = {
+          'error_type' => error&.code,
           'message' => 'Invalid JSON response received from Checkout.com Unified Payments Gateway. Please contact Checkout.com if you continue to receive this message.',
           'raw_response' => scrub(body)
         }
+        response['error_codes'] = [error&.message] if error&.message
+        response
       end
 
       def success_from(response)
@@ -235,7 +246,7 @@ module ActiveMerchant #:nodoc:
         elsif response['error_type']
           response['error_type'] + ': ' + response['error_codes'].first
         else
-          response['response_summary'] || response['response_code'] || 'Unable to read error message'
+          response['response_summary'] || response['response_code'] || response['status'] || response['message'] || 'Unable to read error message'
         end
       end
 

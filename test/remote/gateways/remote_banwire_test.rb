@@ -7,8 +7,8 @@ class RemoteBanwireTest < Test::Unit::TestCase
     @gateway = BanwireGateway.new(fixtures(:banwire))
 
     @amount = 100
-    @credit_card = credit_card('5204164299999999', :verification_value => '999', :brand => 'mastercard')
-    @visa_credit_card = credit_card('4485814063899108', :verification_value => '434')
+    @credit_card = credit_card('5204164299999999', verification_value: '999', brand: 'mastercard')
+    @visa_credit_card = credit_card('4485814063899108', verification_value: '434')
 
     @declined_card = credit_card('4000300011112220')
     @options = {
@@ -45,8 +45,8 @@ class RemoteBanwireTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = BanwireGateway.new(
-      :login => 'fakeuser',
-      :currency => 'MXN'
+      login: 'fakeuser',
+      currency: 'MXN'
     )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response

@@ -7,16 +7,16 @@ class FirstdataE4Test < Test::Unit::TestCase
 
   def setup
     @gateway = FirstdataE4Gateway.new(
-      :login    => 'A00427-01',
-      :password => 'testus'
+      login: 'A00427-01',
+      password: 'testus'
     )
 
     @credit_card = credit_card
     @amount = 100
     @options = {
-      :order_id => '1',
-      :billing_address => address,
-      :description => 'Store Purchase'
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase'
     }
     @authorization = 'ET1700;106625152;4738'
   end

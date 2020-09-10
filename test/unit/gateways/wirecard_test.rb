@@ -259,7 +259,7 @@ class WirecardTest < Test::Unit::TestCase
 
   def test_store_sets_amount_to_amount_from_options
     stub_comms do
-      @gateway.store(@credit_card, :amount => 120)
+      @gateway.store(@credit_card, amount: 120)
     end.check_request do |endpoint, body, headers|
       assert_xml_element_text(body, '//CC_TRANSACTION/Amount', '120')
     end.respond_with(successful_authorization_response)
@@ -285,7 +285,7 @@ class WirecardTest < Test::Unit::TestCase
 
   def test_authorization_with_recurring_transaction_type_initial
     stub_comms do
-      @gateway.authorize(@amount, @credit_card, @options.merge(:recurring => 'Initial'))
+      @gateway.authorize(@amount, @credit_card, @options.merge(recurring: 'Initial'))
     end.check_request do |endpoint, body, headers|
       assert_xml_element_text(body, '//RECURRING_TRANSACTION/Type', 'Initial')
     end.respond_with(successful_authorization_response)
@@ -293,7 +293,7 @@ class WirecardTest < Test::Unit::TestCase
 
   def test_purchase_using_with_recurring_transaction_type_initial
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(:recurring => 'Initial'))
+      @gateway.purchase(@amount, @credit_card, @options.merge(recurring: 'Initial'))
     end.check_request do |endpoint, body, headers|
       assert_xml_element_text(body, '//RECURRING_TRANSACTION/Type', 'Initial')
     end.respond_with(successful_authorization_response)

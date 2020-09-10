@@ -72,8 +72,8 @@ module ActiveMerchant #:nodoc:
         authorization = response[:unique_id]
 
         Response.new(success, message, response,
-          :authorization => authorization,
-          :test => (response[:mode] != 'LIVE')
+          authorization: authorization,
+          test: (response[:mode] != 'LIVE')
         )
       end
 
@@ -103,7 +103,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_request(payment_code, money, payment, options)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.instruct!
         xml.tag! 'Request', 'version' => API_VERSION do
           xml.tag! 'Header' do

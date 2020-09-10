@@ -73,20 +73,30 @@ class RemoteDecidirTest < Test::Unit::TestCase
       card_holder_birthday: '01011980',
       card_holder_identification_type: 'dni',
       card_holder_identification_number: '123456',
-      installments: '12'
+      establishment_name: 'Heavenly Buffaloes',
+      fraud_detection: {
+        send_to_cs: false,
+        channel: 'Web',
+        dispatch_method: 'Store Pick Up'
+      },
+      installments: '12',
+      site_id: '99999999'
     }
 
     response = @gateway_for_purchase.purchase(@amount, credit_card('4509790112684851'), @options.merge(options))
     assert_success response
     assert_equal 'approved', response.message
+    assert_equal 'Heavenly Buffaloes', response.params['establishment_name']
+    assert_equal '99999999', response.params['site_id']
+    assert_equal({'status' => nil}, response.params['fraud_detection'])
     assert response.authorization
   end
 
   def test_failed_purchase
     response = @gateway_for_purchase.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'TARJETA INVALIDA', response.message
-    assert_match Gateway::STANDARD_ERROR_CODE[:invalid_number], response.error_code
+    assert_equal 'COMERCIO INVALIDO | invalid_card', response.message
+    assert_match Gateway::STANDARD_ERROR_CODE[:config_error], response.error_code
   end
 
   def test_failed_purchase_with_invalid_field
@@ -111,7 +121,7 @@ class RemoteDecidirTest < Test::Unit::TestCase
   def test_failed_authorize
     response = @gateway_for_auth.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'TARJETA INVALIDA', response.message
+    assert_equal 'TARJETA INVALIDA | invalid_number', response.message
     assert_match Gateway::STANDARD_ERROR_CODE[:invalid_number], response.error_code
   end
 
@@ -147,7 +157,7 @@ class RemoteDecidirTest < Test::Unit::TestCase
     purchase = @gateway_for_purchase.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway_for_purchase.refund(@amount-1, purchase.authorization)
+    assert refund = @gateway_for_purchase.refund(@amount - 1, purchase.authorization)
     assert_success refund
     assert_equal 'approved', refund.message
     assert refund.authorization
@@ -186,7 +196,7 @@ class RemoteDecidirTest < Test::Unit::TestCase
   def test_failed_verify
     response = @gateway_for_auth.verify(@declined_card, @options)
     assert_failure response
-    assert_match %r{TARJETA INVALIDA}, response.message
+    assert_match %r{TARJETA INVALIDA | invalid_number}, response.message
   end
 
   def test_invalid_login

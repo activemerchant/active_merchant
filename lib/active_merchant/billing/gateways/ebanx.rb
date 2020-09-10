@@ -37,6 +37,15 @@ module ActiveMerchant #:nodoc:
         store: :post
       }
 
+      VERIFY_AMOUNT_PER_COUNTRY = {
+        'br' => 100,
+        'ar' => 100,
+        'co' => 100,
+        'pe' => 300,
+        'mx' => 300,
+        'cl' => 5000
+      }
+
       def initialize(options={})
         requires!(options, :integration_key)
         super
@@ -65,6 +74,7 @@ module ActiveMerchant #:nodoc:
         add_card_or_token(post, payment)
         add_address(post, options)
         add_customer_responsible_person(post, payment, options)
+        add_additional_data(post, options)
         post[:payment][:creditcard][:auto_capture] = false
 
         commit(:authorize, post)
@@ -109,7 +119,7 @@ module ActiveMerchant #:nodoc:
 
       def verify(credit_card, options={})
         MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
+          r.process { authorize(VERIFY_AMOUNT_PER_COUNTRY[customer_country(options)], credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
         end
       end
@@ -120,7 +130,7 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
-          gsub(/(integration_key\\?":\\?")(\d*)/, '\1[FILTERED]').
+          gsub(/(integration_key\\?":\\?")(\w*)/, '\1[FILTERED]').
           gsub(/(card_number\\?":\\?")(\d*)/, '\1[FILTERED]').
           gsub(/(card_cvv\\?":\\?")(\d*)/, '\1[FILTERED]')
       end
@@ -171,7 +181,7 @@ module ActiveMerchant #:nodoc:
       def add_invoice(post, money, options)
         post[:payment][:amount_total] = amount(money)
         post[:payment][:currency_code] = (options[:currency] || currency(money))
-        post[:payment][:merchant_payment_code] = options[:order_id]
+        post[:payment][:merchant_payment_code] = Digest::MD5.hexdigest(options[:order_id])
         post[:payment][:instalments] = options[:instalments] || 1
       end
 
@@ -201,6 +211,7 @@ module ActiveMerchant #:nodoc:
 
       def add_additional_data(post, options)
         post[:device_id] = options[:device_id] if options[:device_id]
+        post[:metadata] = options[:metadata] if options[:metadata]
       end
 
       def parse(body)
@@ -209,7 +220,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, parameters)
         url = url_for((test? ? test_url : live_url), action, parameters)
-        response = parse(ssl_request(HTTP_METHOD[action], url, post_data(action, parameters), {}))
+        response = parse(ssl_request(HTTP_METHOD[action], url, post_data(action, parameters), {'x-ebanx-client-user-agent': "ActiveMerchant/#{ActiveMerchant::VERSION}"}))
 
         success = success_from(action, response)
 

@@ -12,9 +12,9 @@ module ActiveMerchant #:nodoc:
       ADVANCED_PATH = '/evolvcc/evolvcc.aspx'
 
       ACTIONS = {
-        :authorization => 'AuthorizeAPI',
-        :change_status => 'SJAPI_TransactionChangeStatusRequest',
-        :get_status => 'SJAPI_TransactionStatusRequest'
+        authorization: 'AuthorizeAPI',
+        change_status: 'SJAPI_TransactionChangeStatusRequest',
+        get_status: 'SJAPI_TransactionStatusRequest'
       }
 
       SUCCESS_MESSAGE = 'The transaction was successful.'
@@ -242,7 +242,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def status(order_id)
-        commit(:get_status, nil, :szOrderNumber => order_id)
+        commit(:get_status, nil, szOrderNumber: order_id)
       end
 
       private
@@ -264,10 +264,10 @@ module ActiveMerchant #:nodoc:
 
         # Pass along the original transaction id in the case an update transaction
         Response.new(response[:success], message_from(response, action), response,
-          :test => test?,
-          :authorization => response[:szTransactionFileName] || parameters[:szTransactionId],
-          :avs_result => { :code => response[:szAVSResponseCode] },
-          :cvv_result => response[:szCVV2ResponseCode]
+          test: test?,
+          authorization: response[:szTransactionFileName] || parameters[:szTransactionId],
+          avs_result: { code: response[:szAVSResponseCode] },
+          cvv_result: response[:szCVV2ResponseCode]
         )
       end
 

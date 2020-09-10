@@ -180,8 +180,8 @@ module ActiveMerchant #:nodoc:
 
         success = (response_params['ResponseCode'] == '00')
         message = response_params['ResponseText'] || response_params['ResponseMsg']
-        options = @options.merge(:test => test?,
-                                 :authorization => build_authorization(request_params, response_params))
+        options = @options.merge(test: test?,
+                                 authorization: build_authorization(request_params, response_params))
 
         Response.new(success, message, response_params, options)
       end

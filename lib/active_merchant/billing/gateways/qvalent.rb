@@ -230,7 +230,7 @@ module ActiveMerchant #:nodoc:
 
       def headers
         {
-          'Content-Type'  => 'application/x-www-form-urlencoded'
+          'Content-Type' => 'application/x-www-form-urlencoded'
         }
       end
 

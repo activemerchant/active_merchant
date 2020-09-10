@@ -21,6 +21,8 @@ module ActiveMerchant #:nodoc:
         visa:             'Visa 3DSecure',
         american_express: 'AMEX 3DSecure',
         discover:         'Discover 3DSecure',
+        android_pay:      'GooglePayApp',
+        google_pay:       'GooglePayApp'
       }
 
       def initialize(options={})
@@ -32,10 +34,10 @@ module ActiveMerchant #:nodoc:
         commit('CreditAuth') do |xml|
           add_amount(xml, money)
           add_allow_dup(xml)
-          add_customer_data(xml, card_or_token, options)
+          add_card_or_token_customer_data(xml, card_or_token, options)
           add_details(xml, options)
           add_descriptor_name(xml, options)
-          add_payment(xml, card_or_token, options)
+          add_card_or_token_payment(xml, card_or_token, options)
           add_three_d_secure(xml, card_or_token, options)
         end
       end
@@ -47,15 +49,11 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def purchase(money, card_or_token, options={})
-        commit('CreditSale') do |xml|
-          add_amount(xml, money)
-          add_allow_dup(xml)
-          add_customer_data(xml, card_or_token, options)
-          add_details(xml, options)
-          add_descriptor_name(xml, options)
-          add_payment(xml, card_or_token, options)
-          add_three_d_secure(xml, card_or_token, options)
+      def purchase(money, payment_method, options={})
+        if payment_method.is_a?(Check)
+          commit_check_sale(money, payment_method, options)
+        else
+          commit_credit_sale(money, payment_method, options)
         end
       end
 
@@ -64,22 +62,28 @@ module ActiveMerchant #:nodoc:
           add_amount(xml, money)
           add_allow_dup(xml)
           add_reference(xml, transaction_id)
-          add_customer_data(xml, transaction_id, options)
+          add_card_or_token_customer_data(xml, transaction_id, options)
           add_details(xml, options)
         end
       end
 
       def verify(card_or_token, options={})
         commit('CreditAccountVerify') do |xml|
-          add_customer_data(xml, card_or_token, options)
+          add_card_or_token_customer_data(xml, card_or_token, options)
           add_descriptor_name(xml, options)
-          add_payment(xml, card_or_token, options)
+          add_card_or_token_payment(xml, card_or_token, options)
         end
       end
 
       def void(transaction_id, options={})
-        commit('CreditVoid') do |xml|
-          add_reference(xml, transaction_id)
+        if options[:check_void]
+          commit('CheckVoid') do |xml|
+            add_reference(xml, transaction_id)
+          end
+        else
+          commit('CreditVoid') do |xml|
+            add_reference(xml, transaction_id)
+          end
         end
       end
 
@@ -92,10 +96,34 @@ module ActiveMerchant #:nodoc:
           gsub(%r((<hps:CardNbr>)[^<]*(<\/hps:CardNbr>))i, '\1[FILTERED]\2').
           gsub(%r((<hps:CVV2>)[^<]*(<\/hps:CVV2>))i, '\1[FILTERED]\2').
           gsub(%r((<hps:SecretAPIKey>)[^<]*(<\/hps:SecretAPIKey>))i, '\1[FILTERED]\2').
-          gsub(%r((<hps:PaymentData>)[^<]*(<\/hps:PaymentData>))i, '\1[FILTERED]\2')
+          gsub(%r((<hps:PaymentData>)[^<]*(<\/hps:PaymentData>))i, '\1[FILTERED]\2').
+          gsub(%r((<hps:RoutingNumber>)[^<]*(<\/hps:RoutingNumber>))i, '\1[FILTERED]\2').
+          gsub(%r((<hps:AccountNumber>)[^<]*(<\/hps:AccountNumber>))i, '\1[FILTERED]\2')
       end
 
       private
+
+      def commit_check_sale(money, check, options)
+        commit('CheckSale') do |xml|
+          add_check_payment(xml, check, options)
+          add_amount(xml, money)
+          add_sec_code(xml, options)
+          add_check_customer_data(xml, check, options)
+          add_details(xml, options)
+        end
+      end
+
+      def commit_credit_sale(money, card_or_token, options)
+        commit('CreditSale') do |xml|
+          add_amount(xml, money)
+          add_allow_dup(xml)
+          add_card_or_token_customer_data(xml, card_or_token, options)
+          add_details(xml, options)
+          add_descriptor_name(xml, options)
+          add_card_or_token_payment(xml, card_or_token, options)
+          add_three_d_secure(xml, card_or_token, options)
+        end
+      end
 
       def add_reference(xml, transaction_id)
         xml.hps :GatewayTxnId, transaction_id
@@ -105,7 +133,7 @@ module ActiveMerchant #:nodoc:
         xml.hps :Amt, amount(money) if money
       end
 
-      def add_customer_data(xml, credit_card, options)
+      def add_card_or_token_customer_data(xml, credit_card, options)
         xml.hps :CardHolderData do
           if credit_card.respond_to?(:number)
             xml.hps :CardHolderFirstName, credit_card.first_name if credit_card.first_name
@@ -124,11 +152,19 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_payment(xml, card_or_token, options)
+      def add_check_customer_data(xml, check, options)
+        xml.hps :ConsumerInfo do
+          xml.hps :FirstName, check.first_name
+          xml.hps :LastName, check.last_name
+          xml.hps :CheckName, options[:company_name] if options[:company_name]
+        end
+      end
+
+      def add_card_or_token_payment(xml, card_or_token, options)
         xml.hps :CardData do
           if card_or_token.respond_to?(:number)
             if card_or_token.track_data
-              xml.tag!('hps:TrackData', 'method'=>'swipe') do
+              xml.tag!('hps:TrackData', 'method' => 'swipe') do
                 xml.text! card_or_token.track_data
               end
               if options[:encryption_type]
@@ -159,12 +195,27 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_check_payment(xml, check, options)
+        xml.hps :CheckAction, 'SALE'
+        xml.hps :AccountInfo do
+          xml.hps :RoutingNumber, check.routing_number
+          xml.hps :AccountNumber, check.account_number
+          xml.hps :CheckNumber, check.number
+          xml.hps :AccountType, check.account_type.upcase
+        end
+        xml.hps :CheckType, check.account_holder_type.upcase
+      end
+
       def add_details(xml, options)
         xml.hps :AdditionalTxnFields do
           xml.hps :Description, options[:description] if options[:description]
           xml.hps :InvoiceNbr, options[:order_id] if options[:order_id]
           xml.hps :CustomerID, options[:customer_id] if options[:customer_id]
         end
+      end
+
+      def add_sec_code(xml, options)
+        xml.hps :SECCode, options[:sec_code] || 'WEB'
       end
 
       def add_allow_dup(xml)
@@ -214,8 +265,8 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new(encoding: 'UTF-8')
         xml.instruct!(:xml, encoding: 'UTF-8')
         xml.SOAP :Envelope, {
-            'xmlns:SOAP' => 'http://schemas.xmlsoap.org/soap/envelope/',
-            'xmlns:hps' => 'http://Hps.Exchange.PosGateway'
+          'xmlns:SOAP' => 'http://schemas.xmlsoap.org/soap/envelope/',
+          'xmlns:hps' => 'http://Hps.Exchange.PosGateway'
         } do
           xml.SOAP :Body do
             xml.hps :PosRequest do
@@ -296,10 +347,11 @@ module ActiveMerchant #:nodoc:
         )
       end
 
+      SUCCESSFUL_RESPONSE_CODES = %w(0 00 85)
       def successful?(response)
         (
           (response['GatewayRspCode'] == '0') &&
-          ((response['RspCode'] || '00') == '00' || response['RspCode'] == '85')
+          ((SUCCESSFUL_RESPONSE_CODES.include? response['RspCode']) || !response['RspCode'])
         )
       end
 
@@ -307,10 +359,10 @@ module ActiveMerchant #:nodoc:
         if response['Fault']
           response['Fault']
         elsif response['GatewayRspCode'] == '0'
-          if response['RspCode'] != '00' && response['RspCode'] != '85'
-            issuer_message(response['RspCode'])
-          else
+          if SUCCESSFUL_RESPONSE_CODES.include? response['RspCode']
             response['GatewayRspMsg']
+          else
+            issuer_message(response['RspCode'])
           end
         else
           (GATEWAY_MESSAGES[response['GatewayRspCode']] || response['GatewayRspMsg'])

@@ -231,8 +231,8 @@ module ActiveMerchant #:nodoc:
 
       def headers
         {
-          'Accept'  => 'application/json',
-          'Content-Type'  => 'application/x-www-form-urlencoded;charset=UTF-8'
+          'Accept' => 'application/json',
+          'Content-Type' => 'application/x-www-form-urlencoded;charset=UTF-8'
         }
       end
 

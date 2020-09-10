@@ -6,24 +6,24 @@ class RemoteNmiTest < Test::Unit::TestCase
     @amount = Random.rand(100...1000)
     @credit_card = credit_card('4111111111111111', verification_value: 917)
     @check = check(
-      :routing_number => '123123123',
-      :account_number => '123123123'
+      routing_number: '123123123',
+      account_number: '123123123'
     )
     @apple_pay_card = network_tokenization_credit_card('4111111111111111',
-      :payment_cryptogram => 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
-      :month              => '01',
-      :year               => '2024',
-      :source             => :apple_pay,
-      :eci                => '5',
-      :transaction_id     => '123456789'
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      month: '01',
+      year: '2024',
+      source: :apple_pay,
+      eci: '5',
+      transaction_id: '123456789'
     )
     @options = {
-      :order_id => generate_unique_id,
-      :billing_address => address,
-      :description => 'Store purchase'
+      order_id: generate_unique_id,
+      billing_address: address,
+      description: 'Store purchase'
     }
     @level3_options = {
-       tax: 5.25, shipping: 10.51, ponumber: 1002
+      tax: 5.25, shipping: 10.51, ponumber: 1002
     }
   end
 

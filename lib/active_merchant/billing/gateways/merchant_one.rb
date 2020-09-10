@@ -101,8 +101,8 @@ module ActiveMerchant #:nodoc:
           (responses['response'].to_i == 1),
           responses['responsetext'],
           responses,
-          :test => test?,
-          :authorization => responses['transactionid']
+          test: test?,
+          authorization: responses['transactionid']
         )
       end
     end

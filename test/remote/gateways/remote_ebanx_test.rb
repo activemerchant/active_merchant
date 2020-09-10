@@ -18,7 +18,11 @@ class RemoteEbanxTest < Test::Unit::TestCase
       }),
       order_id: generate_unique_id,
       document: '853.513.468-93',
-      device_id: '34c376b2767'
+      device_id: '34c376b2767',
+      metadata: {
+        metadata_1: 'test',
+        metadata_2: 'test2'
+      }
     }
   end
 
@@ -103,7 +107,7 @@ class RemoteEbanxTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@amount - 1, auth.authorization)
     assert_success capture
   end
 
@@ -112,7 +116,7 @@ class RemoteEbanxTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization, @options.merge(include_capture_amount: true))
+    assert capture = @gateway.capture(@amount - 1, auth.authorization, @options.merge(include_capture_amount: true))
     assert_failure capture
     assert_equal 'Partial capture not available', capture.message
   end
@@ -138,7 +142,7 @@ class RemoteEbanxTest < Test::Unit::TestCase
     assert_success purchase
 
     refund_options = @options.merge(description: 'refund due to returned item')
-    assert refund = @gateway.refund(@amount-1, purchase.authorization, refund_options)
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization, refund_options)
     assert_success refund
   end
 
@@ -201,6 +205,27 @@ class RemoteEbanxTest < Test::Unit::TestCase
     assert_match %r{Accepted}, response.message
   end
 
+  def test_successful_verify_for_chile
+    options = @options.merge({
+      order_id: generate_unique_id,
+      ip: '127.0.0.1',
+      email: 'jose@example.com.cl',
+      birth_date: '10/11/1980',
+      billing_address: address({
+        address1: '1040 Rua E',
+        city: 'Medellín',
+        state: 'AN',
+        zip: '29269',
+        country: 'CL',
+        phone_number: '8522847035'
+      })
+    })
+
+    response = @gateway.verify(@credit_card, options)
+    assert_success response
+    assert_match %r{Accepted}, response.message
+  end
+
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
@@ -224,5 +249,13 @@ class RemoteEbanxTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:integration_key], transcript)
+  end
+
+  def test_successful_purchase_with_long_order_id
+    options = @options.update(order_id: SecureRandom.hex(50))
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Accepted', response.message
   end
 end

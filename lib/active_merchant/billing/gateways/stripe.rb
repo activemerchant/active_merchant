@@ -362,6 +362,7 @@ module ActiveMerchant #:nodoc:
           add_customer_data(post, options)
           post[:description] = options[:description]
           post[:statement_descriptor] = options[:statement_description]
+          post[:statement_descriptor_suffix] = options[:statement_descriptor_suffix] if options[:statement_descriptor_suffix]
           post[:receipt_email] = options[:receipt_email] if options[:receipt_email]
           add_customer(post, payment, options)
           add_flags(post, options)
@@ -372,6 +373,7 @@ module ActiveMerchant #:nodoc:
         add_exchange_rate(post, options)
         add_destination(post, options)
         add_level_three(post, options)
+        add_connected_account(post, options)
         post
       end
 
@@ -417,7 +419,7 @@ module ActiveMerchant #:nodoc:
 
       def add_external_account(post, card_params, payment)
         external_account = {}
-        external_account[:object] ='card'
+        external_account[:object] = 'card'
         external_account[:currency] = (options[:currency] || currency(payment)).downcase
         post[:external_account] = external_account.merge(card_params[:card])
       end
@@ -512,10 +514,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer(post, payment, options)
-        if options[:customer] && !payment.respond_to?(:number)
-          ActiveMerchant.deprecated 'Passing the customer in the options is deprecated. Just use the response.authorization instead.'
-          post[:customer] = options[:customer]
-        end
+        post[:customer] = options[:customer] if options[:customer] && !payment.respond_to?(:number)
       end
 
       def add_flags(post, options)
@@ -553,6 +552,16 @@ module ActiveMerchant #:nodoc:
           post[:owner][:phone] = address[:phone] if address[:phone]
           post[:owner][:address] = owner_address
         end
+      end
+
+      def add_connected_account(post, options = {})
+        return unless options[:transfer_destination]
+
+        post[:transfer_data] = { destination: options[:transfer_destination] }
+        post[:transfer_data][:amount] = options[:transfer_amount] if options[:transfer_amount]
+        post[:on_behalf_of] = options[:on_behalf_of] if options[:on_behalf_of]
+        post[:transfer_group] = options[:transfer_group] if options[:transfer_group]
+        post[:application_fee_amount] = options[:application_fee_amount] if options[:application_fee_amount]
       end
 
       def parse(body)
@@ -603,7 +612,7 @@ module ActiveMerchant #:nodoc:
           'User-Agent' => "Stripe/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
           'Stripe-Version' => api_version(options),
           'X-Stripe-Client-User-Agent' => stripe_client_user_agent(options),
-          'X-Stripe-Client-User-Metadata' => {:ip => options[:ip]}.to_json
+          'X-Stripe-Client-User-Metadata' => {ip: options[:ip]}.to_json
         }
         headers['Idempotency-Key'] = idempotency_key if idempotency_key
         headers['Stripe-Account'] = options[:stripe_account] if options[:stripe_account]
@@ -647,12 +656,12 @@ module ActiveMerchant #:nodoc:
         Response.new(success,
           message_from(success, response),
           response,
-          :test => response_is_test?(response),
-          :authorization => authorization_from(success, url, method, response),
-          :avs_result => { :code => avs_code },
-          :cvv_result => cvc_code,
-          :emv_authorization => emv_authorization_from_response(response),
-          :error_code => success ? nil : error_code_from(response)
+          test: response_is_test?(response),
+          authorization: authorization_from(success, url, method, response),
+          avs_result: { code: avs_code },
+          cvv_result: cvc_code,
+          emv_authorization: emv_authorization_from_response(response),
+          error_code: success ? nil : error_code_from(response)
         )
       end
 

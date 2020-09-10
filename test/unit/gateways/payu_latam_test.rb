@@ -12,7 +12,7 @@ class PayuLatamTest < Test::Unit::TestCase
     @pending_card = credit_card('4097440000000004', verification_value: '222', first_name: 'PENDING', last_name: '')
     @no_cvv_visa_card = credit_card('4097440000000004', verification_value: ' ')
     @no_cvv_amex_card = credit_card('4097440000000004', verification_value: ' ', brand: 'american_express')
-    @cabal_credit_card = credit_card('5896570000000004', :verification_value => '123', :first_name => 'APPROVED', :last_name => '', :brand => 'cabal')
+    @cabal_credit_card = credit_card('5896570000000004', verification_value: '123', first_name: 'APPROVED', last_name: '', brand: 'cabal')
 
     @options = {
       dni_number: '5415668464654',

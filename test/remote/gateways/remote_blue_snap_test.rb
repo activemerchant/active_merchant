@@ -33,7 +33,7 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     )
 
     @check = check
-    @invalid_check = check(:routing_number => '123456', :account_number => '123456789')
+    @invalid_check = check(routing_number: '123456', account_number: '123456789')
     @valid_check_options = {
       billing_address: {
         address1: '123 Street',
@@ -48,6 +48,20 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_fractionless_currency_purchase
+    options = @options.merge(currency: 'JPY')
+    response = @gateway.purchase(12300, @credit_card, options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_three_decimal_currency_purchase
+    options = @options.merge(currency: 'BHD')
+    response = @gateway.purchase(1234, @credit_card, options)
     assert_success response
     assert_equal 'Success', response.message
   end
@@ -267,7 +281,7 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@amount - 1, auth.authorization)
     assert_success capture
   end
 
@@ -290,7 +304,7 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount-1, purchase.authorization)
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization)
     assert_success refund
   end
 

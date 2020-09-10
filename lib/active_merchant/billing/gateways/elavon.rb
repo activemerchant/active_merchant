@@ -17,15 +17,15 @@ module ActiveMerchant #:nodoc:
 
       self.delimiter = "\n"
       self.actions = {
-        :purchase => 'CCSALE',
-        :credit => 'CCCREDIT',
-        :refund => 'CCRETURN',
-        :authorize => 'CCAUTHONLY',
-        :capture => 'CCFORCE',
-        :capture_complete => 'CCCOMPLETE',
-        :void => 'CCDELETE',
-        :store => 'CCGETTOKEN',
-        :update => 'CCUPDATETOKEN',
+        purchase: 'CCSALE',
+        credit: 'CCCREDIT',
+        refund: 'CCRETURN',
+        authorize: 'CCAUTHONLY',
+        capture: 'CCFORCE',
+        capture_complete: 'CCCOMPLETE',
+        void: 'CCDELETE',
+        store: 'CCGETTOKEN',
+        update: 'CCUPDATETOKEN',
       }
 
       def initialize(options = {})
@@ -47,6 +47,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(form, options)
         add_test_mode(form, options)
         add_ip(form, options)
+        add_ssl_dynamic_dba(form, options)
         commit(:purchase, money, form, options)
       end
 
@@ -60,6 +61,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(form, options)
         add_test_mode(form, options)
         add_ip(form, options)
+        add_ssl_dynamic_dba(form, options)
         commit(:authorize, money, form, options)
       end
 
@@ -249,6 +251,10 @@ module ActiveMerchant #:nodoc:
         form[:cardholder_ip] = options[:ip] if options.has_key?(:ip)
       end
 
+      def add_ssl_dynamic_dba(form, options)
+        form[:dynamic_dba] = options[:dba] if options.has_key?(:dba)
+      end
+
       def message_from(response)
         success?(response) ? response['result_message'] : response['errorMessage']
       end
@@ -264,10 +270,10 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(test? ? self.test_url : self.live_url, post_data(parameters, options)))
 
         Response.new(response['result'] == '0', message_from(response), response,
-          :test => @options[:test] || test?,
-          :authorization => authorization_from(response),
-          :avs_result => { :code => response['avs_response'] },
-          :cvv_result => response['cvv2_response']
+          test: @options[:test] || test?,
+          authorization: authorization_from(response),
+          avs_result: { code: response['avs_response'] },
+          cvv_result: response['cvv2_response']
         )
       end
 

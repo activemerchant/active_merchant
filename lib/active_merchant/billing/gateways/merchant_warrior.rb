@@ -31,6 +31,7 @@ module ActiveMerchant #:nodoc:
         add_address(post, options)
         add_payment_method(post, payment_method)
         add_recurring_flag(post, options)
+        add_soft_descriptors(post, options)
         commit('processAuth', post)
       end
 
@@ -41,6 +42,7 @@ module ActiveMerchant #:nodoc:
         add_address(post, options)
         add_payment_method(post, payment_method)
         add_recurring_flag(post, options)
+        add_soft_descriptors(post, options)
         commit('processCard', post)
       end
 
@@ -48,6 +50,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_amount(post, money, options)
         add_transaction(post, identification)
+        add_soft_descriptors(post, options)
         post['captureAmount'] = amount(money)
         commit('processCapture', post)
       end
@@ -56,13 +59,17 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_amount(post, money, options)
         add_transaction(post, identification)
+        add_soft_descriptors(post, options)
         post['refundAmount'] = amount(money)
         commit('refundCard', post)
       end
 
-      def void(money, identification, options = {})
+      def void(identification, options = {})
         post = {}
-        add_amount(post, money, options)
+        # The amount parameter is required for void transactions
+        # on the Merchant Warrior gateway.
+        post['transactionAmount'] = options[:amount]
+        post['hash'] = void_verification_hash(identification)
         add_transaction(post, identification)
         commit('processVoid', post)
       end
@@ -150,6 +157,12 @@ module ActiveMerchant #:nodoc:
         post['recurringFlag'] = options[:recurring_flag]
       end
 
+      def add_soft_descriptors(post, options)
+        post['descriptorName'] = options[:descriptor_name] if options[:descriptor_name]
+        post['descriptorCity'] = options[:descriptor_city] if options[:descriptor_city]
+        post['descriptorState'] = options[:descriptor_state] if options[:descriptor_state]
+      end
+
       def verification_hash(money, currency)
         Digest::MD5.hexdigest(
           (
@@ -157,6 +170,16 @@ module ActiveMerchant #:nodoc:
             @options[:merchant_uuid].to_s +
             money.to_s +
             currency
+          ).downcase
+        )
+      end
+
+      def void_verification_hash(transaction_id)
+        Digest::MD5.hexdigest(
+          (
+            @options[:api_passphrase].to_s +
+            @options[:merchant_uuid].to_s +
+            transaction_id
           ).downcase
         )
       end
@@ -188,8 +211,8 @@ module ActiveMerchant #:nodoc:
           success?(response),
           response[:response_message],
           response,
-          :test => test?,
-          :authorization => (response[:card_id] || response[:transaction_id])
+          test: test?,
+          authorization: (response[:card_id] || response[:transaction_id])
         )
       end
 

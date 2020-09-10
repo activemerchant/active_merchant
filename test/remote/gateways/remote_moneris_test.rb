@@ -6,11 +6,11 @@ class MonerisRemoteTest < Test::Unit::TestCase
 
     @gateway = MonerisGateway.new(fixtures(:moneris))
     @amount = 100
-    @credit_card = credit_card('4242424242424242', :verification_value => '012')
+    @credit_card = credit_card('4242424242424242', verification_value: '012')
     @options = {
-        :order_id => generate_unique_id,
-        :customer => generate_unique_id,
-        :billing_address => address
+      order_id: generate_unique_id,
+      customer: generate_unique_id,
+      billing_address: address
     }
   end
 
@@ -130,7 +130,7 @@ class MonerisRemoteTest < Test::Unit::TestCase
     response = @gateway.capture(@amount, response.authorization)
     assert_success response
 
-    void = @gateway.void(response.authorization, :purchasecorrection => true)
+    void = @gateway.void(response.authorization, purchasecorrection: true)
     assert_success void
   end
 
@@ -159,7 +159,7 @@ class MonerisRemoteTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    void = @gateway.void(purchase.authorization, :purchasecorrection => true)
+    void = @gateway.void(purchase.authorization, purchasecorrection: true)
     assert_success void
   end
 
@@ -216,7 +216,7 @@ class MonerisRemoteTest < Test::Unit::TestCase
     gateway = MonerisGateway.new(fixtures(:moneris).merge(avs_enabled: true))
 
     # card number triggers AVS match
-    @credit_card = credit_card('4761739012345637', :verification_value => '012')
+    @credit_card = credit_card('4761739012345637', verification_value: '012')
     assert response = gateway.store(@credit_card, @options)
     assert_success response
     assert_equal 'Successfully registered cc details', response.message
@@ -231,10 +231,10 @@ class MonerisRemoteTest < Test::Unit::TestCase
     assert_false response.authorization.blank?
 
     assert_equal(response.avs_result, {
-        'code' => 'M',
-        'message' => 'Street address and postal code match.',
-        'street_match' => 'Y',
-        'postal_match' => 'Y'
+      'code' => 'M',
+      'message' => 'Street address and postal code match.',
+      'street_match' => 'Y',
+      'postal_match' => 'Y'
     })
   end
 
@@ -300,10 +300,10 @@ class MonerisRemoteTest < Test::Unit::TestCase
     assert response = gateway.purchase(1010, @credit_card, @options)
     assert_success response
     assert_equal(response.avs_result, {
-        'code' => 'A',
-        'message' => 'Street address matches, but postal code does not match.',
-        'street_match' => 'Y',
-        'postal_match' => 'N'
+      'code' => 'A',
+      'message' => 'Street address matches, but postal code does not match.',
+      'street_match' => 'Y',
+      'postal_match' => 'N'
     })
   end
 
@@ -313,10 +313,10 @@ class MonerisRemoteTest < Test::Unit::TestCase
     assert response = gateway.purchase(1010, @credit_card, @options.tap { |x| x.delete(:billing_address) })
     assert_success response
     assert_equal(response.avs_result, {
-        'code' => nil,
-        'message' => nil,
-        'street_match' => nil,
-        'postal_match' => nil
+      'code' => nil,
+      'message' => nil,
+      'street_match' => nil,
+      'postal_match' => nil
     })
   end
 
@@ -324,10 +324,10 @@ class MonerisRemoteTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal(response.avs_result, {
-        'code' => nil,
-        'message' => nil,
-        'street_match' => nil,
-        'postal_match' => nil
+      'code' => nil,
+      'message' => nil,
+      'street_match' => nil,
+      'postal_match' => nil
     })
   end
 

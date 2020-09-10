@@ -13,8 +13,7 @@ module ActiveMerchant #:nodoc:
       # == Usage
       #
       #   gateway = ActiveMerchant::Billing::OppGateway.new(
-      #      user_id: 'merchant user id',
-      #      password: 'password',
+      #      access_token: 'access_token',
       #      entity_id: 'entity id',
       #   )
       #
@@ -119,14 +118,14 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Open Payment Platform'
 
       def initialize(options={})
-        requires!(options, :user_id, :password, :entity_id)
+        requires!(options, :access_token, :entity_id)
         super
       end
 
       def purchase(money, payment, options={})
         # debit
         options[:registrationId] = payment if payment.is_a?(String)
-        execute_dbpa(options[:risk_workflow] ? 'PA.CP': 'DB',
+        execute_dbpa(options[:risk_workflow] ? 'PA.CP' : 'DB',
           money, payment, options)
       end
 
@@ -167,7 +166,7 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
-          gsub(%r((authentication\.password=)\w+), '\1[FILTERED]').
+          gsub(%r((Authorization: Bearer )\w+)i, '\1[FILTERED]').
           gsub(%r((card\.number=)\d+), '\1[FILTERED]').
           gsub(%r((card\.cvv=)\d+), '\1[FILTERED]')
       end
@@ -203,7 +202,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_authentication(post)
-        post[:authentication] = { entityId: @options[:entity_id], password: @options[:password], userId: @options[:user_id]}
+        post[:authentication] = { entityId: @options[:entity_id] }
       end
 
       def add_customer_data(post, payment, options)
@@ -316,7 +315,7 @@ module ActiveMerchant #:nodoc:
               ssl_post(
                 url,
                 post.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&'),
-                'Content-Type' => 'application/x-www-form-urlencoded;charset=UTF-8'
+                headers
               )
             )
           rescue ResponseError => e
@@ -333,6 +332,13 @@ module ActiveMerchant #:nodoc:
           test: test?,
           error_code: success ? nil : error_code_from(response)
         )
+      end
+
+      def headers
+        {
+          'Content-Type' => 'application/x-www-form-urlencoded;charset=UTF-8',
+          'Authorization' => "Bearer #{@options[:access_token]}"
+        }
       end
 
       def parse(body)

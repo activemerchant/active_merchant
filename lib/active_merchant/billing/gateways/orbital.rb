@@ -230,7 +230,7 @@ module ActiveMerchant #:nodoc:
 
       # R – Refund request
       def refund(money, authorization, options = {})
-        order = build_new_order_xml(REFUND, money, nil, options.merge(:authorization => authorization)) do |xml|
+        order = build_new_order_xml(REFUND, money, nil, options.merge(authorization: authorization)) do |xml|
           add_refund(xml, options[:currency])
           xml.tag! :CustomerRefNum, options[:customer_ref_num] if @options[:customer_profiles] && options[:profile_txn]
         end
@@ -245,7 +245,7 @@ module ActiveMerchant #:nodoc:
       def void(authorization, options = {}, deprecated = {})
         if !options.kind_of?(Hash)
           ActiveMerchant.deprecated('Calling the void method with an amount parameter is deprecated and will be removed in a future version.')
-          return void(options, deprecated.merge(:amount => authorization))
+          return void(options, deprecated.merge(amount: authorization))
         end
 
         order = build_void_request_xml(authorization, options)
@@ -286,13 +286,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def retrieve_customer_profile(customer_ref_num)
-        options = {:customer_profile_action => RETRIEVE, :customer_ref_num => customer_ref_num}
+        options = {customer_profile_action: RETRIEVE, customer_ref_num: customer_ref_num}
         order = build_customer_request_xml(nil, options)
         commit(order, :retrieve_customer_profile)
       end
 
       def delete_customer_profile(customer_ref_num)
-        options = {:customer_profile_action => DELETE, :customer_ref_num => customer_ref_num}
+        options = {customer_profile_action: DELETE, customer_ref_num: customer_ref_num}
         order = build_customer_request_xml(nil, options)
         commit(order, :delete_customer_profile)
       end
@@ -569,7 +569,7 @@ module ActiveMerchant #:nodoc:
 
         initiator =
           case parameters[:stored_credential][:initiator]
-          when 'customer' then 'C'
+          when 'cardholder', 'customer' then 'C'
           when 'merchant' then 'M'
           end
         reason =
@@ -622,10 +622,10 @@ module ActiveMerchant #:nodoc:
 
         Response.new(success?(response, message_type), message_from(response), response,
           {
-             :authorization => authorization_string(response[:tx_ref_num], response[:order_id]),
-             :test => self.test?,
-             :avs_result => OrbitalGateway::AVSResult.new(response[:avs_resp_code]),
-             :cvv_result => OrbitalGateway::CVVResult.new(response[:cvv2_resp_code])
+            authorization: authorization_string(response[:tx_ref_num], response[:order_id]),
+            test: self.test?,
+            avs_result: OrbitalGateway::AVSResult.new(response[:avs_resp_code]),
+            cvv_result: OrbitalGateway::CVVResult.new(response[:cvv2_resp_code])
           }
         )
       end
@@ -786,8 +786,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def xml_envelope
-        xml = Builder::XmlMarkup.new(:indent => 2)
-        xml.instruct!(:xml, :version => '1.0', :encoding => 'UTF-8')
+        xml = Builder::XmlMarkup.new(indent: 2)
+        xml.instruct!(:xml, version: '1.0', encoding: 'UTF-8')
         xml
       end
 
@@ -897,54 +897,54 @@ module ActiveMerchant #:nodoc:
       #
       class AVSResult < ActiveMerchant::Billing::AVSResult
         CODES = {
-            '1'  => 'No address supplied',
-            '2'  => 'Bill-to address did not pass Auth Host edit checks',
-            '3'  => 'AVS not performed',
-            '4'  => 'Issuer does not participate in AVS',
-            '5'  => 'Edit-error - AVS data is invalid',
-            '6'  => 'System unavailable or time-out',
-            '7'  => 'Address information unavailable',
-            '8'  => 'Transaction Ineligible for AVS',
-            '9'  => 'Zip Match/Zip 4 Match/Locale match',
-            'A'  => 'Zip Match/Zip 4 Match/Locale no match',
-            'B'  => 'Zip Match/Zip 4 no Match/Locale match',
-            'C'  => 'Zip Match/Zip 4 no Match/Locale no match',
-            'D'  => 'Zip No Match/Zip 4 Match/Locale match',
-            'E'  => 'Zip No Match/Zip 4 Match/Locale no match',
-            'F'  => 'Zip No Match/Zip 4 No Match/Locale match',
-            'G'  => 'No match at all',
-            'H'  => 'Zip Match/Locale match',
-            'J'  => 'Issuer does not participate in Global AVS',
-            'JA' => 'International street address and postal match',
-            'JB' => 'International street address match. Postal code not verified',
-            'JC' => 'International street address and postal code not verified',
-            'JD' => 'International postal code match. Street address not verified',
-            'M1' => 'Cardholder name matches',
-            'M2' => 'Cardholder name, billing address, and postal code matches',
-            'M3' => 'Cardholder name and billing code matches',
-            'M4' => 'Cardholder name and billing address match',
-            'M5' => 'Cardholder name incorrect, billing address and postal code match',
-            'M6' => 'Cardholder name incorrect, billing postal code matches',
-            'M7' => 'Cardholder name incorrect, billing address matches',
-            'M8' => 'Cardholder name, billing address and postal code are all incorrect',
-            'N3' => 'Address matches, ZIP not verified',
-            'N4' => 'Address and ZIP code not verified due to incompatible formats',
-            'N5' => 'Address and ZIP code match (International only)',
-            'N6' => 'Address not verified (International only)',
-            'N7' => 'ZIP matches, address not verified',
-            'N8' => 'Address and ZIP code match (International only)',
-            'N9' => 'Address and ZIP code match (UK only)',
-            'R'  => 'Issuer does not participate in AVS',
-            'UK' => 'Unknown',
-            'X'  => 'Zip Match/Zip 4 Match/Address Match',
-            'Z'  => 'Zip Match/Locale no match',
+          '1'  => 'No address supplied',
+          '2'  => 'Bill-to address did not pass Auth Host edit checks',
+          '3'  => 'AVS not performed',
+          '4'  => 'Issuer does not participate in AVS',
+          '5'  => 'Edit-error - AVS data is invalid',
+          '6'  => 'System unavailable or time-out',
+          '7'  => 'Address information unavailable',
+          '8'  => 'Transaction Ineligible for AVS',
+          '9'  => 'Zip Match/Zip 4 Match/Locale match',
+          'A'  => 'Zip Match/Zip 4 Match/Locale no match',
+          'B'  => 'Zip Match/Zip 4 no Match/Locale match',
+          'C'  => 'Zip Match/Zip 4 no Match/Locale no match',
+          'D'  => 'Zip No Match/Zip 4 Match/Locale match',
+          'E'  => 'Zip No Match/Zip 4 Match/Locale no match',
+          'F'  => 'Zip No Match/Zip 4 No Match/Locale match',
+          'G'  => 'No match at all',
+          'H'  => 'Zip Match/Locale match',
+          'J'  => 'Issuer does not participate in Global AVS',
+          'JA' => 'International street address and postal match',
+          'JB' => 'International street address match. Postal code not verified',
+          'JC' => 'International street address and postal code not verified',
+          'JD' => 'International postal code match. Street address not verified',
+          'M1' => 'Cardholder name matches',
+          'M2' => 'Cardholder name, billing address, and postal code matches',
+          'M3' => 'Cardholder name and billing code matches',
+          'M4' => 'Cardholder name and billing address match',
+          'M5' => 'Cardholder name incorrect, billing address and postal code match',
+          'M6' => 'Cardholder name incorrect, billing postal code matches',
+          'M7' => 'Cardholder name incorrect, billing address matches',
+          'M8' => 'Cardholder name, billing address and postal code are all incorrect',
+          'N3' => 'Address matches, ZIP not verified',
+          'N4' => 'Address and ZIP code not verified due to incompatible formats',
+          'N5' => 'Address and ZIP code match (International only)',
+          'N6' => 'Address not verified (International only)',
+          'N7' => 'ZIP matches, address not verified',
+          'N8' => 'Address and ZIP code match (International only)',
+          'N9' => 'Address and ZIP code match (UK only)',
+          'R'  => 'Issuer does not participate in AVS',
+          'UK' => 'Unknown',
+          'X'  => 'Zip Match/Zip 4 Match/Address Match',
+          'Z'  => 'Zip Match/Locale no match',
         }
 
         # Map vendor's AVS result code to a postal match code
         ORBITAL_POSTAL_MATCH_CODE = {
-            'Y' => %w(9 A B C H JA JD M2 M3 M5 N5 N8 N9 X Z),
-            'N' => %w(D E F G M8),
-            'X' => %w(4 J R),
+          'Y' => %w(9 A B C H JA JD M2 M3 M5 N5 N8 N9 X Z),
+          'N' => %w(D E F G M8),
+          'X' => %w(4 J R),
             nil => %w(1 2 3 5 6 7 8 JB JC M1 M4 M6 M7 N3 N4 N6 N7 UK)
         }.inject({}) do |map, (type, codes)|
           codes.each { |code| map[code] = type }
@@ -953,9 +953,9 @@ module ActiveMerchant #:nodoc:
 
         # Map vendor's AVS result code to a street match code
         ORBITAL_STREET_MATCH_CODE = {
-            'Y' => %w(9 B D F H JA JB M2 M4 M5 M6 M7 N3 N5 N7 N8 N9 X),
-            'N' => %w(A C E G M8 Z),
-            'X' => %w(4 J R),
+          'Y' => %w(9 B D F H JA JB M2 M4 M5 M6 M7 N3 N5 N7 N8 N9 X),
+          'N' => %w(A C E G M8 Z),
+          'X' => %w(4 J R),
             nil => %w(1 2 3 5 6 7 8 JC JD M1 M3 N4 N6 UK)
         }.inject({}) do |map, (type, codes)|
           codes.each { |code| map[code] = type }

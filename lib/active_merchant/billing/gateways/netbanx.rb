@@ -159,7 +159,7 @@ module ActiveMerchant #:nodoc:
         month = format(credit_card.month, :two_digits)
 
         # returns a hash (necessary in the card JSON object)
-        { :month => month, :year => year }
+        { month: month, year: year }
       end
 
       def add_order_id(post, options)
@@ -171,10 +171,10 @@ module ActiveMerchant #:nodoc:
 
         country = Country.find(address[:country]) if address[:country]
         mapped = {
-          :street => address[:address1],
-          :city   => address[:city],
-          :zip    => address[:zip],
-          :state  => address[:state],
+          street: address[:address1],
+          city: address[:city],
+          zip: address[:zip],
+          state: address[:state],
         }
         mapped[:country] = country.code(:alpha2).value unless country.blank?
 
@@ -183,12 +183,12 @@ module ActiveMerchant #:nodoc:
 
       def map_3ds(three_d_secure_options)
         mapped = {
-          :eci => three_d_secure_options[:eci],
-          :cavv => three_d_secure_options[:cavv],
-          :xid => three_d_secure_options[:xid],
-          :threeDResult => three_d_secure_options[:directory_response_status],
-          :threeDSecureVersion => three_d_secure_options[:version],
-          :directoryServerTransactionId => three_d_secure_options[:ds_transaction_id]
+          eci: three_d_secure_options[:eci],
+          cavv: three_d_secure_options[:cavv],
+          xid: three_d_secure_options[:xid],
+          threeDResult: three_d_secure_options[:directory_response_status],
+          threeDSecureVersion: three_d_secure_options[:version],
+          directoryServerTransactionId: three_d_secure_options[:ds_transaction_id]
         }
 
         mapped
@@ -214,9 +214,9 @@ module ActiveMerchant #:nodoc:
           success,
           message_from(success, response),
           response,
-          :test => test?,
-          :error_code => error_code_from(response),
-          :authorization => authorization_from(success, get_url(uri), method, response)
+          test: test?,
+          error_code: error_code_from(response),
+          authorization: authorization_from(success, get_url(uri), method, response)
         )
       end
 

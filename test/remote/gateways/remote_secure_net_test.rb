@@ -28,8 +28,8 @@ class SecureNetTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = SecureNetGateway.new(
-      :login => '9988776',
-      :password => 'RabbitEarsPo'
+      login: '9988776',
+      password: 'RabbitEarsPo'
     )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response

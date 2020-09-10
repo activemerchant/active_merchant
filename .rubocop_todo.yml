@@ -23,13 +23,6 @@ Gemspec/OrderedDependencies:
 Layout/AlignHash:
   Enabled: false
 
-# Offense count: 255
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, IndentationWidth.
-# SupportedStyles: special_inside_parentheses, consistent, align_braces
-Layout/IndentHash:
-  Enabled: false
-
 # Offense count: 392
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle.
@@ -49,12 +42,6 @@ Layout/MultilineMethodCallBraceLayout:
 # Configuration parameters: EnforcedStyle.
 # SupportedStyles: space, no_space
 Layout/SpaceAroundEqualsInParameterDefault:
-  Enabled: false
-
-# Offense count: 782
-# Cop supports --auto-correct.
-# Configuration parameters: AllowForAlignment.
-Layout/SpaceAroundOperators:
   Enabled: false
 
 # Offense count: 1186
@@ -595,13 +582,6 @@ Style/GlobalVars:
 Style/GuardClause:
   Enabled: false
 
-# Offense count: 7482
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, UseHashRocketsWithSymbolValues, PreferHashRocketsForNonAlnumEndingSymbols.
-# SupportedStyles: ruby19, hash_rockets, no_mixed_keys, ruby19_no_mixed_keys
-Style/HashSyntax:
-  Enabled: false
-
 # Offense count: 6
 Style/IdenticalConditionalBranches:
   Exclude:
@@ -977,3 +957,4 @@ Style/ZeroLengthPredicate:
 # URISchemes: http, https
 Metrics/LineLength:
   Max: 2602
+

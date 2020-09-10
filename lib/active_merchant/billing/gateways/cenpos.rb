@@ -181,13 +181,13 @@ module ActiveMerchant #:nodoc:
       def headers
         {
           'Accept-Encoding' => 'identity',
-          'Content-Type'  => 'text/xml;charset=UTF-8',
-          'SOAPAction'  => 'http://tempuri.org/Transactional/ProcessCreditCard'
+          'Content-Type' => 'text/xml;charset=UTF-8',
+          'SOAPAction' => 'http://tempuri.org/Transactional/ProcessCreditCard'
         }
       end
 
       def build_request(post)
-        xml = Builder::XmlMarkup.new :indent => 8
+        xml = Builder::XmlMarkup.new indent: 8
         xml.tag!('acr:MerchantId', post.delete(:MerchantId))
         xml.tag!('acr:Password', post.delete(:Password))
         xml.tag!('acr:UserId', post.delete(:UserId))

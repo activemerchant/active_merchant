@@ -3,14 +3,14 @@ require 'test_helper'
 class PslCardTest < Test::Unit::TestCase
   def setup
     @gateway = PslCardGateway.new(
-      :login => 'LOGIN',
-      :password => 'PASSWORD'
+      login: 'LOGIN',
+      password: 'PASSWORD'
     )
 
     @credit_card = credit_card
     @options = {
-      :billing_address => address,
-      :description => 'Store purchase'
+      billing_address: address,
+      description: 'Store purchase'
     }
     @amount = 100
   end

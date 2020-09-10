@@ -6,17 +6,17 @@ class MerchantOneTest < Test::Unit::TestCase
     @credit_card = credit_card
     @amount = 1000
     @options = {
-      :order_id => '1',
-      :description => 'Store Purchase',
-      :billing_address => {
-        :name =>'Jim Smith',
-        :address1 =>'1234 My Street',
-        :address2 =>'Apt 1',
-        :city =>'Tampa',
-        :state =>'FL',
-        :zip =>'33603',
-        :country =>'US',
-        :phone =>'(813)421-4331'
+      order_id: '1',
+      description: 'Store Purchase',
+      billing_address: {
+        name: 'Jim Smith',
+        address1: '1234 My Street',
+        address2: 'Apt 1',
+        city: 'Tampa',
+        state: 'FL',
+        zip: '33603',
+        country: 'US',
+        phone: '(813)421-4331'
       }
     }
   end

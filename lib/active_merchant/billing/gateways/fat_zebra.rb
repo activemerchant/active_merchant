@@ -79,6 +79,7 @@ module ActiveMerchant #:nodoc:
         post = {}
 
         add_creditcard(post, creditcard)
+        post[:is_billing] = true if options[:recurring]
 
         commit(:post, 'credit_cards', post)
       end
@@ -159,8 +160,8 @@ module ActiveMerchant #:nodoc:
           success,
           message_from(response),
           response,
-          :test => response['test'],
-          :authorization => authorization_from(response, success, uri)
+          test: response['test'],
+          authorization: authorization_from(response, success, uri)
         )
       end
 

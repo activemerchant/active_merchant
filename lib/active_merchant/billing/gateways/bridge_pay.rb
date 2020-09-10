@@ -77,7 +77,7 @@ module ActiveMerchant #:nodoc:
       def store(creditcard, options={})
         post = initialize_required_fields('')
         post[:transaction] = 'Create'
-        post[:CardNumber]    = creditcard.number
+        post[:CardNumber] = creditcard.number
         post[:CustomerPaymentInfoKey] = ''
         post[:token] = ''
         add_payment_method(post, creditcard)
@@ -235,8 +235,8 @@ module ActiveMerchant #:nodoc:
 
       def post_data(post)
         {
-          :UserName => @options[:user_name],
-          :Password => @options[:password]
+          UserName: @options[:user_name],
+          Password: @options[:password]
         }.merge(post).collect { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join('&')
       end
     end

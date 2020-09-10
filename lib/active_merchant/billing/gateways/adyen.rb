@@ -261,7 +261,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_shopper_interaction(post, payment, options={})
-        if options.dig(:stored_credential, :initial_transaction) || (payment.respond_to?(:verification_value) && payment.verification_value) || payment.is_a?(NetworkTokenizationCreditCard)
+        if  (options.dig(:stored_credential, :initial_transaction) && options.dig(:stored_credential, :initiator) == 'cardholder') ||
+            (payment.respond_to?(:verification_value) && payment.verification_value && options.dig(:stored_credential, :initial_transaction).nil?) ||
+            payment.is_a?(NetworkTokenizationCreditCard)
           shopper_interaction = 'Ecommerce'
         else
           shopper_interaction = 'ContAuth'
@@ -273,8 +275,12 @@ module ActiveMerchant #:nodoc:
       def add_recurring_processing_model(post, options)
         return unless options.dig(:stored_credential, :reason_type) || options[:recurring_processing_model]
 
-        if options.dig(:stored_credential, :reason_type) && options[:stored_credential][:reason_type] == 'unscheduled'
-          recurring_processing_model = 'CardOnFile'
+        if options.dig(:stored_credential, :reason_type) == 'unscheduled'
+          if options.dig(:stored_credential, :initiator) == 'merchant'
+            recurring_processing_model = 'UnscheduledCardOnFile'
+          else
+            recurring_processing_model = 'CardOnFile'
+          end
         else
           recurring_processing_model = 'Subscription'
         end
@@ -471,7 +477,7 @@ module ActiveMerchant #:nodoc:
           raw_response = e.response.body
           response = parse(raw_response)
         end
-        success = success_from(action, response)
+        success = success_from(action, response, options)
         Response.new(
           success,
           message_from(action, response),
@@ -479,7 +485,7 @@ module ActiveMerchant #:nodoc:
           authorization: authorization_from(action, parameters, response),
           test: test?,
           error_code: success ? nil : error_code_from(response),
-          avs_result: AVSResult.new(:code => avs_code_from(response)),
+          avs_result: AVSResult.new(code: avs_code_from(response)),
           cvv_result: CVVResult.new(cvv_result_from(response))
         )
       end
@@ -520,7 +526,12 @@ module ActiveMerchant #:nodoc:
         headers
       end
 
-      def success_from(action, response)
+      def success_from(action, response, options)
+        if ['RedirectShopper', 'ChallengeShopper'].include?(response.dig('resultCode')) && !options[:execute_threed] && !options[:threed_dynamic]
+          response['refusalReason'] = 'Received unexpected 3DS authentication response. Use the execute_threed and/or threed_dynamic options to initiate a proper 3DS flow.'
+          return false
+        end
+
         case action.to_s
         when 'authorise', 'authorise3d'
           ['Authorised', 'Received', 'RedirectShopper'].include?(response['resultCode'])
@@ -538,7 +549,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(action, response)
-        return authorize_message_from(response) if action.to_s == 'authorise' || action.to_s == 'authorise3d'
+        return authorize_message_from(response) if %w(authorise authorise3d authorise3ds2).include?(action.to_s)
 
         response['response'] || response['message'] || response['result']
       end

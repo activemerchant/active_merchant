@@ -52,17 +52,17 @@ module ActiveMerchant
       begin
         request_start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
         result = yield
-        log_with_retry_details(options[:logger], initial_retries-retries + 1, Process.clock_gettime(Process::CLOCK_MONOTONIC) - request_start, 'success', options[:tag])
+        log_with_retry_details(options[:logger], initial_retries - retries + 1, Process.clock_gettime(Process::CLOCK_MONOTONIC) - request_start, 'success', options[:tag])
         result
       rescue ActiveMerchant::RetriableConnectionError => e
         retries -= 1
 
-        log_with_retry_details(options[:logger], initial_retries-retries, Process.clock_gettime(Process::CLOCK_MONOTONIC) - request_start, e.message, options[:tag])
+        log_with_retry_details(options[:logger], initial_retries - retries, Process.clock_gettime(Process::CLOCK_MONOTONIC) - request_start, e.message, options[:tag])
         retry unless retries.zero?
         raise ActiveMerchant::ConnectionError.new(e.message, e)
       rescue ActiveMerchant::ConnectionError, ActiveMerchant::InvalidResponseError => e
         retries -= 1
-        log_with_retry_details(options[:logger], initial_retries-retries, Process.clock_gettime(Process::CLOCK_MONOTONIC) - request_start, e.message, options[:tag])
+        log_with_retry_details(options[:logger], initial_retries - retries, Process.clock_gettime(Process::CLOCK_MONOTONIC) - request_start, e.message, options[:tag])
         retry if (options[:retry_safe] || retry_safe) && !retries.zero?
         raise
       end

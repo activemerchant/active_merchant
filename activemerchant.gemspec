@@ -12,12 +12,13 @@ Gem::Specification.new do |s|
   s.author = 'Tobias Luetke'
   s.email = 'tobi@leetsoft.com'
   s.homepage = 'http://activemerchant.org/'
-  s.rubyforge_project = 'activemerchant'
 
   s.required_ruby_version = '>= 2.3'
 
   s.files = Dir['CHANGELOG', 'README.md', 'MIT-LICENSE', 'CONTRIBUTORS', 'lib/**/*', 'vendor/**/*']
   s.require_path = 'lib'
+
+  s.metadata['allowed_push_host'] = 'https://rubygems.org'
 
   s.has_rdoc = true if Gem::VERSION < '1.7.0'
 
