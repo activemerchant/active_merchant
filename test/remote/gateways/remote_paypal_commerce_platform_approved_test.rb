@@ -13,8 +13,8 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     bearer_token = @paypal_customer.get_token(options)
     @headers = { "Authorization": "Bearer #{ bearer_token[:access_token] }", "Content-Type": "application/json" }
 
-    @approved_authroize_order_id = "4DN99469WJ619633F"
-    @approved_capture_order_id = "9DS90579002980107"
+    @approved_authroize_order_id = "63V69084W58300736"
+    @approved_capture_order_id = "2FG60058LG295060B"
 
     @body = {}
 
@@ -24,20 +24,18 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     options = { headers: @headers, body: @body }
     response = @paypal_customer.handle_approve(@approved_capture_order_id,
                                                "capture",options)
-    assert response.success?
-    assert response.parsed_response["status"].eql?("COMPLETED")
-    assert !response.parsed_response["id"].nil?
-    assert !response.parsed_response['links'].blank?
+    assert response[:status].eql?("COMPLETED")
+    assert !response[:id].nil?
+    assert !response[:links].blank?
   end
 
   def test_handle_approve_authorize
     options = { headers: @headers, body: @body }
     response = @paypal_customer.handle_approve(@approved_authroize_order_id,
                                                "authorize",options)
-    assert response.success?
-    assert response.parsed_response["status"].eql?("COMPLETED")
-    assert !response.parsed_response["id"].nil?
-    assert !response.parsed_response['links'].blank?
+    assert response[:status].eql?("COMPLETED")
+    assert !response[:id].nil?
+    assert !response[:links].blank?
   end
 
 end

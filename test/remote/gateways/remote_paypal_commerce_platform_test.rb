@@ -35,12 +35,11 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     )
     @options = { headers: @headers, body: @body }
     response = @paypal_customer.create_order(@options)
-    @order_id = response["id"]
+    @order_id = response[:id]
     puts "Capture Order Id (Instant): #{@order_id}"
-    assert response.success?
-    assert response.parsed_response["status"].eql?("CREATED")
-    assert !response.parsed_response["id"].nil?
-    assert !response.parsed_response['links'].blank?
+    assert response[:status].eql?("CREATED")
+    assert !response[:id].nil?
+    assert !response[:links].blank?
   end
 
   def test_create_authorize_order
@@ -49,12 +48,11 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     )
     @options = { headers: @headers, body: @body }
     response = @paypal_customer.create_order(@options)
-    @order_id = response["id"]
+    @order_id = response[:id]
     puts "Authorize Order Id: #{@order_id}"
-    assert response.success?
-    assert response.parsed_response["status"].eql?("CREATED")
-    assert !response.parsed_response["id"].nil?
-    assert !response.parsed_response['links'].blank?
+    assert response[:status].eql?("CREATED")
+    assert !response[:id].nil?
+    assert !response[:links].blank?
   end
 
   def test_missing_password_argument_to_get_access_token
