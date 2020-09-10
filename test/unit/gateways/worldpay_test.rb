@@ -857,6 +857,16 @@ class WorldpayTest < Test::Unit::TestCase
     assert_equal '3d4187536044bd39ad6a289c4339c41c', response.authorization
   end
 
+  def test_optional_idempotency_key_header
+    response = stub_comms do
+      @gateway.authorize(@amount, @token, @options.merge({idempotency_key: 'test123'}))
+    end.check_request do |endpoint, data, headers|
+      headers && headers['Idempotency-Key'] == 'test123'
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
   def test_failed_store
     response = stub_comms do
       @gateway.store(@credit_card, @store_options.merge(customer: '_invalidId'))

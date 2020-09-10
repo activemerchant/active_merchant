@@ -6,6 +6,7 @@
 * iATS: Allow email to be passed outside of the billing_address context [naashton] #3750
 * Orbital: Don't pass xid for transactions using network tokens [britth] #3757
 * Forte: Add service_fee_amount field [meagabeth] #3751
+* WorldPay: Add support for idempotency_key[cdmackeyfree] #3759
 
 == Version 1.114.0
 * BlueSnap: Add address1,address2,phone,shipping_* support #3749

@@ -568,6 +568,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def headers(options)
+        idempotency_key = options[:idempotency_key]
+
         headers = {
           'Content-Type' => 'text/xml',
           'Authorization' => encoded_credentials
@@ -575,6 +577,8 @@ module ActiveMerchant #:nodoc:
         if options[:cookie]
           headers['Cookie'] = options[:cookie] if options[:cookie]
         end
+
+        headers['Idempotency-Key'] = idempotency_key if idempotency_key
         headers
       end
 
