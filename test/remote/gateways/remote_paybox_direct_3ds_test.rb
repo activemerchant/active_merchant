@@ -16,11 +16,12 @@ class RemotePayboxDirect3DSTest < Test::Unit::TestCase
       order_id: '1',
       billing_address: address,
       description: 'Store Purchase',
-      three_d_secure: true,
-      eci: '02',
-      cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA=',
-      xid: '00000000000000000501',
-      cavv_algorithm: '1'
+      three_d_secure: {
+        eci: '02',
+        cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA=',
+        xid: '00000000000000000501',
+        cavv_algorithm: '1'
+      }
     }
   end
 
@@ -31,9 +32,9 @@ class RemotePayboxDirect3DSTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_other_eci
-    options = @options.merge(
-      eci: '05'
-    )
+    options = @options
+    options[:three_d_secure][:eci] = '05'
+
     assert response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert_equal 'The transaction was approved', response.message
@@ -111,18 +112,17 @@ class RemotePayboxDirect3DSTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase_invalid_eci
-    options = @options.merge(
-      eci: '00'
-    )
+    options = @options
+    options[:three_d_secure][:eci] = '00'
+
     assert purchase = @gateway.purchase(@amount, @credit_card, options)
     assert_failure purchase
     assert_equal "PAYBOX : Transaction refus\xE9e".force_encoding('ASCII-8BIT'), purchase.message
   end
 
   def test_failed_purchase_invalid_cavv
-    options = @options.merge(
-      cavv: 'jJ81HADVRtXfCBATEp01CJUAAAAVZQGY='
-    )
+    options = @options
+    options[:three_d_secure][:cavv] = 'jJ81HADVRtXfCBATEp01CJUAAAAVZQGY='
 
     assert purchase = @gateway.purchase(@amount, @credit_card, options)
     assert_failure purchase
@@ -130,9 +130,8 @@ class RemotePayboxDirect3DSTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase_invalid_xid
-    options = @options.merge(
-      xid: '00000000000000000510123123123456789'
-    )
+    options = @options
+    options[:three_d_secure][:xid] = '00000000000000000510123123123456789'
 
     assert purchase = @gateway.purchase(@amount, @credit_card, options)
     assert_failure purchase
