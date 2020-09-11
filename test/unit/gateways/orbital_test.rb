@@ -237,6 +237,25 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_three_d_secure_2_data_on_discover_authorization
+    stub_comms do
+      @gateway.authorize(50, credit_card(nil, brand: 'discover'), @options.merge(@three_d_secure_2_options))
+    end.check_request do |endpoint, data, headers|
+      assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
+      assert_match %{<CAVV>TESTCAVV</CAVV>}, data
+      assert_xml_valid_to_xsd(data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_three_d_secure_1_data_on_discover_purchase
+    stub_comms do
+      @gateway.purchase(50, credit_card(nil, brand: 'discover'), @options.merge(@three_d_secure_options))
+    end.check_request do |endpoint, data, headers|
+      assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
+      assert_match %{<CAVV>TESTCAVV</CAVV>}, data
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_three_d_secure_1_data_on_master_purchase
     stub_comms do
       @gateway.purchase(50, credit_card(nil, brand: 'master'), @options.merge(@three_d_secure_options))

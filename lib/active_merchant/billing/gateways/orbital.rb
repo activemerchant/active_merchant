@@ -521,7 +521,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_cavv(xml, creditcard, three_d_secure)
-        return unless three_d_secure && creditcard.brand == 'visa'
+        return unless three_d_secure && %w(visa discover).include?(creditcard.brand)
 
         xml.tag!(:CAVV, three_d_secure[:cavv])
       end
