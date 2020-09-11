@@ -47,11 +47,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   end
 
   def test_create_capture_instant_order
-    @body.update(
-        intent:"CAPTURE"
-    )
-    @options = { headers: @headers, body: @body }
-    response = @paypal_customer.create_order(@options)
+    response = create_order("CAPTURE")
     @order_id = response[:id]
     puts "Capture Order Id (Instant): #{@order_id}"
     assert response[:status].eql?("CREATED")
@@ -60,12 +56,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   end
 
   def test_create_authorize_order
-    @body.update(
-        intent:"AUTHORIZE",
-    )
-    @options = { headers: @headers, body: @body }
-    response = @paypal_customer.create_order(@options)
-    @order_id = response[:id]
+    response = create_order("AUTHORIZE")
     puts "Authorize Order Id: #{@order_id}"
     assert response[:status].eql?("CREATED")
     assert !response[:id].nil?
@@ -96,11 +87,10 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @body.delete(
         :intent
     )
-    @options = { headers: @headers, body: @body }
 
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: intent"
-      @paypal_customer.create_order(@options)
+      @paypal_customer.create_order(options)
     end
   end
 
@@ -108,12 +98,47 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @body.delete(
         :purchase_units
     )
-    @options = { headers: @headers, body: @body }
 
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: purchase_units"
-      @paypal_customer.create_order(@options)
+      @paypal_customer.create_order(options)
     end
   end
 
+  def test_missing_operator_arguments_in_handle_approve
+    response = create_order("AUTHORIZE")
+    @order_id = response[:id]
+
+    assert_raise(ArgumentError) do
+      puts "*** ArgumentError Exception: Missing required parameter: operator"
+      @paypal_customer.handle_approve(@order_id, options)
+    end
+  end
+
+  def test_missing_operator_required_id_arguments_in_handle_approve
+    assert_raise(ArgumentError) do
+      puts "*** ArgumentError Exception: Missing required parameter: operator_required_id"
+      @paypal_customer.handle_approve(nil, options)
+    end
+  end
+
+  def test_missing_operator_required_id_arguments_in_handle_approve
+    assert_raise(ArgumentError) do
+      puts "*** ArgumentError Exception: Missing required parameter: operator_required_id"
+      @paypal_customer.handle_approve(nil, options)
+    end
+  end
+
+  private
+  def create_order(order_type)
+    @body.update(
+        intent: order_type
+    )
+
+    @paypal_customer.create_order(options)
+  end
+
+  def options
+    { headers: @headers, body: @body }
+  end
 end

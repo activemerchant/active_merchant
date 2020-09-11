@@ -1,5 +1,9 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+## Calling Mechanism
+# paypal_customer = ActiveMerchant::Billing::PaypalCustomer.new(paypal_options)
+# paypal_customer.register_partner({})
+#
+module ActiveMerchant
+  module Billing
     class PaypalCommercePlateformCustomerGateway < PaypalCommercePlatformGateway
 
       def create_order(options)
@@ -19,22 +23,22 @@ module ActiveMerchant #:nodoc:
         post("v2/checkout/orders/#{ order_id }/authorize", options)
       end
 
-      def handle_approve(operator_required_id, operator, options)
-        requires!({ operator_required_id: operator_required_id, operator: operator }, :operator_required_id, :operator)
+      def handle_approve(operator_required_id, options)
+        requires!(options.merge!({ operator_required_id: operator_required_id }), :operator_required_id, :operator)
 
-        operator == "authorize" ? authorize(operator_required_id, options) : capture(operator_required_id, options)
+        options[:operator] == "authorize" ? authorize(operator_required_id, options) : capture(operator_required_id, options)
       end
 
       def capture(order_id, options)
-        requires!({ order_id: order_id }, :order_id)
+        requires!(options, :operator_required_id)
 
-        post("v2/checkout/orders/#{ order_id }/capture", options)
+        post("v2/checkout/orders/#{ order_id }/capture", options.except(:operator_required_id, :operator))
       end
 
-      def refund(capture_id, options)
+      def refund(capture_id, options={ })
         requires!({ capture_id: capture_id }, :capture_id)
 
-        post("v2/payments/captures/#{ capture_id }/refund", options)
+        post("v1/payments/captures/#{ capture_id }/refund", options)
       end
 
       def void(authorization_id, options)
@@ -63,6 +67,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-## Calling Mechanism
-# paypal_customer = ActiveMerchant::Billing::PaypalCustomer.new(paypal_options)
-# paypal_customer.register_partner({})
