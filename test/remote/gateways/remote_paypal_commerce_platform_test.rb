@@ -3,20 +3,20 @@ require 'byebug'
 
 class PaypalExpressRestTest < Test::Unit::TestCase
   def setup
-    Base.mode = :test
-    @paypal_customer = ActiveMerchant::Billing::PaypalCommercePlateformCustomerGateway.new
+    Base.mode         = :test
+    @paypal_customer  = ActiveMerchant::Billing::PaypalCommercePlateformCustomerGateway.new
 
     params = { username: "ASs8Osqge6KT3OdLtkNhD20VP8lsrqRUlRjLo-e5s75SHz-2ffMMzCos_odQGjGYpPcGlxJVQ5fXMz9q",
                password: "EKj_bMZn0CkOhOvFwJMX2WwhtCq2A0OtlOd5T-zUhKIf9WQxvgPasNX0Kr1U4TjFj8ZN6XCMF5NM30Z_" }
 
-    options = { "Content-Type": "application/json", authorization: params }
-    bearer_token = @paypal_customer.get_token(options)
-    @headers = { "Authorization": "Bearer #{ bearer_token[:access_token] }", "Content-Type": "application/json" }
+    options       = { "Content-Type": "application/json", authorization: params }
+    access_token  = @paypal_customer.get_token(options)
+    @headers      = { "Authorization": access_token, "Content-Type": "application/json" }
 
     @body = {
         "purchase_units": [
             {
-                "reference_id": "camera_shop_seller_#{DateTime.now}",
+                "reference_id": "camera_shop_seller_#{ DateTime.now }",
                 "amount": {
                     "currency_code": "USD",
                     "value": "56.00"
@@ -48,8 +48,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
   def test_create_capture_instant_order
     response = create_order("CAPTURE")
-    @order_id = response[:id]
-    puts "Capture Order Id (Instant): #{@order_id}"
+    puts "Capture Order Id (Instant): #{ response[:id] }"
     assert response[:status].eql?("CREATED")
     assert !response[:id].nil?
     assert !response[:links].blank?
@@ -57,8 +56,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
   def test_create_authorize_order
     response = create_order("AUTHORIZE")
-    @order_id = response[:id]
-    puts "Authorize Order Id: #{@order_id}"
+    puts "Authorize Order Id: #{ response[:id] }"
     assert response[:status].eql?("CREATED")
     assert !response[:id].nil?
     assert !response[:links].blank?
