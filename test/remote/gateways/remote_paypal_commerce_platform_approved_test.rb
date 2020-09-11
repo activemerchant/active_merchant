@@ -14,7 +14,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @headers = { "Authorization": "Bearer #{ bearer_token[:access_token] }", "Content-Type": "application/json" }
 
     @approved_authroize_order_id = "88D0861643690811B"
-    @approved_capture_order_id = "9SX09406GE019062Y"
+    @approved_capture_order_id = "6TG71195SW294173K"
     @approved_authroize_order_id_for_capture = "4DB03990TD1762015"
 
     @body = {}
@@ -46,7 +46,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   def test_refund_captured_order
     response = capture_order
     refund_order_res = @paypal_customer.refund(response[:id])
-    assert refund_order_res[:status].eql?("REFUNDED")
+    assert refund_order_res[:status].eql?("COMPLETED")
     assert !refund_order_res[:id].nil?
     assert !refund_order_res[:links].blank?
   end

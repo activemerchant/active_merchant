@@ -57,6 +57,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
   def test_create_authorize_order
     response = create_order("AUTHORIZE")
+    @order_id = response[:id]
     puts "Authorize Order Id: #{@order_id}"
     assert response[:status].eql?("CREATED")
     assert !response[:id].nil?
@@ -112,13 +113,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: operator"
       @paypal_customer.handle_approve(@order_id, options)
-    end
-  end
-
-  def test_missing_operator_required_id_arguments_in_handle_approve
-    assert_raise(ArgumentError) do
-      puts "*** ArgumentError Exception: Missing required parameter: operator_required_id"
-      @paypal_customer.handle_approve(nil, options)
     end
   end
 
