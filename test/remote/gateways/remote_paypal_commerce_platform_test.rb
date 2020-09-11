@@ -21,12 +21,29 @@ class PaypalExpressRestTest < Test::Unit::TestCase
                     "currency_code": "USD",
                     "value": "100.00"
                 },
-                "payee": {
-                    "email_address": "sb-feqsa3029697@personal.example.com"
-                }
+              "payee": {
+                  "email_address": "sb-feqsa3029697@personal.example.com"
+              }
             }
         ]
     }
+
+    @authorize_additional_params =  {
+                                      payment_instruction: {
+                                      "disbursement_mode": "INSTANT",
+                                      "platform_fees": [
+                                        {
+                                            "amount": {
+                                                "currency_code": "USD",
+                                                "value": "2.00"
+                                            },
+                                            "payee": {
+                                                "email_address": "sb-feqsa3029697@personal.example.com"
+                                            }
+                                        }
+                                        ]
+                                      }
+                                    }
   end
 
   def test_create_capture_instant_order
