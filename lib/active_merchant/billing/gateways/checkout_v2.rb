@@ -63,7 +63,7 @@ module ActiveMerchant #:nodoc:
         commit(:refund, post, authorization)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         authorize(0, credit_card, options)
       end
 
