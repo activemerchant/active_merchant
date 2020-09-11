@@ -19,10 +19,10 @@ class PaypalExpressRestTest < Test::Unit::TestCase
                 "reference_id": "camera_shop_seller_#{DateTime.now}",
                 "amount": {
                     "currency_code": "USD",
-                    "value": "100.00"
+                    "value": "56.00"
                 },
               "payee": {
-                  "email_address": "sb-feqsa3029697@personal.example.com"
+                  "email_address": "sb-jnxjj3033194@business.example.com"
               }
             }
         ]

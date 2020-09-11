@@ -13,9 +13,11 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     bearer_token = @paypal_customer.get_token(options)
     @headers = { "Authorization": "Bearer #{ bearer_token[:access_token] }", "Content-Type": "application/json" }
 
-    @approved_authroize_order_id = "88D0861643690811B"
-    @approved_capture_order_id = "6TG71195SW294173K"
-    @approved_authroize_order_id_for_capture = "4DB03990TD1762015"
+    @approved_authroize_order_id = "7V123312RG0637734"
+    @approved_capture_order_id = "2CJ18316FT2538839"
+    @approved_authroize_order_id_for_capture = "5EU30839XL336345M"
+    @approved_capture_order_id_for_refund = "0V4855580B516603L"
+
 
     @body = {}
   end
@@ -44,8 +46,10 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   end
 
   def test_refund_captured_order
-    response = capture_order
-    refund_order_res = @paypal_customer.refund(response[:id])
+    response = @paypal_customer.handle_approve(@approved_capture_order_id_for_refund,
+                                               options.merge({ operator: "capture" }))
+    capture_id = response[:purchase_units][0][:payments][:captures][0][:id]
+    refund_order_res = @paypal_customer.refund(capture_id, options)
     assert refund_order_res[:status].eql?("COMPLETED")
     assert !refund_order_res[:id].nil?
     assert !refund_order_res[:links].blank?
