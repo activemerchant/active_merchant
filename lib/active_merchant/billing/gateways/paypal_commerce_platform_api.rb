@@ -29,7 +29,6 @@ module ActiveMerchant #:nodoc:
         @options = options
 
         ssl_post_request(url, options)
-        #ssl_request(:post, url, options[:body].to_json, options[:headers])
       end
 
       def encoded_credentials
