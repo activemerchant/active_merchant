@@ -18,7 +18,7 @@ class CheckoutV2Test < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
-    assert_equal 'pay_fj3xswqe3emuxckocjx6td73ni', response.authorization
+    assert_equal 'pay_bgv5tmah6fmuzcmcrcro6exe6m', response.authorization
     assert response.test?
   end
 
@@ -267,7 +267,7 @@ class CheckoutV2Test < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
-    assert_equal 'pay_fj3xswqe3emuxckocjx6td73ni', response.authorization
+    assert_equal 'pay_bgv5tmah6fmuzcmcrcro6exe6m', response.authorization
 
     refund = stub_comms do
       @gateway.refund(@amount, response.authorization)
@@ -353,23 +353,7 @@ class CheckoutV2Test < Test::Unit::TestCase
 
   def successful_purchase_response
     %(
-     {
-       "id":"pay_fj3xswqe3emuxckocjx6td73ni",
-       "amount":200,
-       "currency":"USD",
-       "reference":"1",
-       "response_summary": "Approved",
-       "response_code":"10000",
-       "customer": {
-        "id": "cus_zvnv7gsblfjuxppycd7bx4erue",
-        "email": "longbob.longsen@example.com",
-        "name": "Sarah Mitchell"
-       },
-       "source": {
-         "cvv_check":"Y",
-         "avs_check":"S"
-       }
-      }
+      {"id":"pay_bgv5tmah6fmuzcmcrcro6exe6m","action_id":"act_bgv5tmah6fmuzcmcrcro6exe6m","amount":200,"currency":"USD","approved":true,"status":"Authorized","auth_code":"127172","eci":"05","scheme_id":"096091887499308","response_code":"10000","response_summary":"Approved","risk":{"flagged":false},"source":{"id":"src_fzp3cwkf4ygebbmvrxdhyrwmbm","type":"card","billing_address":{"address_line1":"456 My Street","address_line2":"Apt 1","city":"Ottawa","state":"ON","zip":"K1C2N6","country":"CA"},"expiry_month":6,"expiry_year":2025,"name":"Longbob Longsen","scheme":"Visa","last4":"4242","fingerprint":"9F3BAD2E48C6C8579F2F5DC0710B7C11A8ACD5072C3363A72579A6FB227D64BE","bin":"424242","card_type":"Credit","card_category":"Consumer","issuer":"JPMORGAN CHASE BANK NA","issuer_country":"US","product_id":"A","product_type":"Visa Traditional","avs_check":"S","cvv_check":"Y","payouts":true,"fast_funds":"d"},"customer":{"id":"cus_tz76qzbwr44ezdfyzdvrvlwogy","email":"longbob.longsen@example.com","name":"Longbob Longsen"},"processed_on":"2020-09-11T13:58:32Z","reference":"1","processing":{"acquirer_transaction_id":"9819327011","retrieval_reference_number":"861613285622"},"_links":{"self":{"href":"https://api.sandbox.checkout.com/payments/pay_bgv5tmah6fmuzcmcrcro6exe6m"},"actions":{"href":"https://api.sandbox.checkout.com/payments/pay_bgv5tmah6fmuzcmcrcro6exe6m/actions"},"capture":{"href":"https://api.sandbox.checkout.com/payments/pay_bgv5tmah6fmuzcmcrcro6exe6m/captures"},"void":{"href":"https://api.sandbox.checkout.com/payments/pay_bgv5tmah6fmuzcmcrcro6exe6m/voids"}}}
     )
   end
 

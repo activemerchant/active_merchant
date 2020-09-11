@@ -11,6 +11,7 @@
 * RuboCop: Fix Lint/UnusedMethodArgument [leila-alderman] #3721
 * RuboCop: Fix Naming/MemoizedInstanceVariableName [leila-alderman] #3722
 * RuboCop: Fix Style/BlockComments [leila-alderman] #3729
+* Checkout V2: Move to single-transaction Purchases [curiousepic] #3761
 
 == Version 1.114.0
 * BlueSnap: Add address1,address2,phone,shipping_* support #3749

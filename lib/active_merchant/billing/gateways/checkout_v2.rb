@@ -19,25 +19,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(amount, payment_method, options = {})
-        multi = MultiResponse.run do |r|
-          r.process { authorize(amount, payment_method, options) }
-          r.process { capture(amount, r.authorization, options) }
-        end
+        post = {}
+        build_auth_or_purchase(post, amount, payment_method, options)
 
-        merged_params = multi.responses.map(&:params).reduce({}, :merge)
-        succeeded = success_from(merged_params)
-
-        response(:purchase, succeeded, merged_params)
+        commit(:purchase, post)
       end
 
       def authorize(amount, payment_method, options = {})
         post = {}
         post[:capture] = false
-        add_invoice(post, amount, options)
-        add_payment_method(post, payment_method, options)
-        add_customer_data(post, options)
-        add_transaction_data(post, options)
-        add_3ds(post, options)
+        build_auth_or_purchase(post, amount, payment_method, options)
 
         commit(:authorize, post)
       end
@@ -86,6 +77,14 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
+      def build_auth_or_purchase(post, amount, payment_method, options)
+        add_invoice(post, amount, options)
+        add_payment_method(post, payment_method, options)
+        add_customer_data(post, options)
+        add_transaction_data(post, options)
+        add_3ds(post, options)
+      end
 
       def add_invoice(post, money, options)
         post[:amount] = localized_amount(money, options[:currency])
@@ -199,7 +198,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def url(_post, action, authorization)
-        if action == :authorize
+        if %i[authorize purchase].include?(action)
           "#{base_url}/payments"
         elsif action == :capture
           "#{base_url}/payments/#{authorization}/captures"

@@ -228,6 +228,8 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
+    sleep 1
+
     assert refund = @gateway.refund(@amount, purchase.authorization)
     assert_success refund
   end
@@ -235,6 +237,8 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
   def test_partial_refund
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
+
+    sleep 1
 
     assert refund = @gateway.refund(@amount - 1, purchase.authorization)
     assert_success refund
