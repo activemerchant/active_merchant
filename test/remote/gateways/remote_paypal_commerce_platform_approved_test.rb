@@ -9,9 +9,9 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     params = { username: "ASs8Osqge6KT3OdLtkNhD20VP8lsrqRUlRjLo-e5s75SHz-2ffMMzCos_odQGjGYpPcGlxJVQ5fXMz9q",
                password: "EKj_bMZn0CkOhOvFwJMX2WwhtCq2A0OtlOd5T-zUhKIf9WQxvgPasNX0Kr1U4TjFj8ZN6XCMF5NM30Z_" }
 
-    options = { "Content-Type": "application/json", authorization: params }
-    bearer_token = @paypal_customer.get_token(options)
-    @headers = { "Authorization": "Bearer #{ bearer_token[:access_token] }", "Content-Type": "application/json" }
+    options       = { "Content-Type": "application/json", authorization: params }
+    access_token  = @paypal_customer.get_token(options)
+    @headers      = { "Authorization": access_token, "Content-Type": "application/json" }
 
     @approved_authroize_order_id = "88D0861643690811B"
     @approved_capture_order_id = "9SX09406GE019062Y"
