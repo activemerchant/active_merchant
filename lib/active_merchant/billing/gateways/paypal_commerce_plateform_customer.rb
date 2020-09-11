@@ -24,7 +24,7 @@ module ActiveMerchant
       end
 
       def handle_approve(operator_required_id, options)
-        requires!(options.merge!({ operator_required_id: operator_required_id }), :operator_required_id, :operator)
+        requires!(options.merge({ operator_required_id: operator_required_id }), :operator_required_id, :operator)
 
         options[:operator] == "authorize" ? authorize(operator_required_id, options) : capture(operator_required_id, options)
       end
@@ -32,7 +32,7 @@ module ActiveMerchant
       def capture(order_id, options)
         requires!(options, :operator_required_id)
 
-        post("v2/checkout/orders/#{ order_id }/capture", options.except(:operator_required_id, :operator))
+        post("v2/checkout/orders/#{ order_id }/capture", options)
       end
 
       def refund(capture_id, options={ })
