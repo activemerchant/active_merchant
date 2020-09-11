@@ -46,7 +46,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   def test_refund_captured_order
     response = capture_order
     refund_order_res = @paypal_customer.refund(response[:id])
-    assert refund_order_res[:status].eql?("REFUNDED")
+    assert refund_order_res[:status].eql?("COMPLETED")
     assert !refund_order_res[:id].nil?
     assert !refund_order_res[:links].blank?
   end

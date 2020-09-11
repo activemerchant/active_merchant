@@ -38,7 +38,7 @@ module ActiveMerchant
       def refund(capture_id, options={ })
         requires!({ capture_id: capture_id }, :capture_id)
 
-        post("v1/payments/captures/#{ capture_id }/refund", options)
+        post("v2/payments/captures/#{ capture_id }/refund", options)
       end
 
       def void(authorization_id, options)

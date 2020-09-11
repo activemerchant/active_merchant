@@ -48,8 +48,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
   def test_create_capture_instant_order
     response = create_order("CAPTURE")
-    @order_id = response[:id]
-    puts "Capture Order Id (Instant): #{@order_id}"
+    puts "Capture Order Id (Instant): #{ response[:id] }"
     assert response[:status].eql?("CREATED")
     assert !response[:id].nil?
     assert !response[:links].blank?
@@ -57,7 +56,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
   def test_create_authorize_order
     response = create_order("AUTHORIZE")
-    puts "Authorize Order Id: #{@order_id}"
+    puts "Authorize Order Id: #{ response[:id] }"
     assert response[:status].eql?("CREATED")
     assert !response[:id].nil?
     assert !response[:links].blank?
