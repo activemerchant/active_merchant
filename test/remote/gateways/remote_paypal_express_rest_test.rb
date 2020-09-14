@@ -302,8 +302,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
   def create_order
     paypal_customer = ActiveMerchant::Billing::PaypalCustomerGateway.new
-
-
     response = paypal_customer.create_order(@options)
     assert response.success?
     assert response.test?

@@ -32,9 +32,33 @@ class PaypalExpressRestTest < Test::Unit::TestCase
                                     }
   end
 
-  def test_create_capture_instant_order
+  def test_create_capture_instant_order_direct_merchant
     response = create_order("CAPTURE")
-    puts "Capture Order Id (Instant): #{ response[:id] }"
+    puts "Capture Order Id (Instant) - Direct Merchant: #{ response[:id] }"
+    assert response[:status].eql?("CREATED")
+    assert !response[:id].nil?
+    assert !response[:links].blank?
+  end
+
+  def test_create_capture_instant_order_ppcp
+    response = create_order("CAPTURE", "PPCP")
+    puts "Capture Order Id (Instant) - PPCP: #{ response[:id] }"
+    assert response[:status].eql?("CREATED")
+    assert !response[:id].nil?
+    assert !response[:links].blank?
+  end
+
+  def test_create_capture_delayed_order_direct_merchant
+    response = create_order("CAPTURE", mode = "DELAYED")
+    puts "Capture Order Id (Delayed) - Direct Merchant: #{ response[:id] }"
+    assert response[:status].eql?("CREATED")
+    assert !response[:id].nil?
+    assert !response[:links].blank?
+  end
+
+  def test_create_capture_delayed_order_ppcp
+    response = create_order("CAPTURE", "PPCP", "DELAYED")
+    puts "Capture Order Id (Delayed) - PPCP: #{ response[:id] }"
     assert response[:status].eql?("CREATED")
     assert !response[:id].nil?
     assert !response[:links].blank?
@@ -108,10 +132,27 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   end
 
   private
-  def create_order(order_type)
-    @body.update(
-        intent: order_type
-    )
+  def create_order(order_type, type="DIRECT", mode="INSTANT")
+    if type.eql?("PPCP")
+      @body.update(
+          "payment_instruction": {
+              "disbursement_mode": mode,
+              "platform_fees": [
+                  {
+                      "amount": {
+                          "currency_code": "USD",
+                          "value": "10.00"
+                      },
+                      "payee": {
+                          "email_address": "sb-jnxjj3033194@business.example.com"
+                      }
+                  }
+              ]
+          }
+      )
+    else
+      @body.delete("payment_instruction")
+    end
 
     @paypal_customer.create_order(order_type, options)
   end

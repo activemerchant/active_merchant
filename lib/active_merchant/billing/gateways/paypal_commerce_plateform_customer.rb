@@ -62,7 +62,7 @@ module ActiveMerchant
       end
 
       def disburse(options)
-        requires!(options, :reference_type, :reference_id)
+        requires!(options[:body], :reference_type, :reference_id)
 
         post("v1/payments/referenced-payouts-items", options)
       end
