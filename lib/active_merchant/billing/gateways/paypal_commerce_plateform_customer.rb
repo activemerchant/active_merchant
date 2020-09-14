@@ -16,7 +16,7 @@ module ActiveMerchant
 
         add_payment_instruction(intent, post, options[:payment_instruction]) if options[:payment_instruction]
 
-        commit(:post, "v2/checkout/orders", post, options)
+        commit(:post, "v2/checkout/orders", post, options[:headers])
       end
 
       def get_token(options)
@@ -76,16 +76,16 @@ module ActiveMerchant
       # <-********************Private Methods**********************->
       private
       def add_purchase_units(options, post)
-        post[:purchase_units] = { }
+        post[:purchase_units] = [{ }]
         options.map do |purchase_unit|
-          post[:purchase_units][:reference_id]              = purchase_unit[:reference_id]
+          post[:purchase_units][0][:reference_id]              = purchase_unit[:reference_id]
           ## Amount
-          post[:purchase_units][:amount]                    = { }
-          post[:purchase_units][:amount][:currency_code]    = purchase_unit[:amount][:currency_code]
-          post[:purchase_units][:amount][:value]            = purchase_unit[:amount][:value]
+          post[:purchase_units][0][:amount]                    = { }
+          post[:purchase_units][0][:amount][:currency_code]    = purchase_unit[:amount][:currency_code]
+          post[:purchase_units][0][:amount][:value]            = purchase_unit[:amount][:value]
           ### Payee
-          post[:purchase_units][:payee]                     = { }
-          post[:purchase_units][:payee][:email_address]     = purchase_unit[:payee][:email_address]
+          post[:purchase_units][0][:payee]                     = { }
+          post[:purchase_units][0][:payee][:email_address]     = purchase_unit[:payee][:email_address]
         end
         post
       end
