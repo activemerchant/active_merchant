@@ -8,8 +8,9 @@ class RemoteNetworkInternationalTest < Test::Unit::TestCase
     @credit_card = credit_card('4093191766216474')
     @declined_card = credit_card('4396294095051580')
     @options = {
-      billing_address: address,
-      currency: 'AED'
+      billing_address: address(),
+      currency: 'AED',
+      reference: generate_unique_id,
     }
   end
 

@@ -9,8 +9,8 @@ module ActiveMerchant #:nodoc:
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
       self.money_format = :cents
 
-      self.homepage_url = 'http://www.example.net/'
-      self.display_name = 'New Gateway'
+      self.homepage_url = 'https://www.network.ae/en'
+      self.display_name = 'Network International Payment Solutions'
 
       STANDARD_ERROR_CODE_MAPPING = {}
 
@@ -26,11 +26,8 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, payment, options={})
         post = {}
-        add_invoice(post, money, options)
+        add_order(post, money, options)
         add_payment(post, payment)
-        add_address(post, payment, options)
-        add_customer_data(post, options)
-        add_merchant_data(post, options)
 
         commit('/payment/card', post)
       end
@@ -54,7 +51,7 @@ module ActiveMerchant #:nodoc:
         post[:merchantOrderReference] = options[:reference]
       end
 
-      def add_address(post, creditcard, options)
+      def add_address(post, options)
         if address = options[:billing_address] || options[:address]
           post[:billingAddress] = {}
           post[:billingAddress][:firstName] = options[:first_name]
@@ -75,17 +72,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_invoice(post, money, options)
-        post[:order] = {}
-        post[:order][:action] = options[:action] || "AUTH"
+        post[:action] = options[:action] || "AUTH"
 
-        post[:order][:type] = options[:order_type] if options.has_key?(:order_type)
-        post[:order][:frequency] = options[:frequency] if options.has_key?(:frequency)
-        post[:order][:emailAddress] = options[:email]
+        post[:type] = options[:order_type] if options.has_key?(:order_type)
+        post[:frequency] = options[:frequency] if options.has_key?(:frequency)
+        post[:emailAddress] = options[:email]
         post[:channel] = options[:channel] if options.has_key?(:channel)
 
-        post[:order][:amount] = {}
-        post[:order][:amount][:value] = amount(money)
-        post[:order][:amount][:currencyCode] = options[:currency] || currency(money)
+        post[:amount] = {}
+        post[:amount][:value] = amount(money)
+        post[:amount][:currencyCode] = options[:currency] || currency(money)
       end
 
       def add_merchant_data(post, options)
@@ -103,6 +99,18 @@ module ActiveMerchant #:nodoc:
         if options[:cancel_text].present?
           post[:merchantAttributes][:cancelText] = options[:cancel_text]
         end
+      end
+
+      def add_order(post, money, options)
+        order = {}
+
+        add_invoice(order, money, options)
+        add_address(order, options)
+        add_customer_data(order, options)
+        add_merchant_data(order, options)
+
+        post[:order] = order
+        post
       end
 
       def add_payment(post, payment)
