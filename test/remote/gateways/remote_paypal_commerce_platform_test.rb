@@ -62,6 +62,22 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     assert !response[:links].blank?
   end
 
+  def test_create_capture_delayed_order_direct_merchant
+    response = create_order("CAPTURE", mode = "DELAYED")
+    puts "Capture Order Id (Delayed) - Direct Merchant: #{ response[:id] }"
+    assert response[:status].eql?("CREATED")
+    assert !response[:id].nil?
+    assert !response[:links].blank?
+  end
+
+  def test_create_capture_delayed_order_ppcp
+    response = create_order("CAPTURE", "PPCP", "DELAYED")
+    puts "Capture Order Id (Delayed) - PPCP: #{ response[:id] }"
+    assert response[:status].eql?("CREATED")
+    assert !response[:id].nil?
+    assert !response[:links].blank?
+  end
+
   def test_create_authorize_order
     response = create_order("AUTHORIZE")
     puts "Authorize Order Id: #{ response[:id] }"
@@ -130,15 +146,15 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   end
 
   private
-  def create_order(order_type, mode="DIRECT")
+  def create_order(order_type, type="DIRECT", mode="INSTANT")
     @body.update(
         intent: order_type
     )
 
-    if mode.eql?("PPCP")
+    if type.eql?("PPCP")
       @body.update(
           "payment_instruction": {
-              "disbursement_mode": "INSTANT",
+              "disbursement_mode": mode,
               "platform_fees": [
                   {
                       "amount": {
