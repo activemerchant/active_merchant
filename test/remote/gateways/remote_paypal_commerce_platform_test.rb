@@ -46,9 +46,17 @@ class PaypalExpressRestTest < Test::Unit::TestCase
                                     }
   end
 
-  def test_create_capture_instant_order
+  def test_create_capture_instant_order_direct_merchant
     response = create_order("CAPTURE")
-    puts "Capture Order Id (Instant): #{ response[:id] }"
+    puts "Capture Order Id (Instant) - Direct Merchant: #{ response[:id] }"
+    assert response[:status].eql?("CREATED")
+    assert !response[:id].nil?
+    assert !response[:links].blank?
+  end
+
+  def test_create_capture_instant_order_ppcp
+    response = create_order("CAPTURE", "PPCP")
+    puts "Capture Order Id (Instant) - PPCP: #{ response[:id] }"
     assert response[:status].eql?("CREATED")
     assert !response[:id].nil?
     assert !response[:links].blank?
@@ -122,10 +130,31 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   end
 
   private
-  def create_order(order_type)
+  def create_order(order_type, mode="DIRECT")
     @body.update(
         intent: order_type
     )
+
+    if mode.eql?("PPCP")
+      @body.update(
+          "payment_instruction": {
+              "disbursement_mode": "INSTANT",
+              "platform_fees": [
+                  {
+                      "amount": {
+                          "currency_code": "USD",
+                          "value": "10.00"
+                      },
+                      "payee": {
+                          "email_address": "sb-jnxjj3033194@business.example.com"
+                      }
+                  }
+              ]
+          }
+      )
+    else
+      @body.delete("payment_instruction")
+    end
 
     @paypal_customer.create_order(options)
   end
