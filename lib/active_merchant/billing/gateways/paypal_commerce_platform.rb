@@ -63,11 +63,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def api_request(method, endpoint, parameters = nil, opt_headers = {})
-        p = parameters.to_json
-        puts p
         raw_response = response = nil
         begin
-          raw_response = ssl_request(method, endpoint, p, opt_headers)
+          raw_response = ssl_request(method, endpoint, parameters, opt_headers)
         rescue ResponseError => e
           raw_response = e.response.body
           response = response_error(raw_response)

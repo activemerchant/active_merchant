@@ -76,21 +76,25 @@ module ActiveMerchant
       # <-********************Private Methods**********************->
       private
       def add_purchase_units(options, post)
-        post[:purchase_units] = { }
+        post[:purchase_units] = []
+
         options.map do |purchase_unit|
-          post[:purchase_units][:reference_id]              = purchase_unit[:reference_id]
+          purchase_unit_hsh = {  }
+          purchase_unit_hsh[:reference_id]              = purchase_unit[:reference_id]
           ## Amount
-          post[:purchase_units][:amount]                    = { }
-          post[:purchase_units][:amount][:currency_code]    = purchase_unit[:amount][:currency_code]
-          post[:purchase_units][:amount][:value]            = purchase_unit[:amount][:value]
+          purchase_unit_hsh[:amount]                    = { }
+          purchase_unit_hsh[:amount][:currency_code]    = purchase_unit[:amount][:currency_code]
+          purchase_unit_hsh[:amount][:value]            = purchase_unit[:amount][:value]
           ### Payee
-          post[:purchase_units][:payee]                     = { }
-          post[:purchase_units][:payee][:email_address]     = purchase_unit[:payee][:email_address]
+          purchase_unit_hsh[:payee]                     = { }
+          purchase_unit_hsh[:payee][:email_address]     = purchase_unit[:payee][:email_address]
+          post[:purchase_units] << purchase_unit_hsh
         end
         post
       end
 
       def add_payment_instruction(intent, options, post)
+
         post[:payment_instruction] = { }
         post[:payment_instruction][:disbursement_mode]    = intent
 
