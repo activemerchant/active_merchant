@@ -16,7 +16,7 @@ module ActiveMerchant
 
         add_payment_instruction(intent, post, options[:payment_instruction]) if options[:payment_instruction]
 
-        commit(:post, "v2/checkout/orders", post, options)
+        commit(:post, "v2/checkout/orders", post, options[:headers])
       end
 
       def get_token(options)

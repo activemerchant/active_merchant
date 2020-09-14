@@ -1,7 +1,6 @@
 
 require 'active_merchant/billing/gateways/paypal/paypal_common_api'
 require 'active_merchant/billing/gateways/paypal_commerce_platform_api'
-require 'json'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -42,7 +41,7 @@ module ActiveMerchant #:nodoc:
       private
       def commit(method, url, parameters = nil, options = {})
         #post('v2/checkout/orders', options)
-        response = api_request(method, "#{ test_redirect_url }/#{ url }", parameters, options[:headers])
+        response = api_request(method, "#{ test_redirect_url }/#{ url }", parameters, options)
 
         success = success_from(response, options)
 
@@ -50,7 +49,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response, options)
-        !response.key?('error') && response['status'] != 'failed'
+        response
       end
 
       def response_error(raw_response)
@@ -65,14 +64,14 @@ module ActiveMerchant #:nodoc:
       def api_request(method, endpoint, parameters = nil, opt_headers = {})
         raw_response = response = nil
         begin
-          raw_response = ssl_request(method, endpoint, parameters, opt_headers)
+          raw_response = ssl_request(method, endpoint, parameters.to_json, opt_headers)
         rescue ResponseError => e
           raw_response = e.response.body
           response = response_error(raw_response)
         rescue JSON::ParserError
           response = json_error(raw_response)
         end
-        raw_response
+        eval(raw_response)
       end
       def headers(params)
         params[:headers]
