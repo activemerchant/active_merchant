@@ -40,97 +40,97 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     assert !response[:links].blank?
   end
 
-  #
-  # def test_create_capture_instant_order_ppcp
-  #   response = create_order("CAPTURE", "PPCP")
-  #   puts "Capture Order Id (Instant) - PPCP: #{ response[:id] }"
-  #   assert response[:status].eql?("CREATED")
-  #   assert !response[:id].nil?
-  #   assert !response[:links].blank?
-  # end
-  #
-  # def test_create_capture_delayed_order_direct_merchant
-  #   response = create_order("CAPTURE", mode = "DELAYED")
-  #   puts "Capture Order Id (Delayed) - Direct Merchant: #{ response[:id] }"
-  #   assert response[:status].eql?("CREATED")
-  #   assert !response[:id].nil?
-  #   assert !response[:links].blank?
-  # end
-  #
-  # def test_create_capture_delayed_order_ppcp
-  #   response = create_order("CAPTURE", "PPCP", "DELAYED")
-  #   puts "Capture Order Id (Delayed) - PPCP: #{ response[:id] }"
-  #   assert response[:status].eql?("CREATED")
-  #   assert !response[:id].nil?
-  #   assert !response[:links].blank?
-  # end
 
-  # def test_create_authorize_order
-  #   response = create_order("AUTHORIZE")
-  #   puts "Authorize Order Id: #{ response[:id] }"
-  #   assert response[:status].eql?("CREATED")
-  #   assert !response[:id].nil?
-  #   assert !response[:links].blank?
-  # end
-  #
-  # def test_missing_password_argument_to_get_access_token
-  #   params = { username: "ASs8Osqge6KT3OdLtkNhD20VP8lsrqRUlRjLo-e5s75SHz-2ffMMzCos_odQGjGYpPcGlxJVQ5fXMz9q" }
-  #   options = { "Content-Type": "application/json", authorization: params }
-  #
-  #   assert_raise(ArgumentError) do
-  #     puts "*** ArgumentError Exception: Missing required parameter: password"
-  #     @paypal_customer.get_token(options)
-  #   end
-  # end
-  #
-  # def test_missing_username_argument_to_get_access_token
-  #   params = { password: "ASs8Osqge6KT3OdLtkNhD20VP8lsrqRUlRjLo-e5s75SHz-2ffMMzCos_odQGjGYpPcGlxJVQ5fXMz9q" }
-  #   options = { "Content-Type": "application/json", authorization: params }
-  #
-  #   assert_raise(ArgumentError) do
-  #     puts "*** ArgumentError Exception: Missing required parameter: username"
-  #     @paypal_customer.get_token(options)
-  #   end
-  # end
-  #
-  # def test_missing_intent_argument_for_order_creation
-  #   @body.delete(
-  #       :intent
-  #   )
-  #
-  #   assert_raise(ArgumentError) do
-  #     puts "*** ArgumentError Exception: Missing required parameter: intent"
-  #     @paypal_customer.create_order("CAPTURE", options)
-  #   end
-  # end
-  #
-  # def test_missing_purchase_units_argument_for_order_creation
-  #   @body.delete(
-  #       :purchase_units
-  #   )
-  #
-  #   assert_raise(ArgumentError) do
-  #     puts "*** ArgumentError Exception: Missing required parameter: purchase_units"
-  #     @paypal_customer.create_order("CAPTURE", options)
-  #   end
-  # end
-  #
-  # def test_missing_operator_arguments_in_handle_approve
-  #   response = create_order("AUTHORIZE")
-  #   @order_id = response[:id]
-  #
-  #   assert_raise(ArgumentError) do
-  #     puts "*** ArgumentError Exception: Missing required parameter: operator"
-  #     @paypal_customer.handle_approve(@order_id, options)
-  #   end
-  # end
-  #
-  # def test_missing_operator_required_id_arguments_in_handle_approve
-  #   assert_raise(ArgumentError) do
-  #     puts "*** ArgumentError Exception: Missing required parameter: operator_required_id"
-  #     @paypal_customer.handle_approve(nil, options)
-  #   end
-  # end
+  def test_create_capture_instant_order_ppcp
+    response = create_order("CAPTURE", "PPCP")
+    puts "Capture Order Id (Instant) - PPCP: #{ response[:id] }"
+    assert response[:status].eql?("CREATED")
+    assert !response[:id].nil?
+    assert !response[:links].blank?
+  end
+
+  def test_create_capture_delayed_order_direct_merchant
+    response = create_order("CAPTURE", mode = "DELAYED")
+    puts "Capture Order Id (Delayed) - Direct Merchant: #{ response[:id] }"
+    assert response[:status].eql?("CREATED")
+    assert !response[:id].nil?
+    assert !response[:links].blank?
+  end
+
+  def test_create_capture_delayed_order_ppcp
+    response = create_order("CAPTURE", "PPCP", "DELAYED")
+    puts "Capture Order Id (Delayed) - PPCP: #{ response[:id] }"
+    assert response[:status].eql?("CREATED")
+    assert !response[:id].nil?
+    assert !response[:links].blank?
+  end
+
+  def test_create_authorize_order
+    response = create_order("AUTHORIZE")
+    puts "Authorize Order Id: #{ response[:id] }"
+    assert response[:status].eql?("CREATED")
+    assert !response[:id].nil?
+    assert !response[:links].blank?
+  end
+
+  def test_missing_password_argument_to_get_access_token
+    params = { username: "ASs8Osqge6KT3OdLtkNhD20VP8lsrqRUlRjLo-e5s75SHz-2ffMMzCos_odQGjGYpPcGlxJVQ5fXMz9q" }
+    options = { "Content-Type": "application/json", authorization: params }
+
+    assert_raise(ArgumentError) do
+      puts "*** ArgumentError Exception: Missing required parameter: password"
+      @paypal_customer.get_token(options)
+    end
+  end
+
+  def test_missing_username_argument_to_get_access_token
+    params = { password: "ASs8Osqge6KT3OdLtkNhD20VP8lsrqRUlRjLo-e5s75SHz-2ffMMzCos_odQGjGYpPcGlxJVQ5fXMz9q" }
+    options = { "Content-Type": "application/json", authorization: params }
+
+    assert_raise(ArgumentError) do
+      puts "*** ArgumentError Exception: Missing required parameter: username"
+      @paypal_customer.get_token(options)
+    end
+  end
+
+  def test_missing_intent_argument_for_order_creation
+    @body.delete(
+        :intent
+    )
+
+    assert_raise(ArgumentError) do
+      puts "*** ArgumentError Exception: Missing required parameter: intent"
+      @paypal_customer.create_order("CAPTURE", options)
+    end
+  end
+
+  def test_missing_purchase_units_argument_for_order_creation
+    @body.delete(
+        :purchase_units
+    )
+
+    assert_raise(ArgumentError) do
+      puts "*** ArgumentError Exception: Missing required parameter: purchase_units"
+      @paypal_customer.create_order("CAPTURE", options)
+    end
+  end
+
+  def test_missing_operator_arguments_in_handle_approve
+    response = create_order("AUTHORIZE")
+    @order_id = response[:id]
+
+    assert_raise(ArgumentError) do
+      puts "*** ArgumentError Exception: Missing required parameter: operator"
+      @paypal_customer.handle_approve(@order_id, options)
+    end
+  end
+
+  def test_missing_operator_required_id_arguments_in_handle_approve
+    assert_raise(ArgumentError) do
+      puts "*** ArgumentError Exception: Missing required parameter: operator_required_id"
+      @paypal_customer.handle_approve(nil, options)
+    end
+  end
 
   private
   def create_order(order_type, type="DIRECT", mode="INSTANT")
