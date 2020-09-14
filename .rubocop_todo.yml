@@ -160,13 +160,6 @@ Naming/VariableName:
     - 'test/unit/gateways/card_stream_test.rb'
     - 'test/unit/gateways/worldpay_online_payments_test.rb'
 
-# Offense count: 4
-# Cop supports --auto-correct.
-Performance/RedundantMatch:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/opp.rb'
-    - 'test/unit/gateways/payu_latam_test.rb'
-
 # Offense count: 11
 # Cop supports --auto-correct.
 Performance/StringReplacement:

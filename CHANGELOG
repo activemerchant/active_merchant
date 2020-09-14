@@ -25,6 +25,7 @@
 * PayU Latam: Support partial refunds [leila-alderman] #3774
 * RuboCop: Fix Style/Alias [leila-alderman] #3727
 * Stripe PI: Allow `on_behalf_of` to be passed alone #3776
+* RuboCop: Fix Performance/RedundantMatch [leila-alderman] #3765
 
 == Version 1.114.0
 * BlueSnap: Add address1,address2,phone,shipping_* support #3749

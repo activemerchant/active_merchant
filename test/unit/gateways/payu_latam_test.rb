@@ -214,7 +214,7 @@ class PayuLatamTest < Test::Unit::TestCase
 
   def test_request_using_visa_card_with_no_cvv
     @gateway.expects(:ssl_post).with { |_url, body, _headers|
-      body.match '"securityCode":"000"'
+      body =~ /"securityCode":"000"/
       body.match '"processWithoutCvv2":true'
     }.returns(successful_purchase_response)
     response = @gateway.purchase(@amount, @no_cvv_visa_card, @options)
@@ -225,7 +225,7 @@ class PayuLatamTest < Test::Unit::TestCase
 
   def test_request_using_amex_card_with_no_cvv
     @gateway.expects(:ssl_post).with { |_url, body, _headers|
-      body.match '"securityCode":"0000"'
+      body =~ /"securityCode":"0000"/
       body.match '"processWithoutCvv2":true'
     }.returns(successful_purchase_response)
     response = @gateway.purchase(@amount, @no_cvv_amex_card, @options)
@@ -236,7 +236,7 @@ class PayuLatamTest < Test::Unit::TestCase
 
   def test_request_passes_cvv_option
     @gateway.expects(:ssl_post).with { |_url, body, _headers|
-      body.match '"securityCode":"777"'
+      body =~ /"securityCode":"777"/
       !body.match '"processWithoutCvv2"'
     }.returns(successful_purchase_response)
     options = @options.merge(cvv: '777')
