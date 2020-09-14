@@ -6,15 +6,23 @@ module ActiveMerchant
   module Billing
     class PaypalCommercePlateformCustomerGateway < PaypalCommercePlatformGateway
 
-      def create_order(options)
-        requires!(options[:body], :intent, :purchase_units)
-        post('v2/checkout/orders', options)
+      def create_order(intent, options)
+        requires!(options, :intent, :purchase_units)
+
+        post = { }
+        add_intent(intent, post)
+
+        add_purchase_units(options[:purchase_units], post) if options[:purchase_units]
+
+        add_payment_instruction(intent, post, options[:payment_instruction]) if options[:payment_instruction]
+
+        commit(:post, "v2/checkout/orders", post, options)
       end
 
       def get_token(options)
         requires!(options[:authorization], :username, :password)
 
-        post('v1/oauth2/token', options)
+        prepare_request_to_get_access_token(options)
       end
 
       def authorize(order_id, options)
@@ -63,6 +71,43 @@ module ActiveMerchant
         requires!(options.merge!({ authorization_id: authorization_id  }), :authorization_id)
 
         post("v2/payments/authorizations/#{ authorization_id }/capture", options)
+      end
+
+      # <-********************Private Methods**********************->
+      private
+      def add_purchase_units(options, post)
+        post[:purchase_units] = { }
+        options.map do |purchase_unit|
+          post[:purchase_units][:reference_id]              = purchase_unit[:reference_id]
+          ## Amount
+          post[:purchase_units][:amount]                    = { }
+          post[:purchase_units][:amount][:currency_code]    = purchase_unit[:amount][:currency_code]
+          post[:purchase_units][:amount][:value]            = purchase_unit[:amount][:value]
+          ### Payee
+          post[:purchase_units][:payee]                     = { }
+          post[:purchase_units][:payee][:email_address]     = purchase_unit[:payee][:email_address]
+        end
+        post
+      end
+
+      def add_payment_instruction(intent, options, post)
+        post[:payment_instruction] = { }
+        post[:payment_instruction][:disbursement_mode]    = intent
+
+        options[:plateform_fees].map do |platform_fee|
+          post[:purchase_units][:platform_fees][:amount]                      = { }
+          post[:payment_instruction][:platform_fees][:amount][:currency_code] = platform_fee[:amount][:currency_code]
+          post[:payment_instruction][:plateform_fees][:amount][:value]        = platform_fee[:amount][:value]
+
+          post[:payment_instruction][:platform_fees][:payee]                  = { }
+          post[:payment_instruction][:plateform_fees][:payee][:email_address] = platform_fee[:payee][:email_address]
+        end
+        post
+      end
+
+      def add_intent(intent, post)
+        post[:intent]  = intent
+        post
       end
     end
   end

@@ -13,21 +13,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     access_token  = @paypal_customer.get_token(options)
     @headers      = { "Authorization": access_token, "Content-Type": "application/json" }
 
-    @body = {
-        "purchase_units": [
-            {
-                "reference_id": "camera_shop_seller_#{ DateTime.now }",
-                "amount": {
-                    "currency_code": "USD",
-                    "value": "56.00"
-                },
-              "payee": {
-                  "email_address": "sb-jnxjj3033194@business.example.com"
-              }
-            }
-        ]
-    }
-
+    @body = body
     @authorize_additional_params =  {
                                       payment_instruction: {
                                       "disbursement_mode": "INSTANT",
@@ -89,7 +75,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: intent"
-      @paypal_customer.create_order(options)
+      @paypal_customer.create_order("CAPTURE", options)
     end
   end
 
@@ -100,7 +86,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: purchase_units"
-      @paypal_customer.create_order(options)
+      @paypal_customer.create_order("CAPTURE", options)
     end
   end
 
@@ -127,10 +113,26 @@ class PaypalExpressRestTest < Test::Unit::TestCase
         intent: order_type
     )
 
-    @paypal_customer.create_order(options)
+    @paypal_customer.create_order(order_type, options)
   end
 
   def options
-    { headers: @headers, body: @body }
+    { headers: @headers }.merge(@body)
+  end
+  def body
+    {
+        "purchase_units": [
+            {
+                "reference_id": "camera_shop_seller_#{ DateTime.now }",
+                "amount": {
+                    "currency_code": "USD",
+                    "value": "56.00"
+                },
+                "payee": {
+                    "email_address": "sb-jnxjj3033194@business.example.com"
+                }
+            }
+        ]
+    }
   end
 end
