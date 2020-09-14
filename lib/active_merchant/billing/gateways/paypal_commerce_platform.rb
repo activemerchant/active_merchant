@@ -1,6 +1,7 @@
 
 require 'active_merchant/billing/gateways/paypal/paypal_common_api'
 require 'active_merchant/billing/gateways/paypal_commerce_platform_api'
+require 'json'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -62,17 +63,18 @@ module ActiveMerchant #:nodoc:
       end
 
       def api_request(method, endpoint, parameters = nil, opt_headers = {})
+        p = parameters.to_json
+        puts p
         raw_response = response = nil
         begin
-          raw_response = ssl_request(method, endpoint, parameters, opt_headers)
-          response = parse(raw_response)
+          raw_response = ssl_request(method, endpoint, p, opt_headers)
         rescue ResponseError => e
           raw_response = e.response.body
           response = response_error(raw_response)
         rescue JSON::ParserError
           response = json_error(raw_response)
         end
-        response
+        raw_response
       end
       def headers(params)
         params[:headers]
@@ -81,9 +83,10 @@ module ActiveMerchant #:nodoc:
         @options = options
         "basic #{ encoded_credentials }"
       end
-     def encoded_credentials
+      def encoded_credentials
         Base64.encode64("#{ @options[:authorization][:username] }:#{ @options[:authorization][:password] }").gsub("\n", "")
       end
+
     end
   end
 end

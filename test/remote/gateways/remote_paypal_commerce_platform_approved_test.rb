@@ -32,6 +32,11 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @approved_delayed_authorize_order_id_for_disburse       = "6FF92286BP500124Y"
 
 
+    @approved_capture_order_id_for_get                      = "60K03223240081731"
+    @approved_authorize_order_id_for_get                    = "2YH14823DD593684A"
+    @order_id_for_get                                       = "3DP425895D825693S"
+
+
     @body = {}
 
   end
@@ -162,6 +167,31 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     void_response = @paypal_customer.void(authorization_id, options)
     assert void_response.empty?
   end
+
+  # def test_get_order_details
+  #   response = @paypal_customer.get_order_details(@order_id_for_get, options)
+  #   assert !response[:status].nil?
+  #   assert !response[:id].nil?
+  #   assert !response[:links].blank?
+  # end
+  #
+  # def test_get_capture_order_details
+  #   response          = capture_order(@approved_capture_order_id_for_get)
+  #   capture_id        = response[:purchase_units][0][:payments][:captures][0][:id]
+  #   response          = @paypal_customer.get_capture_details(capture_id, options)
+  #   assert !response[:status].nil?
+  #   assert !response[:id].nil?
+  #   assert !response[:links].blank?
+  # end
+  #
+  # def test_get_authorization_details
+  #   response = @paypal_customer.handle_approve(@approved_authorize_order_id_for_get, options.merge({ operator: "authorize" }))
+  #   authorization_id = response[:purchase_units][0][:payments][:authorizations][0][:id]
+  #   response  = @paypal_customer.get_authorization_details(capture_id, options)
+  #   assert !response[:status].nil?
+  #   assert !response[:id].nil?
+  #   assert !response[:links].blank?
+  # end
 
   # def test_disburse_for_capture_order
   #     @body.update(
