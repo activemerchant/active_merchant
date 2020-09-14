@@ -13,10 +13,11 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     access_token  = @paypal_customer.get_token(options)
     @headers      = { "Authorization": access_token, "Content-Type": "application/json" }
 
-    @approved_authroize_order_id              = "7V123312RG0637734"
-    @approved_capture_order_id                = "2CJ18316FT2538839"
-    @approved_authroize_order_id_for_capture  = "5EU30839XL336345M"
-    @approved_capture_order_id_for_refund     = "0V4855580B516603L"
+    @approved_authroize_order_id              = "7HD516551T284021L"
+    @approved_capture_order_id                = "929546594U981113W"
+    @approved_authroize_order_id_for_capture  = "3K17182735390572B"
+    @approved_capture_order_id_for_refund     = "30P464656T233041H"
+    @approved_authroize_order_id_for_void     = "1FT74869S85767107"
 
 
     @body = {}
@@ -46,13 +47,20 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   end
 
   def test_refund_captured_order
-    response          = @paypal_customer.handle_approve(@approved_capture_order_id_for_refund, 
+    response          = @paypal_customer.handle_approve(@approved_capture_order_id_for_refund,
       options.merge({ operator: "capture" }))
     capture_id        = response[:purchase_units][0][:payments][:captures][0][:id]
     refund_order_res  = @paypal_customer.refund(capture_id, options)
     assert refund_order_res[:status].eql?("COMPLETED")
     assert !refund_order_res[:id].nil?
     assert !refund_order_res[:links].blank?
+  end
+
+  def test_void_authorized_order
+    response = @paypal_customer.handle_approve(@approved_authroize_order_id_for_void, options.merge({ operator: "authorize" }))
+    authorization_id = response[:purchase_units][0][:payments][:authorizations][0][:id]
+    void_response = @paypal_customer.void(authorization_id, options)
+    assert void_response.empty?
   end
 
   private

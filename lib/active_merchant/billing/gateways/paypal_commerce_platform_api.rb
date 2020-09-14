@@ -15,7 +15,9 @@ module ActiveMerchant #:nodoc:
         if options[:authorization].present?
           prepare_request_to_get_access_token(url, options)
         else
-          eval(ssl_request(:post, url, options[:body].to_json, options[:headers]))
+          response = ssl_request(:post, url, options[:body].to_json, options[:headers])
+          response = response.nil? ? "{}" : response
+          eval(response)
         end
       end
 
