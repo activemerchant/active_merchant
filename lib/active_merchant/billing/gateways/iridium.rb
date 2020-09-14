@@ -391,8 +391,7 @@ module ActiveMerchant #:nodoc:
             street_match: AVS_CODE[ response[:transaction_output_data][:address_numeric_check_result] ],
             postal_match: AVS_CODE[ response[:transaction_output_data][:post_code_check_result] ]
           },
-          cvv_result: CVV_CODE[ response[:transaction_output_data][:cv2_check_result] ]
-        )
+          cvv_result: CVV_CODE[ response[:transaction_output_data][:cv2_check_result] ])
       end
 
       def parse(xml)

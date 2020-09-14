@@ -15,13 +15,6 @@
 Layout/AlignHash:
   Enabled: false
 
-# Offense count: 232
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: symmetrical, new_line, same_line
-Layout/MultilineMethodCallBraceLayout:
-  Enabled: false
-
 # Offense count: 1186
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle, EnforcedStyleForEmptyBraces.

@@ -320,8 +320,7 @@ module ActiveMerchant #:nodoc:
           test: @options[:test] || test?,
           authorization: authorization_from(response),
           avs_result: { code: response['avs_response'] },
-          cvv_result: response['cvv2_response']
-        )
+          cvv_result: response['cvv2_response'])
       end
 
       def post_data(parameters, options)

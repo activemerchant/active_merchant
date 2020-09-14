@@ -20,7 +20,8 @@ class LitleTest < Test::Unit::TestCase
         brand: 'visa',
         number:  '44444444400009',
         payment_cryptogram: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA='
-      })
+      }
+    )
     @decrypted_android_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
       {
         source: :android_pay,
@@ -29,7 +30,8 @@ class LitleTest < Test::Unit::TestCase
         brand: 'visa',
         number:  '4457000300000007',
         payment_cryptogram: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA='
-      })
+      }
+    )
     @amount = 100
     @options = {}
     @check = check(

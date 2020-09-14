@@ -91,8 +91,7 @@ class MonerisTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_purchase_network_tokenization)
     @credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
-      verification_value: nil
-    )
+      verification_value: nil)
     assert response = @gateway.purchase(100, @credit_card, @options)
     assert_success response
     assert_equal '101965-0_10;0bbb277b543a17b6781243889a689573', response.authorization
@@ -241,8 +240,7 @@ class MonerisTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_authorization_network_tokenization)
     @credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
-      verification_value: nil
-    )
+      verification_value: nil)
     assert response = @gateway.authorize(100, @credit_card, @options)
     assert_success response
     assert_equal '109232-0_10;d88d9f5f3472898832c54d6b5572757e', response.authorization

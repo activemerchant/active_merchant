@@ -15,8 +15,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
       month:              '10',
       year:               '2025',
       source:             :network_token,
-      verification_value: nil
-    )
+      verification_value: nil)
 
     @options = {
       order_id: '1',

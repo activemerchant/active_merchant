@@ -12,8 +12,7 @@ class PaymentezTest < Test::Unit::TestCase
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'elo'
-    )
+      brand: 'elo')
     @amount = 100
 
     @options = {

@@ -234,8 +234,7 @@ class BluePayTest < Test::Unit::TestCase
         rebill_start_date: '1 MONTH',
         rebill_expression: '14 DAYS',
         rebill_cycles: '24',
-        rebill_amount: @amount * 4
-      )
+        rebill_amount: @amount * 4)
     end
 
     assert_instance_of Response, response

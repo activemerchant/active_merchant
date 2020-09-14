@@ -115,8 +115,7 @@ module ActiveMerchant #:nodoc:
           message_from(response[:ewaytrxnerror]),
           response,
           authorization: response[:ewaytrxnnumber],
-          test: test?
-        )
+          test: test?)
       end
 
       def success?(response)

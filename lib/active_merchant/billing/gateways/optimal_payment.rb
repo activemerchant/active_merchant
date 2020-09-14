@@ -125,8 +125,7 @@ module ActiveMerchant #:nodoc:
           test: test?,
           authorization: authorization_from(response),
           avs_result: { code: avs_result_from(response) },
-          cvv_result: cvv_result_from(response)
-        )
+          cvv_result: cvv_result_from(response))
       end
 
       # The upstream is picky and so we can't use CGI.escape like we want to

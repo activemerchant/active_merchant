@@ -216,8 +216,7 @@ module ActiveMerchant
       ActiveMerchant::Billing::ApplePayPaymentToken.new(defaults[:payment_data],
         payment_instrument_name: defaults[:payment_instrument_name],
         payment_network: defaults[:payment_network],
-        transaction_identifier: defaults[:transaction_identifier]
-      )
+        transaction_identifier: defaults[:transaction_identifier])
     end
 
     def address(options = {})

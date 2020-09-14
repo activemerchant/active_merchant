@@ -106,8 +106,7 @@ module ActiveMerchant #:nodoc:
           test: test?,
           authorization: build_authorization(response),
           avs_result: { code: response[:avsresult] },
-          cvv_result: response[:cardidresult]
-        )
+          cvv_result: response[:cardidresult])
       end
 
       def url

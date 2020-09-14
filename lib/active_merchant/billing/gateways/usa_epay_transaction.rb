@@ -324,8 +324,7 @@ module ActiveMerchant #:nodoc:
           authorization: response[:ref_num],
           cvv_result: response[:cvv2_result_code],
           avs_result: { code: response[:avs_result_code] },
-          error_code: error_code
-        )
+          error_code: error_code)
       end
 
       def message_from(response)

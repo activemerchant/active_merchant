@@ -389,8 +389,7 @@ module ActiveMerchant #:nodoc:
           message_from(response),
           response,
           test: test?,
-          authorization: build_authorization(response)
-        )
+          authorization: build_authorization(response))
       end
 
       def build_authorization(response)

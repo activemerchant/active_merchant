@@ -53,7 +53,8 @@ class RemoteLitleTest < Test::Unit::TestCase
         brand: 'visa',
         number:  '44444444400009',
         payment_cryptogram: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA='
-      })
+      }
+    )
     @decrypted_android_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
       {
         source: :android_pay,
@@ -62,7 +63,8 @@ class RemoteLitleTest < Test::Unit::TestCase
         brand: 'visa',
         number:  '4457000300000007',
         payment_cryptogram: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA='
-      })
+      }
+    )
     @check = check(
       name: 'Tom Black',
       routing_number:  '011075150',
@@ -124,8 +126,7 @@ class RemoteLitleTest < Test::Unit::TestCase
           zip: '03038',
           country: 'US'
         }
-      }
-    )
+      })
     assert_failure response
     assert_equal 'Insufficient Funds', response.message
   end

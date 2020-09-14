@@ -263,8 +263,7 @@ class PaypalTest < Test::Unit::TestCase
     xml = @gateway.send(:build_sale_or_authorization_request, 'Authorization', @amount, @credit_card,
       tax: @amount,
       shipping: @amount,
-      handling: @amount
-    )
+      handling: @amount)
 
     doc = REXML::Document.new(xml)
     assert_nil REXML::XPath.first(doc, '//n2:PaymentDetails/n2:TaxTotal')
@@ -275,8 +274,7 @@ class PaypalTest < Test::Unit::TestCase
       tax: @amount,
       shipping: @amount,
       handling: @amount,
-      subtotal: 200
-    )
+      subtotal: 200)
 
     doc = REXML::Document.new(xml)
     assert_equal '1.00', REXML::XPath.first(doc, '//n2:PaymentDetails/n2:TaxTotal').text

@@ -147,8 +147,7 @@ module ActiveMerchant #:nodoc:
           authorization: response[:credit_card_trans_id],
           fraud_review: fraud_review?(response),
           avs_result: { code: avs_result(response) },
-          cvv_result: cvv_result(response)
-        )
+          cvv_result: cvv_result(response))
       end
 
       def success?(response)

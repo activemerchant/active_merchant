@@ -54,7 +54,8 @@ class BeanstreamTest < Test::Unit::TestCase
 
     @recurring_options = @options.merge(
       interval: { unit: :months, length: 1 },
-      occurrences: 5)
+      occurrences: 5
+    )
   end
 
   def test_successful_purchase

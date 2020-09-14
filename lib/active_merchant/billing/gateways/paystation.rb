@@ -179,8 +179,7 @@ module ActiveMerchant #:nodoc:
 
         PaystationResponse.new(success?(response), message, response,
           test: (response[:tm]&.casecmp('t')&.zero?),
-          authorization: response[:paystation_transaction_id]
-        )
+          authorization: response[:paystation_transaction_id])
       end
 
       def success?(response)

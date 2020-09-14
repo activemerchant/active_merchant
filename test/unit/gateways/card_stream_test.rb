@@ -13,8 +13,7 @@ class CardStreamTest < Test::Unit::TestCase
       month: '12',
       year: '2014',
       verification_value: '356',
-      brand: :visa
-    )
+      brand: :visa)
 
     @visacredit_options = {
       billing_address: {
@@ -44,13 +43,11 @@ class CardStreamTest < Test::Unit::TestCase
       month: '12',
       year: 2014,
       verification_value: '4887',
-      brand: :american_express
-    )
+      brand: :american_express)
 
     @declined_card = credit_card('4000300011112220',
       month: '9',
-      year: '2014'
-    )
+      year: '2014')
   end
 
   def test_successful_visacreditcard_authorization

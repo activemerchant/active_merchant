@@ -417,8 +417,7 @@ module ActiveMerchant #:nodoc:
           test: test? || response[:authCode] == 'TEST',
           authorization: authorization_from(response),
           cvv_result: CVD_CODES[response[:cvdId]],
-          avs_result: { code: AVS_CODES.include?(response[:avsId]) ? AVS_CODES[response[:avsId]] : response[:avsId] }
-        )
+          avs_result: { code: AVS_CODES.include?(response[:avsId]) ? AVS_CODES[response[:avsId]] : response[:avsId] })
       end
 
       def recurring_post(data)

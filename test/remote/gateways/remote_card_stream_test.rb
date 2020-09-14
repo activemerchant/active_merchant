@@ -10,34 +10,29 @@ class RemoteCardStreamTest < Test::Unit::TestCase
       month: '12',
       year: Time.now.year + 1,
       verification_value: '4887',
-      brand: :american_express
-    )
+      brand: :american_express)
 
     @mastercard = credit_card('5301250070000191',
       month: '12',
       year: Time.now.year + 1,
       verification_value: '419',
-      brand: :master
-    )
+      brand: :master)
 
     @visacreditcard = credit_card('4929421234600821',
       month: '12',
       year: Time.now.year + 1,
       verification_value: '356',
-      brand: :visa
-    )
+      brand: :visa)
 
     @visadebitcard = credit_card('4539791001730106',
       month: '12',
       year: Time.now.year + 1,
       verification_value: '289',
-      brand: :visa
-    )
+      brand: :visa)
 
     @declined_card = credit_card('4000300011112220',
       month: '9',
-      year: Time.now.year + 1
-    )
+      year: Time.now.year + 1)
 
     @amex_options = {
       billing_address: {
@@ -117,8 +112,7 @@ class RemoteCardStreamTest < Test::Unit::TestCase
     @three_ds_enrolled_card = credit_card('4012001037141112',
       month: '12',
       year: '2020',
-      brand: :visa
-    )
+      brand: :visa)
   end
 
   def test_successful_visacreditcard_authorization_and_capture

@@ -189,8 +189,7 @@ class EwayRapidTest < Test::Unit::TestCase
           country: 'US',
           phone: '1115555555',
           fax: '1115556666'
-        }
-      )
+        })
     end.check_request do |_endpoint, data, _headers|
       assert_match(%r{"TransactionType":"CustomTransactionType"}, data)
       assert_match(%r{"RedirectUrl":"http://awesomesauce.com"}, data)

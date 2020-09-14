@@ -224,8 +224,7 @@ class OppTest < Test::Unit::TestCase
         'buildNumber' => '20150618-111601.r185004.opp-tags-20150618_stage',
         'timestamp' => '2015-06-20 19:31:01+0000',
         'ndc' => '8a8294174b7ecb28014b9699220015ca_4453edbc001f405da557c05cb3c3add9'
-      })
-    )
+      }))
   end
 
   def successful_store_response(id)
@@ -246,8 +245,7 @@ class OppTest < Test::Unit::TestCase
         'buildNumber' => '20150618-111601.r185004.opp-tags-20150618_stage',
         'timestamp' => '2015-06-20 19:31:01+0000',
         'ndc' => '8a8294174b7ecb28014b9699220015ca_4453edbc001f405da557c05cb3c3add9'
-      })
-    )
+      }))
   end
 
   def failed_response(type, id, code = '100.100.101')
@@ -270,8 +268,7 @@ class OppTest < Test::Unit::TestCase
         'buildNumber' => '20150618-111601.r185004.opp-tags-20150618_stage',
         'timestamp' => '2015-06-20 20:40:26+0000',
         'ndc' => '8a8294174b7ecb28014b9699220015ca_5200332e7d664412a84ed5f4777b3c7d'
-      })
-    )
+      }))
   end
 
   def failed_store_response(id, code = '100.100.101')
@@ -292,8 +289,7 @@ class OppTest < Test::Unit::TestCase
         'buildNumber' => '20150618-111601.r185004.opp-tags-20150618_stage',
         'timestamp' => '2015-06-20 20:40:26+0000',
         'ndc' => '8a8294174b7ecb28014b9699220015ca_5200332e7d664412a84ed5f4777b3c7d'
-      })
-    )
+      }))
   end
 
   class OppMockResponse

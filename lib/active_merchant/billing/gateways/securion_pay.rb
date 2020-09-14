@@ -190,8 +190,7 @@ module ActiveMerchant #:nodoc:
           response,
           test: test?,
           authorization: (success ? response['id'] : response['error']['charge']),
-          error_code: (success ? nil : STANDARD_ERROR_CODE_MAPPING[response['error']['code']])
-        )
+          error_code: (success ? nil : STANDARD_ERROR_CODE_MAPPING[response['error']['code']]))
       end
 
       def headers(options = {})

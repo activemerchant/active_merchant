@@ -1152,8 +1152,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   def test_truncation
     card = credit_card('4242424242424242',
       first_name: 'a' * 51,
-      last_name: 'a' * 51
-    )
+      last_name: 'a' * 51)
 
     options = {
       order_id: 'a' * 21,
@@ -1226,8 +1225,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
   def test_successful_apple_pay_authorization_with_network_tokenization
     credit_card = network_tokenization_credit_card('4242424242424242',
-      payment_cryptogram: '111111111100cryptogram'
-    )
+      payment_cryptogram: '111111111100cryptogram')
 
     response = stub_comms do
       @gateway.authorize(@amount, credit_card)
@@ -1246,8 +1244,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
   def test_failed_apple_pay_authorization_with_network_tokenization_not_supported
     credit_card = network_tokenization_credit_card('4242424242424242',
-      payment_cryptogram: '111111111100cryptogram'
-    )
+      payment_cryptogram: '111111111100cryptogram')
 
     response = stub_comms do
       @gateway.authorize(@amount, credit_card)

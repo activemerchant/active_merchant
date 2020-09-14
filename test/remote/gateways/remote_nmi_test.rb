@@ -15,8 +15,7 @@ class RemoteNmiTest < Test::Unit::TestCase
       year: '2024',
       source: :apple_pay,
       eci: '5',
-      transaction_id: '123456789'
-    )
+      transaction_id: '123456789')
     @options = {
       order_id: generate_unique_id,
       billing_address: address,

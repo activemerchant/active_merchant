@@ -665,8 +665,7 @@ module ActiveMerchant #:nodoc:
             test: self.test?,
             avs_result: OrbitalGateway::AVSResult.new(response[:avs_resp_code]),
             cvv_result: OrbitalGateway::CVVResult.new(response[:cvv2_resp_code])
-          }
-        )
+          })
       end
 
       def remote_url(url = :primary)

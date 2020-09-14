@@ -353,8 +353,7 @@ module ActiveMerchant #:nodoc:
             street_match: AVS_CODE[response['AddressResult']],
             postal_match: AVS_CODE[response['PostCodeResult']]
           },
-          cvv_result: CVV_CODE[response['CV2Result']]
-        )
+          cvv_result: CVV_CODE[response['CV2Result']])
       end
 
       def authorization_from(response, params, action)

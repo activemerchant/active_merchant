@@ -73,8 +73,7 @@ module ActiveMerchant #:nodoc:
 
         Response.new(success, message, response,
           authorization: authorization,
-          test: (response[:mode] != 'LIVE')
-        )
+          test: (response[:mode] != 'LIVE'))
       end
 
       def parse(body)

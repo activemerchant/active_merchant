@@ -163,12 +163,10 @@ module ActiveMerchant #:nodoc:
             email: scrub_email(options[:email]),
             phone: options[:phone] || (options[:billing_address][:phone] if options[:billing_address] &&
               options[:billing_address][:phone]),
-            credit_card: credit_card_params
-          )
+            credit_card: credit_card_params)
           Response.new(result.success?, message_from_result(result),
             braintree_customer: (customer_hash(@braintree_gateway.customer.find(vault_id), :include_credit_cards) if result.success?),
-            customer_vault_id: (result.customer.id if result.success?)
-          )
+            customer_vault_id: (result.customer.id if result.success?))
         end
       end
 
@@ -243,8 +241,7 @@ module ActiveMerchant #:nodoc:
               customer_vault_id: (result.customer.id if result.success?),
               credit_card_token: (result.customer.credit_cards[0].token if result.success?)
             },
-            authorization: (result.customer.id if result.success?)
-          )
+            authorization: (result.customer.id if result.success?))
         end
       end
 

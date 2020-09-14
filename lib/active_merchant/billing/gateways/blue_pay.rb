@@ -366,8 +366,7 @@ module ActiveMerchant #:nodoc:
           test: test?,
           authorization: (parsed[:rebid] && parsed[:rebid] != '' ? parsed[:rebid] : parsed[:transaction_id]),
           avs_result: { code: parsed[:avs_result_code] },
-          cvv_result: parsed[:card_code]
-        )
+          cvv_result: parsed[:card_code])
       end
 
       def message_from(parsed)

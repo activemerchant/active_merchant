@@ -18,8 +18,7 @@ class WorldpayTest < Test::Unit::TestCase
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'elo'
-    )
+      brand: 'elo')
     @sodexo_voucher = credit_card('6060704495764400', brand: 'sodexo')
     @options = {order_id: 1}
     @store_options = {

@@ -14,32 +14,27 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
       verification_value: '321',
       month: '12',
       year: (Time.now.year + 2).to_s,
-      brand: :elo
-    )
+      brand: :elo)
     @three_ds_unenrolled_card = credit_card('4000000000000051',
       verification_value: '321',
       month: '12',
       year: (Time.now.year + 2).to_s,
-      brand: :visa
-    )
+      brand: :visa)
     @three_ds_enrolled_card = credit_card('4000000000000002',
       verification_value: '321',
       month: '12',
       year: (Time.now.year + 2).to_s,
-      brand: :visa
-    )
+      brand: :visa)
     @three_ds_invalid_card = credit_card('4000000000000010',
       verification_value: '321',
       month: '12',
       year: (Time.now.year + 2).to_s,
-      brand: :visa
-    )
+      brand: :visa)
     @three_ds_enrolled_mastercard = credit_card('5200000000001005',
       verification_value: '321',
       month: '12',
       year: (Time.now.year + 2).to_s,
-      brand: :master
-    )
+      brand: :master)
 
     @amount = 100
 
@@ -97,8 +92,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4111111111111111',
       brand: 'visa',
       eci: '05',
-      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
-    )
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
 
     transcript = capture_transcript(@gateway) do
       @gateway.authorize(@amount, credit_card, @options)
@@ -533,8 +527,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4111111111111111',
       brand: 'visa',
       eci: '05',
-      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
-    )
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
 
     assert auth = @gateway.authorize(@amount, credit_card, @options)
     assert_successful_response(auth)

@@ -165,7 +165,8 @@ module ActiveMerchant #:nodoc:
                 live_url + "/#{path}",
                 post_data(post),
                 headers
-              ))
+              )
+            )
           rescue ResponseError => e
             raise unless e.response.code.to_s =~ /4\d\d/
 

@@ -12,8 +12,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'visa'
-    )
+      brand: 'visa')
 
     @avs_credit_card = credit_card('4400000000000008',
       month: 10,
@@ -21,8 +20,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'visa'
-    )
+      brand: 'visa')
 
     @elo_credit_card = credit_card('5066 9911 1111 1118',
       month: 10,
@@ -30,8 +28,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'elo'
-    )
+      brand: 'elo')
 
     @three_ds_enrolled_card = credit_card('4917610000000000', month: 10, year: 2020, verification_value: '737', brand: :visa)
 
@@ -41,8 +38,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'cabal'
-    )
+      brand: 'cabal')
 
     @invalid_cabal_credit_card = credit_card('6035 2200 0000 0006',
       month: 10,
@@ -50,8 +46,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'cabal'
-    )
+      brand: 'cabal')
 
     @unionpay_credit_card = credit_card('8171 9999 0000 0000 021',
       month: 10,
@@ -59,8 +54,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'unionpay'
-    )
+      brand: 'unionpay')
 
     @invalid_unionpay_credit_card = credit_card('8171 9999 1234 0000 921',
       month: 10,
@@ -68,8 +62,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'unionpay'
-    )
+      brand: 'unionpay')
 
     @declined_card = credit_card('4000300011112220')
 
@@ -83,7 +76,8 @@ class RemoteAdyenTest < Test::Unit::TestCase
       brand: 'mastercard'
     )
 
-    @apple_pay_card = network_tokenization_credit_card('4761209980011439',
+    @apple_pay_card = network_tokenization_credit_card(
+      '4761209980011439',
       payment_cryptogram: 'YwAAAAAABaYcCMX/OhNRQAAAAAA=',
       month: '11',
       year: '2022',
@@ -91,7 +85,8 @@ class RemoteAdyenTest < Test::Unit::TestCase
       verification_value: 569
     )
 
-    @google_pay_card = network_tokenization_credit_card('4761209980011439',
+    @google_pay_card = network_tokenization_credit_card(
+      '4761209980011439',
       payment_cryptogram: 'YwAAAAAABaYcCMX/OhNRQAAAAAA=',
       month: '11',
       year: '2022',
@@ -283,8 +278,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'mastercard'
-    )
+      brand: 'mastercard')
     assert response = @gateway.authorize(@amount, mastercard_threed, @options.merge(threed_dynamic: true))
     assert response.test?
     refute response.authorization.blank?
@@ -399,7 +393,8 @@ class RemoteAdyenTest < Test::Unit::TestCase
       installments: 2,
       shopper_statement: 'statement note',
       device_fingerprint: 'm7Cmrf++0cW4P6XfF7m/rA',
-      capture_delay_hours: 4)
+      capture_delay_hours: 4
+    )
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert_equal '[capture-received]', response.message

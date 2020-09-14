@@ -13,8 +13,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'elo'
-    )
+      brand: 'elo')
     @cabal_card = credit_card('6035220000000006')
     @naranja_card = credit_card('5895620000000002')
     @sodexo_voucher = credit_card('6060704495764400', brand: 'sodexo')
@@ -161,7 +160,8 @@ class RemoteWorldpayTest < Test::Unit::TestCase
         session_id: session_id,
         ip: '127.0.0.1',
         cookie: 'machine=32423423'
-      })
+      }
+    )
     assert first_message = @gateway.authorize(@amount, @threeDS_card, options)
     assert_equal "A transaction status of 'AUTHORISED' is required.", first_message.message
     assert first_message.test?
@@ -255,7 +255,8 @@ class RemoteWorldpayTest < Test::Unit::TestCase
         ip: '127.0.0.1',
         cookie: 'machine=32423423',
         stored_credential: stored_credential_params
-      })
+      }
+    )
     assert first_message = @gateway.authorize(@amount, @threeDS_card, options)
     assert_equal "A transaction status of 'AUTHORISED' is required.", first_message.message
     assert first_message.test?
@@ -277,7 +278,8 @@ class RemoteWorldpayTest < Test::Unit::TestCase
         ip: '127.0.0.1',
         cookie: 'machine=32423423',
         stored_credential_usage: 'FIRST'
-      })
+      }
+    )
     assert first_message = @gateway.authorize(@amount, @threeDS_card, options)
     assert_equal "A transaction status of 'AUTHORISED' is required.", first_message.message
     assert first_message.test?
@@ -318,7 +320,8 @@ class RemoteWorldpayTest < Test::Unit::TestCase
         session_id: session_id,
         ip: '127.0.0.1',
         cookie: 'machine=32423423'
-      })
+      }
+    )
     assert first_message = @gateway.authorize(@amount, @threeDS_card, options)
     assert_match %r{missing info for 3D-secure transaction}i, first_message.message
     assert first_message.test?

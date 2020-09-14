@@ -536,7 +536,8 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       dest_state: 'CA',
       dest_name: 'Joan Smith',
       dest_phone: '(123) 456-7890',
-      dest_country: 'US')
+      dest_country: 'US'
+    )
 
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1,

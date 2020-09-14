@@ -175,7 +175,8 @@ module ActiveMerchant #:nodoc:
               ((test? ? test_url : live_url) + action),
               params.to_json,
               headers(options)
-            ))
+            )
+          )
         rescue ResponseError => e
           response = parse(e.response.body)
         end

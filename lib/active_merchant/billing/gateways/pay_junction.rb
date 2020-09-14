@@ -339,8 +339,7 @@ module ActiveMerchant #:nodoc:
 
         Response.new(successful?(response), message_from(response), response,
           test: test?,
-          authorization: response[:transaction_id] || parameters[:transaction_id]
-        )
+          authorization: response[:transaction_id] || parameters[:transaction_id])
       end
 
       def successful?(response)

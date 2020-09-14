@@ -427,8 +427,7 @@ class RemotePayflowTest < Test::Unit::TestCase
         initial_transaction: {
           type: :purchase,
           amount: 500
-        }
-      )
+        })
     end
 
     assert_success response

@@ -932,8 +932,7 @@ module ActiveMerchant #:nodoc:
           authorization: authorization,
           fraud_review: in_fraud_review?(response),
           avs_result: { code: response[:avsCode] },
-          cvv_result: response[:cvCode]
-        )
+          cvv_result: response[:cvCode])
       end
 
       # Parse the SOAP response

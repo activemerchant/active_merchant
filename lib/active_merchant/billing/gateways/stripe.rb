@@ -667,8 +667,7 @@ module ActiveMerchant #:nodoc:
           avs_result: { code: avs_code },
           cvv_result: cvc_code,
           emv_authorization: emv_authorization_from_response(response),
-          error_code: success ? nil : error_code_from(response)
-        )
+          error_code: success ? nil : error_code_from(response))
       end
 
       def authorization_from(success, url, method, response)

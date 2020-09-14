@@ -568,9 +568,11 @@ module ActiveMerchant
         xml.cardholderAuthentication do
           three_d_secure = options.fetch(:three_d_secure, {})
           xml.authenticationIndicator(
-            options[:authentication_indicator] || three_d_secure[:eci])
+            options[:authentication_indicator] || three_d_secure[:eci]
+          )
           xml.cardholderAuthenticationValue(
-            options[:cardholder_authentication_value] || three_d_secure[:cavv])
+            options[:cardholder_authentication_value] || three_d_secure[:cavv]
+          )
         end
       end
 

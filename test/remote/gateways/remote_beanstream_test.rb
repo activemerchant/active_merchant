@@ -60,7 +60,8 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
 
     @recurring_options = @options.merge(
       interval: { unit: :months, length: 1 },
-      occurences: 5)
+      occurences: 5
+    )
   end
 
   def test_successful_visa_purchase

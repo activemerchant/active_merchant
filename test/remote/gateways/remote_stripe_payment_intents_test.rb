@@ -13,13 +13,11 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     @three_ds_credit_card = credit_card('4000000000003220',
       verification_value: '737',
       month: 10,
-      year: 2020
-    )
+      year: 2020)
     @visa_card = credit_card('4242424242424242',
       verification_value: '737',
       month: 10,
-      year: 2020
-    )
+      year: 2020)
     @destination_account = fixtures(:stripe_destination)[:stripe_user_id]
   end
 

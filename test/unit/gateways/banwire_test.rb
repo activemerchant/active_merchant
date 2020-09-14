@@ -6,7 +6,8 @@ class BanwireTest < Test::Unit::TestCase
   def setup
     @gateway = BanwireGateway.new(
       login: 'desarrollo',
-      currency: 'MXN')
+      currency: 'MXN'
+    )
 
     @credit_card = credit_card('5204164299999999',
       month: 11,

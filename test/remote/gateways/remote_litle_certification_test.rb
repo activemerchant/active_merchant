@@ -1057,7 +1057,8 @@ class RemoteLitleCertification < Test::Unit::TestCase
         brand: 'visa',
         number:  '4457000300000007',
         payment_cryptogram: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA='
-      })
+      }
+    )
 
     assert response = @gateway.purchase(10010, decrypted_apple_pay, options)
     assert_success response
@@ -1076,7 +1077,8 @@ class RemoteLitleCertification < Test::Unit::TestCase
         brand: 'visa',
         number:  '4457000300000007',
         payment_cryptogram: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA='
-      })
+      }
+    )
 
     assert response = @gateway.purchase(10010, decrypted_android_pay, options)
     assert_success response

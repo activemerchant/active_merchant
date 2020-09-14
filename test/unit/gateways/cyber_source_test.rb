@@ -579,8 +579,7 @@ class CyberSourceTest < Test::Unit::TestCase
       brand: 'visa',
       transaction_id: '123',
       eci: '05',
-      payment_cryptogram: '111111111100cryptogram'
-    )
+      payment_cryptogram: '111111111100cryptogram')
 
     response = stub_comms do
       @gateway.authorize(@amount, credit_card, @options)
@@ -597,8 +596,7 @@ class CyberSourceTest < Test::Unit::TestCase
       brand: 'visa',
       transaction_id: '123',
       eci: '05',
-      payment_cryptogram: '111111111100cryptogram'
-    )
+      payment_cryptogram: '111111111100cryptogram')
 
     response = stub_comms do
       @gateway.purchase(@amount, credit_card, @options)
@@ -621,8 +619,7 @@ class CyberSourceTest < Test::Unit::TestCase
       brand: 'master',
       transaction_id: '123',
       eci: '05',
-      payment_cryptogram: '111111111100cryptogram'
-    )
+      payment_cryptogram: '111111111100cryptogram')
 
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_success response
@@ -639,8 +636,7 @@ class CyberSourceTest < Test::Unit::TestCase
       brand: 'american_express',
       transaction_id: '123',
       eci: '05',
-      payment_cryptogram: Base64.encode64('111111111100cryptogram')
-    )
+      payment_cryptogram: Base64.encode64('111111111100cryptogram'))
 
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_success response

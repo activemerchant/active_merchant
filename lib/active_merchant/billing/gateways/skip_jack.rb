@@ -267,8 +267,7 @@ module ActiveMerchant #:nodoc:
           test: test?,
           authorization: response[:szTransactionFileName] || parameters[:szTransactionId],
           avs_result: { code: response[:szAVSResponseCode] },
-          cvv_result: response[:szCVV2ResponseCode]
-        )
+          cvv_result: response[:szCVV2ResponseCode])
       end
 
       def url_for(action)

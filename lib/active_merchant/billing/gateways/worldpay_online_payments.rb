@@ -41,8 +41,7 @@ module ActiveMerchant #:nodoc:
             authorization: false,
             avs_result: {},
             cvv_result: {},
-            error_code: false
-          )
+            error_code: false)
         end
       end
 
@@ -178,8 +177,7 @@ module ActiveMerchant #:nodoc:
           authorization: authorization,
           avs_result: {},
           cvv_result: {},
-          error_code: success ? nil : response['customCode']
-        )
+          error_code: success ? nil : response['customCode'])
       end
 
       def test?

@@ -264,8 +264,7 @@ module ActiveMerchant #:nodoc:
           test: test?,
           authorization: authorization_from(response, source),
           avs_result: { code: response[:avs_result] },
-          cvv_result: response[:cvv_result]
-        )
+          cvv_result: response[:cvv_result])
       end
 
       def url(params, source)
@@ -382,8 +381,7 @@ module ActiveMerchant #:nodoc:
           end
 
           Response.new(success, message, response,
-            authorization: response[:guid]
-          )
+            authorization: response[:guid])
         end
 
         ENVELOPE_NAMESPACES = {

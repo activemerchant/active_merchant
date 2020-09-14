@@ -11,22 +11,19 @@ class MercadoPagoTest < Test::Unit::TestCase
       year: 2020,
       first_name: 'John',
       last_name: 'Smith',
-      verification_value: '737'
-    )
+      verification_value: '737')
     @cabal_credit_card = credit_card('6035227716427021',
       month: 10,
       year: 2020,
       first_name: 'John',
       last_name: 'Smith',
-      verification_value: '737'
-    )
+      verification_value: '737')
     @naranja_credit_card = credit_card('5895627823453005',
       month: 10,
       year: 2020,
       first_name: 'John',
       last_name: 'Smith',
-      verification_value: '123'
-    )
+      verification_value: '123')
     @amount = 100
 
     @options = {

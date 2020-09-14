@@ -230,8 +230,7 @@ module ActiveMerchant #:nodoc:
           authorization: (response['transactionid'] || response['customer_vault_id']),
           test: test?,
           cvv_result: response['cvvresponse'],
-          avs_result: { code: response['avsresponse'] }
-        )
+          avs_result: { code: response['avsresponse'] })
       end
 
       def expdate(creditcard)

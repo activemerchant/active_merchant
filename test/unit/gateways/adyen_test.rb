@@ -16,8 +16,7 @@ class AdyenTest < Test::Unit::TestCase
       first_name: 'Test',
       last_name: 'Card',
       verification_value: '737',
-      brand: 'visa'
-    )
+      brand: 'visa')
 
     @elo_credit_card = credit_card('5066 9911 1111 1118',
       month: 10,
@@ -25,8 +24,7 @@ class AdyenTest < Test::Unit::TestCase
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'elo'
-    )
+      brand: 'elo')
 
     @cabal_credit_card = credit_card('6035 2277 1642 7021',
       month: 10,
@@ -34,8 +32,7 @@ class AdyenTest < Test::Unit::TestCase
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'cabal'
-    )
+      brand: 'cabal')
 
     @unionpay_credit_card = credit_card('8171 9999 0000 0000 021',
       month: 10,
@@ -43,8 +40,7 @@ class AdyenTest < Test::Unit::TestCase
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'unionpay'
-    )
+      brand: 'unionpay')
 
     @three_ds_enrolled_card = credit_card('4212345678901237', brand: :visa)
 
@@ -53,8 +49,7 @@ class AdyenTest < Test::Unit::TestCase
       month: '08',
       year: '2018',
       source: :apple_pay,
-      verification_value: nil
-    )
+      verification_value: nil)
 
     @amount = 100
 
