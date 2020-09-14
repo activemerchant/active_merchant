@@ -193,7 +193,7 @@ module ActiveMerchant #:nodoc:
       # A – Authorization request
       def authorize(money, creditcard, options = {})
         order = build_new_order_xml(AUTH_ONLY, money, creditcard, options) do |xml|
-          add_creditcard(xml, creditcard, options[:currency])
+          add_payment_method(xml, creditcard, options[:currency])
           add_address(xml, creditcard, options)
           if @options[:customer_profiles]
             add_customer_data(xml, creditcard, options)
@@ -213,7 +213,7 @@ module ActiveMerchant #:nodoc:
       # AC – Authorization and Capture
       def purchase(money, creditcard, options = {})
         order = build_new_order_xml(AUTH_AND_CAPTURE, money, creditcard, options) do |xml|
-          add_creditcard(xml, creditcard, options[:currency])
+          add_payment_method(xml, creditcard, options[:currency], options)
           add_address(xml, creditcard, options)
           if @options[:customer_profiles]
             add_customer_data(xml, creditcard, options)
@@ -478,14 +478,24 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_creditcard(xml, creditcard, currency = nil)
-        unless creditcard.nil?
-          xml.tag! :AccountNum, creditcard.number
-          xml.tag! :Exp, expiry_date(creditcard)
+      def add_payment_method(xml, payment_source, currency = nil, options)
+        if payment_source.is_a?(Check)
+          add_echeck(xml, payment_source, currency, options)
+        else
+          add_creditcard(xml, payment_source, currency)
         end
+      end
 
+      def add_currency(xml, currency)
         xml.tag! :CurrencyCode, currency_code(currency)
         xml.tag! :CurrencyExponent, currency_exponents(currency)
+      end
+
+      def add_creditcard(xml, creditcard, currency)
+        xml.tag! :AccountNum, creditcard.number
+        xml.tag! :Exp, expiry_date(creditcard)
+
+        add_currency(xml, currency)
 
         # If you are trying to collect a Card Verification Number
         # (CardSecVal) for a Visa or Discover transaction, pass one of these values:
@@ -496,12 +506,25 @@ module ActiveMerchant #:nodoc:
         #   Null-fill this attribute OR
         #   Do not submit the attribute at all.
         # - http://download.chasepaymentech.com/docs/orbital/orbital_gateway_xml_specification.pdf
-        unless creditcard.nil?
-          if creditcard.verification_value?
-            xml.tag! :CardSecValInd, '1' if %w(visa discover).include?(creditcard.brand)
-            xml.tag! :CardSecVal, creditcard.verification_value
+        if creditcard.verification_value?
+          if %w(visa discover).include?(creditcard.brand)
+            xml.tag! :CardSecValInd, '1'
           end
+          xml.tag! :CardSecVal, creditcard.verification_value
         end
+      end
+
+      def add_echeck(xml, e_check, currency, options)
+        return unless bin == '000001'
+
+        xml.tag! :CardBrand, 'EC'
+
+        add_currency(xml, currency)
+
+        xml.tag! :BCRtNum, e_check.routing_number
+        xml.tag! :CheckDDA, e_check.account_number
+        xml.tag! :BankAccountType, 'C'
+        xml.tag! :BankPmtDelv, 'A'
       end
 
       def add_eci(xml, creditcard, three_d_secure)

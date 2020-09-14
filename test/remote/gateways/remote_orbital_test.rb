@@ -8,6 +8,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card('4556761029983886')
     @declined_card = credit_card('4000300011112220')
+    @e_check = check(routing_number: '27000116')
 
     @options = {
       order_id: generate_unique_id,
@@ -109,6 +110,12 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_echeck
+    response = @gateway.purchase(@amount, @e_check, @options)
+    assert_success response
+    assert_equal 'Success', response.message
   end
 
   def test_successful_purchase_with_soft_descriptor_hash
