@@ -149,9 +149,9 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_failed_purchase
-    response = @gateway.purchase(@amount, @declined_card, @options)
+    response = @gateway.purchase(12305, @credit_card, @options)
     assert_failure response
-    assert_equal 'request_invalid: card_number_invalid', response.message
+    assert_equal 'Declined - Do Not Honour', response.message
   end
 
   def test_avs_failed_purchase
@@ -207,8 +207,9 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_failed_authorize
-    response = @gateway.authorize(@amount, @declined_card, @options)
+    response = @gateway.authorize(12314, @credit_card, @options)
     assert_failure response
+    assert_equal 'Invalid Card Number', response.message
   end
 
   def test_partial_capture
