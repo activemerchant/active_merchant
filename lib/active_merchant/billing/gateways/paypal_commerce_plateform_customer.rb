@@ -12,9 +12,9 @@ module ActiveMerchant
         post = { }
         add_intent(intent, post)
 
-        add_purchase_units(options[:purchase_units], post) if options[:purchase_units]
+        add_purchase_units(options[:purchase_units], post) if options[:purchase_units].present?
 
-        add_payment_instruction(intent, post, options[:payment_instruction]) if options[:payment_instruction]
+        add_payment_instruction(intent, post, options[:payment_instruction]) if options[:payment_instruction].present?
 
         commit(:post, "v2/checkout/orders", post, options[:headers])
       end
