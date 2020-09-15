@@ -98,32 +98,26 @@ module ActiveMerchant
       def get_order_details(order_id, options)
         requires!(options.merge(order_id: order_id), :order_id)
 
-        commit(:get, "/v2/checkout/orders/#{ order_id }", { }, options[:headers])
+        commit(:get, "/v2/checkout/orders/#{ order_id }", nil, options[:headers])
       end
 
-      def get_authorize_details(authorization_id, options)
+      def get_authorization_details(authorization_id, options)
         requires!(options.merge(authorization_id: authorization_id), :authorization_id)
 
-        commit(:get, "/v2/checkout/orders/#{ authorization_id }", { }, options[:headers])
+        commit(:get, "/v2/checkout/orders/#{ authorization_id }", nil, options[:headers])
       end
 
       def get_capture_details(capture_id, options)
         requires!(options.merge(capture_id: capture_id), :capture_id)
 
-        commit(:get, "/v2/payments/captures/#{ capture_id }", { }, options[:headers])
-
+        commit(:get, "/v2/payments/captures/#{ capture_id }", nil, options[:headers])
       end
 
       def get_refund_details(refund_id, options)
         requires!(options.merge(refund_id: refund_id), :refund_id)
 
-        commit(:get, "/v2/payments/refunds/#{ refund_id }", { }, options[:headers])
+        commit(:get, "/v2/payments/refunds/#{ refund_id }", nil, options[:headers])
       end
-
-      # {{host}}/v2/checkout/orders/{{order_id}}
-      # {{host}}/v2/payments/authorizations/{{authorization_id}}
-      # {{host}}/v2/payments/captures/{{capture_id}}/refund
-      # {{host}}/v2/payments/captures/{{capture_id}}
 
       # <-********************Private Methods**********************->
       private
