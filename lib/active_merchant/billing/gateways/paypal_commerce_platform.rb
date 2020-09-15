@@ -42,9 +42,7 @@ module ActiveMerchant #:nodoc:
       def commit(method, url, parameters = nil, options = {})
         #post('v2/checkout/orders', options)
         response = api_request(method, "#{ test_redirect_url }/#{ url }", parameters, options)
-
         success = success_from(response, options)
-
         success ? success : response_error(response)
       end
 
@@ -72,6 +70,7 @@ module ActiveMerchant #:nodoc:
         rescue JSON::ParserError
           response = json_error(raw_response)
         end
+        raw_response = raw_response.nil? ? "{}": raw_response
         eval(raw_response)
       end
       def headers(params)

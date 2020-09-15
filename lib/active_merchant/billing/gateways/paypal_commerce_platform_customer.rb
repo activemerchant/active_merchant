@@ -51,6 +51,11 @@ module ActiveMerchant
         requires!({ capture_id: capture_id }, :capture_id)
 
         post = { }
+        add_amount(options[:body][:amount], post) unless options[:body][:amount].nil?
+
+        add_invoice(options[:body][:invoice_id], post) unless options[:body][:invoice_id].nil?
+
+        add_note(options[:body][:note_to_payer], post) unless options[:body][:note_to_payer]
 
         commit(:post, "v2/payments/captures/#{ capture_id }/refund", post, options[:headers])
       end
@@ -79,7 +84,6 @@ module ActiveMerchant
         requires!(options.merge!({ authorization_id: authorization_id  }), :authorization_id)
 
         post = {}
-
         add_amount(options[:body][:amount], post) unless options[:body][:amount].nil?
 
         add_invoice(options[:body][:invoice_id], post) unless options[:body][:invoice_id].nil?
@@ -145,6 +149,11 @@ module ActiveMerchant
 
       def add_final_capture(final_capture, post)
         post[:final_capture] = final_capture
+        post
+      end
+
+      def add_note(note, post)
+        post[:note_to_payer] = note
         post
       end
 

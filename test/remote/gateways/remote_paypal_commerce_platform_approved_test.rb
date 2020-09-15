@@ -15,11 +15,11 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
     @approved_authroize_order_id                            = "264107868C369134E"
     @approved_authroize_order_id_for_capture                = "47D706230B520800F"
-    @approved_authroize_order_id_for_void                   = "1FA83142YH825921F"
+    @approved_authroize_order_id_for_void                   = "0K065186TV015444G"
     @approved_authorize_order_id_for_capture_ppcp           = "60H60233NY496322H"
 
     @approved_capture_order_id                              = "6JX74783D86194728"
-    @approved_capture_order_id_for_refund                   = "7FT59933RJ054911F"
+    @approved_capture_order_id_for_refund                   = "9HP72264U2505724V"
     @approved_capture_order_id_for_ppcp                     = "0U661921F15553423"
 
     @approved_delayed_capture_order_id_for_capture          = "67U39950VY142733G"
@@ -80,38 +80,38 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   end
 
   def test_do_capture_for_authorized_order_direct_merchant
-    response = authorize_order(@approved_authroize_order_id_for_capture)
+    response         = authorize_order(@approved_authroize_order_id_for_capture)
     authorization_id = response[:purchase_units][0][:payments][:authorizations][0][:id]
-    response = do_capture_order(authorization_id)
+    response         = do_capture_order(authorization_id)
     assert response[:status].eql?("COMPLETED")
     assert !response[:id].nil?
     assert !response[:links].blank?
   end
 
   def test_do_capture_for_authorized_order_ppcp
-    response = authorize_order(@approved_authorize_order_id_for_capture_ppcp)
+    response         = authorize_order(@approved_authorize_order_id_for_capture_ppcp)
     authorization_id = response[:purchase_units][0][:payments][:authorizations][0][:id]
-    response = do_capture_order(authorization_id, "PPCP")
+    response         = do_capture_order(authorization_id, "PPCP")
     assert response[:status].eql?("COMPLETED")
     assert !response[:id].nil?
     assert !response[:links].blank?
   end
-  #
-  # def test_refund_captured_order
-  #   response = capture_order(@approved_capture_order_id_for_refund)
-  #   capture_id        = response[:purchase_units][0][:payments][:captures][0][:id]
-  #   refund_order_res  = @paypal_customer.refund(capture_id, options)
-  #   assert refund_order_res[:status].eql?("COMPLETED")
-  #   assert !refund_order_res[:id].nil?
-  #   assert !refund_order_res[:links].blank?
-  # end
-  #
-  # def test_void_authorized_order
-  #   response = @paypal_customer.handle_approve(@approved_authroize_order_id_for_void, options.merge({ operator: "authorize" }))
-  #   authorization_id = response[:purchase_units][0][:payments][:authorizations][0][:id]
-  #   void_response = @paypal_customer.void(authorization_id, options)
-  #   assert void_response.empty?
-  # end
+
+  def test_refund_captured_order
+    response          = capture_order(@approved_capture_order_id_for_refund)
+    capture_id        = response[:purchase_units][0][:payments][:captures][0][:id]
+    refund_order_res  = @paypal_customer.refund(capture_id, options)
+    assert refund_order_res[:status].eql?("COMPLETED")
+    assert !refund_order_res[:id].nil?
+    assert !refund_order_res[:links].blank?
+  end
+
+  def test_void_authorized_order
+    response         = authorize_order(@approved_authroize_order_id_for_void)
+    authorization_id = response[:purchase_units][0][:payments][:authorizations][0][:id]
+    void_response    = @paypal_customer.void(authorization_id, options)
+    assert void_response.empty?
+  end
 
   # def test_get_order_details
   #   response = @paypal_customer.get_order_details(@order_id_for_get, options)
