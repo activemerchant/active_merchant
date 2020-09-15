@@ -152,6 +152,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   #   assert !response[:links].blank?
   # end
 
+  #       <- ************** To be confirmed ************** ->
   # def test_disburse_for_capture_order
   #     @body.update(
   #         :reference_id =>  "capture_id",

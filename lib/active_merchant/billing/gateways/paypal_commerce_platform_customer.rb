@@ -15,7 +15,7 @@ module ActiveMerchant
         add_purchase_units(options[:purchase_units], post) unless options[:purchase_units].nil?
 
         add_payment_instruction(options[:payment_instruction], post) unless options[:payment_instruction].nil?
-        
+
         commit(:post, "v2/checkout/orders", post, options[:headers])
       end
 
