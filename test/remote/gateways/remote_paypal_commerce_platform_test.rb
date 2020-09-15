@@ -42,7 +42,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
 
   def test_create_capture_instant_order_ppcp
-    response = create_order("CAPTURE", "PPCP")
+    response = create_order("CAPTURE", "DIRECT", "PPCP")
     puts "Capture Order Id (Instant) - PPCP: #{ response[:id] }"
     assert response[:status].eql?("CREATED")
     assert !response[:id].nil?
@@ -100,7 +100,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: intent"
-      @paypal_customer.create_order("CAPTURE", options)
+      @paypal_customer.create_order(nil, options)
     end
   end
 

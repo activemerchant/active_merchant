@@ -7,7 +7,7 @@ module ActiveMerchant
     class PaypalCommercePlateformCustomerGateway < PaypalCommercePlatformGateway
 
       def create_order(intent, options)
-        requires!(options.merge!({ intent: intent }), :intent, :purchase_units)
+        requires!(options.merge!(intent == nil ? { } : { intent: intent }), :intent, :purchase_units)
 
         post = { }
         add_intent(intent, post)
