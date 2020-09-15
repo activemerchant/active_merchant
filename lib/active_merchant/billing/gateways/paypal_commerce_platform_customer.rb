@@ -79,7 +79,7 @@ module ActiveMerchant
         requires!(options.merge!({ authorization_id: authorization_id  }), :authorization_id)
 
         post = {}
-        add_amount(options[:amount], post) unless options[:amount].nil?
+        add_amount(options[:purchase_units][:amount], post) unless options[:amount].nil?
 
         add_invoice(options[:invoice_id], post) unless options[:invoice_id].nil?
 
@@ -99,7 +99,7 @@ module ActiveMerchant
           purchase_unit_hsh = {  }
           purchase_unit_hsh[:reference_id]              = purchase_unit[:reference_id]
           ## Amount
-          purchase_unit_hsh[:amount]                     = add_amount(purchase_unit[:amount], purchase_unit_hsh)
+          purchase_unit_hsh                             = add_amount(purchase_unit[:amount], purchase_unit_hsh)
           ## Payee
           purchase_unit_hsh[:payee]                     = { }
           purchase_unit_hsh[:payee][:email_address]     = purchase_unit[:payee][:email_address]
@@ -114,7 +114,7 @@ module ActiveMerchant
         post[:payment_instruction][:platform_fees] = []
         options[:platform_fees].map do |platform_fee|
           platform_fee_hsh                          = { }
-          platform_fee_hsh[:amount]                 = add_amount(platform_fee[:amount], platform_fee_hsh)
+          platform_fee_hsh                          = add_amount(platform_fee[:amount], platform_fee_hsh)
           platform_fee_hsh[:amount][:currency_code] = platform_fee[:amount][:currency_code]
           platform_fee_hsh[:amount][:value]         = platform_fee[:amount][:value]
 
