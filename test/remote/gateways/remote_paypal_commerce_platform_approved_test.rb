@@ -13,14 +13,14 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     access_token  = @paypal_customer.get_token(options)
     @headers      = { "Authorization": access_token, "Content-Type": "application/json" }
 
-    @approved_authroize_order_id                            = "6CM21687PN915261U"
-    @approved_authroize_order_id_for_capture                = "0NF02175CK760451H"
+    @approved_authroize_order_id                            = "264107868C369134E"
+    @approved_authroize_order_id_for_capture                = "47D706230B520800F"
     @approved_authroize_order_id_for_void                   = "1FA83142YH825921F"
-    @approved_authorize_order_id_for_capture_ppcp           = "1CU349438J599582M"
+    @approved_authorize_order_id_for_capture_ppcp           = "60H60233NY496322H"
 
-    @approved_capture_order_id                              = "6UD3200003784181A"
+    @approved_capture_order_id                              = "6JX74783D86194728"
     @approved_capture_order_id_for_refund                   = "7FT59933RJ054911F"
-    @approved_capture_order_id_for_ppcp                     = "0W732992ML392552G"
+    @approved_capture_order_id_for_ppcp                     = "0U661921F15553423"
 
     @approved_delayed_capture_order_id_for_capture          = "67U39950VY142733G"
     @approved_delayed_capture_order_id_for_capture_ppcp     = "539846926F7063801"
@@ -37,7 +37,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @order_id_for_get                                       = "3DP425895D825693S"
 
 
-    @body = {}
+    @body = body
     @capture_body = capture_body
     @additional_params = {
         "payment_instruction": {
@@ -58,27 +58,27 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
   end
 
-  # def test_handle_approve_capture_direct_merchant
-  #   response = capture_order(@approved_capture_order_id)
-  #   assert response[:status].eql?("COMPLETED")
-  #   assert !response[:id].nil?
-  #   assert !response[:links].blank?
-  # end
-  #
-  # def test_handle_approve_capture_ppcp
-  #   response = capture_order(@approved_capture_order_id_for_ppcp)
-  #   assert response[:status].eql?("COMPLETED")
-  #   assert !response[:id].nil?
-  #   assert !response[:links].blank?
-  # end
-  #
-  # def test_handle_approve_authorize
-  #   response = authorize_order(@approved_authroize_order_id)
-  #   assert response[:status].eql?("COMPLETED")
-  #   assert !response[:id].nil?
-  #   assert !response[:links].blank?
-  # end
-  #
+  def test_handle_approve_capture_direct_merchant
+    response = capture_order(@approved_capture_order_id)
+    assert response[:status].eql?("COMPLETED")
+    assert !response[:id].nil?
+    assert !response[:links].blank?
+  end
+
+  def test_handle_approve_capture_ppcp
+    response = capture_order(@approved_capture_order_id_for_ppcp)
+    assert response[:status].eql?("COMPLETED")
+    assert !response[:id].nil?
+    assert !response[:links].blank?
+  end
+
+  def test_handle_approve_authorize
+    response = authorize_order(@approved_authroize_order_id)
+    assert response[:status].eql?("COMPLETED")
+    assert !response[:id].nil?
+    assert !response[:links].blank?
+  end
+
   def test_do_capture_for_authorized_order_direct_merchant
     response = authorize_order(@approved_authroize_order_id_for_capture)
     authorization_id = response[:purchase_units][0][:payments][:authorizations][0][:id]
@@ -89,7 +89,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   end
 
   def test_do_capture_for_authorized_order_ppcp
-    response = @paypal_customer.handle_approve(@approved_authorize_order_id_for_capture_ppcp, options.merge({ operator: "authorize" }))
+    response = authorize_order(@approved_authorize_order_id_for_capture_ppcp)
     authorization_id = response[:purchase_units][0][:payments][:authorizations][0][:id]
     response = do_capture_order(authorization_id, "PPCP")
     assert response[:status].eql?("COMPLETED")
@@ -239,8 +239,9 @@ class PaypalExpressRestTest < Test::Unit::TestCase
       @body.delete("payment_instruction")
     end
     @body.merge!(capture_body)
-    @paypal_customer.do_capture(authorization_id,options)
-    @body.delete(capture_body.keys)
+    response = @paypal_customer.do_capture(authorization_id,options)
+    @body = body
+    response
   end
   def options
     { headers: @headers, body: @body }
@@ -251,8 +252,13 @@ class PaypalExpressRestTest < Test::Unit::TestCase
             "value": "25.00",
             "currency_code": "USD"
         },
-        "invoice_id": "{{invoice_number}}",
+        "invoice_id": "invoice_number_#{DateTime.now}",
         "final_capture": true,
+    }
+  end
+  def body
+    {
+
     }
   end
 end

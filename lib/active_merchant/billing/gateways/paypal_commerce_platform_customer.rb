@@ -79,13 +79,14 @@ module ActiveMerchant
         requires!(options.merge!({ authorization_id: authorization_id  }), :authorization_id)
 
         post = {}
-        add_amount(options[:purchase_units][:amount], post) unless options[:amount].nil?
 
-        add_invoice(options[:invoice_id], post) unless options[:invoice_id].nil?
+        add_amount(options[:body][:amount], post) unless options[:body][:amount].nil?
 
-        add_final_capture(options[:final_capture], post) unless options[:final_capture].nil?
+        add_invoice(options[:body][:invoice_id], post) unless options[:body][:invoice_id].nil?
 
-        add_payment_instruction(options[:payment_instruction], post) unless options[:payment_instruction].nil?
+        add_final_capture(options[:body][:final_capture], post) unless options[:body][:final_capture].nil?
+
+        add_payment_instruction(options[:body][:payment_instruction], post) unless options[:body][:payment_instruction].nil?
 
         commit(:post, "v2/payments/authorizations/#{ authorization_id }/capture", post, options[:headers])
       end
@@ -99,7 +100,7 @@ module ActiveMerchant
           purchase_unit_hsh = {  }
           purchase_unit_hsh[:reference_id]              = purchase_unit[:reference_id]
           ## Amount
-          purchase_unit_hsh                             = add_amount(purchase_unit[:amount], purchase_unit_hsh)
+          add_amount(purchase_unit[:amount], purchase_unit_hsh)
           ## Payee
           purchase_unit_hsh[:payee]                     = { }
           purchase_unit_hsh[:payee][:email_address]     = purchase_unit[:payee][:email_address]
@@ -114,9 +115,8 @@ module ActiveMerchant
         post[:payment_instruction][:platform_fees] = []
         options[:platform_fees].map do |platform_fee|
           platform_fee_hsh                          = { }
-          platform_fee_hsh                          = add_amount(platform_fee[:amount], platform_fee_hsh)
-          platform_fee_hsh[:amount][:currency_code] = platform_fee[:amount][:currency_code]
-          platform_fee_hsh[:amount][:value]         = platform_fee[:amount][:value]
+
+          add_amount(platform_fee[:amount], platform_fee_hsh)
 
           platform_fee_hsh[:payee]                  = { }
           platform_fee_hsh[:payee][:email_address] = platform_fee[:payee][:email_address]

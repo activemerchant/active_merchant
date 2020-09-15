@@ -53,6 +53,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def response_error(raw_response)
+        puts raw_response
         parse(raw_response)
       rescue JSON::ParserError
         json_error(raw_response)
