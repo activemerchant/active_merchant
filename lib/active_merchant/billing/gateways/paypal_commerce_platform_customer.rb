@@ -131,11 +131,11 @@ module ActiveMerchant
         post
       end
 
-      def add_amount(options, post)
-        post[:amount] = {}
-        post[:amount][:currency_code]   = options[:currency_code]
-        post[:amount][:value]           = options[:value]
-        post
+      def add_amount(amount, parameter)
+        parameter[:amount] = {}
+        parameter[:amount][:currency_code]   = amount[:currency_code]
+        parameter[:amount][:value]           = amount[:value]
+        parameter
       end
 
       def add_invoice(invoice_id, post)
