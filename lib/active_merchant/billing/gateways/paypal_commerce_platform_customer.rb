@@ -99,7 +99,9 @@ module ActiveMerchant
           purchase_unit_hsh = {  }
           purchase_unit_hsh[:reference_id]              = purchase_unit[:reference_id]
           ## Amount
-          purchase_unit_hsh[:amount]                     = add_amount(purchase_unit[:amount], purchase_unit_hsh)
+          purchase_unit_hsh[:amount]                    = {}
+          purchase_unit_hsh[:amount][:currency_code]    = purchase_unit[:amount][:currency_code]
+          purchase_unit_hsh[:amount][:value]            = purchase_unit[:amount][:value]
           ## Payee
           purchase_unit_hsh[:payee]                     = { }
           purchase_unit_hsh[:payee][:email_address]     = purchase_unit[:payee][:email_address]
@@ -114,9 +116,9 @@ module ActiveMerchant
         post[:payment_instruction][:platform_fees] = []
         options[:platform_fees].map do |platform_fee|
           platform_fee_hsh                          = { }
-          platform_fee_hsh[:amount]                 = add_amount(platform_fee[:amount], platform_fee_hsh)
-          platform_fee_hsh[:amount][:currency_code] = platform_fee[:amount][:currency_code]
-          platform_fee_hsh[:amount][:value]         = platform_fee[:amount][:value]
+          platform_fee_hsh[:amount]                    = {}
+          platform_fee_hsh[:amount][:currency_code]    = platform_fee[:amount][:currency_code]
+          platform_fee_hsh[:amount][:value]            = platform_fee[:amount][:value]
 
           platform_fee_hsh[:payee]                  = { }
           platform_fee_hsh[:payee][:email_address] = platform_fee[:payee][:email_address]
@@ -131,11 +133,11 @@ module ActiveMerchant
         post
       end
 
-      def add_amount(options, post)
-        post[:amount] = {}
-        post[:amount][:currency_code]   = options[:currency_code]
-        post[:amount][:value]           = options[:value]
-        post
+      def add_amount(amount, parameter)
+        parameter[:amount] = {}
+        parameter[:amount][:currency_code]   = amount[:currency_code]
+        parameter[:amount][:value]           = amount[:value]
+        parameter
       end
 
       def add_invoice(invoice_id, post)
