@@ -4,7 +4,7 @@ require 'byebug'
 class PaypalExpressRestTest < Test::Unit::TestCase
   def setup
     Base.mode         = :test
-    @paypal_customer  = ActiveMerchant::Billing::PaypalCommercePlateformCustomerGateway.new
+    @paypal_customer  = ActiveMerchant::Billing::PaypalCommercePlatformCustomerGateway.new
 
     params = { username: "ASs8Osqge6KT3OdLtkNhD20VP8lsrqRUlRjLo-e5s75SHz-2ffMMzCos_odQGjGYpPcGlxJVQ5fXMz9q",
                password: "EKj_bMZn0CkOhOvFwJMX2WwhtCq2A0OtlOd5T-zUhKIf9WQxvgPasNX0Kr1U4TjFj8ZN6XCMF5NM30Z_" }
@@ -14,9 +14,8 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @headers      = { "Authorization": access_token, "Content-Type": "application/json" }
 
     @body = body
-    @authorize_additional_params =  {
-                                      payment_instruction: {
-                                      "disbursement_mode": "INSTANT",
+    @additional_params =  {
+                                      "payment_instruction": {
                                       "platform_fees": [
                                         {
                                             "amount": {
@@ -42,24 +41,8 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
 
   def test_create_capture_instant_order_ppcp
-    response = create_order("CAPTURE", "DIRECT", "PPCP")
+    response = create_order("CAPTURE", "PPCP")
     puts "Capture Order Id (Instant) - PPCP: #{ response[:id] }"
-    assert response[:status].eql?("CREATED")
-    assert !response[:id].nil?
-    assert !response[:links].blank?
-  end
-
-  def test_create_capture_delayed_order_direct_merchant
-    response = create_order("CAPTURE", mode = "DELAYED")
-    puts "Capture Order Id (Delayed) - Direct Merchant: #{ response[:id] }"
-    assert response[:status].eql?("CREATED")
-    assert !response[:id].nil?
-    assert !response[:links].blank?
-  end
-
-  def test_create_capture_delayed_order_ppcp
-    response = create_order("CAPTURE", "PPCP", "DELAYED")
-    puts "Capture Order Id (Delayed) - PPCP: #{ response[:id] }"
     assert response[:status].eql?("CREATED")
     assert !response[:id].nil?
     assert !response[:links].blank?
@@ -132,24 +115,27 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     end
   end
 
+  # def test_create_capture_delayed_order_direct_merchant
+  #   response = create_order("CAPTURE", mode = "DELAYED")
+  #   puts "Capture Order Id (Delayed) - Direct Merchant: #{ response[:id] }"
+  #   assert response[:status].eql?("CREATED")
+  #   assert !response[:id].nil?
+  #   assert !response[:links].blank?
+  # end
+  #
+  # def test_create_capture_delayed_order_ppcp
+  #   response = create_order("CAPTURE", "PPCP", "DELAYED")
+  #   puts "Capture Order Id (Delayed) - PPCP: #{ response[:id] }"
+  #   assert response[:status].eql?("CREATED")
+  #   assert !response[:id].nil?
+  #   assert !response[:links].blank?
+  # end
+
   private
-  def create_order(order_type, type="DIRECT", mode="INSTANT")
+  def create_order(order_type, type="DIRECT")
     if type.eql?("PPCP")
       @body.update(
-          "payment_instruction": {
-              "disbursement_mode": mode,
-              "platform_fees": [
-                  {
-                      "amount": {
-                          "currency_code": "USD",
-                          "value": "10.00"
-                      },
-                      "payee": {
-                          "email_address": "sb-jnxjj3033194@business.example.com"
-                      }
-                  }
-              ]
-          }
+          @additional_params
       )
     else
       @body.delete("payment_instruction")

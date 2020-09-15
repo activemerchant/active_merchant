@@ -4,7 +4,7 @@
 #
 module ActiveMerchant
   module Billing
-    class PaypalCommercePlateformCustomerGateway < PaypalCommercePlatformGateway
+    class PaypalCommercePlatformCustomerGateway < PaypalCommercePlatformGateway
 
       def create_order(intent, options)
         requires!(options.merge!(intent == nil ? { } : { intent: intent }), :intent, :purchase_units)
@@ -14,8 +14,8 @@ module ActiveMerchant
 
         add_purchase_units(options[:purchase_units], post) unless options[:purchase_units].nil?
 
-        add_payment_instruction(intent, options[:payment_instruction], post) unless options[:payment_instruction].nil?
-
+        add_payment_instruction(options[:payment_instruction], post) unless options[:payment_instruction].nil?
+        
         commit(:post, "v2/checkout/orders", post, options[:headers])
       end
 
@@ -50,13 +50,17 @@ module ActiveMerchant
       def refund(capture_id, options={ })
         requires!({ capture_id: capture_id }, :capture_id)
 
-        post("v2/payments/captures/#{ capture_id }/refund", options)
+        post = { }
+
+        commit(:post, "v2/payments/captures/#{ capture_id }/refund", post, options[:headers])
       end
 
       def void(authorization_id, options)
         requires!({ authorization_id: authorization_id }, :authorization_id)
 
-        post("v2/payments/authorizations/#{ authorization_id }/void", options)
+        post = { }
+
+        commit(:post, "v2/payments/authorizations/#{ authorization_id }/void", post, options[:headers])
       end
 
       def update_order(order_id, options)
@@ -73,6 +77,10 @@ module ActiveMerchant
 
       def do_capture(authorization_id, options)
         requires!(options.merge!({ authorization_id: authorization_id  }), :authorization_id)
+
+        post = {}
+
+        add_payment_instruction(options[:payment_instruction], post) unless options[:payment_instruction].nil?
 
         post("v2/payments/authorizations/#{ authorization_id }/capture", options)
       end
@@ -97,9 +105,8 @@ module ActiveMerchant
         post
       end
 
-      def add_payment_instruction(intent, options, post)
+      def add_payment_instruction(options, post)
         post[:payment_instruction] = { }
-        post[:payment_instruction][:disbursement_mode]    = intent
 
         post[:payment_instruction][:platform_fees] = []
         options[:platform_fees].map do |platform_fee|

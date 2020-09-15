@@ -4,7 +4,7 @@ require 'byebug'
 class PaypalExpressRestTest < Test::Unit::TestCase
   def setup
     Base.mode         = :test
-    @paypal_customer  = ActiveMerchant::Billing::PaypalCommercePlateformCustomerGateway.new
+    @paypal_customer  = ActiveMerchant::Billing::PaypalCommercePlatformCustomerGateway.new
 
     params = { username: "ASs8Osqge6KT3OdLtkNhD20VP8lsrqRUlRjLo-e5s75SHz-2ffMMzCos_odQGjGYpPcGlxJVQ5fXMz9q",
                password: "EKj_bMZn0CkOhOvFwJMX2WwhtCq2A0OtlOd5T-zUhKIf9WQxvgPasNX0Kr1U4TjFj8ZN6XCMF5NM30Z_" }
@@ -13,20 +13,20 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     access_token  = @paypal_customer.get_token(options)
     @headers      = { "Authorization": access_token, "Content-Type": "application/json" }
 
-    @approved_authroize_order_id                            = "8UY10615Y9659812B"
-    @approved_authroize_order_id_for_capture                = "2DT35501JY607793T"
-    @approved_authroize_order_id_for_void                   = "3T212397204450437"
-    @approved_authorize_order_id_for_ppcp                   = "61G33078M85140919"
+    @approved_authroize_order_id                            = "6CM21687PN915261U"
+    @approved_authroize_order_id_for_capture                = "3AG36760C5668132L"
+    @approved_authroize_order_id_for_void                   = "1FA83142YH825921F"
+    @approved_authorize_order_id_for_ppcp                   = "71R23029AP482613V"
 
-    @approved_capture_order_id                              = "66326503HL184414L"
-    @approved_capture_order_id_for_refund                   = "16P87453EJ0248013"
-    @approved_capture_order_id_for_ppcp                     = "27328531KT105745W"
+    @approved_capture_order_id                              = "6UD3200003784181A"
+    @approved_capture_order_id_for_refund                   = "7FT59933RJ054911F"
+    @approved_capture_order_id_for_ppcp                     = "0W732992ML392552G"
 
-    @approved_delayed_capture_order_id_for_capture          = "3PX45947JX8721352"
-    @approved_delayed_capture_order_id_for_capture_ppcp     = "3HP68521Y6643401F"
+    @approved_delayed_capture_order_id_for_capture          = "67U39950VY142733G"
+    @approved_delayed_capture_order_id_for_capture_ppcp     = "539846926F7063801"
 
-    @approved_delayed_authorize_order_id_for_capture        = "06V037529G486703C"
-    @approved_delayed_authorize_order_id_for_capture_ppcp   = "49Y254244M677614V"
+    @approved_delayed_authorize_order_id_for_capture        = "0T579286DN9310115"
+    @approved_delayed_authorize_order_id_for_capture_ppcp   = "9ND37409CB3232456"
 
     @approved_delayed_capture_order_id_for_disburse         = "31R95402NH875082T"
     @approved_delayed_authorize_order_id_for_disburse       = "6FF92286BP500124Y"
@@ -47,7 +47,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   #   assert !response[:id].nil?
   #   assert !response[:links].blank?
   # end
-
+  #
   # def test_handle_approve_delayed_capture_direct_merchant
   #   response = capture_order(@approved_delayed_capture_order_id_for_capture)
   #   assert response[:status].eql?("COMPLETED")
@@ -71,7 +71,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   #
   # def test_handle_approve_authorize
   #   response = @paypal_customer.handle_approve(@approved_authroize_order_id, options.merge({ operator: "authorize" }))
-  #   puts response
   #   assert response[:status].eql?("COMPLETED")
   #   assert !response[:id].nil?
   #   assert !response[:links].blank?
@@ -92,47 +91,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   #   @body.update(
   #       "payment_instruction": {
   #           "disbursement_mode": "INSTANT",
-  #           "platform_fees": [
-  #               {
-  #                   "amount": {
-  #                       "currency_code": "USD",
-  #                       "value": "10.00"
-  #                   },
-  #                   "payee": {
-  #                       "email_address": "sb-jnxjj3033194@business.example.com"
-  #                   }
-  #               }
-  #           ]
-  #       }
-  #   )
-  #   response = @paypal_customer.do_capture(authorization_id,options)
-  #   @body.delete("payment_instruction")
-  #   assert response[:status].eql?("COMPLETED")
-  #   assert !response[:id].nil?
-  #   assert !response[:links].blank?
-  # end
-  #
-  # def test_do_capture_for_delayed_authorized_order_direct_merchant
-  #   response = @paypal_customer.handle_approve(@approved_delayed_authorize_order_id_for_capture, options.merge({ operator: "authorize" }))
-  #   authorization_id = response[:purchase_units][0][:payments][:authorizations][0][:id]
-  #   @body.update(
-  #       "payment_instruction": {
-  #           "disbursement_mode": "DELAYED"
-  #       }
-  #   )
-  #   response = @paypal_customer.do_capture(authorization_id,options)
-  #   @body.delete("payment_instruction")
-  #   assert response[:status].eql?("COMPLETED")
-  #   assert !response[:id].nil?
-  #   assert !response[:links].blank?
-  # end
-  #
-  # def test_do_capture_for_delayed_authorized_order_ppcp
-  #   response = @paypal_customer.handle_approve(@approved_delayed_authorize_order_id_for_capture_ppcp, options.merge({ operator: "authorize" }))
-  #   authorization_id = response[:purchase_units][0][:payments][:authorizations][0][:id]
-  #   @body.update(
-  #       "payment_instruction": {
-  #           "disbursement_mode": "DELAYED",
   #           "platform_fees": [
   #               {
   #                   "amount": {
@@ -236,6 +194,47 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   #     @body.delete("reference_id")
   #     @body.delete("reference_type")
   #     puts disburse_order_res
+  # end
+  #
+  # def test_do_capture_for_delayed_authorized_order_direct_merchant
+  #   response = @paypal_customer.handle_approve(@approved_delayed_authorize_order_id_for_capture, options.merge({ operator: "authorize" }))
+  #   authorization_id = response[:purchase_units][0][:payments][:authorizations][0][:id]
+  #   @body.update(
+  #       "payment_instruction": {
+  #           "disbursement_mode": "DELAYED"
+  #       }
+  #   )
+  #   response = @paypal_customer.do_capture(authorization_id,options)
+  #   @body.delete("payment_instruction")
+  #   assert response[:status].eql?("COMPLETED")
+  #   assert !response[:id].nil?
+  #   assert !response[:links].blank?
+  # end
+  #
+  # def test_do_capture_for_delayed_authorized_order_ppcp
+  #   response = @paypal_customer.handle_approve(@approved_delayed_authorize_order_id_for_capture_ppcp, options.merge({ operator: "authorize" }))
+  #   authorization_id = response[:purchase_units][0][:payments][:authorizations][0][:id]
+  #   @body.update(
+  #       "payment_instruction": {
+  #           "disbursement_mode": "DELAYED",
+  #           "platform_fees": [
+  #               {
+  #                   "amount": {
+  #                       "currency_code": "USD",
+  #                       "value": "10.00"
+  #                   },
+  #                   "payee": {
+  #                       "email_address": "sb-jnxjj3033194@business.example.com"
+  #                   }
+  #               }
+  #           ]
+  #       }
+  #   )
+  #   response = @paypal_customer.do_capture(authorization_id,options)
+  #   @body.delete("payment_instruction")
+  #   assert response[:status].eql?("COMPLETED")
+  #   assert !response[:id].nil?
+  #   assert !response[:links].blank?
   # end
 
   private
