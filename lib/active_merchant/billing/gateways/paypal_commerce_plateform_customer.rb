@@ -28,7 +28,9 @@ module ActiveMerchant
       def authorize(order_id, options)
         requires!({ order_id: order_id }, :order_id)
 
-        post("v2/checkout/orders/#{ order_id }/authorize", options)
+        post = { }
+
+        commit(:post, "v2/checkout/orders/#{ order_id }/authorize", post, options[:headers])
       end
 
       def handle_approve(operator_required_id, options)

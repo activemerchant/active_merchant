@@ -13,7 +13,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     access_token  = @paypal_customer.get_token(options)
     @headers      = { "Authorization": access_token, "Content-Type": "application/json" }
 
-    @approved_authroize_order_id                            = "2X705782F01736618"
+    @approved_authroize_order_id                            = "8UY10615Y9659812B"
     @approved_authroize_order_id_for_capture                = "2DT35501JY607793T"
     @approved_authroize_order_id_for_void                   = "3T212397204450437"
     @approved_authorize_order_id_for_ppcp                   = "61G33078M85140919"
@@ -41,12 +41,12 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
   end
 
-  def test_handle_approve_capture_direct_merchant
-    response = capture_order(@approved_capture_order_id)
-    assert response[:status].eql?("COMPLETED")
-    assert !response[:id].nil?
-    assert !response[:links].blank?
-  end
+  # def test_handle_approve_capture_direct_merchant
+  #   response = capture_order(@approved_capture_order_id)
+  #   assert response[:status].eql?("COMPLETED")
+  #   assert !response[:id].nil?
+  #   assert !response[:links].blank?
+  # end
 
   # def test_handle_approve_delayed_capture_direct_merchant
   #   response = capture_order(@approved_delayed_capture_order_id_for_capture)
@@ -71,6 +71,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   #
   # def test_handle_approve_authorize
   #   response = @paypal_customer.handle_approve(@approved_authroize_order_id, options.merge({ operator: "authorize" }))
+  #   puts response
   #   assert response[:status].eql?("COMPLETED")
   #   assert !response[:id].nil?
   #   assert !response[:links].blank?
