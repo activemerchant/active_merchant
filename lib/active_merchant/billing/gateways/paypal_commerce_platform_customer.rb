@@ -79,10 +79,15 @@ module ActiveMerchant
         requires!(options.merge!({ authorization_id: authorization_id  }), :authorization_id)
 
         post = {}
+        add_amount(options[:amount], post) unless options[:amount].nil?
+
+        add_invoice(options[:invoice_id], post) unless options[:invoice_id].nil?
+
+        add_final_capture(options[:final_capture], post) unless options[:final_capture].nil?
 
         add_payment_instruction(options[:payment_instruction], post) unless options[:payment_instruction].nil?
 
-        post("v2/payments/authorizations/#{ authorization_id }/capture", options)
+        commit(:post, "v2/payments/authorizations/#{ authorization_id }/capture", post, options[:headers])
       end
 
       # <-********************Private Methods**********************->
@@ -94,10 +99,8 @@ module ActiveMerchant
           purchase_unit_hsh = {  }
           purchase_unit_hsh[:reference_id]              = purchase_unit[:reference_id]
           ## Amount
-          purchase_unit_hsh[:amount]                    = { }
-          purchase_unit_hsh[:amount][:currency_code]    = purchase_unit[:amount][:currency_code]
-          purchase_unit_hsh[:amount][:value]            = purchase_unit[:amount][:value]
-          ### Payee
+          add_amount(purchase_unit, purchase_unit_hsh)
+          ## Payee
           purchase_unit_hsh[:payee]                     = { }
           purchase_unit_hsh[:payee][:email_address]     = purchase_unit[:payee][:email_address]
           post[:purchase_units] << purchase_unit_hsh
@@ -127,6 +130,24 @@ module ActiveMerchant
         post[:intent]  = intent
         post
       end
+
+      def add_amount(options, post)
+        post[:amount] = {}
+        post[:amount][:currency_code]   = options[:amount][:currency_code]
+        post[:amount][:value]           = options[:amount][:value]
+        post
+      end
+
+      def add_invoice(invoice_id, post)
+        post[:invoice_id]  = invoice_id
+        post
+      end
+
+      def add_final_capture(final_capture, post)
+        post[:final_capture] = final_capture
+        post
+      end
+
     end
   end
 end
