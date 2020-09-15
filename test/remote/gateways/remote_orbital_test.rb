@@ -155,7 +155,16 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
       brand: 'visa',
       eci: '5'
     )
-    assert response = @gateway.purchase(3000, network_card, @options)
+    # Ensure that soft descriptor fields don't conflict with network token data in schema
+    options = @options.merge(
+      soft_descriptors: {
+        merchant_name: 'Merch',
+        product_description: 'Description',
+        merchant_email: 'email@example'
+      }
+    )
+
+    assert response = @gateway.purchase(3000, network_card, options)
     assert_success response
     assert_equal 'Approved', response.message
     assert_false response.authorization.blank?
@@ -271,7 +280,12 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
         order_id: '2',
         currency: 'USD',
         three_d_secure: fixture[:three_d_secure],
-        address: fixture[:address]
+        address: fixture[:address],
+        soft_descriptors: {
+          merchant_name: 'Merch',
+          product_description: 'Description',
+          merchant_email: 'email@example'
+        }
       )
       assert response = @gateway.authorize(100, cc, options)
 

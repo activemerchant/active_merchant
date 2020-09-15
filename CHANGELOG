@@ -13,6 +13,7 @@
 * RuboCop: Fix Style/BlockComments [leila-alderman] #3729
 * Checkout V2: Move to single-transaction Purchases [curiousepic] #3761
 * RuboCop: Fix Naming/ConstantName [leila-alderman] #3723
+* Orbital: Fix schema errors [britth] #3766
 
 == Version 1.114.0
 * BlueSnap: Add address1,address2,phone,shipping_* support #3749
