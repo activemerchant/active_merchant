@@ -12,9 +12,9 @@ module ActiveMerchant
         post = { }
         add_intent(intent, post)
 
-        add_purchase_units(options[:purchase_units], post) if options[:purchase_units].present?
+        add_purchase_units(options[:purchase_units], post) unless options[:purchase_units].nil?
 
-        add_payment_instruction(intent, post, options[:payment_instruction]) if options[:payment_instruction].present?
+        add_payment_instruction(intent, options[:payment_instruction], post) unless options[:payment_instruction].nil?
 
         commit(:post, "v2/checkout/orders", post, options[:headers])
       end
@@ -94,17 +94,20 @@ module ActiveMerchant
       end
 
       def add_payment_instruction(intent, options, post)
-
         post[:payment_instruction] = { }
         post[:payment_instruction][:disbursement_mode]    = intent
 
-        options[:plateform_fees].map do |platform_fee|
-          post[:purchase_units][:platform_fees][:amount]                      = { }
-          post[:payment_instruction][:platform_fees][:amount][:currency_code] = platform_fee[:amount][:currency_code]
-          post[:payment_instruction][:plateform_fees][:amount][:value]        = platform_fee[:amount][:value]
+        post[:payment_instruction][:platform_fees] = []
+        options[:platform_fees].map do |platform_fee|
+          platform_fee_hsh    = { }
+          platform_fee_hsh[:amount]                      = { }
+          platform_fee_hsh[:amount][:currency_code] = platform_fee[:amount][:currency_code]
+          platform_fee_hsh[:amount][:value]        = platform_fee[:amount][:value]
 
-          post[:payment_instruction][:platform_fees][:payee]                  = { }
-          post[:payment_instruction][:plateform_fees][:payee][:email_address] = platform_fee[:payee][:email_address]
+          platform_fee_hsh[:payee]                  = { }
+          platform_fee_hsh[:payee][:email_address] = platform_fee[:payee][:email_address]
+
+          post[:payment_instruction][:platform_fees] << platform_fee_hsh
         end
         post
       end
