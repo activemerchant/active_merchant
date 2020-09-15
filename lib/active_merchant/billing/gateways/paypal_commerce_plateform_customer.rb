@@ -40,7 +40,9 @@ module ActiveMerchant
       def capture(order_id, options)
         requires!({ order_id: order_id }, :order_id)
 
-        post("v2/checkout/orders/#{ order_id }/capture", options)
+        post = { }
+
+        commit(:post, "v2/checkout/orders/#{ order_id }/capture", post, options[:headers])
       end
 
       def refund(capture_id, options={ })
