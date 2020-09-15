@@ -120,11 +120,6 @@ module ActiveMerchant
         commit(:get, "/v2/payments/refunds/#{ refund_id }", { }, options[:headers])
       end
 
-      # {{host}}/v2/checkout/orders/{{order_id}}
-      # {{host}}/v2/payments/authorizations/{{authorization_id}}
-      # {{host}}/v2/payments/captures/{{capture_id}}/refund
-      # {{host}}/v2/payments/captures/{{capture_id}}
-
       # <-********************Private Methods**********************->
       private
       def add_purchase_units(options, post)
