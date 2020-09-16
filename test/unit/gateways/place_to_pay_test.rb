@@ -6,92 +6,64 @@ class PlaceToPayTest < Test::Unit::TestCase
     @default_gateway = PlaceToPayGateway.new(login: '8c94963bd435c7635826e6a34a4bb11a', secret_key: 'RYKUrC1567q2a086', country: 'COL')
     @gateway_international = PlaceToPayGateway.new(login: '1863f8a3ba0e8d4290137c4b18fa4286', secret_key: '97d3E70wO36CoQjS', country: 'EC')
     @amount = 100
-    @valid_credit_card = credit_card('4005580000000040',
-      verification_value: '237',
-      month: '03',
-      year: '22')
-    @valid_credit_card_otp = credit_card('36545400000008',
-    verification_value: '237',
-    month: '03',
-    year: '22')
-    @valid_credit_card_for_colombia = credit_card('4111111111111111',
-      verification_value: '237',
-      month: '03',
-      year: '22')
-    @invalid_credit_card = credit_card('36545400000248',
-      verification_value: '237',
-      month: '03',
-      year: '22')
-    @expired_credit_card = credit_card('4012888888881881',
-      verification_value: '237',
-      month: '03',
-      year: '22')
+    @valid_credit_card = credit_card('4005580000000040')
+    @valid_credit_card_otp = credit_card('36545400000008')
+    @valid_credit_card_for_colombia = credit_card('4111111111111111')
+    @invalid_credit_card = credit_card('36545400000248')
+    @expired_credit_card = credit_card('4012888888881881')
     @options = {
-      'reference': 'Lucho_test_008',
-      'currency': 'USD'
+      order_id: generate_unique_id,
+      currency: 'USD'
+    }
+    @payer = {
+      document: '8467451900',
+      documentType: 'CC',
+      name: 'Miss Delia Schamberger Sr.',
+      surname: 'Wisozk',
+      email: 'tesst@gmail.com',
+      mobile: '3006108300'
     }
     @options_to_capture = @options.merge({
-      'payer': {
-        "document": "8467451900",
-        "documentType": "CC",
-        "name": "Miss Delia Schamberger Sr.",
-        "surname": "Wisozk",
-        "email": "tesst@gmail.com",
-        "mobile": "3006108300"
-      },
-      'otp': '000000'
+      payer: @payer,
+      otp: '000000'
     })
     @purchase_options = @options.merge({
-      'payer': {
-        "document": "8467451900",
-        "documentType": "CC",
-        "name": "Miss Delia Schamberger Sr.",
-        "surname": "Wisozk",
-        "email": "tesst@gmail.com",
-        "mobile": "3006108300"
+      payer: @payer,
+      reference: "Lucho_test_#{rand(1000)}",
+      description: 'some description',
+      group_code: 'P',
+      buyer: @payer,
+      code: 1,
+      type: 22,
+      groupCode: 'M',
+      installment: 12,
+      additional: {
+        'SOME_ADDITIONAL': 'http://example.com/yourcheckout'
       },
-      "reference": "Lucho_test_#{rand(1000)}",
-      'description': 'some description',
-      'group_code': 'P',
-      'buyer': {
-        "document": "8467451900",
-        "documentType": "CC",
-        "name": "Miss Delia Schamberger Sr.",
-        "surname": "Wisozk",
-        "email": "tesst@gmail.com",
-        "mobile": "3006108300"
-      },
-      'code': 1,
-      'type': 22,
-      'groupCode': 'M',
-      'installment': 12,
-      'additional': {
-        "SOME_ADDITIONAL": "http://example.com/yourcheckout"
-      },
-      'taxes': [
+      taxes: [
         {
-          "kind": "ice",
-          "amount": 4.8,
-          "base": 40
+          kind: 'ice',
+          amount: 4.8,
+          base: 40
         },
         {
-          "kind": "valueAddedTax",
-          "amount": 7.6,
-          "base": 40
+          kind: 'valueAddedTax',
+          amount: 7.6,
+          base: 40
         }
       ],
-      'details': [
+      details: [
         {
-          "kind": "shipping",
-          "amount": 2
+          kind: 'shipping',
+          amount: 2
         },
         {
-          "kind": "tip",
-          "amount": 2
+          kind: 'tip',
+          amount: 2
         },
         {
-          "kind": "subtotal",
-          "amount": 40
+          kind: 'subtotal',
+          amount: 40
         }
       ]
     })
@@ -127,7 +99,7 @@ class PlaceToPayTest < Test::Unit::TestCase
   end
 
   def test_successful_my_pi_query_card_ec
-    options = {'id': 1}
+    options = {id: 1}
     @gateway_international.expects(:ssl_post).returns(successful_my_pi_query_card_response)
     response = @gateway_international.my_pi_query(@amount, @valid_credit_card, options)
     assert_success response
@@ -136,7 +108,7 @@ class PlaceToPayTest < Test::Unit::TestCase
   end
 
   def test_failed_my_pi_query_card_ec
-    options = {'id': 1}
+    options = {id: 1}
     @gateway_international.expects(:ssl_post).returns(failed_my_pi_query_card_response)
     response = @gateway_international.my_pi_query(@amount, @invalid_credit_card, options)
     assert_failure response
@@ -146,10 +118,10 @@ class PlaceToPayTest < Test::Unit::TestCase
 
   def test_successful_calculate_interests_ec
     options = @options.merge({
-      'code': 1,
-      'type': 22,
-      'groupCode': 'M',
-      'installment': 12
+      code: 1,
+      type: 22,
+      groupCode: 'M',
+      installment: 12
     })
     @gateway_international.expects(:ssl_post).returns(successful_calculate_interests_response)
     response = @gateway_international.calculate_interests(@amount, @valid_credit_card, options)
@@ -160,10 +132,10 @@ class PlaceToPayTest < Test::Unit::TestCase
 
   def test_failed_calculate_interests_ec
     options = @options.merge({
-      'code': 1,
-      'type': 22,
-      'groupCode': 'M',
-      'installment': 12
+      code: 1,
+      type: 22,
+      groupCode: 'M',
+      installment: 12
     })
     @gateway_international.expects(:ssl_post).returns(failed_calculate_interests_response)
     response = @gateway_international.calculate_interests(@amount, @invalid_credit_card, options)
@@ -178,8 +150,8 @@ class PlaceToPayTest < Test::Unit::TestCase
       month: '03',
       year: '22')
     options = @options.merge({
-      'reference': '5b05daa383573',
-      'description': 'A payment collect example'
+      reference: '5b05daa383573',
+      description: 'A payment collect example'
     })
     @gateway_international.expects(:ssl_post).returns(successful_generate_otp_response)
     response = @gateway_international.generate_otp(@amount, credit_card, options)
@@ -190,8 +162,8 @@ class PlaceToPayTest < Test::Unit::TestCase
 
   def test_failed_generate_otp_ec
     options = @options.merge({
-      'reference': '5b05daa383573',
-      'description': 'A payment collect example'
+      reference: '5b05daa383573',
+      description: 'A payment collect example'
     })
     @gateway_international.expects(:ssl_post).returns(failed_generate_otp_response)
     response = @gateway_international.generate_otp(@amount, @invalid_credit_card, options)
@@ -202,9 +174,9 @@ class PlaceToPayTest < Test::Unit::TestCase
 
   def test_successful_validate_otp_ec
     options = @options.merge({
-      'reference': '2110163',
-      'otp': '866003',
-      'taxes': []
+      reference: '2110163',
+      otp: '866003',
+      taxes: []
     })
     @gateway_international.expects(:ssl_post).returns(successful_validate_otp_response)
     response = @gateway_international.validate_otp(@amount, @valid_credit_card, options)
@@ -215,9 +187,9 @@ class PlaceToPayTest < Test::Unit::TestCase
 
   def test_failed_validate_otp_ec
     options = @options.merge({
-      'reference': '2110163',
-      'otp': '866003',
-      'taxes': []
+      reference: '2110163',
+      otp: '866003',
+      taxes: []
     })
     @gateway_international.expects(:ssl_post).returns(failed_validate_otp_response)
     response = @gateway_international.validate_otp(@amount, @invalid_credit_card, options)
@@ -243,7 +215,7 @@ class PlaceToPayTest < Test::Unit::TestCase
     @gateway_international.expects(:ssl_post).returns(failed_purchase_response)
     @default_gateway.expects(:ssl_post).returns(failed_purchase_response_col)
     international_response = @gateway_international.purchase(@amount, @invalid_credit_card, @purchase_options)
-    default_gateway = @default_gateway.purchase(@amount, @invalid_credit_card, options)
+    default_gateway = @default_gateway.purchase(@amount, @invalid_credit_card, @purchase_options)
     assert_failure international_response
     assert_failure default_gateway
     assert_equal 'Por favor comunicarse con el call center', international_response.message
@@ -254,7 +226,7 @@ class PlaceToPayTest < Test::Unit::TestCase
 
   def test_succesful_get_status_transaction
     options = {
-      'internalReference': 34812
+      internalReference: 34812
     }
     @gateway_international.expects(:ssl_post).returns(successful_get_query_transaction)
     @default_gateway.expects(:ssl_post).returns(successful_get_query_transaction)
@@ -270,7 +242,7 @@ class PlaceToPayTest < Test::Unit::TestCase
 
   def test_failed_get_status_transaction_wrong_reference
     options = {
-      'internalReference': 34812
+      internalReference: 34812
     }
     @gateway_international.expects(:ssl_post).returns(failed_get_query_transaction_wrong_reference)
     @default_gateway.expects(:ssl_post).returns(failed_get_query_transaction_wrong_reference)
@@ -286,9 +258,9 @@ class PlaceToPayTest < Test::Unit::TestCase
 
   def test_succesful_refund
     options = {
-      'internalReference': 10446,
-      'authorization': "000000",
-      "action": "reverse"
+      internalReference: 10446,
+      authorization: '000000',
+      action: 'reverse'
     }
     @gateway_international.expects(:ssl_post).returns(successful_refund)
     @default_gateway.expects(:ssl_post).returns(successful_refund)
@@ -304,9 +276,9 @@ class PlaceToPayTest < Test::Unit::TestCase
 
   def test_failed_refund
     options = {
-      'internalReference': 10446,
-      'authorization': "000000",
-      "action": "reverse"
+      internalReference: 10446,
+      authorization: '000000',
+      action: 'reverse'
     }
     @gateway_international.expects(:ssl_post).returns(failed_refund)
     @default_gateway.expects(:ssl_post).returns(failed_refund)
@@ -322,15 +294,8 @@ class PlaceToPayTest < Test::Unit::TestCase
 
   def test_successful_capture
     options = @options.merge({
-       'payer': {
-         "document": "8467451900",
-         "documentType": "CC",
-         "name": "Miss Delia Schamberger Sr.",
-         "surname": "Wisozk",
-         "email": "tesst@gmail.com",
-         "mobile": "3006108300"
-       },
-       'otp': 'a8ecc59c2510a8ae27e1724ebf4647b5'
+       payer: @payer,
+       otp: 'a8ecc59c2510a8ae27e1724ebf4647b5'
      })
      @gateway_international.expects(:ssl_post).returns(successful_capture)
      @default_gateway.expects(:ssl_post).returns(successful_capture)
@@ -344,9 +309,9 @@ class PlaceToPayTest < Test::Unit::TestCase
 
    def test_failed_search
     options = {
-      'reference': 'TEST_20180516_182751',
-       'amount': {
-         "currency": "USD"
+      reference: 'TEST_20180516_182751',
+       amount: {
+         currency: 'USD'
        }
      }
      money = 3243

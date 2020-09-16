@@ -14,11 +14,11 @@ module ActiveMerchant #:nodoc:
       URL_FOR_COUNTRIES = {
         'EC': {
           'test': 'https://test.placetopay.ec/rest/gateway/',
-          'prod': 'https://secure.placetopay.ec/redirection/',
+          'prod': 'https://secure.placetopay.ec/rest/gateway/',
         },
         'COL': {
           'test': 'https://test.placetopay.com/rest/gateway/',
-          'prod': 'https://secure.placetopay.com/redirection/',
+          'prod': 'https://secure.placetopay.com/rest/gateway/',
         }
       }
       COMMON_MESSAGES = {
@@ -92,7 +92,7 @@ module ActiveMerchant #:nodoc:
         add_titular_data(post, options, 'buyer')
         add_additional(post, options)
         commit('sale', post)
-    end
+      end
 
       def my_pi_query(money, payment, options={})
         post = {}
@@ -163,10 +163,10 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_auth(post, options)
         add_additional_data(post, options)
-        post[:reference] = options[:reference]
+        post[:reference] = options[:order_id]
         post[:amount] = {
-          'currency': options[:amount][:currency],
-          'total': amount(money)
+          currency: options[:amount][:currency],
+          total: amount(money)
         }
         commit('search', post)
       end
@@ -175,15 +175,14 @@ module ActiveMerchant #:nodoc:
         false
       end
 
-      # Temporary comment until resolve bug with external client
-      # def lookup_card(money, payment, options={})
-      #   post = {}
-      #   add_auth(post, options)
-      #   add_instrument(post, payment)
-      #   add_payment(post, money, options)
-      #   add_return_url(post, options)
-      #   commit('lookup', post)
-      # end
+      def lookup_card(money, payment, options={})
+        post = {}
+        add_auth(post, options)
+        add_instrument(post, payment)
+        add_payment(post, money, options)
+        add_return_url(post, options)
+        commit('lookup', post)
+      end
 
       private
 
@@ -195,21 +194,21 @@ module ActiveMerchant #:nodoc:
         original_nonce = generate_nonce()
         seed = get_date_in_iso_format()
         post[:auth] = {
-          'login': @login,
-          'nonce': convert_to_Base64(original_nonce),
-          'tranKey': generate_trans_key(original_nonce, seed),
-          'seed': seed,
+          login: @login,
+          nonce: convert_to_Base64(original_nonce),
+          tranKey: generate_trans_key(original_nonce, seed),
+          seed: seed,
         }
       end
 
       def add_titular_data(post, options, type='payer')
         post[type] = {
-          'document': options[type.to_sym][:document],
-          'documentType': options[type.to_sym][:documentType],
-          'name': options[type.to_sym][:name],
-          'surname': options[type.to_sym][:surname],
-          'email': options[type.to_sym][:email],
-          'mobile': options[type.to_sym][:mobile]
+          document: options[type.to_sym][:document],
+          documentType: options[type.to_sym][:documentType],
+          name: options[type.to_sym][:name],
+          surname: options[type.to_sym][:surname],
+          email: options[type.to_sym][:email],
+          mobile: options[type.to_sym][:mobile]
         }
       end
 
@@ -243,31 +242,31 @@ module ActiveMerchant #:nodoc:
 
       def add_instrument(post, payment)
         post[:instrument] = {
-          'card': {
-            'number': payment.number,
-            'cvv': payment.verification_value,
-            'expirationMonth': payment.month,
-            'expirationYear': payment.year
+          card: {
+            number: payment.number,
+            cvv: payment.verification_value,
+            expirationMonth: payment.month,
+            expirationYear: payment.year
           }
         }
       end
 
       def add_credit_information(post, options) 
         post[:instrument][:credit] = {
-          'code': options[:code],
-          'type': options[:type],
-          'groupCode': options[:group_code],
-          'installment': options[:installment]
+          code: options[:code],
+          type: options[:type],
+          groupCode: options[:group_code],
+          installment: options[:installment]
         }
       end
 
       def add_payment(post, money, options)
         post[:payment] = {}
-        post[:payment][:reference] = options[:reference]
+        post[:payment][:reference] = options[:order_id]
         post[:payment][:description] = options[:description] if options[:description].present?
         post[:payment][:amount] = {
-          'total': amount(money),
-          'currency': (options[:currency] || currency(money))
+          total: amount(money),
+          currency: (options[:currency] || currency(money))
         }
         add_taxes(post, options)
         add_details(post, options)
@@ -345,17 +344,17 @@ module ActiveMerchant #:nodoc:
         country_urls = @current_country.present? ? URL_FOR_COUNTRIES[@current_country.to_sym] : URL_FOR_COUNTRIES[BASE_COUNTRY]
         siteUrl = test? ? country_urls[:test] : country_urls[:prod]
         routes = {
-          'authonly': "#{siteUrl}information",
-          'lookup': "#{siteUrl}mpi/lookup",
-          'mpiQuery': "#{siteUrl}mpi/query",
-          'interests': "#{siteUrl}interests",
-          'generate_otp': "#{siteUrl}otp/generate",
-          'validate_otp': "#{siteUrl}otp/validate",
-          'sale': "#{siteUrl}process",
-          'query_transaction': "#{siteUrl}query",
-          'refund': "#{siteUrl}transaction",
-          'capture': "#{siteUrl}tokenize",
-          'search': "#{siteUrl}search"
+          authonly: "#{siteUrl}information",
+          lookup: "#{siteUrl}mpi/lookup",
+          mpiQuery: "#{siteUrl}mpi/query",
+          interests: "#{siteUrl}interests",
+          generate_otp: "#{siteUrl}otp/generate",
+          validate_otp: "#{siteUrl}otp/validate",
+          sale: "#{siteUrl}process",
+          query_transaction: "#{siteUrl}query",
+          refund: "#{siteUrl}transaction",
+          capture: "#{siteUrl}tokenize",
+          search: "#{siteUrl}search"
         }
         routes[action.to_sym]
       end
