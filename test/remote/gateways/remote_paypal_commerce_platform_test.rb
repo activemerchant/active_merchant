@@ -135,11 +135,15 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   private
   def create_order(order_type, type="DIRECT")
     if type.eql?("PPCP")
-      @body[:purchase_units][0].update(
-          @additional_params
-      )
+      @body[:purchase_units].each.with_index do |value, index|
+        @body[:purchase_units][index].update(
+            @additional_params
+        )
+      end
     else
-      @body[:purchase_units][0].delete(:payment_instructions)
+      @body[:purchase_units].each.with_index do |value, index|
+        @body[:purchase_units][index].delete(:payment_instructions)
+      end
     end
 
     @paypal_customer.create_order(order_type, options)
