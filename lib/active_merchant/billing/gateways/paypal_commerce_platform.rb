@@ -3,7 +3,8 @@ require 'active_merchant/billing/gateways/paypal/paypal_common_api'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PaypalCommercePlatformGateway < Gateway
-      attr_accessor :test_redirect_url
+      TEST_URL = 'https://api.sandbox.paypal.com'
+      LIVE_URL = 'https://api.paypal.com'
       NON_STANDARD_LOCALE_CODES = {
           'DK' => 'da_DK',
           'IL' => 'he_IL',
@@ -24,8 +25,8 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'PPCP Checkout'
       self.currencies_without_fractions = %w(HUF JPY TWD)
 
-      def initialize(options = nil)
-        self.test_redirect_url = 'https://api.sandbox.paypal.com'
+      def initialize(options = { })
+        @base_url = TEST_URL
       end
 
       def create_order(intent, options)
@@ -205,7 +206,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(method, url, parameters = nil, options = {})
         #post('v2/checkout/orders', options)
-        response = api_request(method, "#{ self.test_redirect_url }/#{ url }", parameters, options)
+        response = api_request(method, "#{ @base_url }/#{ url }", parameters, options)
         success = success_from(response, options)
         success ? success : response_error(response)
       end
