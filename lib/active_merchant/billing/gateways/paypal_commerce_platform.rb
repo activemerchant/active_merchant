@@ -154,13 +154,13 @@ module ActiveMerchant #:nodoc:
           purchase_unit_hsh[:reference_id]              = purchase_unit[:reference_id]
           purchase_unit_hsh[:description]               = purchase_unit[:description] unless purchase_unit[:description].nil?
           ## Amount
-          add_amount(purchase_unit[:amount], purchase_unit_hsh)
+          add_amount(purchase_unit[:amount], purchase_unit_hsh) unless purchase_unit[:amount].blank?
           ## Payee
           purchase_unit_hsh[:payee]                     = { }
           purchase_unit_hsh[:payee][:email_address]     = purchase_unit[:payee][:email_address]
 
-          add_items(purchase_unit[:items], purchase_unit_hsh)
-          add_shipping(purchase_unit[:shipping], purchase_unit_hsh)
+          add_items(purchase_unit[:items], purchase_unit_hsh) unless purchase_unit[:items].blank?
+          add_shipping(purchase_unit[:shipping], purchase_unit_hsh) unless purchase_unit[:shipping].blank?
 
           purchase_unit_hsh[:shipping_method]  = purchase_unit[:shipping_method]
 
