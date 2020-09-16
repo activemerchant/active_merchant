@@ -41,6 +41,7 @@ module ActiveMerchant #:nodoc:
 
         add_application_context(options[:application_context], post) unless options[:application_context].blank?
 
+        puts post
         commit(:post, "v2/checkout/orders", post, options[:headers])
       end
 
@@ -213,11 +214,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_breakdown_for_amount(options, post)
-        post[:breakdown] = { }
+        post[:amount][:breakdown] = { }
         options.each do |key, value|
-          post[:breakdown][key] = { }
-          post[:breakdown][key][:currency_code] = options[key][:currency_code]
-          post[:breakdown][key][:value]         = options[key][:value]
+          post[:amount][:breakdown][key] = { }
+          post[:amount][:breakdown][key][:currency_code] = options[key][:currency_code]
+          post[:amount][:breakdown][key][:value]         = options[key][:value]
         end
         post
       end
