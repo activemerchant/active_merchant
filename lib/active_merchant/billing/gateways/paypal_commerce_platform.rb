@@ -32,6 +32,7 @@ module ActiveMerchant #:nodoc:
       def create_order(intent, options)
         requires!(options.merge!(intent == nil ? { } : { intent: intent }), :intent, :purchase_units)
 
+        # Request prepration
         post = { }
         add_intent(intent, post)
 
@@ -151,7 +152,7 @@ module ActiveMerchant #:nodoc:
 
         options.map do |purchase_unit|
           purchase_unit_hsh = {  }
-          purchase_unit_hsh[:reference_id]              = purchase_unit[:reference_id]
+          purchase_unit_hsh[:reference_id]              = purchase_unit[:reference_id] unless purchase_unit[:reference_id].nil?
           purchase_unit_hsh[:description]               = purchase_unit[:description] unless purchase_unit[:description].nil?
           ## Amount
           add_amount(purchase_unit[:amount], purchase_unit_hsh) unless purchase_unit[:amount].blank?
