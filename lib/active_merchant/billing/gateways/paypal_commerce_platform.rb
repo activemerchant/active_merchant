@@ -177,8 +177,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_application_context(options, post)
-        post[:return_url]   = options[:return_url]
-        post[:cancel_url]   = options[:cancel_url]
+        post[:application_context]                = { }
+        post[:application_context][:return_url]   = options[:return_url]
+        post[:application_context][:cancel_url]   = options[:cancel_url]
       end
 
       def add_payment_instruction(options, post)
