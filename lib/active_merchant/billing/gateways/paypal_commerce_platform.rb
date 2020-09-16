@@ -192,7 +192,7 @@ module ActiveMerchant #:nodoc:
           add_amount(platform_fee[:amount], platform_fee_hsh)
 
           platform_fee_hsh[:payee]                  = { }
-          add_payee_email(platform_fee_hsh, platform_fee[:payee])
+          add_payee(platform_fee_hsh, platform_fee[:payee])
 
           post[:payment_instruction][:platform_fees] << platform_fee_hsh
         end
