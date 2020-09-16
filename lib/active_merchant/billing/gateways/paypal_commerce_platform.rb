@@ -41,7 +41,6 @@ module ActiveMerchant #:nodoc:
 
         add_application_context(options[:application_context], post) unless options[:application_context].blank?
 
-        puts post
         commit(:post, "v2/checkout/orders", post, options[:headers])
       end
 
