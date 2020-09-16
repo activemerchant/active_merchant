@@ -35,9 +35,11 @@ module ActiveMerchant #:nodoc:
         post = { }
         add_intent(intent, post)
 
-        add_purchase_units(options[:purchase_units], post) unless options[:purchase_units].nil?
+        add_purchase_units(options[:purchase_units], post)
 
-        add_payment_instruction(options[:payment_instruction], post) unless options[:payment_instruction].nil?
+        add_payment_instruction(options[:payment_instruction], post) unless options[:payment_instruction].blank?
+
+        add_application_context(options[:application_context], post) unless options[:application_context].blank?
 
         commit(:post, "v2/checkout/orders", post, options[:headers])
       end
@@ -150,14 +152,33 @@ module ActiveMerchant #:nodoc:
         options.map do |purchase_unit|
           purchase_unit_hsh = {  }
           purchase_unit_hsh[:reference_id]              = purchase_unit[:reference_id]
+          purchase_unit_hsh[:description]               = purchase_unit[:description] unless purchase_unit[:description].nil?
           ## Amount
           add_amount(purchase_unit[:amount], purchase_unit_hsh)
           ## Payee
           purchase_unit_hsh[:payee]                     = { }
           purchase_unit_hsh[:payee][:email_address]     = purchase_unit[:payee][:email_address]
+
+          add_items(purchase_unit[:items], purchase_unit_hsh)
+          add_shipping(purchase_unit[:shipping], purchase_unit_hsh)
+
+          purchase_unit_hsh[:shipping_method]  = purchase_unit[:shipping_method]
+
+          add_payment_instruction(purchase_unit[:payment_instruction], purchase_unit_hsh) unless purchase_unit[:payment_instruction].blank?
+
+          purchase_unit_hsh[:payment_group_id]  = purchase_unit[:payment_group_id]
+          purchase_unit_hsh[:custom_id]         = purchase_unit[:custom_id]
+          purchase_unit_hsh[:invoice_id]        = purchase_unit[:invoice_id]
+          purchase_unit_hsh[:soft_descriptor]   = purchase_unit[:soft_descriptor]
+
           post[:purchase_units] << purchase_unit_hsh
         end
         post
+      end
+
+      def add_application_context(options, post)
+        post[:return_url]   = options[:return_url]
+        post[:cancel_url]   = options[:cancel_url]
       end
 
       def add_payment_instruction(options, post)
@@ -182,11 +203,58 @@ module ActiveMerchant #:nodoc:
         post
       end
 
-      def add_amount(amount, parameter)
-        parameter[:amount] = {}
-        parameter[:amount][:currency_code]   = amount[:currency_code]
-        parameter[:amount][:value]           = amount[:value]
-        parameter
+      def add_amount(amount, post)
+        post[:amount] = {}
+        post[:amount][:currency_code]   = amount[:currency_code]
+        post[:amount][:value]           = amount[:value]
+        add_breakdown_for_amount(amount[:breakdown], post) unless amount[:breakdown].blank?
+        post
+      end
+
+      def add_breakdown_for_amount(options, post)
+        post[:breakdown] = { }
+        options.each do |key, value|
+          post[:breakdown][key] = { }
+          post[:breakdown][key][:currency_code] = options[key][:currency_code]
+          post[:breakdown][key][:value]         = options[key][:value]
+        end
+        post
+      end
+
+      def add_items(options, post)
+        post[:items] = []
+        options.each do |item|
+          items_hsh = { }
+          items_hsh[:name]                        = item[:name]
+          items_hsh[:sku]                         = item[:sku]
+          items_hsh[:quantity]                    = item[:quantity]
+          items_hsh[:category]                    = item[:category]
+          items_hsh[:unit_amount]                 = { }
+
+          items_hsh[:unit_amount][:currency_code] = item[:unit_amount][:currency_code]
+          items_hsh[:unit_amount][:value]         = item[:unit_amount][:value]
+
+          items_hsh[:tax]                 = { }
+          items_hsh[:tax][:currency_code] = item[:tax][:currency_code]
+          items_hsh[:tax][:value]         = item[:tax][:value]
+
+          post[:items] << items_hsh
+        end
+        post
+      end
+
+      def add_shipping(options, post)
+        post[:shipping]             = { }
+        post[:shipping][:address]   = { }
+
+        post[:shipping][:address][:address_line_1]    = options[:address][:address_line_1]
+        post[:shipping][:address][:address_line_2]    = options[:address][:address_line_1]
+        post[:shipping][:address][:admin_area_1]      = options[:address][:admin_area_1]
+        post[:shipping][:address][:admin_area_2]      = options[:address][:admin_area_2]
+        post[:shipping][:address][:postal_code]       = options[:address][:postal_code]
+        post[:shipping][:address][:country_code]      = options[:address][:country_code]
+
+        post
       end
 
       def add_invoice(invoice_id, post)
