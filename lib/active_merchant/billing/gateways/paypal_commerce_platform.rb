@@ -158,7 +158,7 @@ module ActiveMerchant #:nodoc:
           add_amount(purchase_unit[:amount], purchase_unit_hsh) unless purchase_unit[:amount].blank?
           ## Payee
           purchase_unit_hsh[:payee]                     = { }
-          purchase_unit_hsh[:payee][:merchant_id]       = purchase_unit[:payee][:merchant_id]
+          purchase_unit_hsh[:payee][:merchant_id]       = purchase_unit[:payee][:merchant_id] unless  purchase_unit[:payee][:merchant_id].nil?
 
           add_items(purchase_unit[:items], purchase_unit_hsh) unless purchase_unit[:items].blank?
           add_shipping(purchase_unit[:shipping], purchase_unit_hsh) unless purchase_unit[:shipping].blank?
@@ -193,7 +193,7 @@ module ActiveMerchant #:nodoc:
           add_amount(platform_fee[:amount], platform_fee_hsh)
 
           platform_fee_hsh[:payee]                  = { }
-          platform_fee_hsh[:payee][:email_address] = platform_fee[:payee][:email_address]
+          platform_fee_hsh[:payee][:email_address] = platform_fee[:payee][:email_address] unless platform_fee[:payee][:email_address].nil?
 
           post[:payment_instruction][:platform_fees] << platform_fee_hsh
         end
@@ -206,7 +206,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_amount(amount, post)
-        post[:amount] = {}
+        post[:amount] = { }
         post[:amount][:currency_code]   = amount[:currency_code]
         post[:amount][:value]           = amount[:value]
         add_breakdown_for_amount(amount[:breakdown], post) unless amount[:breakdown].blank?
@@ -216,9 +216,11 @@ module ActiveMerchant #:nodoc:
       def add_breakdown_for_amount(options, post)
         post[:amount][:breakdown] = { }
         options.each do |key, value|
-          post[:amount][:breakdown][key] = { }
-          post[:amount][:breakdown][key][:currency_code] = options[key][:currency_code]
-          post[:amount][:breakdown][key][:value]         = options[key][:value]
+          unless options[key][:currency_code].nil? && options[key][:value].nil?
+            post[:amount][:breakdown][key] = { }
+            post[:amount][:breakdown][key][:currency_code] = options[key][:currency_code]
+            post[:amount][:breakdown][key][:value]         = options[key][:value]
+          end
         end
         post
       end
