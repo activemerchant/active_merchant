@@ -158,7 +158,10 @@ module ActiveMerchant #:nodoc:
           add_amount(purchase_unit[:amount], purchase_unit_hsh) unless purchase_unit[:amount].blank?
           ## Payee
           purchase_unit_hsh[:payee]                     = { }
-          purchase_unit_hsh[:payee][:merchant_id]       = purchase_unit[:payee][:merchant_id] unless  purchase_unit[:payee][:merchant_id].nil?
+
+          ## Payee Elements
+          add_payee_merchant_id(purchase_unit_hsh, purchase_unit[:payee])
+          add_payee_email(purchase_unit_hsh, purchase_unit[:payee])
 
           add_items(purchase_unit[:items], purchase_unit_hsh) unless purchase_unit[:items].blank?
           add_shipping(purchase_unit[:shipping], purchase_unit_hsh) unless purchase_unit[:shipping].blank?
@@ -193,7 +196,7 @@ module ActiveMerchant #:nodoc:
           add_amount(platform_fee[:amount], platform_fee_hsh)
 
           platform_fee_hsh[:payee]                  = { }
-          platform_fee_hsh[:payee][:email_address] = platform_fee[:payee][:email_address] unless platform_fee[:payee][:email_address].nil?
+          add_payee_email(platform_fee_hsh, platform_fee[:payee])
 
           post[:payment_instruction][:platform_fees] << platform_fee_hsh
         end
@@ -203,6 +206,14 @@ module ActiveMerchant #:nodoc:
       def add_intent(intent, post)
         post[:intent]  = intent
         post
+      end
+
+      def add_payee_email(obj_hsh, payee_obj)
+        obj_hsh[:payee][:email_address] = payee_obj[:email_address] unless payee_obj[:email_address].nil?
+      end
+
+      def add_payee_merchant_id(obj_hsh, payee_merchant_id)
+        obj_hsh[:payee][:merchant_id]       = payee_merchant_id[:merchant_id] unless payee_merchant_id[:merchant_id].nil?
       end
 
       def add_amount(amount, post)
