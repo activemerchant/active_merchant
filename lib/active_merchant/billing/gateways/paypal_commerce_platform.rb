@@ -210,6 +210,15 @@ module ActiveMerchant #:nodoc:
         obj_hsh[:payee][:merchant_id]       = payee_obj[:merchant_id] unless payee_obj[:merchant_id].nil?
       end
 
+      def add_payee(obj_hsh, payee_obj)
+        obj_hsh[:payee] = { }
+        obj_hsh[:payee][:merchant_id]       = payee_obj[:merchant_id] unless payee_obj[:merchant_id].nil?
+      end
+
+      def add_payee_email(obj_hsh, payee_obj)
+        obj_hsh[:payee][:email_address]     = payee_obj[:email_address] unless payee_obj[:email_address].nil?
+      end
+
       def add_amount(amount, post)
         post[:amount] = { }
         post[:amount][:currency_code]   = amount[:currency_code]
