@@ -4,7 +4,7 @@ require 'byebug'
 class PaypalExpressRestTest < Test::Unit::TestCase
   def setup
     Base.mode         = :test
-    @paypal_customer  = ActiveMerchant::Billing::PaypalCommercePlateformCustomerGateway.new
+    @paypal_customer  = ActiveMerchant::Billing::PaypalCommercePlatformCustomerGateway.new
 
     params = { username: "ASs8Osqge6KT3OdLtkNhD20VP8lsrqRUlRjLo-e5s75SHz-2ffMMzCos_odQGjGYpPcGlxJVQ5fXMz9q",
                password: "EKj_bMZn0CkOhOvFwJMX2WwhtCq2A0OtlOd5T-zUhKIf9WQxvgPasNX0Kr1U4TjFj8ZN6XCMF5NM30Z_" }
@@ -13,24 +13,9 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     access_token  = @paypal_customer.get_token(options)
     @headers      = { "Authorization": access_token, "Content-Type": "application/json" }
 
-    @body = {
-        "purchase_units": [
-            {
-                "reference_id": "camera_shop_seller_#{ DateTime.now }",
-                "amount": {
-                    "currency_code": "USD",
-                    "value": "56.00"
-                },
-              "payee": {
-                  "email_address": "sb-jnxjj3033194@business.example.com"
-              }
-            }
-        ]
-    }
-
-    @authorize_additional_params =  {
-                                      payment_instruction: {
-                                      "disbursement_mode": "INSTANT",
+    @body = body
+    @additional_params =  {
+                                      "payment_instruction": {
                                       "platform_fees": [
                                         {
                                             "amount": {
@@ -46,9 +31,18 @@ class PaypalExpressRestTest < Test::Unit::TestCase
                                     }
   end
 
-  def test_create_capture_instant_order
+  def test_create_capture_instant_order_direct_merchant
     response = create_order("CAPTURE")
-    puts "Capture Order Id (Instant): #{ response[:id] }"
+    puts "Capture Order Id (Instant) - Direct Merchant: #{ response[:id] }"
+    assert response[:status].eql?("CREATED")
+    assert !response[:id].nil?
+    assert !response[:links].blank?
+  end
+
+
+  def test_create_capture_instant_order_ppcp
+    response = create_order("CAPTURE", "PPCP")
+    puts "Capture Order Id (Instant) - PPCP: #{ response[:id] }"
     assert response[:status].eql?("CREATED")
     assert !response[:id].nil?
     assert !response[:links].blank?
@@ -89,7 +83,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: intent"
-      @paypal_customer.create_order(options)
+      @paypal_customer.create_order(nil, options)
     end
   end
 
@@ -100,7 +94,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: purchase_units"
-      @paypal_customer.create_order(options)
+      @paypal_customer.create_order("CAPTURE", options)
     end
   end
 
@@ -121,16 +115,52 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     end
   end
 
-  private
-  def create_order(order_type)
-    @body.update(
-        intent: order_type
-    )
+  # def test_create_capture_delayed_order_direct_merchant
+  #   response = create_order("CAPTURE", mode = "DELAYED")
+  #   puts "Capture Order Id (Delayed) - Direct Merchant: #{ response[:id] }"
+  #   assert response[:status].eql?("CREATED")
+  #   assert !response[:id].nil?
+  #   assert !response[:links].blank?
+  # end
+  #
+  # def test_create_capture_delayed_order_ppcp
+  #   response = create_order("CAPTURE", "PPCP", "DELAYED")
+  #   puts "Capture Order Id (Delayed) - PPCP: #{ response[:id] }"
+  #   assert response[:status].eql?("CREATED")
+  #   assert !response[:id].nil?
+  #   assert !response[:links].blank?
+  # end
 
-    @paypal_customer.create_order(options)
+  private
+  def create_order(order_type, type="DIRECT")
+    if type.eql?("PPCP")
+      @body.update(
+          @additional_params
+      )
+    else
+      @body.delete("payment_instruction")
+    end
+
+    @paypal_customer.create_order(order_type, options)
   end
 
   def options
-    { headers: @headers, body: @body }
+    { headers: @headers }.merge(@body)
+  end
+  def body
+    {
+        "purchase_units": [
+            {
+                "reference_id": "camera_shop_seller_#{ DateTime.now }",
+                "amount": {
+                    "currency_code": "USD",
+                    "value": "56.00"
+                },
+                "payee": {
+                    "email_address": "sb-jnxjj3033194@business.example.com"
+                }
+            }
+        ]
+    }
   end
 end

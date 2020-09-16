@@ -37,6 +37,53 @@ module ActiveMerchant #:nodoc:
 
       delegate :post, to: :api_adapter
       delegate :patch, to: :api_adapter
+
+      private
+      def commit(method, url, parameters = nil, options = {})
+        #post('v2/checkout/orders', options)
+        response = api_request(method, "#{ test_redirect_url }/#{ url }", parameters, options)
+        success = success_from(response, options)
+        success ? success : response_error(response)
+      end
+
+      def success_from(response, options)
+        response
+      end
+
+      def response_error(raw_response)
+        puts raw_response
+        parse(raw_response)
+      rescue JSON::ParserError
+        json_error(raw_response)
+      end
+      def api_version(options)
+        options[:version] || @options[:version] || self.class::DEFAULT_API_VERSION
+      end
+
+      def api_request(method, endpoint, parameters = nil, opt_headers = {})
+        raw_response = response = nil
+        begin
+          raw_response = ssl_request(method, endpoint, parameters.to_json, opt_headers)
+        rescue ResponseError => e
+          raw_response = e.response.body
+          response = response_error(raw_response)
+        rescue JSON::ParserError
+          response = json_error(raw_response)
+        end
+        raw_response = raw_response.nil? ? "{}": raw_response
+        eval(raw_response)
+      end
+      def headers(params)
+        params[:headers]
+      end
+      def prepare_request_to_get_access_token(options)
+        @options = options
+        "basic #{ encoded_credentials }"
+      end
+      def encoded_credentials
+        Base64.encode64("#{ @options[:authorization][:username] }:#{ @options[:authorization][:password] }").gsub("\n", "")
+      end
+
     end
   end
 end
