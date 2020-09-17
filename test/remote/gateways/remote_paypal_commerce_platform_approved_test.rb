@@ -13,14 +13,14 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     access_token  = @paypal_customer.get_token(options)
     @headers      = { "Authorization": access_token, "Content-Type": "application/json" }
 
-    @approved_authroize_order_id                            = "5P820709R1513241E"
-    @approved_authroize_order_id_for_capture                = "90P32070AN822850T"
-    @approved_authroize_order_id_for_void                   = "67948351JY195100F"
-    @approved_authorize_order_id_for_capture_ppcp           = "9U0775177H892072L"
+    @approved_authroize_order_id                            = "80G23900B0892511Y"
+    @approved_authroize_order_id_for_capture                = "4Y106351FG419213S"
+    @approved_authroize_order_id_for_void                   = "8CS230979E102013C"
+    @approved_authorize_order_id_for_capture_ppcp           = "6HC82655GE415312S"
 
-    @approved_capture_order_id                              = "06D984636T553381R"
-    @approved_capture_order_id_for_refund                   = "41C219142W2497150"
-    @approved_capture_order_id_for_ppcp                     = "32C76544FD9217427"
+    @approved_capture_order_id                              = "5U840239TP1639010"
+    @approved_capture_order_id_for_refund                   = "65N18245120736931"
+    @approved_capture_order_id_for_ppcp                     = "6HC82655GE415312S"
 
     @approved_delayed_capture_order_id_for_capture          = "67U39950VY142733G"
     @approved_delayed_capture_order_id_for_capture_ppcp     = "539846926F7063801"
@@ -66,12 +66,12 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     assert !response[:links].blank?
   end
 
-  def test_handle_approve_capture_ppcp
-    response = capture_order(@approved_capture_order_id_for_ppcp)
-    assert response[:status].eql?("COMPLETED")
-    assert !response[:id].nil?
-    assert !response[:links].blank?
-  end
+  # def test_handle_approve_capture_ppcp
+  #   response = capture_order(@approved_capture_order_id_for_ppcp)
+  #   assert response[:status].eql?("COMPLETED")
+  #   assert !response[:id].nil?
+  #   assert !response[:links].blank?
+  # end
 
   def test_handle_approve_authorize
     response = authorize_order(@approved_authroize_order_id)

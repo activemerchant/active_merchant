@@ -81,7 +81,7 @@ module ActiveMerchant #:nodoc:
 
         add_invoice(options[:body][:invoice_id], post) unless options[:body][:invoice_id].nil?
 
-        add_note(options[:body][:note_to_payer], post) unless options[:body][:note_to_payer]
+        add_note(options[:body][:note_to_payer], post) unless options[:body][:note_to_payer].nil?
 
         commit(:post, "v2/payments/captures/#{ capture_id }/refund", post, options[:headers])
       end

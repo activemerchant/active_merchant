@@ -22,7 +22,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
                                       "value": "2.00"
                                   },
                                   "payee": {
-                                      "email_address": "sb-feqsa3029697@personal.example.com"
+                                      "email_address": "sb-c447ox3078929@business.example.com"
                                   }
                               }]
         }
@@ -317,7 +317,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
                     }
                 },
                 "payee": {
-                    "merchant_id": "DWUPFA2VU2W9E"
+                    "email_address": "sb-jnxjj3033194@business.example.com"
                 },
                 "items": [
                     {
