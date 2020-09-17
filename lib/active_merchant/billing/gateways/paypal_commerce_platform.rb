@@ -55,6 +55,7 @@ module ActiveMerchant #:nodoc:
         requires!({ order_id: order_id }, :order_id)
 
         post = { }
+        add_payment_source(options[:payment_source], post) unless options[:payment_source].nil?
 
         commit(:post, "v2/checkout/orders/#{ order_id }/authorize", post, options[:headers])
       end
@@ -69,6 +70,7 @@ module ActiveMerchant #:nodoc:
         requires!({ order_id: order_id }, :order_id)
 
         post = { }
+        add_payment_source(options[:payment_source], post) unless options[:payment_source].nil?
 
         commit(:post, "v2/checkout/orders/#{ order_id }/capture", post, options[:headers])
       end
@@ -258,12 +260,12 @@ module ActiveMerchant #:nodoc:
       def add_shipping(options, post)
         post[:shipping]             = { }
 
-        add_address(options[:address], post[:shipping]) unless options[:address].nil?
+        add_shipping_address(options[:address], post[:shipping]) unless options[:address].nil?
 
         skip_empty(post, :shipping)
       end
 
-      def add_address(address, obj_hsh)
+      def add_shipping_address(address, obj_hsh)
         requires!(address, :admin_area_2, :postal_code, :country_code )
         obj_hsh[:address]   = { }
         obj_hsh[:address][:address_line_1]    = address[:address_line_1] unless address[:address_line_1].nil?
@@ -272,6 +274,17 @@ module ActiveMerchant #:nodoc:
         obj_hsh[:address][:admin_area_2]      = address[:admin_area_2]
         obj_hsh[:address][:postal_code]       = address[:postal_code]
         obj_hsh[:address][:country_code]      = address[:country_code]
+        obj_hsh
+      end
+
+      def add_billing_address(address, obj_hsh)
+        requires!(address, :country_code )
+        obj_hsh[:billing_address]   = { }
+        obj_hsh[:billing_address][:address_line_1]    = address[:address_line_1] unless address[:address_line_1].nil?
+        obj_hsh[:billing_address][:admin_area_1]      = address[:admin_area_1] unless address[:admin_area_1].nil?
+        obj_hsh[:billing_address][:admin_area_2]      = address[:admin_area_2] unless address[:admin_area_2].nil?
+        obj_hsh[:billing_address][:postal_code]       = address[:postal_code] unless address[:postal_code].nil?
+        obj_hsh[:billing_address][:country_code]      = address[:country_code] unless address[:country_code].nil?
         obj_hsh
       end
 
@@ -288,6 +301,24 @@ module ActiveMerchant #:nodoc:
       def add_note(note, post)
         post[:note_to_payer] = note
         post
+      end
+
+      def add_payment_source(source, post)
+        post[:payment_source] = { }
+        add_customer_card(source[:card], post[:payment_source])
+        skip_empty(post, :payment_source)
+      end
+
+      def add_customer_card(card_details, post)
+        requires!(card_details, :number, :expiry)
+
+        post[:card] = { }
+        post[:card][:name]             = card_details[:name] unless card_details[:name].nil?
+        post[:card][:number]           = card_details[:number]
+        post[:card][:expiry]           = card_details[:expiry]
+        post[:card][:security_code]    = card_details[:security_code] unless card_details[:security_code].nil?
+
+        add_billing_address(card_details[:billing_address], post) unless card_details[:billing_address].nil?
       end
 
       def commit(method, url, parameters = nil, options = {})

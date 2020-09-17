@@ -27,6 +27,28 @@ class PaypalExpressRestTest < Test::Unit::TestCase
                               }]
         }
     }
+
+    @card = {
+        "name": "John Doe",
+        "number": "4032039317984658",
+        "expiry": "2023-07",
+        "security_code": "111",
+        "billing_address": {
+            "address_line_1": "12312 Port Grace Blvd",
+            "admin_area_2": "La Vista",
+            "admin_area_1": "NE",
+            "postal_code": "68128",
+            "country_code": "US"
+        }
+    }
+
+    @card_order_options = {
+        "payment_source": {
+            "card": @card
+        },
+        "headers": @headers
+    }
+
   end
 
   def test_create_capture_instant_order_direct_merchant
@@ -36,7 +58,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     assert !response[:id].nil?
     assert !response[:links].blank?
   end
-
 
   def test_create_capture_instant_order_ppcp
     response = create_order("CAPTURE", "PPCP")
@@ -52,6 +73,55 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     assert response[:status].eql?("CREATED")
     assert !response[:id].nil?
     assert !response[:links].blank?
+  end
+
+  def test_capture_order_with_card
+    response = create_order("CAPTURE")
+    order_id = response[:id]
+    response = @paypal_customer.capture(order_id, @card_order_options)
+    assert response[:status].eql?("COMPLETED")
+    assert !response[:id].nil?
+    assert !response[:links].blank?
+  end
+
+  def test_authorize_order_with_card
+    response = create_order("AUTHORIZE")
+    order_id = response[:id]
+    response = @paypal_customer.authorize(order_id, @card_order_options)
+    assert response[:status].eql?("COMPLETED")
+    assert !response[:id].nil?
+    assert !response[:links].blank?
+  end
+
+  def test_capture_authorized_order_with_card
+    response = create_order("AUTHORIZE")
+    order_id = response[:id]
+    response = @paypal_customer.authorize(order_id, @card_order_options)
+    authorization_id = response[:purchase_units][0][:payments][:authorizations][0][:id]
+    response         = @paypal_customer.do_capture(authorization_id,options)
+    assert response[:status].eql?("COMPLETED")
+    assert !response[:id].nil?
+    assert !response[:links].blank?
+  end
+
+  def test_refund_captured_order_with_card
+    response = create_order("CAPTURE")
+    order_id = response[:id]
+    response = @paypal_customer.capture(order_id, @card_order_options)
+    capture_id = response[:purchase_units][0][:payments][:captures][0][:id]
+    refund_response = @paypal_customer.refund(capture_id, options)
+    assert refund_response[:status].eql?("COMPLETED")
+    assert !refund_response[:id].nil?
+    assert !refund_response[:links].blank?
+  end
+
+  def test_void_authorized_order_with_card
+    response = create_order("AUTHORIZE")
+    order_id = response[:id]
+    response = @paypal_customer.authorize(order_id, @card_order_options)
+    authorization_id = response[:purchase_units][0][:payments][:authorizations][0][:id]
+    void_response    = @paypal_customer.void(authorization_id, options)
+    assert void_response.empty?
   end
 
   def test_missing_password_argument_to_get_access_token
@@ -277,7 +347,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   end
 
   def options
-    { headers: @headers }.merge(@body)
+    { headers: @headers, body: {} }.merge(@body)
   end
   def body
     {
@@ -348,7 +418,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
                 "shipping_method": "United Postal Service",
                 "payment_group_id": 1,
                 "custom_id": "custom_value_#{ DateTime.now }",
-                "invoice_id": "invoice_number_{{$timestamp}}",
+                "invoice_id": "invoice_number_#{ DateTime.now }",
                 "soft_descriptor": "Payment Camera Shop"
             }
         ],
