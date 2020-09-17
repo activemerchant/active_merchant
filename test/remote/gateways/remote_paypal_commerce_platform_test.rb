@@ -102,7 +102,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     )
 
     assert_raise(ArgumentError) do
-      puts "*** ArgumentError Exception: Missing required parameter: amount"
+      puts "*** ArgumentError Exception: Missing required parameter: amount in purchase_units"
       @paypal_customer.create_order("CAPTURE", options)
     end
   end
@@ -113,7 +113,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     )
 
     assert_raise(ArgumentError) do
-      puts "*** ArgumentError Exception: Missing required parameter: currency_code"
+      puts "*** ArgumentError Exception: Missing required parameter: currency_code in amount"
       @paypal_customer.create_order("CAPTURE", options)
     end
   end
@@ -124,7 +124,103 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     )
 
     assert_raise(ArgumentError) do
-      puts "*** ArgumentError Exception: Missing required parameter: value"
+      puts "*** ArgumentError Exception: Missing required parameter: value in amount"
+      @paypal_customer.create_order("CAPTURE", options)
+    end
+  end
+
+  def test_missing_name_in_items
+    @body[:purchase_units][0][:items][0].delete(
+        :name
+    )
+
+    assert_raise(ArgumentError) do
+      puts "*** ArgumentError Exception: Missing required parameter: name in items"
+      @paypal_customer.create_order("CAPTURE", options)
+    end
+  end
+
+  def test_missing_quantity_in_items
+    @body[:purchase_units][0][:items][0].delete(
+        :quantity
+    )
+
+    assert_raise(ArgumentError) do
+      puts "*** ArgumentError Exception: Missing required parameter: quantity in items"
+      @paypal_customer.create_order("CAPTURE", options)
+    end
+  end
+
+  def test_missing_unit_amount_in_items
+    @body[:purchase_units][0][:items][0].delete(
+        :name
+    )
+
+    assert_raise(ArgumentError) do
+      puts "*** ArgumentError Exception: Missing required parameter: unit_amount in items"
+      @paypal_customer.create_order("CAPTURE", options)
+    end
+  end
+
+  def test_missing_admin_area_2_in_address
+    @body[:purchase_units][0][:shipping][:address].delete(
+        :admin_area_2
+    )
+
+    assert_raise(ArgumentError) do
+      puts "*** ArgumentError Exception: Missing required parameter: admin_area_2 in address"
+      @paypal_customer.create_order("CAPTURE", options)
+    end
+  end
+
+  def test_missing_postal_code_in_address
+    @body[:purchase_units][0][:shipping][:address].delete(
+        :postal_code
+    )
+
+    assert_raise(ArgumentError) do
+      puts "*** ArgumentError Exception: Missing required parameter: postal code in address"
+      @paypal_customer.create_order("CAPTURE", options)
+    end
+  end
+
+  def test_missing_country_code_in_address
+    @body[:purchase_units][0][:shipping][:address].delete(
+        :country_code
+    )
+
+    assert_raise(ArgumentError) do
+      puts "*** ArgumentError Exception: Missing required parameter: country code in address"
+      @paypal_customer.create_order("CAPTURE", options)
+    end
+  end
+
+  def test_missing_amount_in_platform_fee
+    @body[:purchase_units][0].update(
+        @additional_params
+    )
+
+    @body[:purchase_units][0][:payment_instruction][:platform_fees][0].delete(
+        :amount
+    )
+
+    assert_raise(ArgumentError) do
+      puts "*** ArgumentError Exception: Missing required parameter: amount in platform fee"
+      @paypal_customer.create_order("CAPTURE", options)
+    end
+  end
+
+  def test_missing_payee_in_platform_fee
+    @body[:purchase_units][0].update(
+        @additional_params
+    )
+
+    @body[:purchase_units][0][:payment_instruction][:platform_fees][0].delete(
+        :payee
+    )
+
+    assert_raise(ArgumentError) do
+      puts "*** ArgumentError Exception: Missing required parameter: payee in platform fee"
       @paypal_customer.create_order("CAPTURE", options)
     end
   end
