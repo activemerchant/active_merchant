@@ -89,21 +89,27 @@ module ActiveMerchant #:nodoc:
       end
     end
 
-    class PpcpResponse
-      attr_reader :response, :message
-      def initialize(response_obj)
-        @response ||= response_obj
+    class PPCPResponse
+      attr_reader :params, :message, :test, :response
+
+      def success?
+        @success
+      end
+
+      def test?
+        @test
+      end
+
+
+      def initialize(response, options = { })
+        @test = options[:test] || false
+        @response ||= response
       end
 
       def process(ignore_result=false)
-        return unless success?
-
-        response = yield
-        self << response
-
         unless ignore_result
-          if response.success?
-            @response ||= response
+          if success?
+            @response ||= @response
           else
             @response = response
           end
@@ -111,7 +117,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def success?
-        (response ? response.success? : true)
+        @response[:status].present? ? true : false
+        # (response ? response.success? : true)
       end
     end
   end

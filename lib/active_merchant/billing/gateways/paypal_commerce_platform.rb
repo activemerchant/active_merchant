@@ -284,6 +284,7 @@ module ActiveMerchant #:nodoc:
       def commit(method, url, parameters = nil, options = {})
         #post('v2/checkout/orders', options)
         response = api_request(method, "#{ @base_url }/#{ url }", parameters, options)
+        response = ActiveMerchant::Billing::PPCPResponse.new(response).process
         success = success_from(response, options)
         success ? success : response_error(response)
       end
