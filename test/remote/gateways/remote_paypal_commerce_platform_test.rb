@@ -15,20 +15,18 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
     @body = body
     @additional_params =  {
-                                      "payment_instruction": {
-                                      "platform_fees": [
-                                        {
-                                            "amount": {
-                                                "currency_code": "USD",
-                                                "value": "2.00"
-                                            },
-                                            "payee": {
-                                                "email_address": "sb-feqsa3029697@personal.example.com"
-                                            }
-                                        }
-                                        ]
-                                      }
-                                    }
+        "payment_instruction": {
+            "platform_fees": [{
+                                  "amount": {
+                                      "currency_code": "USD",
+                                      "value": "2.00"
+                                  },
+                                  "payee": {
+                                      "email_address": "sb-feqsa3029697@personal.example.com"
+                                  }
+                              }]
+        }
+    }
   end
 
   def test_create_capture_instant_order_direct_merchant
@@ -94,6 +92,39 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: purchase_units"
+      @paypal_customer.create_order("CAPTURE", options)
+    end
+  end
+
+  def test_missing_amount_in_purchase_units_argument_for_order_creation
+    @body[:purchase_units][0].delete(
+        :amount
+    )
+
+    assert_raise(ArgumentError) do
+      puts "*** ArgumentError Exception: Missing required parameter: amount"
+      @paypal_customer.create_order("CAPTURE", options)
+    end
+  end
+
+  def test_missing_currency_code_in_amount_argument_for_order_creation
+    @body[:purchase_units][0][:amount].delete(
+        :currency_code
+    )
+
+    assert_raise(ArgumentError) do
+      puts "*** ArgumentError Exception: Missing required parameter: currency_code"
+      @paypal_customer.create_order("CAPTURE", options)
+    end
+  end
+
+  def test_missing_value_in_amount_argument_for_order_creation
+    @body[:purchase_units][0][:amount].delete(
+        :value
+    )
+
+    assert_raise(ArgumentError) do
+      puts "*** ArgumentError Exception: Missing required parameter: value"
       @paypal_customer.create_order("CAPTURE", options)
     end
   end

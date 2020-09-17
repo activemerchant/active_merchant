@@ -30,7 +30,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def create_order(intent, options)
-        requires!(options.merge!(intent == nil ? { } : { intent: intent }), :intent, :purchase_units)
+        requires!(options.merge!(intent.nil? ? { } : { intent: intent}), :intent, :purchase_units)
 
         # Request prepration
         post = { }
@@ -151,25 +151,26 @@ module ActiveMerchant #:nodoc:
         post[:purchase_units] = []
 
         options.map do |purchase_unit|
+          requires!(purchase_unit, :amount)
           purchase_unit_hsh = {  }
           purchase_unit_hsh[:reference_id]              = purchase_unit[:reference_id] unless purchase_unit[:reference_id].nil?
           purchase_unit_hsh[:description]               = purchase_unit[:description] unless purchase_unit[:description].nil?
           ## Amount
-          add_amount(purchase_unit[:amount], purchase_unit_hsh) unless purchase_unit[:amount].blank?
+          add_amount(purchase_unit[:amount], purchase_unit_hsh)
           ## Payee
-          add_payee(purchase_unit_hsh, purchase_unit[:payee])
+          add_payee(purchase_unit_hsh, purchase_unit[:payee]) unless purchase_unit[:payee].nil?
 
-          add_items(purchase_unit[:items], purchase_unit_hsh) unless purchase_unit[:items].blank?
-          add_shipping(purchase_unit[:shipping], purchase_unit_hsh) unless purchase_unit[:shipping].blank?
+          add_items(purchase_unit[:items], purchase_unit_hsh) unless purchase_unit[:items].nil?
+          add_shipping(purchase_unit[:shipping], purchase_unit_hsh) unless purchase_unit[:shipping].nil?
 
-          purchase_unit_hsh[:shipping_method]  = purchase_unit[:shipping_method]
+          purchase_unit_hsh[:shipping_method]  = purchase_unit[:shipping_method] unless purchase_unit[:shipping_method].nil?
 
           add_payment_instruction(purchase_unit[:payment_instruction], purchase_unit_hsh) unless purchase_unit[:payment_instruction].blank?
 
-          purchase_unit_hsh[:payment_group_id]  = purchase_unit[:payment_group_id]
-          purchase_unit_hsh[:custom_id]         = purchase_unit[:custom_id]
-          purchase_unit_hsh[:invoice_id]        = purchase_unit[:invoice_id]
-          purchase_unit_hsh[:soft_descriptor]   = purchase_unit[:soft_descriptor]
+          purchase_unit_hsh[:payment_group_id]  = purchase_unit[:payment_group_id] unless purchase_unit[:payment_group_id].nil?
+          purchase_unit_hsh[:custom_id]         = purchase_unit[:custom_id] unless purchase_unit[:custom_id].nil?
+          purchase_unit_hsh[:invoice_id]        = purchase_unit[:invoice_id] unless purchase_unit[:invoice_id].nil?
+          purchase_unit_hsh[:soft_descriptor]   = purchase_unit[:soft_descriptor] unless purchase_unit[:soft_descriptor].nil?
 
           post[:purchase_units] << purchase_unit_hsh
         end
@@ -178,25 +179,29 @@ module ActiveMerchant #:nodoc:
 
       def add_application_context(options, post)
         post[:application_context]                = { }
-        post[:application_context][:return_url]   = options[:return_url]
-        post[:application_context][:cancel_url]   = options[:cancel_url]
+        post[:application_context][:return_url]   = options[:return_url] unless options[:return_url].nil?
+        post[:application_context][:cancel_url]   = options[:cancel_url] unless options[:cancel_url].nil?
+        skip_empty(post, :application_context)
       end
 
       def add_payment_instruction(options, post)
         post[:payment_instruction] = { }
 
+        post[:payment_instruction][:disbursement_mode] = options[:disbursement_mode] unless options[:disbursement_mode].nil?
+
         post[:payment_instruction][:platform_fees] = []
         options[:platform_fees].map do |platform_fee|
+          requires!(platform_fee, :amount, :payee)
+
           platform_fee_hsh                          = { }
 
           add_amount(platform_fee[:amount], platform_fee_hsh)
 
-          platform_fee_hsh[:payee]                  = { }
           add_payee(platform_fee_hsh, platform_fee[:payee])
 
           post[:payment_instruction][:platform_fees] << platform_fee_hsh
         end
-        post
+        skip_empty(post, :payment_instruction)
       end
 
       def add_intent(intent, post)
@@ -208,12 +213,14 @@ module ActiveMerchant #:nodoc:
         obj_hsh[:payee] = { }
         obj_hsh[:payee][:merchant_id]       = payee_obj[:merchant_id] unless payee_obj[:merchant_id].nil?
         obj_hsh[:payee][:email_address]       = payee_obj[:email_address] unless payee_obj[:email_address].nil?
+        skip_empty(obj_hsh, :payee)
       end
 
-      def add_amount(amount, post)
-        post[:amount] = { }
-        post[:amount][:currency_code]   = amount[:currency_code]
-        post[:amount][:value]           = amount[:value]
+      def add_amount(amount, post, key=:amount)
+        requires!(amount, :currency_code, :value)
+        post[key] = { }
+        post[key][:currency_code]   = amount[:currency_code]
+        post[key][:value]           = amount[:value]
         add_breakdown_for_amount(amount[:breakdown], post) unless amount[:breakdown].blank?
         post
       end
@@ -222,9 +229,7 @@ module ActiveMerchant #:nodoc:
         post[:amount][:breakdown] = { }
         options.each do |key, value|
           unless options[key][:currency_code].nil? && options[key][:value].nil?
-            post[:amount][:breakdown][key] = { }
-            post[:amount][:breakdown][key][:currency_code] = options[key][:currency_code]
-            post[:amount][:breakdown][key][:value]         = options[key][:value]
+            add_amount(options[key], post[:amount][:breakdown], key)
           end
         end
         post
@@ -233,19 +238,17 @@ module ActiveMerchant #:nodoc:
       def add_items(options, post)
         post[:items] = []
         options.each do |item|
+          requires!(item, :name, :quantity, :unit_amount)
+
           items_hsh = { }
           items_hsh[:name]                        = item[:name]
-          items_hsh[:sku]                         = item[:sku]
+          items_hsh[:sku]                         = item[:sku] unless item[:sku].nil?
           items_hsh[:quantity]                    = item[:quantity]
-          items_hsh[:category]                    = item[:category]
-          items_hsh[:unit_amount]                 = { }
+          items_hsh[:category]                    = item[:category] unless item[:category].nil?
 
-          items_hsh[:unit_amount][:currency_code] = item[:unit_amount][:currency_code]
-          items_hsh[:unit_amount][:value]         = item[:unit_amount][:value]
+          add_amount(item[:unit_amount], items_hsh, :unit_amount)
 
-          items_hsh[:tax]                 = { }
-          items_hsh[:tax][:currency_code] = item[:tax][:currency_code]
-          items_hsh[:tax][:value]         = item[:tax][:value]
+          add_amount(item[:tax], items_hsh, :tax) unless item[:tax].nil?
 
           post[:items] << items_hsh
         end
@@ -254,16 +257,22 @@ module ActiveMerchant #:nodoc:
 
       def add_shipping(options, post)
         post[:shipping]             = { }
-        post[:shipping][:address]   = { }
 
-        post[:shipping][:address][:address_line_1]    = options[:address][:address_line_1]
-        post[:shipping][:address][:address_line_2]    = options[:address][:address_line_1]
-        post[:shipping][:address][:admin_area_1]      = options[:address][:admin_area_1]
-        post[:shipping][:address][:admin_area_2]      = options[:address][:admin_area_2]
-        post[:shipping][:address][:postal_code]       = options[:address][:postal_code]
-        post[:shipping][:address][:country_code]      = options[:address][:country_code]
+        add_address(options[:address], post[:shipping]) unless options[:address].nil?
 
-        post
+        skip_empty(post, :shipping)
+      end
+
+      def add_address(address, obj_hsh)
+        requires!(address, :admin_area_2, :postal_code, :country_code )
+        obj_hsh[:address]   = { }
+        obj_hsh[:address][:address_line_1]    = address[:address_line_1] unless address[:address_line_1].nil?
+        obj_hsh[:address][:address_line_2]    = address[:address_line_2] unless address[:address_line_2].nil?
+        obj_hsh[:address][:admin_area_1]      = address[:admin_area_1] unless address[:admin_area_1].nil?
+        obj_hsh[:address][:admin_area_2]      = address[:admin_area_2]
+        obj_hsh[:address][:postal_code]       = address[:postal_code]
+        obj_hsh[:address][:country_code]      = address[:country_code]
+        obj_hsh
       end
 
       def add_invoice(invoice_id, post)
@@ -288,13 +297,16 @@ module ActiveMerchant #:nodoc:
         success ? success : response_error(response)
       end
 
+      def skip_empty(obj_hsh, key)
+        obj_hsh[key].empty? ? obj_hsh.delete(key) : obj_hsh
+      end
+
       def success_from(response, options)
         response
       end
 
       def response_error(raw_response)
         puts raw_response
-        parse(raw_response)
       rescue JSON::ParserError
         json_error(raw_response)
       end
