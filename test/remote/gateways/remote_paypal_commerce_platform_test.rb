@@ -15,20 +15,40 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
     @body = body
     @additional_params =  {
-                                      "payment_instruction": {
-                                      "platform_fees": [
-                                        {
-                                            "amount": {
-                                                "currency_code": "USD",
-                                                "value": "2.00"
-                                            },
-                                            "payee": {
-                                                "email_address": "sb-feqsa3029697@personal.example.com"
-                                            }
-                                        }
-                                        ]
-                                      }
-                                    }
+        "payment_instruction": {
+            "platform_fees": [{
+                                  "amount": {
+                                      "currency_code": "USD",
+                                      "value": "2.00"
+                                  },
+                                  "payee": {
+                                      "email_address": "sb-c447ox3078929@business.example.com"
+                                  }
+                              }]
+        }
+    }
+
+    @card = {
+        "name": "John Doe",
+        "number": "4032039317984658",
+        "expiry": "2023-07",
+        "security_code": "111",
+        "billing_address": {
+            "address_line_1": "12312 Port Grace Blvd",
+            "admin_area_2": "La Vista",
+            "admin_area_1": "NE",
+            "postal_code": "68128",
+            "country_code": "US"
+        }
+    }
+
+    @card_order_options = {
+        "payment_source": {
+            "card": @card
+        },
+        "headers": @headers
+    }
+
   end
 
   def test_create_capture_instant_order_direct_merchant
@@ -38,7 +58,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     assert !response[:id].nil?
     assert !response[:links].blank?
   end
-
 
   def test_create_capture_instant_order_ppcp
     response = create_order("CAPTURE", "PPCP")
@@ -54,6 +73,55 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     assert response[:status].eql?("CREATED")
     assert !response[:id].nil?
     assert !response[:links].blank?
+  end
+
+  def test_capture_order_with_card
+    response = create_order("CAPTURE")
+    order_id = response[:id]
+    response = @paypal_customer.capture(order_id, @card_order_options)
+    assert response[:status].eql?("COMPLETED")
+    assert !response[:id].nil?
+    assert !response[:links].blank?
+  end
+
+  def test_authorize_order_with_card
+    response = create_order("AUTHORIZE")
+    order_id = response[:id]
+    response = @paypal_customer.authorize(order_id, @card_order_options)
+    assert response[:status].eql?("COMPLETED")
+    assert !response[:id].nil?
+    assert !response[:links].blank?
+  end
+
+  def test_capture_authorized_order_with_card
+    response = create_order("AUTHORIZE")
+    order_id = response[:id]
+    response = @paypal_customer.authorize(order_id, @card_order_options)
+    authorization_id = response[:purchase_units][0][:payments][:authorizations][0][:id]
+    response         = @paypal_customer.do_capture(authorization_id,options)
+    assert response[:status].eql?("COMPLETED")
+    assert !response[:id].nil?
+    assert !response[:links].blank?
+  end
+
+  def test_refund_captured_order_with_card
+    response = create_order("CAPTURE")
+    order_id = response[:id]
+    response = @paypal_customer.capture(order_id, @card_order_options)
+    capture_id = response[:purchase_units][0][:payments][:captures][0][:id]
+    refund_response = @paypal_customer.refund(capture_id, options)
+    assert refund_response[:status].eql?("COMPLETED")
+    assert !refund_response[:id].nil?
+    assert !refund_response[:links].blank?
+  end
+
+  def test_void_authorized_order_with_card
+    response = create_order("AUTHORIZE")
+    order_id = response[:id]
+    response = @paypal_customer.authorize(order_id, @card_order_options)
+    authorization_id = response[:purchase_units][0][:payments][:authorizations][0][:id]
+    void_response    = @paypal_customer.void(authorization_id, options)
+    assert void_response.empty?
   end
 
   def test_missing_password_argument_to_get_access_token
@@ -94,6 +162,135 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: purchase_units"
+      @paypal_customer.create_order("CAPTURE", options)
+    end
+  end
+
+  def test_missing_amount_in_purchase_units_argument_for_order_creation
+    @body[:purchase_units][0].delete(
+        :amount
+    )
+
+    assert_raise(ArgumentError) do
+      puts "*** ArgumentError Exception: Missing required parameter: amount in purchase_units"
+      @paypal_customer.create_order("CAPTURE", options)
+    end
+  end
+
+  def test_missing_currency_code_in_amount_argument_for_order_creation
+    @body[:purchase_units][0][:amount].delete(
+        :currency_code
+    )
+
+    assert_raise(ArgumentError) do
+      puts "*** ArgumentError Exception: Missing required parameter: currency_code in amount"
+      @paypal_customer.create_order("CAPTURE", options)
+    end
+  end
+
+  def test_missing_value_in_amount_argument_for_order_creation
+    @body[:purchase_units][0][:amount].delete(
+        :value
+    )
+
+    assert_raise(ArgumentError) do
+      puts "*** ArgumentError Exception: Missing required parameter: value in amount"
+      @paypal_customer.create_order("CAPTURE", options)
+    end
+  end
+
+  def test_missing_name_in_items
+    @body[:purchase_units][0][:items][0].delete(
+        :name
+    )
+
+    assert_raise(ArgumentError) do
+      puts "*** ArgumentError Exception: Missing required parameter: name in items"
+      @paypal_customer.create_order("CAPTURE", options)
+    end
+  end
+
+  def test_missing_quantity_in_items
+    @body[:purchase_units][0][:items][0].delete(
+        :quantity
+    )
+
+    assert_raise(ArgumentError) do
+      puts "*** ArgumentError Exception: Missing required parameter: quantity in items"
+      @paypal_customer.create_order("CAPTURE", options)
+    end
+  end
+
+  def test_missing_unit_amount_in_items
+    @body[:purchase_units][0][:items][0].delete(
+        :name
+    )
+
+    assert_raise(ArgumentError) do
+      puts "*** ArgumentError Exception: Missing required parameter: unit_amount in items"
+      @paypal_customer.create_order("CAPTURE", options)
+    end
+  end
+
+  def test_missing_admin_area_2_in_address
+    @body[:purchase_units][0][:shipping][:address].delete(
+        :admin_area_2
+    )
+
+    assert_raise(ArgumentError) do
+      puts "*** ArgumentError Exception: Missing required parameter: admin_area_2 in address"
+      @paypal_customer.create_order("CAPTURE", options)
+    end
+  end
+
+  def test_missing_postal_code_in_address
+    @body[:purchase_units][0][:shipping][:address].delete(
+        :postal_code
+    )
+
+    assert_raise(ArgumentError) do
+      puts "*** ArgumentError Exception: Missing required parameter: postal code in address"
+      @paypal_customer.create_order("CAPTURE", options)
+    end
+  end
+
+  def test_missing_country_code_in_address
+    @body[:purchase_units][0][:shipping][:address].delete(
+        :country_code
+    )
+
+    assert_raise(ArgumentError) do
+      puts "*** ArgumentError Exception: Missing required parameter: country code in address"
+      @paypal_customer.create_order("CAPTURE", options)
+    end
+  end
+
+  def test_missing_amount_in_platform_fee
+    @body[:purchase_units][0].update(
+        @additional_params
+    )
+
+    @body[:purchase_units][0][:payment_instruction][:platform_fees][0].delete(
+        :amount
+    )
+
+    assert_raise(ArgumentError) do
+      puts "*** ArgumentError Exception: Missing required parameter: amount in platform fee"
+      @paypal_customer.create_order("CAPTURE", options)
+    end
+  end
+
+  def test_missing_payee_in_platform_fee
+    @body[:purchase_units][0].update(
+        @additional_params
+    )
+
+    @body[:purchase_units][0][:payment_instruction][:platform_fees][0].delete(
+        :payee
+    )
+
+    assert_raise(ArgumentError) do
+      puts "*** ArgumentError Exception: Missing required parameter: payee in platform fee"
       @paypal_customer.create_order("CAPTURE", options)
     end
   end
@@ -150,7 +347,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   end
 
   def options
-    { headers: @headers }.merge(@body)
+    { headers: @headers, body: {} }.merge(@body)
   end
   def body
     {
@@ -190,7 +387,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
                     }
                 },
                 "payee": {
-                    "merchant_id": "DWUPFA2VU2W9E"
+                    "email_address": "sb-jnxjj3033194@business.example.com"
                 },
                 "items": [
                     {
@@ -221,7 +418,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
                 "shipping_method": "United Postal Service",
                 "payment_group_id": 1,
                 "custom_id": "custom_value_#{ DateTime.now }",
-                "invoice_id": "invoice_number_{{$timestamp}}",
+                "invoice_id": "invoice_number_#{ DateTime.now }",
                 "soft_descriptor": "Payment Camera Shop"
             }
         ],
