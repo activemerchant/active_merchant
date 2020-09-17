@@ -95,6 +95,24 @@ module ActiveMerchant #:nodoc:
         @response ||= response_obj
       end
 
+      def process(ignore_result=false)
+        return unless success?
+
+        response = yield
+        self << response
+
+        unless ignore_result
+          if response.success?
+            @response ||= response
+          else
+            @response = response
+          end
+        end
+      end
+
+      def success?
+        (response ? response.success? : true)
+      end
     end
   end
 end
