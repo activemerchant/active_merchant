@@ -88,5 +88,13 @@ module ActiveMerchant #:nodoc:
         )
       end
     end
+
+    class PpcpResponse
+      attr_reader :response, :message
+      def initialize(response_obj)
+        @response ||= response_obj
+      end
+
+    end
   end
 end
