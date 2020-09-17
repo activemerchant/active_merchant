@@ -41,7 +41,7 @@ module ActiveMerchant #:nodoc:
         add_payment_instruction(options[:payment_instruction], post) unless options[:payment_instruction].blank?
 
         add_application_context(options[:application_context], post) unless options[:application_context].blank?
-
+        
         commit(:post, "v2/checkout/orders", post, options[:headers])
       end
 
@@ -232,7 +232,7 @@ module ActiveMerchant #:nodoc:
             add_amount(options[key], post[:amount][:breakdown], key)
           end
         end
-        post
+        skip_empty(post[:amount], :breakdown)
       end
 
       def add_items(options, post)
