@@ -90,7 +90,7 @@ module ActiveMerchant #:nodoc:
     end
 
     class PPCPResponse
-      attr_reader :params, :message, :test, :response
+      attr_reader :message, :test, :response
 
       def success?
         @success
@@ -102,6 +102,7 @@ module ActiveMerchant #:nodoc:
 
 
       def initialize(response, options = { })
+        response
         @test = options[:test] || false
         @response ||= response
       end
@@ -109,7 +110,7 @@ module ActiveMerchant #:nodoc:
       def process(ignore_result=false)
         unless ignore_result
           if success?
-            @response ||= @response
+            response.merge!({ message: "Success" })
           else
             @response = response
           end
@@ -117,8 +118,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success?
-        @response[:status].present? ? true : false
-        # (response ? response.success? : true)
+        response[:status].present? ? true : false
       end
     end
   end
