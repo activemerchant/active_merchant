@@ -41,7 +41,7 @@ module ActiveMerchant #:nodoc:
         add_payment_instruction(options[:payment_instruction], post) unless options[:payment_instruction].blank?
 
         add_application_context(options[:application_context], post) unless options[:application_context].blank?
-        
+
         commit(:post, "v2/checkout/orders", post, options[:headers])
       end
 
@@ -298,7 +298,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def skip_empty(obj_hsh, key)
-        obj_hsh[key].empty? ? obj_hsh.delete(key) : obj_hsh
+        obj_hsh.delete(key) if obj_hsh[key].empty?
       end
 
       def success_from(response, options)
