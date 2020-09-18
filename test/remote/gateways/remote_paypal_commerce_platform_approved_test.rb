@@ -13,13 +13,13 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     access_token  = @paypal_customer.get_token(options)
     @headers      = { "Authorization": access_token, "Content-Type": "application/json" }
 
-    @approved_authroize_order_id                            = "1PF71449SW550790F"
-    @approved_authroize_order_id_for_capture                = "0D411945FS411324F"
-    @approved_authroize_order_id_for_void                   = "9T1564692V100431M"
-    @approved_authorize_order_id_for_capture_ppcp           = "07G13646S75193744"
+    @approved_authroize_order_id                            = "84V39644DT125771A"
+    @approved_authroize_order_id_for_capture                = "0CA154270J328793G"
+    @approved_authroize_order_id_for_void                   = "0LF26667029316907"
+    @approved_authorize_order_id_for_capture_ppcp           = "27D70899339437637"
 
-    @approved_capture_order_id                              = "9A987042DT842132B"
-    @approved_capture_order_id_for_refund                   = "2FU470067G927894V"
+    @approved_capture_order_id                              = "4AV90759YN557674D"
+    @approved_capture_order_id_for_refund                   = "018605808V3854429"
     @approved_capture_order_id_for_ppcp                     = "6HC82655GE415312S"
 
     @approved_delayed_capture_order_id_for_capture          = "67U39950VY142733G"
@@ -256,7 +256,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     response
   end
   def options
-    { headers: @headers, body: @body }
+    { headers: @headers}.merge!(@body)
   end
   def capture_body
     {

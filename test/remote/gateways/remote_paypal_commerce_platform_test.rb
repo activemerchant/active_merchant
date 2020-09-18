@@ -16,15 +16,17 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @body = body
     @additional_params =  {
         "payment_instruction": {
-            "platform_fees": [{
-                                  "amount": {
-                                      "currency_code": "USD",
-                                      "value": "2.00"
-                                  },
-                                  "payee": {
-                                      "email_address": "sb-c447ox3078929@business.example.com"
-                                  }
-                              }]
+            "platform_fees": [
+                {
+                    "amount": {
+                        "currency_code": "USD",
+                        "value": "2.00"
+                    },
+                    "payee": {
+                        "email_address": "sb-c447ox3078929@business.example.com"
+                    }
+                }
+            ]
         }
     }
 
