@@ -59,9 +59,9 @@ module ActiveMerchant #:nodoc:
         requires!({ capture_id: capture_id }, :capture_id)
 
         post = { }
-        add_amount(options[:body][:amount], post) unless options[:body][:amount].nil?
-        add_invoice(options[:body][:invoice_id], post) unless options[:body][:invoice_id].nil?
-        add_note(options[:body][:note_to_payer], post) unless options[:body][:note_to_payer].nil?
+        add_amount(options[:amount], post) unless options[:amount].nil?
+        add_invoice(options[:invoice_id], post) unless options[:invoice_id].nil?
+        add_note(options[:note_to_payer], post) unless options[:note_to_payer].nil?
 
         commit(:post, "v2/payments/captures/#{ capture_id }/refund", post, options[:headers])
       end
@@ -75,8 +75,24 @@ module ActiveMerchant #:nodoc:
 
 
       def update_order(order_id, options)
-        requires!(options.merge!({ order_id: order_id }), :order_id, :op, :path, :value)
-        patch("v2/checkout/orders/#{ order_id }", options)
+        requires!(options.merge!({ order_id: order_id }), :order_id, :body)
+
+        post = [ ]
+        options[:body].each do |update|
+          requires!(update, :op, :path, :value)
+
+          update_hsh = { }
+          update_hsh[:op]    = update[:op]
+          update_hsh[:path]  = update[:path]
+
+          type = get_update_type(update_hsh[:path])
+          add_amount(update[:value], update_hsh, :value)           if type.eql?("amount")
+          add_shipping_address(update[:value], update_hsh, :value) if type.eql?("address")
+
+          post.append(update_hsh)
+        end
+
+        commit(:patch, "v2/checkout/orders/#{ order_id }", post, options[:headers])
       end
 
 
@@ -84,10 +100,10 @@ module ActiveMerchant #:nodoc:
         requires!(options.merge!({ authorization_id: authorization_id  }), :authorization_id)
 
         post = { }
-        add_amount(options[:body][:amount], post) unless options[:body][:amount].nil?
-        add_invoice(options[:body][:invoice_id], post) unless options[:body][:invoice_id].nil?
-        add_final_capture(options[:body][:final_capture], post) unless options[:body][:final_capture].nil?
-        add_payment_instruction(options[:body][:payment_instruction], post) unless options[:body][:payment_instruction].nil?
+        add_amount(options[:amount], post) unless options[:amount].nil?
+        add_invoice(options[:invoice_id], post) unless options[:invoice_id].nil?
+        add_final_capture(options[:final_capture], post) unless options[:final_capture].nil?
+        add_payment_instruction(options[:payment_instruction], post) unless options[:payment_instruction].nil?
 
         commit(:post, "v2/payments/authorizations/#{ authorization_id }/capture", post, options[:headers])
       end
@@ -198,21 +214,18 @@ module ActiveMerchant #:nodoc:
         post[key][:currency_code] = amount[:currency_code]
         post[key][:value]         = amount[:value]
 
-        add_breakdown_for_amount(amount[:breakdown], post) unless amount[:breakdown].blank?
+        add_breakdown_for_amount(amount[:breakdown], post, key) unless amount[:breakdown].blank?
 
         post
       end
 
 
-      def add_breakdown_for_amount(options, post)
-        post[:amount][:breakdown] = { }
-        options.each do |key, _|
-          unless options[key][:currency_code].nil? && options[key][:value].nil?
-            add_amount(options[key], post[:amount][:breakdown], key)
-          end
+      def add_breakdown_for_amount(options, post, key)
+        post[key][:breakdown] = { }
+        options.each do |item, _|
+            add_amount(options[item], post[key][:breakdown], item)
         end
-
-        skip_empty(post[:amount], :breakdown)
+        skip_empty(post[key], :breakdown)
       end
 
 
@@ -241,23 +254,23 @@ module ActiveMerchant #:nodoc:
 
       def add_shipping(options, post)
         post[:shipping] = { }
+        post[:shipping] = { }
         add_shipping_address(options[:address], post[:shipping]) unless options[:address].nil?
 
         skip_empty(post, :shipping)
       end
 
 
-      def add_shipping_address(address, obj_hsh)
+      def add_shipping_address(address, obj_hsh, key = :address)
         requires!(address, :admin_area_2, :postal_code, :country_code )
 
-        obj_hsh[:address] = { }
-
-        obj_hsh[:address][:address_line_1] = address[:address_line_1] unless address[:address_line_1].nil?
-        obj_hsh[:address][:address_line_2] = address[:address_line_2] unless address[:address_line_2].nil?
-        obj_hsh[:address][:admin_area_1]   = address[:admin_area_1] unless address[:admin_area_1].nil?
-        obj_hsh[:address][:admin_area_2]   = address[:admin_area_2]
-        obj_hsh[:address][:postal_code]    = address[:postal_code]
-        obj_hsh[:address][:country_code]   = address[:country_code]
+        obj_hsh[key] = { }
+        obj_hsh[key][:address_line_1] = address[:address_line_1] unless address[:address_line_1].nil?
+        obj_hsh[key][:address_line_2] = address[:address_line_2] unless address[:address_line_2].nil?
+        obj_hsh[key][:admin_area_1]   = address[:admin_area_1] unless address[:admin_area_1].nil?
+        obj_hsh[key][:admin_area_2]   = address[:admin_area_2]
+        obj_hsh[key][:postal_code]    = address[:postal_code]
+        obj_hsh[key][:country_code]   = address[:country_code]
 
         obj_hsh
       end

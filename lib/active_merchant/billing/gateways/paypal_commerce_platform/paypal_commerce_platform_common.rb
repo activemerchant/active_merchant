@@ -4,8 +4,7 @@ module ActiveMerchant
 
       URLS = {
           :test_url     => "https://api.sandbox.paypal.com",
-          :live_url     => "https://api.paypal.com",
-          :create_order => "v2/checkout/orders"
+          :live_url     => "https://api.paypal.com"
       }
 
       def initialize(options = { })
@@ -59,6 +58,10 @@ module ActiveMerchant
 
       def encoded_credentials
         Base64.encode64("#{ @options[:authorization][:username] }:#{ @options[:authorization][:password] }").gsub("\n", "")
+      end
+
+      def get_update_type(path)
+        path.split("/").last
       end
 
 
