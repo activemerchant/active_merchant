@@ -287,7 +287,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   def test_successful_verify
     response = stub_comms do
       @gateway.verify(@credit_card)
-    end.respond_with(successful_authorize_response, failed_void_response)
+    end.respond_with(successful_verify_response)
     assert_success response
     assert_equal 'Succeeded', response.message
   end
@@ -295,9 +295,9 @@ class CheckoutV2Test < Test::Unit::TestCase
   def test_failed_verify
     response = stub_comms do
       @gateway.verify(@credit_card)
-    end.respond_with(failed_authorize_response, successful_void_response)
+    end.respond_with(failed_verify_response)
     assert_failure response
-    assert_equal 'Invalid Card Number', response.message
+    assert_equal 'request_invalid: card_number_invalid', response.message
   end
 
   def test_transcript_scrubbing
@@ -554,5 +554,13 @@ class CheckoutV2Test < Test::Unit::TestCase
     %(
       {"id":"pay_xrwmaqlar73uhjtyoghc7bspa4","requested_on":"2019-08-14T18:32:50Z","source":{"type":"card","expiry_month":12,"expiry_year":2020,"name":"Jane Doe","scheme":"Visa","last4":"7863","fingerprint":"DC20145B78E242C561A892B83CB64471729D7A5063E5A5B341035713B8FDEC92","bin":"453962"},"amount":100,"currency":"USD","payment_type":"Regular","reference":"EuyOZtgt8KI4tolEH8lqxCclWqz","status":"Declined","approved":false,"3ds":{"downgraded":false,"enrolled":"Y","version":"2.1.0"},"risk":{"flagged":false},"customer":{"id":"cus_bb4b7eu35sde7o33fq2xchv7oq","name":"Jane Doe"},"payment_ip":"127.0.0.1","metadata":{"Udf5":"ActiveMerchant"},"_links":{"self":{"href":"https://api.sandbox.checkout.com/payments/pay_xrwmaqlar73uhjtyoghc7bspa4"},"actions":{"href":"https://api.sandbox.checkout.com/payments/pay_xrwmaqlar73uhjtyoghc7bspa4/actions"}}}
     )
+  end
+
+  def successful_verify_response
+    %({"id":"pay_ij6bctwxpzdulm53xyksio7gm4","action_id":"act_ij6bctwxpzdulm53xyksio7gm4","amount":0,"currency":"USD","approved":true,"status":"Card Verified","auth_code":"881790","eci":"05","scheme_id":"305756859646779","response_code":"10000","response_summary":"Approved","risk":{"flagged":false},"source":{"id":"src_nica37p5k7aufhs3rsv2te7xye","type":"card","billing_address":{"address_line1":"456 My Street","address_line2":"Apt 1","city":"Ottawa","state":"ON","zip":"K1C2N6","country":"CA"},"expiry_month":6,"expiry_year":2025,"name":"Longbob Longsen","scheme":"Visa","last4":"4242","fingerprint":"9F3BAD2E48C6C8579F2F5DC0710B7C11A8ACD5072C3363A72579A6FB227D64BE","bin":"424242","card_type":"Credit","card_category":"Consumer","issuer":"JPMORGAN CHASE BANK NA","issuer_country":"US","product_id":"A","product_type":"Visa Traditional","avs_check":"S","cvv_check":"Y","payouts":true,"fast_funds":"d"},"customer":{"id":"cus_r2yb7f2upmsuhm6nbruoqn657y","email":"longbob.longsen@example.com","name":"Longbob Longsen"},"processed_on":"2020-09-18T18:17:45Z","reference":"1","processing":{"acquirer_transaction_id":"4932795322","retrieval_reference_number":"954188232380"},"_links":{"self":{"href":"https://api.sandbox.checkout.com/payments/pay_ij6bctwxpzdulm53xyksio7gm4"},"actions":{"href":"https://api.sandbox.checkout.com/payments/pay_ij6bctwxpzdulm53xyksio7gm4/actions"}}})
+  end
+
+  def failed_verify_response
+    %({"request_id":"911829c3-519a-47e8-bbc1-17337789fda0","error_type":"request_invalid","error_codes":["card_number_invalid"]})
   end
 end
