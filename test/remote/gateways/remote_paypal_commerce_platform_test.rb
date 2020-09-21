@@ -6,15 +6,17 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     Base.mode         = :test
     @paypal_customer  = ActiveMerchant::Billing::PaypalCommercePlatformGateway.new
 
-    params = { username: "ASs8Osqge6KT3OdLtkNhD20VP8lsrqRUlRjLo-e5s75SHz-2ffMMzCos_odQGjGYpPcGlxJVQ5fXMz9q",
-               password: "EKj_bMZn0CkOhOvFwJMX2WwhtCq2A0OtlOd5T-zUhKIf9WQxvgPasNX0Kr1U4TjFj8ZN6XCMF5NM30Z_" }
-
-    options       = { "Content-Type": "application/json", authorization: params }
-    access_token  = @paypal_customer.get_token(options)
+    params                  = { username: "ASs8Osqge6KT3OdLtkNhD20VP8lsrqRUlRjLo-e5s75SHz-2ffMMzCos_odQGjGYpPcGlxJVQ5fXMz9q",
+                                password: "EKj_bMZn0CkOhOvFwJMX2WwhtCq2A0OtlOd5T-zUhKIf9WQxvgPasNX0Kr1U4TjFj8ZN6XCMF5NM30Z_" }
+    options                 = { "Content-Type": "application/json", authorization: params }
+    access_token            = @paypal_customer.get_token(options)
+    missing_password_params = { username: "ASs8Osqge6KT3OdLtkNhD20VP8lsrqRUlRjLo-e5s75SHz-2ffMMzCos_odQGjGYpPcGlxJVQ5fXMz9q" }
+    missing_username_params = { password: "EKj_bMZn0CkOhOvFwJMX2WwhtCq2A0OtlOd5T-zUhKIf9WQxvgPasNX0Kr1U4TjFj8ZN6XCMF5NM30Z_" }
 
     @headers      = { "Authorization": access_token, "Content-Type": "application/json" }
 
     @body = body
+
     @additional_params =  {
         "payment_instruction": {
             "platform_fees": [
@@ -52,8 +54,9 @@ class PaypalExpressRestTest < Test::Unit::TestCase
         "headers": @headers
     }
 
-    params = { username: "ASs8Osqge6KT3OdLtkNhD20VP8lsrqRUlRjLo-e5s75SHz-2ffMMzCos_odQGjGYpPcGlxJVQ5fXMz9q" }
-    @get_token_options = { "Content-Type": "application/json", authorization: params }
+    @get_token_missing_password_options = { "Content-Type": "application/json", authorization: missing_password_params }
+
+    @get_token_missing_username_options = { "Content-Type": "application/json", authorization: missing_username_params }
 
   end
 
@@ -162,7 +165,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   def test_missing_password_argument_to_get_access_token
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: password"
-      @paypal_customer.get_token(@get_token_options)
+      @paypal_customer.get_token(@get_token_missing_password_options)
     end
   end
 
@@ -170,7 +173,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   def test_missing_username_argument_to_get_access_token
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: username"
-      @paypal_customer.get_token(@get_token_options)
+      @paypal_customer.get_token(@get_token_missing_username_options)
     end
   end
 
