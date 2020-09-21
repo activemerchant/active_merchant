@@ -3,11 +3,11 @@ require "byebug"
 
 class PaypalExpressRestTest < Test::Unit::TestCase
   def setup
-    Base.mode         = :test
-    @paypal_customer  = ActiveMerchant::Billing::PaypalCommercePlatformGateway.new
+    Base.mode               = :test
+    @paypal_customer        = ActiveMerchant::Billing::PaypalCommercePlatformGateway.new
 
-    params                  = { username: "ASs8Osqge6KT3OdLtkNhD20VP8lsrqRUlRjLo-e5s75SHz-2ffMMzCos_odQGjGYpPcGlxJVQ5fXMz9q",
-                                password: "EKj_bMZn0CkOhOvFwJMX2WwhtCq2A0OtlOd5T-zUhKIf9WQxvgPasNX0Kr1U4TjFj8ZN6XCMF5NM30Z_" }
+    params                  = user_credentials
+
     options                 = { "Content-Type": "application/json", authorization: params }
     access_token            = @paypal_customer.get_token(options)
     missing_password_params = { username: "ASs8Osqge6KT3OdLtkNhD20VP8lsrqRUlRjLo-e5s75SHz-2ffMMzCos_odQGjGYpPcGlxJVQ5fXMz9q" }
@@ -60,6 +60,12 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
   end
 
+  def test_access_token
+    options       = { "Content-Type": "application/json", authorization: user_credentials }
+    access_token  = @paypal_customer.get_token(options)
+    assert access_token.include?("basic")
+    assert !access_token.nil?
+  end
 
   def test_create_capture_instant_order_direct_merchant
     response = create_order("CAPTURE")
@@ -585,6 +591,10 @@ class PaypalExpressRestTest < Test::Unit::TestCase
         }
     ]
   end
-
-
+  def user_credentials
+    {
+        username: "ASs8Osqge6KT3OdLtkNhD20VP8lsrqRUlRjLo-e5s75SHz-2ffMMzCos_odQGjGYpPcGlxJVQ5fXMz9q",
+        password: "EKj_bMZn0CkOhOvFwJMX2WwhtCq2A0OtlOd5T-zUhKIf9WQxvgPasNX0Kr1U4TjFj8ZN6XCMF5NM30Z_"
+    }
+  end
 end
