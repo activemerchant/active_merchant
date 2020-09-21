@@ -65,7 +65,10 @@ class BlueSnapTest < Test::Unit::TestCase
       shipping_city: 'Springfield',
       shipping_state: 'NC',
       shipping_country: 'US',
-      shipping_zip: '27701'
+      shipping_zip: '27701',
+      first_name: 'Longbob',
+      last_name: 'Longsen',
+      phone_number: '555 999 8888'
     })
     response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.purchase(@amount, @credit_card, more_options)
@@ -76,6 +79,9 @@ class BlueSnapTest < Test::Unit::TestCase
       assert_match(/<state>NC/, data)
       assert_match(/<country>US/, data)
       assert_match(/<zip>27701/, data)
+      assert_match(/<last-name>Longsen/, data)
+      assert_match(/<first-name>Longbob/, data)
+      assert_match(/<phone>555 999 8888/, data)
     end.respond_with(successful_purchase_response_with_metadata)
 
     assert_success response
@@ -91,7 +97,9 @@ class BlueSnapTest < Test::Unit::TestCase
         state: 'CA',
         zip: '94901'
       },
-      phone_number: '555 888 0000'
+      first_name: 'Longsen',
+      last_name: 'Longbob',
+      phone_number: '555 999 8888'
     })
     response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.purchase(@amount, @credit_card, more_options)
@@ -99,7 +107,9 @@ class BlueSnapTest < Test::Unit::TestCase
       assert_match(/card-holder-info/, data)
       assert_match(/<address>123 Street/, data)
       assert_match(/<address2>Apt 1/, data)
-      assert_match(/<phone>555 888 0000/, data)
+      assert_match(/<last-name>Longsen/, data)
+      assert_match(/<first-name>Longbob/, data)
+      assert_match(/<phone>555 999 8888/, data)
     end.respond_with(successful_purchase_response_with_metadata)
 
     assert_success response

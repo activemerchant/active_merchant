@@ -193,18 +193,39 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
       soft_descriptor: 'OnCardStatement',
       personal_identification_number: 'CNPJ',
       billing_address: {
-        address1: '123 Street',
-        address2: 'Apt 1',
+        address1: '123 Billing St',
+        address2: 'Apt 123',
         city: 'Happy City',
         state: 'CA',
-        zip: '94901'
+        zip: '94901',
+        country: 'US'
       },
-      phone_number: '555 888 0000'
+      shipping_address1: '123 Shipping St',
+      shipping_address2: 'Apt 456',
+      shipping_city: 'Springfield',
+      shipping_state: 'NC',
+      shipping_country: 'US',
+      shipping_zip: '27701',
+      phone_number: '555 999 8888'
     })
 
-    response = @gateway.purchase(@amount, @credit_card, more_options)
-    assert_success response
-    assert_equal 'Success', response.message
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, more_options)
+    end
+    data = @gateway.scrub(transcript)
+
+    # address1 field, etc is set INSIDE shipping-contact-info node, as expected
+    assert_match(%r(<shipping-contact-info>.*<first-name>Longbob</first-name>.*</shipping-contact-info>), data)
+    assert_match(%r(<shipping-contact-info>.*<last-name>Longsen</last-name>.*</shipping-contact-info>), data)
+    assert_match(%r(<shipping-contact-info>.*<country>US</country>.*</shipping-contact-info>), data)
+    assert_match(%r(<shipping-contact-info>.*<state>NC</state>.*</shipping-contact-info>), data)
+    assert_match(%r(<shipping-contact-info>.*<city>Springfield</city>.*</shipping-contact-info>), data)
+    assert_match(%r(<shipping-contact-info>.*<address1>123 Shipping St</address1>.*</shipping-contact-info>), data)
+    assert_match(%r(<shipping-contact-info>.*<address2>Apt 456</address2>.*</shipping-contact-info>), data)
+
+    assert_match(%r(<card-holder-info>.*<address>123 Billing St</address>.*</card-holder-info>), data)
+    assert_match(%r(<card-holder-info>.*<address2>Apt 123</address2>.*</card-holder-info>), data)
+    assert_match(%r(<card-holder-info>.*<phone>555 999 8888</phone>.*</card-holder-info>), data)
   end
 
   def test_successful_purchase_with_shipping_contact_info
@@ -213,7 +234,10 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
       shipping_city: 'Springfield',
       shipping_state: 'NC',
       shipping_country: 'US',
-      shipping_zip: '27701'
+      shipping_zip: '27701',
+      first_name: 'John',
+      last_name: 'Doe',
+      phone_number: '555 999 8888'
     })
 
     response = @gateway.purchase(@amount, @credit_card, more_options)
