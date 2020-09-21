@@ -1,18 +1,22 @@
 require "test_helper"
 require "byebug"
+
 class PaypalExpressRestTest < Test::Unit::TestCase
   def setup
-    Base.mode         = :test
-    @paypal_customer  = ActiveMerchant::Billing::PaypalCommercePlatformGateway.new
+    Base.mode               = :test
+    @paypal_customer        = ActiveMerchant::Billing::PaypalCommercePlatformGateway.new
 
-    params            = user_credentials
+    params                  = user_credentials
 
-    options           = { "Content-Type": "application/json", authorization: params }
-    access_token      = @paypal_customer.get_token(options)
+    options                 = { "Content-Type": "application/json", authorization: params }
+    access_token            = @paypal_customer.get_token(options)
+    missing_password_params = { username: "ASs8Osqge6KT3OdLtkNhD20VP8lsrqRUlRjLo-e5s75SHz-2ffMMzCos_odQGjGYpPcGlxJVQ5fXMz9q" }
+    missing_username_params = { password: "EKj_bMZn0CkOhOvFwJMX2WwhtCq2A0OtlOd5T-zUhKIf9WQxvgPasNX0Kr1U4TjFj8ZN6XCMF5NM30Z_" }
 
     @headers      = { "Authorization": access_token, "Content-Type": "application/json" }
 
     @body = body
+
     @additional_params =  {
         "payment_instruction": {
             "platform_fees": [
@@ -49,6 +53,10 @@ class PaypalExpressRestTest < Test::Unit::TestCase
         },
         "headers": @headers
     }
+
+    @get_token_missing_password_options = { "Content-Type": "application/json", authorization: missing_password_params }
+
+    @get_token_missing_username_options = { "Content-Type": "application/json", authorization: missing_username_params }
 
   end
 
@@ -107,9 +115,9 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
 
   def test_capture_authorized_order_with_card
-    response = create_order("AUTHORIZE")
-    order_id = response[:id]
-    response = @paypal_customer.authorize(order_id, @card_order_options)
+    response         = create_order("AUTHORIZE")
+    order_id         = response[:id]
+    response         = @paypal_customer.authorize(order_id, @card_order_options)
     authorization_id = response[:purchase_units][0][:payments][:authorizations][0][:id]
     response         = @paypal_customer.do_capture(authorization_id,options)
     assert response[:status].eql?("COMPLETED")
@@ -119,10 +127,10 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
 
   def test_refund_captured_order_with_card
-    response = create_order("CAPTURE")
-    order_id = response[:id]
-    response = @paypal_customer.capture(order_id, @card_order_options)
-    capture_id = response[:purchase_units][0][:payments][:captures][0][:id]
+    response        = create_order("CAPTURE")
+    order_id        = response[:id]
+    response        = @paypal_customer.capture(order_id, @card_order_options)
+    capture_id      = response[:purchase_units][0][:payments][:captures][0][:id]
     refund_response = @paypal_customer.refund(capture_id, options)
     assert refund_response[:status].eql?("COMPLETED")
     assert !refund_response[:id].nil?
@@ -131,9 +139,9 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
 
   def test_void_authorized_order_with_card
-    response = create_order("AUTHORIZE")
-    order_id = response[:id]
-    response = @paypal_customer.authorize(order_id, @card_order_options)
+    response         = create_order("AUTHORIZE")
+    order_id         = response[:id]
+    response         = @paypal_customer.authorize(order_id, @card_order_options)
     authorization_id = response[:purchase_units][0][:payments][:authorizations][0][:id]
     void_response    = @paypal_customer.void(authorization_id, options)
     assert void_response.empty?
@@ -143,7 +151,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   def test_update_shipping_amount_order
     response = create_order("CAPTURE")
     order_id = response[:id]
-    @body = {body: update_amount_body}
+    @body    = {body: update_amount_body}
     response = @paypal_customer.update_order(order_id, options)
     assert response.empty?
     @body = body
@@ -153,7 +161,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   def test_update_shipping_address_order
     response = create_order("CAPTURE")
     order_id = response[:id]
-    @body = {body: update_shipping_address_body}
+    @body    = {body: update_shipping_address_body}
     response = @paypal_customer.update_order(order_id, options)
     assert response.empty?
     @body = body
@@ -161,23 +169,17 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
 
   def test_missing_password_argument_to_get_access_token
-    params = { username: "ASs8Osqge6KT3OdLtkNhD20VP8lsrqRUlRjLo-e5s75SHz-2ffMMzCos_odQGjGYpPcGlxJVQ5fXMz9q" }
-    options = { "Content-Type": "application/json", authorization: params }
-
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: password"
-      @paypal_customer.get_token(options)
+      @paypal_customer.get_token(@get_token_missing_password_options)
     end
   end
 
 
   def test_missing_username_argument_to_get_access_token
-    params = { password: "ASs8Osqge6KT3OdLtkNhD20VP8lsrqRUlRjLo-e5s75SHz-2ffMMzCos_odQGjGYpPcGlxJVQ5fXMz9q" }
-    options = { "Content-Type": "application/json", authorization: params }
-
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: username"
-      @paypal_customer.get_token(options)
+      @paypal_customer.get_token(@get_token_missing_username_options)
     end
   end
 
@@ -355,7 +357,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
 
   def test_missing_operator_arguments_in_handle_approve
-    response = create_order("AUTHORIZE")
+    response  = create_order("AUTHORIZE")
     @order_id = response[:id]
 
     assert_raise(ArgumentError) do
