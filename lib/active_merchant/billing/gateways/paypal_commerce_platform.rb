@@ -76,7 +76,7 @@ module ActiveMerchant #:nodoc:
 
 
       def update_order(order_id, options)
-        requires!(options.merge!({ order_id: order_id }), :order_id, :body)
+        requires!(options.merge!(order_id.nil? ? { } : { order_id: order_id}), :order_id, :body)
 
         post = [ ]
         options[:body].each do |update|
@@ -330,7 +330,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def is_intent_exists?(intent)
-        debugger
         ["CAPTURE", "AUTHORIZE"].include?(intent)
       end
 

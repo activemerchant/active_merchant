@@ -189,6 +189,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     end
   end
 
+
   def test_mismissing_intent_argument_for_order_creation
     @body[:intent] = "CAPTU"
 
@@ -197,6 +198,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
       @paypal_customer.create_order("CAPTU", options)
     end
   end
+
 
   def test_missing_purchase_units_argument_for_order_creation
     @body.delete(
@@ -365,6 +367,72 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: operator_required_id"
       @paypal_customer.handle_approve(nil, options)
+    end
+  end
+
+
+  def test_missing_order_id_in_update_body
+    assert_raise(ArgumentError) do
+
+      puts "*** ArgumentError Exception: Missing required parameter: order_id in update_order"
+      @body    = {body: update_amount_body}
+      @paypal_customer.update_order(nil, options)
+    end
+  end
+
+
+  def test_missing_body_in_update_body
+    assert_raise(ArgumentError) do
+      response = create_order("CAPTURE")
+      order_id = response[:id]
+      puts "*** ArgumentError Exception: Missing required parameter: body in update_order"
+      @body    = {}
+      @paypal_customer.update_order(order_id, options)
+    end
+  end
+
+
+  def test_missing_op_in_update_body
+    response = create_order("CAPTURE")
+    order_id = response[:id]
+    @body    = {body: update_amount_body}
+    @body[:body][0].delete(
+        :op
+    )
+
+    assert_raise(ArgumentError) do
+      puts "*** ArgumentError Exception: Missing required parameter: op in update field"
+      @paypal_customer.update_order(order_id, options)
+    end
+  end
+
+
+  def test_missing_path_in_update_body
+    response = create_order("CAPTURE")
+    order_id = response[:id]
+    @body    = {body: update_amount_body}
+    @body[:body][0].delete(
+        :path
+    )
+
+    assert_raise(ArgumentError) do
+      puts "*** ArgumentError Exception: Missing required parameter: op in update field"
+      @paypal_customer.update_order(order_id, options)
+    end
+  end
+
+
+  def test_missing_value_in_update_body
+    response = create_order("CAPTURE")
+    order_id = response[:id]
+    @body    = {body: update_amount_body}
+    @body[:body][0].delete(
+        :value
+    )
+
+    assert_raise(ArgumentError) do
+      puts "*** ArgumentError Exception: Missing required parameter: op in update field"
+      @paypal_customer.update_order(order_id, options)
     end
   end
 
