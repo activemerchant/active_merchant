@@ -89,6 +89,7 @@ module ActiveMerchant #:nodoc:
           type = get_update_type(update_hsh[:path])
           add_amount(update[:value], update_hsh, :value)           if type.eql?("amount")
           add_shipping_address(update[:value], update_hsh, :value) if type.eql?("address")
+          add_payment_instruction(update[:value], update_hsh, :value) if type.eql?("payment_instruction")
 
           post.append(update_hsh)
         end
@@ -153,7 +154,7 @@ module ActiveMerchant #:nodoc:
           purchase_unit_hsh[:soft_descriptor]   = purchase_unit[:soft_descriptor] unless purchase_unit[:soft_descriptor].nil?
 
           add_amount(purchase_unit[:amount], purchase_unit_hsh)
-          add_payee(purchase_unit_hsh, purchase_unit[:payee]) unless purchase_unit[:payee].nil?
+          add_payee(purchase_unit[:payee], purchase_unit_hsh) unless purchase_unit[:payee].nil?
           add_items(purchase_unit[:items], purchase_unit_hsh) unless purchase_unit[:items].nil?
           add_shipping(purchase_unit[:shipping], purchase_unit_hsh) unless purchase_unit[:shipping].nil?
           add_payment_instruction(purchase_unit[:payment_instruction], purchase_unit_hsh) unless purchase_unit[:payment_instruction].blank?
@@ -174,22 +175,22 @@ module ActiveMerchant #:nodoc:
       end
 
 
-      def add_payment_instruction(options, post)
-        post[:payment_instruction]                     = { }
-        post[:payment_instruction][:platform_fees]     = []
-        post[:payment_instruction][:disbursement_mode] = options[:disbursement_mode] unless options[:disbursement_mode].nil?
+      def add_payment_instruction(options, post, key=:payment_instruction)
+        post[key]                     = { }
+        post[key][:platform_fees]     = []
+        post[key][:disbursement_mode] = options[:disbursement_mode] unless options[:disbursement_mode].nil?
 
         options[:platform_fees].map do |platform_fee|
           requires!(platform_fee, :amount, :payee)
 
           platform_fee_hsh = { }
           add_amount(platform_fee[:amount], platform_fee_hsh)
-          add_payee(platform_fee_hsh, platform_fee[:payee])
+          add_payee(platform_fee[:payee], platform_fee_hsh)
 
-          post[:payment_instruction][:platform_fees] << platform_fee_hsh
+          post[key][:platform_fees] << platform_fee_hsh
         end
 
-        skip_empty(post, :payment_instruction)
+        skip_empty(post, key)
       end
 
 
@@ -199,7 +200,7 @@ module ActiveMerchant #:nodoc:
       end
 
 
-      def add_payee(obj_hsh, payee_obj)
+      def add_payee(payee_obj, obj_hsh)
         obj_hsh[:payee] = { }
         obj_hsh[:payee][:merchant_id]         = payee_obj[:merchant_id] unless payee_obj[:merchant_id].nil?
         obj_hsh[:payee][:email_address]       = payee_obj[:email_address] unless payee_obj[:email_address].nil?

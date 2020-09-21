@@ -168,6 +168,16 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   end
 
 
+  def test_update_platform_fee_in_update_body
+    response = create_order("CAPTURE")
+    order_id = response[:id]
+    @body    = {body: update_platform_fee_body}
+    response = @paypal_customer.update_order(order_id, options)
+    assert response.empty?
+    @body = body
+  end
+
+
   def test_missing_password_argument_to_get_access_token
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: password"
@@ -591,6 +601,28 @@ class PaypalExpressRestTest < Test::Unit::TestCase
         }
     ]
   end
+
+
+  def update_platform_fee_body
+    [ {
+          "op": "add",
+          "path": "/purchase_units/@reference_id=='#{ @reference_id }'/payment_instruction",
+          "value": {
+              "platform_fees": [
+                  {
+                      "amount": {
+                          "currency_code": "USD",
+                          "value": "3.00"
+                      },
+                      "payee": {
+                          "email_address": "service.connected@partnerplace.example.com"
+                      }
+                  }
+              ]
+          }
+      }]
+  end
+
   def user_credentials
     {
         username: "ASs8Osqge6KT3OdLtkNhD20VP8lsrqRUlRjLo-e5s75SHz-2ffMMzCos_odQGjGYpPcGlxJVQ5fXMz9q",
