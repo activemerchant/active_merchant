@@ -88,42 +88,5 @@ module ActiveMerchant #:nodoc:
         )
       end
     end
-
-    class PPCPResponse
-      attr_reader :message, :test, :response
-
-      def test?
-        @test
-      end
-
-      def initialize(response, options = { })
-        response
-        @test = options[:test] || false
-        @response ||= response
-      end
-
-      def process(ignore_result=false)
-        unless ignore_result
-          if success?
-            success_from(@response)
-          else
-            response_error(@response)
-          end
-        end
-      end
-
-      def success?
-        response[:status].present? ? true : false
-      end
-
-      def success_from(response)
-        response.merge!({ message: "Success" })
-      end
-
-      def response_error(raw_response)
-        raw_response
-      end
-
-    end
   end
 end

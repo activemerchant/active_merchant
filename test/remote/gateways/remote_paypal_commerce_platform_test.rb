@@ -60,397 +60,385 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
   end
 
-  def test_access_token
-    options       = { "Content-Type": "application/json", authorization: user_credentials }
-    access_token  = @paypal_customer.get_token(options)
-    assert access_token.include?("basic")
-    assert !access_token.nil?
-  end
+  # def test_access_token
+  #   options       = { "Content-Type": "application/json", authorization: user_credentials }
+  #   access_token  = @paypal_customer.get_token(options)
+  #   assert access_token.include?("basic")
+  #   assert !access_token.nil?
+  # end
 
   def test_create_capture_instant_order_direct_merchant
     response = create_order("CAPTURE")
-    puts "Capture Order Id (Instant) - Direct Merchant: #{ response[:id] }"
-    assert response[:status].eql?("CREATED")
-    assert !response[:id].nil?
-    assert !response[:links].blank?
+    puts response.params
+
   end
 
-
-  def test_create_capture_instant_order_ppcp
-    response = create_order("CAPTURE", "PPCP")
-    puts "Capture Order Id (Instant) - PPCP: #{ response[:id] }"
-    assert response[:status].eql?("CREATED")
-    assert !response[:id].nil?
-    assert !response[:links].blank?
-  end
-
-
-  def test_create_authorize_order
-    response = create_order("AUTHORIZE")
-    puts "Authorize Order Id: #{ response[:id] }"
-    assert response[:status].eql?("CREATED")
-    assert !response[:id].nil?
-    assert !response[:links].blank?
-  end
-
-
-  def test_capture_order_with_card
-    response = create_order("CAPTURE")
-    order_id = response[:id]
-    response = @paypal_customer.capture(order_id, @card_order_options)
-    assert response[:status].eql?("COMPLETED")
-    assert !response[:id].nil?
-    assert !response[:links].blank?
-  end
-
-
-  def test_authorize_order_with_card
-    response = create_order("AUTHORIZE")
-    order_id = response[:id]
-    response = @paypal_customer.authorize(order_id, @card_order_options)
-    assert response[:status].eql?("COMPLETED")
-    assert !response[:id].nil?
-    assert !response[:links].blank?
-  end
-
-
-  def test_capture_authorized_order_with_card
-    response         = create_order("AUTHORIZE")
-    order_id         = response[:id]
-    response         = @paypal_customer.authorize(order_id, @card_order_options)
-    authorization_id = response[:purchase_units][0][:payments][:authorizations][0][:id]
-    response         = @paypal_customer.do_capture(authorization_id,options)
-    assert response[:status].eql?("COMPLETED")
-    assert !response[:id].nil?
-    assert !response[:links].blank?
-  end
-
-
-  def test_refund_captured_order_with_card
-    response        = create_order("CAPTURE")
-    order_id        = response[:id]
-    response        = @paypal_customer.capture(order_id, @card_order_options)
-    capture_id      = response[:purchase_units][0][:payments][:captures][0][:id]
-    refund_response = @paypal_customer.refund(capture_id, options)
-    assert refund_response[:status].eql?("COMPLETED")
-    assert !refund_response[:id].nil?
-    assert !refund_response[:links].blank?
-  end
-
-
-  def test_void_authorized_order_with_card
-    response         = create_order("AUTHORIZE")
-    order_id         = response[:id]
-    response         = @paypal_customer.authorize(order_id, @card_order_options)
-    authorization_id = response[:purchase_units][0][:payments][:authorizations][0][:id]
-    void_response    = @paypal_customer.void(authorization_id, options)
-    assert void_response.empty?
-  end
-
-
-  def test_update_shipping_amount_order
-    response = create_order("CAPTURE")
-    order_id = response[:id]
-    @body    = {body: update_amount_body}
-    response = @paypal_customer.update_order(order_id, options)
-    assert response.empty?
-    @body = body
-  end
-
-
-  def test_update_shipping_address_order
-    response = create_order("CAPTURE")
-    order_id = response[:id]
-    @body    = {body: update_shipping_address_body}
-    response = @paypal_customer.update_order(order_id, options)
-    assert response.empty?
-    @body = body
-  end
-
-
-  def test_update_platform_fee_in_update_body
-    response = create_order("CAPTURE")
-    order_id = response[:id]
-    @body    = {body: update_platform_fee_body}
-    response = @paypal_customer.update_order(order_id, options)
-    assert response.empty?
-    @body = body
-  end
-
-
-  def test_missing_password_argument_to_get_access_token
-    assert_raise(ArgumentError) do
-      puts "*** ArgumentError Exception: Missing required parameter: password"
-      @paypal_customer.get_token(@get_token_missing_password_options)
-    end
-  end
-
-
-  def test_missing_username_argument_to_get_access_token
-    assert_raise(ArgumentError) do
-      puts "*** ArgumentError Exception: Missing required parameter: username"
-      @paypal_customer.get_token(@get_token_missing_username_options)
-    end
-  end
-
-
-  def test_missing_intent_argument_for_order_creation
-    @body.delete(
-        :intent
-    )
-
-    assert_raise(ArgumentError) do
-      puts "*** ArgumentError Exception: Missing required parameter: intent"
-      @paypal_customer.create_order(nil, options)
-    end
-  end
-
-
-  def test_mismissing_intent_argument_for_order_creation
-    @body[:intent] = "CAPTU"
-
-    assert_raise(ArgumentError) do
-      puts "*** ArgumentError Exception: Intent is mismatched please check your intent: #{ @body[:intent] }"
-      @paypal_customer.create_order("CAPTU", options)
-    end
-  end
-
-
-  def test_missing_purchase_units_argument_for_order_creation
-    @body.delete(
-        :purchase_units
-    )
-
-    assert_raise(ArgumentError) do
-      puts "*** ArgumentError Exception: Missing required parameter: purchase_units"
-      @paypal_customer.create_order("CAPTURE", options)
-    end
-  end
-
-
-  def test_missing_amount_in_purchase_units_argument_for_order_creation
-    @body[:purchase_units][0].delete(
-        :amount
-    )
-
-    assert_raise(ArgumentError) do
-      puts "*** ArgumentError Exception: Missing required parameter: amount in purchase_units"
-      @paypal_customer.create_order("CAPTURE", options)
-    end
-  end
-
-
-  def test_missing_currency_code_in_amount_argument_for_order_creation
-    @body[:purchase_units][0][:amount].delete(
-        :currency_code
-    )
-
-    assert_raise(ArgumentError) do
-      puts "*** ArgumentError Exception: Missing required parameter: currency_code in amount"
-      @paypal_customer.create_order("CAPTURE", options)
-    end
-  end
-
-
-  def test_missing_value_in_amount_argument_for_order_creation
-    @body[:purchase_units][0][:amount].delete(
-        :value
-    )
-
-    assert_raise(ArgumentError) do
-      puts "*** ArgumentError Exception: Missing required parameter: value in amount"
-      @paypal_customer.create_order("CAPTURE", options)
-    end
-  end
-
-
-  def test_missing_name_in_items
-    @body[:purchase_units][0][:items][0].delete(
-        :name
-    )
-
-    assert_raise(ArgumentError) do
-      puts "*** ArgumentError Exception: Missing required parameter: name in items"
-      @paypal_customer.create_order("CAPTURE", options)
-    end
-  end
-
-
-  def test_missing_quantity_in_items
-    @body[:purchase_units][0][:items][0].delete(
-        :quantity
-    )
-
-    assert_raise(ArgumentError) do
-      puts "*** ArgumentError Exception: Missing required parameter: quantity in items"
-      @paypal_customer.create_order("CAPTURE", options)
-    end
-  end
-
-
-  def test_missing_unit_amount_in_items
-    @body[:purchase_units][0][:items][0].delete(
-        :name
-    )
-
-    assert_raise(ArgumentError) do
-      puts "*** ArgumentError Exception: Missing required parameter: unit_amount in items"
-      @paypal_customer.create_order("CAPTURE", options)
-    end
-  end
-
-
-  def test_missing_admin_area_2_in_address
-    @body[:purchase_units][0][:shipping][:address].delete(
-        :admin_area_2
-    )
-
-    assert_raise(ArgumentError) do
-      puts "*** ArgumentError Exception: Missing required parameter: admin_area_2 in address"
-      @paypal_customer.create_order("CAPTURE", options)
-    end
-  end
-
-
-  def test_missing_postal_code_in_address
-    @body[:purchase_units][0][:shipping][:address].delete(
-        :postal_code
-    )
-
-    assert_raise(ArgumentError) do
-      puts "*** ArgumentError Exception: Missing required parameter: postal code in address"
-      @paypal_customer.create_order("CAPTURE", options)
-    end
-  end
-
-
-  def test_missing_country_code_in_address
-    @body[:purchase_units][0][:shipping][:address].delete(
-        :country_code
-    )
-
-    assert_raise(ArgumentError) do
-      puts "*** ArgumentError Exception: Missing required parameter: country code in address"
-      @paypal_customer.create_order("CAPTURE", options)
-    end
-  end
-
-
-  def test_missing_amount_in_platform_fee
-    @body[:purchase_units][0].update(
-        @additional_params
-    )
-
-    @body[:purchase_units][0][:payment_instruction][:platform_fees][0].delete(
-        :amount
-    )
-
-    assert_raise(ArgumentError) do
-      puts "*** ArgumentError Exception: Missing required parameter: amount in platform fee"
-      @paypal_customer.create_order("CAPTURE", options)
-    end
-  end
-
-
-  def test_missing_payee_in_platform_fee
-    @body[:purchase_units][0].update(
-        @additional_params
-    )
-
-    @body[:purchase_units][0][:payment_instruction][:platform_fees][0].delete(
-        :payee
-    )
-
-    assert_raise(ArgumentError) do
-      puts "*** ArgumentError Exception: Missing required parameter: payee in platform fee"
-      @paypal_customer.create_order("CAPTURE", options)
-    end
-  end
-
-
-  def test_missing_operator_arguments_in_handle_approve
-    response  = create_order("AUTHORIZE")
-    @order_id = response[:id]
-
-    assert_raise(ArgumentError) do
-      puts "*** ArgumentError Exception: Missing required parameter: operator"
-      @paypal_customer.handle_approve(@order_id, options)
-    end
-  end
-
-
-  def test_missing_operator_required_id_arguments_in_handle_approve
-    assert_raise(ArgumentError) do
-      puts "*** ArgumentError Exception: Missing required parameter: operator_required_id"
-      @paypal_customer.handle_approve(nil, options)
-    end
-  end
-
-
-  def test_missing_order_id_in_update_body
-    assert_raise(ArgumentError) do
-
-      puts "*** ArgumentError Exception: Missing required parameter: order_id in update_order"
-      @body    = {body: update_amount_body}
-      @paypal_customer.update_order(nil, options)
-    end
-  end
-
-
-  def test_missing_body_in_update_body
-    assert_raise(ArgumentError) do
-      response = create_order("CAPTURE")
-      order_id = response[:id]
-      puts "*** ArgumentError Exception: Missing required parameter: body in update_order"
-      @body    = {}
-      @paypal_customer.update_order(order_id, options)
-    end
-  end
-
-
-  def test_missing_op_in_update_body
-    response = create_order("CAPTURE")
-    order_id = response[:id]
-    @body    = {body: update_amount_body}
-    @body[:body][0].delete(
-        :op
-    )
-
-    assert_raise(ArgumentError) do
-      puts "*** ArgumentError Exception: Missing required parameter: op in update field"
-      @paypal_customer.update_order(order_id, options)
-    end
-  end
-
-
-  def test_missing_path_in_update_body
-    response = create_order("CAPTURE")
-    order_id = response[:id]
-    @body    = {body: update_amount_body}
-    @body[:body][0].delete(
-        :path
-    )
-
-    assert_raise(ArgumentError) do
-      puts "*** ArgumentError Exception: Missing required parameter: op in update field"
-      @paypal_customer.update_order(order_id, options)
-    end
-  end
-
-
-  def test_missing_value_in_update_body
-    response = create_order("CAPTURE")
-    order_id = response[:id]
-    @body    = {body: update_amount_body}
-    @body[:body][0].delete(
-        :value
-    )
-
-    assert_raise(ArgumentError) do
-      puts "*** ArgumentError Exception: Missing required parameter: op in update field"
-      @paypal_customer.update_order(order_id, options)
-    end
-  end
+  #
+  # def test_create_capture_instant_order_ppcp
+  #   response = create_order("CAPTURE", "PPCP")
+  #   puts "Capture Order Id (Instant) - PPCP: #{ response[:id] }"
+  #   assert response[:status].eql?("CREATED")
+  #   assert !response[:id].nil?
+  #   assert !response[:links].blank?
+  # end
+  #
+  #
+  # def test_create_authorize_order
+  #   response = create_order("AUTHORIZE")
+  #   puts "Authorize Order Id: #{ response[:id] }"
+  #   assert response[:status].eql?("CREATED")
+  #   assert !response[:id].nil?
+  #   assert !response[:links].blank?
+  # end
+  #
+  #
+  # def test_capture_order_with_card
+  #   response = create_order("CAPTURE")
+  #   order_id = response[:id]
+  #   response = @paypal_customer.capture(order_id, @card_order_options)
+  #   assert response[:status].eql?("COMPLETED")
+  #   assert !response[:id].nil?
+  #   assert !response[:links].blank?
+  # end
+  #
+  #
+  # def test_authorize_order_with_card
+  #   response = create_order("AUTHORIZE")
+  #   order_id = response[:id]
+  #   response = @paypal_customer.authorize(order_id, @card_order_options)
+  #   assert response[:status].eql?("COMPLETED")
+  #   assert !response[:id].nil?
+  #   assert !response[:links].blank?
+  # end
+  #
+  #
+  # def test_capture_authorized_order_with_card
+  #   response         = create_order("AUTHORIZE")
+  #   order_id         = response[:id]
+  #   response         = @paypal_customer.authorize(order_id, @card_order_options)
+  #   authorization_id = response[:purchase_units][0][:payments][:authorizations][0][:id]
+  #   response         = @paypal_customer.do_capture(authorization_id,options)
+  #   assert response[:status].eql?("COMPLETED")
+  #   assert !response[:id].nil?
+  #   assert !response[:links].blank?
+  # end
+  #
+  #
+  # def test_refund_captured_order_with_card
+  #   response        = create_order("CAPTURE")
+  #   order_id        = response[:id]
+  #   response        = @paypal_customer.capture(order_id, @card_order_options)
+  #   capture_id      = response[:purchase_units][0][:payments][:captures][0][:id]
+  #   refund_response = @paypal_customer.refund(capture_id, options)
+  #   assert refund_response[:status].eql?("COMPLETED")
+  #   assert !refund_response[:id].nil?
+  #   assert !refund_response[:links].blank?
+  # end
+  #
+  #
+  # def test_void_authorized_order_with_card
+  #   response         = create_order("AUTHORIZE")
+  #   order_id         = response[:id]
+  #   response         = @paypal_customer.authorize(order_id, @card_order_options)
+  #   authorization_id = response[:purchase_units][0][:payments][:authorizations][0][:id]
+  #   void_response    = @paypal_customer.void(authorization_id, options)
+  #   assert void_response.empty?
+  # end
+  #
+  #
+  # def test_update_shipping_amount_order
+  #   response = create_order("CAPTURE")
+  #   order_id = response[:id]
+  #   @body    = {body: update_amount_body}
+  #   response = @paypal_customer.update_order(order_id, options)
+  #   assert response.empty?
+  #   @body = body
+  # end
+  #
+  #
+  # def test_update_shipping_address_order
+  #   response = create_order("CAPTURE")
+  #   order_id = response[:id]
+  #   @body    = {body: update_shipping_address_body}
+  #   response = @paypal_customer.update_order(order_id, options)
+  #   assert response.empty?
+  #   @body = body
+  # end
+  #
+  #
+  # def test_update_platform_fee_in_update_body
+  #   response = create_order("CAPTURE")
+  #   order_id = response[:id]
+  #   @body    = {body: update_platform_fee_body}
+  #   response = @paypal_customer.update_order(order_id, options)
+  #   assert response.empty?
+  #   @body = body
+  # end
+  #
+  #
+  # def test_missing_password_argument_to_get_access_token
+  #   assert_raise(ArgumentError) do
+  #     puts "*** ArgumentError Exception: Missing required parameter: password"
+  #     @paypal_customer.get_token(@get_token_missing_password_options)
+  #   end
+  # end
+  #
+  #
+  # def test_missing_username_argument_to_get_access_token
+  #   assert_raise(ArgumentError) do
+  #     puts "*** ArgumentError Exception: Missing required parameter: username"
+  #     @paypal_customer.get_token(@get_token_missing_username_options)
+  #   end
+  # end
+  #
+  #
+  # def test_missing_intent_argument_for_order_creation
+  #   @body.delete(
+  #       :intent
+  #   )
+  #
+  #   assert_raise(ArgumentError) do
+  #     puts "*** ArgumentError Exception: Missing required parameter: intent"
+  #     @paypal_customer.create_order(nil, options)
+  #   end
+  # end
+  #
+  #
+  # def test_missing_purchase_units_argument_for_order_creation
+  #   @body.delete(
+  #       :purchase_units
+  #   )
+  #
+  #   assert_raise(ArgumentError) do
+  #     puts "*** ArgumentError Exception: Missing required parameter: purchase_units"
+  #     @paypal_customer.create_order("CAPTURE", options)
+  #   end
+  # end
+  #
+  #
+  # def test_missing_amount_in_purchase_units_argument_for_order_creation
+  #   @body[:purchase_units][0].delete(
+  #       :amount
+  #   )
+  #
+  #   assert_raise(ArgumentError) do
+  #     puts "*** ArgumentError Exception: Missing required parameter: amount in purchase_units"
+  #     @paypal_customer.create_order("CAPTURE", options)
+  #   end
+  # end
+  #
+  #
+  # def test_missing_currency_code_in_amount_argument_for_order_creation
+  #   @body[:purchase_units][0][:amount].delete(
+  #       :currency_code
+  #   )
+  #
+  #   assert_raise(ArgumentError) do
+  #     puts "*** ArgumentError Exception: Missing required parameter: currency_code in amount"
+  #     @paypal_customer.create_order("CAPTURE", options)
+  #   end
+  # end
+  #
+  #
+  # def test_missing_value_in_amount_argument_for_order_creation
+  #   @body[:purchase_units][0][:amount].delete(
+  #       :value
+  #   )
+  #
+  #   assert_raise(ArgumentError) do
+  #     puts "*** ArgumentError Exception: Missing required parameter: value in amount"
+  #     @paypal_customer.create_order("CAPTURE", options)
+  #   end
+  # end
+  #
+  #
+  # def test_missing_name_in_items
+  #   @body[:purchase_units][0][:items][0].delete(
+  #       :name
+  #   )
+  #
+  #   assert_raise(ArgumentError) do
+  #     puts "*** ArgumentError Exception: Missing required parameter: name in items"
+  #     @paypal_customer.create_order("CAPTURE", options)
+  #   end
+  # end
+  #
+  #
+  # def test_missing_quantity_in_items
+  #   @body[:purchase_units][0][:items][0].delete(
+  #       :quantity
+  #   )
+  #
+  #   assert_raise(ArgumentError) do
+  #     puts "*** ArgumentError Exception: Missing required parameter: quantity in items"
+  #     @paypal_customer.create_order("CAPTURE", options)
+  #   end
+  # end
+  #
+  #
+  # def test_missing_unit_amount_in_items
+  #   @body[:purchase_units][0][:items][0].delete(
+  #       :name
+  #   )
+  #
+  #   assert_raise(ArgumentError) do
+  #     puts "*** ArgumentError Exception: Missing required parameter: unit_amount in items"
+  #     @paypal_customer.create_order("CAPTURE", options)
+  #   end
+  # end
+  #
+  #
+  # def test_missing_admin_area_2_in_address
+  #   @body[:purchase_units][0][:shipping][:address].delete(
+  #       :admin_area_2
+  #   )
+  #
+  #   assert_raise(ArgumentError) do
+  #     puts "*** ArgumentError Exception: Missing required parameter: admin_area_2 in address"
+  #     @paypal_customer.create_order("CAPTURE", options)
+  #   end
+  # end
+  #
+  #
+  # def test_missing_postal_code_in_address
+  #   @body[:purchase_units][0][:shipping][:address].delete(
+  #       :postal_code
+  #   )
+  #
+  #   assert_raise(ArgumentError) do
+  #     puts "*** ArgumentError Exception: Missing required parameter: postal code in address"
+  #     @paypal_customer.create_order("CAPTURE", options)
+  #   end
+  # end
+  #
+  #
+  # def test_missing_country_code_in_address
+  #   @body[:purchase_units][0][:shipping][:address].delete(
+  #       :country_code
+  #   )
+  #
+  #   assert_raise(ArgumentError) do
+  #     puts "*** ArgumentError Exception: Missing required parameter: country code in address"
+  #     @paypal_customer.create_order("CAPTURE", options)
+  #   end
+  # end
+  #
+  #
+  # def test_missing_amount_in_platform_fee
+  #   @body[:purchase_units][0].update(
+  #       @additional_params
+  #   )
+  #
+  #   @body[:purchase_units][0][:payment_instruction][:platform_fees][0].delete(
+  #       :amount
+  #   )
+  #
+  #   assert_raise(ArgumentError) do
+  #     puts "*** ArgumentError Exception: Missing required parameter: amount in platform fee"
+  #     @paypal_customer.create_order("CAPTURE", options)
+  #   end
+  # end
+  #
+  #
+  # def test_missing_payee_in_platform_fee
+  #   @body[:purchase_units][0].update(
+  #       @additional_params
+  #   )
+  #
+  #   @body[:purchase_units][0][:payment_instruction][:platform_fees][0].delete(
+  #       :payee
+  #   )
+  #
+  #   assert_raise(ArgumentError) do
+  #     puts "*** ArgumentError Exception: Missing required parameter: payee in platform fee"
+  #     @paypal_customer.create_order("CAPTURE", options)
+  #   end
+  # end
+  #
+  #
+  # def test_missing_operator_arguments_in_handle_approve
+  #   response  = create_order("AUTHORIZE")
+  #   @order_id = response[:id]
+  #
+  #   assert_raise(ArgumentError) do
+  #     puts "*** ArgumentError Exception: Missing required parameter: operator"
+  #     @paypal_customer.handle_approve(@order_id, options)
+  #   end
+  # end
+  #
+  #
+  # def test_missing_operator_required_id_arguments_in_handle_approve
+  #   assert_raise(ArgumentError) do
+  #     puts "*** ArgumentError Exception: Missing required parameter: operator_required_id"
+  #     @paypal_customer.handle_approve(nil, options)
+  #   end
+  # end
+  #
+  #
+  # def test_missing_order_id_in_update_body
+  #   assert_raise(ArgumentError) do
+  #
+  #     puts "*** ArgumentError Exception: Missing required parameter: order_id in update_order"
+  #     @body    = {body: update_amount_body}
+  #     @paypal_customer.update_order(nil, options)
+  #   end
+  # end
+  #
+  #
+  # def test_missing_body_in_update_body
+  #   assert_raise(ArgumentError) do
+  #     response = create_order("CAPTURE")
+  #     order_id = response[:id]
+  #     puts "*** ArgumentError Exception: Missing required parameter: body in update_order"
+  #     @body    = {}
+  #     @paypal_customer.update_order(order_id, options)
+  #   end
+  # end
+  #
+  #
+  # def test_missing_op_in_update_body
+  #   response = create_order("CAPTURE")
+  #   order_id = response[:id]
+  #   @body    = {body: update_amount_body}
+  #   @body[:body][0].delete(
+  #       :op
+  #   )
+  #
+  #   assert_raise(ArgumentError) do
+  #     puts "*** ArgumentError Exception: Missing required parameter: op in update field"
+  #     @paypal_customer.update_order(order_id, options)
+  #   end
+  # end
+  #
+  #
+  # def test_missing_path_in_update_body
+  #   response = create_order("CAPTURE")
+  #   order_id = response[:id]
+  #   @body    = {body: update_amount_body}
+  #   @body[:body][0].delete(
+  #       :path
+  #   )
+  #
+  #   assert_raise(ArgumentError) do
+  #     puts "*** ArgumentError Exception: Missing required parameter: op in update field"
+  #     @paypal_customer.update_order(order_id, options)
+  #   end
+  # end
+  #
+  #
+  # def test_missing_value_in_update_body
+  #   response = create_order("CAPTURE")
+  #   order_id = response[:id]
+  #   @body    = {body: update_amount_body}
+  #   @body[:body][0].delete(
+  #       :value
+  #   )
+  #
+  #   assert_raise(ArgumentError) do
+  #     puts "*** ArgumentError Exception: Missing required parameter: op in update field"
+  #     @paypal_customer.update_order(order_id, options)
+  #   end
+  # end
 
 
   private
