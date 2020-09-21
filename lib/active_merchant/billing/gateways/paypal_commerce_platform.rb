@@ -328,14 +328,6 @@ module ActiveMerchant #:nodoc:
 
         add_billing_address(card_details[:billing_address], post) unless card_details[:billing_address].nil?
       end
-
-      def is_intent_exists?(intent)
-        ["CAPTURE", "AUTHORIZE"].include?(intent)
-      end
-
-      def validate_intent(intent)
-        raise ArgumentError.new("Intent is mismatched please check your intent: #{ intent }") unless is_intent_exists?(intent)
-      end
     end
   end
 end
