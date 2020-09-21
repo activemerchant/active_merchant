@@ -1,4 +1,5 @@
-require 'test_helper'
+require "test_helper"
+require "byebug"
 
 class PaypalExpressRestTest < Test::Unit::TestCase
   def setup
@@ -185,6 +186,14 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     end
   end
 
+  def test_mismissing_intent_argument_for_order_creation
+    @body[:intent] = "CAPTU"
+
+    assert_raise(ArgumentError) do
+      puts "*** ArgumentError Exception: Intent is mismatched please check your intent: #{ @body[:intent] }"
+      @paypal_customer.create_order("CAPTU", options)
+    end
+  end
 
   def test_missing_purchase_units_argument_for_order_creation
     @body.delete(
