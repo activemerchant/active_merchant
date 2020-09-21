@@ -265,6 +265,11 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
 
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
+    # this should only be a Response and not a MultiResponse
+    # as we are passing in a 0 amount and there should be
+    # no void call
+    assert_instance_of(Response, response)
+    refute_instance_of(MultiResponse, response)
     assert_success response
     assert_match %r{Succeeded}, response.message
   end
