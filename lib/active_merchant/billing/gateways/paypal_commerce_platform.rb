@@ -330,7 +330,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def is_intent_exists?(intent)
-        debugger
         ["CAPTURE", "AUTHORIZE"].include?(intent)
       end
 
