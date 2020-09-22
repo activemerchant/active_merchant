@@ -133,7 +133,19 @@ module ActiveMerchant #:nodoc:
         requires!(options.merge(refund_id: refund_id), :refund_id)
         commit(:get, "/v2/payments/refunds/#{ refund_id }", nil, options[:headers])
       end
+      def update_billing_agreement(agreement_id, options)
+        requires!(options.merge({ agreement_id: agreement_id }), :agreement_id, :intent, :purchase_units)
 
+        post = { }
+        update_billing_arguments(post, options)
+        commit(:patch, "v1/billing-agreements/agreements/#{ agreement_id }", post, options[:headers])
+      end
+
+      def cancel_billing_agreement(agreement_id, options)
+        requires!(agreement_id, :agreement_id)
+
+        commit(:post, "/v1/billing-agreements/agreements/#{ agreement_id }/cancel", nil, options[:headers])
+      end
       private
 
       def add_purchase_units(options, post)
@@ -360,6 +372,37 @@ module ActiveMerchant #:nodoc:
         post[:token][:id]       = options[:id]
         post[:token][:type]     = options[:type]
         post
+      end
+      ### Update Billing Agreement Params
+      # [
+      #     {
+      #         "op": "replace",
+      #         "path": "/",
+      #         "value": {
+      #             "description": "Example Billing Agreement",
+      #             "merchant_custom_data": "INV-001"
+      #         }
+      #     },
+      #     {
+      #         "op": "replace",
+      #         "path": "/plan/merchant_preferences/",
+      #         "value": {
+      #             "notify_url": "https://example.com/notify"
+      #         }
+      #     }
+      # ]
+      def update_billing_arguments(post, options)
+        hsh_collection = []
+        options.map do | hsh_obj|
+          post[:op]                           = hsh_obj[:op]
+          post[:path]                         = hsh_obj[:path]
+          post[:value]                        = { }
+          post[:value][:description]          = hsh_obj[:value][:description] unless hsh_obj[:value][:description].nil?
+          post[:value][:merchant_custom_data] = hsh_obj[:value][:merchant_custom_data] unless hsh_obj[:value][:merchant_custom_data].nil?
+          post[:value][:notify_url]           = hsh_obj[:value][:notify_url] unless hsh_obj[:value][:notify_url].nil?
+          hsh_collection << post
+        end
+        hsh_collection
       end
     end
   end
