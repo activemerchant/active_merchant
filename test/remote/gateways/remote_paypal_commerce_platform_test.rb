@@ -584,8 +584,8 @@ class PaypalExpressRestTest < Test::Unit::TestCase
                 "type": "MERCHANT_INITIATED_BILLING",
                 "merchant_preferences":
                     {
-                        "return_url": "{{return_url}}",
-                        "cancel_url": "{{cancel_url}}",
+                        "return_url": "https://google.com",
+                        "cancel_url": "https://google.com",
                         "accepted_pymt_type": "INSTANT",
                         "skip_shipping_address": false,
                         "immutable_shipping_address": true
