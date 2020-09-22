@@ -5,34 +5,31 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
 
   def setup
 
-    @paypal_customer        = ActiveMerchant::Billing::PaypalCommercePlatformGateway.new
+    @gateway     = ActiveMerchant::Billing::PaypalCommercePlatformGateway.new
 
-    params                  = user_credentials
-    options                 = { "Content-Type": "application/json", authorization: params }
+    params       = user_credentials
+    options      = { "Content-Type": "application/json", authorization: params }
 
-    access_token            = @paypal_customer.get_token(options)
+    access_token = @gateway.get_token(options)
 
-    @headers      = { "Authorization": access_token, "Content-Type": "application/json" }
-
-    @body = body
-
-    @card = {
-        "name": "John Doe",
-        "number": "4032039317984658",
-        "expiry": "2023-07",
-        "security_code": "111",
-        "billing_address": {
-            "address_line_1": "12312 Port Grace Blvd",
-            "admin_area_2": "La Vista",
-            "admin_area_1": "NE",
-            "postal_code": "68128",
-            "country_code": "US"
-        }
-    }
+    @headers     = { "Authorization": access_token, "Content-Type": "application/json" }
+    @body        = body
 
     @card_order_options = {
         "payment_source": {
-            "card": @card
+            "card": {
+                "name": "John Doe",
+                "number": "4032039317984658",
+                "expiry": "2023-07",
+                "security_code": "111",
+                "billing_address": {
+                    "address_line_1": "12312 Port Grace Blvd",
+                    "admin_area_2": "La Vista",
+                    "admin_area_1": "NE",
+                    "postal_code": "68128",
+                    "country_code": "US"
+                }
+            }
         },
         "headers": @headers
     }
@@ -40,31 +37,31 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
   end
 
   def test_successful_create_capture_order
-    @paypal_customer.expects(:ssl_request).times(1).returns(successful_create_capture_order_response)
+    @gateway.expects(:ssl_request).times(1).returns(successful_create_capture_order_response)
     success_create_order_assertions("CAPTURE")
   end
 
   def test_successful_create_authorize_order
-    @paypal_customer.expects(:ssl_request).times(1).returns(successful_create_authorize_order_response)
+    @gateway.expects(:ssl_request).times(1).returns(successful_create_authorize_order_response)
     success_create_order_assertions("AUTHORIZE")
   end
 
   def test_successful_create_and_capture_order
-    @paypal_customer.expects(:ssl_request).times(2).returns(successful_create_capture_order_response, successful_capture_order_response)
+    @gateway.expects(:ssl_request).times(2).returns(successful_create_capture_order_response, successful_capture_order_response)
     create          = success_create_order_assertions("CAPTURE")
     order_id        = create.params["id"]
     success_capture_assertions(order_id)
   end
 
   def test_successful_create_and_authorize_order
-    @paypal_customer.expects(:ssl_request).times(2).returns(successful_create_authorize_order_response, successful_authorize_order_response)
+    @gateway.expects(:ssl_request).times(2).returns(successful_create_authorize_order_response, successful_authorize_order_response)
     create          = success_create_order_assertions("AUTHORIZE")
     order_id        = create.params["id"]
     success_authorize_assertions(order_id)
   end
 
   def test_successful_create_and_authorize_and_capture_order
-    @paypal_customer.expects(:ssl_request).times(3).returns(successful_create_authorize_order_response, successful_authorize_order_response, successful_capture_authorized_order_response)
+    @gateway.expects(:ssl_request).times(3).returns(successful_create_authorize_order_response, successful_authorize_order_response, successful_capture_authorized_order_response)
     create          = success_create_order_assertions("AUTHORIZE")
     order_id        = create.params["id"]
     authorize        = success_authorize_assertions(order_id)
@@ -73,7 +70,7 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
   end
 
   def test_successful_create_and_capture_and_refund_order
-    @paypal_customer.expects(:ssl_request).times(3).returns(successful_create_capture_order_response, successful_capture_order_response, successful_refund_order_response)
+    @gateway.expects(:ssl_request).times(3).returns(successful_create_capture_order_response, successful_capture_order_response, successful_refund_order_response)
     create          = success_create_order_assertions("CAPTURE")
     order_id        = create.params["id"]
     capture         = success_capture_assertions(order_id)
@@ -82,7 +79,7 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
   end
 
   def test_successful_create_and_authorize_and_void_order
-    @paypal_customer.expects(:ssl_request).times(3).returns(successful_create_authorize_order_response, successful_authorize_order_response, successful_void_order_response)
+    @gateway.expects(:ssl_request).times(3).returns(successful_create_authorize_order_response, successful_authorize_order_response, successful_void_order_response)
     create           = success_create_order_assertions("AUTHORIZE")
     order_id         = create.params["id"]
     authorize        = success_authorize_assertions(order_id)
@@ -91,50 +88,50 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
   end
 
   def test_failed_create_capture_order_due_to_invalid_schema
-    @paypal_customer.expects(:ssl_request).times(1).returns(failed_create_order_invalid_schema_response)
+    @gateway.expects(:ssl_request).times(1).returns(failed_create_order_invalid_schema_response)
     failed_create_order_invalid_schema_assertions
   end
 
   def test_failed_create_capture_order_due_to_invalid_business_validation
-    @paypal_customer.expects(:ssl_request).times(1).returns(failed_create_order_invalid_business_validation_response)
+    @gateway.expects(:ssl_request).times(1).returns(failed_create_order_invalid_business_validation_response)
     failed_create_order_invalid_business_validation_assertions
   end
 
   def test_failed_capture_after_creation_due_to_invalid_schema(order_id)
-    @paypal_customer.expects(:ssl_request).times(2).returns(successful_create_capture_order_response, failed_capture_order_invalid_schema_response)
+    @gateway.expects(:ssl_request).times(2).returns(successful_create_capture_order_response, failed_capture_order_invalid_schema_response)
     create          = success_create_order_assertions("CAPTURE")
     order_id        = create.params["id"]
     failed_capture_order_invalid_schema_assertions(order_id)
   end
 
   def test_failed_capture_after_creation_due_to_invalid_business_validation
-    @paypal_customer.expects(:ssl_request).times(2).returns(successful_create_capture_order_response, failed_capture_order_invalid_business_validation_response)
+    @gateway.expects(:ssl_request).times(2).returns(successful_create_capture_order_response, failed_capture_order_invalid_business_validation_response)
     create          = success_create_order_assertions("CAPTURE")
     order_id        = create.params["id"]
     failed_capture_order_invalid_business_validation_assertions(order_id)
   end
 
   def test_failed_authorize_after_creation_due_to_invalid_schema
-    @paypal_customer.expects(:ssl_request).times(2).returns(successful_create_capture_order_response, failed_authorize_order_invalid_schema_response)
+    @gateway.expects(:ssl_request).times(2).returns(successful_create_capture_order_response, failed_authorize_order_invalid_schema_response)
     create          = success_create_order_assertions("CAPTURE")
     order_id        = create.params["id"]
     failed_authorize_order_invalid_schema_assertions(order_id)
   end
 
   def test_failed_authorize_after_creation_due_to_invalid_business_validations
-    @paypal_customer.expects(:ssl_request).times(2).returns(successful_create_authorize_order_response, failed_authorize_order_invalid_business_validation_response)
+    @gateway.expects(:ssl_request).times(2).returns(successful_create_authorize_order_response, failed_authorize_order_invalid_business_validation_response)
     create          = success_create_order_assertions("AUTHORIZE")
     order_id        = create.params["id"]
     failed_authorize_order_invalid_business_validation_assertions(order_id)
   end
 
   def test_failed_void_due_to_invalid_resource
-    @paypal_customer.expects(:ssl_request).times(1).returns(failed_void_invalid_resource_response)
+    @gateway.expects(:ssl_request).times(1).returns(failed_void_invalid_resource_response)
     failed_void_invalid_resource_assertions
   end
 
   def test_failed_void_due_to_invalid_business_validation
-    @paypal_customer.expects(:ssl_request).times(3).returns(successful_create_authorize_order_response, successful_authorize_order_response, failed_void_invalid_business_validation_response)
+    @gateway.expects(:ssl_request).times(3).returns(successful_create_authorize_order_response, successful_authorize_order_response, failed_void_invalid_business_validation_response)
     create           = success_create_order_assertions("AUTHORIZE")
     order_id         = create.params["id"]
     authorize        = success_authorize_assertions(order_id)
@@ -143,7 +140,7 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
   end
 
   def test_failed_refund_due_to_invalid_schema
-    @paypal_customer.expects(:ssl_request).times(3).returns(successful_create_capture_order_response, successful_capture_order_response, failed_refund_invalid_schema_response)
+    @gateway.expects(:ssl_request).times(3).returns(successful_create_capture_order_response, successful_capture_order_response, failed_refund_invalid_schema_response)
     create           = success_create_order_assertions("CAPTURE")
     order_id         = create.params["id"]
     capture         = success_capture_assertions(order_id)
@@ -152,7 +149,7 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
   end
 
   def test_failed_refund_due_to_invalid_business_validation
-    @paypal_customer.expects(:ssl_request).times(3).returns(successful_create_capture_order_response, successful_capture_order_response, failed_refund_invalid_business_validation_response)
+    @gateway.expects(:ssl_request).times(3).returns(successful_create_capture_order_response, successful_capture_order_response, failed_refund_invalid_business_validation_response)
     create           = success_create_order_assertions("CAPTURE")
     order_id         = create.params["id"]
     capture         = success_capture_assertions(order_id)
@@ -1095,10 +1092,10 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
     { headers: @headers }.merge(@body)
   end
 
-  # <- ************************ Assertions ************************ >
+  # Assertions private methods
 
   def success_create_order_assertions(order_type)
-    assert create = @paypal_customer.create_order(order_type, options)
+    assert create = @gateway.create_order(order_type, options)
     assert_instance_of Response, create
     assert_success create
     assert_equal order_type, create.params["intent"]
@@ -1108,7 +1105,7 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
   end
 
   def success_capture_assertions(order_id)
-    assert capture = @paypal_customer.capture(order_id, @card_order_options)
+    assert capture = @gateway.capture(order_id, @card_order_options)
     assert_instance_of Response, capture
     assert_success capture
     assert_equal "COMPLETED", capture.params["status"]
@@ -1117,7 +1114,7 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
   end
 
   def success_authorize_assertions(order_id)
-    assert authorize = @paypal_customer.authorize(order_id, @card_order_options)
+    assert authorize = @gateway.authorize(order_id, @card_order_options)
     assert_instance_of Response, authorize
     assert_success authorize
     assert_equal "COMPLETED", authorize.params["status"]
@@ -1126,7 +1123,7 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
   end
 
   def success_capture_authorized_assertions(authorization_id)
-    assert capture = @paypal_customer.do_capture(authorization_id, options)
+    assert capture = @gateway.do_capture(authorization_id, options)
     assert_instance_of Response, capture
     assert_success capture
     assert_equal "COMPLETED", capture.params["status"]
@@ -1134,7 +1131,7 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
   end
 
   def success_refund_assertions(capture_id)
-    assert refund = @paypal_customer.refund(capture_id, options)
+    assert refund = @gateway.refund(capture_id, options)
     assert_instance_of Response, refund
     assert_success refund
     assert_equal "COMPLETED", refund.params["status"]
@@ -1143,7 +1140,7 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
   end
 
   def success_void_assertions(authorization_id)
-    assert void = @paypal_customer.void(authorization_id, options)
+    assert void = @gateway.void(authorization_id, options)
     assert_instance_of Response, void
     assert_success void
     assert_empty void.params
@@ -1152,7 +1149,7 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
   end
 
   def failed_create_order_invalid_schema_assertions
-    assert create = @paypal_customer.create_order("CAPTURE", options)
+    assert create = @gateway.create_order("CAPTURE", options)
     assert_instance_of Response, create
     assert_failure create
     assert_equal "Request is not well-formed, syntactically incorrect, or violates schema.", create.message
@@ -1160,7 +1157,7 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
   end
 
   def failed_create_order_invalid_business_validation_assertions
-    assert create = @paypal_customer.create_order("CAPTURE", options)
+    assert create = @gateway.create_order("CAPTURE", options)
     assert_instance_of Response, create
     assert_failure create
     assert_equal "The requested action could not be performed, semantically incorrect, or failed business validation.", create.message
@@ -1168,7 +1165,7 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
   end
 
   def failed_capture_order_invalid_schema_assertions(order_id)
-    assert capture = @paypal_customer.capture(order_id, @card_order_options)
+    assert capture = @gateway.capture(order_id, @card_order_options)
     assert_instance_of Response, capture
     assert_failure capture
     assert_equal "Request is not well-formed, syntactically incorrect, or violates schema.", capture.message
@@ -1176,7 +1173,7 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
   end
 
   def failed_capture_order_invalid_business_validation_assertions(order_id)
-    assert capture = @paypal_customer.capture(order_id, @card_order_options)
+    assert capture = @gateway.capture(order_id, @card_order_options)
     assert_instance_of Response, capture
     assert_failure capture
     assert_equal "The requested action could not be performed, semantically incorrect, or failed business validation.", capture.message
@@ -1184,7 +1181,7 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
   end
 
   def failed_authorize_order_invalid_business_validation_assertions(order_id)
-    assert authorize = @paypal_customer.authorize(order_id, @card_order_options)
+    assert authorize = @gateway.authorize(order_id, @card_order_options)
     assert_instance_of Response, authorize
     assert_failure authorize
     assert_equal "The requested action could not be performed, semantically incorrect, or failed business validation.", authorize.message
@@ -1192,7 +1189,7 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
   end
 
   def failed_authorize_order_invalid_schema_assertions(order_id)
-    assert authorize = @paypal_customer.authorize(order_id, @card_order_options)
+    assert authorize = @gateway.authorize(order_id, @card_order_options)
     assert_instance_of Response, authorize
     assert_failure authorize
     assert_equal "Request is not well-formed, syntactically incorrect, or violates schema.", authorize.message
@@ -1200,7 +1197,7 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
   end
 
   def failed_void_invalid_resource_assertions
-    assert void = @paypal_customer.void("INVALID_ID", options)
+    assert void = @gateway.void("INVALID_ID", options)
     assert_instance_of Response, void
     assert_failure void
     assert_equal "The specified resource does not exist.", void.message
@@ -1208,7 +1205,7 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
   end
 
   def failed_void_invalid_business_validation_assertions(authorization_id)
-    assert void = @paypal_customer.void(authorization_id, options)
+    assert void = @gateway.void(authorization_id, options)
     assert_instance_of Response, void
     assert_failure void
     assert_equal "The requested action could not be performed, semantically incorrect, or failed business validation.", void.message
@@ -1216,7 +1213,7 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
   end
 
   def failed_refund_invalid_schema_assertions(capture_id)
-    assert refund = @paypal_customer.refund(capture_id, options)
+    assert refund = @gateway.refund(capture_id, options)
     assert_instance_of Response, refund
     assert_failure refund
     assert_equal "Request is not well-formed, syntactically incorrect, or violates schema", refund.message
@@ -1224,7 +1221,7 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
   end
 
   def failed_refund_invalid_business_validation_assertions(capture_id)
-    assert refund = @paypal_customer.refund(capture_id, options)
+    assert refund = @gateway.refund(capture_id, options)
     assert_instance_of Response, refund
     assert_failure refund
     assert_equal "The requested action could not be performed, semantically incorrect, or failed business validation.", refund.message

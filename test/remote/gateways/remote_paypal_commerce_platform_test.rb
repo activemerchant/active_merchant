@@ -4,12 +4,12 @@ require "byebug"
 class PaypalExpressRestTest < Test::Unit::TestCase
   def setup
     Base.mode               = :test
-    @paypal_customer        = ActiveMerchant::Billing::PaypalCommercePlatformGateway.new
+    @gateway                = ActiveMerchant::Billing::PaypalCommercePlatformGateway.new
 
     params                  = user_credentials
 
     options                 = { "Content-Type": "application/json", authorization: params }
-    access_token            = @paypal_customer.get_token(options)
+    access_token            = @gateway.get_token(options)
     missing_password_params = { username: "ASs8Osqge6KT3OdLtkNhD20VP8lsrqRUlRjLo-e5s75SHz-2ffMMzCos_odQGjGYpPcGlxJVQ5fXMz9q" }
     missing_username_params = { password: "EKj_bMZn0CkOhOvFwJMX2WwhtCq2A0OtlOd5T-zUhKIf9WQxvgPasNX0Kr1U4TjFj8ZN6XCMF5NM30Z_" }
 
@@ -33,23 +33,21 @@ class PaypalExpressRestTest < Test::Unit::TestCase
         }
     }
 
-    @card = {
-        "name": "John Doe",
-        "number": "4032039317984658",
-        "expiry": "2023-07",
-        "security_code": "111",
-        "billing_address": {
-            "address_line_1": "12312 Port Grace Blvd",
-            "admin_area_2": "La Vista",
-            "admin_area_1": "NE",
-            "postal_code": "68128",
-            "country_code": "US"
-        }
-    }
-
     @card_order_options = {
         "payment_source": {
-            "card": @card
+            "card": {
+                "name": "John Doe",
+                "number": "4032039317984658",
+                "expiry": "2023-07",
+                "security_code": "111",
+                "billing_address": {
+                    "address_line_1": "12312 Port Grace Blvd",
+                    "admin_area_2": "La Vista",
+                    "admin_area_1": "NE",
+                    "postal_code": "68128",
+                    "country_code": "US"
+                }
+            }
         },
         "headers": @headers
     }
@@ -62,7 +60,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
   def test_access_token
     options       = { "Content-Type": "application/json", authorization: user_credentials }
-    access_token  = @paypal_customer.get_token(options)
+    access_token  = @gateway.get_token(options)
     assert access_token.include?("basic")
     assert !access_token.nil?
   end
@@ -91,7 +89,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   def test_capture_order_with_card
     response = create_order("CAPTURE")
     order_id = response.params["id"]
-    response = @paypal_customer.capture(order_id, @card_order_options)
+    response = @gateway.capture(order_id, @card_order_options)
     success_status_assertions(response, "COMPLETED")
   end
 
@@ -99,7 +97,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   def test_authorize_order_with_card
     response = create_order("AUTHORIZE")
     order_id = response.params["id"]
-    response = @paypal_customer.authorize(order_id, @card_order_options)
+    response = @gateway.authorize(order_id, @card_order_options)
     success_status_assertions(response, "COMPLETED")
   end
 
@@ -107,9 +105,9 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   def test_capture_authorized_order_with_card
     response         = create_order("AUTHORIZE")
     order_id         = response.params["id"]
-    response         = @paypal_customer.authorize(order_id, @card_order_options)
+    response         = @gateway.authorize(order_id, @card_order_options)
     authorization_id = response.params["purchase_units"][0]["payments"]["authorizations"][0]["id"]
-    response         = @paypal_customer.do_capture(authorization_id,options)
+    response         = @gateway.do_capture(authorization_id,options)
     success_status_assertions(response, "COMPLETED")
   end
 
@@ -117,9 +115,9 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   def test_refund_captured_order_with_card
     response        = create_order("CAPTURE")
     order_id        = response.params["id"]
-    response        = @paypal_customer.capture(order_id, @card_order_options)
+    response        = @gateway.capture(order_id, @card_order_options)
     capture_id      = response.params["purchase_units"][0]["payments"]["captures"][0]["id"]
-    refund_response = @paypal_customer.refund(capture_id, options)
+    refund_response = @gateway.refund(capture_id, options)
     success_status_assertions(refund_response, "COMPLETED")
   end
 
@@ -127,9 +125,9 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   def test_void_authorized_order_with_card
     response         = create_order("AUTHORIZE")
     order_id         = response.params["id"]
-    response         = @paypal_customer.authorize(order_id, @card_order_options)
+    response         = @gateway.authorize(order_id, @card_order_options)
     authorization_id = response.params["purchase_units"][0]["payments"]["authorizations"][0]["id"]
-    void_response    = @paypal_customer.void(authorization_id, options)
+    void_response    = @gateway.void(authorization_id, options)
     success_empty_assertions(void_response)
   end
 
@@ -138,7 +136,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     response = create_order("CAPTURE")
     order_id = response.params["id"]
     @body    = {body: update_amount_body}
-    response = @paypal_customer.update_order(order_id, options)
+    response = @gateway.update_order(order_id, options)
     success_empty_assertions(response)
     @body = body
   end
@@ -148,7 +146,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     response = create_order("CAPTURE")
     order_id = response.params["id"]
     @body    = {body: update_shipping_address_body}
-    response = @paypal_customer.update_order(order_id, options)
+    response = @gateway.update_order(order_id, options)
     success_empty_assertions(response)
     @body = body
   end
@@ -158,7 +156,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     response = create_order("CAPTURE")
     order_id = response.params["id"]
     @body    = {body: update_platform_fee_body}
-    response = @paypal_customer.update_order(order_id, options)
+    response = @gateway.update_order(order_id, options)
     success_empty_assertions(response)
     @body = body
   end
@@ -167,7 +165,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   def test_missing_password_argument_to_get_access_token
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: password"
-      @paypal_customer.get_token(@get_token_missing_password_options)
+      @gateway.get_token(@get_token_missing_password_options)
     end
   end
 
@@ -175,7 +173,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   def test_missing_username_argument_to_get_access_token
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: username"
-      @paypal_customer.get_token(@get_token_missing_username_options)
+      @gateway.get_token(@get_token_missing_username_options)
     end
   end
 
@@ -187,7 +185,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: intent"
-      @paypal_customer.create_order(nil, options)
+      @gateway.create_order(nil, options)
     end
   end
 
@@ -199,7 +197,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: purchase_units"
-      @paypal_customer.create_order("CAPTURE", options)
+      @gateway.create_order("CAPTURE", options)
     end
   end
 
@@ -211,7 +209,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: amount in purchase_units"
-      @paypal_customer.create_order("CAPTURE", options)
+      @gateway.create_order("CAPTURE", options)
     end
   end
 
@@ -223,7 +221,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: currency_code in amount"
-      @paypal_customer.create_order("CAPTURE", options)
+      @gateway.create_order("CAPTURE", options)
     end
   end
 
@@ -235,7 +233,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: value in amount"
-      @paypal_customer.create_order("CAPTURE", options)
+      @gateway.create_order("CAPTURE", options)
     end
   end
 
@@ -247,7 +245,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: name in items"
-      @paypal_customer.create_order("CAPTURE", options)
+      @gateway.create_order("CAPTURE", options)
     end
   end
 
@@ -259,7 +257,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: quantity in items"
-      @paypal_customer.create_order("CAPTURE", options)
+      @gateway.create_order("CAPTURE", options)
     end
   end
 
@@ -271,7 +269,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: unit_amount in items"
-      @paypal_customer.create_order("CAPTURE", options)
+      @gateway.create_order("CAPTURE", options)
     end
   end
 
@@ -283,7 +281,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: admin_area_2 in address"
-      @paypal_customer.create_order("CAPTURE", options)
+      @gateway.create_order("CAPTURE", options)
     end
   end
 
@@ -295,7 +293,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: postal code in address"
-      @paypal_customer.create_order("CAPTURE", options)
+      @gateway.create_order("CAPTURE", options)
     end
   end
 
@@ -307,7 +305,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: country code in address"
-      @paypal_customer.create_order("CAPTURE", options)
+      @gateway.create_order("CAPTURE", options)
     end
   end
 
@@ -323,7 +321,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: amount in platform fee"
-      @paypal_customer.create_order("CAPTURE", options)
+      @gateway.create_order("CAPTURE", options)
     end
   end
 
@@ -339,7 +337,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: payee in platform fee"
-      @paypal_customer.create_order("CAPTURE", options)
+      @gateway.create_order("CAPTURE", options)
     end
   end
 
@@ -350,7 +348,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: operator"
-      @paypal_customer.handle_approve(order_id, options)
+      @gateway.handle_approve(order_id, options)
     end
   end
 
@@ -358,7 +356,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   def test_missing_operator_required_id_arguments_in_handle_approve
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: operator_required_id"
-      @paypal_customer.handle_approve(nil, options)
+      @gateway.handle_approve(nil, options)
     end
   end
 
@@ -368,7 +366,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
       puts "*** ArgumentError Exception: Missing required parameter: order_id in update_order"
       @body    = {body: update_amount_body}
-      @paypal_customer.update_order(nil, options)
+      @gateway.update_order(nil, options)
     end
   end
 
@@ -379,7 +377,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
       order_id = response.params["id"]
       puts "*** ArgumentError Exception: Missing required parameter: body in update_order"
       @body    = {}
-      @paypal_customer.update_order(order_id, options)
+      @gateway.update_order(order_id, options)
     end
   end
 
@@ -394,7 +392,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: op in update field"
-      @paypal_customer.update_order(order_id, options)
+      @gateway.update_order(order_id, options)
     end
   end
 
@@ -409,7 +407,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: op in update field"
-      @paypal_customer.update_order(order_id, options)
+      @gateway.update_order(order_id, options)
     end
   end
 
@@ -424,7 +422,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: op in update field"
-      @paypal_customer.update_order(order_id, options)
+      @gateway.update_order(order_id, options)
     end
   end
 
@@ -445,7 +443,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
       end
     end
 
-    @paypal_customer.create_order(order_type, options)
+    @gateway.create_order(order_type, options)
   end
 
 
@@ -619,7 +617,5 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     assert_success response
     assert_empty   response.params
   end
-
-
 
 end

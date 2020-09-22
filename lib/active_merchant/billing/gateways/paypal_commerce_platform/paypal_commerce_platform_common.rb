@@ -20,11 +20,11 @@ module ActiveMerchant
         response['webhook_id'] = options[:webhook_id] if options[:webhook_id]
         success                = success_from(response, options)
 
-        Response.new(success,
-                     message_from(success, response),
-                     response,
+        Response.new(
+            success,
+            message_from(success, response),
+            response
         )
-
       end
 
       def skip_empty(obj_hsh, key)

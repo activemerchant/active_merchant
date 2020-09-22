@@ -9,7 +9,6 @@ module ActiveMerchant #:nodoc:
       self.homepage_url        = 'https://www.paypal.com/cgi-bin/webscr?cmd=xpt/merchant/ExpressCheckoutIntro-outside'
       self.display_name        = 'PayPal Commerce Platform Checkout'
 
-
       def create_order(intent, options)
         requires!(options.merge!(intent.nil? ? { } : { intent: intent}), :intent, :purchase_units)
 
@@ -22,12 +21,10 @@ module ActiveMerchant #:nodoc:
         commit(:post, "v2/checkout/orders", post, options[:headers])
       end
 
-
       def get_token(options)
         requires!(options[:authorization], :username, :password)
         prepare_request_for_get_access_token(options)
       end
-
 
       def authorize(order_id, options)
         requires!({ order_id: order_id }, :order_id)
@@ -39,12 +36,10 @@ module ActiveMerchant #:nodoc:
         commit(:post, "v2/checkout/orders/#{ order_id }/authorize", post, options[:headers])
       end
 
-
       def handle_approve(operator_required_id, options)
         requires!(options.merge({ operator_required_id: operator_required_id }), :operator_required_id, :operator)
         options[:operator] == "authorize" ? authorize(operator_required_id, options) : capture(operator_required_id, options)
       end
-
 
       def capture(order_id, options)
         requires!({ order_id: order_id }, :order_id)
@@ -53,7 +48,6 @@ module ActiveMerchant #:nodoc:
         populate_payment_source(post, options[:payment_source])
         commit(:post, "v2/checkout/orders/#{ order_id }/capture", post, options[:headers])
       end
-
 
       def refund(capture_id, options={ })
         requires!({ capture_id: capture_id }, :capture_id)
@@ -66,13 +60,11 @@ module ActiveMerchant #:nodoc:
         commit(:post, "v2/payments/captures/#{ capture_id }/refund", post, options[:headers])
       end
 
-
       def void(authorization_id, options)
         requires!({ authorization_id: authorization_id }, :authorization_id)
         post = { }
         commit(:post, "v2/payments/authorizations/#{ authorization_id }/void", post, options[:headers])
       end
-
 
       def update_order(order_id, options)
         requires!(options.merge!(order_id.nil? ? { } : { order_id: order_id}), :order_id, :body)
@@ -96,7 +88,6 @@ module ActiveMerchant #:nodoc:
         commit(:patch, "v2/checkout/orders/#{ order_id }", post, options[:headers])
       end
 
-
       def do_capture(authorization_id, options)
         requires!(options.merge!({ authorization_id: authorization_id  }), :authorization_id)
 
@@ -109,24 +100,20 @@ module ActiveMerchant #:nodoc:
         commit(:post, "v2/payments/authorizations/#{ authorization_id }/capture", post, options[:headers])
       end
 
-
       def get_order_details(order_id, options)
         requires!(options.merge(order_id: order_id), :order_id)
         commit(:get, "/v2/checkout/orders/#{ order_id }", nil, options[:headers])
       end
-
 
       def get_authorization_details(authorization_id, options)
         requires!(options.merge(authorization_id: authorization_id), :authorization_id)
         commit(:get, "/v2/checkout/orders/#{ authorization_id }", nil, options[:headers])
       end
 
-
       def get_capture_details(capture_id, options)
         requires!(options.merge(capture_id: capture_id), :capture_id)
         commit(:get, "/v2/payments/captures/#{ capture_id }", nil, options[:headers])
       end
-
 
       def get_refund_details(refund_id, options)
         requires!(options.merge(refund_id: refund_id), :refund_id)
@@ -147,7 +134,7 @@ module ActiveMerchant #:nodoc:
         post = { token_id: options[:token_id] }
         commit(:post, "/v1/billing-agreements/agreements", post, options[:headers])
       end
-      #### END Billing Agreement ###
+
       private
 
       def add_purchase_units(options, post)
@@ -177,7 +164,6 @@ module ActiveMerchant #:nodoc:
         post
       end
 
-
       def add_application_context(options, post)
         post[:application_context]                = { }
         post[:application_context][:return_url]   = options[:return_url] unless options[:return_url].nil?
@@ -185,7 +171,6 @@ module ActiveMerchant #:nodoc:
 
         skip_empty(post, :application_context)
       end
-
 
       def add_payment_instruction(options, post, key=:payment_instruction)
         post[key]                     = { }
@@ -205,12 +190,10 @@ module ActiveMerchant #:nodoc:
         skip_empty(post, key)
       end
 
-
       def add_intent(intent, post)
         post[:intent]  = intent
         post
       end
-
 
       def add_payee(payee_obj, obj_hsh)
         obj_hsh[:payee] = { }
@@ -219,7 +202,6 @@ module ActiveMerchant #:nodoc:
 
         skip_empty(obj_hsh, :payee)
       end
-
 
       def add_amount(amount, post, key=:amount)
         requires!(amount, :currency_code, :value)
@@ -233,7 +215,6 @@ module ActiveMerchant #:nodoc:
         post
       end
 
-
       def add_breakdown_for_amount(options, post, key)
         post[key][:breakdown] = { }
         options.each do |item, _|
@@ -241,7 +222,6 @@ module ActiveMerchant #:nodoc:
         end
         skip_empty(post[key], :breakdown)
       end
-
 
       def add_items(options, post)
         post[:items] = []
@@ -265,7 +245,6 @@ module ActiveMerchant #:nodoc:
         post
       end
 
-
       def add_shipping(options, post)
         post[:shipping] = { }
         post[:shipping] = { }
@@ -273,7 +252,6 @@ module ActiveMerchant #:nodoc:
 
         skip_empty(post, :shipping)
       end
-
 
       def add_shipping_address(address, obj_hsh, key = :address)
         requires!(address, :admin_area_2, :postal_code, :country_code )
