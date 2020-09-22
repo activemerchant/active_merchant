@@ -30,8 +30,7 @@ module ActiveMerchant #:nodoc:
         requires!({ order_id: order_id }, :order_id)
 
         post = { }
-
-        populate_payment_source(post, options[:payment_source])
+        add_payment_source(options[:payment_source], post) unless options[:payment_source].nil?
 
         commit(:post, "v2/checkout/orders/#{ order_id }/authorize", post, options[:headers])
       end
@@ -45,7 +44,8 @@ module ActiveMerchant #:nodoc:
         requires!({ order_id: order_id }, :order_id)
 
         post = { }
-        populate_payment_source(post, options[:payment_source])
+        add_payment_source(options[:payment_source], post) unless options[:payment_source].nil?
+
         commit(:post, "v2/checkout/orders/#{ order_id }/capture", post, options[:headers])
       end
 
@@ -100,6 +100,20 @@ module ActiveMerchant #:nodoc:
         commit(:post, "v2/payments/authorizations/#{ authorization_id }/capture", post, options[:headers])
       end
 
+      def create_billing_agreement_token(options)
+        requires!(options, :shipping_address, :payer, :plan)
+
+        post = { }
+        prepare_request_to_get_agreement_tokens(post, options)
+        commit(:post, "/v1/billing-agreements/agreement-tokens", post, options[:headers])
+      end
+
+      def create_agreement_for_approval(options)
+        requires!(options, :token_id)
+        post = { token_id: options[:token_id] }
+        commit(:post, "/v1/billing-agreements/agreements", post, options[:headers])
+      end
+
       def get_order_details(order_id, options)
         requires!(options.merge(order_id: order_id), :order_id)
         commit(:get, "/v2/checkout/orders/#{ order_id }", nil, options[:headers])
@@ -118,21 +132,6 @@ module ActiveMerchant #:nodoc:
       def get_refund_details(refund_id, options)
         requires!(options.merge(refund_id: refund_id), :refund_id)
         commit(:get, "/v2/payments/refunds/#{ refund_id }", nil, options[:headers])
-      end
-
-      #### Start Billing Agreement ###
-      def create_billing_agreement_token(options)
-        requires!(options, :shipping_address, :payer, :plan)
-
-        post = { }
-        prepare_request_to_get_agreement_tokens(post, options)
-        commit(:post, "/v1/billing-agreements/agreement-tokens", post, options[:headers])
-      end
-
-      def create_agreement_for_approval(options)
-        requires!(options, :token_id)
-        post = { token_id: options[:token_id] }
-        commit(:post, "/v1/billing-agreements/agreements", post, options[:headers])
       end
 
       private
@@ -297,7 +296,9 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_source(source, post)
         post[:payment_source] = { }
+
         add_customer_card(source[:card], post[:payment_source]) unless source[:card].nil?
+        add_billing_agreement_payment_source(post, source) unless source[:token].nil?
 
         skip_empty(post, :payment_source)
       end
@@ -315,10 +316,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def prepare_request_to_get_agreement_tokens(post, options)
-        post[:description]          = options[:description]
-        add_billing_agreement_shipping_address(options[:shipping_address], post, key = :shipping_address)
-        post[:payer][:payer_method] = options[:payer][:payment_method]
+        post[:payer] = { }
+        post[:description]            = options[:description]
+        post[:payer][:payment_method] = options[:payer][:payment_method]
         add_plan(post, options[:plan])
+        add_billing_agreement_shipping_address(options[:shipping_address], post, key = :shipping_address)
         post
       end
 
@@ -326,11 +328,11 @@ module ActiveMerchant #:nodoc:
         obj_hsh[:plan]                              = { }
         obj_hsh[:plan][:type]                       = options[:type]
         obj_hsh[:plan][:merchant_preferences]       = { }
-        obj_hsh[:plan][:return_url]                 = options[:merchant_preferences][:return_url]
-        obj_hsh[:plan][:cancel_url]                 = options[:merchant_preferences][:cancel_url]
-        obj_hsh[:plan][:accepted_pymt_type]         = options[:merchant_preferences][:accepted_pymt_type]
-        obj_hsh[:plan][:skip_shipping_address]      = options[:merchant_preferences][:skip_shipping_address]
-        obj_hsh[:plan][:immutable_shipping_address] = options[:merchant_preferences][:immutable_shipping_address]
+        obj_hsh[:plan][:merchant_preferences][:return_url]                 = options[:merchant_preferences][:return_url]
+        obj_hsh[:plan][:merchant_preferences][:cancel_url]                 = options[:merchant_preferences][:cancel_url]
+        obj_hsh[:plan][:merchant_preferences][:accepted_pymt_type]         = options[:merchant_preferences][:accepted_pymt_type]
+        obj_hsh[:plan][:merchant_preferences][:skip_shipping_address]      = options[:merchant_preferences][:skip_shipping_address]
+        obj_hsh[:plan][:merchant_preferences][:immutable_shipping_address] = options[:merchant_preferences][:immutable_shipping_address]
         obj_hsh
       end
 
@@ -348,15 +350,7 @@ module ActiveMerchant #:nodoc:
         obj_hsh
       end
 
-      def populate_payment_source(post, options)
-        if options.present? && options[:token].present?
-          add_billing_agreement_payment_source(post, options)
-        elsif options.present?
-          add_payment_source(options, post)
-        end
-      end
-
-      def add_billing_agreement_payment_source(post, options)
+      def add_billing_agreement(post, options)
         post[:payment_source]           = { }
         add_token(post, options[:token])
       end
