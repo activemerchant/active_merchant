@@ -85,6 +85,14 @@ class GlobalCollectTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response, successful_capture_response)
   end
 
+  def test_purchase_passes_installments
+    stub_comms do
+      @gateway.purchase(@accepted_amount, @credit_card, @options.merge(number_of_installments: '3'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/"numberOfInstallments\":\"3\"/, data)
+    end.respond_with(successful_authorize_response, successful_capture_response)
+  end
+
   def test_purchase_does_not_run_capture_if_authorize_auto_captured
     response = stub_comms do
       @gateway.purchase(@accepted_amount, @credit_card, @options)

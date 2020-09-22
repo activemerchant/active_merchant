@@ -100,6 +100,7 @@ module ActiveMerchant #:nodoc:
           'invoiceNumber' => options[:invoice]
         }
         add_airline_data(post, options) if options[:airline_data]
+        add_number_of_installments(post, options) if options[:number_of_installments]
       end
 
       def add_airline_data(post, options)
@@ -229,6 +230,10 @@ module ActiveMerchant #:nodoc:
         fraud_fields[:customerIpAddress] = options[:ip] if options[:ip]
 
         post['fraudFields'] = fraud_fields unless fraud_fields.empty?
+      end
+
+      def add_number_of_installments(post, options)
+        post['order']['additionalInput']['numberOfInstallments'] = options[:number_of_installments] if options[:number_of_installments]
       end
 
       def parse(body)

@@ -29,6 +29,7 @@ Gem::Specification.new do |s|
 
   s.add_development_dependency('mocha', '~> 1')
   s.add_development_dependency('pry')
+  s.add_development_dependency('pry-byebug')
   s.add_development_dependency('rake')
   s.add_development_dependency('test-unit', '~> 3')
   s.add_development_dependency('thor')
