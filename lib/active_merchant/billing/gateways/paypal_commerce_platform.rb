@@ -133,9 +133,21 @@ module ActiveMerchant #:nodoc:
         commit(:get, "/v2/payments/refunds/#{ refund_id }", nil, options[:headers])
       end
 
+      ## Billing Agreement ##
+      def create_billing_agreement_token(options)
+        requires!(options, :shipping_address, :payer, :plan)
 
+        post = { }
+        prepare_request_to_get_agreement_tokens(post, options)
+        commit(:post, "/v1/billing-agreements/agreement-tokens", post, options[:headers])
+      end
+
+      def create_agreement_for_approval(options)
+        requires!(options, :token_id)
+        post = { token_id: options[:token_id] }
+        commit(:post, "/v1/billing-agreements/agreements", post, options[:headers])
+      end
       private
-
 
       def add_purchase_units(options, post)
         post[:purchase_units] = []
@@ -276,7 +288,6 @@ module ActiveMerchant #:nodoc:
         obj_hsh
       end
 
-
       def add_billing_address(address, obj_hsh)
         requires!(address, :country_code )
 
@@ -290,24 +301,20 @@ module ActiveMerchant #:nodoc:
         obj_hsh
       end
 
-
       def add_invoice(invoice_id, post)
         post[:invoice_id]  = invoice_id
         post
       end
 
-
       def add_final_capture(final_capture, post)
         post[:final_capture] = final_capture
         post
       end
-      
 
       def add_note(note, post)
         post[:note_to_payer] = note
         post
       end
-
 
       def add_payment_source(source, post)
         post[:payment_source] = { }
@@ -315,7 +322,6 @@ module ActiveMerchant #:nodoc:
 
         skip_empty(post, :payment_source)
       end
-
 
       def add_customer_card(card_details, post)
         requires!(card_details, :number, :expiry)
@@ -327,6 +333,39 @@ module ActiveMerchant #:nodoc:
         post[:card][:security_code] = card_details[:security_code] unless card_details[:security_code].nil?
 
         add_billing_address(card_details[:billing_address], post) unless card_details[:billing_address].nil?
+      end
+
+      def prepare_request_to_get_agreement_tokens(post, options)
+        post[:description]          = options[:description]
+        add_billing_agreement_shipping_address(options[:shipping_address], post, key = :shipping_address)
+        post[:payer][:payer_method] = options[:payer][:payment_method]
+        add_plan(post, options[:plan])
+        post
+      end
+
+      def add_plan(obj_hsh, options)
+        obj_hsh[:plan]                              = { }
+        obj_hsh[:plan][:type]                       = options[:type]
+        obj_hsh[:plan][:merchant_preferences]       = { }
+        obj_hsh[:plan][:return_url]                 = options[:merchant_preferences][:return_url]
+        obj_hsh[:plan][:cancel_url]                 = options[:merchant_preferences][:cancel_url]
+        obj_hsh[:plan][:accepted_pymt_type]         = options[:merchant_preferences][:accepted_pymt_type]
+        obj_hsh[:plan][:skip_shipping_address]      = options[:merchant_preferences][:skip_shipping_address]
+        obj_hsh[:plan][:immutable_shipping_address] = options[:merchant_preferences][:immutable_shipping_address]
+        obj_hsh
+      end
+      def add_billing_agreement_shipping_address(address, obj_hsh, key = :address)
+        requires!(address, :line1, :postal_code, :country_code )
+
+        obj_hsh[key]                  = { }
+        obj_hsh[key][:line1]          = address[:line1] unless address[:line1].nil?
+        obj_hsh[key][:city]           = address[:city] unless address[:city].nil?
+        obj_hsh[key][:state]          = address[:state] unless address[:state].nil?
+        obj_hsh[key][:postal_code]    = address[:postal_code]
+        obj_hsh[key][:country_code]   = address[:country_code]
+        obj_hsh[key][:recipient_name] = address[:recipient_name]
+
+        obj_hsh
       end
     end
   end
