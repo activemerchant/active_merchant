@@ -11,7 +11,6 @@ module ActiveMerchant #:nodoc:
 
 
       def create_order(intent, options)
-        #validate_intent(intent)
         requires!(options.merge!(intent.nil? ? { } : { intent: intent}), :intent, :purchase_units)
 
         post = { }

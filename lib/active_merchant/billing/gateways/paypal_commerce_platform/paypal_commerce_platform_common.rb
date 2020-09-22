@@ -66,7 +66,7 @@ module ActiveMerchant
       end
 
       def message_from(success, response)
-        success ? 'Transaction Successfully Completed' : response.fetch('error', {'message' => 'No error details'})['message']
+        success ? 'Transaction Successfully Completed' : response['message']
       end
 
       def json_error(raw_response)
@@ -91,13 +91,6 @@ module ActiveMerchant
         path.split("/").last
       end
 
-      def is_intent_exists?(intent)
-        ["CAPTURE", "AUTHORIZE"].include?(intent)
-      end
-
-      def validate_intent(intent)
-        raise ArgumentError.new("Intent is mismatched please check your intent: #{ intent }") unless is_intent_exists?(intent)
-      end
     end
   end
 end
