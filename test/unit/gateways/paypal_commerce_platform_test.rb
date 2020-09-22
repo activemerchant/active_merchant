@@ -104,6 +104,24 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
     success_approve_billing_agreement_assertions
   end
 
+  def test_succesful_capture_with_billing
+    @gateway.expects(:ssl_request).times(3).returns(successful_approve_billing_agreement_response, successful_create_capture_order_response, successful_capture_with_billing_response)
+    approve    = success_approve_billing_agreement_assertions
+    billing_id = approve.params["id"]
+    create     = success_create_order_assertions("CAPTURE")
+    order_id   = create.params["id"]
+    success_capture_order_with_billing_assertions(order_id, billing_id)
+  end
+
+  def test_succesful_authorize_with_billing
+    @gateway.expects(:ssl_request).times(3).returns(successful_approve_billing_agreement_response, successful_create_authorize_order_response, successful_authroize_with_billing_response)
+    approve    = success_approve_billing_agreement_assertions
+    billing_id = approve.params["id"]
+    create     = success_create_order_assertions("AUTHORIZE")
+    order_id   = create.params["id"]
+    success_authorize_order_with_billing_assertions(order_id, billing_id)
+  end
+
   def test_failed_create_capture_order_due_to_invalid_schema
     @gateway.expects(:ssl_request).times(1).returns(failed_create_order_invalid_schema_response)
     failed_create_order_invalid_schema_assertions
@@ -856,6 +874,261 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
     RESPONSE
   end
 
+  def successful_capture_with_billing_response
+    <<-RESPONSE
+        {
+        "id": "2GX9446699622573N",
+        "intent": "CAPTURE",
+        "status": "COMPLETED",
+        "purchase_units": [
+            {
+                "reference_id": "camera_shop_seller_1600788267",
+                "amount": {
+                    "currency_code": "USD",
+                    "value": "60.00"
+                },
+                "payee": {
+                    "email_address": "sb-jnxjj3033194@business.example.com",
+                    "merchant_id": "XC424JYN8FYUC"
+                },
+                "payments": {
+                    "captures": [
+                        {
+                            "id": "2B82960192651640F",
+                            "status": "COMPLETED",
+                            "amount": {
+                                "currency_code": "USD",
+                                "value": "60.00"
+                            },
+                            "final_capture": true,
+                            "seller_protection": {
+                                "status": "ELIGIBLE",
+                                "dispute_categories": [
+                                    "ITEM_NOT_RECEIVED",
+                                    "UNAUTHORIZED_TRANSACTION"
+                                ]
+                            },
+                            "seller_receivable_breakdown": {
+                                "gross_amount": {
+                                    "currency_code": "USD",
+                                    "value": "60.00"
+                                },
+                                "paypal_fee": {
+                                    "currency_code": "USD",
+                                    "value": "2.04"
+                                },
+                                "net_amount": {
+                                    "currency_code": "USD",
+                                    "value": "57.96"
+                                }
+                            },
+                            "links": [
+                                {
+                                    "href": "https://api.sandbox.paypal.com/v2/payments/captures/2B82960192651640F",
+                                    "rel": "self",
+                                    "method": "GET"
+                                },
+                                {
+                                    "href": "https://api.sandbox.paypal.com/v2/payments/captures/2B82960192651640F/refund",
+                                    "rel": "refund",
+                                    "method": "POST"
+                                },
+                                {
+                                    "href": "https://api.sandbox.paypal.com/v2/checkout/orders/2GX9446699622573N",
+                                    "rel": "up",
+                                    "method": "GET"
+                                }
+                            ],
+                            "create_time": "2020-09-22T15:24:47Z",
+                            "update_time": "2020-09-22T15:24:47Z"
+                        }
+                    ]
+                }
+            }
+        ],
+        "payer": {
+            "name": {
+                "given_name": "John",
+                "surname": "Doe"
+            },
+            "email_address": "sb-feqsa3029697@personal.example.com",
+            "payer_id": "DWUPFA2VU2W9E",
+            "address": {
+                "address_line_1": "1 Main St",
+                "admin_area_2": "San Jose",
+                "admin_area_1": "CA",
+                "postal_code": "95131",
+                "country_code": "US"
+            }
+        },
+        "create_time": "2020-09-22T15:24:40Z",
+        "update_time": "2020-09-22T15:24:47Z",
+        "links": [
+            {
+                "href": "https://api.sandbox.paypal.com/v2/checkout/orders/2GX9446699622573N",
+                "rel": "self",
+                "method": "GET"
+            }
+        ]
+    }
+    RESPONSE
+  end
+
+  def successful_authroize_with_billing_response
+    <<-RESPONSE
+    {
+        "id": "1GM23777922690625",
+        "intent": "AUTHORIZE",
+        "status": "COMPLETED",
+        "purchase_units": [
+            {
+                "reference_id": "camera_shop_seller_1600788653",
+                "amount": {
+                    "currency_code": "USD",
+                    "value": "25.00",
+                    "breakdown": {
+                        "item_total": {
+                            "currency_code": "USD",
+                            "value": "25.00"
+                        },
+                        "shipping": {
+                            "currency_code": "USD",
+                            "value": "0.00"
+                        },
+                        "handling": {
+                            "currency_code": "USD",
+                            "value": "0.00"
+                        },
+                        "tax_total": {
+                            "currency_code": "USD",
+                            "value": "0.00"
+                        },
+                        "insurance": {
+                            "currency_code": "USD",
+                            "value": "0.00"
+                        },
+                        "shipping_discount": {
+                            "currency_code": "USD",
+                            "value": "0.00"
+                        }
+                    }
+                },
+                "payee": {
+                    "email_address": "sb-for7q2968277@personal.example.com",
+                    "merchant_id": "3WK2L2WM58FGJ"
+                },
+                "description": "Camera Shop",
+                "custom_id": "custom_value_1600788653",
+                "invoice_id": "invoice_number_1600788653",
+                "items": [
+                    {
+                        "name": "Levis 501 Selvedge STF",
+                        "unit_amount": {
+                            "currency_code": "USD",
+                            "value": "25.00"
+                        },
+                        "tax": {
+                            "currency_code": "USD",
+                            "value": "0.00"
+                        },
+                        "quantity": "1",
+                        "sku": "5158936"
+                    }
+                ],
+                "shipping": {
+                    "name": {
+                        "full_name": "John Doe"
+                    },
+                    "address": {
+                        "address_line_1": "500 Hillside Street",
+                        "address_line_2": "#1000",
+                        "admin_area_2": "San Jose",
+                        "admin_area_1": "CA",
+                        "postal_code": "95131",
+                        "country_code": "US"
+                    }
+                },
+                "payments": {
+                    "authorizations": [
+                        {
+                            "status": "CREATED",
+                            "id": "3RF97879M2824560N",
+                            "amount": {
+                                "currency_code": "USD",
+                                "value": "25.00"
+                            },
+                            "invoice_id": "invoice_number_1600788653",
+                            "custom_id": "custom_value_1600788653",
+                            "seller_protection": {
+                                "status": "ELIGIBLE",
+                                "dispute_categories": [
+                                    "ITEM_NOT_RECEIVED",
+                                    "UNAUTHORIZED_TRANSACTION"
+                                ]
+                            },
+                            "expiration_time": "2020-10-21T15:31:13Z",
+                            "links": [
+                                {
+                                    "href": "https://api.sandbox.paypal.com/v2/payments/authorizations/3RF97879M2824560N",
+                                    "rel": "self",
+                                    "method": "GET"
+                                },
+                                {
+                                    "href": "https://api.sandbox.paypal.com/v2/payments/authorizations/3RF97879M2824560N/capture",
+                                    "rel": "capture",
+                                    "method": "POST"
+                                },
+                                {
+                                    "href": "https://api.sandbox.paypal.com/v2/payments/authorizations/3RF97879M2824560N/void",
+                                    "rel": "void",
+                                    "method": "POST"
+                                },
+                                {
+                                    "href": "https://api.sandbox.paypal.com/v2/payments/authorizations/3RF97879M2824560N/reauthorize",
+                                    "rel": "reauthorize",
+                                    "method": "POST"
+                                },
+                                {
+                                    "href": "https://api.sandbox.paypal.com/v2/checkout/orders/1GM23777922690625",
+                                    "rel": "up",
+                                    "method": "GET"
+                                }
+                            ],
+                            "create_time": "2020-09-22T15:31:13Z",
+                            "update_time": "2020-09-22T15:31:13Z"
+                        }
+                    ]
+                }
+            }
+        ],
+        "payer": {
+            "name": {
+                "given_name": "John",
+                "surname": "Doe"
+            },
+            "email_address": "sb-feqsa3029697@personal.example.com",
+            "payer_id": "DWUPFA2VU2W9E",
+            "address": {
+                "address_line_1": "1 Main St",
+                "admin_area_2": "San Jose",
+                "admin_area_1": "CA",
+                "postal_code": "95131",
+                "country_code": "US"
+            }
+        },
+        "create_time": "2020-09-22T15:31:06Z",
+        "update_time": "2020-09-22T15:31:13Z",
+        "links": [
+            {
+                "href": "https://api.sandbox.paypal.com/v2/checkout/orders/1GM23777922690625",
+                "rel": "self",
+                "method": "GET"
+            }
+        ]
+    }
+    RESPONSE
+  end
+
   def failed_create_order_invalid_schema_response
     <<-RESPONSE
     {
@@ -1227,6 +1500,18 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
     }
   end
 
+  def billing_options(billing_token)
+    {
+        "payment_source": {
+            "token": {
+                "id": billing_token,
+                "type": "BILLING_AGREEMENT"
+            }
+        },
+        "headers": @headers
+    }
+  end
+
   # Assertions private methods
 
   def success_create_order_assertions(order_type)
@@ -1300,11 +1585,28 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
   end
 
   def success_approve_billing_agreement_assertions
-    assert create = @gateway.create_billing_agreement_token(billing_agreement_options)
-    assert_instance_of Response, create
-    assert_success create
-    assert !create.params["id"].nil?
-    assert_equal "ACTIVE", create.params["state"]
+    assert approve = @gateway.create_billing_agreement_token(billing_agreement_options)
+    assert_instance_of Response, approve
+    assert_success approve
+    assert !approve.params["id"].nil?
+    assert_equal "ACTIVE", approve.params["state"]
+    approve
+  end
+
+  def success_capture_order_with_billing_assertions(order_id, billing_id)
+    assert capture = @gateway.capture(order_id, billing_options(billing_id))
+    assert_instance_of Response, capture
+    assert_success capture
+    assert_equal "COMPLETED", capture.params["status"]
+    assert_equal "Transaction Successfully Completed", capture.message
+  end
+
+  def success_authorize_order_with_billing_assertions(order_id, billing_id)
+    assert authorize = @gateway.authorize(order_id, billing_options(billing_id))
+    assert_instance_of Response, authorize
+    assert_success authorize
+    assert_equal "COMPLETED", authorize.params["status"]
+    assert_equal "Transaction Successfully Completed", authorize.message
   end
 
   def failed_create_order_invalid_schema_assertions
