@@ -33,7 +33,8 @@ module ActiveMerchant #:nodoc:
         requires!({ order_id: order_id }, :order_id)
 
         post = { }
-        add_payment_source(options[:payment_source], post) unless options[:payment_source].nil?
+
+        populate_payment_source(post, options[:payment_source])
 
         commit(:post, "v2/checkout/orders/#{ order_id }/authorize", post, options[:headers])
       end
@@ -49,8 +50,7 @@ module ActiveMerchant #:nodoc:
         requires!({ order_id: order_id }, :order_id)
 
         post = { }
-        add_payment_source(options[:payment_source], post) unless options[:payment_source].nil?
-
+        populate_payment_source(post, options[:payment_source])
         commit(:post, "v2/checkout/orders/#{ order_id }/capture", post, options[:headers])
       end
 
@@ -133,7 +133,7 @@ module ActiveMerchant #:nodoc:
         commit(:get, "/v2/payments/refunds/#{ refund_id }", nil, options[:headers])
       end
 
-      ## Billing Agreement ##
+      #### Start Billing Agreement ###
       def create_billing_agreement_token(options)
         requires!(options, :shipping_address, :payer, :plan)
 
@@ -147,6 +147,7 @@ module ActiveMerchant #:nodoc:
         post = { token_id: options[:token_id] }
         commit(:post, "/v1/billing-agreements/agreements", post, options[:headers])
       end
+      #### END Billing Agreement ###
       private
 
       def add_purchase_units(options, post)
@@ -354,6 +355,7 @@ module ActiveMerchant #:nodoc:
         obj_hsh[:plan][:immutable_shipping_address] = options[:merchant_preferences][:immutable_shipping_address]
         obj_hsh
       end
+
       def add_billing_agreement_shipping_address(address, obj_hsh, key = :address)
         requires!(address, :line1, :postal_code, :country_code )
 
@@ -366,6 +368,26 @@ module ActiveMerchant #:nodoc:
         obj_hsh[key][:recipient_name] = address[:recipient_name]
 
         obj_hsh
+      end
+
+      def populate_payment_source(post, options)
+        if options.present? && options[:token].present?
+          add_billing_agreement_payment_source(post, options)
+        elsif options.present?
+          add_payment_source(options, post)
+        end
+      end
+
+      def add_billing_agreement_payment_source(post, options)
+        post[:payment_source]           = { }
+        add_token(post, options[:token])
+      end
+
+      def add_token(post, options)
+        post[:token]            = { }
+        post[:token][:id]       = options[:id]
+        post[:token][:type]     = options[:type]
+        post
       end
     end
   end
