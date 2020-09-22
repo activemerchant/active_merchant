@@ -13,9 +13,8 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     missing_password_params = { username: "ASs8Osqge6KT3OdLtkNhD20VP8lsrqRUlRjLo-e5s75SHz-2ffMMzCos_odQGjGYpPcGlxJVQ5fXMz9q" }
     missing_username_params = { password: "EKj_bMZn0CkOhOvFwJMX2WwhtCq2A0OtlOd5T-zUhKIf9WQxvgPasNX0Kr1U4TjFj8ZN6XCMF5NM30Z_" }
 
-    @headers      = { "Authorization": access_token, "Content-Type": "application/json" }
-
-    @body = body
+    @headers = { "Authorization": access_token, "Content-Type": "application/json" }
+    @body    = body
 
     @additional_params =  {
         "payment_instruction": {
@@ -71,20 +70,17 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     success_status_assertions(response, "CREATED")
   end
 
-
   def test_create_capture_instant_order_ppcp
     response = create_order("CAPTURE", "PPCP")
     puts "Capture Order Id (Instant) - PPCP: #{ response.params["id"] }"
     success_status_assertions(response, "CREATED")
   end
 
-
   def test_create_authorize_order
     response = create_order("AUTHORIZE")
     puts "Authorize Order Id: #{ response.params["id"] }"
     success_status_assertions(response, "CREATED")
   end
-
 
   def test_capture_order_with_card
     response = create_order("CAPTURE")
@@ -93,14 +89,12 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     success_status_assertions(response, "COMPLETED")
   end
 
-
   def test_authorize_order_with_card
     response = create_order("AUTHORIZE")
     order_id = response.params["id"]
     response = @gateway.authorize(order_id, @card_order_options)
     success_status_assertions(response, "COMPLETED")
   end
-
 
   def test_capture_authorized_order_with_card
     response         = create_order("AUTHORIZE")
@@ -111,7 +105,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     success_status_assertions(response, "COMPLETED")
   end
 
-
   def test_refund_captured_order_with_card
     response        = create_order("CAPTURE")
     order_id        = response.params["id"]
@@ -120,7 +113,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     refund_response = @gateway.refund(capture_id, options)
     success_status_assertions(refund_response, "COMPLETED")
   end
-
 
   def test_void_authorized_order_with_card
     response         = create_order("AUTHORIZE")
@@ -131,7 +123,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     success_empty_assertions(void_response)
   end
 
-
   def test_update_shipping_amount_order
     response = create_order("CAPTURE")
     order_id = response.params["id"]
@@ -140,7 +131,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     success_empty_assertions(response)
     @body = body
   end
-
 
   def test_update_shipping_address_order
     response = create_order("CAPTURE")
@@ -151,7 +141,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @body = body
   end
 
-
   def test_update_platform_fee_in_update_body
     response = create_order("CAPTURE")
     order_id = response.params["id"]
@@ -161,7 +150,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @body = body
   end
 
-
   def test_missing_password_argument_to_get_access_token
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: password"
@@ -169,14 +157,12 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     end
   end
 
-
   def test_missing_username_argument_to_get_access_token
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: username"
       @gateway.get_token(@get_token_missing_username_options)
     end
   end
-
 
   def test_missing_intent_argument_for_order_creation
     @body.delete(
@@ -189,7 +175,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     end
   end
 
-
   def test_missing_purchase_units_argument_for_order_creation
     @body.delete(
         :purchase_units
@@ -200,7 +185,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
       @gateway.create_order("CAPTURE", options)
     end
   end
-
 
   def test_missing_amount_in_purchase_units_argument_for_order_creation
     @body[:purchase_units][0].delete(
@@ -213,7 +197,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     end
   end
 
-
   def test_missing_currency_code_in_amount_argument_for_order_creation
     @body[:purchase_units][0][:amount].delete(
         :currency_code
@@ -224,7 +207,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
       @gateway.create_order("CAPTURE", options)
     end
   end
-
 
   def test_missing_value_in_amount_argument_for_order_creation
     @body[:purchase_units][0][:amount].delete(
@@ -237,7 +219,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     end
   end
 
-
   def test_missing_name_in_items
     @body[:purchase_units][0][:items][0].delete(
         :name
@@ -248,7 +229,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
       @gateway.create_order("CAPTURE", options)
     end
   end
-
 
   def test_missing_quantity_in_items
     @body[:purchase_units][0][:items][0].delete(
@@ -261,7 +241,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     end
   end
 
-
   def test_missing_unit_amount_in_items
     @body[:purchase_units][0][:items][0].delete(
         :name
@@ -272,7 +251,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
       @gateway.create_order("CAPTURE", options)
     end
   end
-
 
   def test_missing_admin_area_2_in_address
     @body[:purchase_units][0][:shipping][:address].delete(
@@ -285,7 +263,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     end
   end
 
-
   def test_missing_postal_code_in_address
     @body[:purchase_units][0][:shipping][:address].delete(
         :postal_code
@@ -297,7 +274,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     end
   end
 
-
   def test_missing_country_code_in_address
     @body[:purchase_units][0][:shipping][:address].delete(
         :country_code
@@ -308,7 +284,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
       @gateway.create_order("CAPTURE", options)
     end
   end
-
 
   def test_missing_amount_in_platform_fee
     @body[:purchase_units][0].update(
@@ -325,7 +300,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     end
   end
 
-
   def test_missing_payee_in_platform_fee
     @body[:purchase_units][0].update(
         @additional_params
@@ -341,7 +315,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     end
   end
 
-
   def test_missing_operator_arguments_in_handle_approve
     response  = create_order("AUTHORIZE")
     order_id = response.params["id"]
@@ -352,14 +325,12 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     end
   end
 
-
   def test_missing_operator_required_id_arguments_in_handle_approve
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: operator_required_id"
       @gateway.handle_approve(nil, options)
     end
   end
-
 
   def test_missing_order_id_in_update_body
     assert_raise(ArgumentError) do
@@ -370,7 +341,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     end
   end
 
-
   def test_missing_body_in_update_body
     assert_raise(ArgumentError) do
       response = create_order("CAPTURE")
@@ -380,7 +350,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
       @gateway.update_order(order_id, options)
     end
   end
-
 
   def test_missing_op_in_update_body
     response = create_order("CAPTURE")
@@ -396,7 +365,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     end
   end
 
-
   def test_missing_path_in_update_body
     response = create_order("CAPTURE")
     order_id = response.params["id"]
@@ -410,7 +378,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
       @gateway.update_order(order_id, options)
     end
   end
-
 
   def test_missing_value_in_update_body
     response = create_order("CAPTURE")
@@ -426,9 +393,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     end
   end
 
-
   private
-
 
   def create_order(order_type, type="DIRECT")
     if type.eql?("PPCP")
@@ -446,11 +411,9 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @gateway.create_order(order_type, options)
   end
 
-
   def options
     { headers: @headers }.merge(@body)
   end
-
 
   def body
     @reference_id = "camera_shop_seller_#{ DateTime.now }"
@@ -534,7 +497,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     }
   end
 
-
   def update_amount_body
     [
         {
@@ -558,7 +520,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     ]
   end
 
-
   def update_shipping_address_body
     [
         {
@@ -575,7 +536,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
         }
     ]
   end
-
 
   def update_platform_fee_body
     [ {
@@ -604,7 +564,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     }
   end
 
-  # <- ************************ Assertions ************************ >
+  # Assertions private methods
 
   def success_status_assertions(response, status)
     assert_success response
