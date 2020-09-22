@@ -46,6 +46,13 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
     success_create_order_assertions("AUTHORIZE")
   end
 
+  def test_successful_update_order
+    @gateway.expects(:ssl_request).times(2).returns(successful_create_capture_order_response, successful_update_order_response)
+    create = success_create_order_assertions("CAPTURE")
+    order_id = create.params["id"]
+    success_update_assertions(order_id)
+  end
+
   def test_successful_create_and_capture_order
     @gateway.expects(:ssl_request).times(2).returns(successful_create_capture_order_response, successful_capture_order_response)
     create          = success_create_order_assertions("CAPTURE")
@@ -362,6 +369,14 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
                 "method": "POST"
             }
         ]
+    }
+    RESPONSE
+  end
+
+
+  def successful_update_order_response
+    <<-RESPONSE
+    {
     }
     RESPONSE
   end
@@ -1102,6 +1117,14 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
     assert_equal "CREATED", create.params["status"]
     assert_equal "Transaction Successfully Completed", create.message
     create
+  end
+
+  def success_update_assertions(order_id)
+    assert update = @gateway.update_order(order_id, options.merge(body: {}))
+    assert_instance_of Response, update
+    assert_success update
+    assert_empty update.params
+    assert_equal "Transaction Successfully Completed", update.message
   end
 
   def success_capture_assertions(order_id)
