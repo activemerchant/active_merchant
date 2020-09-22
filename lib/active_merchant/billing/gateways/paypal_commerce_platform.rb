@@ -379,24 +379,7 @@ module ActiveMerchant #:nodoc:
         post[:token][:type]     = options[:type]
         post
       end
-      ### Update Billing Agreement Params
-      # [
-      #     {
-      #         "op": "replace",
-      #         "path": "/",
-      #         "value": {
-      #             "description": "Example Billing Agreement",
-      #             "merchant_custom_data": "INV-001"
-      #         }
-      #     },
-      #     {
-      #         "op": "replace",
-      #         "path": "/plan/merchant_preferences/",
-      #         "value": {
-      #             "notify_url": "https://example.com/notify"
-      #         }
-      #     }
-      # ]
+
       def update_billing_arguments(post, options)
         hsh_collection = []
         options.map do | hsh_obj|
