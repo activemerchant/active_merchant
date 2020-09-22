@@ -8,31 +8,13 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
     @paypal_customer        = ActiveMerchant::Billing::PaypalCommercePlatformGateway.new
 
     params                  = user_credentials
-
     options                 = { "Content-Type": "application/json", authorization: params }
+
     access_token            = @paypal_customer.get_token(options)
-    missing_password_params = { username: "ASs8Osqge6KT3OdLtkNhD20VP8lsrqRUlRjLo-e5s75SHz-2ffMMzCos_odQGjGYpPcGlxJVQ5fXMz9q" }
-    missing_username_params = { password: "EKj_bMZn0CkOhOvFwJMX2WwhtCq2A0OtlOd5T-zUhKIf9WQxvgPasNX0Kr1U4TjFj8ZN6XCMF5NM30Z_" }
 
     @headers      = { "Authorization": access_token, "Content-Type": "application/json" }
 
     @body = body
-
-    @additional_params =  {
-        "payment_instruction": {
-            "platform_fees": [
-                {
-                    "amount": {
-                        "currency_code": "USD",
-                        "value": "2.00"
-                    },
-                    "payee": {
-                        "email_address": "sb-c447ox3078929@business.example.com"
-                    }
-                }
-            ]
-        }
-    }
 
     @card = {
         "name": "John Doe",
@@ -54,10 +36,6 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
         },
         "headers": @headers
     }
-
-    @get_token_missing_password_options = { "Content-Type": "application/json", authorization: missing_password_params }
-
-    @get_token_missing_username_options = { "Content-Type": "application/json", authorization: missing_username_params }
 
   end
 
@@ -85,6 +63,15 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
     success_authorize_assertions(order_id)
   end
 
+  def test_successful_create_and_authorize_and_capture_order
+    @paypal_customer.expects(:ssl_request).times(3).returns(successful_create_authorize_order_response, successful_authorize_order_response, successful_capture_authorized_order_response)
+    create          = success_create_order_assertions("AUTHORIZE")
+    order_id        = create.params["id"]
+    authorize        = success_authorize_assertions(order_id)
+    authorization_id = authorize.params["purchase_units"][0]["payments"]["authorizations"][0]["id"]
+    success_capture_authorized_assertions(authorization_id)
+  end
+
   def test_successful_create_and_capture_and_refund_order
     @paypal_customer.expects(:ssl_request).times(3).returns(successful_create_capture_order_response, successful_capture_order_response, successful_refund_order_response)
     create          = success_create_order_assertions("CAPTURE")
@@ -101,6 +88,76 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
     authorize        = success_authorize_assertions(order_id)
     authorization_id = authorize.params["purchase_units"][0]["payments"]["authorizations"][0]["id"]
     success_void_assertions(authorization_id)
+  end
+
+  def test_failed_create_capture_order_due_to_invalid_schema
+    @paypal_customer.expects(:ssl_request).times(1).returns(failed_create_order_invalid_schema_response)
+    failed_create_order_invalid_schema_assertions
+  end
+
+  def test_failed_create_capture_order_due_to_invalid_business_validation
+    @paypal_customer.expects(:ssl_request).times(1).returns(failed_create_order_invalid_business_validation_response)
+    failed_create_order_invalid_business_validation_assertions
+  end
+
+  def test_failed_capture_after_creation_due_to_invalid_schema(order_id)
+    @paypal_customer.expects(:ssl_request).times(2).returns(successful_create_capture_order_response, failed_capture_order_invalid_schema_response)
+    create          = success_create_order_assertions("CAPTURE")
+    order_id        = create.params["id"]
+    failed_capture_order_invalid_schema_assertions(order_id)
+  end
+
+  def test_failed_capture_after_creation_due_to_invalid_business_validation
+    @paypal_customer.expects(:ssl_request).times(2).returns(successful_create_capture_order_response, failed_capture_order_invalid_business_validation_response)
+    create          = success_create_order_assertions("CAPTURE")
+    order_id        = create.params["id"]
+    failed_capture_order_invalid_business_validation_assertions(order_id)
+  end
+
+  def test_failed_authorize_after_creation_due_to_invalid_schema
+    @paypal_customer.expects(:ssl_request).times(2).returns(successful_create_capture_order_response, failed_authorize_order_invalid_schema_response)
+    create          = success_create_order_assertions("CAPTURE")
+    order_id        = create.params["id"]
+    failed_authorize_order_invalid_schema_assertions(order_id)
+  end
+
+  def test_failed_authorize_after_creation_due_to_invalid_business_validations
+    @paypal_customer.expects(:ssl_request).times(2).returns(successful_create_authorize_order_response, failed_authorize_order_invalid_business_validation_response)
+    create          = success_create_order_assertions("AUTHORIZE")
+    order_id        = create.params["id"]
+    failed_authorize_order_invalid_business_validation_assertions(order_id)
+  end
+
+  def test_failed_void_due_to_invalid_resource
+    @paypal_customer.expects(:ssl_request).times(1).returns(failed_void_invalid_resource_response)
+    failed_void_invalid_resource_assertions
+  end
+
+  def test_failed_void_due_to_invalid_business_validation
+    @paypal_customer.expects(:ssl_request).times(3).returns(successful_create_authorize_order_response, successful_authorize_order_response, failed_void_invalid_business_validation_response)
+    create           = success_create_order_assertions("AUTHORIZE")
+    order_id         = create.params["id"]
+    authorize        = success_authorize_assertions(order_id)
+    authorization_id = authorize.params["purchase_units"][0]["payments"]["authorizations"][0]["id"]
+    failed_void_invalid_business_validation_assertions(authorization_id)
+  end
+
+  def test_failed_refund_due_to_invalid_schema
+    @paypal_customer.expects(:ssl_request).times(3).returns(successful_create_capture_order_response, successful_capture_order_response, failed_refund_invalid_schema_response)
+    create           = success_create_order_assertions("CAPTURE")
+    order_id         = create.params["id"]
+    capture         = success_capture_assertions(order_id)
+    capture_id      = capture.params["purchase_units"][0]["payments"]["captures"][0]["id"]
+    failed_refund_invalid_schema_assertions(capture_id)
+  end
+
+  def test_failed_refund_due_to_invalid_business_validation
+    @paypal_customer.expects(:ssl_request).times(3).returns(successful_create_capture_order_response, successful_capture_order_response, failed_refund_invalid_business_validation_response)
+    create           = success_create_order_assertions("CAPTURE")
+    order_id         = create.params["id"]
+    capture         = success_capture_assertions(order_id)
+    capture_id      = capture.params["purchase_units"][0]["payments"]["captures"][0]["id"]
+    failed_refund_invalid_business_validation_assertions(capture_id)
   end
 
   private
@@ -619,6 +676,59 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
     RESPONSE
   end
 
+  def successful_capture_authorized_order_response
+    <<-RESPONSE
+    {
+        "id": "2K5804563Y769942W",
+        "amount": {
+            "currency_code": "USD",
+            "value": "25.00"
+        },
+        "final_capture": true,
+        "seller_protection": {
+            "status": "NOT_ELIGIBLE"
+        },
+        "seller_receivable_breakdown": {
+            "gross_amount": {
+                "currency_code": "USD",
+                "value": "25.00"
+            },
+            "paypal_fee": {
+                "currency_code": "USD",
+                "value": "1.03"
+            },
+            "net_amount": {
+                "currency_code": "USD",
+                "value": "23.97"
+            },
+            "exchange_rate": {}
+        },
+        "invoice_id": "invoice_number_1600770880",
+        "custom_id": "custom_value_1600770880",
+        "status": "COMPLETED",
+        "create_time": "2020-09-22T10:35:22Z",
+        "update_time": "2020-09-22T10:35:22Z",
+        "links": [
+            {
+                "href": "https://api.sandbox.paypal.com/v2/payments/captures/2K5804563Y769942W",
+                "rel": "self",
+                "method": "GET"
+            },
+            {
+                "href": "https://api.sandbox.paypal.com/v2/payments/captures/2K5804563Y769942W/refund",
+                "rel": "refund",
+                "method": "POST"
+            },
+            {
+                "href": "https://api.sandbox.paypal.com/v2/payments/authorizations/6FR70621P6086464T",
+                "rel": "up",
+                "method": "GET"
+            }
+        ]
+    }
+    RESPONSE
+  end
+
   def successful_refund_order_response
     <<-RESPONSE
     {
@@ -643,6 +753,252 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
   def successful_void_order_response
     <<-RESPONSE
     {}
+    RESPONSE
+  end
+
+  def failed_create_order_invalid_schema_response
+    <<-RESPONSE
+    {
+        "name": "INVALID_REQUEST",
+        "message": "Request is not well-formed, syntactically incorrect, or violates schema.",
+        "debug_id": "adcf063fa5872",
+        "details": [
+            {
+                "field": "/intent",
+                "value": "",
+                "location": "body",
+                "issue": "MISSING_REQUIRED_PARAMETER",
+                "description": "A required field / parameter is missing."
+            }
+        ],
+        "links": [
+            {
+                "href": "https://developer.paypal.com/docs/api/orders/v2/#error-MISSING_REQUIRED_PARAMETER",
+                "rel": "information_link",
+                "encType": "application/json"
+            }
+        ]
+    }
+    RESPONSE
+  end
+
+  def failed_create_order_invalid_business_validation_response
+    <<-RESPONSE
+    {
+        "name": "UNPROCESSABLE_ENTITY",
+        "details": [
+            {
+                "field": "/purchase_units/@reference_id=='camera_shop_seller_1600766405'/amount/value",
+                "value": "-1.00",
+                "issue": "CANNOT_BE_ZERO_OR_NEGATIVE",
+                "description": "Must be greater than zero. If the currency supports decimals, only two decimal place precision is supported."
+            }
+        ],
+        "message": "The requested action could not be performed, semantically incorrect, or failed business validation.",
+        "debug_id": "82f067edbb566",
+        "links": [
+            {
+                "href": "https://developer.paypal.com/docs/api/orders/v2/#error-CANNOT_BE_ZERO_OR_NEGATIVE",
+                "rel": "information_link",
+                "method": "GET"
+            }
+        ]
+    }
+    RESPONSE
+  end
+
+  def failed_capture_order_invalid_schema_response
+    <<-RESPONSE
+    {
+        "name": "INVALID_REQUEST",
+        "message": "Request is not well-formed, syntactically incorrect, or violates schema.",
+        "debug_id": "904aa793bcf15",
+        "details": [
+            {
+                "field": "/payment_source/card/number",
+                "value": "",
+                "location": "body",
+                "issue": "MISSING_REQUIRED_PARAMETER",
+                "description": "A required field / parameter is missing."
+            }
+        ],
+        "links": [
+            {
+                "href": "https://developer.paypal.com/docs/api/orders/v2/#error-MISSING_REQUIRED_PARAMETER",
+                "rel": "information_link",
+                "encType": "application/json"
+            }
+        ]
+    }
+    RESPONSE
+  end
+
+  def failed_capture_order_invalid_business_validation_response
+    <<-RESPONSE
+      {
+        "name": "UNPROCESSABLE_ENTITY",
+        "details": [
+            {
+                "issue": "ORDER_ALREADY_CAPTURED",
+                "description": "Order already captured.If 'intent=CAPTURE' only one capture per order is allowed."
+            }
+        ],
+        "message": "The requested action could not be performed, semantically incorrect, or failed business validation.",
+        "debug_id": "001e3a7caa573",
+        "links": [
+            {
+                "href": "https://developer.paypal.com/docs/api/orders/v2/#error-ORDER_ALREADY_CAPTURED",
+                "rel": "information_link",
+                "method": "GET"
+            }
+        ]
+    }
+    RESPONSE
+  end
+
+  def failed_authorize_order_invalid_business_validation_response
+    <<-RESPONSE
+    {
+        "name": "UNPROCESSABLE_ENTITY",
+        "details": [
+            {
+                "issue": "DUPLICATE_INVOICE_ID",
+                "description": "Duplicate Invoice ID detected. To avoid a potential duplicate transaction your account setting requires that Invoice Id be unique for each transaction."
+            }
+        ],
+        "message": "The requested action could not be performed, semantically incorrect, or failed business validation.",
+        "debug_id": "8ec6eb09c6906",
+        "links": [
+            {
+                "href": "https://developer.paypal.com/docs/api/orders/v2/#error-DUPLICATE_INVOICE_ID",
+                "rel": "information_link",
+                "method": "GET"
+            }
+        ]
+    }
+    RESPONSE
+  end
+
+  def failed_authorize_order_invalid_schema_response
+    <<-RESPONSE
+    {
+        "name": "INVALID_REQUEST",
+        "message": "Request is not well-formed, syntactically incorrect, or violates schema.",
+        "debug_id": "82092f4b2e382",
+        "details": [
+            {
+                "field": "/payment_source/card/number",
+                "value": "",
+                "location": "body",
+                "issue": "MISSING_REQUIRED_PARAMETER",
+                "description": "A required field / parameter is missing."
+            }
+        ],
+        "links": [
+            {
+                "href": "https://developer.paypal.com/docs/api/orders/v2/#error-MISSING_REQUIRED_PARAMETER",
+                "rel": "information_link",
+                "encType": "application/json"
+            }
+        ]
+    }
+    RESPONSE
+  end
+
+  def failed_void_invalid_resource_response
+    <<-RESPONSE
+    {
+        "name": "RESOURCE_NOT_FOUND",
+        "message": "The specified resource does not exist.",
+        "debug_id": "16604b09b8cf7",
+        "details": [
+            {
+                "issue": "INVALID_RESOURCE_ID",
+                "field": "authorization_id",
+                "value": "123",
+                "description": "Specified resource ID does not exist. Please check the resource ID and try again.",
+                "location": "path"
+            }
+        ],
+        "links": [
+            {
+                "href": "https://developer.paypal.com/docs/api/payments/v2/#error-INVALID_RESOURCE_ID",
+                "rel": "information_link"
+            }
+        ]
+    }
+    RESPONSE
+  end
+
+  def failed_void_invalid_business_validation_response
+    <<-RESPONSE
+    {
+        "name": "UNPROCESSABLE_ENTITY",
+        "message": "The requested action could not be performed, semantically incorrect, or failed business validation.",
+        "debug_id": "a50e8cc9962e0",
+        "details": [
+            {
+                "issue": "PREVIOUSLY_VOIDED",
+                "description": "Authorization has been previously voided and hence cannot be voided again."
+            }
+        ],
+        "links": [
+            {
+                "href": "https://developer.paypal.com/docs/api/payments/v2/#error-PREVIOUSLY_VOIDED",
+                "rel": "information_link"
+            }
+        ]
+    }
+    RESPONSE
+  end
+
+  def failed_refund_invalid_business_validation_response
+    <<-RESPONSE
+    {
+        "name": "UNPROCESSABLE_ENTITY",
+        "message": "The requested action could not be performed, semantically incorrect, or failed business validation.",
+        "debug_id": "3db37b636c47c",
+        "details": [
+            {
+                "issue": "CANNOT_BE_ZERO_OR_NEGATIVE",
+                "field": "/amount/value",
+                "value": "-13",
+                "description": "The value of the field should be greater than zero.",
+                "location": "body"
+            }
+        ],
+        "links": [
+            {
+                "href": "https://developer.paypal.com/docs/api/payments/v2/#error-CANNOT_BE_ZERO_OR_NEGATIVE",
+                "rel": "information_link"
+            }
+        ]
+    }
+    RESPONSE
+  end
+
+  def failed_refund_invalid_schema_response
+    <<-RESPONSE
+    {
+        "name": "INVALID_REQUEST",
+        "message": "Request is not well-formed, syntactically incorrect, or violates schema",
+        "debug_id": "8c62076187d7a",
+        "details": [
+            {
+                "issue": "MISSING_REQUIRED_PARAMETER",
+                "field": "/amount/currency_code",
+                "value": "",
+                "description": "A required field/parameter is missing",
+                "location": "body"
+            }
+        ],
+        "links": [
+            {
+                "href": "https://developer.paypal.com/docs/api/payments/v2/#error-MISSING_REQUIRED_PARAMETER",
+                "rel": "information_link"
+            }
+        ]
+    }
     RESPONSE
   end
 
@@ -745,7 +1101,6 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
     assert create = @paypal_customer.create_order(order_type, options)
     assert_instance_of Response, create
     assert_success create
-
     assert_equal order_type, create.params["intent"]
     assert_equal "CREATED", create.params["status"]
     assert_equal "Transaction Successfully Completed", create.message
@@ -756,7 +1111,6 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
     assert capture = @paypal_customer.capture(order_id, @card_order_options)
     assert_instance_of Response, capture
     assert_success capture
-
     assert_equal "COMPLETED", capture.params["status"]
     assert_equal "Transaction Successfully Completed", capture.message
     capture
@@ -766,17 +1120,23 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
     assert authorize = @paypal_customer.authorize(order_id, @card_order_options)
     assert_instance_of Response, authorize
     assert_success authorize
-
     assert_equal "COMPLETED", authorize.params["status"]
     assert_equal "Transaction Successfully Completed", authorize.message
     authorize
+  end
+
+  def success_capture_authorized_assertions(authorization_id)
+    assert capture = @paypal_customer.do_capture(authorization_id, options)
+    assert_instance_of Response, capture
+    assert_success capture
+    assert_equal "COMPLETED", capture.params["status"]
+    assert_equal "Transaction Successfully Completed", capture.message
   end
 
   def success_refund_assertions(capture_id)
     assert refund = @paypal_customer.refund(capture_id, options)
     assert_instance_of Response, refund
     assert_success refund
-
     assert_equal "COMPLETED", refund.params["status"]
     assert_equal "Transaction Successfully Completed", refund.message
     refund
@@ -786,11 +1146,89 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
     assert void = @paypal_customer.void(authorization_id, options)
     assert_instance_of Response, void
     assert_success void
-
     assert_empty void.params
     assert_equal "Transaction Successfully Completed", void.message
     void
   end
 
+  def failed_create_order_invalid_schema_assertions
+    assert create = @paypal_customer.create_order("CAPTURE", options)
+    assert_instance_of Response, create
+    assert_failure create
+    assert_equal "Request is not well-formed, syntactically incorrect, or violates schema.", create.message
+    assert_equal "INVALID_REQUEST", create.params["name"]
+  end
+
+  def failed_create_order_invalid_business_validation_assertions
+    assert create = @paypal_customer.create_order("CAPTURE", options)
+    assert_instance_of Response, create
+    assert_failure create
+    assert_equal "The requested action could not be performed, semantically incorrect, or failed business validation.", create.message
+    assert_equal "UNPROCESSABLE_ENTITY", create.params["name"]
+  end
+
+  def failed_capture_order_invalid_schema_assertions(order_id)
+    assert capture = @paypal_customer.capture(order_id, @card_order_options)
+    assert_instance_of Response, capture
+    assert_failure capture
+    assert_equal "Request is not well-formed, syntactically incorrect, or violates schema.", capture.message
+    assert_equal "INVALID_REQUEST", capture.params["name"]
+  end
+
+  def failed_capture_order_invalid_business_validation_assertions(order_id)
+    assert capture = @paypal_customer.capture(order_id, @card_order_options)
+    assert_instance_of Response, capture
+    assert_failure capture
+    assert_equal "The requested action could not be performed, semantically incorrect, or failed business validation.", capture.message
+    assert_equal "UNPROCESSABLE_ENTITY", capture.params["name"]
+  end
+
+  def failed_authorize_order_invalid_business_validation_assertions(order_id)
+    assert authorize = @paypal_customer.authorize(order_id, @card_order_options)
+    assert_instance_of Response, authorize
+    assert_failure authorize
+    assert_equal "The requested action could not be performed, semantically incorrect, or failed business validation.", authorize.message
+    assert_equal "UNPROCESSABLE_ENTITY", authorize.params["name"]
+  end
+
+  def failed_authorize_order_invalid_schema_assertions(order_id)
+    assert authorize = @paypal_customer.authorize(order_id, @card_order_options)
+    assert_instance_of Response, authorize
+    assert_failure authorize
+    assert_equal "Request is not well-formed, syntactically incorrect, or violates schema.", authorize.message
+    assert_equal "INVALID_REQUEST", authorize.params["name"]
+  end
+
+  def failed_void_invalid_resource_assertions
+    assert void = @paypal_customer.void("INVALID_ID", options)
+    assert_instance_of Response, void
+    assert_failure void
+    assert_equal "The specified resource does not exist.", void.message
+    assert_equal "RESOURCE_NOT_FOUND", void.params["name"]
+  end
+
+  def failed_void_invalid_business_validation_assertions(authorization_id)
+    assert void = @paypal_customer.void(authorization_id, options)
+    assert_instance_of Response, void
+    assert_failure void
+    assert_equal "The requested action could not be performed, semantically incorrect, or failed business validation.", void.message
+    assert_equal "UNPROCESSABLE_ENTITY", void.params["name"]
+  end
+
+  def failed_refund_invalid_schema_assertions(capture_id)
+    assert refund = @paypal_customer.refund(capture_id, options)
+    assert_instance_of Response, refund
+    assert_failure refund
+    assert_equal "Request is not well-formed, syntactically incorrect, or violates schema", refund.message
+    assert_equal "INVALID_REQUEST", refund.params["name"]
+  end
+
+  def failed_refund_invalid_business_validation_assertions(capture_id)
+    assert refund = @paypal_customer.refund(capture_id, options)
+    assert_instance_of Response, refund
+    assert_failure refund
+    assert_equal "The requested action could not be performed, semantically incorrect, or failed business validation.", refund.message
+    assert_equal "UNPROCESSABLE_ENTITY", refund.params["name"]
+  end
 
 end
