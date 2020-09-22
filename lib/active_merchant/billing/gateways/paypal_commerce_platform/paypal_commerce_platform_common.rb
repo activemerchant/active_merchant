@@ -80,7 +80,7 @@ module ActiveMerchant
       end
 
       def success_from(response, options)
-        !response.key?('name') && !response['status'].nil?
+        !response.key?('name') && response['debug_id'].nil?
       end
 
       def encoded_credentials
