@@ -94,6 +94,16 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
     success_void_assertions(authorization_id)
   end
 
+  def test_succesful_create_billing_agreement
+    @gateway.expects(:ssl_request).times(1).returns(successful_create_billing_agreement_response)
+    success_create_billing_agreement_assertions
+  end
+
+  def test_succesful_approve_billing_agreement
+    @gateway.expects(:ssl_request).times(1).returns(successful_approve_billing_agreement_response)
+    success_approve_billing_agreement_assertions
+  end
+
   def test_failed_create_capture_order_due_to_invalid_schema
     @gateway.expects(:ssl_request).times(1).returns(failed_create_order_invalid_schema_response)
     failed_create_order_invalid_schema_assertions
@@ -768,6 +778,84 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
     RESPONSE
   end
 
+  def successful_create_billing_agreement_response
+    <<-RESPONSE
+    {
+        "links": [
+            {
+                "href": "https://www.sandbox.paypal.com/agreements/approve?ba_token=BA-90Y76158PD2562838",
+                "rel": "approval_url",
+                "method": "POST"
+            },
+            {
+                "href": "https://api.sandbox.paypal.com/v1/billing-agreements/BA-90Y76158PD2562838/agreements",
+                "rel": "self",
+                "method": "POST"
+            }
+        ],
+        "token_id": "BA-90Y76158PD2562838"
+    }
+    RESPONSE
+  end
+
+  def successful_approve_billing_agreement_response
+    <<-RESPONSE
+    {
+        "id": "B-0WH24593LA6945220",
+        "state": "ACTIVE",
+        "description": "Billing Agreement",
+        "payer": {
+            "payer_info": {
+                "email": "sb-feqsa3029697@personal.example.com",
+                "first_name": "John",
+                "last_name": "Doe",
+                "payer_id": "DWUPFA2VU2W9E",
+                "billing_address": {
+                    "line1": "1 Main St",
+                    "city": "San Jose",
+                    "state": "CA",
+                    "postal_code": "95131",
+                    "country_code": "US"
+                }
+            }
+        },
+        "shipping_address": {
+            "recipient_name": "John Doe",
+            "line1": "1350 North First Street",
+            "city": "San Jose",
+            "state": "CA",
+            "postal_code": "95112",
+            "country_code": "US"
+        },
+        "plan": {
+            "type": "MERCHANT_INITIATED_BILLING",
+            "merchant_preferences": {
+                "accepted_pymt_type": "INSTANT"
+            }
+        },
+        "create_time": "2020-09-22T14:57:28.000Z",
+        "update_time": "2020-09-22T14:57:28.000Z",
+        "links": [
+            {
+                "href": "https://api.sandbox.paypal.com/v1/billing-agreements/agreements/B-0WH24593LA6945220/cancel",
+                "rel": "cancel",
+                "method": "POST"
+            },
+            {
+                "href": "https://api.sandbox.paypal.com/v1/billing-agreements/agreements/B-0WH24593LA6945220",
+                "rel": "self",
+                "method": "GET"
+            }
+        ],
+        "merchant": {
+            "payee_info": {
+                "email": "sb-jnxjj3033194@business.example.com"
+            }
+        }
+    }
+    RESPONSE
+  end
+
   def failed_create_order_invalid_schema_response
     <<-RESPONSE
     {
@@ -1107,6 +1195,38 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
     { headers: @headers }.merge(@body)
   end
 
+  def billing_agreement_options
+    {
+        "description": "Billing Agreement",
+        "shipping_address":
+            {
+                "line1": "1350 North First Street",
+                "city": "San Jose",
+                "state": "CA",
+                "postal_code": "95112",
+                "country_code": "US",
+                "recipient_name": "John Doe"
+            },
+        "payer":
+            {
+                "payment_method": "PAYPAL"
+            },
+        "plan":
+            {
+                "type": "MERCHANT_INITIATED_BILLING",
+                "merchant_preferences":
+                    {
+                        "return_url": "https://google.com",
+                        "cancel_url": "https://google.com",
+                        "accepted_pymt_type": "INSTANT",
+                        "skip_shipping_address": false,
+                        "immutable_shipping_address": true
+                    }
+            },
+        headers: @headers
+    }
+  end
+
   # Assertions private methods
 
   def success_create_order_assertions(order_type)
@@ -1169,6 +1289,22 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
     assert_empty void.params
     assert_equal "Transaction Successfully Completed", void.message
     void
+  end
+
+  def success_create_billing_agreement_assertions
+    assert create = @gateway.create_billing_agreement_token(billing_agreement_options)
+    assert_instance_of Response, create
+    assert_success create
+    assert !create.params["links"].nil?
+    assert !create.params["token_id"].nil?
+  end
+
+  def success_approve_billing_agreement_assertions
+    assert create = @gateway.create_billing_agreement_token(billing_agreement_options)
+    assert_instance_of Response, create
+    assert_success create
+    assert !create.params["id"].nil?
+    assert_equal "ACTIVE", create.params["state"]
   end
 
   def failed_create_order_invalid_schema_assertions

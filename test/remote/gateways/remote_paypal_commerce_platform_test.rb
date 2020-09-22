@@ -153,7 +153,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   end
 
   def test_create_billing_agreement
-    @body = billing_agreement_body
+    @body    = billing_agreement_body
     response = @gateway.create_billing_agreement_token(options)
     assert_success response
     assert !response.params["token_id"].nil?
@@ -162,7 +162,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   end
 
   def test_approve_billing_agreement
-    @body = { "token_id": @approved_billing_token }
+    @body    = { "token_id": @approved_billing_token }
     response = @gateway.create_agreement_for_approval(options)
     assert_success response
     assert_equal "ACTIVE", response.params["state"]
@@ -171,63 +171,63 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   end
 
   def test_capture_order_with_billing
-    @body = { "token_id": @approved_billing_token }
-    response = @gateway.create_agreement_for_approval(options)
+    @body      = { "token_id": @approved_billing_token }
+    response   = @gateway.create_agreement_for_approval(options)
     billing_id = response.params["id"]
-    @body = body
-    response = create_order("CAPTURE")
-    order_id = response.params["id"]
-    response = @gateway.capture(order_id, billing_options(billing_id))
+    @body      = body
+    response   = create_order("CAPTURE")
+    order_id   = response.params["id"]
+    response   = @gateway.capture(order_id, billing_options(billing_id))
     success_status_assertions(response, "COMPLETED")
   end
 
   def test_authorize_order_with_billing
-    @body = { "token_id": @approved_billing_token }
-    response = @gateway.create_agreement_for_approval(options)
+    @body      = { "token_id": @approved_billing_token }
+    response   = @gateway.create_agreement_for_approval(options)
     billing_id = response.params["id"]
-    @body = body
-    response = create_order("AUTHORIZE")
-    order_id = response.params["id"]
-    response = @gateway.authorize(order_id, billing_options(billing_id))
+    @body      = body
+    response   = create_order("AUTHORIZE")
+    order_id   = response.params["id"]
+    response   = @gateway.authorize(order_id, billing_options(billing_id))
     success_status_assertions(response, "COMPLETED")
   end
 
   def test_capture_authorized_order_with_billing
-    @body = { "token_id": @approved_billing_token }
-    response = @gateway.create_agreement_for_approval(options)
-    billing_id = response.params["id"]
-    @body = body
-    response = create_order("AUTHORIZE")
-    order_id = response.params["id"]
-    response = @gateway.authorize(order_id, billing_options(billing_id))
+    @body            = { "token_id": @approved_billing_token }
+    response         = @gateway.create_agreement_for_approval(options)
+    billing_id       = response.params["id"]
+    @body            = body
+    response         = create_order("AUTHORIZE")
+    order_id         = response.params["id"]
+    response         = @gateway.authorize(order_id, billing_options(billing_id))
     authorization_id = response.params["purchase_units"][0]["payments"]["authorizations"][0]["id"]
-    response = @gateway.do_capture(authorization_id, billing_options(billing_id))
+    response         = @gateway.do_capture(authorization_id, billing_options(billing_id))
     success_status_assertions(response, "COMPLETED")
   end
 
   def test_void_authorized_order_with_billing
-    @body = { "token_id": @approved_billing_token }
-    response = @gateway.create_agreement_for_approval(options)
-    billing_id = response.params["id"]
-    @body = body
-    response = create_order("AUTHORIZE")
-    order_id = response.params["id"]
-    response = @gateway.authorize(order_id, billing_options(billing_id))
+    @body            = { "token_id": @approved_billing_token }
+    response         = @gateway.create_agreement_for_approval(options)
+    billing_id       = response.params["id"]
+    @body            = body
+    response         = create_order("AUTHORIZE")
+    order_id         = response.params["id"]
+    response         = @gateway.authorize(order_id, billing_options(billing_id))
     authorization_id = response.params["purchase_units"][0]["payments"]["authorizations"][0]["id"]
-    response    = @gateway.void(authorization_id, options)
+    response         = @gateway.void(authorization_id, options)
     success_empty_assertions(response)
   end
 
   def test_refund_captured_order_with_billing
-    @body = { "token_id": @approved_billing_token }
-    response = @gateway.create_agreement_for_approval(options)
+    @body      = { "token_id": @approved_billing_token }
+    response   = @gateway.create_agreement_for_approval(options)
     billing_id = response.params["id"]
-    @body = body
-    response = create_order("CAPTURE")
-    order_id = response.params["id"]
-    response = @gateway.capture(order_id, billing_options(billing_id))
+    @body      = body
+    response   = create_order("CAPTURE")
+    order_id   = response.params["id"]
+    response   = @gateway.capture(order_id, billing_options(billing_id))
     capture_id = response.params["purchase_units"][0]["payments"]["captures"][0]["id"]
-    response = @gateway.refund(capture_id, options)
+    response   = @gateway.refund(capture_id, options)
     success_status_assertions(response, "COMPLETED")
   end
 
