@@ -183,7 +183,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def test_network_tokenization_credit_card_data_with_soft_descriptor_hash_level_2_data_and_line_items
     stub_comms do
-      @gateway.authorize(50, network_tokenization_credit_card(nil, eci: '5', transaction_id: 'BwABB4JRdgAAAAAAiFF2AAAAAAA='), @options.merge(
+      options = @options.merge(
         level_2_data: @level_2,
         line_items: @line_items,
         soft_descriptors: {
@@ -191,7 +191,9 @@ class OrbitalGatewayTest < Test::Unit::TestCase
           product_description: 'Description',
           merchant_email: 'email@example',
         }
-      ))
+      )
+
+      @gateway.authorize(50, network_tokenization_credit_card(nil, eci: '5', transaction_id: 'BwABB4JRdgAAAAAAiFF2AAAAAAA='), options)
     end.check_request do |endpoint, data, headers|
       assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
@@ -298,6 +300,28 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
       assert_match %{<AEVV>TESTCAVV</AEVV>}, data
       assert_match %{<PymtBrandProgramCode>ASK</PymtBrandProgramCode>}, data
+      assert_xml_valid_to_xsd(data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_three_d_secure_1_data_on_discover_purchase
+    stub_comms do
+      @gateway.purchase(50, credit_card(nil, brand: 'discover'), @options.merge(@three_d_secure_options))
+    end.check_request do |endpoint, data, headers|
+      assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
+      assert_match %{<DigitalTokenCryptogram>TESTCAVV</DigitalTokenCryptogram>}, data
+      assert_match %{<PymtBrandProgramCode>DPB</PymtBrandProgramCode>}, data
+      assert_xml_valid_to_xsd(data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_three_d_secure_1_data_on_discover_authorization
+    stub_comms do
+      @gateway.authorize(50, credit_card(nil, brand: 'discover'), @options.merge(@three_d_secure_options))
+    end.check_request do |endpoint, data, headers|
+      assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
+      assert_match %{<DigitalTokenCryptogram>TESTCAVV</DigitalTokenCryptogram>}, data
+      assert_match %{<PymtBrandProgramCode>DPB</PymtBrandProgramCode>}, data
       assert_xml_valid_to_xsd(data)
     end.respond_with(successful_purchase_response)
   end

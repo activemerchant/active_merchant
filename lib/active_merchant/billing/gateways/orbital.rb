@@ -538,10 +538,14 @@ module ActiveMerchant #:nodoc:
         xml.tag! :DPANInd, 'Y'
       end
 
-      def add_digital_token_cryptogram(xml, creditcard)
-        return unless creditcard.is_a?(NetworkTokenizationCreditCard)
+      def add_digital_token_cryptogram(xml, creditcard, three_d_secure)
+        cryptogram = if three_d_secure && creditcard.brand == 'discover'
+                       three_d_secure[:cavv]
+                     elsif creditcard.is_a?(NetworkTokenizationCreditCard)
+                       creditcard.payment_cryptogram
+                     end
 
-        xml.tag! :DigitalTokenCryptogram, creditcard.payment_cryptogram
+        xml.tag! :DigitalTokenCryptogram, cryptogram
       end
 
       def add_aevv(xml, creditcard, three_d_secure)
@@ -551,9 +555,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_pymt_brand_program_code(xml, creditcard, three_d_secure)
-        return unless three_d_secure && creditcard.brand == 'american_express'
+        return unless three_d_secure && %w(american_express discover).include?(creditcard.brand)
 
-        xml.tag!(:PymtBrandProgramCode, 'ASK')
+        pmt_brand_program_code = if creditcard.brand == 'american_express'
+                                   'ASK'
+                                 else
+                                   'DPB'
+                                 end
+
+        xml.tag!(:PymtBrandProgramCode, pmt_brand_program_code)
       end
 
       def add_mc_program_protocol(xml, creditcard, three_d_secure)
@@ -774,7 +784,7 @@ module ActiveMerchant #:nodoc:
 
             add_dpanind(xml, creditcard)
             add_aevv(xml, creditcard, three_d_secure)
-            add_digital_token_cryptogram(xml, creditcard)
+            add_digital_token_cryptogram(xml, creditcard, three_d_secure)
 
             add_stored_credentials(xml, parameters)
             add_pymt_brand_program_code(xml, creditcard, three_d_secure)
