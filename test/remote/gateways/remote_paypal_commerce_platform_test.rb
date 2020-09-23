@@ -398,7 +398,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
   def test_missing_operator_arguments_in_handle_approve
     response  = create_order("AUTHORIZE")
-    order_id = response.params["id"]
+    order_id  = response.params["id"]
 
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: operator"

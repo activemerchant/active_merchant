@@ -94,17 +94,17 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
     success_void_assertions(authorization_id)
   end
 
-  def test_succesful_create_billing_agreement
+  def test_successful_create_billing_agreement
     @gateway.expects(:ssl_request).times(1).returns(successful_create_billing_agreement_response)
     success_create_billing_agreement_assertions
   end
 
-  def test_succesful_approve_billing_agreement
+  def test_successful_approve_billing_agreement
     @gateway.expects(:ssl_request).times(1).returns(successful_approve_billing_agreement_response)
     success_approve_billing_agreement_assertions
   end
 
-  def test_succesful_capture_with_billing
+  def test_successful_capture_with_billing
     @gateway.expects(:ssl_request).times(3).returns(successful_approve_billing_agreement_response, successful_create_capture_order_response, successful_capture_with_billing_response)
     approve    = success_approve_billing_agreement_assertions
     billing_id = approve.params["id"]
@@ -113,13 +113,33 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
     success_capture_order_with_billing_assertions(order_id, billing_id)
   end
 
-  def test_succesful_authorize_with_billing
+  def test_successful_authorize_with_billing
     @gateway.expects(:ssl_request).times(3).returns(successful_approve_billing_agreement_response, successful_create_authorize_order_response, successful_authroize_with_billing_response)
     approve    = success_approve_billing_agreement_assertions
     billing_id = approve.params["id"]
     create     = success_create_order_assertions("AUTHORIZE")
     order_id   = create.params["id"]
     success_authorize_order_with_billing_assertions(order_id, billing_id)
+  end
+
+  def test_successful_cancel_billing
+    @gateway.expects(:ssl_request).times(2).returns(successful_approve_billing_agreement_response, successful_cancel_billing_response)
+    approve    = success_approve_billing_agreement_assertions
+    billing_id = approve.params["id"]
+    @body      = { note: "Cancelling Subscription" }
+    response   = @gateway.cancel_billing_agreement(billing_id, options)
+    assert_success response
+  end
+
+  def test_failed_cancel_billing_after_approval
+    @gateway.expects(:ssl_request).times(2).returns(successful_approve_billing_agreement_response, failed_cancel_billing_due_to_business_error)
+    approve    = success_approve_billing_agreement_assertions
+    billing_id = approve.params["id"]
+    @body      = { note: "Cancelling Subscription" }
+    response   = @gateway.cancel_billing_agreement(billing_id, options)
+    assert_failure response
+    assert_equal "BUSINESSS_ERROR", response.params["name"]
+    assert_equal "Business error", response.params["message"]
   end
 
   def test_failed_create_capture_order_due_to_invalid_schema
@@ -974,6 +994,11 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
     RESPONSE
   end
 
+  def successful_cancel_billing_response
+    <<-RESPONSE
+    RESPONSE
+  end
+
   def successful_authroize_with_billing_response
     <<-RESPONSE
     {
@@ -1123,6 +1148,23 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
                 "href": "https://api.sandbox.paypal.com/v2/checkout/orders/1GM23777922690625",
                 "rel": "self",
                 "method": "GET"
+            }
+        ]
+    }
+    RESPONSE
+  end
+
+  def failed_cancel_billing_due_to_business_error
+    <<-RESPONSE
+    {
+        "name": "BUSINESS_ERROR",
+        "debug_id": "4bda83f5f8f42",
+        "message": "Business error",
+        "information_link": "https://developer.paypal.com/webapps/developer/docs/api/#BUSINESS_ERROR",
+        "details": [
+            {
+                "name": "RT_AGREEMENT_ALREADY_CANCELED",
+                "message": "Failed Request: Agreement is already cancelled / Invalid agreement state"
             }
         ]
     }
