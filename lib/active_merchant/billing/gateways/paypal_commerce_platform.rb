@@ -115,10 +115,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def update_billing_agreement(agreement_id, options)
-        requires!(options.merge({ agreement_id: agreement_id }), :agreement_id, :intent, :purchase_units)
+        requires!(options.merge({ agreement_id: agreement_id }), :agreement_id, :body)
 
         post = { }
-        add_update_billing_attributes(post, options)
+        post = add_update_basic_billing_attributes(post, options)
         commit(:patch, "v1/billing-agreements/agreements/#{ agreement_id }", post, options[:headers])
       end
 
@@ -387,15 +387,15 @@ module ActiveMerchant #:nodoc:
         post
       end
 
-      def add_update_billing_attributes(post, options)
+      def add_update_basic_billing_attributes(post, options)
         hsh_collection = []
-        options.map do | hsh_obj|
+        options[:body].map do | hsh_obj|
+          requires!(hsh_obj, :op, :path, :value)
           post[:op]                           = hsh_obj[:op]
           post[:path]                         = hsh_obj[:path]
           post[:value]                        = { }
           post[:value][:description]          = hsh_obj[:value][:description] unless hsh_obj[:value][:description].nil?
           post[:value][:merchant_custom_data] = hsh_obj[:value][:merchant_custom_data] unless hsh_obj[:value][:merchant_custom_data].nil?
-          post[:value][:notify_url]           = hsh_obj[:value][:notify_url] unless hsh_obj[:value][:notify_url].nil?
           hsh_collection << post
         end
         hsh_collection

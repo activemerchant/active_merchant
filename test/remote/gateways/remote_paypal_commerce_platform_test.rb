@@ -152,7 +152,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @body = body
   end
 
-  def test_create_billing_agreement
+  def test_create_billing_agreement_token
     @body    = billing_agreement_body
     response = @gateway.create_billing_agreement_token(options)
     assert_success response
@@ -161,7 +161,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @body = body
   end
 
-  def test_approve_billing_agreement
+  def test_create_billing_agreement
     @body    = { "token_id": @approved_billing_token }
     response = @gateway.create_agreement_for_approval(options)
     assert_success response
@@ -231,6 +231,15 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     success_status_assertions(response, "COMPLETED")
   end
 
+  def test_update_billing_description_and_merchant_custom
+    @body      = { "token_id": @approved_billing_token }
+    response   = @gateway.create_agreement_for_approval(options)
+    billing_id = response.params["id"]
+    @body      = { "body": billing_description_and_merchant_custom_update }
+    response   = @gateway.update_billing_agreement(billing_id, options)
+    success_empty_assertions(response)
+  end
+
   def test_missing_password_argument_to_get_access_token
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: password"
@@ -267,7 +276,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     end
   end
 
-  def test_missing_amount_in_purchase_units_argument_for_order_creation
+  def test_missing_amount_in_purchase_units_argument
     @body[:purchase_units][0].delete(
         :amount
     )
@@ -278,7 +287,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     end
   end
 
-  def test_missing_currency_code_in_amount_argument_for_order_creation
+  def test_missing_currency_code_in_amount_argument
     @body[:purchase_units][0][:amount].delete(
         :currency_code
     )
@@ -289,7 +298,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     end
   end
 
-  def test_missing_value_in_amount_argument_for_order_creation
+  def test_missing_value_in_amount_argument
     @body[:purchase_units][0][:amount].delete(
         :value
     )
@@ -804,6 +813,19 @@ class PaypalExpressRestTest < Test::Unit::TestCase
         },
         "headers": @headers
     }
+  end
+
+  def billing_description_and_merchant_custom_update
+    [
+        {
+            "op": "replace",
+            "path": "/",
+            "value": {
+                "description": "Updated Billing Agreement",
+                "merchant_custom_data": "INV-003"
+            }
+        }
+    ]
   end
 
   def user_credentials

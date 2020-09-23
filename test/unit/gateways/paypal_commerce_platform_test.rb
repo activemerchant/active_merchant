@@ -94,12 +94,12 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
     success_void_assertions(authorization_id)
   end
 
-  def test_successful_create_billing_agreement
+  def test_successful_create_billing_agreement_token
     @gateway.expects(:ssl_request).times(1).returns(successful_create_billing_agreement_response)
     success_create_billing_agreement_assertions
   end
 
-  def test_successful_approve_billing_agreement
+  def test_successful_billing_agreement
     @gateway.expects(:ssl_request).times(1).returns(successful_approve_billing_agreement_response)
     success_approve_billing_agreement_assertions
   end
