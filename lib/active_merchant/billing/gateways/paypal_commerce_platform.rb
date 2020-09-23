@@ -183,11 +183,40 @@ module ActiveMerchant #:nodoc:
         post[:application_context][:return_url]         = options[:return_url] unless options[:return_url].nil?
         post[:application_context][:cancel_url]         = options[:cancel_url] unless options[:cancel_url].nil?
         post[:application_context][:landing_page]       = options[:landing_page] unless options[:landing_page].nil?
+        post[:application_context][:locale]       = options[:locale] unless options[:locale].nil?
         post[:application_context][:user_action]        = options[:user_action] unless options[:user_action].nil?
         post[:application_context][:brand_name]         = options[:brand_name] unless options[:brand_name].nil?
         post[:application_context][:shipping_preference]= options[:shipping_preference] unless options[:shipping_preference].nil?
 
+        add_payment_method(options[:payment_method], post)
+        add_stored_payment_source(options[:stored_payment_source], post)
+
         skip_empty(post, :application_context)
+      end
+
+      def add_stored_payment_source(options, post)
+        post[:stored_payment_source] = { }
+        post[:stored_payment_source][:payment_initiator] = options[:payment_initiator]
+        post[:stored_payment_source][:payment_type] = options[:payment_type]
+        post[:stored_payment_source][:usage] = options[:usage]
+        add_network_transaction_reference(options[:network_transaction_reference], post)
+
+        post
+      end
+
+      def add_network_transaction_reference(options, post)
+        post[:network_transaction_reference]        = { }
+        post[:network_transaction_reference][:id]   = options[:id]
+        post[:network_transaction_reference][:network] = options[:network]
+      end
+
+      def add_payment_method(options, post)
+        post[:payment_method] = { }
+        post[:payment_method][:payer_selected] = options[:payer_selected]
+        post[:payment_method][:payee_preferred] = options[:payee_preferred]
+        post[:payment_method][:standard_entry_class_code] = options[:standard_entry_class_code]
+
+        post
       end
 
       def add_payment_instruction(options, post, key=:payment_instruction)
