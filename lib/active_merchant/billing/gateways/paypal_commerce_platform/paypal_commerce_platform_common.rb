@@ -55,7 +55,7 @@ module ActiveMerchant
       end
 
       def parse(raw_response)
-        raw_response = raw_response.nil? ? "{}": raw_response
+        raw_response = (raw_response.nil? || raw_response.empty?) ? "{}": raw_response
         JSON.parse(raw_response)
       end
 

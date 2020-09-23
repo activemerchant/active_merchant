@@ -3,40 +3,35 @@ require 'byebug'
 
 class PaypalExpressRestTest < Test::Unit::TestCase
   def setup
-    Base.mode         = :test
-    @gateway  = ActiveMerchant::Billing::PaypalCommercePlatformGateway.new
+    Base.mode     = :test
+    @gateway      = ActiveMerchant::Billing::PaypalCommercePlatformGateway.new
 
-    params = { username: "ASs8Osqge6KT3OdLtkNhD20VP8lsrqRUlRjLo-e5s75SHz-2ffMMzCos_odQGjGYpPcGlxJVQ5fXMz9q",
-               password: "EKj_bMZn0CkOhOvFwJMX2WwhtCq2A0OtlOd5T-zUhKIf9WQxvgPasNX0Kr1U4TjFj8ZN6XCMF5NM30Z_" }
+    params        = { username: "ASs8Osqge6KT3OdLtkNhD20VP8lsrqRUlRjLo-e5s75SHz-2ffMMzCos_odQGjGYpPcGlxJVQ5fXMz9q",
+                       password: "EKj_bMZn0CkOhOvFwJMX2WwhtCq2A0OtlOd5T-zUhKIf9WQxvgPasNX0Kr1U4TjFj8ZN6XCMF5NM30Z_" }
 
     options       = { "Content-Type": "application/json", authorization: params }
-    access_token  = @paypal_customer.get_token(options)
+    access_token  = @gateway.get_token(options)
+
     @headers      = { "Authorization": access_token, "Content-Type": "application/json" }
 
     @approved_authroize_order_id                            = "84V39644DT125771A"
     @approved_authroize_order_id_for_capture                = "0CA154270J328793G"
     @approved_authroize_order_id_for_void                   = "0LF26667029316907"
     @approved_authorize_order_id_for_capture_ppcp           = "27D70899339437637"
-
     @approved_capture_order_id                              = "4AV90759YN557674D"
     @approved_capture_order_id_for_refund                   = "018605808V3854429"
     @approved_capture_order_id_for_ppcp                     = "6HC82655GE415312S"
-
     @approved_delayed_capture_order_id_for_capture          = "67U39950VY142733G"
     @approved_delayed_capture_order_id_for_capture_ppcp     = "539846926F7063801"
-
     @approved_delayed_authorize_order_id_for_capture        = "0T579286DN9310115"
     @approved_delayed_authorize_order_id_for_capture_ppcp   = "9ND37409CB3232456"
-
     @approved_delayed_capture_order_id_for_disburse         = "31R95402NH875082T"
     @approved_delayed_authorize_order_id_for_disburse       = "6FF92286BP500124Y"
-
-
     @approved_capture_order_id_for_get                      = "2N479927956739445"
     @approved_capture_order_id_for_get_refund               = "4KM278190P145982L"
     @approved_authorize_order_id_for_get                    = "182969752D966232Y"
     @order_id_for_get                                       = "817565224U7700521"
-
+    @approved_billing_token_id                              = "BA-7WA98250MP881181F"
 
     @body = body
     @capture_body = capture_body
@@ -61,9 +56,10 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
   def test_handle_approve_capture_direct_merchant
     response = capture_order(@approved_capture_order_id)
-    assert response[:status].eql?("COMPLETED")
-    assert !response[:id].nil?
-    assert !response[:links].blank?
+    assert_success response
+    assert_equal "COMPLETED", response.params["status"]
+    assert !response.params["id"].nil?
+    assert !response.params["links"].nil?
   end
 
   # def test_handle_approve_capture_ppcp
@@ -75,43 +71,57 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
   def test_handle_approve_authorize
     response = authorize_order(@approved_authroize_order_id)
-    assert response[:status].eql?("COMPLETED")
-    assert !response[:id].nil?
-    assert !response[:links].blank?
+    assert_success response
+    assert_equal "COMPLETED", response.params["status"]
+    assert !response.params["id"].nil?
+    assert !response.params["links"].nil?
   end
 
   def test_do_capture_for_authorized_order_direct_merchant
     response         = authorize_order(@approved_authroize_order_id_for_capture)
     authorization_id = response[:purchase_units][0][:payments][:authorizations][0][:id]
     response         = do_capture_order(authorization_id)
-    assert response[:status].eql?("COMPLETED")
-    assert !response[:id].nil?
-    assert !response[:links].blank?
+    assert_success response
+    assert_equal "COMPLETED", response.params["status"]
+    assert !response.params["id"].nil?
+    assert !response.params["links"].nil?
   end
 
   def test_do_capture_for_authorized_order_ppcp
     response         = authorize_order(@approved_authorize_order_id_for_capture_ppcp)
     authorization_id = response[:purchase_units][0][:payments][:authorizations][0][:id]
     response         = do_capture_order(authorization_id, "PPCP")
-    assert response[:status].eql?("COMPLETED")
-    assert !response[:id].nil?
-    assert !response[:links].blank?
+    assert_success response
+    assert_equal "COMPLETED", response.params["status"]
+    assert !response.params["id"].nil?
+    assert !response.params["links"].nil?
   end
 
   def test_refund_captured_order
     response          = capture_order(@approved_capture_order_id_for_refund)
     capture_id        = response[:purchase_units][0][:payments][:captures][0][:id]
     refund_response   = @paypal_customer.refund(capture_id, options)
-    assert refund_response[:status].eql?("COMPLETED")
-    assert !refund_response[:id].nil?
-    assert !refund_response[:links].blank?
+    assert_success response
+    assert_equal "COMPLETED", response.params["status"]
+    assert !response.params["id"].nil?
+    assert !response.params["links"].nil?
   end
 
   def test_void_authorized_order
     response         = authorize_order(@approved_authroize_order_id_for_void)
     authorization_id = response[:purchase_units][0][:payments][:authorizations][0][:id]
     void_response    = @paypal_customer.void(authorization_id, options)
-    assert void_response.empty?
+    assert_success response
+    assert_empty   response.params
+  end
+
+  def test_cancel_billing_agreement
+    @body      = { "token_id": @approved_billing_token_id }
+    response   = @gateway.create_agreement_for_approval(options)
+    billing_id = response.params["id"]
+    @body      = { note: "Cancelling Subscription" }
+    response   = @gateway.cancel_billing_agreement(billing_id, options)
+    assert_success response
   end
 
   # def test_get_order_details

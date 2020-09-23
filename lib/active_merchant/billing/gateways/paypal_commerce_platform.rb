@@ -114,6 +114,21 @@ module ActiveMerchant #:nodoc:
         commit(:post, "v1/billing-agreements/agreements", post, options[:headers])
       end
 
+      def update_billing_agreement(agreement_id, options)
+        requires!(options.merge({ agreement_id: agreement_id }), :agreement_id, :intent, :purchase_units)
+
+        post = { }
+        add_update_billing_attributes(post, options)
+        commit(:patch, "v1/billing-agreements/agreements/#{ agreement_id }", post, options[:headers])
+      end
+
+      def cancel_billing_agreement(agreement_id, options)
+        post = { }
+        post[:note] = options[:note] unless options[:note].nil?
+
+        commit(:post, "v1/billing-agreements/agreements/#{ agreement_id }/cancel", post, options[:headers])
+      end
+
       def get_order_details(order_id, options)
         requires!(options.merge(order_id: order_id), :order_id)
         commit(:get, "v2/checkout/orders/#{ order_id }", nil, options[:headers])
@@ -133,19 +148,7 @@ module ActiveMerchant #:nodoc:
         requires!(options.merge(refund_id: refund_id), :refund_id)
         commit(:get, "v2/payments/refunds/#{ refund_id }", nil, options[:headers])
       end
-      def update_billing_agreement(agreement_id, options)
-        requires!(options.merge({ agreement_id: agreement_id }), :agreement_id, :intent, :purchase_units)
 
-        post = { }
-        update_billing_arguments(post, options)
-        commit(:patch, "v1/billing-agreements/agreements/#{ agreement_id }", post, options[:headers])
-      end
-
-      def cancel_billing_agreement(agreement_id, options)
-        requires!(agreement_id, :agreement_id)
-
-        commit(:post, "/v1/billing-agreements/agreements/#{ agreement_id }/cancel", nil, options[:headers])
-      end
       private
 
       def add_purchase_units(options, post)
@@ -380,7 +383,7 @@ module ActiveMerchant #:nodoc:
         post
       end
 
-      def update_billing_arguments(post, options)
+      def add_update_billing_attributes(post, options)
         hsh_collection = []
         options.map do | hsh_obj|
           post[:op]                           = hsh_obj[:op]
