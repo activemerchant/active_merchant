@@ -188,8 +188,8 @@ module ActiveMerchant #:nodoc:
         post[:application_context][:brand_name]         = options[:brand_name] unless options[:brand_name].nil?
         post[:application_context][:shipping_preference]= options[:shipping_preference] unless options[:shipping_preference].nil?
 
-        add_payment_method(options[:payment_method], post)
-        add_stored_payment_source(options[:stored_payment_source], post)
+        add_payment_method(options[:payment_method], post) unless options[:payment_method].nil?
+        add_stored_payment_source(options[:stored_payment_source], post) unless options[:stored_payment_source].nil?
 
         skip_empty(post, :application_context)
       end
@@ -200,8 +200,7 @@ module ActiveMerchant #:nodoc:
         post[:stored_payment_source][:payment_type] = options[:payment_type]
         post[:stored_payment_source][:usage] = options[:usage]
         add_network_transaction_reference(options[:network_transaction_reference], post)
-
-        post
+        skip_empty(post, :stored_payment_source)
       end
 
       def add_network_transaction_reference(options, post)
@@ -215,8 +214,7 @@ module ActiveMerchant #:nodoc:
         post[:payment_method][:payer_selected] = options[:payer_selected]
         post[:payment_method][:payee_preferred] = options[:payee_preferred]
         post[:payment_method][:standard_entry_class_code] = options[:standard_entry_class_code]
-
-        post
+        skip_empty(post, :payment_method)
       end
 
       def add_payment_instruction(options, post, key=:payment_instruction)
