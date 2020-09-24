@@ -397,6 +397,11 @@ module ActiveMerchant #:nodoc:
         obj_hsh[:merchant_preferences][:accepted_pymt_type]         = options[:accepted_pymt_type] unless options[:accepted_pymt_type].nil?
         obj_hsh[:merchant_preferences][:skip_shipping_address]      = options[:skip_shipping_address]
         obj_hsh[:merchant_preferences][:immutable_shipping_address] = options[:immutable_shipping_address] unless options[:immutable_shipping_address].nil?
+        obj_hsh[:merchant_preferences][:experience_id]              = options[:experience_id] unless options[:experience_id].nil?
+        obj_hsh[:merchant_preferences][:notify_url]                 = options[:notify_url] unless options[:notify_url].nil?
+        obj_hsh[:merchant_preferences][:external_selected_funding_instrument_type]              = options[:external_selected_funding_instrument_type] unless options[:external_selected_funding_instrument_type].nil?
+
+        add_expected_legal_country_codes(options[:expected_legal_country_codes], post)
         obj_hsh
       end
 
@@ -489,6 +494,13 @@ module ActiveMerchant #:nodoc:
         post[:payer_info][:phone] = options[:phone]
 
         add_billing_agreement_shipping_address(post,options[:billing_address], :billing_address)
+
+        post
+      end
+
+      def add_expected_legal_country_codes(options, post)
+        post[:expected_legal_country_codes] = { }
+        post[:expected_legal_country_codes][:country_code] = options[:country_code]
 
         post
       end
