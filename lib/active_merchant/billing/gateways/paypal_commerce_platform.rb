@@ -46,6 +46,7 @@ module ActiveMerchant #:nodoc:
 
         post = { }
         add_payment_source(options[:payment_source], post) unless options[:payment_source].nil?
+        add_application_context(options[:application_context], post) unless options[:application_context].nil?
 
         commit(:post, "v2/checkout/orders/#{ order_id }/capture", post, options[:headers])
       end
