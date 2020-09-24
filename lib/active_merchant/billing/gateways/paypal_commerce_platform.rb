@@ -374,6 +374,7 @@ module ActiveMerchant #:nodoc:
       def add_payer(obj_hsh, payer)
         obj_hsh[:payer] = { }
         obj_hsh[:payer][:payment_method] = payer[:payment_method]
+        add_billing_agreement_payer_info_details(options[:payer_info], post) unless options[:payer_info].nil?
         skip_empty(obj_hsh, :payer)
       end
 
@@ -471,6 +472,19 @@ module ActiveMerchant #:nodoc:
         post[:name]                 = { }
         post[:name][:given_name]    = options[:given_name]
         post[:name][:surname]       = options[:surname]
+
+        post
+      end
+      def add_billing_agreement_payer_info_details(options, post)
+        post[:payer_info] = { }
+        post[:payer_info][:email] = options[:email]
+        post[:payer_info][:suffix] = options[:suffix]
+        post[:payer_info][:first_name] = options[:first_name]
+        post[:payer_info][:last_name] = options[:last_name]
+        post[:payer_info][:payer_id] = options[:payer_id]
+        post[:payer_info][:phone] = options[:phone]
+
+        add_billing_agreement_shipping_address(post,options[:billing_address], :billing_address)
 
         post
       end
