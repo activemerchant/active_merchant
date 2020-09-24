@@ -368,6 +368,7 @@ module ActiveMerchant #:nodoc:
 
       def prepare_request_to_get_agreement_tokens(post, options)
         post[:description]            = options[:description] unless options[:description].nil?
+        post[:merchant_custom_data]   = options[:merchant_custom_data] unless options[:merchant_custom_data].nil?
         add_payer(post, options[:payer])
         add_plan(post, options[:plan])
         add_billing_agreement_shipping_address(post, options[:shipping_address], key = :shipping_address) unless options[:shipping_address].nil?
