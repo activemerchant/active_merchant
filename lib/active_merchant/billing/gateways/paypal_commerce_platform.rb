@@ -82,11 +82,20 @@ module ActiveMerchant #:nodoc:
           update_hsh[:from]  = update[:from] unless update[:from].nil?
 
           type = get_update_type(update_hsh[:path])
-          add_amount(update[:value], update_hsh, :value)              if type.eql?("amount")
-          add_single_value(update[:value], update_hsh, :value)        if (type.eql?("custom_id") || type.eql?("description") || type.eql?("soft_descriptor") || type.eql?("invoice_id") || type.eql?("intent") || type.eql?("email_address"))
-          add_name(update[:value], update_hsh, :value)                if (type.eql?("name"))
-          add_shipping_address(update[:value], update_hsh, :value)    if type.eql?("address")
-          add_payment_instruction(update[:value], update_hsh, :value) if type.eql?("payment_instruction")
+          case type
+          when "amount"
+            add_amount(update[:value], update_hsh, :value)
+          when "custom_id", "description", "soft_descriptor", "invoice_id", "intent", "email_address"
+            add_single_value(update[:value], update_hsh, :value)
+          when "name"
+            add_name(update[:value], update_hsh, :value)
+          when "address"
+            add_shipping_address(update[:value], update_hsh, :value)
+          when "payment_instruction"
+            add_payment_instruction(update[:value], update_hsh, :value)
+          else
+            update_hsh[:value] = add_purchase_unit(update[:value])
+          end
 
           post.append(update_hsh)
         end
@@ -163,26 +172,28 @@ module ActiveMerchant #:nodoc:
 
         options.map do |purchase_unit|
           requires!(purchase_unit, :amount)
-
-          purchase_unit_hsh = {  }
-          purchase_unit_hsh[:reference_id]      = purchase_unit[:reference_id] unless purchase_unit[:reference_id].nil?
-          purchase_unit_hsh[:description]       = purchase_unit[:description] unless purchase_unit[:description].nil?
-          purchase_unit_hsh[:shipping_method]   = purchase_unit[:shipping_method] unless purchase_unit[:shipping_method].nil?
-          purchase_unit_hsh[:payment_group_id]  = purchase_unit[:payment_group_id] unless purchase_unit[:payment_group_id].nil?
-          purchase_unit_hsh[:custom_id]         = purchase_unit[:custom_id] unless purchase_unit[:custom_id].nil?
-          purchase_unit_hsh[:invoice_id]        = purchase_unit[:invoice_id] unless purchase_unit[:invoice_id].nil?
-          purchase_unit_hsh[:soft_descriptor]   = purchase_unit[:soft_descriptor] unless purchase_unit[:soft_descriptor].nil?
-
-          add_amount(purchase_unit[:amount], purchase_unit_hsh)
-          add_payee(purchase_unit[:payee], purchase_unit_hsh) unless purchase_unit[:payee].nil?
-          add_items(purchase_unit[:items], purchase_unit_hsh) unless purchase_unit[:items].nil?
-          add_shipping(purchase_unit[:shipping], purchase_unit_hsh) unless purchase_unit[:shipping].nil?
-          add_payment_instruction(purchase_unit[:payment_instruction], purchase_unit_hsh) unless purchase_unit[:payment_instruction].blank?
-
-          post[:purchase_units] << purchase_unit_hsh
+          post[:purchase_units] << add_purchase_unit(purchase_unit)
         end
 
         post
+      end
+
+      def add_purchase_unit(purchase_unit)
+        purchase_unit_hsh = {  }
+        purchase_unit_hsh[:reference_id]      = purchase_unit[:reference_id] unless purchase_unit[:reference_id].nil?
+        purchase_unit_hsh[:description]       = purchase_unit[:description] unless purchase_unit[:description].nil?
+        purchase_unit_hsh[:shipping_method]   = purchase_unit[:shipping_method] unless purchase_unit[:shipping_method].nil?
+        purchase_unit_hsh[:payment_group_id]  = purchase_unit[:payment_group_id] unless purchase_unit[:payment_group_id].nil?
+        purchase_unit_hsh[:custom_id]         = purchase_unit[:custom_id] unless purchase_unit[:custom_id].nil?
+        purchase_unit_hsh[:invoice_id]        = purchase_unit[:invoice_id] unless purchase_unit[:invoice_id].nil?
+        purchase_unit_hsh[:soft_descriptor]   = purchase_unit[:soft_descriptor] unless purchase_unit[:soft_descriptor].nil?
+
+        add_amount(purchase_unit[:amount], purchase_unit_hsh)
+        add_payee(purchase_unit[:payee], purchase_unit_hsh) unless purchase_unit[:payee].nil?
+        add_items(purchase_unit[:items], purchase_unit_hsh) unless purchase_unit[:items].nil?
+        add_shipping(purchase_unit[:shipping], purchase_unit_hsh) unless purchase_unit[:shipping].nil?
+        add_payment_instruction(purchase_unit[:payment_instruction], purchase_unit_hsh) unless purchase_unit[:payment_instruction].blank?
+        purchase_unit_hsh
       end
 
       def add_application_context(options, post)

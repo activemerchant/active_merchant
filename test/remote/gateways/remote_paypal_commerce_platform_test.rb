@@ -152,6 +152,120 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @body = body
   end
 
+  def test_update_soft_descriptor_in_update_body
+    response = create_order("CAPTURE")
+    order_id = response.params["id"]
+    @body    = {body: update_platform_fee_body}
+    @body[:body][0].update(
+        path: "/purchase_units/@reference_id=='#{@reference_id}'/soft_descriptor",
+        value: "Description Changed.",
+        op:    "replace"
+    )
+    response = @gateway.update_order(order_id, options)
+    success_empty_assertions(response)
+    @body = body
+  end
+
+  def test_update_invoice_id_in_update_body
+    response = create_order("CAPTURE")
+    order_id = response.params["id"]
+    @body    = {body: update_platform_fee_body}
+    @body[:body][0].update(
+        path: "/purchase_units/@reference_id=='#{@reference_id}'/invoice_id",
+        value: "INVOICE_ID_123",
+        op:    "replace"
+    )
+    response = @gateway.update_order(order_id, options)
+    success_empty_assertions(response)
+    @body = body
+  end
+
+  def test_update_intent_in_update_body
+    response = create_order("CAPTURE")
+    order_id = response.params["id"]
+    @body    = {body: update_platform_fee_body}
+    @body[:body][0].update(
+        path: "/intent",
+        value: "CAPTURE",
+        op:    "replace"
+    )
+    response = @gateway.update_order(order_id, options)
+    success_empty_assertions(response)
+    @body = body
+  end
+
+  def test_update_shipping_name_in_update_body
+    response = create_order("CAPTURE")
+    order_id = response.params["id"]
+    @body    = {body: update_platform_fee_body}
+    @body[:body][0].update(
+        path: "/purchase_units/@reference_id=='#{@reference_id}'/shipping/name",
+        value: {
+            :full_name => "TEST SHIPPING"
+        },
+        op:    "replace"
+    )
+    response = @gateway.update_order(order_id, options)
+    success_empty_assertions(response)
+    @body = body
+  end
+
+  def test_update_description_in_update_body
+    response = create_order("CAPTURE")
+    order_id = response.params["id"]
+    @body    = {body: update_platform_fee_body}
+    @body[:body][0].update(
+        path: "/purchase_units/@reference_id=='#{@reference_id}'/description",
+        value: "UPDATED DESCRIPTION",
+        op:    "replace"
+    )
+    response = @gateway.update_order(order_id, options)
+    success_empty_assertions(response)
+    @body = body
+  end
+
+  def test_update_custom_id_in_update_body
+    response = create_order("CAPTURE")
+    order_id = response.params["id"]
+    @body    = {body: update_platform_fee_body}
+    @body[:body][0].update(
+        path: "/purchase_units/@reference_id=='#{@reference_id}'/custom_id",
+        value: "CUSTOM_ID_123",
+        op:    "replace"
+    )
+    response = @gateway.update_order(order_id, options)
+    success_empty_assertions(response)
+    @body = body
+  end
+
+  def test_update_payee_email_in_update_body
+    response = create_order("CAPTURE")
+    order_id = response.params["id"]
+    @body    = {body: update_platform_fee_body}
+    @body[:body][0].update(
+        path: "/purchase_units/@reference_id=='#{@reference_id}'/payee/email_address",
+        value: "test@test.com",
+        op:    "replace"
+    )
+    response = @gateway.update_order(order_id, options)
+    success_empty_assertions(response)
+    @body = body
+  end
+
+  def test_update_purchase_unit_in_update_body
+    response = create_order("CAPTURE")
+    order_id = response.params["id"]
+    @body    = {body: update_platform_fee_body}
+    @body[:body][0].update(
+        path: "/purchase_units/@reference_id=='#{@reference_id}'",
+        value: update_purchase_unit_body,
+        op:    "replace"
+    )
+    response = @gateway.update_order(order_id, options)
+    success_empty_assertions(response)
+    @body = body
+  end
+
   def test_create_billing_agreement_token
     @body    = billing_agreement_body
     response = @gateway.create_billing_agreement_token(options)
@@ -770,6 +884,90 @@ class PaypalExpressRestTest < Test::Unit::TestCase
               ]
           }
       }]
+  end
+
+  def update_purchase_unit_body
+    {
+        "reference_id": "camera_shop_seller_{{$timestamp}}",
+        "description": "Camera Shop CHANGED",
+        "amount": {
+            "currency_code": "USD",
+            "value": "25.00",
+            "breakdown": {
+                "item_total": {
+                    "currency_code": "USD",
+                    "value": "25.00"
+                },
+                "shipping": {
+                    "currency_code": "USD",
+                    "value": "0"
+                },
+                "handling": {
+                    "currency_code": "USD",
+                    "value": "0"
+                },
+                "tax_total": {
+                    "currency_code": "USD",
+                    "value": "0"
+                },
+                "gift_wrap": {
+                    "currency_code": "USD",
+                    "value": "0"
+                },
+                "shipping_discount": {
+                    "currency_code": "USD",
+                    "value": "0"
+                }
+            }
+        },
+        "payee": {
+            "email_address": "sb-jnxjj3033194@business.example.com"
+        },
+        "items": [
+            {
+                "name": "Levis 501 Selvedge STF",
+                "sku": "5158936",
+                "unit_amount": {
+                    "currency_code": "USD",
+                    "value": "25.00"
+                },
+                "tax": {
+                    "currency_code": "USD",
+                    "value": "0.00"
+                },
+                "quantity": "1",
+                "category": "PHYSICAL_GOODS"
+            }
+        ],
+        "shipping": {
+            "address": {
+                "address_line_1": "500 Hillside Street",
+                "address_line_2": "#1000",
+                "admin_area_1": "CA",
+                "admin_area_2": "San Jose",
+                "postal_code": "95131",
+                "country_code": "US"
+            }
+        },
+        "shipping_method": "United Postal Service",
+        "payment_instruction": {
+            "platform_fees": [
+                {
+                    "amount": {
+                        "currency_code": "USD",
+                        "value": "2.00"
+                    },
+                    "payee": {
+                        "email_address": "sb-jnxjj3033194@business.example.com"
+                    }
+                }
+            ]
+        },
+        "payment_group_id": 1,
+        "custom_id": "custom_value_{{$timestamp}}",
+        "invoice_id": "invoice_number_{{$timestamp}}",
+        "soft_descriptor": "Payment Camera Shop"
+    }
   end
 
   def billing_agreement_body
