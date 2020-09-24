@@ -32,6 +32,7 @@ module ActiveMerchant #:nodoc:
 
         post = { }
         add_payment_source(options[:payment_source], post) unless options[:payment_source].nil?
+        add_application_context(options[:application_context], post) unless options[:application_context].nil?
 
         commit(:post, "v2/checkout/orders/#{ order_id }/authorize", post, options[:headers])
       end
@@ -98,6 +99,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(options[:invoice_id], post) unless options[:invoice_id].nil?
         add_final_capture(options[:final_capture], post) unless options[:final_capture].nil?
         add_payment_instruction(options[:payment_instruction], post) unless options[:payment_instruction].nil?
+        add_note(options[:note_to_payer], post) unless options[:note_to_payer].nil?
 
         commit(:post, "v2/payments/authorizations/#{ authorization_id }/capture", post, options[:headers])
       end
@@ -206,8 +208,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_network_transaction_reference(options, post)
-        post[:network_transaction_reference]        = { }
-        post[:network_transaction_reference][:id]   = options[:id]
+        post[:network_transaction_reference]           = { }
+        post[:network_transaction_reference][:id]      = options[:id]
+        post[:network_transaction_reference][:date]    = options[:date]
         post[:network_transaction_reference][:network] = options[:network]
       end
 
@@ -293,8 +296,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_shipping(options, post)
-        post[:shipping] = { }
-        post[:shipping] = { }
+        post[:shipping]           = { }
+        post[:shipping][:address] = { }
         add_shipping_address(options[:address], post[:shipping]) unless options[:address].nil?
 
         skip_empty(post, :shipping)
@@ -402,6 +405,7 @@ module ActiveMerchant #:nodoc:
 
         obj_hsh[key]                  = { }
         obj_hsh[key][:line1]          = address[:line1]
+        obj_hsh[key][:line2]          = address[:line2]
         obj_hsh[key][:city]           = address[:city]
         obj_hsh[key][:state]          = address[:state]
         obj_hsh[key][:postal_code]    = address[:postal_code]
