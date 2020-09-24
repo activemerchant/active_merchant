@@ -187,7 +187,7 @@ module ActiveMerchant #:nodoc:
         post[:application_context][:return_url]         = options[:return_url] unless options[:return_url].nil?
         post[:application_context][:cancel_url]         = options[:cancel_url] unless options[:cancel_url].nil?
         post[:application_context][:landing_page]       = options[:landing_page] unless options[:landing_page].nil?
-        post[:application_context][:locale]       = options[:locale] unless options[:locale].nil?
+        post[:application_context][:locale]             = options[:locale] unless options[:locale].nil?
         post[:application_context][:user_action]        = options[:user_action] unless options[:user_action].nil?
         post[:application_context][:brand_name]         = options[:brand_name] unless options[:brand_name].nil?
         post[:application_context][:shipping_preference]= options[:shipping_preference] unless options[:shipping_preference].nil?
@@ -436,6 +436,7 @@ module ActiveMerchant #:nodoc:
           post[:value]                        = { }
           post[:value][:description]          = hsh_obj[:value][:description] unless hsh_obj[:value][:description].nil?
           post[:value][:merchant_custom_data] = hsh_obj[:value][:merchant_custom_data] unless hsh_obj[:value][:merchant_custom_data].nil?
+          add_billing_agreement_shipping_address(options[:shipping_address], post, :shipping_address) unless options[:shipping_address].nil?
           hsh_collection << post
         end
         hsh_collection
