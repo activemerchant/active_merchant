@@ -79,10 +79,13 @@ module ActiveMerchant #:nodoc:
           update_hsh = { }
           update_hsh[:op]    = update[:op]
           update_hsh[:path]  = update[:path]
+          update_hsh[:from]  = update[:from] unless update[:from].nil?
 
           type = get_update_type(update_hsh[:path])
-          add_amount(update[:value], update_hsh, :value)           if type.eql?("amount")
-          add_shipping_address(update[:value], update_hsh, :value) if type.eql?("address")
+          add_amount(update[:value], update_hsh, :value)              if type.eql?("amount")
+          add_single_value(update[:value], update_hsh, :value)        if (type.eql?("custom_id") || type.eql?("description") || type.eql?("soft_descriptor") || type.eql?("invoice_id") || type.eql?("intent") || type.eql?("email_address"))
+          add_name(update[:value], update_hsh, :value)                if (type.eql?("name"))
+          add_shipping_address(update[:value], update_hsh, :value)    if type.eql?("address")
           add_payment_instruction(update[:value], update_hsh, :value) if type.eql?("payment_instruction")
 
           post.append(update_hsh)
@@ -265,6 +268,17 @@ module ActiveMerchant #:nodoc:
         post
       end
 
+      def add_single_value(value, post, key=:value)
+        post[key] = value
+        post
+      end
+
+      def add_name(options, post, key=:value)
+        post[key] = { }
+        post[key][:full_name] = options[:full_name]
+        post
+      end
+
       def add_breakdown_for_amount(options, post, key)
         post[key][:breakdown] = { }
         options.each do |item, _|
@@ -368,6 +382,7 @@ module ActiveMerchant #:nodoc:
 
       def prepare_request_to_get_agreement_tokens(post, options)
         post[:description]            = options[:description] unless options[:description].nil?
+        post[:merchant_custom_data]   = options[:merchant_custom_data] unless options[:merchant_custom_data].nil?
         add_payer(post, options[:payer])
         add_plan(post, options[:plan])
         add_billing_agreement_shipping_address(post, options[:shipping_address], key = :shipping_address) unless options[:shipping_address].nil?
@@ -401,7 +416,7 @@ module ActiveMerchant #:nodoc:
         obj_hsh[:merchant_preferences][:notify_url]                 = options[:notify_url] unless options[:notify_url].nil?
         obj_hsh[:merchant_preferences][:external_selected_funding_instrument_type]              = options[:external_selected_funding_instrument_type] unless options[:external_selected_funding_instrument_type].nil?
 
-        add_expected_legal_country_codes(options[:expected_legal_country_codes], post)
+        add_expected_legal_country_codes(options[:expected_legal_country_codes], obj_hsh) unless options[:expected_legal_country_codes].nil?
         obj_hsh
       end
 
@@ -433,6 +448,7 @@ module ActiveMerchant #:nodoc:
           requires!(hsh_obj, :op, :path, :value)
           post[:op]                           = hsh_obj[:op]
           post[:path]                         = hsh_obj[:path]
+          post[:from]                         = hsh_obj[:from] unless hsh_obj[:from].nil?
           post[:value]                        = { }
           post[:value][:description]          = hsh_obj[:value][:description] unless hsh_obj[:value][:description].nil?
           post[:value][:merchant_custom_data] = hsh_obj[:value][:merchant_custom_data] unless hsh_obj[:value][:merchant_custom_data].nil?
@@ -501,8 +517,8 @@ module ActiveMerchant #:nodoc:
 
       def add_expected_legal_country_codes(options, post)
         post[:expected_legal_country_codes] = { }
-        post[:expected_legal_country_codes][:country_code] = options[:country_code]
-
+        post[:expected_legal_country_codes][:country_code] = ""
+        post[:expected_legal_country_codes][:country_code] = options[:country_code] unless options[:country_code].nil?
         post
       end
     end
