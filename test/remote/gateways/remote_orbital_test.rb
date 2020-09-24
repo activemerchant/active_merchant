@@ -133,6 +133,16 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_purchase_with_card_indicators_and_line_items
+    options = @options.merge(
+      line_items: @line_items,
+      card_indicators: 'y'
+    )
+    assert response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
   def test_successful_purchase_with_level_2_data
     response = @gateway.purchase(@amount, @credit_card, @options.merge(level_2_data: @level_2_options))
 

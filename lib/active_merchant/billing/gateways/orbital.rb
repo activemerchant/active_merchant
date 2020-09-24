@@ -756,8 +756,8 @@ module ActiveMerchant #:nodoc:
             add_level2_purchase(xml, parameters)
             add_level3_purchase(xml, parameters)
             add_level3_tax(xml, parameters)
-            add_card_indicators(xml, parameters)
             add_line_items(xml, parameters) if parameters[:line_items]
+            add_card_indicators(xml, parameters)
             add_stored_credentials(xml, parameters)
             add_pymt_brand_program_code(xml, creditcard, three_d_secure)
           end
