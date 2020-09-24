@@ -17,6 +17,7 @@ module ActiveMerchant #:nodoc:
         add_purchase_units(options[:purchase_units], post)
         add_payment_instruction(options[:payment_instruction], post) unless options[:payment_instruction].blank?
         add_application_context(options[:application_context], post) unless options[:application_context].blank?
+        add_order_payer(options[:payer], post) unless options[:payer].blank?
 
         commit(:post, "v2/checkout/orders", post, options[:headers])
       end
@@ -281,6 +282,7 @@ module ActiveMerchant #:nodoc:
           items_hsh[:name]     = item[:name]
           items_hsh[:sku]      = item[:sku] unless item[:sku].nil?
           items_hsh[:quantity] = item[:quantity]
+          items_hsh[:description] = item[:description]
           items_hsh[:category] = item[:category] unless item[:category].nil?
 
           add_amount(item[:unit_amount], items_hsh, :unit_amount)
@@ -428,6 +430,50 @@ module ActiveMerchant #:nodoc:
           hsh_collection << post
         end
         hsh_collection
+      end
+      def add_order_payer(options, post)
+        post[:payer] = { }
+        add_payer_name(options[:name], post)
+
+        post[:payer][:email_address] = options[:email_address]
+        post[:payer][:payer_id] = options[:payer_id]
+        post[:payer][:birth_date] = options[:birth_date]
+
+        add_phone_number(options[:phone], post)
+        add_tax_info(options[:tax_info], post)
+        add_address(options[:address], [:post])
+      end
+      def add_phone_number(options, post)
+        post[:phone] = { }
+        post[:phone][:phone_type] = options[:phone_type]
+        post[:phone][:phone_number] = { }
+        post[:phone][:phone_number][:national_number] = options[:phone_number][:national_number]
+
+        post
+      end
+      def add_tax_info(options, post)
+        post[:tax_info]               = { }
+        post[:tax_info][:tax_id]      = options[:tax_id]
+        post[:tax_info][:tax_id_type] = options[:tax_id_type]
+        post
+      end
+      def add_address(options, post)
+        post[:address] = { }
+        post[:address][:address_line_1]   = options[:address_line_1]
+        post[:address][:address_line_2]   = options[:address_line_2]
+        post[:address][:admin_area_2]     = options[:admin_area_2]
+        post[:address][:admin_area_1]     = options[:admin_area_1]
+        post[:address][:postal_code]      = options[:postal_code]
+        post[:address][:country_code]     = options[:country_code]
+
+        post
+      end
+      def add_payer_name(options, post)
+        post[:name]                 = { }
+        post[:name][:given_name]    = options[:given_name]
+        post[:name][:surname]       = options[:surname]
+
+        post
       end
     end
   end
