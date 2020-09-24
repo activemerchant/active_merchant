@@ -2,19 +2,26 @@
 
 require 'test_helper'
 
-class RemotePayboxDirectTest < Test::Unit::TestCase
+class RemotePayboxDirect3DSTest < Test::Unit::TestCase
   def setup
     fixtures = fixtures(:paybox_direct)
     @gateway = PayboxDirectGateway.new(fixtures)
 
     @amount = 100
-    @credit_card = credit_card(fixtures[:credit_card_ok])
-    @declined_card = credit_card(fixtures[:credit_card_nok])
+    @credit_card = credit_card(fixtures[:credit_card_ok_3ds])
+    @declined_card = credit_card(fixtures[:credit_card_nok_3ds])
+    @unenrolled_card = credit_card(fixtures[:credit_card_ok_3ds_not_enrolled])
 
     @options = {
       order_id: '1',
       billing_address: address,
-      description: 'Store Purchase'
+      description: 'Store Purchase',
+      three_d_secure: {
+        eci: '02',
+        cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA=',
+        xid: '00000000000000000501',
+        cavv_algorithm: '1'
+      }
     }
   end
 
@@ -24,10 +31,25 @@ class RemotePayboxDirectTest < Test::Unit::TestCase
     assert_equal 'The transaction was approved', response.message
   end
 
+  def test_successful_purchase_other_eci
+    options = @options
+    options[:three_d_secure][:eci] = '05'
+
+    assert response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'The transaction was approved', response.message
+  end
+
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
     assert_equal "PAYBOX : Num\xE9ro de porteur invalide".force_encoding('ASCII-8BIT'), response.message
+  end
+
+  def test_successful_unenrolled_3ds_purchase
+    assert response = @gateway.purchase(@amount, @unenrolled_card, @options)
+    assert_success response
+    assert_equal 'The transaction was approved', response.message
   end
 
   def test_authorize_and_capture
@@ -89,24 +111,30 @@ class RemotePayboxDirectTest < Test::Unit::TestCase
     assert_equal 'Mandatory values missing keyword:13 Type:13', refund.message
   end
 
-  def test_invalid_login
-    gateway = PayboxDirectGateway.new(
-      login: '199988899',
-      password: '1999888F',
-      rang: 100
-    )
-    assert response = gateway.purchase(@amount, @credit_card, @options)
-    assert_failure response
-    assert_equal 'HMAC requis', response.message
+  def test_failed_purchase_invalid_eci
+    options = @options
+    options[:three_d_secure][:eci] = '00'
+
+    assert purchase = @gateway.purchase(@amount, @credit_card, options)
+    assert_failure purchase
+    assert_equal "PAYBOX : Transaction refus\xE9e".force_encoding('ASCII-8BIT'), purchase.message
   end
 
-  def test_invalid_login_without_rang
-    gateway = PayboxDirectGateway.new(
-      login: '199988899',
-      password: '1999888F'
-    )
-    assert response = gateway.purchase(@amount, @credit_card, @options)
-    assert_failure response
-    assert_equal "PAYBOX : Acc\xE8s refus\xE9 ou site/rang/cl\xE9 invalide".force_encoding('ASCII-8BIT'), response.message
+  def test_failed_purchase_invalid_cavv
+    options = @options
+    options[:three_d_secure][:cavv] = 'jJ81HADVRtXfCBATEp01CJUAAAAVZQGY='
+
+    assert purchase = @gateway.purchase(@amount, @credit_card, options)
+    assert_failure purchase
+    assert_equal 'Some values exceed max length', purchase.message
+  end
+
+  def test_failed_purchase_invalid_xid
+    options = @options
+    options[:three_d_secure][:xid] = '00000000000000000510123123123456789'
+
+    assert purchase = @gateway.purchase(@amount, @credit_card, options)
+    assert_failure purchase
+    assert_equal 'Some values exceed max length', purchase.message
   end
 end
