@@ -186,6 +186,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     response   = @gateway.create_agreement_for_approval(options)
     billing_id = response.params["id"]
     @body      = body
+    @intent    = "AUTHORIZE"
     response   = create_order("AUTHORIZE")
     order_id   = response.params["id"]
     response   = @gateway.authorize(order_id, billing_options(billing_id))
@@ -634,81 +635,80 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @reference_id = "camera_shop_seller_#{ DateTime.now }"
 
     {
-        "intent": "CAPTURE",
+        "description": "PPCP",
+        "intent": @intent || "CAPTURE",
         "purchase_units": [
             {
-                "reference_id": @reference_id,
-                "description": "Camera Shop",
-                "amount": {
+              "reference_id": @reference_id,
+              "description": "Camera Shop",
+              "amount": {
+                "currency_code": "USD",
+                "value": "25.00",
+                "breakdown": {
+                "item_total": {
                     "currency_code": "USD",
-                    "value": "25.00",
-                    "breakdown": {
-                        "item_total": {
-                            "currency_code": "USD",
-                            "value": "25.00"
-                        },
-                        "shipping": {
-                            "currency_code": "USD",
-                            "value": "0"
-                        },
-                        "handling": {
-                            "currency_code": "USD",
-                            "value": "0"
-                        },
-                        "tax_total": {
-                            "currency_code": "USD",
-                            "value": "0"
-                        },
-                        "gift_wrap": {
-                            "currency_code": "USD",
-                            "value": "0"
-                        },
-                        "shipping_discount": {
-                            "currency_code": "USD",
-                            "value": "0"
-                        }
-                    }
+                    "value": "25.00"
                 },
-                "payee": {
-                    "email_address": "sb-jnxjj3033194@business.example.com"
-                },
-                "items": [
-                    {
-                        "name": "Levis 501 Selvedge STF",
-                        "sku": "5158936",
-                        "unit_amount": {
-                            "currency_code": "USD",
-                            "value": "25.00"
-                        },
-                        "tax": {
-                            "currency_code": "USD",
-                            "value": "0.00"
-                        },
-                        "quantity": "1",
-                        "category": "PHYSICAL_GOODS"
-                    }
-                ],
                 "shipping": {
-                    "address": {
-                        "address_line_1": "500 Hillside Street",
-                        "address_line_2": "#1000",
-                        "admin_area_1": "CA",
-                        "admin_area_2": "San Jose",
-                        "postal_code": "95131",
-                        "country_code": "US"
-                    }
+                    "currency_code": "USD",
+                    "value": "0"
                 },
-                "shipping_method": "United Postal Service",
-                "payment_group_id": 1,
-                "custom_id": "custom_value_#{ DateTime.now }",
-                "invoice_id": "invoice_number_#{ DateTime.now }",
-                "soft_descriptor": "Payment Camera Shop"
+                "handling": {
+                    "currency_code": "USD",
+                    "value": "0"
+                },
+                "tax_total": {
+                    "currency_code": "USD",
+                    "value": "0"
+                },
+                "gift_wrap": {
+                    "currency_code": "USD",
+                    "value": "0"
+                },
+                "shipping_discount": {
+                    "currency_code": "USD",
+                    "value": "0"
+                }
+            }
+        },
+        "payee": {
+            "email_address": "sb-jnxjj3033194@business.example.com"
+        },
+        "items": [
+            {
+                "name": "Levis 501 Selvedge STF",
+                "sku": "5158936",
+                "unit_amount": {
+                    "currency_code": "USD",
+                    "value": "25.00"
+                },
+                "tax": {
+                    "currency_code": "USD",
+                    "value": "0.00"
+                },
+                "quantity": "1",
+                "category": "PHYSICAL_GOODS"
             }
         ],
-        "application_context": {
-            "return_url": "https://www.google.com/",
-            "cancel_url": "https://www.google.com/"
-        }
+        "shipping": {
+            "address": {
+                "address_line_1": "500 Hillside Street",
+                "address_line_2": "#1000",
+                "admin_area_1": "CA",
+                "admin_area_2": "San Jose",
+                "postal_code": "95131",
+                "country_code": "US"
+            }
+        },
+        "shipping_method": "United Postal Service",
+        "payment_group_id": 1,
+        "custom_id": "custom_value_#{ DateTime.now }",
+        "invoice_id": "invoice_number_#{ DateTime.now }",
+        "soft_descriptor": "Payment Camera Shop"
+    }
+    ],
+        "payer": payer_hash,
+        "application_context": application_context
     }
   end
 
@@ -811,6 +811,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
                 "type": "BILLING_AGREEMENT"
             }
         },
+        application_context: application_context,
         "headers": @headers
     }
   end
@@ -849,4 +850,114 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     assert_empty   response.params
   end
 
+  def payer_hash
+    # Regex for national_number: ^[0-9]{1,14}?$.
+    { name: name, email_address: "sb-feqsa3029697@personal.example.com", payer_id: "QYR5Z8XDVJNXQ", phone: phone, birth_date: "1990-08-31", tax_info: tax_info, address: address }
+  end
+  def address
+    { address_line_1: "2211 N First Street", address_line_2: "Building 17", admin_area_2: "21 N First Street", admin_area_1: "2211 N First Street", postal_code: "95131", country_code: "US" }
+  end
+  def tax_info
+    ## Tax ID Type = Possible values: BR_CPF, BR_CNPJ
+    { tax_id: "000000000", tax_id_type: "BR_CPF" }
+  end
+  def phone
+    { phone_type: "FAX", phone_number: { national_number: "(123) 456-7890" } }
+  end
+  def name
+    { given_name: "Ali Hassan", surname: "Mirza" }
+  end
+  def application_context
+    # The possible values are:
+    #                         GET_FROM_FILE. Use the customer-provided shipping address on the PayPal site.
+    #     NO_SHIPPING. Redact the shipping address from the PayPal site. Recommended for digital goods.
+    #     SET_PROVIDED_ADDRESS. Use the merchant-provided address. The customer cannot change this address on the PayPal site.
+    #     Default: GET_FROM_FILE.
+
+    { return_url: "https://paypal.com",cancel_url: "https://paypal.com", landing_page: "LOGIN", locale: "en", user_action: "PAY_NOW",
+      brand_name: "PPCP", shipping_preference: "NO_SHIPPING", payment_method: payment_method, stored_payment_source: stored_payment_source  }
+  end
+  def payment_method
+    { payer_selected: "PAYPAL", payee_preferred: "UNRESTRICTED", standard_entry_class_code: "WEB" }
+  end
+  def stored_payment_source
+    { payment_initiator: "MERCHANT", payment_type: "ONE_TIME", usage: "FIRST", previous_network_transaction_reference: previous_network_transaction_reference }
+  end
+  def previous_network_transaction_reference
+    { id: "1111111111", date: "2020-10-01T21:20:49Z", network: "MASTERCARD" }
+  end
+  def purchase_units
+    {
+        "purchase_units": [
+          {
+          "reference_id": @reference_id,
+          "description": "Camera Shop",
+          "amount": {
+              "currency_code": "USD",
+              "value": "25.00",
+              "breakdown": {
+                  "item_total": {
+                      "currency_code": "USD",
+                      "value": "25.00"
+                  },
+                  "shipping": {
+                      "currency_code": "USD",
+                      "value": "0"
+                  },
+                  "handling": {
+                      "currency_code": "USD",
+                      "value": "0"
+                  },
+                  "tax_total": {
+                      "currency_code": "USD",
+                      "value": "0"
+                  },
+                  "gift_wrap": {
+                      "currency_code": "USD",
+                      "value": "0"
+                  },
+                  "shipping_discount": {
+                      "currency_code": "USD",
+                      "value": "0"
+                  }
+              }
+          },
+          "payee": {
+              "email_address": "sb-jnxjj3033194@business.example.com"
+          },
+          "items": [
+              {
+                  "name": "Levis 501 Selvedge STF",
+                  "sku": "5158936",
+                  "unit_amount": {
+                      "currency_code": "USD",
+                      "value": "25.00"
+                  },
+                  "tax": {
+                      "currency_code": "USD",
+                      "value": "0.00"
+                  },
+                  "quantity": "1",
+                  "category": "PHYSICAL_GOODS"
+              }
+          ],
+          "shipping": {
+              "address": {
+                  "address_line_1": "500 Hillside Street",
+                  "address_line_2": "#1000",
+                  "admin_area_1": "CA",
+                  "admin_area_2": "San Jose",
+                  "postal_code": "95131",
+                  "country_code": "US"
+              }
+          },
+          "shipping_method": "United Postal Service",
+          "payment_group_id": 1,
+          "custom_id": "custom_value_#{ DateTime.now }",
+          "invoice_id": "invoice_number_#{ DateTime.now }",
+          "soft_descriptor": "Payment Camera Shop"
+        }
+      ]
+    }
+  end
 end

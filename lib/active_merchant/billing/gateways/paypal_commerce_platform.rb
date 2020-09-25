@@ -15,7 +15,7 @@ module ActiveMerchant #:nodoc:
         post = { }
         add_intent(intent, post)
         add_purchase_units(options[:purchase_units], post)
-        add_payment_instruction(options[:payment_instruction], post) unless options[:payment_instruction].blank?
+        # add_payment_instruction(options[:payment_instruction], post) unless options[:payment_instruction].blank?
         add_application_context(options[:application_context], post) unless options[:application_context].blank?
         add_order_payer(options[:payer], post) unless options[:payer].blank?
 
@@ -118,6 +118,7 @@ module ActiveMerchant #:nodoc:
       def create_agreement_for_approval(options)
         requires!(options, :token_id)
         post = { token_id: options[:token_id] }
+
         commit(:post, "v1/billing-agreements/agreements", post, options[:headers])
       end
 
@@ -206,15 +207,16 @@ module ActiveMerchant #:nodoc:
         post[:stored_payment_source][:payment_initiator] = options[:payment_initiator]
         post[:stored_payment_source][:payment_type] = options[:payment_type]
         post[:stored_payment_source][:usage] = options[:usage]
-        add_network_transaction_reference(options[:network_transaction_reference], post)
+        add_network_transaction_reference(options[:previous_network_transaction_reference], post)
         skip_empty(post, :stored_payment_source)
       end
 
       def add_network_transaction_reference(options, post)
-        post[:network_transaction_reference]           = { }
-        post[:network_transaction_reference][:id]      = options[:id]
-        post[:network_transaction_reference][:date]    = options[:date]
-        post[:network_transaction_reference][:network] = options[:network]
+        post[:previous_network_transaction_reference]           = { }
+        post[:previous_network_transaction_reference][:id]      = options[:id]
+        post[:previous_network_transaction_reference][:date]    = options[:date]
+        post[:previous_network_transaction_reference][:network] = options[:network]
+        post
       end
 
       def add_payment_method(options, post)
@@ -467,7 +469,7 @@ module ActiveMerchant #:nodoc:
 
         add_phone_number(options[:phone], post)
         add_tax_info(options[:tax_info], post)
-        add_address(options[:address], [:post])
+        add_address(options[:address], post)
       end
       def add_phone_number(options, post)
         post[:phone] = { }
