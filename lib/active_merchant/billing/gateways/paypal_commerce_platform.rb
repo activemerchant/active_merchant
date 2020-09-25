@@ -468,6 +468,7 @@ module ActiveMerchant #:nodoc:
         end
         hsh_collection
       end
+
       def add_order_payer(options, post)
         post[:payer] = { }
         add_payer_name(options[:name], post)
@@ -480,6 +481,7 @@ module ActiveMerchant #:nodoc:
         add_tax_info(options[:tax_info], post)
         add_address(options[:address], [:post])
       end
+
       def add_phone_number(options, post)
         post[:phone] = { }
         post[:phone][:phone_type] = options[:phone_type]
@@ -488,12 +490,14 @@ module ActiveMerchant #:nodoc:
 
         post
       end
+
       def add_tax_info(options, post)
         post[:tax_info]               = { }
         post[:tax_info][:tax_id]      = options[:tax_id]
         post[:tax_info][:tax_id_type] = options[:tax_id_type]
         post
       end
+
       def add_address(options, post)
         post[:address] = { }
         post[:address][:address_line_1]   = options[:address_line_1]
@@ -505,6 +509,7 @@ module ActiveMerchant #:nodoc:
 
         post
       end
+
       def add_payer_name(options, post)
         post[:name]                 = { }
         post[:name][:given_name]    = options[:given_name]
@@ -512,6 +517,7 @@ module ActiveMerchant #:nodoc:
 
         post
       end
+
       def add_billing_agreement_payer_info_details(options, post)
         post[:payer_info] = { }
         post[:payer_info][:email] = options[:email]
