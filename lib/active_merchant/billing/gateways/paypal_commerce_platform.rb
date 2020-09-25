@@ -463,7 +463,7 @@ module ActiveMerchant #:nodoc:
           post[:value]                        = { }
           post[:value][:description]          = hsh_obj[:value][:description] unless hsh_obj[:value][:description].nil?
           post[:value][:merchant_custom_data] = hsh_obj[:value][:merchant_custom_data] unless hsh_obj[:value][:merchant_custom_data].nil?
-          add_billing_agreement_shipping_address(options[:shipping_address], post, :shipping_address) unless options[:shipping_address].nil?
+          post[:value][:notify_url]           = hsh_obj[:value][:notify_url] unless hsh_obj[:value][:notify_url].nil?
           hsh_collection << post
         end
         hsh_collection

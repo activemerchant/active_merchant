@@ -349,7 +349,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @body      = { "token_id": @approved_billing_token }
     response   = @gateway.create_agreement_for_approval(options)
     billing_id = response.params["id"]
-    @body      = { "body": billing_description_and_merchant_custom_update }
+    @body      = { "body": billing_update_body }
     response   = @gateway.update_billing_agreement(billing_id, options)
     success_empty_assertions(response)
   end
@@ -1013,7 +1013,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     }
   end
 
-  def billing_description_and_merchant_custom_update
+  def billing_update_body
     [
         {
             "op": "replace",
@@ -1021,6 +1021,13 @@ class PaypalExpressRestTest < Test::Unit::TestCase
             "value": {
                 "description": "Updated Billing Agreement",
                 "merchant_custom_data": "INV-003"
+            }
+        },
+        {
+            "op": "replace",
+            "path": "/plan/merchant_preferences/",
+            "value": {
+                    "notify_url": "https://example.com/notification"
             }
         }
     ]
