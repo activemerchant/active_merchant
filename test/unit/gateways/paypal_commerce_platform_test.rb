@@ -131,6 +131,13 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_failed_update_order_business_validation_error
+    @gateway.expects(:ssl_request).times(2).returns(successful_create_capture_order_response, failed_update_order_due_to_business_error_response)
+    create = success_create_order_assertions("CAPTURE")
+    order_id = create.params["id"]
+    failed_update_assertions(order_id)
+  end
+
   def test_failed_cancel_billing_after_approval
     @gateway.expects(:ssl_request).times(2).returns(successful_approve_billing_agreement_response, failed_cancel_billing_due_to_business_error)
     approve    = success_approve_billing_agreement_assertions
@@ -138,7 +145,7 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
     @body      = { note: "Cancelling Subscription" }
     response   = @gateway.cancel_billing_agreement(billing_id, options)
     assert_failure response
-    assert_equal "BUSINESSS_ERROR", response.params["name"]
+    assert_equal "BUSINESS_ERROR", response.params["name"]
     assert_equal "Business error", response.params["message"]
   end
 
@@ -1154,6 +1161,32 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
     RESPONSE
   end
 
+  def failed_update_order_due_to_business_error_response
+    <<-RESPONSE
+    {
+        "name": "UNPROCESSABLE_ENTITY",
+        "details": [
+            {
+                "field": "path",
+                "value": "/purchase_units/0/XYZ",
+                "location": "body",
+                "issue": "INVALID_PARAMETER",
+                "description": "Cannot be specified as part of the request."
+            }
+        ],
+        "message": "The requested action could not be performed, semantically incorrect, or failed business validation.",
+        "debug_id": "c6adfcf430574",
+        "links": [
+            {
+                "href": "https://developer.paypal.com/docs/api/orders/v2/#error-INVALID_PARAMETER",
+                "rel": "information_link",
+                "method": "GET"
+            }
+        ]
+    }
+    RESPONSE
+  end
+
   def failed_cancel_billing_due_to_business_error
     <<-RESPONSE
     {
@@ -1729,6 +1762,14 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
     assert_failure refund
     assert_equal "The requested action could not be performed, semantically incorrect, or failed business validation.", refund.message
     assert_equal "UNPROCESSABLE_ENTITY", refund.params["name"]
+  end
+
+  def failed_update_assertions(order_id)
+    assert update = @gateway.update_order(order_id, options.merge(body: {}))
+    assert_instance_of Response, update
+    assert_failure update
+    assert_equal "The requested action could not be performed, semantically incorrect, or failed business validation.", update.message
+    assert_equal "UNPROCESSABLE_ENTITY", update.params["name"]
   end
 
 end
