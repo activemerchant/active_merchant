@@ -83,18 +83,18 @@ class RemoteAdyenTest < Test::Unit::TestCase
       brand: 'mastercard'
     )
 
-    @apple_pay_card = network_tokenization_credit_card('4111111111111111',
+    @apple_pay_card = network_tokenization_credit_card('4761209980011439',
       payment_cryptogram: 'YwAAAAAABaYcCMX/OhNRQAAAAAA=',
-      month: '08',
-      year: '2018',
+      month: '11',
+      year: '2022',
       source: :apple_pay,
-      verification_value: nil
+      verification_value: 569
     )
 
-    @google_pay_card = network_tokenization_credit_card('4111111111111111',
+    @google_pay_card = network_tokenization_credit_card('4761209980011439',
       payment_cryptogram: 'YwAAAAAABaYcCMX/OhNRQAAAAAA=',
-      month: '08',
-      year: '2018',
+      month: '11',
+      year: '2022',
       source: :google_pay,
       verification_value: nil
     )
@@ -1042,7 +1042,19 @@ class RemoteAdyenTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize_with_sub_merchant_data
+    sub_merchant_data = {
+      sub_merchant_id: '123451234512345',
+      sub_merchant_name: 'Wildsea',
+      sub_merchant_street: '1234 Street St',
+      sub_merchant_city: 'Night City',
+      sub_merchant_state: 'East Block',
+      sub_merchant_postal_code: '112233',
+      sub_merchant_country: 'EUR',
+      sub_merchant_tax_id: '12345abcde67',
+      sub_merchant_mcc: '1234'
+    }
     options = @options.update({
+      installments: 2,
       billing_address: {
         address1: 'Infinite Loop',
         address2: 1,
@@ -1052,7 +1064,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
         zip: '95014'
       }
     })
-    assert response = @gateway.authorize(@amount, @avs_credit_card, options.merge({sub_merchant_id: '123451234512345'}))
+    assert response = @gateway.authorize(@amount, @avs_credit_card, options.merge(sub_merchant_data))
     assert response.test?
     refute response.authorization.blank?
     assert_success response

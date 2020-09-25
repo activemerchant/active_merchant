@@ -820,11 +820,29 @@ class AdyenTest < Test::Unit::TestCase
   end
 
   def test_authorize_with_sub_merchant_id
+    sub_merchant_data = {
+      sub_merchant_id: '123451234512345',
+      sub_merchant_name: 'Wildsea',
+      sub_merchant_street: '1234 Street St',
+      sub_merchant_city: 'Night City',
+      sub_merchant_state: 'East Block',
+      sub_merchant_postal_code: '112233',
+      sub_merchant_country: 'EUR',
+      sub_merchant_tax_id: '12345abcde67',
+      sub_merchant_mcc: '1234'
+    }
     response = stub_comms do
-      @gateway.authorize(@amount, @credit_card, @options.merge(sub_merchant_id: '12345abcde67890'))
+      @gateway.authorize(@amount, @credit_card, @options.merge(sub_merchant_data))
     end.check_request do |_endpoint, data, _headers|
       parsed = JSON.parse(data)
       assert parsed['additionalData']['subMerchantId']
+      assert parsed['additionalData']['subMerchantName']
+      assert parsed['additionalData']['subMerchantStreet']
+      assert parsed['additionalData']['subMerchantCity']
+      assert parsed['additionalData']['subMerchantState']
+      assert parsed['additionalData']['subMerchantPostalCode']
+      assert parsed['additionalData']['subMerchantCountry']
+      assert parsed['additionalData']['subMerchantTaxId']
     end.respond_with(successful_authorize_response)
     assert_success response
   end
