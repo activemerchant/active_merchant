@@ -24,7 +24,8 @@ module ActiveMerchant #:nodoc:
 
       def get_token(options)
         requires!(options[:authorization], :username, :password)
-        prepare_request_for_get_access_token(options)
+        prepare_request_to_get_access_token("#{ base_url }/v1/oauth2/token", options)
+        # prepare_request_for_get_access_token(options)
       end
 
       def authorize(order_id, options)
