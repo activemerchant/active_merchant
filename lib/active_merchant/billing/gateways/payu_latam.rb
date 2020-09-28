@@ -76,9 +76,16 @@ module ActiveMerchant #:nodoc:
         post = {}
 
         add_credentials(post, 'SUBMIT_TRANSACTION', options)
-        add_transaction_elements(post, 'REFUND', options)
-        add_reference(post, authorization)
 
+        if options[:partial_refund]
+          add_transaction_elements(post, 'PARTIAL_REFUND', options)
+          post[:transaction][:additionalValues] ||= {}
+          post[:transaction][:additionalValues][:TX_VALUE] = invoice_for(amount, options)[:TX_VALUE]
+        else
+          add_transaction_elements(post, 'REFUND', options)
+        end
+
+        add_reference(post, authorization)
         commit('refund', post)
       end
 

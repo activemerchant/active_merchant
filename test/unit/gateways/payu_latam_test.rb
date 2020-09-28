@@ -140,6 +140,17 @@ class PayuLatamTest < Test::Unit::TestCase
       @gateway.refund(@amount, '7edbaf68-8f3a-4ae7-b9c7-d1e27e314999', @options.merge(language: 'es'))
     end.check_request do |_endpoint, data, _headers|
       assert_match(/"language":"es"/, data)
+      assert_match(/"type":"REFUND"/, data)
+    end.respond_with(pending_refund_response)
+  end
+
+  def test_partial_refund
+    stub_comms do
+      @gateway.refund(2000, '7edbaf68-8f3a-4ae7-b9c7-d1e27e314999', @options.merge(partial_refund: true))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/"type":"PARTIAL_REFUND"/, data)
+      assert_match(/"TX_VALUE"/, data)
+      assert_match(/"value":"20.00"/, data)
     end.respond_with(pending_refund_response)
   end
 
