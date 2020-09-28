@@ -91,6 +91,29 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     success_status_assertions(response, "COMPLETED")
   end
 
+  def test_capture_order_for_duplicate_invoice_id
+    response = create_order("CAPTURE")
+    order_id = response.params["id"]
+    @card_order_options[:headers].merge!({ "PayPal-Mock-Response": "{\"mock_application_codes\": \"DUPLICATE_INVOICE_ID\"}"})
+
+    response = @gateway.capture(order_id, @card_order_options)
+    assert_equal response.params["name"], "UNPROCESSABLE_ENTITY"
+    assert !response.params["name"].nil?
+    assert response.params["details"].first["issue"] == "DUPLICATE_INVOICE_ID"
+  end
+
+  def test_capture_order_for_internal_server_error_issue
+    response = create_order("CAPTURE")
+    order_id = response.params["id"]
+    @card_order_options[:headers].merge!({ "PayPal-Mock-Response": "{\"mock_application_codes\": \"INTERNAL_SERVER_ERROR\"}"})
+    response = @gateway.capture(order_id, @card_order_options)
+
+    assert_equal response.params["name"], "INTERNAL_SERVER_ERROR"
+    assert !response.params["name"].nil?
+    assert response.params["name"] == "INTERNAL_SERVER_ERROR"
+    assert response.params["message"] == "An internal server error occurred."
+  end
+
   def test_authorize_order_with_card
     response = create_order("AUTHORIZE")
     order_id = response.params["id"]
@@ -742,7 +765,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   end
 
   def options
-    { headers: @headers }.merge(@body)
+    { headers: @headers }.merge(body)
   end
 
   def body
