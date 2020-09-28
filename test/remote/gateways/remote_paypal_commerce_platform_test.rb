@@ -55,7 +55,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
     @get_token_missing_username_options = { "Content-Type": "application/json", authorization: missing_username_params }
 
-    @approved_billing_token = "BA-7CJ88195VF820203M"
+    @approved_billing_token = "BA-18C40743NV1205515"
 
   end
 
