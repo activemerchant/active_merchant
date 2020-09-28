@@ -96,6 +96,37 @@ class NmiTest < Test::Unit::TestCase
     assert_equal 'FAILED', response.message
   end
 
+  def test_successful_purchase_with_3ds
+    version = '2.1.0'
+    eci = '02'
+    cavv = 'jJ81HADVRtXfCBATEp01CJUAAAA'
+    ds_transaction_id = '97267598-FAE6-48F2-8083-C23433990FBC'
+    xid = '00000000000000000501'
+    options_with_3ds = @transaction_options.merge(
+      three_d_secure: {
+        version: version,
+        eci: eci,
+        cavv: cavv,
+        ds_transaction_id: ds_transaction_id,
+        xid: xid
+      }
+    )
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options_with_3ds)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/three_ds_version=2.1.0/, data)
+      assert_match(/eci=02/, data)
+      assert_match(/cavv=jJ81HADVRtXfCBATEp01CJUAAAA/, data)
+      assert_match(/directory_server_id=97267598-FAE6-48F2-8083-C23433990FBC/, data)
+      assert_match(/xid=00000000000000000501/, data)
+    end.respond_with(successful_3ds_purchase_response)
+
+    assert_success response
+    assert response.test?
+    assert_equal 'Succeeded', response.message
+  end
+
   def test_authorize_with_options
     options = @transaction_options.merge(@merchant_defined_fields)
 
@@ -659,6 +690,10 @@ class NmiTest < Test::Unit::TestCase
 
   def failed_echeck_purchase_response
     'response=2&responsetext=FAILED&authcode=123456&transactionid=2762783009&avsresponse=&cvvresponse=&orderid=8070b75a09d75c3e84e1c17d44bbbf34&type=&response_code=200'
+  end
+
+  def successful_3ds_purchase_response
+    'response=1&responsetext=SUCCESS&authcode=123456&transactionid=97267598-FAE6-48F2-8083-C23433990FBC&avsresponse=&cvvresponse=&orderid=b6c1c57f709cfaa65a5cf5b8532ad181&type=&response_code=100'
   end
 
   def successful_authorization_response

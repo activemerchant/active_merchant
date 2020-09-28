@@ -36,6 +36,7 @@ module ActiveMerchant #:nodoc:
         add_vendor_data(post, options)
         add_merchant_defined_fields(post, options)
         add_level3_fields(post, options)
+        add_three_d_secure(post, options)
 
         commit('sale', post)
       end
@@ -49,6 +50,7 @@ module ActiveMerchant #:nodoc:
         add_vendor_data(post, options)
         add_merchant_defined_fields(post, options)
         add_level3_fields(post, options)
+        add_three_d_secure(post, options)
 
         commit('auth', post)
       end
@@ -245,6 +247,18 @@ module ActiveMerchant #:nodoc:
         (1..20).each do |each|
           key = "merchant_defined_field_#{each}".to_sym
           post[key] = options[key] if options[key]
+        end
+      end
+
+      def add_three_d_secure(post, options)
+        return unless options[:three_d_secure]
+
+        if (three_d_secure = options[:three_d_secure])
+          post[:eci] = three_d_secure[:eci]
+          post[:cavv] = three_d_secure[:cavv]
+          post[:xid] = three_d_secure[:xid]
+          post[:three_ds_version] = three_d_secure[:version]
+          post[:directory_server_id] = three_d_secure[:ds_transaction_id]
         end
       end
 
