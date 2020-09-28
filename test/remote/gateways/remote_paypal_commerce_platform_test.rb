@@ -91,6 +91,13 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     success_status_assertions(response, "COMPLETED")
   end
 
+  def test_capture_order_with_payment_instruction_through_card
+    response = create_order("CAPTURE", "PPCP")
+    order_id = response.params["id"]
+    response = @gateway.capture(order_id, @card_order_options)
+    success_status_assertions(response, "COMPLETED")
+  end
+
   def test_authorize_order_with_card
     response = create_order("AUTHORIZE")
     order_id = response.params["id"]
