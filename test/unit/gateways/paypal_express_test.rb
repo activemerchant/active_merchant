@@ -576,18 +576,17 @@ class PaypalExpressTest < Test::Unit::TestCase
   def test_authorize_reference_transaction
     @gateway.expects(:ssl_post).returns(successful_authorize_reference_transaction_response)
 
-    response = @gateway.authorize_reference_transaction(2000,
-      {
-        reference_id: 'ref_id',
-        payment_type: 'Any',
-        invoice_id: 'invoice_id',
-        description: 'Description',
-        ip: '127.0.0.1'
-      })
+    response = @gateway.authorize_reference_transaction(2000, reference_id: 'ref_id')
 
     assert_equal 'Success', response.params['ack']
     assert_equal 'Success', response.message
     assert_equal '9R43552341412482K', response.authorization
+  end
+
+  def test_authorize_reference_transaction_requires_fields
+    assert_raise ArgumentError do
+      @gateway.authorize_reference_transaction(2000, {})
+    end
   end
 
   def test_reference_transaction
