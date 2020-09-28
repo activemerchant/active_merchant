@@ -8,14 +8,14 @@ module ActiveMerchant #:nodoc:
 
       class_attribute :test_periodic_url, :live_periodic_url
 
-      self.test_url = 'https://test.api.securepay.com.au/xmlapi/payment'
+      self.test_url = 'https://api.securepay.com.au/test/payment'
       self.live_url = 'https://api.securepay.com.au/xmlapi/payment'
 
       self.test_periodic_url = 'https://test.securepay.com.au/xmlapi/periodic'
       self.live_periodic_url = 'https://api.securepay.com.au/xmlapi/periodic'
 
       self.supported_countries = ['AU']
-      self.supported_cardtypes = %i[visa master american_express diners_club jcb]
+      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
 
       # The homepage URL of the gateway
       self.homepage_url = 'http://securepay.com.au'
@@ -35,26 +35,26 @@ module ActiveMerchant #:nodoc:
       # 10 Preauthorise
       # 11 Preauth Complete (Advice)
       TRANSACTIONS = {
-        purchase:       0,
-        authorization:  10,
-        capture:        11,
-        void:           6,
-        refund:         4
+        :purchase => 0,
+        :authorization => 10,
+        :capture => 11,
+        :void => 6,
+        :refund => 4
       }
 
       PERIODIC_ACTIONS = {
-        add_triggered:      'add',
-        remove_triggered:   'delete',
-        trigger:            'trigger'
+        :add_triggered    => "add",
+        :remove_triggered => "delete",
+        :trigger          => "trigger"
       }
 
       PERIODIC_TYPES = {
-        add_triggered:    4,
-        remove_triggered: nil,
-        trigger:          nil
+        :add_triggered    => 4,
+        :remove_triggered => nil,
+        :trigger          => nil
       }
 
-      SUCCESS_CODES = %w[00 08 11 16 77]
+      SUCCESS_CODES = [ '00', '08', '11', '16', '77' ]
 
       def initialize(options = {})
         requires!(options, :login, :password)
@@ -101,18 +101,6 @@ module ActiveMerchant #:nodoc:
       def unstore(identification, options = {})
         options[:billing_id] = identification
         commit_periodic(build_periodic_item(:remove_triggered, options[:amount], nil, options))
-      end
-
-      def supports_scrubbing?
-        true
-      end
-
-      def scrub(transcript)
-        transcript.
-          gsub(%r((<merchantID>).+(</merchantID>)), '\1[FILTERED]\2').
-          gsub(%r((<password>).+(</password>)), '\1[FILTERED]\2').
-          gsub(%r((<cardNumber>).+(</cardNumber>)), '\1[FILTERED]\2').
-          gsub(%r((<cvv>).+(</cvv>)), '\1[FILTERED]\2')
       end
 
       private
@@ -167,8 +155,8 @@ module ActiveMerchant #:nodoc:
 
           xml.tag! 'RequestType', 'Payment'
           xml.tag! 'Payment' do
-            xml.tag! 'TxnList', 'count' => 1 do
-              xml.tag! 'Txn', 'ID' => 1 do
+            xml.tag! 'TxnList', "count" => 1 do
+              xml.tag! 'Txn', "ID" => 1 do
                 xml.tag! 'txnType', TRANSACTIONS[action]
                 xml.tag! 'txnSource', 23
                 xml << body
@@ -184,8 +172,8 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(test? ? self.test_url : self.live_url, build_request(action, request)))
 
         Response.new(success?(response), message_from(response), response,
-          test: test?,
-          authorization: authorization_from(response)
+          :test => test?,
+          :authorization => authorization_from(response)
         )
       end
 
@@ -226,8 +214,8 @@ module ActiveMerchant #:nodoc:
 
           xml.tag! 'RequestType', 'Periodic'
           xml.tag! 'Periodic' do
-            xml.tag! 'PeriodicList', 'count' => 1 do
-              xml.tag! 'PeriodicItem', 'ID' => 1 do
+            xml.tag! 'PeriodicList', "count" => 1 do
+              xml.tag! 'PeriodicItem', "ID" => 1 do
                 xml << body
               end
             end
@@ -238,11 +226,12 @@ module ActiveMerchant #:nodoc:
 
       def commit_periodic(request)
         my_request = build_periodic_request(request)
+        #puts my_request
         response = parse(ssl_post(test? ? self.test_periodic_url : self.live_periodic_url, my_request))
 
         Response.new(success?(response), message_from(response), response,
-          test: test?,
-          authorization: authorization_from(response)
+          :test => test?,
+          :authorization => authorization_from(response)
         )
       end
 
@@ -276,7 +265,7 @@ module ActiveMerchant #:nodoc:
 
       def parse_element(response, node)
         if node.has_elements?
-          node.elements.each { |element| parse_element(response, element) }
+          node.elements.each{|element| parse_element(response, element) }
         else
           response[node.name.underscore.to_sym] = node.text
         end

@@ -43,7 +43,7 @@ class Remote<%= class_name %>Test < Test::Unit::TestCase
 
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
-    assert_equal 'REPLACE WITH SUCCESS MESSAGE', capture.message
+    assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
   end
 
   def test_failed_authorize

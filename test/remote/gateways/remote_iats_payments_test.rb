@@ -9,27 +9,14 @@ class IatsPaymentsTest < Test::Unit::TestCase
     @credit_card = credit_card('4222222222222220')
     @check = check(routing_number: '111111111', account_number: '12345678')
     @options = {
-      order_id: generate_unique_id,
-      billing_address: address,
-      description: 'Store purchase'
-    }
-    @customer_details = {
-      phone: '5555555555',
-      email: 'test@example.com',
-      country: 'US'
+      :order_id => generate_unique_id,
+      :billing_address => address,
+      :description => 'Store purchase'
     }
   end
 
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success response
-    assert response.test?
-    assert_equal 'Success', response.message
-    assert response.authorization
-  end
-
-  def test_successful_purchase_with_customer_details
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(@customer_details))
     assert_success response
     assert response.test?
     assert_equal 'Success', response.message
@@ -74,7 +61,7 @@ class IatsPaymentsTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount + 50, purchase.authorization)
+    assert refund = @gateway.refund(@amount, purchase.authorization)
     assert_failure refund
   end
 
@@ -84,54 +71,42 @@ class IatsPaymentsTest < Test::Unit::TestCase
 
     assert refund = @gateway.refund(@amount, purchase.authorization)
 
-    assert_success refund
-    assert_equal 'Success', refund.message
+    # This is a dubious test. Basically testing that the refund failed b/c
+    # the original purchase hadn't yet cleared. No way to test immediate failure
+    # due to the delay in original tx processing, even for text txs.
+    assert_failure refund
+    assert_equal "REJECT: 3", refund.message
   end
 
   def test_failed_check_refund
-    assert refund = @gateway.refund(@amount, 'invalidref')
+    assert refund = @gateway.refund(@amount, "invalidref")
     assert_failure refund
-    assert_equal 'REJECT: 39', refund.message
+    assert_equal "REJECT: 39", refund.message
   end
 
   def test_successful_store_and_unstore
     assert store = @gateway.store(@credit_card, @options)
     assert_success store
     assert store.authorization
-    assert_equal 'Success', store.message
+    assert_equal "Success", store.message
 
     assert unstore = @gateway.unstore(store.authorization, @options)
     assert_success unstore
-    assert_equal 'Success', unstore.message
-  end
-
-  def test_successful_store_and_purchase_and_refund
-    assert store = @gateway.store(@credit_card, @options)
-    assert_success store
-    assert store.authorization
-    assert_equal 'Success', store.message
-
-    assert purchase = @gateway.purchase(@amount, store.authorization, @options)
-    assert_success purchase
-    assert purchase.authorization
-    assert_equal 'Success', purchase.message
-
-    assert refund = @gateway.refund(@amount, purchase.authorization)
-    assert_success refund
+    assert_equal "Success", unstore.message
   end
 
   def test_failed_store
     credit_card = credit_card('4111')
     assert store = @gateway.store(credit_card, @options)
     assert_failure store
-    assert_match(/Invalid credit card number/, store.message)
+    assert_match /Invalid credit card number/, store.message
   end
 
   def test_invalid_login
     gateway = IatsPaymentsGateway.new(
-      agent_code: 'X',
-      password: 'Y',
-      region: 'na'
+      :agent_code => 'X',
+      :password => 'Y',
+      :region => 'na'
     )
 
     assert response = gateway.purchase(@amount, @credit_card)
@@ -161,4 +136,5 @@ class IatsPaymentsTest < Test::Unit::TestCase
     assert_scrubbed(@gateway.options[:agent_code], transcript)
     assert_scrubbed(@gateway.options[:password], transcript)
   end
+
 end

@@ -4,22 +4,21 @@ class PaypalTest < Test::Unit::TestCase
   def setup
     @gateway = PaypalGateway.new(fixtures(:paypal_signature))
 
-    @credit_card = credit_card('4381258770269608') # Use a generated CC from the paypal Sandbox
+    @credit_card = credit_card("4381258770269608") # Use a generated CC from the paypal Sandbox
     @declined_card = credit_card('234234234234')
 
     @params = {
-      order_id: generate_unique_id,
-      email: 'buyer@jadedpallet.com',
-      billing_address: {
-        name: 'Longbob Longsen',
-          address1: '4321 Penny Lane',
-          city: 'Jonsetown',
-          state: 'NC',
-          country: 'US',
-          zip: '23456'
-      },
-      description: 'Stuff that you purchased, yo!',
-      ip: '10.0.0.1'
+      :order_id => generate_unique_id,
+      :email => 'buyer@jadedpallet.com',
+      :billing_address => { :name => 'Longbob Longsen',
+                    :address1 => '4321 Penny Lane',
+                    :city => 'Jonsetown',
+                    :state => 'NC',
+                    :country => 'US',
+                    :zip => '23456'
+                  } ,
+      :description => 'Stuff that you purchased, yo!',
+      :ip => '10.0.0.1'
     }
 
     @amount = 100
@@ -28,8 +27,8 @@ class PaypalTest < Test::Unit::TestCase
     # each auth-id can only be reauthorized and tested once.
     # leave it commented if you don't want to test reauthorization.
     #
-    # @three_days_old_auth_id  = "9J780651TU4465545"
-    # @three_days_old_auth_id2 = "62503445A3738160X"
+    #@three_days_old_auth_id  = "9J780651TU4465545"
+    #@three_days_old_auth_id2 = "62503445A3738160X"
   end
 
   def test_transcript_scrubbing
@@ -42,7 +41,6 @@ class PaypalTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:login], transcript)
     assert_scrubbed(@gateway.options[:password], transcript)
-    assert_scrubbed(@gateway.options[:signature], transcript)
   end
 
   def test_successful_purchase
@@ -59,33 +57,7 @@ class PaypalTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_descriptors
-    response = @gateway.purchase(@amount, @credit_card, @params.merge(soft_descriptor: 'Active Merchant TXN', soft_descriptor_city: '800-883-3931'))
-    assert_success response
-    assert response.params['transaction_id']
-  end
-
-  def test_successful_purchase_with_order_total_elements
-    order_total_elements = {
-      subtotal: @amount / 4,
-      shipping: @amount / 4,
-      handling: @amount / 4,
-      tax: @amount / 4
-    }
-
-    response = @gateway.purchase(@amount, @credit_card, @params.merge(order_total_elements))
-    assert_success response
-    assert response.params['transaction_id']
-  end
-
-  def test_successful_purchase_with_non_fractional_currency_when_any_order_total_element_is_nil
-    order_total_elements = {
-      subtotal: @amount / 4,
-      shipping: @amount / 4,
-      handling: nil,
-      tax: @amount / 4
-    }
-
-    response = @gateway.purchase(@amount, @credit_card, @params.merge(order_total_elements).merge(currency: 'JPY'))
+    response = @gateway.purchase(@amount, @credit_card, @params.merge(soft_descriptor: "Active Merchant TXN", soft_descriptor_city: "800-883-3931"))
     assert_success response
     assert response.params['transaction_id']
   end
@@ -112,7 +84,6 @@ class PaypalTest < Test::Unit::TestCase
 
   def test_successful_reauthorization
     return if not @three_days_old_auth_id
-
     auth = @gateway.reauthorize(1000, @three_days_old_auth_id)
     assert_success auth
     assert auth.authorization
@@ -125,8 +96,7 @@ class PaypalTest < Test::Unit::TestCase
   end
 
   def test_failed_reauthorization
-    return if not @three_days_old_auth_id2 # was authed for $10, attempt $20
-
+    return if not @three_days_old_auth_id2  # was authed for $10, attempt $20
     auth = @gateway.reauthorize(2000, @three_days_old_auth_id2)
     assert_false auth?
     assert !auth.authorization
@@ -145,20 +115,20 @@ class PaypalTest < Test::Unit::TestCase
   def test_successful_incomplete_captures
     auth = @gateway.authorize(100, @credit_card, @params)
     assert_success auth
-    response = @gateway.capture(60, auth.authorization, {complete_type: 'NotComplete'})
+    response = @gateway.capture(60, auth.authorization, {:complete_type => "NotComplete"})
     assert_success response
     assert response.params['transaction_id']
     assert_equal '0.60', response.params['gross_amount']
-    response2 = @gateway.capture(40, auth.authorization)
-    assert_success response2
-    assert response2.params['transaction_id']
-    assert_equal '0.40', response2.params['gross_amount']
+    response_2 = @gateway.capture(40, auth.authorization)
+    assert_success response_2
+    assert response_2.params['transaction_id']
+    assert_equal '0.40', response_2.params['gross_amount']
   end
 
   def test_successful_capture_updating_the_invoice_id
     auth = @gateway.authorize(@amount, @credit_card, @params)
     assert_success auth
-    response = @gateway.capture(@amount, auth.authorization, order_id: "NEWID#{generate_unique_id}")
+    response = @gateway.capture(@amount, auth.authorization, :order_id => "NEWID#{generate_unique_id}")
     assert_success response
     assert response.params['transaction_id']
     assert_equal '1.00', response.params['gross_amount']
@@ -176,7 +146,7 @@ class PaypalTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @params)
     assert_success purchase
 
-    credit = @gateway.refund(@amount, purchase.authorization, note: 'Sorry')
+    credit = @gateway.refund(@amount, purchase.authorization, :note => 'Sorry')
     assert_success credit
     assert credit.test?
     assert_equal 'USD',  credit.params['net_refund_amount_currency_id']
@@ -195,7 +165,7 @@ class PaypalTest < Test::Unit::TestCase
   def test_successful_verify
     assert response = @gateway.verify(@credit_card, @params)
     assert_success response
-    assert_equal '0.00', response.params['amount']
+    assert_equal "0.00", response.params['amount']
     assert_match %r{This card authorization verification is not a payment transaction}, response.message
   end
 
@@ -209,21 +179,21 @@ class PaypalTest < Test::Unit::TestCase
     amex_card = credit_card('371449635398431', brand: nil, verification_value: '1234')
     assert response = @gateway.verify(amex_card, @params)
     assert_success response
-    assert_equal '1.00', response.params['amount']
+    assert_equal "1.00", response.params['amount']
     assert_match %r{Success}, response.message
-    assert_success response.responses.last, 'The void should succeed'
+    assert_success response.responses.last, "The void should succeed"
   end
 
   def test_successful_transfer
     response = @gateway.purchase(@amount, @credit_card, @params)
     assert_success response
 
-    response = @gateway.transfer(@amount, 'joe@example.com', subject: 'Your money', note: 'Thanks for taking care of that')
+    response = @gateway.transfer(@amount, 'joe@example.com', :subject => 'Your money', :note => 'Thanks for taking care of that')
     assert_success response
   end
 
   def test_failed_transfer
-    # paypal allows a max transfer of $10,000
+     # paypal allows a max transfer of $10,000
     response = @gateway.transfer(1000001, 'joe@example.com')
     assert_failure response
   end
@@ -233,8 +203,8 @@ class PaypalTest < Test::Unit::TestCase
     assert_success response
 
     response = @gateway.transfer([@amount, 'joe@example.com'],
-      [600, 'jane@example.com', {note: 'Thanks for taking care of that'}],
-      subject: 'Your money')
+      [600, 'jane@example.com', {:note => 'Thanks for taking care of that'}],
+      :subject => 'Your money')
     assert_success response
   end
 
@@ -243,7 +213,7 @@ class PaypalTest < Test::Unit::TestCase
     assert_success response
 
     # You can only include up to 250 recipients
-    recipients = (1..251).collect { |i| [100, "person#{i}@example.com"] }
+    recipients = (1..251).collect {|i| [100, "person#{i}@example.com"]}
     response = @gateway.transfer(*recipients)
     assert_failure response
   end
@@ -252,7 +222,7 @@ class PaypalTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @params)
     assert_success response
 
-    response = @gateway.transfer([@amount, 'joe@example.com'], receiver_type: 'EmailAddress', subject: 'Your money', note: 'Thanks for taking care of that')
+    response = @gateway.transfer([@amount, 'joe@example.com'], :receiver_type => 'EmailAddress', :subject => 'Your money', :note => 'Thanks for taking care of that')
     assert_success response
   end
 
@@ -260,7 +230,7 @@ class PaypalTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @params)
     assert_success response
 
-    response = @gateway.transfer([@amount, '4ET96X3PQEN8H'], receiver_type: 'UserID', subject: 'Your money', note: 'Thanks for taking care of that')
+    response = @gateway.transfer([@amount, '4ET96X3PQEN8H'], :receiver_type => 'UserID', :subject => 'Your money', :note => 'Thanks for taking care of that')
     assert_success response
   end
 
@@ -268,7 +238,7 @@ class PaypalTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @params)
     assert_success response
 
-    response = @gateway.transfer([@amount, 'joe@example.com'], receiver_type: 'UserID', subject: 'Your money', note: 'Thanks for taking care of that')
+    response = @gateway.transfer([@amount, 'joe@example.com'], :receiver_type => 'UserID', :subject => 'Your money', :note => 'Thanks for taking care of that')
     assert_failure response
   end
 
@@ -283,17 +253,4 @@ class PaypalTest < Test::Unit::TestCase
     assert_success response2
   end
 
-  def test_successful_purchase_with_3ds_version_1
-    params = @params.merge!({
-      three_d_secure: {
-        trans_status: 'Y',
-        eci: '05',
-        cavv: 'AgAAAAAAAIR8CQrXcIhbQAAAAAA',
-        xid: 'MDAwMDAwMDAwMDAwMDAwMzIyNzY='
-      }
-    })
-    response = @gateway.purchase(@amount, @credit_card, params)
-    assert_success response
-    assert response.params['transaction_id']
-  end
 end

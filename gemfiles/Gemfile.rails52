@@ -1,3 +1,0 @@
-eval_gemfile '../Gemfile'
-
-gem 'activesupport', '~> 5.2.0.rc1'

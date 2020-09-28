@@ -8,7 +8,8 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = %w(CA PR US)
       self.default_currency = 'USD'
-      self.supported_cardtypes = %i[visa master american_express discover diners_club jcb]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
+      self.ssl_version = :TLSv1
 
       self.homepage_url = 'https://www.globalpaymentsinc.com'
       self.display_name = 'Global Transport'
@@ -20,12 +21,12 @@ module ActiveMerchant #:nodoc:
       #           :global_password  - Your Global password
       #           :term_type        - 3 character field assigned by Global Transport after
       #                             - your application is certified.
-      def initialize(options = {})
+      def initialize(options={})
         requires!(options, :global_user_name, :global_password, :term_type)
         super
       end
 
-      def purchase(money, payment_method, options = {})
+      def purchase(money, payment_method, options={})
         post = {}
         add_invoice(post, money, options)
         add_payment_method(post, payment_method)
@@ -34,7 +35,7 @@ module ActiveMerchant #:nodoc:
         commit('Sale', post, options)
       end
 
-      def authorize(money, payment_method, options = {})
+      def authorize(money, payment_method, options={})
         post = {}
         add_invoice(post, money, options)
         add_payment_method(post, payment_method)
@@ -43,7 +44,7 @@ module ActiveMerchant #:nodoc:
         commit('Auth', post, options)
       end
 
-      def capture(money, authorization, options = {})
+      def capture(money, authorization, options={})
         post = {}
         add_invoice(post, money, options)
         add_auth(post, authorization)
@@ -51,7 +52,7 @@ module ActiveMerchant #:nodoc:
         commit('Force', post, options)
       end
 
-      def refund(money, authorization, options = {})
+      def refund(money, authorization, options={})
         post = {}
         add_invoice(post, money, options)
         add_auth(post, authorization)
@@ -59,30 +60,19 @@ module ActiveMerchant #:nodoc:
         commit('Return', post, options)
       end
 
-      def void(authorization, options = {})
+      def void(authorization, options={})
         post = {}
         add_auth(post, authorization)
 
         commit('Void', post, options)
       end
 
-      def verify(payment_method, options = {})
+      def verify(payment_method, options={})
         post = {}
         add_payment_method(post, payment_method)
         add_address(post, options)
 
         commit('CardVerify', post, options)
-      end
-
-      def supports_scrubbing?
-        true
-      end
-
-      def scrub(transcript)
-        transcript.
-          gsub(%r((&?CardNum=)[^&]*)i, '\1[FILTERED]').
-          gsub(%r((&?CVNum=)[^&]*)i, '\1[FILTERED]').
-          gsub(%r((&?GlobalPassword=)[^&]*)i, '\1[FILTERED]')
       end
 
       private
@@ -119,10 +109,6 @@ module ActiveMerchant #:nodoc:
           response[node.name.downcase.to_sym] = node.text
         end
 
-        ext_data = Nokogiri::HTML.parse(response[:extdata])
-        response[:approved_amount] = ext_data.xpath('//approvedamount').text
-        response[:balance_due] = ext_data.xpath('//balancedue').text
-
         response
       end
 
@@ -146,7 +132,7 @@ module ActiveMerchant #:nodoc:
         post[:TransType] = action
         post[:ExtData] = "<TermType>#{@options[:term_type]}</TermType>"
 
-        post.merge(params).map { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
+        post.merge(params).map { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
       end
 
       def url
@@ -154,7 +140,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response[:result] == '0' || response[:result] == '200'
+        (response[:result] == "0")
       end
 
       def message_from(response)
@@ -188,6 +174,7 @@ module ActiveMerchant #:nodoc:
           ExtData: ''
         }
       end
+
     end
   end
 end

@@ -4,6 +4,7 @@ module ActiveMerchant
     # http://www.bbbonline.org/eExport/doc/MerchantGuide_cvv2.pdf
     # Check additional codes from cybersource website
     class CVVResult
+
       MESSAGES = {
         'D'  =>  'CVV check flagged transaction as suspicious',
         'I'  =>  'CVV failed data validation check',

@@ -2,30 +2,30 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class VisanetPeruGateway < Gateway
       include Empty
-      self.display_name = 'VisaNet Peru Gateway'
-      self.homepage_url = 'http://www.visanet.com.pe'
+      self.display_name = "VisaNet Peru Gateway"
+      self.homepage_url = "http://www.visanet.com.pe"
 
-      self.test_url = 'https://devapi.vnforapps.com/api.tokenization/api/v2/merchant'
-      self.live_url = 'https://api.vnforapps.com/api.tokenization/api/v2/merchant'
+      self.test_url = "https://devapi.vnforapps.com/api.tokenization/api/v2/merchant"
+      self.live_url = "https://api.vnforapps.com/api.tokenization/api/v2/merchant"
 
-      self.supported_countries = %w[US PE]
-      self.default_currency = 'PEN'
+      self.supported_countries = ["US", "PE"]
+      self.default_currency = "PEN"
       self.money_format = :dollars
-      self.supported_cardtypes = %i[visa master american_express discover]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
 
-      def initialize(options = {})
+      def initialize(options={})
         requires!(options, :access_key_id, :secret_access_key, :merchant_id)
         super
       end
 
-      def purchase(amount, payment_method, options = {})
+      def purchase(amount, payment_method, options={})
         MultiResponse.run() do |r|
           r.process { authorize(amount, payment_method, options) }
-          r.process { capture(amount, r.authorization, options) }
+          r.process { capture(r.authorization, options) }
         end
       end
 
-      def authorize(amount, payment_method, options = {})
+      def authorize(amount, payment_method, options={})
         params = {}
 
         add_invoice(params, amount, options)
@@ -34,38 +34,28 @@ module ActiveMerchant #:nodoc:
         params[:email] = options[:email] || 'unknown@email.com'
         params[:createAlias] = false
 
-        commit('authorize', params, options)
+        commit("authorize", params)
       end
 
-      def capture(amount, authorization, options = {})
-        params = {}
-        options[:id_unico] = split_authorization(authorization)[1]
-        add_auth_order_id(params, authorization, options)
-        commit('deposit', params, options)
-      end
-
-      def void(authorization, options = {})
+      def capture(authorization, options={})
         params = {}
         add_auth_order_id(params, authorization, options)
-        commit('void', params, options)
+        commit("deposit", params)
       end
 
-      def refund(amount, authorization, options = {})
+      def void(authorization, options={})
         params = {}
-        params[:amount] = amount(amount) if amount
         add_auth_order_id(params, authorization, options)
-        response = commit('cancelDeposit', params, options)
-        return response if response.success? || split_authorization(authorization).length == 1 || !options[:force_full_refund_if_unsettled]
-
-        # Attempt RefundSingleTransaction if unsettled (and stash the original
-        # response message so it will be included it in the follow-up response
-        # message)
-        options[:error_message] = response.message
-        prepare_refund_data(params, authorization, options)
-        commit('refund', params, options)
+        commit("void", params)
       end
 
-      def verify(credit_card, options = {})
+      def refund(amount, authorization, options={})
+        params = {}
+        add_auth_order_id(params, authorization, options)
+        commit("cancelDeposit", params)
+      end
+
+      def verify(credit_card, options={})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -85,9 +75,9 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      CURRENCY_CODES = Hash.new { |_h, k| raise ArgumentError.new("Unsupported currency: #{k}") }
-      CURRENCY_CODES['USD'] = 840
-      CURRENCY_CODES['PEN'] = 604
+      CURRENCY_CODES = Hash.new{|h,k| raise ArgumentError.new("Unsupported currency: #{k}")}
+      CURRENCY_CODES["USD"] = 840
+      CURRENCY_CODES["PEN"] = 604
 
       def add_invoice(params, money, options)
         # Visanet Peru expects a 9-digit numeric purchaseNumber
@@ -98,8 +88,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_auth_order_id(params, authorization, options)
-        purchase_number, = split_authorization(authorization)
-        params[:purchaseNumber] = purchase_number
+        params[:purchaseNumber] = authorization
         params[:externalTransactionId] = options[:order_id]
       end
 
@@ -129,62 +118,48 @@ module ActiveMerchant #:nodoc:
         params[:antifraud] = antifraud
       end
 
-      def prepare_refund_data(params, authorization, options)
-        params.delete(:purchaseNumber)
-        params[:externalReferenceId] = params.delete(:externalTransactionId)
-        _, transaction_id = split_authorization(authorization)
-
-        options.update(transaction_id: transaction_id)
-        params[:ruc] = options[:ruc]
-      end
-
-      def split_authorization(authorization)
-        authorization.split('|')
-      end
-
-      def commit(action, params, options = {})
-        raw_response = ssl_request(method(action), url(action, params, options), params.to_json, headers)
-        response = parse(raw_response)
-      rescue ResponseError => e
-        raw_response = e.response.body
-        response_error(raw_response, options, action)
-      rescue JSON::ParserError
-        unparsable_response(raw_response)
-      else
-        Response.new(
-          success_from(response),
-          message_from(response, options, action),
-          response,
-          test: test?,
-          authorization: authorization_from(params, response, options),
-          error_code: response['errorCode']
-        )
+      def commit(action, params)
+        begin
+          raw_response = ssl_request(method(action), url(action, params), params.to_json, headers)
+          response = parse(raw_response)
+        rescue ResponseError => e
+          raw_response = e.response.body
+          response_error(raw_response)
+        rescue JSON::ParserError
+          unparsable_response(raw_response)
+        else
+          Response.new(
+            success_from(response),
+            message_from(response),
+            response,
+            :test => test?,
+            :authorization => authorization_from(params),
+            :error_code => response["errorCode"]
+          )
+        end
       end
 
       def headers
         {
-          'Authorization' => 'Basic ' + Base64.strict_encode64("#{@options[:access_key_id]}:#{@options[:secret_access_key]}").strip,
-          'Content-Type'  => 'application/json'
+          "Authorization" => "Basic " + Base64.strict_encode64("#{@options[:access_key_id]}:#{@options[:secret_access_key]}").strip,
+          "Content-Type"  => "application/json"
         }
       end
 
-      def url(action, params, options = {})
-        if action == 'authorize'
+      def url(action, params)
+        if (action == "authorize")
           "#{base_url}/#{@options[:merchant_id]}"
-        elsif action == 'refund'
-          "#{base_url}/#{@options[:merchant_id]}/#{action}/#{options[:transaction_id]}"
         else
           "#{base_url}/#{@options[:merchant_id]}/#{action}/#{params[:purchaseNumber]}"
         end
       end
 
       def method(action)
-        %w(authorize refund).include?(action) ? :post : :put
+        (action == "authorize") ? :post : :put
       end
 
-      def authorization_from(params, response, options)
-        id_unico = response['data']['ID_UNICO'] || options[:id_unico]
-        "#{params[:purchaseNumber]}|#{id_unico}"
+      def authorization_from(params)
+        params[:purchaseNumber]
       end
 
       def base_url
@@ -196,48 +171,36 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response['errorCode'] == 0
+        response["errorCode"] == 0
       end
 
-      def message_from(response, options, action)
-        message_from_messages(
-          response['errorMessage'],
-          action_code_description(response),
-          options[:error_message]
-        )
+      def message_from(response)
+        if empty?(response["errorMessage"]) || response["errorMessage"] == "[ ]"
+          response["data"]["DSC_COD_ACCION"]
+        else
+          response["errorMessage"]
+        end
       end
 
-      def message_from_messages(*args)
-        args.reject { |m| error_message_empty?(m) }.join(' | ')
-      end
-
-      def action_code_description(response)
-        return nil unless response['data']
-
-        response['data']['DSC_COD_ACCION']
-      end
-
-      def error_message_empty?(error_message)
-        empty?(error_message) || error_message == '[ ]'
-      end
-
-      def response_error(raw_response, options, action)
-        response = parse(raw_response)
-      rescue JSON::ParserError
-        unparsable_response(raw_response)
-      else
-        return Response.new(
-          false,
-          message_from(response, options, action),
-          response,
-          test: test?,
-          authorization: response['transactionUUID'],
-          error_code: response['errorCode']
-        )
+      def response_error(raw_response)
+        begin
+          response = parse(raw_response)
+        rescue JSON::ParserError
+          unparsable_response(raw_response)
+        else
+          return Response.new(
+            false,
+            message_from(response),
+            response,
+            :test => test?,
+            :authorization => response["transactionUUID"],
+            :error_code => response["errorCode"]
+          )
+        end
       end
 
       def unparsable_response(raw_response)
-        message = 'Invalid JSON response received from VisanetPeruGateway. Please contact VisanetPeruGateway if you continue to receive this message.'
+        message = "Invalid JSON response received from VisanetPeruGateway. Please contact VisanetPeruGateway if you continue to receive this message."
         message += " (The raw response returned by the API was #{raw_response.inspect})"
         return Response.new(false, message)
       end

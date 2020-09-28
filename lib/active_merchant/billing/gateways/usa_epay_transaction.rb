@@ -1,22 +1,22 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
+
     class UsaEpayTransactionGateway < Gateway
       self.live_url = 'https://www.usaepay.com/gate'
       self.test_url = 'https://sandbox.usaepay.com/gate'
 
-      self.supported_cardtypes  = %i[visa master american_express]
+      self.supported_cardtypes  = [:visa, :master, :american_express]
       self.supported_countries  = ['US']
       self.homepage_url         = 'http://www.usaepay.com/'
       self.display_name         = 'USA ePay'
 
       TRANSACTIONS = {
-        authorization: 'cc:authonly',
-        purchase: 'cc:sale',
-        capture: 'cc:capture',
-        refund: 'cc:refund',
-        void: 'cc:void',
-        void_release: 'cc:void:release',
-        check_purchase: 'check:sale'
+        :authorization  => 'cc:authonly',
+        :purchase       => 'cc:sale',
+        :capture        => 'cc:capture',
+        :refund         => 'cc:refund',
+        :void           => 'cc:void',
+        :void_release   => 'cc:void:release'
       }
 
       STANDARD_ERROR_CODE_MAPPING = {
@@ -33,9 +33,9 @@ module ActiveMerchant #:nodoc:
         '10110' => STANDARD_ERROR_CODE[:incorrect_address],
         '10111' => STANDARD_ERROR_CODE[:incorrect_address],
         '10127' => STANDARD_ERROR_CODE[:card_declined],
-        '00043' => STANDARD_ERROR_CODE[:call_issuer],
-        '10205' => STANDARD_ERROR_CODE[:card_declined],
-        '10204' => STANDARD_ERROR_CODE[:pickup_card]
+        '10128' => STANDARD_ERROR_CODE[:processing_error],
+        '10132' => STANDARD_ERROR_CODE[:processing_error],
+        '00043' => STANDARD_ERROR_CODE[:call_issuer]
       }
 
       def initialize(options = {})
@@ -48,41 +48,35 @@ module ActiveMerchant #:nodoc:
 
         add_amount(post, money)
         add_invoice(post, options)
-        add_payment(post, credit_card)
+        add_credit_card(post, credit_card)
         unless credit_card.track_data.present?
           add_address(post, credit_card, options)
           add_customer_data(post, options)
         end
         add_split_payments(post, options)
-        add_recurring_fields(post, options)
-        add_custom_fields(post, options)
-        add_line_items(post, options)
         add_test_mode(post, options)
 
         commit(:authorization, post)
       end
 
-      def purchase(money, payment, options = {})
+      def purchase(money, credit_card, options = {})
         post = {}
 
         add_amount(post, money)
         add_invoice(post, options)
-        add_payment(post, payment, options)
-        unless payment.respond_to?(:track_data) && payment.track_data.present?
-          add_address(post, payment, options)
+        add_credit_card(post, credit_card)
+        unless credit_card.track_data.present?
+          add_address(post, credit_card, options)
           add_customer_data(post, options)
         end
         add_split_payments(post, options)
-        add_recurring_fields(post, options)
-        add_custom_fields(post, options)
-        add_line_items(post, options)
         add_test_mode(post, options)
 
-        payment.respond_to?(:routing_number) ? commit(:check_purchase, post) : commit(:purchase, post)
+        commit(:purchase, post)
       end
 
       def capture(money, authorization, options = {})
-        post = { refNum: authorization }
+        post = { :refNum => authorization }
 
         add_amount(post, money)
         add_test_mode(post, options)
@@ -90,7 +84,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(money, authorization, options = {})
-        post = { refNum: authorization }
+        post = { :refNum => authorization }
 
         add_amount(post, money)
         add_test_mode(post, options)
@@ -107,25 +101,12 @@ module ActiveMerchant #:nodoc:
       # Pass `no_release: true` to keep the void from immediately settling
       def void(authorization, options = {})
         command = (options[:no_release] ? :void : :void_release)
-        post = { refNum: authorization }
+        post = { :refNum => authorization }
         add_test_mode(post, options)
         commit(command, post)
       end
 
-      def supports_scrubbing?
-        true
-      end
-
-      def scrub(transcript)
-        transcript.
-          gsub(%r((&?UMcard=)\d*(&?))i, '\1[FILTERED]\2').
-          gsub(%r((&?UMcvv2=)\d*(&?))i, '\1[FILTERED]\2').
-          gsub(%r((&?UMmagstripe=)[^&]*)i, '\1[FILTERED]\2').
-          gsub(%r((&?UMaccount=)[^&]*)i, '\1[FILTERED]').
-          gsub(%r((&?UMkey=)[^&]*)i, '\1[FILTERED]')
-      end
-
-      private
+    private
 
       def add_amount(post, money)
         post[:amount] = amount(money)
@@ -145,32 +126,31 @@ module ActiveMerchant #:nodoc:
 
         if options.has_key? :email
           post[:custemail] = options[:email]
-          if options[:cust_receipt]
-            post[:custreceipt] = options[:cust_receipt]
-            post[:custreceiptname] = options[:cust_receipt_name] if options[:cust_receipt_name]
-          else
-            post[:custreceipt] = 'No'
-          end
+          post[:custreceipt] = 'No'
         end
 
-        post[:custid] = options[:customer] if options.has_key? :customer
+        if options.has_key? :customer
+          post[:custid] = options[:customer]
+        end
 
-        post[:ip] = options[:ip] if options.has_key? :ip
+        if options.has_key? :ip
+          post[:ip] = options[:ip]
+        end
       end
 
-      def add_address(post, payment, options)
+      def add_address(post, credit_card, options)
         billing_address = options[:billing_address] || options[:address]
 
-        add_address_for_type(:billing, post, payment, billing_address) if billing_address
-        add_address_for_type(:shipping, post, payment, options[:shipping_address]) if options[:shipping_address]
+        add_address_for_type(:billing, post, credit_card, billing_address) if billing_address
+        add_address_for_type(:shipping, post, credit_card, options[:shipping_address]) if options[:shipping_address]
       end
 
-      def add_address_for_type(type, post, payment, address)
+      def add_address_for_type(type, post, credit_card, address)
         prefix = address_key_prefix(type)
         first_name, last_name = split_names(address[:name])
 
-        post[address_key(prefix, 'fname')]    = first_name.blank? && last_name.blank? ? payment.first_name : first_name
-        post[address_key(prefix, 'lname')]    = first_name.blank? && last_name.blank? ? payment.last_name : last_name
+        post[address_key(prefix, 'fname')]    = first_name.blank? && last_name.blank? ? credit_card.first_name : first_name
+        post[address_key(prefix, 'lname')]    = first_name.blank? && last_name.blank? ? credit_card.last_name : last_name
         post[address_key(prefix, 'company')]  = address[:company]   unless address[:company].blank?
         post[address_key(prefix, 'street')]   = address[:address1]  unless address[:address1].blank?
         post[address_key(prefix, 'street2')]  = address[:address2]  unless address[:address2].blank?
@@ -193,32 +173,20 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_invoice(post, options)
-        post[:invoice]      = options[:invoice]
-        post[:orderid]      = options[:order_id]
+        post[:invoice]      = options[:order_id]
         post[:description]  = options[:description]
       end
 
-      def add_payment(post, payment, options = {})
-        if payment.respond_to?(:routing_number)
-          post[:checkformat] = options[:check_format] if options[:check_format]
-          if payment.account_type
-            account_type = payment.account_type.to_s.capitalize
-            raise ArgumentError, 'account_type must be checking or savings' unless %w(Checking Savings).include?(account_type)
-
-            post[:accounttype] = account_type
-          end
-          post[:account] = payment.account_number
-          post[:routing] = payment.routing_number
-          post[:name]    = payment.name unless payment.name.blank?
-        elsif payment.respond_to?(:track_data) && payment.track_data.present?
-          post[:magstripe] = payment.track_data
+      def add_credit_card(post, credit_card)
+        if credit_card.track_data.present?
+          post[:magstripe] = credit_card.track_data
           post[:cardpresent] = true
         else
-          post[:card]   = payment.number
-          post[:cvv2]   = payment.verification_value if payment.verification_value?
-          post[:expir]  = expdate(payment)
-          post[:name]   = payment.name unless payment.name.blank?
-          post[:cardpresent] = true if payment.manual_entry
+          post[:card]   = credit_card.number
+          post[:cvv2]   = credit_card.verification_value if credit_card.verification_value?
+          post[:expir]  = expdate(credit_card)
+          post[:name]   = credit_card.name unless credit_card.name.blank?
+          post[:cardpresent] = true if credit_card.manual_entry
         end
       end
 
@@ -229,7 +197,6 @@ module ActiveMerchant #:nodoc:
       # see: http://wiki.usaepay.com/developer/transactionapi#split_payments
       def add_split_payments(post, options)
         return unless options[:split_payments].is_a?(Array)
-
         options[:split_payments].each_with_index do |payment, index|
           prefix = '%02d' % (index + 2)
           post["#{prefix}key"]         = payment[:key]
@@ -241,99 +208,48 @@ module ActiveMerchant #:nodoc:
         post['onError'] = options[:on_error] || 'Void'
       end
 
-      def add_recurring_fields(post, options)
-        return unless options[:recurring_fields].is_a?(Hash)
-
-        options[:recurring_fields].each do |key, value|
-          if value == true
-            value = 'yes'
-          elsif value == false
-            next
-          end
-
-          value = amount(value) if key == :bill_amount
-
-          post[key.to_s.delete('_')] = value
-        end
-      end
-
-      # see: https://wiki.usaepay.com/developer/transactionapi#merchant_defined_custom_fields
-      def add_custom_fields(post, options)
-        return unless options[:custom_fields].is_a?(Hash)
-
-        options[:custom_fields].each do |index, custom|
-          raise ArgumentError.new('Cannot specify custom field with index 0') if index.to_s.to_i.zero?
-
-          post["custom#{index}"] = custom
-        end
-      end
-
-      # see: https://wiki.usaepay.com/developer/transactionapi#line_item_details
-      def add_line_items(post, options)
-        return unless options[:line_items].is_a?(Array)
-
-        options[:line_items].each_with_index do |line_item, index|
-          %w(product_ref_num sku qty name description taxable tax_rate tax_amount commodity_code discount_rate discount_amount).each do |key|
-            post["line#{index}#{key.delete('_')}"] = line_item[key.to_sym] if line_item.has_key?(key.to_sym)
-          end
-
-          {
-            quantity: 'qty',
-            unit: 'um'
-          }.each do |key, umkey|
-            post["line#{index}#{umkey}"] = line_item[key.to_sym] if line_item.has_key?(key.to_sym)
-          end
-
-          post["line#{index}cost"] = amount(line_item[:cost])
-        end
-      end
-
       def parse(body)
         fields = {}
         for line in body.split('&')
-          key, value = *line.scan(%r{^(\w+)\=(.*)$}).flatten
+          key, value = *line.scan( %r{^(\w+)\=(.*)$} ).flatten
           fields[key] = CGI.unescape(value.to_s)
         end
 
         {
-          status: fields['UMstatus'],
-          auth_code: fields['UMauthCode'],
-          ref_num: fields['UMrefNum'],
-          batch: fields['UMbatch'],
-          avs_result: fields['UMavsResult'],
-          avs_result_code: fields['UMavsResultCode'],
-          cvv2_result: fields['UMcvv2Result'],
-          cvv2_result_code: fields['UMcvv2ResultCode'],
-          vpas_result_code: fields['UMvpasResultCode'],
-          result: fields['UMresult'],
-          error: fields['UMerror'],
-          error_code: fields['UMerrorcode'],
-          acs_url: fields['UMacsurl'],
-          payload: fields['UMpayload']
-        }.delete_if { |_k, v| v.nil? }
+          :status           => fields['UMstatus'],
+          :auth_code        => fields['UMauthCode'],
+          :ref_num          => fields['UMrefNum'],
+          :batch            => fields['UMbatch'],
+          :avs_result       => fields['UMavsResult'],
+          :avs_result_code  => fields['UMavsResultCode'],
+          :cvv2_result      => fields['UMcvv2Result'],
+          :cvv2_result_code => fields['UMcvv2ResultCode'],
+          :vpas_result_code => fields['UMvpasResultCode'],
+          :result           => fields['UMresult'],
+          :error            => fields['UMerror'],
+          :error_code       => fields['UMerrorcode'],
+          :acs_url          => fields['UMacsurl'],
+          :payload          => fields['UMpayload']
+        }.delete_if{|k, v| v.nil?}
       end
 
       def commit(action, parameters)
         url = (test? ? self.test_url : self.live_url)
         response = parse(ssl_post(url, post_data(action, parameters)))
-        approved = response[:status] == 'Approved'
-        error_code = nil
-        error_code = (STANDARD_ERROR_CODE_MAPPING[response[:error_code]] || STANDARD_ERROR_CODE[:processing_error]) unless approved
-        Response.new(approved, message_from(response), response,
-          test: test?,
-          authorization: response[:ref_num],
-          cvv_result: response[:cvv2_result_code],
-          avs_result: { code: response[:avs_result_code] },
-          error_code: error_code
+        Response.new(response[:status] == 'Approved', message_from(response), response,
+          :test           => test?,
+          :authorization  => response[:ref_num],
+          :cvv_result     => response[:cvv2_result_code],
+          :avs_result     => { :code => response[:avs_result_code] },
+          :error_code     => STANDARD_ERROR_CODE_MAPPING[response[:error_code]]
         )
       end
 
       def message_from(response)
-        if response[:status] == 'Approved'
+        if response[:status] == "Approved"
           return 'Success'
         else
           return 'Unspecified error' if response[:error].blank?
-
           return response[:error]
         end
       end
@@ -347,7 +263,7 @@ module ActiveMerchant #:nodoc:
         hash = Digest::SHA1.hexdigest("#{parameters[:command]}:#{@options[:password]}:#{parameters[:amount]}:#{parameters[:invoice]}:#{seed}")
         parameters[:hash] = "s/#{seed}/#{hash}/n"
 
-        parameters.collect { |key, value| "UM#{key}=#{CGI.escape(value.to_s)}" }.join('&')
+        parameters.collect { |key, value| "UM#{key}=#{CGI.escape(value.to_s)}" }.join("&")
       end
     end
   end

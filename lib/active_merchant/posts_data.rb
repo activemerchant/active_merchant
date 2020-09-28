@@ -1,17 +1,12 @@
 module ActiveMerchant #:nodoc:
-  module PostsData #:nodoc:
+  module PostsData  #:nodoc:
+
     def self.included(base)
       base.class_attribute :ssl_strict
       base.ssl_strict = true
 
       base.class_attribute :ssl_version
       base.ssl_version = nil
-
-      base.class_attribute :min_version
-      base.min_version = Connection::MIN_VERSION
-
-      base.class_attribute :max_version
-      base.max_version = nil
 
       base.class_attribute :retry_safe
       base.retry_safe = false
@@ -32,7 +27,7 @@ module ActiveMerchant #:nodoc:
       base.class_attribute :proxy_port
     end
 
-    def ssl_get(endpoint, headers = {})
+    def ssl_get(endpoint, headers={})
       ssl_request(:get, endpoint, nil, headers)
     end
 
@@ -45,8 +40,8 @@ module ActiveMerchant #:nodoc:
     end
 
     def raw_ssl_request(method, endpoint, data, headers = {})
-      logger&.warn "#{self.class} using ssl_strict=false, which is insecure" unless ssl_strict
-      logger&.warn "#{self.class} posting to plaintext endpoint, which is insecure" unless endpoint.to_s =~ /^https:/
+      logger.warn "#{self.class} using ssl_strict=false, which is insecure" if logger unless ssl_strict
+      logger.warn "#{self.class} posting to plaintext endpoint, which is insecure" if logger unless endpoint =~ /^https:/
 
       connection = new_connection(endpoint)
       connection.open_timeout = open_timeout
@@ -58,10 +53,6 @@ module ActiveMerchant #:nodoc:
       connection.max_retries  = max_retries
       connection.tag          = self.class.name
       connection.wiredump_device = wiredump_device
-      if connection.respond_to?(:min_version=)
-        connection.min_version = min_version
-        connection.max_version = max_version
-      end
 
       connection.pem          = @options[:pem] if @options
       connection.pem_password = @options[:pem_password] if @options
@@ -88,5 +79,6 @@ module ActiveMerchant #:nodoc:
         raise ResponseError.new(response)
       end
     end
+
   end
 end

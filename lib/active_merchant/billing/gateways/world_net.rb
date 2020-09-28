@@ -113,9 +113,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def scrub(transcript)
-        transcript.
-          gsub(%r{(<CARDNUMBER>\d{6})\d+(\d{4}</CARDNUMBER>)}, '\1...\2').
-          gsub(%r{(<CVV>)\d+(</CVV)}, '\1...\2')
+        transcript
+          .gsub(%r{(<CARDNUMBER>\d{6})\d+(\d{4}</CARDNUMBER>)}, '\1...\2')
+          .gsub(%r{(<CVV>)\d+(</CVV)}, '\1...\2')
       end
 
       private
@@ -128,7 +128,6 @@ module ActiveMerchant #:nodoc:
       def add_address(post, _creditcard, options)
         address = options[:billing_address] || options[:address]
         return unless address
-
         post[:address1] = address[:address1]
         post[:address2] = address[:address2]
         post[:city]     = address[:city]
@@ -279,49 +278,49 @@ module ActiveMerchant #:nodoc:
         # Gateway expects fields in fixed order below.
         case action
         when 'PAYMENT', 'PREAUTH'
-          %i[
-            orderid
-            terminalid
-            amount
-            datetime
-            cardnumber cardtype cardexpiry cardholdername
-            hash
-            currency
-            terminaltype
-            transactiontype
-            email
-            cvv
-            address1 address2
-            postcode
-            description
-            city country
-            ipaddress
+          [
+            :orderid,
+            :terminalid,
+            :amount,
+            :datetime,
+            :cardnumber, :cardtype, :cardexpiry, :cardholdername,
+            :hash,
+            :currency,
+            :terminaltype,
+            :transactiontype,
+            :email,
+            :cvv,
+            :address1, :address2,
+            :postcode,
+            :description,
+            :city, :country,
+            :ipaddress
           ]
         when 'PREAUTHCOMPLETION'
-          %i[uniqueref terminalid amount datetime hash]
+          [:uniqueref, :terminalid, :amount, :datetime, :hash]
         when 'REFUND'
-          %i[uniqueref terminalid amount datetime hash
-             operator reason]
+          [:uniqueref, :terminalid, :amount, :datetime, :hash,
+           :operator, :reason]
         when 'VOID'
           [:uniqueref]
         when 'SECURECARDREGISTRATION'
-          %i[
-            merchantref
-            terminalid
-            datetime
-            cardnumber cardexpiry cardtype cardholdername
-            hash
-            dontchecksecurity
-            cvv
-            issueno
+          [
+            :merchantref,
+            :terminalid,
+            :datetime,
+            :cardnumber, :cardexpiry, :cardtype, :cardholdername,
+            :hash,
+            :dontchecksecurity,
+            :cvv,
+            :issueno
           ]
         when 'SECURECARDREMOVAL'
-          %i[
-            merchantref
-            cardreference
-            terminalid
-            datetime
-            hash
+          [
+            :merchantref,
+            :cardreference,
+            :terminalid,
+            :datetime,
+            :hash
           ]
         end
       end

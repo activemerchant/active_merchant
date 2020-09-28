@@ -1,4 +1,4 @@
-$LOAD_PATH.unshift File.expand_path('../lib', __FILE__)
+$:.unshift File.expand_path('../lib', __FILE__)
 require 'active_merchant/version'
 
 begin
@@ -11,36 +11,31 @@ end
 
 require 'rake'
 require 'rake/testtask'
-require 'rubocop/rake_task'
 require 'support/gateway_support'
 require 'support/ssl_verify'
-require 'support/ssl_version'
 require 'support/outbound_hosts'
 require 'bundler/gem_tasks'
 
 task :tag_release do
   system "git tag 'v#{ActiveMerchant::VERSION}'"
-  system 'git push --tags'
+  system "git push --tags"
 end
 
-desc 'Run the unit test suite'
-task default: 'test:units'
-task test: 'test:units'
-
-RuboCop::RakeTask.new
+desc "Run the unit test suite"
+task :default => 'test:units'
+task :test => 'test:units'
 
 namespace :test do
   Rake::TestTask.new(:units) do |t|
     t.pattern = 'test/unit/**/*_test.rb'
+    t.ruby_opts << '-rubygems -w'
     t.libs << 'test'
-    t.verbose = false
+    t.verbose = true
   end
-
-  desc 'Run all tests that do not require network access'
-  task local: ['test:units', 'rubocop']
 
   Rake::TestTask.new(:remote) do |t|
     t.pattern = 'test/remote/**/*_test.rb'
+    t.ruby_opts << '-rubygems -w'
     t.libs << 'test'
     t.verbose = true
   end
@@ -89,22 +84,15 @@ namespace :gateways do
 
     unless invalid_lines.empty?
       puts
-      puts 'Unable to parse:'
+      puts "Unable to parse:"
       invalid_lines.each do |line|
         puts line
       end
     end
   end
 
-  namespace :ssl do
-    desc 'Test that gateways allow SSL verify_peer'
-    task :verify do
-      SSLVerify.new.test_gateways
-    end
-
-    desc 'Test gateways minimal SSL version connection'
-    task :min_version do
-      SSLVersion.new.test_gateways
-    end
+  desc 'Test that gateways allow SSL verify_peer'
+  task :ssl_verify do
+    SSLVerify.new.test_gateways
   end
 end

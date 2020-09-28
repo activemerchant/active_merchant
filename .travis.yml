@@ -1,23 +1,24 @@
 language: ruby
+script: "bundle exec rake test:units"
+sudo: false
 cache: bundler
 
 rvm:
-- 2.5
-- 2.6
-- 2.7
+- 2.1
+- 2.2.3
+- 2.3.3
 
 gemfile:
-- gemfiles/Gemfile.rails50
-- gemfiles/Gemfile.rails51
-- gemfiles/Gemfile.rails52
-- gemfiles/Gemfile.rails60
-- gemfiles/Gemfile.rails_master
+- Gemfile.rails32
+- Gemfile.rails40
+- Gemfile.rails41
+- Gemfile.rails42
+- Gemfile.rails5
 
-jobs:
-  include:
-      rvm: 2.5
-      gemfile: Gemfile
-      script: bundle exec rubocop --parallel
+matrix:
+  exclude:
+    - rvm: 2.1
+      gemfile: Gemfile.rails5
 
 notifications:
   email:

@@ -1,6 +1,7 @@
 require 'test_helper'
 
 class RemotePayexTest < Test::Unit::TestCase
+
   def setup
     @gateway = PayexGateway.new(fixtures(:payex))
 
@@ -9,7 +10,7 @@ class RemotePayexTest < Test::Unit::TestCase
     @declined_card = credit_card('4000300011112220')
 
     @options = {
-      order_id: '1234'
+      :order_id => '1234',
     }
   end
 
@@ -53,7 +54,7 @@ class RemotePayexTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_void
-    assert response = @gateway.void('1')
+    assert response = @gateway.void("1")
     assert_failure response
     assert_not_equal 'OK', response.message
     assert_match %r{1}, response.message
@@ -68,7 +69,7 @@ class RemotePayexTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_refund
-    assert response = @gateway.refund(@amount, '1', order_id: '123')
+    assert response = @gateway.refund(@amount, "1", order_id: '123')
     assert_failure response
     assert_not_equal 'OK', response.message
     assert_match %r{1}, response.message
@@ -108,9 +109,9 @@ class RemotePayexTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = PayexGateway.new(
-      account: '1',
-      encryption_key: '1'
-    )
+                :account => '1',
+                :encryption_key => '1'
+              )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_not_equal 'OK', response.message
