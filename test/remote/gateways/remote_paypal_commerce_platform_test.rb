@@ -143,6 +143,17 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @body = body
   end
 
+  def test_update_add_shipping_address_order
+    @body[:purchase_units][0].delete(:shipping)
+    response = create_order("CAPTURE")
+    order_id = response.params["id"]
+    @body    = {body: update_shipping_address_body}
+    @body[:body][0].update( op: "add" )
+    response = @gateway.update_order(order_id, options)
+    success_empty_assertions(response)
+    @body = body
+  end
+
   def test_update_platform_fee_in_update_body
     response = create_order("CAPTURE")
     order_id = response.params["id"]
