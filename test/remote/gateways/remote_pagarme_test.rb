@@ -14,7 +14,7 @@ class RemotePagarmeTest < Test::Unit::TestCase
     @declined_card = credit_card('4242424242424242', {
       first_name: 'Richard',
       last_name: 'Deschamps',
-      :verification_value => '688'
+      verification_value: '688'
     })
 
     @options = {
@@ -29,7 +29,7 @@ class RemotePagarmeTest < Test::Unit::TestCase
     assert_equal 'Transação aprovada', response.message
 
     # Assert metadata
-    assert_equal response.params["metadata"]["description"], @options[:description]
+    assert_equal response.params['metadata']['description'], @options[:description]
   end
 
   def test_successful_purchase_with_more_options
@@ -49,13 +49,13 @@ class RemotePagarmeTest < Test::Unit::TestCase
     assert_equal 'Transação aprovada', response.message
 
     # Assert metadata
-    assert_equal response.params["metadata"]["order_id"], options[:order_id]
-    assert_equal response.params["metadata"]["ip"], options[:ip]
-    assert_equal response.params["metadata"]["customer"], options[:customer]
-    assert_equal response.params["metadata"]["invoice"], options[:invoice]
-    assert_equal response.params["metadata"]["merchant"], options[:merchant]
-    assert_equal response.params["metadata"]["description"], options[:description]
-    assert_equal response.params["metadata"]["email"], options[:email]
+    assert_equal response.params['metadata']['order_id'], options[:order_id]
+    assert_equal response.params['metadata']['ip'], options[:ip]
+    assert_equal response.params['metadata']['customer'], options[:customer]
+    assert_equal response.params['metadata']['invoice'], options[:invoice]
+    assert_equal response.params['metadata']['merchant'], options[:merchant]
+    assert_equal response.params['metadata']['description'], options[:description]
+    assert_equal response.params['metadata']['email'], options[:email]
   end
 
   def test_successful_purchase_without_options
@@ -153,5 +153,4 @@ class RemotePagarmeTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:api_key], transcript)
   end
-
 end

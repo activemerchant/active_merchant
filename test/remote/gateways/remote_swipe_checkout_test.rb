@@ -8,7 +8,7 @@ class RemoteSwipeCheckoutTest < Test::Unit::TestCase
     @accepted_card = credit_card('1234123412341234')
     @declined_card = credit_card('1111111111111111')
     @invalid_card  = credit_card('1000000000000000')
-    @empty_card  = credit_card('')
+    @empty_card = credit_card('')
 
     @options = {
       order_id: '1',
@@ -24,7 +24,7 @@ class RemoteSwipeCheckoutTest < Test::Unit::TestCase
   end
 
   def test_region_switching
-    assert response = @gateway.purchase(@amount, @accepted_card, @options.merge(:region => 'CA'))
+    assert response = @gateway.purchase(@amount, @accepted_card, @options.merge(region: 'CA'))
     assert_success response
     assert_equal 'Transaction approved', response.message
   end

@@ -269,7 +269,21 @@ module ActiveMerchant #:nodoc:
         commit 'ManagePendingTransactionStatus', build_manage_pending_transaction_status(transaction_id, action)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((<n1:Password>).+(</n1:Password>)), '\1[FILTERED]\2').
+          gsub(%r((<n1:Username>).+(</n1:Username>)), '\1[FILTERED]\2').
+          gsub(%r((<n1:Signature>).+(</n1:Signature>)), '\1[FILTERED]\2').
+          gsub(%r((<n2:CreditCardNumber>).+(</n2:CreditCardNumber)), '\1[FILTERED]\2').
+          gsub(%r((<n2:CVV2>)\d+(</n2:CVV2)), '\1[FILTERED]\2')
+      end
+
       private
+
       def build_request_wrapper(action, options = {})
         xml = Builder::XmlMarkup.new :indent => 2
         xml.tag! action + 'Req', 'xmlns' => PAYPAL_NAMESPACE do
@@ -572,7 +586,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'n2:OrderTotal', localized_amount(money, currency_code), 'currencyID' => currency_code
 
           # All of the values must be included together and add up to the order total
-          if [:subtotal, :shipping, :handling, :tax].all?{ |o| options.has_key?(o) }
+          if [:subtotal, :shipping, :handling, :tax].all?{ |o| options[o].present? }
             xml.tag! 'n2:ItemTotal', localized_amount(options[:subtotal], currency_code), 'currencyID' => currency_code
             xml.tag! 'n2:ShippingTotal', localized_amount(options[:shipping], currency_code),'currencyID' => currency_code
             xml.tag! 'n2:HandlingTotal', localized_amount(options[:handling], currency_code),'currencyID' => currency_code

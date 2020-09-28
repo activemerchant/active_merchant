@@ -11,7 +11,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['BR']
       self.default_currency = 'BRL'
       self.money_format = :dollars
-      self.supported_cardtypes = [:visa, :master, :discover, :american_express, :diners_club]
+      self.supported_cardtypes = %i[visa master discover american_express diners_club]
       self.homepage_url = 'http://www.maxipago.com/'
       self.display_name = 'maxiPago!'
 
@@ -98,7 +98,7 @@ module ActiveMerchant #:nodoc:
 
       def build_xml_request(action)
         builder = Nokogiri::XML::Builder.new(encoding: 'UTF-8')
-        builder.send("transaction-request") do |xml|
+        builder.send('transaction-request') do |xml|
           xml.version '3.1.1.15'
           xml.verification do
             xml.merchantId @options[:login]
@@ -127,7 +127,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def split_authorization(authorization)
-        authorization.split("|")
+        authorization.split('|')
       end
 
       def parse(body)
@@ -142,7 +142,7 @@ module ActiveMerchant #:nodoc:
 
       def parse_element(response, node)
         if node.has_elements?
-          node.elements.each{|element| parse_element(response, element) }
+          node.elements.each { |element| parse_element(response, element) }
         else
           response[node.name.underscore.to_sym] = node.text
         end
@@ -212,7 +212,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_order_id(xml, authorization)
-        order_id, _ = split_authorization(authorization)
+        order_id, = split_authorization(authorization)
         xml.orderID order_id
       end
     end

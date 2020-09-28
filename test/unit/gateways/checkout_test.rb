@@ -5,8 +5,8 @@ class CheckoutTest < Test::Unit::TestCase
 
   def setup
     @gateway = ActiveMerchant::Billing::CheckoutGateway.new(
-      :merchant_id    => 'SBMTEST',    # Merchant Code
-      :password => 'Password1!'          # Processing Password
+      merchant_id: 'SBMTEST', # Merchant Code
+      password: 'Password1!' # Processing Password
     )
     @options = {
       order_id: generate_unique_id
@@ -55,9 +55,9 @@ class CheckoutTest < Test::Unit::TestCase
   def test_unsuccessful_capture
     @gateway.expects(:ssl_post).returns(failed_capture_response)
 
-    assert response = @gateway.capture(100, '||||' , @options)
+    assert response = @gateway.capture(100, '||||', @options)
     assert_failure response
-    assert_equal 'EGP00173', response.params["error_code_tag"]
+    assert_equal 'EGP00173', response.params['error_code_tag']
     assert response.test?
   end
 
@@ -72,21 +72,20 @@ class CheckoutTest < Test::Unit::TestCase
 
   def test_passes_correct_currency
     stub_comms do
-      @gateway.purchase(100, credit_card, @options.merge(
-        currency: "EUR"
-      ))
-    end.check_request do |endpoint, data, headers|
+      @gateway.purchase(100, credit_card, @options.merge(currency: 'EUR'))
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<bill_currencycode>EUR<\/bill_currencycode>/, data)
     end.respond_with(successful_purchase_response)
   end
 
   def test_passes_descriptors
+    options = @options.merge(
+      descriptor_name: 'ZahName',
+      descriptor_city: 'Oakland'
+    )
     stub_comms do
-      @gateway.purchase(100, credit_card, @options.merge(
-        descriptor_name: "ZahName",
-        descriptor_city: "Oakland"
-      ))
-    end.check_request do |endpoint, data, headers|
+      @gateway.purchase(100, credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<descriptor_name>ZahName<\/descriptor_name>/, data)
       assert_match(/<descriptor_city>Oakland<\/descriptor_city>/, data)
     end.respond_with(successful_purchase_response)
@@ -96,7 +95,7 @@ class CheckoutTest < Test::Unit::TestCase
     @options['orderid'] = '9c38d0506da258e216fa072197faaf37'
     void = stub_comms(@gateway, :ssl_request) do
       @gateway.void('36919371|9c38d0506da258e216fa072197faaf37|1|CAD|100', @options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       # Should only be one pair of track id tags.
       assert_equal 2, data.scan(/trackid/).count
     end.respond_with(successful_void_response)
@@ -137,7 +136,7 @@ class CheckoutTest < Test::Unit::TestCase
       @gateway.verify(credit_card, @options)
     end.respond_with(successful_authorize_response, successful_void_response)
     assert_success response
-    assert_equal "33024417", response.params['tranid']
+    assert_equal '33024417', response.params['tranid']
   end
 
   def test_successful_verify_with_failed_void
@@ -145,7 +144,7 @@ class CheckoutTest < Test::Unit::TestCase
       @gateway.verify(credit_card, @options)
     end.respond_with(successful_authorize_response, failed_void_response)
     assert_success response
-    assert_equal "Successful", response.message
+    assert_equal 'Successful', response.message
   end
 
   def test_unsuccessful_verify
@@ -153,7 +152,7 @@ class CheckoutTest < Test::Unit::TestCase
       @gateway.verify(credit_card, @options)
     end.respond_with(failed_authorize_response, successful_void_response)
     assert_failure response
-    assert_equal "Not Successful", response.message
+    assert_equal 'Not Successful', response.message
   end
 
   private

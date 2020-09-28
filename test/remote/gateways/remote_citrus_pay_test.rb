@@ -22,58 +22,58 @@ class RemoteCitrusPayTest < Test::Unit::TestCase
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "Succeeded", response.message
+    assert_equal 'Succeeded', response.message
   end
 
   def test_successful_purchase_sans_options
     assert response = @gateway.purchase(@amount, @credit_card)
     assert_success response
-    assert_equal "Succeeded", response.message
+    assert_equal 'Succeeded', response.message
   end
 
   def test_successful_purchase_with_more_options
     more_options = @options.merge({
-      ip: "127.0.0.1",
-      email: "joe@example.com",
+      ip: '127.0.0.1',
+      email: 'joe@example.com'
     })
 
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(more_options))
     assert_success response
-    assert_equal "Succeeded", response.message
+    assert_equal 'Succeeded', response.message
   end
 
   def test_adds_3dsecure_id_to_authorize
     more_options = @options.merge({
-      ip: "127.0.0.1",
-      email: "joe@example.com",
-      threed_secure_id: "abc123"
+      ip: '127.0.0.1',
+      email: 'joe@example.com',
+      threed_secure_id: 'abc123'
     })
 
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(more_options))
-    assert_match "No check has been performed for this merchant and 3D Secure Id.", response.message
+    assert_match 'No check has been performed for this merchant and 3D Secure Id.', response.message
   end
 
   def test_failed_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_match /FAILURE/, response.message
+    assert_match %r{FAILURE}, response.message
   end
 
   def test_successful_authorize_and_capture
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "Succeeded", response.message
+    assert_equal 'Succeeded', response.message
     assert_match %r(^.+\|\d+$), response.authorization
 
     assert capture = @gateway.capture(@amount, response.authorization)
     assert_success capture
-    assert_equal "Succeeded", capture.message
+    assert_equal 'Succeeded', capture.message
   end
 
   def test_failed_authorize
     assert response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_match /FAILURE/, response.message
+    assert_match(/FAILURE/, response.message)
   end
 
   def test_successful_refund
@@ -82,7 +82,7 @@ class RemoteCitrusPayTest < Test::Unit::TestCase
 
     assert refund = @gateway.refund(@amount, response.authorization)
     assert_success refund
-    assert_equal "Succeeded", refund.message
+    assert_equal 'Succeeded', refund.message
   end
 
   def test_successful_void
@@ -96,24 +96,24 @@ class RemoteCitrusPayTest < Test::Unit::TestCase
   def test_successful_verify
     assert response = @gateway.verify(@credit_card, @options)
     assert_success response
-    assert_equal "Succeeded", response.message
+    assert_equal 'Succeeded', response.message
 
-    assert_success response.responses.last, "The void should succeed"
-    assert_equal "SUCCESS", response.responses.last.params["result"]
+    assert_success response.responses.last, 'The void should succeed'
+    assert_equal 'SUCCESS', response.responses.last.params['result']
   end
 
   def test_invalid_login
     gateway = CitrusPayGateway.new(
-                :userid => 'nosuch',
-                :password => 'thing'
-              )
+      userid: 'nosuch',
+      password: 'thing'
+    )
     response = gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "ERROR - INVALID_REQUEST - Invalid credentials.", response.message
+    assert_equal 'ERROR - INVALID_REQUEST - Invalid credentials.', response.message
   end
 
   def test_transcript_scrubbing
-    card = credit_card("4987654321098769", verification_value: "134")
+    card = credit_card('4987654321098769', verification_value: '134')
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, card, @options)
     end
@@ -130,5 +130,4 @@ class RemoteCitrusPayTest < Test::Unit::TestCase
     gateway = CitrusPayGateway.new(userid: 'unknown', password: 'unknown')
     assert !gateway.verify_credentials
   end
-
 end

@@ -5,7 +5,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://webservices.primerchants.com'
 
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.homepage_url = 'http://www.transfirst.com/'
       self.display_name = 'TransFirst'
 
@@ -14,19 +14,19 @@ module ActiveMerchant #:nodoc:
       DECLINED = 'The transaction was declined'
 
       ACTIONS = {
-        purchase: "CCSale",
-        purchase_echeck: "ACHDebit",
-        refund: "CreditCardAutoRefundorVoid",
-        refund_echeck: "ACHVoidTransaction",
-        void: "CreditCardAutoRefundorVoid",
+        purchase: 'CCSale',
+        purchase_echeck: 'ACHDebit',
+        refund: 'CreditCardCredit',
+        refund_echeck: 'ACHVoidTransaction',
+        void: 'CreditCardAutoRefundorVoid'
       }
 
       ENDPOINTS = {
-        purchase: "creditcard.asmx",
-        purchase_echeck: "checkverifyws/checkverifyws.asmx",
-        refund: "creditcard.asmx",
-        refund_echeck: "checkverifyws/checkverifyws.asmx",
-        void: "creditcard.asmx"
+        purchase: 'creditcard.asmx',
+        purchase_echeck: 'checkverifyws/checkverifyws.asmx',
+        refund: 'creditcard.asmx',
+        refund_echeck: 'checkverifyws/checkverifyws.asmx',
+        void: 'creditcard.asmx'
       }
 
       def initialize(options = {})
@@ -46,20 +46,21 @@ module ActiveMerchant #:nodoc:
         commit((payment.is_a?(Check) ? :purchase_echeck : :purchase), post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         post = {}
 
         transaction_id, payment_type = split_authorization(authorization)
         add_amount(post, money)
         add_pair(post, :TransID, transaction_id)
+        add_pair(post, :RefID, options[:order_id], required: true)
 
-        commit((payment_type == "check" ? :refund_echeck : :refund), post)
+        commit((payment_type == 'check' ? :refund_echeck : :refund), post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = {}
 
-        transaction_id, _ = split_authorization(authorization)
+        transaction_id, = split_authorization(authorization)
         add_pair(post, :TransID, transaction_id)
 
         commit(:void, post)
@@ -91,8 +92,8 @@ module ActiveMerchant #:nodoc:
           add_pair(post, :Address, address[:address1], required: true)
           add_pair(post, :ZipCode, address[:zip], required: true)
         else
-          add_pair(post, :Address, "", required: true)
-          add_pair(post, :ZipCode, "", required: true)
+          add_pair(post, :Address, '', required: true)
+          add_pair(post, :ZipCode, '', required: true)
         end
       end
 
@@ -101,8 +102,8 @@ module ActiveMerchant #:nodoc:
         add_pair(post, :PONumber, options[:invoice], required: true)
         add_pair(post, :SaleTaxAmount, amount(options[:tax] || 0))
         add_pair(post, :TaxIndicator, 0)
-        add_pair(post, :PaymentDesc, options[:description] || "", required: true)
-        add_pair(post, :CompanyName, options[:company_name] || "", required: true)
+        add_pair(post, :PaymentDesc, options[:description] || '', required: true)
+        add_pair(post, :CompanyName, options[:company_name] || '', required: true)
       end
 
       def add_payment(post, payment)
@@ -123,15 +124,16 @@ module ActiveMerchant #:nodoc:
       def add_echeck(post, payment)
         add_pair(post, :TransRoute, payment.routing_number, required: true)
         add_pair(post, :BankAccountNo, payment.account_number, required: true)
-        add_pair(post, :BankAccountType, add_or_use_default(payment.account_type, "Checking"), required: true)
-        add_pair(post, :CheckType, add_or_use_default(payment.account_holder_type, "Personal"), required: true)
+        add_pair(post, :BankAccountType, add_or_use_default(payment.account_type, 'Checking'), required: true)
+        add_pair(post, :CheckType, add_or_use_default(payment.account_holder_type, 'Personal'), required: true)
         add_pair(post, :Name, payment.name, required: true)
-        add_pair(post, :ProcessDate, Time.now.strftime("%m%d%y"), required: true)
-        add_pair(post, :Description, "", required: true)
+        add_pair(post, :ProcessDate, Time.now.strftime('%m%d%y'), required: true)
+        add_pair(post, :Description, '', required: true)
       end
 
       def add_or_use_default(payment_data, default_value)
         return payment_data.capitalize if payment_data
+
         return default_value
       end
 
@@ -139,7 +141,7 @@ module ActiveMerchant #:nodoc:
         return unless action == :purchase
 
         UNUSED_CREDIT_CARD_FIELDS.each do |f|
-          post[f] = ""
+          post[f] = ''
         end
       end
 
@@ -154,7 +156,7 @@ module ActiveMerchant #:nodoc:
         response = {}
 
         xml = REXML::Document.new(data)
-        root = REXML::XPath.first(xml, "*")
+        root = REXML::XPath.first(xml, '*')
 
         if root.nil?
           response[:message] = data.to_s.strip
@@ -169,20 +171,19 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, params)
         response = parse(ssl_post(url(action), post_data(action, params)))
-
         Response.new(
           success_from(response),
           message_from(response),
           response,
-          :test => test?,
-          :authorization => authorization_from(response),
-          :avs_result => { :code => response[:avs_code] },
-          :cvv_result => response[:cvv2_code]
+          test: test?,
+          authorization: authorization_from(response),
+          avs_result: { code: response[:avs_code] },
+          cvv_result: response[:cvv2_code]
         )
       end
 
       def authorization_from(response)
-        if response[:status] == "APPROVED"
+        if response[:status] == 'APPROVED'
           "#{response[:trans_id]}|check"
         else
           "#{response[:trans_id]}|creditcard"
@@ -191,13 +192,13 @@ module ActiveMerchant #:nodoc:
 
       def success_from(response)
         case response[:status]
-        when "Authorized"
+        when 'Authorized'
           true
-        when "Voided"
+        when 'Voided'
           true
-        when "APPROVED"
+        when 'APPROVED'
           true
-        when "VOIDED"
+        when 'VOIDED'
           true
         else
           false
@@ -218,7 +219,7 @@ module ActiveMerchant #:nodoc:
         params[:MerchantID] = @options[:login]
         params[:RegKey] = @options[:password]
 
-        request = params.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        request = params.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
         request
       end
 
@@ -232,7 +233,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def split_authorization(authorization)
-        authorization.split("|")
+        authorization.split('|')
       end
     end
   end

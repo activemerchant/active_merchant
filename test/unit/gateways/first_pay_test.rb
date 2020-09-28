@@ -21,7 +21,7 @@ class FirstPayTest < Test::Unit::TestCase
   def test_successful_purchase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<FIELD KEY="transaction_center_id">1234<\/FIELD>/, data)
       assert_match(/<FIELD KEY="gateway_id">a91c38c3-7d7f-4d29-acc7-927b4dca0dbe<\/FIELD>/, data)
       assert_match(/<FIELD KEY="operation_type">sale<\/FIELD>/, data)
@@ -62,7 +62,7 @@ class FirstPayTest < Test::Unit::TestCase
   def test_successful_authorize
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<FIELD KEY="transaction_center_id">1234<\/FIELD>/, data)
       assert_match(/<FIELD KEY="gateway_id">a91c38c3-7d7f-4d29-acc7-927b4dca0dbe<\/FIELD>/, data)
       assert_match(/<FIELD KEY="operation_type">auth<\/FIELD>/, data)
@@ -101,7 +101,7 @@ class FirstPayTest < Test::Unit::TestCase
   def test_successful_capture
     response = stub_comms do
       @gateway.capture(@amount, '47920')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<FIELD KEY="transaction_center_id">1234<\/FIELD>/, data)
       assert_match(/<FIELD KEY="gateway_id">a91c38c3-7d7f-4d29-acc7-927b4dca0dbe<\/FIELD>/, data)
       assert_match(/<FIELD KEY="operation_type">settle<\/FIELD>/, data)
@@ -129,7 +129,7 @@ class FirstPayTest < Test::Unit::TestCase
   def test_successful_refund
     response = stub_comms do
       @gateway.refund(@amount, '47925')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<FIELD KEY="transaction_center_id">1234<\/FIELD>/, data)
       assert_match(/<FIELD KEY="gateway_id">a91c38c3-7d7f-4d29-acc7-927b4dca0dbe<\/FIELD>/, data)
       assert_match(/<FIELD KEY="operation_type">credit<\/FIELD>/, data)
@@ -157,7 +157,7 @@ class FirstPayTest < Test::Unit::TestCase
   def test_successful_void
     response = stub_comms do
       @gateway.void('47934')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<FIELD KEY="transaction_center_id">1234<\/FIELD>/, data)
       assert_match(/<FIELD KEY="gateway_id">a91c38c3-7d7f-4d29-acc7-927b4dca0dbe<\/FIELD>/, data)
       assert_match(/<FIELD KEY="operation_type">void<\/FIELD>/, data)
@@ -179,6 +179,37 @@ class FirstPayTest < Test::Unit::TestCase
     assert_failure response
     assert_equal '1', response.authorization
     assert response.message.include?('Void failed')
+  end
+
+  def test_recurring_payments
+    @options[:recurring] = 1
+    @options[:recurring_start_date] = '01/01/1900'
+    @options[:recurring_end_date] = '02/02/1901'
+    @options[:recurring_type] = 'monthly'
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r{<FIELD KEY="recurring">1</FIELD>}, data)
+      assert_match(%r{<FIELD KEY="recurring_start_date">01/01/1900</FIELD>}, data)
+      assert_match(%r{<FIELD KEY="recurring_end_date">02/02/1901</FIELD>}, data)
+      assert_match(%r{<FIELD KEY="recurring_type">monthly</FIELD>}, data)
+    end.respond_with(successful_purchase_response)
+
+    assert response
+    assert_success response
+  end
+
+  def test_error_message
+    @gateway.stubs(:ssl_post).returns(failed_login_response)
+    response = @gateway.void('1')
+
+    assert_failure response
+    assert response.error_code.include?('Merchant: 1234 has encountered error #DTO-200-TC.')
+  end
+
+  def test_scrub
+    assert @gateway.supports_scrubbing?
+    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
   private
@@ -343,6 +374,67 @@ class FirstPayTest < Test::Unit::TestCase
     <FIELD KEY="response1">Void Failed. Transaction cannot be voided.</FIELD>
     <FIELD KEY="reference_number1">1</FIELD>
     <FIELD KEY="error1" />
+  </FIELDS>
+</RESPONSE>)
+  end
+
+  def failed_login_response
+    %(<RESPONSE>
+  <FIELDS>
+  <FIELD KEY="status">0</FIELD>
+  <FIELD KEY="auth_code"></FIELD>
+  <FIELD KEY="auth_response"></FIELD>
+  <FIELD KEY="avs_code"></FIELD>
+  <FIELD KEY="cvv2_code"></FIELD>
+  <FIELD KEY="reference_number"></FIELD>
+  <FIELD KEY="order_id">a0d2560dda18631ce325c07dcbda2a9880fd17fb344fd233</FIELD>
+  <FIELD KEY="error">Merchant: 1234 has encountered error #DTO-200-TC. Please call 888-638-7867 if you feel this is in error.</FIELD>
+  </FIELDS>
+</RESPONSE>)
+  end
+
+  def pre_scrubbed
+    %(<RESPONSE>
+  <FIELDS>
+    <FIELD KEY="order_id">77b61bfe08510e00852f2f20011e7952d80f9a4be17d27cf</FIELD>
+    <FIELD KEY="total">1.00</FIELD><FIELD KEY="card_name">visa</FIELD>
+    <FIELD KEY="card_number">4111111111111111</FIELD>
+    <FIELD KEY="card_exp">0919</FIELD>
+    <FIELD KEY="cvv2">789</FIELD>
+    <FIELD KEY="owner_name">Jim Smith</FIELD>
+    <FIELD KEY="owner_street">456 My Street</FIELD>
+    <FIELD KEY="owner_street2">Apt 1</FIELD>
+    <FIELD KEY="owner_city">Ottawa</FIELD>
+    <FIELD KEY="owner_state">ON</FIELD>
+    <FIELD KEY="owner_zip">K1C2N6</FIELD>
+    <FIELD KEY="owner_country">CA</FIELD>
+    <FIELD KEY="owner_phone">(555)555-5555</FIELD>
+    <FIELD KEY="transaction_center_id">1264</FIELD>
+    <FIELD KEY="gateway_id">a91c38c3-7d7f-4d29-acc7-927b4dca0dbe</FIELD>
+    <FIELD KEY="operation_type">sale</FIELD>
+  </FIELDS>
+</RESPONSE>)
+  end
+
+  def post_scrubbed
+    %(<RESPONSE>
+  <FIELDS>
+    <FIELD KEY=\"order_id\">77b61bfe08510e00852f2f20011e7952d80f9a4be17d27cf</FIELD>
+    <FIELD KEY=\"total\">1.00</FIELD><FIELD KEY=\"card_name\">visa</FIELD>
+    <FIELD KEY=\"card_number[FILTERED]</FIELD>
+    <FIELD KEY=\"card_exp\">0919</FIELD>
+    <FIELD KEY=\"cvv2[FILTERED]</FIELD>
+    <FIELD KEY=\"owner_name\">Jim Smith</FIELD>
+    <FIELD KEY=\"owner_street\">456 My Street</FIELD>
+    <FIELD KEY=\"owner_street2\">Apt 1</FIELD>
+    <FIELD KEY=\"owner_city\">Ottawa</FIELD>
+    <FIELD KEY=\"owner_state\">ON</FIELD>
+    <FIELD KEY=\"owner_zip\">K1C2N6</FIELD>
+    <FIELD KEY=\"owner_country\">CA</FIELD>
+    <FIELD KEY=\"owner_phone\">(555)555-5555</FIELD>
+    <FIELD KEY=\"transaction_center_id\">1264</FIELD>
+    <FIELD KEY=\"gateway_id[FILTERED]</FIELD>
+    <FIELD KEY=\"operation_type\">sale</FIELD>
   </FIELDS>
 </RESPONSE>)
   end

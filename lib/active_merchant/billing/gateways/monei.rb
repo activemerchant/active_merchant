@@ -14,9 +14,9 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://test.monei-api.net/payment/ctpe'
       self.live_url = 'https://monei-api.net/payment/ctpe'
 
-      self.supported_countries = ['AD', 'AT', 'BE', 'BG', 'CA', 'CH', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FO', 'FR', 'GB', 'GI', 'GR', 'HU', 'IE', 'IL', 'IS', 'IT', 'LI', 'LT', 'LU', 'LV', 'MT', 'NL', 'NO', 'PL', 'PT', 'RO', 'SE', 'SI', 'SK', 'TR', 'US', 'VA']
+      self.supported_countries = %w[AD AT BE BG CA CH CY CZ DE DK EE ES FI FO FR GB GI GR HU IE IL IS IT LI LT LU LV MT NL NO PL PT RO SE SI SK TR US VA]
       self.default_currency = 'EUR'
-      self.supported_cardtypes = [:visa, :master, :maestro, :jcb, :american_express]
+      self.supported_cardtypes = %i[visa master maestro jcb american_express]
 
       self.homepage_url = 'http://www.monei.net/'
       self.display_name = 'Monei'
@@ -29,7 +29,7 @@ module ActiveMerchant #:nodoc:
       #           :login      User login
       #           :pwd        User password
       #
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :sender_id, :channel_id, :login, :pwd)
         super
       end
@@ -45,7 +45,7 @@ module ActiveMerchant #:nodoc:
       #               :currency         Sale currency to override money object or default (optional)
       #
       # Returns Active Merchant response object
-      def purchase(money, credit_card, options={})
+      def purchase(money, credit_card, options = {})
         execute_new_order(:purchase, money, credit_card, options)
       end
 
@@ -60,7 +60,7 @@ module ActiveMerchant #:nodoc:
       #               :currency         Sale currency to override money object or default (optional)
       #
       # Returns Active Merchant response object
-      def authorize(money, credit_card, options={})
+      def authorize(money, credit_card, options = {})
         execute_new_order(:authorize, money, credit_card, options)
       end
 
@@ -76,7 +76,7 @@ module ActiveMerchant #:nodoc:
       # Note: you should pass either order_id or description
       #
       # Returns Active Merchant response object
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         execute_dependant(:capture, money, authorization, options)
       end
 
@@ -92,7 +92,7 @@ module ActiveMerchant #:nodoc:
       # Note: you should pass either order_id or description
       #
       # Returns Active Merchant response object
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         execute_dependant(:refund, money, authorization, options)
       end
 
@@ -103,7 +103,7 @@ module ActiveMerchant #:nodoc:
       #                 :order_id         Merchant created id for the authorization (optional)
       #
       # Returns Active Merchant response object
-      def void(authorization, options={})
+      def void(authorization, options = {})
         execute_dependant(:void, nil, authorization, options)
       end
 
@@ -117,7 +117,7 @@ module ActiveMerchant #:nodoc:
       #               :currency         Sale currency to override money object or default (optional)
       #
       # Returns Active Merchant response object of Authorization operation
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -133,6 +133,7 @@ module ActiveMerchant #:nodoc:
           add_payment(xml, action, money, options)
           add_account(xml, credit_card)
           add_customer(xml, credit_card, options)
+          add_three_d_secure(xml, options)
         end
 
         commit(request)
@@ -150,11 +151,11 @@ module ActiveMerchant #:nodoc:
 
       # Private: Build XML wrapping code yielding to code to fill the transaction information
       def build_request
-        builder = Nokogiri::XML::Builder.new(:encoding => 'UTF-8') do |xml|
-          xml.Request(:version => "1.0") do
-            xml.Header { xml.Security(:sender => @options[:sender_id]) }
-            xml.Transaction(:mode => test? ? 'CONNECTOR_TEST' : 'LIVE', :response => 'SYNC', :channel => @options[:channel_id]) do
-              xml.User(:login => @options[:login], :pwd => @options[:pwd])
+        builder = Nokogiri::XML::Builder.new(encoding: 'UTF-8') do |xml|
+          xml.Request(version: '1.0') do
+            xml.Header { xml.Security(sender: @options[:sender_id]) }
+            xml.Transaction(mode: test? ? 'CONNECTOR_TEST' : 'LIVE', response: 'SYNC', channel: @options[:channel_id]) do
+              xml.User(login: @options[:login], pwd: @options[:pwd])
               yield xml
             end
           end
@@ -182,7 +183,7 @@ module ActiveMerchant #:nodoc:
       def add_payment(xml, action, money, options)
         code = tanslate_payment_code(action)
 
-        xml.Payment(:code => code) do
+        xml.Payment(code: code) do
           xml.Presentation do
             xml.Amount amount(money)
             xml.Currency options[:currency] || currency(money)
@@ -197,7 +198,7 @@ module ActiveMerchant #:nodoc:
           xml.Holder credit_card.name
           xml.Number credit_card.number
           xml.Brand credit_card.brand.upcase
-          xml.Expiry(:month => credit_card.month, :year => credit_card.year)
+          xml.Expiry(month: credit_card.month, year: credit_card.year)
           xml.Verification credit_card.verification_value
         end
       end
@@ -225,14 +226,44 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      # Private : Convert ECI to ResultIndicator
+      # Possible ECI values:
+      # 02 or 05 - Fully Authenticated Transaction
+      # 00 or 07 - Non 3D Secure Transaction
+      # Possible ResultIndicator values:
+      # 01 = MASTER_3D_ATTEMPT
+      # 02 = MASTER_3D_SUCCESS
+      # 05 = VISA_3D_SUCCESS
+      # 06 = VISA_3D_ATTEMPT
+      # 07 = DEFAULT_E_COMMERCE
+      def eci_to_result_indicator(eci)
+        case eci
+        when '02', '05'
+          return eci
+        else
+          return '07'
+        end
+      end
+
+      # Private : Add the 3DSecure infos to XML
+      def add_three_d_secure(xml, options)
+        if options[:three_d_secure]
+          xml.Authentication(type: '3DSecure') do
+            xml.ResultIndicator eci_to_result_indicator options[:three_d_secure][:eci]
+            xml.Parameter(name: 'VERIFICATION_ID') { xml.text options[:three_d_secure][:cavv] }
+            xml.Parameter(name: 'XID') { xml.text options[:three_d_secure][:xid] }
+          end
+        end
+      end
+
       # Private: Parse XML response from Monei servers
       def parse(body)
         xml = Nokogiri::XML(body)
         {
-            :unique_id => xml.xpath("//Response/Transaction/Identification/UniqueID").text,
-            :status => translate_status_code(xml.xpath("//Response/Transaction/Processing/Status/@code").text),
-            :reason => translate_status_code(xml.xpath("//Response/Transaction/Processing/Reason/@code").text),
-            :message => xml.xpath("//Response/Transaction/Processing/Return").text
+          unique_id: xml.xpath('//Response/Transaction/Identification/UniqueID').text,
+          status: translate_status_code(xml.xpath('//Response/Transaction/Processing/Status/@code').text),
+          reason: translate_status_code(xml.xpath('//Response/Transaction/Processing/Reason/@code').text),
+          message: xml.xpath('//Response/Transaction/Processing/Return').text
         }
       end
 
@@ -280,26 +311,26 @@ module ActiveMerchant #:nodoc:
       # Private: Translate Monei status code to native ruby symbols
       def translate_status_code(code)
         {
-            '00' => :success,
-            '40' => :neutral,
-            '59' => :waiting_bank,
-            '60' => :rejected_bank,
-            '64' => :waiting_risk,
-            '65' => :rejected_risk,
-            '70' => :rejected_validation,
-            '80' => :waiting,
-            '90' => :new
+          '00' => :success,
+          '40' => :neutral,
+          '59' => :waiting_bank,
+          '60' => :rejected_bank,
+          '64' => :waiting_risk,
+          '65' => :rejected_risk,
+          '70' => :rejected_validation,
+          '80' => :waiting,
+          '90' => :new
         }[code]
       end
 
       # Private: Translate AM operations to Monei operations codes
       def tanslate_payment_code(action)
         {
-            :purchase => 'CC.DB',
-            :authorize => 'CC.PA',
-            :capture => 'CC.CP',
-            :refund => 'CC.RF',
-            :void => 'CC.RV'
+          purchase: 'CC.DB',
+          authorize: 'CC.PA',
+          capture: 'CC.CP',
+          refund: 'CC.RF',
+          void: 'CC.RV'
         }[action]
       end
     end
