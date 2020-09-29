@@ -1,5 +1,4 @@
 require "test_helper"
-require "byebug"
 
 class PaypalExpressRestTest < Test::Unit::TestCase
   def setup
@@ -56,7 +55,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @get_token_missing_username_options = { "Content-Type": "application/json", authorization: missing_username_params }
 
     @approved_billing_token = "BA-5WU2336364357173P"
-
   end
 
   def test_access_token
