@@ -324,9 +324,15 @@ module ActiveMerchant #:nodoc:
       def add_shipping(options, post)
         post[:shipping]           = { }
         post[:shipping][:address] = { }
+        add_name(options[:name], post[:shipping]) unless options[:name].nil?
         add_shipping_address(options[:address], post[:shipping]) unless options[:address].nil?
-
         skip_empty(post, :shipping)
+      end
+
+      def add_name(options, post)
+        post[:name] = { }
+        post[:name][:full_name] = options[:full_name]
+        skip_empty(post, :name)
       end
 
       def add_shipping_address(address, obj_hsh, key = :address)
