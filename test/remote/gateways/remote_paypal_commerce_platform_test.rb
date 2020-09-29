@@ -4,13 +4,12 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   def setup
     Base.mode               = :test
     @gateway                = ActiveMerchant::Billing::PaypalCommercePlatformGateway.new
+    @ppcp_credentials        = fixtures(:ppcp)
 
-    params                  = user_credentials
-
-    options                 = { "Content-Type": "application/json", authorization: params }
+    options                 = { "Content-Type": "application/json", authorization: user_credentials }
     access_token            = @gateway.get_token(options)
-    missing_password_params = { username: "ASs8Osqge6KT3OdLtkNhD20VP8lsrqRUlRjLo-e5s75SHz-2ffMMzCos_odQGjGYpPcGlxJVQ5fXMz9q" }
-    missing_username_params = { password: "EKj_bMZn0CkOhOvFwJMX2WwhtCq2A0OtlOd5T-zUhKIf9WQxvgPasNX0Kr1U4TjFj8ZN6XCMF5NM30Z_" }
+    missing_password_params = { username: @ppcp_credentials[:username] }
+    missing_username_params = { password: @ppcp_credentials[:password] }
 
     @headers = { "Authorization": "bearer #{ access_token }", "Content-Type": "application/json" }
     @body    = body
@@ -1233,8 +1232,8 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
   def user_credentials
     {
-        username: "ASs8Osqge6KT3OdLtkNhD20VP8lsrqRUlRjLo-e5s75SHz-2ffMMzCos_odQGjGYpPcGlxJVQ5fXMz9q",
-        password: "EKj_bMZn0CkOhOvFwJMX2WwhtCq2A0OtlOd5T-zUhKIf9WQxvgPasNX0Kr1U4TjFj8ZN6XCMF5NM30Z_"
+        username: @ppcp_credentials[:username],
+        password: @ppcp_credentials[:password]
     }
   end
 

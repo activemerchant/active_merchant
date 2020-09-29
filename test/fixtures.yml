@@ -1318,3 +1318,7 @@ worldpay_us:
   acctid: MPNAB
   subid: SPREE
   merchantpin: "1234567890"
+
+ppcp:
+  username: "ASs8Osqge6KT3OdLtkNhD20VP8lsrqRUlRjLo-e5s75SHz-2ffMMzCos_odQGjGYpPcGlxJVQ5fXMz9q"
+  password: "EKj_bMZn0CkOhOvFwJMX2WwhtCq2A0OtlOd5T-zUhKIf9WQxvgPasNX0Kr1U4TjFj8ZN6XCMF5NM30Z_"
