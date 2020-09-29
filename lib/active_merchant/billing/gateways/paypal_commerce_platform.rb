@@ -5,9 +5,10 @@ module ActiveMerchant #:nodoc:
     class PaypalCommercePlatformGateway < Gateway
       include PaypalCommercePlatformCommon
       
-      self.supported_countries = ['US']
+      self.supported_countries = ['AU', 'AT', 'BE', 'BG', 'CA', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'GR', 'HU', 'IT', 'LV', 'LI', 'LT', 'LU', 'MT', 'NL', 'NO', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE', 'US', 'GB']
       self.homepage_url        = 'https://www.paypal.com/cgi-bin/webscr?cmd=xpt/merchant/ExpressCheckoutIntro-outside'
       self.display_name        = 'PayPal Commerce Platform Checkout'
+      self.default_currency    = 'USD'
 
       def create_order(intent, options)
         requires!(options.merge!(intent.nil? ? { } : { intent: intent}), :intent, :purchase_units)
