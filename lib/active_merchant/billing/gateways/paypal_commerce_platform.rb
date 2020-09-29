@@ -209,7 +209,6 @@ module ActiveMerchant #:nodoc:
 
         add_payment_method(options[:payment_method], post) unless options[:payment_method].nil?
         add_stored_payment_source(options[:stored_payment_source], post) unless options[:stored_payment_source].nil?
-
         skip_empty(post, :application_context)
       end
 
@@ -254,7 +253,6 @@ module ActiveMerchant #:nodoc:
 
           post[key][:platform_fees] << platform_fee_hsh
         end
-
         skip_empty(post, key)
       end
 
@@ -267,7 +265,6 @@ module ActiveMerchant #:nodoc:
         obj_hsh[:payee] = { }
         obj_hsh[:payee][:merchant_id]         = payee_obj[:merchant_id] unless payee_obj[:merchant_id].nil?
         obj_hsh[:payee][:email_address]       = payee_obj[:email_address] unless payee_obj[:email_address].nil?
-
         skip_empty(obj_hsh, :payee)
       end
 
@@ -385,14 +382,30 @@ module ActiveMerchant #:nodoc:
         post[:card][:number]        = card_details[:number]
         post[:card][:expiry]        = card_details[:expiry]
         post[:card][:security_code] = card_details[:security_code] unless card_details[:security_code].nil?
-
         add_billing_address(card_details[:billing_address], post) unless card_details[:billing_address].nil?
+
+        verify_card(post[:card])
+        post
+      end
+
+      def verify_card(card)
+        defaults = {
+            number: card[:number],
+            first_name: card[:name],
+            last_name: card[:name],
+            verification_value: card[:security_code],
+            month: card[:expiry].split("-")[1].to_i,
+            year: card[:expiry].split("-")[0].to_i
+        }
+        @visa_card = ActiveMerchant::Billing::CreditCard.new(defaults)
+        raise "Invalid Credit Card Format. Message: Missing #{@visa_card.validate}" unless @visa_card.validate.empty?
       end
 
       def prepare_request_to_get_agreement_tokens(post, options)
         requires!(options, :payer, :plan)
         post[:description]            = options[:description] unless options[:description].nil?
         post[:merchant_custom_data]   = options[:merchant_custom_data] unless options[:merchant_custom_data].nil?
+
         add_payer(post, options[:payer])
         add_plan(post, options[:plan])
         add_billing_agreement_shipping_address(post, options[:shipping_address], key = :shipping_address) unless options[:shipping_address].nil?
