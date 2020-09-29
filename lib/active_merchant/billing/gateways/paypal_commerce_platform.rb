@@ -77,7 +77,7 @@ module ActiveMerchant #:nodoc:
           requires!(update, :op, :path, :value)
 
           update_hsh = { }
-          update_hsh[:op]    = update[:op]
+          update_hsh[:op]    = update[:op] if ALLOWED_OP_PATCH.include?(update[:op])
           update_hsh[:path]  = update[:path]
           update_hsh[:from]  = update[:from] unless update[:from].nil?
 
@@ -172,7 +172,6 @@ module ActiveMerchant #:nodoc:
         post[:purchase_units] = []
 
         options.map do |purchase_unit|
-          requires!(purchase_unit, :amount)
           post[:purchase_units] << add_purchase_unit(purchase_unit)
         end
 
@@ -180,6 +179,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_purchase_unit(purchase_unit)
+        requires!(purchase_unit, :amount)
         purchase_unit_hsh = {  }
         purchase_unit_hsh[:reference_id]      = purchase_unit[:reference_id] unless purchase_unit[:reference_id].nil?
         purchase_unit_hsh[:description]       = purchase_unit[:description] unless purchase_unit[:description].nil?
@@ -201,47 +201,48 @@ module ActiveMerchant #:nodoc:
         post[:application_context]                      = { }
         post[:application_context][:return_url]         = options[:return_url] unless options[:return_url].nil?
         post[:application_context][:cancel_url]         = options[:cancel_url] unless options[:cancel_url].nil?
-        post[:application_context][:landing_page]       = options[:landing_page] unless options[:landing_page].nil?
+        post[:application_context][:landing_page]       = options[:landing_page] unless options[:landing_page].nil? || !ALLOWED_LANDING_PAGE.include?(options[:landing_page])
         post[:application_context][:locale]             = options[:locale] unless options[:locale].nil?
-        post[:application_context][:user_action]        = options[:user_action] unless options[:user_action].nil?
+        post[:application_context][:user_action]        = options[:user_action] unless options[:user_action].nil? || !ALLOWED_USER_ACTION.include?(options[:user_action])
         post[:application_context][:brand_name]         = options[:brand_name] unless options[:brand_name].nil?
-        post[:application_context][:shipping_preference]= options[:shipping_preference] unless options[:shipping_preference].nil?
+        post[:application_context][:shipping_preference]= options[:shipping_preference] unless options[:shipping_preference].nil? || !ALLOWED_SHIPPING_PREFERENCE.include?(options[:shipping_preference])
 
         add_payment_method(options[:payment_method], post) unless options[:payment_method].nil?
         add_stored_payment_source(options[:stored_payment_source], post) unless options[:stored_payment_source].nil?
-
         skip_empty(post, :application_context)
       end
 
       def add_stored_payment_source(options, post)
+        requires!(options, :payment_initiator, :payment_type)
         post[:stored_payment_source] = { }
-        post[:stored_payment_source][:payment_initiator] = options[:payment_initiator]
-        post[:stored_payment_source][:payment_type] = options[:payment_type]
-        post[:stored_payment_source][:usage] = options[:usage]
+        post[:stored_payment_source][:payment_initiator] = options[:payment_initiator] if ALLOWED_PAYMENT_INITIATOR.include?(options[:payment_initiator])
+        post[:stored_payment_source][:payment_type] = options[:payment_type] if ALLOWED_PAYMENT_TYPE.include?(options[:payment_type])
+        post[:stored_payment_source][:usage] = options[:usage] if ALLOWED_USAGE.include?(options[:usage])
         add_network_transaction_reference(options[:previous_network_transaction_reference], post)
         skip_empty(post, :stored_payment_source)
       end
 
       def add_network_transaction_reference(options, post)
+        requires!(options, :id, :network)
         post[:previous_network_transaction_reference]           = { }
         post[:previous_network_transaction_reference][:id]      = options[:id]
         post[:previous_network_transaction_reference][:date]    = options[:date]
-        post[:previous_network_transaction_reference][:network] = options[:network]
+        post[:previous_network_transaction_reference][:network] = options[:network] if ALLOWED_NETWORK.include?(options[:network])
         post
       end
 
       def add_payment_method(options, post)
         post[:payment_method] = { }
         post[:payment_method][:payer_selected] = options[:payer_selected]
-        post[:payment_method][:payee_preferred] = options[:payee_preferred]
-        post[:payment_method][:standard_entry_class_code] = options[:standard_entry_class_code]
+        post[:payment_method][:payee_preferred] = options[:payee_preferred] if ALLOWED_PAYEE_PREFERRED.include?(options[:payee_preferred])
+        post[:payment_method][:standard_entry_class_code] = options[:standard_entry_class_code] if ALLOWED_STANDARD_ENTRIES.include?(options[:standard_entry_class_code])
         skip_empty(post, :payment_method)
       end
 
       def add_payment_instruction(options, post, key=:payment_instruction)
         post[key]                     = { }
         post[key][:platform_fees]     = []
-        post[key][:disbursement_mode] = options[:disbursement_mode] unless options[:disbursement_mode].nil?
+        post[key][:disbursement_mode] = options[:disbursement_mode] unless options[:disbursement_mode].nil? || !ALLOWED_DISBURSEMENT_MODE.include(options[:disbursement_mode])
 
         options[:platform_fees].map do |platform_fee|
           requires!(platform_fee, :amount, :payee)
@@ -252,12 +253,11 @@ module ActiveMerchant #:nodoc:
 
           post[key][:platform_fees] << platform_fee_hsh
         end
-
         skip_empty(post, key)
       end
 
       def add_intent(intent, post)
-        post[:intent]  = intent
+        post[:intent]  = intent if ALLOWED_INTENT.include?(intent)
         post
       end
 
@@ -265,7 +265,6 @@ module ActiveMerchant #:nodoc:
         obj_hsh[:payee] = { }
         obj_hsh[:payee][:merchant_id]         = payee_obj[:merchant_id] unless payee_obj[:merchant_id].nil?
         obj_hsh[:payee][:email_address]       = payee_obj[:email_address] unless payee_obj[:email_address].nil?
-
         skip_empty(obj_hsh, :payee)
       end
 
@@ -300,12 +299,11 @@ module ActiveMerchant #:nodoc:
           requires!(item, :name, :quantity, :unit_amount)
 
           items_hsh = { }
-
           items_hsh[:name]     = item[:name]
           items_hsh[:sku]      = item[:sku] unless item[:sku].nil?
           items_hsh[:quantity] = item[:quantity]
           items_hsh[:description] = item[:description]
-          items_hsh[:category] = item[:category] unless item[:category].nil?
+          items_hsh[:category] = item[:category] unless item[:category].nil? || !ALLOWED_ITEM_CATEGORY.include?(item[:category])
 
           add_amount(item[:unit_amount], items_hsh, :unit_amount)
           add_amount(item[:tax], items_hsh, :tax) unless item[:tax].nil?
@@ -339,7 +337,6 @@ module ActiveMerchant #:nodoc:
         obj_hsh[key][:admin_area_2]   = address[:admin_area_2]
         obj_hsh[key][:postal_code]    = address[:postal_code]
         obj_hsh[key][:country_code]   = address[:country_code]
-
         obj_hsh
       end
 
@@ -352,7 +349,6 @@ module ActiveMerchant #:nodoc:
         obj_hsh[:billing_address][:admin_area_2]   = address[:admin_area_2] unless address[:admin_area_2].nil?
         obj_hsh[:billing_address][:postal_code]    = address[:postal_code] unless address[:postal_code].nil?
         obj_hsh[:billing_address][:country_code]   = address[:country_code] unless address[:country_code].nil?
-
         obj_hsh
       end
 
@@ -373,10 +369,8 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_source(source, post)
         post[:payment_source] = { }
-
         add_customer_card(source[:card], post[:payment_source]) unless source[:card].nil?
         add_token(source[:token], post[:payment_source]) unless source[:token].nil?
-
         skip_empty(post, :payment_source)
       end
 
@@ -388,13 +382,30 @@ module ActiveMerchant #:nodoc:
         post[:card][:number]        = card_details[:number]
         post[:card][:expiry]        = card_details[:expiry]
         post[:card][:security_code] = card_details[:security_code] unless card_details[:security_code].nil?
-
         add_billing_address(card_details[:billing_address], post) unless card_details[:billing_address].nil?
+
+        verify_card(post[:card])
+        post
+      end
+
+      def verify_card(card)
+        defaults = {
+            number: card[:number],
+            first_name: card[:name],
+            last_name: card[:name],
+            verification_value: card[:security_code],
+            month: card[:expiry].split("-")[1].to_i,
+            year: card[:expiry].split("-")[0].to_i
+        }
+        @visa_card = ActiveMerchant::Billing::CreditCard.new(defaults)
+        raise "Invalid Credit Card Format. Message: Missing #{@visa_card.validate}" unless @visa_card.validate.empty?
       end
 
       def prepare_request_to_get_agreement_tokens(post, options)
+        requires!(options, :payer, :plan)
         post[:description]            = options[:description] unless options[:description].nil?
         post[:merchant_custom_data]   = options[:merchant_custom_data] unless options[:merchant_custom_data].nil?
+
         add_payer(post, options[:payer])
         add_plan(post, options[:plan])
         add_billing_agreement_shipping_address(post, options[:shipping_address], key = :shipping_address) unless options[:shipping_address].nil?
@@ -403,15 +414,15 @@ module ActiveMerchant #:nodoc:
 
       def add_payer(obj_hsh, payer)
         obj_hsh[:payer] = { }
-        obj_hsh[:payer][:payment_method] = payer[:payment_method]
+        obj_hsh[:payer][:payment_method] = payer[:payment_method] if ALLOWED_PAYMENT_METHOD.include?(payer[:payment_method])
         add_billing_agreement_payer_info_details(options[:payer_info], post) unless options[:payer_info].nil?
         skip_empty(obj_hsh, :payer)
       end
 
       def add_plan(obj_hsh, options)
-        requires!(options, :type, :merchant_preferences)
+        requires!(options, :type)
         obj_hsh[:plan]                              = { }
-        obj_hsh[:plan][:type]                       = options[:type]
+        obj_hsh[:plan][:type]                       = options[:type] if ALLOWED_PLAN_TYPE.include?(options[:type])
         add_merchant_preferences(obj_hsh[:plan], options[:merchant_preferences])
         obj_hsh
       end
@@ -421,14 +432,14 @@ module ActiveMerchant #:nodoc:
         obj_hsh[:merchant_preferences]       = { }
         obj_hsh[:merchant_preferences][:return_url]                 = options[:return_url]
         obj_hsh[:merchant_preferences][:cancel_url]                 = options[:cancel_url]
-        obj_hsh[:merchant_preferences][:accepted_pymt_type]         = options[:accepted_pymt_type] unless options[:accepted_pymt_type].nil?
+        obj_hsh[:merchant_preferences][:accepted_pymt_type]         = options[:accepted_pymt_type] unless options[:accepted_pymt_type].nil? || !ALLOWED_ACCEPT_PAYMENT_TYPE.include?(options[:accepted_pymt_type])
         obj_hsh[:merchant_preferences][:skip_shipping_address]      = options[:skip_shipping_address]
         obj_hsh[:merchant_preferences][:immutable_shipping_address] = options[:immutable_shipping_address] unless options[:immutable_shipping_address].nil?
         obj_hsh[:merchant_preferences][:experience_id]              = options[:experience_id] unless options[:experience_id].nil?
         obj_hsh[:merchant_preferences][:notify_url]                 = options[:notify_url] unless options[:notify_url].nil?
-        obj_hsh[:merchant_preferences][:external_selected_funding_instrument_type]              = options[:external_selected_funding_instrument_type] unless options[:external_selected_funding_instrument_type].nil?
+        obj_hsh[:merchant_preferences][:external_selected_funding_instrument_type]              = options[:external_selected_funding_instrument_type] unless options[:external_selected_funding_instrument_type].nil? || !ALLOWED_EXTERNAL_FUNDING.include?(options[:external_selected_funding_instrument_type])
 
-        add_expected_legal_country_codes(options[:expected_legal_country_codes], obj_hsh) unless options[:expected_legal_country_codes].nil?
+        add_accepted_legal_country_codes(options[:accepted_legal_country_codes], obj_hsh) unless options[:accepted_legal_country_codes].nil?
         obj_hsh
       end
 
@@ -450,7 +461,7 @@ module ActiveMerchant #:nodoc:
         requires!(options, :id, :type)
         post[:token]            = { }
         post[:token][:id]       = options[:id]
-        post[:token][:type]     = options[:type]
+        post[:token][:type]     = options[:type] if ALLOWED_TOKEN_TYPE.include?(options[:type])
         post
       end
 
@@ -472,12 +483,11 @@ module ActiveMerchant #:nodoc:
 
       def add_order_payer(options, post)
         post[:payer] = { }
-        add_payer_name(options[:name], post)
-
         post[:payer][:email_address] = options[:email_address]
         post[:payer][:payer_id] = options[:payer_id]
         post[:payer][:birth_date] = options[:birth_date]
 
+        add_payer_name(options[:name], post)
         add_phone_number(options[:phone], post)
         add_tax_info(options[:tax_info], post)
         add_address(options[:address], post)
@@ -485,7 +495,7 @@ module ActiveMerchant #:nodoc:
 
       def add_phone_number(options, post)
         post[:phone] = { }
-        post[:phone][:phone_type] = options[:phone_type]
+        post[:phone][:phone_type] = options[:phone_type] if ALLOWED_PHONE_TYPE.include?(options[:phone_type])
         post[:phone][:phone_number] = { }
         post[:phone][:phone_number][:national_number] = options[:phone_number][:national_number]
         post
@@ -494,7 +504,7 @@ module ActiveMerchant #:nodoc:
       def add_tax_info(options, post)
         post[:tax_info]               = { }
         post[:tax_info][:tax_id]      = options[:tax_id]
-        post[:tax_info][:tax_id_type] = options[:tax_id_type]
+        post[:tax_info][:tax_id_type] = options[:tax_id_type] if ALLOWED_TAX_TYPE.include?(options[:tax_id_type])
         post
       end
 
@@ -529,10 +539,11 @@ module ActiveMerchant #:nodoc:
         post
       end
 
-      def add_expected_legal_country_codes(options, post)
-        post[:expected_legal_country_codes] = { }
-        post[:expected_legal_country_codes][:country_code] = ""
-        post[:expected_legal_country_codes][:country_code] = options[:country_code] unless options[:country_code].nil?
+      def add_accepted_legal_country_codes(options, post)
+        post[:accepted_legal_country_codes] = [ ]
+        options[:country_code].each do |country_code|
+          post[:accepted_legal_country_codes] << country_code
+        end
         post
       end
     end
