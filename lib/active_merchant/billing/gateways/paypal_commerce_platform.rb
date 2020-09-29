@@ -285,12 +285,6 @@ module ActiveMerchant #:nodoc:
         post
       end
 
-      def add_name(options, post, key=:value)
-        post[key] = { }
-        post[key][:full_name] = options[:full_name]
-        post
-      end
-
       def add_breakdown_for_amount(options, post, key)
         post[key][:breakdown] = { }
         options.each do |item, _|
@@ -329,10 +323,10 @@ module ActiveMerchant #:nodoc:
         skip_empty(post, :shipping)
       end
 
-      def add_name(options, post)
-        post[:name] = { }
-        post[:name][:full_name] = options[:full_name]
-        skip_empty(post, :name)
+      def add_name(options, post, key=:name)
+        post[key] = { }
+        post[key][:full_name] = options[:full_name]
+        skip_empty(post[key], :full_name)
       end
 
       def add_shipping_address(address, obj_hsh, key = :address)
