@@ -23,7 +23,7 @@ module ActiveMerchant #:nodoc:
         commit(:post, "v2/checkout/orders", post, options[:headers])
       end
 
-      def get_token(options)
+      def get_access_token(options)
         requires!(options[:authorization], :username, :password)
         prepare_request_to_get_access_token("#{ base_url }/v1/oauth2/token", options)
       end
@@ -528,13 +528,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_billing_agreement_payer_info_details(options, post)
-        post[:payer_info] = { }
+        post[:payer_info]         = { }
         post[:payer_info][:email] = options[:email]
-        post[:payer_info][:suffix] = options[:suffix]
-        post[:payer_info][:first_name] = options[:first_name]
+        post[:payer_info][:suffix]= options[:suffix]
+        post[:payer_info][:first_name]= options[:first_name]
         post[:payer_info][:last_name] = options[:last_name]
-        post[:payer_info][:payer_id] = options[:payer_id]
-        post[:payer_info][:phone] = options[:phone]
+        post[:payer_info][:payer_id]  = options[:payer_id]
+        post[:payer_info][:phone]     = options[:phone]
 
         add_billing_agreement_shipping_address(post,options[:billing_address], :billing_address)
         post

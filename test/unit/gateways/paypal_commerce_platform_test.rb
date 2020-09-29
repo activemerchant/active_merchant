@@ -11,7 +11,7 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
     params       = user_credentials
     options      = { "Content-Type": "application/json", authorization: params }
 
-    access_token = @gateway.get_token(options)
+    access_token = @gateway.get_access_token(options)
 
     @headers     = { "Authorization": access_token, "Content-Type": "application/json" }
     @body        = body

@@ -7,7 +7,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @ppcp_credentials        = fixtures(:ppcp)
 
     options                 = { "Content-Type": "application/json", authorization: user_credentials }
-    access_token            = @gateway.get_token(options)
+    access_token            = @gateway.get_access_token(options)
     missing_password_params = { username: @ppcp_credentials[:username] }
     missing_username_params = { password: @ppcp_credentials[:password] }
 
@@ -58,7 +58,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
   def test_access_token
     options       = { "Content-Type": "application/json", authorization: user_credentials }
-    access_token  = @gateway.get_token(options)
+    access_token  = @gateway.get_access_token(options)
     # assert access_token.include?("basic")
     assert !access_token.nil?
   end
@@ -102,19 +102,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     success_status_assertions(response, "COMPLETED")
   end
 
-  def test_capture_order_for_duplicate_invoice_id
-    response = create_order("CAPTURE")
-    order_id = response.params["id"]
-    @card_order_options[:headers].merge!({ "PayPal-Mock-Response": "{\"mock_application_codes\": \"DUPLICATE_INVOICE_ID\"}"})
-    response = @gateway.capture(order_id, @card_order_options)
-
-    server_side_failure_assertions(response,
-                                   "UNPROCESSABLE_ENTITY",
-                                   "DUPLICATE_INVOICE_ID",
-                                   "The requested action could not be completed, was semantically incorrect, or failed business validation."
-    )
-  end
-
   def test_create_order_for_internal_server_error
     options[:headers].merge!({ "PayPal-Mock-Response": "{\"mock_application_codes\": \"INTERNAL_SERVER_ERROR\"}"})
     response = @gateway.create_order("CAPTURE", options)
@@ -127,8 +114,10 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   end
 
   def test_capture_order_for_invalid_request
-    options[:headers].merge!({ "PayPal-Mock-Response": "{\"mock_application_codes\": \"INVALID_PARAMETER_VALUE\"}"})
-    response = @gateway.create_order("CAPTURE", options)
+    response        = @gateway.create_order("CAPTURE", options)
+    order_id        = response.params["id"]
+    @card_order_options[:headers].merge!({ "PayPal-Mock-Response": "{\"mock_application_codes\": \"INVALID_PARAMETER_VALUE\"}"})
+    response        = @gateway.capture(order_id, @card_order_options)
 
     server_side_failure_assertions(response,
                                    "INVALID_REQUEST",
@@ -478,14 +467,14 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   def test_missing_password_argument_to_get_access_token
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: password"
-      @gateway.get_token(@get_token_missing_password_options)
+      @gateway.get_access_token(@get_token_missing_password_options)
     end
   end
 
   def test_missing_username_argument_to_get_access_token
     assert_raise(ArgumentError) do
       puts "*** ArgumentError Exception: Missing required parameter: username"
-      @gateway.get_token(@get_token_missing_username_options)
+      @gateway.get_access_token(@get_token_missing_username_options)
     end
   end
 
