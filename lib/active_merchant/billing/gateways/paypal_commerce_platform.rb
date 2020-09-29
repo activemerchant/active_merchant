@@ -15,7 +15,7 @@ module ActiveMerchant #:nodoc:
         post = { }
         add_intent(intent, post)
         add_purchase_units(options[:purchase_units], post)
-        # add_payment_instruction(options[:payment_instruction], post) unless options[:payment_instruction].blank?
+        add_payment_instruction(options[:payment_instruction], post) unless options[:payment_instruction].blank?
         add_application_context(options[:application_context], post) unless options[:application_context].blank?
         add_order_payer(options[:payer], post) unless options[:payer].blank?
 
@@ -25,7 +25,6 @@ module ActiveMerchant #:nodoc:
       def get_token(options)
         requires!(options[:authorization], :username, :password)
         prepare_request_to_get_access_token("#{ base_url }/v1/oauth2/token", options)
-        # prepare_request_for_get_access_token(options)
       end
 
       def authorize(order_id, options)
@@ -278,7 +277,6 @@ module ActiveMerchant #:nodoc:
         post[key][:value]         = amount[:value]
 
         add_breakdown_for_amount(amount[:breakdown], post, key) unless amount[:breakdown].blank?
-
         post
       end
 
@@ -490,7 +488,6 @@ module ActiveMerchant #:nodoc:
         post[:phone][:phone_type] = options[:phone_type]
         post[:phone][:phone_number] = { }
         post[:phone][:phone_number][:national_number] = options[:phone_number][:national_number]
-
         post
       end
 
@@ -509,7 +506,6 @@ module ActiveMerchant #:nodoc:
         post[:address][:admin_area_1]     = options[:admin_area_1]
         post[:address][:postal_code]      = options[:postal_code]
         post[:address][:country_code]     = options[:country_code]
-
         post
       end
 
@@ -517,7 +513,6 @@ module ActiveMerchant #:nodoc:
         post[:name]                 = { }
         post[:name][:given_name]    = options[:given_name]
         post[:name][:surname]       = options[:surname]
-
         post
       end
 
@@ -531,7 +526,6 @@ module ActiveMerchant #:nodoc:
         post[:payer_info][:phone] = options[:phone]
 
         add_billing_agreement_shipping_address(post,options[:billing_address], :billing_address)
-
         post
       end
 
