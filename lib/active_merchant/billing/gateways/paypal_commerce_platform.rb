@@ -273,7 +273,7 @@ module ActiveMerchant #:nodoc:
         requires!(amount, :currency_code, :value)
 
         post[key]                 = { }
-        post[key][:currency_code] = amount[:currency_code]
+        post[key][:currency_code] = amount[:currency_code] || currency(amount[:value])
         post[key][:value]         = amount[:value]
 
         add_breakdown_for_amount(amount[:breakdown], post, key) unless amount[:breakdown].blank?
