@@ -5,7 +5,8 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
 
   def setup
 
-    @gateway     = ActiveMerchant::Billing::PaypalCommercePlatformGateway.new
+    @gateway          = ActiveMerchant::Billing::PaypalCommercePlatformGateway.new
+    @ppcp_credentials = fixtures(:ppcp)
 
     params       = user_credentials
     options      = { "Content-Type": "application/json", authorization: params }
@@ -1534,8 +1535,8 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
 
   def user_credentials
     {
-        username: "ASs8Osqge6KT3OdLtkNhD20VP8lsrqRUlRjLo-e5s75SHz-2ffMMzCos_odQGjGYpPcGlxJVQ5fXMz9q",
-        password: "EKj_bMZn0CkOhOvFwJMX2WwhtCq2A0OtlOd5T-zUhKIf9WQxvgPasNX0Kr1U4TjFj8ZN6XCMF5NM30Z_"
+        username: @ppcp_credentials[:username],
+        password: @ppcp_credentials[:password]
     }
   end
 
