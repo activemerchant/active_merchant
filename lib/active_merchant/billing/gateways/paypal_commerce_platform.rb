@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PaypalCommercePlatformGateway < Gateway
       include PaypalCommercePlatformCommon
-
+      
       self.supported_countries = ['US']
       self.homepage_url        = 'https://www.paypal.com/cgi-bin/webscr?cmd=xpt/merchant/ExpressCheckoutIntro-outside'
       self.display_name        = 'PayPal Commerce Platform Checkout'
