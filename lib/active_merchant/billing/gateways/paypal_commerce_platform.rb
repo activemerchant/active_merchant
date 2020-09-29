@@ -376,13 +376,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_card(card_details, post)
-        requires!(card_details, :number, :expiry)
+        requires!(card_details, :number, :expiry, :name, :security_code)
 
         post[:card] = { }
-        post[:card][:name]          = card_details[:name] unless card_details[:name].nil?
+        post[:card][:name]          = card_details[:name]
         post[:card][:number]        = card_details[:number]
         post[:card][:expiry]        = card_details[:expiry]
-        post[:card][:security_code] = card_details[:security_code] unless card_details[:security_code].nil?
+        post[:card][:security_code] = card_details[:security_code]
         add_billing_address(card_details[:billing_address], post) unless card_details[:billing_address].nil?
 
         verify_card(post[:card])
