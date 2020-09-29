@@ -11,7 +11,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     missing_password_params = { username: @ppcp_credentials[:username] }
     missing_username_params = { password: @ppcp_credentials[:password] }
 
-    @headers = { "Authorization": "bearer #{ access_token }", "Content-Type": "application/json" }
+    @headers = { "Authorization": "Bearer #{ access_token }", "Content-Type": "application/json" }
     @body    = body
 
     @additional_params =  {
@@ -841,6 +841,24 @@ class PaypalExpressRestTest < Test::Unit::TestCase
       @gateway.capture(order_id, billing_body)
     end
     @body = body
+  end
+  def test_transcript_scrubbing
+    @three_ds_credit_card = credit_card('4000000000003220',
+                                        verification_value: '737',
+                                        month: 10,
+                                        year: 2020
+    )
+
+    response = create_order("CAPTURE")
+    order_id = response.params["id"]
+
+    transcript = capture_transcript(@gateway) do
+      @gateway.capture(order_id, @card_order_options)
+    end
+
+    transcript = @gateway.scrub(transcript)
+    assert_scrubbed(@three_ds_credit_card.number, transcript)
+    assert_scrubbed(@three_ds_credit_card.verification_value, transcript)
   end
 
   private

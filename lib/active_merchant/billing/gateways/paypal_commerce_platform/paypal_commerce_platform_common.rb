@@ -128,6 +128,18 @@ module ActiveMerchant
         return_response(http, request)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+            gsub(%r((Authorization: Bearer )\w+), '\1[FILTERED]').
+            gsub(%r((headers\[username\]=)\d+), '\1[FILTERED]').
+            gsub(%r((headers\[password\]=)\d+), '\1[FILTERED]').
+            gsub(%r((card\[cvc\]=)\d+), '\1[FILTERED]').
+            gsub(%r((card\[number\]=)\d+), '\1[FILTERED]')
+      end
     end
   end
 end
