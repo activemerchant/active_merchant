@@ -55,7 +55,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
     @get_token_missing_username_options = { "Content-Type": "application/json", authorization: missing_username_params }
 
-    @approved_billing_token = "BA-18C40743NV1205515"
+    @approved_billing_token = "BA-5WU2336364357173P"
 
   end
 
@@ -91,28 +91,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     success_status_assertions(response, "COMPLETED")
   end
 
-  def test_capture_order_for_duplicate_invoice_id
-    response = create_order("CAPTURE")
-    order_id = response.params["id"]
-    @card_order_options[:headers].merge!({ "PayPal-Mock-Response": "{\"mock_application_codes\": \"DUPLICATE_INVOICE_ID\"}"})
-
-    response = @gateway.capture(order_id, @card_order_options)
-    assert_equal response.params["name"], "UNPROCESSABLE_ENTITY"
-    assert !response.params["name"].nil?
-    assert response.params["details"].first["issue"] == "DUPLICATE_INVOICE_ID"
-  end
-
-  def test_capture_order_for_internal_server_error_issue
-    response = create_order("CAPTURE")
-    order_id = response.params["id"]
-    @card_order_options[:headers].merge!({ "PayPal-Mock-Response": "{\"mock_application_codes\": \"INTERNAL_SERVER_ERROR\"}"})
-    response = @gateway.capture(order_id, @card_order_options)
-
-    assert_equal response.params["name"], "INTERNAL_SERVER_ERROR"
-    assert !response.params["name"].nil?
-    assert response.params["name"] == "INTERNAL_SERVER_ERROR"
-    assert response.params["message"] == "An internal server error occurred."
-  end
   def test_capture_order_with_payment_instruction_through_card
     response = create_order("CAPTURE", "PPCP")
     order_id = response.params["id"]
@@ -125,6 +103,84 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     order_id = response.params["id"]
     response = @gateway.authorize(order_id, @card_order_options)
     success_status_assertions(response, "COMPLETED")
+  end
+
+  def test_capture_order_for_duplicate_invoice_id
+    response = create_order("CAPTURE")
+    order_id = response.params["id"]
+    @card_order_options[:headers].merge!({ "PayPal-Mock-Response": "{\"mock_application_codes\": \"DUPLICATE_INVOICE_ID\"}"})
+    response = @gateway.capture(order_id, @card_order_options)
+
+    server_side_failure_assertions(response,
+                                   "UNPROCESSABLE_ENTITY",
+                                   "DUPLICATE_INVOICE_ID",
+                                   "The requested action could not be completed, was semantically incorrect, or failed business validation."
+    )
+  end
+
+  def test_create_order_for_internal_server_error
+    options[:headers].merge!({ "PayPal-Mock-Response": "{\"mock_application_codes\": \"INTERNAL_SERVER_ERROR\"}"})
+    response = @gateway.create_order("CAPTURE", options)
+
+    server_side_failure_assertions(response,
+                                   "INTERNAL_SERVER_ERROR",
+                                   nil,
+                                   "An internal server error occurred."
+    )
+  end
+
+  def test_capture_order_for_invalid_request
+    options[:headers].merge!({ "PayPal-Mock-Response": "{\"mock_application_codes\": \"INVALID_PARAMETER_VALUE\"}"})
+    response = @gateway.create_order("CAPTURE", options)
+
+    server_side_failure_assertions(response,
+                                   "INVALID_REQUEST",
+                                   nil,
+                                   "The request is not well-formed, is syntactically incorrect, or violates schema."
+    )
+  end
+
+  def test_authorize_order_failure_on_missing_required_parameters
+    response = create_order("AUTHORIZE")
+    order_id = response.params["id"]
+    @card_order_options[:headers].merge!({ "PayPal-Mock-Response": "{\"mock_application_codes\": \"MISSING_REQUIRED_PARAMETER\"}"})
+    response = @gateway.authorize(order_id, @card_order_options)
+
+    server_side_failure_assertions(response,
+                                   "INVALID_REQUEST",
+                                   nil,
+                                   "The request is not well-formed, is syntactically incorrect, or violates schema."
+    )
+  end
+
+  def test_partial_refund_not_allowed
+    response        = create_order("CAPTURE")
+    order_id        = response.params["id"]
+    response        = @gateway.capture(order_id, @card_order_options)
+    capture_id      = response.params["purchase_units"][0]["payments"]["captures"][0]["id"]
+    options[:headers].merge!("PayPal-Mock-Response": "{\"mock_application_codes\": \"PARTIAL_REFUND_NOT_ALLOWED\"}")
+    response        = @gateway.refund(capture_id, options)
+
+    server_side_failure_assertions(response,
+                                   "UNPROCESSABLE_ENTITY",
+                                   "PARTIAL_REFUND_NOT_ALLOWED",
+                                   "The requested action could not be completed, was semantically incorrect, or failed business validation."
+    )
+  end
+
+  def test_transaction_refused_for_void_authorized
+    response         = create_order("AUTHORIZE")
+    order_id         = response.params["id"]
+    response         = @gateway.authorize(order_id, @card_order_options)
+    authorization_id = response.params["purchase_units"][0]["payments"]["authorizations"][0]["id"]
+    options[:headers].merge!("PayPal-Mock-Response": "{\"mock_application_codes\": \"PREVIOUSLY_VOIDED\"}")
+    response    = @gateway.void(authorization_id, options)
+
+    server_side_failure_assertions(response,
+                                   "UNPROCESSABLE_ENTITY",
+                                   "PREVIOUSLY_VOIDED",
+                                   "The requested action could not be performed, semantically incorrect, or failed business validation."
+    )
   end
 
   def test_capture_authorized_order_with_card
@@ -317,7 +373,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   def test_replace_update_purchase_unit_in_update_body
     response = create_order("CAPTURE")
     order_id = response.params["id"]
-    @body    = {body: update_purchase_unit_body}
+    @body    = { body: update_purchase_unit_body }
     response = @gateway.update_order(order_id, options)
     success_empty_assertions(response)
     @body = body
@@ -809,7 +865,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   end
 
   def options
-    { headers: @headers }.merge(body)
+    { headers: @headers }.merge(@body)
   end
 
   def body
@@ -1184,6 +1240,13 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     }
   end
 
+  def invalid_user_credentials
+    {
+        username: "ASs8Osqge6KT3OdLtkNhD20VP8lsrqRUlRjLo-e5s75SHz-2ffMMzCos_odQGjGYpPcGlxJVQ5fXM==",
+        password: "EKj_bMZn0CkOhOvFwJMX2WwhtCq2A0OtlOd5T-zUhKIf9WQxvgPasNX0Kr1U4TjFj8ZN6XCMF5NM3=="
+    }
+  end
+
   # Assertions private methods
 
   def success_status_assertions(response, status)
@@ -1191,6 +1254,13 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     assert_equal status, response.params["status"]
     assert !response.params["id"].nil?
     assert !response.params["links"].nil?
+  end
+
+  def server_side_failure_assertions(response, name, issue_msg, message)
+    assert !response.params["name"].nil?
+    assert response.params["name"] == name
+    assert response.params["details"][0]["issue"] == issue_msg unless issue_msg.nil?
+    assert response.params["message"] == message
   end
 
   def success_empty_assertions(response)
