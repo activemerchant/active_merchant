@@ -21,6 +21,7 @@
 * Update BIN ranges for Elo cardtype [cdmackeyfree] #3769
 * Orbital: Resolve CardIndicators issue [meagabeth] #3771
 * Adyen: Add subMerchant fields [naashton] #3772
+* PayPal Express: reduce param requirements [shasum] #3773
 
 == Version 1.114.0
 * BlueSnap: Add address1,address2,phone,shipping_* support #3749
