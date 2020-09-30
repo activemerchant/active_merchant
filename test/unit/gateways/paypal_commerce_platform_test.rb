@@ -250,7 +250,7 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
 
   def post_scrubbed_access_token
     <<-POST_SCRUBBED
-      Authorization: Basic [FILTERED]=
+      Authorization: Basic [FILTERED]
       User-Agent: PostmanRuntime/7.26.5
       Accept: */*
       Cache-Control: no-cache
@@ -278,23 +278,14 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
     Connection: keep-alive
     Content-Length: 212
     Cookie: l7_az=sandbox.slc; X-PP-SILOVER=name%3DLIVE3.WEB.1%26silo_version%3D880%26app%3Dapiplatformproxyserv%26TIME%3D1591643782%26HTTP_X_PP_AZ_LOCATOR%3Dsandbox.slc
-    {
-        "payment_source": {
-            "card": {
-                "name": "John Doe",
-                "number": "4032039317984658",
-                "expiry": "2023-07",
-                "security_code": "111"
-            }
-        }
-    }
+    payment_source[card][name]=John Doe&payment_source[card][number]=4032039317984658&payment_source[card][expiry]=2023-07&payment_source[card][security_code]=111
     PRE_SCRUBBED
   end
 
   def post_scrubbed_with_card_and_bearer
     <<-POST_SCRUBBED
     Content-Type: application/json
-    Authorization: Bearer [FILTERED=
+    Authorization: Bearer [FILTERED]
     Prefer: return=representation
     User-Agent: PostmanRuntime/7.26.5
     Accept: */*
@@ -305,16 +296,7 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
     Connection: keep-alive
     Content-Length: 212
     Cookie: l7_az=sandbox.slc; X-PP-SILOVER=name%3DLIVE3.WEB.1%26silo_version%3D880%26app%3Dapiplatformproxyserv%26TIME%3D1591643782%26HTTP_X_PP_AZ_LOCATOR%3Dsandbox.slc
-    {
-        "payment_source": {
-            "card": {
-                "name": "John Doe",
-                "number": "[FILTERED]=",
-                "expiry": "[FILTERED]=",
-                "security_code": "[FILTERED]="
-            }
-        }
-    }
+    payment_source[card][name]=John Doe&payment_source[card][number]=[FILTERED]&payment_source[card][expiry]=[FILTERED]&payment_source[card][security_code]=[FILTERED]
     POST_SCRUBBED
   end
 
