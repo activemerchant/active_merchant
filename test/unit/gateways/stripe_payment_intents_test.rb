@@ -132,6 +132,24 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     end.respond_with(successful_create_intent_response)
   end
 
+  def test_on_behalf_of
+    on_behalf_of = 'account_27704'
+
+    options = @options.merge(
+      on_behalf_of: on_behalf_of
+    )
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.create_intent(@amount, @visa_token, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_no_match(/transfer_data\[destination\]/, data)
+      assert_no_match(/transfer_data\[amount\]/, data)
+      assert_match(/on_behalf_of=#{on_behalf_of}/, data)
+      assert_no_match(/transfer_group/, data)
+      assert_no_match(/application_fee_amount/, data)
+    end.respond_with(successful_create_intent_response)
+  end
+
   def test_failed_payment_methods_post
     @gateway.expects(:ssl_request).returns(failed_payment_method_response)
 
