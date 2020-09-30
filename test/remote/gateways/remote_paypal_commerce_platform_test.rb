@@ -4,7 +4,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   def setup
     Base.mode               = :test
     @gateway                = ActiveMerchant::Billing::PaypalCommercePlatformGateway.new
-    @ppcp_credentials        = fixtures(:ppcp)
+    @ppcp_credentials       = fixtures(:ppcp)
 
     options                 = { "Content-Type": "application/json", authorization: user_credentials }
     access_token            = @gateway.get_access_token(options)
@@ -59,7 +59,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   def test_access_token
     options       = { "Content-Type": "application/json", authorization: user_credentials }
     access_token  = @gateway.get_access_token(options)
-    # assert access_token.include?("basic")
     assert !access_token.nil?
   end
 
@@ -106,10 +105,11 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     options[:headers].merge!({ "PayPal-Mock-Response": "{\"mock_application_codes\": \"INTERNAL_SERVER_ERROR\"}"})
     response = @gateway.create_order("CAPTURE", options)
 
-    server_side_failure_assertions(response,
-                                   "INTERNAL_SERVER_ERROR",
-                                   nil,
-                                   "An internal server error occurred."
+    server_side_failure_assertions(
+        response,
+        "INTERNAL_SERVER_ERROR",
+        nil,
+        "An internal server error occurred."
     )
   end
 
@@ -119,10 +119,11 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @card_order_options[:headers].merge!({ "PayPal-Mock-Response": "{\"mock_application_codes\": \"INVALID_PARAMETER_VALUE\"}"})
     response        = @gateway.capture(order_id, @card_order_options)
 
-    server_side_failure_assertions(response,
-                                   "INVALID_REQUEST",
-                                   nil,
-                                   "The request is not well-formed, is syntactically incorrect, or violates schema."
+    server_side_failure_assertions(
+        response,
+        "INVALID_REQUEST",
+        nil,
+        "The request is not well-formed, is syntactically incorrect, or violates schema."
     )
   end
 
@@ -132,10 +133,11 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @card_order_options[:headers].merge!({ "PayPal-Mock-Response": "{\"mock_application_codes\": \"MISSING_REQUIRED_PARAMETER\"}"})
     response = @gateway.authorize(order_id, @card_order_options)
 
-    server_side_failure_assertions(response,
-                                   "INVALID_REQUEST",
-                                   nil,
-                                   "The request is not well-formed, is syntactically incorrect, or violates schema."
+    server_side_failure_assertions(
+        response,
+        "INVALID_REQUEST",
+        nil,
+        "The request is not well-formed, is syntactically incorrect, or violates schema."
     )
   end
 
@@ -147,10 +149,11 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     options[:headers].merge!("PayPal-Mock-Response": "{\"mock_application_codes\": \"PARTIAL_REFUND_NOT_ALLOWED\"}")
     response        = @gateway.refund(capture_id, options)
 
-    server_side_failure_assertions(response,
-                                   "UNPROCESSABLE_ENTITY",
-                                   "PARTIAL_REFUND_NOT_ALLOWED",
-                                   "The requested action could not be completed, was semantically incorrect, or failed business validation."
+    server_side_failure_assertions(
+        response,
+        "UNPROCESSABLE_ENTITY",
+        "PARTIAL_REFUND_NOT_ALLOWED",
+        "The requested action could not be completed, was semantically incorrect, or failed business validation."
     )
   end
 
@@ -162,10 +165,11 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     options[:headers].merge!("PayPal-Mock-Response": "{\"mock_application_codes\": \"PREVIOUSLY_VOIDED\"}")
     response    = @gateway.void(authorization_id, options)
 
-    server_side_failure_assertions(response,
-                                   "UNPROCESSABLE_ENTITY",
-                                   "PREVIOUSLY_VOIDED",
-                                   "The requested action could not be performed, semantically incorrect, or failed business validation."
+    server_side_failure_assertions(
+        response,
+        "UNPROCESSABLE_ENTITY",
+        "PREVIOUSLY_VOIDED",
+        "The requested action could not be performed, semantically incorrect, or failed business validation."
     )
   end
 
@@ -1390,5 +1394,5 @@ class PaypalExpressRestTest < Test::Unit::TestCase
       ]
     }
   end
-  
+
 end
