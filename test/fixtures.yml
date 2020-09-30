@@ -1322,3 +1322,8 @@ worldpay_us:
 ppcp:
   username: "ASs8Osqge6KT3OdLtkNhD20VP8lsrqRUlRjLo-e5s75SHz-2ffMMzCos_odQGjGYpPcGlxJVQ5fXMz9q"
   password: "EKj_bMZn0CkOhOvFwJMX2WwhtCq2A0OtlOd5T-zUhKIf9WQxvgPasNX0Kr1U4TjFj8ZN6XCMF5NM30Z_"
+  approving_billing_token: "BA-09Y29881X1389923H"
+  card_number: "4032039317984658"
+  cvc: "111"
+  month: "07"
+  year: "2023"

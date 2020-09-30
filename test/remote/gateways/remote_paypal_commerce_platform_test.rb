@@ -34,9 +34,9 @@ class PaypalExpressRestTest < Test::Unit::TestCase
         "payment_source": {
             "card": {
                 "name": "John Doe",
-                "number": "4032039317984658",
-                "expiry": "2023-07",
-                "security_code": "111",
+                "number": @ppcp_credentials[:card_number],
+                "expiry": "#{ @ppcp_credentials[:year] }-#{ @ppcp_credentials[:month] }",
+                "security_code": @ppcp_credentials[:cvc],
                 "billing_address": {
                     "address_line_1": "12312 Port Grace Blvd",
                     "admin_area_2": "La Vista",
@@ -53,7 +53,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
     @get_token_missing_username_options = { "Content-Type": "application/json", authorization: missing_username_params }
 
-    @approved_billing_token = "BA-55S78277CF410190G"
+    @approved_billing_token = @ppcp_credentials[:approving_billing_token]
   end
 
   def test_access_token
