@@ -137,9 +137,7 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
   end
 
   def test_successful_scrub_bearer_and_card
-    puts @gateway.scrub(pre_scrubbed_with_card_and_bearer)
-    puts "DIFF"
-    puts post_scrubbed_with_card_and_bearer
+    assert_equal @gateway.scrub(pre_scrubbed_with_card_and_bearer), post_scrubbed_with_card_and_bearer
   end
 
   def test_failed_update_order_business_validation_error
