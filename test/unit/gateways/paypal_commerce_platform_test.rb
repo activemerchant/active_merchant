@@ -132,6 +132,16 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_scrub_basic
+    assert_equal @gateway.scrub(pre_scrubbed_access_token), post_scrubbed_access_token
+  end
+
+  def test_successful_scrub_bearer_and_card
+    puts @gateway.scrub(pre_scrubbed_with_card_and_bearer)
+    puts "DIFF"
+    puts post_scrubbed_with_card_and_bearer
+  end
+
   def test_failed_update_order_business_validation_error
     @gateway.expects(:ssl_request).times(2).returns(successful_create_capture_order_response, failed_update_order_due_to_business_error_response)
     create = success_create_order_assertions("CAPTURE")
@@ -221,6 +231,92 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
   end
 
   private
+
+  def pre_scrubbed_access_token
+      <<-PRE_SCRUBBED
+      Authorization: Basic QVNzOE9zcWdlNktUM09kTHRrTmhEMjBWUDhsc3JxUlVsUmpMby1lNXM3NVNIei0yZmZNTXpDb3Nfb2RRR2pHWXBQY0dseEpWUTVmWE16OXE6RU5PWks2REVIaXozZlh1bWJwQm1kR3BxbVUzMWZiR050TmdwY3JTbzFLWUFqd013TXZtVVVoRHhEVkJCMUY1NWtiZ2NBTkZhaUc5Z3FBUC0=
+      User-Agent: PostmanRuntime/7.26.5
+      Accept: */*
+      Cache-Control: no-cache
+      Host: api.sandbox.paypal.com
+      Accept-Encoding: gzip, deflate, br
+      Connection: keep-alive
+      Content-Type: application/x-www-form-urlencoded
+      Content-Length: 29
+      Cookie: l7_az=sandbox.slc; X-PP-SILOVER=name%3DLIVE3.WEB.1%26silo_version%3D880%26app%3Dapiplatformproxyserv%26TIME%3D1591643782%26HTTP_X_PP_AZ_LOCATOR%3Dsandbox.slc
+      grant_type: "client_credentials"
+      PRE_SCRUBBED
+  end
+
+  def post_scrubbed_access_token
+    <<-POST_SCRUBBED
+      Authorization: Basic [FILTERED]=
+      User-Agent: PostmanRuntime/7.26.5
+      Accept: */*
+      Cache-Control: no-cache
+      Host: api.sandbox.paypal.com
+      Accept-Encoding: gzip, deflate, br
+      Connection: keep-alive
+      Content-Type: application/x-www-form-urlencoded
+      Content-Length: 29
+      Cookie: l7_az=sandbox.slc; X-PP-SILOVER=name%3DLIVE3.WEB.1%26silo_version%3D880%26app%3Dapiplatformproxyserv%26TIME%3D1591643782%26HTTP_X_PP_AZ_LOCATOR%3Dsandbox.slc
+      grant_type: "client_credentials"
+    POST_SCRUBBED
+  end
+
+  def pre_scrubbed_with_card_and_bearer
+    <<-PRE_SCRUBBED
+    Content-Type: application/json
+    Authorization: Bearer A21AAJwH5ydjeVhl9W8YogWHOe2FCZ_ztKMtpgG9p9V_FP_wgCr9uVZatXKxGxx-MuUIwIg8Ed3wMhS1ubbL4D0AI0UEV0i3g
+    Prefer: return=representation
+    User-Agent: PostmanRuntime/7.26.5
+    Accept: */*
+    Cache-Control: no-cache
+    Postman-Token: 4d319dfc-8ba2-4305-a730-9b1a66c381a2
+    Host: api.sandbox.paypal.com
+    Accept-Encoding: gzip, deflate, br
+    Connection: keep-alive
+    Content-Length: 212
+    Cookie: l7_az=sandbox.slc; X-PP-SILOVER=name%3DLIVE3.WEB.1%26silo_version%3D880%26app%3Dapiplatformproxyserv%26TIME%3D1591643782%26HTTP_X_PP_AZ_LOCATOR%3Dsandbox.slc
+    {
+        "payment_source": {
+            "card": {
+                "name": "John Doe",
+                "number": "4032039317984658",
+                "expiry": "2023-07",
+                "security_code": "111"
+            }
+        }
+    }
+    PRE_SCRUBBED
+  end
+
+  def post_scrubbed_with_card_and_bearer
+    <<-POST_SCRUBBED
+    Content-Type: application/json
+    Authorization: Bearer [FILTERED=
+    Prefer: return=representation
+    User-Agent: PostmanRuntime/7.26.5
+    Accept: */*
+    Cache-Control: no-cache
+    Postman-Token: 4d319dfc-8ba2-4305-a730-9b1a66c381a2
+    Host: api.sandbox.paypal.com
+    Accept-Encoding: gzip, deflate, br
+    Connection: keep-alive
+    Content-Length: 212
+    Cookie: l7_az=sandbox.slc; X-PP-SILOVER=name%3DLIVE3.WEB.1%26silo_version%3D880%26app%3Dapiplatformproxyserv%26TIME%3D1591643782%26HTTP_X_PP_AZ_LOCATOR%3Dsandbox.slc
+    {
+        "payment_source": {
+            "card": {
+                "name": "John Doe",
+                "number": "[FILTERED]=",
+                "expiry": "[FILTERED]=",
+                "security_code": "[FILTERED]="
+            }
+        }
+    }
+    POST_SCRUBBED
+  end
 
   def successful_create_capture_order_response
     <<-RESPONSE
