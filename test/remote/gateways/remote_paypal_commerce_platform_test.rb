@@ -4,7 +4,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   def setup
     Base.mode               = :test
     @gateway                = ActiveMerchant::Billing::PaypalCommercePlatformGateway.new
-    @ppcp_credentials        = fixtures(:ppcp)
+    @ppcp_credentials       = fixtures(:ppcp)
 
     options                 = { "Content-Type": "application/json", authorization: user_credentials }
     access_token            = @gateway.get_access_token(options)
@@ -59,7 +59,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   def test_access_token
     options       = { "Content-Type": "application/json", authorization: user_credentials }
     access_token  = @gateway.get_access_token(options)
-    # assert access_token.include?("basic")
     assert !access_token.nil?
   end
 
@@ -106,10 +105,11 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     options[:headers].merge!({ "PayPal-Mock-Response": "{\"mock_application_codes\": \"INTERNAL_SERVER_ERROR\"}"})
     response = @gateway.create_order("CAPTURE", options)
 
-    server_side_failure_assertions(response,
-                                   "INTERNAL_SERVER_ERROR",
-                                   nil,
-                                   "An internal server error occurred."
+    server_side_failure_assertions(
+        response,
+        "INTERNAL_SERVER_ERROR",
+        nil,
+        "An internal server error occurred."
     )
   end
 
@@ -119,10 +119,11 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @card_order_options[:headers].merge!({ "PayPal-Mock-Response": "{\"mock_application_codes\": \"INVALID_PARAMETER_VALUE\"}"})
     response        = @gateway.capture(order_id, @card_order_options)
 
-    server_side_failure_assertions(response,
-                                   "INVALID_REQUEST",
-                                   nil,
-                                   "The request is not well-formed, is syntactically incorrect, or violates schema."
+    server_side_failure_assertions(
+        response,
+        "INVALID_REQUEST",
+        nil,
+        "The request is not well-formed, is syntactically incorrect, or violates schema."
     )
   end
 
@@ -132,10 +133,11 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @card_order_options[:headers].merge!({ "PayPal-Mock-Response": "{\"mock_application_codes\": \"MISSING_REQUIRED_PARAMETER\"}"})
     response = @gateway.authorize(order_id, @card_order_options)
 
-    server_side_failure_assertions(response,
-                                   "INVALID_REQUEST",
-                                   nil,
-                                   "The request is not well-formed, is syntactically incorrect, or violates schema."
+    server_side_failure_assertions(
+        response,
+        "INVALID_REQUEST",
+        nil,
+        "The request is not well-formed, is syntactically incorrect, or violates schema."
     )
   end
 
@@ -147,10 +149,11 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     options[:headers].merge!("PayPal-Mock-Response": "{\"mock_application_codes\": \"PARTIAL_REFUND_NOT_ALLOWED\"}")
     response        = @gateway.refund(capture_id, options)
 
-    server_side_failure_assertions(response,
-                                   "UNPROCESSABLE_ENTITY",
-                                   "PARTIAL_REFUND_NOT_ALLOWED",
-                                   "The requested action could not be completed, was semantically incorrect, or failed business validation."
+    server_side_failure_assertions(
+        response,
+        "UNPROCESSABLE_ENTITY",
+        "PARTIAL_REFUND_NOT_ALLOWED",
+        "The requested action could not be completed, was semantically incorrect, or failed business validation."
     )
   end
 
@@ -162,10 +165,11 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     options[:headers].merge!("PayPal-Mock-Response": "{\"mock_application_codes\": \"PREVIOUSLY_VOIDED\"}")
     response    = @gateway.void(authorization_id, options)
 
-    server_side_failure_assertions(response,
-                                   "UNPROCESSABLE_ENTITY",
-                                   "PREVIOUSLY_VOIDED",
-                                   "The requested action could not be performed, semantically incorrect, or failed business validation."
+    server_side_failure_assertions(
+        response,
+        "UNPROCESSABLE_ENTITY",
+        "PREVIOUSLY_VOIDED",
+        "The requested action could not be performed, semantically incorrect, or failed business validation."
     )
   end
 
@@ -455,13 +459,30 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     success_status_assertions(response, "COMPLETED")
   end
 
-  def test_update_billing_description_and_merchant_custom
+  def test_update_billing_description_and_merchant_custom_and_notify
     @body      = { "token_id": @approved_billing_token }
     response   = @gateway.create_agreement_for_approval(options)
     billing_id = response.params["id"]
     @body      = { "body": billing_update_body }
     response   = @gateway.update_billing_agreement(billing_id, options)
     success_empty_assertions(response)
+  end
+
+  def test_transcript_scrubbing
+    @three_ds_credit_card = credit_card(
+        '4000000000003220',
+        verification_value: '737',
+        month: 10,
+        year: 2020
+    )
+    response = create_order("CAPTURE")
+    order_id = response.params["id"]
+    transcript = capture_transcript(@gateway) do
+      @gateway.capture(order_id, @card_order_options)
+    end
+    transcript = @gateway.scrub(transcript)
+    assert_scrubbed(@three_ds_credit_card.number, transcript)
+    assert_scrubbed(@three_ds_credit_card.verification_value, transcript)
   end
 
   def test_missing_password_argument_to_get_access_token
@@ -830,24 +851,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
       @gateway.capture(order_id, billing_body)
     end
     @body = body
-  end
-  def test_transcript_scrubbing
-    @three_ds_credit_card = credit_card('4000000000003220',
-                                        verification_value: '737',
-                                        month: 10,
-                                        year: 2020
-    )
-
-    response = create_order("CAPTURE")
-    order_id = response.params["id"]
-
-    transcript = capture_transcript(@gateway) do
-      @gateway.capture(order_id, @card_order_options)
-    end
-
-    transcript = @gateway.scrub(transcript)
-    assert_scrubbed(@three_ds_credit_card.number, transcript)
-    assert_scrubbed(@three_ds_credit_card.verification_value, transcript)
   end
 
   private
@@ -1276,19 +1279,24 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     # Regex for national_number: ^[0-9]{1,14}?$.
     { name: name, email_address: "sb-feqsa3029697@personal.example.com", payer_id: "QYR5Z8XDVJNXQ", phone: phone, birth_date: "1990-08-31", tax_info: tax_info, address: address }
   end
+
   def address
     { address_line_1: "2211 N First Street", address_line_2: "Building 17", admin_area_2: "21 N First Street", admin_area_1: "2211 N First Street", postal_code: "95131", country_code: "US" }
   end
+
   def tax_info
     ## Tax ID Type = Possible values: BR_CPF, BR_CNPJ
     { tax_id: "000000000", tax_id_type: "BR_CPF" }
   end
+
   def phone
     { phone_type: "FAX", phone_number: { national_number: "(123) 456-7890" } }
   end
+
   def name
     { given_name: "Ali Hassan", surname: "Mirza" }
   end
+
   def application_context
     # The possible values are:
     #                         GET_FROM_FILE. Use the customer-provided shipping address on the PayPal site.
@@ -1299,15 +1307,19 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     { return_url: "https://paypal.com",cancel_url: "https://paypal.com", landing_page: "LOGIN", locale: "en", user_action: "PAY_NOW",
       brand_name: "PPCP", shipping_preference: "NO_SHIPPING", payment_method: payment_method, stored_payment_source: stored_payment_source  }
   end
+
   def payment_method
     { payer_selected: "PAYPAL", payee_preferred: "UNRESTRICTED", standard_entry_class_code: "WEB" }
   end
+
   def stored_payment_source
     { payment_initiator: "MERCHANT", payment_type: "ONE_TIME", usage: "FIRST", previous_network_transaction_reference: previous_network_transaction_reference }
   end
+
   def previous_network_transaction_reference
     { id: "1111111111", date: "2020-10-01T21:20:49Z", network: "MASTERCARD" }
   end
+
   def purchase_units
     {
         "purchase_units": [
@@ -1382,4 +1394,5 @@ class PaypalExpressRestTest < Test::Unit::TestCase
       ]
     }
   end
+
 end

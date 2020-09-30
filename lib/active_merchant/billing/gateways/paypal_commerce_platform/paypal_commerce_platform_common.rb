@@ -157,10 +157,10 @@ module ActiveMerchant
       def scrub(transcript)
         transcript.
             gsub(%r((Authorization: Bearer )\w+-\w+), '\1[FILTERED]').
-            gsub(%r((Authorization: Basic )\w+=\w+), '\1[FILTERED]').
+            gsub(%r((Authorization: Basic )\w+=), '\1[FILTERED]').
             gsub(%r((payment_source\[card\]\[security_code\]=)\d+), '\1[FILTERED]').
             gsub(%r((payment_source\[card\]\[number\]=)\d+), '\1[FILTERED]').
-            gsub(%r((payment_source\[card\]\[expiry\]=)\d+), '\1[FILTERED]')
+            gsub(%r((payment_source\[card\]\[expiry\]=)\d+-\d+), '\1[FILTERED]')
       end
     end
   end
