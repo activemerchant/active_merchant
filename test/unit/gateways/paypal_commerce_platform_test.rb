@@ -33,96 +33,122 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
 
   def test_successful_create_capture_order
     @gateway.expects(:ssl_request).times(1).returns(successful_create_capture_order_response)
-    success_create_order_assertions("CAPTURE")
+    assert create = @gateway.create_order("CAPTURE", options)
+    success_created_assertions(create)
   end
 
   def test_successful_create_authorize_order
     @gateway.expects(:ssl_request).times(1).returns(successful_create_authorize_order_response)
-    success_create_order_assertions("AUTHORIZE")
+    assert create = @gateway.create_order("AUTHORIZE", options)
+    success_created_assertions(create)
   end
 
   def test_successful_update_order
     @gateway.expects(:ssl_request).times(2).returns(successful_create_capture_order_response, successful_update_order_response)
-    create = success_create_order_assertions("CAPTURE")
-    order_id = create.params["id"]
-    success_update_assertions(order_id)
+    assert create = @gateway.create_order("CAPTURE", options)
+    success_created_assertions(create)
+    order_id      = create.params["id"]
+    assert update = @gateway.update_order(order_id, options.merge(body: {}))
+    success_empty_assertions(update)
   end
 
   def test_successful_create_and_capture_order
     @gateway.expects(:ssl_request).times(2).returns(successful_create_capture_order_response, successful_capture_order_response)
-    create          = success_create_order_assertions("CAPTURE")
-    order_id        = create.params["id"]
-    success_capture_assertions(order_id)
+    assert create  = @gateway.create_order("CAPTURE", options)
+    success_created_assertions(create)
+    order_id       = create.params["id"]
+    assert capture = @gateway.capture(order_id, @card_order_options)
+    success_completed_assertions(capture)
   end
 
   def test_successful_create_and_authorize_order
     @gateway.expects(:ssl_request).times(2).returns(successful_create_authorize_order_response, successful_authorize_order_response)
-    create          = success_create_order_assertions("AUTHORIZE")
-    order_id        = create.params["id"]
-    success_authorize_assertions(order_id)
+    assert create    = @gateway.create_order("AUTHORIZE", options)
+    success_created_assertions(create)
+    order_id         = create.params["id"]
+    assert authorize = @gateway.authorize(order_id, @card_order_options)
+    success_completed_assertions(authorize)
   end
 
   def test_successful_create_and_authorize_and_capture_order
     @gateway.expects(:ssl_request).times(3).returns(successful_create_authorize_order_response, successful_authorize_order_response, successful_capture_authorized_order_response)
-    create          = success_create_order_assertions("AUTHORIZE")
-    order_id        = create.params["id"]
-    authorize        = success_authorize_assertions(order_id)
+    assert create    = @gateway.create_order("AUTHROIZE", options)
+    success_created_assertions(create)
+    order_id         = create.params["id"]
+    assert authorize = @gateway.authorize(order_id, @card_order_options)
+    success_completed_assertions(authorize)
     authorization_id = authorize.params["purchase_units"][0]["payments"]["authorizations"][0]["id"]
-    success_capture_authorized_assertions(authorization_id)
+    assert capture   = @gateway.do_capture(authorization_id, options)
+    success_completed_assertions(capture)
   end
 
   def test_successful_create_and_capture_and_refund_order
     @gateway.expects(:ssl_request).times(3).returns(successful_create_capture_order_response, successful_capture_order_response, successful_refund_order_response)
-    create          = success_create_order_assertions("CAPTURE")
-    order_id        = create.params["id"]
-    capture         = success_capture_assertions(order_id)
-    capture_id      = capture.params["purchase_units"][0]["payments"]["captures"][0]["id"]
-    success_refund_assertions(capture_id)
+    assert create  = @gateway.create_order("CAPTURE", options)
+    success_created_assertions(create)
+    order_id       = create.params["id"]
+    assert capture = @gateway.capture(order_id, @card_order_options)
+    success_completed_assertions(capture)
+    capture_id     = capture.params["purchase_units"][0]["payments"]["captures"][0]["id"]
+    assert refund = @gateway.refund(capture_id, options)
+    success_completed_assertions(refund)
   end
 
   def test_successful_create_and_authorize_and_void_order
     @gateway.expects(:ssl_request).times(3).returns(successful_create_authorize_order_response, successful_authorize_order_response, successful_void_order_response)
-    create           = success_create_order_assertions("AUTHORIZE")
+    assert create    = @gateway.create_order("AUTHORIZE", options)
+    success_created_assertions(create)
     order_id         = create.params["id"]
-    authorize        = success_authorize_assertions(order_id)
+    assert authorize = @gateway.authorize(order_id, @card_order_options)
+    success_completed_assertions(authorize)
     authorization_id = authorize.params["purchase_units"][0]["payments"]["authorizations"][0]["id"]
-    success_void_assertions(authorization_id)
+    assert void = @gateway.void(authorization_id, options)
+    success_empty_assertions(void)
   end
 
   def test_successful_create_billing_agreement_token
     @gateway.expects(:ssl_request).times(1).returns(successful_create_billing_agreement_response)
-    success_create_billing_agreement_assertions
+    assert create = @gateway.create_billing_agreement_token(billing_agreement_options)
+    success_create_billing_agreement_assertions(create)
   end
 
   def test_successful_billing_agreement
     @gateway.expects(:ssl_request).times(1).returns(successful_approve_billing_agreement_response)
-    success_approve_billing_agreement_assertions
+    assert approve = @gateway.create_billing_agreement_token(billing_agreement_options)
+    success_approve_billing_agreement_assertions(approve)
   end
 
   def test_successful_capture_with_billing
     @gateway.expects(:ssl_request).times(3).returns(successful_approve_billing_agreement_response, successful_create_capture_order_response, successful_capture_with_billing_response)
-    approve    = success_approve_billing_agreement_assertions
-    billing_id = approve.params["id"]
-    create     = success_create_order_assertions("CAPTURE")
-    order_id   = create.params["id"]
-    success_capture_order_with_billing_assertions(order_id, billing_id)
+    assert approve = @gateway.create_billing_agreement_token(billing_agreement_options)
+    success_approve_billing_agreement_assertions(approve)
+    billing_id     = approve.params["id"]
+    assert create  = @gateway.create_order("CAPTURE", options)
+    success_created_assertions(create)
+    order_id       = create.params["id"]
+    assert capture = @gateway.capture(order_id, billing_options(billing_id))
+    success_completed_assertions(capture)
   end
 
   def test_successful_authorize_with_billing
     @gateway.expects(:ssl_request).times(3).returns(successful_approve_billing_agreement_response, successful_create_authorize_order_response, successful_authroize_with_billing_response)
-    approve    = success_approve_billing_agreement_assertions
-    billing_id = approve.params["id"]
-    create     = success_create_order_assertions("AUTHORIZE")
-    order_id   = create.params["id"]
-    success_authorize_order_with_billing_assertions(order_id, billing_id)
+    assert approve = @gateway.create_billing_agreement_token(billing_agreement_options)
+    success_approve_billing_agreement_assertions(approve)
+    billing_id     = approve.params["id"]
+    assert create  = @gateway.create_order("AUTHORIZE", options)
+    success_created_assertions(create)
+    order_id       = create.params["id"]
+    assert authorize = @gateway.authorize(order_id, billing_options(billing_id))
+    success_completed_assertions(authorize)
   end
 
   def test_successful_cancel_billing
     @gateway.expects(:ssl_request).times(2).returns(successful_approve_billing_agreement_response, successful_cancel_billing_response)
-    approve    = success_approve_billing_agreement_assertions
-    billing_id = approve.params["id"]
-    @body      = { note: "Cancelling Subscription" }
-    response   = @gateway.cancel_billing_agreement(billing_id, options)
+    assert approve = @gateway.create_billing_agreement_token(billing_agreement_options)
+    success_approve_billing_agreement_assertions(approve)
+    billing_id     = approve.params["id"]
+    @body          = { note: "Cancelling Subscription" }
+    response       = @gateway.cancel_billing_agreement(billing_id, options)
     assert_success response
   end
 
@@ -136,17 +162,20 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
 
   def test_failed_update_order_business_validation_error
     @gateway.expects(:ssl_request).times(2).returns(successful_create_capture_order_response, failed_update_order_due_to_business_error_response)
-    create = success_create_order_assertions("CAPTURE")
-    order_id = create.params["id"]
-    failed_update_assertions(order_id)
+    assert create = @gateway.create_order("CAPTURE", options)
+    success_created_assertions(create)
+    order_id      = create.params["id"]
+    assert update = @gateway.update_order(order_id, options.merge(body: {}))
+    failed_business_validation_assertions(update)
   end
 
   def test_failed_cancel_billing_after_approval
     @gateway.expects(:ssl_request).times(2).returns(successful_approve_billing_agreement_response, failed_cancel_billing_due_to_business_error)
-    approve    = success_approve_billing_agreement_assertions
-    billing_id = approve.params["id"]
-    @body      = { note: "Cancelling Subscription" }
-    response   = @gateway.cancel_billing_agreement(billing_id, options)
+    assert approve = @gateway.create_billing_agreement_token(billing_agreement_options)
+    success_approve_billing_agreement_assertions(approve)
+    billing_id     = approve.params["id"]
+    @body          = { note: "Cancelling Subscription" }
+    response       = @gateway.cancel_billing_agreement(billing_id, options)
     assert_failure response
     assert_equal "BUSINESS_ERROR", response.params["name"]
     assert_equal "Business error", response.params["message"]
@@ -154,72 +183,92 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
 
   def test_failed_create_capture_order_due_to_invalid_schema
     @gateway.expects(:ssl_request).times(1).returns(failed_create_order_invalid_schema_response)
-    failed_create_order_invalid_schema_assertions
+    assert create = @gateway.create_order("CAPTURE", options)
+    failed_schema_assertions(create)
   end
 
   def test_failed_create_capture_order_due_to_invalid_business_validation
     @gateway.expects(:ssl_request).times(1).returns(failed_create_order_invalid_business_validation_response)
-    failed_create_order_invalid_business_validation_assertions
+    assert create = @gateway.create_order("CAPTURE", options)
+    failed_business_validation_assertions(create)
   end
 
   def test_failed_capture_after_creation_due_to_invalid_schema(order_id)
     @gateway.expects(:ssl_request).times(2).returns(successful_create_capture_order_response, failed_capture_order_invalid_schema_response)
-    create          = success_create_order_assertions("CAPTURE")
+    assert create   = @gateway.create_order("CAPTURE", options)
+    success_created_assertions(create)
     order_id        = create.params["id"]
-    failed_capture_order_invalid_schema_assertions(order_id)
+    assert capture  = @gateway.capture(order_id, @card_order_options)
+    failed_schema_assertions(capture)
   end
 
   def test_failed_capture_after_creation_due_to_invalid_business_validation
     @gateway.expects(:ssl_request).times(2).returns(successful_create_capture_order_response, failed_capture_order_invalid_business_validation_response)
-    create          = success_create_order_assertions("CAPTURE")
+    assert create   = @gateway.create_order("CAPTURE", options)
+    success_created_assertions(create)
     order_id        = create.params["id"]
-    failed_capture_order_invalid_business_validation_assertions(order_id)
+    assert capture  = @gateway.capture(order_id, @card_order_options)
+    failed_business_validation_assertions(capture)
   end
 
   def test_failed_authorize_after_creation_due_to_invalid_schema
-    @gateway.expects(:ssl_request).times(2).returns(successful_create_capture_order_response, failed_authorize_order_invalid_schema_response)
-    create          = success_create_order_assertions("CAPTURE")
-    order_id        = create.params["id"]
-    failed_authorize_order_invalid_schema_assertions(order_id)
+    @gateway.expects(:ssl_request).times(2).returns(successful_create_authorize_order_response, failed_authorize_order_invalid_schema_response)
+    assert create    = @gateway.create_order("AUTHORIZE", options)
+    success_created_assertions(create)
+    order_id         = create.params["id"]
+    assert authorize = @gateway.authorize(order_id, @card_order_options)
+    failed_schema_assertions(authorize)
   end
 
   def test_failed_authorize_after_creation_due_to_invalid_business_validations
     @gateway.expects(:ssl_request).times(2).returns(successful_create_authorize_order_response, failed_authorize_order_invalid_business_validation_response)
-    create          = success_create_order_assertions("AUTHORIZE")
-    order_id        = create.params["id"]
-    failed_authorize_order_invalid_business_validation_assertions(order_id)
+    assert create    = @gateway.create_order("AUTHORIZE", options)
+    success_created_assertions(create)
+    order_id         = create.params["id"]
+    assert authorize = @gateway.authorize(order_id, @card_order_options)
+    failed_business_validation_assertions(authorize)
   end
 
   def test_failed_void_due_to_invalid_resource
     @gateway.expects(:ssl_request).times(1).returns(failed_void_invalid_resource_response)
-    failed_void_invalid_resource_assertions
+    assert void = @gateway.void("INVALID_ID", options)
+    failed_resource_assertions(void)
   end
 
   def test_failed_void_due_to_invalid_business_validation
     @gateway.expects(:ssl_request).times(3).returns(successful_create_authorize_order_response, successful_authorize_order_response, failed_void_invalid_business_validation_response)
-    create           = success_create_order_assertions("AUTHORIZE")
+    assert create    = @gateway.create_order("AUTHORIZE", options)
+    success_created_assertions(create)
     order_id         = create.params["id"]
-    authorize        = success_authorize_assertions(order_id)
+    assert authorize = @gateway.authorize(order_id, @card_order_options)
+    success_completed_assertions(authorize)
     authorization_id = authorize.params["purchase_units"][0]["payments"]["authorizations"][0]["id"]
-    failed_void_invalid_business_validation_assertions(authorization_id)
+    assert void = @gateway.void(authorization_id, options)
+    failed_business_validation_assertions(void)
   end
 
   def test_failed_refund_due_to_invalid_schema
     @gateway.expects(:ssl_request).times(3).returns(successful_create_capture_order_response, successful_capture_order_response, failed_refund_invalid_schema_response)
-    create           = success_create_order_assertions("CAPTURE")
-    order_id         = create.params["id"]
-    capture         = success_capture_assertions(order_id)
-    capture_id      = capture.params["purchase_units"][0]["payments"]["captures"][0]["id"]
-    failed_refund_invalid_schema_assertions(capture_id)
+    assert create  = @gateway.create_order("CAPTURE", options)
+    success_created_assertions(create)
+    order_id       = create.params["id"]
+    assert capture = @gateway.capture(order_id, @card_order_options)
+    success_completed_assertions(capture)
+    capture_id     = capture.params["purchase_units"][0]["payments"]["captures"][0]["id"]
+    assert refund = @gateway.refund(capture_id, options)
+    failed_schema_assertions_for_refund(refund)
   end
 
   def test_failed_refund_due_to_invalid_business_validation
     @gateway.expects(:ssl_request).times(3).returns(successful_create_capture_order_response, successful_capture_order_response, failed_refund_invalid_business_validation_response)
-    create           = success_create_order_assertions("CAPTURE")
-    order_id         = create.params["id"]
-    capture         = success_capture_assertions(order_id)
-    capture_id      = capture.params["purchase_units"][0]["payments"]["captures"][0]["id"]
-    failed_refund_invalid_business_validation_assertions(capture_id)
+    assert create  = @gateway.create_order("CAPTURE", options)
+    success_created_assertions(create)
+    order_id       = create.params["id"]
+    assert capture = @gateway.capture(order_id, @card_order_options)
+    success_completed_assertions(capture)
+    capture_id     = capture.params["purchase_units"][0]["payments"]["captures"][0]["id"]
+    assert refund = @gateway.refund(capture_id, options)
+    failed_business_validation_assertions(refund)
   end
 
   private
@@ -1659,187 +1708,67 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
 
   # Assertions private methods
 
-  def success_create_order_assertions(order_type)
-    assert create = @gateway.create_order(order_type, options)
-    assert_instance_of Response, create
-    assert_success create
-    assert_equal order_type, create.params["intent"]
-    assert_equal "CREATED", create.params["status"]
-    assert_equal "Transaction Successfully Completed", create.message
-    create
+  def success_created_assertions(response)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal "CREATED", response.params["status"]
+    assert_equal "Transaction Successfully Completed", response.message
   end
 
-  def success_update_assertions(order_id)
-    assert update = @gateway.update_order(order_id, options.merge(body: {}))
-    assert_instance_of Response, update
-    assert_success update
-    assert_empty update.params
-    assert_equal "Transaction Successfully Completed", update.message
+  def success_empty_assertions(response)
+    assert_instance_of Response, response
+    assert_success response
+    assert_empty response.params
+    assert_equal "Transaction Successfully Completed", response.message
   end
 
-  def success_capture_assertions(order_id)
-    assert capture = @gateway.capture(order_id, @card_order_options)
-    assert_instance_of Response, capture
-    assert_success capture
-    assert_equal "COMPLETED", capture.params["status"]
-    assert_equal "Transaction Successfully Completed", capture.message
-    capture
+  def success_completed_assertions(response)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal "COMPLETED", response.params["status"]
+    assert_equal "Transaction Successfully Completed", response.message
   end
 
-  def success_authorize_assertions(order_id)
-    assert authorize = @gateway.authorize(order_id, @card_order_options)
-    assert_instance_of Response, authorize
-    assert_success authorize
-    assert_equal "COMPLETED", authorize.params["status"]
-    assert_equal "Transaction Successfully Completed", authorize.message
-    authorize
+  def success_create_billing_agreement_assertions(response)
+    assert_instance_of Response, response
+    assert_success response
+    assert !response.params["links"].nil?
+    assert !response.params["token_id"].nil?
   end
 
-  def success_capture_authorized_assertions(authorization_id)
-    assert capture = @gateway.do_capture(authorization_id, options)
-    assert_instance_of Response, capture
-    assert_success capture
-    assert_equal "COMPLETED", capture.params["status"]
-    assert_equal "Transaction Successfully Completed", capture.message
+  def success_approve_billing_agreement_assertions(response)
+    assert_instance_of Response, response
+    assert_success response
+    assert !response.params["id"].nil?
+    assert_equal "ACTIVE", response.params["state"]
   end
 
-  def success_refund_assertions(capture_id)
-    assert refund = @gateway.refund(capture_id, options)
-    assert_instance_of Response, refund
-    assert_success refund
-    assert_equal "COMPLETED", refund.params["status"]
-    assert_equal "Transaction Successfully Completed", refund.message
-    refund
+  def failed_business_validation_assertions(response)
+    assert_instance_of Response, response
+    assert_failure response
+    assert_equal "The requested action could not be performed, semantically incorrect, or failed business validation.", response.message
+    assert_equal "UNPROCESSABLE_ENTITY", response.params["name"]
   end
 
-  def success_void_assertions(authorization_id)
-    assert void = @gateway.void(authorization_id, options)
-    assert_instance_of Response, void
-    assert_success void
-    assert_empty void.params
-    assert_equal "Transaction Successfully Completed", void.message
-    void
+  def failed_schema_assertions(response)
+    assert_instance_of Response, response
+    assert_failure response
+    assert_equal "Request is not well-formed, syntactically incorrect, or violates schema.", response.message
+    assert_equal "INVALID_REQUEST", response.params["name"]
   end
 
-  def success_create_billing_agreement_assertions
-    assert create = @gateway.create_billing_agreement_token(billing_agreement_options)
-    assert_instance_of Response, create
-    assert_success create
-    assert !create.params["links"].nil?
-    assert !create.params["token_id"].nil?
+  def failed_schema_assertions_for_refund(response)
+    assert_instance_of Response, response
+    assert_failure response
+    assert_equal "Request is not well-formed, syntactically incorrect, or violates schema", response.message
+    assert_equal "INVALID_REQUEST", response.params["name"]
   end
 
-  def success_approve_billing_agreement_assertions
-    assert approve = @gateway.create_billing_agreement_token(billing_agreement_options)
-    assert_instance_of Response, approve
-    assert_success approve
-    assert !approve.params["id"].nil?
-    assert_equal "ACTIVE", approve.params["state"]
-    approve
-  end
-
-  def success_capture_order_with_billing_assertions(order_id, billing_id)
-    assert capture = @gateway.capture(order_id, billing_options(billing_id))
-    assert_instance_of Response, capture
-    assert_success capture
-    assert_equal "COMPLETED", capture.params["status"]
-    assert_equal "Transaction Successfully Completed", capture.message
-  end
-
-  def success_authorize_order_with_billing_assertions(order_id, billing_id)
-    assert authorize = @gateway.authorize(order_id, billing_options(billing_id))
-    assert_instance_of Response, authorize
-    assert_success authorize
-    assert_equal "COMPLETED", authorize.params["status"]
-    assert_equal "Transaction Successfully Completed", authorize.message
-  end
-
-  def failed_create_order_invalid_schema_assertions
-    assert create = @gateway.create_order("CAPTURE", options)
-    assert_instance_of Response, create
-    assert_failure create
-    assert_equal "Request is not well-formed, syntactically incorrect, or violates schema.", create.message
-    assert_equal "INVALID_REQUEST", create.params["name"]
-  end
-
-  def failed_create_order_invalid_business_validation_assertions
-    assert create = @gateway.create_order("CAPTURE", options)
-    assert_instance_of Response, create
-    assert_failure create
-    assert_equal "The requested action could not be performed, semantically incorrect, or failed business validation.", create.message
-    assert_equal "UNPROCESSABLE_ENTITY", create.params["name"]
-  end
-
-  def failed_capture_order_invalid_schema_assertions(order_id)
-    assert capture = @gateway.capture(order_id, @card_order_options)
-    assert_instance_of Response, capture
-    assert_failure capture
-    assert_equal "Request is not well-formed, syntactically incorrect, or violates schema.", capture.message
-    assert_equal "INVALID_REQUEST", capture.params["name"]
-  end
-
-  def failed_capture_order_invalid_business_validation_assertions(order_id)
-    assert capture = @gateway.capture(order_id, @card_order_options)
-    assert_instance_of Response, capture
-    assert_failure capture
-    assert_equal "The requested action could not be performed, semantically incorrect, or failed business validation.", capture.message
-    assert_equal "UNPROCESSABLE_ENTITY", capture.params["name"]
-  end
-
-  def failed_authorize_order_invalid_business_validation_assertions(order_id)
-    assert authorize = @gateway.authorize(order_id, @card_order_options)
-    assert_instance_of Response, authorize
-    assert_failure authorize
-    assert_equal "The requested action could not be performed, semantically incorrect, or failed business validation.", authorize.message
-    assert_equal "UNPROCESSABLE_ENTITY", authorize.params["name"]
-  end
-
-  def failed_authorize_order_invalid_schema_assertions(order_id)
-    assert authorize = @gateway.authorize(order_id, @card_order_options)
-    assert_instance_of Response, authorize
-    assert_failure authorize
-    assert_equal "Request is not well-formed, syntactically incorrect, or violates schema.", authorize.message
-    assert_equal "INVALID_REQUEST", authorize.params["name"]
-  end
-
-  def failed_void_invalid_resource_assertions
-    assert void = @gateway.void("INVALID_ID", options)
-    assert_instance_of Response, void
-    assert_failure void
-    assert_equal "The specified resource does not exist.", void.message
-    assert_equal "RESOURCE_NOT_FOUND", void.params["name"]
-  end
-
-  def failed_void_invalid_business_validation_assertions(authorization_id)
-    assert void = @gateway.void(authorization_id, options)
-    assert_instance_of Response, void
-    assert_failure void
-    assert_equal "The requested action could not be performed, semantically incorrect, or failed business validation.", void.message
-    assert_equal "UNPROCESSABLE_ENTITY", void.params["name"]
-  end
-
-  def failed_refund_invalid_schema_assertions(capture_id)
-    assert refund = @gateway.refund(capture_id, options)
-    assert_instance_of Response, refund
-    assert_failure refund
-    assert_equal "Request is not well-formed, syntactically incorrect, or violates schema", refund.message
-    assert_equal "INVALID_REQUEST", refund.params["name"]
-  end
-
-  def failed_refund_invalid_business_validation_assertions(capture_id)
-    assert refund = @gateway.refund(capture_id, options)
-    assert_instance_of Response, refund
-    assert_failure refund
-    assert_equal "The requested action could not be performed, semantically incorrect, or failed business validation.", refund.message
-    assert_equal "UNPROCESSABLE_ENTITY", refund.params["name"]
-  end
-
-  def failed_update_assertions(order_id)
-    assert update = @gateway.update_order(order_id, options.merge(body: {}))
-    assert_instance_of Response, update
-    assert_failure update
-    assert_equal "The requested action could not be performed, semantically incorrect, or failed business validation.", update.message
-    assert_equal "UNPROCESSABLE_ENTITY", update.params["name"]
+  def failed_resource_assertions(response)
+    assert_instance_of Response, response
+    assert_failure response
+    assert_equal "The specified resource does not exist.", response.message
+    assert_equal "RESOURCE_NOT_FOUND", response.params["name"]
   end
 
 end
