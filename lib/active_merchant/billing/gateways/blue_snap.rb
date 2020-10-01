@@ -329,16 +329,18 @@ module ActiveMerchant
       end
 
       def add_shipping_contact_info(doc, payment_method, options)
-        # https://developers.bluesnap.com/v8976-XML/docs/shipping-contact-info
-        doc.send('first-name', payment_method.first_name)
-        doc.send('last-name', payment_method.last_name)
+        if address = options[:shipping_address]
+          # https://developers.bluesnap.com/v8976-XML/docs/shipping-contact-info
+          doc.send('first-name', payment_method.first_name)
+          doc.send('last-name', payment_method.last_name)
 
-        doc.country(options[:shipping_country]) if options[:shipping_country]
-        doc.state(options[:shipping_state]) if options[:shipping_state] && STATE_CODE_COUNTRIES.include?(options[:shipping_country])
-        doc.address1(options[:shipping_address1]) if options[:shipping_address1]
-        doc.address2(options[:shipping_address2]) if options[:shipping_address2]
-        doc.city(options[:shipping_city]) if options[:shipping_city]
-        doc.zip(options[:shipping_zip]) if options[:shipping_zip]
+          doc.country(address[:country]) if address[:country]
+          doc.state(address[:state]) if address[:state] && STATE_CODE_COUNTRIES.include?(address[:country])
+          doc.address1(address[:address1]) if address[:address1]
+          doc.address2(address[:address2]) if address[:address2]
+          doc.city(address[:city]) if address[:city]
+          doc.zip(address[:zip]) if address[:zip]
+        end
       end
 
       def add_alt_transaction_purchase(doc, money, payment_method_details, options)

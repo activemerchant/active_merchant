@@ -61,11 +61,14 @@ class BlueSnapTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_shipping_contact_info
     more_options = @options.merge({
-      shipping_address1: '123 Main St',
-      shipping_city: 'Springfield',
-      shipping_state: 'NC',
-      shipping_country: 'US',
-      shipping_zip: '27701'
+      shipping_address: {
+        address1: '123 Main St',
+        adress2: 'Apt B',
+        city: 'Springfield',
+        state: 'NC',
+        country: 'US',
+        zip: '27701'
+      }
     })
     response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.purchase(@amount, @credit_card, more_options)
