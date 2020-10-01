@@ -4,18 +4,13 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-
     @gateway          = ActiveMerchant::Billing::PaypalCommercePlatformGateway.new
     @ppcp_credentials = fixtures(:ppcp)
-
-    params       = user_credentials
-    options      = { "Content-Type": "application/json", authorization: params }
-
-    access_token = @gateway.get_access_token(options)
-
-    @headers     = { "Authorization": access_token, "Content-Type": "application/json" }
-    @body        = body
-
+    params            = user_credentials
+    options           = { "Content-Type": "application/json", authorization: params }
+    access_token      = @gateway.get_access_token(options)
+    @headers          = { "Authorization": access_token, "Content-Type": "application/json" }
+    @body             = body
     @card_order_options = {
         "payment_source": {
             "card": {
@@ -34,7 +29,6 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
         },
         "headers": @headers
     }
-
   end
 
   def test_successful_create_capture_order
@@ -1529,7 +1523,6 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
 
   def body
     @reference_id = "camera_shop_seller_#{ DateTime.now }"
-
     {
         "intent": "CAPTURE",
         "purchase_units": [
@@ -1567,7 +1560,7 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
                     }
                 },
                 "payee": {
-                    "email_address": "sb-jnxjj3033194@business.example.com"
+                    "email_address": @ppcp_credentials[:payee]
                 },
                 "items": [
                     {

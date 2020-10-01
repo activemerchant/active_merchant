@@ -119,7 +119,6 @@ module ActiveMerchant #:nodoc:
 
       def create_billing_agreement_token(options)
         requires!(options, :payer, :plan)
-
         post = { }
         prepare_request_to_get_agreement_tokens(post, options)
         commit(:post, "v1/billing-agreements/agreement-tokens", post, options[:headers])
@@ -128,13 +127,11 @@ module ActiveMerchant #:nodoc:
       def create_agreement_for_approval(options)
         requires!(options, :token_id)
         post = { token_id: options[:token_id] }
-
         commit(:post, "v1/billing-agreements/agreements", post, options[:headers])
       end
 
       def update_billing_agreement(agreement_id, options)
         requires!(options.merge({ agreement_id: agreement_id }), :agreement_id, :body)
-
         post = { }
         post = add_update_basic_billing_attributes(post, options)
         commit(:patch, "v1/billing-agreements/agreements/#{ agreement_id }", post, options[:headers])
@@ -143,7 +140,6 @@ module ActiveMerchant #:nodoc:
       def cancel_billing_agreement(agreement_id, options)
         post = { }
         post[:note] = options[:note] unless options[:note].nil?
-
         commit(:post, "v1/billing-agreements/agreements/#{ agreement_id }/cancel", post, options[:headers])
       end
 
@@ -171,11 +167,9 @@ module ActiveMerchant #:nodoc:
 
       def add_purchase_units(options, post)
         post[:purchase_units] = []
-
         options.map do |purchase_unit|
           post[:purchase_units] << add_purchase_unit(purchase_unit)
         end
-
         post
       end
 
@@ -217,8 +211,8 @@ module ActiveMerchant #:nodoc:
         requires!(options, :payment_initiator, :payment_type)
         post[:stored_payment_source] = { }
         post[:stored_payment_source][:payment_initiator] = options[:payment_initiator] if ALLOWED_PAYMENT_INITIATOR.include?(options[:payment_initiator])
-        post[:stored_payment_source][:payment_type] = options[:payment_type] if ALLOWED_PAYMENT_TYPE.include?(options[:payment_type])
-        post[:stored_payment_source][:usage] = options[:usage] if ALLOWED_USAGE.include?(options[:usage])
+        post[:stored_payment_source][:payment_type]      = options[:payment_type] if ALLOWED_PAYMENT_TYPE.include?(options[:payment_type])
+        post[:stored_payment_source][:usage]             = options[:usage] if ALLOWED_USAGE.include?(options[:usage])
         add_network_transaction_reference(options[:previous_network_transaction_reference], post)
         skip_empty(post, :stored_payment_source)
       end
@@ -234,8 +228,8 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_method(options, post)
         post[:payment_method] = { }
-        post[:payment_method][:payer_selected] = options[:payer_selected]
-        post[:payment_method][:payee_preferred] = options[:payee_preferred] if ALLOWED_PAYEE_PREFERRED.include?(options[:payee_preferred])
+        post[:payment_method][:payer_selected]            = options[:payer_selected]
+        post[:payment_method][:payee_preferred]           = options[:payee_preferred] if ALLOWED_PAYEE_PREFERRED.include?(options[:payee_preferred])
         post[:payment_method][:standard_entry_class_code] = options[:standard_entry_class_code] if ALLOWED_STANDARD_ENTRIES.include?(options[:standard_entry_class_code])
         skip_empty(post, :payment_method)
       end
@@ -247,13 +241,12 @@ module ActiveMerchant #:nodoc:
 
         options[:platform_fees].map do |platform_fee|
           requires!(platform_fee, :amount, :payee)
-
           platform_fee_hsh = { }
           add_amount(platform_fee[:amount], platform_fee_hsh)
           add_payee(platform_fee[:payee], platform_fee_hsh)
-
           post[key][:platform_fees] << platform_fee_hsh
         end
+
         skip_empty(post, key)
       end
 
@@ -300,11 +293,11 @@ module ActiveMerchant #:nodoc:
           requires!(item, :name, :quantity, :unit_amount)
 
           items_hsh = { }
-          items_hsh[:name]     = item[:name]
-          items_hsh[:sku]      = item[:sku] unless item[:sku].nil?
-          items_hsh[:quantity] = item[:quantity]
+          items_hsh[:name]        = item[:name]
+          items_hsh[:sku]         = item[:sku] unless item[:sku].nil?
+          items_hsh[:quantity]    = item[:quantity]
           items_hsh[:description] = item[:description]
-          items_hsh[:category] = item[:category] unless item[:category].nil? || !ALLOWED_ITEM_CATEGORY.include?(item[:category])
+          items_hsh[:category]    = item[:category] unless item[:category].nil? || !ALLOWED_ITEM_CATEGORY.include?(item[:category])
 
           add_amount(item[:unit_amount], items_hsh, :unit_amount)
           add_amount(item[:tax], items_hsh, :tax) unless item[:tax].nil?
@@ -406,7 +399,6 @@ module ActiveMerchant #:nodoc:
         requires!(options, :payer, :plan)
         post[:description]            = options[:description] unless options[:description].nil?
         post[:merchant_custom_data]   = options[:merchant_custom_data] unless options[:merchant_custom_data].nil?
-
         add_payer(post, options[:payer])
         add_plan(post, options[:plan])
         add_billing_agreement_shipping_address(post, options[:shipping_address], key = :shipping_address) unless options[:shipping_address].nil?
@@ -496,7 +488,7 @@ module ActiveMerchant #:nodoc:
 
       def add_phone_number(options, post)
         post[:phone] = { }
-        post[:phone][:phone_type] = options[:phone_type] if ALLOWED_PHONE_TYPE.include?(options[:phone_type])
+        post[:phone][:phone_type]   = options[:phone_type] if ALLOWED_PHONE_TYPE.include?(options[:phone_type])
         post[:phone][:phone_number] = { }
         post[:phone][:phone_number][:national_number] = options[:phone_number][:national_number]
         post
@@ -528,9 +520,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_billing_agreement_payer_info_details(options, post)
-        post[:payer_info]         = { }
-        post[:payer_info][:email] = options[:email]
-        post[:payer_info][:suffix]= options[:suffix]
+        post[:payer_info]             = { }
+        post[:payer_info][:email]     = options[:email]
+        post[:payer_info][:suffix]    = options[:suffix]
         post[:payer_info][:first_name]= options[:first_name]
         post[:payer_info][:last_name] = options[:last_name]
         post[:payer_info][:payer_id]  = options[:payer_id]
