@@ -51,7 +51,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
     @get_token_missing_password_options = { "Content-Type": "application/json", authorization: missing_password_params }
     @get_token_missing_username_options = { "Content-Type": "application/json", authorization: missing_username_params }
-    @approved_billing_token = @ppcp_credentials[:approving_billing_token]
+    @approved_billing_token = @ppcp_credentials[:approved_billing_token]
   end
 
   def test_access_token
