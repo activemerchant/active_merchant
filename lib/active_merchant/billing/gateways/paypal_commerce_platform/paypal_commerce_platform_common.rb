@@ -57,8 +57,9 @@ module ActiveMerchant
       # to appropriate method(POST, GET, PUT, PATCH).
       def api_request(method, endpoint, parameters = nil, opt_headers = {})
         raw_response = response = nil
+        parameters = parameters.nil? ? nil : parameters.to_json
         begin
-          raw_response = ssl_request(method, endpoint, parameters.to_json, opt_headers)
+          raw_response = ssl_request(method, endpoint, parameters, opt_headers)
           response     = parse(raw_response)
         rescue ResponseError => e
           raw_response = e.response.body

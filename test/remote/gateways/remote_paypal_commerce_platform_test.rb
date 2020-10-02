@@ -66,6 +66,16 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     success_status_assertions(response, "CREATED")
   end
 
+  def test_get_order_details
+    response = create_order("CAPTURE")
+    puts "Capture Order Id (Instant) - PPCP: #{ response.params["id"] }"
+    order_id  = response.params["id"]
+    order_details = @gateway.get_order_details(order_id, options)
+    assert_equal order_id, order_details.params["id"]
+    puts "GET ORDER DETAILS ORDER_ID: #{ order_details }"
+    success_status_assertions(response, "CREATED")
+  end
+
   def test_create_capture_instant_order_ppcp
     response = create_order("CAPTURE", "PPCP")
     puts "Capture Order Id (Instant) - PPCP: #{ response.params["id"] }"

@@ -143,6 +143,27 @@ module ActiveMerchant #:nodoc:
         commit(:post, "v1/billing-agreements/agreements/#{ agreement_id }/cancel", post, options[:headers])
       end
 
+      def get_order_details(order_id, options)
+        requires!(options.merge(order_id: order_id), :order_id)
+
+        commit(:get, "v2/checkout/orders/#{ order_id }", nil, options[:headers])
+      end
+
+      def get_authorization_details(authorization_id, options)
+        requires!(options.merge(authorization_id: authorization_id), :authorization_id)
+        commit(:get, "v2/checkout/orders/#{ authorization_id }", nil, options[:headers])
+      end
+
+      def get_capture_details(capture_id, options)
+        requires!(options.merge(capture_id: capture_id), :capture_id)
+        commit(:get, "v2/payments/captures/#{ capture_id }", nil, options[:headers])
+      end
+
+      def get_refund_details(refund_id, options)
+        requires!(options.merge(refund_id: refund_id), :refund_id)
+        commit(:get, "v2/payments/refunds/#{ refund_id }", nil, options[:headers])
+      end
+
       private
 
       def add_purchase_units(options, post)
