@@ -39,6 +39,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options) unless payment.is_a?(String)
         add_shipping_address(post, options)
         add_payment(post, payment, options)
+        add_submerchant(post, options)
 
         commit('sale', post)
       end
@@ -50,6 +51,7 @@ module ActiveMerchant #:nodoc:
         add_shipping_address(post, options)
         add_payment(post, payment, options)
         add_capture_flag(post, payment)
+        add_submerchant(post, options)
         commit('authonly', post)
       end
 
@@ -200,6 +202,31 @@ module ActiveMerchant #:nodoc:
         return false if payment.is_a?(String)
 
         %w[sodexo vr].include? card_brand(payment)
+      end
+
+      def add_submerchant(post, options)
+        if submerchant = options[:submerchant]
+          post[:SubMerchant] = {}
+          post[:SubMerchant][:Merchant_Category_Code] = submerchant[:merchant_category_code] if submerchant[:merchant_category_code]
+          post[:SubMerchant][:Payment_Facilitator_Code] = submerchant[:payment_facilitator_code] if submerchant[:payment_facilitator_code]
+          post[:SubMerchant][:Code] = submerchant[:code] if submerchant[:code]
+          post[:SubMerchant][:Name] = submerchant[:name] if submerchant[:name]
+          post[:SubMerchant][:Document] = submerchant[:document] if submerchant[:document]
+          post[:SubMerchant][:Type] = submerchant[:type] if submerchant[:type]
+          post[:SubMerchant][:Phone] = {}
+          post[:SubMerchant][:Phone][:Country_Code] = submerchant[:phone][:country_code] if submerchant.dig(:phone, :country_code)
+          post[:SubMerchant][:Phone][:Number] = submerchant[:phone][:number] if submerchant.dig(:phone, :number)
+          post[:SubMerchant][:Phone][:Area_Code] = submerchant[:phone][:area_code] if submerchant.dig(:phone, :area_code)
+          post[:SubMerchant][:Address] = {}
+          post[:SubMerchant][:Address][:Street] = submerchant[:address][:street] if submerchant.dig(:address, :street)
+          post[:SubMerchant][:Address][:Number] = submerchant[:address][:number] if submerchant.dig(:address, :number)
+          post[:SubMerchant][:Address][:Complement] = submerchant[:address][:complement] if submerchant.dig(:address, :complement)
+          post[:SubMerchant][:Address][:Neighborhood] = submerchant[:address][:neighborhood] if submerchant.dig(:address, :neighborhood)
+          post[:SubMerchant][:Address][:City] = submerchant[:address][:city] if submerchant.dig(:address, :city)
+          post[:SubMerchant][:Address][:State] = submerchant[:address][:state] if submerchant.dig(:address, :state)
+          post[:SubMerchant][:Address][:Country] = submerchant[:address][:country] if submerchant.dig(:address, :country)
+          post[:SubMerchant][:Address][:Zip_Code] = submerchant[:address][:zip_code] if submerchant.dig(:address, :zip_code)
+        end
       end
 
       def headers
