@@ -1325,14 +1325,14 @@ worldpay_us:
   merchantpin: "1234567890"
 
 ppcp:
-  username:                "ASs8Osqge6KT3OdLtkNhD20VP8lsrqRUlRjLo-e5s75SHz-2ffMMzCos_odQGjGYpPcGlxJVQ5fXMz9q"
-  password:                "EKj_bMZn0CkOhOvFwJMX2WwhtCq2A0OtlOd5T-zUhKIf9WQxvgPasNX0Kr1U4TjFj8ZN6XCMF5NM30Z_"
-  approved_billing_token:  "BA-6D392273TE4659255"
-  card_number:             "4032039317984658"
-  cvc:                     "111"
-  month:                   "07"
-  year:                    "2023"
-  payee_email:             "sb-jnxjj3033194@business.example.com"
-  platform_payee_email:    "sb-c447ox3078929@business.example.com"
-  payer_email:             "sb-feqsa3029697@personal.example.com"
-  payer_id:                "QYR5Z8XDVJNXQ"
+  username:                your_account_username
+  password:                your_account_password
+  approved_billing_token:  your_approved_billing_token_for_testing
+  card_number:             your_mock_card_number
+  cvc:                     your_mock_card_cvc
+  month:                   your_mock_card_month
+  year:                    your_mock_card_year
+  payee_email:             your_payee_email_for_testing
+  platform_payee_email:    your_platform_payee_email_for_testing
+  payer_email:             your_payer_email
+  payer_id:                your_payer_id
