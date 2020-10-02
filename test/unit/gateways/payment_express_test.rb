@@ -253,7 +253,7 @@ class PaymentExpressTest < Test::Unit::TestCase
   def test_purchase_truncates_order_id_to_16_chars
     stub_comms do
       @gateway.purchase(@amount, @visa, {order_id: '16chars---------EXTRA'})
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<TxnId>16chars---------<\/TxnId>/, data)
     end.respond_with(successful_authorization_response)
   end
@@ -261,7 +261,7 @@ class PaymentExpressTest < Test::Unit::TestCase
   def test_authorize_truncates_order_id_to_16_chars
     stub_comms do
       @gateway.authorize(@amount, @visa, {order_id: '16chars---------EXTRA'})
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<TxnId>16chars---------<\/TxnId>/, data)
     end.respond_with(successful_authorization_response)
   end
@@ -269,7 +269,7 @@ class PaymentExpressTest < Test::Unit::TestCase
   def test_capture_truncates_order_id_to_16_chars
     stub_comms do
       @gateway.capture(@amount, 'identification', {order_id: '16chars---------EXTRA'})
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<TxnId>16chars---------<\/TxnId>/, data)
     end.respond_with(successful_authorization_response)
   end
@@ -277,7 +277,7 @@ class PaymentExpressTest < Test::Unit::TestCase
   def test_refund_truncates_order_id_to_16_chars
     stub_comms do
       @gateway.refund(@amount, 'identification', {description: 'refund', order_id: '16chars---------EXTRA'})
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<TxnId>16chars---------<\/TxnId>/, data)
     end.respond_with(successful_authorization_response)
   end
@@ -285,7 +285,7 @@ class PaymentExpressTest < Test::Unit::TestCase
   def test_purchase_truncates_description_to_50_chars
     stub_comms do
       @gateway.purchase(@amount, @visa, {description: '50chars-------------------------------------------EXTRA'})
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<MerchantReference>50chars-------------------------------------------<\/MerchantReference>/, data)
     end.respond_with(successful_authorization_response)
   end
@@ -293,7 +293,7 @@ class PaymentExpressTest < Test::Unit::TestCase
   def test_authorize_truncates_description_to_50_chars
     stub_comms do
       @gateway.authorize(@amount, @visa, {description: '50chars-------------------------------------------EXTRA'})
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<MerchantReference>50chars-------------------------------------------<\/MerchantReference>/, data)
     end.respond_with(successful_authorization_response)
   end
@@ -301,7 +301,7 @@ class PaymentExpressTest < Test::Unit::TestCase
   def test_capture_truncates_description_to_50_chars
     stub_comms do
       @gateway.capture(@amount, 'identification', {description: '50chars-------------------------------------------EXTRA'})
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<MerchantReference>50chars-------------------------------------------<\/MerchantReference>/, data)
     end.respond_with(successful_authorization_response)
   end
@@ -309,7 +309,7 @@ class PaymentExpressTest < Test::Unit::TestCase
   def test_refund_truncates_description_to_50_chars
     stub_comms do
       @gateway.capture(@amount, 'identification', {description: '50chars-------------------------------------------EXTRA'})
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<MerchantReference>50chars-------------------------------------------<\/MerchantReference>/, data)
     end.respond_with(successful_authorization_response)
   end
@@ -324,35 +324,35 @@ class PaymentExpressTest < Test::Unit::TestCase
     # purchase
     stub_comms do
       @gateway.purchase(@amount, @visa, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       yield data
     end.respond_with(successful_authorization_response)
 
     # authorize
     stub_comms do
       @gateway.authorize(@amount, @visa, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       yield data
     end.respond_with(successful_authorization_response)
 
     # capture
     stub_comms do
       @gateway.capture(@amount, 'identification', options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       yield data
     end.respond_with(successful_authorization_response)
 
     # refund
     stub_comms do
       @gateway.refund(@amount, 'identification', {description: 'description'}.merge(options))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       yield data
     end.respond_with(successful_authorization_response)
 
     # store
     stub_comms do
       @gateway.store(@visa, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       yield data
     end.respond_with(successful_store_response)
   end

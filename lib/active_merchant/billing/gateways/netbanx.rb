@@ -22,12 +22,12 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://processing.paysafe.com/'
       self.display_name = 'Netbanx by PaySafe'
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :account_number, :api_key)
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         # Do a Verification with AVS prior to purchase
         verification_response = verify(payment, options)
         return verification_response if verification_response.message != 'OK'
@@ -40,7 +40,7 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'auths', post)
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         # Do a Verification with AVS prior to Auth + Settle
         verification_response = verify(payment, options)
         return verification_response if verification_response.message != 'OK'
@@ -52,22 +52,24 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'auths', post)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         post = {}
         add_invoice(post, money, options)
 
         commit(:post, "auths/#{authorization}/settlements", post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         # If the transactions that are pending, API call needs to be Cancellation
         settlement_data = get_settlement(authorization)
         return settlement_data if settlement_data.message != 'OK'
 
         post = {}
-        if settlement_data.params['status'] == 'PENDING'
+        if settlement_data.params['status'] == 'PENDING' && money == settlement_data.params['amount']
           post[:status] = 'CANCELLED'
           commit(:put, "settlements/#{authorization}", post)
+        elsif settlement_data.params['status'] == 'PENDING' && (money < settlement_data.params['amount'] || money > settlement_data.params['amount'])
+          return Response.new(false, 'Transaction not settled. Either do a full refund or try partial refund after settlement.')
         else
           add_invoice(post, money, options)
 
@@ -84,14 +86,14 @@ module ActiveMerchant #:nodoc:
         commit(:get, "settlements/#{authorization}", post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = {}
         add_order_id(post, options)
 
         commit(:post, "auths/#{authorization}/voidauths", post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         post = {}
         add_payment(post, credit_card, options)
         add_order_id(post, options)
@@ -101,7 +103,7 @@ module ActiveMerchant #:nodoc:
 
       # note: when passing options[:customer] we only attempt to add the
       #       card to the profile_id passed as the options[:customer]
-      def store(credit_card, options={})
+      def store(credit_card, options = {})
         # locale can only be one of en_US, fr_CA, en_GB
         requires!(options, :locale)
         post = {}
@@ -196,7 +198,7 @@ module ActiveMerchant #:nodoc:
           street: address[:address1],
           city: address[:city],
           zip: address[:zip],
-          state: address[:state],
+          state: address[:state]
         }
         mapped[:country] = country.code(:alpha2).value unless country.blank?
 

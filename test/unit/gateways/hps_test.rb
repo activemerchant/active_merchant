@@ -41,7 +41,7 @@ class HpsTest < Test::Unit::TestCase
   def test_successful_check_purchase
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@check_amount, @check, @options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/<hps:CheckSale><hps:Block1><hps:CheckAction>SALE<\/hps:CheckAction>/, data)
     end.respond_with(successful_check_purchase_response)
 
@@ -53,7 +53,7 @@ class HpsTest < Test::Unit::TestCase
     check.account_type = nil
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@check_amount, check, @options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/<hps:CheckSale><hps:Block1><hps:CheckAction>SALE<\/hps:CheckAction>/, data)
     end.respond_with(successful_check_purchase_response)
 
@@ -65,7 +65,7 @@ class HpsTest < Test::Unit::TestCase
     check.account_holder_type = nil
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@check_amount, check, @options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/<hps:CheckSale><hps:Block1><hps:CheckAction>SALE<\/hps:CheckAction>/, data)
     end.respond_with(successful_check_purchase_response)
 
@@ -153,7 +153,7 @@ class HpsTest < Test::Unit::TestCase
   def test_successful_check_void
     void = stub_comms(@gateway, :ssl_request) do
       @gateway.void('169054', check_void: true)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/<hps:Transaction><hps:CheckVoid>/, data)
     end.respond_with(successful_check_void_response)
 
@@ -250,8 +250,7 @@ class HpsTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :apple_pay
-    )
+      source: :apple_pay)
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -264,8 +263,7 @@ class HpsTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :apple_pay
-    )
+      source: :apple_pay)
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_failure response
     assert_equal 'The card was declined.', response.message
@@ -277,8 +275,7 @@ class HpsTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :apple_pay
-    )
+      source: :apple_pay)
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -290,8 +287,7 @@ class HpsTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :apple_pay
-    )
+      source: :apple_pay)
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_failure response
     assert_equal 'The card was declined.', response.message
@@ -304,8 +300,7 @@ class HpsTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :apple_pay
-    )
+      source: :apple_pay)
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -318,8 +313,7 @@ class HpsTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :apple_pay
-    )
+      source: :apple_pay)
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_failure response
     assert_equal 'The card was declined.', response.message
@@ -331,8 +325,7 @@ class HpsTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :apple_pay
-    )
+      source: :apple_pay)
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -344,8 +337,7 @@ class HpsTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :apple_pay
-    )
+      source: :apple_pay)
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_failure response
     assert_equal 'The card was declined.', response.message
@@ -358,8 +350,7 @@ class HpsTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :android_pay
-    )
+      source: :android_pay)
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -372,8 +363,7 @@ class HpsTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :android_pay
-    )
+      source: :android_pay)
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_failure response
     assert_equal 'The card was declined.', response.message
@@ -385,8 +375,7 @@ class HpsTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :android_pay
-    )
+      source: :android_pay)
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -398,8 +387,7 @@ class HpsTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :android_pay
-    )
+      source: :android_pay)
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_failure response
     assert_equal 'The card was declined.', response.message
@@ -412,8 +400,7 @@ class HpsTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :android_pay
-    )
+      source: :android_pay)
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -426,8 +413,7 @@ class HpsTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :android_pay
-    )
+      source: :android_pay)
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_failure response
     assert_equal 'The card was declined.', response.message
@@ -439,8 +425,7 @@ class HpsTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :android_pay
-    )
+      source: :android_pay)
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -452,8 +437,7 @@ class HpsTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :android_pay
-    )
+      source: :android_pay)
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_failure response
     assert_equal 'The card was declined.', response.message
@@ -466,8 +450,7 @@ class HpsTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :google_pay
-    )
+      source: :google_pay)
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -480,8 +463,7 @@ class HpsTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :google_pay
-    )
+      source: :google_pay)
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_failure response
     assert_equal 'The card was declined.', response.message
@@ -493,8 +475,7 @@ class HpsTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :google_pay
-    )
+      source: :google_pay)
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -506,8 +487,7 @@ class HpsTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :google_pay
-    )
+      source: :google_pay)
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_failure response
     assert_equal 'The card was declined.', response.message
@@ -520,8 +500,7 @@ class HpsTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :google_pay
-    )
+      source: :google_pay)
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -534,8 +513,7 @@ class HpsTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :google_pay
-    )
+      source: :google_pay)
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_failure response
     assert_equal 'The card was declined.', response.message
@@ -547,8 +525,7 @@ class HpsTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :google_pay
-    )
+      source: :google_pay)
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -560,8 +537,7 @@ class HpsTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :google_pay
-    )
+      source: :google_pay)
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_failure response
     assert_equal 'The card was declined.', response.message
@@ -581,7 +557,7 @@ class HpsTest < Test::Unit::TestCase
 
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/<hps:SecureECommerce>(.*)<\/hps:SecureECommerce>/, data)
       assert_match(/<hps:PaymentDataSource>Visa 3DSecure<\/hps:PaymentDataSource>/, data)
       assert_match(/<hps:TypeOfPaymentData>3DSecure<\/hps:TypeOfPaymentData>/, data)
@@ -608,7 +584,7 @@ class HpsTest < Test::Unit::TestCase
 
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/<hps:SecureECommerce>(.*)<\/hps:SecureECommerce>/, data)
       assert_match(/<hps:PaymentDataSource>MasterCard 3DSecure<\/hps:PaymentDataSource>/, data)
       assert_match(/<hps:TypeOfPaymentData>3DSecure<\/hps:TypeOfPaymentData>/, data)
@@ -635,7 +611,7 @@ class HpsTest < Test::Unit::TestCase
 
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/<hps:SecureECommerce>(.*)<\/hps:SecureECommerce>/, data)
       assert_match(/<hps:PaymentDataSource>Discover 3DSecure<\/hps:PaymentDataSource>/, data)
       assert_match(/<hps:TypeOfPaymentData>3DSecure<\/hps:TypeOfPaymentData>/, data)
@@ -662,7 +638,7 @@ class HpsTest < Test::Unit::TestCase
 
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/<hps:SecureECommerce>(.*)<\/hps:SecureECommerce>/, data)
       assert_match(/<hps:PaymentDataSource>AMEX 3DSecure<\/hps:PaymentDataSource>/, data)
       assert_match(/<hps:TypeOfPaymentData>3DSecure<\/hps:TypeOfPaymentData>/, data)
@@ -689,7 +665,7 @@ class HpsTest < Test::Unit::TestCase
 
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       refute_match(/<hps:SecureECommerce>(.*)<\/hps:SecureECommerce>/, data)
       refute_match(/<hps:PaymentDataSource>(.*)<\/hps:PaymentDataSource>/, data)
       refute_match(/<hps:TypeOfPaymentData>3DSecure<\/hps:TypeOfPaymentData>/, data)

@@ -144,7 +144,7 @@ class MerchantESolutionsTest < Test::Unit::TestCase
   def test_visa_3dsecure_params_submitted
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options.merge({xid: '1', cavv: '2'}))
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/xid=1/, data)
       assert_match(/cavv=2/, data)
     end.respond_with(successful_purchase_response)
@@ -153,7 +153,7 @@ class MerchantESolutionsTest < Test::Unit::TestCase
   def test_mastercard_3dsecure_params_submitted
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options.merge({ucaf_collection_ind: '1', ucaf_auth_data: '2'}))
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/ucaf_collection_ind=1/, data)
       assert_match(/ucaf_auth_data=2/, data)
     end.respond_with(successful_purchase_response)

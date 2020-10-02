@@ -38,7 +38,7 @@ class DLocalTest < Test::Unit::TestCase
 
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(installments: installments, installments_id: installments_id))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_equal installments, JSON.parse(data)['card']['installments']
       assert_equal installments_id, JSON.parse(data)['card']['installments_id']
     end.respond_with(successful_purchase_response)
@@ -65,7 +65,7 @@ class DLocalTest < Test::Unit::TestCase
   def test_passing_billing_address
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, @credit_card, @options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/"state\":\"ON\"/, data)
       assert_match(/"city\":\"Ottawa\"/, data)
       assert_match(/"zip_code\":\"K1C2N6\"/, data)
@@ -77,7 +77,7 @@ class DLocalTest < Test::Unit::TestCase
   def test_passing_incomplete_billing_address
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, @credit_card, @options.merge(billing_address: address(address1: 'Just a Street')))
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/"state\":\"ON\"/, data)
       assert_match(/"city\":\"Ottawa\"/, data)
       assert_match(/"zip_code\":\"K1C2N6\"/, data)
@@ -88,7 +88,7 @@ class DLocalTest < Test::Unit::TestCase
   def test_passing_nil_address_1
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, @credit_card, @options.merge(billing_address: address(address1: nil)))
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       refute_match(/"street\"/, data)
     end.respond_with(successful_authorize_response)
   end
@@ -96,7 +96,7 @@ class DLocalTest < Test::Unit::TestCase
   def test_passing_country_as_string
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, @credit_card, @options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/"country\":\"CA\"/, data)
     end.respond_with(successful_authorize_response)
   end
@@ -104,7 +104,7 @@ class DLocalTest < Test::Unit::TestCase
   def test_invalid_country
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, @credit_card, @options.merge(billing_address: address(country: 'INVALID')))
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/\"country\":null/, data)
     end.respond_with(successful_authorize_response)
   end

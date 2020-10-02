@@ -12,8 +12,7 @@ class PaymentezTest < Test::Unit::TestCase
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'elo'
-    )
+      brand: 'elo')
     @amount = 100
 
     @options = {
@@ -515,8 +514,8 @@ Conn close
     '{"status": "failure", "detail": "Invalid Status"}'
   end
 
-  alias_method :successful_refund_response, :successful_void_response
-  alias_method :failed_refund_response, :failed_void_response
+  alias successful_refund_response successful_void_response
+  alias failed_refund_response failed_void_response
 
   def already_stored_response
     '{"error": {"type": "Card already added: 14436664108567261211", "help": "If you want to update the card, first delete it", "description": "{}"}}'

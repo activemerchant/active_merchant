@@ -42,7 +42,7 @@ module ActiveMerchant #:nodoc:
         discover: 'Discover',
         american_express: 'Amex',
         jcb: 'JCB',
-        diners_club: 'DinersClub',
+        diners_club: 'DinersClub'
       }
 
       TRANSACTIONS = {

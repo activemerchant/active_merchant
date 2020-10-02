@@ -50,7 +50,7 @@ require 'active_merchant/version'
 require 'active_merchant/country'
 
 module ActiveMerchant
-  def self.deprecated(message, caller=Kernel.caller[1])
+  def self.deprecated(message, caller = Kernel.caller[1])
     warning = caller + ': ' + message
     if respond_to?(:logger) && logger.present?
       logger.warn(warning)

@@ -125,76 +125,75 @@ class RemoteBarclaysEpdqExtraPlusTest < Test::Unit::TestCase
     assert_success void
   end
 
-=begin Enable if/when fully enabled account is available to test
-  def test_reference_transactions
-    # Setting an alias
-    assert response = @gateway.purchase(@amount, credit_card('4000100011112224'), @options.merge(:billing_id => "awesomeman", :order_id=>Time.now.to_i.to_s+"1"))
-    assert_success response
-    # Updating an alias
-    assert response = @gateway.purchase(@amount, credit_card('4111111111111111'), @options.merge(:billing_id => "awesomeman", :order_id=>Time.now.to_i.to_s+"2"))
-    assert_success response
-    # Using an alias (i.e. don't provide the credit card)
-    assert response = @gateway.purchase(@amount, "awesomeman", @options.merge(:order_id => Time.now.to_i.to_s + "3"))
-    assert_success response
-  end
-
-  def test_successful_store
-    assert response = @gateway.store(@credit_card, :billing_id => 'test_alias')
-    assert_success response
-    assert purchase = @gateway.purchase(@amount, 'test_alias')
-    assert_success purchase
-  end
-
-  def test_successful_store_generated_alias
-    assert response = @gateway.store(@credit_card)
-    assert_success response
-    assert purchase = @gateway.purchase(@amount, response.billing_id)
-    assert_success purchase
-  end
-
-  def test_successful_store
-    assert response = @gateway.store(@credit_card, :billing_id => 'test_alias')
-    assert_success response
-    assert purchase = @gateway.purchase(@amount, 'test_alias')
-    assert_success purchase
-  end
-
-  def test_successful_unreferenced_credit
-    assert credit = @gateway.credit(@amount, @credit_card, @options)
-    assert_success credit
-    assert credit.authorization
-    assert_equal BarclaysEpdqExtraPlusGateway::SUCCESS_MESSAGE, credit.message
-  end
-
-  # NOTE: You have to allow USD as a supported currency in the "Account"->"Currencies"
-  #       section of your account admin before running this test
-  def test_successful_purchase_with_custom_currency_at_the_gateway_level
-    gateway = BarclaysEpdqExtraPlusGateway.new(fixtures(:barclays_epdq_extra_plus).merge(:currency => 'USD'))
-    assert response = gateway.purchase(@amount, @credit_card)
-    assert_success response
-    assert_equal BarclaysEpdqExtraPlusGateway::SUCCESS_MESSAGE, response.message
-    assert_equal "USD", response.params["currency"]
-  end
-
-  # NOTE: You have to allow USD as a supported currency in the "Account"->"Currencies"
-  #       section of your account admin before running this test
-  def test_successful_purchase_with_custom_currency
-    gateway = BarclaysEpdqExtraPlusGateway.new(fixtures(:barclays_epdq_extra_plus).merge(:currency => 'EUR'))
-    assert response = gateway.purchase(@amount, @credit_card, @options.merge(:currency => 'USD'))
-    assert_success response
-    assert_equal BarclaysEpdqExtraPlusGateway::SUCCESS_MESSAGE, response.message
-    assert_equal "USD", response.params["currency"]
-  end
-
-  # NOTE: You have to contact Barclays to make sure your test account allow 3D Secure transactions before running this test
-  def test_successful_purchase_with_3d_secure
-    assert response = @gateway.purchase(@amount, @credit_card_d3d, @options.merge(:d3d => true))
-    assert_success response
-    assert_equal '46', response.params["STATUS"]
-    assert_equal BarclaysEpdqExtraPlusGateway::SUCCESS_MESSAGE, response.message
-    assert response.params["HTML_ANSWER"]
-  end
-=end
+  # Enable if/when fully enabled account is available to test
+  #   def test_reference_transactions
+  #     # Setting an alias
+  #     assert response = @gateway.purchase(@amount, credit_card('4000100011112224'), @options.merge(:billing_id => "awesomeman", :order_id=>Time.now.to_i.to_s+"1"))
+  #     assert_success response
+  #     # Updating an alias
+  #     assert response = @gateway.purchase(@amount, credit_card('4111111111111111'), @options.merge(:billing_id => "awesomeman", :order_id=>Time.now.to_i.to_s+"2"))
+  #     assert_success response
+  #     # Using an alias (i.e. don't provide the credit card)
+  #     assert response = @gateway.purchase(@amount, "awesomeman", @options.merge(:order_id => Time.now.to_i.to_s + "3"))
+  #     assert_success response
+  #   end
+  #
+  #   def test_successful_store
+  #     assert response = @gateway.store(@credit_card, :billing_id => 'test_alias')
+  #     assert_success response
+  #     assert purchase = @gateway.purchase(@amount, 'test_alias')
+  #     assert_success purchase
+  #   end
+  #
+  #   def test_successful_store_generated_alias
+  #     assert response = @gateway.store(@credit_card)
+  #     assert_success response
+  #     assert purchase = @gateway.purchase(@amount, response.billing_id)
+  #     assert_success purchase
+  #   end
+  #
+  #   def test_successful_store
+  #     assert response = @gateway.store(@credit_card, :billing_id => 'test_alias')
+  #     assert_success response
+  #     assert purchase = @gateway.purchase(@amount, 'test_alias')
+  #     assert_success purchase
+  #   end
+  #
+  #   def test_successful_unreferenced_credit
+  #     assert credit = @gateway.credit(@amount, @credit_card, @options)
+  #     assert_success credit
+  #     assert credit.authorization
+  #     assert_equal BarclaysEpdqExtraPlusGateway::SUCCESS_MESSAGE, credit.message
+  #   end
+  #
+  #   # NOTE: You have to allow USD as a supported currency in the "Account"->"Currencies"
+  #   #       section of your account admin before running this test
+  #   def test_successful_purchase_with_custom_currency_at_the_gateway_level
+  #     gateway = BarclaysEpdqExtraPlusGateway.new(fixtures(:barclays_epdq_extra_plus).merge(:currency => 'USD'))
+  #     assert response = gateway.purchase(@amount, @credit_card)
+  #     assert_success response
+  #     assert_equal BarclaysEpdqExtraPlusGateway::SUCCESS_MESSAGE, response.message
+  #     assert_equal "USD", response.params["currency"]
+  #   end
+  #
+  #   # NOTE: You have to allow USD as a supported currency in the "Account"->"Currencies"
+  #   #       section of your account admin before running this test
+  #   def test_successful_purchase_with_custom_currency
+  #     gateway = BarclaysEpdqExtraPlusGateway.new(fixtures(:barclays_epdq_extra_plus).merge(:currency => 'EUR'))
+  #     assert response = gateway.purchase(@amount, @credit_card, @options.merge(:currency => 'USD'))
+  #     assert_success response
+  #     assert_equal BarclaysEpdqExtraPlusGateway::SUCCESS_MESSAGE, response.message
+  #     assert_equal "USD", response.params["currency"]
+  #   end
+  #
+  #   # NOTE: You have to contact Barclays to make sure your test account allow 3D Secure transactions before running this test
+  #   def test_successful_purchase_with_3d_secure
+  #     assert response = @gateway.purchase(@amount, @credit_card_d3d, @options.merge(:d3d => true))
+  #     assert_success response
+  #     assert_equal '46', response.params["STATUS"]
+  #     assert_equal BarclaysEpdqExtraPlusGateway::SUCCESS_MESSAGE, response.message
+  #     assert response.params["HTML_ANSWER"]
+  #   end
 
   def test_successful_refund
     assert purchase = @gateway.purchase(@amount, @credit_card, @options)

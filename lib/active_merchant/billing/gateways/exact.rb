@@ -162,8 +162,7 @@ module ActiveMerchant #:nodoc:
           test: test?,
           authorization: authorization_from(response),
           avs_result: { code: response[:avs] },
-          cvv_result: response[:cvv2]
-        )
+          cvv_result: response[:cvv2])
       rescue ResponseError => e
         case e.response.code
         when '401'
@@ -207,7 +206,7 @@ module ActiveMerchant #:nodoc:
           parse_elements(response, root)
         end
 
-        response.delete_if { |k, v| SENSITIVE_FIELDS.include?(k) }
+        response.delete_if { |k, _v| SENSITIVE_FIELDS.include?(k) }
       end
 
       def parse_elements(response, root)

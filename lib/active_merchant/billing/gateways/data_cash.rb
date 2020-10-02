@@ -262,8 +262,7 @@ module ActiveMerchant
 
         Response.new(response[:status] == '1', response[:reason], response,
           test: test?,
-          authorization: "#{response[:datacash_reference]};#{response[:authcode]};#{response[:ca_reference]}"
-        )
+          authorization: "#{response[:datacash_reference]};#{response[:authcode]};#{response[:ca_reference]}")
       end
 
       def format_date(month, year)

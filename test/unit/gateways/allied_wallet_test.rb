@@ -78,7 +78,7 @@ class AlliedWalletTest < Test::Unit::TestCase
 
     void = stub_comms do
       @gateway.void(response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/123456/, data)
     end.respond_with(successful_void_response)
 
@@ -88,7 +88,7 @@ class AlliedWalletTest < Test::Unit::TestCase
   def test_failed_void
     response = stub_comms do
       @gateway.void('5d53a33d960c46d00f5dc061947d998c')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/5d53a33d960c46d00f5dc061947d998c/, data)
     end.respond_with(failed_void_response)
 
@@ -105,7 +105,7 @@ class AlliedWalletTest < Test::Unit::TestCase
 
     refund = stub_comms do
       @gateway.refund(@amount, response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/123456/, data)
     end.respond_with(successful_refund_response)
 

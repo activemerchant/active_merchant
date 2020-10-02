@@ -67,7 +67,7 @@ class WorldpayUsTest < Test::Unit::TestCase
 
     capture = stub_comms do
       @gateway.capture(@amount, response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/postonly=354275517/, data)
     end.respond_with(successful_capture_response)
 
@@ -84,7 +84,7 @@ class WorldpayUsTest < Test::Unit::TestCase
 
     refund = stub_comms do
       @gateway.refund(@amount, response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/historykeyid=353583515/, data)
       assert_match(/orderkeyid=252889136/, data)
     end.respond_with(successful_refund_response)
@@ -102,7 +102,7 @@ class WorldpayUsTest < Test::Unit::TestCase
 
     refund = stub_comms do
       @gateway.void(response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/historykeyid=353583515/, data)
       assert_match(/orderkeyid=252889136/, data)
     end.respond_with(successful_refund_response)
@@ -136,7 +136,7 @@ class WorldpayUsTest < Test::Unit::TestCase
   def test_passing_cvv
     stub_comms do
       @gateway.purchase(@amount, @credit_card)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/#{@credit_card.verification_value}/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -144,7 +144,7 @@ class WorldpayUsTest < Test::Unit::TestCase
   def test_passing_billing_address
     stub_comms do
       @gateway.purchase(@amount, @credit_card, billing_address: address)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/ci_billaddr1=456\+My\+Street/, data)
       assert_match(/ci_billzip=K1C2N6/, data)
     end.respond_with(successful_purchase_response)
@@ -153,7 +153,7 @@ class WorldpayUsTest < Test::Unit::TestCase
   def test_passing_phone_number
     stub_comms do
       @gateway.purchase(@amount, @credit_card, billing_address: address)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/ci_phone=%28555%29555-5555/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -161,7 +161,7 @@ class WorldpayUsTest < Test::Unit::TestCase
   def test_passing_billing_address_without_phone
     stub_comms do
       @gateway.purchase(@amount, @credit_card, billing_address: address(phone: nil))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_no_match(/udf3/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -178,7 +178,7 @@ class WorldpayUsTest < Test::Unit::TestCase
   def test_backup_url
     response = stub_comms(@gateway) do
       @gateway.purchase(@amount, @credit_card, use_backup_url: true)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |endpoint, _data, _headers|
       assert_equal WorldpayUsGateway.backup_url, endpoint
     end.respond_with(successful_purchase_response)
     assert_success response

@@ -27,7 +27,7 @@ class BraintreeOrangeTest < Test::Unit::TestCase
   def test_fractional_amounts
     response = stub_comms do
       @gateway.purchase(100, @credit_card, @options.merge(currency: 'JPY'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       refute_match(/amount=1.00/, data)
     end.respond_with(successful_purchase_response)
 

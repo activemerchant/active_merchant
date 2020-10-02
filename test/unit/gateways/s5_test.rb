@@ -34,7 +34,7 @@ class S5Test < Test::Unit::TestCase
   def test_successful_purchase_with_recurring_flag
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(recurring: true))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/Recurrence.*REPEATED/, data)
     end.respond_with(successful_purchase_response)
 

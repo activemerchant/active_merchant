@@ -83,8 +83,7 @@ module ActiveMerchant #:nodoc:
           test: test?,
           authorization: build_authorization(response),
           avs_result: { code: response[:avs_result_code] },
-          cvv_result: response[:card_code_response_code]
-        )
+          cvv_result: response[:card_code_response_code])
       end
 
       def build_request(request)

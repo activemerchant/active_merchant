@@ -129,8 +129,7 @@ module ActiveMerchant #:nodoc:
             postal_match: AVS_POSTAL_CODES[response['AVSPostalResponseCode']],
             street_match: AVS_ADDRESS_CODES[response['AVSAddressResponseCode']]
           },
-          cvv_result: CVV2_CODES[response['CVV2ResponseCode']]
-        )
+          cvv_result: CVV2_CODES[response['CVV2ResponseCode']])
       end
 
       def url(action)

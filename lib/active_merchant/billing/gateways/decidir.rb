@@ -39,16 +39,16 @@ module ActiveMerchant #:nodoc:
         76 => STANDARD_ERROR_CODE[:call_issuer],
         91 => STANDARD_ERROR_CODE[:call_issuer],
         96 => STANDARD_ERROR_CODE[:processing_error],
-        97 => STANDARD_ERROR_CODE[:processing_error],
+        97 => STANDARD_ERROR_CODE[:processing_error]
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :api_key)
         super
         @options[:preauth_mode] ||= false
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         raise ArgumentError, 'Purchase is not supported on Decidir gateways configured with the preauth_mode option' if @options[:preauth_mode]
 
         post = {}
@@ -56,7 +56,7 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'payments', post)
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         raise ArgumentError, 'Authorize is not supported on Decidir gateways unless the preauth_mode option is enabled' unless @options[:preauth_mode]
 
         post = {}
@@ -64,7 +64,7 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'payments', post)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         raise ArgumentError, 'Capture is not supported on Decidir gateways unless the preauth_mode option is enabled' unless @options[:preauth_mode]
 
         post = {}
@@ -72,18 +72,18 @@ module ActiveMerchant #:nodoc:
         commit(:put, "payments/#{authorization}", post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         post = {}
         add_amount(post, money, options)
         commit(:post, "payments/#{authorization}/refunds", post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = {}
         commit(:post, "payments/#{authorization}/refunds", post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         raise ArgumentError, 'Verify is not supported on Decidir gateways unless the preauth_mode option is enabled' unless @options[:preauth_mode]
 
         MultiResponse.run(:use_first_response) do |r|
@@ -225,7 +225,7 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def commit(method, endpoint, parameters, options={})
+      def commit(method, endpoint, parameters, options = {})
         url = "#{(test? ? test_url : live_url)}/#{endpoint}"
 
         begin

@@ -30,24 +30,24 @@ module ActiveMerchant #:nodoc:
         'PEN' => 500
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :merchant_id, :account_id, :api_login, :api_key, :payment_country)
         super
       end
 
-      def purchase(amount, payment_method, options={})
+      def purchase(amount, payment_method, options = {})
         post = {}
         auth_or_sale(post, 'AUTHORIZATION_AND_CAPTURE', amount, payment_method, options)
         commit('purchase', post)
       end
 
-      def authorize(amount, payment_method, options={})
+      def authorize(amount, payment_method, options = {})
         post = {}
         auth_or_sale(post, 'AUTHORIZATION', amount, payment_method, options)
         commit('auth', post)
       end
 
-      def capture(amount, authorization, options={})
+      def capture(amount, authorization, options = {})
         post = {}
 
         add_credentials(post, 'SUBMIT_TRANSACTION', options)
@@ -62,7 +62,7 @@ module ActiveMerchant #:nodoc:
         commit('capture', post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = {}
 
         add_credentials(post, 'SUBMIT_TRANSACTION', options)
@@ -72,17 +72,24 @@ module ActiveMerchant #:nodoc:
         commit('void', post)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, options = {})
         post = {}
 
         add_credentials(post, 'SUBMIT_TRANSACTION', options)
-        add_transaction_elements(post, 'REFUND', options)
-        add_reference(post, authorization)
 
+        if options[:partial_refund]
+          add_transaction_elements(post, 'PARTIAL_REFUND', options)
+          post[:transaction][:additionalValues] ||= {}
+          post[:transaction][:additionalValues][:TX_VALUE] = invoice_for(amount, options)[:TX_VALUE]
+        else
+          add_transaction_elements(post, 'REFUND', options)
+        end
+
+        add_reference(post, authorization)
         commit('refund', post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         minimum = MINIMUMS[options[:currency].upcase] if options[:currency]
         amount = options[:verify_amount] || minimum || 100
 
@@ -133,7 +140,7 @@ module ActiveMerchant #:nodoc:
         add_extra_parameters(post, options)
       end
 
-      def add_credentials(post, command, options={})
+      def add_credentials(post, command, options = {})
         post[:test] = test? unless command == 'CREATE_TOKEN'
         post[:language] = options[:language] || 'en'
         post[:command] = command
@@ -391,11 +398,14 @@ module ActiveMerchant #:nodoc:
         else
           if response['transactionResponse']
             response_message = response['transactionResponse']['responseMessage']
+
             response_code = response['transactionResponse']['responseCode'] || response['transactionResponse']['pendingReason']
+
+            response_message = response_code + ' | ' + response['transactionResponse']['paymentNetworkResponseErrorMessage'] unless response['transactionResponse']['paymentNetworkResponseErrorMessage'].nil?
           end
           return response_code if success
 
-          response['error'] || response_message || response_code || 'FAILED'
+          response_message || response['error'] || response_code || 'FAILED'
         end
       end
 

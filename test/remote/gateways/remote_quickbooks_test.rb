@@ -141,6 +141,25 @@ class RemoteTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_without_state_in_address
+    options = {
+      order_id: '1',
+      billing_address:
+        {
+          zip: 90210,
+          # Submitting a value of an empty string for the `state` field
+          # results in a `region is invalid` error message from Quickbooks.
+          # This test ensures that an empty string is not sent from AM.
+          state: '',
+          country: ''
+        }
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'CAPTURED', response.message
+  end
+
   def test_refresh
     response = @gateway.refresh
     assert_success response

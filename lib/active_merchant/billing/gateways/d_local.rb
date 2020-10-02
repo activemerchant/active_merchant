@@ -11,33 +11,33 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://dlocal.com/'
       self.display_name = 'dLocal'
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :login, :trans_key, :secret_key)
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         post = {}
         add_auth_purchase_params(post, money, payment, 'purchase', options)
 
         commit('purchase', post, options)
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         post = {}
         add_auth_purchase_params(post, money, payment, 'authorize', options)
 
         commit('authorize', post, options)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         post = {}
         post[:authorization_id] = authorization
         add_invoice(post, money, options) if money
         commit('capture', post, options)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         post = {}
         post[:payment_id] = authorization
         post[:notification_url] = options[:notification_url]
@@ -45,13 +45,13 @@ module ActiveMerchant #:nodoc:
         commit('refund', post, options)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = {}
         post[:authorization_id] = authorization
         commit('void', post, options)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -138,7 +138,7 @@ module ActiveMerchant #:nodoc:
         house.empty? ? nil : house
       end
 
-      def add_card(post, card, action, options={})
+      def add_card(post, card, action, options = {})
         post[:card] = {}
         post[:card][:holder_name] = card.name
         post[:card][:expiration_month] = card.month
@@ -155,7 +155,7 @@ module ActiveMerchant #:nodoc:
         JSON.parse(body)
       end
 
-      def commit(action, parameters, options={})
+      def commit(action, parameters, options = {})
         url = url(action, parameters, options)
         post = post_data(action, parameters)
         begin
@@ -202,7 +202,7 @@ module ActiveMerchant #:nodoc:
         code&.to_s
       end
 
-      def url(action, parameters, options={})
+      def url(action, parameters, options = {})
         "#{(test? ? test_url : live_url)}/#{endpoint(action, parameters, options)}/"
       end
 
@@ -221,7 +221,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def headers(post, options={})
+      def headers(post, options = {})
         timestamp = Time.now.utc.iso8601
         headers = {
           'Content-Type' => 'application/json',

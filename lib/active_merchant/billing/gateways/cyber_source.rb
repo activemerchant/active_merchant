@@ -34,7 +34,7 @@ module ActiveMerchant #:nodoc:
         american_express: 'aesk',
         jcb: 'js',
         discover: 'pb',
-        diners_club: 'pb',
+        diners_club: 'pb'
       }.freeze
       DEFAULT_COLLECTION_INDICATOR = 2
 
@@ -266,7 +266,9 @@ module ActiveMerchant #:nodoc:
           zip: '00000',
           country: 'US'
         }
-        options[:billing_address] = options[:billing_address] || options[:address] || default_address
+
+        submitted_address = options[:billing_address] || options[:address] || default_address
+        options[:billing_address] = default_address.merge(submitted_address.symbolize_keys) { |_k, default, submitted| submitted.blank? ? default : submitted }
         options[:shipping_address] = options[:shipping_address] || {}
       end
 
@@ -281,9 +283,9 @@ module ActiveMerchant #:nodoc:
         add_payment_network_token(xml) if network_tokenization?(creditcard_or_reference)
         add_business_rules_data(xml, creditcard_or_reference, options)
         add_stored_credential_subsequent_auth(xml, options)
+        add_issuer_additional_data(xml, options)
         add_partner_solution_id(xml)
         add_stored_credential_options(xml, options)
-        add_issuer_additional_data(xml, options)
         add_merchant_description(xml, options)
 
         xml.target!
@@ -325,6 +327,7 @@ module ActiveMerchant #:nodoc:
         add_mdd_fields(xml, options)
         if !payment_method_or_reference.is_a?(String) && card_brand(payment_method_or_reference) == 'check'
           add_check_service(xml)
+          add_issuer_additional_data(xml, options)
           add_partner_solution_id(xml)
         else
           add_purchase_service(xml, payment_method_or_reference, options)
@@ -332,11 +335,11 @@ module ActiveMerchant #:nodoc:
           add_payment_network_token(xml) if network_tokenization?(payment_method_or_reference)
           add_business_rules_data(xml, payment_method_or_reference, options) unless options[:pinless_debit_card]
           add_stored_credential_subsequent_auth(xml, options)
+          add_issuer_additional_data(xml, options)
           add_partner_solution_id(xml)
           add_stored_credential_options(xml, options)
         end
 
-        add_issuer_additional_data(xml, options)
         add_merchant_description(xml, options)
 
         xml.target!
@@ -509,7 +512,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_purchase_data(xml, money = 0, include_grand_total = false, options={})
+      def add_purchase_data(xml, money = 0, include_grand_total = false, options = {})
         xml.tag! 'purchaseTotals' do
           xml.tag! 'currency', options[:currency] || currency(money)
           xml.tag!('grandTotalAmount', localized_amount(money.to_i, options[:currency] || default_currency)) if include_grand_total
@@ -573,7 +576,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_mdd_fields(xml, options)
-        return unless options.keys.any? { |key| key.to_s.start_with?('mdd_field') }
+        return unless options.keys.any? { |key| key.to_s.start_with?('mdd_field') && options[key] }
 
         xml.tag! 'merchantDefinedData' do
           (1..100).each do |each|
@@ -848,7 +851,7 @@ module ActiveMerchant #:nodoc:
         country_code&.code(:alpha2)
       end
 
-      def add_stored_credential_subsequent_auth(xml, options={})
+      def add_stored_credential_subsequent_auth(xml, options = {})
         return unless options[:stored_credential] || options[:stored_credential_overrides]
 
         stored_credential_subsequent_auth = 'true' if options.dig(:stored_credential, :initiator) == 'merchant'
@@ -858,7 +861,7 @@ module ActiveMerchant #:nodoc:
         xml.subsequentAuth override_subsequent_auth.nil? ? stored_credential_subsequent_auth : override_subsequent_auth
       end
 
-      def add_stored_credential_options(xml, options={})
+      def add_stored_credential_options(xml, options = {})
         return unless options[:stored_credential] || options[:stored_credential_overrides]
 
         stored_credential_subsequent_auth_first = 'true' if options.dig(:stored_credential, :initial_transaction)
@@ -929,8 +932,7 @@ module ActiveMerchant #:nodoc:
           authorization: authorization,
           fraud_review: in_fraud_review?(response),
           avs_result: { code: response[:avsCode] },
-          cvv_result: response[:cvCode]
-        )
+          cvv_result: response[:cvCode])
       end
 
       # Parse the SOAP response

@@ -28,7 +28,7 @@ class QuickpayV10Test < Test::Unit::TestCase
       assert_success response
       assert_equal '1145', response.authorization
       assert response.test?
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |endpoint, data, _headers|
       parsed = parse(data)
       if parsed['order_id']
         assert_match %r{/payments}, endpoint
@@ -47,7 +47,7 @@ class QuickpayV10Test < Test::Unit::TestCase
       assert_success response
       assert_equal '1145', response.authorization
       assert response.test?
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |endpoint, data, _headers|
       parsed_data = parse(data)
       if parsed_data['order_id']
         assert_match %r{/payments}, endpoint
@@ -71,7 +71,7 @@ class QuickpayV10Test < Test::Unit::TestCase
       assert_success response
       assert_equal '1145', response.authorization
       assert response.test?
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |endpoint, data, _headers|
       parsed_data = parse(data)
       if parsed_data['order_id']
         assert_match %r{/payments}, endpoint
@@ -87,7 +87,7 @@ class QuickpayV10Test < Test::Unit::TestCase
       assert response = @gateway.void(1145)
       assert_success response
       assert response.test?
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |endpoint, _data, _headers|
       assert_match %r{/payments/1145/cancel}, endpoint
     end.respond_with({'id' => 1145}.to_json)
   end
@@ -115,7 +115,7 @@ class QuickpayV10Test < Test::Unit::TestCase
       assert response = @gateway.store(@credit_card, @options)
       assert_success response
       assert response.test?
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |endpoint, _data, _headers|
       assert_match %r{/card}, endpoint
     end.respond_with(successful_store_response, successful_sauthorize_response)
   end
@@ -125,7 +125,7 @@ class QuickpayV10Test < Test::Unit::TestCase
       assert response = @gateway.unstore('123')
       assert_success response
       assert response.test?
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |endpoint, _data, _headers|
       assert_match %r{/cards/\d+/cancel}, endpoint
     end.respond_with({'id' => '123'}.to_json)
   end

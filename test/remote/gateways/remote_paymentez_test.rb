@@ -12,8 +12,7 @@ class RemotePaymentezTest < Test::Unit::TestCase
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'elo'
-    )
+      brand: 'elo')
     @declined_card = credit_card('4242424242424242', verification_value: '666')
     @options = {
       billing_address: address,

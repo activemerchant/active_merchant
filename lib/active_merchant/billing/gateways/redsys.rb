@@ -352,7 +352,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def headers(action=nil)
+      def headers(action = nil)
         if action
           {
             'Content-Type' => 'text/xml',
@@ -476,7 +476,7 @@ module ActiveMerchant #:nodoc:
           if validate_signature(params)
             message = response_text(params[:ds_response])
             options[:authorization] = build_authorization(params)
-            success = is_success_response?(params[:ds_response])
+            success = success_response?(params[:ds_response])
           else
             message = 'Response failed validation check'
           end
@@ -490,7 +490,7 @@ module ActiveMerchant #:nodoc:
           end
           message = response_text_3ds(xml, params)
           options[:authorization] = build_authorization(params)
-          success = params.size > 0 && is_success_response?(params[:ds_response])
+          success = params.size > 0 && success_response?(params[:ds_response])
         else
           # Some kind of programmer error with the request!
           message = "#{code} ERROR"
@@ -559,7 +559,7 @@ module ActiveMerchant #:nodoc:
         message
       end
 
-      def is_success_response?(code)
+      def success_response?(code)
         (code.to_i < 100) || [400, 481, 500, 900].include?(code.to_i)
       end
 

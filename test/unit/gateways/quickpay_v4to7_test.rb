@@ -47,7 +47,7 @@ class QuickpayV4to7Test < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.store(@credit_card, {order_id: 'fa73664073e23597bbdd', description: 'Storing Card'})
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_equal(expected_store_parameters_v6, CGI::parse(data))
     end.respond_with(successful_store_response_v6)
 
@@ -62,7 +62,7 @@ class QuickpayV4to7Test < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.store(@credit_card, {order_id: 'ed7546cb4ceb8f017ea4', description: 'Storing Card'})
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_equal(expected_store_parameters_v7, CGI::parse(data))
     end.respond_with(successful_store_response_v7)
 
@@ -147,7 +147,7 @@ class QuickpayV4to7Test < Test::Unit::TestCase
   def test_finalize_is_disabled_by_default
     stub_comms(@gateway, :ssl_request) do
       @gateway.capture(@amount, '12345')
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert data =~ /finalize=0/
     end.respond_with(successful_capture_response)
   end
@@ -155,7 +155,7 @@ class QuickpayV4to7Test < Test::Unit::TestCase
   def test_finalize_is_enabled
     stub_comms(@gateway, :ssl_request) do
       @gateway.capture(@amount, '12345', finalize: true)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert data =~ /finalize=1/
     end.respond_with(successful_capture_response)
   end

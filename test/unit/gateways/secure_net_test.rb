@@ -118,7 +118,7 @@ class SecureNetTest < Test::Unit::TestCase
     order_id = "SecureNet doesn't like order_ids greater than 25 characters."
     stub_comms do
       @gateway.purchase(@amount, @credit_card, order_id: order_id)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/ORDERID>SecureNet doesn't like or</, data)
     end.respond_with(successful_purchase_response)
   end
@@ -133,7 +133,7 @@ class SecureNetTest < Test::Unit::TestCase
     options = { description: 'Good Stuff', invoice_description: 'Sweet Invoice', invoice_number: '48' }
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{NOTE>Good Stuff<}, data)
       assert_match(%r{INVOICEDESC>Sweet Invoice<}, data)
       assert_match(%r{INVOICENUM>48<}, data)
@@ -143,7 +143,7 @@ class SecureNetTest < Test::Unit::TestCase
   def test_only_passes_optional_fields_if_specified
     stub_comms do
       @gateway.purchase(@amount, @credit_card, {})
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_no_match(%r{NOTE}, data)
       assert_no_match(%r{INVOICEDESC}, data)
       assert_no_match(%r{INVOICENUM}, data)
@@ -153,7 +153,7 @@ class SecureNetTest < Test::Unit::TestCase
   def test_passes_with_no_developer_id
     stub_comms do
       @gateway.purchase(@amount, @credit_card, {})
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_no_match(%r{DEVELOPERID}, data)
     end.respond_with(successful_purchase_response)
   end
@@ -161,7 +161,7 @@ class SecureNetTest < Test::Unit::TestCase
   def test_passes_with_developer_id
     stub_comms do
       @gateway.purchase(@amount, @credit_card, developer_id: '1234')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{DEVELOPERID}, data)
     end.respond_with(successful_purchase_response)
   end
@@ -169,7 +169,7 @@ class SecureNetTest < Test::Unit::TestCase
   def test_passes_with_test_mode
     stub_comms do
       @gateway.purchase(@amount, @credit_card, test_mode: false)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{<TEST>FALSE</TEST>}, data)
     end.respond_with(successful_purchase_response)
   end
@@ -177,7 +177,7 @@ class SecureNetTest < Test::Unit::TestCase
   def test_passes_without_test_mode
     stub_comms do
       @gateway.purchase(@amount, @credit_card)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{<TEST>TRUE</TEST>}, data)
     end.respond_with(successful_purchase_response)
   end

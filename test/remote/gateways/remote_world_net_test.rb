@@ -8,7 +8,7 @@ class RemoteWorldNetTest < Test::Unit::TestCase
     @declined_amount = 101
     @credit_card = credit_card('3779810000000005')
     @options = {
-      order_id: generate_order_id,
+      order_id: generate_order_id
     }
     @refund_options = {
       operator: 'mr.nobody',
@@ -28,7 +28,7 @@ class RemoteWorldNetTest < Test::Unit::TestCase
       email: 'joe@example.com',
       billing_address: address,
       description: 'Store Purchase',
-      ip: '127.0.0.1',
+      ip: '127.0.0.1'
     }
 
     response = @gateway.purchase(@amount, @credit_card, options)

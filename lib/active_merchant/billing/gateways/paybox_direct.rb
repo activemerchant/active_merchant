@@ -64,10 +64,31 @@ module ActiveMerchant #:nodoc:
         super
       end
 
+      def add_3dsecure(post, options)
+        # ECI=02 => MasterCard success
+        # ECI=05 => Visa, Amex or JCB success
+        if options[:eci] == '02' || options[:eci] == '05'
+          post[:"3DSTATUS"] = 'Y'
+          post[:"3DENROLLED"] = 'Y'
+          post[:"3DSIGNVAL"] = 'Y'
+          post[:"3DERROR"] = '0'
+        else
+          post[:"3DSTATUS"] = 'N'
+          post[:"3DENROLLED"] = 'N'
+          post[:"3DSIGNVAL"] = 'N'
+          post[:"3DERROR"] = '10000'
+        end
+        post[:"3DECI"] = options[:eci]
+        post[:"3DXID"] = options[:xid]
+        post[:"3DCAVV"] = options[:cavv]
+        post[:"3DCAVVALGO"] = options[:cavv_algorithm]
+      end
+
       def authorize(money, creditcard, options = {})
         post = {}
         add_invoice(post, options)
         add_creditcard(post, creditcard)
+        add_3dsecure(post, options[:three_d_secure]) if options[:three_d_secure]
         add_amount(post, money, options)
 
         commit('authorization', money, post)
@@ -77,6 +98,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, options)
         add_creditcard(post, creditcard)
+        add_3dsecure(post, options[:three_d_secure]) if options[:three_d_secure]
         add_amount(post, money, options)
 
         commit('purchase', money, post)
@@ -160,7 +182,7 @@ module ActiveMerchant #:nodoc:
           test: test?,
           authorization: response[:numappel].to_s + response[:numtrans].to_s,
           fraud_review: false,
-          sent_params: parameters.delete_if { |key, value| %w[porteur dateval cvv].include?(key.to_s) }
+          sent_params: parameters.delete_if { |key, _value| %w[porteur dateval cvv].include?(key.to_s) }
         )
       end
 

@@ -115,7 +115,7 @@ class CenposTest < Test::Unit::TestCase
 
     capture = stub_comms do
       @gateway.capture(@amount, response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/1760035844/, data)
     end.respond_with(successful_capture_response)
 
@@ -151,7 +151,7 @@ class CenposTest < Test::Unit::TestCase
 
     void = stub_comms do
       @gateway.void(response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/1760035844/, data)
     end.respond_with(successful_void_response)
 
@@ -161,7 +161,7 @@ class CenposTest < Test::Unit::TestCase
   def test_failed_void
     response = stub_comms do
       @gateway.void('1758584451|4242|1.00')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/1758584451/, data)
     end.respond_with(failed_void_response)
 
@@ -178,7 +178,7 @@ class CenposTest < Test::Unit::TestCase
 
     refund = stub_comms do
       @gateway.refund(@amount, response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/1609995363/, data)
     end.respond_with(successful_refund_response)
 

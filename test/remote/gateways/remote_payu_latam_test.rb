@@ -232,10 +232,23 @@ class RemotePayuLatamTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase
-    response = @gateway.purchase(@amount, @declined_card, @options)
+    response = @gateway.purchase(@amount, @declined_card)
     assert_failure response
     assert_equal 'DECLINED', response.params['transactionResponse']['state']
   end
+
+  # Published API does not currently provide a way to request a CONTACT_THE_ENTITY
+  # def test_failed_purchase_correct_message_when_payment_network_response_error_present
+  #   response = @gateway.purchase(@amount, @credit_card, @options)
+  #   assert_failure response
+  #   assert_equal 'CONTACT_THE_ENTITY | Contactar con entidad emisora', response.message
+  #   assert_equal 'Contactar con entidad emisora', response.params['transactionResponse']['paymentNetworkResponseErrorMessage']
+
+  #   response = @gateway.purchase(@amount, @credit_card, @options)
+  #   assert_failure response
+  #   assert_equal 'CONTACT_THE_ENTITY', response.message
+  #   assert_nil response.params['transactionResponse']['paymentNetworkResponseErrorMessage']
+  # end
 
   def test_failed_purchase_with_cabal_card
     response = @gateway.purchase(@amount, @invalid_cabal_card, @options)
@@ -285,7 +298,7 @@ class RemotePayuLatamTest < Test::Unit::TestCase
   end
 
   def test_failed_authorize
-    response = @gateway.authorize(@amount, @pending_card, @options)
+    response = @gateway.authorize(@amount, @declined_card)
     assert_failure response
     assert_equal 'DECLINED', response.params['transactionResponse']['state']
   end
@@ -395,14 +408,14 @@ class RemotePayuLatamTest < Test::Unit::TestCase
     verify = @gateway.verify(@credit_card, @options.merge(verify_amount: 499))
 
     assert_failure verify
-    assert_equal 'The order value is less than minimum allowed. Minimum value allowed 5 ARS', verify.message
+    assert_equal 'INVALID_TRANSACTION | [The given payment value [4.99] is inferior than minimum configured value [5]]', verify.message
   end
 
   def test_failed_verify_with_specified_language
     verify = @gateway.verify(@credit_card, @options.merge(verify_amount: 499, language: 'es'))
 
     assert_failure verify
-    assert_equal 'The order value is less than minimum allowed. Minimum value allowed 5 ARS', verify.message
+    assert_equal 'INVALID_TRANSACTION | [El valor recibido [4,99] es inferior al valor mínimo configurado [5]]', verify.message
   end
 
   def test_transcript_scrubbing

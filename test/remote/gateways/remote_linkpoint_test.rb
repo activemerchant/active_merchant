@@ -105,8 +105,7 @@ class LinkpointTest < Test::Unit::TestCase
       installments: 12,
       startdate: 'immediate',
       periodicity: :monthly,
-      billing_address: address
-    )
+      billing_address: address)
 
     assert_success response
     assert_equal 'APPROVED', response.params['approved']

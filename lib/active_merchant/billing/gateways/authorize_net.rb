@@ -54,7 +54,7 @@ module ActiveMerchant
         '37' => STANDARD_ERROR_CODE[:invalid_expiry_date],
         '378' => STANDARD_ERROR_CODE[:invalid_cvc],
         '38' => STANDARD_ERROR_CODE[:expired_card],
-        '384' => STANDARD_ERROR_CODE[:config_error],
+        '384' => STANDARD_ERROR_CODE[:config_error]
       }
 
       MARKET_TYPE = {
@@ -94,7 +94,7 @@ module ActiveMerchant
       PAYMENT_METHOD_NOT_SUPPORTED_ERROR = '155'
       INELIGIBLE_FOR_ISSUING_CREDIT_ERROR = '54'
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :login, :password)
         super
       end
@@ -111,7 +111,7 @@ module ActiveMerchant
         end
       end
 
-      def authorize(amount, payment, options={})
+      def authorize(amount, payment, options = {})
         if payment.is_a?(String)
           commit(:cim_authorize, options) do |xml|
             add_cim_auth_purchase(xml, 'profileTransAuthOnly', amount, payment, options)
@@ -123,7 +123,7 @@ module ActiveMerchant
         end
       end
 
-      def capture(amount, authorization, options={})
+      def capture(amount, authorization, options = {})
         if auth_was_for_cim?(authorization)
           cim_capture(amount, authorization, options)
         else
@@ -131,7 +131,7 @@ module ActiveMerchant
         end
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, options = {})
         response =
           if auth_was_for_cim?(authorization)
             cim_refund(amount, authorization, options)
@@ -149,7 +149,7 @@ module ActiveMerchant
         end
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         if auth_was_for_cim?(authorization)
           cim_void(authorization, options)
         else
@@ -157,7 +157,7 @@ module ActiveMerchant
         end
       end
 
-      def credit(amount, payment, options={})
+      def credit(amount, payment, options = {})
         raise ArgumentError, 'Reference credits are not supported. Please supply the original credit card or use the #refund method.' if payment.is_a?(String)
 
         commit(:credit) do |xml|
@@ -568,9 +568,11 @@ module ActiveMerchant
         xml.cardholderAuthentication do
           three_d_secure = options.fetch(:three_d_secure, {})
           xml.authenticationIndicator(
-            options[:authentication_indicator] || three_d_secure[:eci])
+            options[:authentication_indicator] || three_d_secure[:eci]
+          )
           xml.cardholderAuthenticationValue(
-            options[:cardholder_authentication_value] || three_d_secure[:cavv])
+            options[:cardholder_authentication_value] || three_d_secure[:cavv]
+          )
         end
       end
 
@@ -595,7 +597,7 @@ module ActiveMerchant
         end
       end
 
-      def add_shipping_address(xml, options, root_node='shipTo')
+      def add_shipping_address(xml, options, root_node = 'shipTo')
         address = options[:shipping_address] || options[:address]
         return unless address
 
@@ -619,7 +621,7 @@ module ActiveMerchant
         end
       end
 
-      def add_ship_from_address(xml, options, root_node='shipFrom')
+      def add_ship_from_address(xml, options, root_node = 'shipFrom')
         address = options[:ship_from_address]
         return unless address
 
@@ -771,7 +773,7 @@ module ActiveMerchant
       end
 
       def parse(action, raw_response, options = {})
-        if is_cim_action?(action) || action == :verify_credentials
+        if cim_action?(action) || action == :verify_credentials
           parse_cim(raw_response, options)
         else
           parse_normal(action, raw_response)
@@ -802,7 +804,7 @@ module ActiveMerchant
         end
       end
 
-      def is_cim_action?(action)
+      def cim_action?(action)
         action.to_s.start_with?('cim')
       end
 
@@ -824,7 +826,7 @@ module ActiveMerchant
           'deleteCustomerProfileRequest'
         elsif action == :verify_credentials
           'authenticateTestRequest'
-        elsif is_cim_action?(action)
+        elsif cim_action?(action)
           'createCustomerProfileTransactionRequest'
         else
           'createTransactionRequest'
@@ -1006,7 +1008,7 @@ module ActiveMerchant
 
       def auth_was_for_cim?(authorization)
         _, _, action = split_authorization(authorization)
-        action && is_cim_action?(action)
+        action && cim_action?(action)
       end
 
       def parse_direct_response_elements(response, options)
@@ -1059,7 +1061,7 @@ module ActiveMerchant
           card_type: parts[51] || '',
           split_tender_id: parts[52] || '',
           requested_amount: parts[53] || '',
-          balance_on_card: parts[54] || '',
+          balance_on_card: parts[54] || ''
         }
       end
     end
