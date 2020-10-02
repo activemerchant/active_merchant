@@ -133,7 +133,7 @@ module ActiveMerchant #:nodoc:
         commit 'refund', crediting_params(authorization, amount: amount(money))
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         requires!(options, :order_id)
         post = {}
         add_payment_source(post, credit_card, options)
@@ -304,7 +304,8 @@ module ActiveMerchant #:nodoc:
           test: test?,
           avs_result: {code: response[:avs_result_code]},
           cvv_result: response[:cvd_result_code] && response[:cvd_result_code][-1, 1],
-          authorization: authorization_from(response))
+          authorization: authorization_from(response)
+        )
       end
 
       # Generates a Moneris authorization string of the form 'trans_id;receipt_id'.

@@ -47,7 +47,7 @@ module ActiveMerchant #:nodoc:
       #                                      (default: "https://github.com/activemerchant/active_merchant")
       #
       # Returns an ActiveMerchant::Billing::Response object where authorization is the Transaction ID on success
-      def purchase(amount, payment_method, options={})
+      def purchase(amount, payment_method, options = {})
         params = {}
         add_metadata(params, options)
         add_invoice(params, amount, options)
@@ -57,7 +57,7 @@ module ActiveMerchant #:nodoc:
         commit(url_for('Transaction'), params)
       end
 
-      def authorize(amount, payment_method, options={})
+      def authorize(amount, payment_method, options = {})
         params = {}
         add_metadata(params, options)
         add_invoice(params, amount, options)
@@ -204,7 +204,7 @@ module ActiveMerchant #:nodoc:
           'InvoiceReference' => truncate(options[:order_id], 50),
           'InvoiceNumber' => truncate(options[:invoice] || options[:order_id], 12),
           'InvoiceDescription' => truncate(options[:description], 64),
-          'CurrencyCode' => currency_code,
+          'CurrencyCode' => currency_code
         }
       end
 
@@ -251,7 +251,7 @@ module ActiveMerchant #:nodoc:
           payment_method.first_name.present? && payment_method.last_name.present?
       end
 
-      def add_address(params, address, options={})
+      def add_address(params, address, options = {})
         return unless address
 
         params['Title'] = address[:title]
@@ -558,7 +558,7 @@ module ActiveMerchant #:nodoc:
         'V6150' => 'Invalid Refund Amount',
         'V6151' => 'Refund amount greater than original transaction',
         'V6152' => 'Original transaction already refunded for total amount',
-        'V6153' => 'Card type not support by merchant',
+        'V6153' => 'Card type not support by merchant'
       }
     end
   end

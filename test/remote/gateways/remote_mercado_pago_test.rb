@@ -14,22 +14,19 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
       year: 2020,
       first_name: 'John',
       last_name: 'Smith',
-      verification_value: '737'
-    )
+      verification_value: '737')
     @cabal_credit_card = credit_card('6042012045809847',
       month: 10,
       year: 2020,
       first_name: 'John',
       last_name: 'Smith',
-      verification_value: '737'
-    )
+      verification_value: '737')
     @naranja_credit_card = credit_card('5895627823453005',
       month: 10,
       year: 2020,
       first_name: 'John',
       last_name: 'Smith',
-      verification_value: '123'
-    )
+      verification_value: '123')
     @declined_card = credit_card('5031433215406351',
       first_name: 'OTHE')
     @options = {

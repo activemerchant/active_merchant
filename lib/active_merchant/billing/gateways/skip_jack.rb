@@ -51,7 +51,7 @@ module ActiveMerchant #:nodoc:
         'W' => '9-digit zip/postal code matches billing information, street address does not',
         'X' => 'Street address and 9-digit zip/postal code matches billing information',
         'Y' => 'Street address and 5-digit zip/postal code matches billing information',
-        'Z' => '5-digit zip/postal code matches billing information, street address does not',
+        'Z' => '5-digit zip/postal code matches billing information, street address does not'
       }
 
       CHANGE_STATUS_ERROR_MESSAGES = {
@@ -267,8 +267,7 @@ module ActiveMerchant #:nodoc:
           test: test?,
           authorization: response[:szTransactionFileName] || parameters[:szTransactionId],
           avs_result: { code: response[:szAVSResponseCode] },
-          cvv_result: response[:szCVV2ResponseCode]
-        )
+          cvv_result: response[:szCVV2ResponseCode])
       end
 
       def url_for(action)

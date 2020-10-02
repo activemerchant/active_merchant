@@ -114,7 +114,7 @@ class IridiumTest < Test::Unit::TestCase
   def test_nonfractional_currency_handling
     stub_comms do
       @gateway.authorize(14200, @credit_card, @options.merge(currency: 'JPY'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<TransactionDetails Amount=\"142\"/, data)
     end.respond_with(successful_authorize_response)
   end

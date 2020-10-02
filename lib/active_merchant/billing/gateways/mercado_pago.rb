@@ -10,12 +10,12 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Mercado Pago'
       self.money_format = :dollars
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :access_token)
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         MultiResponse.run do |r|
           r.process { commit('tokenize', 'card_tokens', card_token_request(money, payment, options)) }
           options[:card_token] = r.authorization.split('|').first
@@ -23,7 +23,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         MultiResponse.run do |r|
           r.process { commit('tokenize', 'card_tokens', card_token_request(money, payment, options)) }
           options[:card_token] = r.authorization.split('|').first
@@ -31,7 +31,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         post = {}
         authorization, = authorization.split('|')
         post[:capture] = true
@@ -39,20 +39,20 @@ module ActiveMerchant #:nodoc:
         commit('capture', "payments/#{authorization}", post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         post = {}
         authorization, original_amount = authorization.split('|')
         post[:amount] = amount(money).to_f if original_amount && original_amount.to_f > amount(money).to_f
         commit('refund', "payments/#{authorization}/refunds", post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         authorization, = authorization.split('|')
         post = { status: 'cancelled' }
         commit('void', "payments/#{authorization}", post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -311,7 +311,7 @@ module ActiveMerchant #:nodoc:
         headers = {
           'Content-Type' => 'application/json'
         }
-        headers['X-Device-Session-ID'] = options[:device_id] if options[:device_id]
+        headers['X-meli-session-id'] = options[:device_id] if options[:device_id]
         headers
       end
 

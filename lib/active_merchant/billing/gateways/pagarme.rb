@@ -13,17 +13,17 @@ module ActiveMerchant #:nodoc:
 
       STANDARD_ERROR_CODE_MAPPING = {
         'refused' => STANDARD_ERROR_CODE[:card_declined],
-        'processing_error' => STANDARD_ERROR_CODE[:processing_error],
+        'processing_error' => STANDARD_ERROR_CODE[:processing_error]
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :api_key)
         @api_key = options[:api_key]
 
         super
       end
 
-      def purchase(money, payment_method, options={})
+      def purchase(money, payment_method, options = {})
         post = {}
         add_amount(post, money)
         add_payment_method(post, payment_method)
@@ -32,7 +32,7 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'transactions', post)
       end
 
-      def authorize(money, payment_method, options={})
+      def authorize(money, payment_method, options = {})
         post = {}
         add_amount(post, money)
         add_payment_method(post, payment_method)
@@ -43,27 +43,27 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'transactions', post)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         return Response.new(false, 'Não é possível capturar uma transação sem uma prévia autorização.') if authorization.nil?
 
         post = {}
         commit(:post, "transactions/#{authorization}/capture", post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         return Response.new(false, 'Não é possível estornar uma transação sem uma prévia captura.') if authorization.nil?
 
         void(authorization, options)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         return Response.new(false, 'Não é possível estornar uma transação autorizada sem uma prévia autorização.') if authorization.nil?
 
         post = {}
         commit(:post, "transactions/#{authorization}/refund", post)
       end
 
-      def verify(payment_method, options={})
+      def verify(payment_method, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(127, payment_method, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -99,7 +99,7 @@ module ActiveMerchant #:nodoc:
         post[:card_cvv] = credit_card.verification_value
       end
 
-      def add_metadata(post, options={})
+      def add_metadata(post, options = {})
         post[:metadata] = {}
         post[:metadata][:order_id] = options[:order_id]
         post[:metadata][:ip] = options[:ip]

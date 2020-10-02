@@ -105,8 +105,7 @@ class RemoteStripeApplePayTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :apple_pay
-    )
+      source: :apple_pay)
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response
     assert_equal 'charge', response.params['object']
@@ -120,8 +119,7 @@ class RemoteStripeApplePayTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :apple_pay
-    )
+      source: :apple_pay)
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response
     assert_equal 'charge', response.params['object']
@@ -136,8 +134,7 @@ class RemoteStripeApplePayTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :apple_pay
-    )
+      source: :apple_pay)
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_success response
     assert_equal 'charge', response.params['object']
@@ -151,8 +148,7 @@ class RemoteStripeApplePayTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :apple_pay
-    )
+      source: :apple_pay)
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_success response
     assert_equal 'charge', response.params['object']

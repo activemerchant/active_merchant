@@ -13,8 +13,7 @@ class CardStreamTest < Test::Unit::TestCase
       month: '12',
       year: '2014',
       verification_value: '356',
-      brand: :visa
-    )
+      brand: :visa)
 
     @visacredit_options = {
       billing_address: {
@@ -44,13 +43,11 @@ class CardStreamTest < Test::Unit::TestCase
       month: '12',
       year: 2014,
       verification_value: '4887',
-      brand: :american_express
-    )
+      brand: :american_express)
 
     @declined_card = credit_card('4000300011112220',
       month: '9',
-      year: '2014'
-    )
+      year: '2014')
   end
 
   def test_successful_visacreditcard_authorization
@@ -137,7 +134,7 @@ class CardStreamTest < Test::Unit::TestCase
   def test_successful_visacreditcard_purchase_with_descriptors
     stub_comms do
       @gateway.purchase(284, @visacreditcard, @visacredit_descriptor_options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/statementNarrative1=merchant/, data)
       assert_match(/statementNarrative2=product/, data)
     end.respond_with(successful_purchase_response_with_descriptors)
@@ -146,7 +143,7 @@ class CardStreamTest < Test::Unit::TestCase
   def test_successful_visacreditcard_purchase_with_default_ip
     stub_comms do
       @gateway.purchase(284, @visacreditcard, @visacredit_options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/remoteAddress=1\.1\.1\.1/, data)
     end.respond_with(successful_purchase_response_with_descriptors)
   end
@@ -154,7 +151,7 @@ class CardStreamTest < Test::Unit::TestCase
   def test_successful_visacreditcard_purchase_with_default_country
     stub_comms do
       @gateway.purchase(284, @visacreditcard, @visacredit_options.delete(:billing_address))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/customerCountryCode=GB/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -189,7 +186,7 @@ class CardStreamTest < Test::Unit::TestCase
   def test_successful_amex_purchase_with_localized_invoice_amount
     stub_comms do
       @gateway.purchase(28400, @amex, @visacredit_descriptor_options.merge(currency: 'JPY', order_id: '1234567890'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/item1GrossValue=284&/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -214,7 +211,7 @@ class CardStreamTest < Test::Unit::TestCase
     # Default
     purchase = stub_comms do
       @gateway.purchase(142, @visacreditcard, @visacredit_options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/type=1/, data)
     end.respond_with(successful_purchase_response)
 
@@ -222,7 +219,7 @@ class CardStreamTest < Test::Unit::TestCase
 
     purchase = stub_comms do
       @gateway.purchase(142, @visacreditcard, @visacredit_options.merge(type: 2))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/type=2/, data)
     end.respond_with(successful_purchase_response)
 
@@ -230,7 +227,7 @@ class CardStreamTest < Test::Unit::TestCase
 
     purchase = stub_comms do
       @gateway.purchase(142, @visacreditcard, @visacredit_options.merge(currency: 'PEN'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/currencyCode=604/, data)
     end.respond_with(successful_purchase_response)
 
@@ -253,7 +250,7 @@ class CardStreamTest < Test::Unit::TestCase
     post_params = "action=SALE&amount=10000&captureDelay=0&cardCVV=356&cardExpiryMonth=12&cardExpiryYear=14&cardNumber=4929421234600821&countryCode=GB&currencyCode=826&customerAddress=Flat+6%2C+Primrose+Rise+347+Lavender+Road&customerCountryCode=GB&customerName=Longbob+Longsen&customerPostCode=NN17+8YG+&merchantID=login&orderRef=AM+test+purchase&remoteAddress=1.1.1.1&threeDSRequired=N&transactionUnique=#{@visacredit_options[:order_id]}&type=1"
     expected_signature = Digest::SHA512.hexdigest("#{post_params}#{@gateway.options[:shared_secret]}")
 
-    @gateway.expects(:ssl_post).with do |url, data|
+    @gateway.expects(:ssl_post).with do |_url, data|
       data.include?("signature=#{expected_signature}")
     end.returns(successful_authorization_response)
 
@@ -263,7 +260,7 @@ class CardStreamTest < Test::Unit::TestCase
   def test_nonfractional_currency_handling
     stub_comms do
       @gateway.authorize(200, @visacreditcard, @visacredit_options.merge(currency: 'JPY'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/amount=2&currencyCode=392/, data)
     end.respond_with(successful_authorization_response)
   end
@@ -271,7 +268,7 @@ class CardStreamTest < Test::Unit::TestCase
   def test_3ds_response
     purchase = stub_comms do
       @gateway.purchase(142, @visacreditcard, @visacredit_options.merge(threeds_required: true))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/threeDSRequired=Y/, data)
     end.respond_with(successful_purchase_response_with_3dsecure)
 
@@ -291,7 +288,7 @@ class CardStreamTest < Test::Unit::TestCase
     end
     stub_comms do
       @gateway.purchase(142, @visacreditcard, @visacredit_options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/threeDSRequired=Y/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -299,7 +296,7 @@ class CardStreamTest < Test::Unit::TestCase
   def test_default_3dsecure_required
     stub_comms do
       @gateway.purchase(142, @visacreditcard, @visacredit_options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/threeDSRequired=N/, data)
     end.respond_with(successful_purchase_response)
   end

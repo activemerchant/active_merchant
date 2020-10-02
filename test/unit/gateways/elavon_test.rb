@@ -86,7 +86,7 @@ class ElavonTest < Test::Unit::TestCase
     authorization = '123456;00000000-0000-0000-0000-00000000000'
     response = stub_comms do
       @gateway.capture(@amount, authorization, test_mode: true, partial_shipment_flag: true)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/ssl_transaction_type=CCCOMPLETE/, data)
       assert_match(/ssl_test_mode=TRUE/, data)
       assert_match(/ssl_partial_shipment_flag=Y/, data)
@@ -158,7 +158,7 @@ class ElavonTest < Test::Unit::TestCase
   def test_successful_purchase_with_multi_currency
     response = stub_comms(@multi_currency_gateway) do
       @multi_currency_gateway.purchase(@amount, @credit_card, @options.merge(currency: 'EUR'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/ssl_transaction_currency=EUR/, data)
     end.respond_with(successful_purchase_with_multi_currency_response)
 
@@ -168,7 +168,7 @@ class ElavonTest < Test::Unit::TestCase
   def test_successful_purchase_without_multi_currency
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(currency: 'EUR', multi_currency: false))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_no_match(/ssl_transaction_currency=EUR/, data)
     end.respond_with(successful_purchase_response)
 
@@ -320,7 +320,7 @@ class ElavonTest < Test::Unit::TestCase
   def test_custom_fields_in_request
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(customer_number: '123', custom_fields: {a_key: 'a value'}))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/customer_number=123/, data)
       assert_match(/a_key/, data)
       refute_match(/ssl_a_key/, data)
@@ -392,7 +392,7 @@ class ElavonTest < Test::Unit::TestCase
     options = @options.merge(level_3_data: level_3_data)
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/ssl_customer_code=bob/, data)
       assert_match(/ssl_salestax=3.45/, data)
       assert_match(/ssl_salestax_indicator=Y/, data)

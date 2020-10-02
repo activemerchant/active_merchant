@@ -163,12 +163,10 @@ module ActiveMerchant #:nodoc:
             email: scrub_email(options[:email]),
             phone: options[:phone] || (options[:billing_address][:phone] if options[:billing_address] &&
               options[:billing_address][:phone]),
-            credit_card: credit_card_params
-          )
+            credit_card: credit_card_params)
           Response.new(result.success?, message_from_result(result),
             braintree_customer: (customer_hash(@braintree_gateway.customer.find(vault_id), :include_credit_cards) if result.success?),
-            customer_vault_id: (result.customer.id if result.success?)
-          )
+            customer_vault_id: (result.customer.id if result.success?))
         end
       end
 
@@ -182,7 +180,7 @@ module ActiveMerchant #:nodoc:
           Response.new(true, 'OK')
         end
       end
-      alias_method :delete, :unstore
+      alias delete unstore
 
       def supports_network_tokenization?
         true
@@ -234,7 +232,7 @@ module ActiveMerchant #:nodoc:
             phone: options[:phone] || (options[:billing_address][:phone] if options[:billing_address] &&
               options[:billing_address][:phone]),
             id: options[:customer],
-            device_data: options[:device_data],
+            device_data: options[:device_data]
           }.merge credit_card_params
           result = @braintree_gateway.customer.create(merge_credit_card_options(parameters, options))
           Response.new(result.success?, message_from_result(result),
@@ -243,8 +241,7 @@ module ActiveMerchant #:nodoc:
               customer_vault_id: (result.customer.id if result.success?),
               credit_card_token: (result.customer.credit_cards[0].token if result.success?)
             },
-            authorization: (result.customer.id if result.success?)
-          )
+            authorization: (result.customer.id if result.success?))
         end
       end
 
@@ -258,7 +255,7 @@ module ActiveMerchant #:nodoc:
             cvv: credit_card.verification_value,
             expiration_month: credit_card.month.to_s.rjust(2, '0'),
             expiration_year: credit_card.year.to_s,
-            device_data: options[:device_data],
+            device_data: options[:device_data]
           }
           if options[:billing_address]
             address = map_address(options[:billing_address])
@@ -320,7 +317,7 @@ module ActiveMerchant #:nodoc:
           company: address[:company],
           locality: address[:city],
           region: address[:state],
-          postal_code: scrub_zip(address[:zip]),
+          postal_code: scrub_zip(address[:zip])
         }
 
         mapped[:country_code_alpha2] = (address[:country] || address[:country_code_alpha2]) if address[:country] || address[:country_code_alpha2]
@@ -464,7 +461,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def customer_hash(customer, include_credit_cards=false)
+      def customer_hash(customer, include_credit_cards = false)
         hash = {
           'email' => customer.email,
           'phone' => customer.phone,
@@ -508,7 +505,7 @@ module ActiveMerchant #:nodoc:
         customer_details = {
           'id' => transaction.customer_details.id,
           'email' => transaction.customer_details.email,
-          'phone' => transaction.customer_details.phone,
+          'phone' => transaction.customer_details.phone
         }
 
         billing_details = {
@@ -518,7 +515,7 @@ module ActiveMerchant #:nodoc:
           'locality'         => transaction.billing_details.locality,
           'region'           => transaction.billing_details.region,
           'postal_code'      => transaction.billing_details.postal_code,
-          'country_name'     => transaction.billing_details.country_name,
+          'country_name'     => transaction.billing_details.country_name
         }
 
         shipping_details = {
@@ -528,7 +525,7 @@ module ActiveMerchant #:nodoc:
           'locality'         => transaction.shipping_details.locality,
           'region'           => transaction.shipping_details.region,
           'postal_code'      => transaction.shipping_details.postal_code,
-          'country_name'     => transaction.shipping_details.country_name,
+          'country_name'     => transaction.shipping_details.country_name
         }
         credit_card_details = {
           'masked_number'       => transaction.credit_card_details.masked_number,
@@ -578,7 +575,7 @@ module ActiveMerchant #:nodoc:
           options: {
             store_in_vault: options[:store] ? true : false,
             submit_for_settlement: options[:submit_for_settlement],
-            hold_in_escrow: options[:hold_in_escrow],
+            hold_in_escrow: options[:hold_in_escrow]
           }
         }
 

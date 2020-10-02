@@ -183,8 +183,7 @@ module ActiveMerchant #:nodoc:
           test: test?,
           authorization: authorization,
           avs_result: { code: avs_code(response, options) },
-          cvv_result: response[:CVCResponseCode]
-        )
+          cvv_result: response[:CVCResponseCode])
       rescue ResponseError => e
         if e.response.code == '401'
           return Response.new(false, 'Invalid Login')

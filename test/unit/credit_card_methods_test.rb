@@ -157,6 +157,8 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_equal 'elo', CreditCard.brand?('5067530000000000')
     assert_equal 'elo', CreditCard.brand?('6277800000000000')
     assert_equal 'elo', CreditCard.brand?('6509550000000000')
+    assert_equal 'elo', CreditCard.brand?('5090890000000000')
+    assert_equal 'elo', CreditCard.brand?('5092570000000000')
   end
 
   def test_should_detect_alelo_card

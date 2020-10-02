@@ -14,12 +14,12 @@ module ActiveMerchant #:nodoc:
       self.money_format = :dollars
       self.supported_cardtypes = %i[visa master discover diners_club]
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :login, :password)
         super
       end
 
-      def purchase(amount, payment_method, options={})
+      def purchase(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)
@@ -28,7 +28,7 @@ module ActiveMerchant #:nodoc:
         commit('purchase', post)
       end
 
-      def authorize(amount, payment_method, options={})
+      def authorize(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)
@@ -37,7 +37,7 @@ module ActiveMerchant #:nodoc:
         commit('authorize', post)
       end
 
-      def capture(amount, authorization, options={})
+      def capture(amount, authorization, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_reference(post, authorization)
@@ -46,7 +46,7 @@ module ActiveMerchant #:nodoc:
         commit('capture', post)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_reference(post, authorization)
@@ -57,7 +57,7 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      CURRENCY_CODES = Hash.new { |h, k| raise ArgumentError.new("Unsupported currency for HDFC: #{k}") }
+      CURRENCY_CODES = Hash.new { |_h, k| raise ArgumentError.new("Unsupported currency for HDFC: #{k}") }
       CURRENCY_CODES['AED'] = '784'
       CURRENCY_CODES['AUD'] = '036'
       CURRENCY_CODES['CAD'] = '124'
@@ -134,7 +134,7 @@ module ActiveMerchant #:nodoc:
         'purchase' => '1',
         'refund' => '2',
         'authorize' => '4',
-        'capture' => '5',
+        'capture' => '5'
       }
 
       def commit(action, post)
@@ -194,7 +194,7 @@ module ActiveMerchant #:nodoc:
         [tranid, member]
       end
 
-      def escape(string, max_length=250)
+      def escape(string, max_length = 250)
         return '' unless string
 
         string = string[0...max_length] if max_length

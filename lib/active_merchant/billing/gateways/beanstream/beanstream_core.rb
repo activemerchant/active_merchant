@@ -410,15 +410,14 @@ module ActiveMerchant #:nodoc:
         recurring_post(post_data(params, false))
       end
 
-      def post(data, use_profile_api=nil)
+      def post(data, use_profile_api = nil)
         response = parse(ssl_post((use_profile_api ? SECURE_PROFILE_URL : self.live_url), data))
         response[:customer_vault_id] = response[:customerCode] if response[:customerCode]
         build_response(success?(response), message_from(response), response,
           test: test? || response[:authCode] == 'TEST',
           authorization: authorization_from(response),
           cvv_result: CVD_CODES[response[:cvdId]],
-          avs_result: { code: AVS_CODES.include?(response[:avsId]) ? AVS_CODES[response[:avsId]] : response[:avsId] }
-        )
+          avs_result: { code: AVS_CODES.include?(response[:avsId]) ? AVS_CODES[response[:avsId]] : response[:avsId] })
       end
 
       def recurring_post(data)
@@ -468,7 +467,7 @@ module ActiveMerchant #:nodoc:
         params[:vbvEnabled] = '0'
         params[:scEnabled] = '0'
 
-        params.reject { |k, v| v.blank? }.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
+        params.reject { |_k, v| v.blank? }.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
     end
   end

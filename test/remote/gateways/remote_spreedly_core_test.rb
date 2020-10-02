@@ -71,7 +71,7 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
   def test_successful_purchase_with_card_and_address
     options = {
       email: 'joebob@example.com',
-      billing_address: address,
+      billing_address: address
     }
 
     assert response = @gateway.purchase(@amount, @credit_card, options)
@@ -124,7 +124,7 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
   def test_successful_authorize_with_card_and_address
     options = {
       email: 'joebob@example.com',
-      billing_address: address,
+      billing_address: address
     }
 
     assert response = @gateway.authorize(@amount, @credit_card, options)
@@ -194,7 +194,7 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
   def test_successful_store_with_address
     options = {
       email: 'joebob@example.com',
-      billing_address: address,
+      billing_address: address
     }
 
     assert response = @gateway.store(@credit_card, options)

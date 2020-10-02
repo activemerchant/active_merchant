@@ -928,7 +928,7 @@ module ActiveMerchant #:nodoc:
             'card_type' => direct_response_fields[51] || '',
             'split_tender_id' => direct_response_fields[52] || '',
             'requested_amount' => direct_response_fields[53] || '',
-            'balance_on_card' => direct_response_fields[54] || '',
+            'balance_on_card' => direct_response_fields[54] || ''
           }
         )
       end

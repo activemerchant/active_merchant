@@ -56,7 +56,7 @@ module ActiveMerchant
         private
 
         def internal_errors
-          @errors ||= Errors.new
+          @internal_errors ||= Errors.new
         end
 
         class Errors < Hash
@@ -75,7 +75,7 @@ module ActiveMerchant
           end
 
           def empty?
-            all? { |k, v| v&.empty? }
+            all? { |_k, v| v&.empty? }
           end
 
           def on(field)

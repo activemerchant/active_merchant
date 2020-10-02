@@ -15,8 +15,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
       month:              '10',
       year:               '2025',
       source:             :network_token,
-      verification_value: nil
-    )
+      verification_value: nil)
 
     @options = {
       order_id: '1',
@@ -149,9 +148,9 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_failed_purchase
-    response = @gateway.purchase(@amount, @declined_card, @options)
+    response = @gateway.purchase(12305, @credit_card, @options)
     assert_failure response
-    assert_equal 'request_invalid: card_number_invalid', response.message
+    assert_equal 'Declined - Do Not Honour', response.message
   end
 
   def test_avs_failed_purchase
@@ -207,8 +206,9 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_failed_authorize
-    response = @gateway.authorize(@amount, @declined_card, @options)
+    response = @gateway.authorize(12314, @credit_card, @options)
     assert_failure response
+    assert_equal 'Invalid Card Number', response.message
   end
 
   def test_partial_capture
@@ -228,6 +228,8 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
+    sleep 1
+
     assert refund = @gateway.refund(@amount, purchase.authorization)
     assert_success refund
   end
@@ -235,6 +237,8 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
   def test_partial_refund
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
+
+    sleep 1
 
     assert refund = @gateway.refund(@amount - 1, purchase.authorization)
     assert_success refund
@@ -260,6 +264,11 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
 
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
+    # this should only be a Response and not a MultiResponse
+    # as we are passing in a 0 amount and there should be
+    # no void call
+    assert_instance_of(Response, response)
+    refute_instance_of(MultiResponse, response)
     assert_success response
     assert_match %r{Succeeded}, response.message
   end

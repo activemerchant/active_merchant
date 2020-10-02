@@ -302,8 +302,7 @@ module ActiveMerchant #:nodoc:
           authorization: authorization_from(response, money, token),
           avs_result: AVSResult.new(code: response[:avs]),
           cvv_result: CVVResult.new(response[:cvv2]),
-          error_code: success ? nil : error_code_from(response)
-        )
+          error_code: success ? nil : error_code_from(response))
       end
 
       def url

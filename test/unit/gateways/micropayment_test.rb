@@ -15,7 +15,7 @@ class MicropaymentTest < Test::Unit::TestCase
   def test_successful_purchase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/accessKey=key/, data)
       assert_match(/number=#{@credit_card.number}/, data)
       assert_match(/cvc2=#{@credit_card.verification_value}/, data)
@@ -40,7 +40,7 @@ class MicropaymentTest < Test::Unit::TestCase
   def test_successful_authorize_and_capture
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/accessKey=key/, data)
       assert_match(/number=#{@credit_card.number}/, data)
       assert_match(/cvc2=#{@credit_card.verification_value}/, data)
@@ -52,7 +52,7 @@ class MicropaymentTest < Test::Unit::TestCase
 
     capture = stub_comms do
       @gateway.capture(@amount, response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/accessKey=key/, data)
       assert_match(/transactionId=www.spreedly.com-IDhngtaj81a1/, data)
       assert_match(/sessionId=CC747358d9598614c3ba1e9a7b82a28318cd81bc/, data)
@@ -89,7 +89,7 @@ class MicropaymentTest < Test::Unit::TestCase
 
     void = stub_comms do
       @gateway.void(response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/accessKey=key/, data)
       assert_match(/transactionId=www.spreedly.com-IDhngtaj81a1/, data)
       assert_match(/sessionId=CC747358d9598614c3ba1e9a7b82a28318cd81bc/, data)
@@ -115,7 +115,7 @@ class MicropaymentTest < Test::Unit::TestCase
 
     refund = stub_comms do
       @gateway.refund(@amount, response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/accessKey=key/, data)
       assert_match(/transactionId=www.spreedly.com-IDhm7nyju168/, data)
       assert_match(/sessionId=CCadc2b593ca98bfd730c383582de00faed995b0/, data)

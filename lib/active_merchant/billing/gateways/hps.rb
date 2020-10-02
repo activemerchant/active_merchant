@@ -25,12 +25,12 @@ module ActiveMerchant #:nodoc:
         google_pay:       'GooglePayApp'
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :secret_api_key)
         super
       end
 
-      def authorize(money, card_or_token, options={})
+      def authorize(money, card_or_token, options = {})
         commit('CreditAuth') do |xml|
           add_amount(xml, money)
           add_allow_dup(xml)
@@ -42,14 +42,14 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def capture(money, transaction_id, options={})
-        commit('CreditAddToBatch') do |xml|
+      def capture(money, transaction_id, options = {})
+        commit('CreditAddToBatch', transaction_id) do |xml|
           add_amount(xml, money)
           add_reference(xml, transaction_id)
         end
       end
 
-      def purchase(money, payment_method, options={})
+      def purchase(money, payment_method, options = {})
         if payment_method.is_a?(Check)
           commit_check_sale(money, payment_method, options)
         else
@@ -57,7 +57,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def refund(money, transaction_id, options={})
+      def refund(money, transaction_id, options = {})
         commit('CreditReturn') do |xml|
           add_amount(xml, money)
           add_allow_dup(xml)
@@ -67,7 +67,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def verify(card_or_token, options={})
+      def verify(card_or_token, options = {})
         commit('CreditAccountVerify') do |xml|
           add_card_or_token_customer_data(xml, card_or_token, options)
           add_descriptor_name(xml, options)
@@ -75,7 +75,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def void(transaction_id, options={})
+      def void(transaction_id, options = {})
         if options[:check_void]
           commit('CheckVoid') do |xml|
             add_reference(xml, transaction_id)
@@ -126,7 +126,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_reference(xml, transaction_id)
-        xml.hps :GatewayTxnId, transaction_id
+        reference = transaction_id.to_s.include?('|') ? transaction_id.split('|').first : transaction_id
+        xml.hps :GatewayTxnId, reference
       end
 
       def add_amount(xml, money)
@@ -232,7 +233,7 @@ module ActiveMerchant #:nodoc:
             source: card_or_token.source,
             cavv: card_or_token.payment_cryptogram,
             eci: card_or_token.eci,
-            xid: card_or_token.transaction_id,
+            xid: card_or_token.transaction_id
           })
         elsif options[:three_d_secure]
           options[:three_d_secure][:source] ||= card_brand(card_or_token)
@@ -323,7 +324,7 @@ module ActiveMerchant #:nodoc:
         response
       end
 
-      def commit(action, &request)
+      def commit(action, reference = nil, &request)
         data = build_request(action, &request)
 
         response =
@@ -338,7 +339,7 @@ module ActiveMerchant #:nodoc:
           message_from(response),
           response,
           test: test?,
-          authorization: authorization_from(response),
+          authorization: authorization_from(response, reference),
           avs_result: {
             code: response['AVSRsltCode'],
             message: response['AVSRsltText']
@@ -369,7 +370,9 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def authorization_from(response)
+      def authorization_from(response, reference)
+        return [reference, response['GatewayTxnId']].join('|') if reference
+
         response['GatewayTxnId']
       end
 

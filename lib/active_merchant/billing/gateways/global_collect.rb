@@ -12,19 +12,19 @@ module ActiveMerchant #:nodoc:
       self.money_format = :cents
       self.supported_cardtypes = %i[visa master american_express discover naranja cabal]
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :merchant_id, :api_key_id, :secret_api_key)
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         MultiResponse.run do |r|
           r.process { authorize(money, payment, options) }
           r.process { capture(money, r.authorization, options) } if should_request_capture?(r, options[:requires_approval])
         end
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         post = nestable_hash
         add_order(post, money, options)
         add_payment(post, payment, options)
@@ -35,7 +35,7 @@ module ActiveMerchant #:nodoc:
         commit(:authorize, post)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         post = nestable_hash
         add_order(post, money, options, capture: true)
         add_customer_data(post, options)
@@ -43,7 +43,7 @@ module ActiveMerchant #:nodoc:
         commit(:capture, post, authorization)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         post = nestable_hash
         add_amount(post, money, options)
         add_refund_customer_data(post, options)
@@ -51,13 +51,13 @@ module ActiveMerchant #:nodoc:
         commit(:refund, post, authorization)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = nestable_hash
         add_creator_info(post, options)
         commit(:void, post, authorization)
       end
 
-      def verify(payment, options={})
+      def verify(payment, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, payment, options) }
           r.process { void(r.authorization, options) }
@@ -142,7 +142,7 @@ module ActiveMerchant #:nodoc:
         post['shoppingCartExtension']['extensionID'] = options[:extension_ID] if options[:extension_ID]
       end
 
-      def add_amount(post, money, options={})
+      def add_amount(post, money, options = {})
         post['amountOfMoney'] = {
           'amount' => amount(money),
           'currencyCode' => options[:currency] || currency(money)

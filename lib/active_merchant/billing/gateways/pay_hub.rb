@@ -66,7 +66,7 @@ module ActiveMerchant #:nodoc:
         '43' => STANDARD_ERROR_CODE[:pickup_card]
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :orgid, :username, :password, :tid)
 
         super
@@ -82,7 +82,7 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
-      def purchase(amount, creditcard, options={})
+      def purchase(amount, creditcard, options = {})
         post = setup_post('sale')
         add_creditcard(post, creditcard)
         add_amount(post, amount)
@@ -92,7 +92,7 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
-      def refund(amount, trans_id, options={})
+      def refund(amount, trans_id, options = {})
         # Attempt a void in case the transaction is unsettled
         post = setup_post('void')
         add_reference(post, trans_id)
@@ -115,7 +115,7 @@ module ActiveMerchant #:nodoc:
 
       # No void, as PayHub's void does not work on authorizations
 
-      def verify(creditcard, options={})
+      def verify(creditcard, options = {})
         authorize(100, creditcard, options)
       end
 
@@ -189,8 +189,7 @@ module ActiveMerchant #:nodoc:
           avs_result: {code: response['AVS_RESULT_CODE']},
           cvv_result: response['VERIFICATION_RESULT_CODE'],
           error_code: (success ? nil : STANDARD_ERROR_CODE_MAPPING[response['RESPONSE_CODE']]),
-          authorization: response['TRANSACTION_ID']
-        )
+          authorization: response['TRANSACTION_ID'])
       end
 
       def response_error(raw_response)

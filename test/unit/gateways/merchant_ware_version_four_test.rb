@@ -31,8 +31,8 @@ class MerchantWareVersionFourTest < Test::Unit::TestCase
   end
 
   def test_soap_fault_during_authorization
-    response_400 = stub(code: '400', message: 'Bad Request', body: failed_authorize_response)
-    @gateway.expects(:ssl_post).raises(ActiveMerchant::ResponseError.new(response_400))
+    response400 = stub(code: '400', message: 'Bad Request', body: failed_authorize_response)
+    @gateway.expects(:ssl_post).raises(ActiveMerchant::ResponseError.new(response400))
 
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_instance_of Response, response
@@ -41,8 +41,8 @@ class MerchantWareVersionFourTest < Test::Unit::TestCase
 
     assert_nil response.authorization
     assert_equal 'amount cannot be null. Parameter name: amount', response.message
-    assert_equal response_400.code, response.params['http_code']
-    assert_equal response_400.message, response.params['http_message']
+    assert_equal response400.code, response.params['http_code']
+    assert_equal response400.message, response.params['http_message']
   end
 
   def test_failed_authorization

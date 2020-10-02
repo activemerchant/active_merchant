@@ -21,7 +21,7 @@ class NmiTest < Test::Unit::TestCase
   def test_successful_purchase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/username=#{@gateway.options[:login]}/, data)
       assert_match(/password=#{@gateway.options[:password]}/, data)
       assert_match(/type=sale/, data)
@@ -43,7 +43,7 @@ class NmiTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       test_transaction_options(data)
 
       assert_match(/merchant_defined_field_8=value8/, data)
@@ -65,7 +65,7 @@ class NmiTest < Test::Unit::TestCase
   def test_successful_purchase_with_echeck
     response = stub_comms do
       @gateway.purchase(@amount, @check)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/username=#{@gateway.options[:login]}/, data)
       assert_match(/password=#{@gateway.options[:password]}/, data)
       assert_match(/type=sale/, data)
@@ -101,7 +101,7 @@ class NmiTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       test_transaction_options(data)
 
       assert_match(/merchant_defined_field_8=value8/, data)
@@ -113,7 +113,7 @@ class NmiTest < Test::Unit::TestCase
   def test_successful_authorize_and_capture
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/username=#{@gateway.options[:login]}/, data)
       assert_match(/password=#{@gateway.options[:password]}/, data)
       assert_match(/type=auth/, data)
@@ -128,7 +128,7 @@ class NmiTest < Test::Unit::TestCase
 
     capture = stub_comms do
       @gateway.capture(@amount, response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/username=#{@gateway.options[:login]}/, data)
       assert_match(/password=#{@gateway.options[:password]}/, data)
       assert_match(/type=capture/, data)
@@ -167,7 +167,7 @@ class NmiTest < Test::Unit::TestCase
 
     void = stub_comms do
       @gateway.void(response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/username=#{@gateway.options[:login]}/, data)
       assert_match(/password=#{@gateway.options[:password]}/, data)
       assert_match(/type=void/, data)
@@ -195,7 +195,7 @@ class NmiTest < Test::Unit::TestCase
 
     refund = stub_comms do
       @gateway.refund(@amount, response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/username=#{@gateway.options[:login]}/, data)
       assert_match(/password=#{@gateway.options[:password]}/, data)
       assert_match(/type=refund/, data)
@@ -217,7 +217,7 @@ class NmiTest < Test::Unit::TestCase
   def test_successful_credit
     response = stub_comms do
       @gateway.credit(@amount, @credit_card)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/username=#{@gateway.options[:login]}/, data)
       assert_match(/password=#{@gateway.options[:password]}/, data)
       assert_match(/type=credit/, data)
@@ -237,7 +237,7 @@ class NmiTest < Test::Unit::TestCase
   def test_credit_with_options
     response = stub_comms do
       @gateway.credit(@amount, @credit_card, @transaction_options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       test_transaction_options(data)
     end.respond_with(successful_credit_response)
 
@@ -274,7 +274,7 @@ class NmiTest < Test::Unit::TestCase
   def test_successful_store
     response = stub_comms do
       @gateway.store(@credit_card)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/username=#{@gateway.options[:login]}/, data)
       assert_match(/password=#{@gateway.options[:password]}/, data)
       assert_match(/customer_vault=add_customer/, data)
@@ -304,7 +304,7 @@ class NmiTest < Test::Unit::TestCase
   def test_successful_store_with_echeck
     response = stub_comms do
       @gateway.store(@check)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/username=#{@gateway.options[:login]}/, data)
       assert_match(/password=#{@gateway.options[:password]}/, data)
       assert_match(/customer_vault=add_customer/, data)
@@ -346,7 +346,7 @@ class NmiTest < Test::Unit::TestCase
   def test_includes_cvv_tag
     stub_comms do
       @gateway.purchase(@amount, @credit_card)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{cvv}, data)
     end.respond_with(successful_purchase_response)
   end
@@ -355,14 +355,14 @@ class NmiTest < Test::Unit::TestCase
     @credit_card.verification_value = nil
     stub_comms do
       @gateway.purchase(@amount, @credit_card)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_no_match(%r{cvv}, data)
     end.respond_with(successful_purchase_response)
 
     @credit_card.verification_value = '  '
     stub_comms do
       @gateway.purchase(@amount, @credit_card)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_no_match(%r{cvv}, data)
     end.respond_with(successful_purchase_response)
   end
@@ -386,7 +386,7 @@ class NmiTest < Test::Unit::TestCase
     options = stored_credential_options(:cardholder, :recurring, :initial)
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/initiated_by=customer/, data)
       assert_match(/stored_credential_indicator=stored/, data)
       assert_match(/billing_method=recurring/, data)
@@ -400,7 +400,7 @@ class NmiTest < Test::Unit::TestCase
     options = stored_credential_options(:cardholder, :recurring, id: 'abc123')
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/initiated_by=customer/, data)
       assert_match(/stored_credential_indicator=used/, data)
       assert_match(/billing_method=recurring/, data)
@@ -414,7 +414,7 @@ class NmiTest < Test::Unit::TestCase
     options = stored_credential_options(:merchant, :recurring, :initial)
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/initiated_by=merchant/, data)
       assert_match(/stored_credential_indicator=stored/, data)
       assert_match(/billing_method=recurring/, data)
@@ -428,7 +428,7 @@ class NmiTest < Test::Unit::TestCase
     options = stored_credential_options(:merchant, :recurring, id: 'abc123')
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/initiated_by=merchant/, data)
       assert_match(/stored_credential_indicator=used/, data)
       assert_match(/billing_method=recurring/, data)
@@ -442,7 +442,7 @@ class NmiTest < Test::Unit::TestCase
     options = stored_credential_options(:cardholder, :installment, :initial)
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/initiated_by=customer/, data)
       assert_match(/stored_credential_indicator=stored/, data)
       assert_match(/billing_method=installment/, data)
@@ -456,7 +456,7 @@ class NmiTest < Test::Unit::TestCase
     options = stored_credential_options(:cardholder, :installment, id: 'abc123')
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/initiated_by=customer/, data)
       assert_match(/stored_credential_indicator=used/, data)
       assert_match(/billing_method=installment/, data)
@@ -470,7 +470,7 @@ class NmiTest < Test::Unit::TestCase
     options = stored_credential_options(:merchant, :installment, :initial)
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/initiated_by=merchant/, data)
       assert_match(/stored_credential_indicator=stored/, data)
       assert_match(/billing_method=installment/, data)
@@ -484,7 +484,7 @@ class NmiTest < Test::Unit::TestCase
     options = stored_credential_options(:merchant, :installment, id: 'abc123')
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/initiated_by=merchant/, data)
       assert_match(/stored_credential_indicator=used/, data)
       assert_match(/billing_method=installment/, data)
@@ -498,7 +498,7 @@ class NmiTest < Test::Unit::TestCase
     options = stored_credential_options(:cardholder, :unscheduled, :initial)
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/initiated_by=customer/, data)
       assert_match(/stored_credential_indicator=stored/, data)
       refute_match(/billing_method/, data)
@@ -512,7 +512,7 @@ class NmiTest < Test::Unit::TestCase
     options = stored_credential_options(:cardholder, :unscheduled, id: 'abc123')
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/initiated_by=customer/, data)
       assert_match(/stored_credential_indicator=used/, data)
       refute_match(/billing_method/, data)
@@ -526,7 +526,7 @@ class NmiTest < Test::Unit::TestCase
     options = stored_credential_options(:merchant, :unscheduled, :initial)
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/initiated_by=merchant/, data)
       assert_match(/stored_credential_indicator=stored/, data)
       refute_match(/billing_method/, data)
@@ -540,7 +540,7 @@ class NmiTest < Test::Unit::TestCase
     options = stored_credential_options(:merchant, :unscheduled, id: 'abc123')
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/initiated_by=merchant/, data)
       assert_match(/stored_credential_indicator=used/, data)
       refute_match(/billing_method/, data)
@@ -554,7 +554,7 @@ class NmiTest < Test::Unit::TestCase
     options = stored_credential_options(:merchant, :installment, id: 'abc123')
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/initiated_by=merchant/, data)
       assert_match(/stored_credential_indicator=used/, data)
       assert_match(/billing_method=installment/, data)
@@ -568,7 +568,7 @@ class NmiTest < Test::Unit::TestCase
     options = stored_credential_options(:merchant, :installment, id: 'abc123').merge(recurring: true)
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/initiated_by=merchant/, data)
       assert_match(/stored_credential_indicator=used/, data)
       assert_match(/billing_method=installment/, data)
@@ -582,7 +582,7 @@ class NmiTest < Test::Unit::TestCase
     options = stored_credential_options(:merchant, :unscheduled, id: 'abc123').merge(recurring: true)
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/initiated_by=merchant/, data)
       assert_match(/stored_credential_indicator=used/, data)
       refute_match(/billing_method/, data)
@@ -597,7 +597,7 @@ class NmiTest < Test::Unit::TestCase
   def test_verify(options = {})
     response = stub_comms do
       @gateway.verify(@credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/username=#{@gateway.options[:login]}/, data)
       assert_match(/password=#{@gateway.options[:password]}/, data)
       assert_match(/type=validate/, data)

@@ -1,9 +1,63 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Checkout v2: $0 Auth on gateway [jessiagee] #3762
+* Adyen: Safely add execute_threeds: false [curiousepic] #3756
+* RuboCop: Fix Layout/SpaceAroundEqualsInParameterDefault [leila-alderman] #3720
+* iATS: Allow email to be passed outside of the billing_address context [naashton] #3750
+* Orbital: Don't pass xid for transactions using network tokens [britth] #3757
+* Forte: Add service_fee_amount field [meagabeth] #3751
+* WorldPay: Add support for idempotency_key[cdmackeyfree] #3759
+* Orbital: Handle line_tot key as a string [naashton] #3760
+* RuboCop: Fix Lint/UnusedMethodArgument [leila-alderman] #3721
+* RuboCop: Fix Naming/MemoizedInstanceVariableName [leila-alderman] #3722
+* RuboCop: Fix Style/BlockComments [leila-alderman] #3729
+* Checkout V2: Move to single-transaction Purchases [curiousepic] #3761
+* RuboCop: Fix Naming/ConstantName [leila-alderman] #3723
+* Orbital: Fix schema errors [britth] #3766
+* Checkout V2: Start testing via amount code [curiousepic] #3767
+* CyberSource: Don't include empty `mdd_` fields [arbianchi] #3758
+* RuboCop: Fix Naming/VariableNumber [leila-alderman] #3725
+* Update BIN ranges for Elo cardtype [cdmackeyfree] #3769
+* Orbital: Resolve CardIndicators issue [meagabeth] #3771
+* Adyen: Add subMerchant fields [naashton] #3772
+* PayPal Express: reduce param requirements [shasum] #3773
+* PayU Latam: Support partial refunds [leila-alderman] #3774
+* RuboCop: Fix Style/Alias [leila-alderman] #3727
+* Stripe PI: Allow `on_behalf_of` to be passed alone #3776
+* RuboCop: Fix Performance/RedundantMatch [leila-alderman] #3765
+* RuboCop: Fix Layout/MultilineMethodCallBraceLayout [leila-alderman] #3763
+
+== Version 1.114.0
+* BlueSnap: Add address1,address2,phone,shipping_* support #3749
+* BlueSnap: Protect against `nil` metadata [carrigan] #3752
+* Cybersource: [CyberSource] Ensure the default address doesn't override `ActionController::Parameters` [pi3r] #3755
+
+== Version 1.113.0
+* Orbital: Add cardIndicators field [meagabeth] #3734
+* Openpay: Add Colombia to supported countries [molbrown] #3740
+* Mercado Pago: Update Device Id Header field [cdmackeyfree] #3741
+* RuboCop: Fix Style/TrailingCommaInHashLiteral [leila-alderman] #3718
+* RuboCop: Fix Naming/PredicateName [leila-alderman] #3724
+* RuboCop: Fix Style/Attr [leila-alderman] #3728
+* Payflow: Use application_id to set buttonsource [britth] #3737
+* HPS: Enable refunds using capture transaction [britth] #3738
+* Quickbooks: Omit empty strings in address [leila-alderman] #3743
+* BlueSnap: Add transactionMetaData support #3745
+* Orbital: Fix typo in PC3DtlLineTot field [naashton] #3736
+* Credorax: Send first and last name parameters for CFT transactions [britth] #3748
+* Orbital: Update CardIndicators field to fix bug [meagabeth] #3746
+* CyberSource: Always send default address [leila-alderman] #3747
+* Netbanx: Reject partial refund on pending status [rockyhakjoong] #3735
+
+== Version 1.112.0
 * Cybersource: add `maestro` and `diners_club` eci brand mapping [bbraschi] #3708
 * Cybersource: Ensure Partner Solution Id placement conforms to schema [britth] #3715
 * Adyen: Adyen: Pass `subMerchantId` as `additionalData` [naashton] #3714
+* Litle: Omit checkNum when nil [leila-alderman] #3719
+* PayU Latam: Improve error response [esmitperez] #3717
+* Vantiv: Vantiv Express - CardPresentCode, PaymentType, SubmissionType, DuplicateCheckDisableFlag [esmitperez] #3730,#3731
+* Cybersource: Ensure issueradditionaldata comes before partnerSolutionId [britth] #3733
 
 == Version 1.111.0
 * Fat Zebra: standardized 3DS fields and card on file extra data for Visa scheme rules [montdidier] #3409

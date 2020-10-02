@@ -60,7 +60,8 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
 
     @recurring_options = @options.merge(
       interval: { unit: :months, length: 1 },
-      occurences: 5)
+      occurences: 5
+    )
   end
 
   def test_successful_visa_purchase
@@ -416,7 +417,7 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
       'number'       => credit_card.number,
       'expiry_month' => '01',
       'expiry_year'  => (Time.now.year + 1) % 100,
-      'cvd'          => credit_card.verification_value,
+      'cvd'          => credit_card.verification_value
     }.to_json
 
     response = http.request(request)

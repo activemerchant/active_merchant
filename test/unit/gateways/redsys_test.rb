@@ -8,7 +8,7 @@ class RedsysTest < Test::Unit::TestCase
     @credentials = {
       login: '091952713',
       secret_key: 'qwertyasdf0123456789',
-      terminal: '1',
+      terminal: '1'
     }
     @gateway = RedsysGateway.new(@credentials)
     @headers = {
@@ -115,7 +115,7 @@ class RedsysTest < Test::Unit::TestCase
   def test_bad_order_id_format
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(123, credit_card, order_id: 'Una#cce-ptable44Format')
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/MERCHANT_ORDER%3E\d\d\d\dUnaccept%3C/, data)
     end.respond_with(successful_authorize_response)
   end
@@ -123,7 +123,7 @@ class RedsysTest < Test::Unit::TestCase
   def test_order_id_numeric_start_but_too_long
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(123, credit_card, order_id: '1234ThisIs]FineButTooLong')
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/MERCHANT_ORDER%3E1234ThisIsFi%3C/, data)
     end.respond_with(successful_authorize_response)
   end

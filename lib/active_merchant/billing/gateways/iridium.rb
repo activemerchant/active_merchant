@@ -203,7 +203,7 @@ module ActiveMerchant #:nodoc:
         'YER' => '886',
         'ZAR' => '710',
         'ZMK' => '894',
-        'ZWD' => '716',
+        'ZWD' => '716'
       }
 
       AVS_CODE = {
@@ -251,16 +251,16 @@ module ActiveMerchant #:nodoc:
         commit(build_reference_request('COLLECTION', money, authorization, options), options)
       end
 
-      def credit(money, authorization, options={})
+      def credit(money, authorization, options = {})
         ActiveMerchant.deprecated CREDIT_DEPRECATION_MESSAGE
         refund(money, authorization, options)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         commit(build_reference_request('REFUND', money, authorization, options), options)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         commit(build_reference_request('VOID', nil, authorization, options), options)
       end
 
@@ -389,10 +389,9 @@ module ActiveMerchant #:nodoc:
           authorization: authorization,
           avs_result: {
             street_match: AVS_CODE[ response[:transaction_output_data][:address_numeric_check_result] ],
-            postal_match: AVS_CODE[ response[:transaction_output_data][:post_code_check_result] ],
+            postal_match: AVS_CODE[ response[:transaction_output_data][:post_code_check_result] ]
           },
-          cvv_result: CVV_CODE[ response[:transaction_output_data][:cv2_check_result] ]
-        )
+          cvv_result: CVV_CODE[ response[:transaction_output_data][:cv2_check_result] ])
       end
 
       def parse(xml)

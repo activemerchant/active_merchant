@@ -32,8 +32,8 @@ class MerchantWareTest < Test::Unit::TestCase
   end
 
   def test_soap_fault_during_authorization
-    response_500 = stub(code: '500', message: 'Internal Server Error', body: fault_authorization_response)
-    @gateway.expects(:ssl_post).raises(ActiveMerchant::ResponseError.new(response_500))
+    response500 = stub(code: '500', message: 'Internal Server Error', body: fault_authorization_response)
+    @gateway.expects(:ssl_post).raises(ActiveMerchant::ResponseError.new(response500))
 
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_instance_of Response, response
@@ -42,8 +42,8 @@ class MerchantWareTest < Test::Unit::TestCase
 
     assert_nil response.authorization
     assert_equal 'Server was unable to process request. ---> strPAN should be at least 13 to at most 19 characters in size. Parameter name: strPAN', response.message
-    assert_equal response_500.code, response.params['http_code']
-    assert_equal response_500.message, response.params['http_message']
+    assert_equal response500.code, response.params['http_code']
+    assert_equal response500.message, response.params['http_message']
   end
 
   def test_failed_authorization
@@ -113,7 +113,7 @@ class MerchantWareTest < Test::Unit::TestCase
     options = {order_id: '1'}
     stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match '<trackData>Track Data</trackData>', data
     end.respond_with(successful_authorization_response)
   end

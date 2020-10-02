@@ -89,7 +89,7 @@ class ProPayTest < Test::Unit::TestCase
   def test_successful_void
     response = stub_comms do
       @gateway.void('auth', @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r(<transType>07</transType>), data)
     end.respond_with(successful_void_response)
 
@@ -99,7 +99,7 @@ class ProPayTest < Test::Unit::TestCase
   def test_failed_void
     response = stub_comms do
       @gateway.void('invalid-auth', @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r(<transType>07</transType>), data)
     end.respond_with(failed_void_response)
 
@@ -157,7 +157,7 @@ class ProPayTest < Test::Unit::TestCase
 
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<zip>123453456</, data)
     end.respond_with(successful_purchase_response)
   end

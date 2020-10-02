@@ -95,7 +95,7 @@ module ActiveMerchant #:nodoc:
         pickup_card: 'pick_up_card',
         config_error: 'config_error',
         test_mode_live_card: 'test_mode_live_card',
-        unsupported_feature: 'unsupported_feature',
+        unsupported_feature: 'unsupported_feature'
       }
 
       cattr_reader :implementations

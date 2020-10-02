@@ -16,7 +16,7 @@ class CardknoxTest < Test::Unit::TestCase
   def test_successful_purchase_passing_extra_info
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(order_id: '1337', description: 'socool'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/xOrderID=1337/, data)
       assert_match(/xDescription=socool/, data)
     end.respond_with(successful_purchase_response)
@@ -66,7 +66,7 @@ class CardknoxTest < Test::Unit::TestCase
     @credit_card.manual_entry = true
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match %r{xCardNum=4242424242424242}, data
       assert_match %r{xCardPresent=true}, data
     end.respond_with(successful_purchase_response)
@@ -75,7 +75,7 @@ class CardknoxTest < Test::Unit::TestCase
   end
 
   def test_ip_is_being_sent # failed
-    @gateway.expects(:ssl_post).with do |url, data|
+    @gateway.expects(:ssl_post).with do |_url, data|
       data =~ /xIP=123.123.123.123/
     end.returns(successful_purchase_response)
 

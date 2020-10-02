@@ -53,7 +53,7 @@ module ActiveMerchant #:nodoc:
 
       BANK_ACCOUNT_HOLDER_TYPE_MAPPING = {
         'personal' => 'individual',
-        'business' => 'company',
+        'business' => 'company'
       }
 
       MINIMUM_AUTHORIZE_AMOUNTS = {
@@ -560,11 +560,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_connected_account(post, options = {})
+        post[:on_behalf_of] = options[:on_behalf_of] if options[:on_behalf_of]
+
         return unless options[:transfer_destination]
 
         post[:transfer_data] = { destination: options[:transfer_destination] }
         post[:transfer_data][:amount] = options[:transfer_amount] if options[:transfer_amount]
-        post[:on_behalf_of] = options[:on_behalf_of] if options[:on_behalf_of]
         post[:transfer_group] = options[:transfer_group] if options[:transfer_group]
         post[:application_fee_amount] = options[:application_fee_amount] if options[:application_fee_amount]
       end
@@ -666,8 +667,7 @@ module ActiveMerchant #:nodoc:
           avs_result: { code: avs_code },
           cvv_result: cvc_code,
           emv_authorization: emv_authorization_from_response(response),
-          error_code: success ? nil : error_code_from(response)
-        )
+          error_code: success ? nil : error_code_from(response))
       end
 
       def authorization_from(success, url, method, response)
@@ -755,7 +755,7 @@ module ActiveMerchant #:nodoc:
             currency: 'usd',
             routing_number: bank_account.routing_number,
             name: bank_account.name,
-            account_holder_type: account_holder_type,
+            account_holder_type: account_holder_type
           }
         }
 

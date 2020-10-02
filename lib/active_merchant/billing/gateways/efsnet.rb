@@ -149,8 +149,7 @@ module ActiveMerchant #:nodoc:
           test: test?,
           authorization: authorization_from(response, parameters),
           avs_result: { code: response[:avs_response_code] },
-          cvv_result: response[:cvv_response_code]
-        )
+          cvv_result: response[:cvv_response_code])
       end
 
       def success?(response)
@@ -209,7 +208,7 @@ module ActiveMerchant #:nodoc:
         credit_card_refund: %w(ReferenceNumber TransactionAmount OriginalTransactionAmount OriginalTransactionID ClientIpAddress),
         void_transaction: %w(ReferenceNumber TransactionID),
         credit_card_settle: %w(ReferenceNumber TransactionAmount OriginalTransactionAmount OriginalTransactionID ClientIpAddress),
-        system_check: %w(SystemCheck),
+        system_check: %w(SystemCheck)
       }
     end
   end

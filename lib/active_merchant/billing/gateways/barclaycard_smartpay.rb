@@ -78,14 +78,16 @@ module ActiveMerchant #:nodoc:
                 'storeDetailAndSubmitThirdParty',
                 post,
                 @options[:store_payout_account],
-                @options[:store_payout_password])
+                @options[:store_payout_password]
+              )
             }
             r.process {
               commit(
                 'confirmThirdParty',
                 modification_request(r.authorization, @options),
                 @options[:review_payout_account],
-                @options[:review_payout_password])
+                @options[:review_payout_password]
+              )
             }
           end
         else

@@ -99,7 +99,7 @@ module ActiveMerchant #:nodoc:
         commit('refunds', "debits/#{reference_identifier_from(identifier)}/refunds", post)
       end
 
-      def store(credit_card, options={})
+      def store(credit_card, options = {})
         post = {}
 
         post[:number] = credit_card.number
@@ -156,7 +156,7 @@ module ActiveMerchant #:nodoc:
         post[:meta] = options[:meta]
       end
 
-      def commit(entity_name, path, post, method=:post)
+      def commit(entity_name, path, post, method = :post)
         raw_response =
           begin
             parse(
@@ -165,7 +165,8 @@ module ActiveMerchant #:nodoc:
                 live_url + "/#{path}",
                 post_data(post),
                 headers
-              ))
+              )
+            )
           rescue ResponseError => e
             raise unless e.response.code.to_s =~ /4\d\d/
 
@@ -254,7 +255,7 @@ module ActiveMerchant #:nodoc:
           'Authorization' => 'Basic ' + Base64.encode64(@options[:login].to_s + ':').strip,
           'User-Agent' => "Balanced/v1.1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
           'Accept' => 'application/vnd.api+json;revision=1.1',
-          'X-Balanced-User-Agent' => @@ua,
+          'X-Balanced-User-Agent' => @@ua
         }
       end
     end

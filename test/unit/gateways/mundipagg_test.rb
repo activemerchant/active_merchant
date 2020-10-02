@@ -59,7 +59,7 @@ class MundipaggTest < Test::Unit::TestCase
     @options[:holder_document] = 'a1b2c3d4'
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/a1b2c3d4/, data)
     end.respond_with(successful_purchase_response)
 
@@ -71,7 +71,7 @@ class MundipaggTest < Test::Unit::TestCase
     @options.delete(:billing_address)
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       refute data['billing_address']
     end.respond_with(successful_purchase_response)
   end
@@ -271,7 +271,7 @@ class MundipaggTest < Test::Unit::TestCase
     }
     stub_comms do
       gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/"gateway_affiliation_id":"abc123"/, data)
     end.respond_with(successful_purchase_response)
   end

@@ -94,7 +94,7 @@ module ActiveMerchant
         commit(params, options)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(0, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -155,7 +155,7 @@ module ActiveMerchant
         params[:auth] = 'false'
       end
 
-      def is_store_action?(params)
+      def store_action?(params)
         params[:transaction_type] == 'store'
       end
 
@@ -295,7 +295,7 @@ module ActiveMerchant
       end
 
       def endpoint(params)
-        is_store_action?(params) ? '/transactions/tokens' : '/transactions'
+        store_action?(params) ? '/transactions/tokens' : '/transactions'
       end
 
       def api_request(url, params)
@@ -306,7 +306,7 @@ module ActiveMerchant
       def post_data(params)
         return nil unless params
 
-        params.reject { |k, v| v.blank? }.collect { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join('&')
+        params.reject { |_k, v| v.blank? }.collect { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join('&')
       end
 
       def generate_hmac(nonce, current_timestamp, payload)
@@ -373,7 +373,7 @@ module ActiveMerchant
       end
 
       def authorization_from(params, response)
-        if is_store_action?(params)
+        if store_action?(params)
           if success_from(response)
             [
               response['token']['type'],
