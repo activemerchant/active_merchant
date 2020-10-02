@@ -145,13 +145,12 @@ module ActiveMerchant #:nodoc:
 
       def get_order_details(order_id, options)
         requires!(options.merge(order_id: order_id), :order_id)
-
         commit(:get, "v2/checkout/orders/#{ order_id }", nil, options[:headers])
       end
 
       def get_authorization_details(authorization_id, options)
         requires!(options.merge(authorization_id: authorization_id), :authorization_id)
-        commit(:get, "v2/checkout/orders/#{ authorization_id }", nil, options[:headers])
+        commit(:get, "v2/payments/authorizations/#{ authorization_id }", nil, options[:headers])
       end
 
       def get_capture_details(capture_id, options)
@@ -162,6 +161,16 @@ module ActiveMerchant #:nodoc:
       def get_refund_details(refund_id, options)
         requires!(options.merge(refund_id: refund_id), :refund_id)
         commit(:get, "v2/payments/refunds/#{ refund_id }", nil, options[:headers])
+      end
+
+      def get_billing_agreement_details(billing_agreement_token, options)
+        requires!(options.merge(billing_agreement_token: billing_agreement_token), :billing_agreement_token)
+        commit(:get, "v1/billing-agreements/agreement-tokens/#{ billing_agreement_token }", nil, options[:headers])
+      end
+
+      def get_billing_token_details(billing_token, options)
+        requires!(options.merge(billing_token: billing_token), :billing_token)
+        commit(:get, "v1/billing-agreements/agreements/#{ billing_token }", nil, options[:headers])
       end
 
       private

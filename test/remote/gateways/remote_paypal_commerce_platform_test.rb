@@ -67,13 +67,43 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   end
 
   def test_get_order_details
-    response = create_order("CAPTURE")
-    puts "Capture Order Id (Instant) - PPCP: #{ response.params["id"] }"
-    order_id  = response.params["id"]
-    order_details = @gateway.get_order_details(order_id, options)
-    assert_equal order_id, order_details.params["id"]
-    puts "GET ORDER DETAILS ORDER_ID: #{ order_details }"
+    response      = create_order("CAPTURE")
+    order_id      = response.params["id"]
+    response      = @gateway.get_order_details(order_id, options)
+    assert_success response
+    assert_equal order_id, response.params["id"]
+  end
+
+  def test_get_capture_details
+    response   = create_order("CAPTURE")
+    order_id   = response.params["id"]
+    response   = @gateway.capture(order_id, @card_order_options)
+    capture_id = response.params["purchase_units"][0]["payments"]["captures"][0]["id"]
+    response   = @gateway.get_capture_details(capture_id, options)
+    assert_success response
+    success_status_assertions(response, "COMPLETED")
+  end
+
+  def test_get_authorization_details
+    response         = create_order("AUTHORIZE")
+    order_id         = response.params["id"]
+    response         = @gateway.authorize(order_id, @card_order_options)
+    authorization_id = response.params["purchase_units"][0]["payments"]["authorizations"][0]["id"]
+    response         = @gateway.get_authorization_details(authorization_id, options)
+    assert_success response
     success_status_assertions(response, "CREATED")
+  end
+
+  def test_get_refund_details
+    response        = create_order("CAPTURE")
+    order_id        = response.params["id"]
+    response        = @gateway.capture(order_id, @card_order_options)
+    capture_id      = response.params["purchase_units"][0]["payments"]["captures"][0]["id"]
+    response        = @gateway.refund(capture_id, options)
+    refund_id       = response.params["id"]
+    response        = @gateway.get_refund_details(refund_id, options)
+    assert_success response
+    success_status_assertions(response, "COMPLETED")
   end
 
   def test_create_capture_instant_order_ppcp
@@ -455,6 +485,26 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @body      = { "body": billing_update_body }
     response   = @gateway.update_billing_agreement(billing_id, options)
     success_empty_assertions(response)
+  end
+
+  def test_get_billing_agreement_details
+    @body             = billing_agreement_body
+    response          = @gateway.create_billing_agreement_token(options)
+    agreement_token   = response.params["token_id"]
+    response          = @gateway.get_billing_agreement_details(agreement_token, options)
+    assert_success response
+    assert_equal agreement_token, response.params["token_id"]
+    assert_equal "PENDING", response.params["token_status"]
+  end
+
+  def test_get_billing_token_details
+    @body    = { "token_id": @approved_billing_token }
+    response = @gateway.create_agreement_for_approval(options)
+    token_id = response.params["id"]
+    response = @gateway.get_billing_token_details(token_id, options)
+    assert_success response
+    assert_equal token_id, response.params["id"]
+    assert_equal "ACTIVE", response.params["state"]
   end
 
   def test_transcript_scrubbing
