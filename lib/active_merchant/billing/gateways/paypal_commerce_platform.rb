@@ -156,13 +156,13 @@ module ActiveMerchant #:nodoc:
       def add_purchase_unit(purchase_unit)
         requires!(purchase_unit, :amount)
         purchase_unit_hsh = { }
-        purchase_unit_hsh[:reference_id]      = purchase_unit[:reference_id] unless purchase_unit[:reference_id].nil?
-        purchase_unit_hsh[:description]       = purchase_unit[:description] unless purchase_unit[:description].nil?
-        purchase_unit_hsh[:shipping_method]   = purchase_unit[:shipping_method] unless purchase_unit[:shipping_method].nil?
-        purchase_unit_hsh[:payment_group_id]  = purchase_unit[:payment_group_id] unless purchase_unit[:payment_group_id].nil?
-        purchase_unit_hsh[:custom_id]         = purchase_unit[:custom_id] unless purchase_unit[:custom_id].nil?
-        purchase_unit_hsh[:invoice_id]        = purchase_unit[:invoice_id] unless purchase_unit[:invoice_id].nil?
-        purchase_unit_hsh[:soft_descriptor]   = purchase_unit[:soft_descriptor] unless purchase_unit[:soft_descriptor].nil?
+        purchase_unit_hsh[:reference_id]    = purchase_unit[:reference_id] unless purchase_unit[:reference_id].nil?
+        purchase_unit_hsh[:description]     = purchase_unit[:description] unless purchase_unit[:description].nil?
+        purchase_unit_hsh[:shipping_method] = purchase_unit[:shipping_method] unless purchase_unit[:shipping_method].nil?
+        purchase_unit_hsh[:payment_group_id]= purchase_unit[:payment_group_id] unless purchase_unit[:payment_group_id].nil?
+        purchase_unit_hsh[:custom_id]       = purchase_unit[:custom_id] unless purchase_unit[:custom_id].nil?
+        purchase_unit_hsh[:invoice_id]      = purchase_unit[:invoice_id] unless purchase_unit[:invoice_id].nil?
+        purchase_unit_hsh[:soft_descriptor] = purchase_unit[:soft_descriptor] unless purchase_unit[:soft_descriptor].nil?
 
         add_amount(purchase_unit[:amount], purchase_unit_hsh)
         add_payee(purchase_unit[:payee], purchase_unit_hsh) unless purchase_unit[:payee].nil?

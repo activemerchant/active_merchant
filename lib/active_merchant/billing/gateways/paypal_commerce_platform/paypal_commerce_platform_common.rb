@@ -53,6 +53,8 @@ module ActiveMerchant
         obj_hsh.delete(key) if obj_hsh[key].empty?
       end
 
+      # Prepare API request to hit remote endpoint \
+      # to appropriate method(POST, GET, PUT, PATCH).
       def api_request(method, endpoint, parameters = nil, opt_headers = {})
         raw_response = response = nil
         begin
@@ -69,11 +71,6 @@ module ActiveMerchant
 
       def headers(params)
         params[:headers]
-      end
-
-      def prepare_request_for_get_access_token(options)
-        @options = options
-        "basic #{ encoded_credentials }"
       end
 
       def parse(raw_response)
@@ -108,12 +105,12 @@ module ActiveMerchant
       def get_update_type(path)
         path.split("/").last
       end
+
       ###### ACCESS TOKEN METHODS #####################
       def prepare_request_to_get_access_token(url, options)
         @options = options
 
         ssl_post_request(url, options)
-        #ssl_request(:post, url, options[:body].to_json, options[:headers])
       end
 
       def encoded_credentials
@@ -124,6 +121,9 @@ module ActiveMerchant
         response = http.request(request)
         eval(response.body)[:access_token]
       end
+
+      # SSL request Method to send prepare  /
+      # Headers and send request to get access token
 
       def ssl_post_request(url, options={})
         @url = url
@@ -138,14 +138,8 @@ module ActiveMerchant
         request = Net::HTTP::Post.new(url)
         request["accept"]           = 'application/json'
         request["accept-language"]  = 'en_US'
-
-        if @url.include?("token")
-          request["authorization"]    = "basic #{ encoded_credentials }"
-          request["content-type"]   = 'application/x-www-form-urlencoded'
-        else
-          request["content-type"]   = 'application/json'
-          request.body = options[:body].to_json
-        end
+        request["authorization"]    = "basic #{ encoded_credentials }"
+        request["content-type"]   = 'application/x-www-form-urlencoded'
 
         return_response(http, request)
       end
@@ -153,7 +147,9 @@ module ActiveMerchant
       def supports_scrubbing?
         true
       end
-
+      # Scrub Method to filter out sensitive data from /
+      # the request payload
+      #
       def scrub(transcript)
         transcript.
             gsub(%r((Authorization: Bearer )\w+-\w+), '\1[FILTERED]').
