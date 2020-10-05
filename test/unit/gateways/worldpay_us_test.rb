@@ -436,7 +436,7 @@ transid=0
   end
 
   def pre_scrubbed
-    <<~EOS
+    <<~REQUEST
       opening connection to trans.worldpay.us:443...
       opened
       starting SSL for trans.worldpay.us:443...
@@ -455,11 +455,11 @@ transid=0
       -> "<html><body><plaintext>\r\nAccepted=SALE:036586:477::919067116:N::N\r\nhistoryid=919067116\r\norderid=722189706\r\nAccepted=SALE:036586:477::919067116:N::N\r\nACCOUNTNUMBER=************7892\r\nACCTID=MPNAB\r\nauthcode=036586\r\nAuthNo=SALE:036586:477::919067116:N::N\r\nAVS_RESULT=N\r\nBATCHNUMBER=\r\nCVV2_RESULT=N\r\nDEBIT_TRACE_NUMBER=\r\nENTRYMETHOD=M\r\nhistoryid=919067116\r\nMERCHANT_DBA_ADDR=11121 Willows Road NE\r\nMERCHANT_DBA_CITY=Redmond\r\nMERCHANT_DBA_NAME=Merchant Partners\r\nMERCHANT_DBA_PHONE=4254979909\r\nMERCHANT_DBA_STATE=WA\r\nMERCHANTID=542929804946788\r\nMERCHANTORDERNUMBER=67f4f20082e79684f036f25dafe96304\r\norderid=722189706\r\nPAYTYPE=Visa\r\nPRODUCT_DESCRIPTION=\r\nReason=\r\nRECEIPT_FOOTER=Thank You\r\nrecurid=0\r\nrefcode=919067116-036586\r\nresult=1\r\nSEQUENCE_NUMBER=370609730\r\nStatus=Accepted\r\nSUBID=SPREE\r\nSYSTEMAUDITTRACENUMBER=477\r\nTERMINALID=160551\r\nTRANSGUID=d5701d57-9147-4ded-b596-6805581f081c:266\r\ntransid=370609730\r\ntransresult=APPROVED\r\nVISATRANSACTIONID=088044000036586\r\n"
       read 962 bytes
       Conn close
-    EOS
+    REQUEST
   end
 
   def post_scrubbed
-    <<~EOS
+    <<~REQUEST
       opening connection to trans.worldpay.us:443...
       opened
       starting SSL for trans.worldpay.us:443...
@@ -478,11 +478,11 @@ transid=0
       -> "<html><body><plaintext>\r\nAccepted=SALE:036586:477::919067116:N::N\r\nhistoryid=919067116\r\norderid=722189706\r\nAccepted=SALE:036586:477::919067116:N::N\r\nACCOUNTNUMBER=************7892\r\nACCTID=MPNAB\r\nauthcode=036586\r\nAuthNo=SALE:036586:477::919067116:N::N\r\nAVS_RESULT=N\r\nBATCHNUMBER=\r\nCVV2_RESULT=N\r\nDEBIT_TRACE_NUMBER=\r\nENTRYMETHOD=M\r\nhistoryid=919067116\r\nMERCHANT_DBA_ADDR=11121 Willows Road NE\r\nMERCHANT_DBA_CITY=Redmond\r\nMERCHANT_DBA_NAME=Merchant Partners\r\nMERCHANT_DBA_PHONE=4254979909\r\nMERCHANT_DBA_STATE=WA\r\nMERCHANTID=542929804946788\r\nMERCHANTORDERNUMBER=67f4f20082e79684f036f25dafe96304\r\norderid=722189706\r\nPAYTYPE=Visa\r\nPRODUCT_DESCRIPTION=\r\nReason=\r\nRECEIPT_FOOTER=Thank You\r\nrecurid=0\r\nrefcode=919067116-036586\r\nresult=1\r\nSEQUENCE_NUMBER=370609730\r\nStatus=Accepted\r\nSUBID=SPREE\r\nSYSTEMAUDITTRACENUMBER=477\r\nTERMINALID=160551\r\nTRANSGUID=d5701d57-9147-4ded-b596-6805581f081c:266\r\ntransid=370609730\r\ntransresult=APPROVED\r\nVISATRANSACTIONID=088044000036586\r\n"
       read 962 bytes
       Conn close
-    EOS
+    REQUEST
   end
 
   def pre_scrubbed_check
-    <<~EOS
+    <<~REQUEST
       opening connection to trans.worldpay.us:443...
       opened
       starting SSL for trans.worldpay.us:443...
@@ -501,11 +501,11 @@ transid=0
       -> "<html><body><plaintext>\r\nDeclined=DECLINED:1103180001:Invalid Bank:\r\nhistoryid=919060608\r\norderid=722196666\r\nACCOUNTNUMBER=****8535\r\nDeclined=DECLINED:1103180001:Invalid Bank:\r\nENTRYMETHOD=KEYED\r\nhistoryid=919060608\r\nMERCHANTORDERNUMBER=5ec80ff8210dc9d24248ac2777d6b4f3\r\norderid=722196666\r\nPAYTYPE=Check\r\nrcode=1103180001\r\nReason=DECLINED:1103180001:Invalid Bank:\r\nrecurid=0\r\nresult=0\r\nStatus=Declined\r\ntransid=0\r\n"
       read 414 bytes
       Conn close
-    EOS
+    REQUEST
   end
 
   def post_scrubbed_check
-    <<~EOS
+    <<~REQUEST
       opening connection to trans.worldpay.us:443...
       opened
       starting SSL for trans.worldpay.us:443...
@@ -524,6 +524,6 @@ transid=0
       -> "<html><body><plaintext>\r\nDeclined=DECLINED:1103180001:Invalid Bank:\r\nhistoryid=919060608\r\norderid=722196666\r\nACCOUNTNUMBER=****8535\r\nDeclined=DECLINED:1103180001:Invalid Bank:\r\nENTRYMETHOD=KEYED\r\nhistoryid=919060608\r\nMERCHANTORDERNUMBER=5ec80ff8210dc9d24248ac2777d6b4f3\r\norderid=722196666\r\nPAYTYPE=Check\r\nrcode=1103180001\r\nReason=DECLINED:1103180001:Invalid Bank:\r\nrecurid=0\r\nresult=0\r\nStatus=Declined\r\ntransid=0\r\n"
       read 414 bytes
       Conn close
-    EOS
+    REQUEST
   end
 end

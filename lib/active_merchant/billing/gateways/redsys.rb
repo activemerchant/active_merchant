@@ -334,7 +334,7 @@ module ActiveMerchant #:nodoc:
       def commit(data, options = {})
         if data[:threeds]
           action = determine_3ds_action(data[:threeds])
-          request = <<-EOS
+          request = <<-REQUEST
             <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:apachesoap="http://xml.apache.org/xml-soap" xmlns:impl="http://webservice.sis.sermepa.es" xmlns:intf="http://webservice.sis.sermepa.es" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:wsdlsoap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" >
             <soapenv:Header/>
             <soapenv:Body>
@@ -345,7 +345,7 @@ module ActiveMerchant #:nodoc:
               </intf:#{action}>
             </soapenv:Body>
           </soapenv:Envelope>
-          EOS
+          REQUEST
           parse(ssl_post(threeds_url, request, headers(action)), action)
         else
           parse(ssl_post(url, "entrada=#{CGI.escape(xml_request_from(data, options))}", headers), action)

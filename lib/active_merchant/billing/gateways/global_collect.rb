@@ -296,12 +296,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def auth_digest(action, post, authorization = nil)
-        data = <<~EOS
+        data = <<~REQUEST
           POST
           #{content_type}
           #{date}
           #{uri(action, authorization)}
-        EOS
+        REQUEST
         digest = OpenSSL::Digest.new('sha256')
         key = @options[:secret_api_key]
         "GCS v1HMAC:#{@options[:api_key_id]}:#{Base64.strict_encode64(OpenSSL::HMAC.digest(digest, key, data))}"

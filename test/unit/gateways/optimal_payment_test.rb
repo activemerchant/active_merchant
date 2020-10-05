@@ -388,7 +388,7 @@ class OptimalPaymentTest < Test::Unit::TestCase
   end
 
   def pre_scrubbed
-    <<~EOS
+    <<~REQUEST
       opening connection to webservices.test.optimalpayments.com:443...
       opened
       starting SSL for webservices.test.optimalpayments.com:443...
@@ -408,11 +408,11 @@ class OptimalPaymentTest < Test::Unit::TestCase
       -> "?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<ccTxnResponseV1 xmlns=\"http://www.optimalpayments.com/creditcard/xmlschema/v1\"><confirmationNumber>498871860</confirmationNumber><decision>ACCEPTED</decision><code>0</code><description>No Error</description><authCode>369231</authCode><avsResponse>X</avsResponse><cvdResponse>M</cvdResponse><detail><tag>InternalResponseCode</tag><value>0</value></detail><detail><tag>SubErrorCode</tag><value>0</value></detail><detail><tag>InternalResponseDescription</tag><value>no_error</value></detail><txnTime>2018-02-12T16:57:42.289-05:00</txnTime><duplicateFound>false</duplicateFound></ccTxnResponseV1>"
       read 632 bytes
       Conn close
-    EOS
+    REQUEST
   end
 
   def post_scrubbed
-    <<~EOS
+    <<~REQUEST
       opening connection to webservices.test.optimalpayments.com:443...
       opened
       starting SSL for webservices.test.optimalpayments.com:443...
@@ -432,7 +432,7 @@ class OptimalPaymentTest < Test::Unit::TestCase
       -> "?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<ccTxnResponseV1 xmlns=\"http://www.optimalpayments.com/creditcard/xmlschema/v1\"><confirmationNumber>498871860</confirmationNumber><decision>ACCEPTED</decision><code>0</code><description>No Error</description><authCode>369231</authCode><avsResponse>X</avsResponse><cvdResponse>M</cvdResponse><detail><tag>InternalResponseCode</tag><value>0</value></detail><detail><tag>SubErrorCode</tag><value>0</value></detail><detail><tag>InternalResponseDescription</tag><value>no_error</value></detail><txnTime>2018-02-12T16:57:42.289-05:00</txnTime><duplicateFound>false</duplicateFound></ccTxnResponseV1>"
       read 632 bytes
       Conn close
-    EOS
+    REQUEST
   end
 
   def pre_scrubbed_double_escaped

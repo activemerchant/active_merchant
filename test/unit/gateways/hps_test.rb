@@ -681,7 +681,7 @@ class HpsTest < Test::Unit::TestCase
   private
 
   def successful_charge_response
-    <<~RESPONSE
+    <<~XML
       <?xml version="1.0" encoding="UTF-8"?>
       <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <soap:Body>
@@ -715,11 +715,11 @@ class HpsTest < Test::Unit::TestCase
            </PosResponse>
         </soap:Body>
       </soap:Envelope>
-    RESPONSE
+    XML
   end
 
   def successful_check_purchase_response
-    <<~RESPONSE
+    <<~XML
       <?xml version="1.0" encoding="UTF-8"?>
       <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <soap:Body>
@@ -744,11 +744,11 @@ class HpsTest < Test::Unit::TestCase
           </PosResponse>
         </soap:Body>
       </soap:Envelope>
-    RESPONSE
+    XML
   end
 
   def failed_charge_response
-    <<~RESPONSE
+    <<~XML
       <?xml version="1.0" encoding="UTF-8"?>
       <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <soap:Body>
@@ -778,11 +778,11 @@ class HpsTest < Test::Unit::TestCase
            </PosResponse>
         </soap:Body>
       </soap:Envelope>
-    RESPONSE
+    XML
   end
 
   def failed_charge_response_decline
-    <<~RESPONSE
+    <<~XML
       <?xml version="1.0" encoding="UTF-8"?>
       <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <soap:Body>
@@ -812,11 +812,11 @@ class HpsTest < Test::Unit::TestCase
            </PosResponse>
         </soap:Body>
       </soap:Envelope>
-    RESPONSE
+    XML
   end
 
   def successful_authorize_response
-    <<~RESPONSE
+    <<~XML
       <?xml version="1.0" encoding="UTF-8"?>
       <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <soap:Body>
@@ -850,11 +850,11 @@ class HpsTest < Test::Unit::TestCase
            </PosResponse>
         </soap:Body>
       </soap:Envelope>
-    RESPONSE
+    XML
   end
 
   def failed_authorize_response
-    <<~RESPONSE
+    <<~XML
       <?xml version="1.0" encoding="UTF-8"?>
       <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <soap:Body>
@@ -884,11 +884,11 @@ class HpsTest < Test::Unit::TestCase
           </PosResponse>
         </soap:Body>
       </soap:Envelope>
-    RESPONSE
+    XML
   end
 
   def failed_authorize_response_decline
-    <<~RESPONSE
+    <<~XML
       <?xml version="1.0" encoding="UTF-8"?>
       <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <soap:Body>
@@ -918,11 +918,11 @@ class HpsTest < Test::Unit::TestCase
           </PosResponse>
         </soap:Body>
       </soap:Envelope>
-    RESPONSE
+    XML
   end
 
   def successful_capture_response
-    <<~RESPONSE
+    <<~XML
       <?xml version="1.0" encoding="utf-8"?>
       <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
         <soap:Body>
@@ -944,11 +944,11 @@ class HpsTest < Test::Unit::TestCase
           </PosResponse>
         </soap:Body>
       </soap:Envelope>
-    RESPONSE
+    XML
   end
 
   def failed_capture_response
-    <<~Response
+    <<~XML
       <?xml version="1.0" encoding="UTF-8"?>
       <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <soap:Body>
@@ -967,11 +967,11 @@ class HpsTest < Test::Unit::TestCase
            </PosResponse>
         </soap:Body>
       </soap:Envelope>
-    Response
+    XML
   end
 
   def successful_refund_response
-    <<~RESPONSE
+    <<~XML
       <?xml version="1.0" encoding="UTF-8"?>
       <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <soap:Body>
@@ -994,11 +994,11 @@ class HpsTest < Test::Unit::TestCase
            </PosResponse>
         </soap:Body>
       </soap:Envelope>
-    RESPONSE
+    XML
   end
 
   def failed_refund_response
-    <<~RESPONSE
+    <<~XML
       <?xml version="1.0" encoding="UTF-8"?>
       <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <soap:Body>
@@ -1018,11 +1018,11 @@ class HpsTest < Test::Unit::TestCase
            </PosResponse>
         </soap:Body>
       </soap:Envelope>
-    RESPONSE
+    XML
   end
 
   def successful_void_response
-    <<~RESPONSE
+    <<~XML
       <?xml version="1.0" encoding="UTF-8"?>
       <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <soap:Body>
@@ -1044,11 +1044,11 @@ class HpsTest < Test::Unit::TestCase
            </PosResponse>
         </soap:Body>
       </soap:Envelope>
-    RESPONSE
+    XML
   end
 
   def successful_check_void_response
-    <<~RESPONSE
+    <<~XML
       <?xml version="1.0" encoding="UTF-8"?>
       <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <soap:Body>
@@ -1073,11 +1073,11 @@ class HpsTest < Test::Unit::TestCase
           </PosResponse>
         </soap:Body>
       </soap:Envelope>
-    RESPONSE
+    XML
   end
 
   def failed_void_response
-    <<~RESPONSE
+    <<~XML
       <?xml version="1.0" encoding="UTF-8"?>
       <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <soap:Body>
@@ -1096,11 +1096,11 @@ class HpsTest < Test::Unit::TestCase
            </PosResponse>
         </soap:Body>
       </soap:Envelope>
-    RESPONSE
+    XML
   end
 
   def successful_swipe_purchase_response
-    <<~RESPONSE
+    <<~XML
       <?xml version="1.0" encoding="UTF-8"?>
       <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
          <soap:Body>
@@ -1131,11 +1131,11 @@ class HpsTest < Test::Unit::TestCase
             </PosResponse>
          </soap:Body>
       </soap:Envelope>
-    RESPONSE
+    XML
   end
 
   def failed_swipe_purchase_response
-    <<~RESPONSE
+    <<~XML
       <?xml version="1.0" encoding="UTF-8"?>
       <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
          <soap:Body>
@@ -1154,11 +1154,11 @@ class HpsTest < Test::Unit::TestCase
             </PosResponse>
          </soap:Body>
       </soap:Envelope>
-    RESPONSE
+    XML
   end
 
   def successful_verify_response
-    <<~RESPONSE
+    <<~XML
       <?xml version="1.0" encoding="UTF-8"?>
       <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
          <soap:Body>
@@ -1191,11 +1191,11 @@ class HpsTest < Test::Unit::TestCase
             </PosResponse>
          </soap:Body>
       </soap:Envelope>
-    RESPONSE
+    XML
   end
 
   def failed_verify_response
-    <<~RESPONSE
+    <<~XML
       <?xml version="1.0" encoding="UTF-8"?>
       <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
          <soap:Body>
@@ -1215,7 +1215,7 @@ class HpsTest < Test::Unit::TestCase
             </PosResponse>
          </soap:Body>
       </soap:Envelope>
-    RESPONSE
+    XML
   end
 
   def pre_scrub

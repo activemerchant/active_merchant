@@ -515,7 +515,7 @@ class PayflowTest < Test::Unit::TestCase
   private
 
   def pre_scrubbed
-    <<~EOS
+    <<~REQUEST
       opening connection to pilot-payflowpro.paypal.com:443...
       opened
       starting SSL for pilot-payflowpro.paypal.com:443...
@@ -534,11 +534,11 @@ class PayflowTest < Test::Unit::TestCase
       -> "<XMLPayResponse  xmlns=\"http://www.paypal.com/XMLPay\"><ResponseData><Vendor></Vendor><Partner></Partner><TransactionResults><TransactionResult><Result>4</Result><Message>Invalid amount</Message></TransactionResult></TransactionResults></ResponseData></XMLPayResponse>"
       read 267 bytes
       Conn close
-    EOS
+    REQUEST
   end
 
   def post_scrubbed
-    <<~EOS
+    <<~REQUEST
       opening connection to pilot-payflowpro.paypal.com:443...
       opened
       starting SSL for pilot-payflowpro.paypal.com:443...
@@ -557,11 +557,11 @@ class PayflowTest < Test::Unit::TestCase
       -> "<XMLPayResponse  xmlns=\"http://www.paypal.com/XMLPay\"><ResponseData><Vendor></Vendor><Partner></Partner><TransactionResults><TransactionResult><Result>4</Result><Message>Invalid amount</Message></TransactionResult></TransactionResults></ResponseData></XMLPayResponse>"
       read 267 bytes
       Conn close
-    EOS
+    REQUEST
   end
 
   def pre_scrubbed_check
-    <<~EOS
+    <<~REQUEST
       opening connection to pilot-payflowpro.paypal.com:443...
       opened
       starting SSL for pilot-payflowpro.paypal.com:443...
@@ -580,11 +580,11 @@ class PayflowTest < Test::Unit::TestCase
       -> "<XMLPayResponse  xmlns=\"http://www.paypal.com/XMLPay\"><ResponseData><Vendor></Vendor><Partner></Partner><TransactionResults><TransactionResult><Result>4</Result><Message>Invalid amount</Message></TransactionResult></TransactionResults></ResponseData></XMLPayResponse>"
       read 267 bytes
       Conn close
-    EOS
+    REQUEST
   end
 
   def post_scrubbed_check
-    <<~EOS
+    <<~REQUEST
       opening connection to pilot-payflowpro.paypal.com:443...
       opened
       starting SSL for pilot-payflowpro.paypal.com:443...
@@ -603,7 +603,7 @@ class PayflowTest < Test::Unit::TestCase
       -> "<XMLPayResponse  xmlns=\"http://www.paypal.com/XMLPay\"><ResponseData><Vendor></Vendor><Partner></Partner><TransactionResults><TransactionResult><Result>4</Result><Message>Invalid amount</Message></TransactionResult></TransactionResults></ResponseData></XMLPayResponse>"
       read 267 bytes
       Conn close
-    EOS
+    REQUEST
   end
 
   def successful_recurring_response

@@ -90,23 +90,6 @@ Naming/AccessorMethodName:
     - 'test/remote/gateways/remote_authorize_net_cim_test.rb'
     - 'test/unit/gateways/authorize_net_cim_test.rb'
 
-# Offense count: 46
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: lowercase, uppercase
-Naming/HeredocDelimiterCase:
-  Exclude:
-    - 'test/unit/gateways/authorize_net_test.rb'
-    - 'test/unit/gateways/card_stream_test.rb'
-    - 'test/unit/gateways/hps_test.rb'
-    - 'test/unit/gateways/litle_test.rb'
-    - 'test/unit/gateways/moneris_test.rb'
-
-# Offense count: 85
-# Configuration parameters: Blacklist.
-# Blacklist: (?-mix:(^|\s)(EO[A-Z]{1}|END)(\s|$))
-Naming/HeredocDelimiterNaming:
-  Enabled: false
-
 # Offense count: 15
 # Configuration parameters: EnforcedStyle.
 # SupportedStyles: snake_case, camelCase

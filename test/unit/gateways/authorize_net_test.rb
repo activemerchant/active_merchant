@@ -1389,7 +1389,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
 
   def successful_purchase_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="utf-8"?>
       <createTransactionResponse
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"
@@ -1422,11 +1422,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
         </messages>
       </transactionResponse>
       </createTransactionResponse>
-    eos
+    XML
   end
 
   def fraud_review_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="utf-8"?>
       <createTransactionResponse
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"
@@ -1459,11 +1459,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
         </messages>
       </transactionResponse>
       </createTransactionResponse>
-    eos
+    XML
   end
 
   def address_not_provided_avs_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="utf-8"?>
       <createTransactionResponse
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"
@@ -1496,11 +1496,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
         </messages>
       </transactionResponse>
       </createTransactionResponse>
-    eos
+    XML
   end
 
   def no_match_cvv_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="utf-8"?>
       <createTransactionResponse
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"
@@ -1533,11 +1533,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
         </messages>
       </transactionResponse>
       </createTransactionResponse>
-    eos
+    XML
   end
 
   def no_match_avs_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="utf-8"?>
       <createTransactionResponse
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"
@@ -1570,11 +1570,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
         </errors>
       </transactionResponse>
       </createTransactionResponse>
-    eos
+    XML
   end
 
   def failed_purchase_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="utf-8"?>
       <createTransactionResponse xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
               xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
@@ -1616,11 +1616,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
           </userFields>
         </transactionResponse>
       </createTransactionResponse>
-    eos
+    XML
   end
 
   def no_message_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="utf-8"?>
       <createTransactionResponse xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
               xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
@@ -1652,11 +1652,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
           </userFields>
         </transactionResponse>
       </createTransactionResponse>
-    eos
+    XML
   end
 
   def successful_purchase_response_test_mode
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="utf-8"?>
       <createTransactionResponse
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"
@@ -1689,11 +1689,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
         </messages>
       </transactionResponse>
       </createTransactionResponse>
-    eos
+    XML
   end
 
   def successful_authorize_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="utf-8"?>
       <createTransactionResponse xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                                  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
@@ -1735,11 +1735,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
           </userFields>
         </transactionResponse>
       </createTransactionResponse>
-    eos
+    XML
   end
 
   def failed_authorize_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="utf-8"?>
       <createTransactionResponse xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                                  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
@@ -1781,11 +1781,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
           </userFields>
         </transactionResponse>
       </createTransactionResponse>
-    eos
+    XML
   end
 
   def successful_capture_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="utf-8"?>
       <createTransactionResponse xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema xmlns=AnetApi/xml/v1/schema/AnetApiSchema.xsd">
       <refId/>
@@ -1816,11 +1816,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
       </messages>
       </transactionResponse>
       </createTransactionResponse>
-    eos
+    XML
   end
 
   def already_actioned_capture_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="utf-8"?>
       <createTransactionResponse xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema xmlns=AnetApi/xml/v1/schema/AnetApiSchema.xsd">
       <refId/>
@@ -1851,11 +1851,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
       </messages>
       </transactionResponse>
       </createTransactionResponse>
-    eos
+    XML
   end
 
   def failed_capture_response
-    <<-eos
+    <<-XML
       <createTransactionResponse xmlns:xsi=
                                  http://www.w3.org/2001/XMLSchema-instance xmlns:xsd=http://www.w3.org/2001/XMLSchema xmlns=AnetApi/xml/v1/schema/AnetApiSchema.xsd><refId/><messages>
       <resultCode>Error</resultCode>
@@ -1884,11 +1884,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
       <shipTo/>
       </transactionResponse>
       </createTransactionResponse>
-    eos
+    XML
   end
 
   def successful_refund_response
-    <<-eos
+    <<-XML
       <createTransactionResponse xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                                  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
       <messages>
@@ -1918,11 +1918,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
         </messages>
       </transactionResponse>
       </createTransactionResponse>
-    eos
+    XML
   end
 
   def failed_refund_response
-    <<-eos
+    <<-XML
       <createTransactionResponse xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                                  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
       <messages>
@@ -1952,11 +1952,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
         </errors>
       </transactionResponse>
       </createTransactionResponse>
-    eos
+    XML
   end
 
   def successful_void_response
-    <<-eos
+    <<-XML
     <?xml version="1.0" encoding="utf-8"?>
     <createTransactionResponse xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                                xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
@@ -1987,11 +1987,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
       </messages>
     </transactionResponse>
     </createTransactionResponse>
-    eos
+    XML
   end
 
   def failed_void_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="utf-8"?>
       <createTransactionResponse xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                                  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
@@ -2023,11 +2023,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
         <shipTo/>
       </transactionResponse>
       </createTransactionResponse>
-    eos
+    XML
   end
 
   def successful_credit_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <createTransactionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <refId>1</refId>
@@ -2064,11 +2064,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
           </userFields>
         </transactionResponse>
       </createTransactionResponse>
-    eos
+    XML
   end
 
   def failed_credit_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <createTransactionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <refId>1</refId>
@@ -2105,11 +2105,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
           </userFields>
         </transactionResponse>
       </createTransactionResponse>
-    eos
+    XML
   end
 
   def successful_store_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <createCustomerProfileResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
       <messages>
@@ -2126,11 +2126,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
       <customerShippingAddressIdList />
       <validationDirectResponseList />
       </createCustomerProfileResponse>
-    eos
+    XML
   end
 
   def failed_store_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <createCustomerProfileResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
       <messages>
@@ -2144,11 +2144,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
       <customerShippingAddressIdList />
       <validationDirectResponseList />
       </createCustomerProfileResponse>
-    eos
+    XML
   end
 
   def successful_unstore_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="utf-8"?>
       <deleteCustomerProfileResponse xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
         <messages>
@@ -2159,11 +2159,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
           </message>
         </messages>
       </deleteCustomerProfileResponse>
-    eos
+    XML
   end
 
   def failed_unstore_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="utf-8"?>
       <deleteCustomerProfileResponse xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
         <messages>
@@ -2174,11 +2174,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
           </message>
         </messages>
       </deleteCustomerProfileResponse>
-    eos
+    XML
   end
 
   def successful_store_new_payment_profile_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <createCustomerPaymentProfileResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <messages>
@@ -2191,11 +2191,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
         <customerProfileId>38392170</customerProfileId>
         <customerPaymentProfileId>34896759</customerPaymentProfileId>
       </createCustomerPaymentProfileResponse>
-    eos
+    XML
   end
 
   def failed_store_new_payment_profile_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <createCustomerPaymentProfileResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <messages>
@@ -2208,11 +2208,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
         <customerProfileId>38392767</customerProfileId>
         <customerPaymentProfileId>34897359</customerPaymentProfileId>
       </createCustomerPaymentProfileResponse>
-    eos
+    XML
   end
 
   def successful_purchase_using_stored_card_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <createCustomerProfileTransactionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
       <refId>1</refId>
@@ -2225,11 +2225,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
       </messages>
       <directResponse>1,1,1,This transaction has been approved.,8HUT72,Y,2235700270,1,Store Purchase,1.01,CC,auth_capture,e385c780422f4bd182c4,Longbob,Longsen,,,,n/a,,,,,,,,,,,,,,,,,,,4A20EEAF89018FF075899DDB332E9D35,,2,,,,,,,,,,,XXXX2224,Visa,,,,,,,,,,,,,,,,</directResponse>
       </createCustomerProfileTransactionResponse>
-    eos
+    XML
   end
 
   def successful_purchase_using_stored_card_response_with_pipe_delimiter
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <createCustomerProfileTransactionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
       <refId>1</refId>
@@ -2242,7 +2242,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
       </messages>
       <directResponse>1|1|1|This transaction has been approved.|8HUT72|Y|2235700270|1|description, with, commas|1.01|CC|auth_capture|e385c780422f4bd182c4|Longbob|Longsen||||n/a|||||||||||||||||||4A20EEAF89018FF075899DDB332E9D35||2|||||||||||XXXX2224|Visa||||||||||||||||</directResponse>
       </createCustomerProfileTransactionResponse>
-    eos
+    XML
   end
 
   def successful_purchase_using_stored_card_response_with_pipe_delimiter_and_quotes
@@ -2250,7 +2250,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
 
   def failed_purchase_using_stored_card_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <createCustomerProfileTransactionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <refId>1</refId>
@@ -2263,11 +2263,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
         </messages>
         <directResponse>3,1,6,The credit card number is invalid.,,P,0,1,Store Purchase,1.01,CC,auth_capture,2da01d7b583c706106e2,Longbob,Longsen,,,,n/a,,,,,,,,,,,,,,,,,,,13BA28EEA3593C13E2E3BC109D16E5D2,,,,,,,,,,,,,XXXX1222,,,,,,,,,,,,,,,,,</directResponse>
       </createCustomerProfileTransactionResponse>
-    eos
+    XML
   end
 
   def successful_authorize_using_stored_card_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <createCustomerProfileTransactionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <refId>1</refId>
@@ -2280,11 +2280,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
         </messages>
         <directResponse>1,1,1,This transaction has been approved.,GGHQ5R,Y,2235700640,1,Store Purchase,1.01,CC,auth_only,0bde9d39f8eb9443f2af,Longbob,Longsen,,,,n/a,,,,,,,,,,,,,,,,,,,E47E5CA4F1239B00D39A7F8C147215D3,,2,,,,,,,,,,,XXXX2224,Visa,,,,,,,,,,,,,,,,</directResponse>
       </createCustomerProfileTransactionResponse>
-    eos
+    XML
   end
 
   def failed_authorize_using_stored_card_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <createCustomerProfileTransactionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <refId>1</refId>
@@ -2297,11 +2297,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
         </messages>
         <directResponse>3,1,6,The credit card number is invalid.,,P,0,1,Store Purchase,1.01,CC,auth_only,f632442ce056f9f82ee9,Longbob,Longsen,,,,n/a,,,,,,,,,,,,,,,,,,,13BA28EEA3593C13E2E3BC109D16E5D2,,,,,,,,,,,,,XXXX1222,,,,,,,,,,,,,,,,,</directResponse>
       </createCustomerProfileTransactionResponse>
-    eos
+    XML
   end
 
   def successful_capture_using_stored_card_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <createCustomerProfileTransactionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <refId />
@@ -2314,11 +2314,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
         </messages>
         <directResponse>1,1,1,This transaction has been approved.,GGHQ5R,P,2235700640,1,,1.01,CC,prior_auth_capture,0bde9d39f8eb9443f2af,,,,,,,,,,,,,,,,,,,,,,,,,E47E5CA4F1239B00D39A7F8C147215D3,,,,,,,,,,,,,XXXX2224,Visa,,,,,,,,,,,,,,,,</directResponse>
       </createCustomerProfileTransactionResponse>
-    eos
+    XML
   end
 
   def failed_capture_using_stored_card_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <createCustomerProfileTransactionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <refId />
@@ -2331,11 +2331,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
         </messages>
         <directResponse>3,2,47,The amount requested for settlement cannot be greater than the original amount authorized.,,P,0,,,41.01,CC,prior_auth_capture,,,,,,,,,,,,,,,,,,,,,,,,,,8A556B125A1DA070AF5A84B798B7FBF7,,,,,,,,,,,,,,Visa,,,,,,,,,,,,,,,,</directResponse>
       </createCustomerProfileTransactionResponse>
-    eos
+    XML
   end
 
   def failed_refund_using_stored_card_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <createCustomerProfileTransactionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <refId>1</refId>
@@ -2347,11 +2347,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
           </message>
         </messages>
       </createCustomerProfileTransactionResponse>
-    eos
+    XML
   end
 
   def successful_void_using_stored_card_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <createCustomerProfileTransactionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <refId />
@@ -2364,11 +2364,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
         </messages>
         <directResponse>1,1,1,This transaction has been approved.,3R9YE2,P,2235701141,1,,0.00,CC,void,becdb509b35a32c30e97,,,,,,,,,,,,,,,,,,,,,,,,,C3C4B846B9D5A37D14462C2BF5B924FD,,,,,,,,,,,,,XXXX2224,Visa,,,,,,,,,,,,,,,,</directResponse>
       </createCustomerProfileTransactionResponse>
-    eos
+    XML
   end
 
   def failed_void_using_stored_card_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <createCustomerProfileTransactionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <refId />
@@ -2381,11 +2381,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
         </messages>
         <directResponse>1,1,310,This transaction has already been voided.,,P,0,,,0.00,CC,void,,,,,,,,,,,,,,,,,,,,,,,,,,FD9FAE70BEF461997A6C15D7D597658D,,,,,,,,,,,,,,Visa,,,,,,,,,,,,,,,,</directResponse>
       </createCustomerProfileTransactionResponse>
-    eos
+    XML
   end
 
   def network_tokenization_not_supported_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="utf-8"?>
       <createTransactionResponse xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                                  xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
@@ -2427,11 +2427,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
           </userFields>
         </transactionResponse>
       </createTransactionResponse>
-    eos
+    XML
   end
 
   def credentials_are_legit_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <authenticateTestResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <messages>
@@ -2442,11 +2442,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
           </message>
         </messages>
       </authenticateTestResponse>
-    eos
+    XML
   end
 
   def credentials_are_bogus_response
-    <<-eos
+    <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <authenticateTestResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <messages>
@@ -2457,11 +2457,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
           </message>
         </messages>
       </authenticateTestResponse>
-    eos
+    XML
   end
 
   def failed_refund_for_unsettled_payment_response
-    <<-eos
+    <<-XML
     <?xml version="1.0" encoding="utf-8"?>
       <createTransactionResponse xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
         <messages>
@@ -2493,6 +2493,6 @@ class AuthorizeNetTest < Test::Unit::TestCase
           <transHashSha2/>
         </transactionResponse>
       </createTransactionResponse>
-    eos
+    XML
   end
 end

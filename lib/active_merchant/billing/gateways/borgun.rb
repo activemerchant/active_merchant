@@ -205,7 +205,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def envelope(mode)
-        <<-EOS
+        <<-XML
           <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:aut="http://Borgun/Heimir/pub/ws/Authorization">
             <soapenv:Header/>
             <soapenv:Body>
@@ -216,7 +216,7 @@ module ActiveMerchant #:nodoc:
               </aut:#{mode}AuthorizationInput>
             </soapenv:Body>
           </soapenv:Envelope>
-        EOS
+        XML
       end
 
       def url(action)

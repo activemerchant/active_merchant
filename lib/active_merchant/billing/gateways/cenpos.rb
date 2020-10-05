@@ -198,7 +198,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def envelope(body)
-        <<~EOS
+        <<~XML
           <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/" xmlns:acr="http://schemas.datacontract.org/2004/07/Acriter.ABI.CenPOS.EPayment.VirtualTerminal.Common" xmlns:acr1="http://schemas.datacontract.org/2004/07/Acriter.ABI.CenPOS.EPayment.VirtualTerminal.v6.Common" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
           <soapenv:Header/>
              <soapenv:Body>
@@ -209,7 +209,7 @@ module ActiveMerchant #:nodoc:
                 </tem:ProcessCreditCard>
              </soapenv:Body>
           </soapenv:Envelope>
-        EOS
+        XML
       end
 
       def parse(xml)

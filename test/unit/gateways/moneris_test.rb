@@ -977,7 +977,7 @@ class MonerisTest < Test::Unit::TestCase
   end
 
   def pre_scrub
-    <<-pre_scrub
+    <<-REQUEST
       opening connection to esqa.moneris.com:443...
       opened
       starting SSL for esqa.moneris.com:443...
@@ -1001,11 +1001,11 @@ class MonerisTest < Test::Unit::TestCase
       -> "0\r\n"
       -> "\r\n"
       Conn close
-    pre_scrub
+    REQUEST
   end
 
   def post_scrub
-    <<-post_scrub
+    <<-REQUEST
       opening connection to esqa.moneris.com:443...
       opened
       starting SSL for esqa.moneris.com:443...
@@ -1029,6 +1029,6 @@ class MonerisTest < Test::Unit::TestCase
       -> "0\r\n"
       -> "\r\n"
       Conn close
-    post_scrub
+    REQUEST
   end
 end

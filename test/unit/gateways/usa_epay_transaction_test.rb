@@ -607,7 +607,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
   end
 
   def pre_scrubbed
-    <<~EOS
+    <<~REQUEST
       opening connection to sandbox.usaepay.com:443...
       opened
       starting SSL for sandbox.usaepay.com:443...
@@ -627,11 +627,11 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
       -> "UMversion=2.9&UMstatus=Approved&UMauthCode=042366&UMrefNum=132020588&UMavsResult=Address%3A%20Match%20%26%205%20Digit%20Zip%3A%20Match&UMavsResultCode=YYY&UMcvv2Result=Match&UMcvv2ResultCode=M&UMresult=A&UMvpasResultCode=&UMerror=Approved&UMerrorcode=00000&UMcustnum=&UMbatch=120&UMbatchRefNum=848&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMprocRefNum=&UMcardLevelResult=A&UMauthAmount=1&UMfiller=filled"
       read 485 bytes
       Conn close
-    EOS
+    REQUEST
   end
 
   def post_scrubbed
-    <<~EOS
+    <<~REQUEST
       opening connection to sandbox.usaepay.com:443...
       opened
       starting SSL for sandbox.usaepay.com:443...
@@ -651,11 +651,11 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
       -> "UMversion=2.9&UMstatus=Approved&UMauthCode=042366&UMrefNum=132020588&UMavsResult=Address%3A%20Match%20%26%205%20Digit%20Zip%3A%20Match&UMavsResultCode=YYY&UMcvv2Result=Match&UMcvv2ResultCode=M&UMresult=A&UMvpasResultCode=&UMerror=Approved&UMerrorcode=00000&UMcustnum=&UMbatch=120&UMbatchRefNum=848&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMprocRefNum=&UMcardLevelResult=A&UMauthAmount=1&UMfiller=filled"
       read 485 bytes
       Conn close
-    EOS
+    REQUEST
   end
 
   def pre_scrubbed_track_data
-    <<~EOS
+    <<~REQUEST
       opening connection to sandbox.usaepay.com:443...
       opened
       starting SSL for sandbox.usaepay.com:443...
@@ -675,11 +675,11 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
       -> "UMversion=2.9&UMstatus=Approved&UMauthCode=042087&UMrefNum=132020522&UMavsResult=Address%3A%20Match%20%26%205%20Digit%20Zip%3A%20Match&UMavsResultCode=YYY&UMcvv2Result=Match&UMcvv2ResultCode=M&UMresult=A&UMvpasResultCode=&UMerror=Approved&UMerrorcode=00000&UMcustnum=&UMbatch=120&UMbatchRefNum=848&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMprocRefNum=&UMcardLevelResult=A&UMauthAmount=1&UMfiller=filled"
       read 485 bytes
       Conn close
-    EOS
+    REQUEST
   end
 
   def post_scrubbed_track_data
-    <<~EOS
+    <<~REQUEST
       opening connection to sandbox.usaepay.com:443...
       opened
       starting SSL for sandbox.usaepay.com:443...
@@ -699,11 +699,11 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
       -> "UMversion=2.9&UMstatus=Approved&UMauthCode=042087&UMrefNum=132020522&UMavsResult=Address%3A%20Match%20%26%205%20Digit%20Zip%3A%20Match&UMavsResultCode=YYY&UMcvv2Result=Match&UMcvv2ResultCode=M&UMresult=A&UMvpasResultCode=&UMerror=Approved&UMerrorcode=00000&UMcustnum=&UMbatch=120&UMbatchRefNum=848&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMprocRefNum=&UMcardLevelResult=A&UMauthAmount=1&UMfiller=filled"
       read 485 bytes
       Conn close
-    EOS
+    REQUEST
   end
 
   def pre_scrubbed_echeck
-    <<~EOS
+    <<~REQUEST
       opening connection to sandbox.usaepay.com:443...
       opened
       starting SSL for sandbox.usaepay.com:443...
@@ -723,11 +723,11 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
       -> "UMversion=2.9&UMstatus=Approved&UMauthCode=TMEAAF&UMrefNum=133135121&UMavsResult=No%20AVS%20response%20%28Typically%20no%20AVS%20data%20sent%20or%20swiped%20transaction%29&UMavsResultCode=&UMcvv2Result=No%20CVV2%2FCVC%20data%20available%20for%20transaction.&UMcvv2ResultCode=&UMresult=A&UMvpasResultCode=&UMerror=&UMerrorcode=00000&UMcustnum=&UMbatch=180316&UMbatchRefNum=&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMprocRefNum=18031621233689&UMcardLevelResult=&UMauthAmount=&UMfiller=filled"
       read 572 bytes
       Conn close
-    EOS
+    REQUEST
   end
 
   def post_scrubbed_echeck
-    <<~EOS
+    <<~REQUEST
       opening connection to sandbox.usaepay.com:443...
       opened
       starting SSL for sandbox.usaepay.com:443...
@@ -747,6 +747,6 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
       -> "UMversion=2.9&UMstatus=Approved&UMauthCode=TMEAAF&UMrefNum=133135121&UMavsResult=No%20AVS%20response%20%28Typically%20no%20AVS%20data%20sent%20or%20swiped%20transaction%29&UMavsResultCode=&UMcvv2Result=No%20CVV2%2FCVC%20data%20available%20for%20transaction.&UMcvv2ResultCode=&UMresult=A&UMvpasResultCode=&UMerror=&UMerrorcode=00000&UMcustnum=&UMbatch=180316&UMbatchRefNum=&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMprocRefNum=18031621233689&UMcardLevelResult=&UMauthAmount=&UMfiller=filled"
       read 572 bytes
       Conn close
-    EOS
+    REQUEST
   end
 end
