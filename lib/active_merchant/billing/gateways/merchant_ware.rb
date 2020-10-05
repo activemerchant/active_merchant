@@ -272,7 +272,7 @@ module ActiveMerchant #:nodoc:
           response[element.name] = element.text
         end
 
-        response[:message] = response['faultstring'].to_s.gsub("\n", ' ')
+        response[:message] = response['faultstring'].to_s.tr("\n", ' ')
         response
       rescue REXML::ParseException
         response[:http_body]        = http_response.body

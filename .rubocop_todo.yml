@@ -153,21 +153,6 @@ Naming/VariableName:
     - 'test/unit/gateways/card_stream_test.rb'
     - 'test/unit/gateways/worldpay_online_payments_test.rb'
 
-# Offense count: 11
-# Cop supports --auto-correct.
-Performance/StringReplacement:
-  Exclude:
-    - 'lib/active_merchant/billing/compatibility.rb'
-    - 'lib/active_merchant/billing/gateways/card_connect.rb'
-    - 'lib/active_merchant/billing/gateways/firstdata_e4.rb'
-    - 'lib/active_merchant/billing/gateways/merchant_ware.rb'
-    - 'lib/active_merchant/billing/gateways/merchant_ware_version_four.rb'
-    - 'lib/active_merchant/billing/gateways/orbital.rb'
-    - 'lib/active_merchant/billing/gateways/quickbooks.rb'
-    - 'lib/active_merchant/billing/gateways/quickpay/quickpay_v10.rb'
-    - 'lib/active_merchant/billing/gateways/realex.rb'
-    - 'test/unit/gateways/nab_transact_test.rb'
-
 # Offense count: 2
 # Configuration parameters: EnforcedStyle.
 # SupportedStyles: inline, group

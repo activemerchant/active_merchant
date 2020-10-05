@@ -222,7 +222,7 @@ class NabTransactTest < Test::Unit::TestCase
   end
 
   def valid_metadata(name, location)
-    return <<-XML.gsub(/^\s{4}/, '').gsub(/\n/, '')
+    return <<-XML.gsub(/^\s{4}/, '').delete("\n")
     <metadata><meta name="ca_name" value="#{name}"/><meta name="ca_location" value="#{location}"/></metadata>
     XML
   end

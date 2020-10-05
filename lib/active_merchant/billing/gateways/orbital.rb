@@ -34,7 +34,7 @@ module ActiveMerchant #:nodoc:
 
       POST_HEADERS = {
         'MIME-Version' => '1.1',
-        'Content-Type' => "application/PTI#{API_VERSION.gsub(/\./, '')}",
+        'Content-Type' => "application/PTI#{API_VERSION.delete('.')}",
         'Content-transfer-encoding' => 'text',
         'Request-number' => '1',
         'Document-type' => 'Request',
@@ -859,7 +859,7 @@ module ActiveMerchant #:nodoc:
       # 3. PINless Debit transactions can only use uppercase and lowercase alpha (A-Z, a-z) and numeric (0-9)
       def format_order_id(order_id)
         illegal_characters = /[^,$@&\- \w]/
-        order_id = order_id.to_s.gsub(/\./, '-')
+        order_id = order_id.to_s.tr('.', '-')
         order_id.gsub!(illegal_characters, '')
         order_id.lstrip!
         order_id[0...22]

@@ -395,7 +395,7 @@ module ActiveMerchant #:nodoc:
             credit_card.last_name,
             credit_card.month,
             credit_card.year
-          ].map { |value| value.to_s.gsub(/;/, '') }.join(';')
+          ].map { |value| value.to_s.delete(';') }.join(';')
         else
           raise StandardError, "TransArmor support is not enabled on your #{display_name} account"
         end
