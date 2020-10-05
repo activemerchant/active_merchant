@@ -136,20 +136,6 @@ Style/AccessModifierDeclarations:
     - 'test/unit/gateways/metrics_global_test.rb'
     - 'test/unit/gateways/optimal_payment_test.rb'
 
-# Offense count: 12
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: always, conditionals
-Style/AndOr:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/beanstream/beanstream_core.rb'
-    - 'lib/active_merchant/billing/gateways/eway.rb'
-    - 'lib/active_merchant/billing/gateways/iridium.rb'
-    - 'lib/active_merchant/billing/gateways/pac_net_raven.rb'
-    - 'lib/active_merchant/billing/gateways/smart_ps.rb'
-    - 'lib/active_merchant/billing/gateways/stripe.rb'
-    - 'lib/active_merchant/billing/gateways/webpay.rb'
-
 # Offense count: 47
 # Configuration parameters: AllowedChars.
 Style/AsciiComments:

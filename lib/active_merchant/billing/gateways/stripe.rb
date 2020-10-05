@@ -221,7 +221,7 @@ module ActiveMerchant #:nodoc:
             # The /cards endpoint does not update other customer parameters.
             r.process { commit(:post, "customers/#{CGI.escape(options[:customer])}/cards", params, options) }
 
-            post[:default_card] = r.params['id'] if options[:set_default] and r.success? and !r.params['id'].blank?
+            post[:default_card] = r.params['id'] if options[:set_default] && r.success? && !r.params['id'].blank?
 
             r.process { update_customer(options[:customer], post) } if post.count > 0
           end

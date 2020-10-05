@@ -135,7 +135,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(post, address, prefix = '')
         prefix += '_' unless prefix.blank?
-        unless address.blank? or address.values.blank?
+        unless address.blank? || address.values.blank?
           post[prefix + 'address1']    = address[:address1].to_s
           post[prefix + 'address2']    = address[:address2].to_s unless address[:address2].blank?
           post[prefix + 'company']    = address[:company].to_s

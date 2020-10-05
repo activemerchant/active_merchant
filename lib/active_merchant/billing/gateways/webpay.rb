@@ -51,7 +51,7 @@ module ActiveMerchant #:nodoc:
           MultiResponse.run(:first) do |r|
             r.process { commit(:post, "customers/#{CGI.escape(options[:customer])}/", post, options) }
 
-            return r unless options[:set_default] and r.success? and !r.params['id'].blank?
+            return r unless options[:set_default] && r.success? && !r.params['id'].blank?
 
             r.process { update_customer(options[:customer], default_card: r.params['id']) }
           end

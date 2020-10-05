@@ -442,7 +442,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_source(post, source)
-        if source.is_a?(String) or source.is_a?(Integer)
+        if source.is_a?(String) || source.is_a?(Integer)
           post[:customerCode] = source
         else
           card_brand(source) == 'check' ? add_check(post, source) : add_credit_card(post, source)

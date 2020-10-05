@@ -397,7 +397,7 @@ module ActiveMerchant #:nodoc:
       def parse(xml)
         reply = {}
         xml = REXML::Document.new(xml)
-        if (root = REXML::XPath.first(xml, '//CardDetailsTransactionResponse')) or
+        if (root = REXML::XPath.first(xml, '//CardDetailsTransactionResponse')) ||
            (root = REXML::XPath.first(xml, '//CrossReferenceTransactionResponse'))
           root.elements.to_a.each do |node|
             case node.name
