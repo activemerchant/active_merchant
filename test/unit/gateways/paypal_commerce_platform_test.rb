@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'test_helper'
 
 class PaypalCommercePlatformTest < Test::Unit::TestCase
@@ -7,101 +9,101 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
     @gateway          = ActiveMerchant::Billing::PaypalCommercePlatformGateway.new
     @ppcp_credentials = fixtures(:ppcp)
     params            = user_credentials
-    options           = { "Content-Type": "application/json", authorization: params }
+    options           = { "Content-Type": 'application/json', authorization: params }
     access_token      = @gateway.get_access_token(options)
-    @headers          = { "Authorization": access_token, "Content-Type": "application/json" }
+    @headers          = { "Authorization": access_token, "Content-Type": 'application/json' }
     @body             = body
     @card_order_options = {
-        "payment_source": {
-            "card": {
-                "name": "John Doe",
-                "number": @ppcp_credentials[:card_number],
-                "expiry": "#{ @ppcp_credentials[:year] }-#{ @ppcp_credentials[:month] }",
-                "security_code": @ppcp_credentials[:cvc],
-                "billing_address": {
-                    "address_line_1": "12312 Port Grace Blvd",
-                    "admin_area_2": "La Vista",
-                    "admin_area_1": "NE",
-                    "postal_code": "68128",
-                    "country_code": "US"
-                }
-            }
-        },
-        "headers": @headers
+      "payment_source": {
+        "card": {
+          "name": 'John Doe',
+          "number": @ppcp_credentials[:card_number],
+          "expiry": "#{@ppcp_credentials[:year]}-#{@ppcp_credentials[:month]}",
+          "security_code": @ppcp_credentials[:cvc],
+          "billing_address": {
+            "address_line_1": '12312 Port Grace Blvd',
+            "admin_area_2": 'La Vista',
+            "admin_area_1": 'NE',
+            "postal_code": '68128',
+            "country_code": 'US'
+          }
+        }
+      },
+      "headers": @headers
     }
   end
 
   def test_successful_create_capture_order
     @gateway.expects(:ssl_request).times(1).returns(successful_create_capture_order_response)
-    assert create = @gateway.create_order("CAPTURE", options)
+    assert create = @gateway.create_order('CAPTURE', options)
     success_created_assertions(create)
   end
 
   def test_successful_create_authorize_order
     @gateway.expects(:ssl_request).times(1).returns(successful_create_authorize_order_response)
-    assert create = @gateway.create_order("AUTHORIZE", options)
+    assert create = @gateway.create_order('AUTHORIZE', options)
     success_created_assertions(create)
   end
 
   def test_successful_update_order
     @gateway.expects(:ssl_request).times(2).returns(successful_create_capture_order_response, successful_update_order_response)
-    assert create = @gateway.create_order("CAPTURE", options)
+    assert create = @gateway.create_order('CAPTURE', options)
     success_created_assertions(create)
-    order_id      = create.params["id"]
+    order_id      = create.params['id']
     assert update = @gateway.update_order(order_id, options.merge(body: {}))
     success_empty_assertions(update)
   end
 
   def test_successful_create_and_capture_order
     @gateway.expects(:ssl_request).times(2).returns(successful_create_capture_order_response, successful_capture_order_response)
-    assert create  = @gateway.create_order("CAPTURE", options)
+    assert create = @gateway.create_order('CAPTURE', options)
     success_created_assertions(create)
-    order_id       = create.params["id"]
+    order_id = create.params['id']
     assert capture = @gateway.capture(order_id, @card_order_options)
     success_completed_assertions(capture)
   end
 
   def test_successful_create_and_authorize_order
     @gateway.expects(:ssl_request).times(2).returns(successful_create_authorize_order_response, successful_authorize_order_response)
-    assert create    = @gateway.create_order("AUTHORIZE", options)
+    assert create = @gateway.create_order('AUTHORIZE', options)
     success_created_assertions(create)
-    order_id         = create.params["id"]
+    order_id = create.params['id']
     assert authorize = @gateway.authorize(order_id, @card_order_options)
     success_completed_assertions(authorize)
   end
 
   def test_successful_create_and_authorize_and_capture_order
     @gateway.expects(:ssl_request).times(3).returns(successful_create_authorize_order_response, successful_authorize_order_response, successful_capture_authorized_order_response)
-    assert create    = @gateway.create_order("AUTHROIZE", options)
+    assert create = @gateway.create_order('AUTHROIZE', options)
     success_created_assertions(create)
-    order_id         = create.params["id"]
+    order_id = create.params['id']
     assert authorize = @gateway.authorize(order_id, @card_order_options)
     success_completed_assertions(authorize)
-    authorization_id = authorize.params["purchase_units"][0]["payments"]["authorizations"][0]["id"]
+    authorization_id = authorize.params['purchase_units'][0]['payments']['authorizations'][0]['id']
     assert capture   = @gateway.do_capture(authorization_id, options)
     success_completed_assertions(capture)
   end
 
   def test_successful_create_and_capture_and_refund_order
     @gateway.expects(:ssl_request).times(3).returns(successful_create_capture_order_response, successful_capture_order_response, successful_refund_order_response)
-    assert create  = @gateway.create_order("CAPTURE", options)
+    assert create = @gateway.create_order('CAPTURE', options)
     success_created_assertions(create)
-    order_id       = create.params["id"]
+    order_id = create.params['id']
     assert capture = @gateway.capture(order_id, @card_order_options)
     success_completed_assertions(capture)
-    capture_id     = capture.params["purchase_units"][0]["payments"]["captures"][0]["id"]
+    capture_id = capture.params['purchase_units'][0]['payments']['captures'][0]['id']
     assert refund = @gateway.refund(capture_id, options)
     success_completed_assertions(refund)
   end
 
   def test_successful_create_and_authorize_and_void_order
     @gateway.expects(:ssl_request).times(3).returns(successful_create_authorize_order_response, successful_authorize_order_response, successful_void_order_response)
-    assert create    = @gateway.create_order("AUTHORIZE", options)
+    assert create = @gateway.create_order('AUTHORIZE', options)
     success_created_assertions(create)
-    order_id         = create.params["id"]
+    order_id = create.params['id']
     assert authorize = @gateway.authorize(order_id, @card_order_options)
     success_completed_assertions(authorize)
-    authorization_id = authorize.params["purchase_units"][0]["payments"]["authorizations"][0]["id"]
+    authorization_id = authorize.params['purchase_units'][0]['payments']['authorizations'][0]['id']
     assert void = @gateway.void(authorization_id, options)
     success_empty_assertions(void)
   end
@@ -122,10 +124,10 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
     @gateway.expects(:ssl_request).times(3).returns(successful_approve_billing_agreement_response, successful_create_capture_order_response, successful_capture_with_billing_response)
     assert approve = @gateway.create_billing_agreement_token(billing_agreement_options)
     success_approve_billing_agreement_assertions(approve)
-    billing_id     = approve.params["id"]
-    assert create  = @gateway.create_order("CAPTURE", options)
+    billing_id     = approve.params['id']
+    assert create  = @gateway.create_order('CAPTURE', options)
     success_created_assertions(create)
-    order_id       = create.params["id"]
+    order_id       = create.params['id']
     assert capture = @gateway.capture(order_id, billing_options(billing_id))
     success_completed_assertions(capture)
   end
@@ -134,10 +136,10 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
     @gateway.expects(:ssl_request).times(3).returns(successful_approve_billing_agreement_response, successful_create_authorize_order_response, successful_authroize_with_billing_response)
     assert approve = @gateway.create_billing_agreement_token(billing_agreement_options)
     success_approve_billing_agreement_assertions(approve)
-    billing_id     = approve.params["id"]
-    assert create  = @gateway.create_order("AUTHORIZE", options)
+    billing_id     = approve.params['id']
+    assert create  = @gateway.create_order('AUTHORIZE', options)
     success_created_assertions(create)
-    order_id       = create.params["id"]
+    order_id = create.params['id']
     assert authorize = @gateway.authorize(order_id, billing_options(billing_id))
     success_completed_assertions(authorize)
   end
@@ -146,8 +148,8 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
     @gateway.expects(:ssl_request).times(2).returns(successful_approve_billing_agreement_response, successful_cancel_billing_response)
     assert approve = @gateway.create_billing_agreement_token(billing_agreement_options)
     success_approve_billing_agreement_assertions(approve)
-    billing_id     = approve.params["id"]
-    @body          = { note: "Cancelling Subscription" }
+    billing_id     = approve.params['id']
+    @body          = { note: 'Cancelling Subscription' }
     response       = @gateway.cancel_billing_agreement(billing_id, options)
     assert_success response
   end
@@ -162,9 +164,9 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
 
   def test_failed_update_order_business_validation_error
     @gateway.expects(:ssl_request).times(2).returns(successful_create_capture_order_response, failed_update_order_due_to_business_error_response)
-    assert create = @gateway.create_order("CAPTURE", options)
+    assert create = @gateway.create_order('CAPTURE', options)
     success_created_assertions(create)
-    order_id      = create.params["id"]
+    order_id      = create.params['id']
     assert update = @gateway.update_order(order_id, options.merge(body: {}))
     failed_business_validation_assertions(update)
   end
@@ -173,100 +175,100 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
     @gateway.expects(:ssl_request).times(2).returns(successful_approve_billing_agreement_response, failed_cancel_billing_due_to_business_error)
     assert approve = @gateway.create_billing_agreement_token(billing_agreement_options)
     success_approve_billing_agreement_assertions(approve)
-    billing_id     = approve.params["id"]
-    @body          = { note: "Cancelling Subscription" }
+    billing_id     = approve.params['id']
+    @body          = { note: 'Cancelling Subscription' }
     response       = @gateway.cancel_billing_agreement(billing_id, options)
     assert_failure response
-    assert_equal "BUSINESS_ERROR", response.params["name"]
-    assert_equal "Business error", response.params["message"]
+    assert_equal 'BUSINESS_ERROR', response.params['name']
+    assert_equal 'Business error', response.params['message']
   end
 
   def test_failed_create_capture_order_due_to_invalid_schema
     @gateway.expects(:ssl_request).times(1).returns(failed_create_order_invalid_schema_response)
-    assert create = @gateway.create_order("CAPTURE", options)
+    assert create = @gateway.create_order('CAPTURE', options)
     failed_schema_assertions(create)
   end
 
   def test_failed_create_capture_order_due_to_invalid_business_validation
     @gateway.expects(:ssl_request).times(1).returns(failed_create_order_invalid_business_validation_response)
-    assert create = @gateway.create_order("CAPTURE", options)
+    assert create = @gateway.create_order('CAPTURE', options)
     failed_business_validation_assertions(create)
   end
 
   def test_failed_capture_after_creation_due_to_invalid_schema(order_id)
     @gateway.expects(:ssl_request).times(2).returns(successful_create_capture_order_response, failed_capture_order_invalid_schema_response)
-    assert create   = @gateway.create_order("CAPTURE", options)
+    assert create = @gateway.create_order('CAPTURE', options)
     success_created_assertions(create)
-    order_id        = create.params["id"]
-    assert capture  = @gateway.capture(order_id, @card_order_options)
+    order_id = create.params['id']
+    assert capture = @gateway.capture(order_id, @card_order_options)
     failed_schema_assertions(capture)
   end
 
   def test_failed_capture_after_creation_due_to_invalid_business_validation
     @gateway.expects(:ssl_request).times(2).returns(successful_create_capture_order_response, failed_capture_order_invalid_business_validation_response)
-    assert create   = @gateway.create_order("CAPTURE", options)
+    assert create = @gateway.create_order('CAPTURE', options)
     success_created_assertions(create)
-    order_id        = create.params["id"]
-    assert capture  = @gateway.capture(order_id, @card_order_options)
+    order_id = create.params['id']
+    assert capture = @gateway.capture(order_id, @card_order_options)
     failed_business_validation_assertions(capture)
   end
 
   def test_failed_authorize_after_creation_due_to_invalid_schema
     @gateway.expects(:ssl_request).times(2).returns(successful_create_authorize_order_response, failed_authorize_order_invalid_schema_response)
-    assert create    = @gateway.create_order("AUTHORIZE", options)
+    assert create = @gateway.create_order('AUTHORIZE', options)
     success_created_assertions(create)
-    order_id         = create.params["id"]
+    order_id = create.params['id']
     assert authorize = @gateway.authorize(order_id, @card_order_options)
     failed_schema_assertions(authorize)
   end
 
   def test_failed_authorize_after_creation_due_to_invalid_business_validations
     @gateway.expects(:ssl_request).times(2).returns(successful_create_authorize_order_response, failed_authorize_order_invalid_business_validation_response)
-    assert create    = @gateway.create_order("AUTHORIZE", options)
+    assert create = @gateway.create_order('AUTHORIZE', options)
     success_created_assertions(create)
-    order_id         = create.params["id"]
+    order_id = create.params['id']
     assert authorize = @gateway.authorize(order_id, @card_order_options)
     failed_business_validation_assertions(authorize)
   end
 
   def test_failed_void_due_to_invalid_resource
     @gateway.expects(:ssl_request).times(1).returns(failed_void_invalid_resource_response)
-    assert void = @gateway.void("INVALID_ID", options)
+    assert void = @gateway.void('INVALID_ID', options)
     failed_resource_assertions(void)
   end
 
   def test_failed_void_due_to_invalid_business_validation
     @gateway.expects(:ssl_request).times(3).returns(successful_create_authorize_order_response, successful_authorize_order_response, failed_void_invalid_business_validation_response)
-    assert create    = @gateway.create_order("AUTHORIZE", options)
+    assert create = @gateway.create_order('AUTHORIZE', options)
     success_created_assertions(create)
-    order_id         = create.params["id"]
+    order_id = create.params['id']
     assert authorize = @gateway.authorize(order_id, @card_order_options)
     success_completed_assertions(authorize)
-    authorization_id = authorize.params["purchase_units"][0]["payments"]["authorizations"][0]["id"]
+    authorization_id = authorize.params['purchase_units'][0]['payments']['authorizations'][0]['id']
     assert void = @gateway.void(authorization_id, options)
     failed_business_validation_assertions(void)
   end
 
   def test_failed_refund_due_to_invalid_schema
     @gateway.expects(:ssl_request).times(3).returns(successful_create_capture_order_response, successful_capture_order_response, failed_refund_invalid_schema_response)
-    assert create  = @gateway.create_order("CAPTURE", options)
+    assert create = @gateway.create_order('CAPTURE', options)
     success_created_assertions(create)
-    order_id       = create.params["id"]
+    order_id = create.params['id']
     assert capture = @gateway.capture(order_id, @card_order_options)
     success_completed_assertions(capture)
-    capture_id     = capture.params["purchase_units"][0]["payments"]["captures"][0]["id"]
+    capture_id = capture.params['purchase_units'][0]['payments']['captures'][0]['id']
     assert refund = @gateway.refund(capture_id, options)
     failed_schema_assertions_for_refund(refund)
   end
 
   def test_failed_refund_due_to_invalid_business_validation
     @gateway.expects(:ssl_request).times(3).returns(successful_create_capture_order_response, successful_capture_order_response, failed_refund_invalid_business_validation_response)
-    assert create  = @gateway.create_order("CAPTURE", options)
+    assert create = @gateway.create_order('CAPTURE', options)
     success_created_assertions(create)
-    order_id       = create.params["id"]
+    order_id = create.params['id']
     assert capture = @gateway.capture(order_id, @card_order_options)
     success_completed_assertions(capture)
-    capture_id     = capture.params["purchase_units"][0]["payments"]["captures"][0]["id"]
+    capture_id = capture.params['purchase_units'][0]['payments']['captures'][0]['id']
     assert refund = @gateway.refund(capture_id, options)
     failed_business_validation_assertions(refund)
   end
@@ -274,7 +276,7 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
   private
 
   def pre_scrubbed_access_token
-      <<-PRE_SCRUBBED
+    <<-PRE_SCRUBBED
       Authorization: Basic QVNzOE9zcWdlNktUM09kTHRrTmhEMjBWUDhsc3JxUlVsUmpMby1lNXM3NVNIei0yZmZNTXpDb3Nfb2RRR2pHWXBQY0dseEpWUTVmWE16OXE6RU5PWks2REVIaXozZlh1bWJwQm1kR3BxbVUzMWZiR050TmdwY3JTbzFLWUFqd013TXZtVVVoRHhEVkJCMUY1NWtiZ2NBTkZhaUc5Z3FBUC0=
       User-Agent: PostmanRuntime/7.26.5
       Accept: */*
@@ -286,7 +288,7 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
       Content-Length: 29
       Cookie: l7_az=sandbox.slc; X-PP-SILOVER=name%3DLIVE3.WEB.1%26silo_version%3D880%26app%3Dapiplatformproxyserv%26TIME%3D1591643782%26HTTP_X_PP_AZ_LOCATOR%3Dsandbox.slc
       grant_type: "client_credentials"
-      PRE_SCRUBBED
+    PRE_SCRUBBED
   end
 
   def post_scrubbed_access_token
@@ -547,7 +549,6 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
     }
     RESPONSE
   end
-
 
   def successful_update_order_response
     <<-RESPONSE
@@ -1571,90 +1572,90 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
   end
 
   def body
-    @reference_id = "camera_shop_seller_#{ DateTime.now }"
+    @reference_id = "camera_shop_seller_#{DateTime.now}"
     {
-        "intent": "CAPTURE",
-        "purchase_units": [
-            {
-                "reference_id": @reference_id,
-                "description": "Camera Shop",
-                "amount": {
-                    "currency_code": "USD",
-                    "value": "25.00",
-                    "breakdown": {
-                        "item_total": {
-                            "currency_code": "USD",
-                            "value": "25.00"
-                        },
-                        "shipping": {
-                            "currency_code": "USD",
-                            "value": "0"
-                        },
-                        "handling": {
-                            "currency_code": "USD",
-                            "value": "0"
-                        },
-                        "tax_total": {
-                            "currency_code": "USD",
-                            "value": "0"
-                        },
-                        "gift_wrap": {
-                            "currency_code": "USD",
-                            "value": "0"
-                        },
-                        "shipping_discount": {
-                            "currency_code": "USD",
-                            "value": "0"
-                        }
-                    }
-                },
-                "payee": {
-                    "email_address": @ppcp_credentials[:payee]
-                },
-                "items": [
-                    {
-                        "name": "Levis 501 Selvedge STF",
-                        "sku": "5158936",
-                        "unit_amount": {
-                            "currency_code": "USD",
-                            "value": "25.00"
-                        },
-                        "tax": {
-                            "currency_code": "USD",
-                            "value": "0.00"
-                        },
-                        "quantity": "1",
-                        "category": "PHYSICAL_GOODS"
-                    }
-                ],
-                "shipping": {
-                    "address": {
-                        "address_line_1": "500 Hillside Street",
-                        "address_line_2": "#1000",
-                        "admin_area_1": "CA",
-                        "admin_area_2": "San Jose",
-                        "postal_code": "95131",
-                        "country_code": "US"
-                    }
-                },
-                "shipping_method": "United Postal Service",
-                "payment_group_id": 1,
-                "custom_id": "custom_value_#{ DateTime.now }",
-                "invoice_id": "invoice_number_#{ DateTime.now }",
-                "soft_descriptor": "Payment Camera Shop"
+      "intent": 'CAPTURE',
+      "purchase_units": [
+        {
+          "reference_id": @reference_id,
+          "description": 'Camera Shop',
+          "amount": {
+            "currency_code": 'USD',
+            "value": '25.00',
+            "breakdown": {
+              "item_total": {
+                "currency_code": 'USD',
+                "value": '25.00'
+              },
+              "shipping": {
+                "currency_code": 'USD',
+                "value": '0'
+              },
+              "handling": {
+                "currency_code": 'USD',
+                "value": '0'
+              },
+              "tax_total": {
+                "currency_code": 'USD',
+                "value": '0'
+              },
+              "gift_wrap": {
+                "currency_code": 'USD',
+                "value": '0'
+              },
+              "shipping_discount": {
+                "currency_code": 'USD',
+                "value": '0'
+              }
             }
-        ],
-        "application_context": {
-            "return_url": "https://www.google.com/",
-            "cancel_url": "https://www.google.com/"
+          },
+          "payee": {
+            "email_address": @ppcp_credentials[:payee]
+          },
+          "items": [
+            {
+              "name": 'Levis 501 Selvedge STF',
+              "sku": '5158936',
+              "unit_amount": {
+                "currency_code": 'USD',
+                "value": '25.00'
+              },
+              "tax": {
+                "currency_code": 'USD',
+                "value": '0.00'
+              },
+              "quantity": '1',
+              "category": 'PHYSICAL_GOODS'
+            }
+          ],
+          "shipping": {
+            "address": {
+              "address_line_1": '500 Hillside Street',
+              "address_line_2": '#1000',
+              "admin_area_1": 'CA',
+              "admin_area_2": 'San Jose',
+              "postal_code": '95131',
+              "country_code": 'US'
+            }
+          },
+          "shipping_method": 'United Postal Service',
+          "payment_group_id": 1,
+          "custom_id": "custom_value_#{DateTime.now}",
+          "invoice_id": "invoice_number_#{DateTime.now}",
+          "soft_descriptor": 'Payment Camera Shop'
         }
+      ],
+      "application_context": {
+        "return_url": 'https://www.google.com/',
+        "cancel_url": 'https://www.google.com/'
+      }
     }
   end
 
   def user_credentials
     {
-        username: @ppcp_credentials[:username],
-        password: @ppcp_credentials[:password]
+      username: @ppcp_credentials[:username],
+      password: @ppcp_credentials[:password]
     }
   end
 
@@ -1664,45 +1665,45 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
 
   def billing_agreement_options
     {
-        "description": "Billing Agreement",
-        "shipping_address":
+      "description": 'Billing Agreement',
+      "shipping_address":
             {
-                "line1": "1350 North First Street",
-                "city": "San Jose",
-                "state": "CA",
-                "postal_code": "95112",
-                "country_code": "US",
-                "recipient_name": "John Doe"
+              "line1": '1350 North First Street',
+              "city": 'San Jose',
+              "state": 'CA',
+              "postal_code": '95112',
+              "country_code": 'US',
+              "recipient_name": 'John Doe'
             },
-        "payer":
+      "payer":
             {
-                "payment_method": "PAYPAL"
+              "payment_method": 'PAYPAL'
             },
-        "plan":
+      "plan":
             {
-                "type": "MERCHANT_INITIATED_BILLING",
-                "merchant_preferences":
+              "type": 'MERCHANT_INITIATED_BILLING',
+              "merchant_preferences":
                     {
-                        "return_url": "https://google.com",
-                        "cancel_url": "https://google.com",
-                        "accepted_pymt_type": "INSTANT",
-                        "skip_shipping_address": false,
-                        "immutable_shipping_address": true
+                      "return_url": 'https://google.com',
+                      "cancel_url": 'https://google.com',
+                      "accepted_pymt_type": 'INSTANT',
+                      "skip_shipping_address": false,
+                      "immutable_shipping_address": true
                     }
             },
-        headers: @headers
+      headers: @headers
     }
   end
 
   def billing_options(billing_token)
     {
-        "payment_source": {
-            "token": {
-                "id": billing_token,
-                "type": "BILLING_AGREEMENT"
-            }
-        },
-        "headers": @headers
+      "payment_source": {
+        "token": {
+          "id": billing_token,
+          "type": 'BILLING_AGREEMENT'
+        }
+      },
+      "headers": @headers
     }
   end
 
@@ -1711,64 +1712,63 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
   def success_created_assertions(response)
     assert_instance_of Response, response
     assert_success response
-    assert_equal "CREATED", response.params["status"]
-    assert_equal "Transaction Successfully Completed", response.message
+    assert_equal 'CREATED', response.params['status']
+    assert_equal 'Transaction Successfully Completed', response.message
   end
 
   def success_empty_assertions(response)
     assert_instance_of Response, response
     assert_success response
     assert_empty response.params
-    assert_equal "Transaction Successfully Completed", response.message
+    assert_equal 'Transaction Successfully Completed', response.message
   end
 
   def success_completed_assertions(response)
     assert_instance_of Response, response
     assert_success response
-    assert_equal "COMPLETED", response.params["status"]
-    assert_equal "Transaction Successfully Completed", response.message
+    assert_equal 'COMPLETED', response.params['status']
+    assert_equal 'Transaction Successfully Completed', response.message
   end
 
   def success_create_billing_agreement_assertions(response)
     assert_instance_of Response, response
     assert_success response
-    assert !response.params["links"].nil?
-    assert !response.params["token_id"].nil?
+    assert !response.params['links'].nil?
+    assert !response.params['token_id'].nil?
   end
 
   def success_approve_billing_agreement_assertions(response)
     assert_instance_of Response, response
     assert_success response
-    assert !response.params["id"].nil?
-    assert_equal "ACTIVE", response.params["state"]
+    assert !response.params['id'].nil?
+    assert_equal 'ACTIVE', response.params['state']
   end
 
   def failed_business_validation_assertions(response)
     assert_instance_of Response, response
     assert_failure response
-    assert_equal "The requested action could not be performed, semantically incorrect, or failed business validation.", response.message
-    assert_equal "UNPROCESSABLE_ENTITY", response.params["name"]
+    assert_equal 'The requested action could not be performed, semantically incorrect, or failed business validation.', response.message
+    assert_equal 'UNPROCESSABLE_ENTITY', response.params['name']
   end
 
   def failed_schema_assertions(response)
     assert_instance_of Response, response
     assert_failure response
-    assert_equal "Request is not well-formed, syntactically incorrect, or violates schema.", response.message
-    assert_equal "INVALID_REQUEST", response.params["name"]
+    assert_equal 'Request is not well-formed, syntactically incorrect, or violates schema.', response.message
+    assert_equal 'INVALID_REQUEST', response.params['name']
   end
 
   def failed_schema_assertions_for_refund(response)
     assert_instance_of Response, response
     assert_failure response
-    assert_equal "Request is not well-formed, syntactically incorrect, or violates schema", response.message
-    assert_equal "INVALID_REQUEST", response.params["name"]
+    assert_equal 'Request is not well-formed, syntactically incorrect, or violates schema', response.message
+    assert_equal 'INVALID_REQUEST', response.params['name']
   end
 
   def failed_resource_assertions(response)
     assert_instance_of Response, response
     assert_failure response
-    assert_equal "The specified resource does not exist.", response.message
-    assert_equal "RESOURCE_NOT_FOUND", response.params["name"]
+    assert_equal 'The specified resource does not exist.', response.message
+    assert_equal 'RESOURCE_NOT_FOUND', response.params['name']
   end
-
 end
