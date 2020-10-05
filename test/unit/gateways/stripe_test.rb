@@ -545,7 +545,7 @@ class StripeTest < Test::Unit::TestCase
     }
 
     response = stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, 'cus_xxx|card_xxx', @options.merge({application: application}))
+      @gateway.purchase(@amount, 'cus_xxx|card_xxx', @options.merge({ application: application }))
     end.check_request do |_method, _endpoint, _data, headers|
       assert_match(/\"application\"/, headers['X-Stripe-Client-User-Agent'])
       assert_match(/\"name\":\"app\"/, headers['X-Stripe-Client-User-Agent'])
@@ -631,7 +631,7 @@ class StripeTest < Test::Unit::TestCase
       post.include?('metadata[first_value]=true')
     end.returns(successful_purchase_response(true))
 
-    assert response = @gateway.void('ch_test_charge', {metadata: {first_value: true}})
+    assert response = @gateway.void('ch_test_charge', { metadata: { first_value: true } })
     assert_success response
   end
 
@@ -640,7 +640,7 @@ class StripeTest < Test::Unit::TestCase
       post.include?('reason=fraudulent')
     end.returns(successful_purchase_response(true))
 
-    assert response = @gateway.void('ch_test_charge', {reason: 'fraudulent'})
+    assert response = @gateway.void('ch_test_charge', { reason: 'fraudulent' })
     assert_success response
   end
 
@@ -713,7 +713,7 @@ class StripeTest < Test::Unit::TestCase
       post.include?('metadata[first_value]=true')
     end.returns(successful_partially_refunded_response)
 
-    assert response = @gateway.refund(@refund_amount, 'ch_test_charge', {metadata: {first_value: true}})
+    assert response = @gateway.refund(@refund_amount, 'ch_test_charge', { metadata: { first_value: true } })
     assert_success response
   end
 
@@ -961,7 +961,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_application_fee_is_submitted_for_purchase
     stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @credit_card, @options.merge({application_fee: 144}))
+      @gateway.purchase(@amount, @credit_card, @options.merge({ application_fee: 144 }))
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/application_fee=144/, data)
     end.respond_with(successful_purchase_response)
@@ -969,7 +969,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_application_fee_is_submitted_for_capture
     stub_comms(@gateway, :ssl_request) do
-      @gateway.capture(@amount, 'ch_test_charge', @options.merge({application_fee: 144}))
+      @gateway.capture(@amount, 'ch_test_charge', @options.merge({ application_fee: 144 }))
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/application_fee=144/, data)
     end.respond_with(successful_capture_response)
@@ -977,7 +977,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_exchange_rate_is_submitted_for_purchase
     stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @credit_card, @options.merge({exchange_rate: 0.96251}))
+      @gateway.purchase(@amount, @credit_card, @options.merge({ exchange_rate: 0.96251 }))
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/exchange_rate=0.96251/, data)
     end.respond_with(successful_purchase_response)
@@ -985,7 +985,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_exchange_rate_is_submitted_for_capture
     stub_comms(@gateway, :ssl_request) do
-      @gateway.capture(@amount, 'ch_test_charge', @options.merge({exchange_rate: 0.96251}))
+      @gateway.capture(@amount, 'ch_test_charge', @options.merge({ exchange_rate: 0.96251 }))
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/exchange_rate=0.96251/, data)
     end.respond_with(successful_capture_response)
@@ -993,7 +993,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_destination_is_submitted_for_purchase
     stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @credit_card, @options.merge({destination: 'subaccountid'}))
+      @gateway.purchase(@amount, @credit_card, @options.merge({ destination: 'subaccountid' }))
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/destination\[account\]=subaccountid/, data)
     end.respond_with(successful_purchase_response)
@@ -1001,7 +1001,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_destination_amount_is_submitted_for_purchase
     stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @credit_card, @options.merge({destination: 'subaccountid', destination_amount: @amount - 20}))
+      @gateway.purchase(@amount, @credit_card, @options.merge({ destination: 'subaccountid', destination_amount: @amount - 20 }))
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/destination\[amount\]=#{@amount - 20}/, data)
     end.respond_with(successful_purchase_response)
@@ -1009,7 +1009,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_client_data_submitted_with_purchase
     stub_comms(@gateway, :ssl_request) do
-      updated_options = @options.merge({description: 'a test customer', ip: '127.127.127.127', user_agent: 'some browser', order_id: '42', email: 'foo@wonderfullyfakedomain.com', receipt_email: 'receipt-receiver@wonderfullyfakedomain.com', referrer: 'http://www.shopify.com'})
+      updated_options = @options.merge({ description: 'a test customer', ip: '127.127.127.127', user_agent: 'some browser', order_id: '42', email: 'foo@wonderfullyfakedomain.com', receipt_email: 'receipt-receiver@wonderfullyfakedomain.com', referrer: 'http://www.shopify.com' })
       @gateway.purchase(@amount, @credit_card, updated_options)
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/description=a\+test\+customer/, data)
@@ -1026,7 +1026,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_client_data_submitted_with_purchase_without_email_or_order
     stub_comms(@gateway, :ssl_request) do
-      updated_options = @options.merge({description: 'a test customer', ip: '127.127.127.127', user_agent: 'some browser', referrer: 'http://www.shopify.com'})
+      updated_options = @options.merge({ description: 'a test customer', ip: '127.127.127.127', user_agent: 'some browser', referrer: 'http://www.shopify.com' })
       @gateway.purchase(@amount, @credit_card, updated_options)
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/description=a\+test\+customer/, data)
@@ -1040,7 +1040,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_client_data_submitted_with_metadata_in_options
     stub_comms(@gateway, :ssl_request) do
-      updated_options = @options.merge({metadata: {this_is_a_random_key_name: 'with a random value', i_made_up_this_key_too: 'canyoutell'}, order_id: '42', email: 'foo@wonderfullyfakedomain.com'})
+      updated_options = @options.merge({ metadata: { this_is_a_random_key_name: 'with a random value', i_made_up_this_key_too: 'canyoutell' }, order_id: '42', email: 'foo@wonderfullyfakedomain.com' })
       @gateway.purchase(@amount, @credit_card, updated_options)
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/metadata\[this_is_a_random_key_name\]=with\+a\+random\+value/, data)
@@ -1052,7 +1052,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_client_data_submitted_with_metadata_in_options_with_emv_credit_card_purchase
     stub_comms(@gateway, :ssl_request) do
-      updated_options = @options.merge({metadata: {this_is_a_random_key_name: 'with a random value', i_made_up_this_key_too: 'canyoutell'}, order_id: '42', email: 'foo@wonderfullyfakedomain.com'})
+      updated_options = @options.merge({ metadata: { this_is_a_random_key_name: 'with a random value', i_made_up_this_key_too: 'canyoutell' }, order_id: '42', email: 'foo@wonderfullyfakedomain.com' })
       @gateway.purchase(@amount, @emv_credit_card, updated_options)
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/metadata\[this_is_a_random_key_name\]=with\+a\+random\+value/, data)
@@ -1065,7 +1065,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_client_data_submitted_with_metadata_in_options_with_emv_credit_card_authorize
     stub_comms(@gateway, :ssl_request) do
-      updated_options = @options.merge({metadata: {this_is_a_random_key_name: 'with a random value', i_made_up_this_key_too: 'canyoutell'}, order_id: '42', email: 'foo@wonderfullyfakedomain.com'})
+      updated_options = @options.merge({ metadata: { this_is_a_random_key_name: 'with a random value', i_made_up_this_key_too: 'canyoutell' }, order_id: '42', email: 'foo@wonderfullyfakedomain.com' })
       @gateway.authorize(@amount, @emv_credit_card, updated_options)
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/metadata\[this_is_a_random_key_name\]=with\+a\+random\+value/, data)
@@ -1095,7 +1095,7 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def test_add_address
-    post = {card: {}}
+    post = { card: {} }
     @gateway.send(:add_address, post, @options)
     assert_equal @options[:billing_address][:zip], post[:card][:address_zip]
     assert_equal @options[:billing_address][:state], post[:card][:address_state]
@@ -1143,7 +1143,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_metadata_header
     @gateway.expects(:ssl_request).once.with { |_method, _url, _post, headers|
-      headers && headers['X-Stripe-Client-User-Metadata'] == {ip: '1.1.1.1'}.to_json
+      headers && headers['X-Stripe-Client-User-Metadata'] == { ip: '1.1.1.1' }.to_json
     }.returns(successful_purchase_response)
 
     @gateway.purchase(@amount, @credit_card, @options.merge(ip: '1.1.1.1'))
@@ -1260,7 +1260,7 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def generate_options_should_allow_key
-    assert_equal({key: '12345'}, generate_options({key: '12345'}))
+    assert_equal({ key: '12345' }, generate_options({ key: '12345' }))
   end
 
   def test_passing_expand_parameters

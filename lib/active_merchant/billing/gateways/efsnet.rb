@@ -54,7 +54,7 @@ module ActiveMerchant #:nodoc:
       def void(identification, options = {})
         requires!(options, :order_id)
         original_transaction_id, = identification.split(';')
-        commit(:void_transaction, {reference_number: format_reference_number(options[:order_id]), transaction_id: original_transaction_id})
+        commit(:void_transaction, { reference_number: format_reference_number(options[:order_id]), transaction_id: original_transaction_id })
       end
 
       def voice_authorize(money, authorization_code, creditcard, options = {})

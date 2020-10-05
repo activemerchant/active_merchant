@@ -94,7 +94,7 @@ class RemoteDecidirTest < Test::Unit::TestCase
     assert_equal 'approved', response.message
     assert_equal 'Heavenly Buffaloes', response.params['establishment_name']
     assert_equal '99999999', response.params['site_id']
-    assert_equal({'status' => nil}, response.params['fraud_detection'])
+    assert_equal({ 'status' => nil }, response.params['fraud_detection'])
     assert response.authorization
   end
 

@@ -171,7 +171,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
     puts "Test #{options[:order_id]} Sale: #{txn_id(response)}"
 
     # 6A. void
-    assert response = @gateway.void(response.authorization, {order_id: '6A'})
+    assert response = @gateway.void(response.authorization, { order_id: '6A' })
     assert_equal '360', response.params['response']
     assert_equal 'No transaction found with specified transaction Id', response.message
     puts "Test #{options[:order_id]}A: #{txn_id(response)}"
@@ -1173,15 +1173,15 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert_equal auth_code(options[:order_id]), response.params['authCode']
 
     # 1A: capture
-    assert response = @gateway.capture(amount, response.authorization, {id: transaction_id})
+    assert response = @gateway.capture(amount, response.authorization, { id: transaction_id })
     assert_equal 'Approved', response.message
 
     # 1B: credit
-    assert response = @gateway.credit(amount, response.authorization, {id: transaction_id})
+    assert response = @gateway.credit(amount, response.authorization, { id: transaction_id })
     assert_equal 'Approved', response.message
 
     # 1C: void
-    assert response = @gateway.void(response.authorization, {id: transaction_id})
+    assert response = @gateway.void(response.authorization, { id: transaction_id })
     assert_equal 'Approved', response.message
   end
 
@@ -1203,11 +1203,11 @@ class RemoteLitleCertification < Test::Unit::TestCase
     # assert_equal auth_code(options[:order_id]), response.params['authCode']
 
     # 1B: credit
-    assert response = @gateway.credit(amount, response.authorization, {id: transaction_id})
+    assert response = @gateway.credit(amount, response.authorization, { id: transaction_id })
     assert_equal 'Approved', response.message
 
     # 1C: void
-    assert response = @gateway.void(response.authorization, {id: transaction_id})
+    assert response = @gateway.void(response.authorization, { id: transaction_id })
     assert_equal 'Approved', response.message
   end
 

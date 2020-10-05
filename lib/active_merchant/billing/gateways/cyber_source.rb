@@ -390,7 +390,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_create_subscription_request(payment_method, options)
-        default_subscription_params = {frequency: 'on-demand', amount: 0, automatic_renew: false}
+        default_subscription_params = { frequency: 'on-demand', amount: 0, automatic_renew: false }
         options[:subscription] = default_subscription_params.update(
           options[:subscription] || {}
         )
@@ -472,7 +472,7 @@ module ActiveMerchant #:nodoc:
 
       def add_line_item_data(xml, options)
         options[:line_items].each_with_index do |value, index|
-          xml.tag! 'item', {'id' => index} do
+          xml.tag! 'item', { 'id' => index } do
             xml.tag! 'unitPrice', localized_amount(value[:declared_value].to_i, options[:currency] || default_currency)
             xml.tag! 'quantity', value[:quantity]
             xml.tag! 'productCode', value[:code] || 'shipping_only'
@@ -595,7 +595,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_tax_service(xml)
-        xml.tag! 'taxService', {'run' => 'true'} do
+        xml.tag! 'taxService', { 'run' => 'true' } do
           xml.tag!('nexus', @options[:nexus]) unless @options[:nexus].blank?
           xml.tag!('sellerRegistration', @options[:vat_reg_number]) unless @options[:vat_reg_number].blank?
         end
@@ -605,7 +605,7 @@ module ActiveMerchant #:nodoc:
         if network_tokenization?(payment_method)
           add_auth_network_tokenization(xml, payment_method, options)
         else
-          xml.tag! 'ccAuthService', {'run' => 'true'} do
+          xml.tag! 'ccAuthService', { 'run' => 'true' } do
             if options[:three_d_secure]
               add_normalized_threeds_2_data(xml, payment_method, options)
             else
@@ -678,7 +678,7 @@ module ActiveMerchant #:nodoc:
 
         case brand
         when :visa
-          xml.tag! 'ccAuthService', {'run' => 'true'} do
+          xml.tag! 'ccAuthService', { 'run' => 'true' } do
             xml.tag!('cavv', payment_method.payment_cryptogram)
             xml.tag!('commerceIndicator', ECI_BRAND_MAPPING[brand])
             xml.tag!('xid', payment_method.payment_cryptogram)
@@ -689,13 +689,13 @@ module ActiveMerchant #:nodoc:
             xml.tag!('authenticationData', payment_method.payment_cryptogram)
             xml.tag!('collectionIndicator', DEFAULT_COLLECTION_INDICATOR)
           end
-          xml.tag! 'ccAuthService', {'run' => 'true'} do
+          xml.tag! 'ccAuthService', { 'run' => 'true' } do
             xml.tag!('commerceIndicator', ECI_BRAND_MAPPING[brand])
             xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
           end
         when :american_express
           cryptogram = Base64.decode64(payment_method.payment_cryptogram)
-          xml.tag! 'ccAuthService', {'run' => 'true'} do
+          xml.tag! 'ccAuthService', { 'run' => 'true' } do
             xml.tag!('cavv', Base64.encode64(cryptogram[0...20]))
             xml.tag!('commerceIndicator', ECI_BRAND_MAPPING[brand])
             xml.tag!('xid', Base64.encode64(cryptogram[20...40]))
@@ -711,7 +711,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_capture_service(xml, request_id, request_token)
-        xml.tag! 'ccCaptureService', {'run' => 'true'} do
+        xml.tag! 'ccCaptureService', { 'run' => 'true' } do
           xml.tag! 'authRequestID', request_id
           xml.tag! 'authRequestToken', request_token
           xml.tag! 'reconciliationID', options[:reconciliation_id] if options[:reconciliation_id]
@@ -720,56 +720,56 @@ module ActiveMerchant #:nodoc:
 
       def add_purchase_service(xml, payment_method, options)
         if options[:pinless_debit_card]
-          xml.tag! 'pinlessDebitService', {'run' => 'true'} do
+          xml.tag! 'pinlessDebitService', { 'run' => 'true' } do
             xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
           end
         else
           add_auth_service(xml, payment_method, options)
-          xml.tag! 'ccCaptureService', {'run' => 'true'} do
+          xml.tag! 'ccCaptureService', { 'run' => 'true' } do
             xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
           end
         end
       end
 
       def add_void_service(xml, request_id, request_token)
-        xml.tag! 'voidService', {'run' => 'true'} do
+        xml.tag! 'voidService', { 'run' => 'true' } do
           xml.tag! 'voidRequestID', request_id
           xml.tag! 'voidRequestToken', request_token
         end
       end
 
       def add_auth_reversal_service(xml, request_id, request_token)
-        xml.tag! 'ccAuthReversalService', {'run' => 'true'} do
+        xml.tag! 'ccAuthReversalService', { 'run' => 'true' } do
           xml.tag! 'authRequestID', request_id
           xml.tag! 'authRequestToken', request_token
         end
       end
 
       def add_credit_service(xml, request_id = nil, request_token = nil)
-        xml.tag! 'ccCreditService', {'run' => 'true'} do
+        xml.tag! 'ccCreditService', { 'run' => 'true' } do
           xml.tag! 'captureRequestID', request_id if request_id
           xml.tag! 'captureRequestToken', request_token if request_token
         end
       end
 
       def add_check_service(xml)
-        xml.tag! 'ecDebitService', {'run' => 'true'}
+        xml.tag! 'ecDebitService', { 'run' => 'true' }
       end
 
       def add_subscription_create_service(xml, options)
-        xml.tag! 'paySubscriptionCreateService', {'run' => 'true'}
+        xml.tag! 'paySubscriptionCreateService', { 'run' => 'true' }
       end
 
       def add_subscription_update_service(xml, options)
-        xml.tag! 'paySubscriptionUpdateService', {'run' => 'true'}
+        xml.tag! 'paySubscriptionUpdateService', { 'run' => 'true' }
       end
 
       def add_subscription_delete_service(xml, options)
-        xml.tag! 'paySubscriptionDeleteService', {'run' => 'true'}
+        xml.tag! 'paySubscriptionDeleteService', { 'run' => 'true' }
       end
 
       def add_subscription_retrieve_service(xml, options)
-        xml.tag! 'paySubscriptionRetrieveService', {'run' => 'true'}
+        xml.tag! 'paySubscriptionRetrieveService', { 'run' => 'true' }
       end
 
       def add_subscription(xml, options, reference = nil)
@@ -834,13 +834,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_validate_pinless_debit_service(xml)
-        xml.tag! 'pinlessDebitValidateService', {'run' => 'true'}
+        xml.tag! 'pinlessDebitValidateService', { 'run' => 'true' }
       end
 
       def add_threeds_services(xml, options)
-        xml.tag! 'payerAuthEnrollService', {'run' => 'true'} if options[:payer_auth_enroll_service]
+        xml.tag! 'payerAuthEnrollService', { 'run' => 'true' } if options[:payer_auth_enroll_service]
         if options[:payer_auth_validate_service]
-          xml.tag! 'payerAuthValidateService', {'run' => 'true'} do
+          xml.tag! 'payerAuthValidateService', { 'run' => 'true' } do
             xml.tag! 'signedPARes', options[:pares]
           end
         end
@@ -889,17 +889,17 @@ module ActiveMerchant #:nodoc:
 
         xml = Builder::XmlMarkup.new indent: 2
         xml.instruct!
-        xml.tag! 's:Envelope', {'xmlns:s' => 'http://schemas.xmlsoap.org/soap/envelope/'} do
+        xml.tag! 's:Envelope', { 'xmlns:s' => 'http://schemas.xmlsoap.org/soap/envelope/' } do
           xml.tag! 's:Header' do
-            xml.tag! 'wsse:Security', {'s:mustUnderstand' => '1', 'xmlns:wsse' => 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd'} do
+            xml.tag! 'wsse:Security', { 's:mustUnderstand' => '1', 'xmlns:wsse' => 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd' } do
               xml.tag! 'wsse:UsernameToken' do
                 xml.tag! 'wsse:Username', @options[:login]
                 xml.tag! 'wsse:Password', @options[:password], 'Type' => 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText'
               end
             end
           end
-          xml.tag! 's:Body', {'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance', 'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema'} do
-            xml.tag! 'requestMessage', {'xmlns' => "urn:schemas-cybersource-com:transaction-data-#{xsd_version}"} do
+          xml.tag! 's:Body', { 'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance', 'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema' } do
+            xml.tag! 'requestMessage', { 'xmlns' => "urn:schemas-cybersource-com:transaction-data-#{xsd_version}" } do
               add_merchant_data(xml, options)
               xml << body
             end

@@ -17,7 +17,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     @credit_card = credit_card
     @check = check
     @apple_pay_payment_token = ActiveMerchant::Billing::ApplePayPaymentToken.new(
-      {data: 'encoded_payment_data'},
+      { data: 'encoded_payment_data' },
       payment_instrument_name: 'SomeBank Visa',
       payment_network: 'Visa',
       transaction_identifier: 'transaction123'
@@ -141,7 +141,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     [TRACK1_DATA, TRACK2_DATA].each do |track|
       @credit_card.track_data = track
       stub_comms do
-        @gateway.purchase(@amount, @credit_card, {device_type: 1})
+        @gateway.purchase(@amount, @credit_card, { device_type: 1 })
       end.check_request do |_endpoint, data, _headers|
         parse(data) do |doc|
           assert_not_nil doc.at_xpath('//retail')
@@ -474,7 +474,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
     @gateway.expects(:ssl_post).returns(successful_purchase_using_stored_card_response_with_pipe_delimiter)
 
-    response = @gateway.purchase(@amount, store.authorization, {delimiter: '|', description: 'description, with, commas'})
+    response = @gateway.purchase(@amount, store.authorization, { delimiter: '|', description: 'description, with, commas' })
     assert_success response
 
     assert_equal '2235700270#XXXX2224#cim_purchase', response.authorization
@@ -492,7 +492,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
     @gateway.expects(:ssl_post).returns(successful_purchase_using_stored_card_response_with_pipe_delimiter_and_quotes)
 
-    response = @gateway.purchase(@amount, store.authorization, {delimiter: '|', description: 'description, with, commas'})
+    response = @gateway.purchase(@amount, store.authorization, { delimiter: '|', description: 'description, with, commas' })
     assert_success response
 
     assert_equal '12345667#XXXX1111#cim_purchase', response.authorization
@@ -750,7 +750,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
   def test_address
     stub_comms do
-      @gateway.authorize(@amount, @credit_card, billing_address: {address1: '164 Waverley Street', country: 'US', state: 'CO', phone: '(555)555-5555', fax: '(555)555-4444'})
+      @gateway.authorize(@amount, @credit_card, billing_address: { address1: '164 Waverley Street', country: 'US', state: 'CO', phone: '(555)555-5555', fax: '(555)555-4444' })
     end.check_request do |_endpoint, data, _headers|
       parse(data) do |doc|
         assert_equal 'CO', doc.at_xpath('//billTo/state').content, data
@@ -778,7 +778,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
   def test_address_with_address2_present
     stub_comms do
-      @gateway.authorize(@amount, @credit_card, billing_address: {address1: '164 Waverley Street', address2: 'Apt 1234', country: 'US', state: 'CO', phone: '(555)555-5555', fax: '(555)555-4444'})
+      @gateway.authorize(@amount, @credit_card, billing_address: { address1: '164 Waverley Street', address2: 'Apt 1234', country: 'US', state: 'CO', phone: '(555)555-5555', fax: '(555)555-4444' })
     end.check_request do |_endpoint, data, _headers|
       parse(data) do |doc|
         assert_equal 'CO', doc.at_xpath('//billTo/state').content, data
@@ -792,7 +792,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
   def test_address_north_america_with_defaults
     stub_comms do
-      @gateway.authorize(@amount, @credit_card, billing_address: {address1: '164 Waverley Street', country: 'US'})
+      @gateway.authorize(@amount, @credit_card, billing_address: { address1: '164 Waverley Street', country: 'US' })
     end.check_request do |_endpoint, data, _headers|
       parse(data) do |doc|
         assert_equal 'NC', doc.at_xpath('//billTo/state').content, data
@@ -804,7 +804,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
   def test_address_outsite_north_america
     stub_comms do
-      @gateway.authorize(@amount, @credit_card, billing_address: {address1: '164 Waverley Street', country: 'DE'})
+      @gateway.authorize(@amount, @credit_card, billing_address: { address1: '164 Waverley Street', country: 'DE' })
     end.check_request do |_endpoint, data, _headers|
       parse(data) do |doc|
         assert_equal 'n/a', doc.at_xpath('//billTo/state').content, data
@@ -816,7 +816,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
   def test_address_outsite_north_america_with_address2_present
     stub_comms do
-      @gateway.authorize(@amount, @credit_card, billing_address: {address1: '164 Waverley Street', address2: 'Apt 1234', country: 'DE'})
+      @gateway.authorize(@amount, @credit_card, billing_address: { address1: '164 Waverley Street', address2: 'Apt 1234', country: 'DE' })
     end.check_request do |_endpoint, data, _headers|
       parse(data) do |doc|
         assert_equal 'n/a', doc.at_xpath('//billTo/state').content, data

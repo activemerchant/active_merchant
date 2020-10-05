@@ -45,7 +45,7 @@ module ActiveMerchant
       end
 
       def authorize(amount, payment_method, options = {})
-        params = {transaction_type: 'authorize'}
+        params = { transaction_type: 'authorize' }
 
         add_invoice(params, options)
         add_reversal_id(params, options)
@@ -59,7 +59,7 @@ module ActiveMerchant
       end
 
       def capture(amount, authorization, options = {})
-        params = {transaction_type: 'capture'}
+        params = { transaction_type: 'capture' }
 
         add_authorization_info(params, authorization)
         add_amount(params, amount, options)
@@ -69,7 +69,7 @@ module ActiveMerchant
       end
 
       def refund(amount, authorization, options = {})
-        params = {transaction_type: 'refund'}
+        params = { transaction_type: 'refund' }
 
         add_authorization_info(params, authorization)
         add_amount(params, (amount || amount_from_authorization(authorization)), options)
@@ -78,7 +78,7 @@ module ActiveMerchant
       end
 
       def store(payment_method, options = {})
-        params = {transaction_type: 'store'}
+        params = { transaction_type: 'store' }
 
         add_creditcard_for_tokenization(params, payment_method, options)
 
@@ -86,7 +86,7 @@ module ActiveMerchant
       end
 
       def void(authorization, options = {})
-        params = {transaction_type: 'void'}
+        params = { transaction_type: 'void' }
 
         add_authorization_info(params, authorization, options)
         add_amount(params, amount_from_authorization(authorization), options)
@@ -278,7 +278,7 @@ module ActiveMerchant
           response,
           test: test?,
           authorization: authorization_from(params, response),
-          avs_result: {code: response['avs']},
+          avs_result: { code: response['avs'] },
           cvv_result: response['cvv2'],
           error_code: error_code(response, success_from(response))
         )
@@ -405,7 +405,7 @@ module ActiveMerchant
       end
 
       def json_error(raw_response)
-        {'error' => "Unable to parse response: #{raw_response.inspect}"}
+        { 'error' => "Unable to parse response: #{raw_response.inspect}" }
       end
     end
   end

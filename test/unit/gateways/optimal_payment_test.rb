@@ -99,7 +99,7 @@ class OptimalPaymentTest < Test::Unit::TestCase
   end
 
   def test_purchase_with_shipping_address
-    @options[:shipping_address] = {country: 'CA'}
+    @options[:shipping_address] = { country: 'CA' }
     @gateway.expects(:ssl_post).with do |_url, data|
       xml = data.split('&').detect { |string| string =~ /txnRequest=/ }.gsub('txnRequest=', '')
       doc = Nokogiri::XML.parse(CGI.unescape(xml))

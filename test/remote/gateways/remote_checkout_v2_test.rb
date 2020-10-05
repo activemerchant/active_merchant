@@ -86,7 +86,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_manual_entry_flag
-    response = @gateway.authorize(@amount, @credit_card, @options.merge(metadata: { manual_entry: true}))
+    response = @gateway.authorize(@amount, @credit_card, @options.merge(metadata: { manual_entry: true }))
 
     assert_success response
     assert_equal 'Succeeded', response.message

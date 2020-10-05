@@ -750,7 +750,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     response = stub_comms do
       assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
         assert_deprecation_warning do
-          @gateway.add_customer_profile(credit_card, managed_billing: {start_date: '10-10-2014' })
+          @gateway.add_customer_profile(credit_card, managed_billing: { start_date: '10-10-2014' })
         end
       end
     end.check_request do |_endpoint, data, _headers|
@@ -1120,7 +1120,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def test_cvv_indicator_absent_for_recurring
     stub_comms do
-      @gateway.purchase(50, credit_card(nil, {verification_value: nil}), @options)
+      @gateway.purchase(50, credit_card(nil, { verification_value: nil }), @options)
     end.check_request do |_endpoint, data, _headers|
       assert_no_match %r{<CardSecValInd>}, data
       assert_no_match %r{<CardSecVal>}, data

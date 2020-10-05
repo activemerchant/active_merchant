@@ -256,7 +256,7 @@ module ActiveMerchant #:nodoc:
       def schema
         { 'xmlns' => 'http://www.optimalpayments.com/creditcard/xmlschema/v1',
           'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance',
-          'xsi:schemaLocation' => 'http://www.optimalpayments.com/creditcard/xmlschema/v1'}
+          'xsi:schemaLocation' => 'http://www.optimalpayments.com/creditcard/xmlschema/v1' }
       end
 
       def build_merchant_account(xml)

@@ -878,7 +878,7 @@ module ActiveMerchant #:nodoc:
 
       def parse_direct_response(params)
         delimiter = @options[:delimiter] || ','
-        direct_response = {'raw' => params}
+        direct_response = { 'raw' => params }
         direct_response_fields = params.split(delimiter)
         direct_response.merge(
           {

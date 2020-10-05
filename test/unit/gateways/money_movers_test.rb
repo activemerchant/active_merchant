@@ -44,7 +44,7 @@ class MoneyMoversTest < Test::Unit::TestCase
 
   def test_add_address
     result = {}
-    @gateway.send(:add_address, result, billing_address: {address1: '1 Main St.', address2: 'apt 13', country: 'US', state: 'MI', phone: '1234567890'})
+    @gateway.send(:add_address, result, billing_address: { address1: '1 Main St.', address2: 'apt 13', country: 'US', state: 'MI', phone: '1234567890' })
     assert_equal %w[address1 address2 city company country phone state zip], result.stringify_keys.keys.sort
     assert_equal 'MI', result[:state]
     assert_equal '1 Main St.', result[:address1]
@@ -60,7 +60,7 @@ class MoneyMoversTest < Test::Unit::TestCase
   end
 
   def test_purchase_is_valid_csv
-    params = {amount: @amount}
+    params = { amount: @amount }
     @gateway.send(:add_creditcard, params, @credit_card)
 
     assert data = @gateway.send(:post_data, 'auth', params)
@@ -68,7 +68,7 @@ class MoneyMoversTest < Test::Unit::TestCase
   end
 
   def test_purchase_meets_minimum_requirements
-    params = {amount: @amount}
+    params = { amount: @amount }
     @gateway.send(:add_creditcard, params, @credit_card)
     assert data = @gateway.send(:post_data, 'auth', params)
     minimum_requirements.each do |key|

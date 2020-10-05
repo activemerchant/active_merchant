@@ -97,13 +97,13 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
             date: '20190810',
             carrier_code: 'SA',
             number: 596,
-            airline_class: 'ZZ'},
+            airline_class: 'ZZ' },
           { arrival_airport: 'RDU',
             origin_airport: 'BDL',
             date: '20190817',
             carrier_code: 'SA',
             number: 597,
-            airline_class: 'ZZ'}
+            airline_class: 'ZZ' }
         ]
       }
     )
@@ -130,7 +130,7 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_very_long_name
-    credit_card = credit_card('4567350000427977', { first_name: 'thisisaverylongfirstname'})
+    credit_card = credit_card('4567350000427977', { first_name: 'thisisaverylongfirstname' })
 
     response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response
@@ -138,7 +138,7 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_blank_name
-    credit_card = credit_card('4567350000427977', { first_name: nil, last_name: nil})
+    credit_card = credit_card('4567350000427977', { first_name: nil, last_name: nil })
 
     response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response

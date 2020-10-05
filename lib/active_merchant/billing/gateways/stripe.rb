@@ -309,8 +309,8 @@ module ActiveMerchant #:nodoc:
           add_creditcard(post, payment, options, true)
           add_source_owner(post, payment, options)
         elsif type == 'three_d_secure'
-          post[:three_d_secure] = {card: payment}
-          post[:redirect] = {return_url: options[:redirect_url]}
+          post[:three_d_secure] = { card: payment }
+          post[:redirect] = { return_url: options[:redirect_url] }
         end
         commit(:post, 'sources', post, options)
       end
@@ -618,7 +618,7 @@ module ActiveMerchant #:nodoc:
           'User-Agent' => "Stripe/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
           'Stripe-Version' => api_version(options),
           'X-Stripe-Client-User-Agent' => stripe_client_user_agent(options),
-          'X-Stripe-Client-User-Metadata' => {ip: options[:ip]}.to_json
+          'X-Stripe-Client-User-Metadata' => { ip: options[:ip] }.to_json
         }
         headers['Idempotency-Key'] = idempotency_key if idempotency_key
         headers['Stripe-Account'] = options[:stripe_account] if options[:stripe_account]
@@ -628,7 +628,7 @@ module ActiveMerchant #:nodoc:
       def stripe_client_user_agent(options)
         return user_agent unless options[:application]
 
-        JSON.dump(JSON.parse(user_agent).merge!({application: options[:application]}))
+        JSON.dump(JSON.parse(user_agent).merge!({ application: options[:application] }))
       end
 
       def api_version(options)
@@ -683,7 +683,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(success, response)
-        success ? 'Transaction approved' : response.fetch('error', {'message' => 'No error details'})['message']
+        success ? 'Transaction approved' : response.fetch('error', { 'message' => 'No error details' })['message']
       end
 
       def success_from(response, options)

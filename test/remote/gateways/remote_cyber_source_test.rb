@@ -5,7 +5,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
   def setup
     Base.mode = :test
 
-    @gateway = CyberSourceGateway.new({nexus: 'NC'}.merge(fixtures(:cyber_source)))
+    @gateway = CyberSourceGateway.new({ nexus: 'NC' }.merge(fixtures(:cyber_source)))
 
     @credit_card = credit_card('4111111111111111', verification_value: '987')
     @declined_card = credit_card('801111111111111')
@@ -677,7 +677,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
   end
 
   def test_successful_create_subscription_with_monthly_options
-    response = @gateway.store(@credit_card, @subscription_options.merge(setup_fee: 99.0, subscription: {amount: 49.0, automatic_renew: false, frequency: 'monthly'}))
+    response = @gateway.store(@credit_card, @subscription_options.merge(setup_fee: 99.0, subscription: { amount: 49.0, automatic_renew: false, frequency: 'monthly' }))
     assert_equal 'Successful transaction', response.message
     response = @gateway.retrieve(response.authorization, order_id: @subscription_options[:order_id])
     assert_equal '0.49', response.params['recurringAmount']
@@ -688,7 +688,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert response = @gateway.store(@credit_card, @subscription_options)
     assert_successful_response(response)
 
-    assert response = @gateway.update(response.authorization, @credit_card, {order_id: generate_unique_id, setup_fee: 100})
+    assert response = @gateway.update(response.authorization, @credit_card, { order_id: generate_unique_id, setup_fee: 100 })
     assert_successful_response(response)
   end
 
@@ -697,7 +697,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_successful_response(response)
 
     assert response = @gateway.update(response.authorization, nil,
-      {order_id: generate_unique_id, setup_fee: 100, billing_address: address, email: 'someguy1232@fakeemail.net'})
+      { order_id: generate_unique_id, setup_fee: 100, billing_address: address, email: 'someguy1232@fakeemail.net' })
 
     assert_successful_response(response)
   end

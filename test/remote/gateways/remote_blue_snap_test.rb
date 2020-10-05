@@ -357,7 +357,7 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
   end
 
   def test_failed_unauthorized_echeck_purchase
-    response = @gateway.purchase(@amount, @check, @options.merge({authorized_by_shopper: false}))
+    response = @gateway.purchase(@amount, @check, @options.merge({ authorized_by_shopper: false }))
     assert_failure response
     assert_match(/The payment was not authorized by shopper/, response.message)
     assert_equal '16004', response.error_code
@@ -510,7 +510,7 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     assert_success store_response
     assert_match(/check/, store_response.authorization)
 
-    response = @gateway.purchase(@amount, store_response.authorization, @options.merge({authorized_by_shopper: true}))
+    response = @gateway.purchase(@amount, store_response.authorization, @options.merge({ authorized_by_shopper: true }))
     assert_success response
     assert_equal 'Success', response.message
   end

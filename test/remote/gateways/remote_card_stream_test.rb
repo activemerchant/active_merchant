@@ -308,7 +308,7 @@ class RemoteCardStreamTest < Test::Unit::TestCase
   end
 
   def test_successful_visacreditcard_purchase_via_reference
-    assert response = @gateway.purchase(142, @visacreditcard, @visacredit_options.merge({type: '9'}))
+    assert response = @gateway.purchase(142, @visacreditcard, @visacredit_options.merge({ type: '9' }))
     assert_equal 'APPROVED', response.message
     assert_success response
     assert response.test?

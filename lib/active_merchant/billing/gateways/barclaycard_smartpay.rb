@@ -71,7 +71,7 @@ module ActiveMerchant #:nodoc:
         post[:shopperName] = options[:shopper_name] if options[:shopper_name]
 
         if options[:third_party_payout]
-          post[:recurring] = options[:recurring_contract] || {contract: 'PAYOUT'}
+          post[:recurring] = options[:recurring_contract] || { contract: 'PAYOUT' }
           MultiResponse.run do |r|
             r.process {
               commit(
@@ -110,7 +110,7 @@ module ActiveMerchant #:nodoc:
       def store(creditcard, options = {})
         post = store_request(options)
         post[:card] = credit_card_hash(creditcard)
-        post[:recurring] = {contract: 'RECURRING'}
+        post[:recurring] = { contract: 'RECURRING' }
 
         commit('store', post)
       end

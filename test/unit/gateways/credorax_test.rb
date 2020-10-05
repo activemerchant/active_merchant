@@ -23,7 +23,7 @@ class CredoraxTest < Test::Unit::TestCase
       order_id: '123',
       execute_threed: true,
       three_ds_challenge_window_size: '01',
-      stored_credential: {reason_type: 'unscheduled'},
+      stored_credential: { reason_type: 'unscheduled' },
       three_ds_2: {
         channel: 'browser',
         notification_url: 'www.example.com',
@@ -310,7 +310,7 @@ class CredoraxTest < Test::Unit::TestCase
   end
 
   def test_purchase_adds_3d_secure_fields
-    options_with_3ds = @options.merge({eci: 'sample-eci', cavv: 'sample-cavv', xid: 'sample-xid', three_ds_version: '1'})
+    options_with_3ds = @options.merge({ eci: 'sample-eci', cavv: 'sample-cavv', xid: 'sample-xid', three_ds_version: '1' })
 
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, options_with_3ds)
@@ -341,7 +341,7 @@ class CredoraxTest < Test::Unit::TestCase
   end
 
   def test_authorize_adds_3d_secure_fields
-    options_with_3ds = @options.merge({eci: 'sample-eci', cavv: 'sample-cavv', xid: 'sample-xid'})
+    options_with_3ds = @options.merge({ eci: 'sample-eci', cavv: 'sample-cavv', xid: 'sample-xid' })
 
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options_with_3ds)
@@ -357,7 +357,7 @@ class CredoraxTest < Test::Unit::TestCase
   end
 
   def test_defaults_3d_secure_cavv_field_to_none_if_not_present
-    options_with_3ds = @options.merge({eci: 'sample-eci', xid: 'sample-xid'})
+    options_with_3ds = @options.merge({ eci: 'sample-eci', xid: 'sample-xid' })
 
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, options_with_3ds)
@@ -416,7 +416,7 @@ class CredoraxTest < Test::Unit::TestCase
   end
 
   def test_purchase_adds_a9_field
-    options_with_3ds = @options.merge({transaction_type: '8'})
+    options_with_3ds = @options.merge({ transaction_type: '8' })
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options_with_3ds)
     end.check_request do |_endpoint, data, _headers|
@@ -425,7 +425,7 @@ class CredoraxTest < Test::Unit::TestCase
   end
 
   def test_authorize_adds_a9_field
-    options_with_3ds = @options.merge({transaction_type: '8'})
+    options_with_3ds = @options.merge({ transaction_type: '8' })
     stub_comms do
       @gateway.authorize(@amount, @credit_card, options_with_3ds)
     end.check_request do |_endpoint, data, _headers|
@@ -434,7 +434,7 @@ class CredoraxTest < Test::Unit::TestCase
   end
 
   def test_credit_adds_a9_field
-    options_with_3ds = @options.merge({transaction_type: '8'})
+    options_with_3ds = @options.merge({ transaction_type: '8' })
     stub_comms do
       @gateway.credit(@amount, @credit_card, options_with_3ds)
     end.check_request do |_endpoint, data, _headers|
@@ -443,7 +443,7 @@ class CredoraxTest < Test::Unit::TestCase
   end
 
   def test_authorize_adds_authorization_details
-    options_with_auth_details = @options.merge({authorization_type: '2', multiple_capture_count: '5' })
+    options_with_auth_details = @options.merge({ authorization_type: '2', multiple_capture_count: '5' })
     stub_comms do
       @gateway.authorize(@amount, @credit_card, options_with_auth_details)
     end.check_request do |_endpoint, data, _headers|
@@ -870,7 +870,7 @@ class CredoraxTest < Test::Unit::TestCase
   end
 
   def test_3ds_2_optional_fields_adds_fields_to_the_root_of_the_post
-    post = { }
+    post = {}
     options = { three_ds_2: { optional: { '3ds_optional_field_1': :a, '3ds_optional_field_2': :b } } }
 
     @gateway.add_3ds_2_optional_fields(post, options)
@@ -888,12 +888,12 @@ class CredoraxTest < Test::Unit::TestCase
   end
 
   def test_3ds_2_optional_fields_does_not_empty_fields
-    post = { }
+    post = {}
     options = { three_ds_2: { optional: { '3ds_optional_field_1': '', '3ds_optional_field_2': 'null', '3ds_optional_field_3': nil } } }
 
     @gateway.add_3ds_2_optional_fields(post, options)
 
-    assert_equal post, { }
+    assert_equal post, {}
   end
 
   private

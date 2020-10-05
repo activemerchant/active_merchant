@@ -430,7 +430,7 @@ module ActiveMerchant #:nodoc:
         # <r_approved>APPROVED</r_approved>
         # <r_avs></r_avs>
 
-        response = {message: 'Global Error Receipt', complete: false}
+        response = { message: 'Global Error Receipt', complete: false }
 
         xml = REXML::Document.new("<response>#{xml}</response>")
         xml.root&.elements&.each do |node|

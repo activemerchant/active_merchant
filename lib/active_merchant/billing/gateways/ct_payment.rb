@@ -228,7 +228,7 @@ module ActiveMerchant #:nodoc:
             r.process {
               split_auth = split_authorization(r.authorization)
               auth = (action.include?('recur') ? split_auth[4] : split_auth[0])
-              action.include?('recur') ? commit_raw('recur/ack', {ID: auth}) : commit_raw('ack', {TransactionNumber: auth})
+              action.include?('recur') ? commit_raw('recur/ack', { ID: auth }) : commit_raw('ack', { TransactionNumber: auth })
             }
           end
         end

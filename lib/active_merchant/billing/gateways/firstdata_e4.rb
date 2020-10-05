@@ -32,7 +32,7 @@ module ActiveMerchant #:nodoc:
         discover: 'Discover'
       }
 
-      E4_BRANDS = BRANDS.merge({mastercard: 'Mastercard'})
+      E4_BRANDS = BRANDS.merge({ mastercard: 'Mastercard' })
 
       DEFAULT_ECI = '07'
 
@@ -357,7 +357,7 @@ module ActiveMerchant #:nodoc:
         Response.new(successful?(response), message_from(response), response,
           test: test?,
           authorization: successful?(response) ? response_authorization(action, response, credit_card) : '',
-          avs_result: {code: response[:avs]},
+          avs_result: { code: response[:avs] },
           cvv_result: response[:cvv2],
           error_code: standard_error_code(response))
       end

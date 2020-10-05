@@ -295,7 +295,7 @@ module ActiveMerchant
 
       def parse_authorization_string(authorization)
         reference, auth_code, ca_reference = authorization.to_s.split(';')
-        {reference: reference, auth_code: auth_code, ca_reference: ca_reference}
+        { reference: reference, auth_code: auth_code, ca_reference: ca_reference }
       end
     end
   end

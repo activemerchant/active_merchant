@@ -157,8 +157,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(soap_action, soap, options)
-        headers = {'SOAPAction' => "\"urn:Interface##{soap_action}\"",
-                   'Content-Type' => 'text/xml; charset=utf-8'}
+        headers = { 'SOAPAction' => "\"urn:Interface##{soap_action}\"",
+                   'Content-Type' => 'text/xml; charset=utf-8' }
         response_string = ssl_post(test? ? self.test_url : self.live_url, soap, headers)
         response = parse(response_string, soap_action)
         return Response.new(response['errorcode'] == '000',
@@ -179,9 +179,9 @@ module ActiveMerchant #:nodoc:
           'xmlns:types' => 'urn:Interface/encodedTypes',
           'xmlns:soap' => 'http://schemas.xmlsoap.org/soap/envelope/'
         }) do
-          retval.tag!('soap:Body', {'soap:encodingStyle' => 'http://schemas.xmlsoap.org/soap/encoding/'}) do
+          retval.tag!('soap:Body', { 'soap:encodingStyle' => 'http://schemas.xmlsoap.org/soap/encoding/' }) do
             retval.tag!("tns:#{request}") do
-              retval.tag!("#{request}Request", {'xsi:type' => "tns:#{request}Request"}) do
+              retval.tag!("#{request}Request", { 'xsi:type' => "tns:#{request}Request" }) do
                 yield retval
               end
             end

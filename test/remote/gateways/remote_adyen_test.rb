@@ -101,7 +101,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
       shopper_reference: 'John Smith',
       billing_address: address(),
       order_id: '123',
-      stored_credential: {reason_type: 'unscheduled'}
+      stored_credential: { reason_type: 'unscheduled' }
     }
 
     @normalized_3ds_2_options = {
@@ -111,7 +111,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
       shopper_reference: 'John Smith',
       billing_address: address(),
       order_id: '123',
-      stored_credential: {reason_type: 'unscheduled'},
+      stored_credential: { reason_type: 'unscheduled' },
       three_ds_2: {
         channel: 'browser',
         notification_url: 'https://example.com/notification',
@@ -253,7 +253,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
       shopper_reference: 'John Smith',
       billing_address: address(),
       order_id: '123',
-      stored_credential: {reason_type: 'unscheduled'},
+      stored_credential: { reason_type: 'unscheduled' },
       three_ds_2: {
         channel: 'app'
       }
@@ -434,13 +434,13 @@ class RemoteAdyenTest < Test::Unit::TestCase
   end
 
   def test_succesful_purchase_with_brand_override
-    response = @gateway.purchase(@amount, @improperly_branded_maestro, @options.merge({overwrite_brand: true, selected_brand: 'maestro'}))
+    response = @gateway.purchase(@amount, @improperly_branded_maestro, @options.merge({ overwrite_brand: true, selected_brand: 'maestro' }))
     assert_success response
     assert_equal '[capture-received]', response.message
   end
 
   def test_succesful_purchase_with_brand_override_with_execute_threed_false
-    response = @gateway.purchase(@amount, @improperly_branded_maestro, @options.merge({execute_threed: false, overwrite_brand: true, selected_brand: 'maestro'}))
+    response = @gateway.purchase(@amount, @improperly_branded_maestro, @options.merge({ execute_threed: false, overwrite_brand: true, selected_brand: 'maestro' }))
     assert_success response
     assert_equal '[capture-received]', response.message
   end
@@ -771,7 +771,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
   end
 
   def test_successful_tokenize_only_store
-    assert response = @gateway.store(@credit_card, @options.merge({tokenize_only: true}))
+    assert response = @gateway.store(@credit_card, @options.merge({ tokenize_only: true }))
 
     assert_success response
     assert !response.authorization.split('#')[2].nil?

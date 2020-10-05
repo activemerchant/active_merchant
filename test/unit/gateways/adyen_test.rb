@@ -59,7 +59,7 @@ class AdyenTest < Test::Unit::TestCase
       shopper_reference: 'John Smith',
       order_id: '345123',
       installments: 2,
-      stored_credential: {reason_type: 'unscheduled'},
+      stored_credential: { reason_type: 'unscheduled' },
       email: 'john.smith@test.com',
       ip: '77.110.174.153'
     }
@@ -78,7 +78,7 @@ class AdyenTest < Test::Unit::TestCase
       shopper_reference: 'John Smith',
       billing_address: address(),
       order_id: '123',
-      stored_credential: {reason_type: 'unscheduled'},
+      stored_credential: { reason_type: 'unscheduled' },
       three_ds_2: {
         channel: 'browser',
         browser_info: {
@@ -148,7 +148,7 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_successful_authorize_with_recurring_contract_type
     stub_comms do
-      @gateway.authorize(100, @credit_card, @options.merge({recurring_contract_type: 'ONECLICK'}))
+      @gateway.authorize(100, @credit_card, @options.merge({ recurring_contract_type: 'ONECLICK' }))
     end.check_request do |_endpoint, data, _headers|
       assert_equal 'ONECLICK', JSON.parse(data)['recurring']['contract']
     end.respond_with(successful_authorize_response)
@@ -292,7 +292,7 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_successful_maestro_purchase
     response = stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge({selected_brand: 'maestro', overwrite_brand: 'true'}))
+      @gateway.purchase(@amount, @credit_card, @options.merge({ selected_brand: 'maestro', overwrite_brand: 'true' }))
     end.check_request do |endpoint, data, _headers|
       if /authorise/.match?(endpoint)
         assert_match(/"overwriteBrand":true/, data)
@@ -331,7 +331,7 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_capture_delay_hours_sent
     stub_comms do
-      @gateway.authorize(@amount, @credit_card, @options.merge({capture_delay_hours: 4}))
+      @gateway.authorize(@amount, @credit_card, @options.merge({ capture_delay_hours: 4 }))
     end.check_request do |_endpoint, data, _headers|
       assert_equal 4, JSON.parse(data)['captureDelayHours']
     end.respond_with(successful_authorize_response)
@@ -339,7 +339,7 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_custom_routing_sent
     stub_comms do
-      @gateway.authorize(@amount, @credit_card, @options.merge({custom_routing_flag: 'abcdefg'}))
+      @gateway.authorize(@amount, @credit_card, @options.merge({ custom_routing_flag: 'abcdefg' }))
     end.check_request do |_endpoint, data, _headers|
       assert_equal 'abcdefg', JSON.parse(data)['additionalData']['customRoutingFlag']
     end.respond_with(successful_authorize_response)
@@ -373,7 +373,7 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_execute_threed_false_with_additional_data
     stub_comms do
-      @gateway.authorize(@amount, @credit_card, @options.merge({execute_threed: false, overwrite_brand: true, selected_brand: 'maestro'}))
+      @gateway.authorize(@amount, @credit_card, @options.merge({ execute_threed: false, overwrite_brand: true, selected_brand: 'maestro' }))
     end.check_request do |_endpoint, data, _headers|
       assert_match(/"additionalData":{"overwriteBrand":true,"executeThreeD":false}/, data)
       assert_match(/"selectedBrand":"maestro"/, data)
@@ -382,7 +382,7 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_execute_threed_false_sent_3ds2
     stub_comms do
-      @gateway.authorize(@amount, '123', @normalized_3ds_2_options.merge({execute_threed: false}))
+      @gateway.authorize(@amount, '123', @normalized_3ds_2_options.merge({ execute_threed: false }))
     end.check_request do |_endpoint, data, _headers|
       refute JSON.parse(data)['additionalData']['scaExemption']
       assert_false JSON.parse(data)['additionalData']['executeThreeD']
@@ -391,7 +391,7 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_sca_exemption_not_sent_if_execute_threed_missing_3ds2
     stub_comms do
-      @gateway.authorize(@amount, '123', @normalized_3ds_2_options.merge({scaExemption: 'lowValue'}))
+      @gateway.authorize(@amount, '123', @normalized_3ds_2_options.merge({ scaExemption: 'lowValue' }))
     end.check_request do |_endpoint, data, _headers|
       refute JSON.parse(data)['additionalData']['scaExemption']
       refute JSON.parse(data)['additionalData']['executeThreeD']
@@ -400,7 +400,7 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_sca_exemption_and_execute_threed_false_sent_3ds2
     stub_comms do
-      @gateway.authorize(@amount, '123', @normalized_3ds_2_options.merge({sca_exemption: 'lowValue', execute_threed: false}))
+      @gateway.authorize(@amount, '123', @normalized_3ds_2_options.merge({ sca_exemption: 'lowValue', execute_threed: false }))
     end.check_request do |_endpoint, data, _headers|
       assert_equal 'lowValue', JSON.parse(data)['additionalData']['scaExemption']
       assert_false JSON.parse(data)['additionalData']['executeThreeD']
@@ -409,7 +409,7 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_sca_exemption_and_execute_threed_true_sent_3ds2
     stub_comms do
-      @gateway.authorize(@amount, '123', @normalized_3ds_2_options.merge({sca_exemption: 'lowValue', execute_threed: true}))
+      @gateway.authorize(@amount, '123', @normalized_3ds_2_options.merge({ sca_exemption: 'lowValue', execute_threed: true }))
     end.check_request do |_endpoint, data, _headers|
       assert_equal 'lowValue', JSON.parse(data)['additionalData']['scaExemption']
       assert JSON.parse(data)['additionalData']['executeThreeD']
@@ -418,7 +418,7 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_sca_exemption_not_sent_when_execute_threed_true_3ds1
     stub_comms do
-      @gateway.authorize(@amount, '123', @options.merge({sca_exemption: 'lowValue', execute_threed: true}))
+      @gateway.authorize(@amount, '123', @options.merge({ sca_exemption: 'lowValue', execute_threed: true }))
     end.check_request do |_endpoint, data, _headers|
       refute JSON.parse(data)['additionalData']['scaExemption']
       assert JSON.parse(data)['additionalData']['executeThreeD']
@@ -427,7 +427,7 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_sca_exemption_not_sent_when_execute_threed_false_3ds1
     stub_comms do
-      @gateway.authorize(@amount, '123', @options.merge({sca_exemption: 'lowValue', execute_threed: false}))
+      @gateway.authorize(@amount, '123', @options.merge({ sca_exemption: 'lowValue', execute_threed: false }))
     end.check_request do |_endpoint, data, _headers|
       refute JSON.parse(data)['additionalData']['scaExemption']
       refute JSON.parse(data)['additionalData']['executeThreeD']
@@ -436,7 +436,7 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_update_shopper_statement_and_industry_usage_sent
     stub_comms do
-      @gateway.adjust(@amount, '123', @options.merge({update_shopper_statement: 'statement note', industry_usage: 'DelayedCharge'}))
+      @gateway.adjust(@amount, '123', @options.merge({ update_shopper_statement: 'statement note', industry_usage: 'DelayedCharge' }))
     end.check_request do |_endpoint, data, _headers|
       assert_equal 'statement note', JSON.parse(data)['additionalData']['updateShopperStatement']
       assert_equal 'DelayedCharge', JSON.parse(data)['additionalData']['industryUsage']
@@ -445,7 +445,7 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_risk_data_sent
     stub_comms do
-      @gateway.authorize(@amount, @credit_card, @options.merge({risk_data: {'operatingSystem' => 'HAL9000'}}))
+      @gateway.authorize(@amount, @credit_card, @options.merge({ risk_data: { 'operatingSystem' => 'HAL9000' } }))
     end.check_request do |_endpoint, data, _headers|
       assert_equal 'HAL9000', JSON.parse(data)['additionalData']['riskdata.operatingSystem']
     end.respond_with(successful_authorize_response)
@@ -458,7 +458,7 @@ class AdyenTest < Test::Unit::TestCase
         'basket.item.productTitle' => 'Blue T Shirt',
         'promotions.promotion.promotionName' => 'Big Sale promotion'
       }
-      @gateway.authorize(@amount, @credit_card, @options.merge({risk_data: risk_data}))
+      @gateway.authorize(@amount, @credit_card, @options.merge({ risk_data: risk_data }))
     end.check_request do |_endpoint, data, _headers|
       parsed = JSON.parse(data)
       assert_equal 'express', parsed['additionalData']['riskdata.deliveryMethod']
@@ -659,7 +659,7 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_successful_tokenize_only_store
     response = stub_comms do
-      @gateway.store(@credit_card, @options.merge({tokenize_only: true}))
+      @gateway.store(@credit_card, @options.merge({ tokenize_only: true }))
     end.check_request do |_endpoint, data, _headers|
       assert_equal 'CardOnFile', JSON.parse(data)['recurringProcessingModel']
     end.respond_with(successful_store_response)
@@ -678,7 +678,7 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_successful_store_with_recurring_contract_type
     stub_comms do
-      @gateway.store(@credit_card, @options.merge({recurring_contract_type: 'ONECLICK'}))
+      @gateway.store(@credit_card, @options.merge({ recurring_contract_type: 'ONECLICK' }))
     end.check_request do |_endpoint, data, _headers|
       assert_equal 'ONECLICK', JSON.parse(data)['recurring']['contract']
     end.respond_with(successful_store_response)
@@ -755,21 +755,21 @@ class AdyenTest < Test::Unit::TestCase
   end
 
   def test_shopper_data
-    post = {card: {billingAddress: {}}}
+    post = { card: { billingAddress: {} } }
     @gateway.send(:add_shopper_data, post, @options)
     assert_equal 'john.smith@test.com', post[:shopperEmail]
     assert_equal '77.110.174.153', post[:shopperIP]
   end
 
   def test_shopper_data_backwards_compatibility
-    post = {card: {billingAddress: {}}}
+    post = { card: { billingAddress: {} } }
     @gateway.send(:add_shopper_data, post, @options_shopper_data)
     assert_equal 'john2.smith@test.com', post[:shopperEmail]
     assert_equal '192.168.100.100', post[:shopperIP]
   end
 
   def test_add_address
-    post = {card: {billingAddress: {}}}
+    post = { card: { billingAddress: {} } }
     @options[:billing_address].delete(:address1)
     @options[:billing_address].delete(:address2)
     @options[:billing_address].delete(:state)

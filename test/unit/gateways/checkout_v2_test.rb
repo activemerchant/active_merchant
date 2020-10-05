@@ -42,7 +42,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_purchase_using_network_token
-    network_token = network_tokenization_credit_card({source: :network_token})
+    network_token = network_tokenization_credit_card({ source: :network_token })
     response = stub_comms do
       @gateway.purchase(@amount, network_token)
     end.respond_with(successful_purchase_with_network_token_response)
@@ -73,7 +73,7 @@ class CheckoutV2Test < Test::Unit::TestCase
 
   def test_purchase_with_additional_fields
     response = stub_comms do
-      @gateway.purchase(@amount, @credit_card, {descriptor_city: 'london', descriptor_name: 'sherlock'})
+      @gateway.purchase(@amount, @credit_card, { descriptor_city: 'london', descriptor_name: 'sherlock' })
     end.check_request do |_endpoint, data, _headers|
       assert_match(/"billing_descriptor\":{\"name\":\"sherlock\",\"city\":\"london\"}/, data)
     end.respond_with(successful_purchase_response)
@@ -131,7 +131,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   def test_moto_transaction_is_properly_set
     response = stub_comms do
       options = {
-        metadata: { manual_entry: true}
+        metadata: { manual_entry: true }
       }
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|

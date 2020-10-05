@@ -595,7 +595,7 @@ class RemoteLitleTest < Test::Unit::TestCase
     token = store_response.authorization
     assert_equal store_response.params['litleToken'], token
 
-    assert response = @gateway.purchase(10010, token, {basis_expiration_month: '01', basis_expiration_year: '2024'})
+    assert response = @gateway.purchase(10010, token, { basis_expiration_month: '01', basis_expiration_year: '2024' })
     assert_success response
     assert_equal 'Approved', response.message
   end

@@ -222,7 +222,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, parameters)
         url = url_for((test? ? test_url : live_url), action, parameters)
-        response = parse(ssl_request(HTTP_METHOD[action], url, post_data(action, parameters), {'x-ebanx-client-user-agent': "ActiveMerchant/#{ActiveMerchant::VERSION}"}))
+        response = parse(ssl_request(HTTP_METHOD[action], url, post_data(action, parameters), { 'x-ebanx-client-user-agent': "ActiveMerchant/#{ActiveMerchant::VERSION}" }))
 
         success = success_from(action, response)
 

@@ -110,7 +110,7 @@ class MerchantWareTest < Test::Unit::TestCase
 
   def test_add_swipe_data_with_creditcard
     @credit_card.track_data = 'Track Data'
-    options = {order_id: '1'}
+    options = { order_id: '1' }
     stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|

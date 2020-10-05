@@ -177,7 +177,7 @@ class QvalentTest < Test::Unit::TestCase
 
   def test_3d_secure_fields
     response = stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @credit_card, {xid: '123', cavv: '456', eci: '5'})
+      @gateway.purchase(@amount, @credit_card, { xid: '123', cavv: '456', eci: '5' })
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/xid=123/, data)
       assert_match(/cavv=456/, data)
@@ -189,7 +189,7 @@ class QvalentTest < Test::Unit::TestCase
 
   def test_stored_credential_fields_initial
     response = stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @credit_card, {stored_credential: {initial_transaction: true, reason_type: 'unscheduled', initiator: 'merchant'}})
+      @gateway.purchase(@amount, @credit_card, { stored_credential: { initial_transaction: true, reason_type: 'unscheduled', initiator: 'merchant' } })
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/posEntryMode=MANUAL/, data)
       assert_match(/storedCredentialUsage=INITIAL_STORAGE/, data)
@@ -201,7 +201,7 @@ class QvalentTest < Test::Unit::TestCase
 
   def test_stored_credential_fields_recurring
     response = stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @credit_card, {stored_credential: {reason_type: 'recurring', initiator: 'merchant', network_transaction_id: '7890'}})
+      @gateway.purchase(@amount, @credit_card, { stored_credential: { reason_type: 'recurring', initiator: 'merchant', network_transaction_id: '7890' } })
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/posEntryMode=STORED_CREDENTIAL/, data)
       assert_match(/storedCredentialUsage=RECURRING/, data)
@@ -214,7 +214,7 @@ class QvalentTest < Test::Unit::TestCase
 
   def test_stored_credential_fields_unscheduled
     response = stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @credit_card, {stored_credential: {reason_type: 'unscheduled', initiator: 'merchant', network_transaction_id: '7890'}})
+      @gateway.purchase(@amount, @credit_card, { stored_credential: { reason_type: 'unscheduled', initiator: 'merchant', network_transaction_id: '7890' } })
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/posEntryMode=STORED_CREDENTIAL/, data)
       assert_match(/storedCredentialUsage=UNSCHEDULED/, data)
@@ -227,7 +227,7 @@ class QvalentTest < Test::Unit::TestCase
 
   def test_stored_credential_fields_cardholder_initiated
     response = stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @credit_card, {stored_credential: {reason_type: 'unscheduled', initiator: 'cardholder', network_transaction_id: '7890'}})
+      @gateway.purchase(@amount, @credit_card, { stored_credential: { reason_type: 'unscheduled', initiator: 'cardholder', network_transaction_id: '7890' } })
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/posEntryMode=STORED_CREDENTIAL/, data)
       refute_match(/storedCredentialUsage/, data)
@@ -241,7 +241,7 @@ class QvalentTest < Test::Unit::TestCase
   def test_stored_credential_fields_mastercard
     @credit_card.brand = 'master'
     response = stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @credit_card, {stored_credential: {reason_type: 'recurring', initiator: 'merchant', network_transaction_id: '7890'}})
+      @gateway.purchase(@amount, @credit_card, { stored_credential: { reason_type: 'recurring', initiator: 'merchant', network_transaction_id: '7890' } })
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/posEntryMode=STORED_CREDENTIAL/, data)
       refute_match(/storedCredentialUsage/, data)

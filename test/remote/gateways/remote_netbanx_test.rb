@@ -247,7 +247,7 @@ class RemoteNetbanxTest < Test::Unit::TestCase
 
   def test_successful_purchase_using_stored_card
     merchant_customer_id = SecureRandom.hex
-    assert store = @gateway.store(@credit_card, @options.merge({locale: 'en_GB', merchant_customer_id: merchant_customer_id, email: 'email@example.com'}))
+    assert store = @gateway.store(@credit_card, @options.merge({ locale: 'en_GB', merchant_customer_id: merchant_customer_id, email: 'email@example.com' }))
     assert_success store
 
     assert response = @gateway.purchase(@amount, store.authorization.split('|').last)

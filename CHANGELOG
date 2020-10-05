@@ -34,6 +34,7 @@
 * RuboCop: Fix Performance/StringReplacement [leila-alderman] #3782
 * RuboCop: Fix Naming/HeredocDelimiterCase & Naming [leila-alderman] #3781
 * BlueSnap: Add address fields to contact info [naashton] #3777
+* RuboCop: Fix Layout/SpaceInsideHashLiteralBraces [leila-alderman] #3780
 
 == Version 1.114.0
 * BlueSnap: Add address1,address2,phone,shipping_* support #3749

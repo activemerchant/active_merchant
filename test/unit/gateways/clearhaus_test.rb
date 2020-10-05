@@ -67,8 +67,8 @@ class ClearhausTest < Test::Unit::TestCase
       assert_success response
       assert response.test?
     end.check_request do |_endpoint, data, _headers|
-      order_expr = { reference: '123'}.to_query
-      tos_expr   = { text_on_statement: 'test'}.to_query
+      order_expr = { reference: '123' }.to_query
+      tos_expr   = { text_on_statement: 'test' }.to_query
 
       assert_match order_expr, data
       assert_match tos_expr, data
@@ -445,8 +445,8 @@ Conn close
         'captures' => {
           'href' => '/authorizations/77d08c40-cfa9-42e3-993d-795f772b70a4/captures'
         },
-        'voids' => { 'href' => '/authorizations/77d08c40-cfa9-42e3-993d-795f772b70a4/voids'},
-        'refunds' => { 'href' => '/authorizations/77d08c40-cfa9-42e3-993d-795f772b70a4/refunds'}
+        'voids' => { 'href' => '/authorizations/77d08c40-cfa9-42e3-993d-795f772b70a4/voids' },
+        'refunds' => { 'href' => '/authorizations/77d08c40-cfa9-42e3-993d-795f772b70a4/refunds' }
       }
     }
   end
@@ -476,6 +476,6 @@ Conn close
   end
 
   def failed_ch_response
-    { 'status' => { 'code' => 40000, 'message' => 'General input error' }}.to_json
+    { 'status' => { 'code' => 40000, 'message' => 'General input error' } }.to_json
   end
 end

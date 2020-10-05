@@ -26,7 +26,7 @@ class RemoteCredoraxTest < Test::Unit::TestCase
       execute_threed: true,
       three_ds_version: '2',
       three_ds_challenge_window_size: '01',
-      stored_credential: {reason_type: 'unscheduled'},
+      stored_credential: { reason_type: 'unscheduled' },
       three_ds_2: {
         channel: 'browser',
         notification_url: 'www.example.com',
@@ -190,7 +190,7 @@ class RemoteCredoraxTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize_with_authorization_details
-    options_with_auth_details = @options.merge({authorization_type: '2', multiple_capture_count: '5' })
+    options_with_auth_details = @options.merge({ authorization_type: '2', multiple_capture_count: '5' })
     response = @gateway.authorize(@amount, @credit_card, options_with_auth_details)
     assert_success response
     assert_equal 'Succeeded', response.message

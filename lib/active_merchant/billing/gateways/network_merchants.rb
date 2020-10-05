@@ -203,7 +203,7 @@ module ActiveMerchant #:nodoc:
         Response.new(success, raw['responsetext'], raw,
           test: test?,
           authorization: authorization,
-          avs_result: { code: raw['avsresponse']},
+          avs_result: { code: raw['avsresponse'] },
           cvv_result: raw['cvvresponse'])
       end
 

@@ -210,8 +210,8 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'TransactionID', transaction_id.nil? ? generate_unique_id.slice(0, 18) : transaction_id
           xml.tag! 'Origin', options[:origin] || 'INTERNET'
           xml.tag! 'IndustryInfo', 'Type' => options[:industry_info] || 'ECOMMERCE'
-          xml.tag! 'Application', (options[:application] || 'n/a'), {'Version' => options[:application_version] || '1.0'}
-          xml.tag! 'Device', (options[:device] || 'n/a'), {'Version' => options[:device_version] || '1.0'}
+          xml.tag! 'Application', (options[:application] || 'n/a'), { 'Version' => options[:application_version] || '1.0' }
+          xml.tag! 'Device', (options[:device] || 'n/a'), { 'Version' => options[:device_version] || '1.0' }
           xml.tag! 'Library', 'VirtPOS SDK', 'Version' => '1.5'
           xml.tag! 'Gateway', 'JetPay'
           xml.tag! 'DeveloperID', options[:developer_id] || 'n/a'
@@ -405,7 +405,7 @@ module ActiveMerchant #:nodoc:
       def add_invoice_data(xml, options)
         xml.tag! 'OrderNumber', options[:order_id] if options[:order_id]
         if tax_amount = options[:tax_amount]
-          xml.tag! 'TaxAmount', tax_amount, {'ExemptInd' => options[:tax_exempt] || 'false'}
+          xml.tag! 'TaxAmount', tax_amount, { 'ExemptInd' => options[:tax_exempt] || 'false' }
         end
       end
 

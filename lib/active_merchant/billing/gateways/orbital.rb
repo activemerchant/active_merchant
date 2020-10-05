@@ -286,13 +286,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def retrieve_customer_profile(customer_ref_num)
-        options = {customer_profile_action: RETRIEVE, customer_ref_num: customer_ref_num}
+        options = { customer_profile_action: RETRIEVE, customer_ref_num: customer_ref_num }
         order = build_customer_request_xml(nil, options)
         commit(order, :retrieve_customer_profile)
       end
 
       def delete_customer_profile(customer_ref_num)
-        options = {customer_profile_action: DELETE, customer_ref_num: customer_ref_num}
+        options = { customer_profile_action: DELETE, customer_ref_num: customer_ref_num }
         order = build_customer_request_xml(nil, options)
         commit(order, :delete_customer_profile)
       end

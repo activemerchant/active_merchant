@@ -54,7 +54,7 @@ class RemoteStripeApplePayTest < Test::Unit::TestCase
   end
 
   def test_successful_store_with_apple_pay_payment_token
-    assert response = @gateway.store(@apple_pay_payment_token, {description: 'Active Merchant Test Customer', email: 'email@example.com'})
+    assert response = @gateway.store(@apple_pay_payment_token, { description: 'Active Merchant Test Customer', email: 'email@example.com' })
     assert_success response
     assert_equal 'customer', response.params['object']
     assert_equal 'Active Merchant Test Customer', response.params['description']
@@ -66,10 +66,10 @@ class RemoteStripeApplePayTest < Test::Unit::TestCase
   end
 
   def test_successful_store_with_existing_customer_and_apple_pay_payment_token
-    assert response = @gateway.store(@credit_card, {description: 'Active Merchant Test Customer'})
+    assert response = @gateway.store(@credit_card, { description: 'Active Merchant Test Customer' })
     assert_success response
 
-    assert response = @gateway.store(@apple_pay_payment_token, {customer: response.params['id'], description: 'Active Merchant Test Customer', email: 'email@example.com'})
+    assert response = @gateway.store(@apple_pay_payment_token, { customer: response.params['id'], description: 'Active Merchant Test Customer', email: 'email@example.com' })
     assert_success response
     assert_equal 2, response.responses.size
 
@@ -86,7 +86,7 @@ class RemoteStripeApplePayTest < Test::Unit::TestCase
   end
 
   def test_successful_recurring_with_apple_pay_payment_token
-    assert response = @gateway.store(@apple_pay_payment_token, {description: 'Active Merchant Test Customer', email: 'email@example.com'})
+    assert response = @gateway.store(@apple_pay_payment_token, { description: 'Active Merchant Test Customer', email: 'email@example.com' })
     assert_success response
     assert recharge_options = @options.merge(customer: response.params['id'])
     assert response = @gateway.purchase(@amount, nil, recharge_options)

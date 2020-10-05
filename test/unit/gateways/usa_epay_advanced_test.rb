@@ -203,7 +203,7 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
   def test_successful_quick_update_customer
     @gateway.expects(:ssl_post).returns(successful_customer_response('quickUpdateCustomer'))
 
-    assert response = @gateway.quick_update_customer({customer_number: @options[:customer_number], update_data: @customer_options})
+    assert response = @gateway.quick_update_customer({ customer_number: @options[:customer_number], update_data: @customer_options })
     assert_instance_of Response, response
     assert response.test?
     assert_success response

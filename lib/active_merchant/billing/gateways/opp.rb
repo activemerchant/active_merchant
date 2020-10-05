@@ -349,7 +349,7 @@ module ActiveMerchant #:nodoc:
 
       def json_error(body)
         message = "Invalid response received #{body.inspect}"
-        { 'result' => {'description' => message, 'code' => 'unknown' } }
+        { 'result' => { 'description' => message, 'code' => 'unknown' } }
       end
 
       def success_from(response)

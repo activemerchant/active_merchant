@@ -322,7 +322,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_threeds(data, options)
-        data[:threeds] = {threeDSInfo: 'CardData'} if options[:execute_threed] == true
+        data[:threeds] = { threeDSInfo: 'CardData' } if options[:execute_threed] == true
       end
 
       def determine_3ds_action(threeds_hash)

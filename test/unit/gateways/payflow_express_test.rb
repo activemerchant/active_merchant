@@ -26,7 +26,7 @@ class PayflowExpressTest < Test::Unit::TestCase
                  state: 'ON',
                  zip: 'K1C2N6',
                  country: 'Canada',
-                 phone: '(555)555-5555'}
+                 phone: '(555)555-5555' }
   end
 
   def teardown
@@ -161,7 +161,7 @@ class PayflowExpressTest < Test::Unit::TestCase
 
   private
 
-  def successful_get_express_details_response(options = {street: '111 Main St.'})
+  def successful_get_express_details_response(options = { street: '111 Main St.' })
     <<~RESPONSE
       <XMLPayResponse xmlns='http://www.verisign.com/XMLPay'>
         <ResponseData>

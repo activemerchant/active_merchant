@@ -319,7 +319,7 @@ class ElavonTest < Test::Unit::TestCase
 
   def test_custom_fields_in_request
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(customer_number: '123', custom_fields: {a_key: 'a value'}))
+      @gateway.purchase(@amount, @credit_card, @options.merge(customer_number: '123', custom_fields: { a_key: 'a value' }))
     end.check_request do |_endpoint, data, _headers|
       assert_match(/customer_number=123/, data)
       assert_match(/a_key/, data)

@@ -13,7 +13,7 @@ class MonerisTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card('4242424242424242')
-    @options = { order_id: '1', customer: '1', billing_address: address}
+    @options = { order_id: '1', customer: '1', billing_address: address }
   end
 
   def test_default_options
@@ -230,7 +230,7 @@ class MonerisTest < Test::Unit::TestCase
   def test_successful_purchase_with_vault
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     test_successful_store
-    assert response = @gateway.purchase(100, @data_key, {order_id: generate_unique_id, customer: generate_unique_id})
+    assert response = @gateway.purchase(100, @data_key, { order_id: generate_unique_id, customer: generate_unique_id })
     assert_success response
     assert_equal 'Approved', response.message
     assert response.authorization.present?
@@ -249,7 +249,7 @@ class MonerisTest < Test::Unit::TestCase
   def test_successful_authorization_with_vault
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     test_successful_store
-    assert response = @gateway.authorize(100, @data_key, {order_id: generate_unique_id, customer: generate_unique_id})
+    assert response = @gateway.authorize(100, @data_key, { order_id: generate_unique_id, customer: generate_unique_id })
     assert_success response
     assert_equal 'Approved', response.message
     assert response.authorization.present?

@@ -122,7 +122,7 @@ class SecurionPayTest < Test::Unit::TestCase
   end
 
   def test_add_address
-    post = { card: { } }
+    post = { card: {} }
     @gateway.send(:add_address, post, @options)
     assert_equal @options[:billing_address][:zip], post[:card][:addressZip]
     assert_equal @options[:billing_address][:state], post[:card][:addressState]

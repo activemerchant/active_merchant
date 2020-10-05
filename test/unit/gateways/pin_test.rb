@@ -130,7 +130,7 @@ class PinTest < Test::Unit::TestCase
 
   def test_successful_refund
     token = 'ch_encBuMDf17qTabmVjDsQlg'
-    @gateway.expects(:ssl_request).with(:post, "https://test-api.pinpayments.com/1/charges/#{token}/refunds", {amount: '100'}.to_json, instance_of(Hash)).returns(successful_refund_response)
+    @gateway.expects(:ssl_request).with(:post, "https://test-api.pinpayments.com/1/charges/#{token}/refunds", { amount: '100' }.to_json, instance_of(Hash)).returns(successful_refund_response)
 
     assert response = @gateway.refund(100, token)
     assert_equal 'rf_d2C7M6Mn4z2m3APqarNN6w', response.authorization
@@ -140,7 +140,7 @@ class PinTest < Test::Unit::TestCase
 
   def test_unsuccessful_refund
     token = 'ch_encBuMDf17qTabmVjDsQlg'
-    @gateway.expects(:ssl_request).with(:post, "https://test-api.pinpayments.com/1/charges/#{token}/refunds", {amount: '100'}.to_json, instance_of(Hash)).returns(failed_refund_response)
+    @gateway.expects(:ssl_request).with(:post, "https://test-api.pinpayments.com/1/charges/#{token}/refunds", { amount: '100' }.to_json, instance_of(Hash)).returns(failed_refund_response)
 
     assert response = @gateway.refund(100, token)
     assert_failure response

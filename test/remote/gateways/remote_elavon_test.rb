@@ -198,7 +198,7 @@ class RemoteElavonTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_custom_fields
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(custom_fields: {a_key: 'a value'}))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(custom_fields: { a_key: 'a value' }))
 
     assert_success response
     assert response.test?

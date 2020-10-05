@@ -42,7 +42,7 @@ class FirstdataE4Test < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_specified_currency
-    options_with_specified_currency = @options.merge({currency: 'GBP'})
+    options_with_specified_currency = @options.merge({ currency: 'GBP' })
     @gateway.expects(:ssl_post).returns(successful_purchase_with_specified_currency_response)
     assert response = @gateway.purchase(@amount, @credit_card, options_with_specified_currency)
     assert_success response
@@ -61,7 +61,7 @@ class FirstdataE4Test < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_specified_currency_and_token
-    options_with_specified_currency = @options.merge({currency: 'GBP'})
+    options_with_specified_currency = @options.merge({ currency: 'GBP' })
     @gateway.expects(:ssl_post).returns(successful_purchase_with_specified_currency_response)
     assert response = @gateway.purchase(@amount, '8938737759041111;visa;Longbob;Longsen;9;2014',
       options_with_specified_currency)
@@ -82,7 +82,7 @@ class FirstdataE4Test < Test::Unit::TestCase
   end
 
   def test_successful_refund_with_specified_currency
-    options_with_specified_currency = @options.merge({currency: 'GBP'})
+    options_with_specified_currency = @options.merge({ currency: 'GBP' })
     @gateway.expects(:ssl_post).returns(successful_refund_with_specified_currency_response)
     assert response = @gateway.refund(@amount, @authorization, options_with_specified_currency)
     assert_success response
@@ -167,7 +167,7 @@ class FirstdataE4Test < Test::Unit::TestCase
 
   def test_requests_scrub_newline_and_return_characters_from_verification_string_components
     stub_comms do
-      options_with_newline_and_return_characters_in_address = @options.merge({billing_address: address({ address1: "123 My\nStreet", address2: "K1C2N6\r", city: "Ottawa\r\n" })})
+      options_with_newline_and_return_characters_in_address = @options.merge({ billing_address: address({ address1: "123 My\nStreet", address2: "K1C2N6\r", city: "Ottawa\r\n" }) })
       @gateway.purchase(@amount, @credit_card, options_with_newline_and_return_characters_in_address)
     end.check_request do |_endpoint, data, _headers|
       assert_match '<VerificationStr1>123 My Street|K1C2N6|Ottawa|ON|CA</VerificationStr1>', data

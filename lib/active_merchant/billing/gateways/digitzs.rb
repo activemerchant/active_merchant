@@ -151,7 +151,7 @@ module ActiveMerchant #:nodoc:
         post[:data][:type] = 'payments'
         post[:data][:attributes][:merchantId] = options[:merchant_id]
         post[:data][:attributes][:paymentType] = 'cardRefund'
-        post[:data][:attributes][:originalTransaction] = {id: authorization}
+        post[:data][:attributes][:originalTransaction] = { id: authorization }
         add_transaction(post, money, options)
 
         post

@@ -32,7 +32,7 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, authorization, options = {})
         if authorization
-          commit(:post, "orders/#{CGI.escape(authorization)}/capture", {'captureAmount' => money}, options, 'capture')
+          commit(:post, "orders/#{CGI.escape(authorization)}/capture", { 'captureAmount' => money }, options, 'capture')
         else
           Response.new(false,
             'FAILED',
@@ -55,7 +55,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(money, orderCode, options = {})
-        obj = money ? {'refundAmount' => money} : {}
+        obj = money ? { 'refundAmount' => money } : {}
         commit(:post, "orders/#{CGI.escape(orderCode)}/refund", obj, options, 'refund')
       end
 
@@ -84,7 +84,7 @@ module ActiveMerchant #:nodoc:
           },
           'clientKey' => @client_key
         }
-        token_response = commit(:post, 'tokens', obj, {'Authorization' => @service_key}, 'token')
+        token_response = commit(:post, 'tokens', obj, { 'Authorization' => @service_key }, 'token')
         token_response
       end
 
@@ -120,7 +120,7 @@ module ActiveMerchant #:nodoc:
           'Content-Type' => 'application/json',
           'User-Agent' => "Worldpay/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
           'X-Worldpay-Client-User-Agent' => user_agent,
-          'X-Worldpay-Client-User-Metadata' => {ip: options[:ip]}.to_json
+          'X-Worldpay-Client-User-Metadata' => { ip: options[:ip] }.to_json
         }
         headers['Authorization'] = options['Authorization'] if options['Authorization']
         headers

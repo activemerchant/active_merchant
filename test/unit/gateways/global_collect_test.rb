@@ -66,13 +66,13 @@ class GlobalCollectTest < Test::Unit::TestCase
             date: '20190810',
             carrier_code: 'SA',
             number: 596,
-            airline_class: 'ZZ'},
+            airline_class: 'ZZ' },
           { arrival_airport: 'RDU',
             origin_airport: 'BDL',
             date: '20190817',
             carrier_code: 'SA',
             number: 597,
-            airline_class: 'ZZ'}
+            airline_class: 'ZZ' }
         ]
       }
     )
@@ -163,7 +163,7 @@ class GlobalCollectTest < Test::Unit::TestCase
   end
 
   def test_handles_blank_names
-    credit_card = credit_card('4567350000427977', { first_name: nil, last_name: nil})
+    credit_card = credit_card('4567350000427977', { first_name: nil, last_name: nil })
 
     response = stub_comms do
       @gateway.authorize(@accepted_amount, credit_card, @options)
@@ -256,7 +256,7 @@ class GlobalCollectTest < Test::Unit::TestCase
 
   def test_refund_passes_currency_code
     stub_comms do
-      @gateway.refund(@accepted_amount, '000000142800000000920000100001', {currency: 'COP'})
+      @gateway.refund(@accepted_amount, '000000142800000000920000100001', { currency: 'COP' })
     end.check_request do |_endpoint, data, _headers|
       assert_match(/"currencyCode\":\"COP\"/, data)
     end.respond_with(failed_refund_response)

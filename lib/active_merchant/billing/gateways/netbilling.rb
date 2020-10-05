@@ -196,12 +196,12 @@ module ActiveMerchant #:nodoc:
         Response.new(success?(response), message_from(response), response,
           test: test_response?(response),
           authorization: response[:trans_id],
-          avs_result: { code: response[:avs_code]},
+          avs_result: { code: response[:avs_code] },
           cvv_result: response[:cvv2_code])
       rescue ActiveMerchant::ResponseError => e
         raise unless e.response.code =~ /^[67]\d\d$/
 
-        return Response.new(false, e.response.message, {status_code: e.response.code}, test: test?)
+        return Response.new(false, e.response.message, { status_code: e.response.code }, test: test?)
       end
 
       def test_response?(response)

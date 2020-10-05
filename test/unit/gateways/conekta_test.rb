@@ -69,7 +69,7 @@ class ConektaTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_installments
     response = stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @credit_card, @options.merge({monthly_installments: '3'}))
+      @gateway.purchase(@amount, @credit_card, @options.merge({ monthly_installments: '3' }))
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match %r{monthly_installments=3}, data
     end.respond_with(successful_purchase_response)
@@ -154,7 +154,7 @@ class ConektaTest < Test::Unit::TestCase
     }
 
     response = stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, 'tok_xxxxxxxxxxxxxxxx', @options.merge(application: application, meta: {its_so_meta: 'even this acronym'}))
+      @gateway.purchase(@amount, 'tok_xxxxxxxxxxxxxxxx', @options.merge(application: application, meta: { its_so_meta: 'even this acronym' }))
     end.check_request do |_method, _endpoint, _data, headers|
       assert_match(/\"application\"/, headers['X-Conekta-Client-User-Agent'])
       assert_match(/\"name\":\"app\"/, headers['X-Conekta-Client-User-Agent'])

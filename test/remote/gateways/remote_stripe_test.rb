@@ -46,7 +46,7 @@ class RemoteStripeTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_blank_referer
-    options = @options.merge({referrer: ''})
+    options = @options.merge({ referrer: '' })
     assert response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert_equal 'charge', response.params['object']
@@ -519,7 +519,7 @@ class RemoteStripeTest < Test::Unit::TestCase
   end
 
   def test_successful_unstore
-    creation = @gateway.store(@credit_card, {description: 'Active Merchant Unstore Customer'})
+    creation = @gateway.store(@credit_card, { description: 'Active Merchant Unstore Customer' })
     card_id = creation.params['sources']['data'].first['id']
 
     assert response = @gateway.unstore(creation.authorization)
@@ -530,7 +530,7 @@ class RemoteStripeTest < Test::Unit::TestCase
   end
 
   def test_successful_unstore_using_deprecated_api
-    creation = @gateway.store(@credit_card, {description: 'Active Merchant Unstore Customer'})
+    creation = @gateway.store(@credit_card, { description: 'Active Merchant Unstore Customer' })
     card_id = creation.params['sources']['data'].first['id']
     customer_id = creation.params['id']
 
@@ -615,7 +615,7 @@ class RemoteStripeTest < Test::Unit::TestCase
   end
 
   def test_successful_update
-    creation    = @gateway.store(@credit_card, {description: 'Active Merchant Update Credit Card'})
+    creation    = @gateway.store(@credit_card, { description: 'Active Merchant Update Credit Card' })
     customer_id = creation.params['id']
     card_id     = creation.params['sources']['data'].first['id']
 

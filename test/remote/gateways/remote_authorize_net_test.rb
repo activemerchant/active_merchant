@@ -212,7 +212,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize_with_email_and_ip
-    options = @options.merge({email: 'hello@example.com', ip: '127.0.0.1'})
+    options = @options.merge({ email: 'hello@example.com', ip: '127.0.0.1' })
     auth = @gateway.authorize(@amount, @credit_card, options)
     assert_success auth
 

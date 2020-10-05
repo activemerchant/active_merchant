@@ -844,7 +844,7 @@ module ActiveMerchant
         doc = Nokogiri::XML(body)
         doc.remove_namespaces!
 
-        response = {action: action}
+        response = { action: action }
 
         response[:response_code] = if (element = doc.at_xpath('//transactionResponse/responseCode'))
                                      empty?(element.content) ? nil : element.content.to_i

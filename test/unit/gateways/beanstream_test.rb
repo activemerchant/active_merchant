@@ -273,7 +273,7 @@ class BeanstreamTest < Test::Unit::TestCase
   end
 
   def test_no_state_and_zip_default_with_missing_country
-    address = { }
+    address = {}
     @options[:billing_address] = address
     @options[:shipping_address] = address
     response = stub_comms(@gateway, :ssl_request) do

@@ -66,14 +66,14 @@ class RemoteWorldpayTest < Test::Unit::TestCase
   end
 
   def test_successful_3ds2_authorize
-    options = @options.merge({execute_threed: true, three_ds_version: '2.0'})
+    options = @options.merge({ execute_threed: true, three_ds_version: '2.0' })
     assert response = @gateway.authorize(@amount, @threeDS2_card, options)
     assert_success response
     assert_equal 'SUCCESS', response.message
   end
 
   def test_successful_authorize_with_risk_data
-    options = @options.merge({execute_threed: true, three_ds_version: '2.0', risk_data: risk_data})
+    options = @options.merge({ execute_threed: true, three_ds_version: '2.0', risk_data: risk_data })
     assert response = @gateway.authorize(@amount, @threeDS2_card, options)
     assert_success response
     assert_equal 'SUCCESS', response.message
@@ -187,7 +187,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
       network_transaction_id: nil
     }
 
-    assert auth = @gateway.authorize(@amount, @credit_card, @options.merge({stored_credential: stored_credential_params}))
+    assert auth = @gateway.authorize(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
     assert_success auth
     assert auth.authorization
     assert auth.params['scheme_response']

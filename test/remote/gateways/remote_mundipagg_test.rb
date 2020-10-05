@@ -18,7 +18,7 @@ class RemoteMundipaggTest < Test::Unit::TestCase
 
     @options = {
       gateway_affiliation_id: fixtures(:mundipagg)[:gateway_affiliation_id],
-      billing_address: address({neighborhood: 'Sesame Street'}),
+      billing_address: address({ neighborhood: 'Sesame Street' }),
       description: 'Store Purchase'
     }
 
@@ -48,7 +48,7 @@ class RemoteMundipaggTest < Test::Unit::TestCase
       }
     }
 
-    @excess_length_neighborhood = address({neighborhood: 'Super Long Neighborhood Name' * 5})
+    @excess_length_neighborhood = address({ neighborhood: 'Super Long Neighborhood Name' * 5 })
     @neighborhood_length_error = 'Invalid parameters; The request is invalid. | The field neighborhood must be a string with a maximum length of 64.'
   end
 
@@ -271,7 +271,7 @@ class RemoteMundipaggTest < Test::Unit::TestCase
   def test_gateway_id_fallback
     gateway = MundipaggGateway.new(api_key: fixtures(:mundipagg)[:api_key], gateway_id: fixtures(:mundipagg)[:gateway_id])
     options = {
-      billing_address: address({neighborhood: 'Sesame Street'}),
+      billing_address: address({ neighborhood: 'Sesame Street' }),
       description: 'Store Purchase'
     }
     response = gateway.purchase(@amount, @credit_card, options)

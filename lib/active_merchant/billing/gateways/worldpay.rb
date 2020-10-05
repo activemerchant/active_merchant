@@ -510,7 +510,7 @@ module ActiveMerchant #:nodoc:
       def add_hcg_additional_data(xml, options)
         xml.hcgAdditionalData do
           options[:hcg_additional_data].each do |k, v|
-            xml.param({name: k.to_s}, v)
+            xml.param({ name: k.to_s }, v)
           end
         end
       end
@@ -546,7 +546,7 @@ module ActiveMerchant #:nodoc:
         xml = xml.strip.gsub(/\&/, '&amp;')
         doc = Nokogiri::XML(xml, &:strict)
         doc.remove_namespaces!
-        resp_params = {action: action}
+        resp_params = { action: action }
 
         parse_elements(doc.root, resp_params)
         resp_params
@@ -731,7 +731,7 @@ module ActiveMerchant #:nodoc:
       def credit_fund_transfer_attribute(options)
         return unless options[:credit]
 
-        {'action' => 'REFUND'}
+        { 'action' => 'REFUND' }
       end
 
       def encoded_credentials

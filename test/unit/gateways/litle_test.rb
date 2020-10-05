@@ -157,7 +157,7 @@ class LitleTest < Test::Unit::TestCase
 
   def test_passing_basis_date
     stub_comms do
-      @gateway.purchase(@amount, 'token', {basis_expiration_month: '04', basis_expiration_year: '2027'})
+      @gateway.purchase(@amount, 'token', { basis_expiration_month: '04', basis_expiration_year: '2027' })
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<expDate>0427<\/expDate>/, data)
     end.respond_with(successful_purchase_response)

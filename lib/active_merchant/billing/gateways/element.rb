@@ -84,7 +84,7 @@ module ActiveMerchant #:nodoc:
 
       def void(authorization, options = {})
         trans_id, trans_amount = split_authorization(authorization)
-        options.merge!({trans_id: trans_id, trans_amount: trans_amount, reversal_type: 'Full'})
+        options.merge!({ trans_id: trans_id, trans_amount: trans_amount, reversal_type: 'Full' })
 
         request = build_soap_request do |xml|
           xml.CreditCardReversal(xmlns: 'https://transaction.elementexpress.com') do

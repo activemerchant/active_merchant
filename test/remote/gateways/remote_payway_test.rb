@@ -4,7 +4,7 @@ class PaywayTest < Test::Unit::TestCase
   def setup
     @amount = 1100
 
-    @options = {order_id: generate_unique_id}
+    @options = { order_id: generate_unique_id }
 
     @gateway = ActiveMerchant::Billing::PaywayGateway.new(fixtures(:payway))
 

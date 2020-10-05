@@ -15,14 +15,6 @@
 Layout/AlignHash:
   Enabled: false
 
-# Offense count: 1186
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, EnforcedStyleForEmptyBraces.
-# SupportedStyles: space, no_space, compact
-# SupportedStylesForEmptyBraces: space, no_space
-Layout/SpaceInsideHashLiteralBraces:
-  Enabled: false
-
 # Offense count: 150
 # Configuration parameters: AllowSafeAssignment.
 Lint/AssignmentInCondition:

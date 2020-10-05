@@ -4,7 +4,7 @@ class HpsTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    @gateway = HpsGateway.new({secret_api_key: '12'})
+    @gateway = HpsGateway.new({ secret_api_key: '12' })
 
     @credit_card = credit_card
     @amount = 100
