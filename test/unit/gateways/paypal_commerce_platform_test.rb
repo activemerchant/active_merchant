@@ -1572,7 +1572,7 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
   end
 
   def body
-    @reference_id = "camera_shop_seller_#{DateTime.now}"
+    @reference_id = "camera_shop_seller_#{Time.now}"
     {
       "intent": 'CAPTURE',
       "purchase_units": [
@@ -1640,8 +1640,8 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
           },
           "shipping_method": 'United Postal Service',
           "payment_group_id": 1,
-          "custom_id": "custom_value_#{DateTime.now}",
-          "invoice_id": "invoice_number_#{DateTime.now}",
+          "custom_id": "custom_value_#{Time.now}",
+          "invoice_id": "invoice_number_#{Time.now}",
           "soft_descriptor": 'Payment Camera Shop'
         }
       ],

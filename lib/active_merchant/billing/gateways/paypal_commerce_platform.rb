@@ -206,11 +206,11 @@ module ActiveMerchant #:nodoc:
 
       def add_application_context(options, post)
         post[:application_context] = {}
-        post[:application_context][:return_url]          = options[:return_url] unless options[:return_url].nil?
-        post[:application_context][:cancel_url]          = options[:cancel_url] unless options[:cancel_url].nil?
-        post[:application_context][:landing_page]        = options[:landing_page] unless options[:landing_page].nil? || !ALLOWED_LANDING_PAGE.include?(options[:landing_page])
+        post[:application_context][:return_url] = options[:return_url] unless options[:return_url].nil?
+        post[:application_context][:cancel_url] = options[:cancel_url] unless options[:cancel_url].nil?
+        post[:application_context][:landing_page] = options[:landing_page] unless options[:landing_page].nil? || !ALLOWED_LANDING_PAGE.include?(options[:landing_page])
         post[:application_context][:locale] = options[:locale] unless options[:locale].nil?
-        post[:application_context][:user_action]         = options[:user_action] unless options[:user_action].nil? || !ALLOWED_USER_ACTION.include?(options[:user_action])
+        post[:application_context][:user_action] = options[:user_action] unless options[:user_action].nil? || !ALLOWED_USER_ACTION.include?(options[:user_action])
         post[:application_context][:brand_name] = options[:brand_name] unless options[:brand_name].nil?
         post[:application_context][:shipping_preference] = options[:shipping_preference] unless options[:shipping_preference].nil? || !ALLOWED_SHIPPING_PREFERENCE.include?(options[:shipping_preference])
 
