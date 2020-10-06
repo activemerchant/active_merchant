@@ -10,5 +10,4 @@ Gemfile*.lock
 .rvmrc
 /doc/
 .ruby-version
-.idea/*
-.byebug_history
+.ruby-gemset
