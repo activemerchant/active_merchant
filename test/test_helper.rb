@@ -292,6 +292,16 @@ module ActiveMerchant
       hash.symbolize_keys!
       hash.each{|k,v| symbolize_keys(v)}
     end
+
+    def add_subscription_options(card, options, subscription_id)
+      last_four = card.number[-4..-1]
+      card_type= card.brand
+      options.merge!(
+        subscription_id: subscription_id,
+        last_four: last_four,
+        card_type: card_type
+      )
+    end
   end
 end
 

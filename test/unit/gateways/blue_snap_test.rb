@@ -53,13 +53,16 @@ class BlueSnapTest < Test::Unit::TestCase
 
   def test_successful_purchase
     @gateway.expects(:raw_ssl_request).returns(successful_purchase_response)
+    add_subscription_options(@credit_card, @options, "21906519")
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal '1012082839', response.authorization
+    assert_equal '1035736225', response.authorization
   end
 
   def test_successful_purchase_with_unused_state_code
+    add_subscription_options(@credit_card, @options, "21906519")
+
     unrecognized_state_code_options = {
       billing_address: {
         city: 'Dresden',
@@ -68,10 +71,11 @@ class BlueSnapTest < Test::Unit::TestCase
         zip: '01069'
       }
     }
+    @options.merge!(unrecognized_state_code_options)
 
     @gateway.expects(:raw_ssl_request).returns(successful_stateless_purchase_response)
 
-    response = @gateway.purchase(@amount, @credit_card, unrecognized_state_code_options)
+    response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal '1021645629', response.authorization
     assert_not_includes(response.params, 'state')
@@ -86,6 +90,9 @@ class BlueSnapTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_3ds_auth
+    omit "We do not support 3ds actions yet."
+    add_subscription_options(@credit_card, @options, "21906519")
+
     response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options_3ds2)
     end.check_request do |method, url, data|
@@ -104,6 +111,8 @@ class BlueSnapTest < Test::Unit::TestCase
   end
 
   def test_does_not_send_3ds_auth_when_empty
+    add_subscription_options(@credit_card, @options, "21906519")
+
     stub_comms(@gateway, :raw_ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |method, url, data|
@@ -117,6 +126,8 @@ class BlueSnapTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase
+    add_subscription_options(@credit_card, @options, "21906519")
+
     @gateway.expects(:raw_ssl_request).returns(failed_purchase_response)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
@@ -125,6 +136,8 @@ class BlueSnapTest < Test::Unit::TestCase
   end
 
   def test_failed_echeck_purchase
+    add_subscription_options(@credit_card, @options, "21906519")
+
     @gateway.expects(:raw_ssl_request).returns(failed_echeck_purchase_response)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
@@ -267,7 +280,7 @@ class BlueSnapTest < Test::Unit::TestCase
 
   def test_failed_store
     @gateway.expects(:raw_ssl_request).returns(failed_store_response)
-
+    @credit_card.number = ""
     response = @gateway.store(@credit_card, @options)
     assert_failure response
     assert_equal '14002', response.error_code
@@ -282,6 +295,8 @@ class BlueSnapTest < Test::Unit::TestCase
   end
 
   def test_currency_added_correctly
+    add_subscription_options(@credit_card, @options, "21906519")
+
     stub_comms(@gateway, :raw_ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options.merge(currency: 'CAD'))
     end.check_request do |method, url, data|
@@ -300,6 +315,8 @@ class BlueSnapTest < Test::Unit::TestCase
   end
 
   def test_failed_forbidden_response
+    add_subscription_options(@credit_card, @options, "21906519")
+
     @gateway.expects(:raw_ssl_request).returns(forbidden_response)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
@@ -308,6 +325,8 @@ class BlueSnapTest < Test::Unit::TestCase
   end
 
   def test_does_not_send_level_3_when_empty
+    add_subscription_options(@credit_card, @options, "21906519")
+
     response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |type, endpoint, data, headers|
@@ -317,6 +336,8 @@ class BlueSnapTest < Test::Unit::TestCase
   end
 
   def test_fraud_response_handling
+    add_subscription_options(@credit_card, @options, "21906519")
+
     @gateway.expects(:raw_ssl_request).returns(fraudulent_purchase_response)
 
     response = @gateway.purchase(@fraudulent_amount, @credit_card, @options)
@@ -326,6 +347,8 @@ class BlueSnapTest < Test::Unit::TestCase
   end
 
   def test_fraud_response_handling_multiple_triggers
+    add_subscription_options(@fraudulent_card, @options, "21906519")
+
     @gateway.expects(:raw_ssl_request).returns(fraudulent_purchase_response_multiple_triggers)
 
     response = @gateway.purchase(@fraudulent_amount, @fraudulent_card, @options)
@@ -424,36 +447,44 @@ class BlueSnapTest < Test::Unit::TestCase
 
   def successful_purchase_response
     MockResponse.succeeded <<-XML
-      <?xml version="1.0" encoding="UTF-8"?>
-      <card-transaction xmlns="http://ws.plimus.com">
-      <card-transaction-type>AUTH_CAPTURE</card-transaction-type>
-      <transaction-id>1012082839</transaction-id>
-      <recurring-transaction>ECOMMERCE</recurring-transaction>
-      <soft-descriptor>BLS*Spreedly</soft-descriptor>
-      <amount>1.00</amount>
-      <currency>USD</currency>
-      <card-holder-info>
+      <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+      <charge xmlns="http://ws.plimus.com\">
+        <charge-id>19743635</charge-id>
+        <subscription-id>21906519</subscription-id>
+        <vaulted-shopper-id>28907745</vaulted-shopper-id>
+        <transaction-id>1035736225</transaction-id>
+        <transaction-date>2020-10-05</transaction-date>
+        <amount>0.00</amount>
+        <currency>CAD</currency>
+        <soft-descriptor>BLS&#x2a;onboardingDefault</soft-descriptor>
+        <payment-source>
+          <credit-card-info>
+          <billing-contact-info>
           <first-name>Longbob</first-name>
           <last-name>Longsen</last-name>
-          <country>CA</country>
-          <state>ON</state>
-          <city>Ottawa</city>
-          <zip>K1C2N6</zip>
-          <personal-identification-number>CNPJ</personal-identification-number>
-      </card-holder-info>
-      <credit-card>
+          </billing-contact-info>
+          <credit-card>
           <card-last-four-digits>9299</card-last-four-digits>
           <card-type>VISA</card-type>
           <card-sub-type>CREDIT</card-sub-type>
-      </credit-card>
-      <processing-info>
-          <processing-status>success</processing-status>
-          <cvv-response-code>ND</cvv-response-code>
-          <avs-response-code-zip>U</avs-response-code-zip>
-          <avs-response-code-address>U</avs-response-code-address>
-          <avs-response-code-name>U</avs-response-code-name>
-      </processing-info>
-      </card-transaction>
+          <card-category>PLATINUM</card-category>
+          <bin-category>CONSUMER</bin-category>
+          <card-regulated>N</card-regulated>
+          <issuing-bank>ALLIED IRISH BANKS PLC</issuing-bank>
+          <expiration-month>02</expiration-month>
+          <expiration-year>2023</expiration-year>
+          <issuing-country-code>ie</issuing-country-code></credit-card>
+          </credit-card-info>
+        </payment-source>
+        <charge-info>
+          <charge-type>INITIAL</charge-type>
+        </charge-info>
+        <processing-info>
+          <processing-status>SUCCESS</processing-status>
+          <authorization-code>654321</authorization-code>
+        </processing-info>
+        <fraud-result-info/>
+      </charge>
     XML
   end
 

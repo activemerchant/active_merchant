@@ -85,22 +85,7 @@ module ActiveMerchant
             add_alt_transaction_purchase(doc, money, payment_method_details, options)
           end
         elsif options[:subscription_id].blank?
-          commit(:create_subscription, :post, payment_method_details) do |doc|
-            if payment_method_details.vaulted_shopper_id
-              add_vaulted_shopper_id(doc, payment_method_details.vaulted_shopper_id)
-              add_credit_card_info(doc, options)
-            else
-              doc.send('payer-info') do
-                add_personal_info(doc, payment_method, options)
-              end
-              doc.send('payment-source') do
-                store_credit_card(doc, payment_method)
-              end
-            end
-            add_order(doc, options)
-            add_amount(doc, money, options)
-            add_fraud_info(doc, options)
-          end
+          raise ActiveMerchantError.new("Unable to purchase without a subscription")
         else
           commit(:charge_subscription, :post, payment_method_details, options) do |doc|
             add_amount(doc, money, options)
@@ -156,20 +141,23 @@ module ActiveMerchant
             end
           end
 
-          unless payment_method_details.alt_transaction?
+          if r.responses.last.success? && payment_method_details.card_transaction?
             options[:last_four] = r.responses.last.params["card-last-four-digits"]
             options[:card_type] = r.responses.last.params["card-type"]
-
+            options[:vaulted_shopper_id] = r.responses.last.params["vaulted-shopper-id"]
             r.process do
-              commit(:create_subscription, :post, payment_method_details) do |doc|
-                add_vaulted_shopper_id(doc, r.responses.last.authorization)
-                add_credit_card_info(doc, options)
-                add_order(doc, options)
-                add_fraud_info(doc, options)
-                doc.send('currency', options[:currency])
-              end
+              create_subscription(options)
             end
           end
+        end
+      end
+
+      def create_subscription(options = {})
+        commit(:create_subscription, :post) do |doc|
+          add_vaulted_shopper_id(doc, options[:vaulted_shopper_id])
+          add_credit_card_info(doc, options)
+          add_order(doc, options)
+          doc.send('currency', options[:currency])
         end
       end
 
@@ -674,8 +662,16 @@ module ActiveMerchant
         @payment_method.is_a?(Check) || @payment_method_type == 'check'
       end
 
+      def card?
+        @payment_method.is_a?(CreditCard) || @payment_method_type == 'credit_card'
+      end
+
       def alt_transaction?
         check?
+      end
+
+      def card_transaction?
+        card?
       end
 
       def root_element
