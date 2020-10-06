@@ -118,7 +118,7 @@ module ActiveMerchant
 
       def return_response(http, request)
         response = http.request(request)
-        JSON.parse(response.body)[:access_token]
+        JSON.parse(response.body)['access_token']
       end
 
       def ssl_post_request(url, _options = {})
