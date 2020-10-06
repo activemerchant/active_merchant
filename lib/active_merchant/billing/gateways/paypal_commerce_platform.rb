@@ -190,25 +190,17 @@ module ActiveMerchant #:nodoc:
         purchase_unit_hsh = {}
         purchase_unit_hsh[:reference_id]    = purchase_unit[:reference_id] unless purchase_unit[:reference_id].nil?
         purchase_unit_hsh[:description]     = purchase_unit[:description] unless purchase_unit[:description].nil?
-        unless purchase_unit[:shipping_method].nil?
-          purchase_unit_hsh[:shipping_method] = purchase_unit[:shipping_method]
-        end
-        unless purchase_unit[:payment_group_id].nil?
-          purchase_unit_hsh[:payment_group_id] = purchase_unit[:payment_group_id]
-        end
+        purchase_unit_hsh[:shipping_method] = purchase_unit[:shipping_method] unless purchase_unit[:shipping_method].nil?
+        purchase_unit_hsh[:payment_group_id] = purchase_unit[:payment_group_id] unless purchase_unit[:payment_group_id].nil?
         purchase_unit_hsh[:custom_id]       = purchase_unit[:custom_id] unless purchase_unit[:custom_id].nil?
         purchase_unit_hsh[:invoice_id]      = purchase_unit[:invoice_id] unless purchase_unit[:invoice_id].nil?
-        unless purchase_unit[:soft_descriptor].nil?
-          purchase_unit_hsh[:soft_descriptor] = purchase_unit[:soft_descriptor]
-        end
+        purchase_unit_hsh[:soft_descriptor] = purchase_unit[:soft_descriptor] unless purchase_unit[:soft_descriptor].nil?
 
         add_amount(purchase_unit[:amount], purchase_unit_hsh)
         add_payee(purchase_unit[:payee], purchase_unit_hsh) unless purchase_unit[:payee].nil?
         add_items(purchase_unit[:items], purchase_unit_hsh) unless purchase_unit[:items].nil?
         add_shipping(purchase_unit[:shipping], purchase_unit_hsh) unless purchase_unit[:shipping].nil?
-        unless purchase_unit[:payment_instruction].blank?
-          add_payment_instruction(purchase_unit[:payment_instruction], purchase_unit_hsh)
-        end
+        add_payment_instruction(purchase_unit[:payment_instruction], purchase_unit_hsh) unless purchase_unit[:payment_instruction].blank?
         purchase_unit_hsh
       end
 
@@ -216,17 +208,11 @@ module ActiveMerchant #:nodoc:
         post[:application_context] = {}
         post[:application_context][:return_url]          = options[:return_url] unless options[:return_url].nil?
         post[:application_context][:cancel_url]          = options[:cancel_url] unless options[:cancel_url].nil?
-        unless options[:landing_page].nil? || !ALLOWED_LANDING_PAGE.include?(options[:landing_page])
-          post[:application_context][:landing_page]        = options[:landing_page]
-        end
+        post[:application_context][:landing_page]        = options[:landing_page] unless options[:landing_page].nil? || !ALLOWED_LANDING_PAGE.include?(options[:landing_page])
         post[:application_context][:locale] = options[:locale] unless options[:locale].nil?
-        unless options[:user_action].nil? || !ALLOWED_USER_ACTION.include?(options[:user_action])
-          post[:application_context][:user_action]         = options[:user_action]
-        end
+        post[:application_context][:user_action]         = options[:user_action] unless options[:user_action].nil? || !ALLOWED_USER_ACTION.include?(options[:user_action])
         post[:application_context][:brand_name] = options[:brand_name] unless options[:brand_name].nil?
-        unless options[:shipping_preference].nil? || !ALLOWED_SHIPPING_PREFERENCE.include?(options[:shipping_preference])
-          post[:application_context][:shipping_preference] = options[:shipping_preference]
-        end
+        post[:application_context][:shipping_preference] = options[:shipping_preference] unless options[:shipping_preference].nil? || !ALLOWED_SHIPPING_PREFERENCE.include?(options[:shipping_preference])
 
         add_payment_method(options[:payment_method], post) unless options[:payment_method].nil?
         add_stored_payment_source(options[:stored_payment_source], post) unless options[:stored_payment_source].nil?
@@ -236,12 +222,8 @@ module ActiveMerchant #:nodoc:
       def add_stored_payment_source(options, post)
         requires!(options, :payment_initiator, :payment_type)
         post[:stored_payment_source] = {}
-        if ALLOWED_PAYMENT_INITIATOR.include?(options[:payment_initiator])
-          post[:stored_payment_source][:payment_initiator] = options[:payment_initiator]
-        end
-        if ALLOWED_PAYMENT_TYPE.include?(options[:payment_type])
-          post[:stored_payment_source][:payment_type]      = options[:payment_type]
-        end
+        post[:stored_payment_source][:payment_initiator] = options[:payment_initiator] if ALLOWED_PAYMENT_INITIATOR.include?(options[:payment_initiator])
+        post[:stored_payment_source][:payment_type]      = options[:payment_type] if ALLOWED_PAYMENT_TYPE.include?(options[:payment_type])
         post[:stored_payment_source][:usage] = options[:usage] if ALLOWED_USAGE.include?(options[:usage])
         add_network_transaction_reference(options[:previous_network_transaction_reference], post)
         skip_empty(post, :stored_payment_source)
@@ -252,30 +234,22 @@ module ActiveMerchant #:nodoc:
         post[:previous_network_transaction_reference] = {}
         post[:previous_network_transaction_reference][:id]      = options[:id]
         post[:previous_network_transaction_reference][:date]    = options[:date]
-        if ALLOWED_NETWORK.include?(options[:network])
-          post[:previous_network_transaction_reference][:network] = options[:network]
-        end
+        post[:previous_network_transaction_reference][:network] = options[:network] if ALLOWED_NETWORK.include?(options[:network])
         post
       end
 
       def add_payment_method(options, post)
         post[:payment_method] = {}
         post[:payment_method][:payer_selected] = options[:payer_selected]
-        if ALLOWED_PAYEE_PREFERRED.include?(options[:payee_preferred])
-          post[:payment_method][:payee_preferred]           = options[:payee_preferred]
-        end
-        if ALLOWED_STANDARD_ENTRIES.include?(options[:standard_entry_class_code])
-          post[:payment_method][:standard_entry_class_code] = options[:standard_entry_class_code]
-        end
+        post[:payment_method][:payee_preferred]           = options[:payee_preferred] if ALLOWED_PAYEE_PREFERRED.include?(options[:payee_preferred])
+        post[:payment_method][:standard_entry_class_code] = options[:standard_entry_class_code] if ALLOWED_STANDARD_ENTRIES.include?(options[:standard_entry_class_code])
         skip_empty(post, :payment_method)
       end
 
       def add_payment_instruction(options, post, key = :payment_instruction)
         post[key]                     = {}
         post[key][:platform_fees]     = []
-        unless options[:disbursement_mode].nil? || !ALLOWED_DISBURSEMENT_MODE.include(options[:disbursement_mode])
-          post[key][:disbursement_mode] = options[:disbursement_mode]
-        end
+        post[key][:disbursement_mode] = options[:disbursement_mode] unless options[:disbursement_mode].nil? || !ALLOWED_DISBURSEMENT_MODE.include(options[:disbursement_mode])
 
         options[:platform_fees].map do |platform_fee|
           requires!(platform_fee, :amount, :payee)
@@ -334,9 +308,7 @@ module ActiveMerchant #:nodoc:
           items_hsh[:sku]         = item[:sku] unless item[:sku].nil?
           items_hsh[:quantity]    = item[:quantity]
           items_hsh[:description] = item[:description]
-          unless item[:category].nil? || !ALLOWED_ITEM_CATEGORY.include?(item[:category])
-            items_hsh[:category] = item[:category]
-          end
+          items_hsh[:category] = item[:category] unless item[:category].nil? || !ALLOWED_ITEM_CATEGORY.include?(item[:category])
 
           add_amount(item[:unit_amount], items_hsh, :unit_amount)
           add_amount(item[:tax], items_hsh, :tax) unless item[:tax].nil?
@@ -439,17 +411,13 @@ module ActiveMerchant #:nodoc:
         post[:merchant_custom_data]   = options[:merchant_custom_data] unless options[:merchant_custom_data].nil?
         add_payer(post, options[:payer])
         add_plan(post, options[:plan])
-        unless options[:shipping_address].nil?
-          add_billing_agreement_shipping_address(post, options[:shipping_address], key = :shipping_address)
-        end
+        add_billing_agreement_shipping_address(post, options[:shipping_address], :shipping_address) unless options[:shipping_address].nil?
         post
       end
 
       def add_payer(obj_hsh, payer)
         obj_hsh[:payer] = {}
-        if ALLOWED_PAYMENT_METHOD.include?(payer[:payment_method])
-          obj_hsh[:payer][:payment_method] = payer[:payment_method]
-        end
+        obj_hsh[:payer][:payment_method] = payer[:payment_method] if ALLOWED_PAYMENT_METHOD.include?(payer[:payment_method])
         add_billing_agreement_payer_info_details(options[:payer_info], post) unless options[:payer_info].nil?
         skip_empty(obj_hsh, :payer)
       end
@@ -467,26 +435,14 @@ module ActiveMerchant #:nodoc:
         obj_hsh[:merchant_preferences] = {}
         obj_hsh[:merchant_preferences][:return_url]                 = options[:return_url]
         obj_hsh[:merchant_preferences][:cancel_url]                 = options[:cancel_url]
-        unless options[:accepted_pymt_type].nil? || !ALLOWED_ACCEPT_PAYMENT_TYPE.include?(options[:accepted_pymt_type])
-          obj_hsh[:merchant_preferences][:accepted_pymt_type]         = options[:accepted_pymt_type]
-        end
+        obj_hsh[:merchant_preferences][:accepted_pymt_type]         = options[:accepted_pymt_type] unless options[:accepted_pymt_type].nil? || !ALLOWED_ACCEPT_PAYMENT_TYPE.include?(options[:accepted_pymt_type])
         obj_hsh[:merchant_preferences][:skip_shipping_address] = options[:skip_shipping_address]
-        unless options[:immutable_shipping_address].nil?
-          obj_hsh[:merchant_preferences][:immutable_shipping_address] = options[:immutable_shipping_address]
-        end
-        unless options[:experience_id].nil?
-          obj_hsh[:merchant_preferences][:experience_id]              = options[:experience_id]
-        end
-        unless options[:notify_url].nil?
-          obj_hsh[:merchant_preferences][:notify_url]                 = options[:notify_url]
-        end
+        obj_hsh[:merchant_preferences][:immutable_shipping_address] = options[:immutable_shipping_address] unless options[:immutable_shipping_address].nil?
+        obj_hsh[:merchant_preferences][:experience_id]              = options[:experience_id] unless options[:experience_id].nil?
+        obj_hsh[:merchant_preferences][:notify_url]                 = options[:notify_url] unless options[:notify_url].nil?
+        obj_hsh[:merchant_preferences][:external_selected_funding_instrument_type] = options[:external_selected_funding_instrument_type] unless options[:external_selected_funding_instrument_type].nil? || !ALLOWED_EXTERNAL_FUNDING.include?(options[:external_selected_funding_instrument_type])
 
-        unless options[:external_selected_funding_instrument_type].nil? || !ALLOWED_EXTERNAL_FUNDING.include?(options[:external_selected_funding_instrument_type])
-          obj_hsh[:merchant_preferences][:external_selected_funding_instrument_type] = options[:external_selected_funding_instrument_type]
-        end
-        unless options[:accepted_legal_country_codes].nil?
-          add_accepted_legal_country_codes(options[:accepted_legal_country_codes], obj_hsh)
-        end
+        add_accepted_legal_country_codes(options[:accepted_legal_country_codes], obj_hsh) unless options[:accepted_legal_country_codes].nil?
         obj_hsh
       end
 
@@ -521,9 +477,7 @@ module ActiveMerchant #:nodoc:
           post[:from]                         = hsh_obj[:from] unless hsh_obj[:from].nil?
           post[:value]                        = {}
           post[:value][:description]          = hsh_obj[:value][:description] unless hsh_obj[:value][:description].nil?
-          unless hsh_obj[:value][:merchant_custom_data].nil?
-            post[:value][:merchant_custom_data] = hsh_obj[:value][:merchant_custom_data]
-          end
+          post[:value][:merchant_custom_data] = hsh_obj[:value][:merchant_custom_data] unless hsh_obj[:value][:merchant_custom_data].nil?
           post[:value][:notify_url] = hsh_obj[:value][:notify_url] unless hsh_obj[:value][:notify_url].nil?
           hsh_collection << post
         end
