@@ -195,7 +195,7 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
     failed_business_validation_assertions(create)
   end
 
-  def test_failed_capture_after_creation_due_to_invalid_schema(order_id)
+  def test_failed_capture_after_creation_due_to_invalid_schema
     @gateway.expects(:ssl_request).times(2).returns(successful_create_capture_order_response, failed_capture_order_invalid_schema_response)
     assert create = @gateway.create_order('CAPTURE', options)
     success_created_assertions(create)

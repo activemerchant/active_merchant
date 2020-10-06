@@ -142,8 +142,9 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   end
 
   def test_create_order_for_internal_server_error
-    options[:headers].merge!({ "PayPal-Mock-Response": '{"mock_application_codes": "INTERNAL_SERVER_ERROR"}' })
-    response = @gateway.create_order('CAPTURE', options)
+    params = options
+    params[:headers][:PayPal-Mock-Response] = '{"mock_application_codes": "INTERNAL_SERVER_ERROR"}'
+    response = @gateway.create_order('CAPTURE', params)
 
     server_side_failure_assertions(
       response,
@@ -156,7 +157,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   def test_capture_order_for_invalid_request
     response        = @gateway.create_order('CAPTURE', options)
     order_id        = response.params['id']
-    @card_order_options[:headers].merge!({ "PayPal-Mock-Response": '{"mock_application_codes": "INVALID_PARAMETER_VALUE"}' })
+    @card_order_options[:headers][:PayPal-Mock-Response] = '{"mock_application_codes": "INVALID_PARAMETER_VALUE"}'
     response = @gateway.capture(order_id, @card_order_options)
 
     server_side_failure_assertions(
@@ -170,7 +171,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   def test_authorize_order_failure_on_missing_required_parameters
     response = create_order('AUTHORIZE')
     order_id = response.params['id']
-    @card_order_options[:headers].merge!({ "PayPal-Mock-Response": '{"mock_application_codes": "MISSING_REQUIRED_PARAMETER"}' })
+    @card_order_options[:headers][:PayPal-Mock-Response] = '{"mock_application_codes": "MISSING_REQUIRED_PARAMETER"}'
     response = @gateway.authorize(order_id, @card_order_options)
 
     server_side_failure_assertions(
@@ -186,8 +187,9 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     order_id        = response.params['id']
     response        = @gateway.capture(order_id, @card_order_options)
     capture_id      = response.params['purchase_units'][0]['payments']['captures'][0]['id']
-    options[:headers].merge!("PayPal-Mock-Response": '{"mock_application_codes": "PARTIAL_REFUND_NOT_ALLOWED"}')
-    response = @gateway.refund(capture_id, options)
+    params = options
+    params[:headers][:PayPal-Mock-Response] = '{"mock_application_codes": "PARTIAL_REFUND_NOT_ALLOWED"}'
+    response = @gateway.refund(capture_id, params)
 
     server_side_failure_assertions(
       response,
@@ -202,8 +204,9 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     order_id         = response.params['id']
     response         = @gateway.authorize(order_id, @card_order_options)
     authorization_id = response.params['purchase_units'][0]['payments']['authorizations'][0]['id']
-    options[:headers].merge!("PayPal-Mock-Response": '{"mock_application_codes": "PREVIOUSLY_VOIDED"}')
-    response = @gateway.void(authorization_id, options)
+    params = options
+    params[:headers][:PayPal-Mock-Response] = '{"mock_application_codes": "PREVIOUSLY_VOIDED"}'
+    response = @gateway.void(authorization_id, params)
 
     server_side_failure_assertions(
       response,
