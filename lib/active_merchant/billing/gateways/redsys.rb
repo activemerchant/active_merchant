@@ -334,7 +334,7 @@ module ActiveMerchant #:nodoc:
 
           data[:authenticacionMethod] = options[:authentication_method] if options[:authentication_method]
           data[:authenticacionType] = options[:authentication_type] if options[:authentication_type]
-          data[:authenticationFlow] = options[:authentication_flow] if options[:authentication_flow]
+          data[:authenticacionFlow] = options[:authentication_flow] if options[:authentication_flow]
         elsif options[:three_d_secure][:version]
           data[:txid] = options[:three_d_secure][:xid] if options[:three_d_secure][:xid]
           data[:cavv] = options[:three_d_secure][:cavv] if options[:three_d_secure][:cavv]

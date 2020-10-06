@@ -157,6 +157,33 @@ class RedsysSHA256Test < Test::Unit::TestCase
       assert_match(%r("threeDSServerTransID":"xid"), data)
       assert_match(%r("dsTransID":"ds_transaction_id"), data)
       assert_match(%r("authenticacionValue":"cavv"), data)
+
+      assert_not_match(%r("authenticacionMethod"), data)
+      assert_not_match(%r("authenticacionType"), data)
+      assert_not_match(%r("authenticacionFlow"), data)
+
+      assert_match(%r("protocolVersion":"2.0"), data)
+      assert_match(/descripción/, data)
+    end.respond_with(successful_authorize_with_3ds_response)
+  end
+
+  def test_3ds2_data_passed_with_optional_values
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(100, credit_card, { order_id: '156270437866', description: 'esta es la descripción', three_d_secure: { version: '2.0', xid: 'xid', ds_transaction_id: 'ds_transaction_id', cavv: 'cavv' },
+        authentication_method: '01',
+        authentication_type: 'anything',
+        authentication_flow: 'F' })
+    end.check_request do |_method, _endpoint, encdata, _headers|
+      data = CGI.unescape(encdata)
+      assert_match(/<DS_MERCHANT_MPIEXTERNAL>/, data)
+      assert_match(%r("threeDSServerTransID":"xid"), data)
+      assert_match(%r("dsTransID":"ds_transaction_id"), data)
+      assert_match(%r("authenticacionValue":"cavv"), data)
+
+      assert_match(%r("authenticacionMethod":"01"), data)
+      assert_match(%r("authenticacionType":"anything"), data)
+      assert_match(%r("authenticacionFlow":"F"), data)
+
       assert_match(%r("protocolVersion":"2.0"), data)
       assert_match(/descripción/, data)
     end.respond_with(successful_authorize_with_3ds_response)
