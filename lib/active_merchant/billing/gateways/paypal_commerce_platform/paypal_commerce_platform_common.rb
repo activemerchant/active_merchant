@@ -113,7 +113,7 @@ module ActiveMerchant
       end
 
       def encoded_credentials
-        Base64.encode64("#{@options[:authorization][:username]}:#{@options[:authorization][:password]}").gsub("\n", '')
+        Base64.encode64("#{@options[:authorization][:username]}:#{@options[:authorization][:password]}").delete("\n")
       end
 
       def return_response(http, request)
@@ -145,12 +145,12 @@ module ActiveMerchant
       end
 
       def scrub(transcript)
-        transcript
-          .gsub(/(Authorization: Bearer )\w+-\w+/, '\1[FILTERED]')
-                  .gsub(/(Authorization: Basic )\w+=/, '\1[FILTERED]')
-                  .gsub(/(payment_source\[card\]\[security_code\]=)\d+/, '\1[FILTERED]')
-                  .gsub(/(payment_source\[card\]\[number\]=)\d+/, '\1[FILTERED]')
-                  .gsub(/(payment_source\[card\]\[expiry\]=)\d+-\d+/, '\1[FILTERED]')
+        transcript.
+          gsub(/(Authorization: Bearer )\w+-\w+/, '\1[FILTERED]').
+          gsub(/(Authorization: Basic )\w+=/, '\1[FILTERED]').
+          gsub(/(payment_source\[card\]\[security_code\]=)\d+/, '\1[FILTERED]').
+          gsub(/(payment_source\[card\]\[number\]=)\d+/, '\1[FILTERED]').
+          gsub(/(payment_source\[card\]\[expiry\]=)\d+-\d+/, '\1[FILTERED]')
       end
     end
   end
