@@ -77,7 +77,13 @@ class RemoteDecidirTest < Test::Unit::TestCase
       fraud_detection: {
         send_to_cs: false,
         channel: 'Web',
-        dispatch_method: 'Store Pick Up'
+        dispatch_method: 'Store Pick Up',
+        csmdds: [
+          {
+            code: 17,
+            description: 'Campo MDD17'
+          }
+        ]
       },
       installments: '12',
       site_id: '99999999'
@@ -90,6 +96,27 @@ class RemoteDecidirTest < Test::Unit::TestCase
     assert_equal '99999999', response.params['site_id']
     assert_equal({'status' => nil}, response.params['fraud_detection'])
     assert response.authorization
+  end
+
+  def test_failed_purchase_with_bad_csmdds
+    options = {
+      fraud_detection: {
+        send_to_cs: false,
+        channel: 'Web',
+        dispatch_method: 'Store Pick Up',
+        csmdds: [
+          {
+            codee: 17,
+            descriptione: 'Campo MDD17'
+          }
+        ]
+      }
+    }
+
+    response = @gateway_for_purchase.purchase(@amount, credit_card('4509790112684851'), @options.merge(options))
+    assert_failure response
+    assert_equal 'param_required: fraud_detection.csmdds.[0].code, param_required: fraud_detection.csmdds.[0].description', response.message
+    assert_equal(nil, response.params['fraud_detection'])
   end
 
   def test_failed_purchase

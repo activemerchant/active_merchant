@@ -30,6 +30,7 @@
 * NMI: Add standardized 3DS fields [meagabeth] #3775
 * Mundipagg: Add support for SubMerchant fields [meagabeth] #3779
 * Stripe Payment Intents: Add request_three_d_secure option [molbrown] #3787
+* Decidir: Add support for csmdds fields [naashton] #3786
 
 == Version 1.114.0
 * BlueSnap: Add address1,address2,phone,shipping_* support #3749
