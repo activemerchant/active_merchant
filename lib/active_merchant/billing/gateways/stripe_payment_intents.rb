@@ -29,6 +29,7 @@ module ActiveMerchant #:nodoc:
         add_shipping_address(post, options)
         setup_future_usage(post, options)
         add_exemption(post, options)
+        request_three_d_secure(post, options)
 
         CREATE_INTENT_ATTRIBUTES.each do |attribute|
           add_whitelisted_attribute(post, options, attribute)
@@ -265,6 +266,14 @@ module ActiveMerchant #:nodoc:
         post[:payment_method_options] ||= {}
         post[:payment_method_options][:card] ||= {}
         post[:payment_method_options][:card][:moto] = true if options[:moto]
+      end
+
+      def request_three_d_secure(post, options = {})
+        return unless options[:request_three_d_secure] && %w(any automatic).include?(options[:request_three_d_secure])
+
+        post[:payment_method_options] ||= {}
+        post[:payment_method_options][:card] ||= {}
+        post[:payment_method_options][:card][:request_three_d_secure] = options[:request_three_d_secure]
       end
 
       def setup_future_usage(post, options = {})

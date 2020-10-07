@@ -13,11 +13,15 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     @three_ds_credit_card = credit_card('4000000000003220',
       verification_value: '737',
       month: 10,
-      year: 2020)
+      year: 2021)
+    @three_ds_not_required_card = credit_card('4000000000003055',
+      verification_value: '737',
+      month: 10,
+      year: 2021)
     @visa_card = credit_card('4242424242424242',
       verification_value: '737',
       month: 10,
-      year: 2020)
+      year: 2021)
     @destination_account = fixtures(:stripe_destination)[:stripe_user_id]
   end
 
@@ -640,6 +644,21 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
 
     assert_failure purchase
     assert_equal 'Your card was declined. This transaction requires authentication.', purchase.message
+  end
+
+  def test_request_three_d_secure
+    options = {
+      currency: 'GBP',
+      request_three_d_secure: 'any'
+    }
+    assert purchase = @gateway.purchase(@amount, @three_ds_not_required_card, options)
+    assert_equal 'requires_action', purchase.params['status']
+
+    options = {
+      currency: 'GBP'
+    }
+    assert purchase = @gateway.purchase(@amount, @three_ds_not_required_card, options)
+    assert_equal 'succeeded', purchase.params['status']
   end
 
   def test_transcript_scrubbing
