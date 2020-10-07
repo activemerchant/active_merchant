@@ -806,6 +806,19 @@ plugnpay:
   login: LOGIN
   password: PASSWORD
 
+ppcp:
+  username:                your_account_username
+  password:                your_account_password
+  approved_billing_token:  your_approved_billing_token_for_testing
+  card_number:             your_mock_card_number
+  cvc:                     your_mock_card_cvc
+  month:                   your_mock_card_month
+  year:                    your_mock_card_year
+  payee_email:             your_payee_email_for_testing
+  platform_payee_email:    your_platform_payee_email_for_testing
+  payer_email:             your_payer_email
+  payer_id:                your_payer_id
+
 # Working credentials, no need to replace
 pro_pay:
   cert_str: "5ab9cddef2e4911b77e0c4ffb70f03"
@@ -1323,16 +1336,3 @@ worldpay_us:
   acctid: MPNAB
   subid: SPREE
   merchantpin: "1234567890"
-
-ppcp:
-  username:                your_account_username
-  password:                your_account_password
-  approved_billing_token:  your_approved_billing_token_for_testing
-  card_number:             your_mock_card_number
-  cvc:                     your_mock_card_cvc
-  month:                   your_mock_card_month
-  year:                    your_mock_card_year
-  payee_email:             your_payee_email_for_testing
-  platform_payee_email:    your_platform_payee_email_for_testing
-  payer_email:             your_payer_email
-  payer_id:                your_payer_id

@@ -37,7 +37,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a0f91e37-51f3-4aa5-a2a2-11c65a8ca26d" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/lib/active_merchant/billing/gateways/paypal_commerce_platform/paypal_commerce_platform_common.rb" beforeDir="false" afterPath="$PROJECT_DIR$/lib/active_merchant/billing/gateways/paypal_commerce_platform/paypal_commerce_platform_common.rb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/fixtures.yml" beforeDir="false" afterPath="$PROJECT_DIR$/test/fixtures.yml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -114,7 +115,9 @@
       <workItem from="1601545741631" duration="11323000" />
       <workItem from="1601621196140" duration="8114000" />
       <workItem from="1601899882208" duration="10034000" />
-      <workItem from="1601964304685" duration="9039000" />
+      <workItem from="1601964304685" duration="9834000" />
+      <workItem from="1601978649402" duration="7000" />
+      <workItem from="1602054295469" duration="123000" />
     </task>
     <servers />
   </component>
