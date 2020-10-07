@@ -249,7 +249,7 @@ module ActiveMerchant #:nodoc:
           :country => 'US'
         }
         options[:billing_address] = options[:billing_address] || options[:address] || default_address
-        options[:shipping_address] = options[:shipping_address] || {}
+        options[:shipping_address] = options[:shipping_address] || options[:address] || default_address
       end
 
       def build_auth_request(money, creditcard_or_reference, options)
@@ -299,6 +299,7 @@ module ActiveMerchant #:nodoc:
           add_payment_network_token(xml) if network_tokenization?(payment_method_or_reference)
           add_business_rules_data(xml, payment_method_or_reference, options) unless options[:pinless_debit_card]
         end
+        add_bill_to_data(xml, options)
         xml.target!
       end
 
@@ -442,6 +443,21 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'purchaseTotals' do
           xml.tag! 'currency', options[:currency] || currency(money)
           xml.tag!('grandTotalAmount', localized_amount(money.to_i, options[:currency] || default_currency))  if include_grand_total
+        end
+      end
+
+      def add_bill_to_data(xml, options)
+        billing_data = options[:bill_to]
+
+        if billing_data.present?
+          xml.tag! 'BillToForename',            billing_data[:forename]
+          xml.tag! 'BillToSurname',             billing_data[:surname]
+          xml.tag! 'BillToAddressLine1',        billing_data[:address_line1]
+          xml.tag! 'BillToAddressCity',         billing_data[:address_city]
+          xml.tag! 'BillToAddressState',        billing_data[:address_state]
+          xml.tag! 'BillToAddressPostalCode',   billing_data[:address_postal_code]
+          xml.tag! 'BillToAddressCountry',      billing_data[:address_country]
+          xml.tag! 'BillToEmail',               billing_data[:email]
         end
       end
 
