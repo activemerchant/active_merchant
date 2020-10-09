@@ -7,29 +7,6 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://seerbit.com/'
       self.display_name = 'Seerbit'
 
-      # GHS
-      # Ghanaian Cedi
-      # Ghana
-
-      # KES
-      # Kenya Shilling
-      # Kenya
-
-      # NGN
-      # Nigerian Naira
-      # Nigeria
-
-      # TZS
-      # Tanzanian Shilling
-      # Tanzania
-
-      # USD
-      # Us Dollars
-      # United States
-
-      # XOF
-      # CFA Franc BCEAO
-      # Cameroon, Senegal, Dr Congo, Burkinfaso
       self.supported_countries = ['GH', 'KE', 'NG', 'TZ', 'US', 'CM']
       self.default_currency = 'GHS'
 
@@ -37,11 +14,10 @@ module ActiveMerchant #:nodoc:
       self.money_format = :cents
 
       def initialize(options = {})
-        requires!(options, :public_key)
+        requires!(options, :public_key, :private_key)
 
-        @token = options[:token]
         @public_key = options[:public_key]
-        @secret_key = options[:secret_key]
+        @private_key = options[:private_key]
         super
       end
 
@@ -83,8 +59,7 @@ module ActiveMerchant #:nodoc:
         post[:cardNumber] = payment.number
         post[:cvv] = payment.verification_value if payment.verification_value?
         post[:expiryMonth] = payment.month.to_s
-        post[:expiryYear] = payment.year.to_s
-
+        post[:expiryYear] = payment.year.to_s[-2, 2]
         post[:channelType] = card_brand(payment)
       end
 
@@ -95,25 +70,16 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
-          gsub(/(Authorization: Bearer )([A-Za-z0-9\-\._~\+\/]+=*)/, '\1[FILTERED]').
-          gsub(/(\\?\\?\\?"pan\\?\\?\\?":\\?\\?\\?")\d+/, '\1[FILTERED]').
-          gsub(/(\\?\\?\\?"cvv\\?\\?\\?":\\?\\?\\?")\d+/, '\1[FILTERED]')
+          gsub(/(Authorization: Basic )([A-Za-z0-9\-\._~\+\/]+=*)/, '\1[FILTERED]').
+          gsub(/(\\?\\?\\?"cardNumber\\?\\?\\?":\\?\\?\\?")\d+/, '\1[FILTERED]').
+          gsub(/(\\?\\?\\?"cvv\\?\\?\\?":\\?\\?\\?"?)\d+/, '\1[FILTERED]')
       end
 
       private
 
       def commit(action, parameters)
-        puts
-        puts " # ========== commit ============== "
-
         url = (test? ? test_url : live_url) + action
         parameters[:publicKey] = @options[:public_key]
-
-        puts " # url.inspect = #{url.inspect}"
-        puts " # headers.inspect = #{headers.to_json.inspect}"
-        puts " # parameters.inspect = #{parameters.to_json.inspect}"
-        puts " # ===================== "
-        puts
 
         raw_response = ssl_post(url, parameters.to_json, headers)
         response = parse(raw_response)
@@ -132,7 +98,7 @@ module ActiveMerchant #:nodoc:
       def headers(options = {})
         {
           'Content-Type' => 'application/json',
-          'Authorization' => "Bearer #{token}"
+          'Authorization' => "Basic #{token}"
         }
       end
 
@@ -141,7 +107,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response.fetch('status') == 'SUCCESS'
+        response.fetch('status') == 'SUCCESS' &&
+          response.dig('data', 'code') == '00'
       end
 
       def message_from(succeeded, response)
@@ -157,22 +124,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def token
-        @token || get_bearer_token
-      end
-
-      def get_bearer_token
-        raise ArgumentError, 'You must include secret key' if @options[:secret_key].blank?
-
-        auth_headers = { 'Content-Type' => 'application/json' }
-        request_body = { key: "#{@options[:secret_key]}.#{@options[:public_key]}" }
-
-        @token =  parse_bearer_token(
-          ssl_post("#{live_url}/encrypt/keys", request_body.to_json, auth_headers)
-        )
-      end
-
-      def parse_bearer_token(response)
-        response.dig('data', 'EncryptedSecKey', 'encryptedKey')
+        credentials = "#{@options[:public_key]}:#{@options[:private_key]}"
+        Base64.strict_encode64(credentials)
       end
     end
   end
