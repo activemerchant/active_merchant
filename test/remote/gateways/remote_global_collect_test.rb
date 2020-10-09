@@ -84,6 +84,26 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     assert_equal 'CAPTURE_REQUESTED', response.params['payment']['status']
   end
 
+  def test_successful_authorize_via_normalized_3ds2_fields
+    options = @options.merge(
+      three_d_secure: {
+        version: '2.1.0',
+        eci: '05',
+        cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA=',
+        xid: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA=',
+        ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC',
+        acs_transaction_id: '13c701a3-5a88-4c45-89e9-ef65e50a8bf9',
+        cavv_algorithm: 1,
+        authentication_response_status: 'Y'
+      }
+    )
+
+    response = @gateway.authorize(@amount, @credit_card, options)
+    assert_success response
+    assert_match 'jJ81HADVRtXfCBATEp01CJUAAAA=', response.params['payment']['paymentOutput']['cardPaymentMethodSpecificOutput']['threeDSecureResults']['cavv']
+    assert_equal 'Succeeded', response.message
+  end
+
   def test_successful_purchase_with_airline_data
     options = @options.merge(
       airline_data: {

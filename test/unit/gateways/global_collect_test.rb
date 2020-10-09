@@ -16,6 +16,18 @@ class GlobalCollectTest < Test::Unit::TestCase
       billing_address: address,
       description: 'Store Purchase'
     }
+    @options_3ds2 = @options.merge(
+      three_d_secure: {
+        version: '2.1.0',
+        eci: '05',
+        cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA=',
+        xid: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA=',
+        ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC',
+        acs_transaction_id: '13c701a3-5a88-4c45-89e9-ef65e50a8bf9',
+        cavv_algorithm: 1,
+        authentication_response_status: 'Y'
+      }
+    )
   end
 
   def test_successful_authorize_and_capture
@@ -144,6 +156,42 @@ class GlobalCollectTest < Test::Unit::TestCase
       assert_match %r("fraudFields":{"website":"www.example.com","giftMessage":"Happy Day!","customerIpAddress":"127.0.0.1"}), data
       assert_match %r("merchantReference":"123"), data
       assert_match %r("customer":{"personalInformation":{"name":{"firstName":"Longbob","surname":"Longsen"}},"merchantCustomerId":"123987","contactDetails":{"emailAddress":"example@example.com","phoneNumber":"\(555\)555-5555"},"billingAddress":{"street":"456 My Street","additionalInfo":"Apt 1","zip":"K1C2N6","city":"Ottawa","state":"ON","countryCode":"CA"}}}), data
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
+  def test_successful_authorize_with_3ds_auth
+    response = stub_comms do
+      @gateway.authorize(@accepted_amount, @credit_card, @options_3ds2)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/"threeDSecure\":{\"externalCardholderAuthenticationData\":{/, data)
+      assert_match(/"eci\":\"05\"/, data)
+      assert_match(/"cavv\":\"jJ81HADVRtXfCBATEp01CJUAAAA=\"/, data)
+      assert_match(/"xid\":\"BwABBJQ1AgAAAAAgJDUCAAAAAAA=\"/, data)
+      assert_match(/"threeDSecureVersion\":\"2.1.0\"/, data)
+      assert_match(/"directoryServerTransactionId\":\"97267598-FAE6-48F2-8083-C23433990FBC\"/, data)
+      assert_match(/"acsTransactionId\":\"13c701a3-5a88-4c45-89e9-ef65e50a8bf9\"/, data)
+      assert_match(/"cavvAlgorithm\":1/, data)
+      assert_match(/"validationResult\":\"Y\"/, data)
+    end.respond_with(successful_authorize_with_3ds2_data_response)
+
+    assert_success response
+  end
+
+  def test_does_not_send_3ds_auth_when_empty
+    response = stub_comms do
+      @gateway.authorize(@accepted_amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_not_match(/threeDSecure/, data)
+      assert_not_match(/externalCardholderAuthenticationData/, data)
+      assert_not_match(/cavv/, data)
+      assert_not_match(/xid/, data)
+      assert_not_match(/threeDSecureVersion/, data)
+      assert_not_match(/directoryServerTransactionId/, data)
+      assert_not_match(/acsTransactionId/, data)
+      assert_not_match(/cavvAlgorithm/, data)
+      assert_not_match(/validationResult/, data)
     end.respond_with(successful_authorize_response)
 
     assert_success response
@@ -418,6 +466,10 @@ class GlobalCollectTest < Test::Unit::TestCase
 
   def successful_authorize_response
     "{\n   \"creationOutput\" : {\n      \"additionalReference\" : \"00000014280000000092\",\n      \"externalReference\" : \"000000142800000000920000100001\"\n   },\n   \"payment\" : {\n      \"id\" : \"000000142800000000920000100001\",\n      \"paymentOutput\" : {\n         \"amountOfMoney\" : {\n            \"amount\" : 4005,\n            \"currencyCode\" : \"USD\"\n         },\n         \"references\" : {\n            \"paymentReference\" : \"0\"\n         },\n         \"paymentMethod\" : \"card\",\n         \"cardPaymentMethodSpecificOutput\" : {\n            \"paymentProductId\" : 1,\n            \"authorisationCode\" : \"OK1131\",\n            \"fraudResults\" : {\n               \"fraudServiceResult\" : \"no-advice\",\n               \"avsResult\" : \"0\",\n               \"cvvResult\" : \"0\"\n            },\n            \"card\" : {\n               \"cardNumber\" : \"************7977\",\n               \"expiryDate\" : \"0920\"\n            }\n         }\n      },\n      \"status\" : \"PENDING_APPROVAL\",\n      \"statusOutput\" : {\n         \"isCancellable\" : true,\n         \"statusCategory\" : \"PENDING_MERCHANT\",\n         \"statusCode\" : 600,\n         \"statusCodeChangeDateTime\" : \"20191203162910\",\n         \"isAuthorized\" : true,\n         \"isRefundable\" : false\n      }\n   }\n}"
+  end
+
+  def successful_authorize_with_3ds2_data_response
+    %({\"creationOutput\":{\"additionalReference\":\"00000021960000002279\",\"externalReference\":\"000000219600000022790000100001\"},\"payment\":{\"id\":\"000000219600000022790000100001\",\"paymentOutput\":{\"amountOfMoney\":{\"amount\":100,\"currencyCode\":\"USD\"},\"references\":{\"paymentReference\":\"0\"},\"paymentMethod\":\"card\",\"cardPaymentMethodSpecificOutput\":{\"paymentProductId\":1,\"authorisationCode\":\"OK1131\",\"fraudResults\":{\"fraudServiceResult\":\"no-advice\",\"avsResult\":\"0\",\"cvvResult\":\"0\"},\"threeDSecureResults\":{\"cavv\":\"jJ81HADVRtXfCBATEp01CJUAAAA=\",\"directoryServerTransactionId\":\"97267598-FAE6-48F2-8083-C23433990FBC\",\"eci\":\"5\",\"threeDSecureVersion\":\"2.1.0\"},\"card\":{\"cardNumber\":\"************7977\",\"expiryDate\":\"0921\"}}},\"status\":\"PENDING_APPROVAL\",\"statusOutput\":{\"isCancellable\":true,\"statusCategory\":\"PENDING_MERCHANT\",\"statusCode\":600,\"statusCodeChangeDateTime\":\"20201029212921\",\"isAuthorized\":true,\"isRefundable\":false}}})
   end
 
   def failed_authorize_response

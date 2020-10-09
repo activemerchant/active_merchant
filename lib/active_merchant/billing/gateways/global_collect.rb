@@ -32,6 +32,7 @@ module ActiveMerchant #:nodoc:
         add_address(post, payment, options)
         add_creator_info(post, options)
         add_fraud_fields(post, options)
+        add_external_cardholder_authentication_data(post, options)
         commit(:authorize, post)
       end
 
@@ -230,6 +231,24 @@ module ActiveMerchant #:nodoc:
         fraud_fields[:customerIpAddress] = options[:ip] if options[:ip]
 
         post['fraudFields'] = fraud_fields unless fraud_fields.empty?
+      end
+
+      def add_external_cardholder_authentication_data(post, options)
+        return unless threeds_2_options = options[:three_d_secure]
+
+        authentication_data = {}
+        authentication_data[:acsTransactionId] = threeds_2_options[:acs_transaction_id] if threeds_2_options[:acs_transaction_id]
+        authentication_data[:cavv] = threeds_2_options[:cavv] if threeds_2_options[:cavv]
+        authentication_data[:cavvAlgorithm] = threeds_2_options[:cavv_algorithm] if threeds_2_options[:cavv_algorithm]
+        authentication_data[:directoryServerTransactionId] = threeds_2_options[:ds_transaction_id] if threeds_2_options[:ds_transaction_id]
+        authentication_data[:eci] = threeds_2_options[:eci] if threeds_2_options[:eci]
+        authentication_data[:threeDSecureVersion] = threeds_2_options[:version] if threeds_2_options[:version]
+        authentication_data[:validationResult] = threeds_2_options[:authentication_response_status] if threeds_2_options[:authentication_response_status]
+        authentication_data[:xid] = threeds_2_options[:xid] if threeds_2_options[:xid]
+
+        post['cardPaymentMethodSpecificInput'] ||= {}
+        post['cardPaymentMethodSpecificInput']['threeDSecure'] ||= {}
+        post['cardPaymentMethodSpecificInput']['threeDSecure']['externalCardholderAuthenticationData'] = authentication_data unless authentication_data.empty?
       end
 
       def add_number_of_installments(post, options)
