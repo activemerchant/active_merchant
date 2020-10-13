@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>
+  File: README
+  
+    &mdash; Mocha 1.11.2
+  
+</title>
+
+  <link rel="stylesheet" href="css/style.css" type="text/css" charset="utf-8" />
+
+  <link rel="stylesheet" href="css/common.css" type="text/css" charset="utf-8" />
+
+<script type="text/javascript" charset="utf-8">
+  pathId = "README";
+  relpath = '';
+</script>
+
+
+  <script type="text/javascript" charset="utf-8" src="js/jquery.js"></script>
+
+  <script type="text/javascript" charset="utf-8" src="js/app.js"></script>
+
+
+  </head>
+  <body>
+    <div class="nav_wrap">
+      <iframe id="nav" src="file_list.html?1"></iframe>
+      <div id="resizer"></div>
+    </div>
+
+    <div id="main" tabindex="-1">
+      <div id="header">
+        <div id="menu">
+  
+    <a href="_index.html">Index</a> &raquo; 
+    <span class="title">File: README</span>
+  
+</div>
+
+        <div id="search">
+  
+    <a class="full_list_link" id="class_list_link"
+        href="class_list.html">
+
+        <svg width="24" height="24">
+          <rect x="0" y="4" width="24" height="4" rx="1" ry="1"></rect>
+          <rect x="0" y="12" width="24" height="4" rx="1" ry="1"></rect>
+          <rect x="0" y="20" width="24" height="4" rx="1" ry="1"></rect>
+        </svg>
+    </a>
+  
+</div>
+        <div class="clear"></div>
+      </div>
+
+      <div id="content"><div id='filecontents'><h2>Mocha <a href="https://travis-ci.org/freerange/mocha"><img src="https://travis-ci.org/freerange/mocha.svg?branch=master" alt="Build Status"></a> <a href="http://badge.fury.io/rb/mocha"><img src="https://badge.fury.io/rb/mocha.svg" alt="Gem Version"></a> <a href="https://dependabot.com/compatibility-score.html?dependency-name=mocha&package-manager=bundler&version-scheme=semver"><img src="https://api.dependabot.com/badges/compatibility_score?dependency-name=mocha&package-manager=bundler&version-scheme=semver" alt="SemVer"></a></h2>
+
+<h3>Description</h3>
+
+<ul>
+<li>A Ruby library for <a href="http://xunitpatterns.com/Mock%20Object.html">mocking</a> and <a href="http://xunitpatterns.com/Test%20Stub.html">stubbing</a> - but deliberately not (yet) <a href="http://xunitpatterns.com/Fake%20Object.html">faking</a> or <a href="http://xunitpatterns.com/Test%20Spy.html">spying</a>.</li>
+<li>A unified, simple and readable syntax for both full &amp; partial mocking.</li>
+<li>Built-in support for MiniTest and Test::Unit.</li>
+<li>Supported by many other test frameworks.</li>
+</ul>
+
+<h3>Intended Usage</h3>
+
+<p>Mocha is intended to be used in unit tests for the <a href="http://xunitpatterns.com/Mock%20Object.html">Mock Object</a> or <a href="http://xunitpatterns.com/Test%20Stub.html">Test Stub</a> types of <a href="http://xunitpatterns.com/Test%20Double.html">Test Double</a>, not the <a href="http://xunitpatterns.com/Fake%20Object.html">Fake Object</a> or <a href="http://xunitpatterns.com/Test%20Spy.html">Test Spy</a> types. Although it would be possible to extend Mocha to allow the implementation of fakes and spies, we have chosen to keep it focused on mocks and stubs.</p>
+
+<h3>Installation</h3>
+
+<h4>Gem</h4>
+
+<p>Install the latest version of the gem with the following command...</p>
+
+<pre class="code ruby"><code class="ruby">$ gem install mocha
+</code></pre>
+
+<p>Note: If you are intending to use Mocha with Test::Unit or MiniTest, you should only setup Mocha <em>after</em> loading the relevant test library...</p>
+
+<h5>Test::Unit</h5>
+
+<pre class="code ruby"><code class="ruby"><span class='id identifier rubyid_require'>require</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>rubygems</span><span class='tstring_end'>&#39;</span></span>
+<span class='id identifier rubyid_gem'>gem</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>mocha</span><span class='tstring_end'>&#39;</span></span>
+<span class='id identifier rubyid_require'>require</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>test/unit</span><span class='tstring_end'>&#39;</span></span>
+<span class='id identifier rubyid_require'>require</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>mocha/test_unit</span><span class='tstring_end'>&#39;</span></span>
+</code></pre>
+
+<h5>MiniTest</h5>
+
+<pre class="code ruby"><code class="ruby"><span class='id identifier rubyid_require'>require</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>rubygems</span><span class='tstring_end'>&#39;</span></span>
+<span class='id identifier rubyid_gem'>gem</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>mocha</span><span class='tstring_end'>&#39;</span></span>
+<span class='id identifier rubyid_require'>require</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>minitest/unit</span><span class='tstring_end'>&#39;</span></span>
+<span class='id identifier rubyid_require'>require</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>mocha/minitest</span><span class='tstring_end'>&#39;</span></span>
+</code></pre>
+
+<h4>Bundler</h4>
+
+<p>If you&#39;re using Bundler, include Mocha in the <code>Gemfile</code> and then setup Mocha later once you know the test library has been loaded...</p>
+
+<h5>Test::Unit</h5>
+
+<pre class="code ruby"><code class="ruby"><span class='comment'># Gemfile
+</span><span class='id identifier rubyid_gem'>gem</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>mocha</span><span class='tstring_end'>&quot;</span></span>
+
+<span class='comment'># Elsewhere after Bundler has loaded gems e.g. after `require &#39;bundler/setup&#39;`
+</span><span class='id identifier rubyid_require'>require</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>test/unit</span><span class='tstring_end'>&quot;</span></span>
+<span class='id identifier rubyid_require'>require</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>mocha/test_unit</span><span class='tstring_end'>&quot;</span></span>
+</code></pre>
+
+<h5>MiniTest</h5>
+
+<pre class="code ruby"><code class="ruby"><span class='comment'># Gemfile
+</span><span class='id identifier rubyid_gem'>gem</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>mocha</span><span class='tstring_end'>&quot;</span></span>
+
+<span class='comment'># Elsewhere after Bundler has loaded gems e.g. after `require &#39;bundler/setup&#39;`
+</span><span class='id identifier rubyid_require'>require</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>minitest/unit</span><span class='tstring_end'>&quot;</span></span>
+<span class='id identifier rubyid_require'>require</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>mocha/minitest</span><span class='tstring_end'>&quot;</span></span>
+</code></pre>
+
+<h4>Rails</h4>
+
+<p>If you&#39;re loading Mocha using Bundler within a Rails application, you should setup Mocha manually e.g. at the bottom of your <code>test_helper.rb</code>.</p>
+
+<h5>MiniTest</h5>
+
+<pre class="code ruby"><code class="ruby"><span class='comment'># Gemfile in Rails app
+</span><span class='id identifier rubyid_gem'>gem</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>mocha</span><span class='tstring_end'>&#39;</span></span>
+
+<span class='comment'># At bottom of test_helper.rb (or at least after `require &#39;rails/test_help&#39;`)
+</span><span class='id identifier rubyid_require'>require</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>mocha/minitest</span><span class='tstring_end'>&#39;</span></span>
+</code></pre>
+
+<h5>RSpec</h5>
+
+<p>RSpec includes a mocha adapter. Just tell RSpec you want to mock with <code>:mocha</code>:</p>
+
+<pre class="code ruby"><code class="ruby"><span class='comment'># Gemfile in Rails app
+</span><span class='id identifier rubyid_gem'>gem</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>mocha</span><span class='tstring_end'>&#39;</span></span>
+
+<span class='comment'># Within `spec/spec_helper.rb`
+</span><span class='const'>RSpec</span><span class='period'>.</span><span class='id identifier rubyid_configure'>configure</span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_config'>config</span><span class='op'>|</span>
+  <span class='id identifier rubyid_config'>config</span><span class='period'>.</span><span class='id identifier rubyid_mock_with'>mock_with</span> <span class='symbol'>:mocha</span>
+<span class='kw'>end</span>
+</code></pre>
+
+<p>Note: There is no need to use a require statement to setup Mocha; RSpec does this itself.</p>
+
+<h5>MiniTest</h5>
+
+<pre class="code ruby"><code class="ruby"><span class='comment'># At bottom of test_helper.rb (or at least after `require &#39;rails/test_help&#39;`)
+</span><span class='id identifier rubyid_require'>require</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>mocha/minitest</span><span class='tstring_end'>&#39;</span></span>
+</code></pre>
+
+<h5>Cucumber</h5>
+
+<pre class="code ruby"><code class="ruby"><span class='comment'># In e.g. features/support/mocha.rb
+</span><span class='id identifier rubyid_require'>require</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>mocha/api</span><span class='tstring_end'>&#39;</span></span>
+
+<span class='const'>World</span><span class='lparen'>(</span><span class='const'><span class='object_link'><a href="Mocha.html" title="Mocha (module)">Mocha</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="Mocha/API.html" title="Mocha::API (module)">API</a></span></span><span class='rparen'>)</span>
+
+<span class='const'>Around</span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_scenario'>scenario</span><span class='comma'>,</span> <span class='id identifier rubyid_block'>block</span><span class='op'>|</span>
+  <span class='kw'>begin</span>
+    <span class='id identifier rubyid_mocha_setup'>mocha_setup</span>
+    <span class='id identifier rubyid_block'>block</span><span class='period'>.</span><span class='id identifier rubyid_call'>call</span>
+    <span class='id identifier rubyid_mocha_verify'>mocha_verify</span>
+  <span class='kw'>ensure</span>
+    <span class='id identifier rubyid_mocha_teardown'>mocha_teardown</span>
+  <span class='kw'>end</span>
+<span class='kw'>end</span>
+</code></pre>
+
+<h4>Known Issues</h4>
+
+<ul>
+<li>In Mocha v1.10.0 an undocumented feature of <code>API#mock</code>, <code>API#stub</code> &amp; <code>API#stub_everything</code> was changed. Previously when these methods were passed a single symbol, they returned a mock object that responded to the method identified by the symbol. Now Passing a single symbol is equivalent to passing a single string, i.e. it now defines the &quot;name&quot; of the mock object.</li>
+<li>In Mocha v1.2.0 there is a scenario where stubbing a class method originally defined in a module hangs the Ruby interpreter due to <a href="https://bugs.ruby-lang.org/issues/12832">a bug in Ruby v2.3.1</a>. See #272. This was fixed in Mocha v1.2.1.</li>
+<li>Since v1.1.0 Mocha has used prepended modules internally for stubbing methods. There is <a href="https://bugs.ruby-lang.org/issues/12876">an obscure Ruby bug</a> in many (but not all) versions of Ruby between v2.0 &amp; v2.3 which under certain circumstances may cause your Ruby interpreter to hang. See the Ruby bug report for more details. The bug has been fixed in Ruby v2.3.3 &amp; v2.4.0.</li>
+<li>Stubbing an aliased class method, where the original method is defined in a module that&#39;s used to <code>extend</code> the class doesn&#39;t work in Ruby 1.8.x. See stub_method_defined_on_module_and_aliased_test.rb for an example of this behaviour.</li>
+<li>0.13.x versions cause a harmless, but annoying, deprecation warning when used with Rails 3.2.0-3.2.12, 3.1.0-3.1.10 &amp; 3.0.0-3.0.19.</li>
+<li>0.11.x versions don&#39;t work with Rails 3.2.13 (<code>TypeError: superclass mismatch for class ExpectationError</code>). See #115.</li>
+<li>Versions 0.10.2, 0.10.3 &amp; 0.11.0 of the Mocha gem were broken. Please do not use these versions.</li>
+</ul>
+
+<h3>Usage</h3>
+
+<h4>Quick Start</h4>
+
+<pre class="code ruby"><code class="ruby"><span class='id identifier rubyid_require'>require</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>test/unit</span><span class='tstring_end'>&#39;</span></span>
+<span class='id identifier rubyid_require'>require</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>mocha/test_unit</span><span class='tstring_end'>&#39;</span></span>
+
+<span class='kw'>class</span> <span class='const'>MiscExampleTest</span> <span class='op'>&lt;</span> <span class='const'>Test</span><span class='op'>::</span><span class='const'>Unit</span><span class='op'>::</span><span class='const'>TestCase</span>
+  <span class='kw'>def</span> <span class='id identifier rubyid_test_mocking_a_class_method'>test_mocking_a_class_method</span>
+    <span class='id identifier rubyid_product'>product</span> <span class='op'>=</span> <span class='const'>Product</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span>
+    <span class='const'>Product</span><span class='period'>.</span><span class='id identifier rubyid_expects'>expects</span><span class='lparen'>(</span><span class='symbol'>:find</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_with'>with</span><span class='lparen'>(</span><span class='int'>1</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_returns'>returns</span><span class='lparen'>(</span><span class='id identifier rubyid_product'>product</span><span class='rparen'>)</span>
+    <span class='id identifier rubyid_assert_equal'>assert_equal</span> <span class='id identifier rubyid_product'>product</span><span class='comma'>,</span> <span class='const'>Product</span><span class='period'>.</span><span class='id identifier rubyid_find'>find</span><span class='lparen'>(</span><span class='int'>1</span><span class='rparen'>)</span>
+  <span class='kw'>end</span>
+
+  <span class='kw'>def</span> <span class='id identifier rubyid_test_mocking_an_instance_method_on_a_real_object'>test_mocking_an_instance_method_on_a_real_object</span>
+    <span class='id identifier rubyid_product'>product</span> <span class='op'>=</span> <span class='const'>Product</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span>
+    <span class='id identifier rubyid_product'>product</span><span class='period'>.</span><span class='id identifier rubyid_expects'>expects</span><span class='lparen'>(</span><span class='symbol'>:save</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_returns'>returns</span><span class='lparen'>(</span><span class='kw'>true</span><span class='rparen'>)</span>
+    <span class='id identifier rubyid_assert'>assert</span> <span class='id identifier rubyid_product'>product</span><span class='period'>.</span><span class='id identifier rubyid_save'>save</span>
+  <span class='kw'>end</span>
+
+  <span class='kw'>def</span> <span class='id identifier rubyid_test_stubbing_instance_methods_on_real_objects'>test_stubbing_instance_methods_on_real_objects</span>
+    <span class='id identifier rubyid_prices'>prices</span> <span class='op'>=</span> <span class='lbracket'>[</span><span class='id identifier rubyid_stub'>stub</span><span class='lparen'>(</span><span class='symbol'>:pence</span> <span class='op'>=&gt;</span> <span class='int'>1000</span><span class='rparen'>)</span><span class='comma'>,</span> <span class='id identifier rubyid_stub'>stub</span><span class='lparen'>(</span><span class='symbol'>:pence</span> <span class='op'>=&gt;</span> <span class='int'>2000</span><span class='rparen'>)</span><span class='rbracket'>]</span>
+    <span class='id identifier rubyid_product'>product</span> <span class='op'>=</span> <span class='const'>Product</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span>
+    <span class='id identifier rubyid_product'>product</span><span class='period'>.</span><span class='id identifier rubyid_stubs'>stubs</span><span class='lparen'>(</span><span class='symbol'>:prices</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_returns'>returns</span><span class='lparen'>(</span><span class='id identifier rubyid_prices'>prices</span><span class='rparen'>)</span>
+    <span class='id identifier rubyid_assert_equal'>assert_equal</span> <span class='lbracket'>[</span><span class='int'>1000</span><span class='comma'>,</span> <span class='int'>2000</span><span class='rbracket'>]</span><span class='comma'>,</span> <span class='id identifier rubyid_product'>product</span><span class='period'>.</span><span class='id identifier rubyid_prices'>prices</span><span class='period'>.</span><span class='id identifier rubyid_collect'>collect</span> <span class='lbrace'>{</span><span class='op'>|</span><span class='id identifier rubyid_p'>p</span><span class='op'>|</span> <span class='id identifier rubyid_p'>p</span><span class='period'>.</span><span class='id identifier rubyid_pence'>pence</span><span class='rbrace'>}</span>
+  <span class='kw'>end</span>
+
+  <span class='kw'>def</span> <span class='id identifier rubyid_test_stubbing_an_instance_method_on_all_instances_of_a_class'>test_stubbing_an_instance_method_on_all_instances_of_a_class</span>
+    <span class='const'>Product</span><span class='period'>.</span><span class='id identifier rubyid_any_instance'>any_instance</span><span class='period'>.</span><span class='id identifier rubyid_stubs'>stubs</span><span class='lparen'>(</span><span class='symbol'>:name</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_returns'>returns</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>stubbed_name</span><span class='tstring_end'>&#39;</span></span><span class='rparen'>)</span>
+    <span class='id identifier rubyid_product'>product</span> <span class='op'>=</span> <span class='const'>Product</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span>
+    <span class='id identifier rubyid_assert_equal'>assert_equal</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>stubbed_name</span><span class='tstring_end'>&#39;</span></span><span class='comma'>,</span> <span class='id identifier rubyid_product'>product</span><span class='period'>.</span><span class='id identifier rubyid_name'>name</span>
+  <span class='kw'>end</span>
+
+  <span class='kw'>def</span> <span class='id identifier rubyid_test_traditional_mocking'>test_traditional_mocking</span>
+    <span class='id identifier rubyid_object'>object</span> <span class='op'>=</span> <span class='id identifier rubyid_mock'>mock</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>object</span><span class='tstring_end'>&#39;</span></span><span class='rparen'>)</span>
+    <span class='id identifier rubyid_object'>object</span><span class='period'>.</span><span class='id identifier rubyid_expects'>expects</span><span class='lparen'>(</span><span class='symbol'>:expected_method</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_with'>with</span><span class='lparen'>(</span><span class='symbol'>:p1</span><span class='comma'>,</span> <span class='symbol'>:p2</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_returns'>returns</span><span class='lparen'>(</span><span class='symbol'>:result</span><span class='rparen'>)</span>
+    <span class='id identifier rubyid_assert_equal'>assert_equal</span> <span class='symbol'>:result</span><span class='comma'>,</span> <span class='id identifier rubyid_object'>object</span><span class='period'>.</span><span class='id identifier rubyid_expected_method'>expected_method</span><span class='lparen'>(</span><span class='symbol'>:p1</span><span class='comma'>,</span> <span class='symbol'>:p2</span><span class='rparen'>)</span>
+  <span class='kw'>end</span>
+
+  <span class='kw'>def</span> <span class='id identifier rubyid_test_shortcuts'>test_shortcuts</span>
+    <span class='id identifier rubyid_object'>object</span> <span class='op'>=</span> <span class='id identifier rubyid_stub'>stub</span><span class='lparen'>(</span><span class='symbol'>:method1</span> <span class='op'>=&gt;</span> <span class='symbol'>:result1</span><span class='comma'>,</span> <span class='symbol'>:method2</span> <span class='op'>=&gt;</span> <span class='symbol'>:result2</span><span class='rparen'>)</span>
+    <span class='id identifier rubyid_assert_equal'>assert_equal</span> <span class='symbol'>:result1</span><span class='comma'>,</span> <span class='id identifier rubyid_object'>object</span><span class='period'>.</span><span class='id identifier rubyid_method1'>method1</span>
+    <span class='id identifier rubyid_assert_equal'>assert_equal</span> <span class='symbol'>:result2</span><span class='comma'>,</span> <span class='id identifier rubyid_object'>object</span><span class='period'>.</span><span class='id identifier rubyid_method2'>method2</span>
+  <span class='kw'>end</span>
+<span class='kw'>end</span>
+</code></pre>
+
+<h4>Mock Objects</h4>
+
+<pre class="code ruby"><code class="ruby"><span class='kw'>class</span> <span class='const'>Enterprise</span>
+  <span class='kw'>def</span> <span class='id identifier rubyid_initialize'>initialize</span><span class='lparen'>(</span><span class='id identifier rubyid_dilithium'>dilithium</span><span class='rparen'>)</span>
+    <span class='ivar'>@dilithium</span> <span class='op'>=</span> <span class='id identifier rubyid_dilithium'>dilithium</span>
+  <span class='kw'>end</span>
+
+  <span class='kw'>def</span> <span class='id identifier rubyid_go'>go</span><span class='lparen'>(</span><span class='id identifier rubyid_warp_factor'>warp_factor</span><span class='rparen'>)</span>
+    <span class='id identifier rubyid_warp_factor'>warp_factor</span><span class='period'>.</span><span class='id identifier rubyid_times'>times</span> <span class='lbrace'>{</span> <span class='ivar'>@dilithium</span><span class='period'>.</span><span class='id identifier rubyid_nuke'>nuke</span><span class='lparen'>(</span><span class='symbol'>:anti_matter</span><span class='rparen'>)</span> <span class='rbrace'>}</span>
+  <span class='kw'>end</span>
+<span class='kw'>end</span>
+
+<span class='id identifier rubyid_require'>require</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>test/unit</span><span class='tstring_end'>&#39;</span></span>
+<span class='id identifier rubyid_require'>require</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>mocha/test_unit</span><span class='tstring_end'>&#39;</span></span>
+
+<span class='kw'>class</span> <span class='const'>EnterpriseTest</span> <span class='op'>&lt;</span> <span class='const'>Test</span><span class='op'>::</span><span class='const'>Unit</span><span class='op'>::</span><span class='const'>TestCase</span>
+  <span class='kw'>def</span> <span class='id identifier rubyid_test_should_boldly_go'>test_should_boldly_go</span>
+    <span class='id identifier rubyid_dilithium'>dilithium</span> <span class='op'>=</span> <span class='id identifier rubyid_mock'>mock</span><span class='lparen'>(</span><span class='rparen'>)</span>
+    <span class='id identifier rubyid_dilithium'>dilithium</span><span class='period'>.</span><span class='id identifier rubyid_expects'>expects</span><span class='lparen'>(</span><span class='symbol'>:nuke</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_with'>with</span><span class='lparen'>(</span><span class='symbol'>:anti_matter</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_at_least_once'>at_least_once</span>  <span class='comment'># auto-verified at end of test
+</span>    <span class='id identifier rubyid_enterprise'>enterprise</span> <span class='op'>=</span> <span class='const'>Enterprise</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span><span class='id identifier rubyid_dilithium'>dilithium</span><span class='rparen'>)</span>
+    <span class='id identifier rubyid_enterprise'>enterprise</span><span class='period'>.</span><span class='id identifier rubyid_go'>go</span><span class='lparen'>(</span><span class='int'>2</span><span class='rparen'>)</span>
+  <span class='kw'>end</span>
+<span class='kw'>end</span>
+</code></pre>
+
+<h4>Partial Mocking</h4>
+
+<pre class="code ruby"><code class="ruby"><span class='kw'>class</span> <span class='const'>Order</span>
+  <span class='id identifier rubyid_attr_accessor'>attr_accessor</span> <span class='symbol'>:shipped_on</span>
+
+  <span class='kw'>def</span> <span class='id identifier rubyid_total_cost'>total_cost</span>
+    <span class='id identifier rubyid_line_items'>line_items</span><span class='period'>.</span><span class='id identifier rubyid_inject'>inject</span><span class='lparen'>(</span><span class='int'>0</span><span class='rparen'>)</span> <span class='lbrace'>{</span> <span class='op'>|</span><span class='id identifier rubyid_total'>total</span><span class='comma'>,</span> <span class='id identifier rubyid_line_item'>line_item</span><span class='op'>|</span> <span class='id identifier rubyid_total'>total</span> <span class='op'>+</span> <span class='id identifier rubyid_line_item'>line_item</span><span class='period'>.</span><span class='id identifier rubyid_price'>price</span> <span class='rbrace'>}</span> <span class='op'>+</span> <span class='id identifier rubyid_shipping_cost'>shipping_cost</span>
+  <span class='kw'>end</span>
+
+  <span class='kw'>def</span> <span class='id identifier rubyid_total_weight'>total_weight</span>
+    <span class='id identifier rubyid_line_items'>line_items</span><span class='period'>.</span><span class='id identifier rubyid_inject'>inject</span><span class='lparen'>(</span><span class='int'>0</span><span class='rparen'>)</span> <span class='lbrace'>{</span> <span class='op'>|</span><span class='id identifier rubyid_total'>total</span><span class='comma'>,</span> <span class='id identifier rubyid_line_item'>line_item</span><span class='op'>|</span> <span class='id identifier rubyid_total'>total</span> <span class='op'>+</span> <span class='id identifier rubyid_line_item'>line_item</span><span class='period'>.</span><span class='id identifier rubyid_weight'>weight</span> <span class='rbrace'>}</span>
+  <span class='kw'>end</span>
+
+  <span class='kw'>def</span> <span class='id identifier rubyid_shipping_cost'>shipping_cost</span>
+    <span class='id identifier rubyid_total_weight'>total_weight</span> <span class='op'>*</span> <span class='int'>5</span> <span class='op'>+</span> <span class='int'>10</span>
+  <span class='kw'>end</span>
+
+  <span class='kw'>class</span> <span class='op'>&lt;&lt;</span> <span class='kw'>self</span>
+    <span class='kw'>def</span> <span class='id identifier rubyid_find_all'>find_all</span>
+      <span class='comment'># Database.connection.execute(&#39;select * from orders...
+</span>    <span class='kw'>end</span>
+
+    <span class='kw'>def</span> <span class='id identifier rubyid_number_shipped_since'>number_shipped_since</span><span class='lparen'>(</span><span class='id identifier rubyid_date'>date</span><span class='rparen'>)</span>
+      <span class='id identifier rubyid_find_all'>find_all</span><span class='period'>.</span><span class='id identifier rubyid_select'>select</span> <span class='lbrace'>{</span> <span class='op'>|</span><span class='id identifier rubyid_order'>order</span><span class='op'>|</span> <span class='id identifier rubyid_order'>order</span><span class='period'>.</span><span class='id identifier rubyid_shipped_on'>shipped_on</span> <span class='op'>&gt;</span> <span class='id identifier rubyid_date'>date</span> <span class='rbrace'>}</span><span class='period'>.</span><span class='id identifier rubyid_length'>length</span>
+    <span class='kw'>end</span>
+
+    <span class='kw'>def</span> <span class='id identifier rubyid_unshipped_value'>unshipped_value</span>
+      <span class='id identifier rubyid_find_all'>find_all</span><span class='period'>.</span><span class='id identifier rubyid_inject'>inject</span><span class='lparen'>(</span><span class='int'>0</span><span class='rparen'>)</span> <span class='lbrace'>{</span> <span class='op'>|</span><span class='id identifier rubyid_total'>total</span><span class='comma'>,</span> <span class='id identifier rubyid_order'>order</span><span class='op'>|</span> <span class='id identifier rubyid_order'>order</span><span class='period'>.</span><span class='id identifier rubyid_shipped_on'>shipped_on</span> <span class='op'>?</span> <span class='id identifier rubyid_total'>total</span> <span class='op'>:</span> <span class='id identifier rubyid_total'>total</span> <span class='op'>+</span> <span class='id identifier rubyid_order'>order</span><span class='period'>.</span><span class='id identifier rubyid_total_cost'>total_cost</span> <span class='rbrace'>}</span>
+    <span class='kw'>end</span>
+  <span class='kw'>end</span>
+<span class='kw'>end</span>
+
+<span class='id identifier rubyid_require'>require</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>test/unit</span><span class='tstring_end'>&#39;</span></span>
+<span class='id identifier rubyid_require'>require</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>mocha/test_unit</span><span class='tstring_end'>&#39;</span></span>
+
+<span class='kw'>class</span> <span class='const'>OrderTest</span> <span class='op'>&lt;</span> <span class='const'>Test</span><span class='op'>::</span><span class='const'>Unit</span><span class='op'>::</span><span class='const'>TestCase</span>
+  <span class='comment'># illustrates stubbing instance method
+</span>  <span class='kw'>def</span> <span class='id identifier rubyid_test_should_calculate_shipping_cost_based_on_total_weight'>test_should_calculate_shipping_cost_based_on_total_weight</span>
+    <span class='id identifier rubyid_order'>order</span> <span class='op'>=</span> <span class='const'>Order</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span>
+    <span class='id identifier rubyid_order'>order</span><span class='period'>.</span><span class='id identifier rubyid_stubs'>stubs</span><span class='lparen'>(</span><span class='symbol'>:total_weight</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_returns'>returns</span><span class='lparen'>(</span><span class='int'>10</span><span class='rparen'>)</span>
+    <span class='id identifier rubyid_assert_equal'>assert_equal</span> <span class='int'>60</span><span class='comma'>,</span> <span class='id identifier rubyid_order'>order</span><span class='period'>.</span><span class='id identifier rubyid_shipping_cost'>shipping_cost</span>
+  <span class='kw'>end</span>
+
+  <span class='comment'># illustrates stubbing class method
+</span>  <span class='kw'>def</span> <span class='id identifier rubyid_test_should_count_number_of_orders_shipped_after_specified_date'>test_should_count_number_of_orders_shipped_after_specified_date</span>
+    <span class='id identifier rubyid_now'>now</span> <span class='op'>=</span> <span class='const'>Time</span><span class='period'>.</span><span class='id identifier rubyid_now'>now</span><span class='semicolon'>;</span> <span class='id identifier rubyid_week_in_secs'>week_in_secs</span> <span class='op'>=</span> <span class='int'>7</span> <span class='op'>*</span> <span class='int'>24</span> <span class='op'>*</span> <span class='int'>60</span> <span class='op'>*</span> <span class='int'>60</span>
+    <span class='id identifier rubyid_order_1'>order_1</span> <span class='op'>=</span> <span class='const'>Order</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='semicolon'>;</span> <span class='id identifier rubyid_order_1'>order_1</span><span class='period'>.</span><span class='id identifier rubyid_shipped_on'>shipped_on</span> <span class='op'>=</span> <span class='id identifier rubyid_now'>now</span> <span class='op'>-</span> <span class='int'>1</span> <span class='op'>*</span> <span class='id identifier rubyid_week_in_secs'>week_in_secs</span>
+    <span class='id identifier rubyid_order_2'>order_2</span> <span class='op'>=</span> <span class='const'>Order</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='semicolon'>;</span> <span class='id identifier rubyid_order_2'>order_2</span><span class='period'>.</span><span class='id identifier rubyid_shipped_on'>shipped_on</span> <span class='op'>=</span> <span class='id identifier rubyid_now'>now</span> <span class='op'>-</span> <span class='int'>3</span> <span class='op'>*</span> <span class='id identifier rubyid_week_in_secs'>week_in_secs</span>
+    <span class='const'>Order</span><span class='period'>.</span><span class='id identifier rubyid_stubs'>stubs</span><span class='lparen'>(</span><span class='symbol'>:find_all</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_returns'>returns</span><span class='lparen'>(</span><span class='lbracket'>[</span><span class='id identifier rubyid_order_1'>order_1</span><span class='comma'>,</span> <span class='id identifier rubyid_order_2'>order_2</span><span class='rbracket'>]</span><span class='rparen'>)</span>
+    <span class='id identifier rubyid_assert_equal'>assert_equal</span> <span class='int'>1</span><span class='comma'>,</span> <span class='const'>Order</span><span class='period'>.</span><span class='id identifier rubyid_number_shipped_since'>number_shipped_since</span><span class='lparen'>(</span><span class='id identifier rubyid_now'>now</span> <span class='op'>-</span> <span class='int'>2</span> <span class='op'>*</span> <span class='id identifier rubyid_week_in_secs'>week_in_secs</span><span class='rparen'>)</span>
+  <span class='kw'>end</span>
+
+  <span class='comment'># illustrates stubbing instance method for all instances of a class
+</span>  <span class='kw'>def</span> <span class='id identifier rubyid_test_should_calculate_value_of_unshipped_orders'>test_should_calculate_value_of_unshipped_orders</span>
+    <span class='const'>Order</span><span class='period'>.</span><span class='id identifier rubyid_stubs'>stubs</span><span class='lparen'>(</span><span class='symbol'>:find_all</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_returns'>returns</span><span class='lparen'>(</span><span class='lbracket'>[</span><span class='const'>Order</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='comma'>,</span> <span class='const'>Order</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='comma'>,</span> <span class='const'>Order</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='rbracket'>]</span><span class='rparen'>)</span>
+    <span class='const'>Order</span><span class='period'>.</span><span class='id identifier rubyid_any_instance'>any_instance</span><span class='period'>.</span><span class='id identifier rubyid_stubs'>stubs</span><span class='lparen'>(</span><span class='symbol'>:shipped_on</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_returns'>returns</span><span class='lparen'>(</span><span class='kw'>nil</span><span class='rparen'>)</span>
+    <span class='const'>Order</span><span class='period'>.</span><span class='id identifier rubyid_any_instance'>any_instance</span><span class='period'>.</span><span class='id identifier rubyid_stubs'>stubs</span><span class='lparen'>(</span><span class='symbol'>:total_cost</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_returns'>returns</span><span class='lparen'>(</span><span class='int'>10</span><span class='rparen'>)</span>
+    <span class='id identifier rubyid_assert_equal'>assert_equal</span> <span class='int'>30</span><span class='comma'>,</span> <span class='const'>Order</span><span class='period'>.</span><span class='id identifier rubyid_unshipped_value'>unshipped_value</span>
+  <span class='kw'>end</span>
+<span class='kw'>end</span>
+</code></pre>
+
+<h3>Thread safety</h3>
+
+<p>Mocha currently <em>does not</em> attempt to be thread-safe.</p>
+
+<h4>Can I test multi-threaded code with Mocha?</h4>
+
+<p>The short answer is no. In multi-threaded code Mocha exceptions may be raised in a thread other than the one which is running the test and thus a Mocha exception may not be correctly intercepted by Mocha exception handling code.</p>
+
+<h4>Can I run my tests across multiple threads?</h4>
+
+<p>Maybe, but probably not. Partial mocking changes the state of objects in the <code>ObjectSpace</code> which is shared across all threads in the Ruby process and this access to what is effectively global state is not synchronized. So, for example, if two tests are running concurrently and one uses <code>#any_instance</code> to modify a class, both tests will see those changes immediately.</p>
+
+<h3>Expectation matching / invocation order</h3>
+
+<p>Stubs and expectations are basically the same thing. A stub is just an expectation of zero or more invocations. The <code>Expectation#stubs</code> method is syntactic sugar to make the intent of the test more explicit.</p>
+
+<p>When a method is invoked on a mock object, the mock object searches through its expectations from newest to oldest to find one that matches the invocation. After the invocation, the matching expectation might stop matching further invocations.</p>
+
+<p>See the <a href="https://mocha.jamesmead.org/Mocha/Mock.html">documentation</a> for <code>Mocha::Mock</code> for further details.</p>
+
+<h3>Configuration</h3>
+
+<p>If you want, Mocha can generate a warning or raise an exception when:</p>
+
+<ul>
+<li>stubbing a method unnecessarily</li>
+<li>stubbing method on a non-mock object</li>
+<li>stubbing a non-existent method</li>
+<li>stubbing a non-public method</li>
+</ul>
+
+<p>See the <a href="https://mocha.jamesmead.org/Mocha/Configuration.html">documentation</a> for <code>Mocha::Configuration</code> for further details.</p>
+
+<h5>MOCHA_OPTIONS</h5>
+
+<p><code>MOCHA_OPTIONS</code> is an environment variable whose value can be set to a comma-separated list, so that we can specify multiple options e.g. <code>MOCHA_OPTIONS=debug,use_test_unit_gem</code>.
+Only the following values are currently recognized and have an effect:</p>
+
+<ul>
+<li><code>debug</code>: Enables a debug mode which will output backtraces for each deprecation warning. This is useful for finding where in the test suite the deprecated calls are.</li>
+</ul>
+
+<h3>Useful Links</h3>
+
+<ul>
+<li><a href="https://mocha.jamesmead.org">Official Documentation</a></li>
+<li><a href="http://github.com/freerange/mocha">Source Code</a></li>
+<li><a href="http://groups.google.com/group/mocha-developer">Mailing List</a></li>
+<li><a href="http://jamesmead.org/blog/">James Mead&#39;s Blog</a></li>
+<li><a href="http://jamesmead.org/talks/2007-07-09-introduction-to-mock-objects-in-ruby-at-lrug/">An Introduction To Mock Objects In Ruby</a></li>
+<li><a href="http://martinfowler.com/articles/mocksArentStubs.html">Mocks Aren&#39;t Stubs</a></li>
+<li><a href="http://www.growing-object-oriented-software.com/">Growing Object-Oriented Software Guided By Tests</a></li>
+<li><a href="http://www.jmock.org/oopsla2004.pdf">Mock Roles Not Objects</a></li>
+<li><a href="http://www.jmock.org/">jMock</a></li>
+</ul>
+
+<h3>Contributors</h3>
+
+<p>See this <a href="https://github.com/freerange/mocha/graphs/contributors">list of contributors</a>.</p>
+
+<h3>Releasing a new version</h3>
+
+<ul>
+<li>Update the RELEASE.md file with a summary of changes</li>
+<li>Bump the version in <code>lib/mocha/version.rb</code></li>
+<li>Commit &amp; push to GitHub</li>
+<li><p>Check Travis CI build is passing - <a href="https://travis-ci.org/freerange/mocha">https://travis-ci.org/freerange/mocha</a></p></li>
+<li><p>Sign in to Google Analytics - <a href="https://analytics.google.com/analytics/web/">https://analytics.google.com/analytics/web/</a></p></li>
+<li><p>Find the web property ID for floehopper (625523) &gt; Mocha Documentation (UA-625523-7)</p></li>
+<li><p>Generate documentation:</p></li>
+</ul>
+
+<pre class="code bash"><code class="bash">$ MOCHA_GENERATE_DOCS=true bundle install
+
+$ MOCHA_GENERATE_DOCS=true GOOGLE_ANALYTICS_WEB_PROPERTY_ID=UA-625523-7 rake generate_docs
+</code></pre>
+
+<ul>
+<li>Commit documentation &amp; push to GitHub</li>
+<li>Sign in to rubygems.org and find API key - <a href="https://rubygems.org/profile/edit">https://rubygems.org/profile/edit</a></li>
+</ul>
+
+<pre class="code bash"><code class="bash">$ curl -u james@floehopper.org https://rubygems.org/api/v1/api_key.yaml &gt; ~/.gem/credentials; chmod 0600 ~/.gem/credentials`
+</code></pre>
+
+<ul>
+<li>Release gem to Rubygems:</li>
+</ul>
+
+<pre class="code bash"><code class="bash">$ rake release
+[runs tests]
+mocha 1.2.0 built to pkg/mocha-1.2.0.gem.
+Tagged v1.2.0.
+Pushed git commits and tags.
+Pushed mocha 1.2.0 to rubygems.org.
+</code></pre>
+
+<h3>History</h3>
+
+<p>Mocha was initially harvested from projects at <a href="http://www.reevoo.com/">Reevoo</a>. It&#39;s syntax is heavily based on that of <a href="http://www.jmock.org">jMock</a>.</p>
+
+<h3>License</h3>
+
+<p>&copy; Copyright Revieworld Ltd. 2006</p>
+
+<p>You may use, copy and redistribute this library under the same terms as <a href="http://www.ruby-lang.org/en/LICENSE.txt">Ruby itself</a> or under the <a href="http://www.opensource.org/licenses/MIT">MIT license</a>.</p>
+</div><script async src="https://www.googletagmanager.com/gtag/js?id=UA-625523-7"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-625523-7');
+</script>
+</div>
+
+      <div id="footer">
+  Generated on Sat Jan  4 17:36:46 2020 by
+  <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
+  0.9.20 (ruby-2.6.5).
+</div>
+
+    </div>
+  </body>
+</html>

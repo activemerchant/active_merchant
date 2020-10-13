@@ -1,0 +1,15 @@
+*.swp
+*.gem
+*.rbc
+/.bundle
+/.config
+/Gemfile.lock
+/TAGS
+/pkg
+/tags
+/.rvmrc
+digest.htpasswd
+doc
+rdoc
+.yardoc
+_yardoc

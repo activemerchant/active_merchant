@@ -7,8 +7,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     Base.mode               = :test
     @gateway                = ActiveMerchant::Billing::PaypalCommercePlatformGateway.new
     @ppcp_credentials       = fixtures(:ppcp)
-
-    access_token            = @gateway.get_access_token({ authorization: user_credentials })
+    access_token            = @gateway.get_access_token({ authorization: user_credentials }).params['access_token']
     missing_password_params = { username: @ppcp_credentials[:username] }
     missing_username_params = { password: @ppcp_credentials[:password] }
 

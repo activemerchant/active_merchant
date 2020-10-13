@@ -1,0 +1,487 @@
+# -*- coding: utf-8 -*-
+
+class Parser
+
+rule
+  robotstxt		: opt_blanklines
+			  {
+			    @sitemaps = []
+			  }
+			  body
+			  {
+			    body = val[2]
+			    result = RobotsTxt.new(@site, body,
+			      :target => @target,
+                              :sitemaps => @sitemaps,
+                              :crawl_delay_handler => @crawl_delay_handler)
+			  }
+
+  body			:
+			| records
+			  opt_blanklines
+
+  opt_blanklines	:
+			| blanklines
+
+  blanklines		: blankline
+			| blanklines
+			  blankline
+
+  blankline		: EOL
+
+  opt_space		:
+			| SPACE
+
+  opt_commentlines	:
+			| commentlines
+
+  commentlines		: comment
+			| commentlines
+			  comment
+
+  comment		: opt_space COMMENT EOL
+			| 'sitemap' ':' opt_space VALUE eol_opt_comment
+			  {
+			    @sitemaps << val[3]
+			  }
+
+  records		: record
+			  {
+			    result = []
+			    result << val[0]
+			  }
+			| commentblock
+			  {
+			    result = []
+			  }
+			| records
+			  blanklines
+			  record
+			  {
+			    result << val[2]
+			  }
+			| records
+			  blanklines
+			  rulelines
+			  {
+			    val[2].each_with_index { |line, i|
+			      warn "%s line %d: %s: orphan rule line" %
+			        [@site.to_s, @rulelinenos[i], line.token] if $VERBOSE
+			    }
+			  }
+			| records
+			  blanklines
+			  commentblock
+
+  commentblock		: commentlines
+
+  record		: opt_commentlines
+			  agentlines
+			  opt_rulelines
+			  {
+			    result = Record.new(val[1], val[2])
+			  }
+
+  agentlines		: agentline
+			  {
+			    result = [val[0]]
+			  }
+			| agentlines
+			  agentline
+			  {
+			    result << val[1]
+			  }
+			| agentlines
+			  comment
+
+  agentline		: 'user-agent' ':' opt_space VALUE eol_opt_comment
+			  {
+			    result = AgentLine.new(val[0], val[3])
+			  }
+
+  opt_rulelines		:
+			| rulelines
+
+  rulelines		: ruleline
+			  {
+			    result = [result]
+			    @rulelinenos = []
+			  }
+			| rulelines
+			  ruleline
+			  {
+			    result << val[1]
+			    @rulelinenos << @lineno
+			  }
+			| rulelines
+			  comment
+
+  ruleline		: allowline
+			| disallowline
+			| crawldelayline
+			| extension
+
+  allowline		: 'allow' ':' opt_space VALUE eol_opt_comment
+			  {
+			    result = AllowLine.new(val[0], val[3])
+			  }
+
+  disallowline		: 'disallow' ':' opt_space VALUE eol_opt_comment
+			  {
+			    result = DisallowLine.new(val[0], val[3])
+			  }
+
+  crawldelayline	: 'crawl-delay' ':' opt_space VALUE eol_opt_comment
+			  {
+			    result = CrawlDelayLine.new(val[0], val[3])
+			  }
+
+  extension		: TOKEN ':' opt_space VALUE eol_opt_comment
+			  {
+			    result = ExtentionLine.new(val[0], val[3])
+			  }
+
+  eol_opt_comment	: EOL
+			| comment
+
+---- header
+
+require 'strscan'
+
+class WebRobots
+  class Error < StandardError
+  end
+
+  class ParseError < Error
+    # The site's root URI
+    attr_reader :site
+
+    def initialize(message, site)
+      @message = message
+      @site = site
+    end
+
+    def to_s
+      @message
+    end
+  end
+
+  class RobotsTxt
+---- inner
+
+      def initialize(target, crawl_delay_handler = nil)
+        super()
+        @target = target
+        @crawl_delay_handler = crawl_delay_handler
+      end
+
+      def parse!(input, site)
+        parse(input, site)
+      rescue Error => e
+        RobotsTxt.new(site, nil,
+          :error => e,
+          :target => @target,
+          :crawl_delay_handler => @crawl_delay_handler)
+      end
+
+      KNOWN_TOKENS = %w[User-agent Allow Disallow Crawl-delay Sitemap]
+      RE_KNOWN_TOKENS = /\A(#{KNOWN_TOKENS.map { |t| Regexp.quote(t) }.join('|')})\z/i
+
+      def parse(input, site)
+        @q ||= []
+        @errors = []
+        @lineno = 0
+        @site = site
+
+        string = input.respond_to?(:read) ? input.read : input
+        s = StringScanner.new(string)
+        value_expected = false
+
+        until s.eos?
+          @lineno += 1 if s.bol?
+          if t = s.scan(/[ \t]*(?:\r?\n|\z)/)
+            if value_expected
+              @q << [:VALUE, '']
+            end
+            @q << [:EOL, t]
+            value_expected = false
+          elsif t = s.scan(/[ \t]+/)
+            @q << [:SPACE, t]
+          elsif t = s.scan(/:/)
+            @q << [t, t]
+            value_expected = true
+          elsif t = s.scan(/#.*/)
+            if value_expected
+              @q << [:VALUE, '']
+            end
+            @q << [:COMMENT, t]
+          else
+            if value_expected
+              if t = s.scan(/.*?(?=[ \t]*(?:#|$))/)
+                @q << [:VALUE, t]
+              else
+                parse_error @lineno, "unexpected characters: %s" % s.check(/.*/)
+              end
+              value_expected = false
+            elsif t = s.scan(/[^\x00-\x1f\x7f()<>@,;:\\"\/\[\]?={}]+/)
+              case t
+              when RE_KNOWN_TOKENS
+                @q << [t.downcase, t]
+              else
+                @q << [:TOKEN, t]
+              end
+            else
+              parse_error "unexpected characters: %s" % s.check(/.*/)
+            end
+          end
+        end
+
+        @q << [:EOL, ''] if !@q.empty? && @q.last.first != :EOL
+
+        @pos = -1
+
+        do_parse
+      rescue Racc::ParseError => e
+        raise ParseError.new(e.message, @site)
+      ensure
+        @q.clear
+      end
+
+      def next_token
+        @q[@pos += 1]
+      end
+
+      def on_error(token_id, value, stack)
+        parse_error "unexpected %s: %s" % [token_to_str(token_id), value]
+      end
+
+      def parse_error(message)
+        message = "%s line %d: %s" % [@site.to_s, @lineno, message]
+        if @lax
+          @errors << message
+        else
+          raise Racc::ParseError, message
+        end
+      end
+
+---- footer
+    def initialize(site, records, options = nil)
+      @timestamp = Time.now
+      @site = site
+      @options = options || {}
+      @last_checked_at = nil
+
+      @error = @options[:error]
+      @target = @options[:target]
+      @sitemaps = @options[:sitemaps] || []
+      @crawl_delay_handler = @options[:crawl_delay_handler]
+
+      if records && !records.empty?
+        @records, defaults = [], []
+        records.each { |record|
+          if record.default?
+            defaults << record
+          elsif !@target || record.match?(@target)
+            @records << record
+          end
+        }
+        @records.concat(defaults)
+      else
+        @records = []
+      end
+    end
+
+    attr_reader :timestamp, :site, :sitemaps
+    attr_accessor :error
+
+    def error!
+      raise @error if @error
+    end
+
+    def target(user_agent = nil)
+      if user_agent
+        raise ArgumentError, "this instance is targeted for #{@target}" if @target
+        user_agent
+      else
+        raise ArgumentError, "user_agent is mandatory for an untargeted instance" if !@target
+        @target
+      end
+    end
+    private :target
+
+    def find_record(user_agent = nil)
+      user_agent = target(user_agent)
+      @records.find { |record|
+        record.match?(user_agent)
+      }
+    end
+    private :find_record
+
+    def allow?(request_uri, user_agent = nil)
+      record = find_record(user_agent) or return true
+      allow = record.allow?(request_uri)
+      if delay = record.delay and @crawl_delay_handler
+        @crawl_delay_handler.call(delay, @last_checked_at)
+      end
+      @last_checked_at = Time.now
+      return allow
+    end
+
+    def crawl_delay(user_agent = nil)
+      record = find_record(user_agent) or return 0
+      record.delay or return 0
+    end
+
+    def options(user_agent = nil)
+      record = find_record(user_agent) or return {}
+      record.options
+    end
+
+    DISALLOW_ALL = <<-TXT
+User-Agent: *
+Disallow: /
+    TXT
+
+    def self.unfetchable(site, reason, target = nil)
+      Parser.new(target).parse(DISALLOW_ALL, site).tap { |robots_txt|
+        robots_txt.error = reason
+      }
+    end
+
+    class Record
+      def initialize(agentlines, rulelines)
+        @patterns = agentlines.map { |agentline| agentline.pattern }
+        @acls = []
+        @delay = nil
+        @options = {}
+        rulelines.each { |ruleline|
+          case ruleline
+          when AccessControlLine
+            @acls << ruleline
+          when CrawlDelayLine
+            @delay = ruleline.delay
+          else
+            @options[ruleline.token.downcase] = ruleline.value
+          end
+        } if rulelines
+        @acls.replace @acls.sort_by { |x|
+          [-x.value.length, x.is_a?(AllowLine) ? -1 : 0]
+        }
+      end
+
+      attr_reader :delay, :options
+
+      def match?(user_agent)
+        @patterns.any? { |pattern|
+          pattern.match(user_agent)
+        }
+      end
+
+      def default?
+        @patterns.include?(//)
+      end
+
+      def allow?(request_uri)
+        @acls.each { |acl|
+          if acl.match?(request_uri)
+            return acl.allow?
+          end
+        }
+        return true
+      end
+    end
+
+    class Line
+      def initialize(token, value)
+        @token = token
+        @value = value
+        compile
+      end
+
+      attr_reader :token, :value
+
+      def compile
+        self
+      end
+    end
+
+    class AgentLine < Line
+      def compile
+        if @value == '*'
+          @pattern = //
+        else
+          @pattern = Regexp.new(Regexp.quote(@value), Regexp::IGNORECASE)
+        end
+        self
+      end
+
+      attr_reader :pattern
+    end
+
+    class AccessControlLine < Line
+      def compile
+        @empty = @value.empty?
+        re_src = '\A'
+        s = StringScanner.new(@value)
+        until s.eos?
+          if t = s.scan(/[^%*$]+/)
+            re_src << Regexp.quote(t)
+          elsif t = s.scan(/%([0-9a-f]{2})/i)
+            c = s[1].to_i(16)
+            if c == 0x2f
+              re_src << '%2[fF]'
+            else
+              re_src << Regexp.quote('%c' % c)
+            end
+          elsif t = s.scan(/\*/)
+            re_src << '.*'
+          elsif t = s.scan(/\$/)
+            re_src << '\z'
+            break
+          else
+            re_src << Regexp.quote(s.scan(/./))
+          end
+        end
+        @pattern = Regexp.new(re_src, Regexp::MULTILINE)
+        self
+      end
+
+      def match?(request_uri)
+        return false if @empty
+        transformed = request_uri.gsub(/(%2[fF])|%([0-9a-f]{2})/i) { $1 || '%c' % $2.to_i(16) }
+        !!@pattern.match(transformed)
+      end
+    end
+
+    class AllowLine < AccessControlLine
+      def allow?
+        true
+      end
+    end
+
+    class DisallowLine < AccessControlLine
+      def allow?
+        false
+      end
+    end
+
+    class CrawlDelayLine < Line
+      def compile
+        case @value
+        when /\A((0|[1-9][0-9]*)\.[0-9]+)/
+          @delay = @value.to_f
+        when /\A(0|[1-9][0-9]*)/
+          @delay = @value.to_i
+        else
+          @delay = nil
+        end
+        self
+      end
+
+      attr_reader :delay
+    end
+
+    class ExtentionLine < Line
+    end
+  end
+end

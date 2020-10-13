@@ -1,0 +1,11 @@
+*.gem
+.bundle
+Gemfile.lock
+pkg/*
+
+coverage
+rdoc
+doc
+.yardoc
+
+/lib/webrobots/robotstxt.output

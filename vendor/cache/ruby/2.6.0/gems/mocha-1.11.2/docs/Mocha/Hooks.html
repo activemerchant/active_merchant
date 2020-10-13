@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>
+  Module: Mocha::Hooks
+  
+    &mdash; Mocha 1.11.2
+  
+</title>
+
+  <link rel="stylesheet" href="../css/style.css" type="text/css" charset="utf-8" />
+
+  <link rel="stylesheet" href="../css/common.css" type="text/css" charset="utf-8" />
+
+<script type="text/javascript" charset="utf-8">
+  pathId = "Mocha::Hooks";
+  relpath = '../';
+</script>
+
+
+  <script type="text/javascript" charset="utf-8" src="../js/jquery.js"></script>
+
+  <script type="text/javascript" charset="utf-8" src="../js/app.js"></script>
+
+
+  </head>
+  <body>
+    <div class="nav_wrap">
+      <iframe id="nav" src="../class_list.html?1"></iframe>
+      <div id="resizer"></div>
+    </div>
+
+    <div id="main" tabindex="-1">
+      <div id="header">
+        <div id="menu">
+  
+    <a href="../_index.html">Index (H)</a> &raquo;
+    <span class='title'><span class='object_link'><a href="../Mocha.html" title="Mocha (module)">Mocha</a></span></span>
+     &raquo; 
+    <span class="title">Hooks</span>
+  
+</div>
+
+        <div id="search">
+  
+    <a class="full_list_link" id="class_list_link"
+        href="../class_list.html">
+
+        <svg width="24" height="24">
+          <rect x="0" y="4" width="24" height="4" rx="1" ry="1"></rect>
+          <rect x="0" y="12" width="24" height="4" rx="1" ry="1"></rect>
+          <rect x="0" y="20" width="24" height="4" rx="1" ry="1"></rect>
+        </svg>
+    </a>
+  
+</div>
+        <div class="clear"></div>
+      </div>
+
+      <div id="content"><h1>Module: Mocha::Hooks
+  
+  
+  
+</h1>
+<div class="box_info">
+  
+
+  
+  
+  
+  
+  
+
+  
+  <dl>
+    <dt>Included in:</dt>
+    <dd><span class='object_link'><a href="API.html" title="Mocha::API (module)">API</a></span></dd>
+  </dl>
+  
+
+  
+  <dl>
+    <dt>Defined in:</dt>
+    <dd>lib/mocha/hooks.rb</dd>
+  </dl>
+  
+</div>
+
+<h2>Overview</h2><div class="docstring">
+  <div class="discussion">
+    
+<p>Integration hooks for test library authors.</p>
+
+<p>The methods in this module should be called from test libraries wishing to integrate with Mocha.</p>
+
+<p>This module is provided as part of the <code>Mocha::API</code> module and is therefore part of the public API, but should only be used by authors of test libraries and not by typical “users” of Mocha.</p>
+
+<p>Integration with Test::Unit and MiniTest are provided as part of Mocha, because they are (or were once) part of the Ruby standard library. Integration with other test libraries is not provided as <strong>part</strong> of Mocha, but is supported by means of the methods in this module.</p>
+
+<p>See the code in the <code>Adapter</code> modules for examples of how to use the methods in this module. <code>Mocha::ExpectationErrorFactory</code> may be used if you want <code>Mocha</code> to raise a different type of exception.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+
+  <p class="tag_title">See Also:</p>
+  <ul class="see">
+    
+      <li><span class='object_link'><a href="Integration/TestUnit/Adapter.html" title="Mocha::Integration::TestUnit::Adapter (module)">Integration::TestUnit::Adapter</a></span></li>
+    
+      <li><span class='object_link'><a href="Integration/MiniTest/Adapter.html" title="Mocha::Integration::MiniTest::Adapter (module)">Integration::MiniTest::Adapter</a></span></li>
+    
+      <li><span class='object_link'><a href="ExpectationErrorFactory.html" title="Mocha::ExpectationErrorFactory (class)">ExpectationErrorFactory</a></span></li>
+    
+      <li><span class='object_link'><a href="API.html" title="Mocha::API (module)">API</a></span></li>
+    
+  </ul>
+
+</div>
+
+
+
+
+
+
+  
+    <h2>
+      Instance Method Summary
+      <small><a href="#" class="summary_toggle">collapse</a></small>
+    </h2>
+
+    <ul class="summary">
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#mocha_setup-instance_method" title="#mocha_setup (instance method)">#<strong>mocha_setup</strong>  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Prepares Mocha before a test (only for use by authors of test libraries).</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#mocha_teardown-instance_method" title="#mocha_teardown (instance method)">#<strong>mocha_teardown</strong>  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Resets Mocha after a test (only for use by authors of test libraries).</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#mocha_verify-instance_method" title="#mocha_verify (instance method)">#<strong>mocha_verify</strong>(assertion_counter = nil)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Verifies that all mock expectations have been met (only for use by authors of test libraries).</p>
+</div></span>
+  
+</li>
+
+      
+    </ul>
+  
+
+
+
+  <div id="instance_method_details" class="method_details_list">
+    <h2>Instance Method Details</h2>
+
+    
+      <div class="method_details first">
+  <h3 class="signature first" id="mocha_setup-instance_method">
+  
+    #<strong>mocha_setup</strong>  &#x21d2; <tt><span class='object_link'>Object</span></tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Prepares Mocha before a test (only for use by authors of test libraries).</p>
+
+<p>This method should be called before each individual test starts (including before any “setup” code).</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+22
+23
+24</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/mocha/hooks.rb', line 22</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_mocha_setup'>mocha_setup</span>
+  <span class='const'>Mockery</span><span class='period'>.</span><span class='id identifier rubyid_setup'>setup</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="mocha_teardown-instance_method">
+  
+    #<strong>mocha_teardown</strong>  &#x21d2; <tt><span class='object_link'>Object</span></tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Resets Mocha after a test (only for use by authors of test libraries).</p>
+
+<p>This method should be called after each individual test has finished (including after any “teardown” code).</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+38
+39
+40</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/mocha/hooks.rb', line 38</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_mocha_teardown'>mocha_teardown</span>
+  <span class='const'>Mockery</span><span class='period'>.</span><span class='id identifier rubyid_teardown'>teardown</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="mocha_verify-instance_method">
+  
+    #<strong>mocha_verify</strong>(assertion_counter = nil)  &#x21d2; <tt><span class='object_link'>Object</span></tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Verifies that all mock expectations have been met (only for use by authors of test libraries).</p>
+
+<p>This is equivalent to a series of “assertions”.</p>
+
+<p>This method should be called at the end of each individual test, before it has been determined whether or not the test has passed.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+31
+32
+33</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/mocha/hooks.rb', line 31</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_mocha_verify'>mocha_verify</span><span class='lparen'>(</span><span class='id identifier rubyid_assertion_counter'>assertion_counter</span> <span class='op'>=</span> <span class='kw'>nil</span><span class='rparen'>)</span>
+  <span class='const'>Mockery</span><span class='period'>.</span><span class='id identifier rubyid_verify'>verify</span><span class='lparen'>(</span><span class='id identifier rubyid_assertion_counter'>assertion_counter</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+  </div>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-625523-7"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-625523-7');
+</script>
+</div>
+
+      <div id="footer">
+  Generated on Sat Jan  4 17:36:47 2020 by
+  <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
+  0.9.20 (ruby-2.6.5).
+</div>
+
+    </div>
+  </body>
+</html>

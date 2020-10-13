@@ -1,0 +1,82 @@
+#!/usr/bin/env ruby
+
+require 'yaml'
+require 'set'
+require 'English'
+
+def execute(*commands)
+  commands.each do |command|
+    system(command)
+    next if $CHILD_STATUS.success?
+    message = [
+      'Executing shell command failed.',
+      "  Command: #{command}",
+      "  Status:  #{$CHILD_STATUS.exitstatus}"
+    ].join("\n")
+    raise message
+  end
+end
+
+def reset_bundle
+  execute(
+    'rm -rf .bundle/gems',
+    'rm -rf gemfiles/.bundle/gems',
+    'rm -f *.lock',
+    'rm -f gemfiles/*.lock'
+  )
+end
+
+def with_rbenv(command)
+  %{export PATH="$HOME/.rbenv/bin:$PATH"; eval "$(rbenv init -)"; #{command}}
+end
+
+def run(ruby_version, gemfile, task = 'test')
+  ENV['RBENV_VERSION'] = ruby_version
+  ENV['BUNDLE_GEMFILE'] = gemfile
+  ENV['MOCHA_OPTIONS'] = 'debug'
+  reset_bundle
+  execute(
+    with_rbenv("bundle install --gemfile=#{gemfile}"),
+    with_rbenv("bundle exec rake #{task}")
+  )
+end
+
+AVAILABLE_RUBY_VERSIONS = `rbenv versions --bare`.split("\n")
+
+travis_config = YAML.safe_load(File.read('.travis.yml'))
+build_configs = travis_config['matrix']['include']
+travis_config['rvm'].each do |ruby_version|
+  travis_config['gemfile'].each do |gemfile|
+    travis_config['env'].each do |env|
+      build_configs << { 'rvm' => ruby_version, 'gemfile' => gemfile, 'env' => env }
+    end
+  end
+end
+
+missing_ruby_versions = Set.new
+
+build_configs.each do |config|
+  ruby_version = config['rvm']
+  gemfile = config['gemfile']
+  environment_variables = Hash[*config['env'].split.flat_map { |e| e.split('=') }]
+  original_environment_variables = {}
+  begin
+    environment_variables.each do |k, v|
+      original_environment_variables[k] = ENV[k]
+      ENV[k] = v
+    end
+    if AVAILABLE_RUBY_VERSIONS.include?(ruby_version)
+      puts
+      puts "Ruby v#{ruby_version}; Gemfile path: #{gemfile}; Environment: #{environment_variables}"
+      run(ruby_version, gemfile)
+    else
+      missing_ruby_versions << ruby_version
+    end
+  ensure
+    original_environment_variables.each do |k, v|
+      ENV[k] = v
+    end
+  end
+end
+
+puts "Missing Ruby versions: #{missing_ruby_versions.to_a.join(', ')}"

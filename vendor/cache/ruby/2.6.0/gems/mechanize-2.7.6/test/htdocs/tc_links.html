@@ -1,0 +1,21 @@
+<html>
+  <body>
+    <a href="thing.html"><b>Bold Dude</b></a>
+    <a href="thing.html" rel="nofollow">Dude</a>
+    <a href="thing.html" rel="me">Aaron <b>James</b> Patterson</a>
+    <a href="thing.html" id="bold_aaron_link" rel="me nofollow"><b>Aaron</b> Patterson</a>
+    <a href="thing.html" class="thing_link">Thing!</a>
+    <a href="thing.html">Ruby <b>Rocks!</b></a>
+    <!-- Testing a bug with escaped stuff in links:
+      http://rubyforge.org/pipermail/mechanize-users/2006-September/000002.html
+    -->
+    <a href="link%20with%20space.html">encoded space</a>
+    <a href="link with space.html">not encoded space</a>
+    <!-- End escaped bug -->
+    <a href="unusual&&%3F%3F%23%23.html">unusual characters</a>
+
+    <a href="">empty href</a>
+
+    <a href="javascript:new_page('1')">javascript link</a>
+  </body>
+</html>

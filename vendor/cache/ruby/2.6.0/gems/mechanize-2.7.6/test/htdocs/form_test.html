@@ -1,0 +1,188 @@
+<html>
+  <head><title>Page Title</title></head>
+  <body>
+    <h1>Post Form 1</h1>
+    <form name="post_form1" method="post" action="/form_post" id="generic_form" class="really_generic_form" >
+      <table>
+        <tr>
+          <td>First Name</td>
+          <td><input type="text" name="first_name" id="name_first" class="text_input"/></td>
+        </tr>
+        <tr>
+          <td>Gender</td>
+          <td>
+            M: <input type="radio" name="gender" value="male" /><br />
+            F: <input type="radio" name="gender" value="female" /><br />
+          </td>
+        </tr>
+        <tr>
+          <td>Check this if you are cool:</td>
+          <td><input type="checkbox" name="cool person" /></td>
+        </tr>
+        <tr>
+          <td>Check this if you like green eggs:</td>
+          <td><input type="checkbox" name="green[eggs]" /></td>
+        </tr>
+        <tr>
+          <td>Check this if you like ham:</td>
+          <td><input type="checkbox" name="likes ham" /></td>
+        </tr>
+      </table><br />
+      <select name="country">
+        <option value="USA">USA</option>
+        <option value="CANADA">CANADA</option>
+      </select><br />
+      <select name="empty">
+      </select><br />
+      <input type="submit" value="Submit" />
+    </form>
+    <h1>Get Form 1</h1>
+    <form name="get_form1" method="get" action="/form_post">
+      <table>
+        <tr>
+          <td>First Name</td>
+          <td><input type="text" name="first_name" /></td>
+        </tr>
+        <tr>
+          <td>Gender</td>
+          <td>
+            M: <input type="radio" name="gender" value="male" /><br />
+            F: <input type="radio" name="gender" value="female" /><br />
+          </td>
+        </tr>
+        <tr>
+          <td>Check this if you are cool:</td>
+          <td><input type="checkbox" name="cool person" /></td>
+        </tr>
+        <tr>
+          <td>Check this if you like green eggs:</td>
+          <td><input type="checkbox" name="green[eggs]" /></td>
+        </tr>
+        <tr>
+          <td>Check this if you like ham:</td>
+          <td><input type="checkbox" name="likes ham" /></td>
+        </tr>
+      </table><br />
+      <input type="image" name="button" value="button" src="button.jpg" />
+      <input type="submit" value="Submit" />
+    </form>
+
+    <!-- Get ant post to a form with a space in the name -->
+    <h1>Post Form 2</h1>
+    <form name="post_form2" method="post" action="/form post">
+      <table>
+        <tr>
+          <td>First Name</td>
+          <td><input type="text" name="first_name" /></td>
+        </tr>
+        <tr>
+          <td>Gender</td>
+          <td>
+            M: <input type="radio" name="gender" value="male" /><br />
+            F: <input type="radio" name="gender" value="female" /><br />
+          </td>
+        </tr>
+        <tr>
+          <td>Check this if you are cool:</td>
+          <td><input type="checkbox" name="cool person" /></td>
+        </tr>
+        <tr>
+          <td>Check this if you like ham:</td>
+          <td><input type="checkbox" name="likes ham" /></td>
+        </tr>
+      </table><br />
+      <input type="submit" value="Submit" />
+    </form>
+    <h1>Get Form 2</h1>
+    <form name="get_form2" method="get" action="/form post">
+      <table>
+        <tr>
+          <td>First Name</td>
+          <td><input type="text" name="first_name" /></td>
+        </tr>
+        <tr>
+          <td>Gender</td>
+          <td>
+            M: <input type="radio" name="gender" value="male" /><br />
+            F: <input type="radio" name="gender" value="female" /><br />
+          </td>
+        </tr>
+        <tr>
+          <td>Check this if you are cool:</td>
+          <td><input type="checkbox" name="cool person" /></td>
+        </tr>
+        <tr>
+          <td>Check this if you like ham:</td>
+          <td><input type="checkbox" name="likes ham" /></td>
+        </tr>
+      </table><br />
+      <input type="submit" value="Submit" />
+    </form>
+
+    <!-- forms with parameters in the action -->
+    <h1>Post Form 3</h1>
+    <form name="post_form3" method="post" action="/form_post?great day=yes&one=two">
+      <table>
+        <tr>
+          <td>First Name</td>
+          <td><input type="text" name="first_name" /></td>
+        </tr>
+        <tr>
+          <td>Gender</td>
+          <td>
+            M: <input type="radio" name="gender" value="male" /><br />
+            F: <input type="radio" name="gender" value="female" /><br />
+          </td>
+        </tr>
+        <tr>
+          <td>Check this if you are cool:</td>
+          <td><input type="checkbox" name="cool person" /></td>
+        </tr>
+        <tr>
+          <td>Check this if you like ham:</td>
+          <td><input type="checkbox" name="likes ham" /></td>
+        </tr>
+      </table><br />
+      <input type="submit" value="Submit" />
+    </form>
+
+	<!-- Post form with multipart/form-data -->
+	<h1>Post Form 4 - Multipart</h1>
+	<form name="post_form4_multipart" enctype="multipart/form-data" method="post" action="/form_post">
+    <table>
+      <tr>
+        <td>First Name</td>
+        <td><input type="text" name="first_name" /></td>
+      </tr>
+  	</table><br />
+  	<input type="submit" value="Submit" />
+	</form>
+    
+	<h1>Get Form 3</h1>
+    <form name="get_form3" method="get" action="/form_post?great day=yes&one=two">
+      <table>
+        <tr>
+          <td>First Name</td>
+          <td><input type="text" name="first_name" /></td>
+        </tr>
+        <tr>
+          <td>Gender</td>
+          <td>
+            M: <input type="radio" name="gender" value="male" /><br />
+            F: <input type="radio" name="gender" value="female" /><br />
+          </td>
+        </tr>
+        <tr>
+          <td>Check this if you are cool:</td>
+          <td><input type="checkbox" name="cool person" /></td>
+        </tr>
+        <tr>
+          <td>Check this if you like ham:</td>
+          <td><input type="checkbox" name="likes ham" /></td>
+        </tr>
+      </table><br />
+      <input type="submit" value="Submit" />
+    </form>
+    <a href="/form_test.html">form test</a>
+  </body>
+</html>

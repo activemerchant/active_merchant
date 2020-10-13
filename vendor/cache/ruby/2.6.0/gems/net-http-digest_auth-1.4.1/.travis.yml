@@ -1,0 +1,16 @@
+---
+after_script:
+- rake travis:after -t
+before_script:
+- gem install hoe-travis --no-rdoc --no-ri
+- rake travis:before -t
+language: ruby
+notifications:
+  email:
+  - drbrain@segment7.net
+rvm:
+- 1.8.7
+- 1.9.3
+- 2.0.0
+- ruby-head
+script: rake travis

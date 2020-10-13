@@ -1,0 +1,168 @@
+= Getting Started With Mechanize
+
+This guide is meant to get you started using Mechanize.  By the end of this
+guide, you should be able to fetch pages, click links, fill out and submit
+forms, scrape data, and many other hopefully useful things.  This guide
+really just scratches the surface of what is available, but should be enough
+information to get you really going!
+
+== Let's Fetch a Page!
+
+First thing is first.  Make sure that you've required mechanize and that you
+instantiate a new mechanize object:
+
+  require 'rubygems'
+  require 'mechanize'
+
+  agent = Mechanize.new
+
+Now we'll use the agent we've created to fetch a page.  Let's fetch google
+with our mechanize agent:
+
+  page = agent.get('http://google.com/')
+
+What just happened?  We told mechanize to go pick up google's main page.
+Mechanize stored any cookies that were set, and followed any redirects that
+google may have sent.  The agent gave us back a page that we can use to
+scrape data, find links to click, or find forms to fill out.
+
+Next, let's try finding some links to click.
+
+== Finding Links
+
+Mechanize returns a page object whenever you get a page, post, or submit a
+form.  When a page is fetched, the agent will parse the page and put a list
+of links on the page object.
+
+Now that we've fetched google's homepage, let's try listing all of the links:
+
+  page.links.each do |link|
+    puts link.text
+  end
+
+We can list the links, but Mechanize gives a few shortcuts to help us find a
+link to click on.  Let's say we wanted to click the link whose text is 'News'.
+Normally, we would have to do this:
+
+  page = agent.page.links.find { |l| l.text == 'News' }.click
+
+But Mechanize gives us a shortcut.  Instead we can say this:
+
+  page = agent.page.link_with(:text => 'News').click
+
+That shortcut says "find all links with the name 'News'".  You're probably
+thinking "there could be multiple links with that text!", and you would be
+correct!  If you use the plural form, you can access the list.
+If you wanted to click on the second news link, you could do this:
+
+  agent.page.links_with(:text => 'News')[1].click
+
+We can even find a link with a certain href like so:
+
+  page.link_with(:href => '/something')
+
+Or chain them together to find a link with certain text and certain href:
+
+  page.link_with(:text => 'News', :href => '/something')
+
+These shortcuts that Mechanize provides are available on any list that you
+can fetch like frames, iframes, or forms.  Now that we know how to find and
+click links, let's try something more complicated like filling out a form.
+
+== Filling Out Forms
+
+Let's continue with our google example.  Here's the code we have so far:
+  require 'rubygems'
+  require 'mechanize'
+
+  agent = Mechanize.new
+  page = agent.get('http://google.com/')
+
+If we pretty print the page, we can see that there is one form named 'f',
+that has a couple buttons and a few fields:
+
+  pp page
+
+Now that we know the name of the form, let's fetch it off the page:
+
+ google_form = page.form('f')
+
+Mechanize lets you access form input fields in a few different ways, but the
+most convenient is that you can access input fields as accessors on the
+object.  So let's set the form field named 'q' on the form to 'ruby mechanize':
+
+  google_form.q = 'ruby mechanize'
+
+To make sure that we set the value, let's pretty print the form, and you should
+see a line similar to this:
+
+  #<Mechanize::Field:0x1403488 @name="q", @value="ruby mechanize">
+
+If you saw that the value of 'q' changed, you're on the right track!  Now we
+can submit the form and 'press' the submit button and print the results:
+
+  page = agent.submit(google_form, google_form.buttons.first)
+  pp page
+
+What we just did was equivalent to putting text in the search field and
+clicking the 'Google Search' button.  If we had submitted the form without
+a button, it would be like typing in the text field and hitting the return
+button.
+
+Let's take a look at the code all together:
+
+  require 'rubygems'
+  require 'mechanize'
+
+  agent = Mechanize.new
+  page = agent.get('http://google.com/')
+  google_form = page.form('f')
+  google_form.q = 'ruby mechanize'
+  page = agent.submit(google_form)
+  pp page
+
+Before we go on to screen scraping, let's take a look at forms a little more
+in depth.  Unless you want to skip ahead!
+
+== Advanced Form Techniques
+
+In this section, I want to touch on using the different types in input fields
+possible with a form.  Password and textarea fields can be treated just like
+text input fields.  Select fields are very similar to text fields, but they
+have many options associated with them.  If you select one option, mechanize
+will de-select the other options (unless it is a multi select!).
+
+For example, let's select an option on a list:
+
+  form.field_with(:name => 'list').options[0].select
+
+Now let's take a look at checkboxes and radio buttons.  To select a checkbox,
+just check it like this:
+
+  form.checkbox_with(:name => 'box').check
+
+Radio buttons are very similar to checkboxes, but they know how to uncheck
+other radio buttons of the same name.  Just check a radio button like you
+would a checkbox:
+
+ form.radiobuttons_with(:name => 'box')[1].check
+
+Mechanize also makes file uploads easy!  Just find the file upload field, and
+tell it what file name you want to upload:
+
+  form.file_uploads.first.file_name = "somefile.jpg"
+
+== Scraping Data
+
+Mechanize uses nokogiri[http://nokogiri.org/] to parse HTML.  What does this
+mean for you?  You can treat a mechanize page like an nokogiri object.  After
+you have used Mechanize to navigate to the page that you need to scrape, then
+scrape it using nokogiri methods:
+
+  agent.get('http://someurl.com/').search("p.posted")
+
+The expression given to Mechanize::Page#search may be a CSS expression or an
+XPath expression:
+
+  agent.get('http://someurl.com/').search(".//p[@class='posted']")
+

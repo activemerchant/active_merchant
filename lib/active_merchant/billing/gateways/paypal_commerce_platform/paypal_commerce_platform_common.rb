@@ -107,36 +107,19 @@ module ActiveMerchant
         path.split('/').last
       end
 
-      def prepare_request_to_get_access_token(url, options)
-        @options = options
-        ssl_post_request(url, options)
+      def prepare_request_to_get_access_token(options)
+        basic_token = encoded_credentials(options[:authorization][:username], options[:authorization][:password])
+        options[:headers] = {'authorization' => "basic #{basic_token}"}
+        options
       end
 
-      def encoded_credentials
-        Base64.encode64("#{@options[:authorization][:username]}:#{@options[:authorization][:password]}").delete("\n")
+      def encoded_credentials(username, password)
+        Base64.encode64("#{username}:#{password}").delete("\n")
       end
 
       def return_response(http, request)
         response = http.request(request)
         JSON.parse(response.body)['access_token']
-      end
-
-      def ssl_post_request(url, _options = {})
-        @url = url
-        url = URI(@url)
-        http = Net::HTTP.new(url.host, url.port)
-        http.use_ssl = true
-        http.verify_mode = OpenSSL::SSL::VERIFY_PEER
-        params = {
-          grant_type: 'client_credentials'
-        }
-        url.query = URI.encode_www_form(params)
-        request = Net::HTTP::Post.new(url)
-        request['accept-language']  = 'en_US'
-        request['authorization']    = "basic #{encoded_credentials}"
-        request['content-type'] = 'application/x-www-form-urlencoded'
-
-        return_response(http, request)
       end
 
       def supports_scrubbing?

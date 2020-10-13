@@ -8,10 +8,8 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
   def setup
     @gateway          = ActiveMerchant::Billing::PaypalCommercePlatformGateway.new
     @ppcp_credentials = fixtures(:ppcp)
-    params            = user_credentials
-    options           = { "Content-Type": 'application/json', authorization: params }
-    access_token      = @gateway.get_access_token(options)
-    @headers          = { "Authorization": access_token, "Content-Type": 'application/json' }
+    access_token      = @gateway.get_access_token({ authorization: user_credentials }).params['access_token']
+    @headers          = { 'Authorization' => "Bearer #{access_token}", 'Content-Type' => 'application/json' }
     @body             = body
     @card_order_options = {
       "payment_source": {

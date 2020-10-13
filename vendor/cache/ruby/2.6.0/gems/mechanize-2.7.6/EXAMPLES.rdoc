@@ -1,0 +1,192 @@
+= Mechanize examples
+
+Note: Several examples show methods chained to the end of do/end blocks.
+<code>do...end</code> is the same as curly braces (<code>{...}</code>).  For
+example, <code>do ... end.submit</code> is the same as <code>{ ...
+}.submit</code>.
+
+== Google
+
+  require 'rubygems'
+  require 'mechanize'
+
+  a = Mechanize.new { |agent|
+    agent.user_agent_alias = 'Mac Safari'
+  }
+
+  a.get('http://google.com/') do |page|
+    search_result = page.form_with(:id => 'gbqf') do |search|
+      search.q = 'Hello world'
+    end.submit
+
+    search_result.links.each do |link|
+      puts link.text
+    end
+  end
+
+== Rubyforge
+
+  require 'rubygems'
+  require 'mechanize'
+
+  a = Mechanize.new
+  a.get('http://rubyforge.org/') do |page|
+    # Click the login link
+    login_page = a.click(page.link_with(:text => /Log In/))
+
+    # Submit the login form
+    my_page = login_page.form_with(:action => '/account/login.php') do |f|
+      f.form_loginname  = ARGV[0]
+      f.form_pw         = ARGV[1]
+    end.click_button
+
+    my_page.links.each do |link|
+      text = link.text.strip
+      next unless text.length > 0
+      puts text
+    end
+  end
+
+== File Upload
+
+Upload a file to flickr.
+
+  require 'rubygems'
+  require 'mechanize'
+
+  abort "#{$0} login passwd filename" if (ARGV.size != 3)
+
+  a = Mechanize.new { |agent|
+    # Flickr refreshes after login
+    agent.follow_meta_refresh = true
+  }
+
+  a.get('http://flickr.com/') do |home_page|
+    signin_page = a.click(home_page.link_with(:text => /Sign In/))
+
+    my_page = signin_page.form_with(:name => 'login_form') do |form|
+      form.login  = ARGV[0]
+      form.passwd = ARGV[1]
+    end.submit
+
+    # Click the upload link
+    upload_page = a.click(my_page.link_with(:text => /Upload/))
+
+    # We want the basic upload page.
+    upload_page = a.click(upload_page.link_with(:text => /basic Uploader/))
+
+    # Upload the file
+    upload_page.form_with(:method => 'POST') do |upload_form|
+      upload_form.file_uploads.first.file_name = ARGV[2]
+    end.submit
+  end
+
+== Pluggable Parsers
+
+Let's say you want HTML pages to automatically be parsed with Rubyful Soup.
+This example shows you how:
+
+  require 'rubygems'
+  require 'mechanize'
+  require 'rubyful_soup'
+
+  class SoupParser < Mechanize::Page
+    attr_reader :soup
+    def initialize(uri = nil, response = nil, body = nil, code = nil)
+      @soup = BeautifulSoup.new(body)
+      super(uri, response, body, code)
+    end
+  end
+
+  agent = Mechanize.new
+  agent.pluggable_parser.html = SoupParser
+
+Now all HTML pages will be parsed with the SoupParser class, and automatically
+give you access to a method called 'soup' where you can get access to the
+Beautiful Soup for that page.
+
+== Using a proxy
+
+  require 'rubygems'
+  require 'mechanize'
+
+  agent = Mechanize.new
+  agent.set_proxy 'localhost', 8000
+  page = agent.get(ARGV[0])
+  puts page.body
+
+== The transact method
+
+Mechanize#transact runs the given block and then resets the page history. I.e.
+after the block has been executed, you're back at the original page; no need
+to count how many times to call the back method at the end of a loop (while
+accounting for possible exceptions).
+
+This example also demonstrates subclassing Mechanize.
+
+  require 'rubygems'
+  require 'mechanize'
+
+  class TestMech < Mechanize
+    def process
+      get 'http://rubyforge.org/'
+      search_form = page.forms.first
+      search_form.words = 'WWW'
+      submit search_form
+
+      page.links_with(:href => %r{/projects/} ).each do |link|
+        next if link.href =~ %r{/projects/support/}
+
+        puts 'Loading %-30s %s' % [link.href, link.text]
+        begin
+          transact do
+            click link
+            # Do stuff, maybe click more links.
+          end
+          # Now we're back at the original page.
+
+        rescue => e
+          $stderr.puts "#{e.class}: #{e.message}"
+        end
+      end
+    end
+  end
+
+  TestMech.new.process
+
+== Client Certificate Authentication (Mutual Auth)
+
+In most cases a client certificate is created as an additional layer of
+security for certain websites.  The specific case that this was initially
+tested on was for automating the download of archived images from a banks
+(Wachovia) lockbox system.  Once the certificate is installed into your
+browser you will have to export it and split the certificate and private key
+into separate files.
+
+  require 'rubygems'
+  require 'mechanize'
+
+  # create Mechanize instance
+  agent = Mechanize.new
+
+  # set the path of the certificate file
+  agent.cert = 'example.cer'
+
+  # set the path of the private key file
+  agent.key = 'example.key'
+
+  # get the login form & fill it out with the username/password
+  login_form = agent.get("http://example.com/login_page").form('Login')
+  login_form.Userid = 'TestUser'
+  login_form.Password = 'TestPassword'
+
+  # submit login form
+  agent.submit(login_form, login_form.buttons.first)
+
+Exported files are usually in .p12 format (IE 7 & Firefox 2.0) which stands
+for PKCS #12.  You can convert them from p12 to pem format by using the
+following commands:
+
+  openssl pkcs12 -in input_file.p12 -clcerts -out example.key -nocerts -nodes
+  openssl pkcs12 -in input_file.p12 -clcerts -out example.cer -nokeys
+

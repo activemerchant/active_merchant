@@ -1,0 +1,2006 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: https://www.google.com/robots.txt
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      User-Agent:
+      - TestBot
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Vary:
+      - Accept-Encoding
+      Content-Type:
+      - text/plain
+      Date:
+      - Mon, 04 Jan 2016 13:39:15 GMT
+      Expires:
+      - Mon, 04 Jan 2016 13:39:15 GMT
+      Cache-Control:
+      - private, max-age=0
+      Last-Modified:
+      - Thu, 17 Dec 2015 01:06:42 GMT
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - sffe
+      X-Xss-Protection:
+      - 1; mode=block
+      Alternate-Protocol:
+      - 443:quic,p=1
+      Alt-Svc:
+      - quic="www.google.com:443"; ma=600; v="30,29,28,27,26,25",quic=":443"; ma=600;
+        v="30,29,28,27,26,25"
+      Transfer-Encoding:
+      - chunked
+    body:
+      encoding: ASCII-8BIT
+      string: |+
+        User-agent: *
+        Disallow: /search
+        Allow: /search/about
+        Disallow: /sdch
+        Disallow: /groups
+        Disallow: /catalogs
+        Allow: /catalogs/about
+        Allow: /catalogs/p?
+        Disallow: /catalogues
+        Allow: /newsalerts
+        Disallow: /news
+        Allow: /news/directory
+        Disallow: /nwshp
+        Disallow: /setnewsprefs?
+        Disallow: /index.html?
+        Disallow: /?
+        Allow: /?hl=
+        Disallow: /?hl=*&
+        Allow: /?hl=*&gws_rd=ssl$
+        Disallow: /?hl=*&*&gws_rd=ssl
+        Allow: /?gws_rd=ssl$
+        Allow: /?pt1=true$
+        Disallow: /addurl/image?
+        Allow:    /mail/help/
+        Disallow: /mail/
+        Disallow: /pagead/
+        Disallow: /relpage/
+        Disallow: /relcontent
+        Disallow: /imgres
+        Disallow: /imglanding
+        Disallow: /sbd
+        Disallow: /keyword/
+        Disallow: /u/
+        Disallow: /univ/
+        Disallow: /cobrand
+        Disallow: /custom
+        Disallow: /advanced_group_search
+        Disallow: /googlesite
+        Disallow: /preferences
+        Disallow: /setprefs
+        Disallow: /swr
+        Disallow: /url
+        Disallow: /default
+        Disallow: /m?
+        Disallow: /m/
+        Allow:    /m/finance
+        Disallow: /wml?
+        Disallow: /wml/?
+        Disallow: /wml/search?
+        Disallow: /xhtml?
+        Disallow: /xhtml/?
+        Disallow: /xhtml/search?
+        Disallow: /xml?
+        Disallow: /imode?
+        Disallow: /imode/?
+        Disallow: /imode/search?
+        Disallow: /jsky?
+        Disallow: /jsky/?
+        Disallow: /jsky/search?
+        Disallow: /pda?
+        Disallow: /pda/?
+        Disallow: /pda/search?
+        Disallow: /sprint_xhtml
+        Disallow: /sprint_wml
+        Disallow: /pqa
+        Disallow: /palm
+        Disallow: /gwt/
+        Disallow: /purchases
+        Disallow: /bsd?
+        Disallow: /linux?
+        Disallow: /mac?
+        Disallow: /microsoft?
+        Disallow: /unclesam?
+        Disallow: /answers/search?q=
+        Disallow: /local?
+        Disallow: /local_url
+        Disallow: /shihui?
+        Disallow: /shihui/
+        Disallow: /froogle?
+        Disallow: /products?
+        Disallow: /froogle_
+        Disallow: /product_
+        Disallow: /products_
+        Disallow: /products;
+        Disallow: /print
+        Disallow: /books/
+        Disallow: /bkshp?*q=*
+        Disallow: /books?*q=*
+        Disallow: /books?*output=*
+        Disallow: /books?*pg=*
+        Disallow: /books?*jtp=*
+        Disallow: /books?*jscmd=*
+        Disallow: /books?*buy=*
+        Disallow: /books?*zoom=*
+        Allow: /books?*q=related:*
+        Allow: /books?*q=editions:*
+        Allow: /books?*q=subject:*
+        Allow: /books/about
+        Allow: /booksrightsholders
+        Allow: /books?*zoom=1*
+        Allow: /books?*zoom=5*
+        Disallow: /ebooks/
+        Disallow: /ebooks?*q=*
+        Disallow: /ebooks?*output=*
+        Disallow: /ebooks?*pg=*
+        Disallow: /ebooks?*jscmd=*
+        Disallow: /ebooks?*buy=*
+        Disallow: /ebooks?*zoom=*
+        Allow: /ebooks?*q=related:*
+        Allow: /ebooks?*q=editions:*
+        Allow: /ebooks?*q=subject:*
+        Allow: /ebooks?*zoom=1*
+        Allow: /ebooks?*zoom=5*
+        Disallow: /patents?
+        Disallow: /patents/download/
+        Disallow: /patents/pdf/
+        Disallow: /patents/related/
+        Disallow: /scholar
+        Disallow: /citations?
+        Allow: /citations?user=
+        Disallow: /citations?*cstart=
+        Allow: /citations?view_op=new_profile
+        Allow: /citations?view_op=top_venues
+        Disallow: /complete
+        Disallow: /s?
+        Disallow: /sponsoredlinks
+        Disallow: /videosearch?
+        Disallow: /videopreview?
+        Disallow: /videoprograminfo?
+        Allow: /maps?*output=classic*
+        Allow: /maps?*file=
+        Allow: /maps/api/js?
+        Allow: /maps/d/
+        Disallow: /maps?
+        Disallow: /mapstt?
+        Disallow: /mapslt?
+        Disallow: /maps/stk/
+        Disallow: /maps/br?
+        Disallow: /mapabcpoi?
+        Disallow: /maphp?
+        Disallow: /mapprint?
+        Disallow: /maps/api/js/
+        Disallow: /maps/api/staticmap?
+        Disallow: /maps/api/streetview
+        Disallow: /mld?
+        Disallow: /staticmap?
+        Disallow: /places/
+        Allow: /places/$
+        Disallow: /maps/preview
+        Disallow: /maps/place
+        Disallow: /help/maps/streetview/partners/welcome/
+        Disallow: /help/maps/indoormaps/partners/
+        Disallow: /lochp?
+        Disallow: /center
+        Disallow: /ie?
+        Disallow: /sms/demo?
+        Disallow: /katrina?
+        Disallow: /blogsearch?
+        Disallow: /blogsearch/
+        Disallow: /blogsearch_feeds
+        Disallow: /advanced_blog_search
+        Disallow: /uds/
+        Disallow: /chart?
+        Disallow: /transit?
+        Disallow: /mbd?
+        Disallow: /extern_js/
+        Disallow: /xjs/
+        Disallow: /calendar/feeds/
+        Disallow: /calendar/ical/
+        Disallow: /cl2/feeds/
+        Disallow: /cl2/ical/
+        Disallow: /coop/directory
+        Disallow: /coop/manage
+        Disallow: /trends?
+        Disallow: /trends/music?
+        Disallow: /trends/hottrends?
+        Disallow: /trends/viz?
+        Disallow: /trends/embed.js?
+        Disallow: /trends/fetchComponent?
+        Disallow: /notebook/search?
+        Disallow: /musica
+        Disallow: /musicad
+        Disallow: /musicas
+        Disallow: /musicl
+        Disallow: /musics
+        Disallow: /musicsearch
+        Disallow: /musicsp
+        Disallow: /musiclp
+        Disallow: /browsersync
+        Disallow: /call
+        Disallow: /archivesearch?
+        Disallow: /archivesearch/url
+        Disallow: /archivesearch/advanced_search
+        Disallow: /base/reportbadoffer
+        Disallow: /urchin_test/
+        Disallow: /movies?
+        Disallow: /codesearch?
+        Disallow: /codesearch/feeds/search?
+        Disallow: /wapsearch?
+        Disallow: /safebrowsing
+        Allow: /safebrowsing/diagnostic
+        Allow: /safebrowsing/report_badware/
+        Allow: /safebrowsing/report_error/
+        Allow: /safebrowsing/report_phish/
+        Disallow: /reviews/search?
+        Disallow: /orkut/albums
+        Allow: /jsapi
+        Disallow: /views?
+        Disallow: /c/
+        Disallow: /cbk
+        Allow: /cbk?output=tile&cb_client=maps_sv
+        Disallow: /kh
+        Disallow: /vt
+        Disallow: /maps/vt
+        Disallow: /recharge/dashboard/car
+        Disallow: /recharge/dashboard/static/
+        Disallow: /translate_a/
+        Disallow: /translate_c
+        Disallow: /translate_f
+        Disallow: /translate_static/
+        Disallow: /translate_suggestion
+        Disallow: /profiles/me
+        Allow: /profiles
+        Disallow: /s2/profiles/me
+        Allow: /s2/profiles
+        Allow: /s2/oz
+        Allow: /s2/photos
+        Allow: /s2/search/social
+        Allow: /s2/static
+        Disallow: /s2
+        Disallow: /transconsole/portal/
+        Disallow: /gcc/
+        Disallow: /aclk
+        Disallow: /cse?
+        Disallow: /cse/home
+        Disallow: /cse/panel
+        Disallow: /cse/manage
+        Disallow: /tbproxy/
+        Disallow: /imesync/
+        Disallow: /shenghuo/search?
+        Disallow: /support/forum/search?
+        Disallow: /reviews/polls/
+        Disallow: /hosted/images/
+        Disallow: /ppob/?
+        Disallow: /ppob?
+        Disallow: /adwordsresellers
+        Disallow: /accounts/ClientLogin
+        Disallow: /accounts/ClientAuth
+        Disallow: /accounts/o8
+        Allow: /accounts/o8/id
+        Disallow: /topicsearch?q=
+        Disallow: /xfx7/
+        Disallow: /squared/api
+        Disallow: /squared/search
+        Disallow: /squared/table
+        Disallow: /toolkit/
+        Allow: /toolkit/*.html
+        Disallow: /globalmarketfinder/
+        Allow: /globalmarketfinder/*.html
+        Disallow: /qnasearch?
+        Disallow: /app/updates
+        Disallow: /sidewiki/entry/
+        Disallow: /quality_form?
+        Disallow: /labs/popgadget/search
+        Disallow: /buzz/post
+        Disallow: /compressiontest/
+        Disallow: /analytics/reporting/
+        Disallow: /analytics/admin/
+        Disallow: /analytics/web/
+        Disallow: /analytics/feeds/
+        Disallow: /analytics/settings/
+        Allow: /alerts/manage
+        Allow: /alerts/remove
+        Disallow: /alerts/
+        Allow: /alerts/$
+        Disallow: /ads/search?
+        Disallow: /ads/plan/action_plan?
+        Disallow: /ads/plan/api/
+        Disallow: /ads/hotels/partners
+        Disallow: /phone/compare/?
+        Disallow: /travel/clk
+        Disallow: /hotelfinder/rpc
+        Disallow: /hotels/rpc
+        Disallow: /flights/rpc
+        Disallow: /commercesearch/services/
+        Disallow: /evaluation/
+        Disallow: /chrome/browser/mobile/tour
+        Disallow: /compare/*/apply*
+        Disallow: /forms/perks/
+        Disallow: /baraza/*/search
+        Disallow: /baraza/*/report
+        Disallow: /shopping/suppliers/search
+        Disallow: /ct/
+        Disallow: /edu/cs4hs/
+        Disallow: /trustedstores/s/
+        Disallow: /trustedstores/tm2
+        Disallow: /trustedstores/verify
+        Disallow: /adwords/proposal
+        Disallow: /shopping/product/
+        Disallow: /shopping/seller
+        Disallow: /shopping/reviewer
+        Disallow: /about/careers/apply/
+        Disallow: /about/careers/applications/
+        Disallow: /landing/signout.html
+        Disallow: /webmasters/sitemaps/ping?
+        Disallow: /ping?
+        Allow: /gb/images
+        Allow: /gb/js
+        Disallow: /gallery/
+        Allow: /chromecast/setup$
+        Allow: /chromecast/setup/$
+        Disallow: /landing/now/ontap/
+        Sitemap: http://www.gstatic.com/culturalinstitute/sitemaps/www_google_com_culturalinstitute/sitemap-index.xml
+        Sitemap: http://www.gstatic.com/dictionary/static/sitemaps/sitemap_index.xml
+        Sitemap: http://www.gstatic.com/earth/gallery/sitemaps/sitemap.xml
+        Sitemap: http://www.gstatic.com/s2/sitemaps/profiles-sitemap.xml
+        Sitemap: http://www.gstatic.com/trends/websites/sitemaps/sitemapindex.xml
+        Sitemap: https://www.google.com/sitemap.xml
+
+    http_version: 
+  recorded_at: Mon, 04 Jan 2016 13:39:15 GMT
+- request:
+    method: get
+    uri: https://www.yahoo.com/robots.txt
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      User-Agent:
+      - TestBot
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Mon, 04 Jan 2016 13:39:16 GMT
+      P3p:
+      - policyref="http://info.yahoo.com/w3c/p3p.xml", CP="CAO DSP COR CUR ADM DEV
+        TAI PSA PSD IVAi IVDi CONi TELo OTPi OUR DELi SAMi OTRi UNRi PUBi IND PHY
+        ONL UNI PUR FIN COM NAV INT DEM CNT STA POL HEA PRE LOC GOV"
+      Cache-Control:
+      - private
+      Last-Modified:
+      - Thu, 19 Nov 2015 00:31:02 GMT
+      Accept-Ranges:
+      - bytes
+      Vary:
+      - Accept-Encoding
+      Content-Type:
+      - text/plain; charset=utf-8
+      Age:
+      - '2'
+      Via:
+      - http/1.1 usproxy2.fp.gq1.yahoo.com (ApacheTrafficServer), http/1.1 ir2.fp.sg3.yahoo.com
+        (ApacheTrafficServer)
+      Server:
+      - ATS
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Y-Trace:
+      - BAEAQAAAAAADb4_wm_pNEAAAAAAAAAAAGXeCK6w0SUwAAAAAAAAAAAAFKII_Uu55AAUogj9WSEhTfIBlAAAAAA--
+    body:
+      encoding: ASCII-8BIT
+      string: |
+        User-agent: *
+        Disallow: /p/
+        Disallow: /r/
+        Disallow: /bin/
+        Disallow: /includes/
+        Disallow: /blank.html
+        Disallow: /_td_api
+        Disallow: /_tdpp_api
+        Disallow: /_remote
+        Disallow: /_multiremote
+        Disallow: /_tdhl_api
+
+        Sitemap: https://www.yahoo.com/food/sitemaps/sitemap_index_us_en-US.xml.gz
+        Sitemap: https://www.yahoo.com/tech/sitemaps/sitemap_index_us_en-US.xml.gz
+        Sitemap: https://www.yahoo.com/travel/sitemaps/sitemap_index_us_en-US.xml.gz
+        Sitemap: https://www.yahoo.com/movies/sitemaps/sitemap_index_us_en-US.xml.gz
+        Sitemap: https://www.yahoo.com/beauty/sitemaps/sitemap_index_us_en-US.xml.gz
+        Sitemap: https://www.yahoo.com/health/sitemaps/sitemap_index_us_en-US.xml.gz
+        Sitemap: https://www.yahoo.com/style/sitemaps/sitemap_index_us_en-US.xml.gz
+        Sitemap: https://www.yahoo.com/makers/sitemaps/sitemap_index_us_en-US.xml.gz
+        Sitemap: https://www.yahoo.com/parenting/sitemaps/sitemap_index_us_en-US.xml.gz
+        Sitemap: https://www.yahoo.com/music/sitemaps/sitemap_index_us_en-US.xml.gz
+        Sitemap: https://www.yahoo.com/tv/sitemaps/sitemap_index_us_en-US.xml.gz
+        Sitemap: https://www.yahoo.com/politics/sitemaps/sitemap_index_us_en-US.xml.gz
+        Sitemap: https://www.yahoo.com/autos/sitemaps/sitemap_index_us_en-US.xml.gz
+        Sitemap: https://www.yahoo.com/katiecouric/sitemaps/sitemap_index_us_en-US.xml.gz
+        Sitemap: https://www.yahoo.com/digest/sitemap.xml
+    http_version: 
+  recorded_at: Mon, 04 Jan 2016 13:39:17 GMT
+- request:
+    method: get
+    uri: http://www.apple.com/robots.txt
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      User-Agent:
+      - TestBot
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Last-Modified:
+      - Thu, 22 Oct 2015 00:20:47 GMT
+      Server:
+      - Apache
+      Nncoection:
+      - close
+      Accept-Ranges:
+      - bytes
+      Content-Length:
+      - '6902'
+      Content-Type:
+      - text/plain; charset=UTF-8
+      Cache-Control:
+      - max-age=561
+      Expires:
+      - Mon, 04 Jan 2016 13:48:38 GMT
+      Date:
+      - Mon, 04 Jan 2016 13:39:17 GMT
+      Connection:
+      - keep-alive
+    body:
+      encoding: UTF-8
+      string: "# robots.txt for http://www.apple.com/\n\nUser-agent: *\nDisallow:
+        /*/includes/*\nDisallow: /*/retail/availability*\nDisallow: /*/retail/availabilitySearch*\nDisallow:
+        /*/retail/pickupEligibility*\nDisallow: /*/search/*\nDisallow: /*/shop/signed_in_account*\nDisallow:
+        /*/shop/sign_in*\nDisallow: /*/shop/sign_out*\nDisallow: /*/shop/*WebObjects/*\nDisallow:
+        /*/shop/1-800-MY-APPLE/*\nDisallow: /*/shop/answer/vote*\nDisallow: /*/shop/bag*\nDisallow:
+        /*/shop/browse/campaigns/mobile_overlay*\nDisallow: /*/shop/button_availability*\nDisallow:
+        /*/shop/favorites*\nDisallow: /*/shop/mobile/olss_error*\nDisallow: /*/shop/mobilex/*\nDisallow:
+        /*/shop/order/*\nDisallow: /*/shop/question/answer/report*\nDisallow: /*/shop/question/subscribe*\nDisallow:
+        /*/shop/question/unsubscribe/\nDisallow: /*/shop/review/vote*\nDisallow: /*/shop/reviews/report*\nDisallow:
+        /*/shop/rs-mvt/rel/*\nDisallow: /*/shop/sentry*\nDisallow: /*/shop/socialsharing/*\nDisallow:
+        /*/shop/store/feeds/*\nDisallow: /*/shop/variationSelection\nDisallow: /*_adc_*/shop/\nDisallow:
+        /*_aoc_*/shop/\nDisallow: /*_edu_*/shop/\nDisallow: /*_enterprise*/shop/\nDisallow:
+        /*_internal-epp-discounted*/shop/\nDisallow: /*_k12nonbts*/shop/\nDisallow:
+        /*_kiosk*/shop/\nDisallow: /*_nonbts*/shop/\nDisallow: /*_qpromo*/shop/\nDisallow:
+        /*_refurb-discounted*/shop/\nDisallow: /cn/se/*\nDisallow: /retail/availability*\nDisallow:
+        /retail/availabilitySearch*\nDisallow: /retail/pickupEligibility*\nDisallow:
+        /search/*\nDisallow: /shop/*signed_in_account*\nDisallow: /shop/*sign_in*\nDisallow:
+        /shop/*sign_out*\nDisallow: /shop/*WebObjects/*\nDisallow: /shop/1-800-MY-APPLE/*\nDisallow:
+        /shop/answer/vote*\nDisallow: /shop/bag*\nDisallow: /shop/browse/campaigns/mobile_overlay*\nDisallow:
+        /shop/button_availability*\nDisallow: /shop/favorites*\nDisallow: /shop/mobile/olss_error*\nDisallow:
+        /shop/mobilex/\nDisallow: /shop/order/*\nDisallow: /shop/question/answer/report*\nDisallow:
+        /shop/question/subscribe*\nDisallow: /shop/question/unsubscribe/\nDisallow:
+        /shop/review/vote*\nDisallow: /shop/reviews/report*\nDisallow: /shop/rs-mvt/rel/*\nDisallow:
+        /shop/search/*\nDisallow: /shop/sentry*\nDisallow: /shop/socialsharing/*\nDisallow:
+        /shop/store/feeds/*\nDisallow: /shop/variationSelection*\nDisallow: /tmall*\nAllow:
+        /ac/globalnav/2.0/*/images/ac-globalnav/globalnav/search/* \t\n\nUser-agent:
+        Baiduspider\nDisallow: /*/retail/availability*\nDisallow: /*/retail/availabilitySearch*\nDisallow:
+        /*/retail/pickupEligibility*\nDisallow: /*/search/*\nDisallow: /*/shop/*WebObjects/*\nDisallow:
+        /*/shop/1-800-MY-APPLE/*\nDisallow: /*/shop/2322-consumer*\nDisallow: /*/shop/account/setup*\nDisallow:
+        /*/shop/answer/vote*\nDisallow: /*/shop/browse/campaigns/mobile_overlay*\nDisallow:
+        /*/shop/browse/overlay*\nDisallow: /*/shop/button_availability*\nDisallow:
+        /*/shop/bag*\nDisallow: /*/shop/change_password*\nDisallow: /*/shop/checkout*\nDisallow:
+        /*/shop/create_account*\nDisallow: /*/shop/favorites*\nDisallow: /*/shop/identify_user*\nDisallow:
+        /*/shop/mobile/checkout/start*\nDisallow: /*/shop/mobilex/*\nDisallow: /*/shop/question/answer/report*\nDisallow:
+        /*/shop/question/subscribe*\nDisallow: /*/shop/question/unsubscribe/*\nDisallow:
+        /*/shop/review/vote*\nDisallow: /*/shop/reviews/report*\nDisallow: /*/shop/rs-mvt/rel/*\nDisallow:
+        /*/shop/sentry*\nDisallow: /*/shop/sentryx/change_password*\nDisallow: /*/shop/sentryx/create_account*\nDisallow:
+        /*/shop/sentryx/create_account_confirm*\nDisallow: /*/shop/sentryx/identify_user*\nDisallow:
+        /*/shop/sentryx/sign_in*\nDisallow: /*/shop/signed_in_account*\nDisallow:
+        /*/shop/sign_in*\nDisallow: /*/shop/sign_out*\nDisallow: /*/shop/socialsharing/*\nDisallow:
+        /*/shop/storeConfig*\nDisallow: /*/shop/vieworder*\nDisallow: /*/variationSelection*\nDisallow:
+        /ae/*\nDisallow: /am/*\nDisallow: /asia/*\nDisallow: /at/*\nDisallow: /au/*\nDisallow:
+        /befr/*\nDisallow: /benl/*\nDisallow: /bg/*\nDisallow: /bh/*\nDisallow: /br/*\nDisallow:
+        /bw/*\nDisallow: /ca/*\nDisallow: /ca/fr/*\nDisallow: /cf/*\nDisallow: /chde/*\nDisallow:
+        /chfr/*\nDisallow: /ci/*\nDisallow: /cl/*\nDisallow: /cm/*\nDisallow: /cn/se/*\nDisallow:
+        /co/*\nDisallow: /cz/*\nDisallow: /de/*\nDisallow: /dk/*\nDisallow: /ee/*\nDisallow:
+        /eg/*\nDisallow: /es/*\nDisallow: /fi/*\nDisallow: /fr/*\nDisallow: /gn/*\nDisallow:
+        /gq/*\nDisallow: /gr/*\nDisallow: /gw/*\nDisallow: /hk/*\nDisallow: /hk/en/*\nDisallow:
+        /hr/*\nDisallow: /hu/*\nDisallow: /id/*\nDisallow: /ie/*\nDisallow: /il/*\nDisallow:
+        /in/*\nDisallow: /it/*\nDisallow: /jo/*\nDisallow: /jp/*\nDisallow: /ke/*\nDisallow:
+        /kr/*\nDisallow: /kw/*\nDisallow: /la/*\nDisallow: /lae/*\nDisallow: /li/*\nDisallow:
+        /lt/*\nDisallow: /lu/*\nDisallow: /lv/*\nDisallow: /ma/*\nDisallow: /md/*\nDisallow:
+        /me/*\nDisallow: /mg/*\nDisallow: /mk/*\nDisallow: /ml/*\nDisallow: /mt/*\nDisallow:
+        /mu/*\nDisallow: /mx/*\nDisallow: /my/*\nDisallow: /mz/*\nDisallow: /ne/*\nDisallow:
+        /ng/*\nDisallow: /nl/*\nDisallow: /no/*\nDisallow: /nz/*\nDisallow: /om/*\nDisallow:
+        /ph/*\nDisallow: /pl/*\nDisallow: /pt/*\nDisallow: /qa/*\nDisallow: /retail/availability*\nDisallow:
+        /retail/availabilitySearch*\nDisallow: /retail/pickupEligibility*\nDisallow:
+        /ro/*\nDisallow: /ru/*\nDisallow: /sa/*\nDisallow: /se/*\nDisallow: /search/*\nDisallow:
+        /sg/*\nDisallow: /shop/*\nDisallow: /si/*\nDisallow: /sk/*\nDisallow: /sn/*\nDisallow:
+        /th/*\nDisallow: /tmall/*\nDisallow: /tn/*\nDisallow: /tr/*\nDisallow: /tw/*\nDisallow:
+        /ug/*\nDisallow: /uk/*\nDisallow: /vn/*\nDisallow: /za/*\n\nUser-agent: HaoSouSpider\nDisallow:
+        /*/retail/availability*\nDisallow: /*/retail/availabilitySearch*\nDisallow:
+        /*/retail/pickupEligibility*\nDisallow: /*/search/*\nDisallow: /*/shop/*WebObjects/*\nDisallow:
+        /*/shop/1-800-MY-APPLE/*\nDisallow: /*/shop/2322-consumer*\nDisallow: /*/shop/account/setup*\nDisallow:
+        /*/shop/answer/vote*\nDisallow: /*/shop/browse/campaigns/mobile_overlay*\nDisallow:
+        /*/shop/button_availability*\nDisallow: /*/shop/bag*\nDisallow: /*/shop/change_password*\nDisallow:
+        /*/shop/checkout*\nDisallow: /*/shop/create_account*\nDisallow: /*/shop/favorites*\nDisallow:
+        /*/shop/identify_user*\nDisallow: /*/shop/mobile/checkout/start*\nDisallow:
+        /*/shop/mobilex/*\nDisallow: /*/shop/question/answer/report*\nDisallow: /*/shop/question/subscribe*\nDisallow:
+        /*/shop/question/unsubscribe/*\nDisallow: /*/shop/review/vote*\nDisallow:
+        /*/shop/reviews/report*\nDisallow: /*/shop/rs-mvt/rel/*\nDisallow: /*/shop/sentry*\nDisallow:
+        /*/shop/sentryx/change_password*\nDisallow: /*/shop/sentryx/create_account*\nDisallow:
+        /*/shop/sentryx/create_account_confirm*\nDisallow: /*/shop/sentryx/identify_user*\nDisallow:
+        /*/shop/sentryx/sign_in*\nDisallow: /*/shop/signed_in_account*\nDisallow:
+        /*/shop/sign_in*\nDisallow: /*/shop/sign_out*\nDisallow: /*/shop/socialsharing/*\nDisallow:
+        /*/shop/storeConfig*\nDisallow: /*/shop/variationSelection*\nDisallow: /*/shop/vieworder*\nDisallow:
+        /cn/se/*\nDisallow: /retail/availability*\nDisallow: /retail/availabilitySearch*\nDisallow:
+        /retail/pickupEligibility*\nDisallow: /search/*\nDisallow: /shop/bag*\nDisallow:
+        /shop/search/*\nDisallow: /tmall/*\n\nSitemap: http://www.apple.com/shop/sitemap.xml\nSitemap:
+        http://www.apple.com/sitemap.xml\n"
+    http_version: 
+  recorded_at: Mon, 04 Jan 2016 13:39:17 GMT
+- request:
+    method: get
+    uri: http://www.apple.com/robots.txt
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      User-Agent:
+      - TestBaiduspider
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Last-Modified:
+      - Thu, 22 Oct 2015 00:20:47 GMT
+      Server:
+      - Apache
+      Nncoection:
+      - close
+      Accept-Ranges:
+      - bytes
+      Content-Length:
+      - '6902'
+      Content-Type:
+      - text/plain; charset=UTF-8
+      Cache-Control:
+      - max-age=417
+      Expires:
+      - Mon, 04 Jan 2016 13:46:14 GMT
+      Date:
+      - Mon, 04 Jan 2016 13:39:17 GMT
+      Connection:
+      - keep-alive
+    body:
+      encoding: UTF-8
+      string: "# robots.txt for http://www.apple.com/\n\nUser-agent: *\nDisallow:
+        /*/includes/*\nDisallow: /*/retail/availability*\nDisallow: /*/retail/availabilitySearch*\nDisallow:
+        /*/retail/pickupEligibility*\nDisallow: /*/search/*\nDisallow: /*/shop/signed_in_account*\nDisallow:
+        /*/shop/sign_in*\nDisallow: /*/shop/sign_out*\nDisallow: /*/shop/*WebObjects/*\nDisallow:
+        /*/shop/1-800-MY-APPLE/*\nDisallow: /*/shop/answer/vote*\nDisallow: /*/shop/bag*\nDisallow:
+        /*/shop/browse/campaigns/mobile_overlay*\nDisallow: /*/shop/button_availability*\nDisallow:
+        /*/shop/favorites*\nDisallow: /*/shop/mobile/olss_error*\nDisallow: /*/shop/mobilex/*\nDisallow:
+        /*/shop/order/*\nDisallow: /*/shop/question/answer/report*\nDisallow: /*/shop/question/subscribe*\nDisallow:
+        /*/shop/question/unsubscribe/\nDisallow: /*/shop/review/vote*\nDisallow: /*/shop/reviews/report*\nDisallow:
+        /*/shop/rs-mvt/rel/*\nDisallow: /*/shop/sentry*\nDisallow: /*/shop/socialsharing/*\nDisallow:
+        /*/shop/store/feeds/*\nDisallow: /*/shop/variationSelection\nDisallow: /*_adc_*/shop/\nDisallow:
+        /*_aoc_*/shop/\nDisallow: /*_edu_*/shop/\nDisallow: /*_enterprise*/shop/\nDisallow:
+        /*_internal-epp-discounted*/shop/\nDisallow: /*_k12nonbts*/shop/\nDisallow:
+        /*_kiosk*/shop/\nDisallow: /*_nonbts*/shop/\nDisallow: /*_qpromo*/shop/\nDisallow:
+        /*_refurb-discounted*/shop/\nDisallow: /cn/se/*\nDisallow: /retail/availability*\nDisallow:
+        /retail/availabilitySearch*\nDisallow: /retail/pickupEligibility*\nDisallow:
+        /search/*\nDisallow: /shop/*signed_in_account*\nDisallow: /shop/*sign_in*\nDisallow:
+        /shop/*sign_out*\nDisallow: /shop/*WebObjects/*\nDisallow: /shop/1-800-MY-APPLE/*\nDisallow:
+        /shop/answer/vote*\nDisallow: /shop/bag*\nDisallow: /shop/browse/campaigns/mobile_overlay*\nDisallow:
+        /shop/button_availability*\nDisallow: /shop/favorites*\nDisallow: /shop/mobile/olss_error*\nDisallow:
+        /shop/mobilex/\nDisallow: /shop/order/*\nDisallow: /shop/question/answer/report*\nDisallow:
+        /shop/question/subscribe*\nDisallow: /shop/question/unsubscribe/\nDisallow:
+        /shop/review/vote*\nDisallow: /shop/reviews/report*\nDisallow: /shop/rs-mvt/rel/*\nDisallow:
+        /shop/search/*\nDisallow: /shop/sentry*\nDisallow: /shop/socialsharing/*\nDisallow:
+        /shop/store/feeds/*\nDisallow: /shop/variationSelection*\nDisallow: /tmall*\nAllow:
+        /ac/globalnav/2.0/*/images/ac-globalnav/globalnav/search/* \t\n\nUser-agent:
+        Baiduspider\nDisallow: /*/retail/availability*\nDisallow: /*/retail/availabilitySearch*\nDisallow:
+        /*/retail/pickupEligibility*\nDisallow: /*/search/*\nDisallow: /*/shop/*WebObjects/*\nDisallow:
+        /*/shop/1-800-MY-APPLE/*\nDisallow: /*/shop/2322-consumer*\nDisallow: /*/shop/account/setup*\nDisallow:
+        /*/shop/answer/vote*\nDisallow: /*/shop/browse/campaigns/mobile_overlay*\nDisallow:
+        /*/shop/browse/overlay*\nDisallow: /*/shop/button_availability*\nDisallow:
+        /*/shop/bag*\nDisallow: /*/shop/change_password*\nDisallow: /*/shop/checkout*\nDisallow:
+        /*/shop/create_account*\nDisallow: /*/shop/favorites*\nDisallow: /*/shop/identify_user*\nDisallow:
+        /*/shop/mobile/checkout/start*\nDisallow: /*/shop/mobilex/*\nDisallow: /*/shop/question/answer/report*\nDisallow:
+        /*/shop/question/subscribe*\nDisallow: /*/shop/question/unsubscribe/*\nDisallow:
+        /*/shop/review/vote*\nDisallow: /*/shop/reviews/report*\nDisallow: /*/shop/rs-mvt/rel/*\nDisallow:
+        /*/shop/sentry*\nDisallow: /*/shop/sentryx/change_password*\nDisallow: /*/shop/sentryx/create_account*\nDisallow:
+        /*/shop/sentryx/create_account_confirm*\nDisallow: /*/shop/sentryx/identify_user*\nDisallow:
+        /*/shop/sentryx/sign_in*\nDisallow: /*/shop/signed_in_account*\nDisallow:
+        /*/shop/sign_in*\nDisallow: /*/shop/sign_out*\nDisallow: /*/shop/socialsharing/*\nDisallow:
+        /*/shop/storeConfig*\nDisallow: /*/shop/vieworder*\nDisallow: /*/variationSelection*\nDisallow:
+        /ae/*\nDisallow: /am/*\nDisallow: /asia/*\nDisallow: /at/*\nDisallow: /au/*\nDisallow:
+        /befr/*\nDisallow: /benl/*\nDisallow: /bg/*\nDisallow: /bh/*\nDisallow: /br/*\nDisallow:
+        /bw/*\nDisallow: /ca/*\nDisallow: /ca/fr/*\nDisallow: /cf/*\nDisallow: /chde/*\nDisallow:
+        /chfr/*\nDisallow: /ci/*\nDisallow: /cl/*\nDisallow: /cm/*\nDisallow: /cn/se/*\nDisallow:
+        /co/*\nDisallow: /cz/*\nDisallow: /de/*\nDisallow: /dk/*\nDisallow: /ee/*\nDisallow:
+        /eg/*\nDisallow: /es/*\nDisallow: /fi/*\nDisallow: /fr/*\nDisallow: /gn/*\nDisallow:
+        /gq/*\nDisallow: /gr/*\nDisallow: /gw/*\nDisallow: /hk/*\nDisallow: /hk/en/*\nDisallow:
+        /hr/*\nDisallow: /hu/*\nDisallow: /id/*\nDisallow: /ie/*\nDisallow: /il/*\nDisallow:
+        /in/*\nDisallow: /it/*\nDisallow: /jo/*\nDisallow: /jp/*\nDisallow: /ke/*\nDisallow:
+        /kr/*\nDisallow: /kw/*\nDisallow: /la/*\nDisallow: /lae/*\nDisallow: /li/*\nDisallow:
+        /lt/*\nDisallow: /lu/*\nDisallow: /lv/*\nDisallow: /ma/*\nDisallow: /md/*\nDisallow:
+        /me/*\nDisallow: /mg/*\nDisallow: /mk/*\nDisallow: /ml/*\nDisallow: /mt/*\nDisallow:
+        /mu/*\nDisallow: /mx/*\nDisallow: /my/*\nDisallow: /mz/*\nDisallow: /ne/*\nDisallow:
+        /ng/*\nDisallow: /nl/*\nDisallow: /no/*\nDisallow: /nz/*\nDisallow: /om/*\nDisallow:
+        /ph/*\nDisallow: /pl/*\nDisallow: /pt/*\nDisallow: /qa/*\nDisallow: /retail/availability*\nDisallow:
+        /retail/availabilitySearch*\nDisallow: /retail/pickupEligibility*\nDisallow:
+        /ro/*\nDisallow: /ru/*\nDisallow: /sa/*\nDisallow: /se/*\nDisallow: /search/*\nDisallow:
+        /sg/*\nDisallow: /shop/*\nDisallow: /si/*\nDisallow: /sk/*\nDisallow: /sn/*\nDisallow:
+        /th/*\nDisallow: /tmall/*\nDisallow: /tn/*\nDisallow: /tr/*\nDisallow: /tw/*\nDisallow:
+        /ug/*\nDisallow: /uk/*\nDisallow: /vn/*\nDisallow: /za/*\n\nUser-agent: HaoSouSpider\nDisallow:
+        /*/retail/availability*\nDisallow: /*/retail/availabilitySearch*\nDisallow:
+        /*/retail/pickupEligibility*\nDisallow: /*/search/*\nDisallow: /*/shop/*WebObjects/*\nDisallow:
+        /*/shop/1-800-MY-APPLE/*\nDisallow: /*/shop/2322-consumer*\nDisallow: /*/shop/account/setup*\nDisallow:
+        /*/shop/answer/vote*\nDisallow: /*/shop/browse/campaigns/mobile_overlay*\nDisallow:
+        /*/shop/button_availability*\nDisallow: /*/shop/bag*\nDisallow: /*/shop/change_password*\nDisallow:
+        /*/shop/checkout*\nDisallow: /*/shop/create_account*\nDisallow: /*/shop/favorites*\nDisallow:
+        /*/shop/identify_user*\nDisallow: /*/shop/mobile/checkout/start*\nDisallow:
+        /*/shop/mobilex/*\nDisallow: /*/shop/question/answer/report*\nDisallow: /*/shop/question/subscribe*\nDisallow:
+        /*/shop/question/unsubscribe/*\nDisallow: /*/shop/review/vote*\nDisallow:
+        /*/shop/reviews/report*\nDisallow: /*/shop/rs-mvt/rel/*\nDisallow: /*/shop/sentry*\nDisallow:
+        /*/shop/sentryx/change_password*\nDisallow: /*/shop/sentryx/create_account*\nDisallow:
+        /*/shop/sentryx/create_account_confirm*\nDisallow: /*/shop/sentryx/identify_user*\nDisallow:
+        /*/shop/sentryx/sign_in*\nDisallow: /*/shop/signed_in_account*\nDisallow:
+        /*/shop/sign_in*\nDisallow: /*/shop/sign_out*\nDisallow: /*/shop/socialsharing/*\nDisallow:
+        /*/shop/storeConfig*\nDisallow: /*/shop/variationSelection*\nDisallow: /*/shop/vieworder*\nDisallow:
+        /cn/se/*\nDisallow: /retail/availability*\nDisallow: /retail/availabilitySearch*\nDisallow:
+        /retail/pickupEligibility*\nDisallow: /search/*\nDisallow: /shop/bag*\nDisallow:
+        /shop/search/*\nDisallow: /tmall/*\n\nSitemap: http://www.apple.com/shop/sitemap.xml\nSitemap:
+        http://www.apple.com/sitemap.xml\n"
+    http_version: 
+  recorded_at: Mon, 04 Jan 2016 13:39:17 GMT
+- request:
+    method: get
+    uri: https://github.com/robots.txt
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      User-Agent:
+      - TestBot
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Server:
+      - GitHub.com
+      Date:
+      - Mon, 04 Jan 2016 13:39:18 GMT
+      Content-Type:
+      - text/plain
+      Last-Modified:
+      - Mon, 04 Jan 2016 13:28:38 GMT
+      Transfer-Encoding:
+      - chunked
+      Etag:
+      - W/"568a7386-6e36"
+      Vary:
+      - Accept-Encoding
+      X-Served-By:
+      - a568c03544f42dddf712bab3bfd562fd
+      X-Github-Request-Id:
+      - 7C27244A:448A:3EB799EF:568A7605
+    body:
+      encoding: ASCII-8BIT
+      string: |
+        # If you would like to crawl GitHub contact us at support@github.com.
+        # We also provide an extensive API: https://developer.github.com/
+
+        User-agent: CCBot
+        Allow: /*/*/tree/master
+        Allow: /*/*/blob/master
+        Disallow: /ekansa/Open-Context-Data
+        Disallow: /ekansa/opencontext-*
+        Disallow: /*/*/pulse
+        Disallow: /*/*/tree/*
+        Disallow: /*/*/blob/*
+        Disallow: /*/*/wiki/*/*
+        Disallow: /gist/*/*/*
+        Disallow: /oembed
+        Disallow: /*/forks
+        Disallow: /*/stars
+        Disallow: /*/download
+        Disallow: /*/revisions
+        Disallow: /*/*/issues/new
+        Disallow: /*/*/issues/search
+        Disallow: /*/*/commits/*/*
+        Disallow: /*/*/commits/*?author
+        Disallow: /*/*/commits/*?path
+        Disallow: /*/*/branches
+        Disallow: /*/*/tags
+        Disallow: /*/*/contributors
+        Disallow: /*/*/comments
+        Disallow: /*/*/stargazers
+        Disallow: /*/*/search
+        Disallow: /*/tarball/
+        Disallow: /*/zipball/
+        Disallow: /*/*/archive/
+        Disallow: /raw/*
+        Disallow: /*/followers
+        Disallow: /*/following
+        Disallow: /stars/*
+        Disallow: /*/blame/
+        Disallow: /*/watchers
+        Disallow: /*/network
+        Disallow: /*/graphs
+        Disallow: /*/raw/
+        Disallow: /*/compare/
+        Disallow: /*/cache/
+        Disallow: /*/*/blame/
+        Disallow: /*/*/watchers
+        Disallow: /*/*/network
+        Disallow: /*/*/graphs
+        Disallow: /*/*/raw/
+        Disallow: /*/*/compare/
+        Disallow: /*/*/cache/
+        Disallow: /*.git
+        Disallow: /*.git/
+        Disallow: /search/advanced
+        Disallow: /search
+        Disallow: /*q=
+        Disallow: /*.atom
+        Disallow: /login
+
+        User-agent: coccoc
+        Allow: /*/*/tree/master
+        Allow: /*/*/blob/master
+        Disallow: /ekansa/Open-Context-Data
+        Disallow: /ekansa/opencontext-*
+        Disallow: /*/*/pulse
+        Disallow: /*/*/tree/*
+        Disallow: /*/*/blob/*
+        Disallow: /*/*/wiki/*/*
+        Disallow: /gist/*/*/*
+        Disallow: /oembed
+        Disallow: /*/forks
+        Disallow: /*/stars
+        Disallow: /*/download
+        Disallow: /*/revisions
+        Disallow: /*/*/issues/new
+        Disallow: /*/*/issues/search
+        Disallow: /*/*/commits/*/*
+        Disallow: /*/*/commits/*?author
+        Disallow: /*/*/commits/*?path
+        Disallow: /*/*/branches
+        Disallow: /*/*/tags
+        Disallow: /*/*/contributors
+        Disallow: /*/*/comments
+        Disallow: /*/*/stargazers
+        Disallow: /*/*/search
+        Disallow: /*/tarball/
+        Disallow: /*/zipball/
+        Disallow: /*/*/archive/
+        Disallow: /raw/*
+        Disallow: /*/followers
+        Disallow: /*/following
+        Disallow: /stars/*
+        Disallow: /*/blame/
+        Disallow: /*/watchers
+        Disallow: /*/network
+        Disallow: /*/graphs
+        Disallow: /*/raw/
+        Disallow: /*/compare/
+        Disallow: /*/cache/
+        Disallow: /*/*/blame/
+        Disallow: /*/*/watchers
+        Disallow: /*/*/network
+        Disallow: /*/*/graphs
+        Disallow: /*/*/raw/
+        Disallow: /*/*/compare/
+        Disallow: /*/*/cache/
+        Disallow: /*.git
+        Disallow: /*.git/
+        Disallow: /search/advanced
+        Disallow: /search
+        Disallow: /*q=
+        Disallow: /*.atom
+        Disallow: /login
+
+        User-agent: dotbot
+        Allow: /*/*/tree/master
+        Allow: /*/*/blob/master
+        Disallow: /ekansa/Open-Context-Data
+        Disallow: /ekansa/opencontext-*
+        Disallow: /*/*/pulse
+        Disallow: /*/*/tree/*
+        Disallow: /*/*/blob/*
+        Disallow: /*/*/wiki/*/*
+        Disallow: /gist/*/*/*
+        Disallow: /oembed
+        Disallow: /*/forks
+        Disallow: /*/stars
+        Disallow: /*/download
+        Disallow: /*/revisions
+        Disallow: /*/*/issues/new
+        Disallow: /*/*/issues/search
+        Disallow: /*/*/commits/*/*
+        Disallow: /*/*/commits/*?author
+        Disallow: /*/*/commits/*?path
+        Disallow: /*/*/branches
+        Disallow: /*/*/tags
+        Disallow: /*/*/contributors
+        Disallow: /*/*/comments
+        Disallow: /*/*/stargazers
+        Disallow: /*/*/search
+        Disallow: /*/tarball/
+        Disallow: /*/zipball/
+        Disallow: /*/*/archive/
+        Disallow: /raw/*
+        Disallow: /*/followers
+        Disallow: /*/following
+        Disallow: /stars/*
+        Disallow: /*/blame/
+        Disallow: /*/watchers
+        Disallow: /*/network
+        Disallow: /*/graphs
+        Disallow: /*/raw/
+        Disallow: /*/compare/
+        Disallow: /*/cache/
+        Disallow: /*/*/blame/
+        Disallow: /*/*/watchers
+        Disallow: /*/*/network
+        Disallow: /*/*/graphs
+        Disallow: /*/*/raw/
+        Disallow: /*/*/compare/
+        Disallow: /*/*/cache/
+        Disallow: /*.git
+        Disallow: /*.git/
+        Disallow: /search/advanced
+        Disallow: /search
+        Disallow: /*q=
+        Disallow: /*.atom
+        Disallow: /login
+
+        User-agent: duckduckbot
+        Allow: /*/*/tree/master
+        Allow: /*/*/blob/master
+        Disallow: /ekansa/Open-Context-Data
+        Disallow: /ekansa/opencontext-*
+        Disallow: /*/*/pulse
+        Disallow: /*/*/tree/*
+        Disallow: /*/*/blob/*
+        Disallow: /*/*/wiki/*/*
+        Disallow: /gist/*/*/*
+        Disallow: /oembed
+        Disallow: /*/forks
+        Disallow: /*/stars
+        Disallow: /*/download
+        Disallow: /*/revisions
+        Disallow: /*/*/issues/new
+        Disallow: /*/*/issues/search
+        Disallow: /*/*/commits/*/*
+        Disallow: /*/*/commits/*?author
+        Disallow: /*/*/commits/*?path
+        Disallow: /*/*/branches
+        Disallow: /*/*/tags
+        Disallow: /*/*/contributors
+        Disallow: /*/*/comments
+        Disallow: /*/*/stargazers
+        Disallow: /*/*/search
+        Disallow: /*/tarball/
+        Disallow: /*/zipball/
+        Disallow: /*/*/archive/
+        Disallow: /raw/*
+        Disallow: /*/followers
+        Disallow: /*/following
+        Disallow: /stars/*
+        Disallow: /*/blame/
+        Disallow: /*/watchers
+        Disallow: /*/network
+        Disallow: /*/graphs
+        Disallow: /*/raw/
+        Disallow: /*/compare/
+        Disallow: /*/cache/
+        Disallow: /*/*/blame/
+        Disallow: /*/*/watchers
+        Disallow: /*/*/network
+        Disallow: /*/*/graphs
+        Disallow: /*/*/raw/
+        Disallow: /*/*/compare/
+        Disallow: /*/*/cache/
+        Disallow: /*.git
+        Disallow: /*.git/
+        Disallow: /search/advanced
+        Disallow: /search
+        Disallow: /*q=
+        Disallow: /*.atom
+        Disallow: /login
+
+        User-agent: EtaoSpider
+        Allow: /*/*/tree/master
+        Allow: /*/*/blob/master
+        Disallow: /ekansa/Open-Context-Data
+        Disallow: /ekansa/opencontext-*
+        Disallow: /*/*/pulse
+        Disallow: /*/*/tree/*
+        Disallow: /*/*/blob/*
+        Disallow: /*/*/wiki/*/*
+        Disallow: /gist/*/*/*
+        Disallow: /oembed
+        Disallow: /*/forks
+        Disallow: /*/stars
+        Disallow: /*/download
+        Disallow: /*/revisions
+        Disallow: /*/*/issues/new
+        Disallow: /*/*/issues/search
+        Disallow: /*/*/commits/*/*
+        Disallow: /*/*/commits/*?author
+        Disallow: /*/*/commits/*?path
+        Disallow: /*/*/branches
+        Disallow: /*/*/tags
+        Disallow: /*/*/contributors
+        Disallow: /*/*/comments
+        Disallow: /*/*/stargazers
+        Disallow: /*/*/search
+        Disallow: /*/tarball/
+        Disallow: /*/zipball/
+        Disallow: /*/*/archive/
+        Disallow: /raw/*
+        Disallow: /*/followers
+        Disallow: /*/following
+        Disallow: /stars/*
+        Disallow: /*/blame/
+        Disallow: /*/watchers
+        Disallow: /*/network
+        Disallow: /*/graphs
+        Disallow: /*/raw/
+        Disallow: /*/compare/
+        Disallow: /*/cache/
+        Disallow: /*/*/blame/
+        Disallow: /*/*/watchers
+        Disallow: /*/*/network
+        Disallow: /*/*/graphs
+        Disallow: /*/*/raw/
+        Disallow: /*/*/compare/
+        Disallow: /*/*/cache/
+        Disallow: /*.git
+        Disallow: /*.git/
+        Disallow: /search/advanced
+        Disallow: /search
+        Disallow: /*q=
+        Disallow: /*.atom
+        Disallow: /login
+
+        User-agent: Googlebot
+        Allow: /*/*/tree/master
+        Allow: /*/*/blob/master
+        Disallow: /ekansa/Open-Context-Data
+        Disallow: /ekansa/opencontext-*
+        Disallow: /*/*/pulse
+        Disallow: /*/*/tree/*
+        Disallow: /*/*/blob/*
+        Disallow: /*/*/wiki/*/*
+        Disallow: /gist/*/*/*
+        Disallow: /oembed
+        Disallow: /*/forks
+        Disallow: /*/stars
+        Disallow: /*/download
+        Disallow: /*/revisions
+        Disallow: /*/*/issues/new
+        Disallow: /*/*/issues/search
+        Disallow: /*/*/commits/*/*
+        Disallow: /*/*/commits/*?author
+        Disallow: /*/*/commits/*?path
+        Disallow: /*/*/branches
+        Disallow: /*/*/tags
+        Disallow: /*/*/contributors
+        Disallow: /*/*/comments
+        Disallow: /*/*/stargazers
+        Disallow: /*/*/search
+        Disallow: /*/tarball/
+        Disallow: /*/zipball/
+        Disallow: /*/*/archive/
+        Disallow: /raw/*
+        Disallow: /*/followers
+        Disallow: /*/following
+        Disallow: /stars/*
+        Disallow: /*/blame/
+        Disallow: /*/watchers
+        Disallow: /*/network
+        Disallow: /*/graphs
+        Disallow: /*/raw/
+        Disallow: /*/compare/
+        Disallow: /*/cache/
+        Disallow: /*/*/blame/
+        Disallow: /*/*/watchers
+        Disallow: /*/*/network
+        Disallow: /*/*/graphs
+        Disallow: /*/*/raw/
+        Disallow: /*/*/compare/
+        Disallow: /*/*/cache/
+        Disallow: /*.git
+        Disallow: /*.git/
+        Disallow: /search/advanced
+        Disallow: /search
+        Disallow: /*q=
+        Disallow: /*.atom
+        Disallow: /login
+
+        User-agent: HTTrack
+        Allow: /*/*/tree/master
+        Allow: /*/*/blob/master
+        Disallow: /ekansa/Open-Context-Data
+        Disallow: /ekansa/opencontext-*
+        Disallow: /*/*/pulse
+        Disallow: /*/*/tree/*
+        Disallow: /*/*/blob/*
+        Disallow: /*/*/wiki/*/*
+        Disallow: /gist/*/*/*
+        Disallow: /oembed
+        Disallow: /*/forks
+        Disallow: /*/stars
+        Disallow: /*/download
+        Disallow: /*/revisions
+        Disallow: /*/*/issues/new
+        Disallow: /*/*/issues/search
+        Disallow: /*/*/commits/*/*
+        Disallow: /*/*/commits/*?author
+        Disallow: /*/*/commits/*?path
+        Disallow: /*/*/branches
+        Disallow: /*/*/tags
+        Disallow: /*/*/contributors
+        Disallow: /*/*/comments
+        Disallow: /*/*/stargazers
+        Disallow: /*/*/search
+        Disallow: /*/tarball/
+        Disallow: /*/zipball/
+        Disallow: /*/*/archive/
+        Disallow: /raw/*
+        Disallow: /*/followers
+        Disallow: /*/following
+        Disallow: /stars/*
+        Disallow: /*/blame/
+        Disallow: /*/watchers
+        Disallow: /*/network
+        Disallow: /*/graphs
+        Disallow: /*/raw/
+        Disallow: /*/compare/
+        Disallow: /*/cache/
+        Disallow: /*/*/blame/
+        Disallow: /*/*/watchers
+        Disallow: /*/*/network
+        Disallow: /*/*/graphs
+        Disallow: /*/*/raw/
+        Disallow: /*/*/compare/
+        Disallow: /*/*/cache/
+        Disallow: /*.git
+        Disallow: /*.git/
+        Disallow: /search/advanced
+        Disallow: /search
+        Disallow: /*q=
+        Disallow: /*.atom
+        Disallow: /login
+
+        User-agent: ia_archiver
+        Allow: /*/*/tree/master
+        Allow: /*/*/blob/master
+        Disallow: /ekansa/Open-Context-Data
+        Disallow: /ekansa/opencontext-*
+        Disallow: /*/*/pulse
+        Disallow: /*/*/tree/*
+        Disallow: /*/*/blob/*
+        Disallow: /*/*/wiki/*/*
+        Disallow: /gist/*/*/*
+        Disallow: /oembed
+        Disallow: /*/forks
+        Disallow: /*/stars
+        Disallow: /*/download
+        Disallow: /*/revisions
+        Disallow: /*/*/issues/new
+        Disallow: /*/*/issues/search
+        Disallow: /*/*/commits/*/*
+        Disallow: /*/*/commits/*?author
+        Disallow: /*/*/commits/*?path
+        Disallow: /*/*/branches
+        Disallow: /*/*/tags
+        Disallow: /*/*/contributors
+        Disallow: /*/*/comments
+        Disallow: /*/*/stargazers
+        Disallow: /*/*/search
+        Disallow: /*/tarball/
+        Disallow: /*/zipball/
+        Disallow: /*/*/archive/
+        Disallow: /raw/*
+        Disallow: /*/followers
+        Disallow: /*/following
+        Disallow: /stars/*
+        Disallow: /*/blame/
+        Disallow: /*/watchers
+        Disallow: /*/network
+        Disallow: /*/graphs
+        Disallow: /*/raw/
+        Disallow: /*/compare/
+        Disallow: /*/cache/
+        Disallow: /*/*/blame/
+        Disallow: /*/*/watchers
+        Disallow: /*/*/network
+        Disallow: /*/*/graphs
+        Disallow: /*/*/raw/
+        Disallow: /*/*/compare/
+        Disallow: /*/*/cache/
+        Disallow: /*.git
+        Disallow: /*.git/
+        Disallow: /search/advanced
+        Disallow: /search
+        Disallow: /*q=
+        Disallow: /*.atom
+        Disallow: /login
+
+        User-agent: IntuitGSACrawler
+        Allow: /*/*/tree/master
+        Allow: /*/*/blob/master
+        Disallow: /ekansa/Open-Context-Data
+        Disallow: /ekansa/opencontext-*
+        Disallow: /*/*/pulse
+        Disallow: /*/*/tree/*
+        Disallow: /*/*/blob/*
+        Disallow: /*/*/wiki/*/*
+        Disallow: /gist/*/*/*
+        Disallow: /oembed
+        Disallow: /*/forks
+        Disallow: /*/stars
+        Disallow: /*/download
+        Disallow: /*/revisions
+        Disallow: /*/*/issues/new
+        Disallow: /*/*/issues/search
+        Disallow: /*/*/commits/*/*
+        Disallow: /*/*/commits/*?author
+        Disallow: /*/*/commits/*?path
+        Disallow: /*/*/branches
+        Disallow: /*/*/tags
+        Disallow: /*/*/contributors
+        Disallow: /*/*/comments
+        Disallow: /*/*/stargazers
+        Disallow: /*/*/search
+        Disallow: /*/tarball/
+        Disallow: /*/zipball/
+        Disallow: /*/*/archive/
+        Disallow: /raw/*
+        Disallow: /*/followers
+        Disallow: /*/following
+        Disallow: /stars/*
+        Disallow: /*/blame/
+        Disallow: /*/watchers
+        Disallow: /*/network
+        Disallow: /*/graphs
+        Disallow: /*/raw/
+        Disallow: /*/compare/
+        Disallow: /*/cache/
+        Disallow: /*/*/blame/
+        Disallow: /*/*/watchers
+        Disallow: /*/*/network
+        Disallow: /*/*/graphs
+        Disallow: /*/*/raw/
+        Disallow: /*/*/compare/
+        Disallow: /*/*/cache/
+        Disallow: /*.git
+        Disallow: /*.git/
+        Disallow: /search/advanced
+        Disallow: /search
+        Disallow: /*q=
+        Disallow: /*.atom
+        Disallow: /login
+
+        User-agent: Mail.RU_Bot
+        Allow: /*/*/tree/master
+        Allow: /*/*/blob/master
+        Disallow: /ekansa/Open-Context-Data
+        Disallow: /ekansa/opencontext-*
+        Disallow: /*/*/pulse
+        Disallow: /*/*/tree/*
+        Disallow: /*/*/blob/*
+        Disallow: /*/*/wiki/*/*
+        Disallow: /gist/*/*/*
+        Disallow: /oembed
+        Disallow: /*/forks
+        Disallow: /*/stars
+        Disallow: /*/download
+        Disallow: /*/revisions
+        Disallow: /*/*/issues/new
+        Disallow: /*/*/issues/search
+        Disallow: /*/*/commits/*/*
+        Disallow: /*/*/commits/*?author
+        Disallow: /*/*/commits/*?path
+        Disallow: /*/*/branches
+        Disallow: /*/*/tags
+        Disallow: /*/*/contributors
+        Disallow: /*/*/comments
+        Disallow: /*/*/stargazers
+        Disallow: /*/*/search
+        Disallow: /*/tarball/
+        Disallow: /*/zipball/
+        Disallow: /*/*/archive/
+        Disallow: /raw/*
+        Disallow: /*/followers
+        Disallow: /*/following
+        Disallow: /stars/*
+        Disallow: /*/blame/
+        Disallow: /*/watchers
+        Disallow: /*/network
+        Disallow: /*/graphs
+        Disallow: /*/raw/
+        Disallow: /*/compare/
+        Disallow: /*/cache/
+        Disallow: /*/*/blame/
+        Disallow: /*/*/watchers
+        Disallow: /*/*/network
+        Disallow: /*/*/graphs
+        Disallow: /*/*/raw/
+        Disallow: /*/*/compare/
+        Disallow: /*/*/cache/
+        Disallow: /*.git
+        Disallow: /*.git/
+        Disallow: /search/advanced
+        Disallow: /search
+        Disallow: /*q=
+        Disallow: /*.atom
+        Disallow: /login
+
+        User-agent: msnbot
+        Allow: /*/*/tree/master
+        Allow: /*/*/blob/master
+        Disallow: /ekansa/Open-Context-Data
+        Disallow: /ekansa/opencontext-*
+        Disallow: /*/*/pulse
+        Disallow: /*/*/tree/*
+        Disallow: /*/*/blob/*
+        Disallow: /*/*/wiki/*/*
+        Disallow: /gist/*/*/*
+        Disallow: /oembed
+        Disallow: /*/forks
+        Disallow: /*/stars
+        Disallow: /*/download
+        Disallow: /*/revisions
+        Disallow: /*/*/issues/new
+        Disallow: /*/*/issues/search
+        Disallow: /*/*/commits/*/*
+        Disallow: /*/*/commits/*?author
+        Disallow: /*/*/commits/*?path
+        Disallow: /*/*/branches
+        Disallow: /*/*/tags
+        Disallow: /*/*/contributors
+        Disallow: /*/*/comments
+        Disallow: /*/*/stargazers
+        Disallow: /*/*/search
+        Disallow: /*/tarball/
+        Disallow: /*/zipball/
+        Disallow: /*/*/archive/
+        Disallow: /raw/*
+        Disallow: /*/followers
+        Disallow: /*/following
+        Disallow: /stars/*
+        Disallow: /*/blame/
+        Disallow: /*/watchers
+        Disallow: /*/network
+        Disallow: /*/graphs
+        Disallow: /*/raw/
+        Disallow: /*/compare/
+        Disallow: /*/cache/
+        Disallow: /*/*/blame/
+        Disallow: /*/*/watchers
+        Disallow: /*/*/network
+        Disallow: /*/*/graphs
+        Disallow: /*/*/raw/
+        Disallow: /*/*/compare/
+        Disallow: /*/*/cache/
+        Disallow: /*.git
+        Disallow: /*.git/
+        Disallow: /search/advanced
+        Disallow: /search
+        Disallow: /*q=
+        Disallow: /*.atom
+        Disallow: /login
+
+        User-agent: Bingbot
+        Allow: /*/*/tree/master
+        Allow: /*/*/blob/master
+        Disallow: /ekansa/Open-Context-Data
+        Disallow: /ekansa/opencontext-*
+        Disallow: /*/*/pulse
+        Disallow: /*/*/tree/*
+        Disallow: /*/*/blob/*
+        Disallow: /*/*/wiki/*/*
+        Disallow: /gist/*/*/*
+        Disallow: /oembed
+        Disallow: /*/forks
+        Disallow: /*/stars
+        Disallow: /*/download
+        Disallow: /*/revisions
+        Disallow: /*/*/issues/new
+        Disallow: /*/*/issues/search
+        Disallow: /*/*/commits/*/*
+        Disallow: /*/*/commits/*?author
+        Disallow: /*/*/commits/*?path
+        Disallow: /*/*/branches
+        Disallow: /*/*/tags
+        Disallow: /*/*/contributors
+        Disallow: /*/*/comments
+        Disallow: /*/*/stargazers
+        Disallow: /*/*/search
+        Disallow: /*/tarball/
+        Disallow: /*/zipball/
+        Disallow: /*/*/archive/
+        Disallow: /raw/*
+        Disallow: /*/followers
+        Disallow: /*/following
+        Disallow: /stars/*
+        Disallow: /*/blame/
+        Disallow: /*/watchers
+        Disallow: /*/network
+        Disallow: /*/graphs
+        Disallow: /*/raw/
+        Disallow: /*/compare/
+        Disallow: /*/cache/
+        Disallow: /*/*/blame/
+        Disallow: /*/*/watchers
+        Disallow: /*/*/network
+        Disallow: /*/*/graphs
+        Disallow: /*/*/raw/
+        Disallow: /*/*/compare/
+        Disallow: /*/*/cache/
+        Disallow: /*.git
+        Disallow: /*.git/
+        Disallow: /search/advanced
+        Disallow: /search
+        Disallow: /*q=
+        Disallow: /*.atom
+        Disallow: /login
+
+        User-agent: naverbot
+        Allow: /*/*/tree/master
+        Allow: /*/*/blob/master
+        Disallow: /ekansa/Open-Context-Data
+        Disallow: /ekansa/opencontext-*
+        Disallow: /*/*/pulse
+        Disallow: /*/*/tree/*
+        Disallow: /*/*/blob/*
+        Disallow: /*/*/wiki/*/*
+        Disallow: /gist/*/*/*
+        Disallow: /oembed
+        Disallow: /*/forks
+        Disallow: /*/stars
+        Disallow: /*/download
+        Disallow: /*/revisions
+        Disallow: /*/*/issues/new
+        Disallow: /*/*/issues/search
+        Disallow: /*/*/commits/*/*
+        Disallow: /*/*/commits/*?author
+        Disallow: /*/*/commits/*?path
+        Disallow: /*/*/branches
+        Disallow: /*/*/tags
+        Disallow: /*/*/contributors
+        Disallow: /*/*/comments
+        Disallow: /*/*/stargazers
+        Disallow: /*/*/search
+        Disallow: /*/tarball/
+        Disallow: /*/zipball/
+        Disallow: /*/*/archive/
+        Disallow: /raw/*
+        Disallow: /*/followers
+        Disallow: /*/following
+        Disallow: /stars/*
+        Disallow: /*/blame/
+        Disallow: /*/watchers
+        Disallow: /*/network
+        Disallow: /*/graphs
+        Disallow: /*/raw/
+        Disallow: /*/compare/
+        Disallow: /*/cache/
+        Disallow: /*/*/blame/
+        Disallow: /*/*/watchers
+        Disallow: /*/*/network
+        Disallow: /*/*/graphs
+        Disallow: /*/*/raw/
+        Disallow: /*/*/compare/
+        Disallow: /*/*/cache/
+        Disallow: /*.git
+        Disallow: /*.git/
+        Disallow: /search/advanced
+        Disallow: /search
+        Disallow: /*q=
+        Disallow: /*.atom
+        Disallow: /login
+
+        User-agent: red-app-gsa-p-one
+        Allow: /*/*/tree/master
+        Allow: /*/*/blob/master
+        Disallow: /ekansa/Open-Context-Data
+        Disallow: /ekansa/opencontext-*
+        Disallow: /*/*/pulse
+        Disallow: /*/*/tree/*
+        Disallow: /*/*/blob/*
+        Disallow: /*/*/wiki/*/*
+        Disallow: /gist/*/*/*
+        Disallow: /oembed
+        Disallow: /*/forks
+        Disallow: /*/stars
+        Disallow: /*/download
+        Disallow: /*/revisions
+        Disallow: /*/*/issues/new
+        Disallow: /*/*/issues/search
+        Disallow: /*/*/commits/*/*
+        Disallow: /*/*/commits/*?author
+        Disallow: /*/*/commits/*?path
+        Disallow: /*/*/branches
+        Disallow: /*/*/tags
+        Disallow: /*/*/contributors
+        Disallow: /*/*/comments
+        Disallow: /*/*/stargazers
+        Disallow: /*/*/search
+        Disallow: /*/tarball/
+        Disallow: /*/zipball/
+        Disallow: /*/*/archive/
+        Disallow: /raw/*
+        Disallow: /*/followers
+        Disallow: /*/following
+        Disallow: /stars/*
+        Disallow: /*/blame/
+        Disallow: /*/watchers
+        Disallow: /*/network
+        Disallow: /*/graphs
+        Disallow: /*/raw/
+        Disallow: /*/compare/
+        Disallow: /*/cache/
+        Disallow: /*/*/blame/
+        Disallow: /*/*/watchers
+        Disallow: /*/*/network
+        Disallow: /*/*/graphs
+        Disallow: /*/*/raw/
+        Disallow: /*/*/compare/
+        Disallow: /*/*/cache/
+        Disallow: /*.git
+        Disallow: /*.git/
+        Disallow: /search/advanced
+        Disallow: /search
+        Disallow: /*q=
+        Disallow: /*.atom
+        Disallow: /login
+
+        User-agent: rogerbot
+        Allow: /*/*/tree/master
+        Allow: /*/*/blob/master
+        Disallow: /ekansa/Open-Context-Data
+        Disallow: /ekansa/opencontext-*
+        Disallow: /*/*/pulse
+        Disallow: /*/*/tree/*
+        Disallow: /*/*/blob/*
+        Disallow: /*/*/wiki/*/*
+        Disallow: /gist/*/*/*
+        Disallow: /oembed
+        Disallow: /*/forks
+        Disallow: /*/stars
+        Disallow: /*/download
+        Disallow: /*/revisions
+        Disallow: /*/*/issues/new
+        Disallow: /*/*/issues/search
+        Disallow: /*/*/commits/*/*
+        Disallow: /*/*/commits/*?author
+        Disallow: /*/*/commits/*?path
+        Disallow: /*/*/branches
+        Disallow: /*/*/tags
+        Disallow: /*/*/contributors
+        Disallow: /*/*/comments
+        Disallow: /*/*/stargazers
+        Disallow: /*/*/search
+        Disallow: /*/tarball/
+        Disallow: /*/zipball/
+        Disallow: /*/*/archive/
+        Disallow: /raw/*
+        Disallow: /*/followers
+        Disallow: /*/following
+        Disallow: /stars/*
+        Disallow: /*/blame/
+        Disallow: /*/watchers
+        Disallow: /*/network
+        Disallow: /*/graphs
+        Disallow: /*/raw/
+        Disallow: /*/compare/
+        Disallow: /*/cache/
+        Disallow: /*/*/blame/
+        Disallow: /*/*/watchers
+        Disallow: /*/*/network
+        Disallow: /*/*/graphs
+        Disallow: /*/*/raw/
+        Disallow: /*/*/compare/
+        Disallow: /*/*/cache/
+        Disallow: /*.git
+        Disallow: /*.git/
+        Disallow: /search/advanced
+        Disallow: /search
+        Disallow: /*q=
+        Disallow: /*.atom
+        Disallow: /login
+
+        User-agent: SandDollar
+        Allow: /*/*/tree/master
+        Allow: /*/*/blob/master
+        Disallow: /ekansa/Open-Context-Data
+        Disallow: /ekansa/opencontext-*
+        Disallow: /*/*/pulse
+        Disallow: /*/*/tree/*
+        Disallow: /*/*/blob/*
+        Disallow: /*/*/wiki/*/*
+        Disallow: /gist/*/*/*
+        Disallow: /oembed
+        Disallow: /*/forks
+        Disallow: /*/stars
+        Disallow: /*/download
+        Disallow: /*/revisions
+        Disallow: /*/*/issues/new
+        Disallow: /*/*/issues/search
+        Disallow: /*/*/commits/*/*
+        Disallow: /*/*/commits/*?author
+        Disallow: /*/*/commits/*?path
+        Disallow: /*/*/branches
+        Disallow: /*/*/tags
+        Disallow: /*/*/contributors
+        Disallow: /*/*/comments
+        Disallow: /*/*/stargazers
+        Disallow: /*/*/search
+        Disallow: /*/tarball/
+        Disallow: /*/zipball/
+        Disallow: /*/*/archive/
+        Disallow: /raw/*
+        Disallow: /*/followers
+        Disallow: /*/following
+        Disallow: /stars/*
+        Disallow: /*/blame/
+        Disallow: /*/watchers
+        Disallow: /*/network
+        Disallow: /*/graphs
+        Disallow: /*/raw/
+        Disallow: /*/compare/
+        Disallow: /*/cache/
+        Disallow: /*/*/blame/
+        Disallow: /*/*/watchers
+        Disallow: /*/*/network
+        Disallow: /*/*/graphs
+        Disallow: /*/*/raw/
+        Disallow: /*/*/compare/
+        Disallow: /*/*/cache/
+        Disallow: /*.git
+        Disallow: /*.git/
+        Disallow: /search/advanced
+        Disallow: /search
+        Disallow: /*q=
+        Disallow: /*.atom
+        Disallow: /login
+
+        User-agent: seznambot
+        Allow: /*/*/tree/master
+        Allow: /*/*/blob/master
+        Disallow: /ekansa/Open-Context-Data
+        Disallow: /ekansa/opencontext-*
+        Disallow: /*/*/pulse
+        Disallow: /*/*/tree/*
+        Disallow: /*/*/blob/*
+        Disallow: /*/*/wiki/*/*
+        Disallow: /gist/*/*/*
+        Disallow: /oembed
+        Disallow: /*/forks
+        Disallow: /*/stars
+        Disallow: /*/download
+        Disallow: /*/revisions
+        Disallow: /*/*/issues/new
+        Disallow: /*/*/issues/search
+        Disallow: /*/*/commits/*/*
+        Disallow: /*/*/commits/*?author
+        Disallow: /*/*/commits/*?path
+        Disallow: /*/*/branches
+        Disallow: /*/*/tags
+        Disallow: /*/*/contributors
+        Disallow: /*/*/comments
+        Disallow: /*/*/stargazers
+        Disallow: /*/*/search
+        Disallow: /*/tarball/
+        Disallow: /*/zipball/
+        Disallow: /*/*/archive/
+        Disallow: /raw/*
+        Disallow: /*/followers
+        Disallow: /*/following
+        Disallow: /stars/*
+        Disallow: /*/blame/
+        Disallow: /*/watchers
+        Disallow: /*/network
+        Disallow: /*/graphs
+        Disallow: /*/raw/
+        Disallow: /*/compare/
+        Disallow: /*/cache/
+        Disallow: /*/*/blame/
+        Disallow: /*/*/watchers
+        Disallow: /*/*/network
+        Disallow: /*/*/graphs
+        Disallow: /*/*/raw/
+        Disallow: /*/*/compare/
+        Disallow: /*/*/cache/
+        Disallow: /*.git
+        Disallow: /*.git/
+        Disallow: /search/advanced
+        Disallow: /search
+        Disallow: /*q=
+        Disallow: /*.atom
+        Disallow: /login
+
+        User-agent: Slurp
+        Allow: /*/*/tree/master
+        Allow: /*/*/blob/master
+        Disallow: /ekansa/Open-Context-Data
+        Disallow: /ekansa/opencontext-*
+        Disallow: /*/*/pulse
+        Disallow: /*/*/tree/*
+        Disallow: /*/*/blob/*
+        Disallow: /*/*/wiki/*/*
+        Disallow: /gist/*/*/*
+        Disallow: /oembed
+        Disallow: /*/forks
+        Disallow: /*/stars
+        Disallow: /*/download
+        Disallow: /*/revisions
+        Disallow: /*/*/issues/new
+        Disallow: /*/*/issues/search
+        Disallow: /*/*/commits/*/*
+        Disallow: /*/*/commits/*?author
+        Disallow: /*/*/commits/*?path
+        Disallow: /*/*/branches
+        Disallow: /*/*/tags
+        Disallow: /*/*/contributors
+        Disallow: /*/*/comments
+        Disallow: /*/*/stargazers
+        Disallow: /*/*/search
+        Disallow: /*/tarball/
+        Disallow: /*/zipball/
+        Disallow: /*/*/archive/
+        Disallow: /raw/*
+        Disallow: /*/followers
+        Disallow: /*/following
+        Disallow: /stars/*
+        Disallow: /*/blame/
+        Disallow: /*/watchers
+        Disallow: /*/network
+        Disallow: /*/graphs
+        Disallow: /*/raw/
+        Disallow: /*/compare/
+        Disallow: /*/cache/
+        Disallow: /*/*/blame/
+        Disallow: /*/*/watchers
+        Disallow: /*/*/network
+        Disallow: /*/*/graphs
+        Disallow: /*/*/raw/
+        Disallow: /*/*/compare/
+        Disallow: /*/*/cache/
+        Disallow: /*.git
+        Disallow: /*.git/
+        Disallow: /search/advanced
+        Disallow: /search
+        Disallow: /*q=
+        Disallow: /*.atom
+        Disallow: /login
+
+        User-agent: Swiftbot
+        Allow: /*/*/tree/master
+        Allow: /*/*/blob/master
+        Disallow: /ekansa/Open-Context-Data
+        Disallow: /ekansa/opencontext-*
+        Disallow: /*/*/pulse
+        Disallow: /*/*/tree/*
+        Disallow: /*/*/blob/*
+        Disallow: /*/*/wiki/*/*
+        Disallow: /gist/*/*/*
+        Disallow: /oembed
+        Disallow: /*/forks
+        Disallow: /*/stars
+        Disallow: /*/download
+        Disallow: /*/revisions
+        Disallow: /*/*/issues/new
+        Disallow: /*/*/issues/search
+        Disallow: /*/*/commits/*/*
+        Disallow: /*/*/commits/*?author
+        Disallow: /*/*/commits/*?path
+        Disallow: /*/*/branches
+        Disallow: /*/*/tags
+        Disallow: /*/*/contributors
+        Disallow: /*/*/comments
+        Disallow: /*/*/stargazers
+        Disallow: /*/*/search
+        Disallow: /*/tarball/
+        Disallow: /*/zipball/
+        Disallow: /*/*/archive/
+        Disallow: /raw/*
+        Disallow: /*/followers
+        Disallow: /*/following
+        Disallow: /stars/*
+        Disallow: /*/blame/
+        Disallow: /*/watchers
+        Disallow: /*/network
+        Disallow: /*/graphs
+        Disallow: /*/raw/
+        Disallow: /*/compare/
+        Disallow: /*/cache/
+        Disallow: /*/*/blame/
+        Disallow: /*/*/watchers
+        Disallow: /*/*/network
+        Disallow: /*/*/graphs
+        Disallow: /*/*/raw/
+        Disallow: /*/*/compare/
+        Disallow: /*/*/cache/
+        Disallow: /*.git
+        Disallow: /*.git/
+        Disallow: /search/advanced
+        Disallow: /search
+        Disallow: /*q=
+        Disallow: /*.atom
+        Disallow: /login
+
+        User-agent: Telefonica
+        Allow: /*/*/tree/master
+        Allow: /*/*/blob/master
+        Disallow: /ekansa/Open-Context-Data
+        Disallow: /ekansa/opencontext-*
+        Disallow: /*/*/pulse
+        Disallow: /*/*/tree/*
+        Disallow: /*/*/blob/*
+        Disallow: /*/*/wiki/*/*
+        Disallow: /gist/*/*/*
+        Disallow: /oembed
+        Disallow: /*/forks
+        Disallow: /*/stars
+        Disallow: /*/download
+        Disallow: /*/revisions
+        Disallow: /*/*/issues/new
+        Disallow: /*/*/issues/search
+        Disallow: /*/*/commits/*/*
+        Disallow: /*/*/commits/*?author
+        Disallow: /*/*/commits/*?path
+        Disallow: /*/*/branches
+        Disallow: /*/*/tags
+        Disallow: /*/*/contributors
+        Disallow: /*/*/comments
+        Disallow: /*/*/stargazers
+        Disallow: /*/*/search
+        Disallow: /*/tarball/
+        Disallow: /*/zipball/
+        Disallow: /*/*/archive/
+        Disallow: /raw/*
+        Disallow: /*/followers
+        Disallow: /*/following
+        Disallow: /stars/*
+        Disallow: /*/blame/
+        Disallow: /*/watchers
+        Disallow: /*/network
+        Disallow: /*/graphs
+        Disallow: /*/raw/
+        Disallow: /*/compare/
+        Disallow: /*/cache/
+        Disallow: /*/*/blame/
+        Disallow: /*/*/watchers
+        Disallow: /*/*/network
+        Disallow: /*/*/graphs
+        Disallow: /*/*/raw/
+        Disallow: /*/*/compare/
+        Disallow: /*/*/cache/
+        Disallow: /*.git
+        Disallow: /*.git/
+        Disallow: /search/advanced
+        Disallow: /search
+        Disallow: /*q=
+        Disallow: /*.atom
+        Disallow: /login
+
+        User-agent: teoma
+        Allow: /*/*/tree/master
+        Allow: /*/*/blob/master
+        Disallow: /ekansa/Open-Context-Data
+        Disallow: /ekansa/opencontext-*
+        Disallow: /*/*/pulse
+        Disallow: /*/*/tree/*
+        Disallow: /*/*/blob/*
+        Disallow: /*/*/wiki/*/*
+        Disallow: /gist/*/*/*
+        Disallow: /oembed
+        Disallow: /*/forks
+        Disallow: /*/stars
+        Disallow: /*/download
+        Disallow: /*/revisions
+        Disallow: /*/*/issues/new
+        Disallow: /*/*/issues/search
+        Disallow: /*/*/commits/*/*
+        Disallow: /*/*/commits/*?author
+        Disallow: /*/*/commits/*?path
+        Disallow: /*/*/branches
+        Disallow: /*/*/tags
+        Disallow: /*/*/contributors
+        Disallow: /*/*/comments
+        Disallow: /*/*/stargazers
+        Disallow: /*/*/search
+        Disallow: /*/tarball/
+        Disallow: /*/zipball/
+        Disallow: /*/*/archive/
+        Disallow: /raw/*
+        Disallow: /*/followers
+        Disallow: /*/following
+        Disallow: /stars/*
+        Disallow: /*/blame/
+        Disallow: /*/watchers
+        Disallow: /*/network
+        Disallow: /*/graphs
+        Disallow: /*/raw/
+        Disallow: /*/compare/
+        Disallow: /*/cache/
+        Disallow: /*/*/blame/
+        Disallow: /*/*/watchers
+        Disallow: /*/*/network
+        Disallow: /*/*/graphs
+        Disallow: /*/*/raw/
+        Disallow: /*/*/compare/
+        Disallow: /*/*/cache/
+        Disallow: /*.git
+        Disallow: /*.git/
+        Disallow: /search/advanced
+        Disallow: /search
+        Disallow: /*q=
+        Disallow: /*.atom
+        Disallow: /login
+
+        User-agent: Twitterbot
+        Allow: /*/*/tree/master
+        Allow: /*/*/blob/master
+        Disallow: /ekansa/Open-Context-Data
+        Disallow: /ekansa/opencontext-*
+        Disallow: /*/*/pulse
+        Disallow: /*/*/tree/*
+        Disallow: /*/*/blob/*
+        Disallow: /*/*/wiki/*/*
+        Disallow: /gist/*/*/*
+        Disallow: /oembed
+        Disallow: /*/forks
+        Disallow: /*/stars
+        Disallow: /*/download
+        Disallow: /*/revisions
+        Disallow: /*/*/issues/new
+        Disallow: /*/*/issues/search
+        Disallow: /*/*/commits/*/*
+        Disallow: /*/*/commits/*?author
+        Disallow: /*/*/commits/*?path
+        Disallow: /*/*/branches
+        Disallow: /*/*/tags
+        Disallow: /*/*/contributors
+        Disallow: /*/*/comments
+        Disallow: /*/*/stargazers
+        Disallow: /*/*/search
+        Disallow: /*/tarball/
+        Disallow: /*/zipball/
+        Disallow: /*/*/archive/
+        Disallow: /raw/*
+        Disallow: /*/followers
+        Disallow: /*/following
+        Disallow: /stars/*
+        Disallow: /*/blame/
+        Disallow: /*/watchers
+        Disallow: /*/network
+        Disallow: /*/graphs
+        Disallow: /*/raw/
+        Disallow: /*/compare/
+        Disallow: /*/cache/
+        Disallow: /*/*/blame/
+        Disallow: /*/*/watchers
+        Disallow: /*/*/network
+        Disallow: /*/*/graphs
+        Disallow: /*/*/raw/
+        Disallow: /*/*/compare/
+        Disallow: /*/*/cache/
+        Disallow: /*.git
+        Disallow: /*.git/
+        Disallow: /search/advanced
+        Disallow: /search
+        Disallow: /*q=
+        Disallow: /*.atom
+        Disallow: /login
+
+        User-agent: Yandex
+        Allow: /*/*/tree/master
+        Allow: /*/*/blob/master
+        Disallow: /ekansa/Open-Context-Data
+        Disallow: /ekansa/opencontext-*
+        Disallow: /*/*/pulse
+        Disallow: /*/*/tree/*
+        Disallow: /*/*/blob/*
+        Disallow: /*/*/wiki/*/*
+        Disallow: /gist/*/*/*
+        Disallow: /oembed
+        Disallow: /*/forks
+        Disallow: /*/stars
+        Disallow: /*/download
+        Disallow: /*/revisions
+        Disallow: /*/*/issues/new
+        Disallow: /*/*/issues/search
+        Disallow: /*/*/commits/*/*
+        Disallow: /*/*/commits/*?author
+        Disallow: /*/*/commits/*?path
+        Disallow: /*/*/branches
+        Disallow: /*/*/tags
+        Disallow: /*/*/contributors
+        Disallow: /*/*/comments
+        Disallow: /*/*/stargazers
+        Disallow: /*/*/search
+        Disallow: /*/tarball/
+        Disallow: /*/zipball/
+        Disallow: /*/*/archive/
+        Disallow: /raw/*
+        Disallow: /*/followers
+        Disallow: /*/following
+        Disallow: /stars/*
+        Disallow: /*/blame/
+        Disallow: /*/watchers
+        Disallow: /*/network
+        Disallow: /*/graphs
+        Disallow: /*/raw/
+        Disallow: /*/compare/
+        Disallow: /*/cache/
+        Disallow: /*/*/blame/
+        Disallow: /*/*/watchers
+        Disallow: /*/*/network
+        Disallow: /*/*/graphs
+        Disallow: /*/*/raw/
+        Disallow: /*/*/compare/
+        Disallow: /*/*/cache/
+        Disallow: /*.git
+        Disallow: /*.git/
+        Disallow: /search/advanced
+        Disallow: /search
+        Disallow: /*q=
+        Disallow: /*.atom
+        Disallow: /login
+
+
+        User-agent: *
+        Allow: /humans.txt
+        Disallow: /
+    http_version: 
+  recorded_at: Mon, 04 Jan 2016 13:39:18 GMT
+recorded_with: VCR 3.0.0
