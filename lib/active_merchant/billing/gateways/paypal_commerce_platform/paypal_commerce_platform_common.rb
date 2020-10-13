@@ -132,7 +132,6 @@ module ActiveMerchant
         }
         url.query = URI.encode_www_form(params)
         request = Net::HTTP::Post.new(url)
-        request['accept']           = 'application/json'
         request['accept-language']  = 'en_US'
         request['authorization']    = "basic #{encoded_credentials}"
         request['content-type'] = 'application/x-www-form-urlencoded'

@@ -8,12 +8,11 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @gateway                = ActiveMerchant::Billing::PaypalCommercePlatformGateway.new
     @ppcp_credentials       = fixtures(:ppcp)
 
-    options                 = { "Content-Type": 'application/json', authorization: user_credentials }
-    access_token            = @gateway.get_access_token(options)
+    access_token            = @gateway.get_access_token({authorization: user_credentials})
     missing_password_params = { username: @ppcp_credentials[:username] }
     missing_username_params = { password: @ppcp_credentials[:password] }
 
-    @headers = { "Authorization": "Bearer #{access_token}", "Content-Type": 'application/json' }
+    @headers = { 'Authorization' => "Bearer #{access_token}", 'Content-Type' => 'application/json' }
     @body    = body
 
     @additional_params = {
