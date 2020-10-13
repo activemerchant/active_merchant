@@ -109,7 +109,7 @@ module ActiveMerchant
 
       def prepare_request_to_get_access_token(options)
         basic_token = encoded_credentials(options[:authorization][:username], options[:authorization][:password])
-        options[:headers] = {'authorization' => "basic #{basic_token}"}
+        options[:headers] = { 'authorization' => "basic #{basic_token}" }
         options
       end
 
