@@ -3,7 +3,6 @@
 require 'test_helper'
 
 class PaypalExpressRestTest < Test::Unit::TestCase
-
   # This gateway uses v2 APIs for more details please check legacy API documentations https://developer.paypal.com/docs/api/payments/v2/
   # Billing Agreement using V1.
   # Get Access Token is using V1.
@@ -26,40 +25,10 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @headers = { 'Authorization' => "Bearer #{access_token}", 'Content-Type' => 'application/json' }
     @body    = body
 
-    @additional_params = {
-        "payment_instruction": {
-            "platform_fees": [
-                {
-                    "amount": {
-                        "currency_code": 'USD',
-                        "value": '2.00'
-                    },
-                    "payee": {
-                        "email_address": @ppcp_credentials[:platform_payee_email]
-                    }
-                }
-            ]
-        }
-    }
+    @additional_params = { "payment_instruction": { "platform_fees": [{ "amount": { "currency_code": 'USD', "value": '2.00' }, "payee": { "email_address": @ppcp_credentials[:platform_payee_email] } }] } }
 
-    @card_order_options = {
-        "payment_source": {
-            "card": {
-                "name": 'John Doe',
-                "number": @ppcp_credentials[:card_number],
-                "expiry": "#{@ppcp_credentials[:year]}-#{@ppcp_credentials[:month]}",
-                "security_code": @ppcp_credentials[:cvc],
-                "billing_address": {
-                    "address_line_1": '12312 Port Grace Blvd',
-                    "admin_area_2": 'La Vista',
-                    "admin_area_1": 'NE',
-                    "postal_code": '68128',
-                    "country_code": 'US'
-                }
-            }
-        },
-        "headers": @headers
-    }
+    @card_order_options = { "payment_source": { "card": { "name": 'John Doe', "number": @ppcp_credentials[:card_number], "expiry": "#{@ppcp_credentials[:year]}-#{@ppcp_credentials[:month]}", "security_code": @ppcp_credentials[:cvc],
+                                                          "billing_address": { "address_line_1": '12312 Port Grace Blvd', "admin_area_2": 'La Vista', "admin_area_1": 'NE', "postal_code": '68128', "country_code": 'US' } } }, "headers": @headers }
 
     @get_token_missing_password_options = { "Content-Type": 'application/json', authorization: missing_password_params }
     @get_token_missing_username_options = { "Content-Type": 'application/json', authorization: missing_username_params }
@@ -170,12 +139,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     params[:headers][:'PayPal-Mock-Response'] = '{"mock_application_codes": "INTERNAL_SERVER_ERROR"}'
     response = @gateway.create_order('CAPTURE', params)
 
-    server_side_failure_assertions(
-        response,
-        'INTERNAL_SERVER_ERROR',
-        nil,
-        'An internal server error occurred.'
-    )
+    server_side_failure_assertions(response, 'INTERNAL_SERVER_ERROR', nil, 'An internal server error occurred.')
   end
 
   def test_capture_order_for_invalid_request
@@ -184,12 +148,10 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @card_order_options[:headers][:'PayPal-Mock-Response'] = '{"mock_application_codes": "INVALID_PARAMETER_VALUE"}'
     response = @gateway.capture(order_id, @card_order_options)
 
-    server_side_failure_assertions(
-        response,
-        'INVALID_REQUEST',
-        nil,
-        'The request is not well-formed, is syntactically incorrect, or violates schema.'
-    )
+    server_side_failure_assertions(response,
+      'INVALID_REQUEST',
+      nil,
+      'The request is not well-formed, is syntactically incorrect, or violates schema.')
   end
 
   def test_authorize_order_failure_on_missing_required_parameters
@@ -199,10 +161,10 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     response = @gateway.authorize(order_id, @card_order_options)
 
     server_side_failure_assertions(
-        response,
-        'INVALID_REQUEST',
-        nil,
-        'The request is not well-formed, is syntactically incorrect, or violates schema.'
+      response,
+      'INVALID_REQUEST',
+      nil,
+      'The request is not well-formed, is syntactically incorrect, or violates schema.'
     )
   end
 
@@ -216,10 +178,10 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     response = @gateway.refund(capture_id, params)
 
     server_side_failure_assertions(
-        response,
-        'UNPROCESSABLE_ENTITY',
-        'PARTIAL_REFUND_NOT_ALLOWED',
-        'The requested action could not be completed, was semantically incorrect, or failed business validation.'
+      response,
+      'UNPROCESSABLE_ENTITY',
+      'PARTIAL_REFUND_NOT_ALLOWED',
+      'The requested action could not be completed, was semantically incorrect, or failed business validation.'
     )
   end
 
@@ -233,10 +195,10 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     response = @gateway.void(authorization_id, params)
 
     server_side_failure_assertions(
-        response,
-        'UNPROCESSABLE_ENTITY',
-        'PREVIOUSLY_VOIDED',
-        'The requested action could not be performed, semantically incorrect, or failed business validation.'
+      response,
+      'UNPROCESSABLE_ENTITY',
+      'PREVIOUSLY_VOIDED',
+      'The requested action could not be performed, semantically incorrect, or failed business validation.'
     )
   end
 
@@ -538,10 +500,10 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
   def test_transcript_scrubbing
     @three_ds_credit_card = credit_card(
-        '4000000000003220',
-        verification_value: '737',
-        month: 10,
-        year: 2020
+      '4000000000003220',
+      verification_value: '737',
+      month: 10,
+      year: 2020
     )
     response = create_order('CAPTURE')
     order_id = response.params['id']
@@ -817,77 +779,77 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   def body
     @reference_id = "camera_shop_seller_#{Time.now}"
     {
-        "description": 'PPCP',
+      "description": 'PPCP',
         "intent": @intent || 'CAPTURE',
         "purchase_units": [
-            {
-                "reference_id": @reference_id,
-                "description": 'Camera Shop',
-                "amount": {
-                    "currency_code": 'USD',
-                    "value": '25.00',
-                    "breakdown": {
-                        "item_total": {
-                            "currency_code": 'USD',
-                            "value": '25.00'
-                        },
-                        "shipping": {
-                            "currency_code": 'USD',
-                            "value": '0'
-                        },
-                        "handling": {
-                            "currency_code": 'USD',
-                            "value": '0'
-                        },
-                        "tax_total": {
-                            "currency_code": 'USD',
-                            "value": '0'
-                        },
-                        "gift_wrap": {
-                            "currency_code": 'USD',
-                            "value": '0'
-                        },
-                        "shipping_discount": {
-                            "currency_code": 'USD',
-                            "value": '0'
-                        }
-                    }
-                },
-                "payee": {
-                    "email_address": @ppcp_credentials[:payee_email]
-                },
-                "items": [
-                    {
-                        "name": 'Levis 501 Selvedge STF',
-                        "sku": '5158936',
-                        "unit_amount": {
-                            "currency_code": 'USD',
-                            "value": '25.00'
-                        },
-                        "tax": {
-                            "currency_code": 'USD',
-                            "value": '0.00'
-                        },
-                        "quantity": '1',
-                        "category": 'PHYSICAL_GOODS'
-                    }
-                ],
-                "shipping": {
-                    "address": {
-                        "address_line_1": '500 Hillside Street',
-                        "address_line_2": '#1000',
-                        "admin_area_1": 'CA',
-                        "admin_area_2": 'San Jose',
-                        "postal_code": '95131',
-                        "country_code": 'US'
-                    }
-                },
-                "shipping_method": 'United Postal Service',
-                "payment_group_id": 1,
-                "custom_id": "custom_value_#{Time.now}",
-                "invoice_id": "invoice_number_#{Time.now}",
-                "soft_descriptor": 'Payment Camera Shop'
-            }
+          {
+            "reference_id": @reference_id,
+              "description": 'Camera Shop',
+              "amount": {
+                "currency_code": 'USD',
+                  "value": '25.00',
+                  "breakdown": {
+                    "item_total": {
+                      "currency_code": 'USD',
+                          "value": '25.00'
+                    },
+                      "shipping": {
+                        "currency_code": 'USD',
+                          "value": '0'
+                      },
+                      "handling": {
+                        "currency_code": 'USD',
+                          "value": '0'
+                      },
+                      "tax_total": {
+                        "currency_code": 'USD',
+                          "value": '0'
+                      },
+                      "gift_wrap": {
+                        "currency_code": 'USD',
+                          "value": '0'
+                      },
+                      "shipping_discount": {
+                        "currency_code": 'USD',
+                          "value": '0'
+                      }
+                  }
+              },
+              "payee": {
+                "email_address": @ppcp_credentials[:payee_email]
+              },
+              "items": [
+                {
+                  "name": 'Levis 501 Selvedge STF',
+                      "sku": '5158936',
+                      "unit_amount": {
+                        "currency_code": 'USD',
+                          "value": '25.00'
+                      },
+                      "tax": {
+                        "currency_code": 'USD',
+                          "value": '0.00'
+                      },
+                      "quantity": '1',
+                      "category": 'PHYSICAL_GOODS'
+                }
+              ],
+              "shipping": {
+                "address": {
+                  "address_line_1": '500 Hillside Street',
+                      "address_line_2": '#1000',
+                      "admin_area_1": 'CA',
+                      "admin_area_2": 'San Jose',
+                      "postal_code": '95131',
+                      "country_code": 'US'
+                }
+              },
+              "shipping_method": 'United Postal Service',
+              "payment_group_id": 1,
+              "custom_id": "custom_value_#{Time.now}",
+              "invoice_id": "invoice_number_#{Time.now}",
+              "soft_descriptor": 'Payment Camera Shop'
+          }
         ],
         "payer": payer_hash,
         "application_context": application_context
@@ -896,150 +858,150 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
   def update_amount_body
     [
-        {
-            "op": 'replace',
-            "path": "/purchase_units/@reference_id=='#{@reference_id}'/amount",
-            "value": {
-                "currency_code": 'USD',
-                "value": '27.00',
-                "breakdown": {
-                    "item_total": {
-                        "currency_code": 'USD',
-                        "value": '25.00'
-                    },
-                    "shipping": {
-                        "currency_code": 'USD',
-                        "value": '2.00'
-                    }
-                }
-            }
-        }
+      {
+        "op": 'replace',
+          "path": "/purchase_units/@reference_id=='#{@reference_id}'/amount",
+          "value": {
+            "currency_code": 'USD',
+              "value": '27.00',
+              "breakdown": {
+                "item_total": {
+                  "currency_code": 'USD',
+                      "value": '25.00'
+                },
+                  "shipping": {
+                    "currency_code": 'USD',
+                      "value": '2.00'
+                  }
+              }
+          }
+      }
     ]
   end
 
   def update_shipping_address_body
     [
-        {
-            "op": 'replace',
-            "path": "/purchase_units/@reference_id=='#{@reference_id}'/shipping/address",
-            "value": {
-                "address_line_1": '123 Townsend St',
-                "address_line_2": 'Floor 6',
-                "admin_area_2": 'San Francisco',
-                "admin_area_1": 'CA',
-                "postal_code": '94107',
-                "country_code": 'US'
-            }
-        }
+      {
+        "op": 'replace',
+          "path": "/purchase_units/@reference_id=='#{@reference_id}'/shipping/address",
+          "value": {
+            "address_line_1": '123 Townsend St',
+              "address_line_2": 'Floor 6',
+              "admin_area_2": 'San Francisco',
+              "admin_area_1": 'CA',
+              "postal_code": '94107',
+              "country_code": 'US'
+          }
+      }
     ]
   end
 
   def update_intent_body
     [
-        {
-            path: '/intent',
-            value: 'CAPTURE',
-            op: 'replace'
-        }
+      {
+        path: '/intent',
+          value: 'CAPTURE',
+          op: 'replace'
+      }
     ]
   end
 
   def update_platform_fee_body
     [{
-         "op": 'add',
+      "op": 'add',
          "path": "/purchase_units/@reference_id=='#{@reference_id}'/payment_instruction",
          "value": {
-             "platform_fees": [
-                 {
-                     "amount": {
-                         "currency_code": 'USD',
-                         "value": '3.00'
-                     },
-                     "payee": {
-                         "email_address": @ppcp_credentials[:platform_payee_email]
-                     }
-                 }
-             ]
+           "platform_fees": [
+             {
+               "amount": {
+                 "currency_code": 'USD',
+                     "value": '3.00'
+               },
+                   "payee": {
+                     "email_address": @ppcp_credentials[:platform_payee_email]
+                   }
+             }
+           ]
          }
-     }]
+    }]
   end
 
   def update_invoice_id_body
     [
-        {
-            path: "/purchase_units/@reference_id=='#{@reference_id}'/invoice_id",
-            value: 'INVOICE_ID_123',
-            op: 'replace'
-        }
+      {
+        path: "/purchase_units/@reference_id=='#{@reference_id}'/invoice_id",
+          value: 'INVOICE_ID_123',
+          op: 'replace'
+      }
     ]
   end
 
   def update_custom_id_body
     [
-        {
-            path: "/purchase_units/@reference_id=='#{@reference_id}'/custom_id",
-            value: 'CUSTOM_ID_123',
-            op: 'replace'
-        }
+      {
+        path: "/purchase_units/@reference_id=='#{@reference_id}'/custom_id",
+          value: 'CUSTOM_ID_123',
+          op: 'replace'
+      }
     ]
   end
 
   def update_payee_email_body
     [
-        {
-            path: "/purchase_units/@reference_id=='#{@reference_id}'/payee/email_address",
-            value: 'test@test.com',
-            op: 'replace'
-        }
+      {
+        path: "/purchase_units/@reference_id=='#{@reference_id}'/payee/email_address",
+          value: 'test@test.com',
+          op: 'replace'
+      }
     ]
   end
 
   def update_shipping_name_body
     [
-        {
-            path: "/purchase_units/@reference_id=='#{@reference_id}'/shipping/name",
-            value: {
-                full_name: 'TEST SHIPPING'
-            },
-            op: 'replace'
-        }
+      {
+        path: "/purchase_units/@reference_id=='#{@reference_id}'/shipping/name",
+          value: {
+            full_name: 'TEST SHIPPING'
+          },
+          op: 'replace'
+      }
     ]
   end
 
   def update_description_body
     [{
-         path: "/purchase_units/@reference_id=='#{@reference_id}'/description",
+      path: "/purchase_units/@reference_id=='#{@reference_id}'/description",
          value: 'UPDATED DESCRIPTION',
          op: 'replace'
-     }]
+    }]
   end
 
   def update_soft_descriptor_body
     [
-        {
-            path: "/purchase_units/@reference_id=='#{@reference_id}'/soft_descriptor",
-            value: 'Description Changed.',
-            op: 'replace'
-        }
+      {
+        path: "/purchase_units/@reference_id=='#{@reference_id}'/soft_descriptor",
+          value: 'Description Changed.',
+          op: 'replace'
+      }
     ]
   end
 
   def update_purchase_unit_body
     [
-        {
-            "path": "/purchase_units/@reference_id=='#{@reference_id}'",
-            "op": 'replace',
-            "value": body[:purchase_units][0]
-        }
+      {
+        "path": "/purchase_units/@reference_id=='#{@reference_id}'",
+          "op": 'replace',
+          "value": body[:purchase_units][0]
+      }
     ]
   end
 
   def billing_agreement_body
     {
-        "description": 'Billing Agreement',
+      "description": 'Billing Agreement',
         "shipping_address":
             {
-                "line1": '1350 North First Street',
+              "line1": '1350 North First Street',
                 "city": 'San Jose',
                 "state": 'CA',
                 "postal_code": '95112',
@@ -1048,14 +1010,14 @@ class PaypalExpressRestTest < Test::Unit::TestCase
             },
         "payer":
             {
-                "payment_method": 'PAYPAL'
+              "payment_method": 'PAYPAL'
             },
         "plan":
             {
-                "type": 'MERCHANT_INITIATED_BILLING',
+              "type": 'MERCHANT_INITIATED_BILLING',
                 "merchant_preferences":
                     {
-                        "return_url": 'https://google.com',
+                      "return_url": 'https://google.com',
                         "cancel_url": 'https://google.com',
                         "accepted_pymt_type": 'INSTANT',
                         "skip_shipping_address": false,
@@ -1067,12 +1029,12 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
   def billing_options(billing_token)
     {
-        "payment_source": {
-            "token": {
-                "id": billing_token,
-                "type": 'BILLING_AGREEMENT'
-            }
-        },
+      "payment_source": {
+        "token": {
+          "id": billing_token,
+              "type": 'BILLING_AGREEMENT'
+        }
+      },
         application_context: application_context,
         "headers": @headers
     }
@@ -1080,34 +1042,34 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
   def billing_update_body
     [
-        {
-            "op": 'replace',
-            "path": '/',
-            "value": {
-                "description": 'Updated Billing Agreement',
-                "merchant_custom_data": 'INV-003'
-            }
-        },
-        {
-            "op": 'replace',
-            "path": '/plan/merchant_preferences/',
-            "value": {
-                "notify_url": 'https://example.com/notification'
-            }
-        }
+      {
+        "op": 'replace',
+          "path": '/',
+          "value": {
+            "description": 'Updated Billing Agreement',
+              "merchant_custom_data": 'INV-003'
+          }
+      },
+      {
+        "op": 'replace',
+          "path": '/plan/merchant_preferences/',
+          "value": {
+            "notify_url": 'https://example.com/notification'
+          }
+      }
     ]
   end
 
   def user_credentials
     {
-        username: @ppcp_credentials[:username],
+      username: @ppcp_credentials[:username],
         password: @ppcp_credentials[:password]
     }
   end
 
   def invalid_user_credentials
     {
-        username: 'ASs8Osqge6KT3OdLtkNhD20VP8lsrqRUlRjLo-e5s75SHz-2ffMMzCos_odQGjGYpPcGlxJVQ5fXM==',
+      username: 'ASs8Osqge6KT3OdLtkNhD20VP8lsrqRUlRjLo-e5s75SHz-2ffMMzCos_odQGjGYpPcGlxJVQ5fXM==',
         password: 'EKj_bMZn0CkOhOvFwJMX2WwhtCq2A0OtlOd5T-zUhKIf9WQxvgPasNX0Kr1U4TjFj8ZN6XCMF5NM3=='
     }
   end

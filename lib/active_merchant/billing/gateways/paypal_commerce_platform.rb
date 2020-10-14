@@ -421,7 +421,7 @@ module ActiveMerchant #:nodoc:
 
       def verify_card(card)
         defaults = {
-            number: card[:number],
+          number: card[:number],
             first_name: card[:name],
             last_name: card[:name],
             verification_value: card[:security_code],
