@@ -248,7 +248,10 @@ module ActiveMerchant #:nodoc:
           :zip => '00000',
           :country => 'US'
         }
-        options[:billing_address] = options[:billing_address] || options[:address] || default_address
+        options[:billing_address] = options[:billing_address] ||
+          options.dig(:bill_to_defaults, :address) ||
+          options[:address] ||
+          default_address
         options[:shipping_address] = options[:shipping_address] || options[:address] || default_address
       end
 
@@ -299,7 +302,6 @@ module ActiveMerchant #:nodoc:
           add_payment_network_token(xml) if network_tokenization?(payment_method_or_reference)
           add_business_rules_data(xml, payment_method_or_reference, options) unless options[:pinless_debit_card]
         end
-        add_bill_to_data(xml, options)
         xml.target!
       end
 
@@ -446,25 +448,18 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_bill_to_data(xml, options)
-        billing_data = options[:bill_to]
-
-        if billing_data.present?
-          xml.tag! 'BillToForename',            billing_data[:forename]
-          xml.tag! 'BillToSurname',             billing_data[:surname]
-          xml.tag! 'BillToAddressLine1',        billing_data[:address_line1]
-          xml.tag! 'BillToAddressCity',         billing_data[:address_city]
-          xml.tag! 'BillToAddressState',        billing_data[:address_state]
-          xml.tag! 'BillToAddressPostalCode',   billing_data[:address_postal_code]
-          xml.tag! 'BillToAddressCountry',      billing_data[:address_country]
-          xml.tag! 'BillToEmail',               billing_data[:email]
+      def add_address(xml, payment_method, address, options, shipTo = false)
+        if shipTo
+          add_shipping_address(xml, payment_method, address, options)
+        else
+          add_billing_address(xml, payment_method, address, options)
         end
       end
 
-      def add_address(xml, payment_method, address, options, shipTo = false)
-        xml.tag! shipTo ? 'shipTo' : 'billTo' do
-          xml.tag! 'firstName',             payment_method.first_name             if payment_method
-          xml.tag! 'lastName',              payment_method.last_name              if payment_method
+      def add_shipping_address(xml, payment_method, address, options)
+        xml.tag!'shipTo' do
+          xml.tag! 'firstName',             payment_method.first_name         if payment_method
+          xml.tag! 'lastName',              payment_method.last_name          if payment_method
           xml.tag! 'street1',               address[:address1]
           xml.tag! 'street2',               address[:address2]                unless address[:address2].blank?
           xml.tag! 'city',                  address[:city]
@@ -475,7 +470,30 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'companyTaxID',          address[:companyTaxID]            unless address[:company_tax_id].blank?
           xml.tag! 'phoneNumber',           address[:phone]                   unless address[:phone].blank?
           xml.tag! 'email',                 options[:email] || 'null@cybersource.com'
-          xml.tag! 'ipAddress',             options[:ip]                      unless options[:ip].blank? || shipTo
+          xml.tag! 'ipAddress',             options[:ip]                      unless options[:ip].present?
+          xml.tag! 'driversLicenseNumber',  options[:drivers_license_number]  unless options[:drivers_license_number].blank?
+          xml.tag! 'driversLicenseState',   options[:drivers_license_state]   unless options[:drivers_license_state].blank?
+        end
+      end
+
+      def add_billing_address(xml, payment_method, address, options)
+        first_name  = payment_method&.first_name || options.dig(:bill_to_defaults, :first_name)
+        last_name   = payment_method&.last_name  || options.dig(:bill_to_defaults, :last_name)
+
+        xml.tag!'billTo' do
+          xml.tag! 'firstName',             first_name
+          xml.tag! 'lastName',              last_name
+          xml.tag! 'street1',               address.try(:[], :address1).presence
+          xml.tag! 'street2',               address[:address2]                unless address[:address2].blank?
+          xml.tag! 'city',                  address.try(:[], :city).presence
+          xml.tag! 'state',                 address.try(:[], :state).presence
+          xml.tag! 'postalCode',            address.try(:[], :zip).presence
+          xml.tag! 'country',               lookup_country_code(address.try(:[], :country).presence)
+          xml.tag! 'company',               address[:company]                 unless address[:company].blank?
+          xml.tag! 'companyTaxID',          address[:companyTaxID]            unless address[:company_tax_id].blank?
+          xml.tag! 'phoneNumber',           address[:phone]                   unless address[:phone].blank?
+          xml.tag! 'email',                 options[:email] || 'null@cybersource.com'
+          xml.tag! 'ipAddress',             options[:ip]                      unless options[:ip].blank?
           xml.tag! 'driversLicenseNumber',  options[:drivers_license_number]  unless options[:drivers_license_number].blank?
           xml.tag! 'driversLicenseState',   options[:drivers_license_state]   unless options[:drivers_license_state].blank?
         end
