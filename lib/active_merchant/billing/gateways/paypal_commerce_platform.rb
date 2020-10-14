@@ -170,9 +170,7 @@ module ActiveMerchant #:nodoc:
         post[:note] = options[:note] unless options[:note].nil?
         commit(:post, "v1/billing-agreements/agreements/#{agreement_id}/cancel", post, options[:headers])
       end
-
-
-
+      
       private
 
       def add_purchase_units(options, post)
