@@ -180,7 +180,8 @@ class CheckoutV2Test < Test::Unit::TestCase
           version: '1.0.2',
           eci: '05',
           cryptogram: '1234',
-          xid: '1234'
+          xid: '1234',
+          attempt_n3d: true
         }
       }
       @gateway.authorize(@amount, @credit_card, options)

@@ -43,7 +43,8 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
         version: '2.0.0',
         eci: '06',
         cavv: 'AgAAAAAAAIR8CQrXcIhbQAAAAAA',
-        ds_transaction_id: 'MDAwMDAwMDAwMDAwMDAwMzIyNzY='
+        ds_transaction_id: 'MDAwMDAwMDAwMDAwMDAwMzIyNzY=',
+        attempt_n3d: true
       }
     )
   end
