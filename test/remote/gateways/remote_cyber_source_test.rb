@@ -40,6 +40,21 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
       :ignore_cvv => 'true'
     }
 
+    @default_bill_to_options = @options.merge({
+      bill_to_defaults: {
+        email: 'null@cybersource.com',
+        first_name: 'noreal', # forename
+        last_name: 'name',    # surname
+        address: {
+          address1: '1295 Charleston Rd', #line1
+          city: 'Mountain View',
+          state: 'CA',
+          zip: '94043',
+          country: 'US',
+        }
+      }
+    })
+
     @subscription_options = {
       :order_id => generate_unique_id,
       :credit_card => @credit_card,
@@ -129,6 +144,12 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_equal 'Successful transaction', response.message
     assert_success response
     assert response.test?
+  end
+
+  def test_successful_purchase_bill_to_options
+    assert response = @gateway.purchase(@amount, @credit_card, @default_bill_to_options)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
   end
 
   def test_successful_purchase_sans_options
