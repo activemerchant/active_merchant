@@ -13,6 +13,12 @@ module ActiveMerchant #:nodoc:
       self.default_currency    = 'USD'
       self.supported_cardtypes = %i[visa master american_express discover jcb]
 
+      def get_access_token(options)
+        requires!(options[:authorization], :username, :password)
+        options = prepare_request_to_get_access_token(options)
+        commit(:post, 'v1/oauth2/token?grant_type=client_credentials', {}, options[:headers])
+      end
+
       def create_order(intent, options)
         requires!(options.merge!(intent.nil? ? {} : { intent: intent }), :intent, :purchase_units)
 
@@ -26,52 +32,9 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'v2/checkout/orders', post, options[:headers])
       end
 
-      def get_access_token(options)
-        requires!(options[:authorization], :username, :password)
-        options = prepare_request_to_get_access_token(options)
-        commit(:post, 'v1/oauth2/token?grant_type=client_credentials', {}, options[:headers])
-      end
-
-      def authorize(order_id, options)
-        requires!({ order_id: order_id }, :order_id)
-
-        post = {}
-        add_payment_source(options[:payment_source], post) unless options[:payment_source].nil?
-        add_application_context(options[:application_context], post) unless options[:application_context].nil?
-
-        commit(:post, "v2/checkout/orders/#{order_id}/authorize", post, options[:headers])
-      end
-
-      def handle_approve(operator_required_id, options)
-        requires!(options.merge({ operator_required_id: operator_required_id }), :operator_required_id, :operator)
-        options[:operator] == 'authorize' ? authorize(operator_required_id, options) : capture(operator_required_id, options)
-      end
-
-      def capture(order_id, options)
-        requires!({ order_id: order_id }, :order_id)
-
-        post = {}
-        add_payment_source(options[:payment_source], post) unless options[:payment_source].nil?
-        add_application_context(options[:application_context], post) unless options[:application_context].nil?
-
-        commit(:post, "v2/checkout/orders/#{order_id}/capture", post, options[:headers])
-      end
-
-      def refund(capture_id, options = {})
-        requires!({ capture_id: capture_id }, :capture_id)
-
-        post = {}
-        add_amount(options[:amount], post) unless options[:amount].nil?
-        add_invoice(options[:invoice_id], post) unless options[:invoice_id].nil?
-        add_note(options[:note_to_payer], post) unless options[:note_to_payer].nil?
-
-        commit(:post, "v2/payments/captures/#{capture_id}/refund", post, options[:headers])
-      end
-
-      def void(authorization_id, options)
-        requires!({ authorization_id: authorization_id }, :authorization_id)
-        post = {}
-        commit(:post, "v2/payments/authorizations/#{authorization_id}/void", post, options[:headers])
+      def get_order_details(order_id, options)
+        requires!(options.merge(order_id: order_id), :order_id)
+        commit(:get, "v2/checkout/orders/#{order_id}", nil, options[:headers])
       end
 
       def update_order(order_id, options)
@@ -107,7 +70,59 @@ module ActiveMerchant #:nodoc:
         commit(:patch, "v2/checkout/orders/#{order_id}", post, options[:headers])
       end
 
-      def do_capture(authorization_id, options)
+      def authorize(order_id, options)
+        requires!({ order_id: order_id }, :order_id)
+
+        post = {}
+        add_payment_source(options[:payment_source], post) unless options[:payment_source].nil?
+        add_application_context(options[:application_context], post) unless options[:application_context].nil?
+
+        commit(:post, "v2/checkout/orders/#{order_id}/authorize", post, options[:headers])
+      end
+
+      def get_authorization_details(authorization_id, options)
+        requires!(options.merge(authorization_id: authorization_id), :authorization_id)
+        commit(:get, "v2/payments/authorizations/#{authorization_id}", nil, options[:headers])
+      end
+
+      def capture(order_id, options)
+        requires!({ order_id: order_id }, :order_id)
+
+        post = {}
+        add_payment_source(options[:payment_source], post) unless options[:payment_source].nil?
+        add_application_context(options[:application_context], post) unless options[:application_context].nil?
+
+        commit(:post, "v2/checkout/orders/#{order_id}/capture", post, options[:headers])
+      end
+
+      def get_capture_details(capture_id, options)
+        requires!(options.merge(capture_id: capture_id), :capture_id)
+        commit(:get, "v2/payments/captures/#{capture_id}", nil, options[:headers])
+      end
+
+      def refund(capture_id, options = {})
+        requires!({ capture_id: capture_id }, :capture_id)
+
+        post = {}
+        add_amount(options[:amount], post) unless options[:amount].nil?
+        add_invoice(options[:invoice_id], post) unless options[:invoice_id].nil?
+        add_note(options[:note_to_payer], post) unless options[:note_to_payer].nil?
+
+        commit(:post, "v2/payments/captures/#{capture_id}/refund", post, options[:headers])
+      end
+
+      def get_refund_details(refund_id, options)
+        requires!(options.merge(refund_id: refund_id), :refund_id)
+        commit(:get, "v2/payments/refunds/#{refund_id}", nil, options[:headers])
+      end
+
+      def void(authorization_id, options)
+        requires!({ authorization_id: authorization_id }, :authorization_id)
+        post = {}
+        commit(:post, "v2/payments/authorizations/#{authorization_id}/void", post, options[:headers])
+      end
+
+      def capture_authorization(authorization_id, options)
         requires!(options.merge!({ authorization_id: authorization_id }), :authorization_id)
 
         post = {}
@@ -127,10 +142,20 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'v1/billing-agreements/agreement-tokens', post, options[:headers])
       end
 
-      def create_agreement_for_approval(options)
+      def get_billing_agreement_token_details(billing_agreement_token, options)
+        requires!(options.merge(billing_agreement_token: billing_agreement_token), :billing_agreement_token)
+        commit(:get, "v1/billing-agreements/agreement-tokens/#{billing_agreement_token}", nil, options[:headers])
+      end
+
+      def create_billing_agreement(options)
         requires!(options, :token_id)
         post = { token_id: options[:token_id] }
         commit(:post, 'v1/billing-agreements/agreements', post, options[:headers])
+      end
+
+      def get_billing_agreement_details(billing_token, options)
+        requires!(options.merge(billing_token: billing_token), :billing_token)
+        commit(:get, "v1/billing-agreements/agreements/#{billing_token}", nil, options[:headers])
       end
 
       def update_billing_agreement(agreement_id, options)
@@ -146,35 +171,7 @@ module ActiveMerchant #:nodoc:
         commit(:post, "v1/billing-agreements/agreements/#{agreement_id}/cancel", post, options[:headers])
       end
 
-      def get_order_details(order_id, options)
-        requires!(options.merge(order_id: order_id), :order_id)
-        commit(:get, "v2/checkout/orders/#{order_id}", nil, options[:headers])
-      end
 
-      def get_authorization_details(authorization_id, options)
-        requires!(options.merge(authorization_id: authorization_id), :authorization_id)
-        commit(:get, "v2/payments/authorizations/#{authorization_id}", nil, options[:headers])
-      end
-
-      def get_capture_details(capture_id, options)
-        requires!(options.merge(capture_id: capture_id), :capture_id)
-        commit(:get, "v2/payments/captures/#{capture_id}", nil, options[:headers])
-      end
-
-      def get_refund_details(refund_id, options)
-        requires!(options.merge(refund_id: refund_id), :refund_id)
-        commit(:get, "v2/payments/refunds/#{refund_id}", nil, options[:headers])
-      end
-
-      def get_billing_agreement_details(billing_agreement_token, options)
-        requires!(options.merge(billing_agreement_token: billing_agreement_token), :billing_agreement_token)
-        commit(:get, "v1/billing-agreements/agreement-tokens/#{billing_agreement_token}", nil, options[:headers])
-      end
-
-      def get_billing_token_details(billing_token, options)
-        requires!(options.merge(billing_token: billing_token), :billing_token)
-        commit(:get, "v1/billing-agreements/agreements/#{billing_token}", nil, options[:headers])
-      end
 
       private
 

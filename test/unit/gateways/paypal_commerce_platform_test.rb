@@ -78,7 +78,7 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
     assert authorize = @gateway.authorize(order_id, @card_order_options)
     success_completed_assertions(authorize)
     authorization_id = authorize.params['purchase_units'][0]['payments']['authorizations'][0]['id']
-    assert capture   = @gateway.do_capture(authorization_id, options)
+    assert capture   = @gateway.capture_authorization(authorization_id, options)
     success_completed_assertions(capture)
   end
 
