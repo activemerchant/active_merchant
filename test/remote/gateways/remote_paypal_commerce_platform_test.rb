@@ -245,7 +245,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     order_id         = response.params['id']
     response         = @gateway.authorize(order_id, @card_order_options)
     authorization_id = response.params['purchase_units'][0]['payments']['authorizations'][0]['id']
-    response         = @gateway.do_capture(authorization_id, options)
+    response         = @gateway.capture_authorization(authorization_id, options)
     success_status_assertions(response, 'COMPLETED')
   end
 
@@ -438,7 +438,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
   def test_create_billing_agreement
     @body    = { "token_id": @approved_billing_token }
-    response = @gateway.create_agreement_for_approval(options)
+    response = @gateway.create_billing_agreement(options)
     assert_success response
     assert_equal 'ACTIVE', response.params['state']
     assert !response.params['id'].nil?
@@ -447,7 +447,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
   def test_capture_order_with_billing
     @body      = { "token_id": @approved_billing_token }
-    response   = @gateway.create_agreement_for_approval(options)
+    response   = @gateway.create_billing_agreement(options)
     billing_id = response.params['id']
     @body      = body
     response   = create_order('CAPTURE')
@@ -458,7 +458,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
   def test_authorize_order_with_billing
     @body      = { "token_id": @approved_billing_token }
-    response   = @gateway.create_agreement_for_approval(options)
+    response   = @gateway.create_billing_agreement(options)
     billing_id = response.params['id']
     @body      = body
     @intent    = 'AUTHORIZE'
@@ -470,20 +470,20 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
   def test_capture_authorized_order_with_billing
     @body            = { "token_id": @approved_billing_token }
-    response         = @gateway.create_agreement_for_approval(options)
+    response         = @gateway.create_billing_agreement(options)
     billing_id       = response.params['id']
     @body            = body
     response         = create_order('AUTHORIZE')
     order_id         = response.params['id']
     response         = @gateway.authorize(order_id, billing_options(billing_id))
     authorization_id = response.params['purchase_units'][0]['payments']['authorizations'][0]['id']
-    response         = @gateway.do_capture(authorization_id, billing_options(billing_id))
+    response         = @gateway.capture_authorization(authorization_id, billing_options(billing_id))
     success_status_assertions(response, 'COMPLETED')
   end
 
   def test_void_authorized_order_with_billing
     @body            = { "token_id": @approved_billing_token }
-    response         = @gateway.create_agreement_for_approval(options)
+    response         = @gateway.create_billing_agreement(options)
     billing_id       = response.params['id']
     @body            = body
     response         = create_order('AUTHORIZE')
@@ -496,7 +496,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
   def test_refund_captured_order_with_billing
     @body      = { "token_id": @approved_billing_token }
-    response   = @gateway.create_agreement_for_approval(options)
+    response   = @gateway.create_billing_agreement(options)
     billing_id = response.params['id']
     @body      = body
     response   = create_order('CAPTURE')
@@ -509,28 +509,28 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
   def test_update_billing_description_and_merchant_custom_and_notify
     @body      = { "token_id": @approved_billing_token }
-    response   = @gateway.create_agreement_for_approval(options)
+    response   = @gateway.create_billing_agreement(options)
     billing_id = response.params['id']
     @body      = { "body": billing_update_body }
     response   = @gateway.update_billing_agreement(billing_id, options)
     success_empty_assertions(response)
   end
 
-  def test_get_billing_agreement_details
+  def test_get_billing_token_details
     @body             = billing_agreement_body
     response          = @gateway.create_billing_agreement_token(options)
     agreement_token   = response.params['token_id']
-    response          = @gateway.get_billing_agreement_details(agreement_token, options)
+    response          = @gateway.get_billing_agreement_token_details(agreement_token, options)
     assert_success response
     assert_equal agreement_token, response.params['token_id']
     assert_equal 'PENDING', response.params['token_status']
   end
 
-  def test_get_billing_token_details
+  def test_get_billing_agreement_details
     @body    = { "token_id": @approved_billing_token }
-    response = @gateway.create_agreement_for_approval(options)
+    response = @gateway.create_billing_agreement(options)
     token_id = response.params['id']
-    response = @gateway.get_billing_token_details(token_id, options)
+    response = @gateway.get_billing_agreement_details(token_id, options)
     assert_success response
     assert_equal token_id, response.params['id']
     assert_equal 'ACTIVE', response.params['state']
@@ -658,20 +658,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     end
   end
 
-  def test_missing_operator_arguments_in_handle_approve
-    response  = create_order('AUTHORIZE')
-    order_id  = response.params['id']
-    assert_raise(ArgumentError) do
-      @gateway.handle_approve(order_id, options)
-    end
-  end
-
-  def test_missing_operator_required_id_arguments_in_handle_approve
-    assert_raise(ArgumentError) do
-      @gateway.handle_approve(nil, options)
-    end
-  end
-
   def test_missing_order_id_in_update_body
     assert_raise(ArgumentError) do
       @body = { body: update_amount_body }
@@ -774,16 +760,16 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     end
   end
 
-  def test_missing_token_id_in_create_billing_agreement_approval
+  def test_missing_token_id_in_create_billing_agreement
     @body = {}
     assert_raise(ArgumentError) do
-      @gateway.create_agreement_for_approval(options)
+      @gateway.create_billing_agreement(options)
     end
   end
 
   def test_missing_id_in_billing_token
     @body      = { "token_id": @approved_billing_token }
-    response   = @gateway.create_agreement_for_approval(options)
+    response   = @gateway.create_billing_agreement(options)
     billing_id = response.params['id']
     @body      = body
     response   = create_order('CAPTURE')
@@ -797,7 +783,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
   def test_missing_type_in_billing_token
     @body      = { "token_id": @approved_billing_token }
-    response   = @gateway.create_agreement_for_approval(options)
+    response   = @gateway.create_billing_agreement(options)
     billing_id = response.params['id']
     @body      = body
     response   = create_order('CAPTURE')
