@@ -14,13 +14,12 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   # Which needs to be open and needs to pay the amount through personal paypal account once approved then we have to pass that BA token in fixtures.yml under \
   # ppcp block by assigning the value to approved_billing_token.
 
-
   def setup
     Base.mode               = :test
     @gateway                = ActiveMerchant::Billing::PaypalCommercePlatformGateway.new
     @ppcp_credentials       = fixtures(:ppcp)
 
-    access_token            = @gateway.get_access_token({ authorization: user_credentials })
+    access_token            = @gateway.get_access_token({ authorization: user_credentials }).params['access_token']
     missing_password_params = { username: @ppcp_credentials[:username] }
     missing_username_params = { password: @ppcp_credentials[:password] }
 
@@ -128,6 +127,12 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   def test_create_capture_instant_order_ppcp
     response = create_order('CAPTURE', 'PPCP')
     success_status_assertions(response, 'CREATED')
+  end
+
+  # It will test purchase with credit card
+  def test_purchase_with_card
+    response = @gateway.purchase(options.merge(@card_order_options))
+    success_status_assertions(response, 'COMPLETED')
   end
 
   # It will test create order with intent authorization

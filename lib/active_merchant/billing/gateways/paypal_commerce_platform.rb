@@ -25,6 +25,13 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'v1/oauth2/token?grant_type=client_credentials', {}, options[:headers])
       end
 
+      # Purchase method only for the case credit card is provided
+      def purchase(options)
+        response = create_order('CAPTURE', options)
+        order_id = response.params['id']
+        capture(order_id, options)
+      end
+
       # It will creates an order with the intent type(CAPTURE / AUTHORIZE) which is being passed in intent parameter
       # Cannot implement purchase directly as paypal needs manual order approval for capture
       def create_order(intent, options)
