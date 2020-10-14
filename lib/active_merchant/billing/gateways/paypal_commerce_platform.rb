@@ -4,6 +4,11 @@ require 'active_merchant/billing/gateways/paypal_commerce_platform/paypal_commer
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
+    # This gateway uses v2 APIs of the PayPal RESTful services except for the billing agreement and for access token.
+    # Billing Agreement using V1.
+    # Get Access Token is using V1.
+    # AM standards method are not being used for purchase as on order creation we used manual approval for the order.
+    # Server-side APIs are used in this implementation for PayPal Checkout
     class PaypalCommercePlatformGateway < Gateway
       include PaypalCommercePlatformCommon
 
@@ -13,12 +18,15 @@ module ActiveMerchant #:nodoc:
       self.default_currency    = 'USD'
       self.supported_cardtypes = %i[visa master american_express discover jcb]
 
+      # Fetches bearer token from server by using provided credentials
       def get_access_token(options)
         requires!(options[:authorization], :username, :password)
         options = prepare_request_to_get_access_token(options)
         commit(:post, 'v1/oauth2/token?grant_type=client_credentials', {}, options[:headers])
       end
 
+      # It will creates an order with the intent type(CAPTURE / AUTHORIZE) which is being passed in intent parameter
+      # Cannot implement purchase directly as paypal needs manual order approval for capture
       def create_order(intent, options)
         requires!(options.merge!(intent.nil? ? {} : { intent: intent }), :intent, :purchase_units)
 
@@ -32,11 +40,13 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'v2/checkout/orders', post, options[:headers])
       end
 
+      # It will fetch an order details for the provided id
       def get_order_details(order_id, options)
         requires!(options.merge(order_id: order_id), :order_id)
         commit(:get, "v2/checkout/orders/#{order_id}", nil, options[:headers])
       end
 
+      # Updates the order details for the provided path in the options
       def update_order(order_id, options)
         requires!(options.merge!(order_id.nil? ? {} : { order_id: order_id }), :order_id, :body)
 
@@ -70,6 +80,7 @@ module ActiveMerchant #:nodoc:
         commit(:patch, "v2/checkout/orders/#{order_id}", post, options[:headers])
       end
 
+      # To authorizes an order with provided order id
       def authorize(order_id, options)
         requires!({ order_id: order_id }, :order_id)
 
@@ -80,11 +91,13 @@ module ActiveMerchant #:nodoc:
         commit(:post, "v2/checkout/orders/#{order_id}/authorize", post, options[:headers])
       end
 
+      # To fetches an authorization details for the provided authorization id
       def get_authorization_details(authorization_id, options)
         requires!(options.merge(authorization_id: authorization_id), :authorization_id)
         commit(:get, "v2/payments/authorizations/#{authorization_id}", nil, options[:headers])
       end
 
+      # To captures an order for the provided order_id
       def capture(order_id, options)
         requires!({ order_id: order_id }, :order_id)
 
@@ -95,11 +108,13 @@ module ActiveMerchant #:nodoc:
         commit(:post, "v2/checkout/orders/#{order_id}/capture", post, options[:headers])
       end
 
+      # Fetches capture details for the provided capture id
       def get_capture_details(capture_id, options)
         requires!(options.merge(capture_id: capture_id), :capture_id)
         commit(:get, "v2/payments/captures/#{capture_id}", nil, options[:headers])
       end
 
+      # Refunds the amount to payer for the associated capture id
       def refund(capture_id, options = {})
         requires!({ capture_id: capture_id }, :capture_id)
 
@@ -111,17 +126,20 @@ module ActiveMerchant #:nodoc:
         commit(:post, "v2/payments/captures/#{capture_id}/refund", post, options[:headers])
       end
 
+      # Fetches refund details for the provided refund id
       def get_refund_details(refund_id, options)
         requires!(options.merge(refund_id: refund_id), :refund_id)
         commit(:get, "v2/payments/refunds/#{refund_id}", nil, options[:headers])
       end
 
+      # Cancels the authorization operation performed for the associated authorization id
       def void(authorization_id, options)
         requires!({ authorization_id: authorization_id }, :authorization_id)
         post = {}
         commit(:post, "v2/payments/authorizations/#{authorization_id}/void", post, options[:headers])
       end
 
+      # Captures the amount from payer for the associated authorization request
       def capture_authorization(authorization_id, options)
         requires!(options.merge!({ authorization_id: authorization_id }), :authorization_id)
 
@@ -135,6 +153,7 @@ module ActiveMerchant #:nodoc:
         commit(:post, "v2/payments/authorizations/#{authorization_id}/capture", post, options[:headers])
       end
 
+      # Creates the billing agreement token for the provided details in the options
       def create_billing_agreement_token(options)
         requires!(options, :payer, :plan)
         post = {}
@@ -142,22 +161,26 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'v1/billing-agreements/agreement-tokens', post, options[:headers])
       end
 
+      # Fetches billing details for the created billing token
       def get_billing_agreement_token_details(billing_agreement_token, options)
         requires!(options.merge(billing_agreement_token: billing_agreement_token), :billing_agreement_token)
         commit(:get, "v1/billing-agreements/agreement-tokens/#{billing_agreement_token}", nil, options[:headers])
       end
 
+      # Creates the billing agreement id for the approved billing token
       def create_billing_agreement(options)
         requires!(options, :token_id)
         post = { token_id: options[:token_id] }
         commit(:post, 'v1/billing-agreements/agreements', post, options[:headers])
       end
 
+      # Fetches agreement details for the associated billing agreement id
       def get_billing_agreement_details(billing_token, options)
         requires!(options.merge(billing_token: billing_token), :billing_token)
         commit(:get, "v1/billing-agreements/agreements/#{billing_token}", nil, options[:headers])
       end
 
+      # Updates the billing agreement details
       def update_billing_agreement(agreement_id, options)
         requires!(options.merge({ agreement_id: agreement_id }), :agreement_id, :body)
         post = {}
@@ -165,6 +188,7 @@ module ActiveMerchant #:nodoc:
         commit(:patch, "v1/billing-agreements/agreements/#{agreement_id}", post, options[:headers])
       end
 
+      # Cancels the billing agreement plan for the associated agreement
       def cancel_billing_agreement(agreement_id, options)
         post = {}
         post[:note] = options[:note] unless options[:note].nil?
@@ -390,12 +414,12 @@ module ActiveMerchant #:nodoc:
 
       def verify_card(card)
         defaults = {
-          number: card[:number],
-          first_name: card[:name],
-          last_name: card[:name],
-          verification_value: card[:security_code],
-          month: card[:expiry].split('-')[1].to_i,
-          year: card[:expiry].split('-')[0].to_i
+            number: card[:number],
+            first_name: card[:name],
+            last_name: card[:name],
+            verification_value: card[:security_code],
+            month: card[:expiry].split('-')[1].to_i,
+            year: card[:expiry].split('-')[0].to_i
         }
         @visa_card = ActiveMerchant::Billing::CreditCard.new(defaults)
         raise "Invalid Credit Card Format. Message: Missing #{@visa_card.validate}" unless @visa_card.validate.empty?

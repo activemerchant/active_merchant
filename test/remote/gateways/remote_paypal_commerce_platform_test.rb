@@ -3,11 +3,24 @@
 require 'test_helper'
 
 class PaypalExpressRestTest < Test::Unit::TestCase
+
+  # This gateway uses v2 APIs for more details please check legacy API documentations https://developer.paypal.com/docs/api/payments/v2/
+  # Billing Agreement using V1.
+  # Get Access Token is using V1.
+  # AM standards method are not being used for purchase as on order creation we used manual approval for the order.
+  # Server-side APIs are used in this implementation for PayPal Checkout
+
+  # Note: To run Billing Agreement test cases we have to do some process manually, We have to create the billing agreement manually and in its response there must be an approve billing agreement URL \
+  # Which needs to be open and needs to pay the amount through personal paypal account once approved then we have to pass that BA token in fixtures.yml under \
+  # ppcp block by assigning the value to approved_billing_token.
+
+
   def setup
     Base.mode               = :test
     @gateway                = ActiveMerchant::Billing::PaypalCommercePlatformGateway.new
     @ppcp_credentials       = fixtures(:ppcp)
-    access_token            = @gateway.get_access_token({ authorization: user_credentials }).params['access_token']
+
+    access_token            = @gateway.get_access_token({ authorization: user_credentials })
     missing_password_params = { username: @ppcp_credentials[:username] }
     missing_username_params = { password: @ppcp_credentials[:password] }
 
@@ -15,38 +28,38 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @body    = body
 
     @additional_params = {
-      "payment_instruction": {
-        "platform_fees": [
-          {
-            "amount": {
-              "currency_code": 'USD',
-              "value": '2.00'
-            },
-            "payee": {
-              "email_address": @ppcp_credentials[:platform_payee_email]
-            }
-          }
-        ]
-      }
+        "payment_instruction": {
+            "platform_fees": [
+                {
+                    "amount": {
+                        "currency_code": 'USD',
+                        "value": '2.00'
+                    },
+                    "payee": {
+                        "email_address": @ppcp_credentials[:platform_payee_email]
+                    }
+                }
+            ]
+        }
     }
 
     @card_order_options = {
-      "payment_source": {
-        "card": {
-          "name": 'John Doe',
-          "number": @ppcp_credentials[:card_number],
-          "expiry": "#{@ppcp_credentials[:year]}-#{@ppcp_credentials[:month]}",
-          "security_code": @ppcp_credentials[:cvc],
-          "billing_address": {
-            "address_line_1": '12312 Port Grace Blvd',
-            "admin_area_2": 'La Vista',
-            "admin_area_1": 'NE',
-            "postal_code": '68128',
-            "country_code": 'US'
-          }
-        }
-      },
-      "headers": @headers
+        "payment_source": {
+            "card": {
+                "name": 'John Doe',
+                "number": @ppcp_credentials[:card_number],
+                "expiry": "#{@ppcp_credentials[:year]}-#{@ppcp_credentials[:month]}",
+                "security_code": @ppcp_credentials[:cvc],
+                "billing_address": {
+                    "address_line_1": '12312 Port Grace Blvd',
+                    "admin_area_2": 'La Vista',
+                    "admin_area_1": 'NE',
+                    "postal_code": '68128',
+                    "country_code": 'US'
+                }
+            }
+        },
+        "headers": @headers
     }
 
     @get_token_missing_password_options = { "Content-Type": 'application/json', authorization: missing_password_params }
@@ -54,18 +67,20 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @approved_billing_token = @ppcp_credentials[:approved_billing_token]
   end
 
+  # It will test and verify get access token.
   def test_access_token
     options       = { "Content-Type": 'application/json', authorization: user_credentials }
     access_token  = @gateway.get_access_token(options)
     assert !access_token.nil?
   end
 
+  # It will test create the order with intent capture for direct merhcant
   def test_create_capture_instant_order_direct_merchant
     response = create_order('CAPTURE')
-    puts "Capture Order Id (Instant) - PPCP: #{response.params['id']}"
     success_status_assertions(response, 'CREATED')
   end
 
+  # It will test order details
   def test_get_order_details
     response      = create_order('CAPTURE')
     order_id      = response.params['id']
@@ -74,6 +89,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     assert_equal order_id, response.params['id']
   end
 
+  # It will test capture order details
   def test_get_capture_details
     response   = create_order('CAPTURE')
     order_id   = response.params['id']
@@ -84,6 +100,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     success_status_assertions(response, 'COMPLETED')
   end
 
+  # It will test the order authorization details
   def test_get_authorization_details
     response         = create_order('AUTHORIZE')
     order_id         = response.params['id']
@@ -94,6 +111,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     success_status_assertions(response, 'CREATED')
   end
 
+  # It will test the refund details of an order
   def test_get_refund_details
     response        = create_order('CAPTURE')
     order_id        = response.params['id']
@@ -106,18 +124,19 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     success_status_assertions(response, 'COMPLETED')
   end
 
+  # It will test create order with intent capture for PPCP
   def test_create_capture_instant_order_ppcp
     response = create_order('CAPTURE', 'PPCP')
-    puts "Capture Order Id (Instant) - PPCP: #{response.params['id']}"
     success_status_assertions(response, 'CREATED')
   end
 
+  # It will test create order with intent authorization
   def test_create_authorize_order
     response = create_order('AUTHORIZE')
-    puts "Authorize Order Id: #{response.params['id']}"
     success_status_assertions(response, 'CREATED')
   end
 
+  # It will test create order with intent capture along with the card.
   def test_capture_order_with_card
     response = create_order('CAPTURE')
     order_id = response.params['id']
@@ -125,6 +144,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     success_status_assertions(response, 'COMPLETED')
   end
 
+  # It will create ordrer with intent capture using payment instructions
   def test_capture_order_with_payment_instruction_through_card
     response = create_order('CAPTURE', 'PPCP')
     order_id = response.params['id']
@@ -132,6 +152,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     success_status_assertions(response, 'COMPLETED')
   end
 
+  # It will test create order with intent authorize
   def test_authorize_order_with_card
     response = create_order('AUTHORIZE')
     order_id = response.params['id']
@@ -145,10 +166,10 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     response = @gateway.create_order('CAPTURE', params)
 
     server_side_failure_assertions(
-      response,
-      'INTERNAL_SERVER_ERROR',
-      nil,
-      'An internal server error occurred.'
+        response,
+        'INTERNAL_SERVER_ERROR',
+        nil,
+        'An internal server error occurred.'
     )
   end
 
@@ -159,10 +180,10 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     response = @gateway.capture(order_id, @card_order_options)
 
     server_side_failure_assertions(
-      response,
-      'INVALID_REQUEST',
-      nil,
-      'The request is not well-formed, is syntactically incorrect, or violates schema.'
+        response,
+        'INVALID_REQUEST',
+        nil,
+        'The request is not well-formed, is syntactically incorrect, or violates schema.'
     )
   end
 
@@ -173,10 +194,10 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     response = @gateway.authorize(order_id, @card_order_options)
 
     server_side_failure_assertions(
-      response,
-      'INVALID_REQUEST',
-      nil,
-      'The request is not well-formed, is syntactically incorrect, or violates schema.'
+        response,
+        'INVALID_REQUEST',
+        nil,
+        'The request is not well-formed, is syntactically incorrect, or violates schema.'
     )
   end
 
@@ -190,10 +211,10 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     response = @gateway.refund(capture_id, params)
 
     server_side_failure_assertions(
-      response,
-      'UNPROCESSABLE_ENTITY',
-      'PARTIAL_REFUND_NOT_ALLOWED',
-      'The requested action could not be completed, was semantically incorrect, or failed business validation.'
+        response,
+        'UNPROCESSABLE_ENTITY',
+        'PARTIAL_REFUND_NOT_ALLOWED',
+        'The requested action could not be completed, was semantically incorrect, or failed business validation.'
     )
   end
 
@@ -207,10 +228,10 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     response = @gateway.void(authorization_id, params)
 
     server_side_failure_assertions(
-      response,
-      'UNPROCESSABLE_ENTITY',
-      'PREVIOUSLY_VOIDED',
-      'The requested action could not be performed, semantically incorrect, or failed business validation.'
+        response,
+        'UNPROCESSABLE_ENTITY',
+        'PREVIOUSLY_VOIDED',
+        'The requested action could not be performed, semantically incorrect, or failed business validation.'
     )
   end
 
@@ -219,7 +240,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     order_id         = response.params['id']
     response         = @gateway.authorize(order_id, @card_order_options)
     authorization_id = response.params['purchase_units'][0]['payments']['authorizations'][0]['id']
-    response         = @gateway.capture_authorization(authorization_id, options)
+    response         = @gateway.do_capture(authorization_id, options)
     success_status_assertions(response, 'COMPLETED')
   end
 
@@ -412,7 +433,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
   def test_create_billing_agreement
     @body    = { "token_id": @approved_billing_token }
-    response = @gateway.create_billing_agreement(options)
+    response = @gateway.create_agreement_for_approval(options)
     assert_success response
     assert_equal 'ACTIVE', response.params['state']
     assert !response.params['id'].nil?
@@ -421,7 +442,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
   def test_capture_order_with_billing
     @body      = { "token_id": @approved_billing_token }
-    response   = @gateway.create_billing_agreement(options)
+    response   = @gateway.create_agreement_for_approval(options)
     billing_id = response.params['id']
     @body      = body
     response   = create_order('CAPTURE')
@@ -432,7 +453,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
   def test_authorize_order_with_billing
     @body      = { "token_id": @approved_billing_token }
-    response   = @gateway.create_billing_agreement(options)
+    response   = @gateway.create_agreement_for_approval(options)
     billing_id = response.params['id']
     @body      = body
     @intent    = 'AUTHORIZE'
@@ -444,20 +465,20 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
   def test_capture_authorized_order_with_billing
     @body            = { "token_id": @approved_billing_token }
-    response         = @gateway.create_billing_agreement(options)
+    response         = @gateway.create_agreement_for_approval(options)
     billing_id       = response.params['id']
     @body            = body
     response         = create_order('AUTHORIZE')
     order_id         = response.params['id']
     response         = @gateway.authorize(order_id, billing_options(billing_id))
     authorization_id = response.params['purchase_units'][0]['payments']['authorizations'][0]['id']
-    response         = @gateway.capture_authorization(authorization_id, billing_options(billing_id))
+    response         = @gateway.do_capture(authorization_id, billing_options(billing_id))
     success_status_assertions(response, 'COMPLETED')
   end
 
   def test_void_authorized_order_with_billing
     @body            = { "token_id": @approved_billing_token }
-    response         = @gateway.create_billing_agreement(options)
+    response         = @gateway.create_agreement_for_approval(options)
     billing_id       = response.params['id']
     @body            = body
     response         = create_order('AUTHORIZE')
@@ -470,7 +491,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
   def test_refund_captured_order_with_billing
     @body      = { "token_id": @approved_billing_token }
-    response   = @gateway.create_billing_agreement(options)
+    response   = @gateway.create_agreement_for_approval(options)
     billing_id = response.params['id']
     @body      = body
     response   = create_order('CAPTURE')
@@ -483,28 +504,28 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
   def test_update_billing_description_and_merchant_custom_and_notify
     @body      = { "token_id": @approved_billing_token }
-    response   = @gateway.create_billing_agreement(options)
+    response   = @gateway.create_agreement_for_approval(options)
     billing_id = response.params['id']
     @body      = { "body": billing_update_body }
     response   = @gateway.update_billing_agreement(billing_id, options)
     success_empty_assertions(response)
   end
 
-  def test_get_billing_token_details
+  def test_get_billing_agreement_details
     @body             = billing_agreement_body
     response          = @gateway.create_billing_agreement_token(options)
     agreement_token   = response.params['token_id']
-    response          = @gateway.get_billing_agreement_token_details(agreement_token, options)
+    response          = @gateway.get_billing_agreement_details(agreement_token, options)
     assert_success response
     assert_equal agreement_token, response.params['token_id']
     assert_equal 'PENDING', response.params['token_status']
   end
 
-  def test_get_billing_agreement_details
+  def test_get_billing_token_details
     @body    = { "token_id": @approved_billing_token }
-    response = @gateway.create_billing_agreement(options)
+    response = @gateway.create_agreement_for_approval(options)
     token_id = response.params['id']
-    response = @gateway.get_billing_agreement_details(token_id, options)
+    response = @gateway.get_billing_token_details(token_id, options)
     assert_success response
     assert_equal token_id, response.params['id']
     assert_equal 'ACTIVE', response.params['state']
@@ -512,10 +533,10 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
   def test_transcript_scrubbing
     @three_ds_credit_card = credit_card(
-      '4000000000003220',
-      verification_value: '737',
-      month: 10,
-      year: 2020
+        '4000000000003220',
+        verification_value: '737',
+        month: 10,
+        year: 2020
     )
     response = create_order('CAPTURE')
     order_id = response.params['id']
@@ -529,14 +550,12 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
   def test_missing_password_argument_to_get_access_token
     assert_raise(ArgumentError) do
-      puts '*** ArgumentError Exception: Missing required parameter: password'
       @gateway.get_access_token(@get_token_missing_password_options)
     end
   end
 
   def test_missing_username_argument_to_get_access_token
     assert_raise(ArgumentError) do
-      puts '*** ArgumentError Exception: Missing required parameter: username'
       @gateway.get_access_token(@get_token_missing_username_options)
     end
   end
@@ -544,7 +563,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   def test_missing_intent_argument_for_order_creation
     @body.delete(:intent)
     assert_raise(ArgumentError) do
-      puts '*** ArgumentError Exception: Missing required parameter: intent'
       @gateway.create_order(nil, options)
     end
   end
@@ -552,7 +570,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   def test_missing_purchase_units_argument_for_order_creation
     @body.delete(:purchase_units)
     assert_raise(ArgumentError) do
-      puts '*** ArgumentError Exception: Missing required parameter: purchase_units'
       @gateway.create_order('CAPTURE', options)
     end
   end
@@ -560,7 +577,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   def test_missing_amount_in_purchase_units_argument
     @body[:purchase_units][0].delete(:amount)
     assert_raise(ArgumentError) do
-      puts '*** ArgumentError Exception: Missing required parameter: amount in purchase_units'
       @gateway.create_order('CAPTURE', options)
     end
   end
@@ -568,7 +584,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   def test_missing_currency_code_in_amount_argument
     @body[:purchase_units][0][:amount].delete(:currency_code)
     assert_raise(ArgumentError) do
-      puts '*** ArgumentError Exception: Missing required parameter: currency_code in amount'
       @gateway.create_order('CAPTURE', options)
     end
   end
@@ -576,7 +591,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   def test_missing_value_in_amount_argument
     @body[:purchase_units][0][:amount].delete(:value)
     assert_raise(ArgumentError) do
-      puts '*** ArgumentError Exception: Missing required parameter: value in amount'
       @gateway.create_order('CAPTURE', options)
     end
   end
@@ -584,7 +598,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   def test_missing_name_in_items
     @body[:purchase_units][0][:items][0].delete(:name)
     assert_raise(ArgumentError) do
-      puts '*** ArgumentError Exception: Missing required parameter: name in items'
       @gateway.create_order('CAPTURE', options)
     end
   end
@@ -592,7 +605,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   def test_missing_quantity_in_items
     @body[:purchase_units][0][:items][0].delete(:quantity)
     assert_raise(ArgumentError) do
-      puts '*** ArgumentError Exception: Missing required parameter: quantity in items'
       @gateway.create_order('CAPTURE', options)
     end
   end
@@ -600,7 +612,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   def test_missing_unit_amount_in_items
     @body[:purchase_units][0][:items][0].delete(:name)
     assert_raise(ArgumentError) do
-      puts '*** ArgumentError Exception: Missing required parameter: unit_amount in items'
       @gateway.create_order('CAPTURE', options)
     end
   end
@@ -608,7 +619,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   def test_missing_admin_area_2_in_address
     @body[:purchase_units][0][:shipping][:address].delete(:admin_area_2)
     assert_raise(ArgumentError) do
-      puts '*** ArgumentError Exception: Missing required parameter: admin_area_2 in address'
       @gateway.create_order('CAPTURE', options)
     end
   end
@@ -616,7 +626,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   def test_missing_postal_code_in_address
     @body[:purchase_units][0][:shipping][:address].delete(:postal_code)
     assert_raise(ArgumentError) do
-      puts '*** ArgumentError Exception: Missing required parameter: postal code in address'
       @gateway.create_order('CAPTURE', options)
     end
   end
@@ -624,7 +633,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   def test_missing_country_code_in_address
     @body[:purchase_units][0][:shipping][:address].delete(:country_code)
     assert_raise(ArgumentError) do
-      puts '*** ArgumentError Exception: Missing required parameter: country code in address'
       @gateway.create_order('CAPTURE', options)
     end
   end
@@ -633,7 +641,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @body[:purchase_units][0].update(@additional_params)
     @body[:purchase_units][0][:payment_instruction][:platform_fees][0].delete(:amount)
     assert_raise(ArgumentError) do
-      puts '*** ArgumentError Exception: Missing required parameter: amount in platform fee'
       @gateway.create_order('CAPTURE', options)
     end
   end
@@ -642,14 +649,26 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @body[:purchase_units][0].update(@additional_params)
     @body[:purchase_units][0][:payment_instruction][:platform_fees][0].delete(:payee)
     assert_raise(ArgumentError) do
-      puts '*** ArgumentError Exception: Missing required parameter: payee in platform fee'
       @gateway.create_order('CAPTURE', options)
+    end
+  end
+
+  def test_missing_operator_arguments_in_handle_approve
+    response  = create_order('AUTHORIZE')
+    order_id  = response.params['id']
+    assert_raise(ArgumentError) do
+      @gateway.handle_approve(order_id, options)
+    end
+  end
+
+  def test_missing_operator_required_id_arguments_in_handle_approve
+    assert_raise(ArgumentError) do
+      @gateway.handle_approve(nil, options)
     end
   end
 
   def test_missing_order_id_in_update_body
     assert_raise(ArgumentError) do
-      puts '*** ArgumentError Exception: Missing required parameter: order_id in update_order'
       @body = { body: update_amount_body }
       @gateway.update_order(nil, options)
     end
@@ -659,7 +678,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     assert_raise(ArgumentError) do
       response = create_order('CAPTURE')
       order_id = response.params['id']
-      puts '*** ArgumentError Exception: Missing required parameter: body in update_order'
       @body = {}
       @gateway.update_order(order_id, options)
     end
@@ -671,7 +689,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @body    = { body: update_amount_body }
     @body[:body][0].delete(:op)
     assert_raise(ArgumentError) do
-      puts '*** ArgumentError Exception: Missing required parameter: op in update field'
       @gateway.update_order(order_id, options)
     end
   end
@@ -682,7 +699,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @body    = { body: update_amount_body }
     @body[:body][0].delete(:path)
     assert_raise(ArgumentError) do
-      puts '*** ArgumentError Exception: Missing required parameter: op in update field'
       @gateway.update_order(order_id, options)
     end
   end
@@ -693,7 +709,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @body    = { body: update_amount_body }
     @body[:body][0].delete(:value)
     assert_raise(ArgumentError) do
-      puts '*** ArgumentError Exception: Missing required parameter: op in update field'
       @gateway.update_order(order_id, options)
     end
   end
@@ -702,7 +717,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @body = billing_agreement_body
     @body.delete(:payer)
     assert_raise(ArgumentError) do
-      puts '*** ArgumentError Exception: Missing required parameter: payer in create_billing'
       @gateway.create_billing_agreement_token(options)
     end
   end
@@ -711,7 +725,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @body = billing_agreement_body
     @body.delete(:plan)
     assert_raise(ArgumentError) do
-      puts '*** ArgumentError Exception: Missing required parameter: plan in create_billing'
       @gateway.create_billing_agreement_token(options)
     end
   end
@@ -720,7 +733,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @body = billing_agreement_body
     @body[:shipping_address].delete(:line1)
     assert_raise(ArgumentError) do
-      puts '*** ArgumentError Exception: Missing required parameter: line1 in shipping_address'
       @gateway.create_billing_agreement_token(options)
     end
   end
@@ -729,7 +741,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @body = billing_agreement_body
     @body[:shipping_address].delete(:postal_code)
     assert_raise(ArgumentError) do
-      puts '*** ArgumentError Exception: Missing required parameter: postal_code in shipping_address'
       @gateway.create_billing_agreement_token(options)
     end
   end
@@ -738,7 +749,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @body = billing_agreement_body
     @body[:shipping_address].delete(:country_code)
     assert_raise(ArgumentError) do
-      puts '*** ArgumentError Exception: Missing required parameter: country_code in shipping_address'
       @gateway.create_billing_agreement_token(options)
     end
   end
@@ -747,7 +757,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @body = billing_agreement_body
     @body[:shipping_address].delete(:city)
     assert_raise(ArgumentError) do
-      puts '*** ArgumentError Exception: Missing required parameter: city in shipping_address'
       @gateway.create_billing_agreement_token(options)
     end
   end
@@ -756,28 +765,25 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     @body = billing_agreement_body
     @body[:shipping_address].delete(:state)
     assert_raise(ArgumentError) do
-      puts '*** ArgumentError Exception: Missing required parameter: state in shipping_address'
       @gateway.create_billing_agreement_token(options)
     end
   end
 
-  def test_missing_token_id_in_create_billing_agreement
+  def test_missing_token_id_in_create_billing_agreement_approval
     @body = {}
     assert_raise(ArgumentError) do
-      puts '*** ArgumentError Exception: Missing required parameter: token_id in create_billing_agreement_approval'
-      @gateway.create_billing_agreement(options)
+      @gateway.create_agreement_for_approval(options)
     end
   end
 
   def test_missing_id_in_billing_token
     @body      = { "token_id": @approved_billing_token }
-    response   = @gateway.create_billing_agreement(options)
+    response   = @gateway.create_agreement_for_approval(options)
     billing_id = response.params['id']
     @body      = body
     response   = create_order('CAPTURE')
     order_id   = response.params['id']
     assert_raise(ArgumentError) do
-      puts '*** ArgumentError Exception: Missing required parameter: id in billing_token'
       billing_body = billing_options(billing_id)
       billing_body[:payment_source][:token].delete(:id)
       @gateway.capture(order_id, billing_body)
@@ -786,13 +792,12 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
   def test_missing_type_in_billing_token
     @body      = { "token_id": @approved_billing_token }
-    response   = @gateway.create_billing_agreement(options)
+    response   = @gateway.create_agreement_for_approval(options)
     billing_id = response.params['id']
     @body      = body
     response   = create_order('CAPTURE')
     order_id   = response.params['id']
     assert_raise(ArgumentError) do
-      puts '*** ArgumentError Exception: Missing required parameter: id in billing_token'
       billing_body = billing_options(billing_id)
       billing_body[:payment_source][:token].delete(:type)
       @gateway.capture(order_id, billing_body)
@@ -821,249 +826,249 @@ class PaypalExpressRestTest < Test::Unit::TestCase
   def body
     @reference_id = "camera_shop_seller_#{Time.now}"
     {
-      "description": 'PPCP',
-      "intent": @intent || 'CAPTURE',
-      "purchase_units": [
-        {
-          "reference_id": @reference_id,
-          "description": 'Camera Shop',
-          "amount": {
-            "currency_code": 'USD',
-            "value": '25.00',
-            "breakdown": {
-              "item_total": {
-                "currency_code": 'USD',
-                "value": '25.00'
-              },
-              "shipping": {
-                "currency_code": 'USD',
-                "value": '0'
-              },
-              "handling": {
-                "currency_code": 'USD',
-                "value": '0'
-              },
-              "tax_total": {
-                "currency_code": 'USD',
-                "value": '0'
-              },
-              "gift_wrap": {
-                "currency_code": 'USD',
-                "value": '0'
-              },
-              "shipping_discount": {
-                "currency_code": 'USD',
-                "value": '0'
-              }
-            }
-          },
-          "payee": {
-            "email_address": @ppcp_credentials[:payee_email]
-          },
-          "items": [
+        "description": 'PPCP',
+        "intent": @intent || 'CAPTURE',
+        "purchase_units": [
             {
-              "name": 'Levis 501 Selvedge STF',
-              "sku": '5158936',
-              "unit_amount": {
-                "currency_code": 'USD',
-                "value": '25.00'
-              },
-              "tax": {
-                "currency_code": 'USD',
-                "value": '0.00'
-              },
-              "quantity": '1',
-              "category": 'PHYSICAL_GOODS'
+                "reference_id": @reference_id,
+                "description": 'Camera Shop',
+                "amount": {
+                    "currency_code": 'USD',
+                    "value": '25.00',
+                    "breakdown": {
+                        "item_total": {
+                            "currency_code": 'USD',
+                            "value": '25.00'
+                        },
+                        "shipping": {
+                            "currency_code": 'USD',
+                            "value": '0'
+                        },
+                        "handling": {
+                            "currency_code": 'USD',
+                            "value": '0'
+                        },
+                        "tax_total": {
+                            "currency_code": 'USD',
+                            "value": '0'
+                        },
+                        "gift_wrap": {
+                            "currency_code": 'USD',
+                            "value": '0'
+                        },
+                        "shipping_discount": {
+                            "currency_code": 'USD',
+                            "value": '0'
+                        }
+                    }
+                },
+                "payee": {
+                    "email_address": @ppcp_credentials[:payee_email]
+                },
+                "items": [
+                    {
+                        "name": 'Levis 501 Selvedge STF',
+                        "sku": '5158936',
+                        "unit_amount": {
+                            "currency_code": 'USD',
+                            "value": '25.00'
+                        },
+                        "tax": {
+                            "currency_code": 'USD',
+                            "value": '0.00'
+                        },
+                        "quantity": '1',
+                        "category": 'PHYSICAL_GOODS'
+                    }
+                ],
+                "shipping": {
+                    "address": {
+                        "address_line_1": '500 Hillside Street',
+                        "address_line_2": '#1000',
+                        "admin_area_1": 'CA',
+                        "admin_area_2": 'San Jose',
+                        "postal_code": '95131',
+                        "country_code": 'US'
+                    }
+                },
+                "shipping_method": 'United Postal Service',
+                "payment_group_id": 1,
+                "custom_id": "custom_value_#{Time.now}",
+                "invoice_id": "invoice_number_#{Time.now}",
+                "soft_descriptor": 'Payment Camera Shop'
             }
-          ],
-          "shipping": {
-            "address": {
-              "address_line_1": '500 Hillside Street',
-              "address_line_2": '#1000',
-              "admin_area_1": 'CA',
-              "admin_area_2": 'San Jose',
-              "postal_code": '95131',
-              "country_code": 'US'
-            }
-          },
-          "shipping_method": 'United Postal Service',
-          "payment_group_id": 1,
-          "custom_id": "custom_value_#{Time.now}",
-          "invoice_id": "invoice_number_#{Time.now}",
-          "soft_descriptor": 'Payment Camera Shop'
-        }
-      ],
-      "payer": payer_hash,
-      "application_context": application_context
+        ],
+        "payer": payer_hash,
+        "application_context": application_context
     }
   end
 
   def update_amount_body
     [
-      {
-        "op": 'replace',
-        "path": "/purchase_units/@reference_id=='#{@reference_id}'/amount",
-        "value": {
-          "currency_code": 'USD',
-          "value": '27.00',
-          "breakdown": {
-            "item_total": {
-              "currency_code": 'USD',
-              "value": '25.00'
-            },
-            "shipping": {
-              "currency_code": 'USD',
-              "value": '2.00'
+        {
+            "op": 'replace',
+            "path": "/purchase_units/@reference_id=='#{@reference_id}'/amount",
+            "value": {
+                "currency_code": 'USD',
+                "value": '27.00',
+                "breakdown": {
+                    "item_total": {
+                        "currency_code": 'USD',
+                        "value": '25.00'
+                    },
+                    "shipping": {
+                        "currency_code": 'USD',
+                        "value": '2.00'
+                    }
+                }
             }
-          }
         }
-      }
     ]
   end
 
   def update_shipping_address_body
     [
-      {
-        "op": 'replace',
-        "path": "/purchase_units/@reference_id=='#{@reference_id}'/shipping/address",
-        "value": {
-          "address_line_1": '123 Townsend St',
-          "address_line_2": 'Floor 6',
-          "admin_area_2": 'San Francisco',
-          "admin_area_1": 'CA',
-          "postal_code": '94107',
-          "country_code": 'US'
+        {
+            "op": 'replace',
+            "path": "/purchase_units/@reference_id=='#{@reference_id}'/shipping/address",
+            "value": {
+                "address_line_1": '123 Townsend St',
+                "address_line_2": 'Floor 6',
+                "admin_area_2": 'San Francisco',
+                "admin_area_1": 'CA',
+                "postal_code": '94107',
+                "country_code": 'US'
+            }
         }
-      }
     ]
   end
 
   def update_intent_body
     [
-      {
-        path: '/intent',
-        value: 'CAPTURE',
-        op: 'replace'
-      }
+        {
+            path: '/intent',
+            value: 'CAPTURE',
+            op: 'replace'
+        }
     ]
   end
 
   def update_platform_fee_body
     [{
-      "op": 'add',
-      "path": "/purchase_units/@reference_id=='#{@reference_id}'/payment_instruction",
-      "value": {
-        "platform_fees": [
-          {
-            "amount": {
-              "currency_code": 'USD',
-              "value": '3.00'
-            },
-            "payee": {
-              "email_address": @ppcp_credentials[:platform_payee_email]
-            }
-          }
-        ]
-      }
-    }]
+         "op": 'add',
+         "path": "/purchase_units/@reference_id=='#{@reference_id}'/payment_instruction",
+         "value": {
+             "platform_fees": [
+                 {
+                     "amount": {
+                         "currency_code": 'USD',
+                         "value": '3.00'
+                     },
+                     "payee": {
+                         "email_address": @ppcp_credentials[:platform_payee_email]
+                     }
+                 }
+             ]
+         }
+     }]
   end
 
   def update_invoice_id_body
     [
-      {
-        path: "/purchase_units/@reference_id=='#{@reference_id}'/invoice_id",
-        value: 'INVOICE_ID_123',
-        op: 'replace'
-      }
+        {
+            path: "/purchase_units/@reference_id=='#{@reference_id}'/invoice_id",
+            value: 'INVOICE_ID_123',
+            op: 'replace'
+        }
     ]
   end
 
   def update_custom_id_body
     [
-      {
-        path: "/purchase_units/@reference_id=='#{@reference_id}'/custom_id",
-        value: 'CUSTOM_ID_123',
-        op: 'replace'
-      }
+        {
+            path: "/purchase_units/@reference_id=='#{@reference_id}'/custom_id",
+            value: 'CUSTOM_ID_123',
+            op: 'replace'
+        }
     ]
   end
 
   def update_payee_email_body
     [
-      {
-        path: "/purchase_units/@reference_id=='#{@reference_id}'/payee/email_address",
-        value: 'test@test.com',
-        op: 'replace'
-      }
+        {
+            path: "/purchase_units/@reference_id=='#{@reference_id}'/payee/email_address",
+            value: 'test@test.com',
+            op: 'replace'
+        }
     ]
   end
 
   def update_shipping_name_body
     [
-      {
-        path: "/purchase_units/@reference_id=='#{@reference_id}'/shipping/name",
-        value: {
-          full_name: 'TEST SHIPPING'
-        },
-        op: 'replace'
-      }
+        {
+            path: "/purchase_units/@reference_id=='#{@reference_id}'/shipping/name",
+            value: {
+                full_name: 'TEST SHIPPING'
+            },
+            op: 'replace'
+        }
     ]
   end
 
   def update_description_body
     [{
-      path: "/purchase_units/@reference_id=='#{@reference_id}'/description",
-      value: 'UPDATED DESCRIPTION',
-      op: 'replace'
-    }]
+         path: "/purchase_units/@reference_id=='#{@reference_id}'/description",
+         value: 'UPDATED DESCRIPTION',
+         op: 'replace'
+     }]
   end
 
   def update_soft_descriptor_body
     [
-      {
-        path: "/purchase_units/@reference_id=='#{@reference_id}'/soft_descriptor",
-        value: 'Description Changed.',
-        op: 'replace'
-      }
+        {
+            path: "/purchase_units/@reference_id=='#{@reference_id}'/soft_descriptor",
+            value: 'Description Changed.',
+            op: 'replace'
+        }
     ]
   end
 
   def update_purchase_unit_body
     [
-      {
-        "path": "/purchase_units/@reference_id=='#{@reference_id}'",
-        "op": 'replace',
-        "value": body[:purchase_units][0]
-      }
+        {
+            "path": "/purchase_units/@reference_id=='#{@reference_id}'",
+            "op": 'replace',
+            "value": body[:purchase_units][0]
+        }
     ]
   end
 
   def billing_agreement_body
     {
-      "description": 'Billing Agreement',
-      "shipping_address":
+        "description": 'Billing Agreement',
+        "shipping_address":
             {
-              "line1": '1350 North First Street',
-              "city": 'San Jose',
-              "state": 'CA',
-              "postal_code": '95112',
-              "country_code": 'US',
-              "recipient_name": 'John Doe'
+                "line1": '1350 North First Street',
+                "city": 'San Jose',
+                "state": 'CA',
+                "postal_code": '95112',
+                "country_code": 'US',
+                "recipient_name": 'John Doe'
             },
-      "payer":
+        "payer":
             {
-              "payment_method": 'PAYPAL'
+                "payment_method": 'PAYPAL'
             },
-      "plan":
+        "plan":
             {
-              "type": 'MERCHANT_INITIATED_BILLING',
-              "merchant_preferences":
+                "type": 'MERCHANT_INITIATED_BILLING',
+                "merchant_preferences":
                     {
-                      "return_url": 'https://google.com',
-                      "cancel_url": 'https://google.com',
-                      "accepted_pymt_type": 'INSTANT',
-                      "skip_shipping_address": false,
-                      "immutable_shipping_address": true
+                        "return_url": 'https://google.com',
+                        "cancel_url": 'https://google.com',
+                        "accepted_pymt_type": 'INSTANT',
+                        "skip_shipping_address": false,
+                        "immutable_shipping_address": true
                     }
             }
     }
@@ -1071,48 +1076,48 @@ class PaypalExpressRestTest < Test::Unit::TestCase
 
   def billing_options(billing_token)
     {
-      "payment_source": {
-        "token": {
-          "id": billing_token,
-          "type": 'BILLING_AGREEMENT'
-        }
-      },
-      application_context: application_context,
-      "headers": @headers
+        "payment_source": {
+            "token": {
+                "id": billing_token,
+                "type": 'BILLING_AGREEMENT'
+            }
+        },
+        application_context: application_context,
+        "headers": @headers
     }
   end
 
   def billing_update_body
     [
-      {
-        "op": 'replace',
-        "path": '/',
-        "value": {
-          "description": 'Updated Billing Agreement',
-          "merchant_custom_data": 'INV-003'
+        {
+            "op": 'replace',
+            "path": '/',
+            "value": {
+                "description": 'Updated Billing Agreement',
+                "merchant_custom_data": 'INV-003'
+            }
+        },
+        {
+            "op": 'replace',
+            "path": '/plan/merchant_preferences/',
+            "value": {
+                "notify_url": 'https://example.com/notification'
+            }
         }
-      },
-      {
-        "op": 'replace',
-        "path": '/plan/merchant_preferences/',
-        "value": {
-          "notify_url": 'https://example.com/notification'
-        }
-      }
     ]
   end
 
   def user_credentials
     {
-      username: @ppcp_credentials[:username],
-      password: @ppcp_credentials[:password]
+        username: @ppcp_credentials[:username],
+        password: @ppcp_credentials[:password]
     }
   end
 
   def invalid_user_credentials
     {
-      username: 'ASs8Osqge6KT3OdLtkNhD20VP8lsrqRUlRjLo-e5s75SHz-2ffMMzCos_odQGjGYpPcGlxJVQ5fXM==',
-      password: 'EKj_bMZn0CkOhOvFwJMX2WwhtCq2A0OtlOd5T-zUhKIf9WQxvgPasNX0Kr1U4TjFj8ZN6XCMF5NM3=='
+        username: 'ASs8Osqge6KT3OdLtkNhD20VP8lsrqRUlRjLo-e5s75SHz-2ffMMzCos_odQGjGYpPcGlxJVQ5fXM==',
+        password: 'EKj_bMZn0CkOhOvFwJMX2WwhtCq2A0OtlOd5T-zUhKIf9WQxvgPasNX0Kr1U4TjFj8ZN6XCMF5NM3=='
     }
   end
 
