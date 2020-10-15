@@ -498,23 +498,6 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     assert_equal 'ACTIVE', response.params['state']
   end
 
-  def test_transcript_scrubbing
-    @three_ds_credit_card = credit_card(
-      '4000000000003220',
-      verification_value: '737',
-      month: 10,
-      year: 2020
-    )
-    response = create_order('CAPTURE')
-    order_id = response.params['id']
-    transcript = capture_transcript(@gateway) do
-      @gateway.capture(order_id, @card_order_options)
-    end
-    transcript = @gateway.scrub(transcript)
-    assert_scrubbed(@three_ds_credit_card.number, transcript)
-    assert_scrubbed(@three_ds_credit_card.verification_value, transcript)
-  end
-
   def test_missing_password_argument_to_get_access_token
     assert_raise(ArgumentError) do
       @gateway.get_access_token(@get_token_missing_password_options)

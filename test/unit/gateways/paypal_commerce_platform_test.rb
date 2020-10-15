@@ -152,14 +152,6 @@ class PaypalCommercePlatformTest < Test::Unit::TestCase
     assert_success response
   end
 
-  def test_successful_scrub_basic
-    assert_equal @gateway.scrub(pre_scrubbed_access_token), post_scrubbed_access_token
-  end
-
-  def test_successful_scrub_bearer_and_card
-    assert_equal @gateway.scrub(pre_scrubbed_with_card_and_bearer), post_scrubbed_with_card_and_bearer
-  end
-
   def test_failed_update_order_business_validation_error
     @gateway.expects(:ssl_request).times(2).returns(successful_create_capture_order_response, failed_update_order_due_to_business_error_response)
     assert create = @gateway.create_order('CAPTURE', options)
