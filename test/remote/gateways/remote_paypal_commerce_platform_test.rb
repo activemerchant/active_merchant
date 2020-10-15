@@ -134,6 +134,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     success_status_assertions(response, 'COMPLETED')
   end
 
+  # It will test internal server error on creating the order.
   def test_create_order_for_internal_server_error
     params = options
     params[:headers][:'PayPal-Mock-Response'] = '{"mock_application_codes": "INTERNAL_SERVER_ERROR"}'
@@ -142,6 +143,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     server_side_failure_assertions(response, 'INTERNAL_SERVER_ERROR', nil, 'An internal server error occurred.')
   end
 
+  # It will test Invalid request on capturing the order.
   def test_capture_order_for_invalid_request
     response        = @gateway.create_order('CAPTURE', options)
     order_id        = response.params['id']
@@ -154,6 +156,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
       'The request is not well-formed, is syntactically incorrect, or violates schema.')
   end
 
+  # It will test missing required parameters on authorize the order.
   def test_authorize_order_failure_on_missing_required_parameters
     response = create_order('AUTHORIZE')
     order_id = response.params['id']
@@ -168,6 +171,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     )
   end
 
+  # It will test not allowed partial refund validation
   def test_partial_refund_not_allowed
     response        = create_order('CAPTURE')
     order_id        = response.params['id']
@@ -185,6 +189,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     )
   end
 
+  # It will test transaction refused on void authorized
   def test_transaction_refused_for_void_authorized
     response         = create_order('AUTHORIZE')
     order_id         = response.params['id']
@@ -202,6 +207,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     )
   end
 
+  # It will test capture authorized order with card
   def test_capture_authorized_order_with_card
     response         = create_order('AUTHORIZE')
     order_id         = response.params['id']
@@ -211,6 +217,7 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     success_status_assertions(response, 'COMPLETED')
   end
 
+  # It will test refund captured authorized order with card
   def test_refund_captured_order_with_card
     response        = create_order('CAPTURE')
     order_id        = response.params['id']
@@ -496,6 +503,23 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     assert_success response
     assert_equal token_id, response.params['id']
     assert_equal 'ACTIVE', response.params['state']
+  end
+
+  def test_transcript_scrubbing
+    @three_ds_credit_card = credit_card(
+      '4000000000003220',
+      verification_value: '737',
+      month: 10,
+      year: 2020
+    )
+    response = create_order('CAPTURE')
+    order_id = response.params['id']
+    transcript = capture_transcript(@gateway) do
+      @gateway.capture(order_id, @card_order_options)
+    end
+    transcript = @gateway.scrub(transcript)
+    assert_scrubbed(@three_ds_credit_card.number, transcript)
+    assert_scrubbed(@three_ds_credit_card.verification_value, transcript)
   end
 
   def test_missing_password_argument_to_get_access_token

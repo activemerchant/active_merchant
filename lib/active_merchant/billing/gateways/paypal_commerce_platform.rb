@@ -126,6 +126,20 @@ module ActiveMerchant #:nodoc:
         commit(:post, "v2/checkout/orders/#{order_id}/authorize", post, options[:headers])
       end
 
+      # Captures the amount from payer for the associated authorization request
+      def capture_authorization(authorization_id, options)
+        requires!(options.merge!({ authorization_id: authorization_id }), :authorization_id)
+
+        post = {}
+        add_amount(options[:amount], post) unless options[:amount].nil?
+        add_invoice(options[:invoice_id], post) unless options[:invoice_id].nil?
+        add_final_capture(options[:final_capture], post) unless options[:final_capture].nil?
+        add_payment_instruction(options[:payment_instruction], post) unless options[:payment_instruction].nil?
+        add_note(options[:note_to_payer], post) unless options[:note_to_payer].nil?
+
+        commit(:post, "v2/payments/authorizations/#{authorization_id}/capture", post, options[:headers])
+      end
+
       # To fetches an authorization details for the provided authorization id
       def get_authorization_details(authorization_id, options)
         requires!(options.merge(authorization_id: authorization_id), :authorization_id)
@@ -174,20 +188,6 @@ module ActiveMerchant #:nodoc:
         commit(:post, "v2/payments/authorizations/#{authorization_id}/void", post, options[:headers])
       end
 
-      # Captures the amount from payer for the associated authorization request
-      def capture_authorization(authorization_id, options)
-        requires!(options.merge!({ authorization_id: authorization_id }), :authorization_id)
-
-        post = {}
-        add_amount(options[:amount], post) unless options[:amount].nil?
-        add_invoice(options[:invoice_id], post) unless options[:invoice_id].nil?
-        add_final_capture(options[:final_capture], post) unless options[:final_capture].nil?
-        add_payment_instruction(options[:payment_instruction], post) unless options[:payment_instruction].nil?
-        add_note(options[:note_to_payer], post) unless options[:note_to_payer].nil?
-
-        commit(:post, "v2/payments/authorizations/#{authorization_id}/capture", post, options[:headers])
-      end
-
       # Creates the billing agreement token for the provided details in the options
       def create_billing_agreement_token(options)
         requires!(options, :payer, :plan)
@@ -228,6 +228,21 @@ module ActiveMerchant #:nodoc:
         post = {}
         post[:note] = options[:note] unless options[:note].nil?
         commit(:post, "v1/billing-agreements/agreements/#{agreement_id}/cancel", post, options[:headers])
+      end
+
+      # Its an override method to enable the scrubbing support
+      def supports_scrubbing?
+        true
+      end
+
+      # Method to filter the sensitive data.
+      def scrub(transcript)
+        transcript.
+          gsub(/(Authorization: Bearer )\w+-\w+/, '\1[FILTERED]').
+          gsub(/(Authorization: Basic )\w+=/, '\1[FILTERED]').
+          gsub(/(payment_source\[card\]\[security_code\]=)\d+/, '\1[FILTERED]').
+          gsub(/(payment_source\[card\]\[number\]=)\d+/, '\1[FILTERED]').
+          gsub(/(payment_source\[card\]\[expiry\]=)\d+-\d+/, '\1[FILTERED]')
       end
 
       private
@@ -692,19 +707,6 @@ module ActiveMerchant #:nodoc:
       def return_response(http, request)
         response = http.request(request)
         JSON.parse(response.body)['access_token']
-      end
-
-      def supports_scrubbing?
-        true
-      end
-
-      def scrub(transcript)
-        transcript.
-          gsub(/(Authorization: Bearer )\w+-\w+/, '\1[FILTERED]').
-          gsub(/(Authorization: Basic )\w+=/, '\1[FILTERED]').
-          gsub(/(payment_source\[card\]\[security_code\]=)\d+/, '\1[FILTERED]').
-          gsub(/(payment_source\[card\]\[number\]=)\d+/, '\1[FILTERED]').
-          gsub(/(payment_source\[card\]\[expiry\]=)\d+-\d+/, '\1[FILTERED]')
       end
     end
   end
