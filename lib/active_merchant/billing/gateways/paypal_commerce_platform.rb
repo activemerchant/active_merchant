@@ -2,11 +2,16 @@
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-    # This gateway uses v2 APIs of the PayPal RESTful services except for the billing agreement and for access token.
-    # Billing Agreement using V1.
-    # Get Access Token is using V1.
-    # AM standards method are not being used for purchase as on order creation we used manual approval for the order.
-    # Server-side APIs are used in this implementation for PayPal Checkout
+    # The PaypalCommercePlatformGateway uses v2 APIs of the PayPal RESTful services except for getting the access token
+    # and for billing agreements, in which case v1 of the API is used.
+    # The supported flows include:
+    # 1. PayPal Checkout (Direct Merchants and PayPal Commerce Platform)
+    # 2. Advanced Card Payments
+    # 3. PayPal Billing Agreements
+    #
+    # A separate create_order method has been created that enables the caller to manually approve the order
+    # before going on to capture or authorize the order. A manual approval of the order is not required if a
+    # credit card is provided as a payment source.
     class PaypalCommercePlatformGateway < Gateway
       self.supported_countries = %w[AU AT BE BG CA CY CZ DK EE FI FR GR HU IT LV LI LT LU MT NL NO PL PT RO SK SI ES SE US GB]
       self.homepage_url        = 'https://www.paypal.com/us/business/platforms-and-marketplaces'
@@ -53,15 +58,16 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'v1/oauth2/token?grant_type=client_credentials', {}, options[:headers])
       end
 
-      # Purchase method only for the case credit card is provided
+      # Purchase method only for the case a credit card is provided as payment source.
+      # Creates the order and captures it.
       def purchase(options)
         response = create_order('CAPTURE', options)
         order_id = response.params['id']
         capture(order_id, options)
       end
 
-      # It will creates an order with the intent type(CAPTURE / AUTHORIZE) which is being passed in intent parameter
-      # Cannot implement purchase directly as paypal needs manual order approval for capture
+      # Creates an order with the intent type(CAPTURE / AUTHORIZE) which is being passed in +intent+ parameter.
+      # In case of non CC order, a manual approval step will need to be performed using the returned approval link
       def create_order(intent, options)
         requires!(options.merge!(intent.nil? ? {} : { intent: intent }), :intent, :purchase_units)
 
@@ -75,7 +81,7 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'v2/checkout/orders', post, options[:headers])
       end
 
-      # It will fetch an order details for the provided id
+      # Fetches order details for the provided order id
       def get_order_details(order_id, options)
         requires!(options.merge(order_id: order_id), :order_id)
         commit(:get, "v2/checkout/orders/#{order_id}", nil, options[:headers])
@@ -115,7 +121,8 @@ module ActiveMerchant #:nodoc:
         commit(:patch, "v2/checkout/orders/#{order_id}", post, options[:headers])
       end
 
-      # To authorizes an order with provided order id
+      # Authorizes an order with provided order id. If a CC is not used as the payment source, then the order
+      # must be approved before calling this method.
       def authorize(order_id, options)
         requires!({ order_id: order_id }, :order_id)
 
@@ -126,7 +133,7 @@ module ActiveMerchant #:nodoc:
         commit(:post, "v2/checkout/orders/#{order_id}/authorize", post, options[:headers])
       end
 
-      # Captures the amount from payer for the associated authorization request
+      # Captures the amount from payer for the associated authorization request.
       def capture_authorization(authorization_id, options)
         requires!(options.merge!({ authorization_id: authorization_id }), :authorization_id)
 
@@ -140,13 +147,14 @@ module ActiveMerchant #:nodoc:
         commit(:post, "v2/payments/authorizations/#{authorization_id}/capture", post, options[:headers])
       end
 
-      # To fetches an authorization details for the provided authorization id
+      # Fetches authorization details for the provided authorization id
       def get_authorization_details(authorization_id, options)
         requires!(options.merge(authorization_id: authorization_id), :authorization_id)
         commit(:get, "v2/payments/authorizations/#{authorization_id}", nil, options[:headers])
       end
 
-      # To captures an order for the provided order_id
+      # Captures an order for the provided order_id. If a CC is not used as the payment source, then the order
+      # must be approved before calling this method.
       def capture(order_id, options)
         requires!({ order_id: order_id }, :order_id)
 
@@ -230,7 +238,7 @@ module ActiveMerchant #:nodoc:
         commit(:post, "v1/billing-agreements/agreements/#{agreement_id}/cancel", post, options[:headers])
       end
 
-      # Its an override method to enable the scrubbing support
+      # Indicates scrubbing support
       def supports_scrubbing?
         true
       end
