@@ -351,7 +351,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(request)
-        request = "xmldata=#{request}"
+        request = "xmldata=#{request}".delete('&')
         response = parse(ssl_post(test? ? self.test_url : self.live_url, request, headers))
 
         Response.new(

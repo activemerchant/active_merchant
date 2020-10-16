@@ -312,6 +312,14 @@ class ElavonTest < Test::Unit::TestCase
     @gateway.purchase(@amount, @credit_card, @options)
   end
 
+  def test_strip_ampersands
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(shipping_address: { address1: 'Bats & Cats' }))
+    end.check_request do |_endpoint, data, _headers|
+      refute_match(/&/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_custom_fields_in_request
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(customer_number: '123', custom_fields: { a_key: 'a value' }))
