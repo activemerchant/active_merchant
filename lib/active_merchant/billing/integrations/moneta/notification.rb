@@ -46,6 +46,8 @@ module ActiveMerchant #:nodoc:
           def acknowledge
             generate_signature == mnt_signature
           end
+
+          def status; end
         end
       end
     end
