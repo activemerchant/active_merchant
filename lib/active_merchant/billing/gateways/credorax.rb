@@ -25,7 +25,7 @@ module ActiveMerchant #:nodoc:
       self.currencies_with_three_decimal_places = %w(BHD IQD JOD KWD LYD OMR TND)
 
       self.money_format = :cents
-      self.supported_cardtypes = %i[visa master maestro]
+      self.supported_cardtypes = %i[visa master maestro american_express]
 
       RESPONSE_MESSAGES = {
         '00' => 'Approved or completed successfully',
@@ -117,7 +117,8 @@ module ActiveMerchant #:nodoc:
         '96' => 'System malfunction',
         'R0' => 'Stop Payment Order',
         'R1' => 'Revocation of Authorisation Order',
-        'R3' => 'Revocation of all Authorisations Order'
+        'R3' => 'Revocation of all Authorisations Order',
+        '1A' => 'Strong Customer Authentication required'
       }
 
       def initialize(options = {})
