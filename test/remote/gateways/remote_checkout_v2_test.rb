@@ -39,12 +39,12 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     )
     @additional_options_3ds2 = @options.merge(
       execute_threed: true,
+      attempt_n3d: true,
       three_d_secure: {
         version: '2.0.0',
         eci: '06',
         cavv: 'AgAAAAAAAIR8CQrXcIhbQAAAAAA',
-        ds_transaction_id: 'MDAwMDAwMDAwMDAwMDAwMzIyNzY=',
-        attempt_n3d: true
+        ds_transaction_id: 'MDAwMDAwMDAwMDAwMDAwMzIyNzY='
       }
     )
   end

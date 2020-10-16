@@ -38,6 +38,7 @@
 * RuboCop: Fix Style/AndOr [leila-alderman] #3783
 * Checkout V2: Support ability to pass attempt_n3d 3ds field [naashton] #3788
 * Elavon: Upgrade to `processxml.do` [therufs] #3784
+* Checkout V2: Support for attempt_n3d 3DS field [naashton] #3790
 
 == Version 1.114.0
 * BlueSnap: Add address1,address2,phone,shipping_* support #3749

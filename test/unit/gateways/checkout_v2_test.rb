@@ -176,12 +176,12 @@ class CheckoutV2Test < Test::Unit::TestCase
     response = stub_comms do
       options = {
         execute_threed: true,
+        attempt_n3d: true,
         three_d_secure: {
           version: '1.0.2',
           eci: '05',
           cryptogram: '1234',
-          xid: '1234',
-          attempt_n3d: true
+          xid: '1234'
         }
       }
       @gateway.authorize(@amount, @credit_card, options)
