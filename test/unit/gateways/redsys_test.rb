@@ -128,6 +128,22 @@ class RedsysTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
+  def test_authorize_with_challenge_response
+    @gateway.expects(:ssl_post).with(
+      anything,
+      all_of(
+        includes('<DS_MERCHANT_EMV3DS>')
+      ),
+      anything
+    ).returns(successful_authorize_response)
+
+    threeds = { protocolVersion: '2.2.0', threeDSInfo: 'AuthenticationData', threeDSCompInd: 'N' }
+    @options = { order_id: '1001', threeds: threeds }
+
+    response = @gateway.authorize(123, credit_card, @options)
+    assert_success response
+  end
+
   def test_capture
     @gateway.expects(:ssl_post).with(
       anything,
