@@ -61,6 +61,7 @@ module ActiveMerchant #:nodoc:
       # Purchase method only for the case a credit card is provided as payment source.
       # Creates the order and captures it.
       def purchase(options)
+        requires!(options, :payment_source)
         response = create_order('CAPTURE', options)
         order_id = response.params['id']
         capture(order_id, options)
