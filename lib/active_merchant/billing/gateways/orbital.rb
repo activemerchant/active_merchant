@@ -1,7 +1,6 @@
 require 'active_merchant/billing/gateways/orbital/orbital_soft_descriptors'
 require 'rexml/document'
 
-
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     # For more information on Orbital, visit the {integration center}[http://download.chasepaymentech.com]
