@@ -250,16 +250,14 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_electronic_check_having_arc_authorization
-    @options.merge!({ auth_method: 'A', check_serial_number: '000000000' })
-    assert response = @gateway.purchase(20, @echeck, @options)
+    assert response = @gateway.purchase(20, @echeck, @options.merge({ auth_method: 'A', check_serial_number: '000000000' }))
     assert_success response
     assert_equal 'Approved', response.message
     assert_false response.authorization.blank?
   end
 
   def test_successful_purchase_with_electronic_check_having_pop_authorization
-    @options.merge!({ auth_method: 'P', check_serial_number: '000000000', terminal_city: 'CO', terminal_state: 'IL', image_reference_number: '00000' })
-    assert response = @gateway.purchase(20, @echeck, @options)
+    assert response = @gateway.purchase(20, @echeck, @options.merge({ auth_method: 'P', check_serial_number: '000000000', terminal_city: 'CO', terminal_state: 'IL', image_reference_number: '00000' }))
     assert_success response
     assert_equal 'Approved', response.message
     assert_false response.authorization.blank?
