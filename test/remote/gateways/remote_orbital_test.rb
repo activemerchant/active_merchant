@@ -219,7 +219,6 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_electronic_check
-    @options.merge!({ payment_delivery: 'A' })
     assert response = @gateway.purchase(20, @echeck, @options)
     assert_success response
     assert_equal 'Approved', response.message
@@ -433,8 +432,26 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_successful_authorize_and_capture_with_electronic_check
+    assert auth = @gateway.authorize(@amount, @echeck, @options.merge(order_id: '2'))
+    assert_success auth
+    assert_equal 'Approved', auth.message
+    assert auth.authorization
+    assert capture = @gateway.capture(@amount, auth.authorization, order_id: '2')
+    assert_success capture
+  end
+
   def test_authorize_and_void
     assert auth = @gateway.authorize(@amount, @credit_card, @options.merge(order_id: '2'))
+    assert_success auth
+    assert_equal 'Approved', auth.message
+    assert auth.authorization
+    assert void = @gateway.void(auth.authorization, order_id: '2')
+    assert_success void
+  end
+
+  def test_successful_authorize_and_void_with_electronic_check
+    assert auth = @gateway.authorize(@amount, @echeck, @options.merge(order_id: '2'))
     assert_success auth
     assert_equal 'Approved', auth.message
     assert auth.authorization
@@ -448,6 +465,14 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_success response
     assert response.authorization
     assert refund = @gateway.refund(amount, response.authorization, @options)
+    assert_success refund
+  end
+
+  def test_successful_refund_with_electronic_check
+    assert response = @gateway.purchase(@amount, @echeck, @options)
+    assert_success response
+    assert response.authorization
+    assert refund = @gateway.refund(@amount, response.authorization, @options)
     assert_success refund
   end
 
