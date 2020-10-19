@@ -263,6 +263,22 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_false response.authorization.blank?
   end
 
+  def test_successful_purchase_with_electronic_check_on_same_day
+    @options[:same_day] = 'Y'
+    assert response = @gateway.purchase(20, @echeck, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+  end
+
+  def test_successful_purchase_with_electronic_check_on_next_day
+    @options[:same_day] = 'N'
+    assert response = @gateway.purchase(20, @echeck, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+  end
+
   [
     {
       card: {

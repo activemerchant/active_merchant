@@ -776,6 +776,8 @@ module ActiveMerchant #:nodoc:
             add_aevv(xml, payment_source, three_d_secure)
             add_digital_token_cryptogram(xml, payment_source)
 
+            xml.tag! :ECPSameDayInd, parameters[:same_day] if parameters[:same_day] && payment_source.instance_of?(ActiveMerchant::Billing::Check)
+
             set_recurring_ind(xml, parameters)
 
             # Append Transaction Reference Number at the end for Refund transactions
