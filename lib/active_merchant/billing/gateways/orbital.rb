@@ -184,8 +184,8 @@ module ActiveMerchant #:nodoc:
       SENSITIVE_FIELDS = %i[account_num cc_account_num]
 
       ACCOUNT_TYPE = {
-          'saving' => 'S',
-          'checking' => 'C'
+        'saving' => 'S',
+        'checking' => 'C'
       }
 
       def initialize(options = {})
@@ -483,12 +483,12 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_payment_source(xml, payment_source, options={})
-        add_creditcard(xml, payment_source, options[:currency]) if payment_source.instance_of?(ActiveMerchant::Billing::CreditCard) or payment_source.instance_of?(ActiveMerchant::Billing::NetworkTokenizationCreditCard)
+      def add_payment_source(xml, payment_source, options = {})
+        add_creditcard(xml, payment_source, options[:currency]) if payment_source.instance_of?(ActiveMerchant::Billing::CreditCard) || payment_source.instance_of?(ActiveMerchant::Billing::NetworkTokenizationCreditCard)
         add_echeck(xml, payment_source, options) if payment_source.instance_of?(ActiveMerchant::Billing::Check)
       end
 
-      def add_echeck(xml, check, options={})
+      def add_echeck(xml, check, options = {})
         xml.tag! :CardBrand, 'EC'
         xml.tag! :CurrencyCode, currency_code(options[:currency])
         xml.tag! :CurrencyExponent, currency_exponents(options[:currency])
@@ -609,7 +609,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_advanced_check_verification(xml, parameters={})
+      def add_advanced_check_verification(xml, parameters = {})
         xml.tag! :ECPActionCode, parameters[:action_code] if parameters[:action_code]
       end
 
