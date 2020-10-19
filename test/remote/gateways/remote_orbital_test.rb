@@ -8,6 +8,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card('4556761029983886')
     @declined_card = credit_card('4000300011112220')
+    @echeck = check(routing_number: '072403004', account_number: '072403004', account_type: 'saving')
 
     @options = {
       order_id: generate_unique_id,
@@ -212,6 +213,14 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
       verification_value: '111',
       brand: 'discover')
     assert response = @gateway.purchase(3000, network_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+  end
+
+  def test_successful_purchase_with_electronic_check
+    @options.merge!({ payment_delivery: 'A' })
+    assert response = @gateway.purchase(20, @echeck, @options)
     assert_success response
     assert_equal 'Approved', response.message
     assert_false response.authorization.blank?
