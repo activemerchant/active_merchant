@@ -191,12 +191,12 @@ module ActiveMerchant #:nodoc:
       end
 
       # A – Authorization request
-      def authorize(money, creditcard, options = {})
-        order = build_new_order_xml(AUTH_ONLY, money, creditcard, options) do |xml|
-          add_creditcard(xml, creditcard, options[:currency])
-          add_address(xml, creditcard, options)
+      def authorize(money, payment_source, options = {})
+        order = build_new_order_xml(AUTH_ONLY, money, payment_source, options) do |xml|
+          add_payment_source(xml, payment_source, options[:currency])
+          add_address(xml, payment_source, options)
           if @options[:customer_profiles]
-            add_customer_data(xml, creditcard, options)
+            add_customer_data(xml, payment_source, options)
             add_managed_billing(xml, options)
           end
         end
@@ -211,12 +211,12 @@ module ActiveMerchant #:nodoc:
       end
 
       # AC – Authorization and Capture
-      def purchase(money, creditcard, options = {})
-        order = build_new_order_xml(AUTH_AND_CAPTURE, money, creditcard, options) do |xml|
-          add_creditcard(xml, creditcard, options[:currency])
-          add_address(xml, creditcard, options)
+      def purchase(money, payment_source, options = {})
+        order = build_new_order_xml(AUTH_AND_CAPTURE, money, payment_source, options) do |xml|
+          add_payment_source(xml, payment_source, options[:currency])
+          add_address(xml, payment_source, options)
           if @options[:customer_profiles]
-            add_customer_data(xml, creditcard, options)
+            add_customer_data(xml, payment_source, options)
             add_managed_billing(xml, options)
           end
         end
@@ -476,6 +476,10 @@ module ActiveMerchant #:nodoc:
           xml.tag! :CustomerPhone, (address[:phone] ? address[:phone].scan(/\d/).join.to_s : nil)
           xml.tag! :CustomerCountryCode, (avs_supported ? address[:country] : '')
         end
+      end
+
+      def add_payment_source(xml, payment_source, currency)
+        add_creditcard(xml, payment_source, currency) if payment_source.class == ActiveMerchant::Billing::CreditCard || ActiveMerchant::Billing::NetworkTokenizationCreditCard
       end
 
       def add_creditcard(xml, creditcard, currency = nil)
