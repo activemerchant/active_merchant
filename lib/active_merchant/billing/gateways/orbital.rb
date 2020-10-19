@@ -496,6 +496,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! :BCRtNum, check.routing_number if check.valid_routing_number?
           xml.tag! :CheckDDA, check.account_number if check.account_number
           xml.tag! :BankAccountType, ACCOUNT_TYPE[check.account_type] if ACCOUNT_TYPE[check.account_type]
+          xml.tag! :ECPAuthMethod, options[:auth_method] if options[:auth_method]
           xml.tag! :BankPmtDelv, options[:payment_delivery] if options[:payment_delivery]
         end
       end
@@ -609,8 +610,13 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_advanced_check_verification(xml, parameters = {})
+      def add_ecp_details(xml, parameters = {})
+        requires!(parameters, :check_serial_number) if parameters[:auth_method] && (parameters[:auth_method].eql?('A') || parameters[:auth_method].eql?('P'))
         xml.tag! :ECPActionCode, parameters[:action_code] if parameters[:action_code]
+        xml.tag! :ECPCheckSerialNumber, parameters[:check_serial_number] if parameters[:check_serial_number] && parameters[:auth_method] && (parameters[:auth_method].eql?('A') || parameters[:auth_method].eql?('P'))
+        xml.tag! :ECPTerminalCity, parameters[:terminal_city] if parameters[:terminal_city] && parameters[:auth_method] && parameters[:auth_method].eql?('P')
+        xml.tag! :ECPTerminalState, parameters[:terminal_state] if parameters[:terminal_state] && parameters[:auth_method] && parameters[:auth_method].eql?('P')
+        xml.tag! :ECPImageReferenceNumber, parameters[:image_reference_number] if parameters[:image_reference_number] && parameters[:auth_method] && parameters[:auth_method].eql?('P')
       end
 
       def add_stored_credentials(xml, parameters)
@@ -782,7 +788,7 @@ module ActiveMerchant #:nodoc:
             add_level3_purchase(xml, parameters)
             add_level3_tax(xml, parameters)
             add_line_items(xml, parameters) if parameters[:line_items]
-            add_advanced_check_verification(xml, parameters)
+            add_ecp_details(xml, parameters) if payment_source.instance_of?(ActiveMerchant::Billing::Check)
             add_card_indicators(xml, parameters)
             add_stored_credentials(xml, parameters)
             add_pymt_brand_program_code(xml, payment_source, three_d_secure)
