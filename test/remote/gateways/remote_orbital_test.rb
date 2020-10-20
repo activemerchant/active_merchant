@@ -228,7 +228,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
   def test_failed_purchase_with_electronic_check_due_to_invalid_routing
     @echeck.routing_number = '123'
     assert_raise do
-      assert response = @gateway.purchase(20, @echeck, @options)
+      @gateway.purchase(20, @echeck, @options)
     end
   end
 
@@ -271,7 +271,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
 
   def test_failed_missing_serial_for_arc_with_electronic_check
     assert_raise do
-      assert response = @gateway.purchase(20, @echeck, @options.merge({ auth_method: 'A' }))
+      @gateway.purchase(20, @echeck, @options.merge({ auth_method: 'A' }))
     end
   end
 
@@ -284,7 +284,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
 
   def test_failed_missing_serial_for_pop_with_electronic_check
     assert_raise do
-      assert response = @gateway.purchase(20, @echeck, @options.merge({ auth_method: 'P' }))
+      @gateway.purchase(20, @echeck, @options.merge({ auth_method: 'P' }))
     end
   end
 
@@ -487,7 +487,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
   def test_failed_force_capture_with_electronic_check_due_to_invalid_routing
     @echeck.routing_number = '123'
     assert_raise do
-      assert response = @gateway.force_capture(20, @echeck, @options)
+      @gateway.force_capture(20, @echeck, @options)
     end
   end
 

@@ -512,6 +512,7 @@ module ActiveMerchant #:nodoc:
         xml.tag! :CurrencyExponent, currency_exponents(options[:currency])
         unless check.nil?
           raise "Invalid Check Received. Error: #{check.validate}" unless check.validate.empty?
+
           xml.tag! :BCRtNum, check.routing_number
           xml.tag! :CheckDDA, check.account_number if check.account_number
           xml.tag! :BankAccountType, ACCOUNT_TYPE[check.account_type] if ACCOUNT_TYPE[check.account_type]
@@ -630,19 +631,15 @@ module ActiveMerchant #:nodoc:
       end
       
       def validate_ecp_check_serial(serial_number, bin)
-        if bin.eql?('000001')
-          return true if serial_number.length.eql?(9)
-        else
-          return true if serial_number.length.eql?(6)
-        end
-        false
+        (bin.eql?('000001') && serial_number.length.eql?(9)) || (bin.eql?('000002') && serial_number.length.eql?(6))
       end
 
       def add_ecp_details(xml, parameters = {})
         requires!(parameters, :check_serial_number) if parameters[:auth_method] && (parameters[:auth_method].eql?('A') || parameters[:auth_method].eql?('P'))
         xml.tag! :ECPActionCode, parameters[:action_code] if parameters[:action_code] && ECP_ACTION_CODES.include?(parameters[:action_code])
         if parameters[:check_serial_number] && parameters[:auth_method] && (parameters[:auth_method].eql?('A') || parameters[:auth_method].eql?('P'))
-          raise "Invalid Check Serial Number" unless validate_ecp_check_serial(parameters[:check_serial_number], bin)
+          raise 'Invalid Check Serial Number' unless validate_ecp_check_serial(parameters[:check_serial_number], bin)
+
           xml.tag! :ECPCheckSerialNumber, parameters[:check_serial_number]
         end
         xml.tag! :ECPTerminalCity, parameters[:terminal_city] if parameters[:terminal_city] && parameters[:auth_method] && parameters[:auth_method].eql?('P')
