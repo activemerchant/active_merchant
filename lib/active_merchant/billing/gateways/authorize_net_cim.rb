@@ -47,6 +47,7 @@ module ActiveMerchant #:nodoc:
         update_customer_payment_profile: 'updateCustomerPaymentProfile',
         update_customer_shipping_address: 'updateCustomerShippingAddress',
         create_customer_profile_transaction: 'createCustomerProfileTransaction',
+        get_transaction_details: 'getTransactionDetails',
         validate_customer_payment_profile: 'validateCustomerPaymentProfile'
       }
 
@@ -244,6 +245,21 @@ module ActiveMerchant #:nodoc:
 
         request = build_request(:get_customer_payment_profile, options)
         commit(:get_customer_payment_profile, request)
+      end
+
+      # Retrieve details for an existing customer profile transaction.
+      #
+      # Returns a Response whose params hash contains all the transaction information. Sensitive information such as credit card
+      # numbers will be masked.
+      #
+      # ==== Options
+      #
+      # * <tt>:transaction_id</tt> -- The Transaction ID of the transaction to be retrieved. (REQUIRED)
+      def get_transaction_details(options)
+        requires!(options, :transaction_id)
+
+        request = build_request(:get_transaction_details, options)
+        commit(:get_transaction_details, request)
       end
 
       # Retrieve a customer shipping address for an existing customer profile.
@@ -573,6 +589,11 @@ module ActiveMerchant #:nodoc:
         xml.tag!('customerProfileId', options[:customer_profile_id])
         xml.tag!('customerPaymentProfileId', options[:customer_payment_profile_id])
         xml.tag!('unmaskExpirationDate', options[:unmask_expiration_date]) if options[:unmask_expiration_date]
+        xml.target!
+      end
+
+      def build_get_transaction_details_request(xml, options)
+        xml.tag!('transId', options[:transaction_id])
         xml.target!
       end
 
