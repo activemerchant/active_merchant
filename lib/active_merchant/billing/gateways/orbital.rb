@@ -183,13 +183,24 @@ module ActiveMerchant #:nodoc:
 
       SENSITIVE_FIELDS = %i[account_num cc_account_num]
 
+      # Bank account types to be used for check processing
       ACCOUNT_TYPE = {
         'savings' => 'S',
         'checking' => 'C'
       }
 
+      # Fixed possible values for orbital ECP attributes
+      # Auth methods for electronic checks can be:
+      # Written, Internet, Telephonic, Account Receivable, Point of Purchase.
+      # Default auth method for ECP is Internet (I).
+      # Bank payment delivery can be either ACH (Automated Clearing House) or Best Possible.
+      # Default Bank Payment Delivery is Best Possible (B).
+      # Action codes to be used for Early Warning System and additional validations.
+      # Default Action code for ECP is nil.
+      # Electronic check to be processed on same day (Y) or next day (N).
+      # Default ECP Same Day Index is Yes (Y).
       ECP_AUTH_METHODS = %w[W I T A P]
-      BANK_PAYMENT_DELIVERY = %w[A B]
+      ECP_BANK_PAYMENT = %w[A B]
       ECP_ACTION_CODES = %w[LO ND NC W1 W3 W4 W5 W6 W7 W8 W9]
       ECP_SAME_DAY = %w[Y N]
 
@@ -500,12 +511,14 @@ module ActiveMerchant #:nodoc:
           xml.tag! :CustomerCountryCode, (avs_supported ? address[:country] : '')
         end
       end
-
+      
+      # Payment can be done through either Credit Card or Electronic Check
       def add_payment_source(xml, payment_source, options = {})
         add_creditcard(xml, payment_source, options[:currency]) if payment_source.instance_of?(ActiveMerchant::Billing::CreditCard) || payment_source.instance_of?(ActiveMerchant::Billing::NetworkTokenizationCreditCard)
         add_echeck(xml, payment_source, options) if payment_source.instance_of?(ActiveMerchant::Billing::Check)
       end
 
+      # Adds Electronic Check attributes
       def add_echeck(xml, check, options = {})
         xml.tag! :CardBrand, 'EC'
         xml.tag! :CurrencyCode, currency_code(options[:currency])
@@ -517,10 +530,11 @@ module ActiveMerchant #:nodoc:
           xml.tag! :CheckDDA, check.account_number if check.account_number
           xml.tag! :BankAccountType, ACCOUNT_TYPE[check.account_type] if ACCOUNT_TYPE[check.account_type]
           xml.tag! :ECPAuthMethod, options[:auth_method] if options[:auth_method] && ECP_AUTH_METHODS.include?(options[:auth_method])
-          xml.tag! :BankPmtDelv, options[:payment_delivery] if options[:payment_delivery] && BANK_PAYMENT_DELIVERY.include?(options[:payment_delivery])
+          xml.tag! :BankPmtDelv, options[:payment_delivery] if options[:payment_delivery] && ECP_BANK_PAYMENT.include?(options[:payment_delivery])
         end
       end
 
+      # Adds Credit Card attributes
       def add_creditcard(xml, creditcard, currency = nil)
         unless creditcard.nil?
           xml.tag! :AccountNum, creditcard.number
@@ -616,7 +630,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! :MBOrderIdGenerationMethod,     mb[:order_id_generation_method] || 'IO'
           # By default use MBRecurringEndDate, set to N.
           # MMDDYYYY
-          xml.tag! :MBRecurringStartDate,          mb[:start_date].scan(/\d/).join.to_s if mb[:start_date]
+          xml.tag! :MBRecurringStartDate,          mb[:start_date].scan(/\-d/).join.to_s if mb[:start_date]
           # MMDDYYYY
           xml.tag! :MBRecurringEndDate,            mb[:end_date].scan(/\d/).join.to_s if mb[:end_date]
           # By default listen to any value set in MBRecurringEndDate.
@@ -630,10 +644,12 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      # Validates Electronic Check Serial number based on bin value provided
       def validate_ecp_check_serial(serial_number, bin)
         (bin.eql?('000001') && serial_number.length.eql?(9)) || (bin.eql?('000002') && serial_number.length.eql?(6))
       end
 
+      # Adds ECP conditional attributes depending on other attribute values
       def add_ecp_details(xml, parameters = {})
         requires!(parameters, :check_serial_number) if parameters[:auth_method] && (parameters[:auth_method].eql?('A') || parameters[:auth_method].eql?('P'))
         xml.tag! :ECPActionCode, parameters[:action_code] if parameters[:action_code] && ECP_ACTION_CODES.include?(parameters[:action_code])
@@ -642,9 +658,11 @@ module ActiveMerchant #:nodoc:
 
           xml.tag! :ECPCheckSerialNumber, parameters[:check_serial_number]
         end
-        xml.tag! :ECPTerminalCity, parameters[:terminal_city] if parameters[:terminal_city] && parameters[:auth_method] && parameters[:auth_method].eql?('P')
-        xml.tag! :ECPTerminalState, parameters[:terminal_state] if parameters[:terminal_state] && parameters[:auth_method] && parameters[:auth_method].eql?('P')
-        xml.tag! :ECPImageReferenceNumber, parameters[:image_reference_number] if parameters[:image_reference_number] && parameters[:auth_method] && parameters[:auth_method].eql?('P')
+        if parameters[:auth_method] && parameters[:auth_method].eql?('P')
+          xml.tag! :ECPTerminalCity, parameters[:terminal_city] if parameters[:terminal_city]
+          xml.tag! :ECPTerminalState, parameters[:terminal_state] if parameters[:terminal_state]
+          xml.tag! :ECPImageReferenceNumber, parameters[:image_reference_number] if parameters[:image_reference_number]
+        end
       end
 
       def add_stored_credentials(xml, parameters)
