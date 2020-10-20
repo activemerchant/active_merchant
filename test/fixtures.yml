@@ -642,9 +642,9 @@ optimal_payment:
   account_number: ACCOUNTNUMBER
 
 orbital_gateway:
-  login: LOGIN
-  password: PASSWORD
-  merchant_id: MERCHANTID
+  login: 'GWQATEST1'
+  password: 'password2'
+  merchant_id: '041756'
 
 # Working credentials, no need to replace
 pagarme:

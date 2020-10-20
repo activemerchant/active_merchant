@@ -8,7 +8,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card('4556761029983886')
     @declined_card = credit_card('4000300011112220')
-    @echeck = check(routing_number: '072403004', account_number: '072403004', account_type: 'saving')
+    @echeck = check(routing_number: '072403004', account_number: '072403004', account_type: 'savings')
 
     @options = {
       order_id: generate_unique_id,
@@ -225,6 +225,13 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_false response.authorization.blank?
   end
 
+  def test_failed_purchase_with_electronic_check_due_to_invalid_routing
+    @echeck.routing_number = '123'
+    assert_raise do
+      assert response = @gateway.purchase(20, @echeck, @options)
+    end
+  end
+
   def test_successful_purchase_with_electronic_check_having_written_authorization
     @options[:auth_method] = 'W'
     assert response = @gateway.purchase(20, @echeck, @options)
@@ -256,11 +263,29 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_false response.authorization.blank?
   end
 
+  def test_failed_invalid_serial_for_arc_with_electronic_check
+    assert_raise do
+      assert response = @gateway.purchase(20, @echeck, @options.merge({ auth_method: 'A', check_serial_number: '00000000' }))
+    end
+  end
+
+  def test_failed_missing_serial_for_arc_with_electronic_check
+    assert_raise do
+      assert response = @gateway.purchase(20, @echeck, @options.merge({ auth_method: 'A' }))
+    end
+  end
+
   def test_successful_purchase_with_electronic_check_having_pop_authorization
     assert response = @gateway.purchase(20, @echeck, @options.merge({ auth_method: 'P', check_serial_number: '000000000', terminal_city: 'CO', terminal_state: 'IL', image_reference_number: '00000' }))
     assert_success response
     assert_equal 'Approved', response.message
     assert_false response.authorization.blank?
+  end
+
+  def test_failed_missing_serial_for_pop_with_electronic_check
+    assert_raise do
+      assert response = @gateway.purchase(20, @echeck, @options.merge({ auth_method: 'P' }))
+    end
   end
 
   def test_successful_purchase_with_electronic_check_on_same_day
@@ -451,6 +476,28 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_force_capture_with_electronic_check
+    assert response = @gateway.force_capture(@amount, @echeck, @options)
+    assert_success response
+    assert_equal 'APPROVAL        ', response.message
+    assert_equal 'Approved and Completed', response.params['status_msg']
+    assert_false response.authorization.blank?
+  end
+
+  def test_failed_force_capture_with_electronic_check_due_to_invalid_routing
+    @echeck.routing_number = '123'
+    assert_raise do
+      assert response = @gateway.force_capture(20, @echeck, @options)
+    end
+  end
+
+  def test_failed_force_capture_with_electronic_check_due_to_invalid_amount
+    assert capture = @gateway.force_capture(-1, @echeck, @options.merge(order_id: '2'))
+    assert_failure capture
+    assert_equal '801', capture.params['proc_status']
+    assert_equal 'Error validating amount. Must be numerical and greater than 0 [-1]', capture.message
+  end
+
   # Amounts of x.01 will fail
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(101, @declined_card, @options)
@@ -495,6 +542,13 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_failed_authorize_with_electronic_check_due_to_invalid_amount
+    assert auth = @gateway.authorize(-1, @echeck, @options.merge(order_id: '2'))
+    assert_failure auth
+    assert_equal '885', auth.params['proc_status']
+    assert_equal 'Error validating amount. Must be numeric, equal to zero or greater [-1]', auth.message
+  end
+
   def test_authorize_and_void
     assert auth = @gateway.authorize(@amount, @credit_card, @options.merge(order_id: '2'))
     assert_success auth
@@ -528,6 +582,13 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert response.authorization
     assert refund = @gateway.refund(@amount, response.authorization, @options)
     assert_success refund
+  end
+
+  def test_failed_refund_with_electronic_check_due_to_invalid_authorization
+    assert refund = @gateway.refund(@amount, '123;123', @options)
+    assert_failure refund
+    assert_equal 'The LIDM you supplied (3F3F3F) does not match with any existing transaction', refund.message
+    assert_equal '881', refund.params['proc_status']
   end
 
   def test_successful_refund_with_level_2_data

@@ -184,9 +184,14 @@ module ActiveMerchant #:nodoc:
       SENSITIVE_FIELDS = %i[account_num cc_account_num]
 
       ACCOUNT_TYPE = {
-        'saving' => 'S',
+        'savings' => 'S',
         'checking' => 'C'
       }
+
+      ECP_AUTH_METHODS = %w[W I T A P]
+      BANK_PAYMENT_DELIVERY = %w[A B]
+      ECP_ACTION_CODES = %w[LO ND NC W1 W3 W4 W5 W6 W7 W8 W9]
+      ECP_SAME_DAY = %w[Y N]
 
       def initialize(options = {})
         requires!(options, :merchant_id)
@@ -218,6 +223,19 @@ module ActiveMerchant #:nodoc:
       # AC – Authorization and Capture
       def purchase(money, payment_source, options = {})
         order = build_new_order_xml(AUTH_AND_CAPTURE, money, payment_source, options) do |xml|
+          add_payment_source(xml, payment_source, options)
+          add_address(xml, payment_source, options)
+          if @options[:customer_profiles]
+            add_customer_data(xml, payment_source, options)
+            add_managed_billing(xml, options)
+          end
+        end
+        commit(order, :purchase, options[:trace_number])
+      end
+
+      # FC – Force Capture
+      def force_capture(money, payment_source, options = {})
+        order = build_new_order_xml(FORCE_AUTH_AND_CAPTURE, money, payment_source, options) do |xml|
           add_payment_source(xml, payment_source, options)
           add_address(xml, payment_source, options)
           if @options[:customer_profiles]
@@ -493,11 +511,12 @@ module ActiveMerchant #:nodoc:
         xml.tag! :CurrencyCode, currency_code(options[:currency])
         xml.tag! :CurrencyExponent, currency_exponents(options[:currency])
         unless check.nil?
-          xml.tag! :BCRtNum, check.routing_number if check.valid_routing_number?
+          raise "Invalid Check Received. Error: #{check.validate}" unless check.validate.empty?
+          xml.tag! :BCRtNum, check.routing_number
           xml.tag! :CheckDDA, check.account_number if check.account_number
           xml.tag! :BankAccountType, ACCOUNT_TYPE[check.account_type] if ACCOUNT_TYPE[check.account_type]
-          xml.tag! :ECPAuthMethod, options[:auth_method] if options[:auth_method]
-          xml.tag! :BankPmtDelv, options[:payment_delivery] if options[:payment_delivery]
+          xml.tag! :ECPAuthMethod, options[:auth_method] if options[:auth_method] && ECP_AUTH_METHODS.include?(options[:auth_method])
+          xml.tag! :BankPmtDelv, options[:payment_delivery] if options[:payment_delivery] && BANK_PAYMENT_DELIVERY.include?(options[:payment_delivery])
         end
       end
 
@@ -609,11 +628,23 @@ module ActiveMerchant #:nodoc:
           xml.tag! :MBMicroPaymentMaxTransactions, mb[:max_transactions]   if mb[:max_transactions]
         end
       end
+      
+      def validate_ecp_check_serial(serial_number, bin)
+        if bin.eql?('000001')
+          return true if serial_number.length.eql?(9)
+        else
+          return true if serial_number.length.eql?(6)
+        end
+        false
+      end
 
       def add_ecp_details(xml, parameters = {})
         requires!(parameters, :check_serial_number) if parameters[:auth_method] && (parameters[:auth_method].eql?('A') || parameters[:auth_method].eql?('P'))
-        xml.tag! :ECPActionCode, parameters[:action_code] if parameters[:action_code]
-        xml.tag! :ECPCheckSerialNumber, parameters[:check_serial_number] if parameters[:check_serial_number] && parameters[:auth_method] && (parameters[:auth_method].eql?('A') || parameters[:auth_method].eql?('P'))
+        xml.tag! :ECPActionCode, parameters[:action_code] if parameters[:action_code] && ECP_ACTION_CODES.include?(parameters[:action_code])
+        if parameters[:check_serial_number] && parameters[:auth_method] && (parameters[:auth_method].eql?('A') || parameters[:auth_method].eql?('P'))
+          raise "Invalid Check Serial Number" unless validate_ecp_check_serial(parameters[:check_serial_number], bin)
+          xml.tag! :ECPCheckSerialNumber, parameters[:check_serial_number]
+        end
         xml.tag! :ECPTerminalCity, parameters[:terminal_city] if parameters[:terminal_city] && parameters[:auth_method] && parameters[:auth_method].eql?('P')
         xml.tag! :ECPTerminalState, parameters[:terminal_state] if parameters[:terminal_state] && parameters[:auth_method] && parameters[:auth_method].eql?('P')
         xml.tag! :ECPImageReferenceNumber, parameters[:image_reference_number] if parameters[:image_reference_number] && parameters[:auth_method] && parameters[:auth_method].eql?('P')
@@ -776,7 +807,7 @@ module ActiveMerchant #:nodoc:
             add_aevv(xml, payment_source, three_d_secure)
             add_digital_token_cryptogram(xml, payment_source)
 
-            xml.tag! :ECPSameDayInd, parameters[:same_day] if parameters[:same_day] && payment_source.instance_of?(ActiveMerchant::Billing::Check)
+            xml.tag! :ECPSameDayInd, parameters[:same_day] if parameters[:same_day] && ECP_SAME_DAY.include?(parameters[:same_day]) && payment_source.instance_of?(ActiveMerchant::Billing::Check)
 
             set_recurring_ind(xml, parameters)
 
