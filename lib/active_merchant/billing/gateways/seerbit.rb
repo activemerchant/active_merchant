@@ -78,21 +78,28 @@ module ActiveMerchant #:nodoc:
       private
 
       def commit(action, parameters)
-        url = (test? ? test_url : live_url) + action
-        parameters[:publicKey] = @options[:public_key]
+        begin
+          url = (test? ? test_url : live_url) + action
+          parameters[:publicKey] = @options[:public_key]
 
-        raw_response = ssl_post(url, parameters.to_json, headers)
-        response = parse(raw_response)
-        succeeded = success_from(response)
+          raw_response = ssl_post(url, parameters.to_json, headers)
+          response = parse(raw_response)
+          succeeded = success_from(response)
 
+          response(succeeded, response)
+        rescue ResponseError => e
+          response(false, parse(e.response.body))
+        end
+      end
+
+      def response(succeeded, response)
         Response.new(
           succeeded,
-          message_from(succeeded, response),
+          message_from(response),
           response,
           authorization: authorization_from(response),
           test: test?,
-          error_code: error_code_from(response)
-        )
+          error_code: error_code_from(succeeded, response))
       end
 
       def headers(options = {})
@@ -106,21 +113,29 @@ module ActiveMerchant #:nodoc:
         JSON.parse(body)
       end
 
+      def response_error(raw_response)
+        begin
+          parse(raw_response)
+        rescue JSON::ParserError
+          json_error(raw_response)
+        end
+      end
+
       def success_from(response)
         response.fetch('status') == 'SUCCESS' &&
           response.dig('data', 'code') == '00'
       end
 
-      def message_from(succeeded, response)
+      def message_from(response)
         response.dig('data', 'message')
       end
 
       def authorization_from(response)
-        response.dig('data', 'payments', 'linkingReference')
+        response.dig('data', 'payments', 'linkingReference').presence
       end
 
-      def error_code_from(response)
-        response.dig('data', 'code')
+      def error_code_from(succeeded, response)
+        response.dig('data', 'code').presence
       end
 
       def token

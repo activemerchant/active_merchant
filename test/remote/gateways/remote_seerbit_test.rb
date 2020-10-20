@@ -35,15 +35,9 @@ class RemoteSeerbitTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase
-    puts
-    puts " # ========== test_failed_purchase ============== "
-    puts " # @amount = #{@amount}"
-    puts " # @declined_card.inspect = #{@declined_card.inspect}"
-    puts " # ===================== "
-    puts
     response = @gateway.purchase(@amount, @declined_card, @declined_options)
     assert_failure response
-    assert_equal 'Transaction Failed', response.message
+    assert_equal 'Invalid country/currency combination', response.message
   end
 
   def test_transcript_scrubbing
