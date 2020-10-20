@@ -265,7 +265,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
 
   def test_failed_invalid_serial_for_arc_with_electronic_check
     assert_raise do
-      assert response = @gateway.purchase(20, @echeck, @options.merge({ auth_method: 'A', check_serial_number: '00000000' }))
+      @gateway.purchase(20, @echeck, @options.merge({ auth_method: 'A', check_serial_number: '00000000' }))
     end
   end
 

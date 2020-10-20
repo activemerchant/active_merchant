@@ -629,7 +629,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! :MBMicroPaymentMaxTransactions, mb[:max_transactions]   if mb[:max_transactions]
         end
       end
-      
+
       def validate_ecp_check_serial(serial_number, bin)
         (bin.eql?('000001') && serial_number.length.eql?(9)) || (bin.eql?('000002') && serial_number.length.eql?(6))
       end
