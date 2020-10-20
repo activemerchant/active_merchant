@@ -651,14 +651,14 @@ module ActiveMerchant #:nodoc:
 
       # Adds ECP conditional attributes depending on other attribute values
       def add_ecp_details(xml, parameters = {})
-        requires!(parameters, :check_serial_number) if parameters[:auth_method] && (parameters[:auth_method].eql?('A') || parameters[:auth_method].eql?('P'))
+        requires!(parameters, :check_serial_number) if parameters[:auth_method]&.eql?('A') || parameters[:auth_method]&.eql?('P')
         xml.tag! :ECPActionCode, parameters[:action_code] if parameters[:action_code] && ECP_ACTION_CODES.include?(parameters[:action_code])
-        if parameters[:check_serial_number] && parameters[:auth_method] && (parameters[:auth_method].eql?('A') || parameters[:auth_method].eql?('P'))
+        if parameters[:auth_method]&.eql?('A') || parameters[:auth_method]&.eql?('P')
           raise 'Invalid Check Serial Number' unless validate_ecp_check_serial(parameters[:check_serial_number], bin)
 
           xml.tag! :ECPCheckSerialNumber, parameters[:check_serial_number]
         end
-        if parameters[:auth_method] && parameters[:auth_method].eql?('P')
+        if parameters[:auth_method]&.eql?('P')
           xml.tag! :ECPTerminalCity, parameters[:terminal_city] if parameters[:terminal_city]
           xml.tag! :ECPTerminalState, parameters[:terminal_state] if parameters[:terminal_state]
           xml.tag! :ECPImageReferenceNumber, parameters[:image_reference_number] if parameters[:image_reference_number]
