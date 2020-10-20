@@ -511,7 +511,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! :CustomerCountryCode, (avs_supported ? address[:country] : '')
         end
       end
-      
+
       # Payment can be done through either Credit Card or Electronic Check
       def add_payment_source(xml, payment_source, options = {})
         add_creditcard(xml, payment_source, options[:currency]) if payment_source.instance_of?(ActiveMerchant::Billing::CreditCard) || payment_source.instance_of?(ActiveMerchant::Billing::NetworkTokenizationCreditCard)
