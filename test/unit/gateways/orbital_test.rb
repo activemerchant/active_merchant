@@ -8,95 +8,96 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def setup
     @gateway = ActiveMerchant::Billing::OrbitalGateway.new(
-      login: 'login',
-      password: 'password',
-      merchant_id: 'merchant_id'
+        login: 'login',
+        password: 'password',
+        merchant_id: 'merchant_id'
     )
     @customer_ref_num = 'ABC'
+    # Electronic Check object with test credentials of saving account
     @echeck = check(routing_number: '072403004', account_number: '072403004', account_type: 'savings')
 
     @level2 = {
-      tax_indicator: '1',
-      tax: '10',
-      advice_addendum_1: 'taa1 - test',
-      advice_addendum_2: 'taa2 - test',
-      advice_addendum_3: 'taa3 - test',
-      advice_addendum_4: 'taa4 - test',
-      purchase_order: '123abc',
-      name: address[:name],
-      address1: address[:address1],
-      address2: address[:address2],
-      city: address[:city],
-      state: address[:state],
-      zip: address[:zip]
+        tax_indicator: '1',
+        tax: '10',
+        advice_addendum_1: 'taa1 - test',
+        advice_addendum_2: 'taa2 - test',
+        advice_addendum_3: 'taa3 - test',
+        advice_addendum_4: 'taa4 - test',
+        purchase_order: '123abc',
+        name: address[:name],
+        address1: address[:address1],
+        address2: address[:address2],
+        city: address[:city],
+        state: address[:state],
+        zip: address[:zip]
     }
 
     @level3 = {
-      freight_amount: '15',
-      duty_amount: '10',
-      dest_country: 'US',
-      ship_from_zip: '12345',
-      discount_amount: '20',
-      vat_tax: '25',
-      alt_tax: '30',
-      vat_rate: '7',
-      alt_ind: 'Y'
+        freight_amount: '15',
+        duty_amount: '10',
+        dest_country: 'US',
+        ship_from_zip: '12345',
+        discount_amount: '20',
+        vat_tax: '25',
+        alt_tax: '30',
+        vat_rate: '7',
+        alt_ind: 'Y'
     }
 
     @line_items =
-      [
-        {
-          desc: 'credit card payment',
-          prod_cd: 'service',
-          qty: '30',
-          u_o_m: 'EAC',
-          tax_amt: '10',
-          tax_rate: '8.25',
-          line_tot: '20',
-          disc: '6',
-          unit_cost: '5',
-          gross_net: 'Y',
-          disc_ind: 'Y'
-        },
-        {
-          desc: 'credit card payment',
-          prod_cd: 'service',
-          qty: '30',
-          u_o_m: 'EAC',
-          tax_amt: '10',
-          tax_rate: '8.25',
-          line_tot: '20',
-          disc: '6',
-          unit_cost: '5',
-          gross_net: 'Y',
-          disc_ind: 'Y'
-        }
-      ]
+        [
+            {
+                desc: 'credit card payment',
+                prod_cd: 'service',
+                qty: '30',
+                u_o_m: 'EAC',
+                tax_amt: '10',
+                tax_rate: '8.25',
+                line_tot: '20',
+                disc: '6',
+                unit_cost: '5',
+                gross_net: 'Y',
+                disc_ind: 'Y'
+            },
+            {
+                desc: 'credit card payment',
+                prod_cd: 'service',
+                qty: '30',
+                u_o_m: 'EAC',
+                tax_amt: '10',
+                tax_rate: '8.25',
+                line_tot: '20',
+                disc: '6',
+                unit_cost: '5',
+                gross_net: 'Y',
+                disc_ind: 'Y'
+            }
+        ]
 
     @options = {
-      order_id: '1',
-      card_indicators: 'y'
+        order_id: '1',
+        card_indicators: 'y'
     }
 
     @options_stored_credentials = {
-      mit_msg_type: 'MRSB',
-      mit_stored_credential_ind: 'Y',
-      mit_submitted_transaction_id: '123456abcdef'
+        mit_msg_type: 'MRSB',
+        mit_stored_credential_ind: 'Y',
+        mit_submitted_transaction_id: '123456abcdef'
     }
     @normalized_mit_stored_credential = {
-      stored_credential: {
-        initial_transaction: false,
-        initiator: 'merchant',
-        reason_type: 'unscheduled',
-        network_transaction_id: 'abcdefg12345678'
-      }
+        stored_credential: {
+            initial_transaction: false,
+            initiator: 'merchant',
+            reason_type: 'unscheduled',
+            network_transaction_id: 'abcdefg12345678'
+        }
     }
     @three_d_secure_options = {
-      three_d_secure: {
-        eci: '5',
-        xid: 'TESTXID',
-        cavv: 'TESTCAVV'
-      }
+        three_d_secure: {
+            eci: '5',
+            xid: 'TESTXID',
+            cavv: 'TESTCAVV'
+        }
     }
   end
 
@@ -109,6 +110,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', response.authorization
   end
 
+  # Successful Purchase (AC) through Electronic Check as a payment source
   def test_successful_purchase_with_echeck
     @gateway.expects(:ssl_post).returns(successful_purchase_with_echeck_response)
 
@@ -119,8 +121,9 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_equal '5F8E8BEE7299FD339A38F70CFF6E5D010EF55498;9baedc697f2cf06457de78', response.authorization
   end
 
+  # Purchase failure due to invalid bank routing number provided in Electronic Check
   def test_failed_purchase_with_echeck
-    @gateway.expects(:ssl_post).returns(failed_echeck_for_invalid_route_response)
+    @gateway.expects(:ssl_post).returns(failed_echeck_for_invalid_routing_response)
 
     assert response = @gateway.purchase(50, @echeck, order_id: '9baedc697f2cf06457de78')
     assert_instance_of Response, response
@@ -129,6 +132,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_equal '888', response.params['proc_status']
   end
 
+  # Successful Force Capture (FC) through Electronic Check
   def test_successful_force_capture_with_echeck
     @gateway.expects(:ssl_post).returns(successful_force_capture_with_echeck_response)
 
@@ -207,11 +211,11 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def test_schema_for_soft_descriptors_with_network_tokenization_credit_card_data
     options = @options.merge(
-      soft_descriptors: {
-        merchant_name: 'Merch',
-        product_description: 'Description',
-        merchant_email: 'email@example'
-      }
+        soft_descriptors: {
+            merchant_name: 'Merch',
+            product_description: 'Description',
+            merchant_email: 'email@example'
+        }
     )
     stub_comms do
       @gateway.purchase(50, network_tokenization_credit_card(nil, eci: '5', transaction_id: 'BwABB4JRdgAAAAAAiFF2AAAAAAA='), options)
@@ -361,9 +365,9 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def test_numeric_merchant_id_for_caputre
     gateway = ActiveMerchant::Billing::OrbitalGateway.new(
-      login: 'login',
-      password: 'password',
-      merchant_id: 700000123456
+        login: 'login',
+        password: 'password',
+        merchant_id: 700000123456
     )
 
     response = stub_comms(gateway) do
@@ -402,8 +406,8 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def test_truncates_name
     card = credit_card('4242424242424242',
-      first_name: 'John',
-      last_name: 'Jacob Jingleheimer Smith-Jones')
+                       first_name: 'John',
+                       last_name: 'Jacob Jingleheimer Smith-Jones')
 
     response = stub_comms do
       @gateway.purchase(50, card, order_id: 1, billing_address: address)
@@ -450,20 +454,20 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def test_address_format
     address_with_invalid_chars = address(
-      address1: '456% M|a^in \\S/treet',
-      address2: '|Apt. ^Num\\ber /One%',
-      city: 'R^ise o\\f /th%e P|hoenix',
-      state: '%O|H\\I/O',
-      dest_address1: '2/21%B |B^aker\\ St.',
-      dest_address2: 'L%u%xury S|u^i\\t/e',
-      dest_city: '/Winn/i%p|e^g\\',
-      dest_zip: 'A1A 2B2',
-      dest_state: '^MB'
+        address1: '456% M|a^in \\S/treet',
+        address2: '|Apt. ^Num\\ber /One%',
+        city: 'R^ise o\\f /th%e P|hoenix',
+        state: '%O|H\\I/O',
+        dest_address1: '2/21%B |B^aker\\ St.',
+        dest_address2: 'L%u%xury S|u^i\\t/e',
+        dest_city: '/Winn/i%p|e^g\\',
+        dest_zip: 'A1A 2B2',
+        dest_state: '^MB'
     )
 
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1,
-                                         billing_address: address_with_invalid_chars)
+                        billing_address: address_with_invalid_chars)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/456 Main Street</, data)
       assert_match(/Apt. Number One</, data)
@@ -479,7 +483,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     response = stub_comms do
       assert_deprecation_warning do
         @gateway.add_customer_profile(credit_card,
-          billing_address: address_with_invalid_chars)
+                                      billing_address: address_with_invalid_chars)
       end
     end.check_request do |_endpoint, data, _headers|
       assert_match(/456 Main Street</, data)
@@ -491,26 +495,26 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def test_truncates_by_byte_length
     card = credit_card('4242424242424242',
-      first_name: 'John',
-      last_name: 'Jacob Jingleheimer Smith-Jones')
+                       first_name: 'John',
+                       last_name: 'Jacob Jingleheimer Smith-Jones')
 
     long_address = address(
-      address1: '456 Stréêt Name is Really Long',
-      address2: 'Apårtmeñt 123456789012345678901',
-      city: '¡Vancouver-by-the-sea!',
-      state: 'ßC',
-      zip: 'Postäl Cøde',
-      dest_name: 'Pierré von Bürgermeister de Queso',
-      dest_address1: '9876 Stréêt Name is Really Long',
-      dest_address2: 'Apårtmeñt 987654321098765432109',
-      dest_city: 'Montréal-of-the-south!',
-      dest_state: 'Oñtario',
-      dest_zip: 'Postäl Zïps'
+        address1: '456 Stréêt Name is Really Long',
+        address2: 'Apårtmeñt 123456789012345678901',
+        city: '¡Vancouver-by-the-sea!',
+        state: 'ßC',
+        zip: 'Postäl Cøde',
+        dest_name: 'Pierré von Bürgermeister de Queso',
+        dest_address1: '9876 Stréêt Name is Really Long',
+        dest_address2: 'Apårtmeñt 987654321098765432109',
+        dest_city: 'Montréal-of-the-south!',
+        dest_state: 'Oñtario',
+        dest_zip: 'Postäl Zïps'
     )
 
     response = stub_comms do
       @gateway.purchase(50, card, order_id: 1,
-                                  billing_address: long_address)
+                        billing_address: long_address)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/456 Stréêt Name is Really Lo</, data)
       assert_match(/Apårtmeñt 123456789012345678</, data)
@@ -529,7 +533,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     response = stub_comms do
       assert_deprecation_warning do
         @gateway.add_customer_profile(credit_card,
-          billing_address: long_address)
+                                      billing_address: long_address)
       end
     end.check_request do |_endpoint, data, _headers|
       assert_match(/456 Stréêt Name is Really Lo</, data)
@@ -545,14 +549,14 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
     address_options = {
-      address1: nil,
-      address2: nil,
-      city: nil,
-      state: nil,
-      zip: nil,
-      email: nil,
-      phone: nil,
-      fax: nil
+        address1: nil,
+        address2: nil,
+        city: nil,
+        state: nil,
+        zip: nil,
+        email: nil,
+        phone: nil,
+        fax: nil
     }
 
     response = @gateway.purchase(50, credit_card, order_id: 1, billing_address: address(address_options))
@@ -561,18 +565,18 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def test_dest_address
     billing_address = address(
-      dest_zip: '90001',
-      dest_address1: '456 Main St.',
-      dest_city: 'Somewhere',
-      dest_state: 'CA',
-      dest_name: 'Joan Smith',
-      dest_phone: '(123) 456-7890',
-      dest_country: 'US'
+        dest_zip: '90001',
+        dest_address1: '456 Main St.',
+        dest_city: 'Somewhere',
+        dest_state: 'CA',
+        dest_name: 'Joan Smith',
+        dest_phone: '(123) 456-7890',
+        dest_country: 'US'
     )
 
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1,
-                                         billing_address: billing_address)
+                        billing_address: billing_address)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<AVSDestzip>90001/, data)
       assert_match(/<AVSDestaddress1>456 Main St./, data)
@@ -588,7 +592,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     # non-AVS country
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1,
-                                         billing_address: billing_address.merge(dest_country: 'BR'))
+                        billing_address: billing_address.merge(dest_country: 'BR'))
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<AVSDestcountryCode></, data)
     end.respond_with(successful_purchase_response)
@@ -798,12 +802,12 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
         assert_deprecation_warning do
           @gateway.add_customer_profile(credit_card,
-            managed_billing: {
-              start_date: '10-10-2014',
-              end_date: '10-10-2015',
-              max_dollar_value: 1500,
-              max_transactions: 12
-            })
+                                        managed_billing: {
+                                            start_date: '10-10-2014',
+                                            end_date: '10-10-2015',
+                                            max_dollar_value: 1500,
+                                            max_transactions: 12
+                                        })
         end
       end
     end.check_request do |_endpoint, data, _headers|
@@ -913,6 +917,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  # Successful Authorize (A) through Electronic Check
   def test_successful_authorize_with_echeck
     @gateway.expects(:ssl_post).returns(successful_authorize_with_echeck_response)
 
@@ -923,6 +928,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_equal '5F8E8D2B077217F3EF1ACD3B61610E4CD12954A3;2', response.authorization
   end
 
+  # Authorization failure due to invalid amount in Electronic Check
   def test_failed_authorize_with_echeck
     @gateway.expects(:ssl_post).returns(failed_echeck_for_invalid_amount_response)
 
@@ -933,6 +939,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_equal '885', response.params['proc_status']
   end
 
+  # Successful refund through Electronic Check
   def test_successful_refund_with_echeck
     @gateway.expects(:ssl_post).returns(successful_refund_with_echeck_response)
 
@@ -942,6 +949,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_equal '1', response.params['approval_status']
   end
 
+  # Refund failure due to invalid transaction provided in Electronic Check
   def test_failed_refund_with_echeck
     @gateway.expects(:ssl_post).returns(failed_refund_with_echeck_response)
 
@@ -1145,7 +1153,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
     assert_deprecation_warning do
       response = @gateway.add_customer_profile(credit_card,
-        billing_address: address)
+                                               billing_address: address)
     end
 
     assert_instance_of Response, response
@@ -1206,11 +1214,11 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def stored_credential_options(*args, id: nil)
     {
-      order_id: '#1001',
-      description: 'AM test',
-      currency: 'GBP',
-      customer: '123',
-      stored_credential: stored_credential(*args, id: id)
+        order_id: '#1001',
+        description: 'AM test',
+        currency: 'GBP',
+        customer: '123',
+        stored_credential: stored_credential(*args, id: id)
     }
   end
 
@@ -1238,7 +1246,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     '<?xml version="1.0" encoding="UTF-8"?><Response><NewOrderResp><IndustryType></IndustryType><MessageType>FC</MessageType><MerchantID>041756</MerchantID><TerminalID>001</TerminalID><CardBrand>EC</CardBrand><AccountNum></AccountNum><OrderID>2930847bc732eb4e8102cf</OrderID><TxRefNum>5F8ED3D950A43BD63369845D5385B6354C3654B4</TxRefNum><TxRefIdx>2</TxRefIdx><ProcStatus>0</ProcStatus><ApprovalStatus>1</ApprovalStatus><RespCode>00</RespCode><AVSRespCode></AVSRespCode><CVV2RespCode></CVV2RespCode><AuthCode></AuthCode><RecurringAdviceCd></RecurringAdviceCd><CAVVRespCode></CAVVRespCode><StatusMsg>Approved and Completed</StatusMsg><RespMsg>APPROVAL        </RespMsg><HostRespCode></HostRespCode><HostAVSRespCode></HostAVSRespCode><HostCVV2RespCode></HostCVV2RespCode><CustomerRefNum></CustomerRefNum><CustomerName></CustomerName><ProfileProcStatus></ProfileProcStatus><CustomerProfileMessage></CustomerProfileMessage><RespTime>081105</RespTime><PartialAuthOccurred></PartialAuthOccurred><RequestedAmount></RequestedAmount><RedeemedAmount></RedeemedAmount><RemainingBalance></RemainingBalance><CountryFraudFilterStatus></CountryFraudFilterStatus><IsoCountryCode></IsoCountryCode></NewOrderResp></Response>'
   end
 
-  def failed_echeck_for_invalid_route_response
+  def failed_echeck_for_invalid_routing_response
     '<?xml version="1.0" encoding="UTF-8"?><Response><QuickResp><ProcStatus>888</ProcStatus><StatusMsg>Invalid ECP Account Route: []. The field is missing, invalid, or it has exceeded the max length of: [9].</StatusMsg></QuickResp></Response>'
   end
 
