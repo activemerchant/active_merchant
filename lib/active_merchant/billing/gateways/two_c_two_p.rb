@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class TwoCTwoPGateway < Gateway
       self.test_url = 'https://demo2.2c2p.com/2C2PFrontEnd/SecurePayment/Payment.aspx'
-      self.live_url = 'https://example.com/live'
+      self.live_url = 'https://2c2p.com/2C2PFrontEnd/SecurePayment/Payment.aspx'
 
       self.supported_countries = [ "HK", "SG", "MM", "ID", "TH", "PH", "MY", "VN" ]
       self.default_currency = 'SGD'
