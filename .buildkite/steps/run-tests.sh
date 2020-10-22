@@ -2,8 +2,8 @@
 
 set -euo pipefail
 
-readonly RAILS_VERSIONS=(60 60 60 master)
-readonly RUBY_VERSIONS=(2.6.3 2.6.6 2.7.2 2.7.2)
+readonly RAILS_VERSIONS=(60 60 master)
+readonly RUBY_VERSIONS=(2.6.3 2.6.6 2.6.6)
 readonly RAILS_VERSION=${RAILS_VERSIONS[$BUILDKITE_PARALLEL_JOB]}
 readonly RUBY_VERSION=${RUBY_VERSIONS[$BUILDKITE_PARALLEL_JOB]}
 
