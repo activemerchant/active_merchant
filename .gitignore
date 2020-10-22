@@ -6,6 +6,7 @@ pkg
 Gemfile.lock
 Gemfile*.lock
 vendor/bundle*
+gemfiles/vendor/
 .rbx/
 *.gem
 .rvmrc
