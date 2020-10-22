@@ -149,7 +149,7 @@ module ActiveMerchant #:nodoc:
       def parse(response, action)
         result = {}
         document = REXML::Document.new(response)
-        response_element = document.root.get_elements("//[@xsi:type='tns:#{action}Response']").first
+        response_element = document.root.get_elements("//*[@xsi:type='tns:#{action}Response']").first
         response_element.elements.each do |element|
           result[element.name.underscore] = element.text
         end
