@@ -1,4 +1,4 @@
 steps:
   - name: ":ruby: run unit tests"
     command: ".buildkite/steps/run-tests.sh"
-    parallelism: 4
+    parallelism: 2
