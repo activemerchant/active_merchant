@@ -514,8 +514,11 @@ module ActiveMerchant #:nodoc:
 
       # Payment can be done through either Credit Card or Electronic Check
       def add_payment_source(xml, payment_source, options = {})
-        add_creditcard(xml, payment_source, options[:currency]) if payment_source.instance_of?(ActiveMerchant::Billing::CreditCard) || payment_source.instance_of?(ActiveMerchant::Billing::NetworkTokenizationCreditCard)
-        add_echeck(xml, payment_source, options) if payment_source.instance_of?(ActiveMerchant::Billing::Check)
+        if payment_source.instance_of?(ActiveMerchant::Billing::Check)
+          add_echeck(xml, payment_source, options)
+        else
+          add_creditcard(xml, payment_source, options[:currency])
+        end
       end
 
       # Adds Electronic Check attributes
@@ -630,7 +633,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! :MBOrderIdGenerationMethod,     mb[:order_id_generation_method] || 'IO'
           # By default use MBRecurringEndDate, set to N.
           # MMDDYYYY
-          xml.tag! :MBRecurringStartDate,          mb[:start_date].scan(/\-d/).join.to_s if mb[:start_date]
+          xml.tag! :MBRecurringStartDate,          mb[:start_date].scan(/\d/).join.to_s if mb[:start_date]
           # MMDDYYYY
           xml.tag! :MBRecurringEndDate,            mb[:end_date].scan(/\d/).join.to_s if mb[:end_date]
           # By default listen to any value set in MBRecurringEndDate.
