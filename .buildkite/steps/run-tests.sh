@@ -9,7 +9,7 @@ readonly RUBY_VERSION=${RUBY_VERSIONS[$BUILDKITE_PARALLEL_JOB]}
 
 echo -e "+++ :llama: Testing with :ruby: ${RUBY_VERSION} | :rails: ${RAILS_VERSION}"
 
-docker run -it --rm -v "$PWD":/usr/src -w /usr/src ruby:${RUBY_VERSION}-slim-stretch sh -c "apt-get -qqy update && \
+docker run -it --rm -v "$PWD":/usr/src -w /usr/src ruby:${RUBY_VERSION}-slim sh -c "apt-get -qqy update && \
     apt-get install -qy build-essential git-core ; bundle check --path=vendor/bundle_${RAILS_VERSION} \
     --gemfile gemfiles/Gemfile.rails${RAILS_VERSION} || bundle install --jobs=4 --retry=3 --gemfile gemfiles/Gemfile.rails${RAILS_VERSION} --path=vendor/bundle_${RAILS_VERSION} ; \
     BUNDLE_GEMFILE=gemfiles/Gemfile.rails${RAILS_VERSION} bundle exec rake test:units"
