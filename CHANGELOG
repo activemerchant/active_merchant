@@ -3,6 +3,7 @@
 == HEAD
 * Checkout V2: Pass attempt_n3d along with 3ds enabled [naashton] #3805
 * GlobalCollect: Add support for Third-party 3DS2 data [molbrown] #3801
+* Cybersource: Use firstname/lastname from address instead of the payment method [pi3r] #3798
 
 == Version 1.116.0 (October 28th)
 * Remove Braintree specific version dependency [pi3r] #3800
