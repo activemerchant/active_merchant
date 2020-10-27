@@ -1,6 +1,8 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+
+== Version 1.115.0 (October 27th)
 * Checkout v2: $0 Auth on gateway [jessiagee] #3762
 * Adyen: Safely add execute_threeds: false [curiousepic] #3756
 * RuboCop: Fix Layout/SpaceAroundEqualsInParameterDefault [leila-alderman] #3720
@@ -40,6 +42,7 @@
 * Elavon: Upgrade to `processxml.do` [therufs] #3784
 * Checkout V2: Support for attempt_n3d 3DS field [naashton] #3790
 * Elavon: Strip ampersands [therufs] #3795
+* Paybox: Add support for 3DS 1.0 values [jcpaybox] #3335
 
 == Version 1.114.0
 * BlueSnap: Add address1,address2,phone,shipping_* support #3749
