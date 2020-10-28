@@ -46,6 +46,9 @@
 == Version 1.116.0 (October 28th)
 * Remove Braintree specific version dependency [pi3r] #3800
 
+== Version 1.116.0 (October 28th)
+* Remove Braintree specific version dependency [pi3r] #38000
+
 == Version 1.115.0 (October 27th)
 * Checkout v2: $0 Auth on gateway [jessiagee] #3762
 * Adyen: Safely add execute_threeds: false [curiousepic] #3756
