@@ -11,7 +11,7 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'GHS'
 
       self.supported_cardtypes = [:visa, :mastercard, :maestro]
-      self.money_format = :cents
+      self.money_format = :dollars
 
       def initialize(options = {})
         requires!(options, :public_key, :private_key)
