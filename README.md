@@ -245,3 +245,16 @@ Functionality or APIs that are deprecated will be marked as such. Deprecated fun
 ## Ruby and Rails compatibility policies
 
 Because Active Merchant is a payment library, it needs to take security seriously. For this reason, Active Merchant guarantees compatibility only with actively supported versions of Ruby and Rails. At the time of this writing, that means that Ruby 2.3+ and Rails 4.2+ are supported.
+
+
+### Usage with docker
+
+#### Releasing new versions
+
+Before releasing it, we need to commit and push both code and tag to master with the version bump. Follow the steps bellow
+to release it to Github Package:
+
+1. `make build`;
+2. `make release`;
+
+P.S: make sure you have the env GITHUB_TOKEN set with a [github personal token](https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token).
