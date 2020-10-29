@@ -257,6 +257,8 @@ module ActiveMerchant
           add_settings(xml, payment, options)
           add_user_fields(xml, amount, options)
           add_ship_from_address(xml, options)
+          add_processing_options(xml, options)
+          add_subsequent_auth_information(xml, options)
         end
       end
 
@@ -408,7 +410,7 @@ module ActiveMerchant
 
       def add_settings(xml, source, options)
         xml.transactionSettings do
-          if options[:recurring]
+          if options[:recurring] || subsequent_recurring_transaction?(options)
             xml.setting do
               xml.settingName('recurringBilling')
               xml.settingValue('true')
@@ -702,6 +704,30 @@ module ActiveMerchant
         xml.extraOptions("x_delim_char=#{options[:delimiter]}") if options[:delimiter]
       end
 
+      def add_processing_options(xml, options)
+        return unless options[:stored_credential]
+
+        xml.processingOptions do
+          if options[:stored_credential][:initial_transaction]
+            xml.isFirstSubsequentAuth 'true'
+            xml.isFirstRecurringPayment 'true' if options[:stored_credential][:reason_type] == 'recurring'
+          elsif options[:stored_credential][:initiator] == 'cardholder'
+            xml.isStoredCredentials 'true'
+          else
+            xml.isSubsequentAuth 'true'
+          end
+        end
+      end
+
+      def add_subsequent_auth_information(xml, options)
+        return unless options.dig(:stored_credential, :reason_type) == 'unscheduled'
+
+        xml.subsequentAuthInformation do
+          xml.reason options[:stored_credential_reason_type_override] if options[:stored_credential_reason_type_override]
+          xml.originalNetworkTransId options[:stored_credential][:network_transaction_id] if options[:stored_credential][:network_transaction_id]
+        end
+      end
+
       def create_customer_payment_profile(credit_card, options)
         commit(:cim_store_update, options) do |xml|
           xml.customerProfileId options[:customer_profile_id]
@@ -762,6 +788,10 @@ module ActiveMerchant
         else
           address[:state] || 'n/a'
         end
+      end
+
+      def subsequent_recurring_transaction?(options)
+        options.dig(:stored_credential, :reason_type) == 'recurring' && !options.dig(:stored_credential, :initial_transaction)
       end
 
       def headers
