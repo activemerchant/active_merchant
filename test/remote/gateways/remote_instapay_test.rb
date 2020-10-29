@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class RemoteInstapayTest < Test::Unit::TestCase
-
   def setup
     @gateway = InstapayGateway.new(fixtures(:instapay))
 
@@ -10,10 +9,10 @@ class RemoteInstapayTest < Test::Unit::TestCase
     @declined_card = credit_card('4000300011112220')
 
     @options = {
-      :order_id => generate_unique_id,
-      :billing_address => address,
-      :shipping_address => address,
-      :description => 'Store Purchase'
+      order_id: generate_unique_id,
+      billing_address: address,
+      shipping_address: address,
+      description: 'Store Purchase'
     }
   end
 
@@ -50,8 +49,8 @@ class RemoteInstapayTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = InstapayGateway.new(
-      :login => 'X',
-      :password => 'Y'
+      login: 'X',
+      password: 'Y'
     )
 
     assert response = gateway.purchase(@amount, @credit_card)

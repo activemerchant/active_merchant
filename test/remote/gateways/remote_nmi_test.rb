@@ -6,24 +6,23 @@ class RemoteNmiTest < Test::Unit::TestCase
     @amount = Random.rand(100...1000)
     @credit_card = credit_card('4111111111111111', verification_value: 917)
     @check = check(
-      :routing_number => '123123123',
-      :account_number => '123123123'
+      routing_number: '123123123',
+      account_number: '123123123'
     )
     @apple_pay_card = network_tokenization_credit_card('4111111111111111',
-      :payment_cryptogram => 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
-      :month              => '01',
-      :year               => '2024',
-      :source             => :apple_pay,
-      :eci                => '5',
-      :transaction_id     => '123456789'
-    )
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      month: '01',
+      year: '2024',
+      source: :apple_pay,
+      eci: '5',
+      transaction_id: '123456789')
     @options = {
-      :order_id => generate_unique_id,
-      :billing_address => address,
-      :description => 'Store purchase'
+      order_id: generate_unique_id,
+      billing_address: address,
+      description: 'Store purchase'
     }
     @level3_options = {
-       tax: 5.25, shipping: 10.51, ponumber: 1002
+      tax: 5.25, shipping: 10.51, ponumber: 1002
     }
   end
 
@@ -95,9 +94,26 @@ class RemoteNmiTest < Test::Unit::TestCase
     options = @options.merge({
       customer_id: '234',
       vendor_id: '456',
-      recurring: true,
+      recurring: true
     })
     assert response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert response.test?
+    assert_equal 'Succeeded', response.message
+    assert response.authorization
+  end
+
+  def test_successful_purchase_with_three_d_secure
+    three_d_secure_options = @options.merge({
+      three_d_secure: {
+        version: '2.1.0',
+        eci: '02',
+        cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA',
+        ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC'
+      }
+    })
+
+    assert response = @gateway.purchase(@amount, @credit_card, three_d_secure_options)
     assert_success response
     assert response.test?
     assert_equal 'Succeeded', response.message

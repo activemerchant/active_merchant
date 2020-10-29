@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class RemotePslCardTest < Test::Unit::TestCase
-
   def setup
     @gateway = PslCardGateway.new(fixtures(:psl_card))
 
@@ -26,16 +25,14 @@ class RemotePslCardTest < Test::Unit::TestCase
 
   def test_successful_visa_purchase
     response = @gateway.purchase(@accept_amount, @visa,
-      :billing_address => @visa_address
-    )
+      billing_address: @visa_address)
     assert_success response
     assert response.test?
   end
 
   def test_successful_visa_debit_purchase
     response = @gateway.purchase(@accept_amount, @visa_debit,
-      :billing_address => @visa_debit_address
-    )
+      billing_address: @visa_debit_address)
     assert_success response
   end
 
@@ -43,75 +40,66 @@ class RemotePslCardTest < Test::Unit::TestCase
   def test_visa_debit_purchase_should_not_send_debit_info_if_present
     @visa_debit.start_month = '07'
     response = @gateway.purchase(@accept_amount, @visa_debit,
-      :billing_address => @visa_debit_address
-    )
+      billing_address: @visa_debit_address)
     assert_success response
   end
 
   def test_successful_visa_purchase_specifying_currency
     response = @gateway.purchase(@accept_amount, @visa,
-      :billing_address => @visa_address,
-      :currency => 'GBP'
-    )
+      billing_address: @visa_address,
+      currency: 'GBP')
     assert_success response
     assert response.test?
   end
 
   def test_successful_solo_purchase
     response = @gateway.purchase(@accept_amount, @solo,
-      :billing_address => @solo_address
-    )
+      billing_address: @solo_address)
     assert_success response
     assert response.test?
   end
 
   def test_referred_purchase
     response = @gateway.purchase(@referred_amount, @uk_maestro,
-      :billing_address => @uk_maestro_address
-    )
+      billing_address: @uk_maestro_address)
     assert_failure response
     assert response.test?
   end
 
   def test_declined_purchase
     response = @gateway.purchase(@declined_amount, @uk_maestro,
-      :billing_address => @uk_maestro_address
-    )
+      billing_address: @uk_maestro_address)
     assert_failure response
     assert response.test?
   end
 
   def test_declined_keep_card_purchase
     response = @gateway.purchase(@keep_card_amount, @uk_maestro,
-      :billing_address => @uk_maestro_address
-    )
+      billing_address: @uk_maestro_address)
     assert_failure response
     assert response.test?
   end
 
   def test_successful_authorization
     response = @gateway.authorize(@accept_amount, @visa,
-      :billing_address => @visa_address
-    )
+      billing_address: @visa_address)
     assert_success response
     assert response.test?
   end
 
   def test_no_login
     @gateway = PslCardGateway.new(
-      :login => ''
+      login: ''
     )
     response = @gateway.authorize(@accept_amount, @uk_maestro,
-      :billing_address => @uk_maestro_address
-    )
+      billing_address: @uk_maestro_address)
     assert_failure response
     assert response.test?
   end
 
   def test_successful_authorization_and_capture
     authorization = @gateway.authorize(@accept_amount, @visa,
-      :billing_address => @visa_address
-    )
+      billing_address: @visa_address)
     assert_success authorization
     assert authorization.test?
 

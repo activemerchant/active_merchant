@@ -8,9 +8,9 @@ class RemoteStripeAndroidPayTest < Test::Unit::TestCase
     @amount = 100
 
     @options = {
-      :currency => 'USD',
-      :description => 'ActiveMerchant Test Purchase',
-      :email => 'wow@example.com'
+      currency: 'USD',
+      description: 'ActiveMerchant Test Purchase',
+      email: 'wow@example.com'
     }
   end
 
@@ -19,8 +19,7 @@ class RemoteStripeAndroidPayTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :android_pay
-    )
+      source: :android_pay)
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response
     assert_equal 'charge', response.params['object']
@@ -35,8 +34,7 @@ class RemoteStripeAndroidPayTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :android_pay
-    )
+      source: :android_pay)
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_success response
     assert_equal 'charge', response.params['object']

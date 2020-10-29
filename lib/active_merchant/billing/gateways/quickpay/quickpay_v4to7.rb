@@ -141,6 +141,7 @@ module ActiveMerchant #:nodoc:
 
       def add_testmode(post)
         return if post[:transaction].present?
+
         post[:testmode] = test? ? '1' : '0'
       end
 
@@ -164,9 +165,8 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(self.live_url, post_data(action, params)))
 
         Response.new(successful?(response), message_from(response), response,
-          :test => test?,
-          :authorization => response[:transaction]
-        )
+          test: test?,
+          authorization: response[:transaction])
       end
 
       def successful?(response)

@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class RemoteEfsnetTest < Test::Unit::TestCase
-
   def setup
     Base.mode = :test
 
@@ -12,8 +11,8 @@ class RemoteEfsnetTest < Test::Unit::TestCase
     @amount = 100
     @declined_amount = 156
 
-    @options = { :order_id => generate_unique_id,
-                 :billing_address => address}
+    @options = { order_id: generate_unique_id,
+                 billing_address: address }
   end
 
   def test_successful_purchase
@@ -70,8 +69,8 @@ class RemoteEfsnetTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = EfsnetGateway.new(
-      :login => '',
-      :password => ''
+      login: '',
+      password: ''
     )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_equal 'Invalid credentials', response.message

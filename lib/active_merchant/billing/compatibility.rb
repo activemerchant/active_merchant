@@ -28,7 +28,7 @@ module ActiveMerchant
       def self.humanize(lower_case_and_underscored_word)
         result = lower_case_and_underscored_word.to_s.dup
         result.gsub!(/_id$/, '')
-        result.gsub!(/_/, ' ')
+        result.tr!('_', ' ')
         result.gsub(/([a-z\d]*)/i, &:downcase).gsub(/^\w/) { $&.upcase }
       end
     end
@@ -56,7 +56,7 @@ module ActiveMerchant
         private
 
         def internal_errors
-          @errors ||= Errors.new
+          @internal_errors ||= Errors.new
         end
 
         class Errors < Hash
@@ -75,7 +75,7 @@ module ActiveMerchant
           end
 
           def empty?
-            all? { |k, v| v&.empty? }
+            all? { |_k, v| v&.empty? }
           end
 
           def on(field)
@@ -98,7 +98,8 @@ module ActiveMerchant
             result = []
 
             self.each do |key, messages|
-              next unless(messages && !messages.empty?)
+              next unless messages && !messages.empty?
+
               if key == 'base'
                 result << messages.first.to_s
               else

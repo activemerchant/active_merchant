@@ -4,17 +4,17 @@ class PaystationTest < Test::Unit::TestCase
   include CommStub
   def setup
     @gateway = PaystationGateway.new(
-                 :paystation_id => 'some_id_number',
-                 :gateway_id    => 'another_id_number'
-               )
+      paystation_id: 'some_id_number',
+      gateway_id: 'another_id_number'
+    )
 
     @credit_card = credit_card
     @amount = 100
 
     @options = {
-      :order_id => '1',
-      :customer => 'Joe Bloggs, Customer ID #56',
-      :description => 'Store Purchase'
+      order_id: '1',
+      customer: 'Joe Bloggs, Customer ID #56',
+      description: 'Store Purchase'
     }
   end
 
@@ -41,7 +41,7 @@ class PaystationTest < Test::Unit::TestCase
   def test_successful_store
     @gateway.expects(:ssl_post).returns(successful_store_response)
 
-    assert response = @gateway.store(@credit_card, @options.merge(:token => 'justatest1310263135'))
+    assert response = @gateway.store(@credit_card, @options.merge(token: 'justatest1310263135'))
     assert_success response
     assert response.test?
 
@@ -74,7 +74,7 @@ class PaystationTest < Test::Unit::TestCase
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
 
-    assert response = @gateway.capture(@amount, '0009062250-01', @options.merge(:credit_card_verification => 123))
+    assert response = @gateway.capture(@amount, '0009062250-01', @options.merge(credit_card_verification: 123))
     assert_success response
   end
 
@@ -89,7 +89,7 @@ class PaystationTest < Test::Unit::TestCase
 
     refund = stub_comms do
       @gateway.refund(@amount, response.authorization, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/0008813023-01/, data)
     end.respond_with(successful_refund_response)
 
@@ -425,5 +425,4 @@ class PaystationTest < Test::Unit::TestCase
   def post_scrubbed
     'pstn_pi=609035&pstn_gi=PUSHPAY&pstn_2p=t&pstn_nr=t&pstn_df=yymm&pstn_ms=a755b9c84a530aee91dc3077f57294b0&pstn_mo=Store+Purchase&pstn_mr=&pstn_am=&pstn_cu=NZD&pstn_cn=[FILTERED]&pstn_ct=visa&pstn_ex=1305&pstn_cc=[FILTERED]&pstn_tm=T&paystation=_empty'
   end
-
 end

@@ -18,20 +18,20 @@ class PaypalCommonApiTest < Test::Unit::TestCase
     CommonPaypalGateway.pem_file = nil
 
     @gateway = CommonPaypalGateway.new(
-      :login => 'cody',
-      :password => 'test',
-      :pem => 'PEM'
+      login: 'cody',
+      password: 'test',
+      pem: 'PEM'
     )
 
     @address = {
-      :address1 => '1234 My Street',
-      :address2 => 'Apt 1',
-      :company => 'Widgets Inc',
-      :city => 'Ottawa',
-      :state => 'ON',
-      :zip => 'K1C2N6',
-      :country => 'Canada',
-      :phone => '(555)555-5555'
+      address1: '1234 My Street',
+      address2: 'Apt 1',
+      company: 'Widgets Inc',
+      city: 'Ottawa',
+      state: 'ON',
+      zip: 'K1C2N6',
+      country: 'Canada',
+      phone: '(555)555-5555'
     }
   end
 
@@ -44,34 +44,68 @@ class PaypalCommonApiTest < Test::Unit::TestCase
   end
 
   def test_add_payment_details_adds_express_only_payment_details_when_necessary
-    options = {:express_request => true}
+    options = { express_request: true }
     @gateway.expects(:add_express_only_payment_details)
     @gateway.send(:add_payment_details, xml_builder, 100, 'USD', options)
   end
 
   def test_add_payment_details_adds_items_details
-    options = {:items => [1]}
+    options = { items: [1] }
     @gateway.expects(:add_payment_details_items_xml)
     @gateway.send(:add_payment_details, xml_builder, 100, 'USD', options)
   end
 
   def test_add_payment_details_adds_address
-    options = {:shipping_address => @address}
+    options = { shipping_address: @address }
     @gateway.expects(:add_address)
     @gateway.send(:add_payment_details, xml_builder, 100, 'USD', options)
   end
 
   def test_add_payment_details_adds_items_details_elements
-    options = {:items => [{:name => 'foo'}]}
+    options = { items: [{ name: 'foo' }] }
     request = wrap_xml do |xml|
       @gateway.send(:add_payment_details, xml, 100, 'USD', options)
     end
     assert_equal 'foo', REXML::XPath.first(request, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Name').text
   end
 
+  def test_add_payment_details_adds_order_total_elements
+    options = {
+      subtotal: 25,
+      shipping: 5,
+      handling: 2,
+      tax: 1
+    }
+    request = wrap_xml do |xml|
+      @gateway.send(:add_payment_details, xml, 100, 'USD', options)
+    end
+
+    assert_equal '25', REXML::XPath.first(request, '//n2:PaymentDetails/n2:ItemTotal').text
+    assert_equal '5', REXML::XPath.first(request, '//n2:PaymentDetails/n2:ShippingTotal').text
+    assert_equal '2', REXML::XPath.first(request, '//n2:PaymentDetails/n2:HandlingTotal').text
+    assert_equal '1', REXML::XPath.first(request, '//n2:PaymentDetails/n2:TaxTotal').text
+  end
+
+  def test_add_payment_details_does_not_add_order_total_elements_when_any_element_is_nil
+    options = {
+      subtotal: nil,
+      shipping: 5,
+      handling: 2,
+      tax: 1
+    }
+    request = wrap_xml do |xml|
+      @gateway.send(:add_payment_details, xml, 100, 'USD', options)
+    end
+
+    assert_equal nil, REXML::XPath.first(request, '//n2:PaymentDetails/n2:ItemTotal')
+    assert_equal nil, REXML::XPath.first(request, '//n2:PaymentDetails/n2:ShippingTotal')
+    assert_equal nil, REXML::XPath.first(request, '//n2:PaymentDetails/n2:HandlingTotal')
+    assert_equal nil, REXML::XPath.first(request, '//n2:PaymentDetails/n2:TaxTotal')
+  end
+
   def test_add_express_only_payment_details_adds_non_blank_fields
     request = wrap_xml do |xml|
-      @gateway.send(:add_express_only_payment_details, xml, {:payment_action => 'Sale', :payment_request_id => ''})
+      @gateway.send(:add_express_only_payment_details, xml, { payment_action: 'Sale', payment_request_id: '' })
     end
     assert_equal 'Sale', REXML::XPath.first(request, '//n2:PaymentAction').text
     assert_nil REXML::XPath.first(request, '//n2:PaymentRequestID')
@@ -85,7 +119,7 @@ class PaypalCommonApiTest < Test::Unit::TestCase
   end
 
   def test_build_request_wrapper_with_request_details
-    result = @gateway.send(:build_request_wrapper, 'Action', :request_details => true) do |xml|
+    result = @gateway.send(:build_request_wrapper, 'Action', request_details: true) do |xml|
       xml.tag! 'n2:TransactionID', 'baz'
     end
     assert_equal 'baz', REXML::XPath.first(REXML::Document.new(result), '//ActionReq/ActionRequest/n2:ActionRequestDetails/n2:TransactionID').text
@@ -101,24 +135,24 @@ class PaypalCommonApiTest < Test::Unit::TestCase
     assert_equal '1', REXML::XPath.first(request, '//GetBalanceReq/GetBalanceRequest/ReturnAllCurrencies').text
   end
 
-  def test_balance_cleans_up_currencies_values_like_1
+  def test_balance_cleans_up_currencies_values_like_one
     @gateway.stubs(:commit)
-    [1, '1', true].each do |values_like_1|
+    [1, '1', true].each do |values_like_one|
       @gateway.expects(:build_get_balance).with('1')
-      @gateway.balance(values_like_1)
+      @gateway.balance(values_like_one)
     end
   end
 
-  def test_balance_cleans_up_currencies_values_like_0
+  def test_balance_cleans_up_currencies_values_like_zero
     @gateway.stubs(:commit)
-    [0, '0', false, nil, :foo].each do |values_like_0|
+    [0, '0', false, nil, :foo].each do |values_like_zero|
       @gateway.expects(:build_get_balance).with('0')
-      @gateway.balance(values_like_0)
+      @gateway.balance(values_like_zero)
     end
   end
 
   def test_build_do_authorize_request
-    request = REXML::Document.new(@gateway.send(:build_do_authorize, 123, 100, :currency => 'USD'))
+    request = REXML::Document.new(@gateway.send(:build_do_authorize, 123, 100, currency: 'USD'))
     assert_equal '123', REXML::XPath.first(request, '//DoAuthorizationReq/DoAuthorizationRequest/TransactionID').text
     assert_equal '1.00', REXML::XPath.first(request, '//DoAuthorizationReq/DoAuthorizationRequest/Amount').text
   end
@@ -137,10 +171,10 @@ class PaypalCommonApiTest < Test::Unit::TestCase
 
   def test_build_transaction_search_request
     options = {
-      :start_date => DateTime.new(2012, 2, 21, 0),
-      :end_date => DateTime.new(2012, 3, 21, 0),
-      :receiver => 'foo@example.com',
-      :first_name => 'Robert'
+      start_date: DateTime.new(2012, 2, 21, 0),
+      end_date: DateTime.new(2012, 3, 21, 0),
+      receiver: 'foo@example.com',
+      first_name: 'Robert'
     }
     request = REXML::Document.new(@gateway.send(:build_transaction_search, options))
     assert_match %r{^2012-02-21T\d{2}:00:00Z$}, REXML::XPath.first(request, '//TransactionSearchReq/TransactionSearchRequest/StartDate').text
@@ -152,17 +186,16 @@ class PaypalCommonApiTest < Test::Unit::TestCase
     assert_raise ArgumentError do
       @gateway.reference_transaction(100)
     end
-    @gateway.reference_transaction(100, :reference_id => 'id')
+    @gateway.reference_transaction(100, reference_id: 'id')
   end
 
   def test_build_reference_transaction_gets_ip
     request = REXML::Document.new(@gateway.send(:build_reference_transaction_request,
       100,
-      :reference_id => 'id',
-      :ip => '127.0.0.1'))
+      reference_id: 'id',
+      ip: '127.0.0.1'))
     assert_equal '100', REXML::XPath.first(request, '//n2:PaymentDetails/n2:OrderTotal').text
     assert_equal 'id', REXML::XPath.first(request, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:DoReferenceTransactionRequestDetails/n2:ReferenceID').text
     assert_equal '127.0.0.1', REXML::XPath.first(request, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:DoReferenceTransactionRequestDetails/n2:IPAddress').text
   end
-
 end

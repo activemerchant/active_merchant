@@ -25,7 +25,7 @@ class RemoteConektaTest < Test::Unit::TestCase
     )
 
     @options = {
-      :device_fingerprint => '41l9l92hjco6cuekf0c7dq68v4',
+      device_fingerprint: '41l9l92hjco6cuekf0c7dq68v4',
       description: 'Blue clip',
       billing_address: {
         address1: 'Rio Missisipi #123',
@@ -34,18 +34,18 @@ class RemoteConektaTest < Test::Unit::TestCase
         country: 'Mexico',
         zip: '5555',
         name: 'Mario Reyes',
-        phone: '12345678',
+        phone: '12345678'
       },
       carrier: 'Estafeta',
       email: 'bob@something.com',
       line_items: [{
-      name: 'Box of Cohiba S1s',
-      description: 'Imported From Mex.',
-      unit_price: 20000,
-      quantity: 1,
-      sku: '7500244909',
-      type: 'food'
-     }]
+        name: 'Box of Cohiba S1s',
+        description: 'Imported From Mex.',
+        unit_price: 20000,
+        quantity: 1,
+        sku: '7500244909',
+        type: 'food'
+      }]
     }
   end
 
@@ -56,7 +56,7 @@ class RemoteConektaTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_installments
-    assert response = @gateway.purchase(@amount * 300, @credit_card, @options.merge({monthly_installments: 3}))
+    assert response = @gateway.purchase(@amount * 300, @credit_card, @options.merge({ monthly_installments: 3 }))
     assert_success response
     assert_equal nil, response.message
   end
@@ -143,7 +143,7 @@ class RemoteConektaTest < Test::Unit::TestCase
         city: 'Wanaque',
         state: 'NJ',
         country: 'USA',
-        zip: '01085',
+        zip: '01085'
       },
       line_items: [
         {

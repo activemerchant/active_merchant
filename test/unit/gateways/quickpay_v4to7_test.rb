@@ -9,14 +9,14 @@ class QuickpayV4to7Test < Test::Unit::TestCase
 
   def setup
     @gateway = QuickpayGateway.new(
-      :login => merchant_id,
-      :password => 'PASSWORD',
-      :version  => 7
+      login: merchant_id,
+      password: 'PASSWORD',
+      version: 7
     )
 
     @credit_card = credit_card('4242424242424242')
     @amount = 100
-    @options = { :order_id => '1', :billing_address => address }
+    @options = { order_id: '1', billing_address: address }
   end
 
   def test_successful_purchase
@@ -39,15 +39,15 @@ class QuickpayV4to7Test < Test::Unit::TestCase
 
   def test_successful_store_for_v6
     @gateway = QuickpayGateway.new(
-      :login => merchant_id,
-      :password => 'PASSWORD',
-      :version => 6
+      login: merchant_id,
+      password: 'PASSWORD',
+      version: 6
     )
     @gateway.expects(:generate_check_hash).returns(mock_md5_hash)
 
     response = stub_comms do
-      @gateway.store(@credit_card, {:order_id => 'fa73664073e23597bbdd', :description => 'Storing Card'})
-    end.check_request do |endpoint, data, headers|
+      @gateway.store(@credit_card, { order_id: 'fa73664073e23597bbdd', description: 'Storing Card' })
+    end.check_request do |_endpoint, data, _headers|
       assert_equal(expected_store_parameters_v6, CGI::parse(data))
     end.respond_with(successful_store_response_v6)
 
@@ -61,8 +61,8 @@ class QuickpayV4to7Test < Test::Unit::TestCase
     @gateway.expects(:generate_check_hash).returns(mock_md5_hash)
 
     response = stub_comms do
-      @gateway.store(@credit_card, {:order_id => 'ed7546cb4ceb8f017ea4', :description => 'Storing Card'})
-    end.check_request do |endpoint, data, headers|
+      @gateway.store(@credit_card, { order_id: 'ed7546cb4ceb8f017ea4', description: 'Storing Card' })
+    end.check_request do |_endpoint, data, _headers|
       assert_equal(expected_store_parameters_v7, CGI::parse(data))
     end.respond_with(successful_store_response_v7)
 
@@ -124,16 +124,16 @@ class QuickpayV4to7Test < Test::Unit::TestCase
 
   def test_supported_countries
     klass = @gateway.class
-    assert_equal ['DE', 'DK', 'ES', 'FI', 'FR', 'FO', 'GB', 'IS', 'NO', 'SE'], klass.supported_countries
+    assert_equal %w[DE DK ES FI FR FO GB IS NO SE], klass.supported_countries
   end
 
   def test_supported_card_types
     klass = @gateway.class
-    assert_equal [ :dankort, :forbrugsforeningen, :visa, :master, :american_express, :diners_club, :jcb, :maestro ], klass.supported_cardtypes
+    assert_equal %i[dankort forbrugsforeningen visa master american_express diners_club jcb maestro], klass.supported_cardtypes
   end
 
   def test_add_testmode_does_not_add_testmode_if_transaction_id_present
-    post_hash = {:transaction => '12345'}
+    post_hash = { transaction: '12345' }
     @gateway.send(:add_testmode, post_hash)
     assert_equal nil, post_hash[:testmode]
   end
@@ -147,7 +147,7 @@ class QuickpayV4to7Test < Test::Unit::TestCase
   def test_finalize_is_disabled_by_default
     stub_comms(@gateway, :ssl_request) do
       @gateway.capture(@amount, '12345')
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert data =~ /finalize=0/
     end.respond_with(successful_capture_response)
   end
@@ -155,7 +155,7 @@ class QuickpayV4to7Test < Test::Unit::TestCase
   def test_finalize_is_enabled
     stub_comms(@gateway, :ssl_request) do
       @gateway.capture(@amount, '12345', finalize: true)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert data =~ /finalize=1/
     end.respond_with(successful_capture_response)
   end
@@ -192,33 +192,33 @@ class QuickpayV4to7Test < Test::Unit::TestCase
 
   def expected_store_parameters_v6
     {
-      'cardnumber'=>['4242424242424242'],
-      'cvd'=>['123'],
-      'expirationdate'=>[expected_expiration_date],
-      'ordernumber'=>['fa73664073e23597bbdd'],
-      'description'=>['Storing Card'],
-      'testmode'=>['1'],
-      'protocol'=>['6'],
-      'msgtype'=>['subscribe'],
-      'merchant'=>[merchant_id],
-      'md5check'=>[mock_md5_hash]
+      'cardnumber' => ['4242424242424242'],
+      'cvd' => ['123'],
+      'expirationdate' => [expected_expiration_date],
+      'ordernumber' => ['fa73664073e23597bbdd'],
+      'description' => ['Storing Card'],
+      'testmode' => ['1'],
+      'protocol' => ['6'],
+      'msgtype' => ['subscribe'],
+      'merchant' => [merchant_id],
+      'md5check' => [mock_md5_hash]
     }
   end
 
   def expected_store_parameters_v7
     {
-      'amount'=>['0'],
-      'currency'=>['DKK'],
-      'cardnumber'=>['4242424242424242'],
-      'cvd'=>['123'],
-      'expirationdate'=>[expected_expiration_date],
-      'ordernumber'=>['ed7546cb4ceb8f017ea4'],
-      'description'=>['Storing Card'],
-      'testmode'=>['1'],
-      'protocol'=>['7'],
-      'msgtype'=>['subscribe'],
-      'merchant'=>[merchant_id],
-      'md5check'=>[mock_md5_hash]
+      'amount' => ['0'],
+      'currency' => ['DKK'],
+      'cardnumber' => ['4242424242424242'],
+      'cvd' => ['123'],
+      'expirationdate' => [expected_expiration_date],
+      'ordernumber' => ['ed7546cb4ceb8f017ea4'],
+      'description' => ['Storing Card'],
+      'testmode' => ['1'],
+      'protocol' => ['7'],
+      'msgtype' => ['subscribe'],
+      'merchant' => [merchant_id],
+      'md5check' => [mock_md5_hash]
     }
   end
 

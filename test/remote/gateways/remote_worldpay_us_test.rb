@@ -5,9 +5,9 @@ class RemoteWorldpayUsTest < Test::Unit::TestCase
     @gateway = WorldpayUsGateway.new(fixtures(:worldpay_us))
 
     @amount = 100
-    @credit_card = credit_card('4446661234567892', :verification_value => '987')
+    @credit_card = credit_card('4446661234567892', verification_value: '987')
     @declined_card = credit_card('4000300011112220')
-    @check = check(:number => '12345654321')
+    @check = check(number: '12345654321')
 
     @options = {
       order_id: generate_unique_id,
@@ -23,7 +23,7 @@ class RemoteWorldpayUsTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_on_backup_url
-    gateway = WorldpayUsGateway.new(fixtures(:worldpay_us).merge({ use_backup_url: true}))
+    gateway = WorldpayUsGateway.new(fixtures(:worldpay_us).merge({ use_backup_url: true }))
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'Succeeded', response.message
@@ -101,16 +101,16 @@ class RemoteWorldpayUsTest < Test::Unit::TestCase
   end
 
   def test_passing_billing_address
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:billing_address => address))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(billing_address: address))
     assert_success response
   end
 
   def test_invalid_login
     gateway = WorldpayUsGateway.new(
-                :acctid => '',
-                :subid => '',
-                :merchantpin => ''
-              )
+      acctid: '',
+      subid: '',
+      merchantpin: ''
+    )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert response.message =~ /DECLINED/

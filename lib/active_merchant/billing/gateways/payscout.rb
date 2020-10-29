@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = self.test_url = 'https://secure.payscout.com/api/transact.php'
 
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.default_currency = 'USD'
       self.homepage_url = 'http://www.payscout.com/'
       self.display_name = 'Payscout'
@@ -116,12 +116,11 @@ module ActiveMerchant #:nodoc:
         message = message_from(response)
         test_mode = (test? || message =~ /TESTMODE/)
         Response.new(success?(response), message, response,
-          :test => test_mode,
-          :authorization => response['transactionid'],
-          :fraud_review => fraud_review?(response),
-          :avs_result => { :code => response['avsresponse'] },
-          :cvv_result => response['cvvresponse']
-        )
+          test: test_mode,
+          authorization: response['transactionid'],
+          fraud_review: fraud_review?(response),
+          avs_result: { code: response['avsresponse'] },
+          cvv_result: response['cvvresponse'])
       end
 
       def message_from(response)

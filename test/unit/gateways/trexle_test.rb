@@ -46,7 +46,7 @@ class TrexleTest < Test::Unit::TestCase
   end
 
   def test_supported_cardtypes
-    assert_equal [:visa, :master, :american_express], TrexleGateway.supported_cardtypes
+    assert_equal %i[visa master american_express], TrexleGateway.supported_cardtypes
   end
 
   def test_display_name
@@ -123,7 +123,7 @@ class TrexleTest < Test::Unit::TestCase
 
   def test_successful_refund
     token = 'charge_0cfad7ee5ffe75f58222bff214bfa5cc7ad7c367'
-    @gateway.expects(:ssl_request).with(:post, "https://core.trexle.com/api/v1/charges/#{token}/refunds", {amount: '100'}.to_json, instance_of(Hash)).returns(successful_refund_response)
+    @gateway.expects(:ssl_request).with(:post, "https://core.trexle.com/api/v1/charges/#{token}/refunds", { amount: '100' }.to_json, instance_of(Hash)).returns(successful_refund_response)
 
     assert response = @gateway.refund(100, token)
     assert_equal 'refund_7f696a86f9cb136520c51ea90c17f687b8df40b0', response.authorization
@@ -133,7 +133,7 @@ class TrexleTest < Test::Unit::TestCase
 
   def test_unsuccessful_refund
     token = 'charge_0cfad7ee5ffe75f58222bff214bfa5cc7ad7c367'
-    @gateway.expects(:ssl_request).with(:post, "https://core.trexle.com/api/v1/charges/#{token}/refunds", {amount: '100'}.to_json, instance_of(Hash)).returns(failed_refund_response)
+    @gateway.expects(:ssl_request).with(:post, "https://core.trexle.com/api/v1/charges/#{token}/refunds", { amount: '100' }.to_json, instance_of(Hash)).returns(failed_refund_response)
 
     assert response = @gateway.refund(100, token)
     assert_failure response
@@ -440,5 +440,4 @@ class TrexleTest < Test::Unit::TestCase
       }
     }'
   end
-
 end

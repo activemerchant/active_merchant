@@ -7,11 +7,11 @@ class BeanstreamTest < Test::Unit::TestCase
     Base.mode = :test
 
     @gateway = BeanstreamGateway.new(
-                 :login => 'merchant id',
-                 :user => 'username',
-                 :password => 'password',
-                 :api_key => 'api_key'
-               )
+      login: 'merchant id',
+      user: 'username',
+      password: 'password',
+      api_key: 'api_key'
+    )
 
     @credit_card = credit_card
 
@@ -26,41 +26,42 @@ class BeanstreamTest < Test::Unit::TestCase
     )
 
     @check = check(
-                     :institution_number => '001',
-                     :transit_number     => '26729'
-                   )
+      institution_number: '001',
+      transit_number: '26729'
+    )
 
     @amount = 1000
 
     @options = {
-      :order_id => '1234',
-      :billing_address => {
-        :name => 'xiaobo zzz',
-        :phone => '555-555-5555',
-        :address1 => '1234 Levesque St.',
-        :address2 => 'Apt B',
-        :city => 'Montreal',
-        :state => 'QC',
-        :country => 'CA',
-        :zip => 'H2C1X8'
+      order_id: '1234',
+      billing_address: {
+        name: 'xiaobo zzz',
+        phone: '555-555-5555',
+        address1: '1234 Levesque St.',
+        address2: 'Apt B',
+        city: 'Montreal',
+        state: 'QC',
+        country: 'CA',
+        zip: 'H2C1X8'
       },
-      :email => 'xiaobozzz@example.com',
-      :subtotal => 800,
-      :shipping => 100,
-      :tax1 => 100,
-      :tax2 => 100,
-      :custom => 'reference one'
+      email: 'xiaobozzz@example.com',
+      subtotal: 800,
+      shipping: 100,
+      tax1: 100,
+      tax2: 100,
+      custom: 'reference one'
     }
 
     @recurring_options = @options.merge(
-      :interval => { :unit => :months, :length => 1 },
-      :occurrences => 5)
+      interval: { unit: :months, length: 1 },
+      occurrences: 5
+    )
   end
 
   def test_successful_purchase
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @decrypted_credit_card, @options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       refute_match(/recurringPayment=true/, data)
     end.respond_with(successful_purchase_response)
 
@@ -71,7 +72,7 @@ class BeanstreamTest < Test::Unit::TestCase
   def test_successful_purchase_with_recurring
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @decrypted_credit_card, @options.merge(recurring: true))
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/recurringPayment=1/, data)
     end.respond_with(successful_purchase_response)
 
@@ -81,7 +82,7 @@ class BeanstreamTest < Test::Unit::TestCase
   def test_successful_authorize_with_recurring
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, @decrypted_credit_card, @options.merge(recurring: true))
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/recurringPayment=1/, data)
     end.respond_with(successful_purchase_response)
 
@@ -210,7 +211,7 @@ class BeanstreamTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_update_recurring_response)
 
     response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
-      @gateway.update_recurring(@amount, @credit_card, @recurring_options.merge(:account_id => response.params['rbAccountId']))
+      @gateway.update_recurring(@amount, @credit_card, @recurring_options.merge(account_id: response.params['rbAccountId']))
     end
     assert_success response
     assert_equal 'Request successful', response.message
@@ -228,14 +229,14 @@ class BeanstreamTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_cancel_recurring_response)
 
     response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
-      @gateway.cancel_recurring(:account_id => response.params['rbAccountId'])
+      @gateway.cancel_recurring(account_id: response.params['rbAccountId'])
     end
     assert_success response
     assert_equal 'Request successful', response.message
   end
 
   def test_ip_is_being_sent
-    @gateway.expects(:ssl_post).with do |url, data|
+    @gateway.expects(:ssl_post).with do |_url, data|
       data =~ /customerIp=123\.123\.123\.123/
     end.returns(successful_purchase_response)
 
@@ -246,7 +247,7 @@ class BeanstreamTest < Test::Unit::TestCase
   def test_includes_network_tokenization_fields
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @decrypted_credit_card, @options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/3DSecureXID/, data)
       assert_match(/3DSecureECI/, data)
       assert_match(/3DSecureCAVV/, data)
@@ -261,7 +262,7 @@ class BeanstreamTest < Test::Unit::TestCase
     @options[:shipping_address] = address
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @decrypted_credit_card, @options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/ordProvince=--/, data)
       assert_match(/ordPostalCode=000000/, data)
       assert_match(/shipProvince=--/, data)
@@ -272,12 +273,12 @@ class BeanstreamTest < Test::Unit::TestCase
   end
 
   def test_no_state_and_zip_default_with_missing_country
-    address = { }
+    address = {}
     @options[:billing_address] = address
     @options[:shipping_address] = address
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @decrypted_credit_card, @options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_no_match(/ordProvince=--/, data)
       assert_no_match(/ordPostalCode=000000/, data)
       assert_no_match(/shipProvince=--/, data)
@@ -293,7 +294,7 @@ class BeanstreamTest < Test::Unit::TestCase
     @options[:shipping_email] = 'ship@mail.com'
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @decrypted_credit_card, @options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/ordEmailAddress=xiaobozzz%40example.com/, data)
       assert_match(/shipEmailAddress=ship%40mail.com/, data)
     end.respond_with(successful_purchase_response)
@@ -340,11 +341,11 @@ class BeanstreamTest < Test::Unit::TestCase
   end
 
   def brazilian_address_params_without_zip_and_state
-    { :shipProvince => '--', :shipPostalCode => '000000', :ordProvince => '--', :ordPostalCode => '000000', :ordCountry => 'BR', :trnCardOwner => 'Longbob Longsen', :shipCity => 'Rio de Janeiro', :ordAddress1 => '1234 Levesque St.', :ordShippingPrice => '1.00', :deliveryEstimate => nil, :shipName => 'xiaobo zzz', :trnCardNumber => '4242424242424242', :trnAmount => '10.00', :trnType => 'P', :ordAddress2 => 'Apt B', :ordTax1Price => '1.00', :shipEmailAddress => 'xiaobozzz@example.com', :trnExpMonth => '09', :ordCity => 'Rio de Janeiro', :shipPhoneNumber => '555-555-5555', :ordName => 'xiaobo zzz', :trnExpYear => next_year, :trnOrderNumber => '1234', :shipCountry => 'BR', :ordTax2Price => '1.00', :shipAddress1 => '1234 Levesque St.', :ordEmailAddress => 'xiaobozzz@example.com', :trnCardCvd => '123', :trnComments => nil, :shippingMethod => nil, :ref1 => 'reference one', :shipAddress2 => 'Apt B', :ordPhoneNumber => '555-555-5555', :ordItemPrice => '8.00' }
+    { shipProvince: '--', shipPostalCode: '000000', ordProvince: '--', ordPostalCode: '000000', ordCountry: 'BR', trnCardOwner: 'Longbob Longsen', shipCity: 'Rio de Janeiro', ordAddress1: '1234 Levesque St.', ordShippingPrice: '1.00', deliveryEstimate: nil, shipName: 'xiaobo zzz', trnCardNumber: '4242424242424242', trnAmount: '10.00', trnType: 'P', ordAddress2: 'Apt B', ordTax1Price: '1.00', shipEmailAddress: 'xiaobozzz@example.com', trnExpMonth: '09', ordCity: 'Rio de Janeiro', shipPhoneNumber: '555-555-5555', ordName: 'xiaobo zzz', trnExpYear: next_year, trnOrderNumber: '1234', shipCountry: 'BR', ordTax2Price: '1.00', shipAddress1: '1234 Levesque St.', ordEmailAddress: 'xiaobozzz@example.com', trnCardCvd: '123', trnComments: nil, shippingMethod: nil, ref1: 'reference one', shipAddress2: 'Apt B', ordPhoneNumber: '555-555-5555', ordItemPrice: '8.00' }
   end
 
   def german_address_params_without_state
-    { :shipProvince => '--', :shipPostalCode => '12345', :ordProvince => '--', :ordPostalCode => '12345', :ordCountry => 'DE', :trnCardOwner => 'Longbob Longsen', :shipCity => 'Berlin', :ordAddress1 => '1234 Levesque St.', :ordShippingPrice => '1.00', :deliveryEstimate => nil, :shipName => 'xiaobo zzz', :trnCardNumber => '4242424242424242', :trnAmount => '10.00', :trnType => 'P', :ordAddress2 => 'Apt B', :ordTax1Price => '1.00', :shipEmailAddress => 'xiaobozzz@example.com', :trnExpMonth => '09', :ordCity => 'Berlin', :shipPhoneNumber => '555-555-5555', :ordName => 'xiaobo zzz', :trnExpYear => next_year, :trnOrderNumber => '1234', :shipCountry => 'DE', :ordTax2Price => '1.00', :shipAddress1 => '1234 Levesque St.', :ordEmailAddress => 'xiaobozzz@example.com', :trnCardCvd => '123', :trnComments => nil, :shippingMethod => nil, :ref1 => 'reference one', :shipAddress2 => 'Apt B', :ordPhoneNumber => '555-555-5555', :ordItemPrice => '8.00' }
+    { shipProvince: '--', shipPostalCode: '12345', ordProvince: '--', ordPostalCode: '12345', ordCountry: 'DE', trnCardOwner: 'Longbob Longsen', shipCity: 'Berlin', ordAddress1: '1234 Levesque St.', ordShippingPrice: '1.00', deliveryEstimate: nil, shipName: 'xiaobo zzz', trnCardNumber: '4242424242424242', trnAmount: '10.00', trnType: 'P', ordAddress2: 'Apt B', ordTax1Price: '1.00', shipEmailAddress: 'xiaobozzz@example.com', trnExpMonth: '09', ordCity: 'Berlin', shipPhoneNumber: '555-555-5555', ordName: 'xiaobo zzz', trnExpYear: next_year, trnOrderNumber: '1234', shipCountry: 'DE', ordTax2Price: '1.00', shipAddress1: '1234 Levesque St.', ordEmailAddress: 'xiaobozzz@example.com', trnCardCvd: '123', trnComments: nil, shippingMethod: nil, ref1: 'reference one', shipAddress2: 'Apt B', ordPhoneNumber: '555-555-5555', ordItemPrice: '8.00' }
   end
 
   def next_year
@@ -370,5 +371,4 @@ class BeanstreamTest < Test::Unit::TestCase
   def scrubbed_transcript
     'ref1=reference+one&trnCardOwner=Longbob+Longsen&trnCardNumber=[FILTERED]&trnExpMonth=09&trnExpYear=16&trnCardCvd=[FILTERED]&ordName=xiaobo+zzz&ordEmailAddress=xiaobozzz%40example.com&username=awesomesauce&password=[FILTERED]'
   end
-
 end

@@ -12,34 +12,34 @@ module ActiveMerchant #:nodoc:
 
       # Transactions hash
       TRANSACTIONS = {
-        :authorization => '00001',
-        :capture => '00002',
-        :purchase => '00003',
-        :unreferenced_credit => '00004',
-        :void => '00005',
-        :refund => '00014'
+        authorization: '00001',
+        capture: '00002',
+        purchase: '00003',
+        unreferenced_credit: '00004',
+        void: '00005',
+        refund: '00014'
       }
 
       CURRENCY_CODES = {
-        'AUD'=> '036',
-        'CAD'=> '124',
-        'CZK'=> '203',
-        'DKK'=> '208',
-        'HKD'=> '344',
-        'ICK'=> '352',
-        'JPY'=> '392',
-        'NOK'=> '578',
-        'SGD'=> '702',
-        'SEK'=> '752',
-        'CHF'=> '756',
-        'GBP'=> '826',
-        'USD'=> '840',
-        'EUR'=> '978',
-        'XPF'=> '953'
+        'AUD' => '036',
+        'CAD' => '124',
+        'CZK' => '203',
+        'DKK' => '208',
+        'HKD' => '344',
+        'ICK' => '352',
+        'JPY' => '392',
+        'NOK' => '578',
+        'SGD' => '702',
+        'SEK' => '752',
+        'CHF' => '756',
+        'GBP' => '826',
+        'USD' => '840',
+        'EUR' => '978',
+        'XPF' => '953'
       }
 
       SUCCESS_CODES = ['00000']
-      UNAVAILABILITY_CODES = ['00001', '00097', '00098']
+      UNAVAILABILITY_CODES = %w[00001 00097 00098]
       SUCCESS_MESSAGE = 'The transaction was approved'
       FAILURE_MESSAGE = 'The transaction failed'
 
@@ -51,7 +51,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['FR']
 
       # The card types supported by the payment gateway
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
+      self.supported_cardtypes = %i[visa master american_express diners_club jcb]
 
       # The homepage URL of the gateway
       self.homepage_url = 'http://www.paybox.com/'
@@ -64,10 +64,31 @@ module ActiveMerchant #:nodoc:
         super
       end
 
+      def add_3dsecure(post, options)
+        # ECI=02 => MasterCard success
+        # ECI=05 => Visa, Amex or JCB success
+        if options[:eci] == '02' || options[:eci] == '05'
+          post[:"3DSTATUS"] = 'Y'
+          post[:"3DENROLLED"] = 'Y'
+          post[:"3DSIGNVAL"] = 'Y'
+          post[:"3DERROR"] = '0'
+        else
+          post[:"3DSTATUS"] = 'N'
+          post[:"3DENROLLED"] = 'N'
+          post[:"3DSIGNVAL"] = 'N'
+          post[:"3DERROR"] = '10000'
+        end
+        post[:"3DECI"] = options[:eci]
+        post[:"3DXID"] = options[:xid]
+        post[:"3DCAVV"] = options[:cavv]
+        post[:"3DCAVVALGO"] = options[:cavv_algorithm]
+      end
+
       def authorize(money, creditcard, options = {})
         post = {}
         add_invoice(post, options)
         add_creditcard(post, creditcard)
+        add_3dsecure(post, options[:three_d_secure]) if options[:three_d_secure]
         add_amount(post, money, options)
 
         commit('authorization', money, post)
@@ -77,6 +98,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, options)
         add_creditcard(post, creditcard)
+        add_3dsecure(post, options[:three_d_secure]) if options[:three_d_secure]
         add_amount(post, money, options)
 
         commit('purchase', money, post)
@@ -95,7 +117,7 @@ module ActiveMerchant #:nodoc:
 
       def void(identification, options = {})
         requires!(options, :order_id, :amount)
-        post ={}
+        post = {}
         add_invoice(post, options)
         add_reference(post, identification)
         add_amount(post, options[:amount], options)
@@ -153,12 +175,14 @@ module ActiveMerchant #:nodoc:
         request_data = post_data(action, parameters)
         response = parse(ssl_post(test? ? self.test_url : self.live_url, request_data))
         response = parse(ssl_post(self.live_url_backup, request_data)) if service_unavailable?(response) && !test?
-        Response.new(success?(response), message_from(response), response.merge(
-          :timestamp => parameters[:dateq]),
-          :test => test?,
-          :authorization => response[:numappel].to_s + response[:numtrans].to_s,
-          :fraud_review => false,
-          :sent_params => parameters.delete_if { |key, value| ['porteur', 'dateval', 'cvv'].include?(key.to_s) }
+        Response.new(
+          success?(response),
+          message_from(response),
+          response.merge(timestamp: parameters[:dateq]),
+          test: test?,
+          authorization: response[:numappel].to_s + response[:numtrans].to_s,
+          fraud_review: false,
+          sent_params: parameters.delete_if { |key, _value| %w[porteur dateval cvv].include?(key.to_s) }
         )
       end
 
@@ -176,15 +200,15 @@ module ActiveMerchant #:nodoc:
 
       def post_data(action, parameters = {})
         parameters.update(
-          :version => API_VERSION,
-          :type => TRANSACTIONS[action.to_sym],
-          :dateq => Time.now.strftime('%d%m%Y%H%M%S'),
-          :numquestion => unique_id(parameters[:order_id]),
-          :site => @options[:login].to_s[0, 7],
-          :rang => @options[:rang] || @options[:login].to_s[7..-1],
-          :cle => @options[:password],
-          :pays => '',
-          :archivage => parameters[:order_id]
+          version: API_VERSION,
+          type: TRANSACTIONS[action.to_sym],
+          dateq: Time.now.strftime('%d%m%Y%H%M%S'),
+          numquestion: unique_id(parameters[:order_id]),
+          site: @options[:login].to_s[0, 7],
+          rang: @options[:rang] || @options[:login].to_s[7..-1],
+          cle: @options[:password],
+          pays: '',
+          archivage: parameters[:order_id]
         )
 
         parameters.collect { |key, value| "#{key.to_s.upcase}=#{CGI.escape(value.to_s)}" }.join('&')

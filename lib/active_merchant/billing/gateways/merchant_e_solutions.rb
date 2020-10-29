@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['US']
 
       # The card types supported by the payment gateway
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb]
+      self.supported_cardtypes = %i[visa master american_express discover jcb]
 
       # The homepage URL of the gateway
       self.homepage_url = 'http://www.merchante-solutions.com/'
@@ -46,7 +46,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, transaction_id, options = {})
-        post ={}
+        post = {}
         post[:transaction_id] = transaction_id
         post[:client_reference_number] = options[:customer] if options.has_key?(:customer)
         add_invoice(post, options)
@@ -166,11 +166,10 @@ module ActiveMerchant #:nodoc:
           end
 
         Response.new(response['error_code'] == '000', message_from(response), response,
-          :authorization => response['transaction_id'],
-          :test => test?,
-          :cvv_result => response['cvv2_result'],
-          :avs_result => { :code => response['avs_result'] }
-        )
+          authorization: response['transaction_id'],
+          test: test?,
+          cvv_result: response['cvv2_result'],
+          avs_result: { code: response['avs_result'] })
       end
 
       def message_from(response)

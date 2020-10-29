@@ -6,8 +6,8 @@ module ActiveMerchant #:nodoc:
 
       self.money_format = :cents
       self.default_currency = 'USD'
-      self.supported_countries = ['US', 'CA']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_countries = %w[US CA]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       self.homepage_url = 'http://www.jetpay.com'
       self.display_name = 'JetPay'
@@ -210,8 +210,8 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'TransactionID', transaction_id.nil? ? generate_unique_id.slice(0, 18) : transaction_id
           xml.tag! 'Origin', options[:origin] || 'INTERNET'
           xml.tag! 'IndustryInfo', 'Type' => options[:industry_info] || 'ECOMMERCE'
-          xml.tag! 'Application', (options[:application] || 'n/a'), {'Version' => options[:application_version] || '1.0'}
-          xml.tag! 'Device', (options[:device] || 'n/a'), {'Version' => options[:device_version] || '1.0'}
+          xml.tag! 'Application', (options[:application] || 'n/a'), { 'Version' => options[:application_version] || '1.0' }
+          xml.tag! 'Device', (options[:device] || 'n/a'), { 'Version' => options[:device_version] || '1.0' }
           xml.tag! 'Library', 'VirtPOS SDK', 'Version' => '1.5'
           xml.tag! 'Gateway', 'JetPay'
           xml.tag! 'DeveloperID', options[:developer_id] || 'n/a'
@@ -298,12 +298,11 @@ module ActiveMerchant #:nodoc:
         Response.new(success,
           success ? 'APPROVED' : message_from(response),
           response,
-          :test => test?,
-          :authorization => authorization_from(response, money, token),
-          :avs_result => AVSResult.new(:code => response[:avs]),
-          :cvv_result => CVVResult.new(response[:cvv2]),
-          :error_code => success ? nil : error_code_from(response)
-        )
+          test: test?,
+          authorization: authorization_from(response, money, token),
+          avs_result: AVSResult.new(code: response[:avs]),
+          cvv_result: CVVResult.new(response[:cvv2]),
+          error_code: success ? nil : error_code_from(response))
       end
 
       def url
@@ -344,7 +343,7 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(response, money, previous_token)
         original_amount = amount(money) if money
-        [ response[:transaction_id], response[:approval], original_amount, (response[:token] || previous_token)].join(';')
+        [response[:transaction_id], response[:approval], original_amount, (response[:token] || previous_token)].join(';')
       end
 
       def error_code_from(response)
@@ -406,7 +405,7 @@ module ActiveMerchant #:nodoc:
       def add_invoice_data(xml, options)
         xml.tag! 'OrderNumber', options[:order_id] if options[:order_id]
         if tax_amount = options[:tax_amount]
-          xml.tag! 'TaxAmount', tax_amount, {'ExemptInd' => options[:tax_exempt] || 'false'}
+          xml.tag! 'TaxAmount', tax_amount, { 'ExemptInd' => options[:tax_exempt] || 'false' }
         end
       end
 

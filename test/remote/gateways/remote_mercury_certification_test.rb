@@ -13,7 +13,7 @@ class RemoteMercuryCertificationTest < Test::Unit::TestCase
     assert_success sale
     assert_equal 'AP', sale.params['text_response']
 
-    reversal = tokenization_gateway.void(sale.authorization, options.merge(:try_reversal => true))
+    reversal = tokenization_gateway.void(sale.authorization, options.merge(try_reversal: true))
     assert_success reversal
     assert_equal 'REVERSED', reversal.params['text_response']
   end
@@ -45,7 +45,7 @@ class RemoteMercuryCertificationTest < Test::Unit::TestCase
     assert_success preauth
     assert_equal 'AP', preauth.params['text_response']
 
-    reversal = tokenization_gateway.void(preauth.authorization, options.merge(:try_reversal => true))
+    reversal = tokenization_gateway.void(preauth.authorization, options.merge(try_reversal: true))
     assert_success reversal
     assert_equal 'REVERSED', reversal.params['text_response']
   end
@@ -70,45 +70,45 @@ class RemoteMercuryCertificationTest < Test::Unit::TestCase
 
   def tokenization_gateway
     @tokenization_gateway ||= MercuryGateway.new(
-      :login => '023358150511666',
-      :password => 'xyz'
+      login: '023358150511666',
+      password: 'xyz'
     )
   end
 
   def visa
     @visa ||= credit_card(
       '4003000123456781',
-      :brand => 'visa',
-      :month => '12',
-      :year => '15',
-      :verification_value => '123'
+      brand: 'visa',
+      month: '12',
+      year: '15',
+      verification_value: '123'
     )
   end
 
   def disc
     @disc ||= credit_card(
       '6011000997235373',
-      :brand => 'discover',
-      :month => '12',
-      :year => '15',
-      :verification_value => '362'
+      brand: 'discover',
+      month: '12',
+      year: '15',
+      verification_value: '362'
     )
   end
 
   def mc
     @mc ||= credit_card(
       '5439750001500248',
-      :brand => 'master',
-      :month => '12',
-      :year => '15',
-      :verification_value => '123'
+      brand: 'master',
+      month: '12',
+      year: '15',
+      verification_value: '123'
     )
   end
 
-  def options(order_id=nil, other={})
+  def options(order_id = nil, other = {})
     {
-      :order_id => order_id,
-      :description => 'ActiveMerchant',
+      order_id: order_id,
+      description: 'ActiveMerchant'
     }.merge(other)
   end
 end

@@ -3,10 +3,10 @@ require 'test_helper'
 class CardSaveTest < Test::Unit::TestCase
   def setup
     Base.mode = :test
-    @gateway = CardSaveGateway.new(:login => 'login', :password => 'password')
+    @gateway = CardSaveGateway.new(login: 'login', password: 'password')
     @credit_card = credit_card
     @amount = 100
-    @options = {:order_id =>'1', :billing_address => address, :description =>'Store Purchase'}
+    @options = { order_id: '1', billing_address: address, description: 'Store Purchase' }
   end
 
   def test_successful_purchase
@@ -273,5 +273,4 @@ class CardSaveTest < Test::Unit::TestCase
       </soap:Body>
     </soap:Envelope>)
   end
-
 end

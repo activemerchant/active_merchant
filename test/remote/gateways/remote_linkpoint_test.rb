@@ -36,7 +36,7 @@ class LinkpointTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card('4111111111111111')
-    @options = { :order_id => generate_unique_id, :billing_address => address }
+    @options = { order_id: generate_unique_id, billing_address: address }
   end
 
   def test_successful_authorization
@@ -91,9 +91,9 @@ class LinkpointTest < Test::Unit::TestCase
 
   def test_successfull_purchase_with_item_entity
     @options[:line_items] = [
-      {:id => '123456', :description => 'Logo T-Shirt', :price => '12.00', :quantity => '1',
-       :options => [{:name => 'Color', :value => 'Red'}, {:name => 'Size', :value => 'XL'}]},
-      {:id => '111', :description => 'keychain', :price => '3.00', :quantity => '1'}
+      { id: '123456', description: 'Logo T-Shirt', price: '12.00', quantity: '1',
+       options: [{ name: 'Color', value: 'Red' }, { name: 'Size', value: 'XL' }] },
+      { id: '111', description: 'keychain', price: '3.00', quantity: '1' }
     ]
     assert purchase = @gateway.purchase(1500, @credit_card, @options)
     assert_success purchase
@@ -101,12 +101,11 @@ class LinkpointTest < Test::Unit::TestCase
 
   def test_successful_recurring_payment
     assert response = @gateway.recurring(2400, @credit_card,
-      :order_id => generate_unique_id,
-      :installments => 12,
-      :startdate => 'immediate',
-      :periodicity => :monthly,
-      :billing_address => address
-    )
+      order_id: generate_unique_id,
+      installments: 12,
+      startdate: 'immediate',
+      periodicity: :monthly,
+      billing_address: address)
 
     assert_success response
     assert_equal 'APPROVED', response.params['approved']

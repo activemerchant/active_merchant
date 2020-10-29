@@ -3,17 +3,17 @@ require 'test_helper'
 class Be2billTest < Test::Unit::TestCase
   def setup
     @gateway = Be2billGateway.new(
-                 :login    => 'login',
-                 :password => 'password'
-               )
+      login: 'login',
+      password: 'password'
+    )
 
     @credit_card = credit_card
     @amount = 100
 
     @options = {
-      :order_id        => '1',
-      :billing_address => address,
-      :description     => 'Store Purchase'
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase'
     }
   end
 
@@ -41,11 +41,11 @@ class Be2billTest < Test::Unit::TestCase
 
   # Place raw successful response from gateway here
   def successful_purchase_response
-    {'OPERATIONTYPE'=>'payment', 'TRANSACTIONID'=>'A189063', 'EXECCODE'=>'0000', 'MESSAGE'=>'The transaction has been accepted.', 'ALIAS'=>'A189063', 'DESCRIPTOR'=>'RENTABILITEST'}.to_json
+    { 'OPERATIONTYPE' => 'payment', 'TRANSACTIONID' => 'A189063', 'EXECCODE' => '0000', 'MESSAGE' => 'The transaction has been accepted.', 'ALIAS' => 'A189063', 'DESCRIPTOR' => 'RENTABILITEST' }.to_json
   end
 
   # Place raw failed response from gateway here
   def failed_purchase_response
-    {'OPERATIONTYPE'=>'payment', 'TRANSACTIONID'=>'A189063', 'EXECCODE'=>'1001', 'MESSAGE'=>"The parameter \"CARDCODE\" is missing.\n", 'DESCRIPTOR'=>'RENTABILITEST'}.to_json
+    { 'OPERATIONTYPE' => 'payment', 'TRANSACTIONID' => 'A189063', 'EXECCODE' => '1001', 'MESSAGE' => "The parameter \"CARDCODE\" is missing.\n", 'DESCRIPTOR' => 'RENTABILITEST' }.to_json
   end
 end

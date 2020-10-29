@@ -28,11 +28,29 @@ class GlobalCollectTest < Test::Unit::TestCase
 
     capture = stub_comms do
       @gateway.capture(@accepted_amount, response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |endpoint, _data, _headers|
       assert_match(/000000142800000000920000100001/, endpoint)
     end.respond_with(successful_capture_response)
 
     assert_success capture
+  end
+
+  # When requires_approval is true (or not present),
+  # a `purchase` makes two calls (`auth` and `capture`).
+  def test_successful_purchase_with_requires_approval_true
+    stub_comms do
+      @gateway.purchase(@accepted_amount, @credit_card, @options.merge(requires_approval: true))
+    end.check_request do |endpoint, data, headers|
+    end.respond_with(successful_authorize_response, successful_capture_response)
+  end
+
+  # When requires_approval is false, a `purchase` makes one call (`auth`).
+  def test_successful_purchase_with_requires_approval_false
+    stub_comms do
+      @gateway.purchase(@accepted_amount, @credit_card, @options.merge(requires_approval: false))
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal false, JSON.parse(data)['cardPaymentMethodSpecificInput']['requiresApproval']
+    end.respond_with(successful_authorize_response)
   end
 
   def test_successful_purchase_airline_fields
@@ -48,22 +66,30 @@ class GlobalCollectTest < Test::Unit::TestCase
             date: '20190810',
             carrier_code: 'SA',
             number: 596,
-            airline_class: 'ZZ'},
+            airline_class: 'ZZ' },
           { arrival_airport: 'RDU',
             origin_airport: 'BDL',
             date: '20190817',
             carrier_code: 'SA',
             number: 597,
-            airline_class: 'ZZ'}
+            airline_class: 'ZZ' }
         ]
       }
     )
     stub_comms do
       @gateway.purchase(@accepted_amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_equal 111, JSON.parse(data)['order']['additionalInput']['airlineData']['code']
       assert_equal '20190810', JSON.parse(data)['order']['additionalInput']['airlineData']['flightDate']
       assert_equal 2, JSON.parse(data)['order']['additionalInput']['airlineData']['flightLegs'].length
+    end.respond_with(successful_authorize_response, successful_capture_response)
+  end
+
+  def test_purchase_passes_installments
+    stub_comms do
+      @gateway.purchase(@accepted_amount, @credit_card, @options.merge(number_of_installments: '3'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/"numberOfInstallments\":\"3\"/, data)
     end.respond_with(successful_authorize_response, successful_capture_response)
   end
 
@@ -80,7 +106,7 @@ class GlobalCollectTest < Test::Unit::TestCase
   def test_authorize_with_pre_authorization_flag
     response = stub_comms do
       @gateway.authorize(@accepted_amount, @credit_card, @options.merge(pre_authorization: true))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/PRE_AUTHORIZATION/, data)
     end.respond_with(successful_authorize_response)
 
@@ -90,7 +116,7 @@ class GlobalCollectTest < Test::Unit::TestCase
   def test_authorize_without_pre_authorization_flag
     response = stub_comms do
       @gateway.authorize(@accepted_amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/FINAL_AUTHORIZATION/, data)
     end.respond_with(successful_authorize_response)
 
@@ -114,7 +140,7 @@ class GlobalCollectTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.authorize(@accepted_amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match %r("fraudFields":{"website":"www.example.com","giftMessage":"Happy Day!","customerIpAddress":"127.0.0.1"}), data
       assert_match %r("merchantReference":"123"), data
       assert_match %r("customer":{"personalInformation":{"name":{"firstName":"Longbob","surname":"Longsen"}},"merchantCustomerId":"123987","contactDetails":{"emailAddress":"example@example.com","phoneNumber":"\(555\)555-5555"},"billingAddress":{"street":"456 My Street","additionalInfo":"Apt 1","zip":"K1C2N6","city":"Ottawa","state":"ON","countryCode":"CA"}}}), data
@@ -128,7 +154,7 @@ class GlobalCollectTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.authorize(@accepted_amount, credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/thisisaverylong/, data)
     end.respond_with(successful_authorize_response)
 
@@ -137,7 +163,7 @@ class GlobalCollectTest < Test::Unit::TestCase
   end
 
   def test_handles_blank_names
-    credit_card = credit_card('4567350000427977', { first_name: nil, last_name: nil})
+    credit_card = credit_card('4567350000427977', { first_name: nil, last_name: nil })
 
     response = stub_comms do
       @gateway.authorize(@accepted_amount, credit_card, @options)
@@ -173,7 +199,7 @@ class GlobalCollectTest < Test::Unit::TestCase
 
     void = stub_comms do
       @gateway.void(response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |endpoint, _data, _headers|
       assert_match(/000000142800000000920000100001/, endpoint)
     end.respond_with(successful_void_response)
 
@@ -183,7 +209,7 @@ class GlobalCollectTest < Test::Unit::TestCase
   def test_failed_void
     response = stub_comms do
       @gateway.void('5d53a33d960c46d00f5dc061947d998c')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |endpoint, _data, _headers|
       assert_match(/5d53a33d960c46d00f5dc061947d998c/, endpoint)
     end.respond_with(failed_void_response)
 
@@ -221,7 +247,7 @@ class GlobalCollectTest < Test::Unit::TestCase
 
     refund = stub_comms do
       @gateway.refund(@accepted_amount, capture.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |endpoint, _data, _headers|
       assert_match(/000000142800000000920000100001/, endpoint)
     end.respond_with(successful_refund_response)
 
@@ -230,8 +256,8 @@ class GlobalCollectTest < Test::Unit::TestCase
 
   def test_refund_passes_currency_code
     stub_comms do
-      @gateway.refund(@accepted_amount, '000000142800000000920000100001', {currency: 'COP'})
-    end.check_request do |endpoint, data, headers|
+      @gateway.refund(@accepted_amount, '000000142800000000920000100001', { currency: 'COP' })
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/"currencyCode\":\"COP\"/, data)
     end.respond_with(failed_refund_response)
   end

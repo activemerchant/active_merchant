@@ -6,11 +6,11 @@ class MonerisRemoteTest < Test::Unit::TestCase
 
     @gateway = MonerisGateway.new(fixtures(:moneris))
     @amount = 100
-    @credit_card = credit_card('4242424242424242', :verification_value => '012')
+    @credit_card = credit_card('4242424242424242', verification_value: '012')
     @options = {
-        :order_id => generate_unique_id,
-        :customer => generate_unique_id,
-        :billing_address => address
+      order_id: generate_unique_id,
+      customer: generate_unique_id,
+      billing_address: address
     }
   end
 
@@ -130,7 +130,7 @@ class MonerisRemoteTest < Test::Unit::TestCase
     response = @gateway.capture(@amount, response.authorization)
     assert_success response
 
-    void = @gateway.void(response.authorization, :purchasecorrection => true)
+    void = @gateway.void(response.authorization, purchasecorrection: true)
     assert_success void
   end
 
@@ -159,7 +159,7 @@ class MonerisRemoteTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    void = @gateway.void(purchase.authorization, :purchasecorrection => true)
+    void = @gateway.void(purchase.authorization, purchasecorrection: true)
     assert_success void
   end
 
@@ -197,6 +197,45 @@ class MonerisRemoteTest < Test::Unit::TestCase
     assert_equal 'Successfully registered cc details', response.message
     assert response.params['data_key'].present?
     @data_key = response.params['data_key']
+  end
+
+  def test_successful_store_with_duration
+    assert response = @gateway.store(@credit_card, duration: 600)
+    assert_success response
+    assert_equal 'Successfully registered cc details', response.message
+    assert response.params['data_key'].present?
+  end
+
+  # AVS result fields are stored in the vault and returned as part of the
+  # XML response under <Receipt//ResolveData> (which isn't parsed by ActiveMerchant so
+  # we can't test for it).
+  #
+  # Actual AVS results aren't returned processed until an actual transaction is made
+  # so we make a second purchase request.
+  def test_successful_store_and_purchase_with_avs
+    gateway = MonerisGateway.new(fixtures(:moneris).merge(avs_enabled: true))
+
+    # card number triggers AVS match
+    @credit_card = credit_card('4761739012345637', verification_value: '012')
+    assert response = gateway.store(@credit_card, @options)
+    assert_success response
+    assert_equal 'Successfully registered cc details', response.message
+    assert response.params['data_key'].present?
+    data_key = response.params['data_key']
+
+    options_without_address = @options.dup
+    options_without_address.delete(:address)
+    assert response = gateway.purchase(@amount, data_key, options_without_address)
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+
+    assert_equal(response.avs_result, {
+      'code' => 'M',
+      'message' => 'Street address and postal code match.',
+      'street_match' => 'Y',
+      'postal_match' => 'Y'
+    })
   end
 
   def test_successful_unstore
@@ -239,20 +278,20 @@ class MonerisRemoteTest < Test::Unit::TestCase
   def test_cvv_match_when_not_enabled
     assert response = @gateway.purchase(1039, @credit_card, @options)
     assert_success response
-    assert_equal({'code' => nil, 'message' => nil}, response.cvv_result)
+    assert_equal({ 'code' => nil, 'message' => nil }, response.cvv_result)
   end
 
   def test_cvv_no_match_when_not_enabled
     assert response = @gateway.purchase(1053, @credit_card, @options)
     assert_success response
-    assert_equal({'code' => nil, 'message' => nil}, response.cvv_result)
+    assert_equal({ 'code' => nil, 'message' => nil }, response.cvv_result)
   end
 
   def test_cvv_match_when_enabled
     gateway = MonerisGateway.new(fixtures(:moneris).merge(cvv_enabled: true))
     assert response = gateway.purchase(1039, @credit_card, @options)
     assert_success response
-    assert_equal({'code' => 'M', 'message' => 'CVV matches'}, response.cvv_result)
+    assert_equal({ 'code' => 'M', 'message' => 'CVV matches' }, response.cvv_result)
   end
 
   def test_avs_result_valid_when_enabled
@@ -261,10 +300,10 @@ class MonerisRemoteTest < Test::Unit::TestCase
     assert response = gateway.purchase(1010, @credit_card, @options)
     assert_success response
     assert_equal(response.avs_result, {
-        'code' => 'A',
-        'message' => 'Street address matches, but postal code does not match.',
-        'street_match' => 'Y',
-        'postal_match' => 'N'
+      'code' => 'A',
+      'message' => 'Street address matches, but postal code does not match.',
+      'street_match' => 'Y',
+      'postal_match' => 'N'
     })
   end
 
@@ -274,10 +313,10 @@ class MonerisRemoteTest < Test::Unit::TestCase
     assert response = gateway.purchase(1010, @credit_card, @options.tap { |x| x.delete(:billing_address) })
     assert_success response
     assert_equal(response.avs_result, {
-        'code' => nil,
-        'message' => nil,
-        'street_match' => nil,
-        'postal_match' => nil
+      'code' => nil,
+      'message' => nil,
+      'street_match' => nil,
+      'postal_match' => nil
     })
   end
 
@@ -285,10 +324,10 @@ class MonerisRemoteTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal(response.avs_result, {
-        'code' => nil,
-        'message' => nil,
-        'street_match' => nil,
-        'postal_match' => nil
+      'code' => nil,
+      'message' => nil,
+      'street_match' => nil,
+      'postal_match' => nil
     })
   end
 

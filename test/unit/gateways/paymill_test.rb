@@ -2,7 +2,7 @@ require 'test_helper'
 
 class PaymillTest < Test::Unit::TestCase
   def setup
-    @gateway = PaymillGateway.new(:public_key => 'PUBLIC', :private_key => 'PRIVATE')
+    @gateway = PaymillGateway.new(public_key: 'PUBLIC', private_key: 'PRIVATE')
 
     @credit_card = credit_card
     @amount = 100
@@ -776,5 +776,4 @@ class PaymillTest < Test::Unit::TestCase
   def scrubbed_transcript
     'connection_uri=https://test-token.paymill.com?account.number=[FILTERED]&account.expiry.month=09&account.expiry.year=2016&account.verification=[FILTERED]'
   end
-
 end

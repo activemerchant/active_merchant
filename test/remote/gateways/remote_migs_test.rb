@@ -10,18 +10,18 @@ class RemoteMigsTest < Test::Unit::TestCase
 
     @amount = 100
     @declined_amount = 105
-    @visa   = credit_card('4987654321098769', :month => 5, :year => 2021, :brand => 'visa')
-    @master = credit_card('5123456789012346', :month => 5, :year => 2021, :brand => 'master')
-    @amex   = credit_card('371449635311004',  :month => 5, :year => 2021, :brand => 'american_express')
-    @diners = credit_card('30123456789019',   :month => 5, :year => 2021, :brand => 'diners_club')
+    @visa   = credit_card('4987654321098769', month: 5, year: 2021, brand: 'visa')
+    @master = credit_card('5123456789012346', month: 5, year: 2021, brand: 'master')
+    @amex   = credit_card('371449635311004',  month: 5, year: 2021, brand: 'american_express')
+    @diners = credit_card('30123456789019',   month: 5, year: 2021, brand: 'diners_club')
     @credit_card = @visa
 
     @valid_tx_source = 'MOTO'
     @invalid_tx_source = 'penguin'
 
     @options = {
-      :order_id => '1',
-      :currency => 'SAR'
+      order_id: '1',
+      currency: 'SAR'
     }
 
     @three_ds_options = {
@@ -36,10 +36,10 @@ class RemoteMigsTest < Test::Unit::TestCase
 
   def test_server_purchase_url
     options = {
-      :order_id   => 1,
-      :unique_id  => 9,
-      :return_url => 'http://localhost:8080/payments/return',
-      :currency => 'SAR'
+      order_id: 1,
+      unique_id: 9,
+      return_url: 'http://localhost:8080/payments/return',
+      currency: 'SAR'
     }
 
     choice_url = @gateway.purchase_offsite_url(@amount, options)
@@ -52,7 +52,7 @@ class RemoteMigsTest < Test::Unit::TestCase
     }
 
     responses.each_pair do |card_type, response_text|
-      url = @gateway.purchase_offsite_url(@amount, options.merge(:card_type => card_type))
+      url = @gateway.purchase_offsite_url(@amount, options.merge(card_type: card_type))
       assert_response_match response_text, url
     end
   end
@@ -157,7 +157,7 @@ class RemoteMigsTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = MigsGateway.new(:login => '', :password => '')
+    gateway = MigsGateway.new(login: '', password: '')
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Required field vpc_Merchant was not present in the request', response.message
@@ -211,7 +211,7 @@ class RemoteMigsTest < Test::Unit::TestCase
 
   def https_response(url, cookie = nil)
     retry_exceptions do
-      headers = cookie ? {'Cookie' => cookie} : {}
+      headers = cookie ? { 'Cookie' => cookie } : {}
       response = raw_ssl_request(:get, url, nil, headers)
       if response.is_a?(Net::HTTPRedirection)
         new_cookie = [cookie, response['Set-Cookie']].compact.join(';')

@@ -73,7 +73,7 @@ class RemoteIveriTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@amount - 1, auth.authorization)
     assert_success capture
   end
 
@@ -96,7 +96,7 @@ class RemoteIveriTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount-1, purchase.authorization)
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization)
     assert_success refund
   end
 
@@ -124,6 +124,10 @@ class RemoteIveriTest < Test::Unit::TestCase
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response
+    assert_equal 'Authorisation', response.responses[0].params['transaction_command']
+    assert_equal '0', response.responses[0].params['result_status']
+    assert_equal 'Void', response.responses[1].params['transaction_command']
+    assert_equal '0', response.responses[1].params['result_status']
     assert_equal 'Succeeded', response.message
   end
 
@@ -160,5 +164,4 @@ class RemoteIveriTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:cert_id], transcript)
   end
-
 end

@@ -5,7 +5,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = self.test_url = 'https://secure.inspiregateway.net/api/transact.php'
 
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express]
+      self.supported_cardtypes = %i[visa master american_express]
       self.homepage_url = 'http://www.inspiregateway.com'
       self.display_name = 'Inspire Commerce'
 
@@ -51,13 +51,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options = {})
-        post ={}
+        post = {}
         post[:transactionid] = authorization
         commit('capture', money, post)
       end
 
       def void(authorization, options = {})
-        post ={}
+        post = {}
         post[:transactionid] = authorization
         commit('void', nil, post)
       end
@@ -93,10 +93,10 @@ module ActiveMerchant #:nodoc:
       # store and unstore need to be defined
       def store(creditcard, options = {})
         billing_id = options.delete(:billing_id).to_s || true
-        authorize(100, creditcard, options.merge(:store => billing_id))
+        authorize(100, creditcard, options.merge(store: billing_id))
       end
 
-      alias_method :unstore, :delete
+      alias unstore delete
 
       private
 
@@ -124,7 +124,7 @@ module ActiveMerchant #:nodoc:
         post[:orderdescription] = options[:description]
       end
 
-      def add_payment_source(params, source, options={})
+      def add_payment_source(params, source, options = {})
         case determine_funding_source(source)
         when :vault       then add_customer_vault_id(params, source)
         when :credit_card then add_creditcard(params, source, options)
@@ -173,11 +173,10 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(self.live_url, post_data(action, parameters)))
 
         Response.new(response['response'] == '1', message_from(response), response,
-          :authorization => response['transactionid'],
-          :test => test?,
-          :cvv_result => response['cvvresponse'],
-          :avs_result => { :code => response['avsresponse'] }
-        )
+          authorization: response['transactionid'],
+          test: test?,
+          cvv_result: response['cvvresponse'],
+          avs_result: { code: response['avsresponse'] })
       end
 
       def message_from(response)

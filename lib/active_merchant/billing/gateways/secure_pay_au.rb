@@ -8,14 +8,14 @@ module ActiveMerchant #:nodoc:
 
       class_attribute :test_periodic_url, :live_periodic_url
 
-      self.test_url = 'https://api.securepay.com.au/test/payment'
+      self.test_url = 'https://test.api.securepay.com.au/xmlapi/payment'
       self.live_url = 'https://api.securepay.com.au/xmlapi/payment'
 
       self.test_periodic_url = 'https://test.securepay.com.au/xmlapi/periodic'
       self.live_periodic_url = 'https://api.securepay.com.au/xmlapi/periodic'
 
       self.supported_countries = ['AU']
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
+      self.supported_cardtypes = %i[visa master american_express diners_club jcb]
 
       # The homepage URL of the gateway
       self.homepage_url = 'http://securepay.com.au'
@@ -35,26 +35,26 @@ module ActiveMerchant #:nodoc:
       # 10 Preauthorise
       # 11 Preauth Complete (Advice)
       TRANSACTIONS = {
-        :purchase => 0,
-        :authorization => 10,
-        :capture => 11,
-        :void => 6,
-        :refund => 4
+        purchase:       0,
+        authorization:  10,
+        capture:        11,
+        void:           6,
+        refund:         4
       }
 
       PERIODIC_ACTIONS = {
-        :add_triggered    => 'add',
-        :remove_triggered => 'delete',
-        :trigger          => 'trigger'
+        add_triggered:      'add',
+        remove_triggered:   'delete',
+        trigger:            'trigger'
       }
 
       PERIODIC_TYPES = {
-        :add_triggered    => 4,
-        :remove_triggered => nil,
-        :trigger          => nil
+        add_triggered:    4,
+        remove_triggered: nil,
+        trigger:          nil
       }
 
-      SUCCESS_CODES = [ '00', '08', '11', '16', '77' ]
+      SUCCESS_CODES = %w[00 08 11 16 77]
 
       def initialize(options = {})
         requires!(options, :login, :password)
@@ -184,9 +184,8 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(test? ? self.test_url : self.live_url, build_request(action, request)))
 
         Response.new(success?(response), message_from(response), response,
-          :test => test?,
-          :authorization => authorization_from(response)
-        )
+          test: test?,
+          authorization: authorization_from(response))
       end
 
       def build_periodic_item(action, money, credit_card, options)
@@ -241,9 +240,8 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(test? ? self.test_periodic_url : self.live_periodic_url, my_request))
 
         Response.new(success?(response), message_from(response), response,
-          :test => test?,
-          :authorization => authorization_from(response)
-        )
+          test: test?,
+          authorization: authorization_from(response))
       end
 
       def success?(response)

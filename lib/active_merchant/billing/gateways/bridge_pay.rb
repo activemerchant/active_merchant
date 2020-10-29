@@ -9,16 +9,16 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://gatewaystage.itstgate.com/SmartPayments/transact3.asmx'
       self.live_url = 'https://gateway.itstgate.com/SmartPayments/transact3.asmx'
 
-      self.supported_countries = ['CA', 'US']
+      self.supported_countries = %w[CA US]
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club jcb]
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :user_name, :password)
         super
       end
 
-      def purchase(amount, payment_method, options={})
+      def purchase(amount, payment_method, options = {})
         post = initialize_required_fields('Sale')
 
         # Allow the same amount in multiple transactions.
@@ -30,7 +30,7 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
-      def authorize(amount, payment_method, options={})
+      def authorize(amount, payment_method, options = {})
         post = initialize_required_fields('Auth')
 
         add_invoice(post, amount, options)
@@ -40,7 +40,7 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
-      def capture(amount, authorization, options={})
+      def capture(amount, authorization, options = {})
         post = initialize_required_fields('Force')
 
         add_invoice(post, amount, options)
@@ -50,7 +50,7 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, options = {})
         post = initialize_required_fields('Return')
 
         add_invoice(post, amount, options)
@@ -59,7 +59,7 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = initialize_required_fields('Void')
 
         add_reference(post, authorization)
@@ -74,10 +74,10 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def store(creditcard, options={})
+      def store(creditcard, options = {})
         post = initialize_required_fields('')
         post[:transaction] = 'Create'
-        post[:CardNumber]    = creditcard.number
+        post[:CardNumber] = creditcard.number
         post[:CustomerPaymentInfoKey] = ''
         post[:token] = ''
         add_payment_method(post, creditcard)
@@ -147,7 +147,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, options)
-        if(billing_address = (options[:billing_address] || options[:address]))
+        if (billing_address = (options[:billing_address] || options[:address]))
           post[:Street] = billing_address[:address1]
           post[:Zip]    = billing_address[:zip]
         end
@@ -235,8 +235,8 @@ module ActiveMerchant #:nodoc:
 
       def post_data(post)
         {
-          :UserName => @options[:user_name],
-          :Password => @options[:password]
+          UserName: @options[:user_name],
+          Password: @options[:password]
         }.merge(post).collect { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join('&')
       end
     end

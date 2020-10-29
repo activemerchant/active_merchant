@@ -7,8 +7,8 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://api.ewaypayments.com/'
 
       self.money_format = :cents
-      self.supported_countries = ['AU', 'NZ', 'GB', 'SG', 'MY', 'HK']
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
+      self.supported_countries = %w[AU NZ GB SG MY HK]
+      self.supported_cardtypes = %i[visa master american_express diners_club jcb]
       self.homepage_url = 'http://www.eway.com.au/'
       self.display_name = 'eWAY Rapid 3.1'
       self.default_currency = 'AUD'
@@ -47,7 +47,7 @@ module ActiveMerchant #:nodoc:
       #                                      (default: "https://github.com/activemerchant/active_merchant")
       #
       # Returns an ActiveMerchant::Billing::Response object where authorization is the Transaction ID on success
-      def purchase(amount, payment_method, options={})
+      def purchase(amount, payment_method, options = {})
         params = {}
         add_metadata(params, options)
         add_invoice(params, amount, options)
@@ -57,7 +57,7 @@ module ActiveMerchant #:nodoc:
         commit(url_for('Transaction'), params)
       end
 
-      def authorize(amount, payment_method, options={})
+      def authorize(amount, payment_method, options = {})
         params = {}
         add_metadata(params, options)
         add_invoice(params, amount, options)
@@ -204,7 +204,7 @@ module ActiveMerchant #:nodoc:
           'InvoiceReference' => truncate(options[:order_id], 50),
           'InvoiceNumber' => truncate(options[:invoice] || options[:order_id], 12),
           'InvoiceDescription' => truncate(options[:description], 64),
-          'CurrencyCode' => currency_code,
+          'CurrencyCode' => currency_code
         }
       end
 
@@ -232,7 +232,7 @@ module ActiveMerchant #:nodoc:
         params[key] = {}
 
         add_name_and_email(params[key], options[:shipping_address], options[:email])
-        add_address(params[key], options[:shipping_address], {:skip_company => true})
+        add_address(params[key], options[:shipping_address], { skip_company: true })
       end
 
       def add_name_and_email(params, address, email, payment_method = nil)
@@ -251,7 +251,7 @@ module ActiveMerchant #:nodoc:
           payment_method.first_name.present? && payment_method.last_name.present?
       end
 
-      def add_address(params, address, options={})
+      def add_address(params, address, options = {})
         return unless address
 
         params['Title'] = address[:title]
@@ -268,6 +268,7 @@ module ActiveMerchant #:nodoc:
 
       def add_credit_card(params, credit_card, options)
         return unless credit_card
+
         params['Customer'] ||= {}
         if credit_card.respond_to? :number
           card_details = params['Customer']['CardDetails'] = {}
@@ -303,13 +304,13 @@ module ActiveMerchant #:nodoc:
           succeeded,
           message_from(succeeded, raw),
           raw,
-          :authorization => authorization_from(raw),
-          :test => test?,
-          :avs_result => avs_result_from(raw),
-          :cvv_result => cvv_result_from(raw)
+          authorization: authorization_from(raw),
+          test: test?,
+          avs_result: avs_result_from(raw),
+          cvv_result: cvv_result_from(raw)
         )
       rescue ActiveMerchant::ResponseError => e
-        return ActiveMerchant::Billing::Response.new(false, e.response.message, {:status_code => e.response.code}, :test => test?)
+        return ActiveMerchant::Billing::Response.new(false, e.response.message, { status_code: e.response.code }, test: test?)
       end
 
       def parse(data)
@@ -364,7 +365,7 @@ module ActiveMerchant #:nodoc:
           else
             'I'
           end
-        {:code => code}
+        { code: code }
       end
 
       def cvv_result_from(response)
@@ -557,7 +558,7 @@ module ActiveMerchant #:nodoc:
         'V6150' => 'Invalid Refund Amount',
         'V6151' => 'Refund amount greater than original transaction',
         'V6152' => 'Original transaction already refunded for total amount',
-        'V6153' => 'Card type not support by merchant',
+        'V6153' => 'Card type not support by merchant'
       }
     end
   end

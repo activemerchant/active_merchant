@@ -4,40 +4,40 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://sandbox.dlocal.com'
       self.live_url = 'https://api.dlocal.com'
 
-      self.supported_countries = ['AR', 'BR', 'CL', 'CO', 'MX', 'PE', 'UY', 'TR']
+      self.supported_countries = %w[AR BR CL CO MX PE UY TR]
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club, :maestro, :naranja, :cabal]
+      self.supported_cardtypes = %i[visa master american_express discover jcb diners_club maestro naranja cabal]
 
       self.homepage_url = 'https://dlocal.com/'
       self.display_name = 'dLocal'
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :login, :trans_key, :secret_key)
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         post = {}
         add_auth_purchase_params(post, money, payment, 'purchase', options)
 
         commit('purchase', post, options)
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         post = {}
         add_auth_purchase_params(post, money, payment, 'authorize', options)
 
         commit('authorize', post, options)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         post = {}
         post[:authorization_id] = authorization
         add_invoice(post, money, options) if money
         commit('capture', post, options)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         post = {}
         post[:payment_id] = authorization
         post[:notification_url] = options[:notification_url]
@@ -45,13 +45,13 @@ module ActiveMerchant #:nodoc:
         commit('refund', post, options)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = {}
         post[:authorization_id] = authorization
         commit('void', post, options)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -89,11 +89,14 @@ module ActiveMerchant #:nodoc:
 
       def add_country(post, card, options)
         return unless address = options[:billing_address] || options[:address]
+
         post[:country] = lookup_country_code(address[:country])
       end
 
-      def lookup_country_code(country)
-        Country.find(country).code(:alpha2).value
+      def lookup_country_code(country_field)
+        Country.find(country_field).code(:alpha2).value
+      rescue InvalidCountryCodeError
+        nil
       end
 
       def add_payer(post, card, options)
@@ -111,16 +114,31 @@ module ActiveMerchant #:nodoc:
 
       def add_address(post, card, options)
         return unless address = options[:billing_address] || options[:address]
+
         address_object = {}
         address_object[:state] = address[:state] if address[:state]
         address_object[:city] = address[:city] if address[:city]
-        address_object[:zip_code] = address[:zip_code] if address[:zip_code]
-        address_object[:street] = address[:street] if address[:street]
-        address_object[:number] = address[:number] if address[:number]
+        address_object[:zip_code] = address[:zip] if address[:zip]
+        address_object[:street] = address[:street] || parse_street(address) if parse_street(address)
+        address_object[:number] = address[:number] || parse_house_number(address) if parse_house_number(address)
         address_object
       end
 
-      def add_card(post, card, action, options={})
+      def parse_street(address)
+        return unless address[:address1]
+
+        street = address[:address1].split(/\s+/).keep_if { |x| x !~ /\d/ }.join(' ')
+        street.empty? ? nil : street
+      end
+
+      def parse_house_number(address)
+        return unless address[:address1]
+
+        house = address[:address1].split(/\s+/).keep_if { |x| x =~ /\d/ }.join(' ')
+        house.empty? ? nil : house
+      end
+
+      def add_card(post, card, action, options = {})
         post[:card] = {}
         post[:card][:holder_name] = card.name
         post[:card][:expiration_month] = card.month
@@ -129,13 +147,15 @@ module ActiveMerchant #:nodoc:
         post[:card][:cvv] = card.verification_value
         post[:card][:descriptor] = options[:dynamic_descriptor] if options[:dynamic_descriptor]
         post[:card][:capture] = (action == 'purchase')
+        post[:card][:installments] = options[:installments] if options[:installments]
+        post[:card][:installments_id] = options[:installments_id] if options[:installments_id]
       end
 
       def parse(body)
         JSON.parse(body)
       end
 
-      def commit(action, parameters, options={})
+      def commit(action, parameters, options = {})
         url = url(action, parameters, options)
         post = post_data(action, parameters)
         begin
@@ -163,7 +183,8 @@ module ActiveMerchant #:nodoc:
       # we count 100 as a success.
       def success_from(action, response)
         return false unless response['status_code']
-        ['100', '200', '400', '600'].include? response['status_code'].to_s
+
+        %w[100 200 400 600].include? response['status_code'].to_s
       end
 
       def message_from(action, response)
@@ -176,11 +197,12 @@ module ActiveMerchant #:nodoc:
 
       def error_code_from(action, response)
         return if success_from(action, response)
+
         code = response['status_code'] || response['code']
         code&.to_s
       end
 
-      def url(action, parameters, options={})
+      def url(action, parameters, options = {})
         "#{(test? ? test_url : live_url)}/#{endpoint(action, parameters, options)}/"
       end
 
@@ -199,7 +221,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def headers(post, options={})
+      def headers(post, options = {})
         timestamp = Time.now.utc.iso8601
         headers = {
           'Content-Type' => 'application/json',

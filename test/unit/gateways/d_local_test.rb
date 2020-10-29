@@ -32,6 +32,18 @@ class DLocalTest < Test::Unit::TestCase
     assert_equal '300', response.error_code
   end
 
+  def test_purchase_with_installments
+    installments = '6'
+    installments_id = 'INS54434'
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(installments: installments, installments_id: installments_id))
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal installments, JSON.parse(data)['card']['installments']
+      assert_equal installments_id, JSON.parse(data)['card']['installments_id']
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_successful_authorize
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
 
@@ -50,11 +62,50 @@ class DLocalTest < Test::Unit::TestCase
     assert_equal 'D-15104-be03e883-3e6b-497d-840e-54c8b6209bc3', response.authorization
   end
 
+  def test_passing_billing_address
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/"state\":\"ON\"/, data)
+      assert_match(/"city\":\"Ottawa\"/, data)
+      assert_match(/"zip_code\":\"K1C2N6\"/, data)
+      assert_match(/"street\":\"My Street\"/, data)
+      assert_match(/"number\":\"456\"/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_passing_incomplete_billing_address
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@amount, @credit_card, @options.merge(billing_address: address(address1: 'Just a Street')))
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/"state\":\"ON\"/, data)
+      assert_match(/"city\":\"Ottawa\"/, data)
+      assert_match(/"zip_code\":\"K1C2N6\"/, data)
+      assert_match(/"street\":\"Just a Street\"/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_passing_nil_address_1
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@amount, @credit_card, @options.merge(billing_address: address(address1: nil)))
+    end.check_request do |_method, _endpoint, data, _headers|
+      refute_match(/"street\"/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_passing_country_as_string
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, @credit_card, @options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/"country\":\"CA\"/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_invalid_country
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@amount, @credit_card, @options.merge(billing_address: address(country: 'INVALID')))
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/\"country\":null/, data)
     end.respond_with(successful_authorize_response)
   end
 
@@ -200,6 +251,10 @@ class DLocalTest < Test::Unit::TestCase
 
   def successful_purchase_response
     '{"id":"D-15104-05b0ec0c-5a1e-470a-b342-eb5f20758ef7","amount":1.00,"currency":"BRL","payment_method_id":"CARD","payment_method_type":"CARD","payment_method_flow":"DIRECT","country":"BR","card":{"holder_name":"Longbob Longsen","expiration_month":9,"expiration_year":2019,"brand":"VI","last4":"1111","card_id":"CV-993903e4-0b33-48fd-8d9b-99fd6c3f0d1a"},"created_date":"2018-12-06T20:20:41.000+0000","approved_date":"2018-12-06T20:20:42.000+0000","status":"PAID","status_detail":"The payment was paid","status_code":"200","order_id":"15940ef43d39331bc64f31341f8ccd93"}'
+  end
+
+  def successful_purchase_with_installments_response
+    '{"id":"D-4-e2227981-8ec8-48fd-8e9a-19fedb08d73a","amount":1000,"currency":"BRL","payment_method_id":"CARD","payment_method_type":"CARD","payment_method_flow":"DIRECT","country":"BR","card":{"holder_name":"Thiago Gabriel","expiration_month":10,"expiration_year":2040,"brand":"VI","last4":"1111"},"created_date":"2019-02-06T21:04:43.000+0000","approved_date":"2019-02-06T21:04:44.000+0000","status":"PAID","status_detail":"The payment was paid.","status_code":"200","order_id":"657434343","notification_url":"http://merchant.com/notifications"}'
   end
 
   def failed_purchase_response

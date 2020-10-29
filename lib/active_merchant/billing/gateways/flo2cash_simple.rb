@@ -3,7 +3,7 @@ module ActiveMerchant #:nodoc:
     class Flo2cashSimpleGateway < Flo2cashGateway
       self.display_name = 'Flo2Cash Simple'
 
-      def purchase(amount, payment_method, options={})
+      def purchase(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)

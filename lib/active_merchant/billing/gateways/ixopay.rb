@@ -8,18 +8,19 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = %w(AO AQ AR AS AT AU AW AX AZ BA BB BD BE BF BG BH BI BJ BL BM BN BO BQ BQ BR BS BT BV BW BY BZ CA CC CD CF CG CH CI CK CL CM CN CO CR CU CV CW CX CY CZ DE DJ DK DM DO DZ EC EE EG EH ER ES ET FI FJ FK FM FO FR GA GB GD GE GF GG GH GI GL GM GN GP GQ GR GS GT GU GW GY HK HM HN HR HT HU ID IE IL IM IN IO IQ IR IS IT JE JM JO JP KE KG KH KI KM KN KP KR KW KY KZ LA LB LC LI LK LR LS LT LU LV LY MA MC MD ME MF MG MH MK ML MM MN MO MP MQ MR MS MT MU MV MW MX MY MZ NA NC NE NF NG NI NL NO NP NR NU NZ OM PA PE PF PG PH PK PL PM PN PR PS PT PW PY QA RE RO RS RU RW SA SB SC SD SE SG SH SI SJ SK SL SM SN SO SR SS ST SV SX SY SZ TC TD TF TG TH TJ TK TL TM TN TO TR TT TV TW TZ UA UG UM US UY UZ VA VC VE VG VI VN VU WF WS YE YT ZA ZM ZW)
       self.default_currency = 'EUR'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb, :maestro]
+      self.currencies_with_three_decimal_places = %w(BHD IQD JOD KWD LWD OMR TND)
+      self.supported_cardtypes = %i[visa master american_express discover diners_club jcb maestro]
 
       self.homepage_url = 'https://www.ixopay.com'
       self.display_name = 'Ixopay'
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :username, :password, :secret, :api_key)
         @secret = options[:secret]
         super
       end
 
-      def purchase(money, payment_method, options={})
+      def purchase(money, payment_method, options = {})
         request = build_xml_request do |xml|
           add_card_data(xml, payment_method)
           add_debit(xml, money, options)
@@ -28,7 +29,7 @@ module ActiveMerchant #:nodoc:
         commit(request)
       end
 
-      def authorize(money, payment_method, options={})
+      def authorize(money, payment_method, options = {})
         request = build_xml_request do |xml|
           add_card_data(xml, payment_method)
           add_preauth(xml, money, options)
@@ -37,7 +38,7 @@ module ActiveMerchant #:nodoc:
         commit(request)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         request = build_xml_request do |xml|
           add_capture(xml, money, authorization, options)
         end
@@ -45,7 +46,7 @@ module ActiveMerchant #:nodoc:
         commit(request)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         request = build_xml_request do |xml|
           add_refund(xml, money, authorization, options)
         end
@@ -53,7 +54,7 @@ module ActiveMerchant #:nodoc:
         commit(request)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         request = build_xml_request do |xml|
           add_void(xml, authorization)
         end
@@ -61,7 +62,7 @@ module ActiveMerchant #:nodoc:
         commit(request)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -151,6 +152,7 @@ module ActiveMerchant #:nodoc:
           xml.currency    currency
           xml.description description
           xml.callbackUrl(options[:callback_url])
+          add_stored_credentials(xml, options)
         end
       end
 
@@ -169,6 +171,7 @@ module ActiveMerchant #:nodoc:
           xml.currency    currency
           xml.description description
           xml.callbackUrl callback_url
+          add_stored_credentials(xml, options)
         end
       end
 
@@ -249,6 +252,25 @@ module ActiveMerchant #:nodoc:
 
       def new_transaction_id
         SecureRandom.uuid
+      end
+
+      # Ixopay does not pass any parameters for cardholder/merchant initiated.
+      # Ixopay also doesn't support installment transactions, only recurring
+      # ("RECURRING") and unscheduled ("CARDONFILE").
+      #
+      # Furthermore, Ixopay is slightly unusual in its application of stored
+      # credentials in that the gateway does not return a true
+      # network_transaction_id that can be sent on subsequent transactions.
+      def add_stored_credentials(xml, options)
+        return unless stored_credential = options[:stored_credential]
+
+        if stored_credential[:initial_transaction]
+          xml.transactionIndicator 'INITIAL'
+        elsif stored_credential[:reason_type] == 'recurring'
+          xml.transactionIndicator 'RECURRING'
+        elsif stored_credential[:reason_type] == 'unscheduled'
+          xml.transactionIndicator 'CARDONFILE'
+        end
       end
 
       def add_extra_data(xml, extra_data)

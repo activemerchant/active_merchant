@@ -5,12 +5,12 @@ class RemoteCecabankTest < Test::Unit::TestCase
     @gateway = CecabankGateway.new(fixtures(:cecabank))
 
     @amount = 100
-    @credit_card = credit_card('5540500001000004', {:month => 12, :year => Time.now.year, :verification_value => 989})
-    @declined_card = credit_card('5540500001000004', {:month => 11, :year => Time.now.year + 1, :verification_value => 001})
+    @credit_card = credit_card('5540500001000004', { month: 12, year: Time.now.year, verification_value: 989 })
+    @declined_card = credit_card('5540500001000004', { month: 11, year: Time.now.year + 1, verification_value: 001 })
 
     @options = {
-      :order_id => generate_unique_id,
-      :description => 'Active Merchant Test Purchase'
+      order_id: generate_unique_id,
+      description: 'Active Merchant Test Purchase'
     }
   end
 

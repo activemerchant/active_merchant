@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       URL = 'https://banwire.com/api.pago_pro'
 
       self.supported_countries = ['MX']
-      self.supported_cardtypes = [:visa, :master, :american_express]
+      self.supported_cardtypes = %i[visa master american_express]
       self.homepage_url = 'http://www.banwire.com/'
       self.display_name = 'Banwire'
 
@@ -63,7 +63,7 @@ module ActiveMerchant #:nodoc:
         post[:card_num] = creditcard.number
         post[:card_name] = creditcard.name
         post[:card_type] = card_brand(creditcard)
-        post[:card_exp] = "#{sprintf("%02d", creditcard.month)}/#{creditcard.year.to_s[-2, 2]}"
+        post[:card_exp] = "#{sprintf('%02d', creditcard.month)}/#{creditcard.year.to_s[-2, 2]}"
         post[:card_ccv2] = creditcard.verification_value
       end
 
@@ -74,7 +74,7 @@ module ActiveMerchant #:nodoc:
 
       def card_brand(card)
         brand = super
-        ({'master' => 'mastercard', 'american_express' => 'amex'}[brand] || brand)
+        ({ 'master' => 'mastercard', 'american_express' => 'amex' }[brand] || brand)
       end
 
       def parse(body)
@@ -92,8 +92,8 @@ module ActiveMerchant #:nodoc:
         Response.new(success?(response),
           response['message'],
           response,
-          :test => test?,
-          :authorization => response['code_auth'])
+          test: test?,
+          authorization: response['code_auth'])
       end
 
       def success?(response)

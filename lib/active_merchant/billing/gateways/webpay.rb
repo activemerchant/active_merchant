@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['JP']
       self.default_currency = 'JPY'
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express, :jcb, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express jcb diners_club]
 
       self.homepage_url = 'https://webpay.jp/'
       self.display_name = 'WebPay'
@@ -51,9 +51,9 @@ module ActiveMerchant #:nodoc:
           MultiResponse.run(:first) do |r|
             r.process { commit(:post, "customers/#{CGI.escape(options[:customer])}/", post, options) }
 
-            return r unless options[:set_default] and r.success? and !r.params['id'].blank?
+            return r unless options[:set_default] && r.success? && !r.params['id'].blank?
 
-            r.process { update_customer(options[:customer], :default_card => r.params['id']) }
+            r.process { update_customer(options[:customer], default_card: r.params['id']) }
           end
         else
           commit(:post, 'customers', post, options)
@@ -89,7 +89,7 @@ module ActiveMerchant #:nodoc:
           'Authorization' => 'Basic ' + Base64.encode64(@api_key.to_s + ':').strip,
           'User-Agent' => "Webpay/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
           'X-Webpay-Client-User-Agent' => user_agent,
-          'X-Webpay-Client-User-Metadata' => {:ip => options[:ip]}.to_json
+          'X-Webpay-Client-User-Metadata' => { ip: options[:ip] }.to_json
         }
       end
     end

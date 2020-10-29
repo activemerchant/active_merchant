@@ -9,9 +9,9 @@ class RemotePayeezyTest < Test::Unit::TestCase
     @amount = 100
     @reversal_id = "REV-#{SecureRandom.random_number(1000000)}"
     @options = {
-      :billing_address => address,
-      :merchant_ref => 'Store Purchase',
-      :ta_token => 'NOIW'
+      billing_address: address,
+      merchant_ref: 'Store Purchase',
+      ta_token: 'NOIW'
     }
     @options_mdd = {
       soft_descriptors: {
@@ -63,7 +63,7 @@ class RemotePayeezyTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_echeck
-    options = @options.merge({customer_id_type: '1', customer_id_number: '1', client_email: 'test@example.com'})
+    options = @options.merge({ customer_id_type: '1', customer_id_number: '1', client_email: 'test@example.com' })
     assert response = @gateway.purchase(@amount, @check, options)
     assert_match(/Transaction Normal/, response.message)
     assert_success response
@@ -119,7 +119,7 @@ class RemotePayeezyTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@amount - 1, auth.authorization)
     assert_success capture
   end
 
@@ -168,7 +168,7 @@ class RemotePayeezyTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount-1, purchase.authorization)
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization)
     assert_success refund
   end
 

@@ -14,9 +14,10 @@ class RemoteIxopayTest < Test::Unit::TestCase
       email: 'test@example.com',
       description: 'Store Purchase',
       ip: '192.168.1.1',
+      stored_credential: stored_credential(:initial)
     }
 
-    @extra_data = {extra_data: { customData1: 'some data', customData2: 'Can be anything really' }}
+    @extra_data = { extra_data: { customData1: 'some data', customData2: 'Can be anything really' } }
   end
 
   def test_successful_purchase
@@ -165,7 +166,7 @@ class RemoteIxopayTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount-1, purchase.authorization)
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization)
     assert_success refund
   end
 
@@ -173,7 +174,7 @@ class RemoteIxopayTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options.merge(@extra_data))
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount-1, purchase.authorization)
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization)
     assert_success refund
   end
 
@@ -244,5 +245,4 @@ class RemoteIxopayTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:password], transcript)
   end
-
 end

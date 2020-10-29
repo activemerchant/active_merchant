@@ -5,19 +5,19 @@ class PaymentExpressTest < Test::Unit::TestCase
 
   def setup
     @gateway = PaymentExpressGateway.new(
-      :login => 'LOGIN',
-      :password => 'PASSWORD'
+      login: 'LOGIN',
+      password: 'PASSWORD'
     )
 
     @visa = credit_card
 
-    @solo = credit_card('6334900000000005', :brand => 'maestro')
+    @solo = credit_card('6334900000000005', brand: 'maestro')
 
     @options = {
-      :order_id => generate_unique_id,
-      :billing_address => address,
-      :email => 'cody@example.com',
-      :description => 'Store purchase'
+      order_id: generate_unique_id,
+      billing_address: address,
+      email: 'cody@example.com',
+      description: 'Store purchase'
     }
 
     @amount = 100
@@ -74,9 +74,9 @@ class PaymentExpressTest < Test::Unit::TestCase
   end
 
   def test_successful_card_store_with_custom_billing_id
-    @gateway.expects(:ssl_post).returns(successful_store_response(:billing_id => 'my-custom-id'))
+    @gateway.expects(:ssl_post).returns(successful_store_response(billing_id: 'my-custom-id'))
 
-    assert response = @gateway.store(@visa, :billing_id => 'my-custom-id')
+    assert response = @gateway.store(@visa, billing_id: 'my-custom-id')
     assert_success response
     assert response.test?
     assert_equal 'my-custom-id', response.token
@@ -107,14 +107,14 @@ class PaymentExpressTest < Test::Unit::TestCase
 
   def test_purchase_using_merchant_specified_billing_id_token
     @gateway = PaymentExpressGateway.new(
-      :login => 'LOGIN',
-      :password => 'PASSWORD',
-      :use_custom_payment_token => true
+      login: 'LOGIN',
+      password: 'PASSWORD',
+      use_custom_payment_token: true
     )
 
-    @gateway.expects(:ssl_post).returns(successful_store_response({:billing_id => 'TEST1234'}))
+    @gateway.expects(:ssl_post).returns(successful_store_response({ billing_id: 'TEST1234' }))
 
-    assert response = @gateway.store(@visa, {:billing_id => 'TEST1234'})
+    assert response = @gateway.store(@visa, { billing_id: 'TEST1234' })
     assert_equal 'TEST1234', response.token
 
     @gateway.expects(:ssl_post).returns(successful_billing_id_token_purchase_response)
@@ -130,7 +130,7 @@ class PaymentExpressTest < Test::Unit::TestCase
   end
 
   def test_supported_card_types
-    assert_equal [ :visa, :master, :american_express, :diners_club, :jcb ], PaymentExpressGateway.supported_cardtypes
+    assert_equal %i[visa master american_express diners_club jcb], PaymentExpressGateway.supported_cardtypes
   end
 
   def test_avs_result_not_supported
@@ -158,9 +158,9 @@ class PaymentExpressTest < Test::Unit::TestCase
 
   def test_pass_optional_txn_data
     options = {
-      :txn_data1 => 'Transaction Data 1',
-      :txn_data2 => 'Transaction Data 2',
-      :txn_data3 => 'Transaction Data 3'
+      txn_data1: 'Transaction Data 1',
+      txn_data2: 'Transaction Data 2',
+      txn_data3: 'Transaction Data 3'
     }
 
     perform_each_transaction_type_with_request_body_assertions(options) do |body|
@@ -172,9 +172,9 @@ class PaymentExpressTest < Test::Unit::TestCase
 
   def test_pass_optional_txn_data_truncated_to_255_chars
     options = {
-      :txn_data1 => 'Transaction Data 1-01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345-EXTRA',
-      :txn_data2 => 'Transaction Data 2-01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345-EXTRA',
-      :txn_data3 => 'Transaction Data 3-01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345-EXTRA'
+      txn_data1: 'Transaction Data 1-01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345-EXTRA',
+      txn_data2: 'Transaction Data 2-01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345-EXTRA',
+      txn_data3: 'Transaction Data 3-01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345-EXTRA'
     }
 
     truncated_addendum = '01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345'
@@ -187,7 +187,7 @@ class PaymentExpressTest < Test::Unit::TestCase
   end
 
   def test_pass_client_type_as_symbol_for_web
-    options = {:client_type => :web}
+    options = { client_type: :web }
 
     perform_each_transaction_type_with_request_body_assertions(options) do |body|
       assert_match(/<ClientType>Web<\/ClientType>/, body)
@@ -195,7 +195,7 @@ class PaymentExpressTest < Test::Unit::TestCase
   end
 
   def test_pass_client_type_as_symbol_for_ivr
-    options = {:client_type => :ivr}
+    options = { client_type: :ivr }
 
     perform_each_transaction_type_with_request_body_assertions(options) do |body|
       assert_match(/<ClientType>IVR<\/ClientType>/, body)
@@ -203,7 +203,7 @@ class PaymentExpressTest < Test::Unit::TestCase
   end
 
   def test_pass_client_type_as_symbol_for_moto
-    options = {:client_type => :moto}
+    options = { client_type: :moto }
 
     perform_each_transaction_type_with_request_body_assertions(options) do |body|
       assert_match(/<ClientType>MOTO<\/ClientType>/, body)
@@ -211,7 +211,7 @@ class PaymentExpressTest < Test::Unit::TestCase
   end
 
   def test_pass_client_type_as_symbol_for_unattended
-    options = {:client_type => :unattended}
+    options = { client_type: :unattended }
 
     perform_each_transaction_type_with_request_body_assertions(options) do |body|
       assert_match(/<ClientType>Unattended<\/ClientType>/, body)
@@ -219,7 +219,7 @@ class PaymentExpressTest < Test::Unit::TestCase
   end
 
   def test_pass_client_type_as_symbol_for_internet
-    options = {:client_type => :internet}
+    options = { client_type: :internet }
 
     perform_each_transaction_type_with_request_body_assertions(options) do |body|
       assert_match(/<ClientType>Internet<\/ClientType>/, body)
@@ -227,7 +227,7 @@ class PaymentExpressTest < Test::Unit::TestCase
   end
 
   def test_pass_client_type_as_symbol_for_recurring
-    options = {:client_type => :recurring}
+    options = { client_type: :recurring }
 
     perform_each_transaction_type_with_request_body_assertions(options) do |body|
       assert_match(/<ClientType>Recurring<\/ClientType>/, body)
@@ -235,7 +235,7 @@ class PaymentExpressTest < Test::Unit::TestCase
   end
 
   def test_pass_client_type_as_symbol_for_unknown_type_omits_element
-    options = {:client_type => :unknown}
+    options = { client_type: :unknown }
 
     perform_each_transaction_type_with_request_body_assertions(options) do |body|
       assert_no_match(/<ClientType>/, body)
@@ -243,7 +243,7 @@ class PaymentExpressTest < Test::Unit::TestCase
   end
 
   def test_pass_ip_as_client_info
-    options = {:ip => '192.168.0.1'}
+    options = { ip: '192.168.0.1' }
 
     perform_each_transaction_type_with_request_body_assertions(options) do |body|
       assert_match(/<ClientInfo>192.168.0.1<\/ClientInfo>/, body)
@@ -252,64 +252,64 @@ class PaymentExpressTest < Test::Unit::TestCase
 
   def test_purchase_truncates_order_id_to_16_chars
     stub_comms do
-      @gateway.purchase(@amount, @visa, {:order_id => '16chars---------EXTRA'})
-    end.check_request do |endpoint, data, headers|
+      @gateway.purchase(@amount, @visa, { order_id: '16chars---------EXTRA' })
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<TxnId>16chars---------<\/TxnId>/, data)
     end.respond_with(successful_authorization_response)
   end
 
   def test_authorize_truncates_order_id_to_16_chars
     stub_comms do
-      @gateway.authorize(@amount, @visa, {:order_id => '16chars---------EXTRA'})
-    end.check_request do |endpoint, data, headers|
+      @gateway.authorize(@amount, @visa, { order_id: '16chars---------EXTRA' })
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<TxnId>16chars---------<\/TxnId>/, data)
     end.respond_with(successful_authorization_response)
   end
 
   def test_capture_truncates_order_id_to_16_chars
     stub_comms do
-      @gateway.capture(@amount, 'identification', {:order_id => '16chars---------EXTRA'})
-    end.check_request do |endpoint, data, headers|
+      @gateway.capture(@amount, 'identification', { order_id: '16chars---------EXTRA' })
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<TxnId>16chars---------<\/TxnId>/, data)
     end.respond_with(successful_authorization_response)
   end
 
   def test_refund_truncates_order_id_to_16_chars
     stub_comms do
-      @gateway.refund(@amount, 'identification', {:description => 'refund', :order_id => '16chars---------EXTRA'})
-    end.check_request do |endpoint, data, headers|
+      @gateway.refund(@amount, 'identification', { description: 'refund', order_id: '16chars---------EXTRA' })
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<TxnId>16chars---------<\/TxnId>/, data)
     end.respond_with(successful_authorization_response)
   end
 
   def test_purchase_truncates_description_to_50_chars
     stub_comms do
-      @gateway.purchase(@amount, @visa, {:description => '50chars-------------------------------------------EXTRA'})
-    end.check_request do |endpoint, data, headers|
+      @gateway.purchase(@amount, @visa, { description: '50chars-------------------------------------------EXTRA' })
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<MerchantReference>50chars-------------------------------------------<\/MerchantReference>/, data)
     end.respond_with(successful_authorization_response)
   end
 
   def test_authorize_truncates_description_to_50_chars
     stub_comms do
-      @gateway.authorize(@amount, @visa, {:description => '50chars-------------------------------------------EXTRA'})
-    end.check_request do |endpoint, data, headers|
+      @gateway.authorize(@amount, @visa, { description: '50chars-------------------------------------------EXTRA' })
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<MerchantReference>50chars-------------------------------------------<\/MerchantReference>/, data)
     end.respond_with(successful_authorization_response)
   end
 
   def test_capture_truncates_description_to_50_chars
     stub_comms do
-      @gateway.capture(@amount, 'identification', {:description => '50chars-------------------------------------------EXTRA'})
-    end.check_request do |endpoint, data, headers|
+      @gateway.capture(@amount, 'identification', { description: '50chars-------------------------------------------EXTRA' })
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<MerchantReference>50chars-------------------------------------------<\/MerchantReference>/, data)
     end.respond_with(successful_authorization_response)
   end
 
   def test_refund_truncates_description_to_50_chars
     stub_comms do
-      @gateway.capture(@amount, 'identification', {:description => '50chars-------------------------------------------EXTRA'})
-    end.check_request do |endpoint, data, headers|
+      @gateway.capture(@amount, 'identification', { description: '50chars-------------------------------------------EXTRA' })
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<MerchantReference>50chars-------------------------------------------<\/MerchantReference>/, data)
     end.respond_with(successful_authorization_response)
   end
@@ -324,35 +324,35 @@ class PaymentExpressTest < Test::Unit::TestCase
     # purchase
     stub_comms do
       @gateway.purchase(@amount, @visa, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       yield data
     end.respond_with(successful_authorization_response)
 
     # authorize
     stub_comms do
       @gateway.authorize(@amount, @visa, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       yield data
     end.respond_with(successful_authorization_response)
 
     # capture
     stub_comms do
       @gateway.capture(@amount, 'identification', options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       yield data
     end.respond_with(successful_authorization_response)
 
     # refund
     stub_comms do
-      @gateway.refund(@amount, 'identification', {:description => 'description'}.merge(options))
-    end.check_request do |endpoint, data, headers|
+      @gateway.refund(@amount, 'identification', { description: 'description' }.merge(options))
+    end.check_request do |_endpoint, data, _headers|
       yield data
     end.respond_with(successful_authorization_response)
 
     # store
     stub_comms do
       @gateway.store(@visa, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       yield data
     end.respond_with(successful_store_response)
   end
@@ -366,57 +366,57 @@ class PaymentExpressTest < Test::Unit::TestCase
   end
 
   def successful_authorization_response
-    <<-RESPONSE
-<Txn>
-  <Transaction success="1" reco="00" responsetext="APPROVED">
-    <Authorized>1</Authorized>
-    <MerchantReference>Test Transaction</MerchantReference>
-    <Cvc2>M</Cvc2>
-    <CardName>Visa</CardName>
-    <Retry>0</Retry>
-    <StatusRequired>0</StatusRequired>
-    <AuthCode>015921</AuthCode>
-    <Amount>1.23</Amount>
-    <InputCurrencyId>1</InputCurrencyId>
-    <InputCurrencyName>NZD</InputCurrencyName>
-    <Acquirer>WestpacTrust</Acquirer>
-    <CurrencyId>1</CurrencyId>
-    <CurrencyName>NZD</CurrencyName>
-    <CurrencyRate>1.00</CurrencyRate>
-    <Acquirer>WestpacTrust</Acquirer>
-    <AcquirerDate>30102000</AcquirerDate>
-    <AcquirerId>1</AcquirerId>
-    <CardHolderName>DPS</CardHolderName>
-    <DateSettlement>20050811</DateSettlement>
-    <TxnType>Purchase</TxnType>
-    <CardNumber>411111</CardNumber>
-    <DateExpiry>0807</DateExpiry>
-    <ProductId></ProductId>
-    <AcquirerDate>20050811</AcquirerDate>
-    <AcquirerTime>060039</AcquirerTime>
-    <AcquirerId>9000</AcquirerId>
-    <Acquirer>Test</Acquirer>
-    <TestMode>1</TestMode>
-    <CardId>2</CardId>
-    <CardHolderResponseText>APPROVED</CardHolderResponseText>
-    <CardHolderHelpText>The Transaction was approved</CardHolderHelpText>
-    <CardHolderResponseDescription>The Transaction was approved</CardHolderResponseDescription>
-    <MerchantResponseText>APPROVED</MerchantResponseText>
-    <MerchantHelpText>The Transaction was approved</MerchantHelpText>
-    <MerchantResponseDescription>The Transaction was approved</MerchantResponseDescription>
-    <GroupAccount>9997</GroupAccount>
-    <DpsTxnRef>00000004011a2478</DpsTxnRef>
-    <AllowRetry>0</AllowRetry>
-    <DpsBillingId></DpsBillingId>
-    <BillingId></BillingId>
-    <TransactionId>011a2478</TransactionId>
-  </Transaction>
-  <ReCo>00</ReCo>
-  <ResponseText>APPROVED</ResponseText>
-  <HelpText>The Transaction was approved</HelpText>
-  <Success>1</Success>
-  <TxnRef>00000004011a2478</TxnRef>
-</Txn>
+    <<~RESPONSE
+      <Txn>
+        <Transaction success="1" reco="00" responsetext="APPROVED">
+          <Authorized>1</Authorized>
+          <MerchantReference>Test Transaction</MerchantReference>
+          <Cvc2>M</Cvc2>
+          <CardName>Visa</CardName>
+          <Retry>0</Retry>
+          <StatusRequired>0</StatusRequired>
+          <AuthCode>015921</AuthCode>
+          <Amount>1.23</Amount>
+          <InputCurrencyId>1</InputCurrencyId>
+          <InputCurrencyName>NZD</InputCurrencyName>
+          <Acquirer>WestpacTrust</Acquirer>
+          <CurrencyId>1</CurrencyId>
+          <CurrencyName>NZD</CurrencyName>
+          <CurrencyRate>1.00</CurrencyRate>
+          <Acquirer>WestpacTrust</Acquirer>
+          <AcquirerDate>30102000</AcquirerDate>
+          <AcquirerId>1</AcquirerId>
+          <CardHolderName>DPS</CardHolderName>
+          <DateSettlement>20050811</DateSettlement>
+          <TxnType>Purchase</TxnType>
+          <CardNumber>411111</CardNumber>
+          <DateExpiry>0807</DateExpiry>
+          <ProductId></ProductId>
+          <AcquirerDate>20050811</AcquirerDate>
+          <AcquirerTime>060039</AcquirerTime>
+          <AcquirerId>9000</AcquirerId>
+          <Acquirer>Test</Acquirer>
+          <TestMode>1</TestMode>
+          <CardId>2</CardId>
+          <CardHolderResponseText>APPROVED</CardHolderResponseText>
+          <CardHolderHelpText>The Transaction was approved</CardHolderHelpText>
+          <CardHolderResponseDescription>The Transaction was approved</CardHolderResponseDescription>
+          <MerchantResponseText>APPROVED</MerchantResponseText>
+          <MerchantHelpText>The Transaction was approved</MerchantHelpText>
+          <MerchantResponseDescription>The Transaction was approved</MerchantResponseDescription>
+          <GroupAccount>9997</GroupAccount>
+          <DpsTxnRef>00000004011a2478</DpsTxnRef>
+          <AllowRetry>0</AllowRetry>
+          <DpsBillingId></DpsBillingId>
+          <BillingId></BillingId>
+          <TransactionId>011a2478</TransactionId>
+        </Transaction>
+        <ReCo>00</ReCo>
+        <ResponseText>APPROVED</ResponseText>
+        <HelpText>The Transaction was approved</HelpText>
+        <Success>1</Success>
+        <TxnRef>00000004011a2478</TxnRef>
+      </Txn>
     RESPONSE
   end
 

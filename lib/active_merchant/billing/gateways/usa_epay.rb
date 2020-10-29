@@ -5,7 +5,6 @@ module ActiveMerchant #:nodoc:
     # depending on options passed to new.
     #
     class UsaEpayGateway < Gateway
-
       self.abstract_class = true
 
       ##
@@ -13,7 +12,7 @@ module ActiveMerchant #:nodoc:
       # :software id or :live_url are passed in the options hash it will
       # create an instance of UsaEpayAdvancedGateway.
       #
-      def self.new(options={})
+      def self.new(options = {})
         if options.has_key?(:software_id) || options.has_key?(:live_url)
           UsaEpayAdvancedGateway.new(options)
         else

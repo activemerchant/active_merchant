@@ -1,38 +1,37 @@
 require 'test_helper'
 
 class SkipJackTest < Test::Unit::TestCase
-
   def setup
     Base.mode = :test
 
-    @gateway = SkipJackGateway.new(:login => 'X', :password => 'Y')
+    @gateway = SkipJackGateway.new(login: 'X', password: 'Y')
 
     @credit_card = credit_card('4242424242424242')
 
     @billing_address = {
-      :address1 => '123 Any St.',
-      :address2 => 'Apt. B',
-      :city => 'Anytown',
-      :state => 'ST',
-      :country => 'US',
-      :zip => '51511-1234',
-      :phone => '616-555-1212',
-      :fax => '616-555-2121'
+      address1: '123 Any St.',
+      address2: 'Apt. B',
+      city: 'Anytown',
+      state: 'ST',
+      country: 'US',
+      zip: '51511-1234',
+      phone: '616-555-1212',
+      fax: '616-555-2121'
     }
 
     @shipping_address = {
-      :name => 'Stew Packman',
-      :address1 => 'Company',
-      :address2 => '321 No RD',
-      :city => 'Nowhereton',
-      :state => 'ZC',
-      :country => 'MX',
-      :phone => '0123231212'
+      name: 'Stew Packman',
+      address1: 'Company',
+      address2: '321 No RD',
+      city: 'Nowhereton',
+      state: 'ZC',
+      country: 'MX',
+      phone: '0123231212'
     }
 
     @options = {
-      :order_id => 1,
-      :email => 'cody@example.com'
+      order_id: 1,
+      email: 'cody@example.com'
     }
 
     @amount = 100
@@ -103,10 +102,10 @@ class SkipJackTest < Test::Unit::TestCase
   end
 
   def test_turn_authorizeapi_response_into_hash
-    body = <<-EOS
-"AUTHCODE","szSerialNumber","szTransactionAmount","szAuthorizationDeclinedMessage","szAVSResponseCode","szAVSResponseMessage","szOrderNumber","szAuthorizationResponseCode","szIsApproved","szCVV2ResponseCode","szCVV2ResponseMessage","szReturnCode","szTransactionFileName","szCAVVResponseCode"
-"000067","999888777666","1900","","N","Card authorized, exact address match with 5 digit zipcode.","1","000067","1","","","1","10138083786558.009",""
-    EOS
+    body = <<~RESPONSE
+      "AUTHCODE","szSerialNumber","szTransactionAmount","szAuthorizationDeclinedMessage","szAVSResponseCode","szAVSResponseMessage","szOrderNumber","szAuthorizationResponseCode","szIsApproved","szCVV2ResponseCode","szCVV2ResponseMessage","szReturnCode","szTransactionFileName","szCAVVResponseCode"
+      "000067","999888777666","1900","","N","Card authorized, exact address match with 5 digit zipcode.","1","000067","1","","","1","10138083786558.009",""
+    RESPONSE
 
     map = @gateway.send(:authorize_response_map, body)
 
@@ -194,7 +193,7 @@ class SkipJackTest < Test::Unit::TestCase
   end
 
   def test_serial_number_is_added_before_developer_serial_number_for_authorization
-    expected ="Year=#{Time.now.year + 1}&TransactionAmount=1.00&ShipToPhone=&SerialNumber=X&SJName=Longbob+Longsen&OrderString=1~None~0.00~0~N~%7C%7C&OrderNumber=1&OrderDescription=&Month=9&InvoiceNumber=&Email=cody%40example.com&DeveloperSerialNumber=Y&CustomerCode=&CVV2=123&AccountNumber=4242424242424242"
+    expected = "Year=#{Time.now.year + 1}&TransactionAmount=1.00&ShipToPhone=&SerialNumber=X&SJName=Longbob+Longsen&OrderString=1~None~0.00~0~N~%7C%7C&OrderNumber=1&OrderDescription=&Month=9&InvoiceNumber=&Email=cody%40example.com&DeveloperSerialNumber=Y&CustomerCode=&CVV2=123&AccountNumber=4242424242424242"
     expected = expected.gsub('~', '%7E') if RUBY_VERSION < '2.5.0'
     @gateway.expects(:ssl_post).with('https://developer.skipjackic.com/scripts/evolvcc.dll?AuthorizeAPI', expected).returns(successful_authorization_response)
 
@@ -215,7 +214,7 @@ class SkipJackTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options)
 
     @gateway.expects(:ssl_post).with('https://developer.skipjackic.com/scripts/evolvcc.dll?SJAPI_TransactionChangeStatusRequest', "szTransactionId=#{response.authorization}&szSerialNumber=X&szForceSettlement=0&szDeveloperSerialNumber=Y&szDesiredStatus=SETTLE&szAmount=1.00").returns(successful_capture_response)
-    response = @gateway.capture(@amount/2, response.authorization)
+    response = @gateway.capture(@amount / 2, response.authorization)
     assert_equal '1.0000', response.params['TransactionAmount']
   end
 
@@ -236,43 +235,43 @@ class SkipJackTest < Test::Unit::TestCase
   private
 
   def successful_authorization_response
-    <<-CSV
-"AUTHCODE","szSerialNumber","szTransactionAmount","szAuthorizationDeclinedMessage","szAVSResponseCode","szAVSResponseMessage","szOrderNumber","szAuthorizationResponseCode","szIsApproved","szCVV2ResponseCode","szCVV2ResponseMessage","szReturnCode","szTransactionFileName","szCAVVResponseCode"
-"TAS204","000386891209","100","","Y","Card authorized, exact address match with 5 digit zip code.","107a0fdb21ba42cf04f60274908085ea","TAS204","1","M","Match","1","9802853155172.022",""
+    <<~CSV
+      "AUTHCODE","szSerialNumber","szTransactionAmount","szAuthorizationDeclinedMessage","szAVSResponseCode","szAVSResponseMessage","szOrderNumber","szAuthorizationResponseCode","szIsApproved","szCVV2ResponseCode","szCVV2ResponseMessage","szReturnCode","szTransactionFileName","szCAVVResponseCode"
+      "TAS204","000386891209","100","","Y","Card authorized, exact address match with 5 digit zip code.","107a0fdb21ba42cf04f60274908085ea","TAS204","1","M","Match","1","9802853155172.022",""
     CSV
   end
 
   def successful_capture_response
-    <<-CSV
-"000386891209","0","1","","","","","","","","",""
-"000386891209","1.0000","SETTLE","SUCCESSFUL","Valid","618844630c5fad658e95abfd5e1d4e22","9802853156029.022"
+    <<~CSV
+      "000386891209","0","1","","","","","","","","",""
+      "000386891209","1.0000","SETTLE","SUCCESSFUL","Valid","618844630c5fad658e95abfd5e1d4e22","9802853156029.022"
     CSV
   end
 
   def successful_refund_response
-    <<-CSV
-"AUTHCODE","szSerialNumber","szTransactionAmount","szAuthorizationDeclinedMessage","szAVSResponseCode","szAVSResponseMessage","szOrderNumber","szAuthorizationResponseCode","szIsApproved","szCVV2ResponseCode","szCVV2ResponseMessage","szReturnCode","szTransactionFileName","szCAVVResponseCode"
-"TAS204","000386891209","100","","Y","Card authorized, exact address match with 5 digit zip code.","107a0fdb21ba42cf04f60274908085ea","TAS204","1","M","Match","1","9802853155172.022",""
+    <<~CSV
+      "AUTHCODE","szSerialNumber","szTransactionAmount","szAuthorizationDeclinedMessage","szAVSResponseCode","szAVSResponseMessage","szOrderNumber","szAuthorizationResponseCode","szIsApproved","szCVV2ResponseCode","szCVV2ResponseMessage","szReturnCode","szTransactionFileName","szCAVVResponseCode"
+      "TAS204","000386891209","100","","Y","Card authorized, exact address match with 5 digit zip code.","107a0fdb21ba42cf04f60274908085ea","TAS204","1","M","Match","1","9802853155172.022",""
     CSV
   end
 
   def unsuccessful_authorization_response
-    <<-CSV
-"AUTHCODE","szSerialNumber","szTransactionAmount","szAuthorizationDeclinedMessage","szAVSResponseCode","szAVSResponseMessage","szOrderNumber","szAuthorizationResponseCode","szIsApproved","szCVV2ResponseCode","szCVV2ResponseMessage","szReturnCode","szTransactionFileName","szCAVVResponseCode"\r\n"EMPTY","000386891209","100","","","","b1eec256d0182f29375e0cbae685092d","","0","","","-35","",""
+    <<~CSV
+      "AUTHCODE","szSerialNumber","szTransactionAmount","szAuthorizationDeclinedMessage","szAVSResponseCode","szAVSResponseMessage","szOrderNumber","szAuthorizationResponseCode","szIsApproved","szCVV2ResponseCode","szCVV2ResponseMessage","szReturnCode","szTransactionFileName","szCAVVResponseCode"\r\n"EMPTY","000386891209","100","","","","b1eec256d0182f29375e0cbae685092d","","0","","","-35","",""
     CSV
   end
 
   def unsuccessful_paymentech_authorization_response
-    <<-CSV
-"AUTHCODE","szSerialNumber","szTransactionAmount","szAuthorizationDeclinedMessage","szAVSResponseCode","szAVSResponseMessage","szOrderNumber","szAuthorizationResponseCode","szIsApproved","szCVV2ResponseCode","szCVV2ResponseMessage","szReturnCode","szTransactionFileName","szCAVVResponseCode",
-"EMPTY","000000000000","1.00","","","","43985b7953199d1f02c3017f948e9f13","","0","","","-83","","",
+    <<~CSV
+      "AUTHCODE","szSerialNumber","szTransactionAmount","szAuthorizationDeclinedMessage","szAVSResponseCode","szAVSResponseMessage","szOrderNumber","szAuthorizationResponseCode","szIsApproved","szCVV2ResponseCode","szCVV2ResponseMessage","szReturnCode","szTransactionFileName","szCAVVResponseCode",
+      "EMPTY","000000000000","1.00","","","","43985b7953199d1f02c3017f948e9f13","","0","","","-83","","",
     CSV
   end
 
   def successful_paymentech_authorization_response
-    <<-CSV
-"AUTHCODE","szSerialNumber","szTransactionAmount","szAuthorizationDeclinedMessage","szAVSResponseCode","szAVSResponseMessage","szOrderNumber","szAuthorizationResponseCode","szIsApproved","szCVV2ResponseCode","szCVV2ResponseMessage","szReturnCode","szTransactionFileName","szCAVVResponseCode",
-"093223","000000000000","1.00","","Y","Card authorized, exact address match with 5 digit zip code.","5ac0f04e737baea5a5370037afe827f6","093223","1","M","Match","1","40000024585892.109","",
+    <<~CSV
+      "AUTHCODE","szSerialNumber","szTransactionAmount","szAuthorizationDeclinedMessage","szAVSResponseCode","szAVSResponseMessage","szOrderNumber","szAuthorizationResponseCode","szIsApproved","szCVV2ResponseCode","szCVV2ResponseMessage","szReturnCode","szTransactionFileName","szCAVVResponseCode",
+      "093223","000000000000","1.00","","Y","Card authorized, exact address match with 5 digit zip code.","5ac0f04e737baea5a5370037afe827f6","093223","1","M","Match","1","40000024585892.109","",
     CSV
   end
 end

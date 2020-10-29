@@ -22,22 +22,22 @@ module ActiveMerchant #:nodoc:
 
       SUCCESS = 'true'
 
-      SENSITIVE_FIELDS = [:verification_str2, :expiry_date, :card_number]
+      SENSITIVE_FIELDS = %i[verification_str2 expiry_date card_number]
 
       BRANDS = {
-        :visa => 'Visa',
-        :master => 'Mastercard',
-        :american_express => 'American Express',
-        :jcb => 'JCB',
-        :discover => 'Discover'
+        visa: 'Visa',
+        master: 'Mastercard',
+        american_express: 'American Express',
+        jcb: 'JCB',
+        discover: 'Discover'
       }
 
-      E4_BRANDS = BRANDS.merge({:mastercard => 'Mastercard'})
+      E4_BRANDS = BRANDS.merge({ mastercard: 'Mastercard' })
 
       DEFAULT_ECI = '07'
 
       self.supported_cardtypes = BRANDS.keys
-      self.supported_countries = ['CA', 'US']
+      self.supported_countries = %w[CA US]
       self.default_currency = 'USD'
       self.homepage_url = 'http://www.firstdata.com'
       self.display_name = 'FirstData Global Gateway e4'
@@ -217,7 +217,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_identification(xml, identification)
-        authorization_num, transaction_tag, _ = identification.split(';')
+        authorization_num, transaction_tag, = identification.split(';')
 
         xml.tag! 'Authorization_Num', authorization_num
         xml.tag! 'Transaction_Tag', transaction_tag
@@ -255,14 +255,14 @@ module ActiveMerchant #:nodoc:
             (credit_card.respond_to?(:eci) ? credit_card.eci : nil) || options[:eci] || DEFAULT_ECI
           end
 
-        xml.tag! 'Ecommerce_Flag', eci.to_s =~ /^[0-9]+$/ ? eci.to_s.rjust(2, '0') : eci
+        xml.tag! 'Ecommerce_Flag', /^[0-9]+$/.match?(eci.to_s) ? eci.to_s.rjust(2, '0') : eci
       end
 
       def add_credit_card_verification_strings(xml, credit_card, options)
         address = options[:billing_address] || options[:address]
         if address
           address_values = []
-          [:address1, :zip, :city, :state, :country].each { |part| address_values << address[part].to_s }
+          %i[address1 zip city state country].each { |part| address_values << address[part].to_s.tr("\r\n", ' ').strip }
           xml.tag! 'VerificationStr1', address_values.join('|')
         end
 
@@ -298,11 +298,12 @@ module ActiveMerchant #:nodoc:
       def add_credit_card_token(xml, store_authorization, options)
         params = store_authorization.split(';')
         credit_card = CreditCard.new(
-          :brand      => params[1],
-          :first_name => params[2],
-          :last_name  => params[3],
-          :month      => params[4],
-          :year       => params[5])
+          brand: params[1],
+          first_name: params[2],
+          last_name: params[3],
+          month: params[4],
+          year: params[5]
+        )
 
         xml.tag! 'TransarmorToken', params[0]
         xml.tag! 'Expiry_Date', expdate(credit_card)
@@ -354,12 +355,11 @@ module ActiveMerchant #:nodoc:
         end
 
         Response.new(successful?(response), message_from(response), response,
-          :test => test?,
-          :authorization => successful?(response) ? response_authorization(action, response, credit_card) : '',
-          :avs_result => {:code => response[:avs]},
-          :cvv_result => response[:cvv2],
-          :error_code => standard_error_code(response)
-        )
+          test: test?,
+          authorization: successful?(response) ? response_authorization(action, response, credit_card) : '',
+          avs_result: { code: response[:avs] },
+          cvv_result: response[:cvv2],
+          error_code: standard_error_code(response))
       end
 
       def successful?(response)
@@ -395,7 +395,7 @@ module ActiveMerchant #:nodoc:
             credit_card.last_name,
             credit_card.month,
             credit_card.year
-          ].map { |value| value.to_s.gsub(/;/, '') }.join(';')
+          ].map { |value| value.to_s.delete(';') }.join(';')
         else
           raise StandardError, "TransArmor support is not enabled on your #{display_name} account"
         end
@@ -407,9 +407,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        if(response[:faultcode] && response[:faultstring])
+        if response[:faultcode] && response[:faultstring]
           response[:faultstring]
-        elsif(response[:error_number] && response[:error_number] != '0')
+        elsif response[:error_number] && response[:error_number] != '0'
           response[:error_description]
         else
           result = (response[:exact_message] || '')
@@ -420,10 +420,10 @@ module ActiveMerchant #:nodoc:
 
       def parse_error(error)
         {
-          :transaction_approved => 'false',
-          :error_number => error.code,
-          :error_description => error.body,
-          :ecommerce_error_code => error.body.gsub(/[^\d]/, '')
+          transaction_approved: 'false',
+          error_number: error.code,
+          error_description: error.body,
+          ecommerce_error_code: error.body.gsub(/[^\d]/, '')
         }
       end
 
@@ -439,7 +439,7 @@ module ActiveMerchant #:nodoc:
           parse_elements(response, root)
         end
 
-        response.delete_if { |k, v| SENSITIVE_FIELDS.include?(k) }
+        response.delete_if { |k, _v| SENSITIVE_FIELDS.include?(k) }
       end
 
       def parse_elements(response, root)

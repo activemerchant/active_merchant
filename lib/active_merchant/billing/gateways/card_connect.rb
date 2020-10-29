@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       self.homepage_url = 'https://cardconnect.com/'
       self.display_name = 'Card Connect'
@@ -69,7 +69,7 @@ module ActiveMerchant #:nodoc:
 
       def require_valid_domain!(options, param)
         if options[param]
-          raise ArgumentError.new('not a valid cardconnect domain') unless /\Dcardconnect.com:\d{1,}\D/ =~ options[param]
+          raise ArgumentError.new('not a valid cardconnect domain') unless /https:\/\/\D*cardconnect.com/ =~ options[param]
         end
       end
 
@@ -233,7 +233,7 @@ module ActiveMerchant #:nodoc:
           post[:items] = options[:items].map do |item|
             updated = {}
             item.each_pair do |k, v|
-              updated.merge!(k.to_s.gsub(/_/, '') => v)
+              updated.merge!(k.to_s.delete('_') => v)
             end
             updated
           end
@@ -287,7 +287,8 @@ module ActiveMerchant #:nodoc:
           error_code: error_code_from(response)
         )
       rescue ResponseError => e
-        return Response.new(false, 'Unable to authenticate.  Please check your credentials.', {}, :test => test?) if e.response.code == '401'
+        return Response.new(false, 'Unable to authenticate.  Please check your credentials.', {}, test: test?) if e.response.code == '401'
+
         raise
       end
 

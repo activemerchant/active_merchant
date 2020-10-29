@@ -5,7 +5,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :alelo]
+      self.supported_cardtypes = %i[visa master american_express discover alelo]
 
       self.homepage_url = 'https://www.mundipagg.com/'
       self.display_name = 'Mundipagg'
@@ -28,48 +28,50 @@ module ActiveMerchant #:nodoc:
         '500' => 'An internal error occurred;'
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :api_key)
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         post = {}
         add_invoice(post, money, options)
         add_customer_data(post, options) unless payment.is_a?(String)
         add_shipping_address(post, options)
         add_payment(post, payment, options)
+        add_submerchant(post, options)
 
         commit('sale', post)
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         post = {}
         add_invoice(post, money, options)
         add_customer_data(post, options) unless payment.is_a?(String)
         add_shipping_address(post, options)
         add_payment(post, payment, options)
         add_capture_flag(post, payment)
+        add_submerchant(post, options)
         commit('authonly', post)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         post = {}
         post[:code] = authorization
         add_invoice(post, money, options)
         commit('capture', post, authorization)
       end
 
-      def refund(money, authorization, options={})
-        add_invoice(post={}, money, options)
+      def refund(money, authorization, options = {})
+        add_invoice(post = {}, money, options)
         commit('refund', post, authorization)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         commit('void', nil, authorization)
       end
 
-      def store(payment, options={})
+      def store(payment, options = {})
         post = {}
         options.update(name: payment.name)
         options = add_customer(options) unless options[:customer_id]
@@ -77,7 +79,7 @@ module ActiveMerchant #:nodoc:
         commit('store', post, options[:customer_id])
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -198,7 +200,33 @@ module ActiveMerchant #:nodoc:
 
       def voucher?(payment)
         return false if payment.is_a?(String)
+
         %w[sodexo vr].include? card_brand(payment)
+      end
+
+      def add_submerchant(post, options)
+        if submerchant = options[:submerchant]
+          post[:SubMerchant] = {}
+          post[:SubMerchant][:Merchant_Category_Code] = submerchant[:merchant_category_code] if submerchant[:merchant_category_code]
+          post[:SubMerchant][:Payment_Facilitator_Code] = submerchant[:payment_facilitator_code] if submerchant[:payment_facilitator_code]
+          post[:SubMerchant][:Code] = submerchant[:code] if submerchant[:code]
+          post[:SubMerchant][:Name] = submerchant[:name] if submerchant[:name]
+          post[:SubMerchant][:Document] = submerchant[:document] if submerchant[:document]
+          post[:SubMerchant][:Type] = submerchant[:type] if submerchant[:type]
+          post[:SubMerchant][:Phone] = {}
+          post[:SubMerchant][:Phone][:Country_Code] = submerchant[:phone][:country_code] if submerchant.dig(:phone, :country_code)
+          post[:SubMerchant][:Phone][:Number] = submerchant[:phone][:number] if submerchant.dig(:phone, :number)
+          post[:SubMerchant][:Phone][:Area_Code] = submerchant[:phone][:area_code] if submerchant.dig(:phone, :area_code)
+          post[:SubMerchant][:Address] = {}
+          post[:SubMerchant][:Address][:Street] = submerchant[:address][:street] if submerchant.dig(:address, :street)
+          post[:SubMerchant][:Address][:Number] = submerchant[:address][:number] if submerchant.dig(:address, :number)
+          post[:SubMerchant][:Address][:Complement] = submerchant[:address][:complement] if submerchant.dig(:address, :complement)
+          post[:SubMerchant][:Address][:Neighborhood] = submerchant[:address][:neighborhood] if submerchant.dig(:address, :neighborhood)
+          post[:SubMerchant][:Address][:City] = submerchant[:address][:city] if submerchant.dig(:address, :city)
+          post[:SubMerchant][:Address][:State] = submerchant[:address][:state] if submerchant.dig(:address, :state)
+          post[:SubMerchant][:Address][:Country] = submerchant[:address][:country] if submerchant.dig(:address, :country)
+          post[:SubMerchant][:Address][:Zip_Code] = submerchant[:address][:zip_code] if submerchant.dig(:address, :zip_code)
+        end
       end
 
       def headers
@@ -274,7 +302,7 @@ module ActiveMerchant #:nodoc:
         parsed_response_body = parse(error.response.body)
         message = parsed_response_body['message']
 
-        parsed_response_body['errors']&.each do |type, descriptions|
+        parsed_response_body['errors']&.each do |_type, descriptions|
           message += ' | '
           message += descriptions.join(', ')
         end
@@ -290,7 +318,7 @@ module ActiveMerchant #:nodoc:
         error_string = ''
 
         response['last_transaction']['gateway_response']['errors']&.each do |error|
-          error.each do |key, value|
+          error.each do |_key, value|
             error_string += ' | ' unless error_string.blank?
             error_string += value
           end
@@ -301,6 +329,7 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(response, action)
         return "#{response['customer']['id']}|#{response['id']}" if action == 'store'
+
         response['id']
       end
 
@@ -313,7 +342,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_code_from(response)
-        STANDARD_ERROR_CODE[:processing_error] unless success_from(response)
+        return if success_from(response)
+        return response['last_transaction']['acquirer_return_code'] if response['last_transaction']
+
+        STANDARD_ERROR_CODE[:processing_error]
       end
     end
   end

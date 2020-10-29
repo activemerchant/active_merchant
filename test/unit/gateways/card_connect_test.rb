@@ -16,9 +16,19 @@ class CardConnectTest < Test::Unit::TestCase
     }
   end
 
-  def test_incorrect_domain
+  def test_allow_domains_without_ports
+    assert CardConnectGateway.new(username: 'username', password: 'password', merchant_id: 'merchand_id', domain: 'https://vendor.cardconnect.com/test')
+  end
+
+  def test_reject_domains_without_card_connect
     assert_raise(ArgumentError) {
-      CardConnectGateway.new(username: 'username', password: 'password', merchant_id: 'merchand_id', domain: 'www.google.com')
+      CardConnectGateway.new(username: 'username', password: 'password', merchant_id: 'merchand_id', domain: 'https://www.google.com')
+    }
+  end
+
+  def test_reject_domains_without_https
+    assert_raise(ArgumentError) {
+      CardConnectGateway.new(username: 'username', password: 'password', merchant_id: 'merchand_id', domain: 'ttps://cardconnect.com')
     }
   end
 
@@ -185,7 +195,7 @@ class CardConnectTest < Test::Unit::TestCase
   def test_successful_unstore
     stub_comms(@gateway, :ssl_request) do
       @gateway.unstore('1|16700875781344019340')
-    end.check_request do |verb, url, data, headers|
+    end.check_request do |verb, url, _data, _headers|
       assert_equal :delete, verb
       assert_match %r{16700875781344019340/1}, url
     end.respond_with(successful_unstore_response)

@@ -34,7 +34,7 @@ module ActiveMerchant #:nodoc:
 
       POST_HEADERS = {
         'MIME-Version' => '1.1',
-        'Content-Type' => "application/PTI#{API_VERSION.gsub(/\./, '')}",
+        'Content-Type' => "application/PTI#{API_VERSION.delete('.')}",
         'Content-transfer-encoding' => 'text',
         'Request-number' => '1',
         'Document-type' => 'Request',
@@ -71,16 +71,16 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://orbital1.chasepaymentech.com/authorize'
       self.secondary_live_url = 'https://orbital2.chasepaymentech.com/authorize'
 
-      self.supported_countries = ['US', 'CA']
+      self.supported_countries = %w[US CA]
       self.default_currency = 'CAD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club jcb]
 
       self.display_name = 'Orbital Paymentech'
       self.homepage_url = 'http://chasepaymentech.com/'
 
       self.money_format = :cents
 
-      AVS_SUPPORTED_COUNTRIES = ['US', 'CA', 'UK', 'GB']
+      AVS_SUPPORTED_COUNTRIES = %w[US CA UK GB]
 
       CURRENCY_CODES = {
         'AUD' => '036',
@@ -181,7 +181,7 @@ module ActiveMerchant #:nodoc:
       USE_ORDER_ID         = 'O' #  Use OrderID field
       USE_COMMENTS         = 'D' #  Use Comments field
 
-      SENSITIVE_FIELDS = [:account_num, :cc_account_num]
+      SENSITIVE_FIELDS = %i[account_num cc_account_num]
 
       def initialize(options = {})
         requires!(options, :merchant_id)
@@ -230,22 +230,22 @@ module ActiveMerchant #:nodoc:
 
       # R – Refund request
       def refund(money, authorization, options = {})
-        order = build_new_order_xml(REFUND, money, nil, options.merge(:authorization => authorization)) do |xml|
+        order = build_new_order_xml(REFUND, money, nil, options.merge(authorization: authorization)) do |xml|
           add_refund(xml, options[:currency])
           xml.tag! :CustomerRefNum, options[:customer_ref_num] if @options[:customer_profiles] && options[:profile_txn]
         end
         commit(order, :refund, options[:trace_number])
       end
 
-      def credit(money, authorization, options= {})
+      def credit(money, authorization, options = {})
         ActiveMerchant.deprecated CREDIT_DEPRECATION_MESSAGE
         refund(money, authorization, options)
       end
 
       def void(authorization, options = {}, deprecated = {})
-        if(!options.kind_of?(Hash))
+        if !options.kind_of?(Hash)
           ActiveMerchant.deprecated('Calling the void method with an amount parameter is deprecated and will be removed in a future version.')
-          return void(options, deprecated.merge(:amount => authorization))
+          return void(options, deprecated.merge(amount: authorization))
         end
 
         order = build_void_request_xml(authorization, options)
@@ -286,13 +286,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def retrieve_customer_profile(customer_ref_num)
-        options = {:customer_profile_action => RETRIEVE, :customer_ref_num => customer_ref_num}
+        options = { customer_profile_action: RETRIEVE, customer_ref_num: customer_ref_num }
         order = build_customer_request_xml(nil, options)
         commit(order, :retrieve_customer_profile)
       end
 
       def delete_customer_profile(customer_ref_num)
-        options = {:customer_profile_action => DELETE, :customer_ref_num => customer_ref_num}
+        options = { customer_profile_action: DELETE, customer_ref_num: customer_ref_num }
         order = build_customer_request_xml(nil, options)
         commit(order, :delete_customer_profile)
       end
@@ -306,7 +306,8 @@ module ActiveMerchant #:nodoc:
           gsub(%r((<OrbitalConnectionUsername>).+(</OrbitalConnectionUsername>)), '\1[FILTERED]\2').
           gsub(%r((<OrbitalConnectionPassword>).+(</OrbitalConnectionPassword>)), '\1[FILTERED]\2').
           gsub(%r((<AccountNum>).+(</AccountNum>)), '\1[FILTERED]\2').
-          gsub(%r((<CCAccountNum>).+(</CCAccountNum>)), '\1[FILTERED]\2').
+          # the response sometimes contains a new line that cuts off the end of the closing tag
+          gsub(%r((<CCAccountNum>).+(</CC)), '\1[FILTERED]\2').
           gsub(%r((<CardSecVal>).+(</CardSecVal>)), '\1[FILTERED]\2').
           gsub(%r((<MerchantID>).+(</MerchantID>)), '\1[FILTERED]\2').
           gsub(%r((<CustomerMerchantID>).+(</CustomerMerchantID>)), '\1[FILTERED]\2')
@@ -354,36 +355,78 @@ module ActiveMerchant #:nodoc:
         xml.tag! :SDMerchantEmail, soft_desc[:merchant_email] || nil
       end
 
-      def add_level_2_tax(xml, options={})
-        if (level_2 = options[:level_2_data])
-          xml.tag! :TaxInd, level_2[:tax_indicator] if [TAX_NOT_PROVIDED, TAX_INCLUDED, NON_TAXABLE_TRANSACTION].include?(level_2[:tax_indicator].to_i)
-          xml.tag! :Tax, level_2[:tax].to_i if level_2[:tax]
+      def add_level2_tax(xml, options = {})
+        if (level2 = options[:level_2_data])
+          xml.tag! :TaxInd, level2[:tax_indicator] if [TAX_NOT_PROVIDED, TAX_INCLUDED, NON_TAXABLE_TRANSACTION].include?(level2[:tax_indicator].to_i)
+          xml.tag! :Tax, level2[:tax].to_i if level2[:tax]
         end
       end
 
-      def add_level_2_advice_addendum(xml, options={})
-        if (level_2 = options[:level_2_data])
-          xml.tag! :AMEXTranAdvAddn1, byte_limit(level_2[:advice_addendum_1], 40) if level_2[:advice_addendum_1]
-          xml.tag! :AMEXTranAdvAddn2, byte_limit(level_2[:advice_addendum_2], 40) if level_2[:advice_addendum_2]
-          xml.tag! :AMEXTranAdvAddn3, byte_limit(level_2[:advice_addendum_3], 40) if level_2[:advice_addendum_3]
-          xml.tag! :AMEXTranAdvAddn4, byte_limit(level_2[:advice_addendum_4], 40) if level_2[:advice_addendum_4]
+      def add_level3_tax(xml, options = {})
+        if (level3 = options[:level_3_data])
+          xml.tag! :PC3VATtaxAmt, byte_limit(level3[:vat_tax], 12) if level3[:vat_tax]
+          xml.tag! :PC3AltTaxAmt, byte_limit(level3[:alt_tax], 9) if level3[:alt_tax]
+          xml.tag! :PC3VATtaxRate, byte_limit(level3[:vat_rate], 4) if level3[:vat_rate]
+          xml.tag! :PC3AltTaxInd, byte_limit(level3[:alt_ind], 15) if level3[:alt_ind]
         end
       end
 
-      def add_level_2_purchase(xml, options={})
-        if (level_2 = options[:level_2_data])
-          xml.tag! :PCOrderNum,       byte_limit(level_2[:purchase_order], 17) if level_2[:purchase_order]
-          xml.tag! :PCDestZip,        byte_limit(format_address_field(level_2[:zip]), 10) if level_2[:zip]
-          xml.tag! :PCDestName,       byte_limit(format_address_field(level_2[:name]), 30) if level_2[:name]
-          xml.tag! :PCDestAddress1,   byte_limit(format_address_field(level_2[:address1]), 30) if level_2[:address1]
-          xml.tag! :PCDestAddress2,   byte_limit(format_address_field(level_2[:address2]), 30) if level_2[:address2]
-          xml.tag! :PCDestCity,       byte_limit(format_address_field(level_2[:city]), 20) if level_2[:city]
-          xml.tag! :PCDestState,      byte_limit(format_address_field(level_2[:state]), 2) if level_2[:state]
+      def add_level2_advice_addendum(xml, options = {})
+        if (level2 = options[:level_2_data])
+          xml.tag! :AMEXTranAdvAddn1, byte_limit(level2[:advice_addendum_1], 40) if level2[:advice_addendum_1]
+          xml.tag! :AMEXTranAdvAddn2, byte_limit(level2[:advice_addendum_2], 40) if level2[:advice_addendum_2]
+          xml.tag! :AMEXTranAdvAddn3, byte_limit(level2[:advice_addendum_3], 40) if level2[:advice_addendum_3]
+          xml.tag! :AMEXTranAdvAddn4, byte_limit(level2[:advice_addendum_4], 40) if level2[:advice_addendum_4]
         end
+      end
+
+      def add_level2_purchase(xml, options = {})
+        if (level2 = options[:level_2_data])
+          xml.tag! :PCOrderNum,       byte_limit(level2[:purchase_order], 17) if level2[:purchase_order]
+          xml.tag! :PCDestZip,        byte_limit(format_address_field(level2[:zip]), 10) if level2[:zip]
+          xml.tag! :PCDestName,       byte_limit(format_address_field(level2[:name]), 30) if level2[:name]
+          xml.tag! :PCDestAddress1,   byte_limit(format_address_field(level2[:address1]), 30) if level2[:address1]
+          xml.tag! :PCDestAddress2,   byte_limit(format_address_field(level2[:address2]), 30) if level2[:address2]
+          xml.tag! :PCDestCity,       byte_limit(format_address_field(level2[:city]), 20) if level2[:city]
+          xml.tag! :PCDestState,      byte_limit(format_address_field(level2[:state]), 2) if level2[:state]
+        end
+      end
+
+      def add_level3_purchase(xml, options = {})
+        if (level3 = options[:level_3_data])
+          xml.tag! :PC3FreightAmt,    byte_limit(level3[:freight_amount], 12) if level3[:freight_amount]
+          xml.tag! :PC3DutyAmt,       byte_limit(level3[:duty_amount], 12) if level3[:duty_amount]
+          xml.tag! :PC3DestCountryCd, byte_limit(level3[:dest_country], 3) if level3[:dest_country]
+          xml.tag! :PC3ShipFromZip,   byte_limit(level3[:ship_from_zip], 10) if level3[:ship_from_zip]
+          xml.tag! :PC3DiscAmt,       byte_limit(level3[:discount_amount], 12) if level3[:discount_amount]
+        end
+      end
+
+      def add_line_items(xml, options = {})
+        xml.tag! :PC3LineItemCount, byte_limit(options[:line_items].count, 2)
+        xml.tag! :PC3LineItemArray do
+          options[:line_items].each_with_index do |line_item, index|
+            xml.tag! :PC3LineItem do
+              xml.tag! :PC3DtlIndex,  byte_limit(index + 1, 2)
+              line_item.each do |key, value|
+                if [:line_tot, 'line_tot'].include? key
+                  formatted_key = :PC3Dtllinetot
+                else
+                  formatted_key = "PC3Dtl#{key.to_s.camelize}".to_sym
+                end
+                xml.tag! formatted_key, value
+              end
+            end
+          end
+        end
+      end
+
+      def add_card_indicators(xml, options)
+        xml.tag! :CardIndicators, options[:card_indicators] if options[:card_indicators]
       end
 
       def add_address(xml, creditcard, options)
-        if(address = (options[:billing_address] || options[:address]))
+        if (address = (options[:billing_address] || options[:address]))
           avs_supported = AVS_SUPPORTED_COUNTRIES.include?(address[:country].to_s) || empty?(address[:country])
 
           if avs_supported
@@ -421,7 +464,7 @@ module ActiveMerchant #:nodoc:
 
       # For Profile requests
       def add_customer_address(xml, options)
-        if(address = (options[:billing_address] || options[:address]))
+        if (address = (options[:billing_address] || options[:address]))
           avs_supported = AVS_SUPPORTED_COUNTRIES.include?(address[:country].to_s)
 
           xml.tag! :CustomerAddress1, byte_limit(format_address_field(address[:address1]), 30)
@@ -435,7 +478,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_creditcard(xml, creditcard, currency=nil)
+      def add_creditcard(xml, creditcard, currency = nil)
         unless creditcard.nil?
           xml.tag! :AccountNum, creditcard.number
           xml.tag! :Exp, expiry_date(creditcard)
@@ -455,7 +498,7 @@ module ActiveMerchant #:nodoc:
         # - http://download.chasepaymentech.com/docs/orbital/orbital_gateway_xml_specification.pdf
         unless creditcard.nil?
           if creditcard.verification_value?
-            xml.tag! :CardSecValInd, '1' if %w( visa discover ).include?(creditcard.brand)
+            xml.tag! :CardSecValInd, '1' if %w(visa discover).include?(creditcard.brand)
             xml.tag! :CardSecVal, creditcard.verification_value
           end
         end
@@ -472,13 +515,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_xid(xml, creditcard, three_d_secure)
-        xid = if three_d_secure && creditcard.brand == 'visa'
-                three_d_secure[:xid]
-              elsif creditcard.is_a?(NetworkTokenizationCreditCard)
-                creditcard.transaction_id
-              end
+        return unless three_d_secure && creditcard.brand == 'visa'
 
-        xml.tag!(:XID, xid) if xid
+        xml.tag!(:XID, three_d_secure[:xid]) if three_d_secure[:xid]
       end
 
       def add_cavv(xml, creditcard, three_d_secure)
@@ -517,7 +556,7 @@ module ActiveMerchant #:nodoc:
         xml.tag!(:PymtBrandProgramCode, 'ASK')
       end
 
-      def add_refund(xml, currency=nil)
+      def add_refund(xml, currency = nil)
         xml.tag! :AccountNum, nil
 
         xml.tag! :CurrencyCode, currency_code(currency)
@@ -550,6 +589,7 @@ module ActiveMerchant #:nodoc:
 
       def add_stored_credentials(xml, parameters)
         return unless parameters[:mit_stored_credential_ind] == 'Y' || parameters[:stored_credential] && !parameters[:stored_credential].values.all?(&:nil?)
+
         if msg_type = get_msg_type(parameters)
           xml.tag! :MITMsgType, msg_type
         end
@@ -565,9 +605,10 @@ module ActiveMerchant #:nodoc:
         return parameters[:mit_msg_type] if parameters[:mit_msg_type]
         return 'CSTO' if parameters[:stored_credential][:initial_transaction]
         return unless parameters[:stored_credential][:initiator] && parameters[:stored_credential][:reason_type]
+
         initiator =
           case parameters[:stored_credential][:initiator]
-          when 'customer' then 'C'
+          when 'cardholder', 'customer' then 'C'
           when 'merchant' then 'M'
           end
         reason =
@@ -602,7 +643,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def commit(order, message_type, trace_number=nil)
+      def commit(order, message_type, trace_number = nil)
         headers = POST_HEADERS.merge('Content-length' => order.size.to_s)
         if @options[:retry_logic] && trace_number
           headers['Trace-number'] = trace_number.to_s
@@ -620,15 +661,14 @@ module ActiveMerchant #:nodoc:
 
         Response.new(success?(response, message_type), message_from(response), response,
           {
-             :authorization => authorization_string(response[:tx_ref_num], response[:order_id]),
-             :test => self.test?,
-             :avs_result => OrbitalGateway::AVSResult.new(response[:avs_resp_code]),
-             :cvv_result => OrbitalGateway::CVVResult.new(response[:cvv2_resp_code])
-          }
-        )
+            authorization: authorization_string(response[:tx_ref_num], response[:order_id]),
+            test: self.test?,
+            avs_result: OrbitalGateway::AVSResult.new(response[:avs_resp_code]),
+            cvv_result: OrbitalGateway::CVVResult.new(response[:cvv2_resp_code])
+          })
       end
 
-      def remote_url(url=:primary)
+      def remote_url(url = :primary)
         if url == :primary
           (self.test? ? self.test_url : self.live_url)
         else
@@ -637,7 +677,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success?(response, message_type)
-        if [:refund, :void].include?(message_type)
+        if %i[refund void].include?(message_type)
           response[:proc_status] == SUCCESS
         elsif response[:customer_profile_action]
           response[:profile_proc_status] == SUCCESS
@@ -688,15 +728,11 @@ module ActiveMerchant #:nodoc:
             xml.tag! :Amount, amount(money)
             xml.tag! :Comments, parameters[:comments] if parameters[:comments]
 
-            add_level_2_tax(xml, parameters)
-            add_level_2_advice_addendum(xml, parameters)
+            add_level2_tax(xml, parameters)
+            add_level2_advice_addendum(xml, parameters)
 
             add_aav(xml, creditcard, three_d_secure)
             # CustomerAni, AVSPhoneType and AVSDestPhoneType could be added here.
-
-            add_dpanind(xml, creditcard)
-            add_aevv(xml, creditcard, three_d_secure)
-            add_digital_token_cryptogram(xml, creditcard)
 
             if parameters[:soft_descriptors].is_a?(OrbitalSoftDescriptors)
               add_soft_descriptors(xml, parameters[:soft_descriptors])
@@ -704,15 +740,23 @@ module ActiveMerchant #:nodoc:
               add_soft_descriptors_from_hash(xml, parameters[:soft_descriptors])
             end
 
+            add_dpanind(xml, creditcard)
+            add_aevv(xml, creditcard, three_d_secure)
+            add_digital_token_cryptogram(xml, creditcard)
+
             set_recurring_ind(xml, parameters)
 
             # Append Transaction Reference Number at the end for Refund transactions
             if action == REFUND
-              tx_ref_num, _ = split_authorization(parameters[:authorization])
+              tx_ref_num, = split_authorization(parameters[:authorization])
               xml.tag! :TxRefNum, tx_ref_num
             end
 
-            add_level_2_purchase(xml, parameters)
+            add_level2_purchase(xml, parameters)
+            add_level3_purchase(xml, parameters)
+            add_level3_tax(xml, parameters)
+            add_line_items(xml, parameters) if parameters[:line_items]
+            add_card_indicators(xml, parameters)
             add_stored_credentials(xml, parameters)
             add_pymt_brand_program_code(xml, creditcard, three_d_secure)
           end
@@ -726,6 +770,7 @@ module ActiveMerchant #:nodoc:
       def set_recurring_ind(xml, parameters)
         if parameters[:recurring_ind]
           raise 'RecurringInd must be set to either "RF" or "RS"' unless %w(RF RS).include?(parameters[:recurring_ind])
+
           xml.tag! :RecurringInd, parameters[:recurring_ind]
         end
       end
@@ -738,11 +783,13 @@ module ActiveMerchant #:nodoc:
             add_xml_credentials(xml)
             xml.tag! :OrderID, format_order_id(order_id)
             xml.tag! :Amount, amount(money)
-            add_level_2_tax(xml, parameters)
+            add_level2_tax(xml, parameters)
             add_bin_merchant_and_terminal(xml, parameters)
             xml.tag! :TxRefNum, tx_ref_num
-            add_level_2_purchase(xml, parameters)
-            add_level_2_advice_addendum(xml, parameters)
+            add_level2_purchase(xml, parameters)
+            add_level2_advice_addendum(xml, parameters)
+            add_level3_purchase(xml, parameters)
+            add_level3_tax(xml, parameters)
           end
         end
         xml.target!
@@ -783,8 +830,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def xml_envelope
-        xml = Builder::XmlMarkup.new(:indent => 2)
-        xml.instruct!(:xml, :version => '1.0', :encoding => 'UTF-8')
+        xml = Builder::XmlMarkup.new(indent: 2)
+        xml.instruct!(:xml, version: '1.0', encoding: 'UTF-8')
         xml
       end
 
@@ -812,7 +859,7 @@ module ActiveMerchant #:nodoc:
       # 3. PINless Debit transactions can only use uppercase and lowercase alpha (A-Z, a-z) and numeric (0-9)
       def format_order_id(order_id)
         illegal_characters = /[^,$@&\- \w]/
-        order_id = order_id.to_s.gsub(/\./, '-')
+        order_id = order_id.to_s.tr('.', '-')
         order_id.gsub!(illegal_characters, '')
         order_id.lstrip!
         order_id[0...22]
@@ -830,7 +877,8 @@ module ActiveMerchant #:nodoc:
         limited_value = ''
 
         value.to_s.each_char do |c|
-          break if((limited_value.bytesize + c.bytesize) > byte_length)
+          break if (limited_value.bytesize + c.bytesize) > byte_length
+
           limited_value << c
         end
 
@@ -893,55 +941,55 @@ module ActiveMerchant #:nodoc:
       #
       class AVSResult < ActiveMerchant::Billing::AVSResult
         CODES = {
-            '1'  => 'No address supplied',
-            '2'  => 'Bill-to address did not pass Auth Host edit checks',
-            '3'  => 'AVS not performed',
-            '4'  => 'Issuer does not participate in AVS',
-            '5'  => 'Edit-error - AVS data is invalid',
-            '6'  => 'System unavailable or time-out',
-            '7'  => 'Address information unavailable',
-            '8'  => 'Transaction Ineligible for AVS',
-            '9'  => 'Zip Match/Zip 4 Match/Locale match',
-            'A'  => 'Zip Match/Zip 4 Match/Locale no match',
-            'B'  => 'Zip Match/Zip 4 no Match/Locale match',
-            'C'  => 'Zip Match/Zip 4 no Match/Locale no match',
-            'D'  => 'Zip No Match/Zip 4 Match/Locale match',
-            'E'  => 'Zip No Match/Zip 4 Match/Locale no match',
-            'F'  => 'Zip No Match/Zip 4 No Match/Locale match',
-            'G'  => 'No match at all',
-            'H'  => 'Zip Match/Locale match',
-            'J'  => 'Issuer does not participate in Global AVS',
-            'JA' => 'International street address and postal match',
-            'JB' => 'International street address match. Postal code not verified',
-            'JC' => 'International street address and postal code not verified',
-            'JD' => 'International postal code match. Street address not verified',
-            'M1' => 'Cardholder name matches',
-            'M2' => 'Cardholder name, billing address, and postal code matches',
-            'M3' => 'Cardholder name and billing code matches',
-            'M4' => 'Cardholder name and billing address match',
-            'M5' => 'Cardholder name incorrect, billing address and postal code match',
-            'M6' => 'Cardholder name incorrect, billing postal code matches',
-            'M7' => 'Cardholder name incorrect, billing address matches',
-            'M8' => 'Cardholder name, billing address and postal code are all incorrect',
-            'N3' => 'Address matches, ZIP not verified',
-            'N4' => 'Address and ZIP code not verified due to incompatible formats',
-            'N5' => 'Address and ZIP code match (International only)',
-            'N6' => 'Address not verified (International only)',
-            'N7' => 'ZIP matches, address not verified',
-            'N8' => 'Address and ZIP code match (International only)',
-            'N9' => 'Address and ZIP code match (UK only)',
-            'R'  => 'Issuer does not participate in AVS',
-            'UK' => 'Unknown',
-            'X'  => 'Zip Match/Zip 4 Match/Address Match',
-            'Z'  => 'Zip Match/Locale no match',
+          '1'  => 'No address supplied',
+          '2'  => 'Bill-to address did not pass Auth Host edit checks',
+          '3'  => 'AVS not performed',
+          '4'  => 'Issuer does not participate in AVS',
+          '5'  => 'Edit-error - AVS data is invalid',
+          '6'  => 'System unavailable or time-out',
+          '7'  => 'Address information unavailable',
+          '8'  => 'Transaction Ineligible for AVS',
+          '9'  => 'Zip Match/Zip 4 Match/Locale match',
+          'A'  => 'Zip Match/Zip 4 Match/Locale no match',
+          'B'  => 'Zip Match/Zip 4 no Match/Locale match',
+          'C'  => 'Zip Match/Zip 4 no Match/Locale no match',
+          'D'  => 'Zip No Match/Zip 4 Match/Locale match',
+          'E'  => 'Zip No Match/Zip 4 Match/Locale no match',
+          'F'  => 'Zip No Match/Zip 4 No Match/Locale match',
+          'G'  => 'No match at all',
+          'H'  => 'Zip Match/Locale match',
+          'J'  => 'Issuer does not participate in Global AVS',
+          'JA' => 'International street address and postal match',
+          'JB' => 'International street address match. Postal code not verified',
+          'JC' => 'International street address and postal code not verified',
+          'JD' => 'International postal code match. Street address not verified',
+          'M1' => 'Cardholder name matches',
+          'M2' => 'Cardholder name, billing address, and postal code matches',
+          'M3' => 'Cardholder name and billing code matches',
+          'M4' => 'Cardholder name and billing address match',
+          'M5' => 'Cardholder name incorrect, billing address and postal code match',
+          'M6' => 'Cardholder name incorrect, billing postal code matches',
+          'M7' => 'Cardholder name incorrect, billing address matches',
+          'M8' => 'Cardholder name, billing address and postal code are all incorrect',
+          'N3' => 'Address matches, ZIP not verified',
+          'N4' => 'Address and ZIP code not verified due to incompatible formats',
+          'N5' => 'Address and ZIP code match (International only)',
+          'N6' => 'Address not verified (International only)',
+          'N7' => 'ZIP matches, address not verified',
+          'N8' => 'Address and ZIP code match (International only)',
+          'N9' => 'Address and ZIP code match (UK only)',
+          'R'  => 'Issuer does not participate in AVS',
+          'UK' => 'Unknown',
+          'X'  => 'Zip Match/Zip 4 Match/Address Match',
+          'Z'  => 'Zip Match/Locale no match'
         }
 
         # Map vendor's AVS result code to a postal match code
         ORBITAL_POSTAL_MATCH_CODE = {
-            'Y' => %w( 9 A B C H JA JD M2 M3 M5 N5 N8 N9 X Z ),
-            'N' => %w( D E F G M8 ),
-            'X' => %w( 4 J R ),
-            nil => %w( 1 2 3 5 6 7 8 JB JC M1 M4 M6 M7 N3 N4 N6 N7 UK )
+          'Y' => %w(9 A B C H JA JD M2 M3 M5 N5 N8 N9 X Z),
+          'N' => %w(D E F G M8),
+          'X' => %w(4 J R),
+            nil => %w(1 2 3 5 6 7 8 JB JC M1 M4 M6 M7 N3 N4 N6 N7 UK)
         }.inject({}) do |map, (type, codes)|
           codes.each { |code| map[code] = type }
           map
@@ -949,10 +997,10 @@ module ActiveMerchant #:nodoc:
 
         # Map vendor's AVS result code to a street match code
         ORBITAL_STREET_MATCH_CODE = {
-            'Y' => %w( 9 B D F H JA JB M2 M4 M5 M6 M7 N3 N5 N7 N8 N9 X ),
-            'N' => %w( A C E G M8 Z ),
-            'X' => %w( 4 J R ),
-            nil => %w( 1 2 3 5 6 7 8 JC JD M1 M3 N4 N6 UK )
+          'Y' => %w(9 B D F H JA JB M2 M4 M5 M6 M7 N3 N5 N7 N8 N9 X),
+          'N' => %w(A C E G M8 Z),
+          'X' => %w(4 J R),
+            nil => %w(1 2 3 5 6 7 8 JC JD M1 M3 N4 N6 UK)
         }.inject({}) do |map, (type, codes)|
           codes.each { |code| map[code] = type }
           map

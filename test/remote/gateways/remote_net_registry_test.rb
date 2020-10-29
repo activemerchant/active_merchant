@@ -10,15 +10,14 @@ require 'test_helper'
 # All purchases made in these tests are $1, so hopefully you won't be
 # sent broke if you forget...
 class NetRegistryTest < Test::Unit::TestCase
-
   def setup
     @gateway = NetRegistryGateway.new(fixtures(:net_registry))
 
     @amount = 100
     @valid_creditcard = credit_card
     @invalid_creditcard = credit_card('41111111111111111')
-    @expired_creditcard = credit_card('4111111111111111', :year => '2000')
-    @invalid_month_creditcard = credit_card('4111111111111111', :month => '13')
+    @expired_creditcard = credit_card('4111111111111111', year: '2000')
+    @invalid_month_creditcard = credit_card('4111111111111111', month: '13')
   end
 
   def test_successful_purchase_and_credit
@@ -59,7 +58,7 @@ class NetRegistryTest < Test::Unit::TestCase
 
       response = @gateway.capture(@amount,
         response.authorization,
-        :credit_card => @valid_creditcard)
+        credit_card: @valid_creditcard)
       assert_success response
       assert_equal 'approved', response.params['status']
     end
@@ -88,9 +87,9 @@ class NetRegistryTest < Test::Unit::TestCase
 
   def test_bad_login
     gateway = NetRegistryGateway.new(
-                 :login    => 'bad-login',
-                 :password => 'bad-login'
-               )
+      login: 'bad-login',
+      password: 'bad-login'
+    )
     response = gateway.purchase(@amount, @valid_creditcard)
     assert_equal 'failed', response.params['status']
     assert_failure response

@@ -1,13 +1,12 @@
 require 'test_helper'
 
 class ConnectionTest < Test::Unit::TestCase
-
   def setup
-    @ok = stub(:code => 200, :message => 'OK', :body => 'success')
+    @ok = stub(code: 200, message: 'OK', body: 'success')
 
     @endpoint   = 'https://example.com/tx.php'
     @connection = ActiveMerchant::Connection.new(@endpoint)
-    @connection.logger = stub(:info => nil, :debug => nil, :error => nil)
+    @connection.logger = stub(info: nil, debug: nil, error: nil)
   end
 
   def test_connection_endpoint_parses_string_to_uri
@@ -30,7 +29,7 @@ class ConnectionTest < Test::Unit::TestCase
     spy = Net::HTTP.new('example.com', 443)
     Net::HTTP.expects(:new).with('example.com', 443, :ENV, nil).returns(spy)
     spy.expects(:start).returns(true)
-    spy.expects(:get).with('/tx.php', {'connection' => 'close'}).returns(@ok)
+    spy.expects(:get).with('/tx.php', { 'connection' => 'close' }).returns(@ok)
     @connection.request(:get, nil, {})
   end
 
@@ -40,13 +39,13 @@ class ConnectionTest < Test::Unit::TestCase
     spy = Net::HTTP.new('example.com', 443)
     Net::HTTP.expects(:new).with('example.com', 443, 'proxy.example.com', 8080).returns(spy)
     spy.expects(:start).returns(true)
-    spy.expects(:get).with('/tx.php', {'connection' => 'close'}).returns(@ok)
+    spy.expects(:get).with('/tx.php', { 'connection' => 'close' }).returns(@ok)
     @connection.request(:get, nil, {})
   end
 
   def test_connection_does_not_mutate_headers_argument
     headers = { 'Content-Type' => 'text/xml' }.freeze
-    Net::HTTP.any_instance.expects(:get).with('/tx.php', headers.merge({'connection' => 'close'})).returns(@ok)
+    Net::HTTP.any_instance.expects(:get).with('/tx.php', headers.merge({ 'connection' => 'close' })).returns(@ok)
     Net::HTTP.any_instance.expects(:start).returns(true)
     @connection.request(:get, nil, headers)
     assert_equal({ 'Content-Type' => 'text/xml' }, headers)
@@ -54,28 +53,28 @@ class ConnectionTest < Test::Unit::TestCase
 
   def test_successful_get_request
     @connection.logger.expects(:info).twice
-    Net::HTTP.any_instance.expects(:get).with('/tx.php', {'connection' => 'close'}).returns(@ok)
+    Net::HTTP.any_instance.expects(:get).with('/tx.php', { 'connection' => 'close' }).returns(@ok)
     Net::HTTP.any_instance.expects(:start).returns(true)
     response = @connection.request(:get, nil, {})
     assert_equal 'success', response.body
   end
 
   def test_successful_post_request
-    Net::HTTP.any_instance.expects(:post).with('/tx.php', 'data', ActiveMerchant::Connection::RUBY_184_POST_HEADERS.merge({'connection' => 'close'})).returns(@ok)
+    Net::HTTP.any_instance.expects(:post).with('/tx.php', 'data', ActiveMerchant::Connection::RUBY_184_POST_HEADERS.merge({ 'connection' => 'close' })).returns(@ok)
     Net::HTTP.any_instance.expects(:start).returns(true)
     response = @connection.request(:post, 'data', {})
     assert_equal 'success', response.body
   end
 
   def test_successful_put_request
-    Net::HTTP.any_instance.expects(:put).with('/tx.php', 'data', {'connection' => 'close'}).returns(@ok)
+    Net::HTTP.any_instance.expects(:put).with('/tx.php', 'data', { 'connection' => 'close' }).returns(@ok)
     Net::HTTP.any_instance.expects(:start).returns(true)
     response = @connection.request(:put, 'data', {})
     assert_equal 'success', response.body
   end
 
   def test_successful_delete_request
-    Net::HTTP.any_instance.expects(:delete).with('/tx.php', {'connection' => 'close'}).returns(@ok)
+    Net::HTTP.any_instance.expects(:delete).with('/tx.php', { 'connection' => 'close' }).returns(@ok)
     Net::HTTP.any_instance.expects(:start).returns(true)
     response = @connection.request(:delete, nil, {})
     assert_equal 'success', response.body
@@ -244,5 +243,4 @@ class ConnectionTest < Test::Unit::TestCase
       @connection.wiredump_device = transcript
     end
   end
-
 end

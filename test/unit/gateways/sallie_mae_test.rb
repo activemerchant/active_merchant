@@ -3,16 +3,16 @@ require 'test_helper'
 class SallieMaeTest < Test::Unit::TestCase
   def setup
     @gateway = SallieMaeGateway.new(
-                 :login => 'FAKEACCOUNT'
-               )
+      login: 'FAKEACCOUNT'
+    )
 
     @credit_card = credit_card
     @amount = 100
 
     @options = {
-      :order_id => '1',
-      :billing_address => address,
-      :description => 'Store Purchase'
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase'
     }
   end
 
@@ -35,7 +35,7 @@ class SallieMaeTest < Test::Unit::TestCase
   end
 
   def test_test_account
-    gateway = SallieMaeGateway.new(:login => 'TEST0')
+    gateway = SallieMaeGateway.new(login: 'TEST0')
     assert gateway.test?
   end
 

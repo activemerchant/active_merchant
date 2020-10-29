@@ -6,17 +6,17 @@ class RemoteNetbillingTest < Test::Unit::TestCase
 
     @credit_card = credit_card('4444111111111119')
 
-    @address = {  :address1 => '1600 Amphitheatre Parkway',
-                  :city => 'Mountain View',
-                  :state => 'CA',
-                  :country => 'US',
-                  :zip => '94043',
-                  :phone => '650-253-0001'}
+    @address = {  address1: '1600 Amphitheatre Parkway',
+                  city: 'Mountain View',
+                  state: 'CA',
+                  country: 'US',
+                  zip: '94043',
+                  phone: '650-253-0001' }
 
     @options = {
-      :billing_address => @address,
-      :description => 'Internet purchase',
-      :order_id => 987654321
+      billing_address: @address,
+      description: 'Internet purchase',
+      order_id: 987654321
     }
 
     @amount = 100
@@ -88,9 +88,9 @@ class RemoteNetbillingTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = NetbillingGateway.new(
-                :login => '',
-                :password => ''
-              )
+      login: '',
+      password: ''
+    )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_match(/missing/i, response.message)
     assert_failure response

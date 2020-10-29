@@ -54,14 +54,14 @@ module ActiveMerchant #:nodoc:
         @primary_response = nil
       end
 
-      def process(ignore_result=false)
+      def process(ignore_result = false)
         return unless success?
 
         response = yield
         self << response
 
         unless ignore_result
-          if(@use_first_response && response.success?)
+          if @use_first_response && response.success?
             @primary_response ||= response
           else
             @primary_response = response

@@ -9,7 +9,7 @@ class RemoteBamboraApacTest < Test::Unit::TestCase
     @options = {
       order_id: '1',
       billing_address: address,
-      description: 'Store Purchase',
+      description: 'Store Purchase'
     }
   end
 
@@ -69,14 +69,14 @@ class RemoteBamboraApacTest < Test::Unit::TestCase
   def test_successful_void
     response = @gateway.purchase(200, @credit_card, @options)
     assert_success response
-    response = @gateway.void(200, response.authorization)
+    response = @gateway.void(response.authorization, amount: 200)
     assert_success response
   end
 
   def test_failed_void
     response = @gateway.purchase(200, @credit_card, @options)
     assert_success response
-    response = @gateway.void(200, 123)
+    response = @gateway.void(123, amount: 200)
     assert_failure response
     assert_equal 'Cannot find matching transaction to VOID', response.message
   end

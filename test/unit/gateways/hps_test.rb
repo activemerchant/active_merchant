@@ -4,10 +4,12 @@ class HpsTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    @gateway = HpsGateway.new({:secret_api_key => '12'})
+    @gateway = HpsGateway.new({ secret_api_key: '12' })
 
     @credit_card = credit_card
     @amount = 100
+    @check = check(account_number: '1357902468', routing_number: '122000030', number: '1234', account_type: 'SAVINGS')
+    @check_amount = 2000
 
     @options = {
       order_id: '1',
@@ -33,6 +35,40 @@ class HpsTest < Test::Unit::TestCase
     }
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_instance_of Response, response
+    assert_success response
+  end
+
+  def test_successful_check_purchase
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@check_amount, @check, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/<hps:CheckSale><hps:Block1><hps:CheckAction>SALE<\/hps:CheckAction>/, data)
+    end.respond_with(successful_check_purchase_response)
+
+    assert_success response
+  end
+
+  def test_check_purchase_does_not_raise_no_method_error_when_account_type_missing
+    check = @check.dup
+    check.account_type = nil
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@check_amount, check, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/<hps:CheckSale><hps:Block1><hps:CheckAction>SALE<\/hps:CheckAction>/, data)
+    end.respond_with(successful_check_purchase_response)
+
+    assert_success response
+  end
+
+  def test_check_purchase_does_not_raise_no_method_error_when_account_holder_type_missing
+    check = @check.dup
+    check.account_holder_type = nil
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@check_amount, check, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/<hps:CheckSale><hps:Block1><hps:CheckAction>SALE<\/hps:CheckAction>/, data)
+    end.respond_with(successful_check_purchase_response)
+
     assert_success response
   end
 
@@ -111,6 +147,16 @@ class HpsTest < Test::Unit::TestCase
 
     void = @gateway.void('169054')
     assert_instance_of Response, void
+    assert_success void
+  end
+
+  def test_successful_check_void
+    void = stub_comms(@gateway, :ssl_request) do
+      @gateway.void('169054', check_void: true)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/<hps:Transaction><hps:CheckVoid>/, data)
+    end.respond_with(successful_check_void_response)
+
     assert_success void
   end
 
@@ -204,8 +250,7 @@ class HpsTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :apple_pay
-    )
+      source: :apple_pay)
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -218,8 +263,7 @@ class HpsTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :apple_pay
-    )
+      source: :apple_pay)
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_failure response
     assert_equal 'The card was declined.', response.message
@@ -231,8 +275,7 @@ class HpsTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :apple_pay
-    )
+      source: :apple_pay)
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -244,8 +287,7 @@ class HpsTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :apple_pay
-    )
+      source: :apple_pay)
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_failure response
     assert_equal 'The card was declined.', response.message
@@ -258,8 +300,7 @@ class HpsTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :apple_pay
-    )
+      source: :apple_pay)
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -272,8 +313,7 @@ class HpsTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :apple_pay
-    )
+      source: :apple_pay)
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_failure response
     assert_equal 'The card was declined.', response.message
@@ -285,8 +325,7 @@ class HpsTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :apple_pay
-    )
+      source: :apple_pay)
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -298,8 +337,207 @@ class HpsTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :apple_pay
-    )
+      source: :apple_pay)
+    assert response = @gateway.authorize(@amount, credit_card, @options)
+    assert_failure response
+    assert_equal 'The card was declined.', response.message
+  end
+
+  def test_successful_purchase_with_android_pay_raw_cryptogram_with_eci
+    @gateway.expects(:ssl_post).returns(successful_charge_response)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      eci: '05',
+      source: :android_pay)
+    assert response = @gateway.purchase(@amount, credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_failed_purchase_with_android_pay_raw_cryptogram_with_eci
+    @gateway.expects(:ssl_post).returns(failed_charge_response_decline)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      eci: '05',
+      source: :android_pay)
+    assert response = @gateway.purchase(@amount, credit_card, @options)
+    assert_failure response
+    assert_equal 'The card was declined.', response.message
+  end
+
+  def test_successful_purchase_with_android_pay_raw_cryptogram_without_eci
+    @gateway.expects(:ssl_post).returns(successful_charge_response)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      source: :android_pay)
+    assert response = @gateway.purchase(@amount, credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_failed_purchase_with_android_pay_raw_cryptogram_without_eci
+    @gateway.expects(:ssl_post).returns(failed_charge_response_decline)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      source: :android_pay)
+    assert response = @gateway.purchase(@amount, credit_card, @options)
+    assert_failure response
+    assert_equal 'The card was declined.', response.message
+  end
+
+  def test_successful_auth_with_android_pay_raw_cryptogram_with_eci
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      eci: '05',
+      source: :android_pay)
+    assert response = @gateway.authorize(@amount, credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_failed_auth_with_android_pay_raw_cryptogram_with_eci
+    @gateway.expects(:ssl_post).returns(failed_authorize_response_decline)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      eci: '05',
+      source: :android_pay)
+    assert response = @gateway.authorize(@amount, credit_card, @options)
+    assert_failure response
+    assert_equal 'The card was declined.', response.message
+  end
+
+  def test_successful_auth_with_android_pay_raw_cryptogram_without_eci
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      source: :android_pay)
+    assert response = @gateway.authorize(@amount, credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_failed_auth_with_android_pay_raw_cryptogram_without_eci
+    @gateway.expects(:ssl_post).returns(failed_authorize_response_decline)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      source: :android_pay)
+    assert response = @gateway.authorize(@amount, credit_card, @options)
+    assert_failure response
+    assert_equal 'The card was declined.', response.message
+  end
+
+  def test_successful_purchase_with_google_pay_raw_cryptogram_with_eci
+    @gateway.expects(:ssl_post).returns(successful_charge_response)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      eci: '05',
+      source: :google_pay)
+    assert response = @gateway.purchase(@amount, credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_failed_purchase_with_google_pay_raw_cryptogram_with_eci
+    @gateway.expects(:ssl_post).returns(failed_charge_response_decline)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      eci: '05',
+      source: :google_pay)
+    assert response = @gateway.purchase(@amount, credit_card, @options)
+    assert_failure response
+    assert_equal 'The card was declined.', response.message
+  end
+
+  def test_successful_purchase_with_google_pay_raw_cryptogram_without_eci
+    @gateway.expects(:ssl_post).returns(successful_charge_response)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      source: :google_pay)
+    assert response = @gateway.purchase(@amount, credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_failed_purchase_with_google_pay_raw_cryptogram_without_eci
+    @gateway.expects(:ssl_post).returns(failed_charge_response_decline)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      source: :google_pay)
+    assert response = @gateway.purchase(@amount, credit_card, @options)
+    assert_failure response
+    assert_equal 'The card was declined.', response.message
+  end
+
+  def test_successful_auth_with_google_pay_raw_cryptogram_with_eci
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      eci: '05',
+      source: :google_pay)
+    assert response = @gateway.authorize(@amount, credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_failed_auth_with_google_pay_raw_cryptogram_with_eci
+    @gateway.expects(:ssl_post).returns(failed_authorize_response_decline)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      eci: '05',
+      source: :google_pay)
+    assert response = @gateway.authorize(@amount, credit_card, @options)
+    assert_failure response
+    assert_equal 'The card was declined.', response.message
+  end
+
+  def test_successful_auth_with_google_pay_raw_cryptogram_without_eci
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      source: :google_pay)
+    assert response = @gateway.authorize(@amount, credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_failed_auth_with_google_pay_raw_cryptogram_without_eci
+    @gateway.expects(:ssl_post).returns(failed_authorize_response_decline)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      verification_value: nil,
+      source: :google_pay)
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_failure response
     assert_equal 'The card was declined.', response.message
@@ -310,16 +548,16 @@ class HpsTest < Test::Unit::TestCase
     @credit_card.brand = 'visa'
 
     options = {
-      :three_d_secure => {
-        :cavv => 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
-        :eci => '05',
-        :xid => 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
+      three_d_secure: {
+        cavv: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+        eci: '05',
+        xid: 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
       }
     }
 
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/<hps:SecureECommerce>(.*)<\/hps:SecureECommerce>/, data)
       assert_match(/<hps:PaymentDataSource>Visa 3DSecure<\/hps:PaymentDataSource>/, data)
       assert_match(/<hps:TypeOfPaymentData>3DSecure<\/hps:TypeOfPaymentData>/, data)
@@ -337,16 +575,16 @@ class HpsTest < Test::Unit::TestCase
     @credit_card.brand = 'master'
 
     options = {
-      :three_d_secure => {
-        :cavv => 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
-        :eci => '05',
-        :xid => 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
+      three_d_secure: {
+        cavv: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+        eci: '05',
+        xid: 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
       }
     }
 
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/<hps:SecureECommerce>(.*)<\/hps:SecureECommerce>/, data)
       assert_match(/<hps:PaymentDataSource>MasterCard 3DSecure<\/hps:PaymentDataSource>/, data)
       assert_match(/<hps:TypeOfPaymentData>3DSecure<\/hps:TypeOfPaymentData>/, data)
@@ -364,16 +602,16 @@ class HpsTest < Test::Unit::TestCase
     @credit_card.brand = 'discover'
 
     options = {
-      :three_d_secure => {
-        :cavv => 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
-        :eci => '5',
-        :xid => 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
+      three_d_secure: {
+        cavv: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+        eci: '5',
+        xid: 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
       }
     }
 
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/<hps:SecureECommerce>(.*)<\/hps:SecureECommerce>/, data)
       assert_match(/<hps:PaymentDataSource>Discover 3DSecure<\/hps:PaymentDataSource>/, data)
       assert_match(/<hps:TypeOfPaymentData>3DSecure<\/hps:TypeOfPaymentData>/, data)
@@ -391,16 +629,16 @@ class HpsTest < Test::Unit::TestCase
     @credit_card.brand = 'american_express'
 
     options = {
-      :three_d_secure => {
-        :cavv => 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
-        :eci => '05',
-        :xid => 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
+      three_d_secure: {
+        cavv: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+        eci: '05',
+        xid: 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
       }
     }
 
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/<hps:SecureECommerce>(.*)<\/hps:SecureECommerce>/, data)
       assert_match(/<hps:PaymentDataSource>AMEX 3DSecure<\/hps:PaymentDataSource>/, data)
       assert_match(/<hps:TypeOfPaymentData>3DSecure<\/hps:TypeOfPaymentData>/, data)
@@ -418,16 +656,16 @@ class HpsTest < Test::Unit::TestCase
     @credit_card.brand = 'jcb'
 
     options = {
-      :three_d_secure => {
-        :cavv => 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
-        :eci => '5',
-        :xid => 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
+      three_d_secure: {
+        cavv: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+        eci: '5',
+        xid: 'TTBCSkVTa1ZpbDI1bjRxbGk5ODE='
       }
     }
 
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       refute_match(/<hps:SecureECommerce>(.*)<\/hps:SecureECommerce>/, data)
       refute_match(/<hps:PaymentDataSource>(.*)<\/hps:PaymentDataSource>/, data)
       refute_match(/<hps:TypeOfPaymentData>3DSecure<\/hps:TypeOfPaymentData>/, data)
@@ -443,483 +681,541 @@ class HpsTest < Test::Unit::TestCase
   private
 
   def successful_charge_response
-    <<-RESPONSE
-<?xml version="1.0" encoding="UTF-8"?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <soap:Body>
-     <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
-        <Ver1.0>
-           <Header>
-              <LicenseId>95878</LicenseId>
-              <SiteId>95881</SiteId>
-              <DeviceId>2409000</DeviceId>
-              <GatewayTxnId>15927453</GatewayTxnId>
-              <GatewayRspCode>0</GatewayRspCode>
-              <GatewayRspMsg>Success</GatewayRspMsg>
-              <RspDT>2014-03-14T15:40:25.4686202</RspDT>
-           </Header>
-           <Transaction>
-              <CreditSale>
-                 <RspCode>00</RspCode>
-                 <RspText>APPROVAL</RspText>
-                 <AuthCode>36987A</AuthCode>
-                 <AVSRsltCode>0</AVSRsltCode>
-                 <CVVRsltCode>M</CVVRsltCode>
-                 <RefNbr>407313649105</RefNbr>
-                 <AVSResultCodeAction>ACCEPT</AVSResultCodeAction>
-                 <CVVResultCodeAction>ACCEPT</CVVResultCodeAction>
-                 <CardType>Visa</CardType>
-                 <AVSRsltText>AVS Not Requested.</AVSRsltText>
-                 <CVVRsltText>Match.</CVVRsltText>
-              </CreditSale>
-           </Transaction>
-        </Ver1.0>
-     </PosResponse>
-  </soap:Body>
-</soap:Envelope>
-    RESPONSE
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <soap:Body>
+           <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+              <Ver1.0>
+                 <Header>
+                    <LicenseId>95878</LicenseId>
+                    <SiteId>95881</SiteId>
+                    <DeviceId>2409000</DeviceId>
+                    <GatewayTxnId>15927453</GatewayTxnId>
+                    <GatewayRspCode>0</GatewayRspCode>
+                    <GatewayRspMsg>Success</GatewayRspMsg>
+                    <RspDT>2014-03-14T15:40:25.4686202</RspDT>
+                 </Header>
+                 <Transaction>
+                    <CreditSale>
+                       <RspCode>00</RspCode>
+                       <RspText>APPROVAL</RspText>
+                       <AuthCode>36987A</AuthCode>
+                       <AVSRsltCode>0</AVSRsltCode>
+                       <CVVRsltCode>M</CVVRsltCode>
+                       <RefNbr>407313649105</RefNbr>
+                       <AVSResultCodeAction>ACCEPT</AVSResultCodeAction>
+                       <CVVResultCodeAction>ACCEPT</CVVResultCodeAction>
+                       <CardType>Visa</CardType>
+                       <AVSRsltText>AVS Not Requested.</AVSRsltText>
+                       <CVVRsltText>Match.</CVVRsltText>
+                    </CreditSale>
+                 </Transaction>
+              </Ver1.0>
+           </PosResponse>
+        </soap:Body>
+      </soap:Envelope>
+    XML
+  end
+
+  def successful_check_purchase_response
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <soap:Body>
+          <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+            <Ver1.0>
+              <Header>
+                <LicenseId>144379</LicenseId>
+                <SiteId>144474</SiteId>
+                <DeviceId>6407594</DeviceId>
+                <GatewayTxnId>1284694345</GatewayTxnId>
+                <GatewayRspCode>0</GatewayRspCode>
+                <GatewayRspMsg>Success</GatewayRspMsg>
+                <RspDT>2020-01-13T15:11:24.735047</RspDT>
+              </Header>
+              <Transaction>
+                <CheckSale>
+                  <RspCode>0</RspCode>
+                  <RspMessage>Transaction Approved. BatchID:31796</RspMessage>
+                </CheckSale>
+              </Transaction>
+            </Ver1.0>
+          </PosResponse>
+        </soap:Body>
+      </soap:Envelope>
+    XML
   end
 
   def failed_charge_response
-    <<-RESPONSE
-<?xml version="1.0" encoding="UTF-8"?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <soap:Body>
-     <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
-        <Ver1.0>
-           <Header>
-              <LicenseId>21229</LicenseId>
-              <SiteId>21232</SiteId>
-              <DeviceId>1525997</DeviceId>
-              <GatewayTxnId>16099851</GatewayTxnId>
-              <GatewayRspCode>0</GatewayRspCode>
-              <GatewayRspMsg>Success</GatewayRspMsg>
-              <RspDT>2014-03-17T13:01:55.851307</RspDT>
-           </Header>
-           <Transaction>
-              <CreditSale>
-                 <RspCode>02</RspCode>
-                 <RspText>CALL</RspText>
-                 <AuthCode />
-                 <AVSRsltCode>0</AVSRsltCode>
-                 <RefNbr>407613674802</RefNbr>
-                 <CardType>Visa</CardType>
-                 <AVSRsltText>AVS Not Requested.</AVSRsltText>
-              </CreditSale>
-           </Transaction>
-        </Ver1.0>
-     </PosResponse>
-  </soap:Body>
-</soap:Envelope>
-    RESPONSE
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <soap:Body>
+           <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+              <Ver1.0>
+                 <Header>
+                    <LicenseId>21229</LicenseId>
+                    <SiteId>21232</SiteId>
+                    <DeviceId>1525997</DeviceId>
+                    <GatewayTxnId>16099851</GatewayTxnId>
+                    <GatewayRspCode>0</GatewayRspCode>
+                    <GatewayRspMsg>Success</GatewayRspMsg>
+                    <RspDT>2014-03-17T13:01:55.851307</RspDT>
+                 </Header>
+                 <Transaction>
+                    <CreditSale>
+                       <RspCode>02</RspCode>
+                       <RspText>CALL</RspText>
+                       <AuthCode />
+                       <AVSRsltCode>0</AVSRsltCode>
+                       <RefNbr>407613674802</RefNbr>
+                       <CardType>Visa</CardType>
+                       <AVSRsltText>AVS Not Requested.</AVSRsltText>
+                    </CreditSale>
+                 </Transaction>
+              </Ver1.0>
+           </PosResponse>
+        </soap:Body>
+      </soap:Envelope>
+    XML
   end
 
   def failed_charge_response_decline
-    <<-RESPONSE
-<?xml version="1.0" encoding="UTF-8"?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <soap:Body>
-     <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
-        <Ver1.0>
-           <Header>
-              <LicenseId>21229</LicenseId>
-              <SiteId>21232</SiteId>
-              <DeviceId>1525997</DeviceId>
-              <GatewayTxnId>16099851</GatewayTxnId>
-              <GatewayRspCode>0</GatewayRspCode>
-              <GatewayRspMsg>Success</GatewayRspMsg>
-              <RspDT>2014-03-17T13:01:55.851307</RspDT>
-           </Header>
-           <Transaction>
-              <CreditSale>
-                 <RspCode>05</RspCode>
-                 <RspText>DECLINE</RspText>
-                 <AuthCode />
-                 <AVSRsltCode>0</AVSRsltCode>
-                 <RefNbr>407613674802</RefNbr>
-                 <CardType>Visa</CardType>
-                 <AVSRsltText>AVS Not Requested.</AVSRsltText>
-              </CreditSale>
-           </Transaction>
-        </Ver1.0>
-     </PosResponse>
-  </soap:Body>
-</soap:Envelope>
-    RESPONSE
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <soap:Body>
+           <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+              <Ver1.0>
+                 <Header>
+                    <LicenseId>21229</LicenseId>
+                    <SiteId>21232</SiteId>
+                    <DeviceId>1525997</DeviceId>
+                    <GatewayTxnId>16099851</GatewayTxnId>
+                    <GatewayRspCode>0</GatewayRspCode>
+                    <GatewayRspMsg>Success</GatewayRspMsg>
+                    <RspDT>2014-03-17T13:01:55.851307</RspDT>
+                 </Header>
+                 <Transaction>
+                    <CreditSale>
+                       <RspCode>05</RspCode>
+                       <RspText>DECLINE</RspText>
+                       <AuthCode />
+                       <AVSRsltCode>0</AVSRsltCode>
+                       <RefNbr>407613674802</RefNbr>
+                       <CardType>Visa</CardType>
+                       <AVSRsltText>AVS Not Requested.</AVSRsltText>
+                    </CreditSale>
+                 </Transaction>
+              </Ver1.0>
+           </PosResponse>
+        </soap:Body>
+      </soap:Envelope>
+    XML
   end
 
   def successful_authorize_response
-    <<-RESPONSE
-<?xml version="1.0" encoding="UTF-8"?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <soap:Body>
-     <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
-        <Ver1.0>
-           <Header>
-              <LicenseId>21229</LicenseId>
-              <SiteId>21232</SiteId>
-              <DeviceId>1525997</DeviceId>
-              <GatewayTxnId>16072891</GatewayTxnId>
-              <GatewayRspCode>0</GatewayRspCode>
-              <GatewayRspMsg>Success</GatewayRspMsg>
-              <RspDT>2014-03-17T13:05:34.5819712</RspDT>
-           </Header>
-           <Transaction>
-              <CreditAuth>
-                 <RspCode>00</RspCode>
-                 <RspText>APPROVAL</RspText>
-                 <AuthCode>43204A</AuthCode>
-                 <AVSRsltCode>0</AVSRsltCode>
-                 <CVVRsltCode>M</CVVRsltCode>
-                 <RefNbr>407613674895</RefNbr>
-                 <AVSResultCodeAction>ACCEPT</AVSResultCodeAction>
-                 <CVVResultCodeAction>ACCEPT</CVVResultCodeAction>
-                 <CardType>Visa</CardType>
-                 <AVSRsltText>AVS Not Requested.</AVSRsltText>
-                 <CVVRsltText>Match.</CVVRsltText>
-              </CreditAuth>
-           </Transaction>
-        </Ver1.0>
-     </PosResponse>
-  </soap:Body>
-</soap:Envelope>
-    RESPONSE
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <soap:Body>
+           <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+              <Ver1.0>
+                 <Header>
+                    <LicenseId>21229</LicenseId>
+                    <SiteId>21232</SiteId>
+                    <DeviceId>1525997</DeviceId>
+                    <GatewayTxnId>16072891</GatewayTxnId>
+                    <GatewayRspCode>0</GatewayRspCode>
+                    <GatewayRspMsg>Success</GatewayRspMsg>
+                    <RspDT>2014-03-17T13:05:34.5819712</RspDT>
+                 </Header>
+                 <Transaction>
+                    <CreditAuth>
+                       <RspCode>00</RspCode>
+                       <RspText>APPROVAL</RspText>
+                       <AuthCode>43204A</AuthCode>
+                       <AVSRsltCode>0</AVSRsltCode>
+                       <CVVRsltCode>M</CVVRsltCode>
+                       <RefNbr>407613674895</RefNbr>
+                       <AVSResultCodeAction>ACCEPT</AVSResultCodeAction>
+                       <CVVResultCodeAction>ACCEPT</CVVResultCodeAction>
+                       <CardType>Visa</CardType>
+                       <AVSRsltText>AVS Not Requested.</AVSRsltText>
+                       <CVVRsltText>Match.</CVVRsltText>
+                    </CreditAuth>
+                 </Transaction>
+              </Ver1.0>
+           </PosResponse>
+        </soap:Body>
+      </soap:Envelope>
+    XML
   end
 
   def failed_authorize_response
-    <<-RESPONSE
-<?xml version="1.0" encoding="UTF-8"?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <soap:Body>
-    <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
-       <Ver1.0>
-          <Header>
-             <LicenseId>21229</LicenseId>
-             <SiteId>21232</SiteId>
-             <DeviceId>1525997</DeviceId>
-             <GatewayTxnId>16088893</GatewayTxnId>
-             <GatewayRspCode>0</GatewayRspCode>
-             <GatewayRspMsg>Success</GatewayRspMsg>
-             <RspDT>2014-03-17T13:06:45.449707</RspDT>
-          </Header>
-          <Transaction>
-             <CreditAuth>
-                <RspCode>54</RspCode>
-                <RspText>EXPIRED CARD</RspText>
-                <AuthCode />
-                <AVSRsltCode>0</AVSRsltCode>
-                <RefNbr>407613674811</RefNbr>
-                <CardType>Visa</CardType>
-                <AVSRsltText>AVS Not Requested.</AVSRsltText>
-             </CreditAuth>
-          </Transaction>
-       </Ver1.0>
-    </PosResponse>
-  </soap:Body>
-</soap:Envelope>
-    RESPONSE
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <soap:Body>
+          <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+             <Ver1.0>
+                <Header>
+                   <LicenseId>21229</LicenseId>
+                   <SiteId>21232</SiteId>
+                   <DeviceId>1525997</DeviceId>
+                   <GatewayTxnId>16088893</GatewayTxnId>
+                   <GatewayRspCode>0</GatewayRspCode>
+                   <GatewayRspMsg>Success</GatewayRspMsg>
+                   <RspDT>2014-03-17T13:06:45.449707</RspDT>
+                </Header>
+                <Transaction>
+                   <CreditAuth>
+                      <RspCode>54</RspCode>
+                      <RspText>EXPIRED CARD</RspText>
+                      <AuthCode />
+                      <AVSRsltCode>0</AVSRsltCode>
+                      <RefNbr>407613674811</RefNbr>
+                      <CardType>Visa</CardType>
+                      <AVSRsltText>AVS Not Requested.</AVSRsltText>
+                   </CreditAuth>
+                </Transaction>
+             </Ver1.0>
+          </PosResponse>
+        </soap:Body>
+      </soap:Envelope>
+    XML
   end
 
   def failed_authorize_response_decline
-    <<-RESPONSE
-<?xml version="1.0" encoding="UTF-8"?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <soap:Body>
-    <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
-       <Ver1.0>
-          <Header>
-             <LicenseId>21229</LicenseId>
-             <SiteId>21232</SiteId>
-             <DeviceId>1525997</DeviceId>
-             <GatewayTxnId>16088893</GatewayTxnId>
-             <GatewayRspCode>0</GatewayRspCode>
-             <GatewayRspMsg>Success</GatewayRspMsg>
-             <RspDT>2014-03-17T13:06:45.449707</RspDT>
-          </Header>
-          <Transaction>
-             <CreditAuth>
-                <RspCode>05</RspCode>
-                <RspText>DECLINE</RspText>
-                <AuthCode />
-                <AVSRsltCode>0</AVSRsltCode>
-                <RefNbr>407613674811</RefNbr>
-                <CardType>Visa</CardType>
-                <AVSRsltText>AVS Not Requested.</AVSRsltText>
-             </CreditAuth>
-          </Transaction>
-       </Ver1.0>
-    </PosResponse>
-  </soap:Body>
-</soap:Envelope>
-    RESPONSE
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <soap:Body>
+          <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+             <Ver1.0>
+                <Header>
+                   <LicenseId>21229</LicenseId>
+                   <SiteId>21232</SiteId>
+                   <DeviceId>1525997</DeviceId>
+                   <GatewayTxnId>16088893</GatewayTxnId>
+                   <GatewayRspCode>0</GatewayRspCode>
+                   <GatewayRspMsg>Success</GatewayRspMsg>
+                   <RspDT>2014-03-17T13:06:45.449707</RspDT>
+                </Header>
+                <Transaction>
+                   <CreditAuth>
+                      <RspCode>05</RspCode>
+                      <RspText>DECLINE</RspText>
+                      <AuthCode />
+                      <AVSRsltCode>0</AVSRsltCode>
+                      <RefNbr>407613674811</RefNbr>
+                      <CardType>Visa</CardType>
+                      <AVSRsltText>AVS Not Requested.</AVSRsltText>
+                   </CreditAuth>
+                </Transaction>
+             </Ver1.0>
+          </PosResponse>
+        </soap:Body>
+      </soap:Envelope>
+    XML
   end
 
   def successful_capture_response
-    <<-RESPONSE
-<?xml version="1.0" encoding="utf-8"?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <soap:Body>
-    <PosResponse rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway" xmlns="http://Hps.Exchange.PosGateway">
-      <Ver1.0>
-        <Header>
-          <LicenseId>21229</LicenseId>
-          <SiteId>21232</SiteId>
-          <DeviceId>1525997</DeviceId>
-          <GatewayTxnId>17213037</GatewayTxnId>
-          <GatewayRspCode>0</GatewayRspCode>
-          <GatewayRspMsg>Success</GatewayRspMsg>
-          <RspDT>2014-05-16T14:45:48.9906929</RspDT>
-        </Header>
-        <Transaction>
-          <CreditAddToBatch />
-        </Transaction>
-      </Ver1.0>
-    </PosResponse>
-  </soap:Body>
-</soap:Envelope>
-    RESPONSE
+    <<~XML
+      <?xml version="1.0" encoding="utf-8"?>
+      <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        <soap:Body>
+          <PosResponse rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway" xmlns="http://Hps.Exchange.PosGateway">
+            <Ver1.0>
+              <Header>
+                <LicenseId>21229</LicenseId>
+                <SiteId>21232</SiteId>
+                <DeviceId>1525997</DeviceId>
+                <GatewayTxnId>17213037</GatewayTxnId>
+                <GatewayRspCode>0</GatewayRspCode>
+                <GatewayRspMsg>Success</GatewayRspMsg>
+                <RspDT>2014-05-16T14:45:48.9906929</RspDT>
+              </Header>
+              <Transaction>
+                <CreditAddToBatch />
+              </Transaction>
+            </Ver1.0>
+          </PosResponse>
+        </soap:Body>
+      </soap:Envelope>
+    XML
   end
 
   def failed_capture_response
-    <<-Response
-<?xml version="1.0" encoding="UTF-8"?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <soap:Body>
-     <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
-        <Ver1.0>
-           <Header>
-              <LicenseId>21229</LicenseId>
-              <SiteId>21232</SiteId>
-              <DeviceId>1525997</DeviceId>
-              <GatewayTxnId>16104055</GatewayTxnId>
-              <GatewayRspCode>3</GatewayRspCode>
-              <GatewayRspMsg>Transaction rejected because the referenced original transaction is invalid. Subject '216072899'.  Original transaction not found.</GatewayRspMsg>
-              <RspDT>2014-03-17T14:20:32.355307</RspDT>
-           </Header>
-        </Ver1.0>
-     </PosResponse>
-  </soap:Body>
-</soap:Envelope>
-    Response
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <soap:Body>
+           <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+              <Ver1.0>
+                 <Header>
+                    <LicenseId>21229</LicenseId>
+                    <SiteId>21232</SiteId>
+                    <DeviceId>1525997</DeviceId>
+                    <GatewayTxnId>16104055</GatewayTxnId>
+                    <GatewayRspCode>3</GatewayRspCode>
+                    <GatewayRspMsg>Transaction rejected because the referenced original transaction is invalid. Subject '216072899'.  Original transaction not found.</GatewayRspMsg>
+                    <RspDT>2014-03-17T14:20:32.355307</RspDT>
+                 </Header>
+              </Ver1.0>
+           </PosResponse>
+        </soap:Body>
+      </soap:Envelope>
+    XML
   end
 
   def successful_refund_response
-    <<-RESPONSE
-<?xml version="1.0" encoding="UTF-8"?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <soap:Body>
-     <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
-        <Ver1.0>
-           <Header>
-              <LicenseId>21229</LicenseId>
-              <SiteId>21232</SiteId>
-              <DeviceId>1525997</DeviceId>
-              <SiteTrace />
-              <GatewayTxnId>16092738</GatewayTxnId>
-              <GatewayRspCode>0</GatewayRspCode>
-              <GatewayRspMsg>Success</GatewayRspMsg>
-              <RspDT>2014-03-17T13:31:42.0231712</RspDT>
-           </Header>
-           <Transaction>
-              <CreditReturn />
-           </Transaction>
-        </Ver1.0>
-     </PosResponse>
-  </soap:Body>
-</soap:Envelope>
-    RESPONSE
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <soap:Body>
+           <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+              <Ver1.0>
+                 <Header>
+                    <LicenseId>21229</LicenseId>
+                    <SiteId>21232</SiteId>
+                    <DeviceId>1525997</DeviceId>
+                    <SiteTrace />
+                    <GatewayTxnId>16092738</GatewayTxnId>
+                    <GatewayRspCode>0</GatewayRspCode>
+                    <GatewayRspMsg>Success</GatewayRspMsg>
+                    <RspDT>2014-03-17T13:31:42.0231712</RspDT>
+                 </Header>
+                 <Transaction>
+                    <CreditReturn />
+                 </Transaction>
+              </Ver1.0>
+           </PosResponse>
+        </soap:Body>
+      </soap:Envelope>
+    XML
   end
 
   def failed_refund_response
-    <<-RESPONSE
-<?xml version="1.0" encoding="UTF-8"?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <soap:Body>
-     <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
-        <Ver1.0>
-           <Header>
-              <LicenseId>21229</LicenseId>
-              <SiteId>21232</SiteId>
-              <DeviceId>1525997</DeviceId>
-              <SiteTrace />
-              <GatewayTxnId>16092766</GatewayTxnId>
-              <GatewayRspCode>3</GatewayRspCode>
-              <GatewayRspMsg>Transaction rejected because the referenced original transaction is invalid.</GatewayRspMsg>
-              <RspDT>2014-03-17T13:48:55.3203712</RspDT>
-           </Header>
-        </Ver1.0>
-     </PosResponse>
-  </soap:Body>
-</soap:Envelope>
-    RESPONSE
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <soap:Body>
+           <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+              <Ver1.0>
+                 <Header>
+                    <LicenseId>21229</LicenseId>
+                    <SiteId>21232</SiteId>
+                    <DeviceId>1525997</DeviceId>
+                    <SiteTrace />
+                    <GatewayTxnId>16092766</GatewayTxnId>
+                    <GatewayRspCode>3</GatewayRspCode>
+                    <GatewayRspMsg>Transaction rejected because the referenced original transaction is invalid.</GatewayRspMsg>
+                    <RspDT>2014-03-17T13:48:55.3203712</RspDT>
+                 </Header>
+              </Ver1.0>
+           </PosResponse>
+        </soap:Body>
+      </soap:Envelope>
+    XML
   end
 
   def successful_void_response
-    <<-RESPONSE
-<?xml version="1.0" encoding="UTF-8"?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <soap:Body>
-     <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
-        <Ver1.0>
-           <Header>
-              <LicenseId>21229</LicenseId>
-              <SiteId>21232</SiteId>
-              <DeviceId>1525997</DeviceId>
-              <GatewayTxnId>16092767</GatewayTxnId>
-              <GatewayRspCode>0</GatewayRspCode>
-              <GatewayRspMsg>Success</GatewayRspMsg>
-              <RspDT>2014-03-17T13:53:43.6863712</RspDT>
-           </Header>
-           <Transaction>
-              <CreditVoid />
-           </Transaction>
-        </Ver1.0>
-     </PosResponse>
-  </soap:Body>
-</soap:Envelope>
-    RESPONSE
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <soap:Body>
+           <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+              <Ver1.0>
+                 <Header>
+                    <LicenseId>21229</LicenseId>
+                    <SiteId>21232</SiteId>
+                    <DeviceId>1525997</DeviceId>
+                    <GatewayTxnId>16092767</GatewayTxnId>
+                    <GatewayRspCode>0</GatewayRspCode>
+                    <GatewayRspMsg>Success</GatewayRspMsg>
+                    <RspDT>2014-03-17T13:53:43.6863712</RspDT>
+                 </Header>
+                 <Transaction>
+                    <CreditVoid />
+                 </Transaction>
+              </Ver1.0>
+           </PosResponse>
+        </soap:Body>
+      </soap:Envelope>
+    XML
+  end
+
+  def successful_check_void_response
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <soap:Body>
+          <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+            <Ver1.0>
+              <Header>
+                <LicenseId>144379</LicenseId>
+                <SiteId>144474</SiteId>
+                <DeviceId>6407594</DeviceId>
+                <GatewayTxnId>1284696436</GatewayTxnId>
+                <GatewayRspCode>0</GatewayRspCode>
+                <GatewayRspMsg>Success</GatewayRspMsg>
+                <RspDT>2020-01-13T15:44:24.3568038</RspDT>
+              </Header>
+              <Transaction>
+                <CheckVoid>
+                  <RspCode>0</RspCode>
+                  <RspMessage>Transaction Approved.</RspMessage>
+                </CheckVoid>
+              </Transaction>
+            </Ver1.0>
+          </PosResponse>
+        </soap:Body>
+      </soap:Envelope>
+    XML
   end
 
   def failed_void_response
-    <<-RESPONSE
-<?xml version="1.0" encoding="UTF-8"?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <soap:Body>
-     <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
-        <Ver1.0>
-           <Header>
-              <LicenseId>21229</LicenseId>
-              <SiteId>21232</SiteId>
-              <DeviceId>1525997</DeviceId>
-              <GatewayTxnId>16103858</GatewayTxnId>
-              <GatewayRspCode>3</GatewayRspCode>
-              <GatewayRspMsg>Transaction rejected because the referenced original transaction is invalid. Subject '169054'.  Original transaction not found.</GatewayRspMsg>
-              <RspDT>2014-03-17T13:55:56.8947712</RspDT>
-           </Header>
-        </Ver1.0>
-     </PosResponse>
-  </soap:Body>
-</soap:Envelope>
-    RESPONSE
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <soap:Body>
+           <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+              <Ver1.0>
+                 <Header>
+                    <LicenseId>21229</LicenseId>
+                    <SiteId>21232</SiteId>
+                    <DeviceId>1525997</DeviceId>
+                    <GatewayTxnId>16103858</GatewayTxnId>
+                    <GatewayRspCode>3</GatewayRspCode>
+                    <GatewayRspMsg>Transaction rejected because the referenced original transaction is invalid. Subject '169054'.  Original transaction not found.</GatewayRspMsg>
+                    <RspDT>2014-03-17T13:55:56.8947712</RspDT>
+                 </Header>
+              </Ver1.0>
+           </PosResponse>
+        </soap:Body>
+      </soap:Envelope>
+    XML
   end
 
   def successful_swipe_purchase_response
-    <<-RESPONSE
-<?xml version="1.0" encoding="UTF-8"?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-   <soap:Body>
-      <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
-         <Ver1.0>
-            <Header>
-               <LicenseId>95878</LicenseId>
-               <SiteId>95881</SiteId>
-               <DeviceId>2409000</DeviceId>
-               <GatewayTxnId>17596558</GatewayTxnId>
-               <GatewayRspCode>0</GatewayRspCode>
-               <GatewayRspMsg>Success</GatewayRspMsg>
-               <RspDT>2014-05-26T10:27:30.4211513</RspDT>
-            </Header>
-            <Transaction>
-               <CreditSale>
-                  <RspCode>00</RspCode>
-                  <RspText>APPROVAL</RspText>
-                  <AuthCode>037677</AuthCode>
-                  <AVSRsltCode>0</AVSRsltCode>
-                  <RefNbr>414614470800</RefNbr>
-                  <AVSResultCodeAction>ACCEPT</AVSResultCodeAction>
-                  <CardType>MC</CardType>
-                  <AVSRsltText>AVS Not Requested.</AVSRsltText>
-               </CreditSale>
-            </Transaction>
-         </Ver1.0>
-      </PosResponse>
-   </soap:Body>
-</soap:Envelope>
-    RESPONSE
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+         <soap:Body>
+            <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+               <Ver1.0>
+                  <Header>
+                     <LicenseId>95878</LicenseId>
+                     <SiteId>95881</SiteId>
+                     <DeviceId>2409000</DeviceId>
+                     <GatewayTxnId>17596558</GatewayTxnId>
+                     <GatewayRspCode>0</GatewayRspCode>
+                     <GatewayRspMsg>Success</GatewayRspMsg>
+                     <RspDT>2014-05-26T10:27:30.4211513</RspDT>
+                  </Header>
+                  <Transaction>
+                     <CreditSale>
+                        <RspCode>00</RspCode>
+                        <RspText>APPROVAL</RspText>
+                        <AuthCode>037677</AuthCode>
+                        <AVSRsltCode>0</AVSRsltCode>
+                        <RefNbr>414614470800</RefNbr>
+                        <AVSResultCodeAction>ACCEPT</AVSResultCodeAction>
+                        <CardType>MC</CardType>
+                        <AVSRsltText>AVS Not Requested.</AVSRsltText>
+                     </CreditSale>
+                  </Transaction>
+               </Ver1.0>
+            </PosResponse>
+         </soap:Body>
+      </soap:Envelope>
+    XML
   end
 
   def failed_swipe_purchase_response
-    <<-RESPONSE
-<?xml version="1.0" encoding="UTF-8"?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-   <soap:Body>
-      <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
-         <Ver1.0>
-            <Header>
-               <LicenseId>95878</LicenseId>
-               <SiteId>95881</SiteId>
-               <DeviceId>2409000</DeviceId>
-               <GatewayTxnId>17602711</GatewayTxnId>
-               <GatewayRspCode>8</GatewayRspCode>
-               <GatewayRspMsg>Transaction was rejected because the track data could not be read.</GatewayRspMsg>
-               <RspDT>2014-05-26T10:42:44.5031513</RspDT>
-            </Header>
-         </Ver1.0>
-      </PosResponse>
-   </soap:Body>
-</soap:Envelope>
-    RESPONSE
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+         <soap:Body>
+            <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+               <Ver1.0>
+                  <Header>
+                     <LicenseId>95878</LicenseId>
+                     <SiteId>95881</SiteId>
+                     <DeviceId>2409000</DeviceId>
+                     <GatewayTxnId>17602711</GatewayTxnId>
+                     <GatewayRspCode>8</GatewayRspCode>
+                     <GatewayRspMsg>Transaction was rejected because the track data could not be read.</GatewayRspMsg>
+                     <RspDT>2014-05-26T10:42:44.5031513</RspDT>
+                  </Header>
+               </Ver1.0>
+            </PosResponse>
+         </soap:Body>
+      </soap:Envelope>
+    XML
   end
 
   def successful_verify_response
-    <<-RESPONSE
-<?xml version="1.0" encoding="UTF-8"?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-   <soap:Body>
-      <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
-         <Ver1.0>
-            <Header>
-               <LicenseId>95878</LicenseId>
-               <SiteId>95881</SiteId>
-               <DeviceId>2409000</DeviceId>
-               <SiteTrace />
-               <GatewayTxnId>20153225</GatewayTxnId>
-               <GatewayRspCode>0</GatewayRspCode>
-               <GatewayRspMsg>Success</GatewayRspMsg>
-               <RspDT>2014-09-04T14:43:49.6015895</RspDT>
-            </Header>
-            <Transaction>
-               <CreditAccountVerify>
-                  <RspCode>85</RspCode>
-                  <RspText>CARD OK</RspText>
-                  <AuthCode>65557A</AuthCode>
-                  <AVSRsltCode>0</AVSRsltCode>
-                  <CVVRsltCode>M</CVVRsltCode>
-                  <RefNbr>424715929580</RefNbr>
-                  <CardType>Visa</CardType>
-                  <AVSRsltText>AVS Not Requested.</AVSRsltText>
-                  <CVVRsltText>Match.</CVVRsltText>
-               </CreditAccountVerify>
-            </Transaction>
-         </Ver1.0>
-      </PosResponse>
-   </soap:Body>
-</soap:Envelope>
-    RESPONSE
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+         <soap:Body>
+            <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+               <Ver1.0>
+                  <Header>
+                     <LicenseId>95878</LicenseId>
+                     <SiteId>95881</SiteId>
+                     <DeviceId>2409000</DeviceId>
+                     <SiteTrace />
+                     <GatewayTxnId>20153225</GatewayTxnId>
+                     <GatewayRspCode>0</GatewayRspCode>
+                     <GatewayRspMsg>Success</GatewayRspMsg>
+                     <RspDT>2014-09-04T14:43:49.6015895</RspDT>
+                  </Header>
+                  <Transaction>
+                     <CreditAccountVerify>
+                        <RspCode>85</RspCode>
+                        <RspText>CARD OK</RspText>
+                        <AuthCode>65557A</AuthCode>
+                        <AVSRsltCode>0</AVSRsltCode>
+                        <CVVRsltCode>M</CVVRsltCode>
+                        <RefNbr>424715929580</RefNbr>
+                        <CardType>Visa</CardType>
+                        <AVSRsltText>AVS Not Requested.</AVSRsltText>
+                        <CVVRsltText>Match.</CVVRsltText>
+                     </CreditAccountVerify>
+                  </Transaction>
+               </Ver1.0>
+            </PosResponse>
+         </soap:Body>
+      </soap:Envelope>
+    XML
   end
 
   def failed_verify_response
-    <<-RESPONSE
-<?xml version="1.0" encoding="UTF-8"?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-   <soap:Body>
-      <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
-         <Ver1.0>
-            <Header>
-               <LicenseId>95878</LicenseId>
-               <SiteId>95881</SiteId>
-               <DeviceId>2409000</DeviceId>
-               <SiteTrace />
-               <GatewayTxnId>20155097</GatewayTxnId>
-               <GatewayRspCode>14</GatewayRspCode>
-               <GatewayRspMsg>Transaction rejected because the manually entered card number is invalid.</GatewayRspMsg>
-               <RspDT>2014-09-04T15:42:47.983634</RspDT>
-            </Header>
-         </Ver1.0>
-      </PosResponse>
-   </soap:Body>
-</soap:Envelope>
-    RESPONSE
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+         <soap:Body>
+            <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+               <Ver1.0>
+                  <Header>
+                     <LicenseId>95878</LicenseId>
+                     <SiteId>95881</SiteId>
+                     <DeviceId>2409000</DeviceId>
+                     <SiteTrace />
+                     <GatewayTxnId>20155097</GatewayTxnId>
+                     <GatewayRspCode>14</GatewayRspCode>
+                     <GatewayRspMsg>Transaction rejected because the manually entered card number is invalid.</GatewayRspMsg>
+                     <RspDT>2014-09-04T15:42:47.983634</RspDT>
+                  </Header>
+               </Ver1.0>
+            </PosResponse>
+         </soap:Body>
+      </soap:Envelope>
+    XML
   end
 
   def pre_scrub
@@ -981,5 +1277,4 @@ read 1067 bytes
 Conn close
     }
   end
-
 end

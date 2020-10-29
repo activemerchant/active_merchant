@@ -7,12 +7,12 @@ class RemoteEvoCaTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card('4111111111111111')
     @options = {
-      :order_id => '1',
-      :billing_address => address,
-      :description => 'Store Purchase',
-      :invoice => 'AB-1234',
-      :email => 'evo@example.com',
-      :ip => '127.0.0.1'
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase',
+      invoice: 'AB-1234',
+      email: 'evo@example.com',
+      ip: '127.0.0.1'
     }
   end
 
@@ -72,7 +72,7 @@ class RemoteEvoCaTest < Test::Unit::TestCase
   def test_purchase_and_update
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert response = @gateway.update(response.authorization, :shipping_carrier => 'fedex', :tracking_number => '12345')
+    assert response = @gateway.update(response.authorization, shipping_carrier: 'fedex', tracking_number: '12345')
     assert_success response
     assert_equal EvoCaGateway::MESSAGES[100], response.message
   end
@@ -102,7 +102,7 @@ class RemoteEvoCaTest < Test::Unit::TestCase
 
   def test_avs_match
     # To simulate an AVS Match, pass 888 in the address1 field, 77777 for zip.
-    opts = @options.merge(:billing_address => address({:address1 => '888', :zip => '77777'}))
+    opts = @options.merge(billing_address: address({ address1: '888', zip: '77777' }))
     assert response = @gateway.purchase(@amount, @credit_card, opts)
     assert_success response
     assert_equal 'Y', response.avs_result['code']
@@ -112,7 +112,7 @@ class RemoteEvoCaTest < Test::Unit::TestCase
 
   def test_cvv_match
     # To simulate a CVV Match, pass 999 in the cvv field.
-    assert response = @gateway.purchase(@amount, credit_card('4111111111111111', :verification_value => 999), @options)
+    assert response = @gateway.purchase(@amount, credit_card('4111111111111111', verification_value: 999), @options)
     assert_success response
     assert_equal 'M', response.cvv_result['code']
   end

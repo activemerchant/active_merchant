@@ -7,13 +7,13 @@ class MonerisTest < Test::Unit::TestCase
     Base.mode = :test
 
     @gateway = MonerisGateway.new(
-      :login => 'store3',
-      :password => 'yesguy'
+      login: 'store3',
+      password: 'yesguy'
     )
 
     @amount = 100
     @credit_card = credit_card('4242424242424242')
-    @options = { :order_id => '1', :customer => '1', :billing_address => address}
+    @options = { order_id: '1', customer: '1', billing_address: address }
   end
 
   def test_default_options
@@ -32,8 +32,8 @@ class MonerisTest < Test::Unit::TestCase
 
   def test_successful_first_purchase_with_credential_on_file
     gateway = MonerisGateway.new(
-      :login => 'store3',
-      :password => 'yesguy'
+      login: 'store3',
+      password: 'yesguy'
     )
     gateway.expects(:ssl_post).returns(successful_first_cof_purchase_response)
     assert response = gateway.purchase(
@@ -53,8 +53,8 @@ class MonerisTest < Test::Unit::TestCase
 
   def test_successful_subsequent_purchase_with_credential_on_file
     gateway = MonerisGateway.new(
-      :login => 'store3',
-      :password => 'yesguy'
+      login: 'store3',
+      password: 'yesguy'
     )
     gateway.expects(:ssl_post).returns(successful_first_cof_authorize_response)
     assert response = gateway.authorize(
@@ -91,8 +91,7 @@ class MonerisTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_purchase_network_tokenization)
     @credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
-      verification_value: nil
-    )
+      verification_value: nil)
     assert response = @gateway.purchase(100, @credit_card, @options)
     assert_success response
     assert_equal '101965-0_10;0bbb277b543a17b6781243889a689573', response.authorization
@@ -129,11 +128,11 @@ class MonerisTest < Test::Unit::TestCase
 
   def test_preauth_is_valid_xml
     params = {
-      :order_id => 'order1',
-      :amount => '1.01',
-      :pan => '4242424242424242',
-      :expdate => '0303',
-      :crypt_type => 7,
+      order_id: 'order1',
+      amount: '1.01',
+      pan: '4242424242424242',
+      expdate: '0303',
+      crypt_type: 7
     }
 
     assert data = @gateway.send(:post_data, 'preauth', params)
@@ -143,11 +142,11 @@ class MonerisTest < Test::Unit::TestCase
 
   def test_purchase_is_valid_xml
     params = {
-      :order_id => 'order1',
-      :amount => '1.01',
-      :pan => '4242424242424242',
-      :expdate => '0303',
-      :crypt_type => 7,
+      order_id: 'order1',
+      amount: '1.01',
+      pan: '4242424242424242',
+      expdate: '0303',
+      crypt_type: 7
     }
 
     assert data = @gateway.send(:post_data, 'purchase', params)
@@ -157,11 +156,11 @@ class MonerisTest < Test::Unit::TestCase
 
   def test_capture_is_valid_xml
     params = {
-      :order_id => 'order1',
-      :amount => '1.01',
-      :pan => '4242424242424242',
-      :expdate => '0303',
-      :crypt_type => 7,
+      order_id: 'order1',
+      amount: '1.01',
+      pan: '4242424242424242',
+      expdate: '0303',
+      crypt_type: 7
     }
 
     assert data = @gateway.send(:post_data, 'preauth', params)
@@ -170,10 +169,11 @@ class MonerisTest < Test::Unit::TestCase
   end
 
   def test_successful_verify
-    response = stub_comms do
-      @gateway.verify(@credit_card, @options)
-    end.respond_with(successful_authorize_response, failed_void_response)
+    @gateway.expects(:ssl_post).returns(successful_verify_response)
+
+    assert response = @gateway.verify(@credit_card, @options)
     assert_success response
+    assert_equal '125-0_14;93565164-01571', response.authorization
     assert_equal 'Approved', response.message
   end
 
@@ -182,7 +182,7 @@ class MonerisTest < Test::Unit::TestCase
   end
 
   def test_supported_card_types
-    assert_equal [:visa, :master, :american_express, :diners_club, :discover], MonerisGateway.supported_cardtypes
+    assert_equal %i[visa master american_express diners_club discover], MonerisGateway.supported_cardtypes
   end
 
   def test_should_raise_error_if_transaction_param_empty_on_credit_request
@@ -194,6 +194,15 @@ class MonerisTest < Test::Unit::TestCase
   def test_successful_store
     @gateway.expects(:ssl_post).returns(successful_store_response)
     assert response = @gateway.store(@credit_card)
+    assert_success response
+    assert_equal 'Successfully registered cc details', response.message
+    assert response.params['data_key'].present?
+    @data_key = response.params['data_key']
+  end
+
+  def test_successful_store_with_duration
+    @gateway.expects(:ssl_post).returns(successful_store_with_duration_response)
+    assert response = @gateway.store(@credit_card, duration: 600)
     assert_success response
     assert_equal 'Successfully registered cc details', response.message
     assert response.params['data_key'].present?
@@ -221,7 +230,7 @@ class MonerisTest < Test::Unit::TestCase
   def test_successful_purchase_with_vault
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     test_successful_store
-    assert response = @gateway.purchase(100, @data_key, {:order_id => generate_unique_id, :customer => generate_unique_id})
+    assert response = @gateway.purchase(100, @data_key, { order_id: generate_unique_id, customer: generate_unique_id })
     assert_success response
     assert_equal 'Approved', response.message
     assert response.authorization.present?
@@ -231,8 +240,7 @@ class MonerisTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_authorization_network_tokenization)
     @credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
-      verification_value: nil
-    )
+      verification_value: nil)
     assert response = @gateway.authorize(100, @credit_card, @options)
     assert_success response
     assert_equal '109232-0_10;d88d9f5f3472898832c54d6b5572757e', response.authorization
@@ -241,7 +249,7 @@ class MonerisTest < Test::Unit::TestCase
   def test_successful_authorization_with_vault
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     test_successful_store
-    assert response = @gateway.authorize(100, @data_key, {:order_id => generate_unique_id, :customer => generate_unique_id})
+    assert response = @gateway.authorize(100, @data_key, { order_id: generate_unique_id, customer: generate_unique_id })
     assert_success response
     assert_equal 'Approved', response.message
     assert response.authorization.present?
@@ -260,7 +268,7 @@ class MonerisTest < Test::Unit::TestCase
     @credit_card.verification_value = '452'
     stub_comms(gateway) do
       gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{cvd_indicator>1<}, data)
       assert_match(%r{cvd_value>452<}, data)
     end.respond_with(successful_purchase_response)
@@ -272,7 +280,7 @@ class MonerisTest < Test::Unit::TestCase
     @credit_card.verification_value = ''
     stub_comms(gateway) do
       gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{cvd_indicator>0<}, data)
       assert_no_match(%r{cvd_value>}, data)
     end.respond_with(successful_purchase_response)
@@ -282,7 +290,7 @@ class MonerisTest < Test::Unit::TestCase
     @credit_card.verification_value = '452'
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_no_match(%r{cvd_value>}, data)
       assert_no_match(%r{cvd_indicator>}, data)
     end.respond_with(successful_purchase_response)
@@ -292,7 +300,7 @@ class MonerisTest < Test::Unit::TestCase
     @credit_card.verification_value = ''
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_no_match(%r{cvd_value>}, data)
       assert_no_match(%r{cvd_indicator>}, data)
     end.respond_with(successful_purchase_response)
@@ -304,7 +312,7 @@ class MonerisTest < Test::Unit::TestCase
     billing_address = address(address1: '1234 Anystreet', address2: '')
     stub_comms(gateway) do
       gateway.purchase(@amount, @credit_card, billing_address: billing_address, order_id: '1')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{avs_street_number>1234<}, data)
       assert_match(%r{avs_street_name>Anystreet<}, data)
       assert_match(%r{avs_zipcode>#{billing_address[:zip]}<}, data)
@@ -316,7 +324,7 @@ class MonerisTest < Test::Unit::TestCase
 
     stub_comms(gateway) do
       gateway.purchase(@amount, @credit_card, @options.tap { |x| x.delete(:billing_address) })
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_no_match(%r{avs_street_number>}, data)
       assert_no_match(%r{avs_street_name>}, data)
       assert_no_match(%r{avs_zipcode>}, data)
@@ -327,7 +335,7 @@ class MonerisTest < Test::Unit::TestCase
     billing_address = address(address1: '1234 Anystreet', address2: '')
     stub_comms do
       @gateway.purchase(@amount, @credit_card, billing_address: billing_address, order_id: '1')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_no_match(%r{avs_street_number>}, data)
       assert_no_match(%r{avs_street_name>}, data)
       assert_no_match(%r{avs_zipcode>}, data)
@@ -337,7 +345,7 @@ class MonerisTest < Test::Unit::TestCase
   def test_avs_disabled_and_not_provided
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.tap { |x| x.delete(:billing_address) })
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_no_match(%r{avs_street_number>}, data)
       assert_no_match(%r{avs_street_name>}, data)
       assert_no_match(%r{avs_zipcode>}, data)
@@ -358,7 +366,7 @@ class MonerisTest < Test::Unit::TestCase
   def test_customer_can_be_specified
     stub_comms do
       @gateway.purchase(@amount, @credit_card, order_id: '3', customer: 'Joe Jones')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{cust_id>Joe Jones}, data)
     end.respond_with(successful_purchase_response)
   end
@@ -366,7 +374,7 @@ class MonerisTest < Test::Unit::TestCase
   def test_customer_not_specified_card_name_used
     stub_comms do
       @gateway.purchase(@amount, @credit_card, order_id: '3')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{cust_id>Longbob Longsen}, data)
     end.respond_with(successful_purchase_response)
   end
@@ -376,7 +384,7 @@ class MonerisTest < Test::Unit::TestCase
 
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match '<pos_code>00</pos_code>', data
       assert_match '<track2>Track Data</track2>', data
     end.respond_with(successful_purchase_response)
@@ -394,7 +402,7 @@ class MonerisTest < Test::Unit::TestCase
     options = stored_credential_options(:cardholder, :recurring, :initial)
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<issuer_id><\/issuer_id>/, data)
       assert_match(/<payment_indicator>C<\/payment_indicator>/, data)
       assert_match(/<payment_information>0<\/payment_information>/, data)
@@ -407,7 +415,7 @@ class MonerisTest < Test::Unit::TestCase
     options = stored_credential_options(:cardholder, :recurring, id: 'abc123')
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<issuer_id>abc123<\/issuer_id>/, data)
       assert_match(/<payment_indicator>Z<\/payment_indicator>/, data)
       assert_match(/<payment_information>2<\/payment_information>/, data)
@@ -420,7 +428,7 @@ class MonerisTest < Test::Unit::TestCase
     options = stored_credential_options(:merchant, :recurring, :initial)
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<issuer_id><\/issuer_id>/, data)
       assert_match(/<payment_indicator>R<\/payment_indicator>/, data)
       assert_match(/<payment_information>0<\/payment_information>/, data)
@@ -433,7 +441,7 @@ class MonerisTest < Test::Unit::TestCase
     options = stored_credential_options(:merchant, :recurring, id: 'abc123')
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<issuer_id>abc123<\/issuer_id>/, data)
       assert_match(/<payment_indicator>R<\/payment_indicator>/, data)
       assert_match(/<payment_information>2<\/payment_information>/, data)
@@ -446,7 +454,7 @@ class MonerisTest < Test::Unit::TestCase
     options = stored_credential_options(:cardholder, :installment, :initial)
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<issuer_id><\/issuer_id>/, data)
       assert_match(/<payment_indicator>C<\/payment_indicator>/, data)
       assert_match(/<payment_information>0<\/payment_information>/, data)
@@ -459,7 +467,7 @@ class MonerisTest < Test::Unit::TestCase
     options = stored_credential_options(:cardholder, :installment, id: 'abc123')
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<issuer_id>abc123<\/issuer_id>/, data)
       assert_match(/<payment_indicator>Z<\/payment_indicator>/, data)
       assert_match(/<payment_information>2<\/payment_information>/, data)
@@ -472,7 +480,7 @@ class MonerisTest < Test::Unit::TestCase
     options = stored_credential_options(:merchant, :installment, :initial)
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<issuer_id><\/issuer_id>/, data)
       assert_match(/<payment_indicator>R<\/payment_indicator>/, data)
       assert_match(/<payment_information>0<\/payment_information>/, data)
@@ -485,7 +493,7 @@ class MonerisTest < Test::Unit::TestCase
     options = stored_credential_options(:merchant, :installment, id: 'abc123')
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<issuer_id>abc123<\/issuer_id>/, data)
       assert_match(/<payment_indicator>R<\/payment_indicator>/, data)
       assert_match(/<payment_information>2<\/payment_information>/, data)
@@ -498,7 +506,7 @@ class MonerisTest < Test::Unit::TestCase
     options = stored_credential_options(:cardholder, :unscheduled, :initial)
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<issuer_id><\/issuer_id>/, data)
       assert_match(/<payment_indicator>C<\/payment_indicator>/, data)
       assert_match(/<payment_information>0<\/payment_information>/, data)
@@ -511,7 +519,7 @@ class MonerisTest < Test::Unit::TestCase
     options = stored_credential_options(:cardholder, :unscheduled, id: 'abc123')
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<issuer_id>abc123<\/issuer_id>/, data)
       assert_match(/<payment_indicator>Z<\/payment_indicator>/, data)
       assert_match(/<payment_information>2<\/payment_information>/, data)
@@ -524,7 +532,7 @@ class MonerisTest < Test::Unit::TestCase
     options = stored_credential_options(:merchant, :unscheduled, :initial)
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<issuer_id><\/issuer_id>/, data)
       assert_match(/<payment_indicator>C<\/payment_indicator>/, data)
       assert_match(/<payment_information>0<\/payment_information>/, data)
@@ -537,7 +545,7 @@ class MonerisTest < Test::Unit::TestCase
     options = stored_credential_options(:merchant, :unscheduled, id: 'abc123')
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<issuer_id>abc123<\/issuer_id>/, data)
       assert_match(/<payment_indicator>U<\/payment_indicator>/, data)
       assert_match(/<payment_information>2<\/payment_information>/, data)
@@ -550,7 +558,7 @@ class MonerisTest < Test::Unit::TestCase
     options = stored_credential_options(:merchant, :unscheduled, id: 'abc123').merge(issuer_id: 'xyz987', payment_indicator: 'R', payment_information: '0')
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<issuer_id>xyz987<\/issuer_id>/, data)
       assert_match(/<payment_indicator>R<\/payment_indicator>/, data)
       assert_match(/<payment_information>0<\/payment_information>/, data)
@@ -573,141 +581,141 @@ class MonerisTest < Test::Unit::TestCase
   end
 
   def successful_purchase_response
-    <<-RESPONSE
-<?xml version="1.0"?>
-<response>
-  <receipt>
-    <ReceiptId>1026.1</ReceiptId>
-    <ReferenceNum>661221050010170010</ReferenceNum>
-    <ResponseCode>027</ResponseCode>
-    <ISO>01</ISO>
-    <AuthCode>013511</AuthCode>
-    <TransTime>18:41:13</TransTime>
-    <TransDate>2008-01-05</TransDate>
-    <TransType>00</TransType>
-    <Complete>true</Complete>
-    <Message>APPROVED * =</Message>
-    <TransAmount>1.00</TransAmount>
-    <CardType>V</CardType>
-    <TransID>58-0_3</TransID>
-    <TimedOut>false</TimedOut>
-  </receipt>
-</response>
+    <<~RESPONSE
+      <?xml version="1.0"?>
+      <response>
+        <receipt>
+          <ReceiptId>1026.1</ReceiptId>
+          <ReferenceNum>661221050010170010</ReferenceNum>
+          <ResponseCode>027</ResponseCode>
+          <ISO>01</ISO>
+          <AuthCode>013511</AuthCode>
+          <TransTime>18:41:13</TransTime>
+          <TransDate>2008-01-05</TransDate>
+          <TransType>00</TransType>
+          <Complete>true</Complete>
+          <Message>APPROVED * =</Message>
+          <TransAmount>1.00</TransAmount>
+          <CardType>V</CardType>
+          <TransID>58-0_3</TransID>
+          <TimedOut>false</TimedOut>
+        </receipt>
+      </response>
 
     RESPONSE
   end
 
   def successful_first_cof_purchase_response
-    <<-RESPONSE
-<?xml version=\"1.0\" standalone=\"yes\"?>
-<?xml version=“1.0” standalone=“yes”?>
-<response>
- <receipt>
-   <ReceiptId>a33ba7edd448b91ef8d2f85fea614b8d</ReceiptId>
-   <ReferenceNum>660114080015099160</ReferenceNum>
-   <ResponseCode>027</ResponseCode>
-   <ISO>01</ISO>
-   <AuthCode>822665</AuthCode>
-   <TransTime>07:43:28</TransTime>
-   <TransDate>2018-11-11</TransDate>
-   <TransType>00</TransType>
-   <Complete>true</Complete>
-   <Message>APPROVED           *                    =</Message>
-   <TransAmount>1.00</TransAmount>
-   <CardType>V</CardType>
-   <TransID>799655-0_11</TransID>
-   <TimedOut>false</TimedOut>
-   <BankTotals>null</BankTotals>
-   <Ticket>null</Ticket>
-   <IssuerId>355689484440192</IssuerId>
-   <IsVisaDebit>false</IsVisaDebit>
- </receipt>
-</response>
+    <<~RESPONSE
+      <?xml version=\"1.0\" standalone=\"yes\"?>
+      <?xml version=“1.0” standalone=“yes”?>
+      <response>
+       <receipt>
+         <ReceiptId>a33ba7edd448b91ef8d2f85fea614b8d</ReceiptId>
+         <ReferenceNum>660114080015099160</ReferenceNum>
+         <ResponseCode>027</ResponseCode>
+         <ISO>01</ISO>
+         <AuthCode>822665</AuthCode>
+         <TransTime>07:43:28</TransTime>
+         <TransDate>2018-11-11</TransDate>
+         <TransType>00</TransType>
+         <Complete>true</Complete>
+         <Message>APPROVED           *                    =</Message>
+         <TransAmount>1.00</TransAmount>
+         <CardType>V</CardType>
+         <TransID>799655-0_11</TransID>
+         <TimedOut>false</TimedOut>
+         <BankTotals>null</BankTotals>
+         <Ticket>null</Ticket>
+         <IssuerId>355689484440192</IssuerId>
+         <IsVisaDebit>false</IsVisaDebit>
+       </receipt>
+      </response>
     RESPONSE
   end
 
   def successful_first_cof_authorize_response
-    <<-RESPONSE
-<?xml version=\"1.0\" standalone=\"yes\"?>
-<response>
-  <receipt>
-    <ReceiptId>8dbc28468af2007779bbede7ec1bab6c</ReceiptId>
-    <ReferenceNum>660109300018229130</ReferenceNum>
-    <ResponseCode>027</ResponseCode>
-    <ISO>01</ISO>
-    <AuthCode>718280</AuthCode>
-    <TransTime>07:50:53</TransTime>
-    <TransDate>2018-11-11</TransDate>
-    <TransType>01</TransType>
-    <Complete>true</Complete>
-    <Message>APPROVED           *                    =</Message>
-    <TransAmount>1.00</TransAmount>
-    <CardType>V</CardType>
-    <TransID>830724-0_11</TransID>
-    <TimedOut>false</TimedOut>
-    <BankTotals>null</BankTotals>
-    <Ticket>null</Ticket>
-    <MessageId>1A8315282537312</MessageId>
-    <IssuerId>550923784451193</IssuerId>
-    <IsVisaDebit>false</IsVisaDebit>
-  </receipt>
-</response>
+    <<~RESPONSE
+      <?xml version=\"1.0\" standalone=\"yes\"?>
+      <response>
+        <receipt>
+          <ReceiptId>8dbc28468af2007779bbede7ec1bab6c</ReceiptId>
+          <ReferenceNum>660109300018229130</ReferenceNum>
+          <ResponseCode>027</ResponseCode>
+          <ISO>01</ISO>
+          <AuthCode>718280</AuthCode>
+          <TransTime>07:50:53</TransTime>
+          <TransDate>2018-11-11</TransDate>
+          <TransType>01</TransType>
+          <Complete>true</Complete>
+          <Message>APPROVED           *                    =</Message>
+          <TransAmount>1.00</TransAmount>
+          <CardType>V</CardType>
+          <TransID>830724-0_11</TransID>
+          <TimedOut>false</TimedOut>
+          <BankTotals>null</BankTotals>
+          <Ticket>null</Ticket>
+          <MessageId>1A8315282537312</MessageId>
+          <IssuerId>550923784451193</IssuerId>
+          <IsVisaDebit>false</IsVisaDebit>
+        </receipt>
+      </response>
     RESPONSE
   end
 
   def successful_subsequent_cof_purchase_response
-    <<-RESPONSE
-<?xml version="1.0" standalone="yes"?>
-<response>
-  <receipt>
-    <ReceiptId>830724-0_11;8dbc28468af2007779bbede7ec1bab6c</ReceiptId>
-    <ReferenceNum>660109490014038930</ReferenceNum>
-    <ResponseCode>027</ResponseCode>
-    <ISO>01</ISO>
-    <AuthCode>111234</AuthCode>
-    <TransTime>07:50:54</TransTime>
-    <TransDate>2018-11-11</TransDate>
-    <TransType>00</TransType>
-    <Complete>true</Complete>
-    <Message>APPROVED           *                    =</Message>
-    <TransAmount>1.00</TransAmount>
-    <CardType>V</CardType>
-    <TransID>455422-0_11</TransID>
-    <TimedOut>false</TimedOut>
-    <BankTotals>null</BankTotals>
-    <Ticket>null</Ticket>
-    <IssuerId>762097792112819</IssuerId>
-    <IsVisaDebit>false</IsVisaDebit>
-  </receipt>
-</response>
+    <<~RESPONSE
+      <?xml version="1.0" standalone="yes"?>
+      <response>
+        <receipt>
+          <ReceiptId>830724-0_11;8dbc28468af2007779bbede7ec1bab6c</ReceiptId>
+          <ReferenceNum>660109490014038930</ReferenceNum>
+          <ResponseCode>027</ResponseCode>
+          <ISO>01</ISO>
+          <AuthCode>111234</AuthCode>
+          <TransTime>07:50:54</TransTime>
+          <TransDate>2018-11-11</TransDate>
+          <TransType>00</TransType>
+          <Complete>true</Complete>
+          <Message>APPROVED           *                    =</Message>
+          <TransAmount>1.00</TransAmount>
+          <CardType>V</CardType>
+          <TransID>455422-0_11</TransID>
+          <TimedOut>false</TimedOut>
+          <BankTotals>null</BankTotals>
+          <Ticket>null</Ticket>
+          <IssuerId>762097792112819</IssuerId>
+          <IsVisaDebit>false</IsVisaDebit>
+        </receipt>
+      </response>
     RESPONSE
   end
 
   def successful_purchase_network_tokenization
-    <<-RESPONSE
-<?xml version="1.0"?>
-<response>
-   <receipt>
-      <ReceiptId>0bbb277b543a17b6781243889a689573</ReceiptId>
-      <ReferenceNum>660110910011133780</ReferenceNum>
-      <ResponseCode>027</ResponseCode>
-      <ISO>01</ISO>
-      <AuthCode>368269</AuthCode>
-      <TransTime>22:54:10</TransTime>
-      <TransDate>2015-07-05</TransDate>
-      <TransType>00</TransType>
-      <Complete>true</Complete>
-      <Message>APPROVED           *                    =</Message>
-      <TransAmount>1.00</TransAmount>
-      <CardType>V</CardType>
-      <TransID>101965-0_10</TransID>
-      <TimedOut>false</TimedOut>
-      <BankTotals>null</BankTotals>
-      <Ticket>null</Ticket>
-      <CorporateCard>false</CorporateCard>
-      <IsVisaDebit>false</IsVisaDebit>
-   </receipt>
-</response>
+    <<~RESPONSE
+      <?xml version="1.0"?>
+      <response>
+         <receipt>
+            <ReceiptId>0bbb277b543a17b6781243889a689573</ReceiptId>
+            <ReferenceNum>660110910011133780</ReferenceNum>
+            <ResponseCode>027</ResponseCode>
+            <ISO>01</ISO>
+            <AuthCode>368269</AuthCode>
+            <TransTime>22:54:10</TransTime>
+            <TransDate>2015-07-05</TransDate>
+            <TransType>00</TransType>
+            <Complete>true</Complete>
+            <Message>APPROVED           *                    =</Message>
+            <TransAmount>1.00</TransAmount>
+            <CardType>V</CardType>
+            <TransID>101965-0_10</TransID>
+            <TimedOut>false</TimedOut>
+            <BankTotals>null</BankTotals>
+            <Ticket>null</Ticket>
+            <CorporateCard>false</CorporateCard>
+            <IsVisaDebit>false</IsVisaDebit>
+         </receipt>
+      </response>
 
     RESPONSE
   end
@@ -742,128 +750,163 @@ class MonerisTest < Test::Unit::TestCase
   end
 
   def successful_authorization_network_tokenization
-    <<-RESPONSE
-<?xml version="1.0"?>
-<response>
-   <receipt>
-      <ReceiptId>d88d9f5f3472898832c54d6b5572757e</ReceiptId>
-      <ReferenceNum>660110910011139740</ReferenceNum>
-      <ResponseCode>027</ResponseCode>
-      <ISO>01</ISO>
-      <AuthCode>873534</AuthCode>
-      <TransTime>09:31:41</TransTime>
-      <TransDate>2015-07-09</TransDate>
-      <TransType>01</TransType>
-      <Complete>true</Complete>
-      <Message>APPROVED           *                    =</Message>
-      <TransAmount>1.00</TransAmount>
-      <CardType>V</CardType>
-      <TransID>109232-0_10</TransID>
-      <TimedOut>false</TimedOut>
-      <BankTotals>null</BankTotals>
-      <Ticket>null</Ticket>
-      <CorporateCard>false</CorporateCard>
-      <IsVisaDebit>false</IsVisaDebit>
-   </receipt>
-</response>
+    <<~RESPONSE
+      <?xml version="1.0"?>
+      <response>
+         <receipt>
+            <ReceiptId>d88d9f5f3472898832c54d6b5572757e</ReceiptId>
+            <ReferenceNum>660110910011139740</ReferenceNum>
+            <ResponseCode>027</ResponseCode>
+            <ISO>01</ISO>
+            <AuthCode>873534</AuthCode>
+            <TransTime>09:31:41</TransTime>
+            <TransDate>2015-07-09</TransDate>
+            <TransType>01</TransType>
+            <Complete>true</Complete>
+            <Message>APPROVED           *                    =</Message>
+            <TransAmount>1.00</TransAmount>
+            <CardType>V</CardType>
+            <TransID>109232-0_10</TransID>
+            <TimedOut>false</TimedOut>
+            <BankTotals>null</BankTotals>
+            <Ticket>null</Ticket>
+            <CorporateCard>false</CorporateCard>
+            <IsVisaDebit>false</IsVisaDebit>
+         </receipt>
+      </response>
 
     RESPONSE
   end
 
   def successful_purchase_response_with_avs_result
-    <<-RESPONSE
-<?xml version="1.0"?>
-<response>
-  <receipt>
-    <ReceiptId>9c7189ec64b58f541335be1ca6294d09</ReceiptId>
-    <ReferenceNum>660110910011136190</ReferenceNum>
-    <ResponseCode>027</ResponseCode>
-    <ISO>01</ISO>
-    <AuthCode>115497</AuthCode>
-    <TransTime>15:20:51</TransTime>
-    <TransDate>2014-06-18</TransDate>
-    <TransType>00</TransType>
-    <Complete>true</Complete><Message>APPROVED * =</Message>
-    <TransAmount>10.10</TransAmount>
-    <CardType>V</CardType>
-    <TransID>491573-0_9</TransID>
-    <TimedOut>false</TimedOut>
-    <BankTotals>null</BankTotals>
-    <Ticket>null</Ticket>
-    <CorporateCard>false</CorporateCard>
-    <AvsResultCode>A</AvsResultCode>
-    <ITDResponse>null</ITDResponse>
-    <IsVisaDebit>false</IsVisaDebit>
-  </receipt>
-</response>
+    <<~RESPONSE
+      <?xml version="1.0"?>
+      <response>
+        <receipt>
+          <ReceiptId>9c7189ec64b58f541335be1ca6294d09</ReceiptId>
+          <ReferenceNum>660110910011136190</ReferenceNum>
+          <ResponseCode>027</ResponseCode>
+          <ISO>01</ISO>
+          <AuthCode>115497</AuthCode>
+          <TransTime>15:20:51</TransTime>
+          <TransDate>2014-06-18</TransDate>
+          <TransType>00</TransType>
+          <Complete>true</Complete><Message>APPROVED * =</Message>
+          <TransAmount>10.10</TransAmount>
+          <CardType>V</CardType>
+          <TransID>491573-0_9</TransID>
+          <TimedOut>false</TimedOut>
+          <BankTotals>null</BankTotals>
+          <Ticket>null</Ticket>
+          <CorporateCard>false</CorporateCard>
+          <AvsResultCode>A</AvsResultCode>
+          <ITDResponse>null</ITDResponse>
+          <IsVisaDebit>false</IsVisaDebit>
+        </receipt>
+      </response>
 
     RESPONSE
   end
 
   def failed_purchase_response
-    <<-RESPONSE
-<?xml version="1.0"?>
-<response>
-  <receipt>
-    <ReceiptId>1026.1</ReceiptId>
-    <ReferenceNum>661221050010170010</ReferenceNum>
-    <ResponseCode>481</ResponseCode>
-    <ISO>01</ISO>
-    <AuthCode>013511</AuthCode>
-    <TransTime>18:41:13</TransTime>
-    <TransDate>2008-01-05</TransDate>
-    <TransType>00</TransType>
-    <Complete>true</Complete>
-    <Message>DECLINED * =</Message>
-    <TransAmount>1.00</TransAmount>
-    <CardType>V</CardType>
-    <TransID>97-2-0</TransID>
-    <TimedOut>false</TimedOut>
-  </receipt>
-</response>
+    <<~RESPONSE
+      <?xml version="1.0"?>
+      <response>
+        <receipt>
+          <ReceiptId>1026.1</ReceiptId>
+          <ReferenceNum>661221050010170010</ReferenceNum>
+          <ResponseCode>481</ResponseCode>
+          <ISO>01</ISO>
+          <AuthCode>013511</AuthCode>
+          <TransTime>18:41:13</TransTime>
+          <TransDate>2008-01-05</TransDate>
+          <TransType>00</TransType>
+          <Complete>true</Complete>
+          <Message>DECLINED * =</Message>
+          <TransAmount>1.00</TransAmount>
+          <CardType>V</CardType>
+          <TransID>97-2-0</TransID>
+          <TimedOut>false</TimedOut>
+        </receipt>
+      </response>
 
     RESPONSE
   end
 
   def successful_store_response
-    <<-RESPONSE
-<?xml version="1.0"?>
-<response>
-  <receipt>
-    <DataKey>1234567890</DataKey>
-    <ResponseCode>027</ResponseCode>
-    <Complete>true</Complete>
-    <Message>Successfully registered cc details * =</Message>
-  </receipt>
-</response>
+    <<~RESPONSE
+      <?xml version="1.0"?>
+      <response>
+        <receipt>
+          <DataKey>1234567890</DataKey>
+          <ResponseCode>027</ResponseCode>
+          <Complete>true</Complete>
+          <Message>Successfully registered cc details * =</Message>
+        </receipt>
+      </response>
+    RESPONSE
+  end
+
+  def successful_store_with_duration_response
+    <<~RESPONSE
+      <?xml version="1.0"?>
+      <response>
+        <receipt>
+          <DataKey>1234567890</DataKey>
+          <ReceiptId>null</ReceiptId>
+          <ReferenceNum>null</ReferenceNum>
+          <ResponseCode>001</ResponseCode>
+          <ISO>null</ISO>
+          <AuthCode>null</AuthCode>
+          <Message>Successfully registered CC details.</Message>
+          <TransType>null</TransType>
+          <Complete>true</Complete>
+          <TransAmount>null</TransAmount>
+          <CardType>null</CardType>
+          <TransID>null</TransID>
+          <TimedOut>false</TimedOut>
+          <CorporateCard>null</CorporateCard>
+          <RecurSuccess>null</RecurSuccess>
+          <AvsResultCode>null</AvsResultCode>
+          <CvdResultCode>null</CvdResultCode>
+          <ResSuccess>true</ResSuccess>
+          <PaymentType>cc</PaymentType>
+          <IsVisaDebit>null</IsVisaDebit>
+          <ResolveData>
+            <anc1/>
+            <masked_pan>4242***4242</masked_pan>
+            <expdate>2010</expdate>
+          </ResolveData>
+        </receipt>
+      </response>
     RESPONSE
   end
 
   def successful_unstore_response
-    <<-RESPONSE
-<?xml version="1.0"?>
-<response>
-  <receipt>
-    <DataKey>1234567890</DataKey>
-    <ResponseCode>027</ResponseCode>
-    <Complete>true</Complete>
-    <Message>Successfully deleted cc details * =</Message>
-  </receipt>
-</response>
+    <<~RESPONSE
+      <?xml version="1.0"?>
+      <response>
+        <receipt>
+          <DataKey>1234567890</DataKey>
+          <ResponseCode>027</ResponseCode>
+          <Complete>true</Complete>
+          <Message>Successfully deleted cc details * =</Message>
+        </receipt>
+      </response>
     RESPONSE
   end
 
   def successful_update_response
-    <<-RESPONSE
-<?xml version="1.0"?>
-<response>
-  <receipt>
-    <DataKey>1234567890</DataKey>
-    <ResponseCode>027</ResponseCode>
-    <Complete>true</Complete>
-    <Message>Successfully updated cc details * =</Message>
-  </receipt>
-</response>
+    <<~RESPONSE
+      <?xml version="1.0"?>
+      <response>
+        <receipt>
+          <DataKey>1234567890</DataKey>
+          <ResponseCode>027</ResponseCode>
+          <Complete>true</Complete>
+          <Message>Successfully updated cc details * =</Message>
+        </receipt>
+      </response>
     RESPONSE
   end
 
@@ -894,6 +937,37 @@ class MonerisTest < Test::Unit::TestCase
     RESPONSE
   end
 
+  def successful_verify_response
+    <<-RESPONSE
+    <?xml version="1.0" standalone="yes"?>
+    <response>
+      <receipt>
+        <ReceiptId>93565164-01571</ReceiptId>
+        <ReferenceNum>660158360010251110</ReferenceNum>
+        <ResponseCode>027</ResponseCode>
+        <ISO>01</ISO>
+        <AuthCode>000000</AuthCode>
+        <TransTime>16:06:11</TransTime>
+        <TransDate>2019-11-04</TransDate>
+        <TransType>06</TransType>
+        <Complete>true</Complete>
+        <Message>APPROVED           *                    =</Message>
+        <TransAmount>0.00</TransAmount>
+        <CardType>V</CardType>
+        <TransID>125-0_14</TransID>
+        <TimedOut>false</TimedOut>
+        <BankTotals>null</BankTotals>
+        <Ticket>null</Ticket>
+        <AvsResultCode>null</AvsResultCode>
+        <ITDResponse>null</ITDResponse>
+        <CvdResultCode>1M</CvdResultCode>
+        <CavvResultCode>2</CavvResultCode>
+        <IsVisaDebit>false</IsVisaDebit>
+      </receipt>
+    </response>
+    RESPONSE
+  end
+
   def xml_purchase_fixture
     '<request><store_id>store1</store_id><api_token>yesguy</api_token><purchase><amount>1.01</amount><pan>4242424242424242</pan><expdate>0303</expdate><crypt_type>7</crypt_type><order_id>order1</order_id></purchase></request>'
   end
@@ -903,7 +977,7 @@ class MonerisTest < Test::Unit::TestCase
   end
 
   def pre_scrub
-    <<-pre_scrub
+    <<-REQUEST
       opening connection to esqa.moneris.com:443...
       opened
       starting SSL for esqa.moneris.com:443...
@@ -927,11 +1001,11 @@ class MonerisTest < Test::Unit::TestCase
       -> "0\r\n"
       -> "\r\n"
       Conn close
-    pre_scrub
+    REQUEST
   end
 
   def post_scrub
-    <<-post_scrub
+    <<-REQUEST
       opening connection to esqa.moneris.com:443...
       opened
       starting SSL for esqa.moneris.com:443...
@@ -955,6 +1029,6 @@ class MonerisTest < Test::Unit::TestCase
       -> "0\r\n"
       -> "\r\n"
       Conn close
-    post_scrub
+    REQUEST
   end
 end

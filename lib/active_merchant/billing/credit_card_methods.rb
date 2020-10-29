@@ -10,12 +10,18 @@ module ActiveMerchant #:nodoc:
         'discover'           => ->(num) { num =~ /^(6011|65\d{2}|64[4-9]\d)\d{12,15}|(62\d{14,17})$/ },
         'american_express'   => ->(num) { num =~ /^3[47]\d{13}$/ },
         'naranja'            => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), NARANJA_RANGES) },
-        'diners_club'        => ->(num) { num =~ /^3(0[0-5]|[68]\d)\d{11}$/ },
+        'diners_club'        => ->(num) { num =~ /^3(0[0-5]|[68]\d)\d{11,16}$/ },
         'jcb'                => ->(num) { num =~ /^35(28|29|[3-8]\d)\d{12}$/ },
         'dankort'            => ->(num) { num =~ /^5019\d{12}$/ },
-        'maestro'            => ->(num) { (12..19).cover?(num&.size) && in_bin_range?(num.slice(0, 6), MAESTRO_RANGES) },
+        'maestro'            => lambda { |num|
+          (12..19).cover?(num&.size) && (
+            in_bin_range?(num.slice(0, 6), MAESTRO_RANGES) ||
+            MAESTRO_BINS.any? { |bin| num.slice(0, bin.size) == bin }
+          )
+        },
         'forbrugsforeningen' => ->(num) { num =~ /^600722\d{10}$/ },
         'sodexo'             => ->(num) { num =~ /^(606071|603389|606070|606069|606068|600818)\d{10}$/ },
+        'alia'               => ->(num) { num =~ /^(504997|505878|601030|601073|505874)\d{10}$/ },
         'vr'                 => ->(num) { num =~ /^(627416|637036)\d{10}$/ },
         'cabal'              => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 8), CABAL_RANGES) },
         'unionpay'           => ->(num) { (16..19).cover?(num&.size) && in_bin_range?(num.slice(0, 8), UNIONPAY_RANGES) },
@@ -52,10 +58,10 @@ module ActiveMerchant #:nodoc:
       ]
 
       CARNET_BINS = Set.new(
-        [
-          '286900', '502275', '606333', '627535', '636318', '636379', '639388',
-          '639484', '639559', '50633601', '50633606', '58877274', '62753500',
-          '60462203', '60462204', '588772'
+        %w[
+          286900 502275 606333 627535 636318 636379 639388
+          639484 639559 50633601 50633606 58877274 62753500
+          60462203 60462204 588772
         ]
       )
 
@@ -64,6 +70,10 @@ module ActiveMerchant #:nodoc:
         (222100..272099),
         (510000..559999),
       ]
+
+      MAESTRO_BINS = Set.new(
+        %w[500033 581149]
+      )
 
       # https://www.mastercard.us/content/dam/mccom/global/documents/mastercard-rules.pdf, page 73
       MAESTRO_RANGES = [
@@ -94,11 +104,11 @@ module ActiveMerchant #:nodoc:
         506707..506708, 506715..506715, 506718..506722, 506724..506724, 506726..506736, 506739..506739, 506741..506743,
         506745..506747, 506753..506753, 506774..506776, 506778..506778, 509000..509001, 509003..509003, 509007..509007,
         509020..509022, 509035..509035, 509039..509042, 509045..509045, 509048..509048, 509051..509071, 509073..509074,
-        509077..509080, 509084..509084, 509091..509094, 509098..509098, 509100..509100, 509104..509104, 509106..509109,
-        627780..627780, 636368..636368, 650031..650033, 650035..650045, 650047..650047, 650406..650410, 650434..650436,
-        650439..650439, 650485..650504, 650506..650530, 650577..650580, 650582..650591, 650721..650727, 650901..650922,
-        650928..650928, 650938..650939, 650946..650948, 650954..650955, 650962..650963, 650967..650967, 650971..650971,
-        651652..651667, 651675..651678, 655000..655010, 655012..655015, 655051..655052, 655056..655057
+        509077..509080, 509084..509089, 509091..509094, 509098..509098, 509100..509100, 509104..509104, 509106..509109,
+        509257..509257, 627780..627780, 636368..636368, 650031..650033, 650035..650045, 650047..650047, 650406..650410,
+        650434..650436, 650439..650439, 650485..650504, 650506..650530, 650577..650580, 650582..650591, 650721..650727,
+        650901..650922, 650928..650928, 650938..650939, 650946..650948, 650954..650955, 650962..650963, 650967..650967,
+        650971..650971, 651652..651667, 651675..651678, 655000..655010, 655012..655015, 655051..655052, 655056..655057
       ]
 
       # Alelo provides BIN ranges by e-mailing them out periodically.
@@ -111,7 +121,7 @@ module ActiveMerchant #:nodoc:
         405886..405886, 430471..430471, 438061..438061, 438064..438064, 470063..470066,
         496067..496067, 506699..506704, 506706..506706, 506713..506714, 506716..506716,
         506749..506750, 506752..506752, 506754..506756, 506758..506762, 506764..506767,
-        506770..506771, 509015..509019, 509880..509882, 509884..509885, 509987..509988
+        506770..506771, 509015..509019, 509880..509882, 509884..509885, 509987..509992
       ]
 
       CABAL_RANGES = [
@@ -247,6 +257,7 @@ module ActiveMerchant #:nodoc:
 
         def last_digits(number)
           return '' if number.nil?
+
           number.length <= 4 ? number : number.slice(-4..-1)
         end
 
@@ -268,11 +279,13 @@ module ActiveMerchant #:nodoc:
 
         def valid_card_number_length?(number) #:nodoc:
           return false if number.nil?
+
           number.length >= 12
         end
 
         def valid_card_number_characters?(number) #:nodoc:
           return false if number.nil?
+
           !number.match(/\D/)
         end
 
@@ -285,6 +298,8 @@ module ActiveMerchant #:nodoc:
           case brand
           when 'naranja'
             valid_naranja_algo?(numbers)
+          when 'alia'
+            true
           else
             valid_luhn?(numbers)
           end
@@ -314,7 +329,7 @@ module ActiveMerchant #:nodoc:
           54 => 3, # 6 * 2 - 9
           55 => 5, # etc ...
           56 => 7,
-          57 => 9,
+          57 => 9
         }.freeze
 
         # Checks the validity of a card number by use of the Luhn Algorithm.
@@ -341,7 +356,7 @@ module ActiveMerchant #:nodoc:
         def valid_naranja_algo?(numbers) #:nodoc:
           num_array = numbers.to_s.chars.map(&:to_i)
           multipliers = [4, 3, 2, 7, 6, 5, 4, 3, 2, 7, 6, 5, 4, 3, 2]
-          num_sum = num_array[0..14].zip(multipliers).map { |a, b| a*b }.reduce(:+)
+          num_sum = num_array[0..14].zip(multipliers).map { |a, b| a * b }.reduce(:+)
           intermediate = 11 - (num_sum % 11)
           final_num = intermediate > 9 ? 0 : intermediate
           final_num == num_array[15]

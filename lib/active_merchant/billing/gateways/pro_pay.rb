@@ -6,10 +6,10 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://xmltest.propay.com/API/PropayAPI.aspx'
       self.live_url = 'https://epay.propay.com/api/propayapi.aspx'
 
-      self.supported_countries = ['US', 'CA']
+      self.supported_countries = %w[US CA]
       self.default_currency = 'USD'
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       self.homepage_url = 'https://www.propay.com/'
       self.display_name = 'ProPay'
@@ -133,12 +133,12 @@ module ActiveMerchant #:nodoc:
         '99' => 'Generic decline or unable to parse issuer response code'
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :cert_str)
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         request = build_xml_request do |xml|
           add_invoice(xml, money, options)
           add_payment(xml, payment, options)
@@ -151,7 +151,7 @@ module ActiveMerchant #:nodoc:
         commit(request)
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         request = build_xml_request do |xml|
           add_invoice(xml, money, options)
           add_payment(xml, payment, options)
@@ -164,7 +164,7 @@ module ActiveMerchant #:nodoc:
         commit(request)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         request = build_xml_request do |xml|
           add_invoice(xml, money, options)
           add_account(xml, options)
@@ -175,7 +175,7 @@ module ActiveMerchant #:nodoc:
         commit(request)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         request = build_xml_request do |xml|
           add_invoice(xml, money, options)
           add_account(xml, options)
@@ -186,11 +186,11 @@ module ActiveMerchant #:nodoc:
         commit(request)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         refund(nil, authorization, options)
       end
 
-      def credit(money, payment, options={})
+      def credit(money, payment, options = {})
         request = build_xml_request do |xml|
           add_invoice(xml, money, options)
           add_payment(xml, payment, options)
@@ -201,7 +201,7 @@ module ActiveMerchant #:nodoc:
         commit(request)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -284,6 +284,7 @@ module ActiveMerchant #:nodoc:
 
       def message_from(response)
         return 'Success' if success_from(response)
+
         message = STATUS_RESPONSE_CODES[response[:status]]
         message += " - #{TRANSACTION_RESPONSE_CODES[response[:response_code]]}" if response[:response_code]
 

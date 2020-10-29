@@ -3,7 +3,7 @@ require 'test_helper'
 class EwayTest < Test::Unit::TestCase
   def setup
     @gateway = EwayGateway.new(
-      :login => '87654321'
+      login: '87654321'
     )
 
     @amount = 100
@@ -11,17 +11,17 @@ class EwayTest < Test::Unit::TestCase
     @credit_card = credit_card('4646464646464646')
 
     @options = {
-      :order_id => '1230123',
-      :email => 'bob@testbob.com',
-      :billing_address => {
-        :address1 => '1234 First St.',
-        :address2 => 'Apt. 1',
-        :city     => 'Melbourne',
-        :state    => 'ACT',
-        :country  => 'AU',
-        :zip      => '12345'
+      order_id: '1230123',
+      email: 'bob@testbob.com',
+      billing_address: {
+        address1: '1234 First St.',
+        address2: 'Apt. 1',
+        city: 'Melbourne',
+        state: 'ACT',
+        country: 'AU',
+        zip: '12345'
       },
-      :description => 'purchased items'
+      description: 'purchased items'
     }
   end
 

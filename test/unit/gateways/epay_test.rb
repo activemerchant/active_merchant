@@ -5,12 +5,12 @@ class EpayTest < Test::Unit::TestCase
     Base.mode = :test
 
     @gateway = EpayGateway.new(
-      :login    => '10100111001',
-      :password => 'http://example.com'
+      login: '10100111001',
+      password: 'http://example.com'
     )
 
     @credit_card = credit_card
-    @options = {three_d_secure: { eci: '7', xid: '123', cavv: '456', version: '2', ds_transaction_id: '798' }}
+    @options = { three_d_secure: { eci: '7', xid: '123', cavv: '456', version: '2', ds_transaction_id: '798' } }
   end
 
   def test_successful_purchase
@@ -122,13 +122,13 @@ class EpayTest < Test::Unit::TestCase
   def test_authorize_sends_order_number
     @gateway.expects(:raw_ssl_request).with(anything, anything, regexp_matches(/orderid=1234/), anything).returns(valid_authorize_response)
 
-    @gateway.authorize(100, '123', :order_id => '#1234')
+    @gateway.authorize(100, '123', order_id: '#1234')
   end
 
   def test_purchase_sends_order_number
     @gateway.expects(:raw_ssl_request).with(anything, anything, regexp_matches(/orderid=1234/), anything).returns(valid_authorize_response)
 
-    @gateway.purchase(100, '123', :order_id => '#1234')
+    @gateway.purchase(100, '123', order_id: '#1234')
   end
 
   def test_transcript_scrubbing

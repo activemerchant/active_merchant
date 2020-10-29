@@ -6,14 +6,6 @@
 # Note that changes in the inspected code, or installation of new
 # versions of RuboCop, may require this file to be generated again.
 
-# Offense count: 2
-# Cop supports --auto-correct.
-# Configuration parameters: Include, TreatCommentsAsGroupSeparators.
-# Include: **/*.gemspec
-Gemspec/OrderedDependencies:
-  Exclude:
-    - 'activemerchant.gemspec'
-
 # Offense count: 1828
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedHashRocketStyle, EnforcedColonStyle, EnforcedLastArgumentHashStyle.
@@ -21,99 +13,6 @@ Gemspec/OrderedDependencies:
 # SupportedColonStyles: key, separator, table
 # SupportedLastArgumentHashStyles: always_inspect, always_ignore, ignore_implicit, ignore_explicit
 Layout/AlignHash:
-  Enabled: false
-
-# Offense count: 167
-# Cop supports --auto-correct.
-Layout/EmptyLineAfterGuardClause:
-  Enabled: false
-
-# Offense count: 173
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: empty_lines, empty_lines_except_namespace, empty_lines_special, no_empty_lines, beginning_only, ending_only
-Layout/EmptyLinesAroundClassBody:
-  Enabled: false
-
-# Offense count: 105
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, IndentationWidth.
-# SupportedStyles: consistent, consistent_relative_to_receiver, special_for_inner_method_call, special_for_inner_method_call_in_parentheses
-Layout/FirstParameterIndentation:
-  Enabled: false
-
-# Offense count: 255
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, IndentationWidth.
-# SupportedStyles: special_inside_parentheses, consistent, align_braces
-Layout/IndentHash:
-  Enabled: false
-
-# Offense count: 392
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: auto_detection, squiggly, active_support, powerpack, unindent
-Layout/IndentHeredoc:
-  Enabled: false
-
-# Offense count: 1
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: symmetrical, new_line, same_line
-Layout/MultilineArrayBraceLayout:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/optimal_payment.rb'
-
-# Offense count: 232
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: symmetrical, new_line, same_line
-Layout/MultilineMethodCallBraceLayout:
-  Enabled: false
-
-# Offense count: 649
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: space, no_space
-Layout/SpaceAroundEqualsInParameterDefault:
-  Enabled: false
-
-# Offense count: 104
-# Cop supports --auto-correct.
-Layout/SpaceAroundKeyword:
-  Enabled: false
-
-# Offense count: 782
-# Cop supports --auto-correct.
-# Configuration parameters: AllowForAlignment.
-Layout/SpaceAroundOperators:
-  Enabled: false
-
-# Offense count: 118
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, EnforcedStyleForEmptyBrackets.
-# SupportedStyles: space, no_space, compact
-# SupportedStylesForEmptyBrackets: space, no_space
-Layout/SpaceInsideArrayLiteralBrackets:
-  Enabled: false
-
-# Offense count: 12
-# Cop supports --auto-correct.
-Layout/SpaceInsideArrayPercentLiteral:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/migs/migs_codes.rb'
-
-# Offense count: 1186
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, EnforcedStyleForEmptyBraces.
-# SupportedStyles: space, no_space, compact
-# SupportedStylesForEmptyBraces: space, no_space
-Layout/SpaceInsideHashLiteralBraces:
-  Enabled: false
-
-# Offense count: 115
-# Cop supports --auto-correct.
-Layout/SpaceInsidePercentLiteralDelimiters:
   Enabled: false
 
 # Offense count: 150
@@ -136,12 +35,6 @@ Lint/HandleExceptions:
 Lint/RescueException:
   Exclude:
     - 'lib/active_merchant/billing/gateways/quantum.rb'
-
-# Offense count: 1502
-# Cop supports --auto-correct.
-# Configuration parameters: IgnoreEmptyBlocks, AllowUnusedKeywordArguments.
-Lint/UnusedBlockArgument:
-  Enabled: false
 
 # Offense count: 284
 # Cop supports --auto-correct.
@@ -189,35 +82,6 @@ Naming/AccessorMethodName:
     - 'test/remote/gateways/remote_authorize_net_cim_test.rb'
     - 'test/unit/gateways/authorize_net_cim_test.rb'
 
-# Offense count: 1
-Naming/ConstantName:
-  Exclude:
-    - 'test/test_helper.rb'
-
-# Offense count: 46
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: lowercase, uppercase
-Naming/HeredocDelimiterCase:
-  Exclude:
-    - 'test/unit/gateways/authorize_net_test.rb'
-    - 'test/unit/gateways/card_stream_test.rb'
-    - 'test/unit/gateways/hps_test.rb'
-    - 'test/unit/gateways/litle_test.rb'
-    - 'test/unit/gateways/moneris_test.rb'
-
-# Offense count: 85
-# Configuration parameters: Blacklist.
-# Blacklist: (?-mix:(^|\s)(EO[A-Z]{1}|END)(\s|$))
-Naming/HeredocDelimiterNaming:
-  Enabled: false
-
-# Offense count: 1
-# Configuration parameters: EnforcedStyleForLeadingUnderscores.
-# SupportedStylesForLeadingUnderscores: disallowed, required, optional
-Naming/MemoizedInstanceVariableName:
-  Exclude:
-    - 'lib/active_merchant/billing/compatibility.rb'
-
 # Offense count: 15
 # Configuration parameters: EnforcedStyle.
 # SupportedStyles: snake_case, camelCase
@@ -231,21 +95,6 @@ Naming/MethodName:
     - 'test/remote/gateways/remote_fat_zebra_test.rb'
     - 'test/remote/gateways/remote_sage_pay_test.rb'
     - 'test/unit/gateways/sage_pay_test.rb'
-
-# Offense count: 5
-# Configuration parameters: NamePrefix, NamePrefixBlacklist, NameWhitelist, MethodDefinitionMacros.
-# NamePrefix: is_, has_, have_
-# NamePrefixBlacklist: is_, has_, have_
-# NameWhitelist: is_a?
-# MethodDefinitionMacros: define_method, define_singleton_method
-Naming/PredicateName:
-  Exclude:
-    - 'spec/**/*'
-    - 'lib/active_merchant/billing/gateways/authorize_net.rb'
-    - 'lib/active_merchant/billing/gateways/payeezy.rb'
-    - 'lib/active_merchant/billing/gateways/paymill.rb'
-    - 'lib/active_merchant/billing/gateways/redsys.rb'
-    - 'lib/active_merchant/billing/gateways/sage_pay.rb'
 
 # Offense count: 14
 # Configuration parameters: MinNameLength, AllowNamesEndingInNumbers, AllowedNames, ForbiddenNames.
@@ -279,42 +128,6 @@ Naming/VariableName:
     - 'test/unit/gateways/card_stream_test.rb'
     - 'test/unit/gateways/worldpay_online_payments_test.rb'
 
-# Offense count: 11
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: snake_case, normalcase, non_integer
-Naming/VariableNumber:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/merchant_partners.rb'
-    - 'lib/active_merchant/billing/gateways/mercury.rb'
-    - 'lib/active_merchant/billing/gateways/orbital.rb'
-    - 'test/remote/gateways/remote_paypal_test.rb'
-    - 'test/unit/gateways/merchant_ware_test.rb'
-    - 'test/unit/gateways/merchant_ware_version_four_test.rb'
-    - 'test/unit/gateways/orbital_test.rb'
-    - 'test/unit/gateways/paypal/paypal_common_api_test.rb'
-
-# Offense count: 4
-# Cop supports --auto-correct.
-Performance/RedundantMatch:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/opp.rb'
-    - 'test/unit/gateways/payu_latam_test.rb'
-
-# Offense count: 11
-# Cop supports --auto-correct.
-Performance/StringReplacement:
-  Exclude:
-    - 'lib/active_merchant/billing/compatibility.rb'
-    - 'lib/active_merchant/billing/gateways/card_connect.rb'
-    - 'lib/active_merchant/billing/gateways/firstdata_e4.rb'
-    - 'lib/active_merchant/billing/gateways/merchant_ware.rb'
-    - 'lib/active_merchant/billing/gateways/merchant_ware_version_four.rb'
-    - 'lib/active_merchant/billing/gateways/orbital.rb'
-    - 'lib/active_merchant/billing/gateways/quickbooks.rb'
-    - 'lib/active_merchant/billing/gateways/quickpay/quickpay_v10.rb'
-    - 'lib/active_merchant/billing/gateways/realex.rb'
-    - 'test/unit/gateways/nab_transact_test.rb'
-
 # Offense count: 2
 # Configuration parameters: EnforcedStyle.
 # SupportedStyles: inline, group
@@ -322,36 +135,6 @@ Style/AccessModifierDeclarations:
   Exclude:
     - 'test/unit/gateways/metrics_global_test.rb'
     - 'test/unit/gateways/optimal_payment_test.rb'
-
-# Offense count: 11
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: prefer_alias, prefer_alias_method
-Style/Alias:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/beanstream.rb'
-    - 'lib/active_merchant/billing/gateways/braintree_blue.rb'
-    - 'lib/active_merchant/billing/gateways/inspire.rb'
-    - 'lib/active_merchant/billing/gateways/migs.rb'
-    - 'lib/active_merchant/billing/gateways/smart_ps.rb'
-    - 'lib/active_merchant/billing/gateways/spreedly_core.rb'
-    - 'lib/active_merchant/post_data.rb'
-    - 'test/unit/gateways/bpoint_test.rb'
-    - 'test/unit/gateways/paymentez_test.rb'
-
-# Offense count: 12
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: always, conditionals
-Style/AndOr:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/beanstream/beanstream_core.rb'
-    - 'lib/active_merchant/billing/gateways/eway.rb'
-    - 'lib/active_merchant/billing/gateways/iridium.rb'
-    - 'lib/active_merchant/billing/gateways/pac_net_raven.rb'
-    - 'lib/active_merchant/billing/gateways/smart_ps.rb'
-    - 'lib/active_merchant/billing/gateways/stripe.rb'
-    - 'lib/active_merchant/billing/gateways/webpay.rb'
 
 # Offense count: 47
 # Configuration parameters: AllowedChars.
@@ -371,12 +154,6 @@ Style/AsciiComments:
     - 'test/remote/gateways/remote_data_cash_test.rb'
     - 'test/remote/gateways/remote_nab_transact_test.rb'
 
-# Offense count: 1
-# Cop supports --auto-correct.
-Style/Attr:
-  Exclude:
-    - 'test/unit/gateways/forte_test.rb'
-
 # Offense count: 2
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle.
@@ -385,14 +162,6 @@ Style/BarePercentLiterals:
   Exclude:
     - 'test/unit/gateways/eway_rapid_test.rb'
     - 'test/unit/gateways/orbital_test.rb'
-
-# Offense count: 3
-# Cop supports --auto-correct.
-Style/BlockComments:
-  Exclude:
-    - 'test/remote/gateways/remote_barclays_epdq_extra_plus_test.rb'
-    - 'test/remote/gateways/remote_netpay_test.rb'
-    - 'test/remote/gateways/remote_payu_in_test.rb'
 
 # Offense count: 77
 # Cop supports --auto-correct.
@@ -644,13 +413,6 @@ Style/GlobalVars:
 # Offense count: 196
 # Configuration parameters: MinBodyLength.
 Style/GuardClause:
-  Enabled: false
-
-# Offense count: 7482
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, UseHashRocketsWithSymbolValues, PreferHashRocketsForNonAlnumEndingSymbols.
-# SupportedStyles: ruby19, hash_rockets, no_mixed_keys, ruby19_no_mixed_keys
-Style/HashSyntax:
   Enabled: false
 
 # Offense count: 6
@@ -953,41 +715,6 @@ Style/SingleLineMethods:
   Exclude:
     - 'test/unit/gateways/paypal/paypal_common_api_test.rb'
 
-# Offense count: 3
-# Cop supports --auto-correct.
-# Configuration parameters: .
-# SupportedStyles: use_perl_names, use_english_names
-Style/SpecialGlobalVars:
-  EnforcedStyle: use_perl_names
-
-# Offense count: 27
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: single_quotes, double_quotes
-Style/StringLiteralsInInterpolation:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/banwire.rb'
-    - 'lib/active_merchant/billing/gateways/cams.rb'
-    - 'lib/active_merchant/billing/gateways/checkout_v2.rb'
-    - 'lib/active_merchant/billing/gateways/credorax.rb'
-    - 'lib/active_merchant/billing/gateways/digitzs.rb'
-    - 'lib/active_merchant/billing/gateways/ebanx.rb'
-    - 'lib/active_merchant/billing/gateways/merchant_one.rb'
-    - 'lib/active_merchant/billing/gateways/micropayment.rb'
-    - 'lib/active_merchant/billing/gateways/pagarme.rb'
-    - 'lib/active_merchant/billing/gateways/quickpay/quickpay_v10.rb'
-    - 'lib/active_merchant/billing/gateways/stripe.rb'
-    - 'lib/active_merchant/billing/gateways/usa_epay_advanced.rb'
-    - 'lib/active_merchant/billing/gateways/worldpay.rb'
-    - 'test/unit/gateways/eway_managed_test.rb'
-
-# Offense count: 309
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, MinSize.
-# SupportedStyles: percent, brackets
-Style/SymbolArray:
-  Enabled: false
-
 # Offense count: 7
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyleForMultiline.
@@ -997,26 +724,6 @@ Style/TrailingCommaInArrayLiteral:
     - 'lib/active_merchant/billing/credit_card_methods.rb'
     - 'test/unit/gateways/netaxept_test.rb'
     - 'test/unit/gateways/usa_epay_transaction_test.rb'
-
-# Offense count: 160
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyleForMultiline.
-# SupportedStylesForMultiline: comma, consistent_comma, no_comma
-Style/TrailingCommaInHashLiteral:
-  Enabled: false
-
-# Offense count: 38
-# Cop supports --auto-correct.
-# Configuration parameters: AllowNamedUnderscoreVariables.
-Style/TrailingUnderscoreVariable:
-  Enabled: false
-
-# Offense count: 119
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, MinSize, WordRegex.
-# SupportedStyles: percent, brackets
-Style/WordArray:
-  Enabled: false
 
 # Offense count: 34
 # Cop supports --auto-correct.
@@ -1028,3 +735,4 @@ Style/ZeroLengthPredicate:
 # URISchemes: http, https
 Metrics/LineLength:
   Max: 2602
+

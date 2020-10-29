@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class EfsnetGateway < Gateway
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.homepage_url = 'http://www.concordefsnet.com/'
       self.display_name = 'Efsnet'
 
@@ -53,8 +53,8 @@ module ActiveMerchant #:nodoc:
 
       def void(identification, options = {})
         requires!(options, :order_id)
-        original_transaction_id, _ = identification.split(';')
-        commit(:void_transaction, {:reference_number => format_reference_number(options[:order_id]), :transaction_id => original_transaction_id})
+        original_transaction_id, = identification.split(';')
+        commit(:void_transaction, { reference_number: format_reference_number(options[:order_id]), transaction_id: original_transaction_id })
       end
 
       def voice_authorize(money, authorization_code, creditcard, options = {})
@@ -81,11 +81,11 @@ module ActiveMerchant #:nodoc:
         requires!(options, :order_id)
 
         {
-          :reference_number => format_reference_number(options[:order_id]),
-          :transaction_amount => amount(money),
-          :original_transaction_amount => original_transaction_amount,
-          :original_transaction_id => original_transaction_id,
-          :client_ip_address => options[:ip]
+          reference_number: format_reference_number(options[:order_id]),
+          transaction_amount: amount(money),
+          original_transaction_amount: original_transaction_amount,
+          original_transaction_id: original_transaction_id,
+          client_ip_address: options[:ip]
         }
       end
 
@@ -93,10 +93,10 @@ module ActiveMerchant #:nodoc:
         requires!(options, :order_id)
 
         post = {
-          :reference_number => format_reference_number(options[:order_id]),
-          :authorization_number => options[:authorization_number],
-          :transaction_amount => amount(money),
-          :client_ip_address => options[:ip]
+          reference_number: format_reference_number(options[:order_id]),
+          authorization_number: options[:authorization_number],
+          transaction_amount: amount(money),
+          client_ip_address: options[:ip]
 
         }
         add_creditcard(post, creditcard)
@@ -146,11 +146,10 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(test? ? self.test_url : self.live_url, post_data(action, parameters), 'Content-Type' => 'text/xml'))
 
         Response.new(success?(response), message_from(response[:result_message]), response,
-          :test => test?,
-          :authorization => authorization_from(response, parameters),
-          :avs_result => { :code => response[:avs_response_code] },
-          :cvv_result => response[:cvv_response_code]
-        )
+          test: test?,
+          authorization: authorization_from(response, parameters),
+          avs_result: { code: response[:avs_response_code] },
+          cvv_result: response[:cvv_response_code])
       end
 
       def success?(response)
@@ -158,7 +157,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response, params)
-        [ response[:transaction_id], params[:transaction_amount] ].compact.join(';')
+        [response[:transaction_id], params[:transaction_amount]].compact.join(';')
       end
 
       def parse(xml)
@@ -190,6 +189,7 @@ module ActiveMerchant #:nodoc:
 
       def message_from(message)
         return 'Unspecified error' if message.blank?
+
         message.gsub(/[^\w]/, ' ').split.join(' ').capitalize
       end
 
@@ -197,18 +197,18 @@ module ActiveMerchant #:nodoc:
         ACTIONS
       end
 
-      CREDIT_CARD_FIELDS = %w(AuthorizationNumber ClientIpAddress BillingAddress BillingCity BillingState BillingPostalCode BillingCountry BillingName CardVerificationValue ExpirationMonth ExpirationYear ReferenceNumber TransactionAmount AccountNumber )
+      CREDIT_CARD_FIELDS = %w(AuthorizationNumber ClientIpAddress BillingAddress BillingCity BillingState BillingPostalCode BillingCountry BillingName CardVerificationValue ExpirationMonth ExpirationYear ReferenceNumber TransactionAmount AccountNumber)
 
       ACTIONS = {
-           :credit_card_authorize       => CREDIT_CARD_FIELDS,
-           :credit_card_charge          => CREDIT_CARD_FIELDS,
-           :credit_card_voice_authorize => CREDIT_CARD_FIELDS,
-           :credit_card_capture         => CREDIT_CARD_FIELDS,
-           :credit_card_credit          => CREDIT_CARD_FIELDS + ['OriginalTransactionAmount'],
-           :credit_card_refund          => %w(ReferenceNumber TransactionAmount OriginalTransactionAmount OriginalTransactionID ClientIpAddress),
-           :void_transaction            => %w(ReferenceNumber TransactionID),
-           :credit_card_settle          => %w(ReferenceNumber TransactionAmount OriginalTransactionAmount OriginalTransactionID ClientIpAddress),
-           :system_check                => %w(SystemCheck),
+        credit_card_authorize: CREDIT_CARD_FIELDS,
+        credit_card_charge: CREDIT_CARD_FIELDS,
+        credit_card_voice_authorize: CREDIT_CARD_FIELDS,
+        credit_card_capture: CREDIT_CARD_FIELDS,
+        credit_card_credit: CREDIT_CARD_FIELDS + ['OriginalTransactionAmount'],
+        credit_card_refund: %w(ReferenceNumber TransactionAmount OriginalTransactionAmount OriginalTransactionID ClientIpAddress),
+        void_transaction: %w(ReferenceNumber TransactionID),
+        credit_card_settle: %w(ReferenceNumber TransactionAmount OriginalTransactionAmount OriginalTransactionID ClientIpAddress),
+        system_check: %w(SystemCheck)
       }
     end
   end

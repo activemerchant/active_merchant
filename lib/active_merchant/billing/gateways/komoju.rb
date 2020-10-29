@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
       self.money_format = :cents
       self.homepage_url = 'https://www.komoju.com/'
       self.display_name = 'Komoju'
-      self.supported_cardtypes = [:visa, :master, :american_express, :jcb]
+      self.supported_cardtypes = %i[visa master american_express jcb]
 
       STANDARD_ERROR_CODE_MAPPING = {
         'bad_verification_value' => 'incorrect_cvc',

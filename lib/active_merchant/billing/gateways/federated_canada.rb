@@ -12,7 +12,7 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'CAD'
 
       # The card types supported by the payment gateway
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       # The homepage URL of the gateway
       self.homepage_url = 'http://www.federatedcanada.com/'
@@ -54,7 +54,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(money, authorization, options = {})
-        commit('refund', money, options.merge(:transactionid => authorization))
+        commit('refund', money, options.merge(transactionid: authorization))
       end
 
       def credit(money, authorization, options = {})
@@ -122,11 +122,10 @@ module ActiveMerchant #:nodoc:
         message = message_from(response)
 
         Response.new(success?(response), message, response,
-          :test => test?,
-          :authorization => response['transactionid'],
-          :avs_result => {:code => response['avsresponse']},
-          :cvv_result => response['cvvresponse']
-        )
+          test: test?,
+          authorization: response['transactionid'],
+          avs_result: { code: response['avsresponse'] },
+          cvv_result: response['cvvresponse'])
       end
 
       def success?(response)

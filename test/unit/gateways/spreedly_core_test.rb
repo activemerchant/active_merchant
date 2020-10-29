@@ -1,9 +1,8 @@
 require 'test_helper'
 
 class SpreedlyCoreTest < Test::Unit::TestCase
-
   def setup
-    @gateway = SpreedlyCoreGateway.new(:login => 'api_login', :password => 'api_secret', :gateway_token => 'token')
+    @gateway = SpreedlyCoreGateway.new(login: 'api_login', password: 'api_secret', gateway_token: 'token')
     @payment_method_token = 'E3eQGR3E0xiosj7FOJRtIKbF8Ch'
 
     @credit_card = credit_card
@@ -950,7 +949,7 @@ class SpreedlyCoreTest < Test::Unit::TestCase
   end
 
   def pre_scrubbed
-    <<-EOS
+    <<-REQUEST
       opening connection to core.spreedly.com:443...
       opened
       starting SSL for core.spreedly.com:443...
@@ -975,11 +974,11 @@ class SpreedlyCoreTest < Test::Unit::TestCase
       -> "<transaction>\n  <token>NRBpydUCWn658GHV8h2kVlUzB0i</token>\n  <created_at type=\"dateTime\">2018-03-10T22:04:06Z</created_at>\n  <updated_at type=\"dateTime\">2018-03-10T22:04:06Z</updated_at>\n  <succeeded type=\"boolean\">true</succeeded>\n  <transaction_type>AddPaymentMethod</transaction_type>\n  <retained type=\"boolean\">false</retained>\n  <state>succeeded</state>\n  <message key=\"messages.transaction_succeeded\">Succeeded!</message>\n  <payment_method>\n    <token>Wd25UIrH1uopTkZZ4UDdb5XmSDd</token>\n    <created_at type=\"dateTime\">2018-03-10T22:04:06Z</created_at>\n    <updated_at type=\"dateTime\">2018-03-10T22:04:06Z</updated_at>\n    <email nil=\"true\"/>\n    <data nil=\"true\"/>\n    <storage_state>cached</storage_state>\n    <test type=\"boolean\">true</test>\n    <last_four_digits>4444</last_four_digits>\n    <first_six_digits>555555</first_six_digits>\n    <card_type>master</card_type>\n    <first_name>Longbob</first_name>\n    <last_name>Longsen</last_name>\n    <month type=\"integer\">9</month>\n    <year type=\"integer\">2019</year>\n    <address1 nil=\"true\"/>\n    <address2 nil=\"true\"/>\n    <city nil=\"true\"/>\n    <state nil=\"true\"/>\n    <zip nil=\"true\"/>\n    <country nil=\"true\"/>\n    <phone_number nil=\"true\"/>\n    <company nil=\"true\"/>\n    <full_name>Longbob Longsen</full_name>\n    <eligible_for_card_updater type=\"boolean\">true</eligible_for_card_updater>\n    <shipping_address1 nil=\"true\"/>\n    <shipping_address2 nil=\"true\"/>\n    <shipping_city nil=\"true\"/>\n    <shipping_state nil=\"true\"/>\n    <shipping_zip nil=\"true\"/>\n    <shipping_country nil=\"true\"/>\n    <shipping_phone_number nil=\"true\"/>\n    <payment_method_type>credit_card</payment_method_type>\n    <errors>\n    </errors>\n    <verification_value>XXX</verification_value>\n    <number>XXXX-XXXX-XXXX-4444</number>\n    <fingerprint>125370bb396dff6fed4f581f85a91a9e5317</fingerprint>\n  </payment_method>\n</transaction>\n"
       read 1875 bytes
       Conn close
-    EOS
+    REQUEST
   end
 
   def post_scrubbed
-    <<-EOS
+    <<-REQUEST
       opening connection to core.spreedly.com:443...
       opened
       starting SSL for core.spreedly.com:443...
@@ -1004,7 +1003,7 @@ class SpreedlyCoreTest < Test::Unit::TestCase
       -> "<transaction>\n  <token>NRBpydUCWn658GHV8h2kVlUzB0i</token>\n  <created_at type=\"dateTime\">2018-03-10T22:04:06Z</created_at>\n  <updated_at type=\"dateTime\">2018-03-10T22:04:06Z</updated_at>\n  <succeeded type=\"boolean\">true</succeeded>\n  <transaction_type>AddPaymentMethod</transaction_type>\n  <retained type=\"boolean\">false</retained>\n  <state>succeeded</state>\n  <message key=\"messages.transaction_succeeded\">Succeeded!</message>\n  <payment_method>\n    <token>Wd25UIrH1uopTkZZ4UDdb5XmSDd</token>\n    <created_at type=\"dateTime\">2018-03-10T22:04:06Z</created_at>\n    <updated_at type=\"dateTime\">2018-03-10T22:04:06Z</updated_at>\n    <email nil=\"true\"/>\n    <data nil=\"true\"/>\n    <storage_state>cached</storage_state>\n    <test type=\"boolean\">true</test>\n    <last_four_digits>4444</last_four_digits>\n    <first_six_digits>555555</first_six_digits>\n    <card_type>master</card_type>\n    <first_name>Longbob</first_name>\n    <last_name>Longsen</last_name>\n    <month type=\"integer\">9</month>\n    <year type=\"integer\">2019</year>\n    <address1 nil=\"true\"/>\n    <address2 nil=\"true\"/>\n    <city nil=\"true\"/>\n    <state nil=\"true\"/>\n    <zip nil=\"true\"/>\n    <country nil=\"true\"/>\n    <phone_number nil=\"true\"/>\n    <company nil=\"true\"/>\n    <full_name>Longbob Longsen</full_name>\n    <eligible_for_card_updater type=\"boolean\">true</eligible_for_card_updater>\n    <shipping_address1 nil=\"true\"/>\n    <shipping_address2 nil=\"true\"/>\n    <shipping_city nil=\"true\"/>\n    <shipping_state nil=\"true\"/>\n    <shipping_zip nil=\"true\"/>\n    <shipping_country nil=\"true\"/>\n    <shipping_phone_number nil=\"true\"/>\n    <payment_method_type>credit_card</payment_method_type>\n    <errors>\n    </errors>\n    <verification_value>[FILTERED]</verification_value>\n    <number>[FILTERED]</number>\n    <fingerprint>125370bb396dff6fed4f581f85a91a9e5317</fingerprint>\n  </payment_method>\n</transaction>\n"
       read 1875 bytes
       Conn close
-    EOS
+    REQUEST
   end
 
   def successful_verify_response

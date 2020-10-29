@@ -9,10 +9,10 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://sandbox.api.payulatam.com/payments-api/4.0/service.cgi'
       self.live_url = 'https://api.payulatam.com/payments-api/4.0/service.cgi'
 
-      self.supported_countries = ['AR', 'BR', 'CL', 'CO', 'MX', 'PA', 'PE']
+      self.supported_countries = %w[AR BR CL CO MX PA PE]
       self.default_currency = 'USD'
       self.money_format = :dollars
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :naranja, :cabal]
+      self.supported_cardtypes = %i[visa master american_express diners_club naranja cabal]
 
       BRAND_MAP = {
         'visa' => 'VISA',
@@ -30,24 +30,24 @@ module ActiveMerchant #:nodoc:
         'PEN' => 500
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :merchant_id, :account_id, :api_login, :api_key, :payment_country)
         super
       end
 
-      def purchase(amount, payment_method, options={})
+      def purchase(amount, payment_method, options = {})
         post = {}
         auth_or_sale(post, 'AUTHORIZATION_AND_CAPTURE', amount, payment_method, options)
         commit('purchase', post)
       end
 
-      def authorize(amount, payment_method, options={})
+      def authorize(amount, payment_method, options = {})
         post = {}
         auth_or_sale(post, 'AUTHORIZATION', amount, payment_method, options)
         commit('auth', post)
       end
 
-      def capture(amount, authorization, options={})
+      def capture(amount, authorization, options = {})
         post = {}
 
         add_credentials(post, 'SUBMIT_TRANSACTION', options)
@@ -62,7 +62,7 @@ module ActiveMerchant #:nodoc:
         commit('capture', post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = {}
 
         add_credentials(post, 'SUBMIT_TRANSACTION', options)
@@ -72,17 +72,24 @@ module ActiveMerchant #:nodoc:
         commit('void', post)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, options = {})
         post = {}
 
         add_credentials(post, 'SUBMIT_TRANSACTION', options)
-        add_transaction_elements(post, 'REFUND', options)
-        add_reference(post, authorization)
 
+        if options[:partial_refund]
+          add_transaction_elements(post, 'PARTIAL_REFUND', options)
+          post[:transaction][:additionalValues] ||= {}
+          post[:transaction][:additionalValues][:TX_VALUE] = invoice_for(amount, options)[:TX_VALUE]
+        else
+          add_transaction_elements(post, 'REFUND', options)
+        end
+
+        add_reference(post, authorization)
         commit('refund', post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         minimum = MINIMUMS[options[:currency].upcase] if options[:currency]
         amount = options[:verify_amount] || minimum || 100
 
@@ -96,7 +103,7 @@ module ActiveMerchant #:nodoc:
         post = {}
 
         add_credentials(post, 'CREATE_TOKEN')
-        add_payment_method_to_be_tokenized(post, payment_method)
+        add_payment_method_to_be_tokenized(post, payment_method, options)
 
         commit('store', post)
       end
@@ -133,7 +140,7 @@ module ActiveMerchant #:nodoc:
         add_extra_parameters(post, options)
       end
 
-      def add_credentials(post, command, options={})
+      def add_credentials(post, command, options = {})
         post[:test] = test? unless command == 'CREATE_TOKEN'
         post[:language] = options[:language] || 'en'
         post[:command] = command
@@ -180,12 +187,13 @@ module ActiveMerchant #:nodoc:
 
       def billing_address_fields(options)
         return unless address = options[:billing_address]
+
         billing_address = {}
         billing_address[:street1] = address[:address1]
         billing_address[:street2] = address[:address2]
         billing_address[:city] = address[:city]
         billing_address[:state] = address[:state]
-        billing_address[:country] = address[:country]
+        billing_address[:country] = address[:country] unless address[:country].blank?
         billing_address[:postalCode] = address[:zip] if @options[:payment_country] == 'MX'
         billing_address[:phone] = address[:phone]
         billing_address
@@ -217,6 +225,7 @@ module ActiveMerchant #:nodoc:
 
       def shipping_address_fields(options)
         return unless address = options[:shipping_address]
+
         shipping_address = {}
         shipping_address[:street1] = address[:address1]
         shipping_address[:street2] = address[:address2]
@@ -292,6 +301,7 @@ module ActiveMerchant #:nodoc:
 
       def add_process_without_cvv2(payment_method, options)
         return true if payment_method.verification_value.blank? && options[:cvv].blank?
+
         false
       end
 
@@ -310,15 +320,14 @@ module ActiveMerchant #:nodoc:
         post[:transaction][:reason] = 'n/a'
       end
 
-      def add_payment_method_to_be_tokenized(post, payment_method)
+      def add_payment_method_to_be_tokenized(post, payment_method, options)
         credit_card_token = {}
-        credit_card_token[:payerId] = generate_unique_id
+        credit_card_token[:payerId] = options[:payer_id] || generate_unique_id
         credit_card_token[:name] = payment_method.name.strip
-        credit_card_token[:identificationNumber] = generate_unique_id
+        credit_card_token[:identificationNumber] = options[:dni_number]
         credit_card_token[:paymentMethod] = BRAND_MAP[payment_method.brand.to_s]
         credit_card_token[:number] = payment_method.number
         credit_card_token[:expirationDate] = format(payment_method.year, :four_digits).to_s + '/' + format(payment_method.month, :two_digits).to_s
-        credit_card_token[:securityCode] = payment_method.verification_value
         post[:creditCardToken] = credit_card_token
       end
 
@@ -344,8 +353,8 @@ module ActiveMerchant #:nodoc:
 
       def headers
         {
-          'Content-Type'  => 'application/json',
-          'Accept'  => 'application/json'
+          'Content-Type' => 'application/json',
+          'Accept' => 'application/json'
         }
       end
 
@@ -379,18 +388,24 @@ module ActiveMerchant #:nodoc:
         case action
         when 'store'
           return response['code'] if success
+
           error_description = response['creditCardToken']['errorDescription'] if response['creditCardToken']
           response['error'] || error_description || 'FAILED'
         when 'verify_credentials'
           return 'VERIFIED' if success
+
           'FAILED'
         else
           if response['transactionResponse']
             response_message = response['transactionResponse']['responseMessage']
+
             response_code = response['transactionResponse']['responseCode'] || response['transactionResponse']['pendingReason']
+
+            response_message = response_code + ' | ' + response['transactionResponse']['paymentNetworkResponseErrorMessage'] unless response['transactionResponse']['paymentNetworkResponseErrorMessage'].nil?
           end
           return response_code if success
-          response['error'] || response_message || response_code || 'FAILED'
+
+          response_message || response['error'] || response_code || 'FAILED'
         end
       end
 
@@ -435,7 +450,7 @@ module ActiveMerchant #:nodoc:
           false,
           message_from('', false, response),
           response,
-          :test => test?
+          test: test?
         )
       end
 

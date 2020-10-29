@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = %w[MX EC CO BR CL PE]
       self.default_currency = 'USD'
-      self.supported_cardtypes = %i[visa master american_express diners_club elo]
+      self.supported_cardtypes = %i[visa master american_express diners_club elo alia]
 
       self.homepage_url = 'https://secure.paymentez.com/'
       self.display_name = 'Paymentez'
@@ -72,16 +72,16 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, authorization, _options = {})
         post = {
-            transaction: { id: authorization }
+          transaction: { id: authorization }
         }
-        post[:order] = {amount: amount(money).to_f} if money
+        post[:order] = { amount: amount(money).to_f } if money
 
         commit_transaction('capture', post)
       end
 
       def refund(money, authorization, options = {})
-        post = {transaction: {id: authorization}}
-        post[:order] = {amount: amount(money).to_f} if money
+        post = { transaction: { id: authorization } }
+        post[:order] = { amount: amount(money).to_f } if money
 
         commit_transaction('refund', post)
       end
@@ -113,7 +113,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def unstore(identification, options = {})
-        post = { card: { token: identification }, user: { id: options[:user_id] }}
+        post = { card: { token: identification }, user: { id: options[:user_id] } }
         commit_card('delete', post)
       end
 
@@ -194,7 +194,7 @@ module ActiveMerchant #:nodoc:
         begin
           parse(raw_response)
         rescue JSON::ParserError
-          {'status' => 'Internal server error'}
+          { 'status' => 'Internal server error' }
         end
       end
 
@@ -236,10 +236,13 @@ module ActiveMerchant #:nodoc:
       def card_success_from(response)
         return false if response.include?('error')
         return true if response['message'] == 'card deleted'
+
         response['card']['status'] == 'valid'
       end
 
       def message_from(response)
+        return response['detail'] if response['detail'].present?
+
         if !success_from(response) && response['error']
           response['error'] && response['error']['type']
         else
@@ -274,6 +277,7 @@ module ActiveMerchant #:nodoc:
 
       def error_code_from(response)
         return if success_from(response)
+
         if response['transaction']
           detail = response['transaction']['status_detail']
           return STANDARD_ERROR_CODE[STANDARD_ERROR_CODE_MAPPING[detail]] if STANDARD_ERROR_CODE_MAPPING.include?(detail)

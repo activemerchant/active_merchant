@@ -4,16 +4,16 @@ class RemoteMerchantWareVersionFourTest < Test::Unit::TestCase
   def setup
     @gateway = MerchantWareVersionFourGateway.new(fixtures(:merchant_ware_version_four))
     @amount = rand(200..1199)
-    @credit_card = credit_card('5424180279791732', {:brand => 'master'})
+    @credit_card = credit_card('5424180279791732', { brand: 'master' })
     @declined_card = credit_card('1234567890123')
 
     @options = {
-      :order_id => generate_unique_id[0, 8],
-      :billing_address => address
+      order_id: generate_unique_id[0, 8],
+      billing_address: address
     }
 
     @reference_purchase_options = {
-      :order_id => generate_unique_id[0, 8]
+      order_id: generate_unique_id[0, 8]
     }
   end
 
@@ -92,10 +92,10 @@ class RemoteMerchantWareVersionFourTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = MerchantWareVersionFourGateway.new(
-                :login => '',
-                :password => '',
-                :name => ''
-              )
+      login: '',
+      password: '',
+      name: ''
+    )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Invalid Credentials.', response.message

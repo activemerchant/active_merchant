@@ -974,5 +974,4 @@ class PagarmeTest < Test::Unit::TestCase
     }
     SUCCESS_RESPONSE
   end
-
 end

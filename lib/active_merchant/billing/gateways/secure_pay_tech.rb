@@ -2,7 +2,7 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class SecurePayTechGateway < Gateway
       class SecurePayTechPostData < PostData
-        self.required_fields = [ :OrderReference, :CardNumber, :CardExpiry, :CardHolderName, :CardType, :MerchantID, :MerchantKey, :Amount, :Currency ]
+        self.required_fields = %i[OrderReference CardNumber CardExpiry CardHolderName CardType MerchantID MerchantKey Amount Currency]
       end
 
       self.live_url = self.test_url = 'https://tx.securepaytech.com/web/HttpPostPurchase'
@@ -21,7 +21,7 @@ module ActiveMerchant #:nodoc:
 
       self.default_currency = 'NZD'
       self.supported_countries = ['NZ']
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express diners_club]
       self.homepage_url = 'http://www.securepaytech.com/'
       self.display_name = 'SecurePayTech'
 
@@ -85,9 +85,8 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(self.live_url, post_data(action, post)))
 
         Response.new(response[:result_code] == 1, message_from(response), response,
-          :test => test?,
-          :authorization => response[:merchant_transaction_reference]
-        )
+          test: test?,
+          authorization: response[:merchant_transaction_reference])
       end
 
       def message_from(result)

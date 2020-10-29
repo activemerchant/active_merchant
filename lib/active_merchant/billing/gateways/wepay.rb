@@ -4,8 +4,8 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://stage.wepayapi.com/v2'
       self.live_url = 'https://wepayapi.com/v2'
 
-      self.supported_countries = ['US', 'CA']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_countries = %w[US CA]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.homepage_url = 'https://www.wepay.com/'
       self.default_currency = 'USD'
       self.display_name = 'WePay'
@@ -81,7 +81,7 @@ module ActiveMerchant #:nodoc:
         post[:expiration_month] = creditcard.month
         post[:expiration_year] = creditcard.year
 
-        if(billing_address = (options[:billing_address] || options[:address]))
+        if (billing_address = (options[:billing_address] || options[:address]))
           post[:address] = {}
           post[:address]['address1'] = billing_address[:address1] if billing_address[:address1]
           post[:address]['city']     = billing_address[:city] if billing_address[:city]
@@ -168,13 +168,15 @@ module ActiveMerchant #:nodoc:
         JSON.parse(response)
       end
 
-      def commit(action, params, options={})
+      def commit(action, params, options = {})
         begin
-          response = parse(ssl_post(
-            ((test? ? test_url : live_url) + action),
-            params.to_json,
-            headers(options)
-          ))
+          response = parse(
+            ssl_post(
+              ((test? ? test_url : live_url) + action),
+              params.to_json,
+              headers(options)
+            )
+          )
         rescue ResponseError => e
           response = parse(e.response.body)
         end

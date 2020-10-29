@@ -3,24 +3,24 @@ require 'test_helper'
 class FederatedCanadaTest < Test::Unit::TestCase
   def setup
     @gateway = FederatedCanadaGateway.new(
-                 :login => 'demo',
-                 :password => 'password'
-               )
+      login: 'demo',
+      password: 'password'
+    )
 
     @credit_card = credit_card('4111111111111111')
     @credit_card.verification_value = '999'
     @amount = 100
 
     @options = {
-      :order_id => '1',
-      :billing_address => address,
-      :description => 'Store Purchase'
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase'
     }
   end
 
   def test_successful_authorization
     @gateway.expects(:ssl_post).returns(successful_authorization_response)
-    options = {:billing_address => {:address1 => '888', :address2 => 'apt 13', :country => 'CA', :state => 'SK', :city => 'Big Beaver', :zip => '77777'}}
+    options = { billing_address: { address1: '888', address2: 'apt 13', country: 'CA', state: 'SK', city: 'Big Beaver', zip: '77777' } }
     assert response = @gateway.authorize(@amount, @credit_card, options)
     assert_instance_of Response, response
     assert_success response
@@ -47,8 +47,8 @@ class FederatedCanadaTest < Test::Unit::TestCase
 
   def test_add_address
     result = {}
-    @gateway.send(:add_address, result, :billing_address => {:address1 => '123 Happy Town Road', :address2 => 'apt 13', :country => 'CA', :state => 'SK', :phone => '1234567890'})
-    assert_equal ['address1', 'address2', 'city', 'company', 'country', 'phone', 'state', 'zip'], result.stringify_keys.keys.sort
+    @gateway.send(:add_address, result, billing_address: { address1: '123 Happy Town Road', address2: 'apt 13', country: 'CA', state: 'SK', phone: '1234567890' })
+    assert_equal %w[address1 address2 city company country phone state zip], result.stringify_keys.keys.sort
     assert_equal 'SK', result[:state]
     assert_equal '123 Happy Town Road', result[:address1]
     assert_equal 'apt 13', result[:address2]
@@ -57,13 +57,13 @@ class FederatedCanadaTest < Test::Unit::TestCase
 
   def test_add_invoice
     result = {}
-    @gateway.send(:add_invoice, result, :order_id => '#1001', :description => 'This is a great order')
+    @gateway.send(:add_invoice, result, order_id: '#1001', description: 'This is a great order')
     assert_equal '#1001', result[:orderid]
     assert_equal 'This is a great order', result[:orderdescription]
   end
 
   def test_purchase_is_valid_csv
-    params = {:amount => @amount}
+    params = { amount: @amount }
     @gateway.send(:add_creditcard, params, @credit_card)
 
     assert data = @gateway.send(:post_data, 'auth', params)
@@ -71,7 +71,7 @@ class FederatedCanadaTest < Test::Unit::TestCase
   end
 
   def test_purchase_meets_minimum_requirements
-    params = {:amount => @amount}
+    params = { amount: @amount }
     @gateway.send(:add_creditcard, params, @credit_card)
     assert data = @gateway.send(:post_data, 'auth', params)
     minimum_requirements.each do |key|
@@ -80,8 +80,8 @@ class FederatedCanadaTest < Test::Unit::TestCase
   end
 
   def test_expdate_formatting
-    assert_equal '0909', @gateway.send(:expdate, credit_card('4111111111111111', :month => '9', :year => '2009'))
-    assert_equal '0711', @gateway.send(:expdate, credit_card('4111111111111111', :month => '7', :year => '2011'))
+    assert_equal '0909', @gateway.send(:expdate, credit_card('4111111111111111', month: '9', year: '2009'))
+    assert_equal '0711', @gateway.send(:expdate, credit_card('4111111111111111', month: '7', year: '2011'))
   end
 
   def test_supported_countries
@@ -89,7 +89,7 @@ class FederatedCanadaTest < Test::Unit::TestCase
   end
 
   def test_supported_card_types
-    assert_equal @gateway.supported_cardtypes, [:visa, :master, :american_express, :discover]
+    assert_equal @gateway.supported_cardtypes, %i[visa master american_express discover]
   end
 
   def test_avs_result

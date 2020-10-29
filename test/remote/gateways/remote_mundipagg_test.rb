@@ -18,11 +18,37 @@ class RemoteMundipaggTest < Test::Unit::TestCase
 
     @options = {
       gateway_affiliation_id: fixtures(:mundipagg)[:gateway_affiliation_id],
-      billing_address: address({neighborhood: 'Sesame Street'}),
+      billing_address: address({ neighborhood: 'Sesame Street' }),
       description: 'Store Purchase'
     }
 
-    @excess_length_neighborhood = address({neighborhood: 'Super Long Neighborhood Name' * 5})
+    @submerchant_options = {
+      submerchant: {
+        "merchant_category_code": '44444',
+        "payment_facilitator_code": '5555555',
+        "code": 'code2',
+        "name": 'Sub Tony Stark',
+        "document": '123456789',
+        "type": 'individual',
+        "phone": {
+          "country_code": '55',
+          "number": '000000000',
+          "area_code": '21'
+        },
+        "address": {
+          "street": 'Malibu Point',
+          "number": '10880',
+          "complement": 'A',
+          "neighborhood": 'Central Malibu',
+          "city": 'Malibu',
+          "state": 'CA',
+          "country": 'US',
+          "zip_code": '24210-460'
+        }
+      }
+    }
+
+    @excess_length_neighborhood = address({ neighborhood: 'Super Long Neighborhood Name' * 5 })
     @neighborhood_length_error = 'Invalid parameters; The request is invalid. | The field neighborhood must be a string with a maximum length of 64.'
   end
 
@@ -67,6 +93,13 @@ class RemoteMundipaggTest < Test::Unit::TestCase
     assert_equal 'Simulator|Transação de simulação autorizada com sucesso', response.message
   end
 
+  def test_successful_purchase_with_submerchant
+    options = @options.update(@submerchant_options)
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Simulator|Transação de simulação autorizada com sucesso', response.message
+  end
+
   def test_failed_purchase
     test_failed_purchase_with(@declined_card)
   end
@@ -90,6 +123,13 @@ class RemoteMundipaggTest < Test::Unit::TestCase
 
   def test_successful_authorize_and_capture_with_alelo_card
     test_successful_authorize_and_capture_with(@alelo_voucher)
+  end
+
+  def test_successful_authorize_with_submerchant
+    options = @options.update(@submerchant_options)
+    response = @gateway.authorize(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Simulator|Transação de simulação autorizada com sucesso', response.message
   end
 
   def test_failed_authorize
@@ -231,7 +271,7 @@ class RemoteMundipaggTest < Test::Unit::TestCase
   def test_gateway_id_fallback
     gateway = MundipaggGateway.new(api_key: fixtures(:mundipagg)[:api_key], gateway_id: fixtures(:mundipagg)[:gateway_id])
     options = {
-      billing_address: address({neighborhood: 'Sesame Street'}),
+      billing_address: address({ neighborhood: 'Sesame Street' }),
       description: 'Store Purchase'
     }
     response = gateway.purchase(@amount, @credit_card, options)
@@ -282,7 +322,7 @@ class RemoteMundipaggTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@amount - 1, auth.authorization)
     assert_success capture
   end
 
