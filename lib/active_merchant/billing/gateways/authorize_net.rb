@@ -710,7 +710,7 @@ module ActiveMerchant
         xml.processingOptions do
           if options[:stored_credential][:initial_transaction]
             xml.isFirstSubsequentAuth 'true'
-            xml.isFirstRecurringPayment 'true' if options[:stored_credential][:reason_type] == 'recurring'
+            # xml.isFirstRecurringPayment 'true' if options[:stored_credential][:reason_type] == 'recurring'
           elsif options[:stored_credential][:initiator] == 'cardholder'
             xml.isStoredCredentials 'true'
           else
