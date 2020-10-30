@@ -8,6 +8,8 @@
 * Litle: Add support for general credit transactions [naashton] #3807
 * Redsys: Add 3DS2 Integration Support [esmitperez] #3794
 * Cybersource: Use firstname/lastname from address instead of the payment method [pi3r] #3798
+* Add MPI functionality for SafeCharge gateway [daniel] #3809
+* SafeCharge: Standardize MPI fields [curiousepic] #3809
 
 == Version 1.116.0 (October 28th)
 * Remove Braintree specific version dependency [pi3r] #3800

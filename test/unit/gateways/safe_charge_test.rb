@@ -23,10 +23,12 @@ class SafeChargeTest < Test::Unit::TestCase
 
     @three_ds_options = @options.merge(three_d_secure: true)
 
-    @mpi_options = @three_ds_options.merge({
-      ds_transaction_id: 'c5b808e7-1de1-4069-a17b-f70d3b3b1645',
-      eci: '05',
-      cavv: 'MAAAAAAAAAAAAAAAAAAAAAAAAAA'
+    @mpi_options = @options.merge({
+      three_d_secure: {
+        ds_transaction_id: 'c5b808e7-1de1-4069-a17b-f70d3b3b1645',
+        eci: '05',
+        cavv: 'Vk83Y2t0cHRzRFZzRlZlR0JIQXo='
+      }
     })
   end
 
@@ -236,7 +238,7 @@ class SafeChargeTest < Test::Unit::TestCase
   def test_mpi_response_fail
     purchase = stub_comms do
       @gateway.purchase(@amount, @three_ds_enrolled_card, @mpi_options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_, data, _|
       assert_match(/sg_eci/, data)
       assert_match(/sg_cavv/, data)
       assert_match(/sg_IsExternalMPI/, data)
@@ -250,7 +252,7 @@ class SafeChargeTest < Test::Unit::TestCase
   def test_mpi_response_success
     purchase = stub_comms do
       @gateway.purchase(@amount, @three_ds_enrolled_card, @mpi_options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_, data, _|
       assert_match(/sg_eci/, data)
       assert_match(/sg_cavv/, data)
       assert_match(/sg_IsExternalMPI/, data)
@@ -399,13 +401,13 @@ reading 727 bytes...
 
   def successful_mpi_response
     %(
-      <Response><Version>4.1.0</Version><ClientLoginID>testSworld2.TRX</ClientLoginID><ClientUniqueID /><TransactionID>1110000000007383613</TransactionID><Status>APPROVED</Status><AuthCode>111946</AuthCode><AVSCode /><CVV2Reply /><ReasonCodes><Reason code="0" /></ReasonCodes><ErrCode>0</ErrCode><ExErrCode>0</ExErrCode><Token>MQBLAGUANQBJAG0ANgB0AFEAMABXAFsAXABdAFYAPgApAGsASwBwAE8AVwBCAHYANgBYAHkAXgA+AD0AQABEAGIALwBdAD4AVwAlADMAKgBvAGsAMwA=</Token><CustomData /><AcquirerID>19</AcquirerID><IssuerBankName>River Valley Credit Union</IssuerBankName><IssuerBankCountry>gb</IssuerBankCountry><Reference /><AGVCode /><AGVError /><UniqueCC>yKHZK4vGCyf0c/Se7rujEvNQtN8=</UniqueCC><CustomData2 /><ThreeDFlow>1</ThreeDFlow><CreditCardInfo><IsPrepaid>0</IsPrepaid><CardType>Credit</CardType><CardProgram /><CardProduct /></CreditCardInfo><IsPartialApproval>0</IsPartialApproval><AmountInfo><RequestedAmount>200</RequestedAmount><RequestedCurrency>USD</RequestedCurrency><ProcessedAmount>200</ProcessedAmount><ProcessedCurrency>USD</ProcessedCurrency></AmountInfo><RRN /><ICC /><CVVReply /><FraudResponse /></Response>
+      <Response><Version>4.1.0</Version><ClientLoginID>SpreedlyTestTRX</ClientLoginID><ClientUniqueID>27822c1132eba4c731ebe24b6190646f</ClientUniqueID><TransactionID>1110000000009330260</TransactionID><Status>APPROVED</Status><AuthCode>111447</AuthCode><AVSCode></AVSCode><CVV2Reply></CVV2Reply><ReasonCodes><Reason code="0"></Reason></ReasonCodes><ErrCode>0</ErrCode><ExErrCode>0</ExErrCode><Token>UQBzAFEAdABvAG0ATgA5AEwAagBHAGwAPwA7AF0ANgA1AD4AfABOADUAdAA/AD4AZQA3AEcAXQBnAGgAQQA4AG4APABNACUARABFADgAMQBrAFIAMwA=</Token><CustomData></CustomData><ThreeDResponse><VerifyAuth3DResponse><Result></Result><ECI>5</ECI><CAVV>Vk83Y2t0cHRzRFZzRlZlR0JIQXo=</CAVV><WhitelistStatus></WhitelistStatus><XID>00000000000000000501</XID><ThreeDReason></ThreeDReason><ThreeDSVersion></ThreeDSVersion><ThreeDSServerTransID></ThreeDSServerTransID><AcsTransID></AcsTransID><DSTransID>c5b808e7-1de1-4069-a17b-f70d3b3b1645</DSTransID></VerifyAuth3DResponse></ThreeDResponse><AcquirerID>19</AcquirerID><IssuerBankName>Visa Production Support Client Bid 1</IssuerBankName><IssuerBankCountry>gb</IssuerBankCountry><Reference></Reference><AGVCode></AGVCode><AGVError></AGVError><UniqueCC>rDNDlh6XR8R6CVdGQyqDkZzdqE0=</UniqueCC><CustomData2></CustomData2><CreditCardInfo><IsPrepaid>0</IsPrepaid><CardType>Debit</CardType><CardProgram></CardProgram><CardProduct></CardProduct></CreditCardInfo><IsPartialApproval>0</IsPartialApproval><AmountInfo><RequestedAmount>1</RequestedAmount><RequestedCurrency>EUR</RequestedCurrency><ProcessedAmount>1</ProcessedAmount><ProcessedCurrency>EUR</ProcessedCurrency></AmountInfo><RRN></RRN><ICC></ICC><CVVReply></CVVReply><FraudResponse><FinalDecision>Accept</FinalDecision><Recommendations /><Rule /></FraudResponse></Response>
     )
   end
 
   def failed_mpi_response
     %(
-      <Response><Version>4.1.0</Version><ClientLoginID>testSworld2.TRX</ClientLoginID><ClientUniqueID></ClientUniqueID><TransactionID>1110000000007383719</TransactionID><Status>DECLINED</Status><AuthCode></AuthCode><AVSCode></AVSCode><CVV2Reply></CVV2Reply><ReasonCodes><Reason code="0">Decline</Reason></ReasonCodes><ErrCode>-1</ErrCode><ExErrCode>0</ExErrCode><Token>ZQBVAEcAcwBxAE8AVwBpAEcAZAA8AFMAVwBPAFsALwBEAEgAWABJACMAdQBaAFMAVgB6AEsAJwAqACUAegBoAFYAYgBUADsAVABcAGQAewBrAEIAMwA=</Token><CustomData></CustomData><AcquirerID>19</AcquirerID><IssuerBankName>R Raphael &amp; Sons PLC</IssuerBankName><IssuerBankCountry>gb</IssuerBankCountry><Reference></Reference><AGVCode></AGVCode><AGVError></AGVError><UniqueCC>adHQpo22N7Jw85jUAsLu0+Q5ZPs=</UniqueCC><CustomData2></CustomData2><ThreeDFlow>1</ThreeDFlow><CreditCardInfo><IsPrepaid>1</IsPrepaid><CardType>Debit</CardType><CardProgram></CardProgram><CardProduct></CardProduct></CreditCardInfo><IsPartialApproval>0</IsPartialApproval><AmountInfo><RequestedAmount>200</RequestedAmount><RequestedCurrency>USD</RequestedCurrency><ProcessedAmount>200</ProcessedAmount><ProcessedCurrency>USD</ProcessedCurrency></AmountInfo><RRN></RRN><ICC></ICC><CVVReply></CVVReply><FraudResponse /></Response>
+      <Response><Version>4.1.0</Version><ClientLoginID>SpreedlyTestTRX</ClientLoginID><ClientUniqueID>040b37ca7af949daeb38a8cff0a16f1b</ClientUniqueID><TransactionID>1110000000009330310</TransactionID><Status>DECLINED</Status><AuthCode></AuthCode><AVSCode></AVSCode><CVV2Reply></CVV2Reply><ReasonCodes><Reason code="0">Decline</Reason></ReasonCodes><ErrCode>-1</ErrCode><ExErrCode>0</ExErrCode><Token>UQBLAEcAdABRAE8AWABPADUANgBCADAAcABGAEUANwArADgAewBTACcAcwAlAF8APABQAEEAXgBVACUAYQBLACMALwBWAEUANQApAD4ARQBqADsAMwA=</Token><CustomData></CustomData><ThreeDResponse><VerifyAuth3DResponse><Result></Result><ECI>5</ECI><CAVV>Vk83Y2t0cHRzRFZzRlZlR0JIQXo=</CAVV><WhitelistStatus></WhitelistStatus><XID>00000000000000000501</XID><ThreeDReason></ThreeDReason><ThreeDSVersion></ThreeDSVersion><ThreeDSServerTransID></ThreeDSServerTransID><AcsTransID></AcsTransID><DSTransID>c5b808e7-1de1-4069-a17b-f70d3b3b1645</DSTransID></VerifyAuth3DResponse></ThreeDResponse><AcquirerID>19</AcquirerID><IssuerBankName></IssuerBankName><IssuerBankCountry></IssuerBankCountry><Reference></Reference><AGVCode></AGVCode><AGVError></AGVError><UniqueCC>GyueFkuQqW+UL38d57fuA5/RqfQ=</UniqueCC><CustomData2></CustomData2><CreditCardInfo><IsPrepaid>0</IsPrepaid><CardType></CardType><CardProgram></CardProgram><CardProduct></CardProduct></CreditCardInfo><IsPartialApproval>0</IsPartialApproval><AmountInfo><RequestedAmount>1</RequestedAmount><RequestedCurrency>EUR</RequestedCurrency><ProcessedAmount>1</ProcessedAmount><ProcessedCurrency>EUR</ProcessedCurrency></AmountInfo><RRN></RRN><ICC></ICC><CVVReply></CVVReply><FraudResponse><FinalDecision>Accept</FinalDecision><Recommendations /><Rule /></FraudResponse></Response>
     )
   end
 end
