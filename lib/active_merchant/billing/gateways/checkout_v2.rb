@@ -144,6 +144,7 @@ module ActiveMerchant #:nodoc:
           post[:'3ds'][:enabled] = true
           post[:success_url] = options[:callback_url] if options[:callback_url]
           post[:failure_url] = options[:callback_url] if options[:callback_url]
+          post[:'3ds'][:attempt_n3d] = options[:attempt_n3d] if options[:attempt_n3d]
         end
 
         if options[:three_d_secure]
@@ -151,7 +152,6 @@ module ActiveMerchant #:nodoc:
           post[:'3ds'][:cryptogram] = options[:three_d_secure][:cavv] if options[:three_d_secure][:cavv]
           post[:'3ds'][:version] = options[:three_d_secure][:version] if options[:three_d_secure][:version]
           post[:'3ds'][:xid] = options[:three_d_secure][:ds_transaction_id] || options[:three_d_secure][:xid]
-          post[:'3ds'][:attempt_n3d] = options[:attempt_n3d] if options[:attempt_n3d]
         end
       end
 
