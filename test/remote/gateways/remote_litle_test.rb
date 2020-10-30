@@ -476,6 +476,18 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_equal 'No transaction found with specified Transaction Id', void.message
   end
 
+  def test_successful_credit
+    assert credit = @gateway.credit(123456, @credit_card1, @options)
+    assert_success credit
+    assert_equal 'Approved', credit.message
+  end
+
+  def test_failed_credit
+    @credit_card1.number = '1234567890'
+    assert credit = @gateway.credit(1, @credit_card1, @options)
+    assert_failure credit
+  end
+
   def test_partial_refund
     assert purchase = @gateway.purchase(10010, @credit_card1, @options)
 

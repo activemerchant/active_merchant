@@ -259,6 +259,23 @@ class LitleTest < Test::Unit::TestCase
     assert_equal '360', response.params['response']
   end
 
+  def test_successful_credit
+    credit = stub_comms do
+      @gateway.credit(@amount, @credit_card)
+    end.respond_with(successful_credit_response)
+
+    assert_success credit
+    assert_equal 'Approved', credit.message
+  end
+
+  def test_failed_credit
+    credit = stub_comms do
+      @gateway.credit(@amount, @credit_card)
+    end.respond_with(failed_credit_response)
+
+    assert_failure credit
+  end
+
   def test_successful_void_of_authorization
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card)
@@ -762,6 +779,28 @@ class LitleTest < Test::Unit::TestCase
           <message>No transaction found with specified litleTxnId</message>
         </creditResponse>
       </litleOnlineResponse>
+    )
+  end
+
+  def successful_credit_response
+    %(
+      <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+      <litleOnlineResponse version="9.14" response="0" message="Valid Format">
+        <creditResponse id="1" reportGroup="Default Report Group">
+          <litleTxnId>908410935514139173</litleTxnId>
+          <orderId>1</orderId>
+          <response>000</response>
+          <responseTime>2020-10-30T19:19:38.935</responseTime>
+          <message>Approved</message>
+        </creditResponse>
+      </litleOnlineResponse>
+    )
+  end
+
+  def failed_credit_response
+    %(
+      <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+      <litleOnlineResponse version="9.14" response="1" message="Error validating xml data against the schema: cvc-minLength-valid: Value '1234567890' with length = '10' is not facet-valid with respect to minLength '13' for type 'ccAccountNumberType'."/>
     )
   end
 
