@@ -4,6 +4,7 @@
 * Checkout V2: Pass attempt_n3d along with 3ds enabled [naashton] #3805
 * GlobalCollect: Add support for Third-party 3DS2 data [molbrown] #3801
 * Authorize.net: Pass stored credentials [therufs] #3804
+* Authorize.net: Don't pass isFirstRecurringPayment [therufs] #3805
 
 == Version 1.116.0 (October 28th)
 * Remove Braintree specific version dependency [pi3r] #3800

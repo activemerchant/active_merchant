@@ -211,10 +211,66 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert_success purchase
   end
 
-  def test_successful_auth_and_capture_with_stored_credential
+  def test_successful_auth_and_capture_with_recurring_stored_credential
+    stored_credential_params = {
+      initial_transaction: true,
+      reason_type: 'recurring',
+      initiator: 'merchant',
+      network_transaction_id: nil
+    }
+    assert auth = @gateway.authorize(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
+    assert_success auth
+    assert auth.authorization
+
+    assert capture = @gateway.capture(@amount, auth.authorization, authorization_validated: true)
+    assert_success capture
+
+    @options[:stored_credential] = {
+      initial_transaction: false,
+      reason_type: 'recurring',
+      initiator: 'merchant',
+      network_transaction_id: auth.params['transaction_identifier']
+    }
+
+    assert next_auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert next_auth.authorization
+
+    assert capture = @gateway.capture(@amount, next_auth.authorization, authorization_validated: true)
+    assert_success capture
+  end
+
+  def test_successful_auth_and_capture_with_unscheduled_stored_credential
     stored_credential_params = {
       initial_transaction: true,
       reason_type: 'unscheduled',
+      initiator: 'merchant',
+      network_transaction_id: nil
+    }
+    assert auth = @gateway.authorize(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
+    assert_success auth
+    assert auth.authorization
+
+    assert capture = @gateway.capture(@amount, auth.authorization, authorization_validated: true)
+    assert_success capture
+
+    @options[:stored_credential] = {
+      initial_transaction: false,
+      reason_type: 'unscheduled',
+      initiator: 'merchant',
+      network_transaction_id: auth.params['transaction_identifier']
+    }
+
+    assert next_auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert next_auth.authorization
+
+    assert capture = @gateway.capture(@amount, next_auth.authorization, authorization_validated: true)
+    assert_success capture
+  end
+
+  def test_successful_auth_and_capture_with_installment_stored_credential
+    stored_credential_params = {
+      initial_transaction: true,
+      reason_type: 'installment',
       initiator: 'merchant',
       network_transaction_id: nil
     }
