@@ -520,9 +520,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(xml, payment_method, address, options, shipTo = false)
+        first_name, last_name = address_names(address[:name], payment_method)
+
         xml.tag! shipTo ? 'shipTo' : 'billTo' do
-          xml.tag! 'firstName',             payment_method.first_name if payment_method
-          xml.tag! 'lastName',              payment_method.last_name if payment_method
+          xml.tag! 'firstName',             first_name if first_name
+          xml.tag! 'lastName',              last_name if last_name
           xml.tag! 'street1',               address[:address1]
           xml.tag! 'street2',               address[:address2] unless address[:address2].blank?
           xml.tag! 'city',                  address[:city]
@@ -537,6 +539,16 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'driversLicenseNumber',  options[:drivers_license_number]  unless options[:drivers_license_number].blank?
           xml.tag! 'driversLicenseState',   options[:drivers_license_state]   unless options[:drivers_license_state].blank?
         end
+      end
+
+      def address_names(address_name, payment_method)
+        names = split_names(address_name)
+        return names if names.any?(&:present?)
+
+        [
+          payment_method&.first_name,
+          payment_method&.last_name
+        ]
       end
 
       def add_creditcard(xml, creditcard)
