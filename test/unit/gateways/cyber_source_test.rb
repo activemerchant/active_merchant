@@ -121,6 +121,39 @@ class CyberSourceTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_uses_names_from_billing_address_if_present
+    name = 'Wesley Crusher'
+
+    stub_comms do
+      @gateway.authorize(100, @credit_card, billing_address: { name: name })
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r(<billTo>.*<firstName>Wesley</firstName>.*</billTo>)m, data)
+      assert_match(%r(<billTo>.*<lastName>Crusher</lastName>.*</billTo>)m, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_uses_names_from_shipping_address_if_present
+    name = 'Wesley Crusher'
+
+    stub_comms do
+      @gateway.authorize(100, @credit_card, shipping_address: { name: name })
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r(<shipTo>.*<firstName>Wesley</firstName>.*</shipTo>)m, data)
+      assert_match(%r(<shipTo>.*<lastName>Crusher</lastName>.*</shipTo>)m, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_uses_names_from_the_payment_method
+    stub_comms do
+      @gateway.authorize(100, @credit_card)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r(<shipTo>.*<firstName>#{@credit_card.first_name}</firstName>.*</shipTo>)m, data)
+      assert_match(%r(<shipTo>.*<lastName>#{@credit_card.last_name}</lastName>.*</shipTo>)m, data)
+      assert_match(%r(<billTo>.*<firstName>#{@credit_card.first_name}</firstName>.*</billTo>)m, data)
+      assert_match(%r(<billTo>.*<lastName>#{@credit_card.last_name}</lastName>.*</billTo>)m, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_purchase_includes_merchant_descriptor
     stub_comms do
       @gateway.purchase(100, @credit_card, merchant_descriptor: 'Spreedly')
