@@ -539,6 +539,59 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal 'This transaction has been approved.', capture.message
   end
 
+  def test_successful_auth_with_initial_stored_credential
+    stored_credential_params = {
+      initial_transaction: true,
+      reason_type: 'unscheduled',
+      initiator: 'merchant',
+      network_transaction_id: nil
+    }
+    auth = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
+    end.check_request do |_endpoint, data, _headers|
+      doc = parse(data)
+      assert_equal 'true', doc.at_xpath('//processingOptions/isFirstSubsequentAuth').content
+    end.respond_with(successful_authorize_response)
+    assert_success auth
+    assert auth.authorization
+  end
+
+  def test_successful_auth_with_installment_stored_credential
+    stored_credential_params = {
+      initial_transaction: false,
+      reason_type: 'installment',
+      initiator: 'merchant',
+      network_transaction_id: '0123'
+    }
+    auth = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
+    end.check_request do |_endpoint, data, _headers|
+      doc = parse(data)
+      assert_equal 'true', doc.at_xpath('//processingOptions/isSubsequentAuth').content
+    end.respond_with(successful_authorize_response)
+    assert_success auth
+    assert auth.authorization
+  end
+
+  def test_successful_auth_with_recurring_stored_credential
+    stored_credential_params = {
+      initial_transaction: false,
+      reason_type: 'recurring',
+      initiator: 'merchant',
+      network_transaction_id: '0123'
+    }
+    auth = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
+    end.check_request do |_endpoint, data, _headers|
+      doc = parse(data)
+      assert_equal 'true', doc.at_xpath('//processingOptions/isSubsequentAuth').content
+      assert_equal 'recurringBilling', doc.at_xpath('//transactionSettings/setting/settingName').content
+      assert_equal 'true', doc.at_xpath('//transactionSettings/setting/settingValue').content
+    end.respond_with(successful_authorize_response)
+    assert_success auth
+    assert auth.authorization
+  end
+
   def test_failed_authorize_using_stored_card
     @gateway.expects(:ssl_post).returns(successful_store_response)
     store = @gateway.store(@credit_card, @options)

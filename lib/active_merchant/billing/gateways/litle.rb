@@ -84,7 +84,7 @@ module ActiveMerchant #:nodoc:
             elsif check?(payment)
               add_echeck_purchase_params(doc, money, payment, options)
             else
-              add_auth_purchase_params(doc, money, payment, options)
+              add_credit_params(doc, money, payment, options)
             end
           end
         end
@@ -225,6 +225,17 @@ module ActiveMerchant #:nodoc:
         add_merchant_data(doc, options)
         add_debt_repayment(doc, options)
         add_stored_credential_params(doc, options)
+      end
+
+      def add_credit_params(doc, money, payment_method, options)
+        doc.orderId(truncate(options[:order_id], 24))
+        doc.amount(money)
+        add_order_source(doc, payment_method, options)
+        add_billing_address(doc, payment_method, options)
+        add_payment_method(doc, payment_method, options)
+        add_pos(doc, payment_method)
+        add_descriptor(doc, options)
+        add_merchant_data(doc, options)
       end
 
       def add_merchant_data(doc, options = {})
