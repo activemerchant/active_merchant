@@ -23,6 +23,7 @@ module ActiveMerchant #:nodoc:
         payment_method = add_payment_method_token(post, payment_method, options)
         return payment_method if payment_method.is_a?(ActiveMerchant::Billing::Response)
 
+        add_external_three_d_secure_auth_data(post, options)
         add_metadata(post, options)
         add_return_url(post, options)
         add_connected_account(post, options)
@@ -274,6 +275,19 @@ module ActiveMerchant #:nodoc:
         post[:payment_method_options] ||= {}
         post[:payment_method_options][:card] ||= {}
         post[:payment_method_options][:card][:request_three_d_secure] = options[:request_three_d_secure]
+      end
+
+      def add_external_three_d_secure_auth_data(post, options = {})
+        return unless options[:three_d_secure]&.is_a?(Hash)
+
+        three_d_secure = options[:three_d_secure]
+        post[:payment_method_options] ||= {}
+        post[:payment_method_options][:card] ||= {}
+        post[:payment_method_options][:card][:three_d_secure] ||= {}
+        post[:payment_method_options][:card][:three_d_secure][:version] = three_d_secure[:version] || (three_d_secure[:ds_transaction_id] ? '2.1.0' : '1.0.2')
+        post[:payment_method_options][:card][:three_d_secure][:electronic_commerce_indicator] = three_d_secure[:eci] if three_d_secure[:eci]
+        post[:payment_method_options][:card][:three_d_secure][:cryptogram] = three_d_secure[:cavv] if three_d_secure[:cavv]
+        post[:payment_method_options][:card][:three_d_secure][:transaction_id] = three_d_secure[:ds_transaction_id] || three_d_secure[:xid]
       end
 
       def setup_future_usage(post, options = {})
