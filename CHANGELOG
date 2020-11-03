@@ -11,6 +11,7 @@
 * Add MPI functionality for SafeCharge gateway [daniel] #3809
 * SafeCharge: Standardize MPI fields [curiousepic] #3809
 * Credorax: Adds AMEX to supported cards and adds 1A error code [LinTrieu] #3792
+* Stripe PI: Pass external 3DS auth data [curiousepic] #3811
 
 == Version 1.116.0 (October 28th)
 * Remove Braintree specific version dependency [pi3r] #3800
