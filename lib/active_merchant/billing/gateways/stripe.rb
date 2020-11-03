@@ -28,7 +28,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = %w(AT AU BE BG BR CA CH CY CZ DE DK EE ES FI FR GB GR HK IE IT JP LT LU LV MT MX NL NO NZ PL PT RO SE SG SI SK US)
       self.default_currency = 'USD'
       self.money_format = :cents
-      self.supported_cardtypes = %i[visa master american_express discover jcb diners_club maestro]
+      self.supported_cardtypes = %i[visa master american_express discover jcb diners_club maestro unionpay]
       self.currencies_without_fractions = %w(BIF CLP DJF GNF JPY KMF KRW MGA PYG RWF VND VUV XAF XOF XPF UGX)
 
       self.homepage_url = 'https://stripe.com/'
