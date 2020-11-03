@@ -114,6 +114,45 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     end.respond_with(successful_request_three_d_secure_response)
   end
 
+  def test_external_three_d_secure_auth_data
+    options = @options.merge(
+      three_d_secure: {
+        eci: '05',
+        cavv: '4BQwsg4yuKt0S1LI1nDZTcO9vUM=',
+        xid: 'd+NEBKSpEMauwleRhdrDY06qj4A='
+      }
+    )
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @visa_token, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/payment_method_options\[card\]\[three_d_secure\]/, data)
+      assert_match(/three_d_secure\]\[version\]=1.0.2/, data)
+      assert_match(/three_d_secure\]\[electronic_commerce_indicator\]=05/, data)
+      assert_match(/three_d_secure\]\[cryptogram\]=4BQwsg4yuKt0S1LI1nDZTcO9vUM%3D/, data)
+      assert_match(/three_d_secure\]\[transaction_id\]=d%2BNEBKSpEMauwleRhdrDY06qj4A%3D/, data)
+    end.respond_with(successful_request_three_d_secure_response)
+
+    options = @options.merge(
+      three_d_secure: {
+        version: '2.1.0',
+        eci: '02',
+        cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA=',
+        ds_transaction_id: 'f879ea1c-aa2c-4441-806d-e30406466d79'
+      }
+    )
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @visa_token, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/payment_method_options\[card\]\[three_d_secure\]/, data)
+      assert_match(/three_d_secure\]\[version\]=2.1.0/, data)
+      assert_match(/three_d_secure\]\[electronic_commerce_indicator\]=02/, data)
+      assert_match(/three_d_secure\]\[cryptogram\]=jJ81HADVRtXfCBATEp01CJUAAAA%3D/, data)
+      assert_match(/three_d_secure\]\[transaction_id\]=f879ea1c-aa2c-4441-806d-e30406466d79/, data)
+    end.respond_with(successful_request_three_d_secure_response)
+  end
+
   def test_failed_capture_after_creation
     @gateway.expects(:ssl_request).returns(failed_capture_response)
 
