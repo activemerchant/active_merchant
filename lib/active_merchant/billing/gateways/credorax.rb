@@ -325,7 +325,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_3d_secure(post, options)
-        if options[:eci] && options[:xid]
+        if (options[:eci] && options[:xid]) || (options[:three_d_secure] && options[:three_d_secure][:version]&.start_with?('1'))
           add_3d_secure_1_data(post, options)
         elsif options[:execute_threed] && options[:three_ds_2]
           three_ds_2_options = options[:three_ds_2]
@@ -358,8 +358,17 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_3d_secure_1_data(post, options)
-        post[:i8] = build_i8(options[:eci], options[:cavv], options[:xid])
-        post[:'3ds_version'] = options[:three_ds_version].nil? || options[:three_ds_version] == '1' ? '1.0' : options[:three_ds_version]
+        if three_d_secure_options = options[:three_d_secure]
+          post[:i8] = build_i8(
+            three_d_secure_options[:eci],
+            three_d_secure_options[:cavv],
+            three_d_secure_options[:xid]
+          )
+          post[:'3ds_version'] = three_d_secure_options[:version]&.start_with?('1') ? '1.0' : three_d_secure_options[:version]
+        else
+          post[:i8] = build_i8(options[:eci], options[:cavv], options[:xid])
+          post[:'3ds_version'] = options[:three_ds_version].nil? || options[:three_ds_version]&.start_with?('1') ? '1.0' : options[:three_ds_version]
+        end
       end
 
       def add_normalized_3d_secure_2_data(post, options)
@@ -369,7 +378,7 @@ module ActiveMerchant #:nodoc:
           three_d_secure_options[:eci],
           three_d_secure_options[:cavv]
         )
-        post[:'3ds_version'] = three_d_secure_options[:version] == '2' ? '2.0' : three_d_secure_options[:version]
+        post[:'3ds_version'] = three_d_secure_options[:version]&.start_with?('2') ? '2.0' : three_d_secure_options[:version]
         post[:'3ds_dstrxid'] = three_d_secure_options[:ds_transaction_id]
       end
 
