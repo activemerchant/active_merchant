@@ -36,6 +36,10 @@ axcessms:
 balanced:
   login: 'e1c5ad38d1c711e1b36c026ba7e239a9'
 
+bambora_apac:
+  username: nmi.api
+  password: qwerty123
+
 bambora_na:
   merchant_id: MERCHANT_ID
   api_key: API_KEY
