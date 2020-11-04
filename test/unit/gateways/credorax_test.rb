@@ -310,19 +310,41 @@ class CredoraxTest < Test::Unit::TestCase
   end
 
   def test_purchase_adds_3d_secure_fields
-    options_with_3ds = @options.merge({ eci: 'sample-eci', cavv: 'sample-cavv', xid: 'sample-xid', three_ds_version: '1' })
+    options_with_3ds = @options.merge({ eci: 'sample-eci', cavv: 'sample-cavv', xid: 'sample-xid', three_ds_version: '1.0.2' })
 
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, options_with_3ds)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/i8=sample-eci%3Asample-cavv%3Asample-xid/, data)
-      assert_match(/3ds_version=1.0/, data)
+      assert_match(/3ds_version=1.0&/, data)
     end.respond_with(successful_purchase_response)
 
     assert_success response
 
     assert_equal '8a82944a5351570601535955efeb513c;006596;02617cf5f02ccaed239b6521748298c5;purchase', response.authorization
     assert response.test?
+  end
+
+  def test_purchase_adds_3d_secure_fields_via_normalized_hash
+    version = '1.0.2'
+    eci = 'sample-eci'
+    cavv = 'sample-cavv'
+    xid = 'sample-xid'
+    options_with_normalized_3ds = @options.merge(
+      three_d_secure: {
+        version: version,
+        eci: eci,
+        cavv: cavv,
+        xid: xid
+      }
+    )
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options_with_normalized_3ds)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/i8=#{eci}%3A#{cavv}%3A#{xid}/, data)
+      assert_match(/3ds_version=1.0&/, data)
+    end.respond_with(successful_purchase_response)
   end
 
   def test_3ds_channel_field_set_by_stored_credential_initiator
@@ -395,7 +417,7 @@ class CredoraxTest < Test::Unit::TestCase
   end
 
   def test_adds_default_cavv_when_omitted_from_normalized_hash
-    version = '2.0'
+    version = '2.2.0'
     eci = '05'
     ds_transaction_id = '97267598-FAE6-48F2-8083-C23433990FBC'
     options_with_normalized_3ds = @options.merge(
@@ -410,7 +432,7 @@ class CredoraxTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, options_with_normalized_3ds)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/i8=#{eci}%3Anone%3Anone/, data)
-      assert_match(/3ds_version=#{version}/, data)
+      assert_match(/3ds_version=2.0/, data)
       assert_match(/3ds_dstrxid=#{ds_transaction_id}/, data)
     end.respond_with(successful_purchase_response)
   end

@@ -93,7 +93,30 @@ class RemoteCredoraxTest < Test::Unit::TestCase
       xid: '00000000000000000501',
       # Having processor-specification enabled in Credorax test account causes 3DS tests to fail without a r1 (processor) parameter.
       processor: 'CREDORAX',
-      three_ds_version: '1.0'
+      three_ds_version: '1.0.2'
+    )
+
+    response = @gateway.purchase(@amount, @fully_auth_card, options)
+    assert_success response
+    assert_equal '1', response.params['H9']
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_purchase_with_auth_data_via_normalized_3ds1_options
+    version = '1.0.2'
+    eci = '02'
+    cavv = 'jJ81HADVRtXfCBATEp01CJUAAAA='
+    xid = '00000000000000000501'
+
+    options = @options.merge(
+      three_d_secure: {
+        version: version,
+        eci: eci,
+        cavv: cavv,
+        xid: xid
+      },
+      # Having processor-specification enabled in Credorax test account causes 3DS tests to fail without a r1 (processor) parameter.
+      processor: 'CREDORAX'
     )
 
     response = @gateway.purchase(@amount, @fully_auth_card, options)
@@ -118,7 +141,7 @@ class RemoteCredoraxTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_auth_data_via_normalized_3ds2_options
-    version = '2.0'
+    version = '2.2.0'
     eci = '02'
     cavv = 'jJ81HADVRtXfCBATEp01CJUAAAA='
     ds_transaction_id = '97267598-FAE6-48F2-8083-C23433990FBC'
