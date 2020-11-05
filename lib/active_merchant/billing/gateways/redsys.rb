@@ -91,7 +91,7 @@ module ActiveMerchant #:nodoc:
       # More operations are supported by the gateway itself, but
       # are not supported in this library.
       SUPPORTED_TRANSACTIONS = {
-        purchase:   'A',
+        purchase:   '0',
         authorize:  '1',
         capture:    '2',
         refund:     '3',
