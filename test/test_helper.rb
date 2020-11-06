@@ -163,6 +163,14 @@ module ActiveMerchant
       Billing::CreditCard.new(defaults)
     end
 
+    def paypal_account(first_name = "John", last_name = "Doe",  payment_method_nonce = "fake-paypal-future-nonce")
+      OpenStruct.new(
+        first_name: first_name,
+        last_name: last_name,
+        payment_method_nonce: payment_method_nonce,
+      )
+    end
+
     def credit_card_with_track_data(number = '4242424242424242', options = {})
       defaults = {
         :track_data => '%B' + number + '^LONGSEN/L. ^15121200000000000000**123******?',

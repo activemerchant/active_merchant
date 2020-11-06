@@ -311,27 +311,24 @@ module ActiveMerchant #:nodoc:
         customer = nil
         commit do
           customer = @braintree_gateway.customer.find(vault_id)
+
           return Response.new(false, 'Braintree::NotFoundError') if customer.nil?
 
-          # Delete the customers existing payment methods
-          customer.paypal_accounts.each { |pp| @braintree_gateway.paypal_account.delete(pp.token) }
-          customer.apple_pay_cards.each { |pp| @braintree_gateway.payment_method.delete(pp.token) }
+          delete_existing_payment_methods(customer) unless partial_paypal_account_update?(paypal_account)
 
-          # Update it with the new nonce
           parameters = {
             :first_name => paypal_account.first_name,
             :last_name => paypal_account.last_name,
             :email => scrub_email(options[:email]),
-            :payment_method_nonce => paypal_account.payment_method_nonce,
           }
 
+          parameters[:payment_method_nonce] = paypal_account.payment_method_nonce unless partial_paypal_account_update?(paypal_account)
           parameters[:device_data] = options[:device_data] if options[:device_data]
 
           result = @braintree_gateway.customer.update(vault_id, parameters)
-
-          Response.new(result.success?, message_from_result(result),
-            :braintree_customer => (customer_hash(@braintree_gateway.customer.find(vault_id), :include_credit_cards) if result.success?),
-            :customer_vault_id => (result.customer.id if result.success?)
+              Response.new(result.success?, message_from_result(result),
+                       :braintree_customer => (customer_hash(@braintree_gateway.customer.find(vault_id), :include_credit_cards) if result.success?),
+                       :customer_vault_id => (result.customer.id if result.success?)
           )
         end
       end
@@ -695,6 +692,15 @@ module ActiveMerchant #:nodoc:
 
         parameters[:payment_method_nonce] = options[:three_ds_token] if options[:three_ds]
         parameters
+      end
+
+      def partial_paypal_account_update?(paypal_account)
+        paypal_account.payment_method_nonce.blank?
+      end
+
+      def delete_existing_payment_methods(customer)
+        customer.paypal_accounts.each { |pp| @braintree_gateway.paypal_account.delete(pp.token) }
+        customer.apple_pay_cards.each { |pp| @braintree_gateway.payment_method.delete(pp.token) }
       end
     end
   end
