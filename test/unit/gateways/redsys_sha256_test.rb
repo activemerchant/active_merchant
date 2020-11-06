@@ -148,9 +148,28 @@ class RedsysSHA256Test < Test::Unit::TestCase
     end.respond_with(successful_authorize_with_3ds_response)
   end
 
-  def test_3ds2_data_passed
+  def test_3ds1_data_passed_as_mpi
     stub_comms(@gateway, :ssl_request) do
-      @gateway.authorize(100, credit_card, { order_id: '156270437866', description: 'esta es la descripción', three_d_secure: { version: '2.0', xid: 'xid', ds_transaction_id: 'ds_transaction_id', cavv: 'cavv' } })
+      @gateway.authorize(100, credit_card, { order_id: '156270437866', description: 'esta es la descripción', three_d_secure: { version: '1.0.2', xid: 'xid', ds_transaction_id: 'ds_transaction_id', cavv: 'cavv', eci: '02' } })
+    end.check_request do |_method, _endpoint, encdata, _headers|
+      data = CGI.unescape(encdata)
+      assert_match(/<DS_MERCHANT_MPIEXTERNAL>/, data)
+      assert_match(%r("TXID":"xid"), data)
+      assert_match(%r("CAVV":"cavv"), data)
+      assert_match(%r("ECI":"02"), data)
+
+      assert_not_match(%r("authenticacionMethod"), data)
+      assert_not_match(%r("authenticacionType"), data)
+      assert_not_match(%r("authenticacionFlow"), data)
+
+      assert_not_match(%r("protocolVersion":"2.1.0"), data)
+      assert_match(/descripción/, data)
+    end.respond_with(successful_authorize_with_3ds_response)
+  end
+
+  def test_3ds2_data_passed_as_mpi
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(100, credit_card, { order_id: '156270437866', description: 'esta es la descripción', three_d_secure: { version: '2.1.0', xid: 'xid', ds_transaction_id: 'ds_transaction_id', cavv: 'cavv' } })
     end.check_request do |_method, _endpoint, encdata, _headers|
       data = CGI.unescape(encdata)
       assert_match(/<DS_MERCHANT_MPIEXTERNAL>/, data)
@@ -162,14 +181,14 @@ class RedsysSHA256Test < Test::Unit::TestCase
       assert_not_match(%r("authenticacionType"), data)
       assert_not_match(%r("authenticacionFlow"), data)
 
-      assert_match(%r("protocolVersion":"2.0"), data)
+      assert_match(%r("protocolVersion":"2.1.0"), data)
       assert_match(/descripción/, data)
     end.respond_with(successful_authorize_with_3ds_response)
   end
 
-  def test_3ds2_data_passed_with_optional_values
+  def test_3ds2_data_passed_as_mpi_with_optional_values
     stub_comms(@gateway, :ssl_request) do
-      @gateway.authorize(100, credit_card, { order_id: '156270437866', description: 'esta es la descripción', three_d_secure: { version: '2.0', xid: 'xid', ds_transaction_id: 'ds_transaction_id', cavv: 'cavv' },
+      @gateway.authorize(100, credit_card, { order_id: '156270437866', description: 'esta es la descripción', three_d_secure: { version: '2.1.0', xid: 'xid', ds_transaction_id: 'ds_transaction_id', cavv: 'cavv' },
         authentication_method: '01',
         authentication_type: 'anything',
         authentication_flow: 'F' })
@@ -184,15 +203,15 @@ class RedsysSHA256Test < Test::Unit::TestCase
       assert_match(%r("authenticacionType":"anything"), data)
       assert_match(%r("authenticacionFlow":"F"), data)
 
-      assert_match(%r("protocolVersion":"2.0"), data)
+      assert_match(%r("protocolVersion":"2.1.0"), data)
       assert_match(/descripción/, data)
     end.respond_with(successful_authorize_with_3ds_response)
   end
 
-  def test_3ds2_data_with_special_characters_properly_escaped
+  def test_3ds2_data_as_mpi_with_special_characters_properly_escaped
     @credit_card.first_name = 'Julián'
     stub_comms(@gateway, :ssl_request) do
-      @gateway.authorize(100, @credit_card, { order_id: '156270437866', terminal: 12, description: 'esta es la descripción', three_d_secure: { version: '2.0', xid: 'xid', ds_transaction_id: 'ds_transaction_id', cavv: 'cavv' } })
+      @gateway.authorize(100, @credit_card, { order_id: '156270437866', terminal: 12, description: 'esta es la descripción', three_d_secure: { version: '2.1.0', xid: 'xid', ds_transaction_id: 'ds_transaction_id', cavv: 'cavv' } })
     end.check_request do |_method, _endpoint, encdata, _headers|
       assert_match(/Juli%C3%A1n/, encdata)
       assert_match(%r(descripci%C3%B3n), encdata)

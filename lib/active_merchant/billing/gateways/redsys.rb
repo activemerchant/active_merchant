@@ -170,6 +170,10 @@ module ActiveMerchant #:nodoc:
         9914 => 'KO Confirmation'
       }
 
+      # Expected values as per documentation
+      THREE_DS_V1 = '1.0.2'
+      THREE_DS_V2 = '2.1.0'
+
       # Creates a new instance
       #
       # Redsys requires a login and secret_key, and optionally also accepts a
@@ -326,7 +330,7 @@ module ActiveMerchant #:nodoc:
       def add_external_mpi_fields(data, options)
         return unless options[:three_d_secure]
 
-        if options[:three_d_secure][:version]
+        if options[:three_d_secure][:version] == THREE_DS_V2
           data[:threeDSServerTransID] = options[:three_d_secure][:xid] if options[:three_d_secure][:xid]
           data[:dsTransID] = options[:three_d_secure][:ds_transaction_id] if options[:three_d_secure][:ds_transaction_id]
           data[:authenticacionValue] = options[:three_d_secure][:cavv] if options[:three_d_secure][:cavv]
@@ -335,7 +339,7 @@ module ActiveMerchant #:nodoc:
           data[:authenticacionMethod] = options[:authentication_method] if options[:authentication_method]
           data[:authenticacionType] = options[:authentication_type] if options[:authentication_type]
           data[:authenticacionFlow] = options[:authentication_flow] if options[:authentication_flow]
-        elsif options[:three_d_secure][:version]
+        elsif options[:three_d_secure][:version] == THREE_DS_V1
           data[:txid] = options[:three_d_secure][:xid] if options[:three_d_secure][:xid]
           data[:cavv] = options[:three_d_secure][:cavv] if options[:three_d_secure][:cavv]
           data[:eci] = options[:three_d_secure][:eci] if options[:three_d_secure][:eci]
