@@ -320,6 +320,62 @@ class ElavonTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_split_full_network_transaction_id
+    oar_data = '010012318808182231420000047554200000000000093840023122123188'
+    ps2000_data = 'A8181831435010530042VE'
+    network_transaction_id = "#{oar_data}|#{ps2000_data}"
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential: { network_transaction_id: network_transaction_id }))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<ssl_oar_data>#{oar_data}<\/ssl_oar_data>/, data)
+      assert_match(/<ssl_ps2000_data>#{ps2000_data}<\/ssl_ps2000_data>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_oar_only_network_transaction_id
+    oar_data = '010012318808182231420000047554200000000000093840023122123188'
+    ps2000_data = nil
+    network_transaction_id = "#{oar_data}|#{ps2000_data}"
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential: { network_transaction_id: network_transaction_id }))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<ssl_oar_data>#{oar_data}<\/ssl_oar_data>/, data)
+      refute_match(/<ssl_ps2000_data>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_ps2000_only_network_transaction_id
+    oar_data = nil
+    ps2000_data = 'A8181831435010530042VE'
+    network_transaction_id = "#{oar_data}|#{ps2000_data}"
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential: { network_transaction_id: network_transaction_id }))
+    end.check_request do |_endpoint, data, _headers|
+      refute_match(/<ssl_oar_data>/, data)
+      assert_match(/<ssl_ps2000_data>#{ps2000_data}<\/ssl_ps2000_data>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_oar_transaction_id_without_pipe
+    oar_data = '010012318808182231420000047554200000000000093840023122123188'
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential: { network_transaction_id: oar_data }))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<ssl_oar_data>#{oar_data}<\/ssl_oar_data>/, data)
+      refute_match(/<ssl_ps2000_data>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_ps2000_transaction_id_without_pipe
+    ps2000_data = 'A8181831435010530042VE'
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential: { network_transaction_id: ps2000_data }))
+    end.check_request do |_endpoint, data, _headers|
+      refute_match(/<ssl_oar_data>/, data)
+      assert_match(/<ssl_ps2000_data>#{ps2000_data}<\/ssl_ps2000_data>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_custom_fields_in_request
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(customer_number: '123', custom_fields: { a_key: 'a value' }))
