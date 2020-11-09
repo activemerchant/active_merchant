@@ -331,6 +331,7 @@ module ActiveMerchant #:nodoc:
           three_ds_2_options = options[:three_ds_2]
           browser_info = three_ds_2_options[:browser_info]
           post[:'3ds_initiate'] = options[:three_ds_initiate] || '01'
+          post[:f23] = options[:f23] if options[:f23]
           post[:'3ds_purchasedate'] = Time.now.utc.strftime('%Y%m%d%I%M%S')
           options.dig(:stored_credential, :initiator) == 'merchant' ? post[:'3ds_channel'] = '03' : post[:'3ds_channel'] = '02'
           post[:'3ds_redirect_url'] = three_ds_2_options[:notification_url]
