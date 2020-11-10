@@ -210,6 +210,14 @@ module ActiveMerchant #:nodoc:
           hsh[:channel] = options[:channel] if valid_fraud_detection_option?(options[:channel])
           hsh[:dispatch_method] = options[:dispatch_method] if valid_fraud_detection_option?(options[:dispatch_method])
           hsh[:csmdds] = options[:csmdds] if valid_fraud_detection_option?(options[:csmdds])
+          hsh[:device_unique_id] = options[:device_unique_id] if valid_fraud_detection_option?(options[:device_unique_id])
+          hsh[:bill_to] = options[:bill_to] if valid_fraud_detection_option?(options[:bill_to])
+          hsh[:purchase_totals] = options[:purchase_totals] if valid_fraud_detection_option?(options[:purchase_totals])
+          hsh[:customer_in_site] = options[:customer_in_site] if valid_fraud_detection_option?(options[:customer_in_site])
+          hsh[:retail_transaction_data] = options[:retail_transaction_data] if valid_fraud_detection_option?(options[:retail_transaction_data])
+          hsh[:ship_to] = options[:ship_to] if valid_fraud_detection_option?(options[:ship_to])
+          hsh[:tax_voucher_required] = options[:tax_voucher_required] if valid_fraud_detection_option?(options[:tax_voucher_required])
+          hsh[:copy_paste_card_data] = options[:copy_paste_card_data] if valid_fraud_detection_option?(options[:copy_paste_card_data])
         end
       end
 

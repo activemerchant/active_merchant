@@ -62,6 +62,7 @@
 * Checkout V2: Support for attempt_n3d 3DS field [naashton] #3790
 * Elavon: Strip ampersands [therufs] #3795
 * Paybox: Add support for 3DS 1.0 values [jcpaybox] #3335
+* Decidir: Add additional fraud_detection options [cdmackeyfree] #3812
 
 == Version 1.114.0
 * BlueSnap: Add address1,address2,phone,shipping_* support #3749
