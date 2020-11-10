@@ -5,6 +5,7 @@
 * Adyen: Update capitalization on subMerchantId field [cdmackeyfree] #3824
 * Maestro and Elo: Update BIN ranges [meagabeth] #3822
 * HPS: Truncate invoice numbers that are too long [curiousepic] #3825
+* Pass network_transaction_id attribute in Response [therufs] #3815
 
 == Version 1.117.0 (November 13th)
 * Checkout V2: Pass attempt_n3d along with 3ds enabled [naashton] #3805
@@ -21,6 +22,7 @@
 * Credorax: Allow 3DS1 normalized pass-through, ease version matching [britth] #3812
 * Redsys: Redsys: Harden 3DS v1/v2 check for External MPI [esmitperez] #3814
 * Add card types for Stripe, Worldpay, Checkout.com [LinTrieu] #3810
+* ActiveMerchant::Billing::Response: Include `network_transaction_id` attribute [therufs] #3815
 
 == Version 1.116.0 (October 28th)
 * Remove Braintree specific version dependency [pi3r] #3800
