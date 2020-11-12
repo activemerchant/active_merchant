@@ -75,7 +75,6 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
       three_d_secure: {
         version: '2.1.0',
         ds_transaction_id: 'c5b808e7-1de1-4069-a17b-f70d3b3b1645',
-        xid: '00000000000000000501',
         eci: '05',
         cavv: 'Vk83Y2t0cHRzRFZzRlZlR0JIQXo='
       }
@@ -91,7 +90,6 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
       three_d_secure: {
         version: '2.1.0',
         ds_transaction_id: 'c5b808e7-1de1-4069-a17b-f70d3b3b1645',
-        xid: '00000000000000000501',
         eci: '05',
         cavv: 'Vk83Y2t0cHRzRFZzRlZlR0JIQXo='
       }
@@ -107,7 +105,6 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
       three_d_secure: {
         version: '2.1.0',
         ds_transaction_id: 'c5b808e7-1de1-4069-a17b-f70d3b3b1645',
-        xid: '00000000000000000501',
         eci: '05',
         cavv: 'Vk83Y2t0cHRzRFZzRlZlR0JIQXo='
       }
