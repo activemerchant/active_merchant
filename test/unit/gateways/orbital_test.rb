@@ -136,7 +136,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   def test_successful_force_capture_with_echeck
     @gateway.expects(:ssl_post).returns(successful_force_capture_with_echeck_response)
 
-    assert response = @gateway.force_capture(31, @echeck, order_id: '2')
+    assert response = @gateway.purchase(31, @echeck, order_id: '2', force_capture: true)
     assert_instance_of Response, response
     assert_equal 'APPROVAL        ', response.message
     assert_equal 'Approved and Completed', response.params['status_msg']

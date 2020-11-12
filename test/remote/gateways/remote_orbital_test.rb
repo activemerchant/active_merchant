@@ -491,7 +491,8 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
 
   # Successful force capture on Electronic Check
   def test_successful_force_capture_with_echeck
-    assert response = @gateway.force_capture(@amount, @echeck, @options)
+    @options[:force_capture] = true
+    assert response = @gateway.purchase(@amount, @echeck, @options)
     assert_success response
     assert_equal 'APPROVAL        ', response.message
     assert_equal 'Approved and Completed', response.params['status_msg']
@@ -500,15 +501,17 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
 
   # Failed force capture of electronic check due to invalid routing number provided
   def test_failed_force_capture_with_echeck_due_to_invalid_routing
+    @options[:force_capture] = true
     @echeck.routing_number = '123'
     assert_raise do
-      @gateway.force_capture(20, @echeck, @options)
+      @gateway.purchase(20, @echeck, @options)
     end
   end
 
   # Failed force capture of electronic check due to invalid amount number provided
   def test_failed_force_capture_with_echeck_due_to_invalid_amount
-    assert capture = @gateway.force_capture(-1, @echeck, @options.merge(order_id: '2'))
+    @options[:force_capture] = true
+    assert capture = @gateway.purchase(-1, @echeck, @options.merge(order_id: '2'))
     assert_failure capture
     assert_equal '801', capture.params['proc_status']
     assert_equal 'Error validating amount. Must be numerical and greater than 0 [-1]', capture.message

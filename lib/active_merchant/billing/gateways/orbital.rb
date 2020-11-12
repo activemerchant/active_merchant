@@ -232,21 +232,8 @@ module ActiveMerchant #:nodoc:
       end
 
       # AC – Authorization and Capture
-      def purchase(money, payment_source, options = {})
-        order = build_new_order_xml(AUTH_AND_CAPTURE, money, payment_source, options) do |xml|
-          add_payment_source(xml, payment_source, options)
-          add_address(xml, payment_source, options)
-          if @options[:customer_profiles]
-            add_customer_data(xml, payment_source, options)
-            add_managed_billing(xml, options)
-          end
-        end
-        commit(order, :purchase, options[:trace_number])
-      end
-
-      # FC – Force Capture
-      def force_capture(money, payment_source, options = {})
-        order = build_new_order_xml(FORCE_AUTH_AND_CAPTURE, money, payment_source, options) do |xml|
+      def purchase(money, payment_source, options = {force_capture: false})
+        order = build_new_order_xml(options[:force_capture]? FORCE_AUTH_AND_CAPTURE : AUTH_AND_CAPTURE, money, payment_source, options) do |xml|
           add_payment_source(xml, payment_source, options)
           add_address(xml, payment_source, options)
           if @options[:customer_profiles]
