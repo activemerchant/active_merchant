@@ -9,6 +9,7 @@
 * Elavon: support standardized stored credentials [therufs] #3816
 * Decidir: update fraud_detection field [cdmackeyfree] #3829
 * Paymentez: Add Olimpica cardtype [meagabeth] #3831
+* SafeCharge: 3DS external MPI data refinements [curiousepic] #3821
 
 == Version 1.117.0 (November 13th)
 * Checkout V2: Pass attempt_n3d along with 3ds enabled [naashton] #3805

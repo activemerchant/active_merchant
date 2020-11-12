@@ -170,11 +170,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_external_mpi_data(post, options)
+        version = options[:three_d_secure][:ds_transaction_id] ? '2' : '1'
+
         post[:sg_eci] = options[:three_d_secure][:eci] if options[:three_d_secure][:eci]
         post[:sg_cavv] = options[:three_d_secure][:cavv] if options[:three_d_secure][:cavv]
-        post[:sg_dsTransID] = options[:three_d_secure][:ds_transaction_id] if options[:three_d_secure][:ds_transaction_id]
-        post[:sg_threeDSProtocolVersion] = options[:three_d_secure][:version] || (options[:three_d_secure][:ds_transaction_id] ? '2' : '1')
-        post[:sg_xid] = options[:three_d_secure][:xid]
+        post[:sg_dsTransID] = options[:three_d_secure][:ds_transaction_id] if version == '2'
+        post[:sg_threeDSProtocolVersion] = version
+        post[:sg_xid] = options[:three_d_secure][:xid] if version == '1'
         post[:sg_IsExternalMPI] = 1
       end
 
