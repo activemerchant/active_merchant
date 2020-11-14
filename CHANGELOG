@@ -6,6 +6,7 @@
 * Moka: Support 3DS endpoint and update test url [dsmcclain] #4110
 * Paysafe: Adjust profile data [meagabeth] #4112
 * Stripe Payment Intents: Add support for claim_without_transaction_id field [BritneyS] #4111
+* Mit: Add New Gateway [EsporaInfra] #3820
 
 == Version 1.123.0 (September 10th, 2021)
 * Paysafe: Add gateway integration [meagabeth] #4085
