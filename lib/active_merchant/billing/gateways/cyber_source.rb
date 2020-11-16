@@ -478,6 +478,14 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_address_ip_fields(xml, options)
+        return if options[:ip].blank?
+
+        xml.tag! 'billTo' do
+          xml.tag! 'ipAddress', options[:ip]
+        end
+      end
+
       def add_creditcard(xml, creditcard)
         xml.tag! 'card' do
           xml.tag!('accountNumber', creditcard.number) unless creditcard.number.blank?
@@ -679,6 +687,7 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_method_or_subscription(xml, money, payment_method_or_reference, options)
         if payment_method_or_reference.is_a?(String)
+          add_address_ip_fields(xml, options)
           add_purchase_data(xml, money, true, options)
           add_subscription(xml, options, payment_method_or_reference)
         elsif card_brand(payment_method_or_reference) == 'check'

@@ -188,6 +188,18 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_reference_purchase_includes_customer_ip
+    customer_ip_regexp = /<ipAddress>#{@customer_ip}<\//
+    @gateway.expects(:ssl_post).returns(successful_create_subscription_response)
+    @gateway.expects(:ssl_post).
+      with(anything, regexp_matches(customer_ip_regexp), anything).
+      returns(successful_purchase_response)
+
+    assert_success(response = @gateway.store(@credit_card, @subscription_options))
+    assert_success(@gateway.purchase(@amount, response.authorization, @options))
+    assert response.test?
+  end
+
   def test_unsuccessful_authorization
     @gateway.expects(:ssl_post).returns(unsuccessful_authorization_response)
 
