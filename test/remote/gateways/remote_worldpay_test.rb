@@ -72,6 +72,13 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_equal 'SUCCESS', response.message
   end
 
+  def test_successful_3ds2_authorize_with_browser_size
+    options = @options.merge({ execute_threed: true, three_ds_version: '2.0', browser_size: '390x400' })
+    assert response = @gateway.authorize(@amount, @threeDS2_card, options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
   def test_successful_authorize_with_risk_data
     options = @options.merge({ execute_threed: true, three_ds_version: '2.0', risk_data: risk_data })
     assert response = @gateway.authorize(@amount, @threeDS2_card, options)

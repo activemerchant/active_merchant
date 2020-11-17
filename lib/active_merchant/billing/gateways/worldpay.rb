@@ -260,7 +260,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_additional_3ds_data(xml, options)
-        xml.additional3DSData 'dfReferenceId' => options[:session_id]
+        additional_data = { 'dfReferenceId' => options[:session_id] }
+        additional_data['challengeWindowSize'] = options[:browser_size] if options[:browser_size]
+
+        xml.additional3DSData additional_data
       end
 
       def add_3ds_exemption(xml, options)
