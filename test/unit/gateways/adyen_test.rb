@@ -830,7 +830,7 @@ class AdyenTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @credit_card, @options.merge(sub_merchant_data))
     end.check_request do |_endpoint, data, _headers|
       parsed = JSON.parse(data)
-      assert parsed['additionalData']['subMerchantId']
+      assert parsed['additionalData']['subMerchantID']
       assert parsed['additionalData']['subMerchantName']
       assert parsed['additionalData']['subMerchantStreet']
       assert parsed['additionalData']['subMerchantCity']
