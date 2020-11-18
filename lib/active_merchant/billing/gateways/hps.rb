@@ -210,7 +210,7 @@ module ActiveMerchant #:nodoc:
       def add_details(xml, options)
         xml.hps :AdditionalTxnFields do
           xml.hps :Description, options[:description] if options[:description]
-          xml.hps :InvoiceNbr, options[:order_id] if options[:order_id]
+          xml.hps :InvoiceNbr, options[:order_id][0..59] if options[:order_id]
           xml.hps :CustomerID, options[:customer_id] if options[:customer_id]
         end
       end
