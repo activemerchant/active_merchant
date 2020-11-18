@@ -678,6 +678,17 @@ class HpsTest < Test::Unit::TestCase
     assert_equal 'Success', response.message
   end
 
+  def test_truncates_long_invoicenbr
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@check_amount, @check, @options.merge(order_id: '04863692e6b56aaed85760b3d0879afd18b980da0521f6454c007a838435e561'))
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/<hps:InvoiceNbr>04863692e6b56aaed85760b3d0879afd18b980da0521f6454c007a838435<\/hps:InvoiceNbr>/, data)
+    end.respond_with(successful_check_purchase_response)
+
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
   private
 
   def successful_charge_response

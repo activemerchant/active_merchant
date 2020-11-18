@@ -281,6 +281,13 @@ class RemoteHpsTest < Test::Unit::TestCase
     assert_equal 'Success', response.message
   end
 
+  def test_successful_purchase_with_truncated_invoicenbr
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(order_id: '04863692e6b56aaed85760b3d0879afd18b980da0521f6454c007a838435e561'))
+
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
   def tests_successful_verify
     response = @gateway.verify(@credit_card, @options)
 
