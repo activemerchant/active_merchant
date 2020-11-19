@@ -13,6 +13,16 @@ module ActiveMerchant #:nodoc:
       self.supported_cardtypes = [:visa, :mastercard, :maestro]
       self.money_format = :dollars
 
+      #
+      #  00 - success - Purchase without 3DS
+      # S20 - successful initial call - 3DS
+      #
+      SUCCESS_CODES = %w( 00 S20 )
+
+      # Some endpoints require Bearer token auth,
+      # the rest of them use basic auth
+      REQUIRE_BEARER_TOKEN = %w( /payments/initiates )
+
       def initialize(options = {})
         requires!(options, :public_key, :private_key)
 
@@ -21,18 +31,48 @@ module ActiveMerchant #:nodoc:
         super
       end
 
+      # Initiates a 3DS transaction
+      # https://doc.seerbit.com/overview-1/cards#scenario-2-master-card-and-visa-card
+      #
+      def initiate_3ds(money, payment, options = {})
+        post = {}
+
+        add_public_key(post)
+        add_order(post, money, options)
+        add_customer_data(post, options)
+        add_payment(post, payment)
+        add_3ds_arguments(post, options)
+
+        commit("/payments/initiates", post)
+      end
+
       def purchase(money, payment, options = {})
         post = {}
 
+        add_public_key(post)
         add_order(post, money, options)
         add_customer_data(post, options)
         add_payment(post, payment)
 
-        commit('/payments/charge', post)
+        commit("/payments/charge", post)
       end
 
       def supports_scrubbing?
         true
+      end
+
+      def add_3ds_arguments(post, options)
+        post[:fee] = options[:fee] if options[:fee].present?
+        post[:productId] = options[:product_id] if options[:product_id].present?
+        post[:productDescription] = options[:product_desc] if options[:product_desc].present?
+        post[:invoiceNumber] = options[:invoice_number] if options[:invoice_number].present?
+        post[:deviceType] = options[:device_type] if options[:device_type].present?
+        post[:sourceIP] = options[:source_ip] if options[:source_ip]
+        post[:clientAppCode] = options[:app_code] if options[:app_code].present?
+
+        post[:redirectUrl] = options[:redirect_url] || '127.0.0.1'
+
+        post
       end
 
       def add_customer_data(post, options)
@@ -58,9 +98,13 @@ module ActiveMerchant #:nodoc:
         post[:paymentType] = 'CARD'
         post[:cardNumber] = payment.number
         post[:cvv] = payment.verification_value if payment.verification_value?
-        post[:expiryMonth] = payment.month.to_s
+        post[:expiryMonth] = payment.month.to_s.rjust(2, '0')
         post[:expiryYear] = payment.year.to_s[-2, 2]
         post[:channelType] = card_brand(payment)
+      end
+
+      def add_public_key(post)
+        post[:publicKey] = @options[:public_key]
       end
 
       def card_brand(card)
@@ -80,13 +124,14 @@ module ActiveMerchant #:nodoc:
       def commit(action, parameters)
         begin
           url = (test? ? test_url : live_url) + action
-          parameters[:publicKey] = @options[:public_key]
 
-          raw_response = ssl_post(url, parameters.to_json, headers)
-          response = parse(raw_response)
-          succeeded = success_from(response)
+          raw_response = ssl_post(url, parameters.to_json, headers(action))
 
-          response(succeeded, response)
+          parsed_response = parse(raw_response)
+
+          succeeded = success_from(parsed_response)
+
+          response(succeeded, parsed_response)
         rescue ResponseError => e
           response(false, parse(e.response.body))
         end
@@ -102,10 +147,12 @@ module ActiveMerchant #:nodoc:
           error_code: error_code_from(succeeded, response))
       end
 
-      def headers(options = {})
+      def headers(action)
+        token_type = REQUIRE_BEARER_TOKEN.include?(action) ? 'Bearer' : 'Basic'
+
         {
           'Content-Type' => 'application/json',
-          'Authorization' => "Basic #{token}"
+          'Authorization' => "#{token_type} #{authorization_token(token_type)}"
         }
       end
 
@@ -123,7 +170,7 @@ module ActiveMerchant #:nodoc:
 
       def success_from(response)
         response.fetch('status') == 'SUCCESS' &&
-          response.dig('data', 'code') == '00'
+          SUCCESS_CODES.include?(response.dig('data', 'code'))
       end
 
       def message_from(response)
@@ -138,9 +185,32 @@ module ActiveMerchant #:nodoc:
         response.dig('data', 'code').presence
       end
 
-      def token
+      def authorization_token(token_type)
+        token_type == 'Bearer' ? bearer_token : basic_token
+      end
+
+      def basic_token
         credentials = "#{@options[:public_key]}:#{@options[:private_key]}"
         Base64.strict_encode64(credentials)
+      end
+
+      def bearer_token
+        url = (test? ? test_url : live_url) + '/encrypt/keys'
+        headers = { 'Content-Type' => 'application/json' }
+        params = { key: "#{@options[:private_key]}.#{@options[:public_key]}"}
+
+        raw_response = ssl_post(url, params.to_json, headers)
+
+        get_token(raw_response)
+      end
+
+      def get_token(raw_response)
+        response = parse(raw_response)
+        if success_from(response)
+          response.dig('data', 'EncryptedSecKey', 'encryptedKey')
+        else
+          raise "Failed authorization: #{raw_response}"
+        end
       end
     end
   end

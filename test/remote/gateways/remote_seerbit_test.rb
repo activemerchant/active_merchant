@@ -4,11 +4,12 @@ class RemoteSeerbitTest < Test::Unit::TestCase
   def setup
     @gateway = SeerbitGateway.new(fixtures(:seerbit))
 
-    @amount = 100
+    @amount = 10000
     @credit_card = credit_card('5123450000000008', {
       month: '05',
       year: '21',
-      verification_value: 100
+      verification_value: 100,
+      brand: 'master'
     })
     @declined_card = credit_card('4242424242424242')
     @options = {
@@ -16,7 +17,12 @@ class RemoteSeerbitTest < Test::Unit::TestCase
       description: 'Store Purchase',
       reference: SecureRandom.uuid,
       currency: 'GHS',
-      address: address({ country: 'GH' })
+      address: address({ country: 'GH' }),
+      customer: {
+        email: "john.smith@test.com",
+        full_name: 'John smith',
+        mob_phone: '08032000001'
+      }
     }
 
     @declined_options = {
@@ -26,6 +32,12 @@ class RemoteSeerbitTest < Test::Unit::TestCase
       currency: 'GHS',
       address: address({ country: 'US' })
     }
+  end
+
+  def test_successful_3ds_initiation
+    response = @gateway.initiate_3ds(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Transaction is pending', response.message
   end
 
   def test_successful_purchase
