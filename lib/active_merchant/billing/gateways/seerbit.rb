@@ -21,7 +21,9 @@ module ActiveMerchant #:nodoc:
 
       # Some endpoints require Bearer token auth,
       # the rest of them use basic auth
-      REQUIRE_BEARER_TOKEN = %w( /payments/initiates )
+      REQUIRE_BEARER_TOKEN = %w( /payments/initiates /recurring/subscribes )
+
+      PLAN_INTERVALS = %w( DAILY WEEKLY MONTHLY ANNUALLY )
 
       def initialize(options = {})
         requires!(options, :public_key, :private_key)
@@ -39,9 +41,11 @@ module ActiveMerchant #:nodoc:
 
         add_public_key(post)
         add_order(post, money, options)
+        add_retry_data(post, options)
         add_customer_data(post, options)
         add_payment(post, payment)
-        add_3ds_arguments(post, options)
+        add_card_data(post, payment)
+        add_3ds_data(post, options)
 
         commit("/payments/initiates", post)
       end
@@ -51,20 +55,36 @@ module ActiveMerchant #:nodoc:
 
         add_public_key(post)
         add_order(post, money, options)
+        add_retry_data(post, options)
         add_customer_data(post, options)
         add_payment(post, payment)
+        add_card_data(post, payment)
 
         commit("/payments/charge", post)
+      end
+
+
+
+      def recurring(money, payment, options = {})
+        post = {}
+
+        add_public_key(post)
+        add_payment(post, payment)
+        add_product_data(post, options)
+        add_order(post, money, options)
+        add_customer_data(post, options)
+        add_recurring_data(post, options)
+
+        commit("/recurring/subscribes", post)
       end
 
       def supports_scrubbing?
         true
       end
 
-      def add_3ds_arguments(post, options)
+      def add_3ds_data(post, options)
+        add_product_data(post, options)
         post[:fee] = options[:fee] if options[:fee].present?
-        post[:productId] = options[:product_id] if options[:product_id].present?
-        post[:productDescription] = options[:product_desc] if options[:product_desc].present?
         post[:invoiceNumber] = options[:invoice_number] if options[:invoice_number].present?
         post[:deviceType] = options[:device_type] if options[:device_type].present?
         post[:sourceIP] = options[:source_ip] if options[:source_ip]
@@ -75,12 +95,27 @@ module ActiveMerchant #:nodoc:
         post
       end
 
+      def add_product_data(post, options)
+        post[:productId] = options[:product_id] if options[:product_id].present?
+        post[:productDescription] = options[:product_desc] if options[:product_desc].present?
+      end
+
       def add_customer_data(post, options)
         customer = options[:customer] || {}
 
         post[:email] = customer[:email]
         post[:fullName] = customer[:full_name]
         post[:mobileNumber] = customer[:mob_phone]
+        post[:cardName] = customer[:full_name]
+      end
+
+      def add_recurring_data(post, options)
+        post[:planId] = options[:plan_id] if options[:plan_id].present?
+        post[:startDate] = options[:start_date] if options[:start_date].present?
+        post[:callbackUrl] = options[:callback_url]
+        post[:billingCycle] = (PLAN_INTERVALS & [ options[:billing_cycle]&.upcase ]).first
+        post[:billingPeriod] = options[:billing_period]
+        post[:subscriptionAmount] = options[:subscription_amount] || false
       end
 
       def add_order(post, money, options)
@@ -90,16 +125,21 @@ module ActiveMerchant #:nodoc:
         post[:currency] = options[:currency] || currency(money)
         post[:country] = address[:country] || 'NG'
         post[:paymentReference] = options[:reference]
-        post[:retry] = false
+      end
+
+      def add_retry_data(post, options)
+        post[:retry] = options[:retry] || false  
       end
 
       def add_payment(post, payment)
-        post[:payment] = {}
-        post[:paymentType] = 'CARD'
         post[:cardNumber] = payment.number
         post[:cvv] = payment.verification_value if payment.verification_value?
         post[:expiryMonth] = payment.month.to_s.rjust(2, '0')
         post[:expiryYear] = payment.year.to_s[-2, 2]
+      end
+
+      def add_card_data(post, payment)
+        post[:paymentType] = 'CARD'
         post[:channelType] = card_brand(payment)
       end
 
@@ -174,7 +214,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        response.dig('data', 'message')
+        response.dig('data', 'message').presence || response.dig('message')
       end
 
       def authorization_from(response)
@@ -182,7 +222,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_code_from(succeeded, response)
-        response.dig('data', 'code').presence
+        response.dig('data', 'code').presence || response.dig('message')
       end
 
       def authorization_token(token_type)

@@ -32,6 +32,13 @@ class RemoteSeerbitTest < Test::Unit::TestCase
       currency: 'GHS',
       address: address({ country: 'US' })
     }
+
+    @recurring_options = {
+      start_date: 1.month.from_now,
+      billing_cycle: 'MONTHLY',
+      billing_period: 12,
+      callback_url: 'http://127.0.0.1'
+    }
   end
 
   def test_successful_3ds_initiation
@@ -46,10 +53,23 @@ class RemoteSeerbitTest < Test::Unit::TestCase
     assert_equal 'APPROVED', response.message
   end
 
+  def test_successful_recurring
+    response = @gateway.recurring(
+      @amount, @credit_card, @options.merge(@recurring_options))
+    assert_success response
+    assert_equal 'Transaction is pending', response.message
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @declined_options)
     assert_failure response
     assert_equal 'Invalid country/currency combination', response.message
+  end
+
+  def test_failed_recurring
+    response = @gateway.recurring(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'Billing Cycle cannot be null', response.message
   end
 
   def test_transcript_scrubbing
