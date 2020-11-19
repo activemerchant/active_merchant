@@ -51,6 +51,29 @@ class LitleTest < Test::Unit::TestCase
   def test_successful_purchase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card)
+    end.check_request do |endpoint, _data, _headers|
+      # Counterpoint to test_successful_postlive_url:
+      assert_match(/www\.testvantivcnp\.com/, endpoint)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+
+    assert_equal '100000000000000006;sale;100', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_postlive_url
+    @gateway = LitleGateway.new(
+      login: 'login',
+      password: 'password',
+      merchant_id: 'merchant_id',
+      url_override: 'postlive'
+    )
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.check_request do |endpoint, _data, _headers|
+      assert_match(/payments\.vantivpostlive\.com/, endpoint)
     end.respond_with(successful_purchase_response)
 
     assert_success response
