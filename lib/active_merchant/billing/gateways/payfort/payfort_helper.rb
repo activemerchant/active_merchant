@@ -85,7 +85,7 @@ module ActiveMerchant #:nodoc:
       # * Generate SHA256 digest for string from previous step
       def sign(parameters)
         phrase = []
-        parameters.sort.to_h.each do |k, v|
+        parameters.to_unsafe_h.sort.to_h.each do |k, v|
           phrase << [k, v].join('=')
         end
         phrase.push(@options[:signature_phrase])
