@@ -292,10 +292,10 @@ module ActiveMerchant #:nodoc:
           parameters = {
             :first_name => creditcard.first_name,
             :last_name => creditcard.last_name,
-            :email => scrub_email(options[:email]),
-            :credit_card => credit_card_params
+            :email => scrub_email(options[:email])
           }
-
+          
+          parameters[:credit_card] = credit_card_params unless partial_credit_card_account_update?(creditcard)
           parameters[:device_data] = options[:device_data] if options[:device_data]
 
           result = @braintree_gateway.customer.update(vault_id, parameters)
@@ -696,6 +696,10 @@ module ActiveMerchant #:nodoc:
 
       def partial_paypal_account_update?(paypal_account)
         paypal_account.payment_method_nonce.blank?
+      end
+
+      def partial_credit_card_account_update?(creditcard)
+        creditcard.number.length <= 4
       end
 
       def delete_existing_payment_methods(customer)

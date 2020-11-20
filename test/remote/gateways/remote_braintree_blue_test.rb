@@ -524,6 +524,35 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal customer_vault_id, response.params["braintree_customer"]["id"]
   end
 
+  def test_successful_credit_card_partial_update
+    assert response = @gateway.store(
+      credit_card('4111111111111111',
+                  :first_name => 'Old First', :last_name => 'Old Last',
+                  :month => 9, :year => 2012
+      ),
+      :email => "old@example.com"
+    )
+
+    assert_success response
+    assert_equal 'OK', response.message
+    customer_vault_id = response.params["customer_vault_id"]
+    assert_match(/\A\d+\z/, customer_vault_id)
+    assert_equal "old@example.com", response.params["braintree_customer"]["email"]
+    assert_equal "Old First", response.params["braintree_customer"]["first_name"]
+    assert_equal "Old Last", response.params["braintree_customer"]["last_name"]
+    assert_equal "411111", response.params["braintree_customer"]["credit_cards"][0]["bin"]
+    assert_equal "09/2012", response.params["braintree_customer"]["credit_cards"][0]["expiration_date"]
+    assert_not_nil response.params["braintree_customer"]["credit_cards"][0]["token"]
+    assert_equal customer_vault_id, response.params["braintree_customer"]["id"]
+
+    assert response = @gateway.update(customer_vault_id, credit_card('1111', first_name: "New First", last_name: "New Last"), email: "new@example.com")
+    assert_success response
+    assert_equal "new@example.com", response.params["braintree_customer"]["email"]
+    assert_equal "New First", response.params["braintree_customer"]["first_name"]
+    assert_equal "New Last", response.params["braintree_customer"]["last_name"]
+    assert_equal customer_vault_id, response.params["braintree_customer"]["id"]
+  end
+
   def test_successful_partial_paypal_update
     assert response = @gateway.store(paypal_account, email: "jd@example.com")
 
