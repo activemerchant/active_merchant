@@ -516,7 +516,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def url
-        return postlive_url if @options[:url_override].to_s == "postlive"
+        return postlive_url if @options[:url_override].to_s == 'postlive'
 
         test? ? test_url : live_url
       end
