@@ -30,7 +30,8 @@ module ActiveMerchant #:nodoc:
             in_bin_range?(num.slice(0, 6), CARNET_RANGES) ||
             CARNET_BINS.any? { |bin| num.slice(0, bin.size) == bin }
           )
-        }
+        },
+        'serfinanza' => ->(num) { num =~ /^636853\d{10}$/ }
       }
 
       # http://www.barclaycard.co.uk/business/files/bin_rules.pdf
