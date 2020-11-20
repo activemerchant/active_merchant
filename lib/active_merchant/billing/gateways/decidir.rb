@@ -215,8 +215,8 @@ module ActiveMerchant #:nodoc:
           hsh[:send_to_cs] = options[:send_to_cs] if valid_fraud_detection_option?(options[:send_to_cs]) # true/false
           hsh[:channel] = options[:channel] if valid_fraud_detection_option?(options[:channel])
           hsh[:dispatch_method] = options[:dispatch_method] if valid_fraud_detection_option?(options[:dispatch_method])
-          hsh[:device_unique_identifier] = options[:device_unique_identifier] if valid_fraud_detection_option?(options[:device_unique_identifier])
           hsh[:csmdds] = options[:csmdds] if valid_fraud_detection_option?(options[:csmdds])
+          hsh[:device_unique_id] = options[:device_unique_id] if valid_fraud_detection_option?(options[:device_unique_id])
           hsh[:bill_to] = options[:bill_to] if valid_fraud_detection_option?(options[:bill_to])
           hsh[:purchase_totals] = options[:purchase_totals] if valid_fraud_detection_option?(options[:purchase_totals])
           hsh[:customer_in_site] = options[:customer_in_site] if valid_fraud_detection_option?(options[:customer_in_site])
