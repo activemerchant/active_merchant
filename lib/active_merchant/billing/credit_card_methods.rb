@@ -31,7 +31,7 @@ module ActiveMerchant #:nodoc:
             CARNET_BINS.any? { |bin| num.slice(0, bin.size) == bin }
           )
         },
-        'serfinanza' => ->(num) { num =~ /^636853\d{10}$/ }
+        'olimpica' => ->(num) { num =~ /^636853\d{10}$/ }
       }
 
       # http://www.barclaycard.co.uk/business/files/bin_rules.pdf

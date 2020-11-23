@@ -149,8 +149,8 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     end
   end
 
-  def test_should_detect_serfinanza_card
-    assert_equal 'serfinanza', CreditCard.brand?('6368530000000000')
+  def test_should_detect_olimpica_card
+    assert_equal 'olimpica', CreditCard.brand?('6368530000000000')
   end
 
   def test_should_detect_vr_card
