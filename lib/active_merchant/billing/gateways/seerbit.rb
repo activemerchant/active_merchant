@@ -23,7 +23,7 @@ module ActiveMerchant #:nodoc:
       # the rest of them use basic auth
       REQUIRE_BEARER_TOKEN = %w( /payments/initiates /recurring/subscribes )
 
-      PLAN_INTERVALS = %w( DAILY WEEKLY MONTHLY ANNUALLY )
+      PLAN_INTERVALS = %w( WEEKLY DAILY YEARLY MONTHLY QUATERLY HOURLY )
 
       def initialize(options = {})
         requires!(options, :public_key, :private_key)
