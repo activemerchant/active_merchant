@@ -29,10 +29,10 @@ class SSLVersion
         success << g
       when :fail
         print 'F'
-        failed << {gateway: g, message: message}
+        failed << { gateway: g, message: message }
       when :error
         print 'E'
-        errored << {gateway: g, message: message}
+        errored << { gateway: g, message: message }
       end
     end
 

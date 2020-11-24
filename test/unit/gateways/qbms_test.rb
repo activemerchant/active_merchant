@@ -7,7 +7,8 @@ class QbmsTest < Test::Unit::TestCase
     @gateway = QbmsGateway.new(
       login: 'test',
       ticket: 'abc123',
-      pem: 'PEM')
+      pem: 'PEM'
+    )
 
     @amount = 100
     @card = credit_card('4111111111111111')

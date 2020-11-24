@@ -93,15 +93,15 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     ]
 
     @test_suite = [
-      {card: :visa, AVSzip: 11111, CVD: 111,  amount: 3000},
-      {card: :visa, AVSzip: 33333, CVD: nil,  amount: 3801},
-      {card: :mc,   AVSzip: 44444, CVD: nil,  amount: 4100},
-      {card: :mc,   AVSzip: 88888, CVD: 666,  amount: 1102},
-      {card: :amex, AVSzip: 55555, CVD: nil,  amount: 105500},
-      {card: :amex, AVSzip: 66666, CVD: 2222, amount: 7500},
-      {card: :ds,   AVSzip: 77777, CVD: nil,  amount: 1000},
-      {card: :ds,   AVSzip: 88888, CVD: 444,  amount: 6303},
-      {card: :jcb,  AVSzip: 33333, CVD: nil,  amount: 2900}
+      { card: :visa, AVSzip: 11111, CVD: 111,  amount: 3000 },
+      { card: :visa, AVSzip: 33333, CVD: nil,  amount: 3801 },
+      { card: :mc,   AVSzip: 44444, CVD: nil,  amount: 4100 },
+      { card: :mc,   AVSzip: 88888, CVD: 666,  amount: 1102 },
+      { card: :amex, AVSzip: 55555, CVD: nil,  amount: 105500 },
+      { card: :amex, AVSzip: 66666, CVD: 2222, amount: 7500 },
+      { card: :ds,   AVSzip: 77777, CVD: nil,  amount: 1000 },
+      { card: :ds,   AVSzip: 88888, CVD: 444,  amount: 6303 },
+      { card: :jcb,  AVSzip: 33333, CVD: nil,  amount: 2900 }
     ]
   end
 
@@ -133,6 +133,16 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_purchase_with_card_indicators_and_line_items
+    options = @options.merge(
+      line_items: @line_items,
+      card_indicators: 'y'
+    )
+    assert response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
   def test_successful_purchase_with_level_2_data
     response = @gateway.purchase(@amount, @credit_card, @options.merge(level_2_data: @level_2_options))
 
@@ -148,14 +158,24 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_visa_network_tokenization_credit_card_with_eci
-    network_card = network_tokenization_credit_card('4788250000028291',
+    network_card = network_tokenization_credit_card(
+      '4788250000028291',
       payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
       transaction_id: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
       verification_value: '111',
       brand: 'visa',
       eci: '5'
     )
-    assert response = @gateway.purchase(3000, network_card, @options)
+    # Ensure that soft descriptor fields don't conflict with network token data in schema
+    options = @options.merge(
+      soft_descriptors: {
+        merchant_name: 'Merch',
+        product_description: 'Description',
+        merchant_email: 'email@example'
+      }
+    )
+
+    assert response = @gateway.purchase(3000, network_card, options)
     assert_success response
     assert_equal 'Approved', response.message
     assert_false response.authorization.blank?
@@ -166,8 +186,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
       payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
       transaction_id: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
       verification_value: '111',
-      brand: 'master'
-    )
+      brand: 'master')
     assert response = @gateway.purchase(3000, network_card, @options)
     assert_success response
     assert_equal 'Approved', response.message
@@ -179,8 +198,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
       payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
       transaction_id: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
       verification_value: '111',
-      brand: 'american_express'
-    )
+      brand: 'american_express')
     assert response = @gateway.purchase(3000, network_card, @options)
     assert_success response
     assert_equal 'Approved', response.message
@@ -192,8 +210,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
       payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
       transaction_id: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
       verification_value: '111',
-      brand: 'discover'
-    )
+      brand: 'discover')
     assert response = @gateway.purchase(3000, network_card, @options)
     assert_success response
     assert_equal 'Approved', response.message
@@ -271,7 +288,12 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
         order_id: '2',
         currency: 'USD',
         three_d_secure: fixture[:three_d_secure],
-        address: fixture[:address]
+        address: fixture[:address],
+        soft_descriptors: {
+          merchant_name: 'Merch',
+          product_description: 'Description',
+          merchant_email: 'email@example'
+        }
       )
       assert response = @gateway.authorize(100, cc, options)
 

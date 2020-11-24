@@ -20,12 +20,12 @@ module ActiveMerchant #:nodoc:
       #           :global_password  - Your Global password
       #           :term_type        - 3 character field assigned by Global Transport after
       #                             - your application is certified.
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :global_user_name, :global_password, :term_type)
         super
       end
 
-      def purchase(money, payment_method, options={})
+      def purchase(money, payment_method, options = {})
         post = {}
         add_invoice(post, money, options)
         add_payment_method(post, payment_method)
@@ -34,7 +34,7 @@ module ActiveMerchant #:nodoc:
         commit('Sale', post, options)
       end
 
-      def authorize(money, payment_method, options={})
+      def authorize(money, payment_method, options = {})
         post = {}
         add_invoice(post, money, options)
         add_payment_method(post, payment_method)
@@ -43,7 +43,7 @@ module ActiveMerchant #:nodoc:
         commit('Auth', post, options)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         post = {}
         add_invoice(post, money, options)
         add_auth(post, authorization)
@@ -51,7 +51,7 @@ module ActiveMerchant #:nodoc:
         commit('Force', post, options)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         post = {}
         add_invoice(post, money, options)
         add_auth(post, authorization)
@@ -59,14 +59,14 @@ module ActiveMerchant #:nodoc:
         commit('Return', post, options)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = {}
         add_auth(post, authorization)
 
         commit('Void', post, options)
       end
 
-      def verify(payment_method, options={})
+      def verify(payment_method, options = {})
         post = {}
         add_payment_method(post, payment_method)
         add_address(post, options)

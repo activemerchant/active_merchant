@@ -163,12 +163,10 @@ module ActiveMerchant #:nodoc:
             email: scrub_email(options[:email]),
             phone: options[:phone] || (options[:billing_address][:phone] if options[:billing_address] &&
               options[:billing_address][:phone]),
-            credit_card: credit_card_params
-          )
+            credit_card: credit_card_params)
           Response.new(result.success?, message_from_result(result),
             braintree_customer: (customer_hash(@braintree_gateway.customer.find(vault_id), :include_credit_cards) if result.success?),
-            customer_vault_id: (result.customer.id if result.success?)
-          )
+            customer_vault_id: (result.customer.id if result.success?))
         end
       end
 
@@ -182,7 +180,7 @@ module ActiveMerchant #:nodoc:
           Response.new(true, 'OK')
         end
       end
-      alias_method :delete, :unstore
+      alias delete unstore
 
       def supports_network_tokenization?
         true
@@ -205,9 +203,9 @@ module ActiveMerchant #:nodoc:
       def check_customer_exists(customer_vault_id)
         commit do
           @braintree_gateway.customer.find(customer_vault_id)
-          ActiveMerchant::Billing::Response.new(true, 'Customer found', {exists: true}, authorization: customer_vault_id)
+          ActiveMerchant::Billing::Response.new(true, 'Customer found', { exists: true }, authorization: customer_vault_id)
         rescue Braintree::NotFoundError
-          ActiveMerchant::Billing::Response.new(true, 'Customer not found', {exists: false})
+          ActiveMerchant::Billing::Response.new(true, 'Customer not found', { exists: false })
         end
       end
 
@@ -243,8 +241,7 @@ module ActiveMerchant #:nodoc:
               customer_vault_id: (result.customer.id if result.success?),
               credit_card_token: (result.customer.credit_cards[0].token if result.success?)
             },
-            authorization: (result.customer.id if result.success?)
-          )
+            authorization: (result.customer.id if result.success?))
         end
       end
 
@@ -464,7 +461,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def customer_hash(customer, include_credit_cards=false)
+      def customer_hash(customer, include_credit_cards = false)
         hash = {
           'email' => customer.email,
           'phone' => customer.phone,

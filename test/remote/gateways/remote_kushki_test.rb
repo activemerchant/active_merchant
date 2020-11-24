@@ -53,7 +53,7 @@ class RemoteKushkiTest < Test::Unit::TestCase
 
   def test_successful_authorize
     # Kushki only allows preauthorization for PEN, CLP, and UF.
-    response = @gateway.authorize(@amount, @credit_card, {currency: 'PEN'})
+    response = @gateway.authorize(@amount, @credit_card, { currency: 'PEN' })
     assert_success response
     assert_equal 'Succeeded', response.message
     assert_match %r(^\d+$), response.authorization

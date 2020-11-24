@@ -17,7 +17,7 @@ class RemoteIxopayTest < Test::Unit::TestCase
       stored_credential: stored_credential(:initial)
     }
 
-    @extra_data = {extra_data: { customData1: 'some data', customData2: 'Can be anything really' }}
+    @extra_data = { extra_data: { customData1: 'some data', customData2: 'Can be anything really' } }
   end
 
   def test_successful_purchase

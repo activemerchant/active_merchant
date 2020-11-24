@@ -157,16 +157,16 @@ class SageGatewayTest < Test::Unit::TestCase
 
   def test_include_customer_number_for_numeric_values
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge({customer: '123'}))
-    end.check_request do |method, data|
+      @gateway.purchase(@amount, @credit_card, @options.merge({ customer: '123' }))
+    end.check_request do |_method, data|
       assert data =~ /T_customer_number=123/
     end.respond_with(successful_authorization_response)
   end
 
   def test_dont_include_customer_number_for_numeric_values
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge({customer: 'bob@test.com'}))
-    end.check_request do |method, data|
+      @gateway.purchase(@amount, @credit_card, @options.merge({ customer: 'bob@test.com' }))
+    end.check_request do |_method, data|
       assert data !~ /T_customer_number/
     end.respond_with(successful_authorization_response)
   end
@@ -188,7 +188,7 @@ class SageGatewayTest < Test::Unit::TestCase
   def test_address_with_state
     post = {}
     options = {
-      billing_address: { country: 'US', state: 'CA'}
+      billing_address: { country: 'US', state: 'CA' }
     }
     @gateway.send(:add_addresses, post, options)
 
@@ -199,7 +199,7 @@ class SageGatewayTest < Test::Unit::TestCase
   def test_address_without_state
     post = {}
     options = {
-      billing_address: { country: 'NZ', state: ''}
+      billing_address: { country: 'NZ', state: '' }
     }
     @gateway.send(:add_addresses, post, options)
 
@@ -249,7 +249,7 @@ class SageGatewayTest < Test::Unit::TestCase
   def test_successful_store
     response = stub_comms do
       @gateway.store(@credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, headers|
       assert_match(/<ns1:M_ID>login<\/ns1:M_ID>/, data)
       assert_match(/<ns1:M_KEY>password<\/ns1:M_KEY>/, data)
       assert_match(/<ns1:CARDNUMBER>#{credit_card.number}<\/ns1:CARDNUMBER>/, data)
@@ -267,7 +267,7 @@ class SageGatewayTest < Test::Unit::TestCase
   def test_failed_store
     response = stub_comms do
       @gateway.store(@credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, headers|
       assert_match(/<ns1:M_ID>login<\/ns1:M_ID>/, data)
       assert_match(/<ns1:M_KEY>password<\/ns1:M_KEY>/, data)
       assert_match(/<ns1:CARDNUMBER>#{credit_card.number}<\/ns1:CARDNUMBER>/, data)
@@ -285,7 +285,7 @@ class SageGatewayTest < Test::Unit::TestCase
   def test_successful_unstore
     response = stub_comms do
       @gateway.unstore('1234', @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, headers|
       assert_match(/<ns1:M_ID>login<\/ns1:M_ID>/, data)
       assert_match(/<ns1:M_KEY>password<\/ns1:M_KEY>/, data)
       assert_match(/<ns1:GUID>1234<\/ns1:GUID>/, data)
@@ -301,7 +301,7 @@ class SageGatewayTest < Test::Unit::TestCase
   def test_failed_unstore
     response = stub_comms do
       @gateway.unstore('1234', @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, headers|
       assert_match(/<ns1:M_ID>login<\/ns1:M_ID>/, data)
       assert_match(/<ns1:M_KEY>password<\/ns1:M_KEY>/, data)
       assert_match(/<ns1:GUID>1234<\/ns1:GUID>/, data)

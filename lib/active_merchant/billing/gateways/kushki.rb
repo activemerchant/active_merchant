@@ -12,26 +12,26 @@ module ActiveMerchant #:nodoc:
       self.money_format = :dollars
       self.supported_cardtypes = %i[visa master american_express discover diners_club alia]
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :public_merchant_id, :private_merchant_id)
         super
       end
 
-      def purchase(amount, payment_method, options={})
+      def purchase(amount, payment_method, options = {})
         MultiResponse.run() do |r|
           r.process { tokenize(amount, payment_method, options) }
           r.process { charge(amount, r.authorization, options) }
         end
       end
 
-      def authorize(amount, payment_method, options={})
+      def authorize(amount, payment_method, options = {})
         MultiResponse.run() do |r|
           r.process { tokenize(amount, payment_method, options) }
           r.process { preauthorize(amount, r.authorization, options) }
         end
       end
 
-      def capture(amount, authorization, options={})
+      def capture(amount, authorization, options = {})
         action = 'capture'
 
         post = {}
@@ -41,7 +41,7 @@ module ActiveMerchant #:nodoc:
         commit(action, post)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, options = {})
         action = 'refund'
 
         post = {}
@@ -50,7 +50,7 @@ module ActiveMerchant #:nodoc:
         commit(action, post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         action = 'void'
 
         post = {}

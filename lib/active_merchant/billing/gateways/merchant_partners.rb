@@ -13,12 +13,12 @@ module ActiveMerchant #:nodoc:
       self.money_format = :dollars
       self.supported_cardtypes = %i[visa master american_express discover diners_club jcb]
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :account_id, :merchant_pin)
         super
       end
 
-      def purchase(amount, payment_method, options={})
+      def purchase(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)
@@ -27,7 +27,7 @@ module ActiveMerchant #:nodoc:
         commit(payment_method.is_a?(String) ? :stored_purchase : :purchase, post)
       end
 
-      def authorize(amount, payment_method, options={})
+      def authorize(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)
@@ -36,7 +36,7 @@ module ActiveMerchant #:nodoc:
         commit(:authorize, post)
       end
 
-      def capture(amount, authorization, options={})
+      def capture(amount, authorization, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_reference(post, authorization)
@@ -45,14 +45,14 @@ module ActiveMerchant #:nodoc:
         commit(:capture, post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = {}
         add_reference(post, authorization)
 
         commit(:void, post)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_reference(post, authorization)
@@ -61,7 +61,7 @@ module ActiveMerchant #:nodoc:
         commit(:refund, post)
       end
 
-      def credit(amount, payment_method, options={})
+      def credit(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)
@@ -69,7 +69,7 @@ module ActiveMerchant #:nodoc:
         commit(payment_method.is_a?(String) ? :stored_credit : :credit, post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -111,9 +111,9 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_method(post, payment_method)
         if payment_method.is_a?(String)
-          user_profile_id, last_4 = split_authorization(payment_method)
+          user_profile_id, last4 = split_authorization(payment_method)
           post[:userprofileid] = user_profile_id
-          post[:last4digits] = last_4
+          post[:last4digits] = last4
         else
           post[:ccname] = payment_method.name
           post[:ccnum] = payment_method.number

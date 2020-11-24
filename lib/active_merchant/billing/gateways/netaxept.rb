@@ -94,12 +94,12 @@ module ActiveMerchant #:nodoc:
         commit('Netaxept/query.aspx', post)
       end
 
-      def add_credentials(post, options, secure=true)
+      def add_credentials(post, options, secure = true)
         post[:merchantId] = @options[:login]
         post[:token] = @options[:password] if secure
       end
 
-      def add_authorization(post, authorization, money=nil)
+      def add_authorization(post, authorization, money = nil)
         post[:transactionId] = authorization
         post[:transactionAmount] = amount(money) if money
       end
@@ -118,7 +118,7 @@ module ActiveMerchant #:nodoc:
         post[:securityCode] = options.verification_value
       end
 
-      def commit(path, parameters, xml=true)
+      def commit(path, parameters, xml = true)
         raw = parse(ssl_get(build_url(path, parameters)), xml)
 
         success = false
@@ -141,12 +141,12 @@ module ActiveMerchant #:nodoc:
         )
       end
 
-      def parse(result, expects_xml=true)
+      def parse(result, expects_xml = true)
         if expects_xml
           doc = REXML::Document.new(result)
           extract_xml(doc.root).merge(container: doc.root.name)
         else
-          {result: result}
+          { result: result }
         end
       end
 
@@ -162,7 +162,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def build_url(base, parameters=nil)
+      def build_url(base, parameters = nil)
         url = (test? ? self.test_url : self.live_url).dup
         url << base
         if parameters

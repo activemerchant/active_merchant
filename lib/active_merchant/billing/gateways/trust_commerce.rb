@@ -447,8 +447,7 @@ module ActiveMerchant #:nodoc:
           test: test?,
           authorization: authorization_from(action, data),
           cvv_result: data['cvv'],
-          avs_result: { code: data['avs'] }
-        )
+          avs_result: { code: data['avs'] })
       end
 
       def parse(body)

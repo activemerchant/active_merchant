@@ -39,7 +39,13 @@ class DecidirTest < Test::Unit::TestCase
       fraud_detection: {
         send_to_cs: false,
         channel: 'Web',
-        dispatch_method: 'Store Pick Up'
+        dispatch_method: 'Store Pick Up',
+        csmdds: [
+          {
+            code: 17,
+            description: 'Campo MDD17'
+          }
+        ]
       },
       installments: 12,
       site_id: '99999999'
@@ -47,14 +53,14 @@ class DecidirTest < Test::Unit::TestCase
 
     response = stub_comms(@gateway_for_purchase, :ssl_request) do
       @gateway_for_purchase.purchase(@amount, @credit_card, @options.merge(options))
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert data =~ /"card_holder_door_number":1234/
       assert data =~ /"card_holder_birthday":"01011980"/
       assert data =~ /"type":"dni"/
       assert data =~ /"number":"123456"/
       assert data =~ /"establishment_name":"Heavenly Buffaloes"/
       assert data =~ /"site_id":"99999999"/
-      assert data =~ /"fraud_detection":{"send_to_cs":false,"channel":"Web","dispatch_method":"Store Pick Up"}/
+      assert data =~ /"fraud_detection":{"send_to_cs":false,"channel":"Web","dispatch_method":"Store Pick Up","csmdds":\[{"code":17,"description":"Campo MDD17"}\]}/
     end.respond_with(successful_purchase_response)
 
     assert_equal 7719132, response.authorization
@@ -87,7 +93,7 @@ class DecidirTest < Test::Unit::TestCase
 
     response = stub_comms(@gateway_for_purchase, :ssl_request) do
       @gateway_for_purchase.purchase(@amount, @credit_card, @options.merge(options))
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert data =~ /"aggregate_data":{"indicator":1/
       assert data =~ /"identification_number":"308103480"/
       assert data =~ /"bill_to_pay":"test1"/
@@ -352,7 +358,7 @@ class DecidirTest < Test::Unit::TestCase
 
     stub_comms(@gateway_for_purchase, :ssl_request) do
       @gateway_for_purchase.purchase(@amount, visa_debit_card, debit_options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/"payment_method_id":31/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -364,7 +370,7 @@ class DecidirTest < Test::Unit::TestCase
 
     stub_comms(@gateway_for_purchase, :ssl_request) do
       @gateway_for_purchase.purchase(@amount, mastercard, debit_options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/"payment_method_id":105/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -376,7 +382,7 @@ class DecidirTest < Test::Unit::TestCase
 
     stub_comms(@gateway_for_purchase, :ssl_request) do
       @gateway_for_purchase.purchase(@amount, maestro_card, debit_options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/"payment_method_id":106/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -388,7 +394,7 @@ class DecidirTest < Test::Unit::TestCase
 
     stub_comms(@gateway_for_purchase, :ssl_request) do
       @gateway_for_purchase.purchase(@amount, cabal_card, debit_options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/"payment_method_id":108/, data)
     end.respond_with(successful_purchase_response)
   end

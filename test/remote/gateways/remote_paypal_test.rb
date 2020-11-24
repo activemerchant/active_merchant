@@ -145,14 +145,14 @@ class PaypalTest < Test::Unit::TestCase
   def test_successful_incomplete_captures
     auth = @gateway.authorize(100, @credit_card, @params)
     assert_success auth
-    response = @gateway.capture(60, auth.authorization, {complete_type: 'NotComplete'})
+    response = @gateway.capture(60, auth.authorization, { complete_type: 'NotComplete' })
     assert_success response
     assert response.params['transaction_id']
     assert_equal '0.60', response.params['gross_amount']
-    response_2 = @gateway.capture(40, auth.authorization)
-    assert_success response_2
-    assert response_2.params['transaction_id']
-    assert_equal '0.40', response_2.params['gross_amount']
+    response2 = @gateway.capture(40, auth.authorization)
+    assert_success response2
+    assert response2.params['transaction_id']
+    assert_equal '0.40', response2.params['gross_amount']
   end
 
   def test_successful_capture_updating_the_invoice_id
@@ -233,7 +233,7 @@ class PaypalTest < Test::Unit::TestCase
     assert_success response
 
     response = @gateway.transfer([@amount, 'joe@example.com'],
-      [600, 'jane@example.com', {note: 'Thanks for taking care of that'}],
+      [600, 'jane@example.com', { note: 'Thanks for taking care of that' }],
       subject: 'Your money')
     assert_success response
   end

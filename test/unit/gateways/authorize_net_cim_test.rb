@@ -434,7 +434,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
           }
         }
       )
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match %r{<cardNumber>XXXX4242</cardNumber>}, data
     end.respond_with(successful_update_customer_payment_profile_response)
 
@@ -602,7 +602,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
           recurring_billing: true
         }
       )
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match %r{<recurringBilling>true</recurringBilling>}, data
     end.respond_with(successful_create_customer_profile_transaction_response(:auth_capture))
 

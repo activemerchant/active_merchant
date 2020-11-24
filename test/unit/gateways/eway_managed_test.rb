@@ -36,7 +36,7 @@ class EwayManagedTest < Test::Unit::TestCase
 
   def test_should_require_billing_address_on_store
     assert_raise ArgumentError do
-      @gateway.store(@credit_card, { })
+      @gateway.store(@credit_card, {})
     end
     assert_raise ArgumentError do
       @gateway.store(@credit_card, { billing_address: {} })
@@ -55,7 +55,7 @@ class EwayManagedTest < Test::Unit::TestCase
 
   def test_should_require_billing_address_on_update
     assert_raise ArgumentError do
-      @gateway.update(@valid_customer_id, @credit_card, { })
+      @gateway.update(@valid_customer_id, @credit_card, {})
     end
     assert_raise ArgumentError do
       @gateway.update(@valid_customer_id, @credit_card, { billing_address: {} })
@@ -85,7 +85,7 @@ class EwayManagedTest < Test::Unit::TestCase
   end
 
   def test_expected_request_on_purchase
-    @gateway.expects(:ssl_post).with { |endpoint, data, headers|
+    @gateway.expects(:ssl_post).with { |_endpoint, data, _headers|
       # Compare the actual and expected XML documents, by converting them to Hashes first
       expected = Hash.from_xml(expected_purchase_request)
       actual = Hash.from_xml(data)
@@ -101,7 +101,7 @@ class EwayManagedTest < Test::Unit::TestCase
     options[:order_id] = 'order_id'
     options.delete(:invoice)
 
-    @gateway.expects(:ssl_post).with { |endpoint, data, headers|
+    @gateway.expects(:ssl_post).with { |_endpoint, data, _headers|
       request_hash = Hash.from_xml(data)
       request_hash['Envelope']['Body']['ProcessPayment']['invoiceReference'] == 'order_id'
     }.returns(successful_purchase_response)
@@ -111,7 +111,7 @@ class EwayManagedTest < Test::Unit::TestCase
     options[:invoice] = 'invoice'
     options.delete(:order_id)
 
-    @gateway.expects(:ssl_post).with { |endpoint, data, headers|
+    @gateway.expects(:ssl_post).with { |_endpoint, data, _headers|
       request_hash = Hash.from_xml(data)
       request_hash['Envelope']['Body']['ProcessPayment']['invoiceReference'] == 'invoice'
     }.returns(successful_purchase_response)
@@ -121,7 +121,7 @@ class EwayManagedTest < Test::Unit::TestCase
     options[:order_id] = 'order_id'
     options[:invoice] = 'invoice'
 
-    @gateway.expects(:ssl_post).with { |endpoint, data, headers|
+    @gateway.expects(:ssl_post).with { |_endpoint, data, _headers|
       request_hash = Hash.from_xml(data)
       request_hash['Envelope']['Body']['ProcessPayment']['invoiceReference'] == 'order_id'
     }.returns(successful_purchase_response)
@@ -148,7 +148,7 @@ class EwayManagedTest < Test::Unit::TestCase
   end
 
   def test_expected_request_on_store
-    @gateway.expects(:ssl_post).with { |endpoint, data, headers|
+    @gateway.expects(:ssl_post).with { |_endpoint, data, _headers|
       # Compare the actual and expected XML documents, by converting them to Hashes first
       expected = Hash.from_xml(expected_store_request)
       actual = Hash.from_xml(data)
@@ -164,7 +164,7 @@ class EwayManagedTest < Test::Unit::TestCase
     options.delete(:email)
     options[:billing_address][:email] = 'email+billing@example.com'
 
-    @gateway.expects(:ssl_post).with { |endpoint, data, headers|
+    @gateway.expects(:ssl_post).with { |_endpoint, data, _headers|
       request_hash = Hash.from_xml(data)
       request_hash['Envelope']['Body']['CreateCustomer']['Email'] == 'email+billing@example.com'
     }.returns(successful_store_response)
@@ -174,7 +174,7 @@ class EwayManagedTest < Test::Unit::TestCase
     options[:billing_address].delete(:email)
     options[:email] = 'email+root@example.com'
 
-    @gateway.expects(:ssl_post).with { |endpoint, data, headers|
+    @gateway.expects(:ssl_post).with { |_endpoint, data, _headers|
       request_hash = Hash.from_xml(data)
       request_hash['Envelope']['Body']['CreateCustomer']['Email'] == 'email+root@example.com'
     }.returns(successful_store_response)
@@ -184,7 +184,7 @@ class EwayManagedTest < Test::Unit::TestCase
     options[:billing_address][:email] = 'email+billing@example.com'
     options[:email] = 'email+root@example.com'
 
-    @gateway.expects(:ssl_post).with { |endpoint, data, headers|
+    @gateway.expects(:ssl_post).with { |_endpoint, data, _headers|
       request_hash = Hash.from_xml(data)
       request_hash['Envelope']['Body']['CreateCustomer']['Email'] == 'email+billing@example.com'
     }.returns(successful_store_response)
@@ -198,7 +198,7 @@ class EwayManagedTest < Test::Unit::TestCase
     options.delete(:customer)
     options[:billing_address][:customer_ref] = 'customer_ref+billing'
 
-    @gateway.expects(:ssl_post).with { |endpoint, data, headers|
+    @gateway.expects(:ssl_post).with { |_endpoint, data, _headers|
       request_hash = Hash.from_xml(data)
       request_hash['Envelope']['Body']['CreateCustomer']['CustomerRef'] == 'customer_ref+billing'
     }.returns(successful_store_response)
@@ -208,7 +208,7 @@ class EwayManagedTest < Test::Unit::TestCase
     options[:billing_address].delete(:customer_ref)
     options[:customer] = 'customer_ref+root'
 
-    @gateway.expects(:ssl_post).with { |endpoint, data, headers|
+    @gateway.expects(:ssl_post).with { |_endpoint, data, _headers|
       request_hash = Hash.from_xml(data)
       request_hash['Envelope']['Body']['CreateCustomer']['CustomerRef'] == 'customer_ref+root'
     }.returns(successful_store_response)
@@ -218,7 +218,7 @@ class EwayManagedTest < Test::Unit::TestCase
     options[:billing_address][:customer_ref] = 'customer_ref+billing'
     options[:customer] = 'customer_ref+root'
 
-    @gateway.expects(:ssl_post).with { |endpoint, data, headers|
+    @gateway.expects(:ssl_post).with { |_endpoint, data, _headers|
       request_hash = Hash.from_xml(data)
       request_hash['Envelope']['Body']['CreateCustomer']['CustomerRef'] == 'customer_ref+billing'
     }.returns(successful_store_response)
@@ -246,7 +246,7 @@ class EwayManagedTest < Test::Unit::TestCase
   end
 
   def test_expected_retrieve_response
-    @gateway.expects(:ssl_post).with { |endpoint, data, headers|
+    @gateway.expects(:ssl_post).with { |_endpoint, data, _headers|
       # Compare the actual and expected XML documents, by converting them to Hashes first
       expected = Hash.from_xml(expected_retrieve_request)
       actual = Hash.from_xml(data)

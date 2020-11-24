@@ -41,7 +41,7 @@ class TrustCommerceTest < Test::Unit::TestCase
     ActiveMerchant::Billing::TrustCommerceGateway.application_id = 'abc123'
     stub_comms do
       @gateway.purchase(@amount, @check)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{aggregator1}, data)
       assert_match(%r{name=Jim\+Smith}, data)
     end.respond_with(successful_purchase_response)
@@ -50,7 +50,7 @@ class TrustCommerceTest < Test::Unit::TestCase
   def test_succesful_purchase_with_custom_fields
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options_with_custom_fields)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{customfield1=test1}, data)
     end.respond_with(successful_purchase_response)
   end
@@ -58,7 +58,7 @@ class TrustCommerceTest < Test::Unit::TestCase
   def test_succesful_authorize_with_custom_fields
     stub_comms do
       @gateway.authorize(@amount, @check, @options_with_custom_fields)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{customfield1=test1}, data)
     end.respond_with(successful_authorize_response)
   end
@@ -66,7 +66,7 @@ class TrustCommerceTest < Test::Unit::TestCase
   def test_successful_void_from_purchase
     stub_comms do
       @gateway.void('1235|sale')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{action=void}, data)
     end.respond_with(successful_void_response)
   end
@@ -74,7 +74,7 @@ class TrustCommerceTest < Test::Unit::TestCase
   def test_successful_void_from_authorize
     stub_comms do
       @gateway.void('1235|preauth')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{action=reversal}, data)
     end.respond_with(successful_void_response)
   end
@@ -82,7 +82,7 @@ class TrustCommerceTest < Test::Unit::TestCase
   def test_succesful_capture_with_custom_fields
     stub_comms do
       @gateway.capture(@amount, 'auth', @options_with_custom_fields)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{customfield1=test1}, data)
     end.respond_with(successful_capture_response)
   end
@@ -90,7 +90,7 @@ class TrustCommerceTest < Test::Unit::TestCase
   def test_succesful_refund_with_custom_fields
     stub_comms do
       @gateway.refund(@amount, 'auth|100', @options_with_custom_fields)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{customfield1=test1}, data)
     end.respond_with(successful_refund_response)
   end
@@ -98,7 +98,7 @@ class TrustCommerceTest < Test::Unit::TestCase
   def test_succesful_void_with_custom_fields
     stub_comms do
       @gateway.void('1235|sale', @options_with_custom_fields)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{customfield1=test1}, data)
     end.respond_with(successful_void_response)
   end
@@ -106,7 +106,7 @@ class TrustCommerceTest < Test::Unit::TestCase
   def test_succesful_store_with_custom_fields
     stub_comms do
       @gateway.store(@credit_card, @options_with_custom_fields)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{customfield1=test1}, data)
     end.respond_with(successful_store_response)
   end
@@ -114,7 +114,7 @@ class TrustCommerceTest < Test::Unit::TestCase
   def test_succesful_unstore_with_custom_fields
     stub_comms do
       @gateway.unstore('test', @options_with_custom_fields)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{customfield1=test1}, data)
     end.respond_with(successful_unstore_response)
   end

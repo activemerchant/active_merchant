@@ -40,7 +40,7 @@ class Latitude19Test < Test::Unit::TestCase
 
     capture = stub_comms do
       @gateway.capture(@amount, response.authorization, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/"amount\":\"1.00\"/, data)
     end.respond_with(successful_capture_response)
     assert_success capture

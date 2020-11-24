@@ -182,8 +182,7 @@ module ActiveMerchant
           test: test?,
           authorization: response[:orderid],
           avs_result: { code: response[:avs_code] },
-          cvv_result: response[:cvvresp]
-        )
+          cvv_result: response[:cvvresp])
       end
 
       def parse(body)

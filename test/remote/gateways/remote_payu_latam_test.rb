@@ -232,7 +232,7 @@ class RemotePayuLatamTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase
-    response = @gateway.purchase(@amount, @declined_card, @options)
+    response = @gateway.purchase(@amount, @declined_card)
     assert_failure response
     assert_equal 'DECLINED', response.params['transactionResponse']['state']
   end
@@ -298,7 +298,7 @@ class RemotePayuLatamTest < Test::Unit::TestCase
   end
 
   def test_failed_authorize
-    response = @gateway.authorize(@amount, @pending_card, @options)
+    response = @gateway.authorize(@amount, @declined_card)
     assert_failure response
     assert_equal 'DECLINED', response.params['transactionResponse']['state']
   end

@@ -40,7 +40,7 @@ module CommStub
     @last_comm_stub ||= Stub::Complete.new
   end
 
-  def stub_comms(gateway=@gateway, method_to_stub=:ssl_post, &action)
+  def stub_comms(gateway = @gateway, method_to_stub = :ssl_post, &action)
     assert last_comm_stub.complete?, "Tried to stub communications when there's a stub already in progress."
     @last_comm_stub = Stub.new(gateway, method_to_stub, action)
   end

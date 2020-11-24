@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = %w[MX EC CO BR CL PE]
       self.default_currency = 'USD'
-      self.supported_cardtypes = %i[visa master american_express diners_club elo alia]
+      self.supported_cardtypes = %i[visa master american_express diners_club elo alia olimpica]
 
       self.homepage_url = 'https://secure.paymentez.com/'
       self.display_name = 'Paymentez'
@@ -74,14 +74,14 @@ module ActiveMerchant #:nodoc:
         post = {
           transaction: { id: authorization }
         }
-        post[:order] = {amount: amount(money).to_f} if money
+        post[:order] = { amount: amount(money).to_f } if money
 
         commit_transaction('capture', post)
       end
 
       def refund(money, authorization, options = {})
-        post = {transaction: {id: authorization}}
-        post[:order] = {amount: amount(money).to_f} if money
+        post = { transaction: { id: authorization } }
+        post[:order] = { amount: amount(money).to_f } if money
 
         commit_transaction('refund', post)
       end
@@ -113,7 +113,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def unstore(identification, options = {})
-        post = { card: { token: identification }, user: { id: options[:user_id] }}
+        post = { card: { token: identification }, user: { id: options[:user_id] } }
         commit_card('delete', post)
       end
 
@@ -194,7 +194,7 @@ module ActiveMerchant #:nodoc:
         begin
           parse(raw_response)
         rescue JSON::ParserError
-          {'status' => 'Internal server error'}
+          { 'status' => 'Internal server error' }
         end
       end
 

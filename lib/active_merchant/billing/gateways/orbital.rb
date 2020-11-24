@@ -34,7 +34,7 @@ module ActiveMerchant #:nodoc:
 
       POST_HEADERS = {
         'MIME-Version' => '1.1',
-        'Content-Type' => "application/PTI#{API_VERSION.gsub(/\./, '')}",
+        'Content-Type' => "application/PTI#{API_VERSION.delete('.')}",
         'Content-transfer-encoding' => 'text',
         'Request-number' => '1',
         'Document-type' => 'Request',
@@ -237,7 +237,7 @@ module ActiveMerchant #:nodoc:
         commit(order, :refund, options[:trace_number])
       end
 
-      def credit(money, authorization, options= {})
+      def credit(money, authorization, options = {})
         ActiveMerchant.deprecated CREDIT_DEPRECATION_MESSAGE
         refund(money, authorization, options)
       end
@@ -286,13 +286,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def retrieve_customer_profile(customer_ref_num)
-        options = {customer_profile_action: RETRIEVE, customer_ref_num: customer_ref_num}
+        options = { customer_profile_action: RETRIEVE, customer_ref_num: customer_ref_num }
         order = build_customer_request_xml(nil, options)
         commit(order, :retrieve_customer_profile)
       end
 
       def delete_customer_profile(customer_ref_num)
-        options = {customer_profile_action: DELETE, customer_ref_num: customer_ref_num}
+        options = { customer_profile_action: DELETE, customer_ref_num: customer_ref_num }
         order = build_customer_request_xml(nil, options)
         commit(order, :delete_customer_profile)
       end
@@ -355,61 +355,61 @@ module ActiveMerchant #:nodoc:
         xml.tag! :SDMerchantEmail, soft_desc[:merchant_email] || nil
       end
 
-      def add_level_2_tax(xml, options={})
-        if (level_2 = options[:level_2_data])
-          xml.tag! :TaxInd, level_2[:tax_indicator] if [TAX_NOT_PROVIDED, TAX_INCLUDED, NON_TAXABLE_TRANSACTION].include?(level_2[:tax_indicator].to_i)
-          xml.tag! :Tax, level_2[:tax].to_i if level_2[:tax]
+      def add_level2_tax(xml, options = {})
+        if (level2 = options[:level_2_data])
+          xml.tag! :TaxInd, level2[:tax_indicator] if [TAX_NOT_PROVIDED, TAX_INCLUDED, NON_TAXABLE_TRANSACTION].include?(level2[:tax_indicator].to_i)
+          xml.tag! :Tax, level2[:tax].to_i if level2[:tax]
         end
       end
 
-      def add_level_3_tax(xml, options={})
-        if (level_3 = options[:level_3_data])
-          xml.tag! :PC3VATtaxAmt, byte_limit(level_3[:vat_tax], 12) if level_3[:vat_tax]
-          xml.tag! :PC3AltTaxAmt, byte_limit(level_3[:alt_tax], 9) if level_3[:alt_tax]
-          xml.tag! :PC3VATtaxRate, byte_limit(level_3[:vat_rate], 4) if level_3[:vat_rate]
-          xml.tag! :PC3AltTaxInd, byte_limit(level_3[:alt_ind], 15) if level_3[:alt_ind]
+      def add_level3_tax(xml, options = {})
+        if (level3 = options[:level_3_data])
+          xml.tag! :PC3VATtaxAmt, byte_limit(level3[:vat_tax], 12) if level3[:vat_tax]
+          xml.tag! :PC3AltTaxAmt, byte_limit(level3[:alt_tax], 9) if level3[:alt_tax]
+          xml.tag! :PC3VATtaxRate, byte_limit(level3[:vat_rate], 4) if level3[:vat_rate]
+          xml.tag! :PC3AltTaxInd, byte_limit(level3[:alt_ind], 15) if level3[:alt_ind]
         end
       end
 
-      def add_level_2_advice_addendum(xml, options={})
-        if (level_2 = options[:level_2_data])
-          xml.tag! :AMEXTranAdvAddn1, byte_limit(level_2[:advice_addendum_1], 40) if level_2[:advice_addendum_1]
-          xml.tag! :AMEXTranAdvAddn2, byte_limit(level_2[:advice_addendum_2], 40) if level_2[:advice_addendum_2]
-          xml.tag! :AMEXTranAdvAddn3, byte_limit(level_2[:advice_addendum_3], 40) if level_2[:advice_addendum_3]
-          xml.tag! :AMEXTranAdvAddn4, byte_limit(level_2[:advice_addendum_4], 40) if level_2[:advice_addendum_4]
+      def add_level2_advice_addendum(xml, options = {})
+        if (level2 = options[:level_2_data])
+          xml.tag! :AMEXTranAdvAddn1, byte_limit(level2[:advice_addendum_1], 40) if level2[:advice_addendum_1]
+          xml.tag! :AMEXTranAdvAddn2, byte_limit(level2[:advice_addendum_2], 40) if level2[:advice_addendum_2]
+          xml.tag! :AMEXTranAdvAddn3, byte_limit(level2[:advice_addendum_3], 40) if level2[:advice_addendum_3]
+          xml.tag! :AMEXTranAdvAddn4, byte_limit(level2[:advice_addendum_4], 40) if level2[:advice_addendum_4]
         end
       end
 
-      def add_level_2_purchase(xml, options={})
-        if (level_2 = options[:level_2_data])
-          xml.tag! :PCOrderNum,       byte_limit(level_2[:purchase_order], 17) if level_2[:purchase_order]
-          xml.tag! :PCDestZip,        byte_limit(format_address_field(level_2[:zip]), 10) if level_2[:zip]
-          xml.tag! :PCDestName,       byte_limit(format_address_field(level_2[:name]), 30) if level_2[:name]
-          xml.tag! :PCDestAddress1,   byte_limit(format_address_field(level_2[:address1]), 30) if level_2[:address1]
-          xml.tag! :PCDestAddress2,   byte_limit(format_address_field(level_2[:address2]), 30) if level_2[:address2]
-          xml.tag! :PCDestCity,       byte_limit(format_address_field(level_2[:city]), 20) if level_2[:city]
-          xml.tag! :PCDestState,      byte_limit(format_address_field(level_2[:state]), 2) if level_2[:state]
+      def add_level2_purchase(xml, options = {})
+        if (level2 = options[:level_2_data])
+          xml.tag! :PCOrderNum,       byte_limit(level2[:purchase_order], 17) if level2[:purchase_order]
+          xml.tag! :PCDestZip,        byte_limit(format_address_field(level2[:zip]), 10) if level2[:zip]
+          xml.tag! :PCDestName,       byte_limit(format_address_field(level2[:name]), 30) if level2[:name]
+          xml.tag! :PCDestAddress1,   byte_limit(format_address_field(level2[:address1]), 30) if level2[:address1]
+          xml.tag! :PCDestAddress2,   byte_limit(format_address_field(level2[:address2]), 30) if level2[:address2]
+          xml.tag! :PCDestCity,       byte_limit(format_address_field(level2[:city]), 20) if level2[:city]
+          xml.tag! :PCDestState,      byte_limit(format_address_field(level2[:state]), 2) if level2[:state]
         end
       end
 
-      def add_level_3_purchase(xml, options={})
-        if (level_3 = options[:level_3_data])
-          xml.tag! :PC3FreightAmt,    byte_limit(level_3[:freight_amount], 12) if level_3[:freight_amount]
-          xml.tag! :PC3DutyAmt,       byte_limit(level_3[:duty_amount], 12) if level_3[:duty_amount]
-          xml.tag! :PC3DestCountryCd, byte_limit(level_3[:dest_country], 3) if level_3[:dest_country]
-          xml.tag! :PC3ShipFromZip,   byte_limit(level_3[:ship_from_zip], 10) if level_3[:ship_from_zip]
-          xml.tag! :PC3DiscAmt,       byte_limit(level_3[:discount_amount], 12) if level_3[:discount_amount]
+      def add_level3_purchase(xml, options = {})
+        if (level3 = options[:level_3_data])
+          xml.tag! :PC3FreightAmt,    byte_limit(level3[:freight_amount], 12) if level3[:freight_amount]
+          xml.tag! :PC3DutyAmt,       byte_limit(level3[:duty_amount], 12) if level3[:duty_amount]
+          xml.tag! :PC3DestCountryCd, byte_limit(level3[:dest_country], 3) if level3[:dest_country]
+          xml.tag! :PC3ShipFromZip,   byte_limit(level3[:ship_from_zip], 10) if level3[:ship_from_zip]
+          xml.tag! :PC3DiscAmt,       byte_limit(level3[:discount_amount], 12) if level3[:discount_amount]
         end
       end
 
-      def add_line_items(xml, options={})
+      def add_line_items(xml, options = {})
         xml.tag! :PC3LineItemCount, byte_limit(options[:line_items].count, 2)
         xml.tag! :PC3LineItemArray do
           options[:line_items].each_with_index do |line_item, index|
             xml.tag! :PC3LineItem do
               xml.tag! :PC3DtlIndex,  byte_limit(index + 1, 2)
               line_item.each do |key, value|
-                if key == :line_tot
+                if [:line_tot, 'line_tot'].include? key
                   formatted_key = :PC3Dtllinetot
                 else
                   formatted_key = "PC3Dtl#{key.to_s.camelize}".to_sym
@@ -478,7 +478,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_creditcard(xml, creditcard, currency=nil)
+      def add_creditcard(xml, creditcard, currency = nil)
         unless creditcard.nil?
           xml.tag! :AccountNum, creditcard.number
           xml.tag! :Exp, expiry_date(creditcard)
@@ -515,13 +515,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_xid(xml, creditcard, three_d_secure)
-        xid = if three_d_secure && creditcard.brand == 'visa'
-                three_d_secure[:xid]
-              elsif creditcard.is_a?(NetworkTokenizationCreditCard)
-                creditcard.transaction_id
-              end
+        return unless three_d_secure && creditcard.brand == 'visa'
 
-        xml.tag!(:XID, xid) if xid
+        xml.tag!(:XID, three_d_secure[:xid]) if three_d_secure[:xid]
       end
 
       def add_cavv(xml, creditcard, three_d_secure)
@@ -560,7 +556,7 @@ module ActiveMerchant #:nodoc:
         xml.tag!(:PymtBrandProgramCode, 'ASK')
       end
 
-      def add_refund(xml, currency=nil)
+      def add_refund(xml, currency = nil)
         xml.tag! :AccountNum, nil
 
         xml.tag! :CurrencyCode, currency_code(currency)
@@ -647,7 +643,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def commit(order, message_type, trace_number=nil)
+      def commit(order, message_type, trace_number = nil)
         headers = POST_HEADERS.merge('Content-length' => order.size.to_s)
         if @options[:retry_logic] && trace_number
           headers['Trace-number'] = trace_number.to_s
@@ -669,11 +665,10 @@ module ActiveMerchant #:nodoc:
             test: self.test?,
             avs_result: OrbitalGateway::AVSResult.new(response[:avs_resp_code]),
             cvv_result: OrbitalGateway::CVVResult.new(response[:cvv2_resp_code])
-          }
-        )
+          })
       end
 
-      def remote_url(url=:primary)
+      def remote_url(url = :primary)
         if url == :primary
           (self.test? ? self.test_url : self.live_url)
         else
@@ -733,21 +728,21 @@ module ActiveMerchant #:nodoc:
             xml.tag! :Amount, amount(money)
             xml.tag! :Comments, parameters[:comments] if parameters[:comments]
 
-            add_level_2_tax(xml, parameters)
-            add_level_2_advice_addendum(xml, parameters)
+            add_level2_tax(xml, parameters)
+            add_level2_advice_addendum(xml, parameters)
 
             add_aav(xml, creditcard, three_d_secure)
             # CustomerAni, AVSPhoneType and AVSDestPhoneType could be added here.
-
-            add_dpanind(xml, creditcard)
-            add_aevv(xml, creditcard, three_d_secure)
-            add_digital_token_cryptogram(xml, creditcard)
 
             if parameters[:soft_descriptors].is_a?(OrbitalSoftDescriptors)
               add_soft_descriptors(xml, parameters[:soft_descriptors])
             elsif parameters[:soft_descriptors].is_a?(Hash)
               add_soft_descriptors_from_hash(xml, parameters[:soft_descriptors])
             end
+
+            add_dpanind(xml, creditcard)
+            add_aevv(xml, creditcard, three_d_secure)
+            add_digital_token_cryptogram(xml, creditcard)
 
             set_recurring_ind(xml, parameters)
 
@@ -757,11 +752,11 @@ module ActiveMerchant #:nodoc:
               xml.tag! :TxRefNum, tx_ref_num
             end
 
-            add_level_2_purchase(xml, parameters)
-            add_level_3_purchase(xml, parameters)
-            add_level_3_tax(xml, parameters)
-            add_card_indicators(xml, parameters)
+            add_level2_purchase(xml, parameters)
+            add_level3_purchase(xml, parameters)
+            add_level3_tax(xml, parameters)
             add_line_items(xml, parameters) if parameters[:line_items]
+            add_card_indicators(xml, parameters)
             add_stored_credentials(xml, parameters)
             add_pymt_brand_program_code(xml, creditcard, three_d_secure)
           end
@@ -788,13 +783,13 @@ module ActiveMerchant #:nodoc:
             add_xml_credentials(xml)
             xml.tag! :OrderID, format_order_id(order_id)
             xml.tag! :Amount, amount(money)
-            add_level_2_tax(xml, parameters)
+            add_level2_tax(xml, parameters)
             add_bin_merchant_and_terminal(xml, parameters)
             xml.tag! :TxRefNum, tx_ref_num
-            add_level_2_purchase(xml, parameters)
-            add_level_2_advice_addendum(xml, parameters)
-            add_level_3_purchase(xml, parameters)
-            add_level_3_tax(xml, parameters)
+            add_level2_purchase(xml, parameters)
+            add_level2_advice_addendum(xml, parameters)
+            add_level3_purchase(xml, parameters)
+            add_level3_tax(xml, parameters)
           end
         end
         xml.target!
@@ -864,7 +859,7 @@ module ActiveMerchant #:nodoc:
       # 3. PINless Debit transactions can only use uppercase and lowercase alpha (A-Z, a-z) and numeric (0-9)
       def format_order_id(order_id)
         illegal_characters = /[^,$@&\- \w]/
-        order_id = order_id.to_s.gsub(/\./, '-')
+        order_id = order_id.to_s.tr('.', '-')
         order_id.gsub!(illegal_characters, '')
         order_id.lstrip!
         order_id[0...22]

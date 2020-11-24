@@ -12,7 +12,8 @@ class CreditCardMethodsTest < Test::Unit::TestCase
       5612590000000000 5817500000000000 5818000000000000
       6390000000000000 6390700000000000 6390990000000000
       6761999999999999 6763000000000000 6799999999999999
-      5000330000000000 5811499999999999
+      5000330000000000 5811499999999999 5010410000000000
+      5010630000000000 5892440000000000
     ]
   end
 
@@ -148,6 +149,10 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     end
   end
 
+  def test_should_detect_olimpica_card
+    assert_equal 'olimpica', CreditCard.brand?('6368530000000000')
+  end
+
   def test_should_detect_vr_card
     assert_equal 'vr', CreditCard.brand?('6370364495764400')
   end
@@ -157,6 +162,9 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_equal 'elo', CreditCard.brand?('5067530000000000')
     assert_equal 'elo', CreditCard.brand?('6277800000000000')
     assert_equal 'elo', CreditCard.brand?('6509550000000000')
+    assert_equal 'elo', CreditCard.brand?('5090890000000000')
+    assert_equal 'elo', CreditCard.brand?('5092570000000000')
+    assert_equal 'elo', CreditCard.brand?('5094100000000000')
   end
 
   def test_should_detect_alelo_card

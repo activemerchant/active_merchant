@@ -38,7 +38,7 @@ module ActiveMerchant #:nodoc:
         commit(purchase_url(post[:CVN]), money, post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         post = {}
 
         add_customer_id(post)
@@ -66,7 +66,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def requires_address!(options)
-        raise ArgumentError.new('Missing eWay required parameters: address or billing_address') unless options.has_key?(:address) or options.has_key?(:billing_address)
+        raise ArgumentError.new('Missing eWay required parameters: address or billing_address') unless options.has_key?(:address) || options.has_key?(:billing_address)
       end
 
       def add_creditcard(post, creditcard)
@@ -115,8 +115,7 @@ module ActiveMerchant #:nodoc:
           message_from(response[:ewaytrxnerror]),
           response,
           authorization: response[:ewaytrxnnumber],
-          test: test?
-        )
+          test: test?)
       end
 
       def success?(response)

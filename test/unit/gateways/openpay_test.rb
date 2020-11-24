@@ -113,7 +113,7 @@ class OpenpayTest < Test::Unit::TestCase
   def test_successful_purchase_with_card_id
     @gateway.expects(:ssl_request).returns(successful_purchase_response)
 
-    assert response = @gateway.purchase(@amount, {credit_card: 'a2b79p8xmzeyvmolqfja'}, @options)
+    assert response = @gateway.purchase(@amount, { credit_card: 'a2b79p8xmzeyvmolqfja' }, @options)
     assert_instance_of Response, response
     assert_success response
 
@@ -171,7 +171,7 @@ class OpenpayTest < Test::Unit::TestCase
   def test_passing_device_session_id
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, device_session_id: 'TheDeviceSessionID')
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(%r{"device_session_id":"TheDeviceSessionID"}, data)
     end.respond_with(successful_purchase_response)
 
@@ -181,7 +181,7 @@ class OpenpayTest < Test::Unit::TestCase
   def test_passing_payment_installments
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, payments: '6')
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(%r{"payments":"6"}, data)
       assert_match(%r{"payment_plan":}, data)
     end.respond_with(successful_purchase_response)

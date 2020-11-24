@@ -13,13 +13,19 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     @three_ds_credit_card = credit_card('4000000000003220',
       verification_value: '737',
       month: 10,
-      year: 2020
-    )
+      year: 2021)
+    @three_ds_not_required_card = credit_card('4000000000003055',
+      verification_value: '737',
+      month: 10,
+      year: 2021)
+    @three_ds_external_data_card = credit_card('4000002760003184',
+      verification_value: '737',
+      month: 10,
+      year: 2021)
     @visa_card = credit_card('4242424242424242',
       verification_value: '737',
       month: 10,
-      year: 2020
-    )
+      year: 2021)
     @destination_account = fixtures(:stripe_destination)[:stripe_user_id]
   end
 
@@ -121,6 +127,74 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
 
     assert_equal 'Your card was declined.', purchase.message
     refute purchase.params.dig('error', 'payment_intent', 'charges', 'data')[0]['captured']
+  end
+
+  def test_successful_purchase_with_external_auth_data_3ds_1
+    options = {
+      currency: 'GBP',
+      three_d_secure: {
+        eci: '05',
+        cavv: '4BQwsg4yuKt0S1LI1nDZTcO9vUM=',
+        xid: 'd+NEBKSpEMauwleRhdrDY06qj4A='
+      }
+    }
+
+    assert purchase = @gateway.purchase(@amount, @three_ds_external_data_card, options)
+
+    assert_equal 'succeeded', purchase.params['status']
+    assert purchase.params.dig('charges', 'data')[0]['captured']
+  end
+
+  def test_successful_purchase_with_external_auth_data_3ds_2
+    options = {
+      currency: 'GBP',
+      three_d_secure: {
+        version: '2.1.0',
+        eci: '02',
+        cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA=',
+        ds_transaction_id: 'f879ea1c-aa2c-4441-806d-e30406466d79'
+      }
+    }
+
+    assert purchase = @gateway.purchase(@amount, @three_ds_external_data_card, options)
+
+    assert_equal 'succeeded', purchase.params['status']
+    assert purchase.params.dig('charges', 'data')[0]['captured']
+  end
+
+  def test_successful_purchase_with_customer_token_and_external_auth_data_3ds_2
+    options = {
+      currency: 'GBP',
+      customer: @customer,
+      three_d_secure: {
+        version: '2.1.0',
+        eci: '02',
+        cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA=',
+        ds_transaction_id: 'f879ea1c-aa2c-4441-806d-e30406466d79'
+      }
+    }
+
+    assert purchase = @gateway.purchase(@amount, @three_ds_authentication_required, options)
+
+    assert_equal 'succeeded', purchase.params['status']
+    assert purchase.params.dig('charges', 'data')[0]['captured']
+  end
+
+  def test_successful_authorization_with_external_auth_data_3ds_2
+    options = {
+      currency: 'GBP',
+      three_d_secure: {
+        version: '2.1.0',
+        eci: '02',
+        cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA=',
+        ds_transaction_id: 'f879ea1c-aa2c-4441-806d-e30406466d79'
+      }
+    }
+
+    assert authorization = @gateway.authorize(@amount, @three_ds_external_data_card, options)
+
+    assert_equal 'requires_capture', authorization.params['status']
+    refute authorization.params.dig('charges', 'data')[0]['captured']
   end
 
   def test_create_payment_intent_manual_capture_method
@@ -642,6 +716,21 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
 
     assert_failure purchase
     assert_equal 'Your card was declined. This transaction requires authentication.', purchase.message
+  end
+
+  def test_request_three_d_secure
+    options = {
+      currency: 'GBP',
+      request_three_d_secure: 'any'
+    }
+    assert purchase = @gateway.purchase(@amount, @three_ds_not_required_card, options)
+    assert_equal 'requires_action', purchase.params['status']
+
+    options = {
+      currency: 'GBP'
+    }
+    assert purchase = @gateway.purchase(@amount, @three_ds_not_required_card, options)
+    assert_equal 'succeeded', purchase.params['status']
   end
 
   def test_transcript_scrubbing

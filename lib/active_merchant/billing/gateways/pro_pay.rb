@@ -133,12 +133,12 @@ module ActiveMerchant #:nodoc:
         '99' => 'Generic decline or unable to parse issuer response code'
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :cert_str)
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         request = build_xml_request do |xml|
           add_invoice(xml, money, options)
           add_payment(xml, payment, options)
@@ -151,7 +151,7 @@ module ActiveMerchant #:nodoc:
         commit(request)
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         request = build_xml_request do |xml|
           add_invoice(xml, money, options)
           add_payment(xml, payment, options)
@@ -164,7 +164,7 @@ module ActiveMerchant #:nodoc:
         commit(request)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         request = build_xml_request do |xml|
           add_invoice(xml, money, options)
           add_account(xml, options)
@@ -175,7 +175,7 @@ module ActiveMerchant #:nodoc:
         commit(request)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         request = build_xml_request do |xml|
           add_invoice(xml, money, options)
           add_account(xml, options)
@@ -186,11 +186,11 @@ module ActiveMerchant #:nodoc:
         commit(request)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         refund(nil, authorization, options)
       end
 
-      def credit(money, payment, options={})
+      def credit(money, payment, options = {})
         request = build_xml_request do |xml|
           add_invoice(xml, money, options)
           add_payment(xml, payment, options)
@@ -201,7 +201,7 @@ module ActiveMerchant #:nodoc:
         commit(request)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }

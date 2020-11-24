@@ -332,7 +332,7 @@ module ActiveMerchant #:nodoc:
         parse(ssl_post(url, post_data(action, fields)))
       end
 
-      def parse_recurring(response_fields, opts={}) # expected status?
+      def parse_recurring(response_fields, opts = {}) # expected status?
         parsed = {}
         response_fields.each do |k, v|
           mapped_key = REBILL_FIELD_MAP.include?(k) ? REBILL_FIELD_MAP[k] : k
@@ -366,8 +366,7 @@ module ActiveMerchant #:nodoc:
           test: test?,
           authorization: (parsed[:rebid] && parsed[:rebid] != '' ? parsed[:rebid] : parsed[:transaction_id]),
           avs_result: { code: parsed[:avs_result_code] },
-          cvv_result: parsed[:card_code]
-        )
+          cvv_result: parsed[:card_code])
       end
 
       def message_from(parsed)

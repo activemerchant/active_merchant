@@ -29,13 +29,13 @@ module ActiveMerchant #:nodoc:
         '135' => STANDARD_ERROR_CODE[:incorrect_address]
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :username, :password, :merchant_account)
         @username, @password, @merchant_account = options.values_at(:username, :password, :merchant_account)
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         if options[:execute_threed] || options[:threed_dynamic]
           authorize(money, payment, options)
         else
@@ -46,7 +46,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         requires!(options, :order_id)
         post = init_post(options)
         add_invoice(post, money, options)
@@ -62,7 +62,7 @@ module ActiveMerchant #:nodoc:
         commit('authorise', post, options)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         post = init_post(options)
         add_invoice_for_modification(post, money, options)
         add_reference(post, authorization, options)
@@ -70,7 +70,7 @@ module ActiveMerchant #:nodoc:
         commit('capture', post, options)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         post = init_post(options)
         add_invoice_for_modification(post, money, options)
         add_original_reference(post, authorization, options)
@@ -78,13 +78,13 @@ module ActiveMerchant #:nodoc:
         commit('refund', post, options)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = init_post(options)
         add_reference(post, authorization, options)
         commit('cancel', post, options)
       end
 
-      def adjust(money, authorization, options={})
+      def adjust(money, authorization, options = {})
         post = init_post(options)
         add_invoice_for_modification(post, money, options)
         add_reference(post, authorization, options)
@@ -92,7 +92,7 @@ module ActiveMerchant #:nodoc:
         commit('adjustAuthorisation', post, options)
       end
 
-      def store(credit_card, options={})
+      def store(credit_card, options = {})
         requires!(options, :order_id)
         post = init_post(options)
         add_invoice(post, 0, options)
@@ -115,7 +115,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def unstore(options={})
+      def unstore(options = {})
         requires!(options, :shopper_reference, :recurring_detail_reference)
         post = {}
 
@@ -126,7 +126,7 @@ module ActiveMerchant #:nodoc:
         commit('disable', post, options)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(0, credit_card, options) }
           options[:idempotency_key] = nil
@@ -227,7 +227,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_merchant_data(post, options)
-        post[:additionalData][:subMerchantId] = options[:sub_merchant_id] if options[:sub_merchant_id]
+        post[:additionalData][:subMerchantID] = options[:sub_merchant_id] if options[:sub_merchant_id]
+        post[:additionalData][:subMerchantName] = options[:sub_merchant_name] if options[:sub_merchant_name]
+        post[:additionalData][:subMerchantStreet] = options[:sub_merchant_street] if options[:sub_merchant_street]
+        post[:additionalData][:subMerchantCity] = options[:sub_merchant_city] if options[:sub_merchant_city]
+        post[:additionalData][:subMerchantState] = options[:sub_merchant_state] if options[:sub_merchant_state]
+        post[:additionalData][:subMerchantPostalCode] = options[:sub_merchant_postal_code] if options[:sub_merchant_postal_code]
+        post[:additionalData][:subMerchantCountry] = options[:sub_merchant_country] if options[:sub_merchant_country]
+        post[:additionalData][:subMerchantTaxId] = options[:sub_merchant_tax_id] if options[:sub_merchant_tax_id]
+        post[:additionalData][:subMerchantMCC] = options[:sub_merchant_mcc] if options[:sub_merchant_mcc]
       end
 
       def add_risk_data(post, options)
@@ -271,7 +279,7 @@ module ActiveMerchant #:nodoc:
         post[:shopperReference] = options[:shopper_reference] if options[:shopper_reference]
       end
 
-      def add_shopper_interaction(post, payment, options={})
+      def add_shopper_interaction(post, payment, options = {})
         if  (options.dig(:stored_credential, :initial_transaction) && options.dig(:stored_credential, :initiator) == 'cardholder') ||
             (payment.respond_to?(:verification_value) && payment.verification_value && options.dig(:stored_credential, :initial_transaction).nil?) ||
             payment.is_a?(NetworkTokenizationCreditCard)
@@ -364,7 +372,7 @@ module ActiveMerchant #:nodoc:
           cvc: credit_card.verification_value
         }
 
-        card.delete_if { |k, v| v.blank? }
+        card.delete_if { |_k, v| v.blank? }
         card[:holderName] ||= 'Not Provided' if credit_card.is_a?(NetworkTokenizationCreditCard)
         requires!(card, :expiryMonth, :expiryYear, :holderName, :number)
         post[:card] = card
@@ -432,7 +440,8 @@ module ActiveMerchant #:nodoc:
           return unless !options[:execute_threed].nil? || !options[:threed_dynamic].nil?
 
           post[:browserInfo] = { userAgent: options[:user_agent], acceptHeader: options[:accept_header] } if options[:execute_threed] || options[:threed_dynamic]
-          post[:additionalData] = { executeThreeD: options[:execute_threed] } if !options[:execute_threed].nil?
+          post[:additionalData] ||= {}
+          post[:additionalData][:executeThreeD] = options[:execute_threed] if !options[:execute_threed].nil?
         end
       end
 

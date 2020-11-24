@@ -15,19 +15,19 @@ module ActiveMerchant
       self.homepage_url = 'http://vancopayments.com/'
       self.display_name = 'Vanco Payment Solutions'
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :user_id, :password, :client_id)
         super
       end
 
-      def purchase(money, payment_method, options={})
+      def purchase(money, payment_method, options = {})
         MultiResponse.run do |r|
           r.process { login }
           r.process { commit(purchase_request(money, payment_method, r.params['response_sessionid'], options), :response_transactionref) }
         end
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         MultiResponse.run do |r|
           r.process { login }
           r.process { commit(refund_request(money, authorization, r.params['response_sessionid']), :response_creditrequestreceived) }

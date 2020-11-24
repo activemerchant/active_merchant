@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = %w[AD AE AR AT AU BE BG BH BR CH CL CN CO CY CZ DE DK EE EG ES FI FR GB GR HK HR HU IE IS IT JO JP KW LI LT LU LV MC MT MX MY NL NO NZ OM PE PL PT QA RO SA SE SG SI SK SM TR US]
       self.default_currency = 'USD'
       self.money_format = :cents
-      self.supported_cardtypes = %i[visa master american_express diners_club maestro discover]
+      self.supported_cardtypes = %i[visa master american_express diners_club maestro discover jcb]
       self.currencies_without_fractions = %w(BIF DJF GNF ISK KMF XAF CLF XPF JPY PYG RWF KRW VUV VND XOF)
       self.currencies_with_three_decimal_places = %w(BHD LYD JOD KWD OMR TND)
 
@@ -19,25 +19,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(amount, payment_method, options = {})
-        multi = MultiResponse.run do |r|
-          r.process { authorize(amount, payment_method, options) }
-          r.process { capture(amount, r.authorization, options) }
-        end
+        post = {}
+        build_auth_or_purchase(post, amount, payment_method, options)
 
-        merged_params = multi.responses.map(&:params).reduce({}, :merge)
-        succeeded = success_from(merged_params)
-
-        response(:purchase, succeeded, merged_params)
+        commit(:purchase, post)
       end
 
       def authorize(amount, payment_method, options = {})
         post = {}
         post[:capture] = false
-        add_invoice(post, amount, options)
-        add_payment_method(post, payment_method, options)
-        add_customer_data(post, options)
-        add_transaction_data(post, options)
-        add_3ds(post, options)
+        build_auth_or_purchase(post, amount, payment_method, options)
 
         commit(:authorize, post)
       end
@@ -64,13 +55,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify(credit_card, options = {})
-        MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
-        end
+        authorize(0, credit_card, options)
       end
 
-      def verify_payment(authorization, option={})
+      def verify_payment(authorization, option = {})
         commit(:verify_payment, authorization)
       end
 
@@ -86,6 +74,14 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
+      def build_auth_or_purchase(post, amount, payment_method, options)
+        add_invoice(post, amount, options)
+        add_payment_method(post, payment_method, options)
+        add_customer_data(post, options)
+        add_transaction_data(post, options)
+        add_3ds(post, options)
+      end
 
       def add_invoice(post, money, options)
         post[:amount] = localized_amount(money, options[:currency])
@@ -148,6 +144,7 @@ module ActiveMerchant #:nodoc:
           post[:'3ds'][:enabled] = true
           post[:success_url] = options[:callback_url] if options[:callback_url]
           post[:failure_url] = options[:callback_url] if options[:callback_url]
+          post[:'3ds'][:attempt_n3d] = options[:attempt_n3d] if options[:attempt_n3d]
         end
 
         if options[:three_d_secure]
@@ -199,7 +196,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def url(_post, action, authorization)
-        if action == :authorize
+        if %i[authorize purchase].include?(action)
           "#{base_url}/payments"
         elsif action == :capture
           "#{base_url}/payments/#{authorization}/captures"

@@ -15,8 +15,7 @@ class RemoteNmiTest < Test::Unit::TestCase
       year: '2024',
       source: :apple_pay,
       eci: '5',
-      transaction_id: '123456789'
-    )
+      transaction_id: '123456789')
     @options = {
       order_id: generate_unique_id,
       billing_address: address,
@@ -98,6 +97,23 @@ class RemoteNmiTest < Test::Unit::TestCase
       recurring: true
     })
     assert response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert response.test?
+    assert_equal 'Succeeded', response.message
+    assert response.authorization
+  end
+
+  def test_successful_purchase_with_three_d_secure
+    three_d_secure_options = @options.merge({
+      three_d_secure: {
+        version: '2.1.0',
+        eci: '02',
+        cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA',
+        ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC'
+      }
+    })
+
+    assert response = @gateway.purchase(@amount, @credit_card, three_d_secure_options)
     assert_success response
     assert response.test?
     assert_equal 'Succeeded', response.message

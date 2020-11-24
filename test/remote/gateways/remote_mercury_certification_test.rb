@@ -105,7 +105,7 @@ class RemoteMercuryCertificationTest < Test::Unit::TestCase
     )
   end
 
-  def options(order_id=nil, other={})
+  def options(order_id = nil, other = {})
     {
       order_id: order_id,
       description: 'ActiveMerchant'

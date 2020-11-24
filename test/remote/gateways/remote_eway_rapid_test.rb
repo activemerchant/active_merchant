@@ -109,8 +109,7 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
         country:  'US',
         phone:    '1115555555',
         fax:      '1115556666'
-      }
-    )
+      })
     assert_success response
   end
 

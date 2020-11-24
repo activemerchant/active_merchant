@@ -269,7 +269,8 @@ module ActiveMerchant #:nodoc:
           first_name: params[2],
           last_name: params[3],
           month: params[4],
-          year: params[5])
+          year: params[5]
+        )
 
         xml.tag! 'TransarmorToken', params[0]
         xml.tag! 'Expiry_Date', expdate(credit_card)
@@ -371,10 +372,9 @@ module ActiveMerchant #:nodoc:
         Response.new(successful?(response), message_from(response), response,
           test: test?,
           authorization: successful?(response) ? response_authorization(action, response, credit_card) : '',
-          avs_result: {code: response[:avs]},
+          avs_result: { code: response[:avs] },
           cvv_result: response[:cvv2],
-          error_code: standard_error_code(response)
-        )
+          error_code: standard_error_code(response))
       end
 
       def headers(method, url, request)

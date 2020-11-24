@@ -58,7 +58,7 @@ class PayflowTest < Test::Unit::TestCase
   def test_authorization_with_three_d_secure_option
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options.merge(three_d_secure_option))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_three_d_secure REXML::Document.new(data), authorize_buyer_auth_result_path
     end.respond_with(successful_authorization_response)
     assert_equal 'Approved', response.message
@@ -84,7 +84,7 @@ class PayflowTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match %r(<InvNum>123</InvNum>), data
       assert_match %r(<Description>Description string</Description>), data
       assert_match %r(<OrderDesc>OrderDesc string</OrderDesc>), data
@@ -111,7 +111,7 @@ class PayflowTest < Test::Unit::TestCase
   def test_successful_purchase_with_three_d_secure_option
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(three_d_secure_option))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_three_d_secure REXML::Document.new(data), purchase_buyer_auth_result_path
     end.respond_with(successful_purchase_with_fraud_review_response)
     assert_success response
@@ -124,7 +124,7 @@ class PayflowTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match %r(<AcctNum>6355059797</AcctNum>), data
       assert_match %r(<ACH><AcctType>), data.tr("\n ", '')
     end.respond_with(successful_l2_response)
@@ -139,7 +139,7 @@ class PayflowTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match %r(<Date>20190104</Date>), data
       assert_match %r(<Amount>3.23</Amount>), data
       assert_match %r(<Level3Invoice><CountyTax><Amount>), data.tr("\n ", '')
@@ -155,7 +155,7 @@ class PayflowTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match %r(<Date>20190104</Date>), data
       assert_match %r(<Amount>3.23</Amount>), data
       assert_match %r(<AcctNum>6355059797</AcctNum>), data
@@ -314,8 +314,7 @@ class PayflowTest < Test::Unit::TestCase
       assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
         @gateway.recurring(@amount, @credit_card,
           periodicity: :monthly,
-          initial_transaction: { }
-        )
+          initial_transaction: {})
       end
     end
   end
@@ -325,8 +324,7 @@ class PayflowTest < Test::Unit::TestCase
       assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
         @gateway.recurring(@amount, @credit_card,
           periodicity: :monthly,
-          initial_transaction: { amount: :purchase }
-        )
+          initial_transaction: { amount: :purchase })
       end
     end
   end
@@ -480,7 +478,7 @@ class PayflowTest < Test::Unit::TestCase
   end
 
   def test_name_field_are_included_instead_of_first_and_last
-    @gateway.expects(:ssl_post).returns(successful_authorization_response).with do |url, data|
+    @gateway.expects(:ssl_post).returns(successful_authorization_response).with do |_url, data|
       data !~ /FirstName/ && data !~ /LastName/ && data =~ /<Name>/
     end
     response = @gateway.authorize(@amount, @credit_card, @options)
@@ -517,7 +515,7 @@ class PayflowTest < Test::Unit::TestCase
   private
 
   def pre_scrubbed
-    <<~EOS
+    <<~REQUEST
       opening connection to pilot-payflowpro.paypal.com:443...
       opened
       starting SSL for pilot-payflowpro.paypal.com:443...
@@ -536,11 +534,11 @@ class PayflowTest < Test::Unit::TestCase
       -> "<XMLPayResponse  xmlns=\"http://www.paypal.com/XMLPay\"><ResponseData><Vendor></Vendor><Partner></Partner><TransactionResults><TransactionResult><Result>4</Result><Message>Invalid amount</Message></TransactionResult></TransactionResults></ResponseData></XMLPayResponse>"
       read 267 bytes
       Conn close
-    EOS
+    REQUEST
   end
 
   def post_scrubbed
-    <<~EOS
+    <<~REQUEST
       opening connection to pilot-payflowpro.paypal.com:443...
       opened
       starting SSL for pilot-payflowpro.paypal.com:443...
@@ -559,11 +557,11 @@ class PayflowTest < Test::Unit::TestCase
       -> "<XMLPayResponse  xmlns=\"http://www.paypal.com/XMLPay\"><ResponseData><Vendor></Vendor><Partner></Partner><TransactionResults><TransactionResult><Result>4</Result><Message>Invalid amount</Message></TransactionResult></TransactionResults></ResponseData></XMLPayResponse>"
       read 267 bytes
       Conn close
-    EOS
+    REQUEST
   end
 
   def pre_scrubbed_check
-    <<~EOS
+    <<~REQUEST
       opening connection to pilot-payflowpro.paypal.com:443...
       opened
       starting SSL for pilot-payflowpro.paypal.com:443...
@@ -582,11 +580,11 @@ class PayflowTest < Test::Unit::TestCase
       -> "<XMLPayResponse  xmlns=\"http://www.paypal.com/XMLPay\"><ResponseData><Vendor></Vendor><Partner></Partner><TransactionResults><TransactionResult><Result>4</Result><Message>Invalid amount</Message></TransactionResult></TransactionResults></ResponseData></XMLPayResponse>"
       read 267 bytes
       Conn close
-    EOS
+    REQUEST
   end
 
   def post_scrubbed_check
-    <<~EOS
+    <<~REQUEST
       opening connection to pilot-payflowpro.paypal.com:443...
       opened
       starting SSL for pilot-payflowpro.paypal.com:443...
@@ -605,7 +603,7 @@ class PayflowTest < Test::Unit::TestCase
       -> "<XMLPayResponse  xmlns=\"http://www.paypal.com/XMLPay\"><ResponseData><Vendor></Vendor><Partner></Partner><TransactionResults><TransactionResult><Result>4</Result><Message>Invalid amount</Message></TransactionResult></TransactionResults></ResponseData></XMLPayResponse>"
       read 267 bytes
       Conn close
-    EOS
+    REQUEST
   end
 
   def successful_recurring_response

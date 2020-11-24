@@ -113,7 +113,7 @@ class PayeezyGateway < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.purchase(@amount, check_without_number, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/001/, data)
     end.respond_with(successful_purchase_echeck_response)
 
@@ -126,7 +126,7 @@ class PayeezyGateway < Test::Unit::TestCase
   def test_successful_purchase_with_stored_credentials
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(@options_stored_credentials))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/stored_credentials/, data)
     end.respond_with(successful_purchase_stored_credentials_response)
 
@@ -196,7 +196,7 @@ class PayeezyGateway < Test::Unit::TestCase
   def test_successful_void
     response = stub_comms do
       @gateway.void(@authorization, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       json = '{"transaction_type":"void","method":"credit_card","transaction_tag":"106625152","currency_code":"USD","amount":"4738"}'
       assert_match json, data
     end.respond_with(successful_void_response)
@@ -207,7 +207,7 @@ class PayeezyGateway < Test::Unit::TestCase
   def test_successful_void_with_reversal_id
     stub_comms do
       @gateway.void(@authorization, @options.merge(reversal_id: @reversal_id))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       json = "{\"transaction_type\":\"void\",\"method\":\"credit_card\",\"reversal_id\":\"#{@reversal_id}\",\"currency_code\":\"USD\",\"amount\":\"4738\"}"
       assert_match json, data
     end.respond_with(successful_void_response)
@@ -268,7 +268,7 @@ class PayeezyGateway < Test::Unit::TestCase
   def test_requests_include_verification_string
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       json_address = '{"street":"456 My Street","city":"Ottawa","state_province":"ON","zip_postal_code":"K1C2N6","country":"CA"}'
       assert_match json_address, data
     end.respond_with(successful_purchase_response)

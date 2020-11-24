@@ -8,12 +8,11 @@ class RemotePaymentezTest < Test::Unit::TestCase
     @credit_card = credit_card('4111111111111111', verification_value: '666')
     @elo_credit_card = credit_card('6362970000457013',
       month: 10,
-      year: 2020,
+      year: 2022,
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'elo'
-    )
+      brand: 'elo')
     @declined_card = credit_card('4242424242424242', verification_value: '666')
     @options = {
       billing_address: address,
@@ -138,7 +137,7 @@ class RemotePaymentezTest < Test::Unit::TestCase
   def test_failed_void
     response = @gateway.void('')
     assert_failure response
-    assert_equal 'Carrier not supported', response.message
+    assert_equal 'ValidationError', response.message
     assert_equal Gateway::STANDARD_ERROR_CODE[:config_error], response.error_code
   end
 
@@ -172,7 +171,8 @@ class RemotePaymentezTest < Test::Unit::TestCase
   def test_successful_authorize_and_capture_with_different_amount
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
-    assert capture = @gateway.capture(@amount + 100, auth.authorization)
+    amount = 99.0
+    assert capture = @gateway.capture(amount, auth.authorization)
     assert_success capture
     assert_equal 'Response by mock', capture.message
   end

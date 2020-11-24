@@ -47,7 +47,7 @@ module ActiveMerchant #:nodoc:
       #                                      (default: "https://github.com/activemerchant/active_merchant")
       #
       # Returns an ActiveMerchant::Billing::Response object where authorization is the Transaction ID on success
-      def purchase(amount, payment_method, options={})
+      def purchase(amount, payment_method, options = {})
         params = {}
         add_metadata(params, options)
         add_invoice(params, amount, options)
@@ -57,7 +57,7 @@ module ActiveMerchant #:nodoc:
         commit(url_for('Transaction'), params)
       end
 
-      def authorize(amount, payment_method, options={})
+      def authorize(amount, payment_method, options = {})
         params = {}
         add_metadata(params, options)
         add_invoice(params, amount, options)
@@ -232,7 +232,7 @@ module ActiveMerchant #:nodoc:
         params[key] = {}
 
         add_name_and_email(params[key], options[:shipping_address], options[:email])
-        add_address(params[key], options[:shipping_address], {skip_company: true})
+        add_address(params[key], options[:shipping_address], { skip_company: true })
       end
 
       def add_name_and_email(params, address, email, payment_method = nil)
@@ -251,7 +251,7 @@ module ActiveMerchant #:nodoc:
           payment_method.first_name.present? && payment_method.last_name.present?
       end
 
-      def add_address(params, address, options={})
+      def add_address(params, address, options = {})
         return unless address
 
         params['Title'] = address[:title]
@@ -310,7 +310,7 @@ module ActiveMerchant #:nodoc:
           cvv_result: cvv_result_from(raw)
         )
       rescue ActiveMerchant::ResponseError => e
-        return ActiveMerchant::Billing::Response.new(false, e.response.message, {status_code: e.response.code}, test: test?)
+        return ActiveMerchant::Billing::Response.new(false, e.response.message, { status_code: e.response.code }, test: test?)
       end
 
       def parse(data)
@@ -365,7 +365,7 @@ module ActiveMerchant #:nodoc:
           else
             'I'
           end
-        {code: code}
+        { code: code }
       end
 
       def cvv_result_from(response)
