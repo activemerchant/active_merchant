@@ -5,6 +5,7 @@ class RemoteNetbanxTest < Test::Unit::TestCase
     @gateway = NetbanxGateway.new(fixtures(:netbanx))
     @amount = 100
     @credit_card = credit_card('4530910000012345')
+    @credit_card_no_match_cvv = credit_card('4530910000012345',{verification_value: 666})
     @declined_amount = 11
     @options = {
       billing_address: address,
@@ -31,6 +32,13 @@ class RemoteNetbanxTest < Test::Unit::TestCase
     assert_equal response.authorization, response.params['id']
     assert_equal 'MATCH', response.params['cvvVerification']
     assert_equal 'MATCH', response.params['avsResponse']
+  end
+
+  def test_successful_purchase_avs_no_match_cvv
+    response = @gateway.purchase(@amount, @credit_card_no_match_cvv, @options)
+    assert_success response
+    assert_equal 'X', response.avs_result['code']
+    assert_equal 'N', response.cvv_result['code']
   end
 
   def test_successful_purchase_with_more_options
