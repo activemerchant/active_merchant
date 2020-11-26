@@ -97,6 +97,26 @@ module ActiveMerchant
           gsub(%r(("cvd\\?":\\?")\d+), '\1[FILTERED]')
       end
 
+      def status(transaction_id: nil, order_id: nil)
+        raise 'Either transaction_id or order_id must be provided' unless transaction_id || order_id
+
+        endpoint = live_url + "/payments"
+        endpoint += "?id=#{transaction_id}" if transaction_id
+        endpoint += (endpoint.include?('?') ? '&' : '?') + "order_id=#{order_id}" if order_id
+
+        success = false
+        begin
+          response = parse(ssl_get(endpoint, headers))
+          success = true
+        rescue ResponseError => e
+          response = response_error(e.response.body)
+        rescue JSON::ParserError
+          response = json_error(response)
+        end
+
+        Response.new(success, message_from(success, response), response.any? ? response.first : {}, test: test?)
+      end
+
       private
 
       def authorization_params(money, credit_card_or_reference, options = {})
