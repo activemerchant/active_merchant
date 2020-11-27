@@ -100,7 +100,7 @@ module ActiveMerchant
       def status(transaction_id: nil, order_id: nil)
         raise 'Either transaction_id or order_id must be provided' unless transaction_id || order_id
 
-        endpoint = live_url + "/payments"
+        endpoint = live_url + '/payments'
         endpoint += "?id=#{transaction_id}" if transaction_id
         endpoint += (endpoint.include?('?') ? '&' : '?') + "order_id=#{order_id}" if order_id
 
