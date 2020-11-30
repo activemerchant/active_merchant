@@ -11,7 +11,7 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'GHS'
 
       self.supported_cardtypes = [:visa, :mastercard, :maestro]
-      self.money_format = :dollars
+      self.money_format = :cents
 
       #
       #  00 - success - Purchase without 3DS
@@ -62,8 +62,6 @@ module ActiveMerchant #:nodoc:
 
         commit("/payments/charge", post)
       end
-
-
 
       def recurring(money, payment, options = {})
         post = {}

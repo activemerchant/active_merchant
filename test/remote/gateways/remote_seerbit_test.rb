@@ -4,7 +4,7 @@ class RemoteSeerbitTest < Test::Unit::TestCase
   def setup
     @gateway = SeerbitGateway.new(fixtures(:seerbit))
 
-    @amount = 10000
+    @amount = 100
     @credit_card = credit_card('5123450000000008', {
       month: '05',
       year: '21',
