@@ -236,6 +236,7 @@ module ActiveMerchant #:nodoc:
         post[:additionalData][:subMerchantCountry] = options[:sub_merchant_country] if options[:sub_merchant_country]
         post[:additionalData][:subMerchantTaxId] = options[:sub_merchant_tax_id] if options[:sub_merchant_tax_id]
         post[:additionalData][:subMerchantMCC] = options[:sub_merchant_mcc] if options[:sub_merchant_mcc]
+        post[:additionalData] = post[:additionalData].merge(options[:sub_merchant_data]) if options[:sub_merchant_data]
       end
 
       def add_risk_data(post, options)

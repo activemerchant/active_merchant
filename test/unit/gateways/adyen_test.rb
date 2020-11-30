@@ -842,6 +842,86 @@ class AdyenTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_authorize_with_sub_sellers
+    sub_seller_options = {
+      "subMerchant.numberOfSubSellers": '2',
+      "subMerchant.subSeller1.id": '111111111',
+      "subMerchant.subSeller1.name": 'testSub1',
+      "subMerchant.subSeller1.street": 'Street1',
+      "subMerchant.subSeller1.postalCode": '12242840',
+      "subMerchant.subSeller1.city": 'Sao jose dos campos',
+      "subMerchant.subSeller1.state": 'SP',
+      "subMerchant.subSeller1.country": 'BRA',
+      "subMerchant.subSeller1.taxId": '12312312340',
+      "subMerchant.subSeller1.mcc": '5691',
+      "subMerchant.subSeller1.debitSettlementBank": '1',
+      "subMerchant.subSeller1.debitSettlementAgency": '1',
+      "subMerchant.subSeller1.debitSettlementAccountType": '1',
+      "subMerchant.subSeller1.debitSettlementAccount": '1',
+      "subMerchant.subSeller1.creditSettlementBank": '1',
+      "subMerchant.subSeller1.creditSettlementAgency": '1',
+      "subMerchant.subSeller1.creditSettlementAccountType": '1',
+      "subMerchant.subSeller1.creditSettlementAccount": '1',
+      "subMerchant.subSeller2.id": '22222222',
+      "subMerchant.subSeller2.name": 'testSub2',
+      "subMerchant.subSeller2.street": 'Street2',
+      "subMerchant.subSeller2.postalCode": '12300000',
+      "subMerchant.subSeller2.city": 'Jacarei',
+      "subMerchant.subSeller2.state": 'SP',
+      "subMerchant.subSeller2.country": 'BRA',
+      "subMerchant.subSeller2.taxId": '12312312340',
+      "subMerchant.subSeller2.mcc": '5691',
+      "subMerchant.subSeller2.debitSettlementBank": '1',
+      "subMerchant.subSeller2.debitSettlementAgency": '1',
+      "subMerchant.subSeller2.debitSettlementAccountType": '1',
+      "subMerchant.subSeller2.debitSettlementAccount": '1',
+      "subMerchant.subSeller2.creditSettlementBank": '1',
+      "subMerchant.subSeller2.creditSettlementAgency": '1',
+      "subMerchant.subSeller2.creditSettlementAccountType": '1',
+      "subMerchant.subSeller2.creditSettlementAccount": '1'
+    }
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(sub_merchant_data: sub_seller_options))
+    end.check_request do |_endpoint, data, _headers|
+      parsed = JSON.parse(data)
+      additional_data = parsed['additionalData']
+      assert additional_data['subMerchant.numberOfSubSellers']
+      assert additional_data['subMerchant.subSeller1.id']
+      assert additional_data['subMerchant.subSeller1.name']
+      assert additional_data['subMerchant.subSeller1.street']
+      assert additional_data['subMerchant.subSeller1.city']
+      assert additional_data['subMerchant.subSeller1.state']
+      assert additional_data['subMerchant.subSeller1.postalCode']
+      assert additional_data['subMerchant.subSeller1.country']
+      assert additional_data['subMerchant.subSeller1.taxId']
+      assert additional_data['subMerchant.subSeller1.debitSettlementBank']
+      assert additional_data['subMerchant.subSeller1.debitSettlementAgency']
+      assert additional_data['subMerchant.subSeller1.debitSettlementAccountType']
+      assert additional_data['subMerchant.subSeller1.debitSettlementAccount']
+      assert additional_data['subMerchant.subSeller1.creditSettlementBank']
+      assert additional_data['subMerchant.subSeller1.creditSettlementAgency']
+      assert additional_data['subMerchant.subSeller1.creditSettlementAccountType']
+      assert additional_data['subMerchant.subSeller1.creditSettlementAccount']
+      assert additional_data['subMerchant.subSeller2.id']
+      assert additional_data['subMerchant.subSeller2.name']
+      assert additional_data['subMerchant.subSeller2.street']
+      assert additional_data['subMerchant.subSeller2.city']
+      assert additional_data['subMerchant.subSeller2.state']
+      assert additional_data['subMerchant.subSeller2.postalCode']
+      assert additional_data['subMerchant.subSeller2.country']
+      assert additional_data['subMerchant.subSeller2.taxId']
+      assert additional_data['subMerchant.subSeller2.debitSettlementBank']
+      assert additional_data['subMerchant.subSeller2.debitSettlementAgency']
+      assert additional_data['subMerchant.subSeller2.debitSettlementAccountType']
+      assert additional_data['subMerchant.subSeller2.debitSettlementAccount']
+      assert additional_data['subMerchant.subSeller2.creditSettlementBank']
+      assert additional_data['subMerchant.subSeller2.creditSettlementAgency']
+      assert additional_data['subMerchant.subSeller2.creditSettlementAccountType']
+      assert additional_data['subMerchant.subSeller2.creditSettlementAccount']
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
   def test_extended_avs_response
     response = stub_comms do
       @gateway.verify(@credit_card, @options)
