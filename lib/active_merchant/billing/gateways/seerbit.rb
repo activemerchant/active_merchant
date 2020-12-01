@@ -108,7 +108,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_recurring_data(post, options)
-        post[:planId] = options[:plan_id] if options[:plan_id].present?
+        post[:planId] = options[:plan_id] || ''
         post[:startDate] = options[:start_date] if options[:start_date].present?
         post[:callbackUrl] = options[:callback_url]
         post[:billingCycle] = (PLAN_INTERVALS & [ options[:billing_cycle]&.upcase ]).first
