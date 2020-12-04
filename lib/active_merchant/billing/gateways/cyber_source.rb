@@ -603,6 +603,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'accountNumber', check.account_number
           xml.tag! 'accountType', check.account_type[0]
           xml.tag! 'bankTransitNumber', check.routing_number
+          xml.tag! 'secCode', 'WEB'
         end
       end
 
