@@ -84,6 +84,7 @@ class RemoteDecidirTest < Test::Unit::TestCase
             description: 'Campo MDD17'
           }
         ],
+        device_unique_id: '1',
         bill_to: {
           postal_code: '12345',
           last_name: 'Smith',

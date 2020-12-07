@@ -12,6 +12,7 @@
 * SafeCharge: 3DS external MPI data refinements [curiousepic] #3821
 * Credorax: Add support for 3DS Adviser [meagabeth] #3834
 * Adyen: Support subMerchant data [mymir][therufs] #3835
+* Decidir: add device_unique_identifier to card data #3839
 
 == Version 1.117.0 (November 13th)
 * Checkout V2: Pass attempt_n3d along with 3ds enabled [naashton] #3805
