@@ -45,7 +45,8 @@ class DecidirTest < Test::Unit::TestCase
             code: 17,
             description: 'Campo MDD17'
           }
-        ]
+        ],
+        device_unique_id: '111'
       },
       installments: 12,
       site_id: '99999999'
@@ -60,7 +61,7 @@ class DecidirTest < Test::Unit::TestCase
       assert data =~ /"number":"123456"/
       assert data =~ /"establishment_name":"Heavenly Buffaloes"/
       assert data =~ /"site_id":"99999999"/
-      assert data =~ /"fraud_detection":{"send_to_cs":false,"channel":"Web","dispatch_method":"Store Pick Up","csmdds":\[{"code":17,"description":"Campo MDD17"}\]}/
+      assert data =~ /"fraud_detection":{"send_to_cs":false,"channel":"Web","dispatch_method":"Store Pick Up","csmdds":\[{"code":17,"description":"Campo MDD17"}\],"device_unique_id":"111"}/
     end.respond_with(successful_purchase_response)
 
     assert_equal 7719132, response.authorization
