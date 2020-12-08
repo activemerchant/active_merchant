@@ -756,6 +756,14 @@ class BraintreeBlueTest < Test::Unit::TestCase
     assert_equal 'B', response.cvv_result['code']
   end
 
+  def test_successful_purchase_with_account_type
+    Braintree::TransactionGateway.any_instance.expects(:sale).with do |params|
+      params[:options][:credit_card][:account_type] == 'credit'
+    end.returns(braintree_result)
+
+    @gateway.purchase(100, credit_card('41111111111111111111'), account_type: 'credit')
+  end
+
   def test_configured_logger_has_a_default
     # The default is actually provided by the Braintree gem, but we
     # assert its presence in order to show ActiveMerchant need not
