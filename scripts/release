@@ -1,0 +1,13 @@
+#!/bin/bash
+
+set -eo pipefail
+
+ghtoken=$1;
+
+echo ":github: Bearer $ghtoken" >> ~/.gem/credentials
+chmod 0600 /root/.gem/credentials
+
+gemversion=$(cat lib/active_merchant/version.rb | grep -o '[0-9]\{1,\}\.[0-9]\{1,\}.[0-9]\{1,\}')
+
+gem build activemerchant.gemspec
+gem push --key github --host https://rubygems.pkg.github.com/paywith activemerchant-$gemversion.gem
