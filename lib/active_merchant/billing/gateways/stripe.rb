@@ -102,6 +102,7 @@ module ActiveMerchant #:nodoc:
           end
           r.process do
             post = create_post_for_auth_or_purchase(money, payment, options)
+            post[:payment_method_types] = ["card", "sepa_debit"]
             commit(:post, options[:three_d_secure] && post[:payment_method] ? 'payment_intents' : 'charges', post, options)
           end
         end.responses.last
@@ -343,6 +344,9 @@ module ActiveMerchant #:nodoc:
         r = commit(:get, "payment_methods?customer=#{customer}&type=card", nil, options)
         raise r.message unless r.success?
 
+        r = commit(:get, "payment_methods?customer=#{customer}&type=sepa_debit", nil, options)
+        raise r.message unless r.success?
+
         payment_methods = r.params["data"]
         return payment_methods[0]["id"] if payment_methods&.count == 1
 
@@ -574,7 +578,7 @@ module ActiveMerchant #:nodoc:
 
       def success_response?(url, response)
         if url =~ /\Apayment_intents/
-          !response.key?("error") && response["status"] == "succeeded"
+          !response.key?("error") && (response["status"] == "succeeded" || response["status"] == "processing")
         else
           !response.key?("error")
         end
