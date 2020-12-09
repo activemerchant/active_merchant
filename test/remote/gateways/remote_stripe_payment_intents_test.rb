@@ -469,7 +469,6 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     transcript = @gateway.scrub(transcript)
 
     assert_scrubbed(@three_ds_credit_card.number, transcript)
-    assert_scrubbed(@three_ds_credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:login], transcript)
   end
 end
