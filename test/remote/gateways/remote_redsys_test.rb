@@ -60,6 +60,32 @@ class RemoteRedsysTest < Test::Unit::TestCase
     assert_equal 'Transaction Approved', response.message
   end
 
+  def test_successful_purchase_with_stored_credentials
+    initial_options = @options.merge(
+      stored_credential: {
+        initial_transaction: true,
+        reason_type: 'recurring'
+      }
+    )
+    initial_response = @gateway.purchase(@amount, @credit_card, initial_options)
+    assert_success initial_response
+    assert_equal 'Transaction Approved', initial_response.message
+    assert_not_nil initial_response.params['ds_merchant_cof_txnid']
+    network_transaction_id = initial_response.params['ds_merchant_cof_txnid']
+
+    used_options = @options.merge(
+      order_id: generate_order_id,
+      stored_credential: {
+        initial_transaction: false,
+        reason_type: 'unscheduled',
+        network_transaction_id: network_transaction_id
+      }
+    )
+    response = @gateway.purchase(@amount, @credit_card, used_options)
+    assert_success response
+    assert_equal 'Transaction Approved', response.message
+  end
+
   def test_purchase_with_invalid_order_id
     response = @gateway.purchase(@amount, @credit_card, order_id: "a%4#{generate_order_id}")
     assert_success response
