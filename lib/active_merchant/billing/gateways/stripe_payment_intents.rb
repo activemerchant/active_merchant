@@ -187,6 +187,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment_method_data(post, payment_method, options)
+        # for token and or string (eg: token) we don't add the card
+        # details because we don't have them
+        return if payment_method.is_a?(StripePaymentToken) || payment_method.is_a?(String)
+        # Received both payment_method and payment_method_data parameters. Please pass in only one.
+        # Stripe will return that error if both payment_method and payment_method_data
+        # are present
+        return if post[:payment_method].present?
         return unless options[:mit]
 
         post[:payment_method_data] = {}
@@ -195,7 +202,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment_method_token(post, payment_method, options)
-        return if payment_method.nil? || options[:mit]
+        return if payment_method.nil?
 
         if payment_method.is_a?(ActiveMerchant::Billing::CreditCard)
           p = create_payment_method(payment_method, options)

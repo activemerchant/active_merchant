@@ -13,12 +13,12 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     @three_ds_credit_card = credit_card('4000000000003220',
       verification_value: '737',
       month: 10,
-      year: 2020
+      year: 2024
     )
     @visa_card = credit_card('4242424242424242',
       verification_value: '737',
       month: 10,
-      year: 2020
+      year: 2024
     )
     @destination_account = fixtures(:stripe_destination)[:stripe_user_id]
   end
@@ -406,6 +406,24 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert_nil unstore.params['customer']
   end
 
+  def test_successful_store_purchase_and_unstore_with_mit
+    options = {
+      currency: 'eur',
+      confirm: "true",
+      off_session: "true",
+      payment_method_types: ['card'],
+      mit: true
+    }
+    assert store = @gateway.store(@visa_card, options)
+    assert store.params['customer'].start_with?('cus_')
+
+    assert purchase = @gateway.purchase(@amount, store.authorization, options)
+    assert 'succeeded', purchase.params['status']
+
+    assert unstore = @gateway.unstore(store.authorization)
+    assert_nil unstore.params['customer']
+  end
+
   def test_moto_enabled_card_requires_action_when_not_marked
     options = {
       currency: 'GBP',
@@ -469,7 +487,6 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     transcript = @gateway.scrub(transcript)
 
     assert_scrubbed(@three_ds_credit_card.number, transcript)
-    assert_scrubbed(@three_ds_credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:login], transcript)
   end
 end
