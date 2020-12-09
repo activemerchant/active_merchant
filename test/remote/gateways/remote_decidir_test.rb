@@ -74,6 +74,7 @@ class RemoteDecidirTest < Test::Unit::TestCase
       card_holder_identification_type: 'dni',
       card_holder_identification_number: '123456',
       establishment_name: 'Heavenly Buffaloes',
+      device_unique_identifier: '1',
       fraud_detection: {
         send_to_cs: false,
         channel: 'Web',
