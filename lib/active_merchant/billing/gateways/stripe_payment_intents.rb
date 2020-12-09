@@ -187,6 +187,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment_method_data(post, payment_method, options)
+        # for token and or string (eg: token) we don't add the card
+        # details because we don't have them
+        return if payment_method.is_a?(StripePaymentToken) || payment_method.is_a?(String)
         return unless options[:mit]
 
         post[:payment_method_data] = {}
