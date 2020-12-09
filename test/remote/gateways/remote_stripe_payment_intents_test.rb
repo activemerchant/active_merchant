@@ -406,6 +406,24 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert_nil unstore.params['customer']
   end
 
+  def test_successful_store_purchase_and_unstore_with_mit
+    options = {
+      currency: 'eur',
+      confirm: "true",
+      off_session: "true",
+      payment_method_types: ['card'],
+      mit: true
+    }
+    assert store = @gateway.store(@visa_card, options)
+    assert store.params['customer'].start_with?('cus_')
+
+    assert purchase = @gateway.purchase(@amount, store.authorization, options)
+    assert 'succeeded', purchase.params['status']
+
+    assert unstore = @gateway.unstore(store.authorization)
+    assert_nil unstore.params['customer']
+  end
+
   def test_moto_enabled_card_requires_action_when_not_marked
     options = {
       currency: 'GBP',
