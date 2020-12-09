@@ -170,7 +170,11 @@ module ActiveMerchant #:nodoc:
         card_data[:security_code] = credit_card.verification_value if credit_card.verification_value?
         card_data[:card_holder_name] = credit_card.name if credit_card.name
 
-        card_data[:device_unique_identifier] = options[:device_unique_id] if valid_fraud_detection_option?(options[:device_unique_id])
+        # the device_unique_id has to be sent in via the card data (as device_unique_identifier) no other fraud detection fields require this
+        if options[:fraud_detection].present?
+          card_data[:fraud_detection] = {} if (options[:fraud_detection][:device_unique_id]).present?
+          card_data[:fraud_detection][:device_unique_identifier] = (options[:fraud_detection][:device_unique_id]) if (options[:fraud_detection][:device_unique_id]).present?
+        end
 
         # additional data used for Visa transactions
         card_data[:card_holder_door_number] = options[:card_holder_door_number].to_i if options[:card_holder_door_number]
