@@ -23,19 +23,19 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Netbanx by PaySafe'
 
       AVS_CODE_CONVERTER = {
-          'MATCH' => 'X',
-          'MATCH_ADDRESS_ONLY' => 'A',
-          'MATCH_ZIP_ONLY' => 'Z',
-          'NO_MATCH' => 'N',
-          'NOT_PROCESSED' => 'U',
-          'UNKNOWN' => 'Q'
+        'MATCH' => 'X',
+        'MATCH_ADDRESS_ONLY' => 'A',
+        'MATCH_ZIP_ONLY' => 'Z',
+        'NO_MATCH' => 'N',
+        'NOT_PROCESSED' => 'U',
+        'UNKNOWN' => 'Q'
       }
 
       CVV_CODE_CONVERTER = {
-          'MATCH' => 'M',
-          'NO_MATCH' => 'N',
-          'NOT_PROCESSED' => 'P',
-          'UNKNOWN' => 'U'
+        'MATCH' => 'M',
+        'NO_MATCH' => 'N',
+        'NOT_PROCESSED' => 'P',
+        'UNKNOWN' => 'U'
       }
 
       def initialize(options = {})

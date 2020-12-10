@@ -5,7 +5,7 @@ class RemoteNetbanxTest < Test::Unit::TestCase
     @gateway = NetbanxGateway.new(fixtures(:netbanx))
     @amount = 100
     @credit_card = credit_card('4530910000012345')
-    @credit_card_no_match_cvv = credit_card('4530910000012345',{verification_value: 666})
+    @credit_card_no_match_cvv = credit_card('4530910000012345', { verification_value: 666 })
     @declined_amount = 11
     @options = {
       billing_address: address,
