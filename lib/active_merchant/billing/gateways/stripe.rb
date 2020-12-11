@@ -195,9 +195,16 @@ module ActiveMerchant #:nodoc:
         elsif payment.is_a?(StripePaymentToken)
           add_payment_token(params, payment, options)
         elsif payment.is_a?(Check)
-          bank_token_response = tokenize_bank_account(payment)
-          return bank_token_response unless bank_token_response.success?
-          params = { source: bank_token_response.params["token"]["id"] }
+          if payment.iban.present?
+            # direct debit
+            direct_debit_token_response = tokenize_direct_debit(payment, options)
+            return direct_debit_token_response unless direct_debit_token_response.success?
+            params = { payment_method_id: direct_debit_token_response.authorization }
+          else
+            bank_token_response = tokenize_bank_account(payment)
+            return bank_token_response unless bank_token_response.success?
+            params = { source: bank_token_response.params["token"]["id"] }
+          end
         else
           add_creditcard(params, payment, options)
         end
@@ -223,7 +230,14 @@ module ActiveMerchant #:nodoc:
             end
           end
         else
-          commit(:post, 'customers', post.merge(params), options)
+          if params[:payment_method_id].present?
+            MultiResponse.run(:first) do |r|
+              r.process { commit(:post, 'customers', post.merge(params.except(:payment_method_id)), options) }
+              r.process { setup_intents(r.responses.last.authorization.split("|").first, params[:payment_method_id]) }
+            end
+          else
+            commit(:post, 'customers', post.merge(params.except(:payment_method_id)), options)
+          end
         end
       end
 
@@ -614,7 +628,7 @@ module ActiveMerchant #:nodoc:
         return response.dig("error", "payment_intent", "id") || response.dig("error", "charge") || response["id"] unless success
 
         if url == "customers"
-          [response["id"], response["sources"]["data"].first["id"]].join("|")
+          [response["id"], response["sources"]["data"].present? ? response["sources"]["data"].first["id"] : nil].join("|")
         elsif method == :post && url.match(/customers\/.*\/cards/)
           [response["customer"], response["id"]].join("|")
         else
@@ -694,6 +708,55 @@ module ActiveMerchant #:nodoc:
 
         if success && token_response["id"]
           Response.new(success, nil, token: token_response)
+        else
+          Response.new(success, token_response["error"]["message"])
+        end
+      end
+
+      def tokenize_direct_debit(bank_account, options = {})
+        post = {
+          type: 'sepa_debit',
+          billing_details: {
+            name: bank_account.name,
+            email: options[:email],
+          },
+          sepa_debit: {
+            iban: bank_account.iban
+          }
+        }
+
+        token_response = api_request(:post, "payment_methods", post)
+        success = token_response["error"].nil?
+
+        if success && token_response["id"]
+          Response.new(success, nil, token_response, authorization: token_response["id"])
+        else
+          Response.new(success, token_response["error"]["message"])
+        end
+      end
+
+      def setup_intents(customer_id, payment_method_id)
+        post = {
+          payment_method_types: ["sepa_debit"],
+          customer: customer_id,
+          payment_method: payment_method_id,
+          confirm: true,
+          mandate_data: {
+            customer_acceptance: {
+              type: "online",
+              online: {
+                ip_address: "127.0.0.1",
+                user_agent: "Firefox"
+              }
+            }
+          }
+        }
+
+        token_response = api_request(:post, "setup_intents", post)
+        success = token_response["error"].nil?
+
+        if success && token_response["id"]
+          Response.new(success, nil, token_response, authorization: token_response["id"])
         else
           Response.new(success, token_response["error"]["message"])
         end
