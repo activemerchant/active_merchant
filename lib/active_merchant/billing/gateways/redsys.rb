@@ -200,7 +200,7 @@ module ActiveMerchant #:nodoc:
         add_action(data, :purchase, options)
         add_amount(data, money, options)
         add_order(data, options[:order_id])
-        add_payment(data, payment, options)
+        add_payment(data, payment)
         add_external_mpi_fields(data, options)
         add_threeds(data, options) if options[:execute_threed]
         add_stored_credential_options(data, options)
@@ -218,7 +218,7 @@ module ActiveMerchant #:nodoc:
         add_action(data, :authorize, options)
         add_amount(data, money, options)
         add_order(data, options[:order_id])
-        add_payment(data, payment, options)
+        add_payment(data, payment)
         add_external_mpi_fields(data, options)
         add_threeds(data, options) if options[:execute_threed]
         add_stored_credential_options(data, options)
@@ -313,7 +313,7 @@ module ActiveMerchant #:nodoc:
         test? ? 'https://sis-t.redsys.es:25443/sis/services/SerClsWSEntradaV2' : 'https://sis.redsys.es/sis/services/SerClsWSEntradaV2'
       end
 
-      def add_payment(data, card, options)
+      def add_payment(data, card)
         if card.is_a?(String)
           data[:credit_card_token] = card
         else
@@ -327,7 +327,6 @@ module ActiveMerchant #:nodoc:
             cvv: card.verification_value
           }
         end
-        add_stored_credential_options(data, options)
       end
 
       def add_external_mpi_fields(data, options)
