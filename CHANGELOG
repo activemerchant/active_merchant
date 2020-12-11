@@ -16,6 +16,7 @@
 * BraintreeBlue: add support for account_type field [jimilpatel24] #3840
 * Redsys: Add support for stored_credential [meagabeth] #3844
 * Redsys: add_payment method solution [meagabeth] #3845
+* Stripe Payment Intents: Add support for error_on_requires_action option [tatsianaclifton] #3846
 
 == Version 1.117.0 (November 13th)
 * Checkout V2: Pass attempt_n3d along with 3ds enabled [naashton] #3805
