@@ -30,6 +30,7 @@ module ActiveMerchant #:nodoc:
         add_shipping_address(post, options)
         setup_future_usage(post, options)
         add_exemption(post, options)
+        add_error_on_requires_action(post, options)
         request_three_d_secure(post, options)
 
         CREATE_INTENT_ATTRIBUTES.each do |attribute|
@@ -267,6 +268,12 @@ module ActiveMerchant #:nodoc:
         post[:payment_method_options] ||= {}
         post[:payment_method_options][:card] ||= {}
         post[:payment_method_options][:card][:moto] = true if options[:moto]
+      end
+
+      def add_error_on_requires_action(post, options = {})
+        return unless options[:confirm]
+
+        post[:error_on_requires_action] = true if options[:error_on_requires_action]
       end
 
       def request_three_d_secure(post, options = {})

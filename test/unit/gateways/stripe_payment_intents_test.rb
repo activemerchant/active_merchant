@@ -227,6 +227,14 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     assert_equal 'invalid_request_error', create.params.dig('error', 'type')
   end
 
+  def test_failed_error_on_requires_action
+    @gateway.expects(:ssl_request).returns(failed_with_set_error_on_requires_action_response)
+
+    assert create = @gateway.create_intent(@amount, 'pm_failed', @options)
+    assert_equal 'This payment required an authentication action to complete, but `error_on_requires_action` was set. When you\'re ready, you can upgrade your integration to handle actions at https://stripe.com/docs/payments/payment-intents/upgrade-to-handle-actions.', create.params.dig('error', 'message')
+    assert_equal 'card_error', create.params.dig('error', 'type')
+  end
+
   def test_failed_refund_due_to_service_unavailability
     @gateway.expects(:ssl_request).returns(failed_service_response)
 
@@ -564,6 +572,12 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
   def failed_service_response
     <<-RESPONSE
       {"error": {"message": "Error while communicating with one of our backends.  Sorry about that!  We have been notified of the problem.  If you have any questions, we can help at https://support.stripe.com/.", "type": "api_error"  }}
+    RESPONSE
+  end
+
+  def failed_with_set_error_on_requires_action_response
+    <<-RESPONSE
+      {"error": {"message": "This payment required an authentication action to complete, but `error_on_requires_action` was set. When you're ready, you can upgrade your integration to handle actions at https://stripe.com/docs/payments/payment-intents/upgrade-to-handle-actions.", "type": "card_error"  }}
     RESPONSE
   end
 
