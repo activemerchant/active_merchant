@@ -320,7 +320,7 @@ module ActiveMerchant #:nodoc:
         end
 
         if options[:three_d_secure]
-          payment_method = card_payment_method_for_customer(options[:customer])
+          payment_method = card_payment_method_for_customer(options[:customer], options[:payment_type])
 
           if payment_method
             post[:confirmation_method] = "manual"
@@ -353,13 +353,15 @@ module ActiveMerchant #:nodoc:
         post
       end
 
-      def card_payment_method_for_customer(customer)
+      def card_payment_method_for_customer(customer, payment_type)
         # if customer has only one payment method we choose that one
         r = commit(:get, "payment_methods?customer=#{customer}&type=card", nil, options)
         raise r.message unless r.success?
 
-        r = commit(:get, "payment_methods?customer=#{customer}&type=sepa_debit", nil, options)
-        raise r.message unless r.success?
+        if payment_type == "bank_account"
+          r = commit(:get, "payment_methods?customer=#{customer}&type=sepa_debit", nil, options)
+          raise r.message unless r.success?
+        end
 
         payment_methods = r.params["data"]
         return payment_methods[0]["id"] if payment_methods&.count == 1
