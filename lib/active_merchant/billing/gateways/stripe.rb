@@ -233,7 +233,7 @@ module ActiveMerchant #:nodoc:
           if params[:payment_method_id].present?
             MultiResponse.run(:first) do |r|
               r.process { commit(:post, 'customers', post.merge(params.except(:payment_method_id)), options) }
-              r.process { setup_intents(r.responses.last.authorization.split("|").first, params[:payment_method_id]) }
+              r.process { setup_intents(r.responses.last.authorization.split("|").first, params[:payment_method_id], options) }
             end
           else
             commit(:post, 'customers', post.merge(params.except(:payment_method_id)), options)
@@ -735,7 +735,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def setup_intents(customer_id, payment_method_id)
+      def setup_intents(customer_id, payment_method_id, options)
         post = {
           payment_method_types: ["sepa_debit"],
           customer: customer_id,
@@ -745,8 +745,8 @@ module ActiveMerchant #:nodoc:
             customer_acceptance: {
               type: "online",
               online: {
-                ip_address: "127.0.0.1",
-                user_agent: "Firefox"
+                ip_address: options.dig(:device_data, :ip),
+                user_agent: options.dig(:device_data, :user_agent)
               }
             }
           }
