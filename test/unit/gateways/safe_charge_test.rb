@@ -8,6 +8,14 @@ class SafeChargeTest < Test::Unit::TestCase
     @credit_card = credit_card
     @three_ds_enrolled_card = credit_card('4012 0010 3749 0014')
     @amount = 100
+    @network_token_credit_card = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
+      brand: 'Visa',
+      payment_cryptogram: 'AgAAAAAAAIR8CQrXcIhbQAAAAAA',
+      number: '4012001037490014',
+      source: :network_token,
+      month: '12',
+      year: 2020
+    })
 
     @options = {
       order_id: '1',
@@ -249,8 +257,8 @@ class SafeChargeTest < Test::Unit::TestCase
     purchase = stub_comms do
       @gateway.purchase(@amount, @three_ds_enrolled_card, @mpi_options_3ds1)
     end.check_request do |_, data, _|
-      assert_match(/sg_eci/, data)
-      assert_match(/sg_cavv/, data)
+      assert_match(/sg_ECI/, data)
+      assert_match(/sg_CAVV/, data)
       assert_match(/sg_IsExternalMPI/, data)
     end.respond_with(failed_mpi_response)
 
@@ -262,11 +270,11 @@ class SafeChargeTest < Test::Unit::TestCase
     purchase = stub_comms do
       @gateway.purchase(@amount, @three_ds_enrolled_card, @mpi_options_3ds1)
     end.check_request do |_, data, _|
-      assert_match(/sg_eci/, data)
-      assert_match(/sg_cavv/, data)
+      assert_match(/sg_ECI/, data)
+      assert_match(/sg_CAVV/, data)
       assert_match(/sg_IsExternalMPI/, data)
       assert_match(/sg_threeDSProtocolVersion=1/, data)
-      assert_match(/sg_xid/, data)
+      assert_match(/sg_Xid/, data)
     end.respond_with(successful_mpi_response)
 
     assert_success purchase
@@ -277,13 +285,27 @@ class SafeChargeTest < Test::Unit::TestCase
     purchase = stub_comms do
       @gateway.purchase(@amount, @three_ds_enrolled_card, @mpi_options_3ds2)
     end.check_request do |_, data, _|
-      assert_match(/sg_eci/, data)
-      assert_match(/sg_cavv/, data)
+      assert_match(/sg_ECI/, data)
+      assert_match(/sg_CAVV/, data)
       assert_match(/sg_IsExternalMPI/, data)
       assert_match(/sg_dsTransID/, data)
       assert_match(/sg_threeDSProtocolVersion=2/, data)
       refute_match(/sg_xid/, data)
     end.respond_with(successful_mpi_response)
+
+    assert_success purchase
+    assert_equal 'APPROVED', purchase.params['status']
+  end
+
+  def test_network_tokenization_success
+    purchase = stub_comms do
+      @gateway.purchase(@amount, @network_token_credit_card, @mpi_options_3ds2)
+    end.check_request do |_, data, _|
+      assert_match(/sg_CAVV/, data)
+      assert_match(/sg_ECI/, data)
+      assert_match(/sg_IsExternalMPI/, data)
+      assert_match(/sg_CardNumber/, data)
+    end.respond_with(successful_network_token_response)
 
     assert_success purchase
     assert_equal 'APPROVED', purchase.params['status']
@@ -428,6 +450,66 @@ reading 727 bytes...
   def successful_mpi_response
     %(
       <Response><Version>4.1.0</Version><ClientLoginID>SpreedlyTestTRX</ClientLoginID><ClientUniqueID>27822c1132eba4c731ebe24b6190646f</ClientUniqueID><TransactionID>1110000000009330260</TransactionID><Status>APPROVED</Status><AuthCode>111447</AuthCode><AVSCode></AVSCode><CVV2Reply></CVV2Reply><ReasonCodes><Reason code="0"></Reason></ReasonCodes><ErrCode>0</ErrCode><ExErrCode>0</ExErrCode><Token>UQBzAFEAdABvAG0ATgA5AEwAagBHAGwAPwA7AF0ANgA1AD4AfABOADUAdAA/AD4AZQA3AEcAXQBnAGgAQQA4AG4APABNACUARABFADgAMQBrAFIAMwA=</Token><CustomData></CustomData><ThreeDResponse><VerifyAuth3DResponse><Result></Result><ECI>5</ECI><CAVV>Vk83Y2t0cHRzRFZzRlZlR0JIQXo=</CAVV><WhitelistStatus></WhitelistStatus><XID>00000000000000000501</XID><ThreeDReason></ThreeDReason><ThreeDSVersion></ThreeDSVersion><ThreeDSServerTransID></ThreeDSServerTransID><AcsTransID></AcsTransID><DSTransID>c5b808e7-1de1-4069-a17b-f70d3b3b1645</DSTransID></VerifyAuth3DResponse></ThreeDResponse><AcquirerID>19</AcquirerID><IssuerBankName>Visa Production Support Client Bid 1</IssuerBankName><IssuerBankCountry>gb</IssuerBankCountry><Reference></Reference><AGVCode></AGVCode><AGVError></AGVError><UniqueCC>rDNDlh6XR8R6CVdGQyqDkZzdqE0=</UniqueCC><CustomData2></CustomData2><CreditCardInfo><IsPrepaid>0</IsPrepaid><CardType>Debit</CardType><CardProgram></CardProgram><CardProduct></CardProduct></CreditCardInfo><IsPartialApproval>0</IsPartialApproval><AmountInfo><RequestedAmount>1</RequestedAmount><RequestedCurrency>EUR</RequestedCurrency><ProcessedAmount>1</ProcessedAmount><ProcessedCurrency>EUR</ProcessedCurrency></AmountInfo><RRN></RRN><ICC></ICC><CVVReply></CVVReply><FraudResponse><FinalDecision>Accept</FinalDecision><Recommendations /><Rule /></FraudResponse></Response>
+    )
+  end
+
+  def successful_network_token_response
+    %(
+      <Response>
+    <Version>4.1.0</Version>
+    <ClientLoginID>SpreedlyTestTRX</ClientLoginID>
+    <ClientUniqueID>27822c1132eba4c731ebe24b6190646f</ClientUniqueID>
+    <TransactionID>1110000000009330260</TransactionID>
+    <Status>APPROVED</Status>
+    <AuthCode></AuthCode>
+    <AVSCode></AVSCode>
+    <CVV2Reply></CVV2Reply>
+    <ReasonCodes>
+        <Reason code="0"></Reason>
+    </ReasonCodes>
+    <ErrCode>0</ErrCode>
+    <ExErrCode>0</ExErrCode>
+    <Token>UQBzAFEAdABvAG0ATgA5AEwAagBHAGwAPwA7AF0ANgA1AD4AfABOADUAdAA/AD4AZQA3AEcAXQBnAGgAQQA4AG4APABNACUARABFADgAMQBrAFIAMwA=</Token>
+    <CustomData></CustomData>
+    <ThreeDResponse>
+        <VerifyAuth3DResponse>
+            <Result></Result>
+            <ECI>5</ECI>
+            <CAVV>Vk83Y2t0cHRzRFZzRlZlR0JIQXo=</CAVV>
+            <WhitelistStatus></WhitelistStatus>
+            <XID>00000000000000000501</XID>
+            <ThreeDReason></ThreeDReason>
+            <ThreeDSVersion></ThreeDSVersion>
+            <ThreeDSServerTransID></ThreeDSServerTransID>
+            <AcsTransID></AcsTransID>
+            <DSTransID>c5b808e7-1de1-4069-a17b-f70d3b3b1645</DSTransID>
+        </VerifyAuth3DResponse>
+    </ThreeDResponse>
+    <AcquirerID>19</AcquirerID>
+    <IssuerBankName>Visa Production Support Client Bid 1</IssuerBankName>
+    <IssuerBankCountry>gb</IssuerBankCountry>
+    <Reference></Reference>
+    <AGVCode></AGVCode>
+    <AGVError></AGVError>
+    <UniqueCC>rDNDlh6XR8R6CVdGQyqDkZzdqE0=</UniqueCC>
+    <CustomData2></CustomData2>
+    <CreditCardInfo>
+        <IsPrepaid>0</IsPrepaid>
+        <CardType>Debit</CardType>
+        <CardProgram></CardProgram>
+        <CardProduct></CardProduct>
+    </CreditCardInfo>
+    <IsPartialApproval>0</IsPartialApproval>
+    <AmountInfo>
+        <RequestedAmount>1</RequestedAmount>
+        <RequestedCurrency>EUR</RequestedCurrency>
+        <ProcessedAmount>1</ProcessedAmount>
+        <ProcessedCurrency>EUR</ProcessedCurrency>
+    </AmountInfo>
+    <RRN></RRN>
+    <ICC></ICC>
+    <CVVReply></CVVReply>
+</Response>
     )
   end
 
