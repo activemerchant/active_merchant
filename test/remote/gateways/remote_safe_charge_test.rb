@@ -19,6 +19,16 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
     @three_ds_enrolled_card = credit_card('4012 0010 3749 0014')
     @three_ds_non_enrolled_card = credit_card('5333 3062 3122 6927')
     @three_ds_invalid_pa_res_card = credit_card('4012 0010 3749 0006')
+
+    @network_token_credit_card = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
+      :brand => 'Visa',
+      :payment_cryptogram => 'UnVBR0RlYm42S2UzYWJKeWJBdWQ=',
+      :number => '4012001037490014',
+      :source => :network_token,
+      :month => '12',
+      :year => 2020,
+      :verification_value => '217'
+    )
   end
 
   def test_successful_3ds_purchase
@@ -82,6 +92,18 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
     })
 
     response = @gateway.purchase(@amount, @three_ds_enrolled_card, options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_network_tokenization_request
+    options = @options.merge({
+      three_d_secure: {
+        eci: '05'
+      }
+    })
+
+    response = @gateway.purchase(@amount, @network_token_credit_card, options)
     assert_success response
     assert_equal 'Success', response.message
   end
