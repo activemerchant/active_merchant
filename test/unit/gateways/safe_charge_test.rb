@@ -270,11 +270,11 @@ class SafeChargeTest < Test::Unit::TestCase
     purchase = stub_comms do
       @gateway.purchase(@amount, @three_ds_enrolled_card, @mpi_options_3ds1)
     end.check_request do |_, data, _|
-      assert_match(/sg_eci/, data)
-      assert_match(/sg_cavv/, data)
+      assert_match(/sg_ECI/, data)
+      assert_match(/sg_CAVV/, data)
       assert_match(/sg_IsExternalMPI/, data)
       assert_match(/sg_threeDSProtocolVersion=1/, data)
-      assert_match(/sg_xid/, data)
+      assert_match(/sg_Xid/, data)
     end.respond_with(successful_mpi_response)
 
     assert_success purchase
@@ -299,7 +299,7 @@ class SafeChargeTest < Test::Unit::TestCase
 
   def test_network_tokenization_success
     purchase = stub_comms do
-      @gateway.purchase(@amount, @network_token_credit_card, @mpi_options)
+      @gateway.purchase(@amount, @network_token_credit_card, @mpi_options_3ds2)
     end.check_request do |_, data, _|
       assert_match(/sg_CAVV/, data)
       assert_match(/sg_ECI/, data)
