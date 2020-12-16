@@ -726,6 +726,24 @@ class WorldpayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_3ds_additional_information
+    browser_size = '390x400'
+    session_id = '0215ui8ib1'
+
+    options = @options.merge(
+      session_id: session_id,
+      browser_size: browser_size,
+      execute_threed: true,
+      three_ds_version: '2.0.1'
+    )
+
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_tag_with_attributes 'additional3DSData', { 'dfReferenceId' => session_id, 'challengeWindowSize' => browser_size }, data
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_transcript_scrubbing
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end

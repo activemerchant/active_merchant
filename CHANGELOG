@@ -1,6 +1,24 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Worldpay: Add support for challengeWindowSize [carrigan] #3823
+* Adyen: Update capitalization on subMerchantId field [cdmackeyfree] #3824
+* Maestro and Elo: Update BIN ranges [meagabeth] #3822
+* HPS: Truncate invoice numbers that are too long [curiousepic] #3825
+* Pass network_transaction_id attribute in Response [therufs] #3815
+* Elavon: support standardized stored credentials [therufs] #3816
+* Decidir: update fraud_detection field [cdmackeyfree] #3829
+* Paymentez: Add Olimpica cardtype [meagabeth] #3831
+* SafeCharge: 3DS external MPI data refinements [curiousepic] #3821
+* Credorax: Add support for 3DS Adviser [meagabeth] #3834
+* Adyen: Support subMerchant data [mymir][therufs] #3835
+* Decidir: add device_unique_identifier to card data [cdmackeyfree] #3839
+* BraintreeBlue: add support for account_type field [jimilpatel24] #3840
+* Redsys: Add support for stored_credential [meagabeth] #3844
+* Redsys: add_payment method solution [meagabeth] #3845
+* Stripe Payment Intents: Add support for error_on_requires_action option [tatsianaclifton] #3846
+
+== Version 1.117.0 (November 13th)
 * Checkout V2: Pass attempt_n3d along with 3ds enabled [naashton] #3805
 * GlobalCollect: Add support for Third-party 3DS2 data [molbrown] #3801
 * Authorize.net: Pass stored credentials [therufs] #3804
@@ -15,6 +33,7 @@
 * Credorax: Allow 3DS1 normalized pass-through, ease version matching [britth] #3812
 * Redsys: Redsys: Harden 3DS v1/v2 check for External MPI [esmitperez] #3814
 * Add card types for Stripe, Worldpay, Checkout.com [LinTrieu] #3810
+* ActiveMerchant::Billing::Response: Include `network_transaction_id` attribute [therufs] #3815
 
 == Version 1.116.0 (October 28th)
 * Remove Braintree specific version dependency [pi3r] #3800
@@ -60,6 +79,7 @@
 * Checkout V2: Support for attempt_n3d 3DS field [naashton] #3790
 * Elavon: Strip ampersands [therufs] #3795
 * Paybox: Add support for 3DS 1.0 values [jcpaybox] #3335
+* Decidir: Add additional fraud_detection options [cdmackeyfree] #3812
 
 == Version 1.114.0
 * BlueSnap: Add address1,address2,phone,shipping_* support #3749

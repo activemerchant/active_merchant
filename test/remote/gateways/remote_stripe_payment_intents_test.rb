@@ -3,7 +3,7 @@ require 'test_helper'
 class RemoteStripeIntentsTest < Test::Unit::TestCase
   def setup
     @gateway = StripePaymentIntentsGateway.new(fixtures(:stripe))
-    @customer = fixtures(:stripe)[:customer_id]
+    @customer = fixtures(:stripe_verified_bank_account)[:customer_id]
     @amount = 2000
     @three_ds_payment_method = 'pm_card_threeDSecure2Required'
     @visa_payment_method = 'pm_card_visa'
@@ -436,6 +436,28 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert capture_response = @gateway.capture(@amount, intent_id, options)
     assert_equal 'succeeded', capture_response.params['status']
     assert_equal 'Payment complete.', capture_response.params.dig('charges', 'data')[0].dig('outcome', 'seller_message')
+  end
+
+  def test_failed_create_a_payment_intent_with_set_error_on_requires_action
+    options = {
+      currency: 'GBP',
+      customer: @customer,
+      confirm: true,
+      error_on_requires_action: true
+    }
+    assert create_response = @gateway.create_intent(@amount, @three_ds_credit_card, options)
+    assert create_response.message.include?('This payment required an authentication action to complete, but `error_on_requires_action` was set.')
+  end
+
+  def test_successful_create_a_payment_intent_with_set_error_on_requires_action
+    options = {
+      currency: 'GBP',
+      customer: @customer,
+      confirm: true,
+      error_on_requires_action: true
+    }
+    assert create_response = @gateway.create_intent(@amount, @visa_payment_method, options)
+    assert_equal 'succeeded', create_response.params['status']
   end
 
   def test_amount_localization

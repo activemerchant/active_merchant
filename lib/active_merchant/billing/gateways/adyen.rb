@@ -227,7 +227,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_merchant_data(post, options)
-        post[:additionalData][:subMerchantId] = options[:sub_merchant_id] if options[:sub_merchant_id]
+        post[:additionalData][:subMerchantID] = options[:sub_merchant_id] if options[:sub_merchant_id]
         post[:additionalData][:subMerchantName] = options[:sub_merchant_name] if options[:sub_merchant_name]
         post[:additionalData][:subMerchantStreet] = options[:sub_merchant_street] if options[:sub_merchant_street]
         post[:additionalData][:subMerchantCity] = options[:sub_merchant_city] if options[:sub_merchant_city]
@@ -235,8 +235,8 @@ module ActiveMerchant #:nodoc:
         post[:additionalData][:subMerchantPostalCode] = options[:sub_merchant_postal_code] if options[:sub_merchant_postal_code]
         post[:additionalData][:subMerchantCountry] = options[:sub_merchant_country] if options[:sub_merchant_country]
         post[:additionalData][:subMerchantTaxId] = options[:sub_merchant_tax_id] if options[:sub_merchant_tax_id]
-        post[:additionalData][:subMerchantId] = options[:sub_merchant_id] if options[:sub_merchant_id]
         post[:additionalData][:subMerchantMCC] = options[:sub_merchant_mcc] if options[:sub_merchant_mcc]
+        post[:additionalData] = post[:additionalData].merge(options[:sub_merchant_data]) if options[:sub_merchant_data]
       end
 
       def add_risk_data(post, options)

@@ -583,6 +583,7 @@ module ActiveMerchant #:nodoc:
         parameters[:device_data] = options[:device_data] if options[:device_data]
         parameters[:service_fee_amount] = options[:service_fee_amount] if options[:service_fee_amount]
 
+        add_account_type(parameters, options) if options[:account_type]
         add_skip_options(parameters, options)
         add_merchant_account_id(parameters, options)
 
@@ -607,6 +608,11 @@ module ActiveMerchant #:nodoc:
         end
 
         parameters
+      end
+
+      def add_account_type(parameters, options)
+        parameters[:options][:credit_card] = {}
+        parameters[:options][:credit_card][:account_type] = options[:account_type]
       end
 
       def add_skip_options(parameters, options)

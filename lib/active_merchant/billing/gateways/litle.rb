@@ -5,7 +5,10 @@ module ActiveMerchant #:nodoc:
     class LitleGateway < Gateway
       SCHEMA_VERSION = '9.14'
 
+      class_attribute :postlive_url
+
       self.test_url = 'https://www.testvantivcnp.com/sandbox/communicator/online'
+      self.postlive_url = 'https://payments.vantivpostlive.com/vap/communicator/online'
       self.live_url = 'https://payments.vantivcnp.com/vap/communicator/online'
 
       self.supported_countries = ['US']
@@ -513,6 +516,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def url
+        return postlive_url if @options[:url_override].to_s == 'postlive'
+
         test? ? test_url : live_url
       end
 

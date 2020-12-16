@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     # ==== Customer Information Manager (CIM)

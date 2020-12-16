@@ -31,11 +31,21 @@ class SafeChargeTest < Test::Unit::TestCase
 
     @three_ds_options = @options.merge(three_d_secure: true)
 
-    @mpi_options = @options.merge({
+    @mpi_options_3ds1 = @options.merge({
       three_d_secure: {
-        ds_transaction_id: 'c5b808e7-1de1-4069-a17b-f70d3b3b1645',
         eci: '05',
-        cavv: 'Vk83Y2t0cHRzRFZzRlZlR0JIQXo='
+        cavv: 'Vk83Y2t0cHRzRFZzRlZlR0JIQXo=',
+        xid: '00000000000000000501'
+      }
+    })
+
+    @mpi_options_3ds2 = @options.merge({
+      three_d_secure: {
+        version: '2.1.0',
+        eci: '05',
+        cavv: 'Vk83Y2t0cHRzRFZzRlZlR0JIQXo=',
+        xid: '00000000000000000501',
+        ds_transaction_id: 'c5b808e7-1de1-4069-a17b-f70d3b3b1645'
       }
     })
   end
@@ -245,26 +255,42 @@ class SafeChargeTest < Test::Unit::TestCase
 
   def test_mpi_response_fail
     purchase = stub_comms do
-      @gateway.purchase(@amount, @three_ds_enrolled_card, @mpi_options)
+      @gateway.purchase(@amount, @three_ds_enrolled_card, @mpi_options_3ds1)
     end.check_request do |_, data, _|
       assert_match(/sg_ECI/, data)
       assert_match(/sg_CAVV/, data)
       assert_match(/sg_IsExternalMPI/, data)
-      assert_match(/sg_dsTransID/, data)
     end.respond_with(failed_mpi_response)
 
     assert_failure purchase
     assert_equal 'DECLINED', purchase.params['status']
   end
 
-  def test_mpi_response_success
+  def test_mpi_response_success_3ds1
     purchase = stub_comms do
-      @gateway.purchase(@amount, @three_ds_enrolled_card, @mpi_options)
+      @gateway.purchase(@amount, @three_ds_enrolled_card, @mpi_options_3ds1)
+    end.check_request do |_, data, _|
+      assert_match(/sg_eci/, data)
+      assert_match(/sg_cavv/, data)
+      assert_match(/sg_IsExternalMPI/, data)
+      assert_match(/sg_threeDSProtocolVersion=1/, data)
+      assert_match(/sg_xid/, data)
+    end.respond_with(successful_mpi_response)
+
+    assert_success purchase
+    assert_equal 'APPROVED', purchase.params['status']
+  end
+
+  def test_mpi_response_success_3ds2
+    purchase = stub_comms do
+      @gateway.purchase(@amount, @three_ds_enrolled_card, @mpi_options_3ds2)
     end.check_request do |_, data, _|
       assert_match(/sg_ECI/, data)
       assert_match(/sg_CAVV/, data)
       assert_match(/sg_IsExternalMPI/, data)
       assert_match(/sg_dsTransID/, data)
+      assert_match(/sg_threeDSProtocolVersion=2/, data)
+      refute_match(/sg_xid/, data)
     end.respond_with(successful_mpi_response)
 
     assert_success purchase
