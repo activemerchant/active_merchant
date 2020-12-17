@@ -21,13 +21,13 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
     @three_ds_invalid_pa_res_card = credit_card('4012 0010 3749 0006')
 
     @network_token_credit_card = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
-      :brand => 'Visa',
-      :payment_cryptogram => 'UnVBR0RlYm42S2UzYWJKeWJBdWQ=',
-      :number => '4012001037490014',
-      :source => :network_token,
-      :month => '12',
-      :year => 2020,
-      :verification_value => '217'
+      brand: 'Visa',
+      payment_cryptogram: 'UnVBR0RlYm42S2UzYWJKeWJBdWQ=',
+      number: '4012001037490014',
+      source: :network_token,
+      month: '12',
+      year: 2020,
+      verification_value: '217'
     )
   end
 
