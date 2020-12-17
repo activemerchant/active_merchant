@@ -20,7 +20,7 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
     @three_ds_non_enrolled_card = credit_card('5333 3062 3122 6927')
     @three_ds_invalid_pa_res_card = credit_card('4012 0010 3749 0006')
 
-    @network_token_credit_card = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
+    @network_token_credit_card = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
       brand: 'Visa',
       payment_cryptogram: 'UnVBR0RlYm42S2UzYWJKeWJBdWQ=',
       number: '4012001037490014',
@@ -28,7 +28,7 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
       month: '12',
       year: 2020,
       verification_value: '217'
-    )
+    })
   end
 
   def test_successful_3ds_purchase

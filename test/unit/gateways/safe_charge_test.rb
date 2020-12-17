@@ -8,14 +8,14 @@ class SafeChargeTest < Test::Unit::TestCase
     @credit_card = credit_card
     @three_ds_enrolled_card = credit_card('4012 0010 3749 0014')
     @amount = 100
-    @network_token_credit_card = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
+    @network_token_credit_card = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
       brand: 'Visa',
-      payment_cryptogram => 'AgAAAAAAAIR8CQrXcIhbQAAAAAA',
+      payment_cryptogram: 'AgAAAAAAAIR8CQrXcIhbQAAAAAA',
       number: '4012001037490014',
       source: :network_token,
       month: '12',
       year: 2020
-    )
+    })
 
     @options = {
       order_id: '1',
