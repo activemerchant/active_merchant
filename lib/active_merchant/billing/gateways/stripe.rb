@@ -102,8 +102,8 @@ module ActiveMerchant #:nodoc:
           end
           r.process do
             post = create_post_for_auth_or_purchase(money, payment, options)
-            post[:payment_method_types] = ["card", "sepa_debit"]
-            commit(:post, options[:three_d_secure] && post[:payment_method] ? 'payment_intents' : 'charges', post, options)
+            post[:payment_method_types] = ["sepa_debit"] if options[:use_sepa_debit]
+            commit(:post, should_use_payment_intents?(post, options) ? 'payment_intents' : 'charges', post, options)
           end
         end.responses.last
 
@@ -335,6 +335,12 @@ module ActiveMerchant #:nodoc:
           end
         end
 
+        if options[:use_sepa_debit]
+          post[:off_session] = true
+          post[:confirm] = true
+          post[:payment_method] = sepa_debit_payment_method_for_customer(options[:customer])
+        end
+
         unless emv_payment?(payment)
           add_amount(post, money, options, true)
           add_customer_data(post, options)
@@ -358,11 +364,6 @@ module ActiveMerchant #:nodoc:
         r = commit(:get, "payment_methods?customer=#{customer}&type=card", nil, options)
         raise r.message unless r.success?
 
-        if payment_type == "bank_account"
-          r = commit(:get, "payment_methods?customer=#{customer}&type=sepa_debit", nil, options)
-          raise r.message unless r.success?
-        end
-
         payment_methods = r.params["data"]
         return payment_methods[0]["id"] if payment_methods&.count == 1
 
@@ -379,6 +380,22 @@ module ActiveMerchant #:nodoc:
           r = commit(:get, "sources/#{default_source}", nil, options)
           return r.params["id"] if r.params["type"] == "card"
         end
+
+        if payment_methods&.count > 1 && !default_payment_method
+          raise "Customer has more than one payment method but doesn't have default one."
+        end
+      end
+
+      def sepa_debit_payment_method_for_customer(customer)
+        r = commit(:get, "payment_methods?customer=#{customer}&type=sepa_debit", nil, options)
+        raise r.message unless r.success?
+
+        payment_methods = r.params["data"]
+        return payment_methods[0]["id"] if payment_methods&.count == 1
+
+        # if customer has default payment method
+        default_payment_method = r.params.dig("invoice_settings", "default_payment_method")
+        return default_payment_method if default_payment_method
 
         if payment_methods&.count > 1 && !default_payment_method
           raise "Customer has more than one payment method but doesn't have default one."
@@ -762,6 +779,10 @@ module ActiveMerchant #:nodoc:
         else
           Response.new(success, token_response["error"]["message"])
         end
+      end
+
+      def should_use_payment_intents?(post, options)
+        (options[:three_d_secure] && post[:payment_method]) || options[:use_sepa_debit]
       end
 
       def ach?(payment_method)
