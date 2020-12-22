@@ -16,6 +16,15 @@ class RemotePinTest < Test::Unit::TestCase
       billing_address: address,
       description: "Store Purchase #{DateTime.now.to_i}"
     }
+
+    @additional_options_3ds = @options.merge(
+      three_d_secure: {
+        version: '1.0.2',
+        eci: '06',
+        cavv: 'AgAAAAAAAIR8CQrXcIhbQAAAAAA',
+        xid: 'MDAwMDAwMDAwMDAwMDAwMzIyNzY='
+      }
+    )
   end
 
   def test_successful_purchase
@@ -45,6 +54,16 @@ class RemotePinTest < Test::Unit::TestCase
 
   def test_successful_authorize_and_capture
     authorization = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorization
+    assert_equal false, authorization.params['response']['captured']
+
+    response = @gateway.capture(@amount, authorization.authorization, @options)
+    assert_success response
+    assert_equal true, response.params['response']['captured']
+  end
+
+  def test_successful_authorize_and_capture_with_passthrough_3ds
+    authorization = @gateway.authorize(@amount, @credit_card, @additional_options_3ds)
     assert_success authorization
     assert_equal false, authorization.params['response']['captured']
 
