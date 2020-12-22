@@ -9,12 +9,13 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     @credit_card = credit_card('4556761029983886')
     @declined_card = credit_card('4000300011112220')
     # Electronic Check object with test credentials of saving account
-    @echeck = check(routing_number: '072403004', account_number: '072403004', account_type: 'savings')
+    @echeck = check(account_number: '072403004', account_type: 'savings')
 
     @options = {
       order_id: generate_unique_id,
       address: address,
-      merchant_id: 'merchant1234'
+      merchant_id: 'merchant1234',
+      routing_number: '072403004',
     }
 
     @cards = {

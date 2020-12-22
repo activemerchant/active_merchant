@@ -516,7 +516,7 @@ module ActiveMerchant #:nodoc:
         unless check.nil?
           raise "Invalid Check Received. Error: #{check.validate}" unless check.validate.empty?
 
-          xml.tag! :BCRtNum, check.routing_number
+          xml.tag! :BCRtNum, options[:routing_number]
           xml.tag! :CheckDDA, check.account_number if check.account_number
           xml.tag! :BankAccountType, ACCOUNT_TYPE[check.account_type] if ACCOUNT_TYPE[check.account_type]
           xml.tag! :ECPAuthMethod, options[:auth_method] if options[:auth_method] && ECP_AUTH_METHODS.include?(options[:auth_method])

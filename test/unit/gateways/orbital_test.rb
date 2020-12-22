@@ -14,7 +14,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     )
     @customer_ref_num = 'ABC'
     # Electronic Check object with test credentials of saving account
-    @echeck = check(routing_number: '072403004', account_number: '072403004', account_type: 'savings')
+    @echeck = check(account_number: '072403004', account_type: 'savings')
 
     @level2 = {
       tax_indicator: '1',
