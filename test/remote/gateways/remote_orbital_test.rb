@@ -15,7 +15,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
       order_id: generate_unique_id,
       address: address,
       merchant_id: 'merchant1234',
-      routing_number: '072403004',
+      routing_number: '072403004'
     }
 
     @cards = {
