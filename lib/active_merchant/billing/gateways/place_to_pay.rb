@@ -49,6 +49,28 @@ module ActiveMerchant #:nodoc:
         commit('/gateway/interests', post)
       end
 
+      def lookup(money, payment, options)
+        post = {}
+
+        add_auth_data(post)
+        add_instrument_data(post, payment, options)
+        add_payment_data(post, money, options)
+        post[:returnUrl] = options[:return_url]
+
+        commit('/gateway/mpi/lookup', post)
+      end
+
+      def query(money, payment, options)
+        post = {}
+
+        add_auth_data(post)
+        add_instrument_data(post, payment, options)
+        add_payment_data(post, money, options)
+        post[:id] = options[:identifier]
+
+        commit('/gateway/mpi/query', post)
+      end
+
       def otp(money, payment, options={})
         post = {}
 
@@ -156,9 +178,9 @@ module ActiveMerchant #:nodoc:
 
         instrument[:card] = {}
         instrument[:card][:number] = payment.number
-        instrument[:card][:expirationMonth] = payment.month
-        instrument[:card][:expirationYear] = payment.year
-        instrument[:card][:cvv] = payment.verification_value
+        instrument[:card][:expirationMonth] = payment.month if payment.month.present?
+        instrument[:card][:expirationYear] = payment.year if payment.year.present?
+        instrument[:card][:cvv] = payment.verification_value if payment.verification_value?
 
         if options[:credit].present?
           valid_group_codes = %w(C D M P X)
@@ -325,7 +347,7 @@ module ActiveMerchant #:nodoc:
       def add_auth_data(post)
         secret_key = @options[:secret_key]
         nonce = SecureRandom.alphanumeric(8)
-        seed  = Time.now.iso8601
+        seed  = Time.current.iso8601
         tran_key = Digest::SHA256.base64digest(nonce + seed + secret_key)
 
         auth = {}
