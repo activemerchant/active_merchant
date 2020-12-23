@@ -346,17 +346,20 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
         brand: 'master'
       },
       three_d_secure: {
-        eci: '6',
-        cavv: 'Asju1ljfl86bAAAAAACm9zU6aqY=',
-        xid: 'Asju1ljfl86bAAAAAACm9zU6aqY='
+        eci: '5',
+        cavv: 'AAAEEEDDDSSSAAA2243234',
+        xid: 'Asju1ljfl86bAAAAAACm9zU6aqY=',
+        version: '2',
+        ds_transaction_id: '8dh4htokdf84jrnxyemfiosheuyfjt82jiek'
       },
       address: {
         address1: 'Byway Street',
         address2: '',
         city: 'Portsmouth',
         state: 'MA',
-        zip: '',
-        country: 'US'
+        zip: '67890',
+        country: 'US',
+        phone: '5555555555'
       }
     },
     {

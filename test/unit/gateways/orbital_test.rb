@@ -96,7 +96,9 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       three_d_secure: {
         eci: '5',
         xid: 'TESTXID',
-        cavv: 'TESTCAVV'
+        cavv: 'TESTCAVV',
+        version: '2',
+        ds_transaction_id: '97267598FAE648F28083C23433990FBC'
       }
     }
   end
@@ -251,6 +253,9 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
       assert_match %{<AAV>TESTCAVV</AAV>}, data
+      assert_match %{<MCProgramProtocol>2</MCProgramProtocol>}, data
+      assert_match %{<MCDirectoryTransID>97267598FAE648F28083C23433990FBC</MCDirectoryTransID>}, data
+      assert_match %{<UCAFInd>4</UCAFInd>}, data
     end.respond_with(successful_purchase_response)
   end
 
@@ -260,6 +265,9 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
       assert_match %{<AAV>TESTCAVV</AAV>}, data
+      assert_match %{<MCProgramProtocol>2</MCProgramProtocol>}, data
+      assert_match %{<MCDirectoryTransID>97267598FAE648F28083C23433990FBC</MCDirectoryTransID>}, data
+      assert_match %{<UCAFInd>4</UCAFInd>}, data
     end.respond_with(successful_purchase_response)
   end
 
@@ -1014,7 +1022,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1, billing_address: address)
     end.check_request do |_endpoint, data, _headers|
-      schema_file = File.read("#{File.dirname(__FILE__)}/../../schema/orbital/Request_PTI77.xsd")
+      schema_file = File.read("#{File.dirname(__FILE__)}/../../schema/orbital/Request_PTI83.xsd")
       doc = Nokogiri::XML(data)
       xsd = Nokogiri::XML::Schema(schema_file)
       assert xsd.valid?(doc), 'Request does not adhere to DTD'
@@ -1026,7 +1034,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1, billing_address: address(country: 'DE'))
     end.check_request do |_endpoint, data, _headers|
-      schema_file = File.read("#{File.dirname(__FILE__)}/../../schema/orbital/Request_PTI77.xsd")
+      schema_file = File.read("#{File.dirname(__FILE__)}/../../schema/orbital/Request_PTI83.xsd")
       doc = Nokogiri::XML(data)
       xsd = Nokogiri::XML::Schema(schema_file)
       assert xsd.valid?(doc), 'Request does not adhere to DTD'
