@@ -30,7 +30,7 @@ module ActiveMerchant #:nodoc:
     class OrbitalGateway < Gateway
       include Empty
 
-      API_VERSION = '7.7'
+      API_VERSION = '8.1'
 
       POST_HEADERS = {
         'MIME-Version' => '1.1',
@@ -532,6 +532,24 @@ module ActiveMerchant #:nodoc:
         xml.tag!(:AAV, three_d_secure[:cavv])
       end
 
+      def add_mc_program_protocol(xml, creditcard, three_d_secure)
+        return unless three_d_secure && creditcard.brand == 'master'
+
+        xml.tag!(:MCProgramProtocol, three_d_secure[:version]) if three_d_secure[:version]
+      end
+
+      def add_mc_directory_trans_id(xml, creditcard, three_d_secure)
+        return unless three_d_secure && creditcard.brand == 'master'
+
+        xml.tag!(:MCDirectoryTransID, three_d_secure[:ds_transaction_id]) if three_d_secure[:ds_transaction_id]
+      end
+
+      def add_ucafind(xml, creditcard, three_d_secure)
+        return unless three_d_secure && creditcard.brand == 'master'
+
+        xml.tag! :UCAFInd, '4'
+      end
+
       def add_dpanind(xml, creditcard)
         return unless creditcard.is_a?(NetworkTokenizationCreditCard)
 
@@ -743,7 +761,6 @@ module ActiveMerchant #:nodoc:
             add_dpanind(xml, creditcard)
             add_aevv(xml, creditcard, three_d_secure)
             add_digital_token_cryptogram(xml, creditcard)
-
             set_recurring_ind(xml, parameters)
 
             # Append Transaction Reference Number at the end for Refund transactions
@@ -759,6 +776,10 @@ module ActiveMerchant #:nodoc:
             add_card_indicators(xml, parameters)
             add_stored_credentials(xml, parameters)
             add_pymt_brand_program_code(xml, creditcard, three_d_secure)
+
+            add_mc_program_protocol(xml, creditcard, three_d_secure)
+            add_mc_directory_trans_id(xml, creditcard, three_d_secure)
+            add_ucafind(xml, creditcard, three_d_secure)
           end
         end
         xml.target!
