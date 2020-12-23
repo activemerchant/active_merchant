@@ -90,9 +90,12 @@ module ActiveMerchant
       }.freeze
 
       APPLE_PAY_DATA_DESCRIPTOR = 'COMMON.APPLE.INAPP.PAYMENT'
+      NONCE_DATA_DESCRIPTOR = 'COMMON.ACCEPT.INAPP.PAYMENT'
 
       PAYMENT_METHOD_NOT_SUPPORTED_ERROR = '155'
       INELIGIBLE_FOR_ISSUING_CREDIT_ERROR = '54'
+
+      CARD_ALIASES = { 'MasterCard' => :master }.freeze
 
       def initialize(options = {})
         requires!(options, :login, :password)
@@ -200,6 +203,11 @@ module ActiveMerchant
       def verify_credentials
         response = commit(:verify_credentials) {}
         response.success?
+      end
+
+      def merchant_details
+        response = commit(:merchant_details) {}
+        response.success? ? response.params.fetch('data') : {}
       end
 
       def supports_scrubbing?
@@ -399,6 +407,8 @@ module ActiveMerchant
           add_check(xml, source)
         elsif card_brand(source) == 'apple_pay'
           add_apple_pay_payment_token(xml, source)
+        elsif options[:payment_method_nonce]
+          add_nonce_payment_token(xml, options[:payment_method_nonce])
         else
           add_credit_card(xml, source, action)
         end
@@ -514,6 +524,15 @@ module ActiveMerchant
           xml.opaqueData do
             xml.dataDescriptor(APPLE_PAY_DATA_DESCRIPTOR)
             xml.dataValue(Base64.strict_encode64(apple_pay_payment_token.payment_data.to_json))
+          end
+        end
+      end
+
+      def add_nonce_payment_token(xml, nonce_payment_token)
+        xml.payment do
+          xml.opaqueData do
+            xml.dataDescriptor(NONCE_DATA_DESCRIPTOR)
+            xml.dataValue(nonce_payment_token)
           end
         end
       end
@@ -805,6 +824,8 @@ module ActiveMerchant
       def parse(action, raw_response, options = {})
         if cim_action?(action) || action == :verify_credentials
           parse_cim(raw_response, options)
+        elsif action == :merchant_details
+          parse_merchant_details(raw_response, options)
         else
           parse_normal(action, raw_response)
         end
@@ -848,18 +869,14 @@ module ActiveMerchant
       end
 
       def root_for(action)
-        if action == :cim_store
-          'createCustomerProfileRequest'
-        elsif action == :cim_store_update
-          'createCustomerPaymentProfileRequest'
-        elsif action == :cim_store_delete_customer
-          'deleteCustomerProfileRequest'
-        elsif action == :verify_credentials
-          'authenticateTestRequest'
-        elsif cim_action?(action)
-          'createCustomerProfileTransactionRequest'
+        case action
+        when :cim_store then 'createCustomerProfileRequest'
+        when :cim_store_update then 'createCustomerPaymentProfileRequest'
+        when :cim_store_delete_customer then 'deleteCustomerProfileRequest'
+        when :verify_credentials then 'authenticateTestRequest'
+        when :merchant_details then 'getMerchantDetailsRequest'
         else
-          'createTransactionRequest'
+          cim_action?(action) ? 'createCustomerProfileTransactionRequest' : 'createTransactionRequest'
         end
       end
 
@@ -938,53 +955,56 @@ module ActiveMerchant
       end
 
       def parse_cim(body, options)
-        response = {}
+        parse_common_info(body) do |response, doc|
+          response[:test_request] =
+            if element = doc.at_xpath('//testRequest')
+              empty?(element.content) ? nil : element.content
+            end
 
-        doc = Nokogiri::XML(body).remove_namespaces!
+          response[:customer_profile_id] =
+            if element = doc.at_xpath('//customerProfileId')
+              empty?(element.content) ? nil : element.content
+            end
 
-        if element = doc.at_xpath('//messages/message')
-          response[:message_code] = element.at_xpath('code').content[/0*(\d+)$/, 1]
-          response[:message_text] = element.at_xpath('text').content.chomp('.')
+          response[:customer_payment_profile_id] =
+            if element = doc.at_xpath('//customerPaymentProfileIdList/numericString')
+              empty?(element.content) ? nil : element.content
+            end
+
+          response[:customer_payment_profile_id] =
+            if element = doc.at_xpath('//customerPaymentProfileIdList/numericString') ||
+                         doc.at_xpath('//customerPaymentProfileId')
+              empty?(element.content) ? nil : element.content
+            end
+
+          response[:direct_response] =
+            if element = doc.at_xpath('//directResponse')
+              empty?(element.content) ? nil : element.content
+            end
+
+          response.merge!(parse_direct_response_elements(response, options))
         end
+      end
 
-        response[:result_code] =
-          if element = doc.at_xpath('//messages/resultCode')
-            empty?(element.content) ? nil : element.content
+      def parse_merchant_details(body, options)
+        parse_common_info(body) do |response, doc|
+          data = { payment_methods: [], payment_method_cards: [] }
+
+          data[:merchant_name] = doc.at_xpath('//merchantName')&.content
+          doc.xpath('//paymentMethods/paymentMethod').each do |element|
+            name = CARD_ALIASES.fetch(element.content) { |value| value.underscore.to_sym }
+            key = self.class.supported_cardtypes.include?(name) ? :payment_method_cards : :payment_methods
+            data[key].push(name)
           end
+          data[:currencies] = doc.xpath('//currencies/currency').map(&:content)
+          data[:public_client_key] = doc.at_xpath('//publicClientKey')&.content
 
-        response[:test_request] =
-          if element = doc.at_xpath('//testRequest')
-            empty?(element.content) ? nil : element.content
-          end
-
-        response[:customer_profile_id] =
-          if element = doc.at_xpath('//customerProfileId')
-            empty?(element.content) ? nil : element.content
-          end
-
-        response[:customer_payment_profile_id] =
-          if element = doc.at_xpath('//customerPaymentProfileIdList/numericString')
-            empty?(element.content) ? nil : element.content
-          end
-
-        response[:customer_payment_profile_id] =
-          if element = doc.at_xpath('//customerPaymentProfileIdList/numericString') ||
-                       doc.at_xpath('//customerPaymentProfileId')
-            empty?(element.content) ? nil : element.content
-          end
-
-        response[:direct_response] =
-          if element = doc.at_xpath('//directResponse')
-            empty?(element.content) ? nil : element.content
-          end
-
-        response.merge!(parse_direct_response_elements(response, options))
-
-        response
+          response[:data] = data
+        end
       end
 
       def success_from(action, response)
-        if cim?(action) || (action == :verify_credentials)
+        if cim?(action) || %i[verify_credentials merchant_details].include?(action)
           response[:result_code] == 'Ok'
         else
           [APPROVED, FRAUD_REVIEW].include?(response[:response_code]) && TRANSACTION_ALREADY_ACTIONED.exclude?(response[:response_reason_code])
@@ -1093,6 +1113,26 @@ module ActiveMerchant
           requested_amount: parts[53] || '',
           balance_on_card: parts[54] || ''
         }
+      end
+
+      def parse_common_info(body)
+        response = {}
+
+        doc = Nokogiri::XML(body).remove_namespaces!
+
+        if element = doc.at_xpath('//messages/message')
+          response[:message_code] = element.at_xpath('code').content[/0*(\d+)$/, 1]
+          response[:message_text] = element.at_xpath('text').content.chomp('.')
+        end
+
+        response[:result_code] =
+          if element = doc.at_xpath('//messages/resultCode')
+            empty?(element.content) ? nil : element.content
+          end
+
+        yield response, doc
+
+        response
       end
     end
   end
