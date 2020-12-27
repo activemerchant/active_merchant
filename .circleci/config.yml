@@ -1,15 +1,19 @@
-version: 2.1
-orbs:
-  ruby: circleci/ruby@0.1.2 
-
+version: 2
 jobs:
   build:
-    docker:
-      - image: circleci/ruby:2.6.3-stretch-node
-    executor: ruby/default
+    machine:
+      docker:
+        - image: alpine:3.4
+          environment:
+            DATABASE_URL: postgres://127.0.0.1:5432
+            RAILS_ENV: test
+        - image: circleci/postgres:9.6.2-alpine
+          environment:
+            POSTGRES_USER: root
+            POSTGRES_DB: circle-test_test
     steps:
       - checkout
+      - run: mkdir -p /tmp/artifacts
       - run:
-          name: Which bundler?
-          command: bundle -v
-      - ruby/bundle-install
+          name: build_image
+          command: make build
