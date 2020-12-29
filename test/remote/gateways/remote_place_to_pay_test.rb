@@ -7,6 +7,7 @@ class RemotePlaceToPayTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card('36545400000008', { brand: 'Dinners' })
     @declined_card = credit_card('36545400000248', { brand: 'Dinners' })
+    @three_ds_card = credit_card('4532840681197602')
     @options = {
       reference: SecureRandom.uuid.remove('-'),
       description: 'Description',
@@ -39,6 +40,24 @@ class RemotePlaceToPayTest < Test::Unit::TestCase
     response = @gateway.interests(@amount, @credit_card, @options.merge(@credit_options))
     assert_success response
     assert_equal 'La petición se ha procesado correctamente', response.message
+  end
+
+  def test_fail_lookup
+    response = @gateway.lookup(
+      @amount,
+      @three_ds_card,
+      @options.merge(@credit_options).merge({ return_url: 'http://localhost'}))
+    assert_failure response
+    assert_equal 'El comercio no tiene configurados datos de 3DS', response.message
+  end
+
+  def test_query
+    response = @gateway.query(
+      @amount,
+      @three_ds_card,
+      @options.merge(@credit_options).merge({ identifier: '1'}))
+    assert_failure response
+    assert_equal 'El comercio no tiene configurados datos de 3DS', response.message
   end
 
   def test_successful_otp_generation
