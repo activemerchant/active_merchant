@@ -1,14 +1,14 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PlaceToPayGateway < Gateway
-      self.test_url = 'https://test.placetopay.ec/rest'
-      self.live_url = 'https://placetopay.ec/rest'
+      self.test_url = 'https://test.placetopay.ec/rest/gateway'
+      self.live_url = 'https://placetopay.ec/rest/gateway'
 
-      self.supported_countries = ['US']
+      self.supported_countries = ['US', 'EC']
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club]
 
-      self.homepage_url = 'https://test.placetopay.ec/'
+      self.homepage_url = 'https://placetopay.ec/'
       self.display_name = 'Place To Pay'
 
       self.money_format = :dollars
@@ -35,7 +35,7 @@ module ActiveMerchant #:nodoc:
         add_instrument_data(post, payment, options)
         add_payment_data(post, money, options)
 
-        commit('/gateway/information', post)
+        commit('/information', post)
       end
 
       def interests(money, payment, options={})
@@ -46,7 +46,7 @@ module ActiveMerchant #:nodoc:
         add_instrument_data(post, payment, options)
         add_payment_data(post, money, options)
 
-        commit('/gateway/interests', post)
+        commit('/interests', post)
       end
 
       def lookup(money, payment, options)
@@ -57,7 +57,7 @@ module ActiveMerchant #:nodoc:
         add_payment_data(post, money, options)
         post[:returnUrl] = options[:return_url]
 
-        commit('/gateway/mpi/lookup', post)
+        commit('/mpi/lookup', post)
       end
 
       def query(money, payment, options)
@@ -68,7 +68,7 @@ module ActiveMerchant #:nodoc:
         add_payment_data(post, money, options)
         post[:id] = options[:identifier]
 
-        commit('/gateway/mpi/query', post)
+        commit('/mpi/query', post)
       end
 
       def otp(money, payment, options={})
@@ -79,7 +79,7 @@ module ActiveMerchant #:nodoc:
         add_instrument_data(post, payment, options)
         add_payment_data(post, money, options)
 
-        commit('/gateway/otp/generate', post)
+        commit('/otp/generate', post)
       end
 
       def otp_validation(money, payment, options={})
@@ -90,7 +90,7 @@ module ActiveMerchant #:nodoc:
         add_instrument_data(post, payment, options)
         add_payment_data(post, money, options)
 
-        commit('/gateway/otp/validate', post)
+        commit('/otp/validate', post)
       end
 
       def store(payment, options)
@@ -101,7 +101,7 @@ module ActiveMerchant #:nodoc:
         add_instrument_data(post, payment, options)
         add_customer_data(post, payment, options)
 
-        commit('/gateway/tokenize', post)
+        commit('/tokenize', post)
       end
 
       def purchase(money, payment, options={})
@@ -114,9 +114,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, payment, options)
         post[:buyer] = customer_data(payment, options)
 
-        endpoint = options['otp'] ? '/gateway/safe-process' : '/gateway/process'
-        
-        commit(endpoint, post)
+        commit('/process', post)
       end
 
       def void(authorization, options = {})
@@ -129,7 +127,7 @@ module ActiveMerchant #:nodoc:
         post[:authorization] = authorization
         post[:action] = 'reverse'
 
-        commit('/gateway/transaction', post)
+        commit('/transaction', post)
       end
 
       def search(money, options)
@@ -139,7 +137,7 @@ module ActiveMerchant #:nodoc:
         options[:reference] = options[:reference]
         options[:amount] = amount_base(money, options)
 
-        commit('/gateway/search', post)        
+        commit('/search', post)
       end
 
       def add_customer_data(post, payment, options)
@@ -168,7 +166,7 @@ module ActiveMerchant #:nodoc:
       def scrub(transcript)
         transcript.
           gsub(%r(("card\\?":{.*\\?"number\\?":\\?")\d+), '\1[FILTERED]').
-          gsub(%r(("card\\?":{.*\\?"cvv\\?":\\?")\d+), '\1[FILTERED]')  
+          gsub(%r(("card\\?":{.*\\?"cvv\\?":\\?")\d+), '\1[FILTERED]')
       end
 
       private
@@ -185,12 +183,12 @@ module ActiveMerchant #:nodoc:
         if options[:credit].present?
           valid_group_codes = %w(C D M P X)
           instrument[:credit] = {}
-          instrument[:credit][:code] = options[:credit][:code] 
+          instrument[:credit][:code] = options[:credit][:code]
           instrument[:credit][:type] = options[:credit][:type]
           instrument[:credit][:groupCode] = valid_group_codes
             .grep(options[:credit][:group_code]).first
           instrument[:credit][:installment] = options[:credit][:installment]
-          instrument[:credit][:installments] = options[:credit][:installments]  
+          instrument[:credit][:installments] = options[:credit][:installments]
         end
 
         if options[:otp].present?
@@ -206,7 +204,7 @@ module ActiveMerchant #:nodoc:
         person[:documentType] = options[:person_id_type] if options[:person_id_type]
         person[:document] = options[:document] if options[:document]
         person[:name] = payment.first_name
-        person[:surname] = payment.last_name 
+        person[:surname] = payment.last_name
         person[:company] = options[:company] if options[:mobile]
         person[:email] = options[:email]
         person[:address] = add_address_data(options)
@@ -314,7 +312,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        ['OK', 'APPROVED'].include?(response['status']['status']) 
+        ['OK', 'APPROVED'].include?(response['status']['status'])
       end
 
       def message_from(response)

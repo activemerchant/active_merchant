@@ -48,7 +48,7 @@ class RemotePlaceToPayTest < Test::Unit::TestCase
       @three_ds_card,
       @options.merge(@credit_options).merge({ return_url: 'http://localhost'}))
     assert_failure response
-    assert_equal 'El comercio no tiene configurados datos de 3DS', response.message
+    assert_equal 'No se ha podido realizar la validación 3DS, puedes intentar de nuevo en unos minutos.', response.message
   end
 
   def test_query
