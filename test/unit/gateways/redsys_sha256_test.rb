@@ -169,13 +169,14 @@ class RedsysSHA256Test < Test::Unit::TestCase
 
   def test_3ds2_data_passed_as_mpi
     stub_comms(@gateway, :ssl_request) do
-      @gateway.authorize(100, credit_card, { order_id: '156270437866', description: 'esta es la descripción', three_d_secure: { version: '2.1.0', xid: 'xid', ds_transaction_id: 'ds_transaction_id', cavv: 'cavv' } })
+      @gateway.authorize(100, credit_card, { order_id: '156270437866', description: 'esta es la descripción', three_d_secure: { version: '2.1.0', three_ds_server_trans_id: 'three_ds_server_trans_id', ds_transaction_id: 'ds_transaction_id', cavv: 'cavv', eci: '02' } })
     end.check_request do |_method, _endpoint, encdata, _headers|
       data = CGI.unescape(encdata)
       assert_match(/<DS_MERCHANT_MPIEXTERNAL>/, data)
-      assert_match(%r("threeDSServerTransID":"xid"), data)
+      assert_match(%r("threeDSServerTransID":"three_ds_server_trans_id"), data)
       assert_match(%r("dsTransID":"ds_transaction_id"), data)
       assert_match(%r("authenticacionValue":"cavv"), data)
+      assert_match(%r("Eci":"02"), data)
 
       assert_not_match(%r("authenticacionMethod"), data)
       assert_not_match(%r("authenticacionType"), data)
@@ -188,16 +189,17 @@ class RedsysSHA256Test < Test::Unit::TestCase
 
   def test_3ds2_data_passed_as_mpi_with_optional_values
     stub_comms(@gateway, :ssl_request) do
-      @gateway.authorize(100, credit_card, { order_id: '156270437866', description: 'esta es la descripción', three_d_secure: { version: '2.1.0', xid: 'xid', ds_transaction_id: 'ds_transaction_id', cavv: 'cavv' },
+      @gateway.authorize(100, credit_card, { order_id: '156270437866', description: 'esta es la descripción', three_d_secure: { version: '2.1.0', three_ds_server_trans_id: 'three_ds_server_trans_id', ds_transaction_id: 'ds_transaction_id', cavv: 'cavv', eci: '02' },
         authentication_method: '01',
         authentication_type: 'anything',
         authentication_flow: 'F' })
     end.check_request do |_method, _endpoint, encdata, _headers|
       data = CGI.unescape(encdata)
       assert_match(/<DS_MERCHANT_MPIEXTERNAL>/, data)
-      assert_match(%r("threeDSServerTransID":"xid"), data)
+      assert_match(%r("threeDSServerTransID":"three_ds_server_trans_id"), data)
       assert_match(%r("dsTransID":"ds_transaction_id"), data)
       assert_match(%r("authenticacionValue":"cavv"), data)
+      assert_match(%r("Eci":"02"), data)
 
       assert_match(%r("authenticacionMethod":"01"), data)
       assert_match(%r("authenticacionType":"anything"), data)
