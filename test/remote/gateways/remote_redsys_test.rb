@@ -19,9 +19,10 @@ class RemoteRedsysTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_threeds2
-    xid = '97267598-FAE6-48F2-8083-C23433990FBC'
+    three_ds_server_trans_id = '97267598-FAE6-48F2-8083-C23433990FBC'
     ds_transaction_id = '97267598-FAE6-48F2-8083-C23433990FBC'
     version = '2.1.0'
+    eci = '02'
 
     response = @gateway.purchase(
       100,
@@ -30,7 +31,8 @@ class RemoteRedsysTest < Test::Unit::TestCase
         three_d_secure: {
           version: version,
           ds_transaction_id: ds_transaction_id,
-          xid: xid
+          three_ds_server_trans_id: three_ds_server_trans_id,
+          eci: eci
         }
       )
     )

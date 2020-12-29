@@ -333,18 +333,18 @@ module ActiveMerchant #:nodoc:
         return unless options[:three_d_secure]
 
         if options[:three_d_secure][:version] == THREE_DS_V2
-          data[:threeDSServerTransID] = options[:three_d_secure][:xid] if options[:three_d_secure][:xid]
+          data[:threeDSServerTransID] = options[:three_d_secure][:three_ds_server_trans_id] if options[:three_d_secure][:three_ds_server_trans_id]
           data[:dsTransID] = options[:three_d_secure][:ds_transaction_id] if options[:three_d_secure][:ds_transaction_id]
           data[:authenticacionValue] = options[:three_d_secure][:cavv] if options[:three_d_secure][:cavv]
           data[:protocolVersion] = options[:three_d_secure][:version] if options[:three_d_secure][:version]
-
           data[:authenticacionMethod] = options[:authentication_method] if options[:authentication_method]
           data[:authenticacionType] = options[:authentication_type] if options[:authentication_type]
           data[:authenticacionFlow] = options[:authentication_flow] if options[:authentication_flow]
+          data[:eci_v2] = options[:three_d_secure][:eci] if options[:three_d_secure][:eci]
         elsif options[:three_d_secure][:version] == THREE_DS_V1
           data[:txid] = options[:three_d_secure][:xid] if options[:three_d_secure][:xid]
           data[:cavv] = options[:three_d_secure][:cavv] if options[:three_d_secure][:cavv]
-          data[:eci] = options[:three_d_secure][:eci] if options[:three_d_secure][:eci]
+          data[:eci_v1] = options[:three_d_secure][:eci] if options[:three_d_secure][:eci]
         end
       end
 
@@ -525,13 +525,13 @@ module ActiveMerchant #:nodoc:
         ds_merchant_mpi_external = {}
         ds_merchant_mpi_external[:TXID] = data[:txid] if data[:txid]
         ds_merchant_mpi_external[:CAVV] = data[:cavv] if data[:cavv]
-        ds_merchant_mpi_external[:ECI] = data[:eci] if data[:eci]
+        ds_merchant_mpi_external[:ECI] = data[:eci_v1] if data[:eci_v1]
 
         ds_merchant_mpi_external[:threeDSServerTransID] = data[:threeDSServerTransID] if data[:threeDSServerTransID]
         ds_merchant_mpi_external[:dsTransID] = data[:dsTransID] if data[:dsTransID]
         ds_merchant_mpi_external[:authenticacionValue] = data[:authenticacionValue] if data[:authenticacionValue]
         ds_merchant_mpi_external[:protocolVersion] = data[:protocolVersion] if data[:protocolVersion]
-
+        ds_merchant_mpi_external[:Eci] = data[:eci_v2] if data[:eci_v2]
         ds_merchant_mpi_external[:authenticacionMethod] = data[:authenticacionMethod] if data[:authenticacionMethod]
         ds_merchant_mpi_external[:authenticacionType] = data[:authenticacionType] if data[:authenticacionType]
         ds_merchant_mpi_external[:authenticacionFlow] = data[:authenticacionFlow] if data[:authenticacionFlow]

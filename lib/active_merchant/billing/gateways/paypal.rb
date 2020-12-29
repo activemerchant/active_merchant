@@ -75,6 +75,7 @@ module ActiveMerchant #:nodoc:
 
       def api_version(options)
         return API_VERSION_3DS2 if options.dig(:three_d_secure, :version) =~ /^2/
+
         API_VERSION
       end
 
