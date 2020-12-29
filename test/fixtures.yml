@@ -830,6 +830,10 @@ payway:
 pin:
   api_key: "I_mo9BUUUXIwXF-avcs3LA"
 
+place_to_pay:
+  login: LOGIN
+  secret_key: KEY
+
 plugnpay:
   login: LOGIN
   password: PASSWORD
