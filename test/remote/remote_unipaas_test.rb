@@ -4,7 +4,7 @@ class RemoteUnipaasTest < Test::Unit::TestCase
   def setup
     @gateway = UnipaasGateway.new(fixtures(:unipaas))
 
-    @amount = 10000
+    @amount = 100
     @credit_card = credit_card('4000100011112224')
     @declined_card = credit_card('4000300011112220')
     @options = {
@@ -25,6 +25,29 @@ class RemoteUnipaasTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, store.authorization, @options)
     assert_equal 'Success', response.message
   end
+
+  def test_successful_recurring_purchase_flow_with_token
+    store = @gateway.store(@credit_card, @options)
+    assert_success store
+
+    @recurring_options = {
+        is_recurring: true,
+    }
+
+    initial = @gateway.purchase(@amount, store.authorization, @options.merge(@recurring_options))
+    assert_equal 'Success', initial.message
+
+    @initial_transaction_otptions = {
+        initial_transaction_id: initial.authorization,
+    }
+
+    second = @gateway.purchase(@amount, store.authorization, @options.merge(@recurring_options).merge(@initial_transaction_otptions))
+    assert_equal 'Success', second.message
+
+    third = @gateway.purchase(@amount, store.authorization, @options.merge(@recurring_options).merge(@initial_transaction_otptions))
+    assert_equal 'Success', third.message
+  end
+
 
   def test_successful_purchase_with_more_options
     options = {

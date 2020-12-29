@@ -21,7 +21,7 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment, options = {})
         post = {}
         add_invoice(post, money, options)
-        add_payment(post, payment)
+        add_payment(post, payment, options)
         add_address(post, payment, options)
         add_customer_data(post, options)
         post[:transactionType] = 'Sale'
@@ -32,7 +32,7 @@ module ActiveMerchant #:nodoc:
       def authorize(money, payment, options = {})
         post = {}
         add_invoice(post, money, options)
-        add_payment(post, payment)
+        add_payment(post, payment, options)
         add_address(post, payment, options)
         add_customer_data(post, options)
         post[:transactionType] = 'Auth'
@@ -107,7 +107,7 @@ module ActiveMerchant #:nodoc:
         post[:orderid] = options[:order_id] if options[:order_id]
       end
 
-      def add_payment(post, payment)
+      def add_payment(post, payment, options)
         if payment.is_a?(String)
           post[:payment_option_id] = payment
         else
@@ -119,6 +119,11 @@ module ActiveMerchant #:nodoc:
           post[:paymentOption][:nameOnCard] = "#{payment.first_name} #{payment.last_name}"
         end
 
+        if options[:is_recurring] || options[:initial_transaction_id]
+          post[:recurring] = {}
+          post[:recurring][:is_recurring] = options[:is_recurring] if options[:is_recurring]
+          post[:recurring][:initial_transaction_id] = options[:initial_transaction_id] if options[:initial_transaction_id]
+        end
       end
 
       def parse(body)
