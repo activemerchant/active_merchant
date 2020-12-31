@@ -110,7 +110,9 @@ module ActiveMerchant #:nodoc:
         three_d_secure = options[:three_d_secure]
         xml.tag! 'ThreeDSecureRequest' do
           xml.tag! 'MpiVendor3ds', 'Y'
-          xml.tag! 'AuthStatus3ds', three_d_secure[:trans_status] unless three_d_secure[:trans_status].blank?
+          if three_d_secure[:authentication_response_status] || three_d_secure[:trans_status]
+            xml.tag! 'AuthStatus3ds', three_d_secure[:authentication_response_status] || three_d_secure[:trans_status]
+          end
           xml.tag! 'Cavv', three_d_secure[:cavv] unless three_d_secure[:cavv].blank?
           xml.tag! 'Eci3ds', three_d_secure[:eci] unless three_d_secure[:eci].blank?
           xml.tag! 'Xid', three_d_secure[:xid] unless three_d_secure[:xid].blank?

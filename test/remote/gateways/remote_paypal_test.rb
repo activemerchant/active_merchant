@@ -300,7 +300,7 @@ class PaypalTest < Test::Unit::TestCase
   def test_successful_purchase_with_3ds_version_2
     params = @params.merge!({
       three_d_secure: {
-        trans_status: 'Y',
+        authentication_response_status: 'Y',
         eci: '05',
         cavv: 'AgAAAAAAAIR8CQrXcIhbQAAAAAA',
         ds_transaction_id: 'bDE9Aa1A-C5Ac-AD3a-4bBC-aC918ab1de3E',
