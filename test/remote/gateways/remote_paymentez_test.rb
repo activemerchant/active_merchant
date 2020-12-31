@@ -22,6 +22,29 @@ class RemotePaymentezTest < Test::Unit::TestCase
       vat: 0,
       dev_reference: 'Testing'
     }
+
+    @cavv = 'example-cavv-value'
+    @xid = 'three-ds-v1-trans-id'
+    @eci = '01'
+    @three_ds_v1_version = '1.0.2'
+    @three_ds_v2_version = '2.1.0'
+    @three_ds_server_trans_id = 'three-ds-v2-trans-id'
+    @authentication_response_status = 'Y'
+
+    @three_ds_v1_mpi = {
+      cavv: @cavv,
+      eci: @eci,
+      version: @three_ds_v1_version,
+      xid: @xid
+    }
+
+    @three_ds_v2_mpi = {
+      cavv: @cavv,
+      eci: @eci,
+      version: @three_ds_v2_version,
+      three_ds_server_trans_id: @three_ds_server_trans_id,
+      authentication_response_status: @authentication_response_status
+    }
   end
 
   def test_successful_purchase
@@ -90,6 +113,18 @@ class RemotePaymentezTest < Test::Unit::TestCase
     token = store_response.authorization
     purchase_response = @gateway.purchase(@amount, token, @options)
     assert_success purchase_response
+  end
+
+  def test_successful_purchase_with_3ds1_mpi_fields
+    @options[:three_d_secure] = @three_ds_v1_mpi
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+  end
+
+  def test_successful_purchase_with_3ds2_mpi_fields
+    @options[:three_d_secure] = @three_ds_v2_mpi
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
   end
 
   def test_failed_purchase
@@ -175,6 +210,18 @@ class RemotePaymentezTest < Test::Unit::TestCase
     assert capture = @gateway.capture(amount, auth.authorization)
     assert_success capture
     assert_equal 'Response by mock', capture.message
+  end
+
+  def test_successful_authorize_with_3ds1_mpi_fields
+    @options[:three_d_secure] = @three_ds_v1_mpi
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+  end
+
+  def test_successful_authorize_with_3ds2_mpi_fields
+    @options[:three_d_secure] = @three_ds_v2_mpi
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
   end
 
   def test_failed_authorize

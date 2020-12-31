@@ -175,7 +175,27 @@ module ActiveMerchant #:nodoc:
         extra_params = {}
         extra_params.merge!(options[:extra_params]) if options[:extra_params]
 
+        add_external_mpi_fields(extra_params, options)
+
         post['extra_params'] = extra_params unless extra_params.empty?
+      end
+
+      def add_external_mpi_fields(extra_params, options)
+        three_d_secure_options = options[:three_d_secure]
+        return unless three_d_secure_options
+
+        auth_data = {
+          cavv: three_d_secure_options[:cavv],
+          xid: three_d_secure_options[:xid],
+          eci: three_d_secure_options[:eci],
+          version: three_d_secure_options[:version],
+          reference_id: three_d_secure_options[:three_ds_server_trans_id],
+          status: three_d_secure_options[:authentication_response_status] || three_d_secure_options[:directory_response_status]
+        }.compact
+
+        return if auth_data.empty?
+
+        extra_params[:auth_data] = auth_data
       end
 
       def parse(body)
