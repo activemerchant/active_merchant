@@ -22,6 +22,29 @@ class PaymentezTest < Test::Unit::TestCase
       description: 'Store Purchase',
       email: 'a@b.com'
     }
+
+    @cavv = 'example-cavv-value'
+    @xid = 'three-ds-v1-trans-id'
+    @eci = '01'
+    @three_ds_v1_version = '1.0.2'
+    @three_ds_v2_version = '2.1.0'
+    @three_ds_server_trans_id = 'three-ds-v2-trans-id'
+    @authentication_response_status = 'Y'
+
+    @three_ds_v1_mpi = {
+      cavv: @cavv,
+      eci: @eci,
+      version: @three_ds_v1_version,
+      xid: @xid
+    }
+
+    @three_ds_v2_mpi = {
+      cavv: @cavv,
+      eci: @eci,
+      version: @three_ds_v2_version,
+      three_ds_server_trans_id: @three_ds_server_trans_id,
+      authentication_response_status: @authentication_response_status
+    }
   end
 
   def test_successful_purchase
@@ -52,6 +75,41 @@ class PaymentezTest < Test::Unit::TestCase
 
     assert_equal 'PR-926', response.authorization
     assert response.test?
+  end
+
+  def test_purchase_3ds1_mpi_fields
+    @options[:three_d_secure] = @three_ds_v1_mpi
+
+    expected_auth_data = {
+      cavv: @cavv,
+      xid: @xid,
+      eci: @eci,
+      version: @three_ds_v1_version
+    }
+
+    @gateway.expects(:commit_transaction).with do |_, post_data|
+      post_data['extra_params'][:auth_data] == expected_auth_data
+    end
+
+    @gateway.purchase(@amount, @credit_card, @options)
+  end
+
+  def test_purchase_3ds2_mpi_fields
+    @options[:three_d_secure] = @three_ds_v2_mpi
+
+    expected_auth_data = {
+      cavv: @cavv,
+      eci: @eci,
+      version: @three_ds_v2_version,
+      reference_id: @three_ds_server_trans_id,
+      status: @authentication_response_status
+    }
+
+    @gateway.expects(:commit_transaction).with() do |_, post_data|
+      post_data['extra_params'][:auth_data] == expected_auth_data
+    end
+
+    @gateway.purchase(@amount, @credit_card, @options)
   end
 
   def test_failed_purchase
@@ -96,6 +154,41 @@ class PaymentezTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'CI-635', response.authorization
     assert response.test?
+  end
+
+  def test_authorize_3ds1_mpi_fields
+    @options[:three_d_secure] = @three_ds_v1_mpi
+
+    expected_auth_data = {
+      cavv: @cavv,
+      xid: @xid,
+      eci: @eci,
+      version: @three_ds_v1_version
+    }
+
+    @gateway.expects(:commit_transaction).with() do |_, post_data|
+      post_data['extra_params'][:auth_data] == expected_auth_data
+    end
+
+    @gateway.authorize(@amount, @credit_card, @options)
+  end
+
+  def test_authorize_3ds2_mpi_fields
+    @options[:three_d_secure] = @three_ds_v2_mpi
+
+    expected_auth_data = {
+      cavv: @cavv,
+      eci: @eci,
+      version: @three_ds_v2_version,
+      reference_id: @three_ds_server_trans_id,
+      status: @authentication_response_status
+    }
+
+    @gateway.expects(:commit_transaction).with() do |_, post_data|
+      post_data['extra_params'][:auth_data] == expected_auth_data
+    end
+
+    @gateway.authorize(@amount, @credit_card, @options)
   end
 
   def test_failed_authorize
