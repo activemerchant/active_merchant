@@ -196,6 +196,16 @@ module ActiveMerchant #:nodoc:
       # Bank payment delivery can be either ACH (Automated Clearing House) or Best Possible.
       # Default Bank Payment Delivery is Best Possible (B).
       # Action codes to be used for Early Warning System and additional validations.
+      # Valid combinations of Message Type and Action Code to be used are:
+      #   A   W1
+      #   AC  W1
+      #   FC  W4
+      #   R   W6
+      #   FC  W8
+      #   A   W3
+      #   AC  W3
+      #   FC  W5
+      #   R   W7
       # Default Action code for ECP is nil.
       # Electronic check to be processed on same day (Y) or next day (N).
       # Default ECP Same Day Index is Yes (Y).

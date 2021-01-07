@@ -495,7 +495,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     @options[:force_capture] = true
     assert response = @gateway.purchase(@amount, @echeck, @options)
     assert_success response
-    assert_equal 'APPROVAL        ', response.message
+    assert_match 'APPROVAL', response.message
     assert_equal 'Approved and Completed', response.params['status_msg']
     assert_false response.authorization.blank?
   end

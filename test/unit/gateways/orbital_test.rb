@@ -138,7 +138,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
     assert response = @gateway.purchase(31, @echeck, order_id: '2', force_capture: true)
     assert_instance_of Response, response
-    assert_equal 'APPROVAL        ', response.message
+    assert_match 'APPROVAL', response.message
     assert_equal 'Approved and Completed', response.params['status_msg']
     assert_equal '5F8ED3D950A43BD63369845D5385B6354C3654B4;2930847bc732eb4e8102cf', response.authorization
   end
