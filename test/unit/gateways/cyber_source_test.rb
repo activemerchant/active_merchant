@@ -121,6 +121,27 @@ class CyberSourceTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_allows_nil_values_in_billing_address
+    billing_address = {
+      address1: '123 Fourth St',
+      city: 'Fiveton',
+      state: '',
+      country: 'CA'
+    }
+
+    stub_comms do
+      @gateway.authorize(100, @credit_card, billing_address: billing_address)
+    end.check_request do |_endpoint, data, _headers|
+      assert_nil billing_address[:zip]
+      assert_nil billing_address[:phone]
+      assert_match(%r(<billTo>.*<street1>123 Fourth St</street1>.*</billTo>)m, data)
+      assert_match(%r(<billTo>.*<city>Fiveton</city>.*</billTo>)m, data)
+      assert_match(%r(<billTo>.*<state>NC</state>.*</billTo>)m, data)
+      assert_match(%r(<billTo>.*<postalCode>00000</postalCode>.*</billTo>)m, data)
+      assert_match(%r(<billTo>.*<country>CA</country>.*</billTo>)m, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_uses_names_from_billing_address_if_present
     name = 'Wesley Crusher'
 
