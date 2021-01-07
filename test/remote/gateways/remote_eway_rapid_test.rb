@@ -76,7 +76,6 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
 
     assert_success response
     assert_equal 'Transaction Approved Successful', response.message
-
   end
 
   def test_successful_purchase_with_3ds2
@@ -98,7 +97,6 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
 
     assert_success response
     assert_equal 'Transaction Approved Successful', response.message
-
   end
 
   def test_successful_purchase_with_shipping_address
