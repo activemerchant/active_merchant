@@ -1,5 +1,5 @@
 # Active Merchant
-[![Build Status](https://travis-ci.org/activemerchant/active_merchant.svg?branch=master)](https://travis-ci.org/activemerchant/active_merchant)
+[![Build Status](https://github.com/activemerchant/active_merchant/workflows/CI/badge.svg?branch=master)](https://github.com/activemerchant/active_merchant/actions?query=workflow%3ACI)
 [![Code Climate](https://codeclimate.com/github/activemerchant/active_merchant.svg)](https://codeclimate.com/github/activemerchant/active_merchant)
 
 Active Merchant is an extraction from the ecommerce system [Shopify](http://www.shopify.com).
