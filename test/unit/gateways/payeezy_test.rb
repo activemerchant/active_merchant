@@ -22,6 +22,14 @@ class PayeezyGateway < Test::Unit::TestCase
       initiator: 'MERCHANT',
       auth_type_override: 'A'
     }
+    @options_standardized_stored_credentials = {
+      stored_credential: {
+        network_transaction_id: 'abc123',
+        initial_transaction: false,
+        reason_type: 'recurring',
+        initiator: 'cardholder'
+      }
+    }
     @authorization = 'ET1700|106625152|credit_card|4738'
     @reversal_id = SecureRandom.random_number(1000000).to_s
   end
@@ -126,6 +134,18 @@ class PayeezyGateway < Test::Unit::TestCase
   def test_successful_purchase_with_stored_credentials
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(@options_stored_credentials))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/stored_credentials/, data)
+    end.respond_with(successful_purchase_stored_credentials_response)
+
+    assert_success response
+    assert response.test?
+    assert_equal 'Transaction Normal - Approved', response.message
+  end
+
+  def test_successful_purchase_with_standardized_stored_credentials
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(@options_standardized_stored_credentials))
     end.check_request do |_endpoint, data, _headers|
       assert_match(/stored_credentials/, data)
     end.respond_with(successful_purchase_stored_credentials_response)
