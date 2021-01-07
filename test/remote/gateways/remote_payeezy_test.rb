@@ -33,6 +33,14 @@ class RemotePayeezyTest < Test::Unit::TestCase
       initiator: 'MERCHANT',
       auth_type_override: 'A'
     }
+    @options_standardized_stored_credentials = {
+      stored_credential: {
+        network_transaction_id: 'abc123', # Not checked if initial_transaction == true; not valid if initial_transaction == false.
+        initial_transaction: true,
+        reason_type: 'recurring',
+        initiator: 'cardholder'
+      }
+    }
   end
 
   def test_successful_store
@@ -77,6 +85,12 @@ class RemotePayeezyTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_stored_credentials
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(@options_stored_credentials))
+    assert_match(/Transaction Normal/, response.message)
+    assert_success response
+  end
+
+  def test_successful_purchase_with_standardized_stored_credentials
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(@options_standardized_stored_credentials))
     assert_match(/Transaction Normal/, response.message)
     assert_success response
   end
