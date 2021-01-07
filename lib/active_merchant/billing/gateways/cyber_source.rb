@@ -256,8 +256,9 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      # Create all address hash key value pairs so that we still function if we
-      # were only provided with one or two of them or even none
+      # Create all required address hash key value pairs
+      # If a value of nil is received, that value will be passed on to the gateway and will not be replaced with a default value
+      # Billing address fields received without an override value or with an empty string value will be replaced with the default_address values
       def setup_address_hash(options)
         default_address = {
           address1: 'Unspecified',
@@ -268,8 +269,18 @@ module ActiveMerchant #:nodoc:
         }
 
         submitted_address = options[:billing_address] || options[:address] || default_address
-        options[:billing_address] = default_address.merge(submitted_address.symbolize_keys) { |_k, default, submitted| submitted.blank? ? default : submitted }
+        options[:billing_address] = default_address.merge(submitted_address.symbolize_keys) { |_k, default, submitted| check_billing_field_value(default, submitted) }
         options[:shipping_address] = options[:shipping_address] || {}
+      end
+
+      def check_billing_field_value(default, submitted)
+        if submitted.nil?
+          nil
+        elsif submitted.blank?
+          default
+        else
+          submitted
+        end
       end
 
       def build_auth_request(money, creditcard_or_reference, options)
