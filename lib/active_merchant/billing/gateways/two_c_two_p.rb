@@ -5,8 +5,8 @@ require 'active_support/core_ext/hash'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class TwoCTwoPGateway < Gateway
-      self.test_url = 'https://demo2.2c2p.com/2C2PFrontEnd/SecurePayment/Payment.aspx'
-      self.live_url = 'https://2c2p.com/2C2PFrontEnd/SecurePayment/Payment.aspx'
+      self.test_url = 'https://demo2.2c2p.com/2C2PFrontend/storedCardPaymentV2/AuthPayment.aspx'
+      self.live_url = 'https://2c2p.com/2C2PFrontend/storedCardPaymentV2/AuthPayment.aspx'
 
       self.supported_countries = [ "HK", "SG", "MM", "ID", "TH", "PH", "MY", "VN" ]
       self.default_currency = 'SGD'
@@ -15,7 +15,7 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://www.2c2p.com/'
       self.display_name = '2C2P'
 
-      VERSION = '9.9'
+      VERSION = '9.7'
 
       CURRENCY_CODES = {
         "HKD" => 344, # HONG KONG
@@ -26,21 +26,31 @@ module ActiveMerchant #:nodoc:
         "PHP" => 608, # PHILIPPINES
         "MYR" => 458, # MALAYSIA
         "VND" => 704, # VIETNAM
+        "USD" => 840, # US Dollar
+        "JPY" => 392, # Japan Yen
+        "EUR" => 978, # Euro
       }
 
       STANDARD_ERROR_CODE_MAPPING = {}
 
       def initialize(options={})
-        requires!(options, :merchant_id, :secret_key)
+        requires!(options,
+          :merchant_id,
+          :secret_key,
+          :pem_2c2p,
+          :merchant_cert,
+          :merchant_private_pem,
+          :merchant_pem_password)
+
         super
       end
 
       def purchase(money, payment, options={})
         post = {}
+
+        add_customer_data(post, options)
         add_invoice(post, money, options)
         add_payment(post, payment, options)
-        add_address(post, payment, options)
-        add_customer_data(post, options)
 
         commit('sale', post)
       end
@@ -50,50 +60,48 @@ module ActiveMerchant #:nodoc:
       end
 
       def scrub(transcript)
-        force_utf8(transcript).gsub(/(paymentRequest=).+/, '\1[FILTERED]')
+        transcript.
+          gsub(%r(("pan\\":\\")\d+), '\1[FILTERED]').
+          gsub(%r(("merchantID\\":\\")\d+), '\1[FILTERED]')
       end
 
       private
-
-      def encode64(payload)
-        Base64.strict_encode64(payload)
-      end
-
-      def force_utf8(string)
-        return nil unless string
-        binary = string.encode("BINARY", invalid: :replace, undef: :replace, replace: "?")
-        binary.encode("UTF-8", invalid: :replace, undef: :replace, replace: "?")
-      end
-
-      def build_xml(parameters)
-        builder = Builder::XmlMarkup.new
-        builder.tag!("PaymentRequest") do |xml|
-          parameters.map do |name, value|
-            xml.tag!(xmlize_param_name(name), value)
-          end
-        end
-        builder.target!
-      end
 
       def add_customer_data(post, options)
         post[:merchantID] = @options[:merchant_id]
         post[:unique_transaction_code] = options[:order_id][0,10]
         post[:desc] = options[:description]
-      end
 
-      def add_address(post, creditcard, options)
+        post[:user_defined_1] = options[:user_defined_1]
+        post[:user_defined_2] = options[:user_defined_2]
+        post[:user_defined_3] = options[:user_defined_3]
+        post[:user_defined_4] = options[:user_defined_4]
+        post[:user_defined_5] = options[:user_defined_5]
       end
 
       def add_invoice(post, money, options)
         # 12 digit format with leading zero
         post[:amt] = money.to_s.rjust(12, "0")
-        post[:currency_code] = currency_code(options[:currency])
+        post[:currency_code] = currency_code(options[:currency]) || 764
       end
 
       def add_payment(post, payment, options)
-        post[:pan_country] = options[:pan_country]
         post[:cardholder_name] = payment.name
-        post[:enc_card_data] = options[:enc_card_data]
+        post[:cardholder_email] = options[:email]
+
+        post[:pan] = payment.number
+        post[:security_code] = payment.verification_value if payment.verification_value?
+        post[:expiry] = {
+          month: payment.month.to_s.rjust(2, '0'),
+          year: payment.year.to_s
+        }
+        post[:store_card_unique_i_d] = options[:store_card_uuid] if options[:store_card_uuid].present?
+
+        post[:pan_country] = options[:pan_country]
+        post[:payment_channel] = options[:payment_channel]
+        post[:client_I_P] = options[:ip]
+        post[:pan_bank] = options[:bank_name]
+        post[:store_card] = options[:store_card]
       end
 
       def currency_code(country)
@@ -101,21 +109,54 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        xml_response = Nokogiri::XML(Base64.decode64(body))
+        page = Nokogiri::HTML.parse(body)
+        payment_response_input = page.search("//input[@id='paymentResponse']")
+        if payment_response_input.present?
+          encrypted_response = payment_response_input.attr('value').value
+          decrypted_data = decrypt(wrap_pkcs7_cert(encrypted_response))
 
-        payload = xml_response.xpath('//payload').text
+          Hash.from_xml(decrypted_data)
+        else
+          raise StandardError, "parsing response: #{body}"
+        end
+      end
 
-        decode_payload = Base64.decode64(payload)
+      def wrap_pkcs7_cert(content)
+        "-----BEGIN PKCS7-----\n" + content + "\n-----END PKCS7-----"
+      end
 
-        xml = Nokogiri::XML(decode_payload)
+      def unwrap_pkcs7_cert(content)
+        content.gsub(/-----(BEGIN|END) PKCS7-----|\n/, '')
+      end
 
-        JSON.parse(Hash.from_xml(xml.to_xml).to_json)
+      # Encrypt using 2c2p certificate provided
+      #
+      def encrypt(payload)
+        cert = OpenSSL::X509::Certificate.new(@options[:pem_2c2p])
+        ciphertext = OpenSSL::PKCS7::encrypt([cert], payload).to_s
+        unwrap_pkcs7_cert(ciphertext)
+      end
+
+      # Decrypt using merchant private cert
+      #
+      def decrypt(ciphertext)
+        private_key = OpenSSL::PKey::RSA.new(
+          @options[:merchant_private_pem],
+          @options[:merchant_pem_password])
+
+        cert = OpenSSL::X509::Certificate.new(@options[:merchant_cert])
+
+        pkcs7 = OpenSSL::PKCS7.new(ciphertext)
+        pkcs7.decrypt(private_key, cert)
       end
 
       def commit(action, parameters)
         url = (test? ? test_url : live_url)
-        payload = "paymentRequest=#{post_data(parameters)}"
-        response = parse(ssl_post(url, payload))
+
+        xml = post_data(parameters)
+        encrypted_payload = encrypt(xml)
+
+        response = parse(ssl_post(url, "paymentRequest=#{encrypted_payload}"))
 
         Response.new(
           success_from(response),
@@ -140,41 +181,52 @@ module ActiveMerchant #:nodoc:
         response["PaymentResponse"]["approvalCode"]
       end
 
-      # https://developer.2c2p.com/docs/submit-payment-request-s2s
+      def error_code_from(response)
+        response["PaymentResponse"]["failReason"]
+      end
+
+      # Prepare the data to be sent
       #
-      # Here is implemented the data setting described in the above link.
-      #
-      # 1. Construct payment request message as xml
-      # 2. Convert payment request xml to base64
-      # 3. sign the payload in 2
-      # 4. build a new payment request xml with 2 & 3
-      # 5. Convert the new payment request xml to base64 again
-      # 6. encode the final payload
+      #  * compute a hash_value using some parameters and sign them with sha1
+      #  * add version to use
+      #  * add timestamp and
+      #  * convert keys to camelcase
       #
       def post_data(parameters)
-        params_xml = build_xml(parameters)
+        signature_string = @options[:merchant_id] + parameters[:unique_transaction_code] + parameters[:amt]
 
-        params_xml_encoded = encode64(params_xml)
+        parameters[:hash_value] = sign(signature_string)
 
-        signature = sign(params_xml_encoded)
-
-        payment_request_xml = build_xml({
+        build_xml(parameters.merge({
           version: VERSION,
-          payload: params_xml_encoded,
-          signature: signature
-        })
-
-        payment_request_encoded = encode64(payment_request_xml)
-
-        CGI.escape(payment_request_encoded)
+          time_stamp: DateTime.now.strftime("%d%m%y%H%M%S")
+        }))
       end
 
       def sign(payload)
-        OpenSSL::HMAC.hexdigest("sha256", @options[:secret_key], payload).upcase
+        OpenSSL::HMAC.hexdigest("sha1", @options[:secret_key], payload).upcase
       end
 
-      def error_code_from(response)
-        response["PaymentResponse"]["failReason"]
+      def build_xml(parameters)
+        builder = Builder::XmlMarkup.new
+        builder.tag!("PaymentRequest") do |xml|
+          parameters.map do |name, value|
+            if value.is_a?(Hash)
+              add_children(xml, name, value)
+            else
+              xml.tag!(xmlize_param_name(name), value)
+            end
+          end
+        end
+        builder.target!
+      end
+
+      def add_children(xml, name, sub_fields)
+        xml.tag!(xmlize_param_name(name)) {
+          sub_fields.each do |n, v|
+            xml.tag!(xmlize_param_name(n), v)
+          end
+        }
       end
 
       def xmlize_param_name(name)
