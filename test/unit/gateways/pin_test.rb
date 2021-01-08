@@ -13,6 +13,20 @@ class PinTest < Test::Unit::TestCase
       description: 'Store Purchase',
       ip: '127.0.0.1'
     }
+
+    @three_d_secure_v1 = {
+      version: '1.0.2',
+      eci: '05',
+      cavv: '1234',
+      xid: '1234'
+    }
+
+    @three_d_secure_v2 = {
+      version: '2.0.0',
+      eci: '06',
+      cavv: 'jEoEjMykRWFCBEAAAVOBSYAAAA=',
+      ds_transaction_id: 'f92a19e2-485f-4d21-81ea-69a7352f611e'
+    }
   end
 
   def test_required_api_key_on_initialization
@@ -176,6 +190,34 @@ class PinTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_succesful_purchase_with_3ds
+    post_data = {}
+    headers = {}
+    @gateway.stubs(:headers).returns(headers)
+    @gateway.stubs(:post_data).returns(post_data)
+    @gateway.expects(:ssl_request).with(:post, 'https://test-api.pinpayments.com/1/charges', post_data, headers).returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(three_d_secure: @three_d_secure_v1))
+    assert_success response
+    assert_equal 'ch_Kw_JxmVqMeSOQU19_krRdw', response.authorization
+    assert_equal JSON.parse(successful_purchase_response), response.params
+    assert response.test?
+  end
+
+  def test_succesful_authorize_with_3ds
+    post_data = {}
+    headers = {}
+    @gateway.stubs(:headers).returns(headers)
+    @gateway.stubs(:post_data).returns(post_data)
+    @gateway.expects(:ssl_request).with(:post, 'https://test-api.pinpayments.com/1/charges', post_data, headers).returns(successful_purchase_response)
+
+    assert response = @gateway.authorize(@amount, @credit_card, @options.merge(three_d_secure: @three_d_secure_v1))
+    assert_success response
+    assert_equal 'ch_Kw_JxmVqMeSOQU19_krRdw', response.authorization
+    assert_equal JSON.parse(successful_purchase_response), response.params
+    assert response.test?
+  end
+
   def test_store_parameters
     @gateway.expects(:add_creditcard).with(instance_of(Hash), @credit_card)
     @gateway.expects(:add_address).with(instance_of(Hash), @credit_card, @options)
@@ -289,6 +331,24 @@ class PinTest < Test::Unit::TestCase
     @gateway.send(:add_creditcard, post, 'cus_XZg1ULpWaROQCOT5PdwLkQ')
     assert_equal 'cus_XZg1ULpWaROQCOT5PdwLkQ', post[:customer_token]
     assert_false post.has_key?(:card)
+  end
+
+  def test_add_3ds_v1
+    post = {}
+    @gateway.send(:add_3ds, post, @options.merge(three_d_secure: @three_d_secure_v1))
+    assert_equal '1.0.2', post[:three_d_secure][:version]
+    assert_equal '05', post[:three_d_secure][:eci]
+    assert_equal '1234', post[:three_d_secure][:cavv]
+    assert_equal '1234', post[:three_d_secure][:transaction_id]
+  end
+
+  def test_add_3ds_v2
+    post = {}
+    @gateway.send(:add_3ds, post, @options.merge(three_d_secure: @three_d_secure_v2))
+    assert_equal '2.0.0', post[:three_d_secure][:version]
+    assert_equal '06', post[:three_d_secure][:eci]
+    assert_equal 'jEoEjMykRWFCBEAAAVOBSYAAAA=', post[:three_d_secure][:cavv]
+    assert_equal 'f92a19e2-485f-4d21-81ea-69a7352f611e', post[:three_d_secure][:transaction_id]
   end
 
   def test_post_data
