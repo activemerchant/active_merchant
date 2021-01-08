@@ -259,12 +259,12 @@ module ActiveMerchant
 
       def original_transaction_id(options)
         return options[:cardbrand_original_transaction_id] if options[:cardbrand_original_transaction_id]
-        return options[:stored_credential][:network_transaction_id] if options[:stored_credential][:network_transaction_id]
+        return options[:stored_credential][:network_transaction_id] if options.dig(:stored_credential, :network_transaction_id)
       end
 
       def initiator(options)
         return options[:initiator] if options[:initiator]
-        return options[:stored_credential][:initiator].upcase if options[:stored_credential][:initiator]
+        return options[:stored_credential][:initiator].upcase if options.dig(:stored_credential, :initiator)
       end
 
       def sequence(initial_transaction)

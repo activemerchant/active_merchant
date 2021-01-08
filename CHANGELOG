@@ -26,6 +26,7 @@
 * Paymentez: Add 3DS MPI field support [carrigan] #3856
 * BlueSnap: Add support `fraud-session-id` field [meagabeth] #3863
 * BlueSnap: Update handling of `transaction-fraud-info` fields [meagabeth] #3866
+* Payeezy: Allow no stored credential transaction id [therufs] #3868
 
 == Version 1.117.0 (November 13th)
 * Checkout V2: Pass attempt_n3d along with 3ds enabled [naashton] #3805
