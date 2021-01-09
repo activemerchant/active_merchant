@@ -49,6 +49,12 @@ class BlueSnapTest < Test::Unit::TestCase
       },
       authorized_by_shopper: true
     }
+    @option_fraud_info = @options.merge(
+      transaction_fraud_info: {
+        fraud_session_id: 'fbcc094208f54c0e974d56875c73af7a',
+        shopper_ip_address: '123.12.134.1'
+      }
+    )
   end
 
   def test_successful_purchase
@@ -231,6 +237,18 @@ class BlueSnapTest < Test::Unit::TestCase
     assert_success response
     assert_equal '1021645629', response.authorization
     assert_not_includes(response.params, 'state')
+  end
+
+  def test_successful_purchase_with_fraud_info
+    response = stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @option_fraud_info)
+    end.check_request do |_method, _url, data|
+      assert_match(/<fraud-session-id>fbcc094208f54c0e974d56875c73af7a<\/fraud-session-id>/, data)
+      assert_match(/<shopper-ip-address>123.12.134.1<\/shopper-ip-address>/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert_equal '1012082839', response.authorization
   end
 
   def test_successful_echeck_purchase
