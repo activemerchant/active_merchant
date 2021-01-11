@@ -511,6 +511,9 @@ module ActiveMerchant #:nodoc:
 
           xml.DS_MERCHANT_EMV3DS data[:threeds].to_json if data[:threeds]
 
+          merchant_url = options[:merchant_url] || @options[:merchant_url]
+          xml.DS_MERCHANT_MERCHANTURL merchant_url if merchant_url
+
           if options[:stored_credential]
             xml.DS_MERCHANT_COF_INI data[:DS_MERCHANT_COF_INI]
             xml.DS_MERCHANT_COF_TYPE data[:DS_MERCHANT_COF_TYPE]
