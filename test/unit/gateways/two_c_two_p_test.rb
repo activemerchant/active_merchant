@@ -2,7 +2,16 @@ require 'test_helper'
 
 class TwoCTwoPGatewayTest < Test::Unit::TestCase
   def setup
-    @gateway = TwoCTwoPGateway.new(merchant_id: 'login', secret_key: 'password')
+    pem_2c2p = File.read(File.join(File.dirname(__FILE__), '../../support/files/2c2p.pem'))
+
+    @gateway = TwoCTwoPGateway.new(
+      merchant_id: 'login',
+      secret_key: 'password',
+      merchant_pem_password: 'password',
+      pem_2c2p: pem_2c2p,
+      merchant_private_pem: 'private_key',
+      merchant_cert: 'merchant_cert')
+
     @credit_card = credit_card
     @amount = 100
 
@@ -14,34 +23,112 @@ class TwoCTwoPGatewayTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    @gateway.expects(:parse).returns(successful_purchase_response)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
 
-    assert_equal '631496', response.authorization
+    assert_equal '936267', response.authorization
     assert response.test?
   end
 
   def test_failed_purchase
-    @gateway.expects(:ssl_post).returns(failed_purchase_response)
+    @gateway.expects(:parse).returns(failed_purchase_response)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal 'Invalid Card Number.', response.error_code
+    assert_equal "The length of 'pan' field does not match.", response.error_code
   end
 
   private
 
   def successful_purchase_response
-    <<-eos
-    PFBheW1lbnRSZXNwb25zZT48dmVyc2lvbj45Ljk8L3ZlcnNpb24+PHBheWxvYWQ+UEZCaGVXMWxiblJTWlhOd2IyNXpaVDQ4ZEdsdFpWTjBZVzF3UGpJM01EZ3lNREU1TXpNd056d3ZkR2x0WlZOMFlXMXdQanh0WlhKamFHRnVkRWxFUGtwVU1ERThMMjFsY21Ob1lXNTBTVVErUEhKbGMzQkRiMlJsUGpBd1BDOXlaWE53UTI5a1pUNDhjR0Z1UGpReU5ESTBNbGhZV0ZoWVdEUXlOREk4TDNCaGJqNDhZVzEwUGpBd01EQXdNREF3TURFd01Ed3ZZVzEwUGp4MWJtbHhkV1ZVY21GdWMyRmpkR2x2YmtOdlpHVStaR1F3WTJZeU5UUXdaand2ZFc1cGNYVmxWSEpoYm5OaFkzUnBiMjVEYjJSbFBqeDBjbUZ1VW1WbVBqTXlNREEyTXpJOEwzUnlZVzVTWldZK1BHRndjSEp2ZG1Gc1EyOWtaVDQyTXpFME9UWThMMkZ3Y0hKdmRtRnNRMjlrWlQ0OGNtVm1UblZ0WW1WeVBtUmtNR05tTWpVME1HWThMM0psWms1MWJXSmxjajQ4WldOcFBqQTNQQzlsWTJrK1BHUmhkR1ZVYVcxbFBqSTNNRGd5TURJd016TXdOend2WkdGMFpWUnBiV1UrUEhOMFlYUjFjejVCUEM5emRHRjBkWE0rUEdaaGFXeFNaV0Z6YjI0K1FYQndjbTkyWldROEwyWmhhV3hTWldGemIyNCtQSFZ6WlhKRVpXWnBibVZrTVQ0OEwzVnpaWEpFWldacGJtVmtNVDQ4ZFhObGNrUmxabWx1WldReVBqd3ZkWE5sY2tSbFptbHVaV1F5UGp4MWMyVnlSR1ZtYVc1bFpETStQQzkxYzJWeVJHVm1hVzVsWkRNK1BIVnpaWEpFWldacGJtVmtORDQ4TDNWelpYSkVaV1pwYm1Wa05ENDhkWE5sY2tSbFptbHVaV1ExUGp3dmRYTmxja1JsWm1sdVpXUTFQanhwY0hCUVpYSnBiMlErUEM5cGNIQlFaWEpwYjJRK1BHbHdjRWx1ZEdWeVpYTjBWSGx3WlQ0OEwybHdjRWx1ZEdWeVpYTjBWSGx3WlQ0OGFYQndTVzUwWlhKbGMzUlNZWFJsUGp3dmFYQndTVzUwWlhKbGMzUlNZWFJsUGp4cGNIQk5aWEpqYUdGdWRFRmljMjl5WWxKaGRHVStQQzlwY0hCTlpYSmphR0Z1ZEVGaWMyOXlZbEpoZEdVK1BIQmhhV1JEYUdGdWJtVnNQand2Y0dGcFpFTm9ZVzV1Wld3K1BIQmhhV1JCWjJWdWRENDhMM0JoYVdSQloyVnVkRDQ4Y0dGNWJXVnVkRU5vWVc1dVpXdytQQzl3WVhsdFpXNTBRMmhoYm01bGJENDhZbUZqYTJWdVpFbHVkbTlwWTJVK016QTRNak0zTUR3dlltRmphMlZ1WkVsdWRtOXBZMlUrUEdsemMzVmxja052ZFc1MGNuaytWVk04TDJsemMzVmxja052ZFc1MGNuaytQR2x6YzNWbGNrTnZkVzUwY25sQk16NVZVMEU4TDJsemMzVmxja052ZFc1MGNubEJNejQ4WW1GdWEwNWhiV1UrU2xCTlQxSkhRVTRnUTBoQlUwVWdRa0ZPU3lCT1FUd3ZZbUZ1YTA1aGJXVStQR05oY21SVWVYQmxQa05TUlVSSlZEd3ZZMkZ5WkZSNWNHVStQSEJ5YjJObGMzTkNlVDVXU1R3dmNISnZZMlZ6YzBKNVBqeHdZWGx0Wlc1MFUyTm9aVzFsUGxaSlBDOXdZWGx0Wlc1MFUyTm9aVzFsUGp4eVlYUmxVWFZ2ZEdWSlJENDhMM0poZEdWUmRXOTBaVWxFUGp4dmNtbG5hVzVoYkVGdGIzVnVkRDQ4TDI5eWFXZHBibUZzUVcxdmRXNTBQanhtZUZKaGRHVStNQzR3UEM5bWVGSmhkR1UrUEdOMWNuSmxibU41UTI5a1pUNDNNREk4TDJOMWNuSmxibU41UTI5a1pUNDhMMUJoZVcxbGJuUlNaWE53YjI1elpUND08L3BheWxvYWQ+PHNpZ25hdHVyZT45MDhDMzE4NjlBMERCQTVFMTY0N0E5REVEREUxRkVGRUM0QjNGODdDMDU5QzE0RDJBRjcwQkY0QjIzMDk1RkUxPC9zaWduYXR1cmU+PC9QYXltZW50UmVzcG9uc2U+
-    eos
+    {
+      "PaymentResponse"=>{
+        "version"=>"9.7",
+        "timeStamp"=>"070121061206",
+        "merchantID"=>"764764000001638",
+        "respCode"=>"00",
+        "pan"=>"424242XXXXXX4242",
+        "amt"=>"000000001000",
+        "uniqueTransactionCode"=>"e6b2aeddfe",
+        "tranRef"=>"3481964",
+        "approvalCode"=>"936267",
+        "refNumber"=>"e6b2aeddfe",
+        "eci"=>"06",
+        "dateTime"=>"070121131209",
+        "status"=>"A",
+        "failReason"=>"Approved",
+        "userDefined1"=>nil,
+        "userDefined2"=>nil,
+        "userDefined3"=>nil,
+        "userDefined4"=>nil,
+        "userDefined5"=>nil,
+        "ippPeriod"=>nil,
+        "ippInterestType"=>nil,
+        "ippInterestRate"=>nil,
+        "ippMerchantAbsorbRate"=>nil,
+        "paidChannel"=>nil,
+        "paidAgent"=>nil,
+        "paymentChannel"=>nil,
+        "backendInvoice"=>"3322910",
+        "issuerCountry"=>"US",
+        "issuerCountryA3"=>"USA",
+        "bankName"=>"JPMORGAN CHASE BANK NA",
+        "cardType"=>"CREDIT",
+        "processBy"=>"VI",
+        "paymentScheme"=>"VI",
+        "rateQuoteID"=>nil,
+        "originalAmount"=>nil,
+        "fxRate"=>"0.3883",
+        "currencyCode"=>"608",
+        "hashValue"=>"E7F7A217CB99B1C67A161A99C1451D598492E013"
+      }
+    }
   end
 
   def failed_purchase_response
-    <<-eos
-    PFBheW1lbnRSZXNwb25zZT48dmVyc2lvbj45Ljk8L3ZlcnNpb24+PHBheWxvYWQ+UEZCaGVXMWxiblJTWlhOd2IyNXpaVDQ4ZEdsdFpWTjBZVzF3UGpJM01EZ3lNREU1TXpVMU9Ud3ZkR2x0WlZOMFlXMXdQanh0WlhKamFHRnVkRWxFUGtwVU1ERThMMjFsY21Ob1lXNTBTVVErUEhKbGMzQkRiMlJsUGprNVBDOXlaWE53UTI5a1pUNDhjR0Z1UGpReE1URXhNVmhZV0ZoWU1URXhNVHd2Y0dGdVBqeGhiWFErTURBd01EQXdNREF3TVRBd1BDOWhiWFErUEhWdWFYRjFaVlJ5WVc1ellXTjBhVzl1UTI5a1pUNHhZbVV6WXpVNU9EUXpQQzkxYm1seGRXVlVjbUZ1YzJGamRHbHZia052WkdVK1BIUnlZVzVTWldZK1BDOTBjbUZ1VW1WbVBqeGhjSEJ5YjNaaGJFTnZaR1UrUEM5aGNIQnliM1poYkVOdlpHVStQSEpsWms1MWJXSmxjajQ4TDNKbFprNTFiV0psY2o0OFpXTnBQand2WldOcFBqeGtZWFJsVkdsdFpUNHlOekE0TWpBeU1ETTFOVGs4TDJSaGRHVlVhVzFsUGp4emRHRjBkWE0rUmp3dmMzUmhkSFZ6UGp4bVlXbHNVbVZoYzI5dVBrbHVkbUZzYVdRZ1EyRnlaQ0JPZFcxaVpYSXVQQzltWVdsc1VtVmhjMjl1UGp4MWMyVnlSR1ZtYVc1bFpERStQQzkxYzJWeVJHVm1hVzVsWkRFK1BIVnpaWEpFWldacGJtVmtNajQ4TDNWelpYSkVaV1pwYm1Wa01qNDhkWE5sY2tSbFptbHVaV1F6UGp3dmRYTmxja1JsWm1sdVpXUXpQangxYzJWeVJHVm1hVzVsWkRRK1BDOTFjMlZ5UkdWbWFXNWxaRFErUEhWelpYSkVaV1pwYm1Wa05UNDhMM1Z6WlhKRVpXWnBibVZrTlQ0OGFYQndVR1Z5YVc5a1Bqd3ZhWEJ3VUdWeWFXOWtQanhwY0hCSmJuUmxjbVZ6ZEZSNWNHVStQQzlwY0hCSmJuUmxjbVZ6ZEZSNWNHVStQR2x3Y0VsdWRHVnlaWE4wVW1GMFpUNDhMMmx3Y0VsdWRHVnlaWE4wVW1GMFpUNDhhWEJ3VFdWeVkyaGhiblJCWW5OdmNtSlNZWFJsUGp3dmFYQndUV1Z5WTJoaGJuUkJZbk52Y21KU1lYUmxQanh3WVdsa1EyaGhibTVsYkQ0OEwzQmhhV1JEYUdGdWJtVnNQanh3WVdsa1FXZGxiblErUEM5d1lXbGtRV2RsYm5RK1BIQmhlVzFsYm5SRGFHRnVibVZzUGp3dmNHRjViV1Z1ZEVOb1lXNXVaV3crUEdKaFkydGxibVJKYm5admFXTmxQand2WW1GamEyVnVaRWx1ZG05cFkyVStQR2x6YzNWbGNrTnZkVzUwY25rK1BDOXBjM04xWlhKRGIzVnVkSEo1UGp4cGMzTjFaWEpEYjNWdWRISjVRVE0rUEM5cGMzTjFaWEpEYjNWdWRISjVRVE0rUEdKaGJtdE9ZVzFsUGp3dlltRnVhMDVoYldVK1BHTmhjbVJVZVhCbFBqd3ZZMkZ5WkZSNWNHVStQSEJ5YjJObGMzTkNlVDVXU1R3dmNISnZZMlZ6YzBKNVBqeHdZWGx0Wlc1MFUyTm9aVzFsUGxaSlBDOXdZWGx0Wlc1MFUyTm9aVzFsUGp4eVlYUmxVWFZ2ZEdWSlJENDhMM0poZEdWUmRXOTBaVWxFUGp4dmNtbG5hVzVoYkVGdGIzVnVkRDQ4TDI5eWFXZHBibUZzUVcxdmRXNTBQanhtZUZKaGRHVStQQzltZUZKaGRHVStQR04xY25KbGJtTjVRMjlrWlQ0OEwyTjFjbkpsYm1ONVEyOWtaVDQ4TDFCaGVXMWxiblJTWlhOd2IyNXpaVDQ9PC9wYXlsb2FkPjxzaWduYXR1cmU+RjNGMjMyOTY0NEQ5REJGQTE2QTZENDlBQzYzREY1NTgzQ0NGQTJCRDg2MEIwREYzREI5OUJCRkVGQjRGMUU2NDwvc2lnbmF0dXJlPjwvUGF5bWVudFJlc3BvbnNlPg==
-    eos
+    {
+      "PaymentResponse"=>{
+        "version"=>"9.7",
+        "timeStamp"=>"070121131521",
+        "merchantID"=>"764764000001638",
+        "respCode"=>"99",
+        "pan"=>nil,
+        "amt"=>"000000001000",
+        "uniqueTransactionCode"=>"974a80e935",
+        "tranRef"=>nil,
+        "approvalCode"=>nil,
+        "refNumber"=>nil,
+        "eci"=>nil,
+        "dateTime"=>"070121131521",
+        "status"=>"F",
+        "failReason"=>"The length of 'pan' field does not match.",
+        "userDefined1"=>nil,
+        "userDefined2"=>nil,
+        "userDefined3"=>nil,
+        "userDefined4"=>nil,
+        "userDefined5"=>nil,
+        "ippPeriod"=>nil,
+        "ippInterestType"=>nil,
+        "ippInterestRate"=>nil,
+        "ippMerchantAbsorbRate"=>nil,
+        "paidChannel"=>nil,
+        "paidAgent"=>nil,
+        "paymentChannel"=>nil,
+        "backendInvoice"=>nil,
+        "issuerCountry"=>nil,
+        "issuerCountryA3"=>nil,
+        "bankName"=>nil,
+        "cardType"=>nil,
+        "processBy"=>nil,
+        "paymentScheme"=>nil,
+        "rateQuoteID"=>nil,
+        "originalAmount"=>nil,
+        "fxRate"=>nil,
+        "currencyCode"=>nil,
+        "hashValue"=>"7FB8AFA6B100BECBFA489347DEF3A18ECD5D7751"
+      }
+    }
   end
 end
