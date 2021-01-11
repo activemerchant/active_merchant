@@ -744,6 +744,16 @@ module ActiveMerchant #:nodoc:
           }
         }
 
+        if address = options[:billing_address] || options[:address]
+          post[:billing_details][:address] = {}
+          post[:billing_details][:address][:line1] = address[:address1] if address[:address1]
+          post[:billing_details][:address][:line2] = address[:address2] if address[:address2]
+          post[:billing_details][:address][:country] = address[:country] if address[:country]
+          post[:billing_details][:address][:postal_code] = address[:zip] if address[:zip]
+          post[:billing_details][:address][:state] = address[:state] if address[:state]
+          post[:billing_details][:address][:city] = address[:city] if address[:city]
+        end
+
         token_response = api_request(:post, "payment_methods", post)
         success = token_response["error"].nil?
 
