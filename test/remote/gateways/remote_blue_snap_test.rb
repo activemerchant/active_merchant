@@ -305,6 +305,19 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     assert_equal 'Success', response.message
   end
 
+  def test_successful_purchase_with_transaction_fraud_info
+    fraud_info_options = @options.merge(
+      transaction_fraud_info: {
+        fraud_session_id: 'fbcc094208f54c0e974d56875c73af7a',
+        shopper_ip_address: '123.12.134.1'
+      }
+    )
+
+    response = @gateway.purchase(@amount, @credit_card, fraud_info_options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
   def test_successful_echeck_purchase
     response = @gateway.purchase(@amount, @check, @options.merge(@valid_check_options))
     assert_success response
