@@ -51,8 +51,7 @@ class BlueSnapTest < Test::Unit::TestCase
     }
     @option_fraud_info = @options.merge(
       transaction_fraud_info: {
-        fraud_session_id: 'fbcc094208f54c0e974d56875c73af7a',
-        shopper_ip_address: '123.12.134.1'
+        fraud_session_id: 'fbcc094208f54c0e974d56875c73af7a'
       }
     )
   end
@@ -240,8 +239,9 @@ class BlueSnapTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_fraud_info
+    fraud_info = @option_fraud_info.merge({ ip: '123.12.134.1' })
     response = stub_comms(@gateway, :raw_ssl_request) do
-      @gateway.purchase(@amount, @credit_card, @option_fraud_info)
+      @gateway.purchase(@amount, @credit_card, fraud_info)
     end.check_request do |_method, _url, data|
       assert_match(/<fraud-session-id>fbcc094208f54c0e974d56875c73af7a<\/fraud-session-id>/, data)
       assert_match(/<shopper-ip-address>123.12.134.1<\/shopper-ip-address>/, data)

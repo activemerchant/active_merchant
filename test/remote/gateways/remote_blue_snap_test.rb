@@ -306,12 +306,12 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_transaction_fraud_info
-    fraud_info_options = @options.merge(
+    fraud_info_options = @options.merge({
+      ip: '123.12.134.1',
       transaction_fraud_info: {
-        fraud_session_id: 'fbcc094208f54c0e974d56875c73af7a',
-        shopper_ip_address: '123.12.134.1'
+        fraud_session_id: 'fbcc094208f54c0e974d56875c73af7a'
       }
-    )
+    })
 
     response = @gateway.purchase(@amount, @credit_card, fraud_info_options)
     assert_success response
