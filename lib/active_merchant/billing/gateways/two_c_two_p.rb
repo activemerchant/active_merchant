@@ -5,7 +5,7 @@ require 'active_support/core_ext/hash'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class TwoCTwoPGateway < Gateway
-      self.test_url = 'https://demo2.2c2p.com/2C2PFrontend/storedCardPaymentV2/AuthPayment.aspx'
+      self.test_url = 'https://demo2.2c2p.com/2C2PFrontend/storedCardPaymentv2/payment.aspx'
       self.live_url = 'https://t.2c2p.com/storedCardPaymentV2/Payment.aspx'
 
       self.supported_countries = [ "HK", "SG", "MM", "ID", "TH", "PH", "MY", "VN" ]
@@ -109,16 +109,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        page = Nokogiri::HTML.parse(body)
-        payment_response_input = page.search("//input[@id='paymentResponse']")
-        if payment_response_input.present?
-          encrypted_response = payment_response_input.attr('value').value
-          decrypted_data = decrypt(wrap_pkcs7_cert(encrypted_response))
+        decrypted_data = decrypt(wrap_pkcs7_cert(body))
 
-          Hash.from_xml(decrypted_data)
-        else
-          raise StandardError, "parsing response: #{body}"
-        end
+        Hash.from_xml(decrypted_data)
       end
 
       def wrap_pkcs7_cert(content)
