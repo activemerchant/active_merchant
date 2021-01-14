@@ -33,7 +33,7 @@ class RemotePlaceToPayTest < Test::Unit::TestCase
   def test_successful_information_gathering_for_en_locale
     response = @gateway.information(@amount, @credit_card, @options.merge(locale: 'en_US'))
     assert_success response
-    assert_equal 'The request has been successfully processed', response.message    
+    assert_equal 'The request has been successfully processed', response.message
   end
 
   def test_successful_interest_calculation
@@ -94,6 +94,30 @@ class RemotePlaceToPayTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options.merge(otp: '123456'))
     assert_success response
     assert_equal 'Aprobada', response.message
+  end
+
+  def test_pending_query_transaction
+    card = credit_card('36545400000701', { brand: 'Dinners' })
+    purchase_response = @gateway.purchase(@amount, card, @options)
+    response = @gateway.query_transaction(purchase_response.params["internalReference"])
+
+    assert_equal 'Pendiente, se requiere una revisión adicional para procesar la transacción', response.message
+  end
+
+  def test_approved_query_transaction
+    card = credit_card('36545400000008', { brand: 'Dinners' })
+    purchase_response = @gateway.purchase(@amount, card, @options)
+    response = @gateway.query_transaction(purchase_response.params["internalReference"])
+
+    assert_equal 'Aprobada', response.message
+  end
+
+  def test_declined_query_transaction
+    card = credit_card('36545400000248', { brand: 'Dinners' })
+    purchase_response = @gateway.purchase(@amount, card, @options)
+    response = @gateway.query_transaction(purchase_response.params["internalReference"])
+
+    assert_equal 'Rechazada', response.message
   end
 
   def test_successful_purchase_with_more_options
