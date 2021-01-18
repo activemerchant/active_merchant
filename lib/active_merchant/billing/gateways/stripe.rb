@@ -393,6 +393,7 @@ module ActiveMerchant #:nodoc:
         payment_methods = r.params["data"]
         return payment_methods[0]["id"] if payment_methods&.count == 1
 
+        r = commit(:get, "customers/#{customer}", nil, options)
         # if customer has default payment method
         default_payment_method = r.params.dig("invoice_settings", "default_payment_method")
         return default_payment_method if default_payment_method
