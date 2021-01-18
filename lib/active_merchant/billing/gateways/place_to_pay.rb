@@ -38,6 +38,15 @@ module ActiveMerchant #:nodoc:
         commit('/information', post)
       end
 
+      def query_transaction(reference, options={})
+        post = {}
+
+        add_auth_data(post)
+        post[:internalReference] = reference
+
+        commit('/query', post)
+      end
+
       def interests(money, payment, options={})
         post = {}
 
