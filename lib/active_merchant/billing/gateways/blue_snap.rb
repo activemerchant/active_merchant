@@ -156,6 +156,7 @@ module ActiveMerchant
         commit(:create_subscription, :post) do |doc|
           add_vaulted_shopper_id(doc, options[:vaulted_shopper_id])
           add_credit_card_info(doc, options)
+          add_fraud_info(doc, options)
           add_order(doc, options)
           doc.send('currency', options[:currency])
         end
