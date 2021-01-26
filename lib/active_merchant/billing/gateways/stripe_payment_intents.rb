@@ -253,6 +253,7 @@ module ActiveMerchant #:nodoc:
         if payment_method.is_a?(ActiveMerchant::Billing::CreditCard)
           if off_session_request?(options)
             post[:payment_method_data] = create_payment_method_data(payment_method, options)
+            return
           else
             p = create_payment_method(payment_method, options)
             return p unless p.success?
@@ -336,6 +337,7 @@ module ActiveMerchant #:nodoc:
       def setup_future_usage(post, options = {})
         post[:setup_future_usage] = options[:setup_future_usage] if %w(on_session off_session).include?(options[:setup_future_usage])
         post[:off_session] = options[:off_session] if off_session_request?(options)
+        post
       end
 
       def add_billing_address(post, options = {})

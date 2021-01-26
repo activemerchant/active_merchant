@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Stripe PI: ensure `setup_future_sage` and `off_session` work when using SetupIntents.
 
 == Version 1.119.0 (February 9th, 2021)
 * Payment Express: support verify/validate [therufs] #3874
