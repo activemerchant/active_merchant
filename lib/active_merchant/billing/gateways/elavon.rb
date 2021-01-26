@@ -380,6 +380,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(request)
         request = "xmldata=#{request}".delete('&')
+
         response = parse(ssl_post(test? ? self.test_url : self.live_url, request, headers))
 
         Response.new(
@@ -415,6 +416,14 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(response)
         [response[:approval_code], response[:txn_id]].join(';')
+      end
+
+      def truncate(value, size)
+        return nil unless value
+
+        difference = value.force_encoding('iso-8859-1').length - value.length
+
+        return value.to_s[0, (size - difference)]
       end
     end
   end

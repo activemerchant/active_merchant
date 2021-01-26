@@ -385,6 +385,19 @@ class ElavonTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_truncate_special_characters
+    first_name = 'Ricky ™ Martínez įncogníto'
+    credit_card = @credit_card
+    credit_card.first_name = first_name
+
+    stub_comms do
+      @gateway.purchase(@amount, credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      check = '<ssl_first_name>Ricky ™ Martínez </ssl_first_name>'
+      assert_match(/#{check}/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_level_3_fields_in_request
     level_3_data = {
       customer_code: 'bob',
