@@ -150,6 +150,7 @@ class RemoteDecidirTest < Test::Unit::TestCase
     response = @gateway_for_purchase.purchase(@amount, @declined_card, @options)
     assert_failure response
     assert_equal 'COMERCIO INVALIDO | invalid_card', response.message
+    assert_equal '3, config_error', response.error_code
     assert_match Gateway::STANDARD_ERROR_CODE[:config_error], response.error_code
   end
 
@@ -157,7 +158,7 @@ class RemoteDecidirTest < Test::Unit::TestCase
     response = @gateway_for_purchase.purchase(@amount, @declined_card, @options.merge(installments: -1))
     assert_failure response
     assert_equal 'invalid_param: installments', response.message
-    assert_match 'invalid_request_error', response.error_code
+    assert_equal 'invalid_request_error', response.error_code
   end
 
   def test_successful_authorize_and_capture
@@ -253,8 +254,16 @@ class RemoteDecidirTest < Test::Unit::TestCase
     assert_match %r{PEDIR AUTORIZACION | request_authorization_card}, response.message
   end
 
-  def test_invalid_login
+  def test_invalid_login_without_api_key
     gateway = DecidirGateway.new(api_key: '')
+
+    response = gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_match %r{No API key found in request}, response.message
+  end
+
+  def test_invalid_login
+    gateway = DecidirGateway.new(api_key: 'xxxxxxx')
 
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
