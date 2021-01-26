@@ -9,6 +9,13 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     @credit_card = credit_card()
     @threeds_2_card = credit_card('4000000000003220')
     @visa_token = 'pm_card_visa'
+
+    @three_ds_authentication_required_setup_for_off_session = 'pm_card_authenticationRequiredSetupForOffSession'
+    @three_ds_off_session_credit_card = credit_card('4000002500003155',
+      verification_value: '737',
+      month: 10,
+      year: 2022)
+
     @amount = 2020
     @update_amount = 2050
 
@@ -257,6 +264,60 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     assert verify = @gateway.verify(@visa_token)
     assert_success verify
     assert_equal 'succeeded', verify.params['status']
+  end
+
+  def test_succesful_purchase_with_stored_credentials
+    [@three_ds_off_session_credit_card, @three_ds_authentication_required_setup_for_off_session].each do |card_to_use|
+      network_transaction_id = '1098510912210968'
+      stub_comms(@gateway, :ssl_request) do
+        @gateway.purchase(@amount, card_to_use, {
+          currency: 'USD',
+          execute_threed: true,
+          confirm: true,
+          off_session: true,
+          stored_credential: {
+            network_transaction_id: network_transaction_id, # TEST env seems happy with any value :/
+            ds_transaction_id: 'null' # this is optional and can be null if not available.
+          }
+        })
+      end.check_request do |_method, _endpoint, data, _headers|
+        assert_match(%r{payment_method_options\[card\]\[mit_exemption\]\[network_transaction_id\]=#{network_transaction_id}}, data)
+        assert_match(%r{payment_method_options\[card\]\[mit_exemption\]\[ds_transaction_id\]=null}, data)
+      end.respond_with(successful_create_intent_response)
+    end
+  end
+
+  def test_succesful_purchase_with_stored_credentials_without_optional_ds_transaction_id
+    [@three_ds_off_session_credit_card, @three_ds_authentication_required_setup_for_off_session].each do |card_to_use|
+      network_transaction_id = '1098510912210968'
+      stub_comms(@gateway, :ssl_request) do
+        @gateway.purchase(@amount, card_to_use, {
+          currency: 'USD',
+          execute_threed: true,
+          confirm: true,
+          off_session: true,
+          stored_credential: {
+            network_transaction_id: network_transaction_id, # TEST env seems happy with any value :/
+          }
+        })
+      end.check_request do |_method, _endpoint, data, _headers|
+        assert_match(%r{payment_method_options\[card\]\[mit_exemption\]\[network_transaction_id\]=#{network_transaction_id}}, data)
+        assert_no_match(%r{payment_method_options\[card\]\[mit_exemption\]\[ds_transaction_id\]=null}, data)
+      end.respond_with(successful_create_intent_response)
+    end
+  end
+
+  def test_succesful_purchase_without_stored_credentials_introduces_no_exemption_fields
+    [@three_ds_off_session_credit_card, @three_ds_authentication_required_setup_for_off_session].each do |card_to_use|
+      stub_comms(@gateway, :ssl_request) do
+        @gateway.purchase(@amount, card_to_use, {
+          currency: 'USD'
+        })
+      end.check_request do |_method, _endpoint, data, _headers|
+        assert_no_match(%r{payment_method_options\[card\]\[mit_exemption\]\[network_transaction_id\]=}, data)
+        assert_no_match(%r{payment_method_options\[card\]\[mit_exemption\]\[ds_transaction_id\]=null}, data)
+      end.respond_with(successful_create_intent_response)
+    end
   end
 
   private
