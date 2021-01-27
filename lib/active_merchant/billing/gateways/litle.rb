@@ -371,9 +371,9 @@ module ActiveMerchant #:nodoc:
         return unless address
 
         doc.companyName(address[:company]) unless address[:company].blank?
-        doc.addressLine1(address[:address1]) unless address[:address1].blank?
-        doc.addressLine2(address[:address2]) unless address[:address2].blank?
-        doc.city(address[:city]) unless address[:city].blank?
+        doc.addressLine1(truncate(address[:address1], 35)) unless address[:address1].blank?
+        doc.addressLine2(truncate(address[:address2], 35)) unless address[:address2].blank?
+        doc.city(truncate(address[:city], 35)) unless address[:city].blank?
         doc.state(address[:state]) unless address[:state].blank?
         doc.zip(address[:zip]) unless address[:zip].blank?
         doc.country(address[:country]) unless address[:country].blank?

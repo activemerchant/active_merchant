@@ -46,6 +46,15 @@ class LitleTest < Test::Unit::TestCase
       account_number: '1099999999',
       account_type: 'checking'
     )
+
+    @long_address = {
+      address1: '1234 Supercalifragilisticexpialidocious',
+      address2: 'Unit 6',
+      city: '‎Lake Chargoggagoggmanchauggagoggchaubunagungamaugg',
+      state: 'ME',
+      zip: '09901',
+      country: 'US'
+    }
   end
 
   def test_successful_purchase
@@ -148,6 +157,14 @@ class LitleTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, shipping_address: address)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<shipToAddress>.*Widgets.*456.*Apt 1.*Otta.*ON.*K1C.*CA.*555-5/m, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_truncating_billing_address
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, billing_address: @long_address)
+    end.check_request do |_endpoint, data, _headers|
+      refute_match(/<billToAddress>Supercalifragilisticexpialidocious/m, data)
     end.respond_with(successful_purchase_response)
   end
 
