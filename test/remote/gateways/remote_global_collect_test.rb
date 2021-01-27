@@ -14,6 +14,15 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
       billing_address: address,
       description: 'Store Purchase'
     }
+    @long_address = {
+      billing_address: {
+        address1: '1234 Supercalifragilisticexpialidociousthiscantbemorethanfiftycharacters',
+        city: '‎Portland',
+        state: 'ME',
+        zip: '09901',
+        country: 'US'
+      }
+    }
   end
 
   def test_successful_purchase
@@ -161,6 +170,12 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     credit_card = credit_card('4567350000427977', { first_name: nil, last_name: nil })
 
     response = @gateway.purchase(@amount, credit_card, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_purchase_with_truncated_address
+    response = @gateway.purchase(@amount, @credit_card, @long_address)
     assert_success response
     assert_equal 'Succeeded', response.message
   end

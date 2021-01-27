@@ -220,6 +220,24 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_truncates_address_fields
+    response = stub_comms do
+      @gateway.purchase(@accepted_amount, @credit_card, {
+        billing_address: {
+          address1: '1234 Supercalifragilisticexpialidociousthiscantbemorethanfiftycharacters',
+          address2: 'Unit 6',
+          city: '‎Portland',
+          state: 'ME',
+          zip: '09901',
+          country: 'US'
+        }
+      })
+    end.check_request do |_endpoint, data, _headers|
+      refute_match(/Supercalifragilisticexpialidociousthiscantbemorethanfiftycharacters/, data)
+    end.respond_with(successful_capture_response)
+    assert_success response
+  end
+
   def test_failed_authorize
     response = stub_comms do
       @gateway.authorize(@rejected_amount, @declined_card, @options)

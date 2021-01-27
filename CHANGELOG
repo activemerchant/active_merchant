@@ -2,6 +2,7 @@
 
 == HEAD
 * Payment Express: support verify/validate [therufs] #3874
+* GlobalCollect: Truncate address fields [meagabeth] #3878
 
 == Version 1.118.0 (January 22nd, 2021)
 * Worldpay: Add support for challengeWindowSize [carrigan] #3823
