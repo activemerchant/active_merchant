@@ -5,6 +5,7 @@
 * GlobalCollect: Truncate address fields [meagabeth] #3878
 * Litle: Truncate address fields [meagabeth] #3877
 * Decidir: Improve error mapping [meagabeth] #3875
+* Worldpay: support `skip_capture` [therufs] #3879
 
 == Version 1.118.0 (January 22nd, 2021)
 * Worldpay: Add support for challengeWindowSize [carrigan] #3823

@@ -58,7 +58,7 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment_method, options = {})
         MultiResponse.run do |r|
           r.process { authorize(money, payment_method, options) }
-          r.process { capture(money, r.authorization, options.merge(authorization_validated: true)) }
+          r.process { capture(money, r.authorization, options.merge(authorization_validated: true)) } unless options[:skip_capture]
         end
       end
 
