@@ -300,7 +300,7 @@ module ActiveMerchant
         end
         xml.tag! 'supplementarydata' do
           xml.tag! 'item', 'type' => 'mobile' do
-            xml.tag! 'field01', payment.source.to_s.gsub('_', '-')
+            xml.tag! 'field01', payment.source.to_s.tr('_', '-')
           end
         end
       end

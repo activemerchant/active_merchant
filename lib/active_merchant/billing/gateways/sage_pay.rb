@@ -162,7 +162,7 @@ module ActiveMerchant #:nodoc:
         commit(:unstore, post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -353,8 +353,7 @@ module ActiveMerchant #:nodoc:
             street_match: AVS_CODE[response['AddressResult']],
             postal_match: AVS_CODE[response['PostCodeResult']]
           },
-          cvv_result: CVV_CODE[response['CV2Result']]
-        )
+          cvv_result: CVV_CODE[response['CV2Result']])
       end
 
       def authorization_from(response, params, action)

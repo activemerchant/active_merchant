@@ -209,11 +209,14 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_shipping_contact_info
     more_options = @options.merge({
-      shipping_address1: '123 Main St',
-      shipping_city: 'Springfield',
-      shipping_state: 'NC',
-      shipping_country: 'US',
-      shipping_zip: '27701'
+      shipping_address: {
+        address1: '123 Main St',
+        address2: 'Apt B',
+        city: 'Springfield',
+        state: 'NC',
+        country: 'US',
+        zip: '27701'
+      }
     })
 
     response = @gateway.purchase(@amount, @credit_card, more_options)
@@ -302,6 +305,19 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     assert_equal 'Success', response.message
   end
 
+  def test_successful_purchase_with_transaction_fraud_info
+    fraud_info_options = @options.merge({
+      ip: '123.12.134.1',
+      transaction_fraud_info: {
+        fraud_session_id: 'fbcc094208f54c0e974d56875c73af7a'
+      }
+    })
+
+    response = @gateway.purchase(@amount, @credit_card, fraud_info_options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
   def test_successful_echeck_purchase
     response = @gateway.purchase(@amount, @check, @options.merge(@valid_check_options))
     assert_success response
@@ -354,7 +370,7 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
   end
 
   def test_failed_unauthorized_echeck_purchase
-    response = @gateway.purchase(@amount, @check, @options.merge({authorized_by_shopper: false}))
+    response = @gateway.purchase(@amount, @check, @options.merge({ authorized_by_shopper: false }))
     assert_failure response
     assert_match(/The payment was not authorized by shopper/, response.message)
     assert_equal '16004', response.error_code
@@ -507,7 +523,7 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     assert_success store_response
     assert_match(/check/, store_response.authorization)
 
-    response = @gateway.purchase(@amount, store_response.authorization, @options.merge({authorized_by_shopper: true}))
+    response = @gateway.purchase(@amount, store_response.authorization, @options.merge({ authorized_by_shopper: true }))
     assert_success response
     assert_equal 'Success', response.message
   end

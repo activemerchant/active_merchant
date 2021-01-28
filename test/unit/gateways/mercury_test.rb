@@ -20,7 +20,7 @@ class MercuryTest < Test::Unit::TestCase
   def test_successful_purchase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/InvoiceNo>c111111111.1</, data)
       assert_match(/Frequency>OneTime/, data)
       assert_match(/RecordNo>RecordNumberRequested/, data)
@@ -36,7 +36,7 @@ class MercuryTest < Test::Unit::TestCase
   def test_successful_purchase_with_allow_partial_auth
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(allow_partial_auth: true))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/PartialAuth>Allow</, data)
     end.respond_with(successful_purchase_response)
 
@@ -68,7 +68,7 @@ class MercuryTest < Test::Unit::TestCase
     @credit_card.track_data = track_data
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<Track1>#{Regexp.escape(track_data)}<\/Track1>/, data)
     end.respond_with(successful_purchase_response)
 
@@ -82,7 +82,7 @@ class MercuryTest < Test::Unit::TestCase
     @credit_card.track_data = track_data
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<Track2>#{Regexp.escape(stripped_track_data)}<\/Track2>/, data)
     end.respond_with(successful_purchase_response)
 
@@ -96,7 +96,7 @@ class MercuryTest < Test::Unit::TestCase
     @credit_card.track_data = track_data
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<Track1>#{Regexp.escape(stripped_data)}<\/Track1>/, data)
     end.respond_with(successful_purchase_response)
 
@@ -109,7 +109,7 @@ class MercuryTest < Test::Unit::TestCase
     @credit_card.track_data = track_data
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<Track1>#{Regexp.escape(track_data)}<\/Track1>/, data)
     end.respond_with(successful_purchase_response)
 

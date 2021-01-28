@@ -36,3 +36,6 @@ Layout/CaseIndentation:
 Layout/IndentHash:
   EnforcedStyle: consistent
 
+Naming/PredicateName:
+  Exclude:
+    - "lib/active_merchant/billing/gateways/payeezy.rb"

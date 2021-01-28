@@ -118,7 +118,7 @@ class SecureNetTest < Test::Unit::TestCase
     order_id = "SecureNet doesn't like order_ids greater than 25 characters."
     stub_comms do
       @gateway.purchase(@amount, @credit_card, order_id: order_id)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/ORDERID>SecureNet doesn't like or</, data)
     end.respond_with(successful_purchase_response)
   end
@@ -133,7 +133,7 @@ class SecureNetTest < Test::Unit::TestCase
     options = { description: 'Good Stuff', invoice_description: 'Sweet Invoice', invoice_number: '48' }
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{NOTE>Good Stuff<}, data)
       assert_match(%r{INVOICEDESC>Sweet Invoice<}, data)
       assert_match(%r{INVOICENUM>48<}, data)
@@ -143,7 +143,7 @@ class SecureNetTest < Test::Unit::TestCase
   def test_only_passes_optional_fields_if_specified
     stub_comms do
       @gateway.purchase(@amount, @credit_card, {})
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_no_match(%r{NOTE}, data)
       assert_no_match(%r{INVOICEDESC}, data)
       assert_no_match(%r{INVOICENUM}, data)
@@ -153,7 +153,7 @@ class SecureNetTest < Test::Unit::TestCase
   def test_passes_with_no_developer_id
     stub_comms do
       @gateway.purchase(@amount, @credit_card, {})
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_no_match(%r{DEVELOPERID}, data)
     end.respond_with(successful_purchase_response)
   end
@@ -161,7 +161,7 @@ class SecureNetTest < Test::Unit::TestCase
   def test_passes_with_developer_id
     stub_comms do
       @gateway.purchase(@amount, @credit_card, developer_id: '1234')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{DEVELOPERID}, data)
     end.respond_with(successful_purchase_response)
   end
@@ -169,7 +169,7 @@ class SecureNetTest < Test::Unit::TestCase
   def test_passes_with_test_mode
     stub_comms do
       @gateway.purchase(@amount, @credit_card, test_mode: false)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{<TEST>FALSE</TEST>}, data)
     end.respond_with(successful_purchase_response)
   end
@@ -177,7 +177,7 @@ class SecureNetTest < Test::Unit::TestCase
   def test_passes_without_test_mode
     stub_comms do
       @gateway.purchase(@amount, @credit_card)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{<TEST>TRUE</TEST>}, data)
     end.respond_with(successful_purchase_response)
   end
@@ -231,7 +231,7 @@ class SecureNetTest < Test::Unit::TestCase
   end
 
   def pre_scrubbed
-    <<~EOS
+    <<~REQUEST
       opening connection to certify.securenet.com:443...
       opened
       starting SSL for certify.securenet.com:443...
@@ -250,11 +250,11 @@ class SecureNetTest < Test::Unit::TestCase
       -> "<GATEWAYRESPONSE xmlns=\"http://gateway.securenet.com/API/Contracts\" xmlns:i=\"http://www.w3.org/2001/XMLSchema-instance\"><ABRESPONSE i:nil=\"true\"/><TRANSACTIONRESPONSE><RESPONSE_CODE>1</RESPONSE_CODE><RESPONSE_REASON_CODE>0000</RESPONSE_REASON_CODE><RESPONSE_REASON_TEXT>Approved</RESPONSE_REASON_TEXT><RESPONSE_SUBCODE/><ADDITIONALAMOUNT>0</ADDITIONALAMOUNT><ADDITIONALDATA1/><ADDITIONALDATA2/><ADDITIONALDATA3/><ADDITIONALDATA4/><ADDITIONALDATA5/><AUTHCODE>JUJQLQ</AUTHCODE><AUTHORIZATIONMODE i:nil=\"true\"/><AUTHORIZEDAMOUNT>1.00</AUTHORIZEDAMOUNT><AVS_RESULT_CODE>Y</AVS_RESULT_CODE><BANK_ACCOUNTNAME/><BANK_ACCOUNTTYPE/><BATCHID>0</BATCHID><CALLID/><CARDENTRYMODE i:nil=\"true\"/><CARDHOLDERVERIFICATION i:nil=\"true\"/><CARDHOLDER_FIRSTNAME>Longbob</CARDHOLDER_FIRSTNAME><CARDHOLDER_LASTNAME>Longsen</CARDHOLDER_LASTNAME><CARDLEVEL_RESULTS/><CARDTYPE>VI</CARDTYPE><CARD_CODE_RESPONSE_CODE>M</CARD_CODE_RESPONSE_CODE><CASHBACK_AMOUNT>0</CASHBACK_AMOUNT><CATINDICATOR>0</CATINDICATOR><CAVV_RESPONSE_CODE/><CHECKNUM i:nil=\"true\"/><CODE>0100</CODE><CUSTOMERID/><CUSTOMER_BILL><ADDRESS>456 My Street</ADDRESS><CITY>Ottawa</CITY><COMPANY>Widgets Inc</COMPANY><COUNTRY>CA</COUNTRY><EMAIL/><EMAILRECEIPT>FALSE</EMAILRECEIPT><FIRSTNAME>Longbob</FIRSTNAME><LASTNAME>Longsen</LASTNAME><PHONE>(555)555-5555</PHONE><STATE>ON</STATE><ZIP>K1C2N6</ZIP></CUSTOMER_BILL><DYNAMICMCC i:nil=\"true\"/><EMVRESPONSE><ISSUERAUTHENTICATIONDATA i:nil=\"true\"/><ISSUERSCRIPTTEMPLATE1 i:nil=\"true\"/><ISSUERSCRIPTTEMPLATE2 i:nil=\"true\"/></EMVRESPONSE><EXPIRYDATE>0919</EXPIRYDATE><GRATUITY>0</GRATUITY><INDUSTRYSPECIFICDATA>P</INDUSTRYSPECIFICDATA><INVOICEDESCRIPTION i:nil=\"true\"/><LAST4DIGITS>2224</LAST4DIGITS><LEVEL2_VALID>FALSE</LEVEL2_VALID><LEVEL3_VALID>FALSE</LEVEL3_VALID><MARKETSPECIFICDATA/><METHOD>CC</METHOD><NETWORKCODE/><NETWORKID/><NOTES>Store Purchase</NOTES><ORDERID>1519921868962609</ORDERID><PAYMENTID/><RETREFERENCENUM/><RISK_CATEGORY i:nil=\"true\"/><RISK_REASON1 i:nil=\"true\"/><RISK_REASON2 i:nil=\"true\"/><RISK_REASON3 i:nil=\"true\"/><RISK_REASON4 i:nil=\"true\"/><RISK_REASON5 i:nil=\"true\"/><SECURENETID>7001218</SECURENETID><SETTLEMENTAMOUNT>1.00</SETTLEMENTAMOUNT><SETTLEMENTDATETIME>03012018113101</SETTLEMENTDATETIME><SOFTDESCRIPTOR/><SYSTEM_TRACENUM/><TRACKTYPE>0</TRACKTYPE><TRANSACTIONAMOUNT>1.00</TRANSACTIONAMOUNT><TRANSACTIONDATETIME>03012018113101</TRANSACTIONDATETIME><TRANSACTIONID>116186071</TRANSACTIONID><USERDEFINED i:nil=\"true\"/></TRANSACTIONRESPONSE><VAULTACCOUNTRESPONSE i:nil=\"true\"/><VAULTCUSTOMERRESPONSE i:nil=\"true\"/></GATEWAYRESPONSE>"
       read 2547 bytes
       Conn close
-    EOS
+    REQUEST
   end
 
   def post_scrubbed
-    <<~EOS
+    <<~REQUEST
       opening connection to certify.securenet.com:443...
       opened
       starting SSL for certify.securenet.com:443...
@@ -273,6 +273,6 @@ class SecureNetTest < Test::Unit::TestCase
       -> "<GATEWAYRESPONSE xmlns=\"http://gateway.securenet.com/API/Contracts\" xmlns:i=\"http://www.w3.org/2001/XMLSchema-instance\"><ABRESPONSE i:nil=\"true\"/><TRANSACTIONRESPONSE><RESPONSE_CODE>1</RESPONSE_CODE><RESPONSE_REASON_CODE>0000</RESPONSE_REASON_CODE><RESPONSE_REASON_TEXT>Approved</RESPONSE_REASON_TEXT><RESPONSE_SUBCODE/><ADDITIONALAMOUNT>0</ADDITIONALAMOUNT><ADDITIONALDATA1/><ADDITIONALDATA2/><ADDITIONALDATA3/><ADDITIONALDATA4/><ADDITIONALDATA5/><AUTHCODE>JUJQLQ</AUTHCODE><AUTHORIZATIONMODE i:nil=\"true\"/><AUTHORIZEDAMOUNT>1.00</AUTHORIZEDAMOUNT><AVS_RESULT_CODE>Y</AVS_RESULT_CODE><BANK_ACCOUNTNAME/><BANK_ACCOUNTTYPE/><BATCHID>0</BATCHID><CALLID/><CARDENTRYMODE i:nil=\"true\"/><CARDHOLDERVERIFICATION i:nil=\"true\"/><CARDHOLDER_FIRSTNAME>Longbob</CARDHOLDER_FIRSTNAME><CARDHOLDER_LASTNAME>Longsen</CARDHOLDER_LASTNAME><CARDLEVEL_RESULTS/><CARDTYPE>VI</CARDTYPE><CARD_CODE_RESPONSE_CODE>M</CARD_CODE_RESPONSE_CODE><CASHBACK_AMOUNT>0</CASHBACK_AMOUNT><CATINDICATOR>0</CATINDICATOR><CAVV_RESPONSE_CODE/><CHECKNUM i:nil=\"true\"/><CODE>0100</CODE><CUSTOMERID/><CUSTOMER_BILL><ADDRESS>456 My Street</ADDRESS><CITY>Ottawa</CITY><COMPANY>Widgets Inc</COMPANY><COUNTRY>CA</COUNTRY><EMAIL/><EMAILRECEIPT>FALSE</EMAILRECEIPT><FIRSTNAME>Longbob</FIRSTNAME><LASTNAME>Longsen</LASTNAME><PHONE>(555)555-5555</PHONE><STATE>ON</STATE><ZIP>K1C2N6</ZIP></CUSTOMER_BILL><DYNAMICMCC i:nil=\"true\"/><EMVRESPONSE><ISSUERAUTHENTICATIONDATA i:nil=\"true\"/><ISSUERSCRIPTTEMPLATE1 i:nil=\"true\"/><ISSUERSCRIPTTEMPLATE2 i:nil=\"true\"/></EMVRESPONSE><EXPIRYDATE>0919</EXPIRYDATE><GRATUITY>0</GRATUITY><INDUSTRYSPECIFICDATA>P</INDUSTRYSPECIFICDATA><INVOICEDESCRIPTION i:nil=\"true\"/><LAST4DIGITS>2224</LAST4DIGITS><LEVEL2_VALID>FALSE</LEVEL2_VALID><LEVEL3_VALID>FALSE</LEVEL3_VALID><MARKETSPECIFICDATA/><METHOD>CC</METHOD><NETWORKCODE/><NETWORKID/><NOTES>Store Purchase</NOTES><ORDERID>1519921868962609</ORDERID><PAYMENTID/><RETREFERENCENUM/><RISK_CATEGORY i:nil=\"true\"/><RISK_REASON1 i:nil=\"true\"/><RISK_REASON2 i:nil=\"true\"/><RISK_REASON3 i:nil=\"true\"/><RISK_REASON4 i:nil=\"true\"/><RISK_REASON5 i:nil=\"true\"/><SECURENETID>7001218</SECURENETID><SETTLEMENTAMOUNT>1.00</SETTLEMENTAMOUNT><SETTLEMENTDATETIME>03012018113101</SETTLEMENTDATETIME><SOFTDESCRIPTOR/><SYSTEM_TRACENUM/><TRACKTYPE>0</TRACKTYPE><TRANSACTIONAMOUNT>1.00</TRANSACTIONAMOUNT><TRANSACTIONDATETIME>03012018113101</TRANSACTIONDATETIME><TRANSACTIONID>116186071</TRANSACTIONID><USERDEFINED i:nil=\"true\"/></TRANSACTIONRESPONSE><VAULTACCOUNTRESPONSE i:nil=\"true\"/><VAULTCUSTOMERRESPONSE i:nil=\"true\"/></GATEWAYRESPONSE>"
       read 2547 bytes
       Conn close
-    EOS
+    REQUEST
   end
 end

@@ -18,6 +18,85 @@ class RemoteRedsysSHA256Test < Test::Unit::TestCase
     assert_equal 'Transaction Approved', response.message
   end
 
+  def test_successful_purchase_threeds1_as_mpi_has_no_effect
+    # 1.0.2 is NOT supported by RedSys External MPI; thus, behaviour should be same as if not present.
+    xid = '97267598-FAE6-48F2-8083-C23433990FBC'
+    cavv = '123'
+    eci = '01'
+    version = '1.0.2'
+
+    response = @gateway.purchase(
+      @amount,
+      @credit_card,
+      @options.merge(
+        three_d_secure: {
+          version: version,
+          xid: xid,
+          cavv: cavv,
+          eci: eci
+        },
+        description: 'description',
+        store: 'store',
+        sca_exemption: 'MOTO'
+      )
+    )
+
+    assert_success response
+    assert_equal 'Transaction Approved', response.message
+  end
+
+  def test_succesful_purchase_threeds1_as_mpi
+    xid = '97267598-FAE6-48F2-8083-C23433990FBC'
+    cavv = '123'
+    eci = '01'
+    version = '0.0.0'
+
+    response = @gateway.purchase(
+      @amount,
+      @credit_card,
+      @options.merge(
+        three_d_secure: {
+          version: version,
+          xid: xid,
+          cavv: cavv,
+          eci: eci
+        },
+        description: 'description',
+        store: 'store',
+        sca_exemption: 'MOTO'
+      )
+    )
+
+    assert_success response
+    assert_equal 'Transaction Approved', response.message
+  end
+
+  def test_successful_purchase_threeds2_as_mpi
+    three_ds_server_trans_id = '97267598-FAE6-48F2-8083-C23433990FBC'
+    ds_transaction_id = '97267598-FAE6-48F2-8083-C23433990FBC'
+    eci = '01'
+    version = '2.1.0'
+
+    response = @gateway.purchase(
+      @amount,
+      @credit_card,
+      @options.merge(
+        three_d_secure: {
+          version: version,
+          ds_transaction_id: ds_transaction_id,
+          three_ds_server_trans_id: three_ds_server_trans_id,
+          eci: eci
+        },
+        description: 'description',
+        store: 'store',
+        sca_exemption: 'MOTO'
+      )
+    )
+
+    assert_success response
+    assert_equal 'Transaction Approved', response.message
+  end
+
   def test_successful_authorize_3ds
     options = @options.merge(execute_threed: true, terminal: 12)
     response = @gateway.authorize(@amount, @credit_card, options)

@@ -28,7 +28,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = %w(AT AU BE BG BR CA CH CY CZ DE DK EE ES FI FR GB GR HK IE IT JP LT LU LV MT MX NL NO NZ PL PT RO SE SG SI SK US)
       self.default_currency = 'USD'
       self.money_format = :cents
-      self.supported_cardtypes = %i[visa master american_express discover jcb diners_club maestro]
+      self.supported_cardtypes = %i[visa master american_express discover jcb diners_club maestro unionpay]
       self.currencies_without_fractions = %w(BIF CLP DJF GNF JPY KMF KRW MGA PYG RWF VND VUV XAF XOF XPF UGX)
 
       self.homepage_url = 'https://stripe.com/'
@@ -221,7 +221,7 @@ module ActiveMerchant #:nodoc:
             # The /cards endpoint does not update other customer parameters.
             r.process { commit(:post, "customers/#{CGI.escape(options[:customer])}/cards", params, options) }
 
-            post[:default_card] = r.params['id'] if options[:set_default] and r.success? and !r.params['id'].blank?
+            post[:default_card] = r.params['id'] if options[:set_default] && r.success? && !r.params['id'].blank?
 
             r.process { update_customer(options[:customer], post) } if post.count > 0
           end
@@ -309,8 +309,8 @@ module ActiveMerchant #:nodoc:
           add_creditcard(post, payment, options, true)
           add_source_owner(post, payment, options)
         elsif type == 'three_d_secure'
-          post[:three_d_secure] = {card: payment}
-          post[:redirect] = {return_url: options[:redirect_url]}
+          post[:three_d_secure] = { card: payment }
+          post[:redirect] = { return_url: options[:redirect_url] }
         end
         commit(:post, 'sources', post, options)
       end
@@ -560,11 +560,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_connected_account(post, options = {})
+        post[:on_behalf_of] = options[:on_behalf_of] if options[:on_behalf_of]
+
         return unless options[:transfer_destination]
 
         post[:transfer_data] = { destination: options[:transfer_destination] }
         post[:transfer_data][:amount] = options[:transfer_amount] if options[:transfer_amount]
-        post[:on_behalf_of] = options[:on_behalf_of] if options[:on_behalf_of]
         post[:transfer_group] = options[:transfer_group] if options[:transfer_group]
         post[:application_fee_amount] = options[:application_fee_amount] if options[:application_fee_amount]
       end
@@ -617,7 +618,7 @@ module ActiveMerchant #:nodoc:
           'User-Agent' => "Stripe/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
           'Stripe-Version' => api_version(options),
           'X-Stripe-Client-User-Agent' => stripe_client_user_agent(options),
-          'X-Stripe-Client-User-Metadata' => {ip: options[:ip]}.to_json
+          'X-Stripe-Client-User-Metadata' => { ip: options[:ip] }.to_json
         }
         headers['Idempotency-Key'] = idempotency_key if idempotency_key
         headers['Stripe-Account'] = options[:stripe_account] if options[:stripe_account]
@@ -627,7 +628,7 @@ module ActiveMerchant #:nodoc:
       def stripe_client_user_agent(options)
         return user_agent unless options[:application]
 
-        JSON.dump(JSON.parse(user_agent).merge!({application: options[:application]}))
+        JSON.dump(JSON.parse(user_agent).merge!({ application: options[:application] }))
       end
 
       def api_version(options)
@@ -666,8 +667,7 @@ module ActiveMerchant #:nodoc:
           avs_result: { code: avs_code },
           cvv_result: cvc_code,
           emv_authorization: emv_authorization_from_response(response),
-          error_code: success ? nil : error_code_from(response)
-        )
+          error_code: success ? nil : error_code_from(response))
       end
 
       def authorization_from(success, url, method, response)
@@ -683,7 +683,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(success, response)
-        success ? 'Transaction approved' : response.fetch('error', {'message' => 'No error details'})['message']
+        success ? 'Transaction approved' : response.fetch('error', { 'message' => 'No error details' })['message']
       end
 
       def success_from(response, options)

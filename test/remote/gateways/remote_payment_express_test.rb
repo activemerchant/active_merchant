@@ -85,6 +85,14 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_verify
+    assert response = @gateway.verify(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'The Transaction was approved', response.message
+    assert_not_nil token = response.authorization
+    assert_equal token, response.token
+  end
+
   def test_store_credit_card
     assert response = @gateway.store(@credit_card)
     assert_success response

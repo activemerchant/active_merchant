@@ -42,7 +42,7 @@ class FirstdataE4Test < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_specified_currency
-    options_with_specified_currency = @options.merge({currency: 'GBP'})
+    options_with_specified_currency = @options.merge({ currency: 'GBP' })
     @gateway.expects(:ssl_post).returns(successful_purchase_with_specified_currency_response)
     assert response = @gateway.purchase(@amount, @credit_card, options_with_specified_currency)
     assert_success response
@@ -61,7 +61,7 @@ class FirstdataE4Test < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_specified_currency_and_token
-    options_with_specified_currency = @options.merge({currency: 'GBP'})
+    options_with_specified_currency = @options.merge({ currency: 'GBP' })
     @gateway.expects(:ssl_post).returns(successful_purchase_with_specified_currency_response)
     assert response = @gateway.purchase(@amount, '8938737759041111;visa;Longbob;Longsen;9;2014',
       options_with_specified_currency)
@@ -82,7 +82,7 @@ class FirstdataE4Test < Test::Unit::TestCase
   end
 
   def test_successful_refund_with_specified_currency
-    options_with_specified_currency = @options.merge({currency: 'GBP'})
+    options_with_specified_currency = @options.merge({ currency: 'GBP' })
     @gateway.expects(:ssl_post).returns(successful_refund_with_specified_currency_response)
     assert response = @gateway.refund(@amount, @authorization, options_with_specified_currency)
     assert_success response
@@ -160,16 +160,16 @@ class FirstdataE4Test < Test::Unit::TestCase
   def test_requests_include_verification_string
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match '<VerificationStr1>456 My Street|K1C2N6|Ottawa|ON|CA</VerificationStr1>', data
     end.respond_with(successful_purchase_response)
   end
 
   def test_requests_scrub_newline_and_return_characters_from_verification_string_components
     stub_comms do
-      options_with_newline_and_return_characters_in_address = @options.merge({billing_address: address({ address1: "123 My\nStreet", address2: "K1C2N6\r", city: "Ottawa\r\n" })})
+      options_with_newline_and_return_characters_in_address = @options.merge({ billing_address: address({ address1: "123 My\nStreet", address2: "K1C2N6\r", city: "Ottawa\r\n" }) })
       @gateway.purchase(@amount, @credit_card, options_with_newline_and_return_characters_in_address)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match '<VerificationStr1>123 My Street|K1C2N6|Ottawa|ON|CA</VerificationStr1>', data
     end.respond_with(successful_purchase_response)
   end
@@ -177,7 +177,7 @@ class FirstdataE4Test < Test::Unit::TestCase
   def test_tax_fields_are_sent
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(tax1_amount: 830, tax1_number: 'Br59a'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match '<Tax1Amount>830', data
       assert_match '<Tax1Number>Br59a', data
     end.respond_with(successful_purchase_response)
@@ -186,7 +186,7 @@ class FirstdataE4Test < Test::Unit::TestCase
   def test_customer_ref_is_sent
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(customer: '932'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match '<Customer_Ref>932', data
     end.respond_with(successful_purchase_response)
   end
@@ -194,7 +194,7 @@ class FirstdataE4Test < Test::Unit::TestCase
   def test_eci_default_value
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match '<Ecommerce_Flag>07</Ecommerce_Flag>', data
     end.respond_with(successful_purchase_response)
   end
@@ -205,7 +205,7 @@ class FirstdataE4Test < Test::Unit::TestCase
 
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match '<Ecommerce_Flag>05</Ecommerce_Flag>', data
     end.respond_with(successful_purchase_response)
 
@@ -214,7 +214,7 @@ class FirstdataE4Test < Test::Unit::TestCase
 
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match '<Ecommerce_Flag>05</Ecommerce_Flag>', data
     end.respond_with(successful_purchase_response)
   end
@@ -222,7 +222,7 @@ class FirstdataE4Test < Test::Unit::TestCase
   def test_eci_option_value
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(eci: '05'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match '<Ecommerce_Flag>05</Ecommerce_Flag>', data
     end.respond_with(successful_purchase_response)
   end
@@ -296,7 +296,7 @@ class FirstdataE4Test < Test::Unit::TestCase
 
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options_with_authentication_data)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match '<Ecommerce_Flag>06</Ecommerce_Flag>', data
       assert_match '<CAVV>SAMPLECAVV</CAVV>', data
       assert_match '<XID>SAMPLEXID</XID>', data
@@ -318,7 +318,7 @@ class FirstdataE4Test < Test::Unit::TestCase
 
     stub_comms do
       @gateway.purchase(@amount, @credit_card)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match '<Track1>Track Data</Track1>', data
       assert_match '<Ecommerce_Flag>R</Ecommerce_Flag>', data
     end.respond_with(successful_purchase_response)

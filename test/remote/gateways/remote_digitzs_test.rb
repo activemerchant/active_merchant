@@ -99,17 +99,17 @@ class RemoteDigitzsTest < Test::Unit::TestCase
   end
 
   def test_successful_store_without_billing_address
-    assert response = @gateway.store(@credit_card, {merchant_id: 'spreedly-susanswidg-32268973-2091076-148408385'})
+    assert response = @gateway.store(@credit_card, { merchant_id: 'spreedly-susanswidg-32268973-2091076-148408385' })
     assert_success response
   end
 
   def test_store_adds_card_to_existing_customer
-    assert response = @gateway.store(@credit_card, @options.merge({customer_id: 'spreedly-susanswidg-32268973-2091076-148408385-5980208887457495-148700575'}))
+    assert response = @gateway.store(@credit_card, @options.merge({ customer_id: 'spreedly-susanswidg-32268973-2091076-148408385-5980208887457495-148700575' }))
     assert_success response
   end
 
   def test_store_creates_new_customer_and_adds_card
-    assert response = @gateway.store(@credit_card, @options.merge({customer_id: 'nonexistant'}))
+    assert response = @gateway.store(@credit_card, @options.merge({ customer_id: 'nonexistant' }))
     assert_success response
   end
 

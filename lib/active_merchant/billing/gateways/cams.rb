@@ -67,12 +67,12 @@ module ActiveMerchant #:nodoc:
         '894' => STANDARD_ERROR_CODE[:processing_error]
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :username, :password)
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         post = {}
         add_invoice(post, money, options)
 
@@ -86,7 +86,7 @@ module ActiveMerchant #:nodoc:
         commit('sale', post)
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         post = {}
         add_invoice(post, money, options)
         add_payment(post, payment)
@@ -95,7 +95,7 @@ module ActiveMerchant #:nodoc:
         commit('auth', post)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         post = {}
         add_reference(post, authorization)
         add_invoice(post, money, options)
@@ -103,20 +103,20 @@ module ActiveMerchant #:nodoc:
         commit('capture', post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         post = {}
         add_reference(post, authorization)
         add_invoice(post, money, options)
         commit('refund', post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = {}
         add_reference(post, authorization)
         commit('void', post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         post = {}
         add_invoice(post, 0, options)
         add_payment(post, credit_card)
@@ -138,7 +138,7 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def add_address(post, creditcard, options={})
+      def add_address(post, creditcard, options = {})
         post[:firstname] = creditcard.first_name
         post[:lastname]  = creditcard.last_name
 

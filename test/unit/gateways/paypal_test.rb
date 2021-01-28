@@ -15,7 +15,7 @@ class PaypalTest < Test::Unit::TestCase
 
     @credit_card = credit_card('4242424242424242')
     @options = { billing_address: address, ip: '127.0.0.1' }
-    @recurring_required_fields = {start_date: Date.today, frequency: :Month, period: 'Month', description: 'A description'}
+    @recurring_required_fields = { start_date: Date.today, frequency: :Month, period: 'Month', description: 'A description' }
   end
 
   def test_no_ip_address
@@ -102,7 +102,7 @@ class PaypalTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_auth_signature
     @gateway = PaypalGateway.new(login: 'cody', password: 'test', pem: 'PEM', auth_signature: 123)
-    expected_header = {'X-PP-AUTHORIZATION' => 123, 'X-PAYPAL-MESSAGE-PROTOCOL' => 'SOAP11'}
+    expected_header = { 'X-PP-AUTHORIZATION' => 123, 'X-PAYPAL-MESSAGE-PROTOCOL' => 'SOAP11' }
     @gateway.expects(:ssl_post).with(anything, anything, expected_header).returns(successful_purchase_response)
     @gateway.expects(:add_credentials).never
 
@@ -157,7 +157,7 @@ class PaypalTest < Test::Unit::TestCase
   def test_descriptors_passed
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(soft_descriptor: 'Eggcellent', soft_descriptor_city: 'New York'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{<n2:SoftDescriptor>Eggcellent}, data)
       assert_match(%r{<n2:SoftDescriptorCity>New York}, data)
     end.respond_with(successful_purchase_response)
@@ -263,8 +263,7 @@ class PaypalTest < Test::Unit::TestCase
     xml = @gateway.send(:build_sale_or_authorization_request, 'Authorization', @amount, @credit_card,
       tax: @amount,
       shipping: @amount,
-      handling: @amount
-    )
+      handling: @amount)
 
     doc = REXML::Document.new(xml)
     assert_nil REXML::XPath.first(doc, '//n2:PaymentDetails/n2:TaxTotal')
@@ -275,8 +274,7 @@ class PaypalTest < Test::Unit::TestCase
       tax: @amount,
       shipping: @amount,
       handling: @amount,
-      subtotal: 200
-    )
+      subtotal: 200)
 
     doc = REXML::Document.new(xml)
     assert_equal '1.00', REXML::XPath.first(doc, '//n2:PaymentDetails/n2:TaxTotal').text
@@ -476,20 +474,20 @@ class PaypalTest < Test::Unit::TestCase
   def test_mass_pay_transfer_recipient_types
     stub_comms do
       @gateway.transfer 1000, 'fred@example.com'
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_no_match %r{ReceiverType}, data
     end.respond_with(successful_purchase_response)
 
     stub_comms do
       @gateway.transfer 1000, 'fred@example.com', receiver_type: 'EmailAddress'
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match %r{<ReceiverType>EmailAddress</ReceiverType>}, data
       assert_match %r{<ReceiverEmail>fred@example\.com</ReceiverEmail>}, data
     end.respond_with(successful_purchase_response)
 
     stub_comms do
       @gateway.transfer 1000, 'fred@example.com', receiver_type: 'UserID'
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match %r{<ReceiverType>UserID</ReceiverType>}, data
       assert_match %r{<ReceiverID>fred@example\.com</ReceiverID>}, data
     end.respond_with(successful_purchase_response)
@@ -553,7 +551,7 @@ class PaypalTest < Test::Unit::TestCase
   def test_includes_cvv_tag
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{CVV2}, data)
     end.respond_with(successful_purchase_response)
   end
@@ -562,14 +560,14 @@ class PaypalTest < Test::Unit::TestCase
     @credit_card.verification_value = nil
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_no_match(%r{CVV2}, data)
     end.respond_with(successful_purchase_response)
 
     @credit_card.verification_value = '  '
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_no_match(%r{CVV2}, data)
     end.respond_with(successful_purchase_response)
   end
@@ -613,13 +611,26 @@ class PaypalTest < Test::Unit::TestCase
 
   def test_3ds_version_1_request
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(three_d_secure_option))
-    end.check_request do |endpoint, data, headers|
+      @gateway.purchase(@amount, @credit_card, @options.merge(three_d_secure_option(version: '1.0.2', xid: 'xid')))
+    end.check_request do |_endpoint, data, _headers|
       assert_match %r{<n2:Version>124</n2:Version>}, data
       assert_match %r{<AuthStatus3ds>Y</AuthStatus3ds>}, data
       assert_match %r{<Cavv>cavv</Cavv>}, data
       assert_match %r{<Eci3ds>eci</Eci3ds>}, data
       assert_match %r{<Xid>xid</Xid>}, data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_3ds_version_2_request
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(three_d_secure_option(version: '2.1.0', ds_transaction_id: 'ds_transaction_id')))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r{<n2:Version>214.0</n2:Version>}, data
+      assert_match %r{<AuthStatus3ds>Y</AuthStatus3ds>}, data
+      assert_match %r{<Cavv>cavv</Cavv>}, data
+      assert_match %r{<Eci3ds>eci</Eci3ds>}, data
+      assert_match %r{<ThreeDSVersion>2.1.0</ThreeDSVersion>}, data
+      assert_match %r{<DSTransactionId>ds_transaction_id</DSTransactionId>}, data
     end.respond_with(successful_purchase_response)
   end
 
@@ -1429,13 +1440,15 @@ class PaypalTest < Test::Unit::TestCase
     RESPONSE
   end
 
-  def three_d_secure_option
+  def three_d_secure_option(version:, xid: nil, ds_transaction_id: nil)
     {
       three_d_secure: {
-        trans_status: 'Y',
+        authentication_response_status: 'Y',
         eci: 'eci',
         cavv: 'cavv',
-        xid: 'xid'
+        xid: xid,
+        ds_transaction_id: ds_transaction_id,
+        version: version
       }
     }
   end

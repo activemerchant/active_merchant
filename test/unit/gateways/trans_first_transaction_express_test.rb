@@ -40,7 +40,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
 
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/018033747/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -82,7 +82,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
 
     capture = stub_comms do
       @gateway.capture(@amount, response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/000015377801/, data)
     end.respond_with(successful_capture_response)
 
@@ -118,7 +118,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
 
     void = stub_comms do
       @gateway.void(response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/000015212561/, data)
     end.respond_with(successful_void_response)
 
@@ -128,7 +128,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
   def test_failed_void
     response = stub_comms do
       @gateway.void('purchase|5d53a33d960c46d00f5dc061947d998c')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/5d53a33d960c46d00f5dc061947d998c/, data)
     end.respond_with(failed_void_response)
 
@@ -146,7 +146,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
 
     refund = stub_comms do
       @gateway.refund(@amount, response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/000015212561/, data)
     end.respond_with(successful_refund_response)
 
@@ -172,7 +172,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
 
     refund = stub_comms do
       @gateway.refund(@amount, response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/000028705491/, data)
     end.respond_with(successful_refund_echeck_response)
 

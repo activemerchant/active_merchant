@@ -168,13 +168,13 @@ class JetpayV2Test < Test::Unit::TestCase
       with(anything, regexp_matches(/<UDField3>Value3<\/UDField3>/)).
       returns(successful_purchase_response)
 
-    @gateway.purchase(@amount, @credit_card, {tax: '777', ud_field_1: 'Value1', ud_field_2: 'Value2', ud_field_3: 'Value3'})
+    @gateway.purchase(@amount, @credit_card, { tax: '777', ud_field_1: 'Value1', ud_field_2: 'Value2', ud_field_3: 'Value3' })
   end
 
   private
 
   def successful_purchase_response
-    <<-EOF
+    <<-XML
     <JetPayResponse Version="2.2">
       <TransactionID>8afa688fd002821362</TransactionID>
       <ActionCode>000</ActionCode>
@@ -186,21 +186,21 @@ class JetpayV2Test < Test::Unit::TestCase
       <ZipMatch>Y</ZipMatch>
       <AVS>D</AVS>
     </JetPayResponse>
-    EOF
+    XML
   end
 
   def failed_purchase_response
-    <<-EOF
+    <<-XML
       <JetPayResponse Version="2.2">
         <TransactionID>7605f7c5d6e8f74deb</TransactionID>
         <ActionCode>005</ActionCode>
         <ResponseText>DECLINED</ResponseText>
       </JetPayResponse>
-    EOF
+    XML
   end
 
   def successful_authorize_response
-    <<-EOF
+    <<-XML
       <JetPayResponse Version="2.2">
         <TransactionID>cbf902091334a0b1aa</TransactionID>
         <ActionCode>000</ActionCode>
@@ -212,75 +212,75 @@ class JetpayV2Test < Test::Unit::TestCase
         <ZipMatch>Y</ZipMatch>
         <AVS>D</AVS>
       </JetPayResponse>
-    EOF
+    XML
   end
 
   def successful_capture_response
-    <<-EOF
+    <<-XML
       <JetPayResponse Version="2.2">
         <TransactionID>010327153017T10018</TransactionID>
         <ActionCode>000</ActionCode>
         <Approval>502F6B</Approval>
         <ResponseText>APPROVED</ResponseText>
       </JetPayResponse>
-    EOF
+    XML
   end
 
   def failed_capture_response
-    <<-EOF
+    <<-XML
       <JetPayResponse Version="2.2">
         <TransactionID>010327153017T10018</TransactionID>
         <ActionCode>025</ActionCode>
         <Approval>REJECT</Approval>
         <ResponseText>ED</ResponseText>
       </JetPayResponse>
-    EOF
+    XML
   end
 
   def successful_void_response
-    <<-EOF
+    <<-XML
       <JetPayResponse Version="2.2">
         <TransactionID>010327153x17T10418</TransactionID>
         <ActionCode>000</ActionCode>
         <Approval>502F7B</Approval>
         <ResponseText>VOID PROCESSED</ResponseText>
       </JetPayResponse>
-    EOF
+    XML
   end
 
   def failed_void_response
-    <<-EOF
+    <<-XML
       <JetPayResponse Version="2.2">
         <TransactionID>010327153x17T10418</TransactionID>
         <ActionCode>900</ActionCode>
         <ResponseText>INVALID MESSAGE TYPE</ResponseText>
       </JetPayResponse>
-    EOF
+    XML
   end
 
   def successful_credit_response
-    <<-EOF
+    <<-XML
       <JetPayResponse Version="2.2">
         <TransactionID>010327153017T10017</TransactionID>
         <ActionCode>000</ActionCode>
         <Approval>002F6B</Approval>
         <ResponseText>APPROVED</ResponseText>
       </JetPayResponse>
-    EOF
+    XML
   end
 
   def failed_credit_response
-    <<-EOF
+    <<-XML
       <JetPayResponse Version="2.2">
         <TransactionID>010327153017T10017</TransactionID>
         <ActionCode>912</ActionCode>
         <ResponseText>INVALID CARD NUMBER</ResponseText>
       </JetPayResponse>
-    EOF
+    XML
   end
 
   def transcript
-    <<-EOF
+    <<-XML
     <TerminalID>TESTMCC3136X</TerminalID>
     <TransactionType>SALE</TransactionType>
     <TransactionID>e23c963a1247fd7aad</TransactionID>
@@ -289,11 +289,11 @@ class JetpayV2Test < Test::Unit::TestCase
     <CardExpYear>16</CardExpYear>
     <CardName>Longbob Longsen</CardName>
     <CVV2>123</CVV2>
-    EOF
+    XML
   end
 
   def scrubbed_transcript
-    <<-EOF
+    <<-XML
     <TerminalID>TESTMCC3136X</TerminalID>
     <TransactionType>SALE</TransactionType>
     <TransactionID>e23c963a1247fd7aad</TransactionID>
@@ -302,6 +302,6 @@ class JetpayV2Test < Test::Unit::TestCase
     <CardExpYear>16</CardExpYear>
     <CardName>Longbob Longsen</CardName>
     <CVV2>[FILTERED]</CVV2>
-    EOF
+    XML
   end
 end

@@ -112,7 +112,7 @@ class RemoteFirstPayTest < Test::Unit::TestCase
   end
 
   def test_recurring_payment
-    @options.merge!({recurring: 1, recurring_start_date: DateTime.now.strftime('%m/%d/%Y'), recurring_end_date: DateTime.now.strftime('%m/%d/%Y'), recurring_type: 'monthly'})
+    @options.merge!({ recurring: 1, recurring_start_date: DateTime.now.strftime('%m/%d/%Y'), recurring_end_date: DateTime.now.strftime('%m/%d/%Y'), recurring_type: 'monthly' })
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'Approved', response.message

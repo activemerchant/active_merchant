@@ -122,7 +122,7 @@ class FinansbankTest < Test::Unit::TestCase
   private
 
   def successful_purchase_response
-    <<~EOF
+    <<~XML
       <CC5Response>
             <OrderId>1</OrderId>
             <GroupId>1</GroupId>
@@ -133,11 +133,11 @@ class FinansbankTest < Test::Unit::TestCase
             <TransId>123456</TransId>
             <ErrMsg></ErrMsg>
       </CC5Response>
-    EOF
+    XML
   end
 
   def failed_purchase_response
-    <<~EOF
+    <<~XML
       <CC5Response>
             <OrderId>1</OrderId>
             <GroupId>2</GroupId>
@@ -148,11 +148,11 @@ class FinansbankTest < Test::Unit::TestCase
             <TransId>123456</TransId>
             <ErrMsg>Not enough credit</ErrMsg>
       </CC5Response>
-    EOF
+    XML
   end
 
   def successful_authorize_response
-    <<~EOF
+    <<~XML
       <CC5Response>
         <OrderId>1</OrderId>
         <GroupId>1</GroupId>
@@ -172,11 +172,11 @@ class FinansbankTest < Test::Unit::TestCase
           <ISYERI3DSECURE>N</ISYERI3DSECURE>
         </Extra>
       </CC5Response>
-    EOF
+    XML
   end
 
   def successful_capture_response
-    <<~EOF
+    <<~XML
       <CC5Response>
         <OrderId>1</OrderId>
         <GroupId>1</GroupId>
@@ -193,11 +193,11 @@ class FinansbankTest < Test::Unit::TestCase
           <NUMCODE>00</NUMCODE>
         </Extra>
       </CC5Response>
-    EOF
+    XML
   end
 
   def capture_without_authorize_response
-    <<~EOF
+    <<~XML
       <CC5Response>
         <OrderId></OrderId>
         <GroupId></GroupId>
@@ -214,11 +214,11 @@ class FinansbankTest < Test::Unit::TestCase
           <NUMCODE>992115</NUMCODE>
         </Extra>
       </CC5Response>
-    EOF
+    XML
   end
 
   def successful_void_response
-    <<~EOF
+    <<~XML
       <CC5Response>
         <OrderId>1</OrderId>
         <GroupId>1</GroupId>
@@ -235,11 +235,11 @@ class FinansbankTest < Test::Unit::TestCase
           <NUMCODE>00</NUMCODE>
           </Extra>
       </CC5Response>
-    EOF
+    XML
   end
 
   def failed_void_response
-    <<~EOF
+    <<~XML
       <CC5Response>
         <OrderId></OrderId>
         <GroupId></GroupId>
@@ -256,11 +256,11 @@ class FinansbankTest < Test::Unit::TestCase
           <NUMCODE>992008</NUMCODE>
         </Extra>
       </CC5Response>
-    EOF
+    XML
   end
 
   def success_refund_response
-    <<~EOF
+    <<~XML
       <CC5Response>
         <OrderId>1</OrderId>
         <GroupId>1</GroupId>
@@ -280,11 +280,11 @@ class FinansbankTest < Test::Unit::TestCase
           <CAVVRESULTCODE>3</CAVVRESULTCODE>
         </Extra>
       </CC5Response>
-    EOF
+    XML
   end
 
   def failed_refund_response
-    <<~EOF
+    <<~XML
       <CC5Response>
         <OrderId></OrderId>
         <GroupId></GroupId>
@@ -301,11 +301,11 @@ class FinansbankTest < Test::Unit::TestCase
           <NUMCODE>992508</NUMCODE>
         </Extra>
       </CC5Response>
-    EOF
+    XML
   end
 
   def success_credit_response
-    <<~EOF
+    <<~XML
       <CC5Response>
         <OrderId>ORDER-14024KUGB13953</OrderId>
         <GroupId>ORDER-14024KUGB13953</GroupId>
@@ -323,11 +323,11 @@ class FinansbankTest < Test::Unit::TestCase
           <CAVVRESULTCODE>3</CAVVRESULTCODE>
         </Extra>
       </CC5Response>
-    EOF
+    XML
   end
 
   def failed_credit_response
-    <<~EOF
+    <<~XML
       <CC5Response>
         <OrderId></OrderId>
         <GroupId></GroupId>
@@ -344,6 +344,6 @@ class FinansbankTest < Test::Unit::TestCase
           <NUMCODE>992012</NUMCODE>
         </Extra>
       </CC5Response>
-    EOF
+    XML
   end
 end

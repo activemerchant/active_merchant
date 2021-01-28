@@ -27,8 +27,7 @@ class AuthorizeNetArbTest < Test::Unit::TestCase
       duration: {
         start_date: Time.now.strftime('%Y-%m-%d'),
         occurrences: 30
-      }
-    )
+      })
 
     assert_instance_of Response, response
     assert response.success?

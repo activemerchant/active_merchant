@@ -56,7 +56,7 @@ module ActiveMerchant #:nodoc:
         commit("gateways/#{@options[:gateway_token]}/authorize.xml", request)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         request = build_xml_request('transaction') do |doc|
           add_invoice(doc, money, options)
         end
@@ -64,7 +64,7 @@ module ActiveMerchant #:nodoc:
         commit("transactions/#{authorization}/capture.xml", request)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         request = build_xml_request('transaction') do |doc|
           add_invoice(doc, money, options)
           add_extra_options(:gateway_specific_fields, doc, options)
@@ -73,7 +73,7 @@ module ActiveMerchant #:nodoc:
         commit("transactions/#{authorization}/credit.xml", request)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         commit("transactions/#{authorization}/void.xml", '')
       end
 
@@ -98,7 +98,7 @@ module ActiveMerchant #:nodoc:
       #
       # credit_card    - The CreditCard to store
       # options        - A standard ActiveMerchant options hash
-      def store(credit_card, options={})
+      def store(credit_card, options = {})
         retain = (options.has_key?(:retain) ? options[:retain] : true)
         save_card(retain, credit_card, options)
       end
@@ -108,7 +108,7 @@ module ActiveMerchant #:nodoc:
       #
       # credit_card    - The CreditCard to store
       # options        - A standard ActiveMerchant options hash
-      def unstore(authorization, options={})
+      def unstore(authorization, options = {})
         commit("payment_methods/#{authorization}/redact.xml", '', :put)
       end
 
@@ -117,7 +117,7 @@ module ActiveMerchant #:nodoc:
         commit("transactions/#{transaction_token}.xml", nil, :get)
       end
 
-      alias_method :status, :find
+      alias status find
 
       def supports_scrubbing?
         true

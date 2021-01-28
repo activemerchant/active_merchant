@@ -31,7 +31,7 @@ class FatZebraTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_metadata
-    @gateway.expects(:ssl_request).with { |method, url, body, headers|
+    @gateway.expects(:ssl_request).with { |_method, _url, body, _headers|
       body.match '"metadata":{"foo":"bar"}'
     }.returns(successful_purchase_response_with_metadata)
 
@@ -43,7 +43,7 @@ class FatZebraTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_token
-    @gateway.expects(:ssl_request).with { |method, url, body, headers|
+    @gateway.expects(:ssl_request).with { |_method, _url, body, _headers|
       body.match '"card_token":"e1q7dbj2"'
     }.returns(successful_purchase_response)
 
@@ -55,7 +55,7 @@ class FatZebraTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_token_string
-    @gateway.expects(:ssl_request).with { |method, url, body, headers|
+    @gateway.expects(:ssl_request).with { |_method, _url, body, _headers|
       body.match '"card_token":"e1q7dbj2"'
     }.returns(successful_purchase_response)
 
@@ -67,7 +67,7 @@ class FatZebraTest < Test::Unit::TestCase
   end
 
   def test_successful_multi_currency_purchase
-    @gateway.expects(:ssl_request).with { |method, url, body, headers|
+    @gateway.expects(:ssl_request).with { |_method, _url, body, _headers|
       body.match '"currency":"USD"'
     }.returns(successful_purchase_response)
 
@@ -81,13 +81,13 @@ class FatZebraTest < Test::Unit::TestCase
   def test_successful_purchase_with_recurring_flag
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options.merge(recurring: true))
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(%r("extra":{"ecm":"32"), data)
     end.respond_with(successful_purchase_response)
   end
 
   def test_successful_purchase_with_descriptor
-    @gateway.expects(:ssl_request).with { |method, url, body, headers|
+    @gateway.expects(:ssl_request).with { |_method, _url, body, _headers|
       json = JSON.parse(body)
       json['extra']['name'] == 'Merchant' && json['extra']['location'] == 'Location'
     }.returns(successful_purchase_response)
@@ -100,7 +100,7 @@ class FatZebraTest < Test::Unit::TestCase
   end
 
   def test_successful_authorization
-    @gateway.expects(:ssl_request).with { |method, url, body, headers|
+    @gateway.expects(:ssl_request).with { |_method, _url, body, _headers|
       body.match '"capture":false'
     }.returns(successful_purchase_response)
 
@@ -112,7 +112,7 @@ class FatZebraTest < Test::Unit::TestCase
   end
 
   def test_successful_capture
-    @gateway.expects(:ssl_request).with { |method, url, body, headers|
+    @gateway.expects(:ssl_request).with { |_method, url, _body, _headers|
       url =~ %r[purchases/e1q7dbj2/capture\z]
     }.returns(successful_purchase_response)
 

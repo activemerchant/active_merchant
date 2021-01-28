@@ -60,7 +60,7 @@ class InspireTest < Test::Unit::TestCase
   def test_add_address
     result = {}
 
-    @gateway.send(:add_address, result, nil, billing_address: {address1: '164 Waverley Street', country: 'US', state: 'CO'})
+    @gateway.send(:add_address, result, nil, billing_address: { address1: '164 Waverley Street', country: 'US', state: 'CO' })
     assert_equal %w[address1 city company country phone state zip], result.stringify_keys.keys.sort
     assert_equal 'CO', result[:state]
     assert_equal '164 Waverley Street', result[:address1]

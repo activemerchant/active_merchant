@@ -5,7 +5,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
   def setup
     Base.mode = :test
 
-    @gateway = CyberSourceGateway.new({nexus: 'NC'}.merge(fixtures(:cyber_source)))
+    @gateway = CyberSourceGateway.new({ nexus: 'NC' }.merge(fixtures(:cyber_source)))
 
     @credit_card = credit_card('4111111111111111', verification_value: '987')
     @declined_card = credit_card('801111111111111')
@@ -14,32 +14,27 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
       verification_value: '321',
       month: '12',
       year: (Time.now.year + 2).to_s,
-      brand: :elo
-    )
+      brand: :elo)
     @three_ds_unenrolled_card = credit_card('4000000000000051',
       verification_value: '321',
       month: '12',
       year: (Time.now.year + 2).to_s,
-      brand: :visa
-    )
+      brand: :visa)
     @three_ds_enrolled_card = credit_card('4000000000000002',
       verification_value: '321',
       month: '12',
       year: (Time.now.year + 2).to_s,
-      brand: :visa
-    )
+      brand: :visa)
     @three_ds_invalid_card = credit_card('4000000000000010',
       verification_value: '321',
       month: '12',
       year: (Time.now.year + 2).to_s,
-      brand: :visa
-    )
+      brand: :visa)
     @three_ds_enrolled_mastercard = credit_card('5200000000001005',
       verification_value: '321',
       month: '12',
       year: (Time.now.year + 2).to_s,
-      brand: :master
-    )
+      brand: :master)
 
     @amount = 100
 
@@ -97,8 +92,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4111111111111111',
       brand: 'visa',
       eci: '05',
-      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
-    )
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
 
     transcript = capture_transcript(@gateway) do
       @gateway.authorize(@amount, credit_card, @options)
@@ -370,9 +364,16 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_billing_address_override
-    @options[:billing_address] = address
+    billing_address = {
+      address1: '111 North Pole Lane',
+      city: 'Santaland',
+      state: '',
+      phone: nil
+    }
+    @options[:billing_address] = billing_address
     @options[:email] = 'override@example.com'
     assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_equal true, response.success?
     assert_successful_response(response)
   end
 
@@ -533,8 +534,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4111111111111111',
       brand: 'visa',
       eci: '05',
-      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
-    )
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
 
     assert auth = @gateway.authorize(@amount, credit_card, @options)
     assert_successful_response(auth)
@@ -684,7 +684,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
   end
 
   def test_successful_create_subscription_with_monthly_options
-    response = @gateway.store(@credit_card, @subscription_options.merge(setup_fee: 99.0, subscription: {amount: 49.0, automatic_renew: false, frequency: 'monthly'}))
+    response = @gateway.store(@credit_card, @subscription_options.merge(setup_fee: 99.0, subscription: { amount: 49.0, automatic_renew: false, frequency: 'monthly' }))
     assert_equal 'Successful transaction', response.message
     response = @gateway.retrieve(response.authorization, order_id: @subscription_options[:order_id])
     assert_equal '0.49', response.params['recurringAmount']
@@ -695,7 +695,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert response = @gateway.store(@credit_card, @subscription_options)
     assert_successful_response(response)
 
-    assert response = @gateway.update(response.authorization, @credit_card, {order_id: generate_unique_id, setup_fee: 100})
+    assert response = @gateway.update(response.authorization, @credit_card, { order_id: generate_unique_id, setup_fee: 100 })
     assert_successful_response(response)
   end
 
@@ -704,7 +704,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_successful_response(response)
 
     assert response = @gateway.update(response.authorization, nil,
-      {order_id: generate_unique_id, setup_fee: 100, billing_address: address, email: 'someguy1232@fakeemail.net'})
+      { order_id: generate_unique_id, setup_fee: 100, billing_address: address, email: 'someguy1232@fakeemail.net' })
 
     assert_successful_response(response)
   end

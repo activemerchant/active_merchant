@@ -30,7 +30,7 @@ module ActiveMerchant #:nodoc:
 
       SOAP_ACTIONS = {
         initialize: { name: 'Initialize8', url: 'pxorder/pxorder.asmx', xmlns: 'http://external.payex.com/PxOrder/' },
-        purchasecc: { name: 'PurchaseCC', url: 'pxconfined/pxorder.asmx', xmlns: 'http://confined.payex.com/PxOrder/', confined: true},
+        purchasecc: { name: 'PurchaseCC', url: 'pxconfined/pxorder.asmx', xmlns: 'http://confined.payex.com/PxOrder/', confined: true },
         cancel: { name: 'Cancel2', url: 'pxorder/pxorder.asmx', xmlns: 'http://external.payex.com/PxOrder/' },
         capture: { name: 'Capture5', url: 'pxorder/pxorder.asmx', xmlns: 'http://external.payex.com/PxOrder/' },
         credit: { name: 'Credit5', url: 'pxorder/pxorder.asmx', xmlns: 'http://external.payex.com/PxOrder/' },
@@ -117,7 +117,7 @@ module ActiveMerchant #:nodoc:
       # options        - A standard ActiveMerchant options hash
       #
       # Returns an ActiveMerchant::Billing::Response object
-      def void(authorization, options={})
+      def void(authorization, options = {})
         send_cancel(authorization)
       end
 
@@ -155,7 +155,7 @@ module ActiveMerchant #:nodoc:
         amount = amount(1) # 1 cent for authorization
         MultiResponse.run(:first) do |r|
           r.process { send_create_agreement(options) }
-          r.process { send_initialize(amount, true, options.merge({agreement_ref: r.authorization})) }
+          r.process { send_initialize(amount, true, options.merge({ agreement_ref: r.authorization })) }
           order_ref = r.params['orderref']
           r.process { send_purchasecc(creditcard, order_ref) }
         end
@@ -341,9 +341,9 @@ module ActiveMerchant #:nodoc:
 
       def build_xml_request(soap_action, properties)
         builder = Nokogiri::XML::Builder.new
-        builder.__send__('soap12:Envelope', {'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance',
+        builder.__send__('soap12:Envelope', { 'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance',
                                              'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema',
-                                             'xmlns:soap12' => 'http://www.w3.org/2003/05/soap-envelope'}) do |root|
+                                             'xmlns:soap12' => 'http://www.w3.org/2003/05/soap-envelope' }) do |root|
           root.__send__('soap12:Body') do |body|
             body.__send__(soap_action[:name], xmlns: soap_action[:xmlns]) do |doc|
               properties.each do |key, val|
@@ -389,8 +389,7 @@ module ActiveMerchant #:nodoc:
           message_from(response),
           response,
           test: test?,
-          authorization: build_authorization(response)
-        )
+          authorization: build_authorization(response))
       end
 
       def build_authorization(response)

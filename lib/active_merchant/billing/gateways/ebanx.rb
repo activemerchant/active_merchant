@@ -46,12 +46,12 @@ module ActiveMerchant #:nodoc:
         'cl' => 5000
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :integration_key)
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         post = { payment: {} }
         add_integration_key(post)
         add_operation(post)
@@ -65,7 +65,7 @@ module ActiveMerchant #:nodoc:
         commit(:purchase, post)
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         post = { payment: {} }
         add_integration_key(post)
         add_operation(post)
@@ -80,7 +80,7 @@ module ActiveMerchant #:nodoc:
         commit(:authorize, post)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         post = {}
         add_integration_key(post)
         post[:hash] = authorization
@@ -89,7 +89,7 @@ module ActiveMerchant #:nodoc:
         commit(:capture, post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         post = {}
         add_integration_key(post)
         add_operation(post)
@@ -100,7 +100,7 @@ module ActiveMerchant #:nodoc:
         commit(:refund, post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = {}
         add_integration_key(post)
         add_authorization(post, authorization)
@@ -108,7 +108,7 @@ module ActiveMerchant #:nodoc:
         commit(:void, post)
       end
 
-      def store(credit_card, options={})
+      def store(credit_card, options = {})
         post = {}
         add_integration_key(post)
         add_payment_details(post, credit_card)
@@ -117,7 +117,7 @@ module ActiveMerchant #:nodoc:
         commit(:store, post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(VERIFY_AMOUNT_PER_COUNTRY[customer_country(options)], credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -222,7 +222,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, parameters)
         url = url_for((test? ? test_url : live_url), action, parameters)
-        response = parse(ssl_request(HTTP_METHOD[action], url, post_data(action, parameters), {'x-ebanx-client-user-agent': "ActiveMerchant/#{ActiveMerchant::VERSION}"}))
+        response = parse(ssl_request(HTTP_METHOD[action], url, post_data(action, parameters), { 'x-ebanx-client-user-agent': "ActiveMerchant/#{ActiveMerchant::VERSION}" }))
 
         success = success_from(action, response)
 

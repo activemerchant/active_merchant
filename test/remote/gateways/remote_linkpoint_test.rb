@@ -91,9 +91,9 @@ class LinkpointTest < Test::Unit::TestCase
 
   def test_successfull_purchase_with_item_entity
     @options[:line_items] = [
-      {id: '123456', description: 'Logo T-Shirt', price: '12.00', quantity: '1',
-       options: [{name: 'Color', value: 'Red'}, {name: 'Size', value: 'XL'}]},
-      {id: '111', description: 'keychain', price: '3.00', quantity: '1'}
+      { id: '123456', description: 'Logo T-Shirt', price: '12.00', quantity: '1',
+       options: [{ name: 'Color', value: 'Red' }, { name: 'Size', value: 'XL' }] },
+      { id: '111', description: 'keychain', price: '3.00', quantity: '1' }
     ]
     assert purchase = @gateway.purchase(1500, @credit_card, @options)
     assert_success purchase
@@ -105,8 +105,7 @@ class LinkpointTest < Test::Unit::TestCase
       installments: 12,
       startdate: 'immediate',
       periodicity: :monthly,
-      billing_address: address
-    )
+      billing_address: address)
 
     assert_success response
     assert_equal 'APPROVED', response.params['approved']

@@ -17,12 +17,12 @@ module ActiveMerchant #:nodoc:
       SERVICE_TEST_URL = 'https://certservices.elementexpress.com/express.asmx'
       SERVICE_LIVE_URL = 'https://services.elementexpress.com/express.asmx'
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :account_id, :account_token, :application_id, :acceptor_id, :application_name, :application_version)
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         action = payment.is_a?(Check) ? 'CheckSale' : 'CreditCardSale'
 
         request = build_soap_request do |xml|
@@ -38,7 +38,7 @@ module ActiveMerchant #:nodoc:
         commit(action, request, money)
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         request = build_soap_request do |xml|
           xml.CreditCardAuthorization(xmlns: 'https://transaction.elementexpress.com') do
             add_credentials(xml)
@@ -52,7 +52,7 @@ module ActiveMerchant #:nodoc:
         commit('CreditCardAuthorization', request, money)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         trans_id, = split_authorization(authorization)
         options[:trans_id] = trans_id
 
@@ -67,7 +67,7 @@ module ActiveMerchant #:nodoc:
         commit('CreditCardAuthorizationCompletion', request, money)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         trans_id, = split_authorization(authorization)
         options[:trans_id] = trans_id
 
@@ -82,9 +82,9 @@ module ActiveMerchant #:nodoc:
         commit('CreditCardReturn', request, money)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         trans_id, trans_amount = split_authorization(authorization)
-        options.merge!({trans_id: trans_id, trans_amount: trans_amount, reversal_type: 'Full'})
+        options.merge!({ trans_id: trans_id, trans_amount: trans_amount, reversal_type: 'Full' })
 
         request = build_soap_request do |xml|
           xml.CreditCardReversal(xmlns: 'https://transaction.elementexpress.com') do
@@ -110,7 +110,7 @@ module ActiveMerchant #:nodoc:
         commit('PaymentAccountCreate', request, nil)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         request = build_soap_request do |xml|
           xml.CreditCardAVSOnly(xmlns: 'https://transaction.elementexpress.com') do
             add_credentials(xml)

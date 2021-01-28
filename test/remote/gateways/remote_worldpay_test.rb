@@ -13,8 +13,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'elo'
-    )
+      brand: 'elo')
     @cabal_card = credit_card('6035220000000006')
     @naranja_card = credit_card('5895620000000002')
     @sodexo_voucher = credit_card('6060704495764400', brand: 'sodexo')
@@ -67,14 +66,21 @@ class RemoteWorldpayTest < Test::Unit::TestCase
   end
 
   def test_successful_3ds2_authorize
-    options = @options.merge({execute_threed: true, three_ds_version: '2.0'})
+    options = @options.merge({ execute_threed: true, three_ds_version: '2.0' })
+    assert response = @gateway.authorize(@amount, @threeDS2_card, options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_3ds2_authorize_with_browser_size
+    options = @options.merge({ execute_threed: true, three_ds_version: '2.0', browser_size: '390x400' })
     assert response = @gateway.authorize(@amount, @threeDS2_card, options)
     assert_success response
     assert_equal 'SUCCESS', response.message
   end
 
   def test_successful_authorize_with_risk_data
-    options = @options.merge({execute_threed: true, three_ds_version: '2.0', risk_data: risk_data})
+    options = @options.merge({ execute_threed: true, three_ds_version: '2.0', risk_data: risk_data })
     assert response = @gateway.authorize(@amount, @threeDS2_card, options)
     assert_success response
     assert_equal 'SUCCESS', response.message
@@ -161,7 +167,8 @@ class RemoteWorldpayTest < Test::Unit::TestCase
         session_id: session_id,
         ip: '127.0.0.1',
         cookie: 'machine=32423423'
-      })
+      }
+    )
     assert first_message = @gateway.authorize(@amount, @threeDS_card, options)
     assert_equal "A transaction status of 'AUTHORISED' is required.", first_message.message
     assert first_message.test?
@@ -187,7 +194,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
       network_transaction_id: nil
     }
 
-    assert auth = @gateway.authorize(@amount, @credit_card, @options.merge({stored_credential: stored_credential_params}))
+    assert auth = @gateway.authorize(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
     assert_success auth
     assert auth.authorization
     assert auth.params['scheme_response']
@@ -255,7 +262,8 @@ class RemoteWorldpayTest < Test::Unit::TestCase
         ip: '127.0.0.1',
         cookie: 'machine=32423423',
         stored_credential: stored_credential_params
-      })
+      }
+    )
     assert first_message = @gateway.authorize(@amount, @threeDS_card, options)
     assert_equal "A transaction status of 'AUTHORISED' is required.", first_message.message
     assert first_message.test?
@@ -277,7 +285,8 @@ class RemoteWorldpayTest < Test::Unit::TestCase
         ip: '127.0.0.1',
         cookie: 'machine=32423423',
         stored_credential_usage: 'FIRST'
-      })
+      }
+    )
     assert first_message = @gateway.authorize(@amount, @threeDS_card, options)
     assert_equal "A transaction status of 'AUTHORISED' is required.", first_message.message
     assert first_message.test?
@@ -318,7 +327,8 @@ class RemoteWorldpayTest < Test::Unit::TestCase
         session_id: session_id,
         ip: '127.0.0.1',
         cookie: 'machine=32423423'
-      })
+      }
+    )
     assert first_message = @gateway.authorize(@amount, @threeDS_card, options)
     assert_match %r{missing info for 3D-secure transaction}i, first_message.message
     assert first_message.test?

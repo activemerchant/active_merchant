@@ -138,7 +138,7 @@ class MoneiTest < Test::Unit::TestCase
     })
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       body = CGI.unescape data
       assert_match %r{<Authentication type="3DSecure">}, body
       assert_match %r{<ResultIndicator>05</ResultIndicator>}, body

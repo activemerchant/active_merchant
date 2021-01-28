@@ -90,7 +90,7 @@ module ActiveMerchant #:nodoc:
         response
       end
 
-      def commit(action, post=nil)
+      def commit(action, post = nil)
         url = (test? ? self.test_url : self.live_url) + action
 
         begin

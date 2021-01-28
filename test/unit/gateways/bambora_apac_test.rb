@@ -16,7 +16,7 @@ class BamboraApacTest < Test::Unit::TestCase
   def test_successful_purchase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, order_id: 1)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{<SubmitSinglePayment }, data)
       assert_match(%r{<UserName>username<}, data)
       assert_match(%r{<Password>password<}, data)
@@ -48,7 +48,7 @@ class BamboraApacTest < Test::Unit::TestCase
   def test_successful_authorize
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, order_id: 1)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{<SubmitSinglePayment }, data)
       assert_match(%r{<CustRef>1<}, data)
       assert_match(%r{<TrnType>2<}, data)
@@ -61,7 +61,7 @@ class BamboraApacTest < Test::Unit::TestCase
   def test_successful_capture
     response = stub_comms do
       @gateway.capture(@amount, 'receipt')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{<SubmitSingleCapture }, data)
       assert_match(%r{<Receipt>receipt<}, data)
       assert_match(%r{<Amount>100<}, data)
@@ -73,7 +73,7 @@ class BamboraApacTest < Test::Unit::TestCase
   def test_successful_refund
     response = stub_comms do
       @gateway.refund(@amount, 'receipt')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{<SubmitSingleRefund }, data)
       assert_match(%r{<Receipt>receipt<}, data)
       assert_match(%r{<Amount>100<}, data)
@@ -85,7 +85,7 @@ class BamboraApacTest < Test::Unit::TestCase
   def test_successful_void
     response = stub_comms do
       @gateway.void('receipt', amount: 200)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{<SubmitSingleVoid }, data)
       assert_match(%r{<Amount>200<}, data)
     end.respond_with(successful_void_response)

@@ -60,7 +60,7 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
 
     stub_comms(@gateway, :ssl_request) do
       @gateway.create_intent(@amount, @visa_token, options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/statement_descriptor_suffix=suffix/, data)
     end.respond_with(successful_create_intent_response)
   end
@@ -80,9 +80,77 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
 
     stub_comms(@gateway, :ssl_request) do
       @gateway.create_intent(@amount, @visa_token, options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, _data, headers|
       assert_equal idempotency_key, headers['Idempotency-Key']
     end.respond_with(successful_create_intent_response)
+  end
+
+  def test_request_three_d_secure
+    request_three_d_secure = 'any'
+    options = @options.merge(request_three_d_secure: request_three_d_secure)
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.create_intent(@amount, @visa_token, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/\[request_three_d_secure\]=any/, data)
+    end.respond_with(successful_request_three_d_secure_response)
+
+    request_three_d_secure = 'automatic'
+    options = @options.merge(request_three_d_secure: request_three_d_secure)
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.create_intent(@amount, @visa_token, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/\[request_three_d_secure\]=automatic/, data)
+    end.respond_with(successful_request_three_d_secure_response)
+
+    request_three_d_secure = true
+    options = @options.merge(request_three_d_secure: request_three_d_secure)
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.create_intent(@amount, @visa_token, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      refute_match(/\[request_three_d_secure\]/, data)
+    end.respond_with(successful_request_three_d_secure_response)
+  end
+
+  def test_external_three_d_secure_auth_data
+    options = @options.merge(
+      three_d_secure: {
+        eci: '05',
+        cavv: '4BQwsg4yuKt0S1LI1nDZTcO9vUM=',
+        xid: 'd+NEBKSpEMauwleRhdrDY06qj4A='
+      }
+    )
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @visa_token, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/payment_method_options\[card\]\[three_d_secure\]/, data)
+      assert_match(/three_d_secure\]\[version\]=1.0.2/, data)
+      assert_match(/three_d_secure\]\[electronic_commerce_indicator\]=05/, data)
+      assert_match(/three_d_secure\]\[cryptogram\]=4BQwsg4yuKt0S1LI1nDZTcO9vUM%3D/, data)
+      assert_match(/three_d_secure\]\[transaction_id\]=d%2BNEBKSpEMauwleRhdrDY06qj4A%3D/, data)
+    end.respond_with(successful_request_three_d_secure_response)
+
+    options = @options.merge(
+      three_d_secure: {
+        version: '2.1.0',
+        eci: '02',
+        cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA=',
+        ds_transaction_id: 'f879ea1c-aa2c-4441-806d-e30406466d79'
+      }
+    )
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @visa_token, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/payment_method_options\[card\]\[three_d_secure\]/, data)
+      assert_match(/three_d_secure\]\[version\]=2.1.0/, data)
+      assert_match(/three_d_secure\]\[electronic_commerce_indicator\]=02/, data)
+      assert_match(/three_d_secure\]\[cryptogram\]=jJ81HADVRtXfCBATEp01CJUAAAA%3D/, data)
+      assert_match(/three_d_secure\]\[transaction_id\]=f879ea1c-aa2c-4441-806d-e30406466d79/, data)
+    end.respond_with(successful_request_three_d_secure_response)
   end
 
   def test_failed_capture_after_creation
@@ -123,12 +191,30 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
 
     stub_comms(@gateway, :ssl_request) do
       @gateway.create_intent(@amount, @visa_token, options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/transfer_data\[destination\]=#{destination}/, data)
       assert_match(/transfer_data\[amount\]=#{amount}/, data)
       assert_match(/on_behalf_of=#{on_behalf_of}/, data)
       assert_match(/transfer_group=#{transfer_group}/, data)
       assert_match(/application_fee_amount=#{application_fee_amount}/, data)
+    end.respond_with(successful_create_intent_response)
+  end
+
+  def test_on_behalf_of
+    on_behalf_of = 'account_27704'
+
+    options = @options.merge(
+      on_behalf_of: on_behalf_of
+    )
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.create_intent(@amount, @visa_token, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_no_match(/transfer_data\[destination\]/, data)
+      assert_no_match(/transfer_data\[amount\]/, data)
+      assert_match(/on_behalf_of=#{on_behalf_of}/, data)
+      assert_no_match(/transfer_group/, data)
+      assert_no_match(/application_fee_amount/, data)
     end.respond_with(successful_create_intent_response)
   end
 
@@ -139,6 +225,14 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     assert_equal 'validation_error', create.params.dig('error', 'code')
     assert_equal 'You must verify a phone number on your Stripe account before you can send raw credit card numbers to the Stripe API. You can avoid this requirement by using Stripe.js, the Stripe mobile bindings, or Stripe Checkout. For more information, see https://dashboard.stripe.com/phone-verification.', create.params.dig('error', 'message')
     assert_equal 'invalid_request_error', create.params.dig('error', 'type')
+  end
+
+  def test_failed_error_on_requires_action
+    @gateway.expects(:ssl_request).returns(failed_with_set_error_on_requires_action_response)
+
+    assert create = @gateway.create_intent(@amount, 'pm_failed', @options)
+    assert_equal 'This payment required an authentication action to complete, but `error_on_requires_action` was set. When you\'re ready, you can upgrade your integration to handle actions at https://stripe.com/docs/payments/payment-intents/upgrade-to-handle-actions.', create.params.dig('error', 'message')
+    assert_equal 'card_error', create.params.dig('error', 'type')
   end
 
   def test_failed_refund_due_to_service_unavailability
@@ -332,6 +426,131 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     RESPONSE
   end
 
+  def successful_request_three_d_secure_response
+    <<-RESPONSE
+    {"id"=>"pi_1HZJGPAWOtgoysogrKURP11Q",
+      "object"=>"payment_intent",
+      "amount"=>2000,
+      "amount_capturable"=>0,
+      "amount_received"=>2000,
+      "application"=>nil,
+      "application_fee_amount"=>nil,
+      "canceled_at"=>nil,
+      "cancellation_reason"=>nil,
+      "capture_method"=>"automatic",
+      "charges"=>
+       {"object"=>"list",
+        "data"=>
+         [{"id"=>"ch_1HZJGQAWOtgoysogEpbZTGIl",
+           "object"=>"charge",
+           "amount"=>2000,
+           "amount_captured"=>2000,
+           "amount_refunded"=>0,
+           "application"=>nil,
+           "application_fee"=>nil,
+           "application_fee_amount"=>nil,
+           "balance_transaction"=>"txn_1HZJGQAWOtgoysogEKwV2r5N",
+           "billing_details"=>
+            {"address"=>{"city"=>nil, "country"=>nil, "line1"=>nil, "line2"=>nil, "postal_code"=>nil, "state"=>nil}, "email"=>nil, "name"=>nil, "phone"=>nil},
+           "calculated_statement_descriptor"=>"SPREEDLY",
+           "captured"=>true,
+           "created"=>1602002626,
+           "currency"=>"gbp",
+           "customer"=>nil,
+           "description"=>nil,
+           "destination"=>nil,
+           "dispute"=>nil,
+           "disputed"=>false,
+           "failure_code"=>nil,
+           "failure_message"=>nil,
+           "fraud_details"=>{},
+           "invoice"=>nil,
+           "livemode"=>false,
+           "metadata"=>{},
+           "on_behalf_of"=>nil,
+           "order"=>nil,
+           "outcome"=>
+            {"network_status"=>"approved_by_network",
+             "reason"=>nil,
+             "risk_level"=>"normal",
+             "risk_score"=>16,
+             "seller_message"=>"Payment complete.",
+             "type"=>"authorized"},
+           "paid"=>true,
+           "payment_intent"=>"pi_1HZJGPAWOtgoysogrKURP11Q",
+           "payment_method"=>"pm_1HZJGOAWOtgoysogvnMsnnG1",
+           "payment_method_details"=>
+            {"card"=>
+              {"brand"=>"visa",
+               "checks"=>{"address_line1_check"=>nil, "address_postal_code_check"=>nil, "cvc_check"=>"pass"},
+               "country"=>"US",
+               "ds_transaction_id"=>nil,
+               "exp_month"=>10,
+               "exp_year"=>2020,
+               "fingerprint"=>"hfaVNMiXc0dYSiC5",
+               "funding"=>"credit",
+               "installments"=>nil,
+               "last4"=>"4242",
+               "moto"=>nil,
+               "network"=>"visa",
+               "network_transaction_id"=>"1041029786787710",
+               "three_d_secure"=>
+                {"authenticated"=>false,
+                 "authentication_flow"=>nil,
+                 "electronic_commerce_indicator"=>"06",
+                 "result"=>"attempt_acknowledged",
+                 "result_reason"=>nil,
+                 "succeeded"=>true,
+                 "transaction_id"=>"d1VlRVF6a1BVNXN1cjMzZVl0RU0=",
+                 "version"=>"1.0.2"},
+               "wallet"=>nil},
+             "type"=>"card"},
+           "receipt_email"=>nil,
+           "receipt_number"=>nil,
+           "receipt_url"=>"https://pay.stripe.com/receipts/acct_160DX6AWOtgoysog/ch_1HZJGQAWOtgoysogEpbZTGIl/rcpt_I9cVpN9xAeS39FhMqTS33Fj8gHsjjuX",
+           "refunded"=>false,
+           "refunds"=>{"object"=>"list", "data"=>[], "has_more"=>false, "total_count"=>0, "url"=>"/v1/charges/ch_1HZJGQAWOtgoysogEpbZTGIl/refunds"},
+           "review"=>nil,
+           "shipping"=>nil,
+           "source"=>nil,
+           "source_transfer"=>nil,
+           "statement_descriptor"=>nil,
+           "statement_descriptor_suffix"=>nil,
+           "status"=>"succeeded",
+           "transfer_data"=>nil,
+           "transfer_group"=>nil}],
+        "has_more"=>false,
+        "total_count"=>1,
+        "url"=>"/v1/charges?payment_intent=pi_1HZJGPAWOtgoysogrKURP11Q"},
+      "client_secret"=>"pi_1HZJGPAWOtgoysogrKURP11Q_secret_dJNY00dYXC22Fc9nPscAmhFMt",
+      "confirmation_method"=>"automatic",
+      "created"=>1602002625,
+      "currency"=>"gbp",
+      "customer"=>nil,
+      "description"=>nil,
+      "invoice"=>nil,
+      "last_payment_error"=>nil,
+      "livemode"=>false,
+      "metadata"=>{},
+      "next_action"=>nil,
+      "on_behalf_of"=>nil,
+      "payment_method"=>"pm_1HZJGOAWOtgoysogvnMsnnG1",
+      "payment_method_options"=>{"card"=>{"installments"=>nil, "network"=>nil, "request_three_d_secure"=>"any"}},
+      "payment_method_types"=>["card"],
+      "receipt_email"=>nil,
+      "review"=>nil,
+      "setup_future_usage"=>nil,
+      "shipping"=>nil,
+      "source"=>nil,
+      "statement_descriptor"=>nil,
+      "statement_descriptor_suffix"=>nil,
+      "status"=>"succeeded",
+      "transfer_data"=>nil,
+      "transfer_group"=>nil
+      }
+    RESPONSE
+  end
+
   def failed_capture_response
     <<-RESPONSE
       {"error":{"charge":"ch_1F2MB6AWOtgoysogAIvNV32Z","code":"card_declined","decline_code":"generic_decline","doc_url":"https://stripe.com/docs/error-codes/card-declined","message":"Your card was declined.","payment_intent":{"id":"pi_1F2MB5AWOtgoysogCMt8BaxR","object":"payment_intent","amount":2020,"amount_capturable":0,"amount_received":0,"application":null,"application_fee_amount":null,"canceled_at":null,"cancellation_reason":null,"capture_method":"automatic","charges":{"object":"list","data":[{"id":"ch_1F2MB6AWOtgoysogAIvNV32Z","object":"charge","amount":2020,"amount_refunded":0,"application":null,"application_fee":null,"application_fee_amount":null,"balance_transaction":null,"billing_details":{"address":{"city":null,"country":null,"line1":null,"line2":null,"postal_code":null,"state":null},"email":null,"name":null,"phone":null},"captured":false,"created":1564596332,"currency":"gbp","customer":"cus_7s22nNueP2Hjj6","description":null,"destination":null,"dispute":null,"failure_code":"card_declined","failure_message":"Your card was declined.","fraud_details":{},"invoice":null,"livemode":false,"metadata":{},"on_behalf_of":null,"order":null,"outcome":{"network_status":"declined_by_network","reason":"generic_decline","risk_level":"normal","risk_score":41,"seller_message":"The bank did not return any further details with this decline.","type":"issuer_declined"},"paid":false,"payment_intent":"pi_1F2MB5AWOtgoysogCMt8BaxR","payment_method":"pm_1F2MB5AWOtgoysogq3yXZ98h","payment_method_details":{"card":{"brand":"visa","checks":{"address_line1_check":null,"address_postal_code_check":null,"cvc_check":null},"country":"US","exp_month":7,"exp_year":2020,"fingerprint":"1VUoWMvHnqtngyrD","funding":"credit","last4":"0002","three_d_secure":null,"wallet":null},"type":"card"},"receipt_email":null,"receipt_number":null,"receipt_url":"https://pay.stripe.com/receipts/acct_160DX6AWOtgoysog/ch_1F2MB6AWOtgoysogAIvNV32Z/rcpt_FXR3PjBGluHmHsnLmp0S2KQiHl3yg6W","refunded":false,"refunds":{"object":"list","data":[],"has_more":false,"total_count":0,"url":"/v1/charges/ch_1F2MB6AWOtgoysogAIvNV32Z/refunds"},"review":null,"shipping":null,"source":null,"source_transfer":null,"statement_descriptor":null,"status":"failed","transfer_data":null,"transfer_group":null}],"has_more":false,"total_count":1,"url":"/v1/charges?payment_intent=pi_1F2MB5AWOtgoysogCMt8BaxR"},"client_secret":"pi_1F2MB5AWOtgoysogCMt8BaxR_secret_fOHryjtjBE4gACiHTcREraXSQ","confirmation_method":"manual","created":1564596331,"currency":"gbp","customer":"cus_7s22nNueP2Hjj6","description":null,"invoice":null,"last_payment_error":{"charge":"ch_1F2MB6AWOtgoysogAIvNV32Z","code":"card_declined","decline_code":"generic_decline","doc_url":"https://stripe.com/docs/error-codes/card-declined","message":"Your card was declined.","payment_method":{"id":"pm_1F2MB5AWOtgoysogq3yXZ98h","object":"payment_method","billing_details":{"address":{"city":null,"country":null,"line1":null,"line2":null,"postal_code":null,"state":null},"email":null,"name":null,"phone":null},"card":{"brand":"visa","checks":{"address_line1_check":null,"address_postal_code_check":null,"cvc_check":null},"country":"US","exp_month":7,"exp_year":2020,"fingerprint":"1VUoWMvHnqtngyrD","funding":"credit","generated_from":null,"last4":"0002","three_d_secure_usage":{"supported":true},"wallet":null},"created":1564596331,"customer":null,"livemode":false,"metadata":{},"type":"card"},"type":"card_error"},"livemode":false,"metadata":{},"next_action":null,"on_behalf_of":null,"payment_method":null,"payment_method_options":{"card":{"request_three_d_secure":"automatic"}},"payment_method_types":["card"],"receipt_email":null,"review":null,"setup_future_usage":null,"shipping":null,"source":null,"statement_descriptor":null,"status":"requires_payment_method","transfer_data":null,"transfer_group":null},"payment_method":{"id":"pm_1F2MB5AWOtgoysogq3yXZ98h","object":"payment_method","billing_details":{"address":{"city":null,"country":null,"line1":null,"line2":null,"postal_code":null,"state":null},"email":null,"name":null,"phone":null},"card":{"brand":"visa","checks":{"address_line1_check":null,"address_postal_code_check":null,"cvc_check":null},"country":"US","exp_month":7,"exp_year":2020,"fingerprint":"1VUoWMvHnqtngyrD","funding":"credit","generated_from":null,"last4":"0002","three_d_secure_usage":{"supported":true},"wallet":null},"created":1564596331,"customer":null,"livemode":false,"metadata":{},"type":"card"},"type":"card_error"}}
@@ -353,6 +572,12 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
   def failed_service_response
     <<-RESPONSE
       {"error": {"message": "Error while communicating with one of our backends.  Sorry about that!  We have been notified of the problem.  If you have any questions, we can help at https://support.stripe.com/.", "type": "api_error"  }}
+    RESPONSE
+  end
+
+  def failed_with_set_error_on_requires_action_response
+    <<-RESPONSE
+      {"error": {"message": "This payment required an authentication action to complete, but `error_on_requires_action` was set. When you're ready, you can upgrade your integration to handle actions at https://stripe.com/docs/payments/payment-intents/upgrade-to-handle-actions.", "type": "card_error"  }}
     RESPONSE
   end
 

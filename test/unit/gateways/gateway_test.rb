@@ -131,11 +131,11 @@ class GatewayTest < Test::Unit::TestCase
   end
 
   def test_strip_invalid_xml_chars
-    xml = <<EOF
+    xml = <<~XML
       <response>
         <element>Parse the First & but not this &tilde; &x002a;</element>
       </response>
-EOF
+    XML
     parsed_xml = @gateway.send(:strip_invalid_xml_chars, xml)
 
     assert REXML::Document.new(parsed_xml)
@@ -147,7 +147,7 @@ EOF
   def test_add_field_to_post_if_present
     order_id = 'abc123'
 
-    post = { }
+    post = {}
     options = { order_id: order_id, do_not_add: 24 }
 
     @gateway.add_field_to_post_if_present(post, options, :order_id)
@@ -160,7 +160,7 @@ EOF
     order_id = 'abc123'
     transaction_number = 500
 
-    post = { }
+    post = {}
     options = { order_id: order_id, transaction_number: transaction_number, do_not_add: 24 }
 
     @gateway.add_fields_to_post_if_present(post, options, %i[order_id transaction_number])

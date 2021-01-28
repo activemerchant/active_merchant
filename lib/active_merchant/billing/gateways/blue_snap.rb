@@ -70,12 +70,12 @@ module ActiveMerchant
 
       STATE_CODE_COUNTRIES = %w(US CA)
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :api_username, :api_password)
         super
       end
 
-      def purchase(money, payment_method, options={})
+      def purchase(money, payment_method, options = {})
         payment_method_details = PaymentMethodDetails.new(payment_method)
 
         commit(:purchase, :post, payment_method_details) do |doc|
@@ -87,13 +87,13 @@ module ActiveMerchant
         end
       end
 
-      def authorize(money, payment_method, options={})
+      def authorize(money, payment_method, options = {})
         commit(:authorize) do |doc|
           add_auth_purchase(doc, money, payment_method, options)
         end
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         commit(:capture, :put) do |doc|
           add_authorization(doc, authorization)
           add_order(doc, options)
@@ -101,7 +101,7 @@ module ActiveMerchant
         end
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         commit(:refund, :put) do |doc|
           add_authorization(doc, authorization)
           add_amount(doc, money, options)
@@ -109,14 +109,14 @@ module ActiveMerchant
         end
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         commit(:void, :put) do |doc|
           add_authorization(doc, authorization)
           add_order(doc, options)
         end
       end
 
-      def verify(payment_method, options={})
+      def verify(payment_method, options = {})
         authorize(0, payment_method, options)
       end
 
@@ -214,7 +214,7 @@ module ActiveMerchant
       end
 
       def add_metadata(doc, options)
-        transaction_meta_data = options.fetch(:transaction_meta_data, {})
+        transaction_meta_data = options[:transaction_meta_data] || []
         return if transaction_meta_data.empty? && !options[:description]
 
         doc.send('transaction-meta-data') do
@@ -319,7 +319,9 @@ module ActiveMerchant
       def add_fraud_info(doc, payment_method, options)
         doc.send('transaction-fraud-info') do
           doc.send('shopper-ip-address', options[:ip]) if options[:ip]
-
+          if fraud_info = options[:transaction_fraud_info]
+            doc.send('fraud-session-id', fraud_info[:fraud_session_id]) if fraud_info[:fraud_session_id]
+          end
           unless payment_method.is_a? String
             doc.send('shipping-contact-info') do
               add_shipping_contact_info(doc, payment_method, options)
@@ -329,16 +331,18 @@ module ActiveMerchant
       end
 
       def add_shipping_contact_info(doc, payment_method, options)
-        # https://developers.bluesnap.com/v8976-XML/docs/shipping-contact-info
-        doc.send('first-name', payment_method.first_name)
-        doc.send('last-name', payment_method.last_name)
+        if address = options[:shipping_address]
+          # https://developers.bluesnap.com/v8976-XML/docs/shipping-contact-info
+          doc.send('first-name', payment_method.first_name)
+          doc.send('last-name', payment_method.last_name)
 
-        doc.country(options[:shipping_country]) if options[:shipping_country]
-        doc.state(options[:shipping_state]) if options[:shipping_state] && STATE_CODE_COUNTRIES.include?(options[:shipping_country])
-        doc.address1(options[:shipping_address1]) if options[:shipping_address1]
-        doc.address2(options[:shipping_address2]) if options[:shipping_address2]
-        doc.city(options[:shipping_city]) if options[:shipping_city]
-        doc.zip(options[:shipping_zip]) if options[:shipping_zip]
+          doc.country(address[:country]) if address[:country]
+          doc.state(address[:state]) if address[:state] && STATE_CODE_COUNTRIES.include?(address[:country])
+          doc.address1(address[:address1]) if address[:address1]
+          doc.address2(address[:address2]) if address[:address2]
+          doc.city(address[:city]) if address[:city]
+          doc.zip(address[:zip]) if address[:zip]
+        end
       end
 
       def add_alt_transaction_purchase(doc, money, payment_method_details, options)

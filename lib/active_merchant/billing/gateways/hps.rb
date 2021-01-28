@@ -25,12 +25,12 @@ module ActiveMerchant #:nodoc:
         google_pay:       'GooglePayApp'
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :secret_api_key)
         super
       end
 
-      def authorize(money, card_or_token, options={})
+      def authorize(money, card_or_token, options = {})
         commit('CreditAuth') do |xml|
           add_amount(xml, money)
           add_allow_dup(xml)
@@ -42,14 +42,14 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def capture(money, transaction_id, options={})
+      def capture(money, transaction_id, options = {})
         commit('CreditAddToBatch', transaction_id) do |xml|
           add_amount(xml, money)
           add_reference(xml, transaction_id)
         end
       end
 
-      def purchase(money, payment_method, options={})
+      def purchase(money, payment_method, options = {})
         if payment_method.is_a?(Check)
           commit_check_sale(money, payment_method, options)
         else
@@ -57,7 +57,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def refund(money, transaction_id, options={})
+      def refund(money, transaction_id, options = {})
         commit('CreditReturn') do |xml|
           add_amount(xml, money)
           add_allow_dup(xml)
@@ -67,7 +67,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def verify(card_or_token, options={})
+      def verify(card_or_token, options = {})
         commit('CreditAccountVerify') do |xml|
           add_card_or_token_customer_data(xml, card_or_token, options)
           add_descriptor_name(xml, options)
@@ -75,7 +75,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def void(transaction_id, options={})
+      def void(transaction_id, options = {})
         if options[:check_void]
           commit('CheckVoid') do |xml|
             add_reference(xml, transaction_id)
@@ -210,7 +210,7 @@ module ActiveMerchant #:nodoc:
       def add_details(xml, options)
         xml.hps :AdditionalTxnFields do
           xml.hps :Description, options[:description] if options[:description]
-          xml.hps :InvoiceNbr, options[:order_id] if options[:order_id]
+          xml.hps :InvoiceNbr, options[:order_id][0..59] if options[:order_id]
           xml.hps :CustomerID, options[:customer_id] if options[:customer_id]
         end
       end

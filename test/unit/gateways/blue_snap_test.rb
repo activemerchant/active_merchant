@@ -49,6 +49,11 @@ class BlueSnapTest < Test::Unit::TestCase
       },
       authorized_by_shopper: true
     }
+    @option_fraud_info = @options.merge(
+      transaction_fraud_info: {
+        fraud_session_id: 'fbcc094208f54c0e974d56875c73af7a'
+      }
+    )
   end
 
   def test_successful_purchase
@@ -61,15 +66,18 @@ class BlueSnapTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_shipping_contact_info
     more_options = @options.merge({
-      shipping_address1: '123 Main St',
-      shipping_city: 'Springfield',
-      shipping_state: 'NC',
-      shipping_country: 'US',
-      shipping_zip: '27701'
+      shipping_address: {
+        address1: '123 Main St',
+        adress2: 'Apt B',
+        city: 'Springfield',
+        state: 'NC',
+        country: 'US',
+        zip: '27701'
+      }
     })
     response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.purchase(@amount, @credit_card, more_options)
-    end.check_request do |method, url, data|
+    end.check_request do |_method, _url, data|
       assert_match(/shipping-contact-info/, data)
       assert_match(/<address1>123 Main St/, data)
       assert_match(/<city>Springfield/, data)
@@ -95,7 +103,7 @@ class BlueSnapTest < Test::Unit::TestCase
     })
     response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.purchase(@amount, @credit_card, more_options)
-    end.check_request do |method, url, data|
+    end.check_request do |_method, _url, data|
       assert_match(/card-holder-info/, data)
       assert_match(/<address>123 Street/, data)
       assert_match(/<address2>Apt 1/, data)
@@ -137,7 +145,7 @@ class BlueSnapTest < Test::Unit::TestCase
 
     response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.purchase(@amount, @credit_card, more_options)
-    end.check_request do |method, url, data|
+    end.check_request do |_method, _url, data|
       assert_match(/transaction-meta-data/, data)
       assert_match(/<meta-value>Legacy Product Desc<\/meta-value>/, data)
       assert_match(/<meta-key>description<\/meta-key>/, data)
@@ -182,7 +190,28 @@ class BlueSnapTest < Test::Unit::TestCase
 
     response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.purchase(@amount, @credit_card, more_options)
-    end.check_request do |method, url, data|
+    end.check_request do |_method, _url, data|
+      assert_not_match(/transaction-meta-data/, data)
+      assert_not_match(/meta-key/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert_nil response.params['transaction-meta-data']
+  end
+
+  def test_successful_purchase_with_metadata_nil
+    more_options = @options.merge({
+      order_id: '1',
+      ip: '127.0.0.1',
+      email: 'joe@example.com',
+      transaction_meta_data: nil,
+      soft_descriptor: 'OnCardStatement',
+      personal_identification_number: 'CNPJ'
+    })
+
+    response = stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.purchase(@amount, @credit_card, more_options)
+    end.check_request do |_method, _url, data|
       assert_not_match(/transaction-meta-data/, data)
       assert_not_match(/meta-key/, data)
     end.respond_with(successful_purchase_response)
@@ -209,6 +238,19 @@ class BlueSnapTest < Test::Unit::TestCase
     assert_not_includes(response.params, 'state')
   end
 
+  def test_successful_purchase_with_fraud_info
+    fraud_info = @option_fraud_info.merge({ ip: '123.12.134.1' })
+    response = stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.purchase(@amount, @credit_card, fraud_info)
+    end.check_request do |_method, _url, data|
+      assert_match(/<fraud-session-id>fbcc094208f54c0e974d56875c73af7a<\/fraud-session-id>/, data)
+      assert_match(/<shopper-ip-address>123.12.134.1<\/shopper-ip-address>/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert_equal '1012082839', response.authorization
+  end
+
   def test_successful_echeck_purchase
     @gateway.expects(:raw_ssl_request).returns(successful_echeck_purchase_response)
 
@@ -220,7 +262,7 @@ class BlueSnapTest < Test::Unit::TestCase
   def test_successful_purchase_with_3ds_auth
     response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options_3ds2)
-    end.check_request do |method, url, data|
+    end.check_request do |_method, _url, data|
       assert_match(/<three-d-secure>/, data)
       assert_match(/<eci>#{Regexp.quote(@options_3ds2[:three_d_secure][:eci])}<\/eci>/, data)
       assert_match(/<cavv>#{Regexp.quote(@options_3ds2[:three_d_secure][:cavv])}<\/cavv>/, data)
@@ -238,7 +280,7 @@ class BlueSnapTest < Test::Unit::TestCase
   def test_does_not_send_3ds_auth_when_empty
     stub_comms(@gateway, :raw_ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |method, url, data|
+    end.check_request do |_method, _url, data|
       assert_not_match(/<three-d-secure>/, data)
       assert_not_match(/<eci>/, data)
       assert_not_match(/<cavv>/, data)
@@ -267,7 +309,7 @@ class BlueSnapTest < Test::Unit::TestCase
   def test_successful_authorize
     response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.authorize(@amount, @credit_card, @options)
-    end.check_request do |type, endpoint, data, headers|
+    end.check_request do |_type, _endpoint, data, _headers|
       assert_match '<store-card>false</store-card>', data
       assert_match '<personal-identification-number>CNPJ</personal-identification-number>', data
     end.respond_with(successful_authorize_response)
@@ -278,7 +320,7 @@ class BlueSnapTest < Test::Unit::TestCase
   def test_successful_authorize_with_3ds_auth
     response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.authorize(@amount, @credit_card, @options_3ds2)
-    end.check_request do |type, endpoint, data, headers|
+    end.check_request do |_type, _endpoint, data, _headers|
       assert_match(/<three-d-secure>/, data)
       assert_match(/<eci>#{Regexp.quote(@options_3ds2[:three_d_secure][:eci])}<\/eci>/, data)
       assert_match(/<cavv>#{Regexp.quote(@options_3ds2[:three_d_secure][:cavv])}<\/cavv>/, data)
@@ -304,7 +346,7 @@ class BlueSnapTest < Test::Unit::TestCase
   def test_successful_capture
     response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.capture(@amount, @credit_card, @options)
-    end.check_request do |method, url, data|
+    end.check_request do |_method, _url, data|
       assert_not_match(/<amount>1.00<\/amount>/, data)
       assert_not_match(/<currency>USD<\/currency>/, data)
     end.respond_with(successful_capture_response)
@@ -316,7 +358,7 @@ class BlueSnapTest < Test::Unit::TestCase
   def test_successful_partial_capture
     response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.capture(@amount, @credit_card, @options.merge(include_capture_amount: true))
-    end.check_request do |method, url, data|
+    end.check_request do |_method, _url, data|
       assert_match(/<amount>1.00<\/amount>/, data)
       assert_match(/<currency>USD<\/currency>/, data)
     end.respond_with(successful_capture_response)
@@ -416,7 +458,7 @@ class BlueSnapTest < Test::Unit::TestCase
   def test_currency_added_correctly
     stub_comms(@gateway, :raw_ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options.merge(currency: 'CAD'))
-    end.check_request do |method, url, data|
+    end.check_request do |_method, _url, data|
       assert_match(/<currency>CAD<\/currency>/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -442,7 +484,7 @@ class BlueSnapTest < Test::Unit::TestCase
   def test_does_not_send_level_3_when_empty
     response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |type, endpoint, data, headers|
+    end.check_request do |_type, _endpoint, data, _headers|
       assert_not_match(/level-3-data/, data)
     end.respond_with(successful_purchase_response)
     assert_success response

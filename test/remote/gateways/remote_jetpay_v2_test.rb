@@ -36,7 +36,7 @@ class RemoteJetpayV2Test < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_minimal_options
-    assert response = @gateway.purchase(@amount_approved, @credit_card, {device: 'spreedly', application: 'spreedly'})
+    assert response = @gateway.purchase(@amount_approved, @credit_card, { device: 'spreedly', application: 'spreedly' })
     assert_success response
     assert_equal 'APPROVED', response.message
     assert_not_nil response.authorization

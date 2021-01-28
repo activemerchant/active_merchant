@@ -68,7 +68,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert_equal @profile[:ship_to_list][:phone_number], response.params['profile']['ship_to_list']['phone_number']
     assert_equal @profile[:ship_to_list][:company], response.params['profile']['ship_to_list']['company']
 
-    assert response = @gateway.update_customer_profile(profile: {customer_profile_id: @customer_profile_id, email: 'new email address'})
+    assert response = @gateway.update_customer_profile(profile: { customer_profile_id: @customer_profile_id, email: 'new email address' })
     assert response.test?
     assert_success response
     assert_nil response.authorization

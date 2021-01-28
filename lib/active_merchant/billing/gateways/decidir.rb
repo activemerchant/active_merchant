@@ -42,13 +42,13 @@ module ActiveMerchant #:nodoc:
         97 => STANDARD_ERROR_CODE[:processing_error]
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :api_key)
         super
         @options[:preauth_mode] ||= false
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         raise ArgumentError, 'Purchase is not supported on Decidir gateways configured with the preauth_mode option' if @options[:preauth_mode]
 
         post = {}
@@ -56,7 +56,7 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'payments', post)
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         raise ArgumentError, 'Authorize is not supported on Decidir gateways unless the preauth_mode option is enabled' unless @options[:preauth_mode]
 
         post = {}
@@ -64,7 +64,7 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'payments', post)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         raise ArgumentError, 'Capture is not supported on Decidir gateways unless the preauth_mode option is enabled' unless @options[:preauth_mode]
 
         post = {}
@@ -72,18 +72,18 @@ module ActiveMerchant #:nodoc:
         commit(:put, "payments/#{authorization}", post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         post = {}
         add_amount(post, money, options)
         commit(:post, "payments/#{authorization}/refunds", post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = {}
         commit(:post, "payments/#{authorization}/refunds", post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         raise ArgumentError, 'Verify is not supported on Decidir gateways unless the preauth_mode option is enabled' unless @options[:preauth_mode]
 
         MultiResponse.run(:use_first_response) do |r|
@@ -170,6 +170,12 @@ module ActiveMerchant #:nodoc:
         card_data[:security_code] = credit_card.verification_value if credit_card.verification_value?
         card_data[:card_holder_name] = credit_card.name if credit_card.name
 
+        # the device_unique_id has to be sent in via the card data (as device_unique_identifier) no other fraud detection fields require this
+        if options[:fraud_detection].present?
+          card_data[:fraud_detection] = {} if (options[:fraud_detection][:device_unique_id]).present?
+          card_data[:fraud_detection][:device_unique_identifier] = (options[:fraud_detection][:device_unique_id]) if (options[:fraud_detection][:device_unique_id]).present?
+        end
+
         # additional data used for Visa transactions
         card_data[:card_holder_door_number] = options[:card_holder_door_number].to_i if options[:card_holder_door_number]
         card_data[:card_holder_birthday] = options[:card_holder_birthday] if options[:card_holder_birthday]
@@ -209,6 +215,15 @@ module ActiveMerchant #:nodoc:
           hsh[:send_to_cs] = options[:send_to_cs] if valid_fraud_detection_option?(options[:send_to_cs]) # true/false
           hsh[:channel] = options[:channel] if valid_fraud_detection_option?(options[:channel])
           hsh[:dispatch_method] = options[:dispatch_method] if valid_fraud_detection_option?(options[:dispatch_method])
+          hsh[:csmdds] = options[:csmdds] if valid_fraud_detection_option?(options[:csmdds])
+          hsh[:device_unique_id] = options[:device_unique_id] if valid_fraud_detection_option?(options[:device_unique_id])
+          hsh[:bill_to] = options[:bill_to] if valid_fraud_detection_option?(options[:bill_to])
+          hsh[:purchase_totals] = options[:purchase_totals] if valid_fraud_detection_option?(options[:purchase_totals])
+          hsh[:customer_in_site] = options[:customer_in_site] if valid_fraud_detection_option?(options[:customer_in_site])
+          hsh[:retail_transaction_data] = options[:retail_transaction_data] if valid_fraud_detection_option?(options[:retail_transaction_data])
+          hsh[:ship_to] = options[:ship_to] if valid_fraud_detection_option?(options[:ship_to])
+          hsh[:tax_voucher_required] = options[:tax_voucher_required] if valid_fraud_detection_option?(options[:tax_voucher_required])
+          hsh[:copy_paste_card_data] = options[:copy_paste_card_data] if valid_fraud_detection_option?(options[:copy_paste_card_data])
         end
       end
 
@@ -225,7 +240,7 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def commit(method, endpoint, parameters, options={})
+      def commit(method, endpoint, parameters, options = {})
         url = "#{(test? ? test_url : live_url)}/#{endpoint}"
 
         begin

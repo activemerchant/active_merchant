@@ -203,7 +203,7 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
   def test_successful_quick_update_customer
     @gateway.expects(:ssl_post).returns(successful_customer_response('quickUpdateCustomer'))
 
-    assert response = @gateway.quick_update_customer({customer_number: @options[:customer_number], update_data: @customer_options})
+    assert response = @gateway.quick_update_customer({ customer_number: @options[:customer_number], update_data: @customer_options })
     assert_instance_of Response, response
     assert response.test?
     assert_success response
@@ -397,7 +397,7 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.run_check_sale(@options.merge(payment_method: @check))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/123456789012/, data)
     end.respond_with(successful_transaction_response('runCheckSale'))
 

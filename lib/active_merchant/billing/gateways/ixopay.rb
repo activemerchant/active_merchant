@@ -14,13 +14,13 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://www.ixopay.com'
       self.display_name = 'Ixopay'
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :username, :password, :secret, :api_key)
         @secret = options[:secret]
         super
       end
 
-      def purchase(money, payment_method, options={})
+      def purchase(money, payment_method, options = {})
         request = build_xml_request do |xml|
           add_card_data(xml, payment_method)
           add_debit(xml, money, options)
@@ -29,7 +29,7 @@ module ActiveMerchant #:nodoc:
         commit(request)
       end
 
-      def authorize(money, payment_method, options={})
+      def authorize(money, payment_method, options = {})
         request = build_xml_request do |xml|
           add_card_data(xml, payment_method)
           add_preauth(xml, money, options)
@@ -38,7 +38,7 @@ module ActiveMerchant #:nodoc:
         commit(request)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         request = build_xml_request do |xml|
           add_capture(xml, money, authorization, options)
         end
@@ -46,7 +46,7 @@ module ActiveMerchant #:nodoc:
         commit(request)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         request = build_xml_request do |xml|
           add_refund(xml, money, authorization, options)
         end
@@ -54,7 +54,7 @@ module ActiveMerchant #:nodoc:
         commit(request)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         request = build_xml_request do |xml|
           add_void(xml, authorization)
         end
@@ -62,7 +62,7 @@ module ActiveMerchant #:nodoc:
         commit(request)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }

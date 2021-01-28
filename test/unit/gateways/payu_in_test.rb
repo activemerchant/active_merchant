@@ -16,7 +16,7 @@ class PayuInTest < Test::Unit::TestCase
     }
   end
 
-  def assert_parameter(parameter, expected_value, data, options={})
+  def assert_parameter(parameter, expected_value, data, options = {})
     assert (data =~ %r{(?:^|&)#{parameter}=([^&]*)(?:&|$)}), "Unable to find #{parameter} in #{data}"
     value = CGI.unescape($1 || '')
     case expected_value
@@ -203,7 +203,7 @@ class PayuInTest < Test::Unit::TestCase
           phone: ('a-' + ('1' * 51))
         }
       )
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |endpoint, data, _headers|
       case endpoint
       when /_payment/
         assert_parameter('txnid', /^a/, data, length: 30)
@@ -291,7 +291,7 @@ class PayuInTest < Test::Unit::TestCase
   def test_successful_refund
     response = stub_comms do
       @gateway.refund(100, 'abc')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_parameter('command', 'cancel_refund_transaction', data)
       assert_parameter('var1', 'abc', data)
       assert_parameter('var2', /./, data)
