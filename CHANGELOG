@@ -2,6 +2,7 @@
 
 == HEAD
 * BlueSnap: Add address1,address2,phone,shipping_* support #3749
+* Netbanx: Add-customer-information(name,email,IP)-to-a-transaction [rockyhakjoong] #3754
 
 == Version 1.113.0
 * Orbital: Add cardIndicators field [meagabeth] #3734
