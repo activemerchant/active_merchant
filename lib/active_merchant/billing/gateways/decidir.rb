@@ -301,15 +301,21 @@ module ActiveMerchant #:nodoc:
         error_code = nil
         if error = response.dig('status_details', 'error')
           code = error.dig('reason', 'id')
-          error_code = STANDARD_ERROR_CODE_MAPPING[code]
+          standard_error_code = STANDARD_ERROR_CODE_MAPPING[code]
+          error_code = "#{code}, #{standard_error_code}"
           error_code ||= error['type']
         elsif response['error_type']
           error_code = response['error_type'] if response['validation_errors']
-        elsif error = response.dig('error')
+        elsif response.dig('error', 'validation_errors')
+          error = response.dig('error')
           validation_errors = error.dig('validation_errors', 0)
           code = validation_errors['code'] if validation_errors && validation_errors['code']
           param = validation_errors['param'] if validation_errors && validation_errors['param']
           error_code = "#{error['error_type']} | #{code} | #{param}" if error['error_type']
+        elsif error = response.dig('error')
+          code = error.dig('reason', 'id')
+          standard_error_code = STANDARD_ERROR_CODE_MAPPING[code]
+          error_code = "#{code}, #{standard_error_code}"
         end
 
         error_code || STANDARD_ERROR_CODE[:processing_error]
