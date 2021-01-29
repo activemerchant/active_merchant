@@ -4,6 +4,7 @@
 * Payment Express: support verify/validate [therufs] #3874
 * GlobalCollect: Truncate address fields [meagabeth] #3878
 * Litle: Truncate address fields [meagabeth] #3877
+* Netbanx: Add-customer-information(name,email,IP)-to-a-transaction [rockyhakjoong] #3754
 
 == Version 1.118.0 (January 22nd, 2021)
 * Worldpay: Add support for challengeWindowSize [carrigan] #3823
@@ -100,7 +101,6 @@
 
 == Version 1.114.0
 * BlueSnap: Add address1,address2,phone,shipping_* support #3749
-* Netbanx: Add-customer-information(name,email,IP)-to-a-transaction [rockyhakjoong] #3754
 * BlueSnap: Protect against `nil` metadata [carrigan] #3752
 * Cybersource: [CyberSource] Ensure the default address doesn't override `ActionController::Parameters` [pi3r] #3755
 
