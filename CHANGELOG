@@ -4,6 +4,7 @@
 * Payment Express: support verify/validate [therufs] #3874
 * GlobalCollect: Truncate address fields [meagabeth] #3878
 * Litle: Truncate address fields [meagabeth] #3877
+* Netbanx: Add-customer-information(name,email,IP)-to-a-transaction [rockyhakjoong] #3754
 * Decidir: Improve error mapping [meagabeth] #3875
 * Worldpay: support `skip_capture` [therufs] #3879
 
