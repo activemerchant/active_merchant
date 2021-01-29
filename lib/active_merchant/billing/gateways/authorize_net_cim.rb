@@ -756,6 +756,7 @@ module ActiveMerchant #:nodoc:
             add_credit_card(xml, payment_profile[:payment][:credit_card]) if payment_profile[:payment].has_key?(:credit_card)
             add_bank_account(xml, payment_profile[:payment][:bank_account]) if payment_profile[:payment].has_key?(:bank_account)
             add_drivers_license(xml, payment_profile[:payment][:drivers_license]) if payment_profile[:payment].has_key?(:drivers_license)
+            add_opaque_data(xml, payment_profile[:payment][:opaque_data]) if payment_profile[:payment].has_key?(:opaque_data)
             # This element is only required for Wells Fargo SecureSource eCheck.Net merchants
             # The customer's Social Security Number or Tax ID
             xml.tag!('taxId', payment_profile[:payment]) if payment_profile[:payment].has_key?(:tax_id)
@@ -844,6 +845,13 @@ module ActiveMerchant #:nodoc:
           # The date of birth listed on the customer's driver's license
           # YYYY-MM-DD
           xml.tag!('dateOfBirth', drivers_license[:date_of_birth])
+        end
+      end
+
+      def add_opaque_data(xml, opaque_data)
+        xml.tag!('opaqueData') do
+          xml.tag!('dataDescriptor', AuthorizeNetGateway::NONCE_DATA_DESCRIPTOR)
+          xml.tag!('dataValue', opaque_data[:data_value])
         end
       end
 
