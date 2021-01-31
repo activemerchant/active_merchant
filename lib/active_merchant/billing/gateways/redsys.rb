@@ -126,6 +126,7 @@ module ActiveMerchant #:nodoc:
         184 => 'Authentication error',
         190 => 'Refusal with no specific reason',
         191 => 'Expiry date incorrect',
+        195 => 'Requires SCA authentication',
 
         201 => 'Card expired',
         202 => 'Card blocked temporarily or under suspicion of fraud',
@@ -622,7 +623,7 @@ module ActiveMerchant #:nodoc:
       def response_text(code)
         code = code.to_i
         code = 0 if code < 100
-        RESPONSE_TEXTS[code] || 'Unkown code, please check in manual'
+        RESPONSE_TEXTS[code] || 'Unknown code, please check in manual'
       end
 
       def response_text_3ds(xml, params)
