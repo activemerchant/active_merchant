@@ -102,6 +102,7 @@ module ActiveMerchant #:nodoc:
       # * +'union_pay'+
       # * +'alia'+
       # * +'olimpica'+
+      # * +'creditel'+
       #
       # Or, if you wish to test your implementation, +'bogus'+.
       #

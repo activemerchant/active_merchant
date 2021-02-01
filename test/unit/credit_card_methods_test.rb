@@ -172,6 +172,10 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_equal 'olimpica', CreditCard.brand?('6368530000000000')
   end
 
+  def test_should_detect_creditel_card
+    assert_equal 'creditel', CreditCard.brand?('6019330047539016')
+  end
+
   def test_should_detect_vr_card
     assert_equal 'vr', CreditCard.brand?('6370364495764400')
   end
@@ -275,6 +279,12 @@ class CreditCardMethodsTest < Test::Unit::TestCase
   def test_matching_valid_naranja
     number = '5895627823453005'
     assert_equal 'naranja', CreditCard.brand?(number)
+    assert CreditCard.valid_number?(number)
+  end
+
+  def test_matching_valid_creditel
+    number = '6019330047539016'
+    assert_equal 'creditel', CreditCard.brand?(number)
     assert CreditCard.valid_number?(number)
   end
 

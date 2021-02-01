@@ -31,7 +31,8 @@ module ActiveMerchant #:nodoc:
             CARNET_BINS.any? { |bin| num.slice(0, bin.size) == bin }
           )
         },
-        'olimpica' => ->(num) { num =~ /^636853\d{10}$/ }
+        'olimpica' => ->(num) { num =~ /^636853\d{10}$/ },
+        'creditel' => ->(num) { num =~ /^601933\d{10}$/ }
       }
 
       # http://www.barclaycard.co.uk/business/files/bin_rules.pdf
@@ -346,6 +347,8 @@ module ActiveMerchant #:nodoc:
           case brand
           when 'naranja'
             valid_naranja_algo?(numbers)
+          when 'creditel'
+            valid_creditel_algo?(numbers)
           when 'alia'
             true
           else
@@ -400,13 +403,21 @@ module ActiveMerchant #:nodoc:
           sum % 10 == 0
         end
 
-        # Checks the validity of a card number by use of Naranja's specific algorithm.
+        # Checks the validity of a card number by use of specific algorithms
         def valid_naranja_algo?(numbers) #:nodoc:
           num_array = numbers.to_s.chars.map(&:to_i)
           multipliers = [4, 3, 2, 7, 6, 5, 4, 3, 2, 7, 6, 5, 4, 3, 2]
           num_sum = num_array[0..14].zip(multipliers).map { |a, b| a * b }.reduce(:+)
           intermediate = 11 - (num_sum % 11)
           final_num = intermediate > 9 ? 0 : intermediate
+          final_num == num_array[15]
+        end
+
+        def valid_creditel_algo?(numbers) #:nodoc:
+          num_array = numbers.to_s.chars.map(&:to_i)
+          multipliers = [5, 4, 3, 2, 1, 9, 8, 7, 6, 5, 4, 3, 2, 1, 9]
+          num_sum = num_array[0..14].zip(multipliers).map { |a, b| a * b }.reduce(:+)
+          final_num = num_sum % 10
           final_num == num_array[15]
         end
       end
