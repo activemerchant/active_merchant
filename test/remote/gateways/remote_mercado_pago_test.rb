@@ -2,28 +2,30 @@ require 'test_helper'
 
 class RemoteMercadoPagoTest < Test::Unit::TestCase
   def setup
+    exp_year = Time.now.year + 1
     @gateway = MercadoPagoGateway.new(fixtures(:mercado_pago))
     @argentina_gateway = MercadoPagoGateway.new(fixtures(:mercado_pago_argentina))
     @colombian_gateway = MercadoPagoGateway.new(fixtures(:mercado_pago_colombia))
+    @uruguayan_gateway = MercadoPagoGateway.new(fixtures(:mercado_pago_uruguay))
 
     @amount = 500
     @credit_card = credit_card('5031433215406351')
     @colombian_card = credit_card('4013540682746260')
     @elo_credit_card = credit_card('5067268650517446',
       month: 10,
-      year: 2020,
+      year: exp_year,
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737')
-    @cabal_credit_card = credit_card('6042012045809847',
+    @cabal_credit_card = credit_card('6035227716427021',
       month: 10,
-      year: 2020,
+      year: exp_year,
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737')
     @naranja_credit_card = credit_card('5895627823453005',
       month: 10,
-      year: 2020,
+      year: exp_year,
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '123')
