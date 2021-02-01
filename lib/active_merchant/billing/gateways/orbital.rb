@@ -60,7 +60,8 @@ module ActiveMerchant #:nodoc:
         '93', # Approved high fraud
         '94', # Approved fraud service unavailable
         'E7', # Stored
-        'PA'  # Partial approval
+        'PA', # Partial approval
+        'P1'  # ECP - AVS - Account Status Verification and/or AOA data is in a positive status.
       ]
 
       class_attribute :secondary_test_url, :secondary_live_url
@@ -341,7 +342,8 @@ module ActiveMerchant #:nodoc:
           gsub(%r((<CCAccountNum>).+(</CC)), '\1[FILTERED]\2').
           gsub(%r((<CardSecVal>).+(</CardSecVal>)), '\1[FILTERED]\2').
           gsub(%r((<MerchantID>).+(</MerchantID>)), '\1[FILTERED]\2').
-          gsub(%r((<CustomerMerchantID>).+(</CustomerMerchantID>)), '\1[FILTERED]\2')
+          gsub(%r((<CustomerMerchantID>).+(</CustomerMerchantID>)), '\1[FILTERED]\2').
+          gsub(%r((<CustomerProfileMessage>).+(</CustomerProfileMessage>)), '\1[FILTERED]\2')
       end
 
       private
@@ -661,6 +663,24 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_ews_details(xml, payment_source, parameters = {})
+        xml.tag! :EWSFirstName, payment_source.first_name
+        xml.tag! :EWSLastName, payment_source.last_name
+        xml.tag! :EWSBusinessName, parameters[:company] if payment_source.first_name.empty? && payment_source.last_name.empty?
+
+        if (address = (parameters[:billing_address] || parameters[:address]))
+          xml.tag! :EWSAddressLine1, byte_limit(format_address_field(address[:address1]), 30)
+          xml.tag! :EWSAddressLine2, byte_limit(format_address_field(address[:address2]), 30)
+          xml.tag! :EWSCity, byte_limit(format_address_field(address[:city]), 20)
+          xml.tag! :EWSState, byte_limit(format_address_field(address[:state]), 2)
+          xml.tag! :EWSZip, byte_limit(format_address_field(address[:zip]), 10)
+        end
+
+        xml.tag! :EWSPhoneType, parameters[:phone_type]
+        xml.tag! :EWSPhoneNumber, parameters[:phone_number]
+        xml.tag! :EWSCheckSerialNumber, payment_source.account_number unless parameters[:auth_method].eql?('I')
+      end
+
       # Adds ECP conditional attributes depending on other attribute values
       def add_ecp_details(xml, payment_source, parameters = {})
         requires!(payment_source.account_number) if parameters[:auth_method]&.eql?('A') || parameters[:auth_method]&.eql?('P')
@@ -670,6 +690,10 @@ module ActiveMerchant #:nodoc:
           xml.tag! :ECPTerminalCity, parameters[:terminal_city] if parameters[:terminal_city]
           xml.tag! :ECPTerminalState, parameters[:terminal_state] if parameters[:terminal_state]
           xml.tag! :ECPImageReferenceNumber, parameters[:image_reference_number] if parameters[:image_reference_number]
+        end
+        if parameters[:action_code]&.eql?('W3') || parameters[:action_code]&.eql?('W5') ||
+           parameters[:action_code]&.eql?('W7') || parameters[:action_code]&.eql?('W9')
+          add_ews_details(xml, payment_source, parameters)
         end
       end
 
