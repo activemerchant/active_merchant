@@ -611,13 +611,26 @@ class PaypalTest < Test::Unit::TestCase
 
   def test_3ds_version_1_request
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(three_d_secure_option))
+      @gateway.purchase(@amount, @credit_card, @options.merge(three_d_secure_option(version: '1.0.2', xid: 'xid')))
     end.check_request do |_endpoint, data, _headers|
       assert_match %r{<n2:Version>124</n2:Version>}, data
       assert_match %r{<AuthStatus3ds>Y</AuthStatus3ds>}, data
       assert_match %r{<Cavv>cavv</Cavv>}, data
       assert_match %r{<Eci3ds>eci</Eci3ds>}, data
       assert_match %r{<Xid>xid</Xid>}, data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_3ds_version_2_request
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(three_d_secure_option(version: '2.1.0', ds_transaction_id: 'ds_transaction_id')))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r{<n2:Version>214.0</n2:Version>}, data
+      assert_match %r{<AuthStatus3ds>Y</AuthStatus3ds>}, data
+      assert_match %r{<Cavv>cavv</Cavv>}, data
+      assert_match %r{<Eci3ds>eci</Eci3ds>}, data
+      assert_match %r{<ThreeDSVersion>2.1.0</ThreeDSVersion>}, data
+      assert_match %r{<DSTransactionId>ds_transaction_id</DSTransactionId>}, data
     end.respond_with(successful_purchase_response)
   end
 
@@ -1427,13 +1440,15 @@ class PaypalTest < Test::Unit::TestCase
     RESPONSE
   end
 
-  def three_d_secure_option
+  def three_d_secure_option(version:, xid: nil, ds_transaction_id: nil)
     {
       three_d_secure: {
-        trans_status: 'Y',
+        authentication_response_status: 'Y',
         eci: 'eci',
         cavv: 'cavv',
-        xid: 'xid'
+        xid: xid,
+        ds_transaction_id: ds_transaction_id,
+        version: version
       }
     }
   end

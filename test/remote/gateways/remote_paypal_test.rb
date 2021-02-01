@@ -296,4 +296,19 @@ class PaypalTest < Test::Unit::TestCase
     assert_success response
     assert response.params['transaction_id']
   end
+
+  def test_successful_purchase_with_3ds_version_2
+    params = @params.merge!({
+      three_d_secure: {
+        authentication_response_status: 'Y',
+        eci: '05',
+        cavv: 'AgAAAAAAAIR8CQrXcIhbQAAAAAA',
+        ds_transaction_id: 'bDE9Aa1A-C5Ac-AD3a-4bBC-aC918ab1de3E',
+        version: '2.1.0'
+      }
+    })
+    response = @gateway.purchase(@amount, @credit_card, params)
+    assert_success response
+    assert response.params['transaction_id']
+  end
 end

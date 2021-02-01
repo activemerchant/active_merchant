@@ -36,6 +36,7 @@ class DecidirTest < Test::Unit::TestCase
       card_holder_identification_type: 'dni',
       card_holder_identification_number: '123456',
       establishment_name: 'Heavenly Buffaloes',
+      device_unique_identifier: '111',
       fraud_detection: {
         send_to_cs: false,
         channel: 'Web',
@@ -45,7 +46,8 @@ class DecidirTest < Test::Unit::TestCase
             code: 17,
             description: 'Campo MDD17'
           }
-        ]
+        ],
+        device_unique_id: '111'
       },
       installments: 12,
       site_id: '99999999'
@@ -60,7 +62,8 @@ class DecidirTest < Test::Unit::TestCase
       assert data =~ /"number":"123456"/
       assert data =~ /"establishment_name":"Heavenly Buffaloes"/
       assert data =~ /"site_id":"99999999"/
-      assert data =~ /"fraud_detection":{"send_to_cs":false,"channel":"Web","dispatch_method":"Store Pick Up","csmdds":\[{"code":17,"description":"Campo MDD17"}\]}/
+      assert data =~ /"device_unique_identifier":"111"/
+      assert data =~ /"fraud_detection":{"send_to_cs":false,"channel":"Web","dispatch_method":"Store Pick Up","csmdds":\[{"code":17,"description":"Campo MDD17"}\],"device_unique_id":"111"}/
     end.respond_with(successful_purchase_response)
 
     assert_equal 7719132, response.authorization
@@ -148,6 +151,14 @@ class DecidirTest < Test::Unit::TestCase
     response = @gateway_for_purchase.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_match 'invalid_request_error | invalid_param | payment_type', response.error_code
+  end
+
+  def test_failed_purchase_error_response_with_error_code
+    @gateway_for_purchase.expects(:ssl_request).returns(error_response_with_error_code)
+
+    response = @gateway_for_purchase.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_match '14, invalid_number', response.error_code
   end
 
   def test_successful_authorize
@@ -531,6 +542,12 @@ class DecidirTest < Test::Unit::TestCase
   def unique_error_response
     %{
       {\"error\":{\"error_type\":\"invalid_request_error\",\"validation_errors\":[{\"code\":\"invalid_param\",\"param\":\"payment_type\"}]}}
+    }
+  end
+
+  def error_response_with_error_code
+    %{
+      {\"error\":{\"type\":\"invalid_number\",\"reason\":{\"id\":14,\"description\":\"TARJETA INVALIDA\",\"additional_description\":\"\"}}}
     }
   end
 end

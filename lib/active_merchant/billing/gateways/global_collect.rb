@@ -201,21 +201,21 @@ module ActiveMerchant #:nodoc:
         shipping_address = options[:shipping_address]
         if billing_address = options[:billing_address] || options[:address]
           post['order']['customer']['billingAddress'] = {
-            'street' => billing_address[:address1],
-            'additionalInfo' => billing_address[:address2],
+            'street' => truncate(billing_address[:address1], 50),
+            'additionalInfo' => truncate(billing_address[:address2], 50),
             'zip' => billing_address[:zip],
             'city' => billing_address[:city],
-            'state' => billing_address[:state],
+            'state' => truncate(billing_address[:state], 35),
             'countryCode' => billing_address[:country]
           }
         end
         if shipping_address
           post['order']['customer']['shippingAddress'] = {
-            'street' => shipping_address[:address1],
-            'additionalInfo' => shipping_address[:address2],
+            'street' => truncate(shipping_address[:address1], 50),
+            'additionalInfo' => truncate(shipping_address[:address2], 50),
             'zip' => shipping_address[:zip],
             'city' => shipping_address[:city],
-            'state' => shipping_address[:state],
+            'state' => truncate(shipping_address[:state], 35),
             'countryCode' => shipping_address[:country]
           }
           post['order']['customer']['shippingAddress']['name'] = {

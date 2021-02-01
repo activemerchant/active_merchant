@@ -30,6 +30,7 @@ module ActiveMerchant #:nodoc:
         add_address(post, creditcard, options)
         add_capture(post, options)
         add_metadata(post, options)
+        add_3ds(post, options)
 
         commit(:post, 'charges', post, options)
       end
@@ -156,6 +157,16 @@ module ActiveMerchant #:nodoc:
 
       def add_metadata(post, options)
         post[:metadata] = options[:metadata] if options[:metadata]
+      end
+
+      def add_3ds(post, options)
+        if options[:three_d_secure]
+          post[:three_d_secure] = {}
+          post[:three_d_secure][:version] = options[:three_d_secure][:version] if options[:three_d_secure][:version]
+          post[:three_d_secure][:eci] = options[:three_d_secure][:eci] if options[:three_d_secure][:eci]
+          post[:three_d_secure][:cavv] = options[:three_d_secure][:cavv] if options[:three_d_secure][:cavv]
+          post[:three_d_secure][:transaction_id] = options[:three_d_secure][:ds_transaction_id] || options[:three_d_secure][:xid]
+        end
       end
 
       def headers(params = {})

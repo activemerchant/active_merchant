@@ -72,8 +72,9 @@ class RemoteRedsysSHA256Test < Test::Unit::TestCase
   end
 
   def test_successful_purchase_threeds2_as_mpi
-    xid = '97267598-FAE6-48F2-8083-C23433990FBC'
+    three_ds_server_trans_id = '97267598-FAE6-48F2-8083-C23433990FBC'
     ds_transaction_id = '97267598-FAE6-48F2-8083-C23433990FBC'
+    eci = '01'
     version = '2.1.0'
 
     response = @gateway.purchase(
@@ -83,7 +84,8 @@ class RemoteRedsysSHA256Test < Test::Unit::TestCase
         three_d_secure: {
           version: version,
           ds_transaction_id: ds_transaction_id,
-          xid: xid
+          three_ds_server_trans_id: three_ds_server_trans_id,
+          eci: eci
         },
         description: 'description',
         store: 'store',

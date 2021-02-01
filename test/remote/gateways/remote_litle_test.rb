@@ -148,6 +148,23 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_purchase_with_truncated_billing_address
+    assert response = @gateway.purchase(10010, @credit_card1, {
+      order_id: '1',
+      email: 'test@example.com',
+      billing_address: {
+        address1: '1234 Supercalifragilisticexpialidocious',
+        address2: 'Unit 6',
+        city: '‎Lake Chargoggagoggmanchauggagoggchaubunagungamaugg',
+        state: 'ME',
+        zip: '09901',
+        country: 'US'
+      }
+    })
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
   def test_successful_purchase_with_debt_repayment_flag
     assert response = @gateway.purchase(10010, @credit_card1, @options.merge(debt_repayment: true))
     assert_success response

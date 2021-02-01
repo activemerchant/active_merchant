@@ -170,6 +170,12 @@ module ActiveMerchant #:nodoc:
         card_data[:security_code] = credit_card.verification_value if credit_card.verification_value?
         card_data[:card_holder_name] = credit_card.name if credit_card.name
 
+        # the device_unique_id has to be sent in via the card data (as device_unique_identifier) no other fraud detection fields require this
+        if options[:fraud_detection].present?
+          card_data[:fraud_detection] = {} if (options[:fraud_detection][:device_unique_id]).present?
+          card_data[:fraud_detection][:device_unique_identifier] = (options[:fraud_detection][:device_unique_id]) if (options[:fraud_detection][:device_unique_id]).present?
+        end
+
         # additional data used for Visa transactions
         card_data[:card_holder_door_number] = options[:card_holder_door_number].to_i if options[:card_holder_door_number]
         card_data[:card_holder_birthday] = options[:card_holder_birthday] if options[:card_holder_birthday]
@@ -210,7 +216,7 @@ module ActiveMerchant #:nodoc:
           hsh[:channel] = options[:channel] if valid_fraud_detection_option?(options[:channel])
           hsh[:dispatch_method] = options[:dispatch_method] if valid_fraud_detection_option?(options[:dispatch_method])
           hsh[:csmdds] = options[:csmdds] if valid_fraud_detection_option?(options[:csmdds])
-          hsh[:device_unique_identifier] = options[:device_unique_identifier] if valid_fraud_detection_option?(options[:device_unique_identifier])
+          hsh[:device_unique_id] = options[:device_unique_id] if valid_fraud_detection_option?(options[:device_unique_id])
           hsh[:bill_to] = options[:bill_to] if valid_fraud_detection_option?(options[:bill_to])
           hsh[:purchase_totals] = options[:purchase_totals] if valid_fraud_detection_option?(options[:purchase_totals])
           hsh[:customer_in_site] = options[:customer_in_site] if valid_fraud_detection_option?(options[:customer_in_site])
@@ -295,15 +301,21 @@ module ActiveMerchant #:nodoc:
         error_code = nil
         if error = response.dig('status_details', 'error')
           code = error.dig('reason', 'id')
-          error_code = STANDARD_ERROR_CODE_MAPPING[code]
+          standard_error_code = STANDARD_ERROR_CODE_MAPPING[code]
+          error_code = "#{code}, #{standard_error_code}"
           error_code ||= error['type']
         elsif response['error_type']
           error_code = response['error_type'] if response['validation_errors']
-        elsif error = response.dig('error')
+        elsif response.dig('error', 'validation_errors')
+          error = response.dig('error')
           validation_errors = error.dig('validation_errors', 0)
           code = validation_errors['code'] if validation_errors && validation_errors['code']
           param = validation_errors['param'] if validation_errors && validation_errors['param']
           error_code = "#{error['error_type']} | #{code} | #{param}" if error['error_type']
+        elsif error = response.dig('error')
+          code = error.dig('reason', 'id')
+          standard_error_code = STANDARD_ERROR_CODE_MAPPING[code]
+          error_code = "#{code}, #{standard_error_code}"
         end
 
         error_code || STANDARD_ERROR_CODE[:processing_error]

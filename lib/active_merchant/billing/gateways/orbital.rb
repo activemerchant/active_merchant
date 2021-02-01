@@ -30,7 +30,7 @@ module ActiveMerchant #:nodoc:
     class OrbitalGateway < Gateway
       include Empty
 
-      API_VERSION = '7.7'
+      API_VERSION = '8.1'
 
       POST_HEADERS = {
         'MIME-Version' => '1.1',
@@ -183,6 +183,37 @@ module ActiveMerchant #:nodoc:
 
       SENSITIVE_FIELDS = %i[account_num cc_account_num]
 
+      # Bank account types to be used for check processing
+      ACCOUNT_TYPE = {
+        'savings' => 'S',
+        'checking' => 'C'
+      }
+
+      # Fixed possible values for orbital ECP attributes
+      # Auth methods for electronic checks can be:
+      # Written, Internet, Telephonic, Account Receivable, Point of Purchase.
+      # Default auth method for ECP is Internet (I).
+      # Bank payment delivery can be either ACH (Automated Clearing House) or Best Possible.
+      # Default Bank Payment Delivery is Best Possible (B).
+      # Action codes to be used for Early Warning System and additional validations.
+      # Valid combinations of Message Type and Action Code to be used are:
+      #   A   W1
+      #   AC  W1
+      #   FC  W4
+      #   R   W6
+      #   FC  W8
+      #   A   W3
+      #   AC  W3
+      #   FC  W5
+      #   R   W7
+      # Default Action code for ECP is nil.
+      # Electronic check to be processed on same day (Y) or next day (N).
+      # Default ECP Same Day Index is Yes (Y).
+      ECP_AUTH_METHODS = %w[W I T A P]
+      ECP_BANK_PAYMENT = %w[A B]
+      ECP_ACTION_CODES = %w[LO ND NC W1 W3 W4 W5 W6 W7 W8 W9]
+      ECP_SAME_DAY = %w[Y N]
+
       def initialize(options = {})
         requires!(options, :merchant_id)
         requires!(options, :login, :password) unless options[:ip_authentication]
@@ -191,12 +222,12 @@ module ActiveMerchant #:nodoc:
       end
 
       # A – Authorization request
-      def authorize(money, creditcard, options = {})
-        order = build_new_order_xml(AUTH_ONLY, money, creditcard, options) do |xml|
-          add_creditcard(xml, creditcard, options[:currency])
-          add_address(xml, creditcard, options)
+      def authorize(money, payment_source, options = {})
+        order = build_new_order_xml(AUTH_ONLY, money, payment_source, options) do |xml|
+          add_payment_source(xml, payment_source, options)
+          add_address(xml, payment_source, options)
           if @options[:customer_profiles]
-            add_customer_data(xml, creditcard, options)
+            add_customer_data(xml, payment_source, options)
             add_managed_billing(xml, options)
           end
         end
@@ -211,12 +242,12 @@ module ActiveMerchant #:nodoc:
       end
 
       # AC – Authorization and Capture
-      def purchase(money, creditcard, options = {})
-        order = build_new_order_xml(AUTH_AND_CAPTURE, money, creditcard, options) do |xml|
-          add_creditcard(xml, creditcard, options[:currency])
-          add_address(xml, creditcard, options)
+      def purchase(money, payment_source, options = {})
+        order = build_new_order_xml(options[:force_capture] ? FORCE_AUTH_AND_CAPTURE : AUTH_AND_CAPTURE, money, payment_source, options) do |xml|
+          add_payment_source(xml, payment_source, options)
+          add_address(xml, payment_source, options)
           if @options[:customer_profiles]
-            add_customer_data(xml, creditcard, options)
+            add_customer_data(xml, payment_source, options)
             add_managed_billing(xml, options)
           end
         end
@@ -478,6 +509,31 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      # Payment can be done through either Credit Card or Electronic Check
+      def add_payment_source(xml, payment_source, options = {})
+        if payment_source.instance_of?(ActiveMerchant::Billing::Check)
+          add_echeck(xml, payment_source, options)
+        else
+          add_creditcard(xml, payment_source, options[:currency])
+        end
+      end
+
+      # Adds Electronic Check attributes
+      def add_echeck(xml, check, options = {})
+        xml.tag! :CardBrand, 'EC'
+        xml.tag! :CurrencyCode, currency_code(options[:currency])
+        xml.tag! :CurrencyExponent, currency_exponents(options[:currency])
+        unless check.nil?
+
+          xml.tag! :BCRtNum, check.routing_number
+          xml.tag! :CheckDDA, check.account_number if check.account_number
+          xml.tag! :BankAccountType, ACCOUNT_TYPE[check.account_type] if ACCOUNT_TYPE[check.account_type]
+          xml.tag! :ECPAuthMethod, options[:auth_method] if options[:auth_method] && ECP_AUTH_METHODS.include?(options[:auth_method])
+          xml.tag! :BankPmtDelv, options[:payment_delivery] if options[:payment_delivery] && ECP_BANK_PAYMENT.include?(options[:payment_delivery])
+        end
+      end
+
+      # Adds Credit Card attributes
       def add_creditcard(xml, creditcard, currency = nil)
         unless creditcard.nil?
           xml.tag! :AccountNum, creditcard.number
@@ -532,6 +588,24 @@ module ActiveMerchant #:nodoc:
         xml.tag!(:AAV, three_d_secure[:cavv])
       end
 
+      def add_mc_program_protocol(xml, creditcard, three_d_secure)
+        return unless three_d_secure && creditcard.brand == 'master'
+
+        xml.tag!(:MCProgramProtocol, three_d_secure[:version]) if three_d_secure[:version]
+      end
+
+      def add_mc_directory_trans_id(xml, creditcard, three_d_secure)
+        return unless three_d_secure && creditcard.brand == 'master'
+
+        xml.tag!(:MCDirectoryTransID, three_d_secure[:ds_transaction_id]) if three_d_secure[:ds_transaction_id]
+      end
+
+      def add_ucafind(xml, creditcard, three_d_secure)
+        return unless three_d_secure && creditcard.brand == 'master'
+
+        xml.tag! :UCAFInd, '4'
+      end
+
       def add_dpanind(xml, creditcard)
         return unless creditcard.is_a?(NetworkTokenizationCreditCard)
 
@@ -584,6 +658,18 @@ module ActiveMerchant #:nodoc:
           xml.tag! :MBMicroPaymentMaxDollarValue,  mb[:max_dollar_value]   if mb[:max_dollar_value]
           xml.tag! :MBMicroPaymentMaxBillingDays,  mb[:max_billing_days]   if mb[:max_billing_days]
           xml.tag! :MBMicroPaymentMaxTransactions, mb[:max_transactions]   if mb[:max_transactions]
+        end
+      end
+
+      # Adds ECP conditional attributes depending on other attribute values
+      def add_ecp_details(xml, parameters = {})
+        requires!(parameters, :check_serial_number) if parameters[:auth_method]&.eql?('A') || parameters[:auth_method]&.eql?('P')
+        xml.tag! :ECPActionCode, parameters[:action_code] if parameters[:action_code] && ECP_ACTION_CODES.include?(parameters[:action_code])
+        xml.tag! :ECPCheckSerialNumber, parameters[:check_serial_number] if parameters[:auth_method]&.eql?('A') || parameters[:auth_method]&.eql?('P')
+        if parameters[:auth_method]&.eql?('P')
+          xml.tag! :ECPTerminalCity, parameters[:terminal_city] if parameters[:terminal_city]
+          xml.tag! :ECPTerminalState, parameters[:terminal_state] if parameters[:terminal_state]
+          xml.tag! :ECPImageReferenceNumber, parameters[:image_reference_number] if parameters[:image_reference_number]
         end
       end
 
@@ -695,7 +781,7 @@ module ActiveMerchant #:nodoc:
         @options[:ip_authentication] == true
       end
 
-      def build_new_order_xml(action, money, creditcard, parameters = {})
+      def build_new_order_xml(action, money, payment_source, parameters = {})
         requires!(parameters, :order_id)
         xml = xml_envelope
         xml.tag! :Request do
@@ -720,9 +806,9 @@ module ActiveMerchant #:nodoc:
 
             three_d_secure = parameters[:three_d_secure]
 
-            add_eci(xml, creditcard, three_d_secure)
-            add_cavv(xml, creditcard, three_d_secure)
-            add_xid(xml, creditcard, three_d_secure)
+            add_eci(xml, payment_source, three_d_secure)
+            add_cavv(xml, payment_source, three_d_secure)
+            add_xid(xml, payment_source, three_d_secure)
 
             xml.tag! :OrderID, format_order_id(parameters[:order_id])
             xml.tag! :Amount, amount(money)
@@ -731,7 +817,7 @@ module ActiveMerchant #:nodoc:
             add_level2_tax(xml, parameters)
             add_level2_advice_addendum(xml, parameters)
 
-            add_aav(xml, creditcard, three_d_secure)
+            add_aav(xml, payment_source, three_d_secure)
             # CustomerAni, AVSPhoneType and AVSDestPhoneType could be added here.
 
             if parameters[:soft_descriptors].is_a?(OrbitalSoftDescriptors)
@@ -740,9 +826,11 @@ module ActiveMerchant #:nodoc:
               add_soft_descriptors_from_hash(xml, parameters[:soft_descriptors])
             end
 
-            add_dpanind(xml, creditcard)
-            add_aevv(xml, creditcard, three_d_secure)
-            add_digital_token_cryptogram(xml, creditcard)
+            add_dpanind(xml, payment_source)
+            add_aevv(xml, payment_source, three_d_secure)
+            add_digital_token_cryptogram(xml, payment_source)
+
+            xml.tag! :ECPSameDayInd, parameters[:same_day] if parameters[:same_day] && ECP_SAME_DAY.include?(parameters[:same_day]) && payment_source.instance_of?(ActiveMerchant::Billing::Check)
 
             set_recurring_ind(xml, parameters)
 
@@ -756,9 +844,13 @@ module ActiveMerchant #:nodoc:
             add_level3_purchase(xml, parameters)
             add_level3_tax(xml, parameters)
             add_line_items(xml, parameters) if parameters[:line_items]
+            add_ecp_details(xml, parameters) if payment_source.instance_of?(ActiveMerchant::Billing::Check)
             add_card_indicators(xml, parameters)
             add_stored_credentials(xml, parameters)
-            add_pymt_brand_program_code(xml, creditcard, three_d_secure)
+            add_pymt_brand_program_code(xml, payment_source, three_d_secure)
+            add_mc_program_protocol(xml, payment_source, three_d_secure)
+            add_mc_directory_trans_id(xml, payment_source, three_d_secure)
+            add_ucafind(xml, payment_source, three_d_secure)
           end
         end
         xml.target!

@@ -364,9 +364,16 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_billing_address_override
-    @options[:billing_address] = address
+    billing_address = {
+      address1: '111 North Pole Lane',
+      city: 'Santaland',
+      state: '',
+      phone: nil
+    }
+    @options[:billing_address] = billing_address
     @options[:email] = 'override@example.com'
     assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_equal true, response.success?
     assert_successful_response(response)
   end
 

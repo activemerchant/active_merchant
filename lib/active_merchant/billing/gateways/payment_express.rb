@@ -86,6 +86,11 @@ module ActiveMerchant #:nodoc:
         refund(money, identification, options)
       end
 
+      def verify(money, payment_source, options = {})
+        request = build_purchase_or_authorization_request(money, payment_source, options)
+        commit(:validate, request)
+      end
+
       # Token Based Billing
       #
       # Instead of storing the credit card details locally, you can store them inside the
@@ -334,7 +339,7 @@ module ActiveMerchant #:nodoc:
       def authorization_from(action, response)
         case action
         when :validate
-          (response[:billing_id] || response[:dps_billing_id])
+          (response[:billing_id] || response[:dps_billing_id] || response[:dps_txn_ref])
         else
           response[:dps_txn_ref]
         end
@@ -361,7 +366,7 @@ module ActiveMerchant #:nodoc:
       # add a method to response so we can easily get the token
       # for Validate transactions
       def token
-        @params['billing_id'] || @params['dps_billing_id']
+        @params['billing_id'] || @params['dps_billing_id'] || @params['dps_txn_ref']
       end
     end
   end

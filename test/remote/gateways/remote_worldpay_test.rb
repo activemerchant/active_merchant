@@ -56,6 +56,13 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_equal 'SUCCESS', response.message
   end
 
+  def test_successful_purchase_skipping_capture
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(skip_capture: true))
+    assert_success response
+    assert response.responses.length == 1
+    assert_equal 'SUCCESS', response.message
+  end
+
   def test_successful_authorize_avs_and_cvv
     card = credit_card('4111111111111111', verification_value: 555)
     assert response = @gateway.authorize(@amount, card, @options.merge(billing_address: address.update(zip: 'CCCC')))

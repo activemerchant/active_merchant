@@ -13,6 +13,8 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       merchant_id: 'merchant_id'
     )
     @customer_ref_num = 'ABC'
+    # Electronic Check object with test credentials of saving account
+    @echeck = check(account_number: '072403004', account_type: 'savings', routing_number: '072403004')
 
     @level2 = {
       tax_indicator: '1',
@@ -94,7 +96,9 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       three_d_secure: {
         eci: '5',
         xid: 'TESTXID',
-        cavv: 'TESTCAVV'
+        cavv: 'TESTCAVV',
+        version: '2',
+        ds_transaction_id: '97267598FAE648F28083C23433990FBC'
       }
     }
   end
@@ -106,6 +110,36 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
     assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', response.authorization
+  end
+
+  def test_successful_purchase_with_echeck
+    @gateway.expects(:ssl_post).returns(successful_purchase_with_echeck_response)
+
+    assert response = @gateway.purchase(50, @echeck, order_id: '9baedc697f2cf06457de78')
+    assert_instance_of Response, response
+    assert_equal 'Approved', response.message
+    assert_success response
+    assert_equal '5F8E8BEE7299FD339A38F70CFF6E5D010EF55498;9baedc697f2cf06457de78', response.authorization
+  end
+
+  def test_failed_purchase_with_echeck
+    @gateway.expects(:ssl_post).returns(failed_echeck_for_invalid_routing_response)
+
+    assert response = @gateway.purchase(50, @echeck, order_id: '9baedc697f2cf06457de78')
+    assert_instance_of Response, response
+    assert_failure response
+    assert_equal 'Invalid ECP Account Route: []. The field is missing, invalid, or it has exceeded the max length of: [9].', response.message
+    assert_equal '888', response.params['proc_status']
+  end
+
+  def test_successful_force_capture_with_echeck
+    @gateway.expects(:ssl_post).returns(successful_force_capture_with_echeck_response)
+
+    assert response = @gateway.purchase(31, @echeck, order_id: '2', force_capture: true)
+    assert_instance_of Response, response
+    assert_match 'APPROVAL', response.message
+    assert_equal 'Approved and Completed', response.params['status_msg']
+    assert_equal '5F8ED3D950A43BD63369845D5385B6354C3654B4;2930847bc732eb4e8102cf', response.authorization
   end
 
   def test_level2_data
@@ -216,6 +250,9 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
       assert_match %{<AAV>TESTCAVV</AAV>}, data
+      assert_match %{<MCProgramProtocol>2</MCProgramProtocol>}, data
+      assert_match %{<MCDirectoryTransID>97267598FAE648F28083C23433990FBC</MCDirectoryTransID>}, data
+      assert_match %{<UCAFInd>4</UCAFInd>}, data
     end.respond_with(successful_purchase_response)
   end
 
@@ -225,6 +262,9 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
       assert_match %{<AAV>TESTCAVV</AAV>}, data
+      assert_match %{<MCProgramProtocol>2</MCProgramProtocol>}, data
+      assert_match %{<MCDirectoryTransID>97267598FAE648F28083C23433990FBC</MCDirectoryTransID>}, data
+      assert_match %{<UCAFInd>4</UCAFInd>}, data
     end.respond_with(successful_purchase_response)
   end
 
@@ -882,6 +922,45 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_authorize_with_echeck
+    @gateway.expects(:ssl_post).returns(successful_authorize_with_echeck_response)
+
+    assert response = @gateway.authorize(50, @echeck, order_id: '2')
+    assert_instance_of Response, response
+    assert_equal 'Approved', response.message
+    assert_success response
+    assert_equal '5F8E8D2B077217F3EF1ACD3B61610E4CD12954A3;2', response.authorization
+  end
+
+  def test_failed_authorize_with_echeck
+    @gateway.expects(:ssl_post).returns(failed_echeck_for_invalid_amount_response)
+
+    assert response = @gateway.authorize(-1, @echeck, order_id: '9baedc697f2cf06457de78')
+    assert_instance_of Response, response
+    assert_failure response
+    assert_equal 'Error validating amount. Must be numeric, equal to zero or greater [-1]', response.message
+    assert_equal '885', response.params['proc_status']
+  end
+
+  def test_successful_refund_with_echeck
+    @gateway.expects(:ssl_post).returns(successful_refund_with_echeck_response)
+
+    assert response = @gateway.refund(50, '1;2', @options)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '1', response.params['approval_status']
+  end
+
+  def test_failed_refund_with_echeck
+    @gateway.expects(:ssl_post).returns(failed_refund_with_echeck_response)
+
+    assert response = @gateway.refund(50, '1;2', @options)
+    assert_instance_of Response, response
+    assert_failure response
+    assert_equal 'Refund Transactions By TxRefNum Are Only Valid When The Original Transaction Was An AUTH Or AUTH CAPTURE.', response.message
+    assert_equal '9806', response.params['proc_status']
+  end
+
   def test_send_address_details_for_united_states
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1, billing_address: address)
@@ -936,7 +1015,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1, billing_address: address)
     end.check_request do |_endpoint, data, _headers|
-      schema_file = File.read("#{File.dirname(__FILE__)}/../../schema/orbital/Request_PTI77.xsd")
+      schema_file = File.read("#{File.dirname(__FILE__)}/../../schema/orbital/Request_PTI83.xsd")
       doc = Nokogiri::XML(data)
       xsd = Nokogiri::XML::Schema(schema_file)
       assert xsd.valid?(doc), 'Request does not adhere to DTD'
@@ -948,7 +1027,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1, billing_address: address(country: 'DE'))
     end.check_request do |_endpoint, data, _headers|
-      schema_file = File.read("#{File.dirname(__FILE__)}/../../schema/orbital/Request_PTI77.xsd")
+      schema_file = File.read("#{File.dirname(__FILE__)}/../../schema/orbital/Request_PTI83.xsd")
       doc = Nokogiri::XML(data)
       xsd = Nokogiri::XML::Schema(schema_file)
       assert xsd.valid?(doc), 'Request does not adhere to DTD'
@@ -1158,6 +1237,34 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def successful_void_response
     '<?xml version="1.0" encoding="UTF-8"?><Response><ReversalResp><MerchantID>700000208761</MerchantID><TerminalID>001</TerminalID><OrderID>2</OrderID><TxRefNum>50FB1C41FEC9D016FF0BEBAD0884B174AD0853B0</TxRefNum><TxRefIdx>1</TxRefIdx><OutstandingAmt>0</OutstandingAmt><ProcStatus>0</ProcStatus><StatusMsg></StatusMsg><RespTime>01192013172049</RespTime></ReversalResp></Response>'
+  end
+
+  def successful_purchase_with_echeck_response
+    '<?xml version="1.0" encoding="UTF-8"?><Response><NewOrderResp><IndustryType></IndustryType><MessageType>AC</MessageType><MerchantID>041756</MerchantID><TerminalID>001</TerminalID><CardBrand>EC</CardBrand><AccountNum></AccountNum><OrderID>9baedc697f2cf06457de78</OrderID><TxRefNum>5F8E8BEE7299FD339A38F70CFF6E5D010EF55498</TxRefNum><TxRefIdx>2</TxRefIdx><ProcStatus>0</ProcStatus><ApprovalStatus>1</ApprovalStatus><RespCode>00</RespCode><AVSRespCode>3 </AVSRespCode><CVV2RespCode> </CVV2RespCode><AuthCode>123456</AuthCode><RecurringAdviceCd></RecurringAdviceCd><CAVVRespCode></CAVVRespCode><StatusMsg>Approved</StatusMsg><RespMsg></RespMsg><HostRespCode>102</HostRespCode><HostAVSRespCode>  </HostAVSRespCode><HostCVV2RespCode>  </HostCVV2RespCode><CustomerRefNum></CustomerRefNum><CustomerName></CustomerName><ProfileProcStatus></ProfileProcStatus><CustomerProfileMessage></CustomerProfileMessage><RespTime>030414</RespTime><PartialAuthOccurred></PartialAuthOccurred><RequestedAmount></RequestedAmount><RedeemedAmount></RedeemedAmount><RemainingBalance></RemainingBalance><CountryFraudFilterStatus></CountryFraudFilterStatus><IsoCountryCode></IsoCountryCode></NewOrderResp></Response>'
+  end
+
+  def successful_force_capture_with_echeck_response
+    '<?xml version="1.0" encoding="UTF-8"?><Response><NewOrderResp><IndustryType></IndustryType><MessageType>FC</MessageType><MerchantID>041756</MerchantID><TerminalID>001</TerminalID><CardBrand>EC</CardBrand><AccountNum></AccountNum><OrderID>2930847bc732eb4e8102cf</OrderID><TxRefNum>5F8ED3D950A43BD63369845D5385B6354C3654B4</TxRefNum><TxRefIdx>2</TxRefIdx><ProcStatus>0</ProcStatus><ApprovalStatus>1</ApprovalStatus><RespCode>00</RespCode><AVSRespCode></AVSRespCode><CVV2RespCode></CVV2RespCode><AuthCode></AuthCode><RecurringAdviceCd></RecurringAdviceCd><CAVVRespCode></CAVVRespCode><StatusMsg>Approved and Completed</StatusMsg><RespMsg>APPROVAL        </RespMsg><HostRespCode></HostRespCode><HostAVSRespCode></HostAVSRespCode><HostCVV2RespCode></HostCVV2RespCode><CustomerRefNum></CustomerRefNum><CustomerName></CustomerName><ProfileProcStatus></ProfileProcStatus><CustomerProfileMessage></CustomerProfileMessage><RespTime>081105</RespTime><PartialAuthOccurred></PartialAuthOccurred><RequestedAmount></RequestedAmount><RedeemedAmount></RedeemedAmount><RemainingBalance></RemainingBalance><CountryFraudFilterStatus></CountryFraudFilterStatus><IsoCountryCode></IsoCountryCode></NewOrderResp></Response>'
+  end
+
+  def failed_echeck_for_invalid_routing_response
+    '<?xml version="1.0" encoding="UTF-8"?><Response><QuickResp><ProcStatus>888</ProcStatus><StatusMsg>Invalid ECP Account Route: []. The field is missing, invalid, or it has exceeded the max length of: [9].</StatusMsg></QuickResp></Response>'
+  end
+
+  def failed_echeck_for_invalid_amount_response
+    '<?xml version="1.0" encoding="UTF-8"?><Response><QuickResp><ProcStatus>885</ProcStatus><StatusMsg>Error validating amount. Must be numeric, equal to zero or greater [-1]</StatusMsg></QuickResp></Response>'
+  end
+
+  def successful_authorize_with_echeck_response
+    '<?xml version="1.0" encoding="UTF-8"?><Response><NewOrderResp><IndustryType></IndustryType><MessageType>A</MessageType><MerchantID>041756</MerchantID><TerminalID>001</TerminalID><CardBrand>EC</CardBrand><AccountNum></AccountNum><OrderID>2</OrderID><TxRefNum>5F8E8D2B077217F3EF1ACD3B61610E4CD12954A3</TxRefNum><TxRefIdx>0</TxRefIdx><ProcStatus>0</ProcStatus><ApprovalStatus>1</ApprovalStatus><RespCode>00</RespCode><AVSRespCode>3 </AVSRespCode><CVV2RespCode> </CVV2RespCode><AuthCode>123456</AuthCode><RecurringAdviceCd></RecurringAdviceCd><CAVVRespCode></CAVVRespCode><StatusMsg>Approved</StatusMsg><RespMsg></RespMsg><HostRespCode>102</HostRespCode><HostAVSRespCode>  </HostAVSRespCode><HostCVV2RespCode>  </HostCVV2RespCode><CustomerRefNum></CustomerRefNum><CustomerName></CustomerName><ProfileProcStatus></ProfileProcStatus><CustomerProfileMessage></CustomerProfileMessage><RespTime>030931</RespTime><PartialAuthOccurred></PartialAuthOccurred><RequestedAmount></RequestedAmount><RedeemedAmount></RedeemedAmount><RemainingBalance></RemainingBalance><CountryFraudFilterStatus></CountryFraudFilterStatus><IsoCountryCode></IsoCountryCode></NewOrderResp></Response>'
+  end
+
+  def successful_refund_with_echeck_response
+    '<?xml version="1.0" encoding="UTF-8"?><Response><NewOrderResp><IndustryType></IndustryType><MessageType>R</MessageType><MerchantID>041756</MerchantID><TerminalID>001</TerminalID><CardBrand>EC</CardBrand><AccountNum>XXXXX3004</AccountNum><OrderID>b67774a1bbfe1387f5e185</OrderID><TxRefNum>5F8E8D8A542ED5CC24449BC4CECD337BE05754C2</TxRefNum><TxRefIdx>2</TxRefIdx><ProcStatus>0</ProcStatus><ApprovalStatus>1</ApprovalStatus><RespCode></RespCode><AVSRespCode></AVSRespCode><CVV2RespCode></CVV2RespCode><AuthCode></AuthCode><RecurringAdviceCd></RecurringAdviceCd><CAVVRespCode></CAVVRespCode><StatusMsg></StatusMsg><RespMsg></RespMsg><HostRespCode></HostRespCode><HostAVSRespCode></HostAVSRespCode><HostCVV2RespCode></HostCVV2RespCode><CustomerRefNum></CustomerRefNum><CustomerName></CustomerName><ProfileProcStatus></ProfileProcStatus><CustomerProfileMessage></CustomerProfileMessage><RespTime>031106</RespTime><PartialAuthOccurred></PartialAuthOccurred><RequestedAmount></RequestedAmount><RedeemedAmount></RedeemedAmount><RemainingBalance></RemainingBalance><CountryFraudFilterStatus></CountryFraudFilterStatus><IsoCountryCode></IsoCountryCode></NewOrderResp></Response>'
+  end
+
+  def failed_refund_with_echeck_response
+    '<?xml version="1.0" encoding="UTF-8"?><Response><QuickResp><ProcStatus>9806</ProcStatus><StatusMsg>Refund Transactions By TxRefNum Are Only Valid When The Original Transaction Was An AUTH Or AUTH CAPTURE.</StatusMsg></QuickResp></Response>'
   end
 
   def pre_scrubbed

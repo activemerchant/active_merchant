@@ -5,10 +5,11 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     @gateway = CredoraxGateway.new(fixtures(:credorax))
 
     @amount = 100
+    @adviser_amount = 1000001
     @credit_card = credit_card('4176661000001015', verification_value: '281', month: '12', year: '2022')
     @fully_auth_card = credit_card('5223450000000007', brand: 'mastercard', verification_value: '090', month: '12', year: '2025')
     @declined_card = credit_card('4176661000001111', verification_value: '681', month: '12', year: '2022')
-    @three_ds_card = credit_card('5455330200000016', verification_value: '737', month: '12', year: '2022')
+    @three_ds_card = credit_card('4761739000060016', verification_value: '212', month: '12', year: '2027')
     @options = {
       order_id: '1',
       currency: 'EUR',
@@ -130,6 +131,15 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @three_ds_card, options)
     assert_success response
     assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_purchase_with_3ds_adviser
+    threeds_options = @options.merge(@normalized_3ds_2_options)
+    options = threeds_options.merge(three_ds_initiate: '03', f23: '1')
+    response = @gateway.purchase(@adviser_amount, @three_ds_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal '01', response.params['SMART_3DS_RESULT']
   end
 
   def test_successful_moto_purchase

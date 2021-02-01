@@ -164,6 +164,14 @@ class WorldpayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_skipping_capture
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(skip_capture: true))
+    end.respond_with(successful_authorize_response, successful_capture_response)
+    assert response.responses.length == 1
+    assert_success response
+  end
+
   def test_successful_purchase_with_elo
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(currency: 'BRL'))

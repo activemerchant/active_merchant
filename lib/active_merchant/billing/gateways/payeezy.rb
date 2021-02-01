@@ -247,14 +247,32 @@ module ActiveMerchant
       end
 
       def add_stored_credentials(params, options)
-        if options[:sequence]
+        if options[:sequence] || options[:stored_credential]
           params[:stored_credentials] = {}
-          params[:stored_credentials][:cardbrand_original_transaction_id] = options[:cardbrand_original_transaction_id] if options[:cardbrand_original_transaction_id]
-          params[:stored_credentials][:sequence] = options[:sequence]
-          params[:stored_credentials][:initiator] = options[:initiator] if options[:initiator]
-          params[:stored_credentials][:is_scheduled] = options[:is_scheduled]
+          params[:stored_credentials][:cardbrand_original_transaction_id] = original_transaction_id(options) if original_transaction_id(options)
+          params[:stored_credentials][:initiator] = initiator(options) if initiator(options)
+          params[:stored_credentials][:sequence] = options[:sequence] || sequence(options[:stored_credential][:initial_transaction])
+          params[:stored_credentials][:is_scheduled] = options[:is_scheduled] || is_scheduled(options[:stored_credential][:reason_type])
           params[:stored_credentials][:auth_type_override] = options[:auth_type_override] if options[:auth_type_override]
         end
+      end
+
+      def original_transaction_id(options)
+        return options[:cardbrand_original_transaction_id] if options[:cardbrand_original_transaction_id]
+        return options[:stored_credential][:network_transaction_id] if options.dig(:stored_credential, :network_transaction_id)
+      end
+
+      def initiator(options)
+        return options[:initiator] if options[:initiator]
+        return options[:stored_credential][:initiator].upcase if options.dig(:stored_credential, :initiator)
+      end
+
+      def sequence(initial_transaction)
+        initial_transaction ? 'FIRST' : 'SUBSEQUENT'
+      end
+
+      def is_scheduled(reason_type)
+        reason_type == 'recurring' ? 'true' : 'false'
       end
 
       def commit(params, options)

@@ -126,6 +126,7 @@ module ActiveMerchant #:nodoc:
         184 => 'Authentication error',
         190 => 'Refusal with no specific reason',
         191 => 'Expiry date incorrect',
+        195 => 'Requires SCA authentication',
 
         201 => 'Card expired',
         202 => 'Card blocked temporarily or under suspicion of fraud',
@@ -203,6 +204,7 @@ module ActiveMerchant #:nodoc:
         add_payment(data, payment)
         add_external_mpi_fields(data, options)
         add_threeds(data, options) if options[:execute_threed]
+        add_stored_credential_options(data, options)
         data[:description] = options[:description]
         data[:store_in_vault] = options[:store]
         data[:sca_exemption] = options[:sca_exemption]
@@ -220,6 +222,7 @@ module ActiveMerchant #:nodoc:
         add_payment(data, payment)
         add_external_mpi_fields(data, options)
         add_threeds(data, options) if options[:execute_threed]
+        add_stored_credential_options(data, options)
         data[:description] = options[:description]
         data[:store_in_vault] = options[:store]
         data[:sca_exemption] = options[:sca_exemption]
@@ -331,18 +334,39 @@ module ActiveMerchant #:nodoc:
         return unless options[:three_d_secure]
 
         if options[:three_d_secure][:version] == THREE_DS_V2
-          data[:threeDSServerTransID] = options[:three_d_secure][:xid] if options[:three_d_secure][:xid]
+          data[:threeDSServerTransID] = options[:three_d_secure][:three_ds_server_trans_id] if options[:three_d_secure][:three_ds_server_trans_id]
           data[:dsTransID] = options[:three_d_secure][:ds_transaction_id] if options[:three_d_secure][:ds_transaction_id]
           data[:authenticacionValue] = options[:three_d_secure][:cavv] if options[:three_d_secure][:cavv]
           data[:protocolVersion] = options[:three_d_secure][:version] if options[:three_d_secure][:version]
-
           data[:authenticacionMethod] = options[:authentication_method] if options[:authentication_method]
           data[:authenticacionType] = options[:authentication_type] if options[:authentication_type]
           data[:authenticacionFlow] = options[:authentication_flow] if options[:authentication_flow]
+          data[:eci_v2] = options[:three_d_secure][:eci] if options[:three_d_secure][:eci]
         elsif options[:three_d_secure][:version] == THREE_DS_V1
           data[:txid] = options[:three_d_secure][:xid] if options[:three_d_secure][:xid]
           data[:cavv] = options[:three_d_secure][:cavv] if options[:three_d_secure][:cavv]
-          data[:eci] = options[:three_d_secure][:eci] if options[:three_d_secure][:eci]
+          data[:eci_v1] = options[:three_d_secure][:eci] if options[:three_d_secure][:eci]
+        end
+      end
+
+      def add_stored_credential_options(data, options)
+        return unless options[:stored_credential]
+
+        case options[:stored_credential][:initial_transaction]
+        when true
+          data[:DS_MERCHANT_COF_INI] = 'S'
+        when false
+          data[:DS_MERCHANT_COF_INI] = 'N'
+          data[:DS_MERCHANT_COF_TXNID] = options[:stored_credential][:network_transaction_id] if options[:stored_credential][:network_transaction_id]
+        end
+
+        case options[:stored_credential][:reason_type]
+        when 'recurring'
+          data[:DS_MERCHANT_COF_TYPE] = 'R'
+        when 'installment'
+          data[:DS_MERCHANT_COF_TYPE] = 'I'
+        when 'unscheduled'
+          return
         end
       end
 
@@ -487,6 +511,12 @@ module ActiveMerchant #:nodoc:
           xml.DS_MERCHANT_DIRECTPAYMENT 'moto' if options.dig(:moto) && options.dig(:metadata, :manual_entry)
 
           xml.DS_MERCHANT_EMV3DS data[:threeds].to_json if data[:threeds]
+
+          if options[:stored_credential]
+            xml.DS_MERCHANT_COF_INI data[:DS_MERCHANT_COF_INI]
+            xml.DS_MERCHANT_COF_TYPE data[:DS_MERCHANT_COF_TYPE]
+            xml.DS_MERCHANT_COF_TXNID data[:DS_MERCHANT_COF_TXNID] if data[:DS_MERCHANT_COF_TXNID]
+          end
         end
       end
 
@@ -496,13 +526,13 @@ module ActiveMerchant #:nodoc:
         ds_merchant_mpi_external = {}
         ds_merchant_mpi_external[:TXID] = data[:txid] if data[:txid]
         ds_merchant_mpi_external[:CAVV] = data[:cavv] if data[:cavv]
-        ds_merchant_mpi_external[:ECI] = data[:eci] if data[:eci]
+        ds_merchant_mpi_external[:ECI] = data[:eci_v1] if data[:eci_v1]
 
         ds_merchant_mpi_external[:threeDSServerTransID] = data[:threeDSServerTransID] if data[:threeDSServerTransID]
         ds_merchant_mpi_external[:dsTransID] = data[:dsTransID] if data[:dsTransID]
         ds_merchant_mpi_external[:authenticacionValue] = data[:authenticacionValue] if data[:authenticacionValue]
         ds_merchant_mpi_external[:protocolVersion] = data[:protocolVersion] if data[:protocolVersion]
-
+        ds_merchant_mpi_external[:Eci] = data[:eci_v2] if data[:eci_v2]
         ds_merchant_mpi_external[:authenticacionMethod] = data[:authenticacionMethod] if data[:authenticacionMethod]
         ds_merchant_mpi_external[:authenticacionType] = data[:authenticacionType] if data[:authenticacionType]
         ds_merchant_mpi_external[:authenticacionFlow] = data[:authenticacionFlow] if data[:authenticacionFlow]
@@ -593,7 +623,7 @@ module ActiveMerchant #:nodoc:
       def response_text(code)
         code = code.to_i
         code = 0 if code < 100
-        RESPONSE_TEXTS[code] || 'Unkown code, please check in manual'
+        RESPONSE_TEXTS[code] || 'Unknown code, please check in manual'
       end
 
       def response_text_3ds(xml, params)
