@@ -251,7 +251,8 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_echeck_having_arc_authorization
-    assert response = @gateway.purchase(20, @echeck, @options.merge({ auth_method: 'A', check_serial_number: '000000000' }))
+    test_check = check(account_number: '000000000', account_type: 'checking', routing_number: '072403004')
+    assert response = @gateway.purchase(20, test_check, @options.merge({ auth_method: 'A' }))
     assert_success response
     assert_equal 'Approved', response.message
     assert_false response.authorization.blank?
@@ -259,12 +260,14 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
 
   def test_failed_missing_serial_for_arc_with_echeck
     assert_raise do
-      @gateway.purchase(20, @echeck, @options.merge({ auth_method: 'A' }))
+      test_check = { account_type: 'savings', routing_number: '072403004' }
+      @gateway.purchase(20, test_check, @options.merge({ auth_method: 'A' }))
     end
   end
 
   def test_successful_purchase_with_echeck_having_pop_authorization
-    assert response = @gateway.purchase(20, @echeck, @options.merge({ auth_method: 'P', check_serial_number: '000000000', terminal_city: 'CO', terminal_state: 'IL', image_reference_number: '00000' }))
+    test_check = check(account_number: '000000000', account_type: 'savings', routing_number: '072403004')
+    assert response = @gateway.purchase(20, test_check, @options.merge({ auth_method: 'P', terminal_city: 'CO', terminal_state: 'IL', image_reference_number: '00000' }))
     assert_success response
     assert_equal 'Approved', response.message
     assert_false response.authorization.blank?
@@ -272,7 +275,8 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
 
   def test_failed_missing_serial_for_pop_with_echeck
     assert_raise do
-      @gateway.purchase(20, @echeck, @options.merge({ auth_method: 'P' }))
+      test_check = { account_type: 'savings', routing_number: '072403004' }
+      @gateway.purchase(20, test_check, @options.merge({ auth_method: 'P' }))
     end
   end
 

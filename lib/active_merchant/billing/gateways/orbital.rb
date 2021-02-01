@@ -511,7 +511,7 @@ module ActiveMerchant #:nodoc:
 
       # Payment can be done through either Credit Card or Electronic Check
       def add_payment_source(xml, payment_source, options = {})
-        if payment_source.instance_of?(ActiveMerchant::Billing::Check)
+        if payment_source.is_a?(Check)
           add_echeck(xml, payment_source, options)
         else
           add_creditcard(xml, payment_source, options[:currency])
@@ -662,10 +662,10 @@ module ActiveMerchant #:nodoc:
       end
 
       # Adds ECP conditional attributes depending on other attribute values
-      def add_ecp_details(xml, parameters = {})
-        requires!(parameters, :check_serial_number) if parameters[:auth_method]&.eql?('A') || parameters[:auth_method]&.eql?('P')
+      def add_ecp_details(xml, payment_source, parameters = {})
+        requires!(payment_source.account_number) if parameters[:auth_method]&.eql?('A') || parameters[:auth_method]&.eql?('P')
         xml.tag! :ECPActionCode, parameters[:action_code] if parameters[:action_code] && ECP_ACTION_CODES.include?(parameters[:action_code])
-        xml.tag! :ECPCheckSerialNumber, parameters[:check_serial_number] if parameters[:auth_method]&.eql?('A') || parameters[:auth_method]&.eql?('P')
+        xml.tag! :ECPCheckSerialNumber, payment_source.account_number if parameters[:auth_method]&.eql?('A') || parameters[:auth_method]&.eql?('P')
         if parameters[:auth_method]&.eql?('P')
           xml.tag! :ECPTerminalCity, parameters[:terminal_city] if parameters[:terminal_city]
           xml.tag! :ECPTerminalState, parameters[:terminal_state] if parameters[:terminal_state]
@@ -830,7 +830,7 @@ module ActiveMerchant #:nodoc:
             add_aevv(xml, payment_source, three_d_secure)
             add_digital_token_cryptogram(xml, payment_source)
 
-            xml.tag! :ECPSameDayInd, parameters[:same_day] if parameters[:same_day] && ECP_SAME_DAY.include?(parameters[:same_day]) && payment_source.instance_of?(ActiveMerchant::Billing::Check)
+            xml.tag! :ECPSameDayInd, parameters[:same_day] if parameters[:same_day] && ECP_SAME_DAY.include?(parameters[:same_day]) && payment_source.is_a?(Check)
 
             set_recurring_ind(xml, parameters)
 
@@ -844,7 +844,7 @@ module ActiveMerchant #:nodoc:
             add_level3_purchase(xml, parameters)
             add_level3_tax(xml, parameters)
             add_line_items(xml, parameters) if parameters[:line_items]
-            add_ecp_details(xml, parameters) if payment_source.instance_of?(ActiveMerchant::Billing::Check)
+            add_ecp_details(xml, payment_source, parameters) if payment_source.is_a?(Check)
             add_card_indicators(xml, parameters)
             add_stored_credentials(xml, parameters)
             add_pymt_brand_program_code(xml, payment_source, three_d_secure)

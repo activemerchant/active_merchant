@@ -8,6 +8,7 @@
 * Decidir: Improve error mapping [meagabeth] #3875
 * Worldpay: support `skip_capture` [therufs] #3879
 * Redsys: Add new response code text [britth] #3880
+* Orbital: Update ECP details to use payment source [jessiagee] #3881
 
 == Version 1.118.0 (January 22nd, 2021)
 * Worldpay: Add support for challengeWindowSize [carrigan] #3823
