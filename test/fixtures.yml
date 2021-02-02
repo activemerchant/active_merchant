@@ -461,8 +461,8 @@ linkpoint:
     PASTE YOUR PEM FILE HERE
 
 litle:
-  login: ACTIVE
-  password: MERCHANT
+  login: ""
+  password: ""
   merchant_id: 101
 
 # Working test credentials, no need to replace
