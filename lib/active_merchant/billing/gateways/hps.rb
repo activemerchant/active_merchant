@@ -67,6 +67,15 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def credit(money, payment_method, options = {})
+        commit('CreditReturn') do |xml|
+          add_amount(xml, money)
+          add_allow_dup(xml)
+          add_card_or_token_payment(xml, payment_method, options)
+          add_details(xml, options)
+        end
+      end
+
       def verify(card_or_token, options = {})
         commit('CreditAccountVerify') do |xml|
           add_card_or_token_customer_data(xml, card_or_token, options)

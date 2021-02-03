@@ -167,6 +167,17 @@ class RemoteHpsTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_successful_credit
+    credit = @gateway.credit(@amount, @credit_card, @options)
+    assert_success credit
+    assert_equal 'Success', credit.params['GatewayRspMsg']
+  end
+
+  def test_failed_credit
+    credit = @gateway.credit(nil, @credit_card)
+    assert_failure credit
+  end
+
   def test_successful_void
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
