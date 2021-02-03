@@ -1447,6 +1447,10 @@ wirecard_checkout_page:
   shop_id: ''
   paymenttype: IDL
 
+wompi:
+  public_key: PUBLIC_KEY
+  private_key: PRIVATE_KEY
+
 # Working credentials, no need to replace
 world_net:
   terminal_id: '6001'
