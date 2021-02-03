@@ -142,6 +142,20 @@ class HpsTest < Test::Unit::TestCase
     assert_failure refund
   end
 
+  def test_successful_credit
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
+
+    credit = @gateway.credit(@amount, @credit_card)
+    assert_success credit
+  end
+
+  def test_failed_credit
+    @gateway.expects(:ssl_post).returns(failed_refund_response)
+
+    credit = @gateway.refund(@amount, @credit_card)
+    assert_failure credit
+  end
+
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_void_response)
 
