@@ -21,6 +21,12 @@ module ActiveMerchant #:nodoc:
         super
       end
 
+      def query_acceptance_token
+        action = "/merchants/#{@options[:public_key]}"
+
+        commit(:get, action)
+      end
+
       def store(payment_method, options={})
         post = {}
 
@@ -35,7 +41,7 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, payment, options={})
         post = {}
-        post[:acceptance_token] = acceptance_token
+        post[:acceptance_token] = query_acceptance_token.message
 
         add_invoice(post, money, options)
         add_payment(post, payment, options)
@@ -220,23 +226,6 @@ module ActiveMerchant #:nodoc:
 
       def url
         test? ? test_url : live_url
-      end
-
-      def acceptance_token
-        action = "/merchants/#{@options[:public_key]}"
-        endpoint = url + action
-
-        response = parse(ssl_get(endpoint, headers(action)))
-
-        get_token(success_from(action, response), response)
-      end
-
-      def get_token(success, response)
-        if success
-          response.dig('data', 'presigned_acceptance', 'acceptance_token')
-        else
-          raise "Failed authorization: #{raw_response}"
-        end
       end
 
       def reference_in_params?(action)
