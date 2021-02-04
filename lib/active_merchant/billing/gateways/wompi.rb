@@ -65,7 +65,7 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
-          gsub(/(Authorization: Bearer )([A-Za-z0-9\-\._~\+\/]+=*)/, '\1[FILTERED]').
+          gsub(/(Authorization: Bearer )([^\s])+/, '\1[FILTERED]').
           gsub(/(\\?\\?\\?"number\\?\\?\\?":\\?\\?\\?")\d+/, '\1[FILTERED]').
           gsub(/(\\?\\?\\?"cvc\\?\\?\\?":\\?\\?\\?"?)\d+/, '\1[FILTERED]')
       end
@@ -74,9 +74,9 @@ module ActiveMerchant #:nodoc:
 
       def add_customer_data(post, options)
         post[:customer_data] = {}
-        post[:customer_data][:phone_number] = options[:customer]&.[](:mob_phone)
-        post[:customer_data][:full_name] = options[:customer]&.[](:full_name)
-        post[:customer_email] = options[:customer]&.[](:email)
+        post[:customer_data][:phone_number] = options.dig(:customer, :mob_phone)
+        post[:customer_data][:full_name] = options.dig(:customer, :full_name)
+        post[:customer_email] = options.dig(:customer, :email)
         post[:redirect_url] = options[:redirect_url]
       end
 
@@ -120,16 +120,15 @@ module ActiveMerchant #:nodoc:
 
       def headers(action)
         key = reference_in_params?(action) ? :private_key : :public_key
+        token = @options.send(:[], key)
+
+        raise 'Missing Bearer token' if token.nil?
 
         {
           'accept' => '*/*',
           'Content-Type' => 'application/json',
-          'Authorization' => "Bearer #{@options.send(:[], key)}"
+          'Authorization' => "Bearer #{token}"
         }
-      end
-
-      def reference_in_params?(action)
-        action.match(/\A?reference=[^&]+&*/).present?
       end
 
       def commit(verb, action, parameters={})
@@ -223,8 +222,6 @@ module ActiveMerchant #:nodoc:
         test? ? test_url : live_url
       end
 
-      # This is a previous query before each query needed to get a bearer token
-      # https://docs.wompi.co/docs/en/tokens-de-aceptacion
       def acceptance_token
         action = "/merchants/#{@options[:public_key]}"
         endpoint = url + action
@@ -240,6 +237,18 @@ module ActiveMerchant #:nodoc:
         else
           raise "Failed authorization: #{raw_response}"
         end
+      end
+
+      def reference_in_params?(action)
+        path_params_ref?(action) || query_string_ref?(action.split('?').last)
+      end
+
+      def path_params_ref?(action)
+        action =~ /\/transactions\/[^\s]+/
+      end
+
+      def query_string_ref?(query)
+        CGI::parse(query).has_key?('reference')
       end
     end
   end
