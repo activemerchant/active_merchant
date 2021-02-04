@@ -20,6 +20,12 @@ class RemoteWompiTest < Test::Unit::TestCase
     }
   end
 
+  def test_query_acceptance_token
+    response = @gateway.query_acceptance_token
+    assert_success response
+    assert_match /.{20}\..{284}\..{43}/, response.message
+  end
+
   def test_successful_store
     response = @gateway.store(@credit_card, @options)
     assert_success response
