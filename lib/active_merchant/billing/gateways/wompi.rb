@@ -41,7 +41,7 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, payment, options={})
         post = {}
-        post[:acceptance_token] = query_acceptance_token.message
+        post[:acceptance_token] = query_acceptance_token.authorization
 
         add_invoice(post, money, options)
         add_payment(post, payment, options)
@@ -165,7 +165,7 @@ module ActiveMerchant #:nodoc:
           response['status'] == 'CREATED'
 
         when /\/merchants\/pub_(test|prod)_.+/
-          response['data']['presigned_acceptance']['acceptance_token']
+          response.dig('data', 'presigned_acceptance', 'acceptance_token')
 
         when '/transactions'
           data = response['data']
@@ -203,10 +203,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(endpoint, response)
-        data = response['data']
-        response_data = data.is_a?(Array) ? data.first : data
+        case endpoint
+        when /\/merchants\/pub_(test|prod)_.+/
+          response['data']['presigned_acceptance']['acceptance_token']
+        else
+          data = response['data']
+          response_data = data.is_a?(Array) ? data.first : data
 
-        response_data&.[]('id')
+          response_data&.[]('id')
+        end
       end
 
       def post_data(action, parameters = {})
