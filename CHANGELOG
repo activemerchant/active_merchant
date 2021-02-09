@@ -13,6 +13,7 @@
 * HPS: Update Add support for general credit [naashton] #3885
 * Elavon: Fix issue with encoding data sent in the request [naashton] #3865
 * Orbital: Update ECP to use EWS verification [jessiagee] #3886
+* Eway: Add 3ds field when do direct payment [GavinSun9527] #3860 
 
 == Version 1.118.0 (January 22nd, 2021)
 * Worldpay: Add support for challengeWindowSize [carrigan] #3823
