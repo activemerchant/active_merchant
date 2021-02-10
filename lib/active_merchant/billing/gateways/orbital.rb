@@ -232,7 +232,7 @@ module ActiveMerchant #:nodoc:
             add_managed_billing(xml, options)
           end
         end
-        commit(order, :authorize, options[:trace_number])
+        commit(order, :authorize, options[:retry_logic], options[:trace_number])
       end
 
       def verify(creditcard, options = {})
@@ -252,12 +252,12 @@ module ActiveMerchant #:nodoc:
             add_managed_billing(xml, options)
           end
         end
-        commit(order, :purchase, options[:trace_number])
+        commit(order, :purchase, options[:retry_logic], options[:trace_number])
       end
 
       # MFC - Mark For Capture
       def capture(money, authorization, options = {})
-        commit(build_mark_for_capture_xml(money, authorization, options), :capture)
+        commit(build_mark_for_capture_xml(money, authorization, options), :capture, options[:retry_logic], options[:trace_number])
       end
 
       # R – Refund request
@@ -266,7 +266,7 @@ module ActiveMerchant #:nodoc:
           add_refund(xml, options[:currency])
           xml.tag! :CustomerRefNum, options[:customer_ref_num] if @options[:customer_profiles] && options[:profile_txn]
         end
-        commit(order, :refund, options[:trace_number])
+        commit(order, :refund, options[:retry_logic], options[:trace_number])
       end
 
       def credit(money, authorization, options = {})
@@ -281,7 +281,7 @@ module ActiveMerchant #:nodoc:
         end
 
         order = build_void_request_xml(authorization, options)
-        commit(order, :void, options[:trace_number])
+        commit(order, :void, options[:retry_logic], options[:trace_number])
       end
 
       # ==== Customer Profiles
@@ -753,9 +753,9 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def commit(order, message_type, trace_number = nil)
+      def commit(order, message_type, retry_logic = nil, trace_number = nil)
         headers = POST_HEADERS.merge('Content-length' => order.size.to_s)
-        if @options[:retry_logic] && trace_number
+        if (@options[:retry_logic] || retry_logic) && trace_number
           headers['Trace-number'] = trace_number.to_s
           headers['Merchant-Id'] = @options[:merchant_id]
         end
@@ -1105,7 +1105,7 @@ module ActiveMerchant #:nodoc:
           'Y' => %w(9 A B C H JA JD M2 M3 M5 N5 N8 N9 X Z),
           'N' => %w(D E F G M8),
           'X' => %w(4 J R),
-            nil => %w(1 2 3 5 6 7 8 JB JC M1 M4 M6 M7 N3 N4 N6 N7 UK)
+          nil => %w(1 2 3 5 6 7 8 JB JC M1 M4 M6 M7 N3 N4 N6 N7 UK)
         }.inject({}) do |map, (type, codes)|
           codes.each { |code| map[code] = type }
           map
@@ -1116,7 +1116,7 @@ module ActiveMerchant #:nodoc:
           'Y' => %w(9 B D F H JA JB M2 M4 M5 M6 M7 N3 N5 N7 N8 N9 X),
           'N' => %w(A C E G M8 Z),
           'X' => %w(4 J R),
-            nil => %w(1 2 3 5 6 7 8 JC JD M1 M3 N4 N6 UK)
+          nil => %w(1 2 3 5 6 7 8 JC JD M1 M3 N4 N6 UK)
         }.inject({}) do |map, (type, codes)|
           codes.each { |code| map[code] = type }
           map

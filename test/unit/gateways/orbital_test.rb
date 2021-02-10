@@ -1128,6 +1128,36 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_headers_when_retry_logic_param_exists
+    response = stub_comms do
+      @gateway.purchase(50, credit_card, order_id: 1, retry_logic: 'true', trace_number: 1)
+    end.check_request do |_endpoint, _data, headers|
+      assert_equal('1', headers['Trace-number'])
+      assert_equal('merchant_id', headers['Merchant-Id'])
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
+  def test_retry_logic_when_param_nonexistant
+    response = stub_comms do
+      @gateway.purchase(50, credit_card, order_id: 1, trace_number: 1)
+    end.check_request do |_endpoint, _data, headers|
+      assert_equal(false, headers.has_key?('Trace-number'))
+      assert_equal(false, headers.has_key?('Merchant-Id'))
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
+  def test_headers_when_trace_number_nonexistant
+    response = stub_comms do
+      @gateway.purchase(50, credit_card, order_id: 1, retry_logic: 'true')
+    end.check_request do |_endpoint, _data, headers|
+      assert_equal(nil, headers['Trace-number'])
+      assert_equal(nil, headers['Merchant-Id'])
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
   ActiveMerchant::Billing::OrbitalGateway::APPROVED.each do |resp_code|
     define_method "test_approval_response_code_#{resp_code}" do
       @gateway.expects(:ssl_post).returns(successful_purchase_response(resp_code))

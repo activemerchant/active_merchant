@@ -597,6 +597,12 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_equal 'Bad data error', response.message
   end
 
+  def test_authorize_sends_with_retry
+    assert auth = @echeck_gateway.authorize(@amount, @credit_card, @options.merge(order_id: '4', retry_logic: 'true', trace_number: '989898'))
+    assert_success auth
+    assert_equal 'Approved', auth.message
+  end
+
   # == Certification Tests
 
   # ==== Section A
