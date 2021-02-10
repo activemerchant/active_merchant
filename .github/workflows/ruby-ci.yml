@@ -26,9 +26,11 @@ jobs:
           - gemfiles/Gemfile.rails52
           - gemfiles/Gemfile.rails60
           - gemfiles/Gemfile.rails_master
-        # exclude:
-        #   - version: 2.7
-        #     gemfile: <Gemfile> to exclude for Ruby Version above
+        exclude:
+          - version: 2.6
+            gemfile: gemfiles/Gemfile.rails_master
+          - version: 2.5
+            gemfile: gemfiles/Gemfile.rails_master
     steps:
       - uses: actions/checkout@v2
       
