@@ -1,6 +1,8 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+
+== Version 1.119.0 (February 9th, 2021)
 * Payment Express: support verify/validate [therufs] #3874
 * GlobalCollect: Truncate address fields [meagabeth] #3878
 * Litle: Truncate address fields [meagabeth] #3877
