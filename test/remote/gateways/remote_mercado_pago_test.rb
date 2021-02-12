@@ -6,7 +6,6 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
     @gateway = MercadoPagoGateway.new(fixtures(:mercado_pago))
     @argentina_gateway = MercadoPagoGateway.new(fixtures(:mercado_pago_argentina))
     @colombian_gateway = MercadoPagoGateway.new(fixtures(:mercado_pago_colombia))
-    @uruguayan_gateway = MercadoPagoGateway.new(fixtures(:mercado_pago_uruguay))
 
     @amount = 500
     @credit_card = credit_card('5031433215406351')

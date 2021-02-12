@@ -4,6 +4,7 @@
 * Stripe PI: ensure `setup_future_sage` and `off_session` work when using SetupIntents.
 * Orbital: Update commit to accept retry_logic in params [jessiagee] #3890
 * Orbital: Update remote 3DS tests [jessiagee] #3892
+* Mercado Pago: support Creditel card type [therufs] #3893
 
 == Version 1.119.0 (February 9th, 2021)
 * Payment Express: support verify/validate [therufs] #3874
