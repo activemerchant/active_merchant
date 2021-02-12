@@ -5,6 +5,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     Base.mode = :test
     @gateway = ActiveMerchant::Billing::OrbitalGateway.new(fixtures(:orbital_gateway))
     @echeck_gateway = ActiveMerchant::Billing::OrbitalGateway.new(fixtures(:orbital_asv_aoa_gateway))
+    @three_ds_gateway = ActiveMerchant::Billing::OrbitalGateway.new(fixtures(:orbital_3ds_gateway))
 
     @amount = 100
     @credit_card = credit_card('4556761029983886')
@@ -378,7 +379,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
           merchant_email: 'email@example'
         }
       )
-      assert response = @gateway.authorize(100, cc, options)
+      assert response = @three_ds_gateway.authorize(100, cc, options)
 
       assert_success response
       assert_equal 'Approved', response.message
@@ -396,7 +397,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
         three_d_secure: fixture[:three_d_secure],
         address: fixture[:address]
       )
-      assert response = @gateway.purchase(100, cc, options)
+      assert response = @three_ds_gateway.purchase(100, cc, options)
 
       assert_success response
       assert_equal 'Approved', response.message
