@@ -102,6 +102,13 @@ class RemotePayeezyTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_failed_purchase_with_insufficient_funds
+    assert response = @gateway.purchase(530200, @credit_card, @options)
+    assert_failure response
+    assert_equal '302', response.error_code
+    assert_match(/Insufficient Funds/, response.message)
+  end
+
   def test_authorize_and_capture
     assert auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth

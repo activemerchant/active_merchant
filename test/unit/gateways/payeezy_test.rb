@@ -163,6 +163,15 @@ class PayeezyGateway < Test::Unit::TestCase
     assert_equal response.error_code, 'card_expired'
   end
 
+  def test_failed_purchase_with_insufficient_funds
+    response = stub_comms do
+      @gateway.purchase(530200, @credit_card, @options)
+    end.respond_with(failed_purchase_response_for_insufficient_funds)
+
+    assert_failure response
+    assert_equal '302', response.error_code
+  end
+
   def test_successful_authorize
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
     assert response = @gateway.authorize(@amount, @credit_card, @options)
@@ -259,7 +268,9 @@ class PayeezyGateway < Test::Unit::TestCase
     assert response = @gateway.capture(@amount, @authorization)
     assert_instance_of Response, response
     assert_failure response
-    assert_equal response.error_code, 'server_error'
+    error_msg = response.params['Error']['messages']
+    error_code = error_msg.map { |x| x.values[0] }
+    assert_equal error_code[0], 'server_error'
     assert_equal response.message, 'ProcessedBad Request (69) - Invalid Transaction Tag'
   end
 
@@ -570,6 +581,10 @@ class PayeezyGateway < Test::Unit::TestCase
       message:
     RESPONSE
     YAML.safe_load(yamlexcep, ['Net::HTTPBadRequest', 'ActiveMerchant::ResponseError'])
+  end
+
+  def failed_purchase_response_for_insufficient_funds
+    '{"correlation_id":"124.1342365067332","transaction_status":"declined","validation_status":"success","transaction_type":"purchase","transaction_tag":"4611610442","method":"credit_card","amount":"530200","currency":"USD","avs":"4","cvv2":"M","token":{"token_type":"FDToken", "token_data":{"value":"0788934280684242"}},"card":{"type":"Visa","cardholder_name":"Longbob Longsen","card_number":"4242","exp_date":"0922"},"bank_resp_code":"302","bank_message":"Insufficient Funds","gateway_resp_code":"00","gateway_message":"Transaction Normal"}'
   end
 
   def successful_authorize_response

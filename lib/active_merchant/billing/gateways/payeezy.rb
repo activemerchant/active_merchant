@@ -290,15 +290,16 @@ module ActiveMerchant
           response = json_error(e.response.body)
         end
 
+        success = success_from(response)
         Response.new(
-          success_from(response),
-          handle_message(response, success_from(response)),
+          success,
+          handle_message(response, success),
           response,
           test: test?,
           authorization: authorization_from(params, response),
           avs_result: { code: response['avs'] },
           cvv_result: response['cvv2'],
-          error_code: error_code(response, success_from(response))
+          error_code: success ? nil : error_code_from(response)
         )
       end
 
@@ -352,10 +353,15 @@ module ActiveMerchant
         }
       end
 
-      def error_code(response, success)
-        return if success
+      def error_code_from(response)
+        error_code = nil
+        if response['bank_resp_code'] && response['bank_resp_code'] != '100'
+          error_code = response['bank_resp_code']
+        else
+          error_code = response['Error'].to_h['messages'].to_a.map { |e| e['code'] }.join(', ')
+        end
 
-        response['Error'].to_h['messages'].to_a.map { |e| e['code'] }.join(', ')
+        error_code
       end
 
       def success_from(response)
