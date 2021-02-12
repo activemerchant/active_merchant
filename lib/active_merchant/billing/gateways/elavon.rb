@@ -423,7 +423,7 @@ module ActiveMerchant #:nodoc:
 
         difference = value.force_encoding('iso-8859-1').length - value.length
 
-        return value.to_s[0, (size - difference)]
+        return value.delete('&"<>').to_s[0, (size - difference)]
       end
     end
   end

@@ -415,8 +415,9 @@ class RemoteElavonTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_truncated_data
     credit_card = @credit_card
-    credit_card.first_name = 'Ricky ™ Martínez įncogníto'
+    credit_card.first_name = 'Rick & ™ \" < > Martínez įncogníto'
     credit_card.last_name = 'Lesly Andrea Mart™nez estrada the last name'
+    @options[:billing_address][:city] = 'Saint-François-Xavier-de-Brompton'
     @options[:billing_address][:address1] = 'Bats & Cats'
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)

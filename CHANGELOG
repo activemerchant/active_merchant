@@ -19,6 +19,7 @@
 * Orbital: Update ECP to use EWS verification [jessiagee] #3886
 * Eway: Add 3ds field when do direct payment [GavinSun9527] #3860 
 * Support Creditel cardtype [therufs] #3883
+* Elavon: Remove ampersand char from fields [naashton] #3891
 
 == Version 1.118.0 (January 22nd, 2021)
 * Worldpay: Add support for challengeWindowSize [carrigan] #3823
