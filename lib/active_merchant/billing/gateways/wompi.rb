@@ -71,7 +71,7 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
-          gsub(/(Authorization: Bearer )([^\s])+/, '\1[FILTERED]').
+          gsub(/\b(Authorization:\s+Bearer\s+)\S+/, '\1[FILTERED]').
           gsub(/(\\?\\?\\?"number\\?\\?\\?":\\?\\?\\?")\d+/, '\1[FILTERED]').
           gsub(/(\\?\\?\\?"cvc\\?\\?\\?":\\?\\?\\?"?)\d+/, '\1[FILTERED]')
       end
@@ -234,7 +234,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def reference_in_params?(action)
-        path_params_ref?(action) || query_string_ref?(action.split('?').last)
+        action_uri = URI(action)
+        path_params_ref?(action_uri.path) || query_string_ref?(action_uri.query)
       end
 
       def path_params_ref?(action)
