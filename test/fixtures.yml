@@ -1292,6 +1292,12 @@ visanet_peru:
   merchant_id: "543025501"
   ruc: '20341198217'
 
+vpos:
+  public_key: SOMECREDENTIAL
+  private_key: ANOTHERCREDENTIAL
+  commerce: 123
+  commerce_branch: 45
+
 webpay:
   login: "test_secret_eHn4TTgsGguBcW764a2KA8Yd"
 
