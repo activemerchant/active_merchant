@@ -264,6 +264,31 @@ class RemoteHpsTest < Test::Unit::TestCase
     assert_equal 'Success', response.message
   end
 
+  def test_successful_purchase_with_stored_credentials
+    initial_options = @options.merge(
+      stored_credential: {
+        initial_transaction: true,
+        reason_type: 'recurring'
+      }
+    )
+    initial_response = @gateway.purchase(@amount, @credit_card, initial_options)
+    assert_success initial_response
+    assert_equal 'Success', initial_response.message
+    assert_not_nil initial_response.params['CardBrandTxnId']
+    network_transaction_id = initial_response.params['CardBrandTxnId']
+
+    used_options = @options.merge(
+      stored_credential: {
+        initial_transaction: false,
+        reason_type: 'unscheduled',
+        network_transaction_id: network_transaction_id
+      }
+    )
+    response = @gateway.purchase(@amount, @credit_card, used_options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
   def test_failed_purchase_with_swipe_bad_track_data
     @credit_card.track_data = '%B547888879888877776?;?'
     response = @gateway.purchase(@amount, @credit_card, @options)

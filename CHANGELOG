@@ -6,6 +6,7 @@
 * Orbital: Update remote 3DS tests [jessiagee] #3892
 * Mercado Pago: support Creditel card type [therufs] #3893
 * Payeezy: Update error mapping [meagabeth] #3896
+* HPS: Add support for stored_credential [cdmackeyfree] #3894
 
 == Version 1.119.0 (February 9th, 2021)
 * Payment Express: support verify/validate [therufs] #3874

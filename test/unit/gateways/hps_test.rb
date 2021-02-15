@@ -182,6 +182,18 @@ class HpsTest < Test::Unit::TestCase
     assert_failure void
   end
 
+  def test_successful_recurring_purchase
+    stored_credential_params = {
+      reason_type: 'recurring'
+    }
+
+    @gateway.expects(:ssl_post).returns(successful_charge_response)
+
+    response = @gateway.purchase(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
+    assert_instance_of Response, response
+    assert_success response
+  end
+
   def test_successful_purchase_with_swipe_no_encryption
     @gateway.expects(:ssl_post).returns(successful_swipe_purchase_response)
 
@@ -686,6 +698,26 @@ class HpsTest < Test::Unit::TestCase
       refute_match(/<hps:PaymentData>#{options[:three_d_secure][:cavv]}<\/hps:PaymentData>/, data)
       refute_match(/<hps:ECommerceIndicator>5<\/hps:ECommerceIndicator>/, data)
       refute_match(/<hps:XID>#{options[:three_d_secure][:xid]}<\/hps:XID>/, data)
+    end.respond_with(successful_charge_response)
+
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_auth_with_stored_credentials
+    stored_credential_params = {
+      initial_transaction: false,
+      reason_type: 'recurring',
+      initiator: 'customer',
+      network_transaction_id: 12345
+    }
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/<hps:CardOnFile>C<\/hps:CardOnFile>/, data)
+      assert_match(/<hps:CardBrandTxnId>12345<\/hps:CardBrandTxnId>/, data)
+      assert_match(/<hps:OneTime>N<\/hps:OneTime>/, data)
     end.respond_with(successful_charge_response)
 
     assert_success response
