@@ -71,7 +71,7 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
-          gsub(/(Authorization: Bearer )([^\s])+/, '\1[FILTERED]').
+          gsub(/\b(Authorization:\s+Bearer\s+)\S+/, '\1[FILTERED]').
           gsub(/(\\?\\?\\?"number\\?\\?\\?":\\?\\?\\?")\d+/, '\1[FILTERED]').
           gsub(/(\\?\\?\\?"cvc\\?\\?\\?":\\?\\?\\?"?)\d+/, '\1[FILTERED]')
       end
