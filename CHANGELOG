@@ -10,6 +10,7 @@
 * Orbital: Ensure payment_detail sends for ECP [jessiagee] #3899
 * Payeezy: Update `error_code_from` method [meagabeth] #3900
 * Worldpay: Add support for `statementNarrative` field [meagabeth] #3901
+* Mercado Pago: Give ability to pass capture option in authorize txn field [naashton] #3897
 
 == Version 1.119.0 (February 9th, 2021)
 * Payment Express: support verify/validate [therufs] #3874

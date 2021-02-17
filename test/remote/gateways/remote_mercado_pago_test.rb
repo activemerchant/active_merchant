@@ -160,6 +160,12 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
     assert_equal 'accredited', capture.message
   end
 
+  def test_successful_authorize_with_capture_option
+    auth = @gateway.authorize(@amount, @credit_card, @options.merge(capture: true))
+    assert_success auth
+    assert_equal 'accredited', auth.message
+  end
+
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
