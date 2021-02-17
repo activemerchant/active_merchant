@@ -105,7 +105,7 @@ module ActiveMerchant #:nodoc:
 
       def authorize_request(money, payment, options = {})
         post = purchase_request(money, payment, options)
-        post[:capture] = false
+        post[:capture] = options[:capture] || false
         post
       end
 
