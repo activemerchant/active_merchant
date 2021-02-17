@@ -6,16 +6,16 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['CO']
       self.default_currency = 'COP'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       self.homepage_url = 'https://wompi.co/'
       self.display_name = 'Wompi'
 
       self.money_format = :cents
 
-      PAYMENT_SOURCE_TYPES = %w[ CARD NEQUI ]
+      PAYMENT_SOURCE_TYPES = %w[CARD NEQUI]
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :public_key, :private_key)
 
         super
@@ -27,7 +27,7 @@ module ActiveMerchant #:nodoc:
         commit(:get, action)
       end
 
-      def store(payment_method, options={})
+      def store(payment_method, options = {})
         post = {}
 
         post[:number] = payment_method.number
@@ -39,21 +39,42 @@ module ActiveMerchant #:nodoc:
         commit(:post, '/tokens/cards', post)
       end
 
-      def purchase(money, payment, options={})
+      def payment_sources(options = {})
+        post = {}
+
+        post[:type] = 'CARD'
+        post[:token] = options[:token]
+        post[:customer_email] = options.dig(:customer, :email)
+        post[:acceptance_token] = query_acceptance_token.authorization
+
+        commit(:post, '/payment_sources', post)
+      end
+
+      def capture(money, payment, options = {})
         post = {}
         post[:acceptance_token] = query_acceptance_token.authorization
 
         add_invoice(post, money, options)
-        add_payment(post, payment, options)
         add_address(post, payment, options)
         add_customer_data(post, options)
+        add_payment(post, payment, options.merge(token: options[:token]))
 
         commit(:post, '/transactions', post)
       end
 
+      def purchase(money, payment, options = {})
+        MultiResponse.run do |r|
+          r.process { store(payment, options) }
+
+          r.process do
+            capture(money, payment, options.merge(token: r.authorization))
+          end
+        end
+      end
+
       # Lookup transaction using reference or using transaction id path parans
       #
-      def query_transaction(reference, options={})
+      def query_transaction(reference, options = {})
         if options[:path_params] && reference.present?
           commit(:get, "/transactions/#{reference}")
         else
@@ -62,7 +83,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def pse_financial_institutions
-        commit(:get, "/pse/financial_institutions")
+        commit(:get, '/pse/financial_institutions')
       end
 
       def supports_scrubbing?
@@ -70,10 +91,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def scrub(transcript)
-        transcript.
-          gsub(/\b(Authorization:\s+Bearer\s+)\S+/, '\1[FILTERED]').
-          gsub(/(\\?\\?\\?"number\\?\\?\\?":\\?\\?\\?")\d+/, '\1[FILTERED]').
-          gsub(/(\\?\\?\\?"cvc\\?\\?\\?":\\?\\?\\?"?)\d+/, '\1[FILTERED]')
+        transcript
+          .gsub(/\b(Authorization:\s+Bearer\s+)\S+/, '\1[FILTERED]')
+          .gsub(/(\\?\\?\\?"number\\?\\?\\?":\\?\\?\\?")\d+/, '\1[FILTERED]')
+          .gsub(/(\\?\\?\\?"cvc\\?\\?\\?":\\?\\?\\?"?)\d+/, '\1[FILTERED]')
       end
 
       private
@@ -115,7 +136,8 @@ module ActiveMerchant #:nodoc:
 
       def add_payment(post, payment, options)
         post[:payment_method] = {}
-        post[:payment_method][:type] = "CARD"
+        post[:type] = 'CARD'
+        post[:payment_method][:type] = 'CARD'
         post[:payment_method][:token] = options[:token]
         post[:payment_method][:installments] = options[:installments] || 1
       end
@@ -128,16 +150,14 @@ module ActiveMerchant #:nodoc:
         key = reference_in_params?(action) ? :private_key : :public_key
         token = @options.send(:[], key)
 
-        raise 'Missing Bearer token' if token.nil?
-
         {
           'accept' => '*/*',
           'Content-Type' => 'application/json',
-          'Authorization' => "Bearer #{token}"
+          'Authorization' => "Bearer #{token}",
         }
       end
 
-      def commit(verb, action, parameters={})
+      def commit(verb, action, parameters = {})
         endpoint = url + action
 
         begin
@@ -155,7 +175,7 @@ module ActiveMerchant #:nodoc:
           response,
           authorization: authorization_from(action, response),
           test: test?,
-          error_code: error_code_from(success, response)
+          error_code: error_code_from(success, response),
         )
       end
 
@@ -163,14 +183,13 @@ module ActiveMerchant #:nodoc:
         case action
         when '/tokens/cards'
           response['status'] == 'CREATED'
-
-        when /\/merchants\/pub_(test|prod)_.+/
+        when %r{\/merchants\/pub_(test|prod)_.+}
           response.dig('data', 'presigned_acceptance', 'acceptance_token')
-
         when '/transactions'
           data = response['data']
           response_data = data.is_a?(Array) ? data.first : data
-          [ 'PENDING', 'APPROVED' ].include?(response_data&.[]('status'))
+          # PENDING transactions returns as not success
+          ['APPROVED'].include?(response_data&.[]('status'))
 
         when '/pse/financial_institutions'
           response['data'].is_a?(Array) && !response['data'].empty?
@@ -183,17 +202,16 @@ module ActiveMerchant #:nodoc:
           if success
             response.fetch('status')
           else
-            response
-              .dig('error', 'messages').map { |k, v| "#{k}: #{v.join}" }
-              .join
+            response.dig('error', 'messages').map do |k, v|
+              "#{k}: #{v.join}"
+            end.join
           end
-
-        when /\/merchants\/pub_(test|prod)_\w+/
+        when %r{\/merchants\/pub_(test|prod)_\w+}
           response.dig('data', 'presigned_acceptance', 'acceptance_token')
-
         when '/pse/financial_institutions'
-          'APPROVED' if response['data'].is_a?(Array) && !response['data'].empty?
-
+          if response['data'].is_a?(Array) && !response['data'].empty?
+            'APPROVED'
+          end
         else
           data = response['data']
           response_data = data.is_a?(Array) ? data.first : data
@@ -204,7 +222,7 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(endpoint, response)
         case endpoint
-        when /\/merchants\/pub_(test|prod)_.+/
+        when %r{\/merchants\/pub_(test|prod)_.+}
           response['data']['presigned_acceptance']['acceptance_token']
         else
           data = response['data']
@@ -239,11 +257,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def path_params_ref?(action)
-        action =~ /\/transactions\/[^\s]+/
+        action =~ %r{\/transactions\/[^\s]+}
       end
 
       def query_string_ref?(query)
-        CGI::parse(query).has_key?('reference')
+        query && CGI.parse(query).has_key?('reference')
       end
     end
   end
