@@ -799,6 +799,12 @@ payway:
   password:
   pem:
 
+# Working credentials, no need to replace
+payway_dot_com:
+  login:      "sprerestwsdev"
+  password:   "sprerestwsdev1!"
+  company_id: "3"
+
 pin:
   api_key: "I_mo9BUUUXIwXF-avcs3LA"
 
