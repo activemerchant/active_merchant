@@ -1,4 +1,5 @@
 require 'test_helper'
+require 'active_support/duration'
 
 class RemotePagarmeTest < Test::Unit::TestCase
   def setup
@@ -6,14 +7,21 @@ class RemotePagarmeTest < Test::Unit::TestCase
 
     @amount = 1000
 
+    exp_date = Time.now + 1.year
+
     @credit_card = credit_card('4242424242424242', {
       first_name: 'Richard',
-      last_name: 'Deschamps'
+      last_name: 'Deschamps',
+      year: exp_date.year,
+      month: exp_date.month,
+      verification_value: 123
     })
 
     @declined_card = credit_card('4242424242424242', {
       first_name: 'Richard',
       last_name: 'Deschamps',
+      year: exp_date.year,
+      month: exp_date.month,
       verification_value: '688'
     })
 
