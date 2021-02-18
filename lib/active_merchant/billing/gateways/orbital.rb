@@ -531,7 +531,12 @@ module ActiveMerchant #:nodoc:
           xml.tag! :CheckDDA, check.account_number if check.account_number
           xml.tag! :BankAccountType, ACCOUNT_TYPE[check.account_type] if ACCOUNT_TYPE[check.account_type]
           xml.tag! :ECPAuthMethod, options[:auth_method] if options[:auth_method] && ECP_AUTH_METHODS.include?(options[:auth_method])
-          xml.tag! :BankPmtDelv, options[:payment_delivery] if options[:payment_delivery] && ECP_BANK_PAYMENT.include?(options[:payment_delivery])
+
+          if options[:payment_delivery] && ECP_BANK_PAYMENT.include?(options[:payment_delivery])
+            xml.tag! :BankPmtDelv, options[:payment_delivery]
+          else
+            xml.tag! :BankPmtDelv, 'B'
+          end
         end
       end
 

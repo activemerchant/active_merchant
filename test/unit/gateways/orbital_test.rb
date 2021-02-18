@@ -1158,6 +1158,33 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_payment_delivery_when_param_correct
+    response = stub_comms do
+      @gateway.purchase(50, @echeck, order_id: 1, payment_delivery: 'A')
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<BankPmtDelv>A/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
+  def test_payment_delivery_when_param_incorrect
+    response = stub_comms do
+      @gateway.purchase(50, @echeck, order_id: 1, payment_delivery: 'Z')
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<BankPmtDelv>B/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
+  def test_payment_delivery_when_no_payment_delivery_param
+    response = stub_comms do
+      @gateway.purchase(50, @echeck, order_id: 1)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<BankPmtDelv>B/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
   ActiveMerchant::Billing::OrbitalGateway::APPROVED.each do |resp_code|
     define_method "test_approval_response_code_#{resp_code}" do
       @gateway.expects(:ssl_post).returns(successful_purchase_response(resp_code))
