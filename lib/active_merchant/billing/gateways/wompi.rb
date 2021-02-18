@@ -92,7 +92,7 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript
-          .gsub(/\b(Authorization:\s+Bearer\s+)\S+/, '\1[FILTERED]')
+          .gsub(/(Authorization:\s+Bearer\s+)\S+/, '\1[FILTERED]')
           .gsub(/(\\?\\?\\?"number\\?\\?\\?":\\?\\?\\?")\d+/, '\1[FILTERED]')
           .gsub(/(\\?\\?\\?"cvc\\?\\?\\?":\\?\\?\\?"?)\d+/, '\1[FILTERED]')
       end
@@ -171,7 +171,7 @@ module ActiveMerchant #:nodoc:
 
         Response.new(
           success,
-          message_from(success, action, response),
+          message_from(action, response),
           response,
           authorization: authorization_from(action, response),
           test: test?,
@@ -188,24 +188,21 @@ module ActiveMerchant #:nodoc:
         when '/transactions'
           data = response['data']
           response_data = data.is_a?(Array) ? data.first : data
+
           # PENDING transactions returns as not success
           ['APPROVED'].include?(response_data&.[]('status'))
-
         when '/pse/financial_institutions'
           response['data'].is_a?(Array) && !response['data'].empty?
         end
       end
 
-      def message_from(success, endpoint, response)
+      def message_from(endpoint, response)
         case endpoint
         when '/tokens/cards'
-          if success
-            response.fetch('status')
-          else
-            response.dig('error', 'messages').map do |k, v|
+          response['status'] || response['error']['messages'].map do |k, v|
               "#{k}: #{v.join}"
             end.join
-          end
+
         when %r{\/merchants\/pub_(test|prod)_\w+}
           response.dig('data', 'presigned_acceptance', 'acceptance_token')
         when '/pse/financial_institutions'
