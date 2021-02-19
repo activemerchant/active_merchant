@@ -355,10 +355,11 @@ module ActiveMerchant
 
       def error_code_from(response)
         error_code = nil
-        if response['bank_resp_code'] && response['bank_resp_code'] != '100'
+        if response['bank_resp_code'] == '100'
+          return
+        elsif response['bank_resp_code']
           error_code = response['bank_resp_code']
-        else
-          error_code = response['Error'].to_h['messages'].to_a.map { |e| e['code'] }.join(', ')
+        elsif error_code = response['Error'].to_h['messages'].to_a.map { |e| e['code'] }.join(', ')
         end
 
         error_code

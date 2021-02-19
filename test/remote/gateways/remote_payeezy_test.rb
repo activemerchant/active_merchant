@@ -67,6 +67,8 @@ class RemotePayeezyTest < Test::Unit::TestCase
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_match(/Transaction Normal/, response.message)
+    assert_equal '100', response.params['bank_resp_code']
+    assert_equal nil, response.error_code
     assert_success response
   end
 
