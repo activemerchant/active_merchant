@@ -206,6 +206,7 @@ module ActiveMerchant #:nodoc:
               end
               add_payment_method(xml, money, payment_method, options)
               add_shopper(xml, options)
+              add_statement_narrative(xml, options)
               add_risk_data(xml, options[:risk_data]) if options[:risk_data]
               add_hcg_additional_data(xml, options) if options[:hcg_additional_data]
               add_instalments_data(xml, options) if options[:instalments]
@@ -483,6 +484,10 @@ module ActiveMerchant #:nodoc:
             xml.userAgentHeader options[:user_agent]
           end
         end
+      end
+
+      def add_statement_narrative(xml, options)
+        xml.statementNarrative truncate(options[:statement_narrative], 50) if options[:statement_narrative]
       end
 
       def add_authenticated_shopper_id(xml, options)

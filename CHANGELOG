@@ -9,6 +9,7 @@
 * HPS: Add support for stored_credential [cdmackeyfree] #3894
 * Orbital: Ensure payment_detail sends for ECP [jessiagee] #3899
 * Payeezy: Update `error_code_from` method [meagabeth] #3900
+* Worldpay: Add support for `statementNarrative` field [meagabeth] #3901
 
 == Version 1.119.0 (February 9th, 2021)
 * Payment Express: support verify/validate [therufs] #3874

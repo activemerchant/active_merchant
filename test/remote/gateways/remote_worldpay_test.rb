@@ -577,6 +577,12 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_match @store_options[:customer], response.authorization
   end
 
+  def test_successful_purchase_with_statement_narrative
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(statement_narrative: 'Merchant Statement Narrative'))
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
   def test_successful_authorize_using_token
     assert store = @gateway.store(@credit_card, @store_options)
     assert_success store
