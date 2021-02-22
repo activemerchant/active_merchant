@@ -467,10 +467,10 @@ class WorldpayTest < Test::Unit::TestCase
       assert_no_match %r(firstName), data
       assert_no_match %r(lastName), data
       assert_no_match %r(address2), data
-      assert_match %r(<address1>N/A</address1>), data
-      assert_match %r(<city>N/A</city>), data
+      assert_match %r(<address1/>), data
+      assert_match %r(<city/>), data
       assert_match %r(<postalCode>0000</postalCode>), data
-      assert_match %r(<state>N/A</state>), data
+      assert_match %r(<state/>), data
       assert_match %r(<countryCode>US</countryCode>), data
       assert_match %r(<telephoneNumber>555-3323</telephoneNumber>), data
     end.respond_with(successful_authorize_response)
@@ -504,12 +504,36 @@ class WorldpayTest < Test::Unit::TestCase
       assert_no_match %r(firstName), data
       assert_no_match %r(lastName), data
       assert_no_match %r(address2), data
-      assert_match %r(<address1>N/A</address1>), data
-      assert_match %r(<city>N/A</city>), data
+      assert_match %r(<address1/>), data
+      assert_match %r(<city/>), data
       assert_match %r(<postalCode>0000</postalCode>), data
-      assert_match %r(<state>N/A</state>), data
+      assert_match %r(<state/>), data
       assert_match %r(<countryCode>US</countryCode>), data
       assert_match %r(<telephoneNumber>555-3323</telephoneNumber>), data
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_address_with_address1_no_city
+    city = 'Ontario'
+    address_with_nils = { address1: nil, city: city }
+
+    stub_comms do
+      @gateway.authorize(100, @credit_card, @options.merge(billing_address: address_with_nils))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r(<address1>N/A</address1>), data
+      assert_match %r(<city>#{city}</city>), data
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_address_with_city_no_address1
+    address1 = '456 My Street'
+    address_with_nils = { address1: address1, city: nil }
+
+    stub_comms do
+      @gateway.authorize(100, @credit_card, @options.merge(billing_address: address_with_nils))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r(<address1>#{address1}</address1>), data
+      assert_match %r(<city>N/A</city>), data
     end.respond_with(successful_authorize_response)
   end
 

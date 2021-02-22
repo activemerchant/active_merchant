@@ -397,6 +397,12 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_success @gateway.authorize(@amount, @credit_card, @options.merge(billing_address: billing_address))
   end
 
+  def test_state_omitted
+    billing_address = address
+    billing_address.delete(:state)
+    assert_success @gateway.authorize(@amount, @credit_card, @options.merge(billing_address: billing_address))
+  end
+
   def test_ip_address
     assert_success @gateway.authorize(@amount, @credit_card, @options.merge(ip: '192.18.123.12'))
   end

@@ -12,6 +12,7 @@
 * Worldpay: Add support for `statementNarrative` field [meagabeth] #3901
 * Mercado Pago: Give ability to pass capture option in authorize txn field [naashton] #3897
 * Orbital: Ensure correct fields sent in refund [jessiagee] #3903
+* WorldPay: remove some defaults in billing address [carrigan] #3902
 
 == Version 1.119.0 (February 9th, 2021)
 * Payment Express: support verify/validate [therufs] #3874
@@ -26,7 +27,7 @@
 * HPS: Update Add support for general credit [naashton] #3885
 * Elavon: Fix issue with encoding data sent in the request [naashton] #3865
 * Orbital: Update ECP to use EWS verification [jessiagee] #3886
-* Eway: Add 3ds field when do direct payment [GavinSun9527] #3860 
+* Eway: Add 3ds field when do direct payment [GavinSun9527] #3860
 * Support Creditel cardtype [therufs] #3883
 * Elavon: Remove ampersand char from fields [naashton] #3891
 
