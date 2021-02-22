@@ -262,8 +262,13 @@ module ActiveMerchant #:nodoc:
 
       # R – Refund request
       def refund(money, authorization, options = {})
-        order = build_new_order_xml(REFUND, money, nil, options.merge(authorization: authorization)) do |xml|
-          add_refund(xml, options[:currency])
+        payment_method = options[:payment_method]
+        order = build_new_order_xml(REFUND, money, payment_method, options.merge(authorization: authorization)) do |xml|
+          if payment_method.is_a?(Check)
+            add_echeck(xml, payment_method, options)
+          else
+            add_refund(xml, options[:currency])
+          end
           xml.tag! :CustomerRefNum, options[:customer_ref_num] if @options[:customer_profiles] && options[:profile_txn]
         end
         commit(order, :refund, options[:retry_logic], options[:trace_number])

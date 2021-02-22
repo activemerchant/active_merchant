@@ -632,6 +632,37 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_match(/<RespCode>00/, transcript)
   end
 
+  def test_sending_echeck_adds_ecp_details_for_refund
+    assert auth = @echeck_gateway.authorize(@amount, @echeck, @options.merge(order_id: '2'))
+    assert_success auth
+    assert_equal 'Approved', auth.message
+
+    capture = @echeck_gateway.capture(@amount, auth.authorization, @options)
+    assert_success capture
+
+    transcript = capture_transcript(@echeck_gateway) do
+      refund = @echeck_gateway.refund(@amount, capture.authorization, @options.merge(payment_method: @echeck, action_code: 'W6', auth_method: 'I'))
+      assert_success refund
+    end
+
+    assert_match(/<ECPActionCode>W6/, transcript)
+    assert_match(/<ECPAuthMethod>I/, transcript)
+    assert_match(/<MessageType>R/, transcript)
+    assert_match(/<ApprovalStatus>1/, transcript)
+  end
+
+  def test_sending_credit_card_performs_correct_refund
+    assert auth = @echeck_gateway.authorize(@amount, @credit_card, @options.merge(order_id: '2'))
+    assert_success auth
+    assert_equal 'Approved', auth.message
+
+    capture = @echeck_gateway.capture(@amount, auth.authorization, @options)
+    assert_success capture
+
+    refund = @echeck_gateway.refund(@amount, capture.authorization, @options)
+    assert_success refund
+  end
+
   # == Certification Tests
 
   # ==== Section A
