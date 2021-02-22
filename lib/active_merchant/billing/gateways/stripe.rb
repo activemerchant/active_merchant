@@ -102,7 +102,8 @@ module ActiveMerchant #:nodoc:
           end
           r.process do
             post = create_post_for_auth_or_purchase(money, payment, options)
-            commit(:post, options[:three_d_secure] && post[:payment_method] ? 'payment_intents' : 'charges', post, options)
+            post[:payment_method_types] = ["sepa_debit"] if options[:use_sepa_debit]
+            commit(:post, use_payment_intents?(post, options) ? 'payment_intents' : 'charges', post, options)
           end
         end.responses.last
 
@@ -194,9 +195,16 @@ module ActiveMerchant #:nodoc:
         elsif payment.is_a?(StripePaymentToken)
           add_payment_token(params, payment, options)
         elsif payment.is_a?(Check)
-          bank_token_response = tokenize_bank_account(payment)
-          return bank_token_response unless bank_token_response.success?
-          params = { source: bank_token_response.params["token"]["id"] }
+          if payment.iban.present?
+            # direct debit
+            direct_debit_token_response = tokenize_direct_debit(payment, options)
+            return direct_debit_token_response unless direct_debit_token_response.success?
+            params = { payment_method_id: direct_debit_token_response.authorization }
+          else
+            bank_token_response = tokenize_bank_account(payment)
+            return bank_token_response unless bank_token_response.success?
+            params = { source: bank_token_response.params["token"]["id"] }
+          end
         else
           add_creditcard(params, payment, options)
         end
@@ -222,7 +230,14 @@ module ActiveMerchant #:nodoc:
             end
           end
         else
-          commit(:post, 'customers', post.merge(params), options)
+          if params[:payment_method_id].present?
+            MultiResponse.run(:first) do |r|
+              r.process { commit(:post, 'customers', post.merge(params.except(:payment_method_id)), options) }
+              r.process { setup_intents(r.responses.last.authorization.split("|").first, params[:payment_method_id], options) }
+            end
+          else
+            commit(:post, 'customers', post.merge(params), options)
+          end
         end
       end
 
@@ -320,6 +335,12 @@ module ActiveMerchant #:nodoc:
           end
         end
 
+        if options[:use_sepa_debit]
+          post[:off_session] = true
+          post[:confirm] = true
+          post[:payment_method] = sepa_debit_payment_method_for_customer(options[:customer])
+        end
+
         unless emv_payment?(payment)
           add_amount(post, money, options, true)
           add_customer_data(post, options)
@@ -339,29 +360,59 @@ module ActiveMerchant #:nodoc:
       end
 
       def card_payment_method_for_customer(customer)
-        # if customer has only one payment method we choose that one
-        r = commit(:get, "payment_methods?customer=#{customer}&type=card", nil, options)
+        payment_methods = customer_payment_methods(customer, "card")
+        return payment_methods.default_payment_method if payment_methods.default_payment_method
+
+        # in last resort we choose default source
+        default_source = customer_default_source(customer)
+        return default_source if default_source
+
+        if payment_methods.count > 1
+          raise "Customer has more than one payment method but doesn't have default one."
+        end
+      end
+
+      def sepa_debit_payment_method_for_customer(customer)
+        payment_methods = customer_payment_methods(customer, "sepa_debit")
+        return payment_methods.default_payment_method if payment_methods.default_payment_method
+
+        if payment_methods.count > 1
+          raise "Customer has more than one payment method but doesn't have default one."
+        end
+      end
+
+      def customer_payment_methods(customer, payment_type)
+        r = commit(:get, "payment_methods?customer=#{customer}&type=#{payment_type}", nil, options)
         raise r.message unless r.success?
 
         payment_methods = r.params["data"]
-        return payment_methods[0]["id"] if payment_methods&.count == 1
+
+        return OpenStruct.new(
+          count: payment_methods.count,
+          default_payment_method: payment_methods[0]["id"]
+        ) if payment_methods&.count == 1
 
         r = commit(:get, "customers/#{customer}", nil, options)
         # if customer has default payment method
         default_payment_method = r.params.dig("invoice_settings", "default_payment_method")
-        return default_payment_method if default_payment_method
 
-        # in last resort we choose default source
+        return OpenStruct.new(
+          count: payment_methods.count,
+          default_payment_method: default_payment_method
+        ) if default_payment_method
+
+        return OpenStruct.new(count: payment_methods.count, default_payment_method: nil)
+      end
+
+      def customer_default_source(customer)
+        r = commit(:get, "customers/#{customer}", nil, options)
+
         default_source = r.params["default_source"]
         return default_source if default_source&.start_with?("card_")
 
         if default_source&.start_with?("src_")
           r = commit(:get, "sources/#{default_source}", nil, options)
           return r.params["id"] if r.params["type"] == "card"
-        end
-
-        if payment_methods&.count > 1 && !default_payment_method
-          raise "Customer has more than one payment method but doesn't have default one."
         end
       end
 
@@ -574,7 +625,7 @@ module ActiveMerchant #:nodoc:
 
       def success_response?(url, response)
         if url =~ /\Apayment_intents/
-          !response.key?("error") && response["status"] == "succeeded"
+          !response.key?("error") && (response["status"] == "succeeded" || response["status"] == "processing")
         else
           !response.key?("error")
         end
@@ -610,7 +661,7 @@ module ActiveMerchant #:nodoc:
         return response.dig("error", "payment_intent", "id") || response.dig("error", "charge") || response["id"] unless success
 
         if url == "customers"
-          [response["id"], response["sources"]["data"].first["id"]].join("|")
+          [response["id"], response["sources"]["data"].present? ? response["sources"]["data"].first["id"] : nil].join("|")
         elsif method == :post && url.match(/customers\/.*\/cards/)
           [response["customer"], response["id"]].join("|")
         else
@@ -693,6 +744,69 @@ module ActiveMerchant #:nodoc:
         else
           Response.new(success, token_response["error"]["message"])
         end
+      end
+
+      def tokenize_direct_debit(bank_account, options = {})
+        post = {
+          type: 'sepa_debit',
+          billing_details: {
+            name: bank_account.name,
+            email: options[:email],
+          },
+          sepa_debit: {
+            iban: bank_account.iban
+          }
+        }
+
+        if address = options[:billing_address] || options[:address]
+          post[:billing_details][:address] = {}
+          post[:billing_details][:address][:line1] = address[:address1] if address[:address1]
+          post[:billing_details][:address][:line2] = address[:address2] if address[:address2]
+          post[:billing_details][:address][:country] = address[:country] if address[:country]
+          post[:billing_details][:address][:postal_code] = address[:zip] if address[:zip]
+          post[:billing_details][:address][:state] = address[:state] if address[:state]
+          post[:billing_details][:address][:city] = address[:city] if address[:city]
+        end
+
+        token_response = api_request(:post, "payment_methods", post)
+        success = token_response["error"].nil?
+
+        if success && token_response["id"]
+          Response.new(success, nil, token_response, authorization: token_response["id"])
+        else
+          Response.new(success, token_response["error"]["message"])
+        end
+      end
+
+      def setup_intents(customer_id, payment_method_id, options)
+        post = {
+          payment_method_types: ["sepa_debit"],
+          customer: customer_id,
+          payment_method: payment_method_id,
+          confirm: true,
+          mandate_data: {
+            customer_acceptance: {
+              type: "online",
+              online: {
+                ip_address: options.dig(:device_data, :ip),
+                user_agent: options.dig(:device_data, :user_agent)
+              }
+            }
+          }
+        }
+
+        token_response = api_request(:post, "setup_intents", post)
+        success = token_response["error"].nil?
+
+        if success && token_response["id"]
+          Response.new(success, nil, token_response, authorization: token_response["id"])
+        else
+          Response.new(success, token_response["error"]["message"])
+        end
+      end
+
+      def use_payment_intents?(post, options)
+        (options[:three_d_secure] && post[:payment_method]) || options[:use_sepa_debit]
       end
 
       def ach?(payment_method)
