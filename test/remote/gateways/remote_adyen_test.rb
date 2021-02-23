@@ -6,43 +6,47 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
     @amount = 100
 
-    @credit_card = credit_card('4111111111111111',
-      month: 10,
-      year: 2020,
+    @credit_card = credit_card('3700 0000 0000 002',
+      month: 3,
+      year: 2030,
       first_name: 'John',
       last_name: 'Smith',
-      verification_value: '737',
+      verification_value: '7373',
       brand: 'visa')
 
     @avs_credit_card = credit_card('4400000000000008',
-      month: 10,
-      year: 2020,
+      month: 3,
+      year: 2030,
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
       brand: 'visa')
 
     @elo_credit_card = credit_card('5066 9911 1111 1118',
-      month: 10,
-      year: 2020,
+      month: 3,
+      year: 2030,
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
       brand: 'elo')
 
-    @three_ds_enrolled_card = credit_card('4917610000000000', month: 10, year: 2020, verification_value: '737', brand: :visa)
+    @three_ds_enrolled_card = credit_card('4917610000000000',
+      month: 3,
+      year: 2030,
+      verification_value: '737',
+      brand: :visa)
 
     @cabal_credit_card = credit_card('6035 2277 1642 7021',
-      month: 10,
-      year: 2020,
+      month: 3,
+      year: 2030,
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
       brand: 'cabal')
 
     @invalid_cabal_credit_card = credit_card('6035 2200 0000 0006',
-      month: 10,
-      year: 2020,
+      month: 3,
+      year: 2030,
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
@@ -623,6 +627,18 @@ class RemoteAdyenTest < Test::Unit::TestCase
     response = @gateway.refund(@amount, '')
     assert_failure response
     assert_equal 'Original pspReference required for this operation', response.message
+  end
+
+  def test_successful_credit
+    response = @gateway.credit(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Received', response.message
+  end
+
+  def test_failed_credit
+    response = @gateway.credit(@amount, '')
+    assert_failure response
+    assert_equal 'Reference Missing', response.message
   end
 
   def test_successful_void

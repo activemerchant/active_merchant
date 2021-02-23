@@ -78,6 +78,14 @@ module ActiveMerchant #:nodoc:
         commit('refund', post, options)
       end
 
+      def credit(money, payment, options = {})
+        post = init_post(options)
+        add_invoice(post, money, options)
+        add_payment(post, payment, options)
+        add_shopper_reference(post, options)
+        commit('refundWithData', post, options)
+      end
+
       def void(authorization, options = {})
         post = init_post(options)
         add_reference(post, authorization, options)
@@ -564,6 +572,8 @@ module ActiveMerchant #:nodoc:
           response['result'] == 'Success'
         when 'disable'
           response['response'] == '[detail-successfully-disabled]'
+        when 'refundWithData'
+          response['resultCode'] == 'Received'
         else
           false
         end
@@ -572,7 +582,7 @@ module ActiveMerchant #:nodoc:
       def message_from(action, response)
         return authorize_message_from(response) if %w(authorise authorise3d authorise3ds2).include?(action.to_s)
 
-        response['response'] || response['message'] || response['result']
+        response['response'] || response['message'] || response['result'] || response['resultCode']
       end
 
       def authorize_message_from(response)

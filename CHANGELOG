@@ -13,6 +13,7 @@
 * Mercado Pago: Give ability to pass capture option in authorize txn field [naashton] #3897
 * Orbital: Ensure correct fields sent in refund [jessiagee] #3903
 * WorldPay: remove some defaults in billing address [carrigan] #3902
+* Adyen: Support for General Credit [naashton] #3904
 
 == Version 1.119.0 (February 9th, 2021)
 * Payment Express: support verify/validate [therufs] #3874

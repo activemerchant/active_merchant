@@ -614,6 +614,22 @@ class AdyenTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_failed_credit
+    @gateway.expects(:ssl_post).returns(failed_credit_response)
+    response = @gateway.refund(@amount, '')
+    assert_nil response.authorization
+    assert_equal 'Reference Missing', response.message
+    assert_failure response
+  end
+
+  def test_successful_credit
+    @gateway.expects(:ssl_post).returns(successful_credit_response)
+    response = @gateway.credit(@amount, '883614109029400G')
+    assert_equal '#883614109029400G#', response.authorization
+    assert_equal 'Received', response.message
+    assert_success response
+  end
+
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_void_response)
     response = @gateway.void('7914775043909934')
@@ -1198,6 +1214,26 @@ class AdyenTest < Test::Unit::TestCase
       "status":422,
       "errorCode":"167",
       "message":"Original pspReference required for this operation",
+      "errorType":"validation"
+    }
+    RESPONSE
+  end
+
+  def successful_credit_response
+    <<-RESPONSE
+    {
+      "pspReference": "883614109029400G",
+      "resultCode": "Received"
+    }
+    RESPONSE
+  end
+
+  def failed_credit_response
+    <<-RESPONSE
+    {
+      "status":422,
+      "errorCode":"130",
+      "message":"Reference Missing",
       "errorType":"validation"
     }
     RESPONSE
