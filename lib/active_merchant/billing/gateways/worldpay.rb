@@ -538,24 +538,15 @@ module ActiveMerchant #:nodoc:
       def address_with_defaults(address)
         address ||= {}
         address.delete_if { |_, v| v.blank? }
-        ensure_address1_and_city(address)
         address.reverse_merge!(default_address)
-      end
-
-      # `address1` and `city` are optional but if one is supplied, the other
-      # must also be present
-      def ensure_address1_and_city(address)
-        has_address1 = !address[:address1].nil? && !address[:address1].blank?
-        has_city = !address[:city].nil? && !address[:city].blank?
-
-        address[:city] = 'N/A' if !has_city && has_address1
-        address[:address1] = 'N/A' if !has_address1 && has_city
       end
 
       def default_address
         {
           zip: '0000',
-          country: 'US'
+          country: 'US',
+          city: 'N/A',
+          address1: 'N/A'
         }
       end
 

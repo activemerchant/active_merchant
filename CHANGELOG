@@ -14,6 +14,7 @@
 * Orbital: Ensure correct fields sent in refund [jessiagee] #3903
 * WorldPay: remove some defaults in billing address [carrigan] #3902
 * Adyen: Support for General Credit [naashton] #3904
+* Worldpay: reintroduce address1 and city defaults [carrigan] #3905
 
 == Version 1.119.0 (February 9th, 2021)
 * Payment Express: support verify/validate [therufs] #3874
