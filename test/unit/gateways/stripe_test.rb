@@ -1342,6 +1342,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_scrub
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+    assert_equal @gateway.scrub(pre_scrubbed_nested_payment_method_data), post_scrubbed_nested_payment_method_data
   end
 
   def test_scrubs_track_data
@@ -1574,6 +1575,35 @@ class StripeTest < Test::Unit::TestCase
     PRE_SCRUBBED
   end
 
+  def pre_scrubbed_nested_payment_method_data
+    <<-PRE_SCRUBBED
+      opening connection to api.stripe.com:443...
+      opened
+      starting SSL for api.stripe.com:443...
+      SSL established
+      <- "POST /v1/charges HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic c2tfdGVzdF9oQkwwTXF6ZGZ6Rnk3OXU0cFloUmVhQlo6\r\nUser-Agent: Stripe/v1 ActiveMerchantBindings/1.45.0\r\nX-Stripe-Client-User-Agent: {\"bindings_version\":\"1.45.0\",\"lang\":\"ruby\",\"lang_version\":\"2.1.3 p242 (2014-09-19)\",\"platform\":\"x86_64-linux\",\"publisher\":\"active_merchant\"}\r\nX-Stripe-Client-User-Metadata: {\"ip\":null}\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: api.stripe.com\r\nContent-Length: 270\r\n\r\n"
+      <- "amount=100&currency=usd&payment_method_data[card][number]=4242424242424242&payment_method_data[card][exp_month]=9&payment_method_data[card][exp_year]=2015&payment_method_data[card][cvc]=123&payment_method_data[card][name]=Longbob+Longsen&description=ActiveMerchant+Test+Purchase&payment_user_agent=Stripe%2Fv1+ActiveMerchantBindings%2F1.45.0&metadata[email]=wow%40example.com&payment_method_data[card][cryptogram]=sensitive_data&three_d_secure[cryptogram]=123456789abcdefghijklmnop&three_d_secure[apple_pay]=true"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Server: nginx\r\n"
+      -> "Date: Tue, 02 Dec 2014 19:44:17 GMT\r\n"
+      -> "Content-Type: application/json;charset=utf-8\r\n"
+      -> "Content-Length: 1303\r\n"
+      -> "Connection: close\r\n"
+      -> "Access-Control-Allow-Credentials: true\r\n"
+      -> "Access-Control-Allow-Methods: GET, POST, HEAD, OPTIONS, DELETE\r\n"
+      -> "Access-Control-Max-Age: 300\r\n"
+      -> "Cache-Control: no-cache, no-store\r\n"
+      -> "Request-Id: 89de951c-f880-4c39-93b0-832b3cc6dd32\r\n"
+      -> "Stripe-Version: 2013-12-03\r\n"
+      -> "Strict-Transport-Security: max-age=31556926; includeSubDomains\r\n"
+      -> "\r\n"
+      reading 1303 bytes...
+      -> "{\n  \"id\": \"ch_155MZJ2gKyKnHxtY1dGqFhSb\",\n  \"object\": \"charge\",\n  \"created\": 1417549457,\n  \"livemode\": false,\n  \"paid\": true,\n  \"amount\": 100,\n  \"currency\": \"usd\",\n  \"refunded\": false,\n  \"captured\": true,\n  \"refunds\": [],\n  \"card\": {\n    \"id\": \"card_155MZJ2gKyKnHxtYihrJ8z94\",\n    \"object\": \"card\",\n    \"last4\": \"4242\",\n    \"brand\": \"Visa\",\n    \"funding\": \"credit\",\n    \"exp_month\": 9,\n    \"exp_year\": 2015,\n    \"fingerprint\": \"944LvWcY01HVTbVc\",\n    \"country\": \"US\",\n    \"name\": \"Longbob Longsen\",\n    \"address_line1\": null,\n    \"address_line2\": null,\n    \"address_city\": null,\n    \"address_state\": null,\n    \"address_zip\": null,\n    \"address_country\": null,\n    \"cvc_check\": \"pass\",\n    \"address_line1_check\": null,\n    \"address_zip_check\": null,\n    \"dynamic_last4\": null,\n    \"customer\": null,\n    \"type\": \"Visa\"\n  },\n  \"balance_transaction\": \"txn_155MZJ2gKyKnHxtYxpYDI5OW\",\n  \"failure_message\": null,\n  \"failure_code\": null,\n  \"amount_refunded\": 0,\n  \"customer\": null,\n  \"invoice\": null,\n  \"description\": \"ActiveMerchant Test Purchase\",\n  \"dispute\": null,\n  \"metadata\": {\n    \"email\": \"wow@example.com\"\n  },\n  \"statement_description\": null,\n  \"fraud_details\": {\n    \"stripe_report\": \"unavailable\",\n    \"user_report\": null\n  },\n  \"receipt_email\": null,\n  \"receipt_number\": null,\n  \"shipping\": null\n}\n"
+      read 1303 bytes
+      Conn close
+    PRE_SCRUBBED
+  end
+
   def pre_scrubbed_with_track_data
     <<-PRE_SCRUBBED
       opening connection to api.stripe.com:443...
@@ -1700,6 +1730,35 @@ class StripeTest < Test::Unit::TestCase
       SSL established
       <- "POST /v1/charges HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic [FILTERED]\r\nUser-Agent: Stripe/v1 ActiveMerchantBindings/1.45.0\r\nX-Stripe-Client-User-Agent: {\"bindings_version\":\"1.45.0\",\"lang\":\"ruby\",\"lang_version\":\"2.1.3 p242 (2014-09-19)\",\"platform\":\"x86_64-linux\",\"publisher\":\"active_merchant\"}\r\nX-Stripe-Client-User-Metadata: {\"ip\":null}\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: api.stripe.com\r\nContent-Length: 270\r\n\r\n"
       <- "amount=100&currency=usd&card[number]=[FILTERED]&card[exp_month]=9&card[exp_year]=2015&card[cvc]=[FILTERED]&card[name]=Longbob+Longsen&description=ActiveMerchant+Test+Purchase&payment_user_agent=Stripe%2Fv1+ActiveMerchantBindings%2F1.45.0&metadata[email]=wow%40example.com&card[cryptogram]=[FILTERED]&three_d_secure[cryptogram]=[FILTERED]&three_d_secure[apple_pay]=true"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Server: nginx\r\n"
+      -> "Date: Tue, 02 Dec 2014 19:44:17 GMT\r\n"
+      -> "Content-Type: application/json;charset=utf-8\r\n"
+      -> "Content-Length: 1303\r\n"
+      -> "Connection: close\r\n"
+      -> "Access-Control-Allow-Credentials: true\r\n"
+      -> "Access-Control-Allow-Methods: GET, POST, HEAD, OPTIONS, DELETE\r\n"
+      -> "Access-Control-Max-Age: 300\r\n"
+      -> "Cache-Control: no-cache, no-store\r\n"
+      -> "Request-Id: 89de951c-f880-4c39-93b0-832b3cc6dd32\r\n"
+      -> "Stripe-Version: 2013-12-03\r\n"
+      -> "Strict-Transport-Security: max-age=31556926; includeSubDomains\r\n"
+      -> "\r\n"
+      reading 1303 bytes...
+      -> "{\n  \"id\": \"ch_155MZJ2gKyKnHxtY1dGqFhSb\",\n  \"object\": \"charge\",\n  \"created\": 1417549457,\n  \"livemode\": false,\n  \"paid\": true,\n  \"amount\": 100,\n  \"currency\": \"usd\",\n  \"refunded\": false,\n  \"captured\": true,\n  \"refunds\": [],\n  \"card\": {\n    \"id\": \"card_155MZJ2gKyKnHxtYihrJ8z94\",\n    \"object\": \"card\",\n    \"last4\": \"4242\",\n    \"brand\": \"Visa\",\n    \"funding\": \"credit\",\n    \"exp_month\": 9,\n    \"exp_year\": 2015,\n    \"fingerprint\": \"944LvWcY01HVTbVc\",\n    \"country\": \"US\",\n    \"name\": \"Longbob Longsen\",\n    \"address_line1\": null,\n    \"address_line2\": null,\n    \"address_city\": null,\n    \"address_state\": null,\n    \"address_zip\": null,\n    \"address_country\": null,\n    \"cvc_check\": \"pass\",\n    \"address_line1_check\": null,\n    \"address_zip_check\": null,\n    \"dynamic_last4\": null,\n    \"customer\": null,\n    \"type\": \"Visa\"\n  },\n  \"balance_transaction\": \"txn_155MZJ2gKyKnHxtYxpYDI5OW\",\n  \"failure_message\": null,\n  \"failure_code\": null,\n  \"amount_refunded\": 0,\n  \"customer\": null,\n  \"invoice\": null,\n  \"description\": \"ActiveMerchant Test Purchase\",\n  \"dispute\": null,\n  \"metadata\": {\n    \"email\": \"wow@example.com\"\n  },\n  \"statement_description\": null,\n  \"fraud_details\": {\n    \"stripe_report\": \"unavailable\",\n    \"user_report\": null\n  },\n  \"receipt_email\": null,\n  \"receipt_number\": null,\n  \"shipping\": null\n}\n"
+      read 1303 bytes
+      Conn close
+    POST_SCRUBBED
+  end
+
+  def post_scrubbed_nested_payment_method_data
+    <<-POST_SCRUBBED
+      opening connection to api.stripe.com:443...
+      opened
+      starting SSL for api.stripe.com:443...
+      SSL established
+      <- "POST /v1/charges HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic [FILTERED]\r\nUser-Agent: Stripe/v1 ActiveMerchantBindings/1.45.0\r\nX-Stripe-Client-User-Agent: {\"bindings_version\":\"1.45.0\",\"lang\":\"ruby\",\"lang_version\":\"2.1.3 p242 (2014-09-19)\",\"platform\":\"x86_64-linux\",\"publisher\":\"active_merchant\"}\r\nX-Stripe-Client-User-Metadata: {\"ip\":null}\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: api.stripe.com\r\nContent-Length: 270\r\n\r\n"
+      <- "amount=100&currency=usd&payment_method_data[card][number]=[FILTERED]&payment_method_data[card][exp_month]=9&payment_method_data[card][exp_year]=2015&payment_method_data[card][cvc]=[FILTERED]&payment_method_data[card][name]=Longbob+Longsen&description=ActiveMerchant+Test+Purchase&payment_user_agent=Stripe%2Fv1+ActiveMerchantBindings%2F1.45.0&metadata[email]=wow%40example.com&payment_method_data[card][cryptogram]=[FILTERED]&three_d_secure[cryptogram]=[FILTERED]&three_d_secure[apple_pay]=true"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Server: nginx\r\n"
       -> "Date: Tue, 02 Dec 2014 19:44:17 GMT\r\n"

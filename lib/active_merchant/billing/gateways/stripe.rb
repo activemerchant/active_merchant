@@ -279,14 +279,14 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
           gsub(%r((&?three_d_secure\[cryptogram\]=)[\w=]*(&?)), '\1[FILTERED]\2').
-          gsub(%r((card\[cryptogram\]=)[^&]+(&?)), '\1[FILTERED]\2').
-          gsub(%r((card\[cvc\]=)\d+), '\1[FILTERED]').
-          gsub(%r((card\[emv_approval_data\]=)[^&]+(&?)), '\1[FILTERED]\2').
-          gsub(%r((card\[emv_auth_data\]=)[^&]+(&?)), '\1[FILTERED]\2').
-          gsub(%r((card\[encrypted_pin\]=)[^&]+(&?)), '\1[FILTERED]\2').
-          gsub(%r((card\[encrypted_pin_key_id\]=)[\w=]+(&?)), '\1[FILTERED]\2').
-          gsub(%r((card\[number\]=)\d+), '\1[FILTERED]').
-          gsub(%r((card\[swipe_data\]=)[^&]+(&?)), '\1[FILTERED]\2')
+          gsub(%r(((\[card\]|card)\[cryptogram\]=)[^&]+(&?)), '\1[FILTERED]\3').
+          gsub(%r(((\[card\]|card)\[cvc\]=)\d+), '\1[FILTERED]').
+          gsub(%r(((\[card\]|card)\[emv_approval_data\]=)[^&]+(&?)), '\1[FILTERED]\3').
+          gsub(%r(((\[card\]|card)\[emv_auth_data\]=)[^&]+(&?)), '\1[FILTERED]\3').
+          gsub(%r(((\[card\]|card)\[encrypted_pin\]=)[^&]+(&?)), '\1[FILTERED]\3').
+          gsub(%r(((\[card\]|card)\[encrypted_pin_key_id\]=)[\w=]+(&?)), '\1[FILTERED]\3').
+          gsub(%r(((\[card\]|card)\[number\]=)\d+), '\1[FILTERED]').
+          gsub(%r(((\[card\]|card)\[swipe_data\]=)[^&]+(&?)), '\1[FILTERED]\3')
       end
 
       def supports_network_tokenization?
