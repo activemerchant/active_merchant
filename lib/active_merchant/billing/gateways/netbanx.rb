@@ -22,6 +22,22 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://processing.paysafe.com/'
       self.display_name = 'Netbanx by PaySafe'
 
+      AVS_CODE_CONVERTER = {
+        'MATCH' => 'X',
+        'MATCH_ADDRESS_ONLY' => 'A',
+        'MATCH_ZIP_ONLY' => 'Z',
+        'NO_MATCH' => 'N',
+        'NOT_PROCESSED' => 'U',
+        'UNKNOWN' => 'Q'
+      }
+
+      CVV_CODE_CONVERTER = {
+        'MATCH' => 'M',
+        'NO_MATCH' => 'N',
+        'NOT_PROCESSED' => 'P',
+        'UNKNOWN' => 'U'
+      }
+
       def initialize(options = {})
         requires!(options, :account_number, :api_key)
         super
@@ -256,9 +272,17 @@ module ActiveMerchant #:nodoc:
           test: test?,
           error_code: error_code_from(response),
           authorization: authorization_from(success, get_url(uri), method, response),
-          avs_result: AVSResult.new(code: response['avsResponse']),
-          cvv_result: CVVResult.new(response['cvvVerification'])
+          avs_result: avs_result(response),
+          cvv_result: cvv_result(response)
         )
+      end
+
+      def avs_result(response)
+        AVSResult.new(code: AVS_CODE_CONVERTER[response['avsResponse']])
+      end
+
+      def cvv_result(response)
+        CVVResult.new(CVV_CODE_CONVERTER[response['cvvVerification']])
       end
 
       def get_url(uri)
