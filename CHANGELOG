@@ -26,6 +26,7 @@
 * PaywayDotCom: Add New Gateway [DanAtPayway] #3898
 * Orbital: Remove unnecessary requirements [jessiagee] #3917
 * SafeCharge (Nuvei): Add network tokenization support [DStoyanoff] #3847
+* Stripe PI: Enhance testing of SetupIntents API #3908
 
 == Version 1.119.0 (February 9th, 2021)
 * Payment Express: support verify/validate [therufs] #3874
