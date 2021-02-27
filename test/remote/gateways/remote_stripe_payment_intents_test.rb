@@ -360,13 +360,24 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
       assert_match 'https://hooks.stripe.com', authorize_response.params.dig('next_action', 'redirect_to_url', 'url')
 
       # since we cannot "click" the stripe hooks URL to confirm the authorization
-      # we will at least confirm we can retrieve the created setup_intent.
+      # we will at least confirm we can retrieve the created setup_intent and it contains the structure we expect
       setup_intent_id = authorize_response.params['id']
 
       assert si_reponse = @gateway.retrieve_setup_intent(setup_intent_id)
       assert_equal 'requires_action', si_reponse.params['status']
+
+      assert_not_empty si_reponse.params.dig('latest_attempt', 'payment_method_details', 'card')
       assert_nil si_reponse.params.dig('latest_attempt', 'payment_method_details', 'card', 'network_transaction_id')
     end
+  end
+
+  def test_retrieving_error_for_non_existant_setup_intent
+    assert si_reponse = @gateway.retrieve_setup_intent('seti_does_not_exist')
+    assert_nil si_reponse.params['status']
+    assert_nil si_reponse.params.dig('latest_attempt', 'payment_method_details', 'card', 'network_transaction_id')
+
+    assert_match 'resource_missing', si_reponse.params.dig('error', 'code')
+    assert_match "No such setupintent: 'seti_does_not_exist'", si_reponse.params.dig('error', 'message')
   end
 
   def test_3ds_unauthenticated_authorize_with_off_session_requires_capture
