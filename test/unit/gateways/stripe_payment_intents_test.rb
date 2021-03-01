@@ -320,6 +320,38 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     end
   end
 
+  def test_store_does_not_pass_validation_to_attach_by_default
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.store(@credit_card)
+    end.check_request do |_method, endpoint, data, _headers|
+      assert_no_match(/validate=/, data) if /attach/.match?(endpoint)
+    end.respond_with(successful_payment_method_response, successful_create_customer_response, successful_payment_method_attach_response)
+  end
+
+  def test_store_sets_validation_on_attach_to_false_when_false_in_options
+    options = @options.merge(
+      validate: false
+    )
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.store(@credit_card, options)
+    end.check_request do |_method, endpoint, data, _headers|
+      assert_match(/validate=false/, data) if /attach/.match?(endpoint)
+    end.respond_with(successful_payment_method_response, successful_create_customer_response, successful_payment_method_attach_response)
+  end
+
+  def test_store_sets_validationon_attach_to_true_when_true_in_options
+    options = @options.merge(
+      validate: true
+    )
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.store(@credit_card, options)
+    end.check_request do |_method, endpoint, data, _headers|
+      assert_match(/validate=true/, data) if /attach/.match?(endpoint)
+    end.respond_with(successful_payment_method_response, successful_create_customer_response, successful_payment_method_attach_response)
+  end
+
   private
 
   def successful_create_intent_response
@@ -672,6 +704,169 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
         "single_use_mandate": null,
         "status": "succeeded",
         "usage": "off_session"
+      }
+    RESPONSE
+  end
+
+  def successful_payment_method_response
+    <<-RESPONSE
+      {
+        "id": "pm_1IQ3OhAWOtgoysogUkVwJ5MT",
+        "object": "payment_method",
+        "billing_details": {
+          "address": {
+            "city": null,
+            "country": null,
+            "line1": null,
+            "line2": null,
+            "postal_code": null,
+            "state": null
+          },
+          "email": null,
+          "name": null,
+          "phone": null
+        },
+        "card": {
+          "brand": "visa",
+          "checks": {
+            "address_line1_check": null,
+            "address_postal_code_check": null,
+            "cvc_check": "unchecked"
+          },
+          "country": "US",
+          "exp_month": 10,
+          "exp_year": 2021,
+          "fingerprint": "hfaVNMiXc0dYSiC5",
+          "funding": "credit",
+          "generated_from": null,
+          "last4": "4242",
+          "networks": {
+            "available": [
+              "visa"
+            ],
+            "preferred": null
+          },
+          "three_d_secure_usage": {
+            "supported": true
+          },
+          "wallet": null
+        },
+        "created": 1614573020,
+        "customer": null,
+        "livemode": false,
+        "metadata": {
+        },
+        "type": "card"
+      }
+    RESPONSE
+  end
+
+  def successful_create_customer_response
+    <<-RESPONSE
+      {
+        "id": "cus_J27e2tthifSmpm",
+        "object": "customer",
+        "account_balance": 0,
+        "address": null,
+        "balance": 0,
+        "created": 1614573020,
+        "currency": null,
+        "default_source": null,
+        "delinquent": false,
+        "description": null,
+        "discount": null,
+        "email": null,
+        "invoice_prefix": "B0C3D1B5",
+        "invoice_settings": {
+          "custom_fields": null,
+          "default_payment_method": null,
+          "footer": null
+        },
+        "livemode": false,
+        "metadata": {
+        },
+        "name": null,
+        "next_invoice_sequence": 1,
+        "phone": null,
+        "preferred_locales": [],
+        "shipping": null,
+        "sources": {
+          "object": "list",
+          "data": [],
+          "has_more": false,
+          "total_count": 0,
+          "url": "/v1/customers/cus_J27e2tthifSmpm/sources"
+        },
+        "subscriptions": {
+          "object": "list",
+          "data": [],
+          "has_more": false,
+          "total_count": 0,
+          "url": "/v1/customers/cus_J27e2tthifSmpm/subscriptions"
+        },
+        "tax_exempt": "none",
+        "tax_ids": {
+          "object": "list",
+          "data": [],
+          "has_more": false,
+          "total_count": 0,
+          "url": "/v1/customers/cus_J27e2tthifSmpm/tax_ids"
+        },
+        "tax_info": null,
+        "tax_info_verification": null
+      }
+    RESPONSE
+  end
+
+  def successful_payment_method_attach_response
+    <<-RESPONSE
+      {
+        "id": "pm_1IQ3AYAWOtgoysogcvbllgNa",
+        "object": "payment_method",
+        "billing_details": {
+          "address": {
+            "city": null,
+            "country": null,
+            "line1": null,
+            "line2": null,
+            "postal_code": null,
+            "state": null
+          },
+          "email": null,
+          "name": null,
+          "phone": null
+        },
+        "card": {
+          "brand": "visa",
+          "checks": {
+            "address_line1_check": null,
+            "address_postal_code_check": null,
+            "cvc_check": "unchecked"
+          },
+          "country": "US",
+          "exp_month": 10,
+          "exp_year": 2021,
+          "fingerprint": "hfaVNMiXc0dYSiC5",
+          "funding": "credit",
+          "generated_from": null,
+          "last4": "4242",
+          "networks": {
+            "available": [
+              "visa"
+            ],
+            "preferred": null
+          },
+          "three_d_secure_usage": {
+            "supported": true
+          },
+          "wallet": null
+        },
+        "created": 1614572142,
+        "customer": "cus_J27PL9krZlnw82",
+        "livemode": false,
+        "metadata": {
+        },
+        "type": "card"
       }
     RESPONSE
   end

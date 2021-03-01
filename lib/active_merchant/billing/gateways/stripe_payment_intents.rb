@@ -183,7 +183,6 @@ module ActiveMerchant #:nodoc:
           if options[:customer]
             customer_id = options[:customer]
           else
-            post[:validate] = options[:validate] unless options[:validate].nil?
             post[:description] = options[:description] if options[:description]
             post[:email] = options[:email] if options[:email]
             options = format_idempotency_key(options, 'customer')
@@ -191,7 +190,9 @@ module ActiveMerchant #:nodoc:
             customer_id = customer.params['id']
           end
           options = format_idempotency_key(options, 'attach')
-          commit(:post, "payment_methods/#{params[:payment_method]}/attach", { customer: customer_id }, options)
+          attach_parameters = { customer: customer_id }
+          attach_parameters[:validate] = options[:validate] unless options[:validate].nil?
+          commit(:post, "payment_methods/#{params[:payment_method]}/attach", attach_parameters, options)
         else
           super(payment_method, options)
         end

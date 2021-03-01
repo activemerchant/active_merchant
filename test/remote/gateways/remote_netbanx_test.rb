@@ -40,7 +40,7 @@ class RemoteNetbanxTest < Test::Unit::TestCase
     assert_equal 'X', response.avs_result['code']
     assert_equal 'N', response.cvv_result['code']
   end
-  
+
   def split_names(full_name)
     names = (full_name || '').split
     return [nil, nil] if names.size == 0

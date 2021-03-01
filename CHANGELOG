@@ -16,6 +16,7 @@
 * Adyen: Support for General Credit [naashton] #3904
 * Worldpay: reintroduce address1 and city defaults [carrigan] #3905
 * Stripe: ensure potentially nested data is scrubbed #3907
+* Stripe PI: Send Validate on Payment Method Attach [tatsianaclifton] #3909
 
 == Version 1.119.0 (February 9th, 2021)
 * Payment Express: support verify/validate [therufs] #3874

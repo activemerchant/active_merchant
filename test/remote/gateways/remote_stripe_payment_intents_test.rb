@@ -791,6 +791,26 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert_equal store1.params['id'], store2.params['id']
   end
 
+  def test_successful_store_with_false_validate_option
+    options = {
+      currency: 'GBP',
+      validate: false
+    }
+    assert store = @gateway.store(@visa_card, options)
+    assert store.params['customer'].start_with?('cus_')
+    assert_equal 'unchecked', store.params['card']['checks']['cvc_check']
+  end
+
+  def test_successful_store_with_true_validate_option
+    options = {
+      currency: 'GBP',
+      validate: true
+    }
+    assert store = @gateway.store(@visa_card, options)
+    assert store.params['customer'].start_with?('cus_')
+    assert_equal 'pass', store.params['card']['checks']['cvc_check']
+  end
+
   def test_successful_verify
     options = {
       customer: @customer
