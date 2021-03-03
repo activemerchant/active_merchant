@@ -6,12 +6,12 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
     @amount = 100
 
-    @credit_card = credit_card('3700 0000 0000 002',
+    @credit_card = credit_card('4111111111111111',
       month: 3,
       year: 2030,
       first_name: 'John',
       last_name: 'Smith',
-      verification_value: '7373',
+      verification_value: '737',
       brand: 'visa')
 
     @avs_credit_card = credit_card('4400000000000008',
@@ -315,8 +315,8 @@ class RemoteAdyenTest < Test::Unit::TestCase
   # with rule set in merchant account to skip 3DS for cards of this brand
   def test_successful_authorize_with_3ds_dynamic_rule_broken
     mastercard_threed = credit_card('5212345678901234',
-      month: 10,
-      year: 2020,
+      month: 3,
+      year: 2030,
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
@@ -586,6 +586,16 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert refund = @gateway.refund(@amount, purchase.authorization)
     assert_success refund
     assert_equal '[refund-received]', refund.message
+  end
+
+  def test_successful_refund_with_auth_original_reference
+    auth_response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth_response
+    assert_equal 'Authorised', auth_response.message
+
+    refund_resp = @gateway.refund(@amount, auth_response.authorization)
+    assert_success refund_resp
+    assert_equal '[refund-received]', refund_resp.message
   end
 
   def test_successful_refund_with_elo_card

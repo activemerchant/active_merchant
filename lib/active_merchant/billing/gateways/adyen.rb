@@ -399,7 +399,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_original_reference(post, authorization, options = {})
-        original_psp_reference, = authorization.split('#')
+        if authorization.start_with?('#')
+          _, original_psp_reference, = authorization.split('#')
+        else
+          original_psp_reference, = authorization.split('#')
+        end
         post[:originalReference] = single_reference(authorization) || original_psp_reference
       end
 
