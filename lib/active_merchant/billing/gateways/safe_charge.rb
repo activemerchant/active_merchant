@@ -184,6 +184,7 @@ module ActiveMerchant #:nodoc:
         post[:sg_threeDSProtocolVersion] = version
         post[:sg_Xid] = options[:three_d_secure][:xid] if version == '1'
         post[:sg_IsExternalMPI] = 1
+        post[:sg_EnablePartialApproval] = options[:is_partial_approval]
       end
 
       def parse(xml)
