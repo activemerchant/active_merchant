@@ -18,6 +18,7 @@
 * Stripe: ensure potentially nested data is scrubbed #3907
 * Stripe PI: Send Validate on Payment Method Attach [tatsianaclifton] #3909
 * Adyen: Update handling of authorization returned from gateway [meagabeth] #3910
+* Update gateway templates for Rubocop compliance [therufs] #3912 #3895
 
 == Version 1.119.0 (February 9th, 2021)
 * Payment Express: support verify/validate [therufs] #3874
