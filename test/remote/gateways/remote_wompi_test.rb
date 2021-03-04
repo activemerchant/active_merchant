@@ -18,6 +18,35 @@ class RemoteWompiTest < Test::Unit::TestCase
         mob_phone: '08032000001',
       },
     }
+
+    @debit_information = {
+      type: 'PSE',
+      user_type: 0,
+      user_legal_id_type: 'CC',
+      user_legal_id: '1999888777',
+      financial_institution_code: '1',
+      payment_description: 'Pago a Tienda Wompi',
+    }
+  end
+
+  def test_approved_pse_transaction
+    response = @gateway.pse_financial_institutions
+    assert_equal 'APPROVED', response.message
+
+    purchase_response = @gateway.purchase(@amount, @debit_information, @options)
+    assert_equal 'PENDING', purchase_response.message
+
+    sleep 10 # simulate long polling. Doesn't always work.
+
+    response =
+      @gateway.query_transaction(purchase_response.params['data']['reference'])
+
+    ticket_id =
+      response.params['data'].first['payment_method']['extra']['ticket_id']
+    assert_equal "https://sandbox.wompi.co/v1/pse/redirect?ticket_id=#{ticket_id}",
+                 response.params['data'].first['payment_method']['extra'][
+                   'async_payment_url'
+                 ]
   end
 
   def test_query_acceptance_token
@@ -42,11 +71,18 @@ class RemoteWompiTest < Test::Unit::TestCase
 
   def test_approved_purchase
     purchase_response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_equal 'PENDING', purchase_response.message
 
     response =
       @gateway.query_transaction(purchase_response.params['data']['reference'])
 
+    sleep 10 # Wait for purchase to approve. Doesn't always work.
+
     assert_equal 'APPROVED', response.message
+  end
+
+  def test_approved_purchase_with_multiple_token
+    @options.merge!(multiple_payments_token: true)
   end
 
   def test_pending_purchase
@@ -55,7 +91,7 @@ class RemoteWompiTest < Test::Unit::TestCase
     assert_equal 'PENDING', response.message
   end
 
-  def test_failed_purchase
+  def test_declined_purchase
     purchase_response = @gateway.purchase(@amount, @declined_card, @options)
     response =
       @gateway.query_transaction(purchase_response.params['data']['reference'])

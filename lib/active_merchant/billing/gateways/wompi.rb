@@ -59,16 +59,36 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_payment(post, payment, options.merge(token: options[:token]))
 
+        post[:payment_source_id] = options[:payment_source_id] if options[
+          :payment_source_id
+        ].present?
+
         commit(:post, '/transactions', post)
       end
 
       def purchase(money, payment, options = {})
-        MultiResponse.run do |r|
-          r.process { store(payment, options) }
+        if payment.is_a?(CreditCard)
+          MultiResponse.run(:use_first_response) do |r|
+            r.process { store(payment, options) }
 
-          r.process do
-            capture(money, payment, options.merge(token: r.authorization))
+            if options[:multiple_payments_token]
+              r.process { payment_sources(options.merge(token: r.authorization)) }
+
+              r.process {
+                capture(
+                  money,
+                  payment,
+                  options.merge(payment_source_id: r.authorization)
+                )
+              }
+            else
+              r.process {
+                capture(money, payment, options.merge(token: r.authorization))
+              }
+            end
           end
+        else
+          capture(money, payment, options)
         end
       end
 
@@ -136,10 +156,22 @@ module ActiveMerchant #:nodoc:
 
       def add_payment(post, payment, options)
         post[:payment_method] = {}
-        post[:type] = 'CARD'
-        post[:payment_method][:type] = 'CARD'
-        post[:payment_method][:token] = options[:token]
-        post[:payment_method][:installments] = options[:installments] || 1
+
+        if payment.is_a?(CreditCard)
+          post[:type] = 'CARD'
+          post[:payment_method][:type] = 'CARD'
+          post[:payment_method][:token] = options[:token]
+          post[:payment_method][:installments] = options[:installments] || 1
+        else
+          payment.deep_symbolize_keys!
+
+          post[:payment_method][:type] = 'PSE'
+          post[:payment_method][:user_type] = payment[:user_type]
+          post[:payment_method][:user_legal_id_type] = payment[:user_legal_id_type]
+          post[:payment_method][:user_legal_id] = payment[:user_legal_id]
+          post[:payment_method][:financial_institution_code] = payment[:financial_institution_code]
+          post[:payment_method][:payment_description] = options[:reference]
+        end
       end
 
       def parse(body)
@@ -183,14 +215,17 @@ module ActiveMerchant #:nodoc:
         case action
         when '/tokens/cards'
           response['status'] == 'CREATED'
+
         when %r{\/merchants\/pub_(test|prod)_.+}
           response.dig('data', 'presigned_acceptance', 'acceptance_token')
-        when '/transactions'
+
+        when /\/transactions(\/.+)?/
           data = response['data']
           response_data = data.is_a?(Array) ? data.first : data
 
           # PENDING transactions returns as not success
           ['APPROVED'].include?(response_data&.[]('status'))
+
         when '/pse/financial_institutions'
           response['data'].is_a?(Array) && !response['data'].empty?
         end
@@ -199,10 +234,8 @@ module ActiveMerchant #:nodoc:
       def message_from(endpoint, response)
         case endpoint
         when '/tokens/cards'
-          response['status'] || response['error']['messages'].map do |k, v|
-              "#{k}: #{v.join}"
-            end.join
-
+          response['status'] ||
+            response['error']['messages'].map { |k, v| "#{k}: #{v.join}" }.join
         when %r{\/merchants\/pub_(test|prod)_\w+}
           response.dig('data', 'presigned_acceptance', 'acceptance_token')
         when '/pse/financial_institutions'
