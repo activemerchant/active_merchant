@@ -272,6 +272,41 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_not_empty setup_intent_response.params["payment_method"]
   end
 
+  def test_successful_store_another_sepa_direct_debit_for_customer
+    assert response = @gateway.store(@sepa_direct_debit, email: 'sepa@example.com', device_data: { ip: '127.0.0.1', user_agent: 'Firefox' })
+    assert_success response
+    assert_equal 2, response.responses.size
+
+    customer_response = response.responses[0]
+    customer_id = customer_response.params["id"]
+
+    assert_equal "customer", customer_response.params["object"]
+    assert_equal "sepa@example.com", customer_response.params["email"]
+
+    setup_intent_response = response.responses[1]
+    assert_equal "setup_intent", setup_intent_response.params["object"]
+    assert_equal customer_id, setup_intent_response.params["customer"]
+    assert_equal ["sepa_debit"], setup_intent_response.params["payment_method_types"]
+    assert_not_empty setup_intent_response.params["mandate"]
+    assert_not_empty setup_intent_response.params["payment_method"]
+
+    assert response = @gateway.store(@sepa_direct_debit, email: 'sepa@example.com', device_data: { ip: '127.0.0.1', user_agent: 'Firefox' }, customer: customer_id, set_default: true)
+    assert_success response
+    assert_equal 2, response.responses.size
+
+    setup_intent_response = response.responses[0]
+    customer_response = response.responses[1]
+    payment_method_id = setup_intent_response.params["payment_method"]
+
+    assert_equal "setup_intent", setup_intent_response.params["object"]
+    assert_equal customer_id, setup_intent_response.params["customer"]
+    assert_equal ["sepa_debit"], setup_intent_response.params["payment_method_types"]
+    assert_not_empty setup_intent_response.params["mandate"]
+    assert_not_empty setup_intent_response.params["payment_method"]
+
+    assert_equal payment_method_id, customer_response.params["invoice_settings"]["default_payment_method"]
+  end
+
   def test_successful_purchase_using_stored_card
     assert store = @gateway.store(@credit_card)
     assert_success store
@@ -492,5 +527,4 @@ class RemoteStripeTest < Test::Unit::TestCase
     gateway = StripeGateway.new(login: 'an_unknown_api_key')
     assert !gateway.verify_credentials
   end
-
 end

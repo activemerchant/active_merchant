@@ -218,11 +218,20 @@ module ActiveMerchant #:nodoc:
           commit(:post, "accounts/#{CGI.escape(options[:account])}/external_accounts", post, options)
         elsif options[:customer]
           MultiResponse.run(:first) do |r|
-            # The /cards endpoint does not update other customer parameters.
-            r.process { commit(:post, "customers/#{CGI.escape(options[:customer])}/cards", params, options) }
+            if params[:payment_method_id].present?
+              r.process { setup_intents(options[:customer], params[:payment_method_id], options) }
 
-            if options[:set_default] and r.success? and !r.params['id'].blank?
-              post[:default_card] = r.params['id']
+              if options[:set_default] && r.success?
+                post[:invoice_settings] = {}
+                post[:invoice_settings][:default_payment_method] = params[:payment_method_id]
+              end
+            else
+              # The /cards endpoint does not update other customer parameters.
+              r.process { commit(:post, "customers/#{CGI.escape(options[:customer])}/cards", params, options) }
+
+              if options[:set_default] and r.success? and r.params['id'].present?
+                post[:default_card] = r.params['id']
+              end
             end
 
             if post.count > 0
