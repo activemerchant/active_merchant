@@ -155,6 +155,7 @@ module ActiveMerchant #:nodoc:
           post[:sg_CAVV] = payment.payment_cryptogram
           post[:sg_ECI] = options[:three_d_secure][:eci] || '05'
           post[:sg_IsExternalMPI] = 1
+          post[:sg_ExternalTokenProvider] = 5
         else
           post[:sg_NameOnCard] = payment.name
           post[:sg_StoredCredentialMode] = (options[:stored_credential_mode] == true ? 1 : 0)
