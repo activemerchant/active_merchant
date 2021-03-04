@@ -463,20 +463,30 @@ module ActiveMerchant #:nodoc:
         xml.tag! :CardIndicators, options[:card_indicators] if options[:card_indicators]
       end
 
-      def add_address(xml, creditcard, options)
-        if (address = (options[:billing_address] || options[:address]))
+      def add_address(xml, payment_source, options)
+        address = (options[:billing_address] || options[:address])
+
+        # always send the AVSname if the payment is a check regardless
+        # if there's an address or not
+        if payment_source.is_a?(Check) && address.blank?
+          xml.tag! :AVSname, (payment_source&.name ? payment_source.name[0..29] : nil)
+
+          return
+        end
+
+        unless address.blank?
           avs_supported = AVS_SUPPORTED_COUNTRIES.include?(address[:country].to_s) || empty?(address[:country])
 
           if avs_supported
-            xml.tag! :AVSzip,      byte_limit(format_address_field(address[:zip]), 10)
+            xml.tag! :AVSzip, byte_limit(format_address_field(address[:zip]), 10)
             xml.tag! :AVSaddress1, byte_limit(format_address_field(address[:address1]), 30)
             xml.tag! :AVSaddress2, byte_limit(format_address_field(address[:address2]), 30)
-            xml.tag! :AVScity,     byte_limit(format_address_field(address[:city]), 20)
-            xml.tag! :AVSstate,    byte_limit(format_address_field(address[:state]), 2)
+            xml.tag! :AVScity, byte_limit(format_address_field(address[:city]), 20)
+            xml.tag! :AVSstate, byte_limit(format_address_field(address[:state]), 2)
             xml.tag! :AVSphoneNum, (address[:phone] ? address[:phone].scan(/\d/).join.to_s[0..13] : nil)
           end
 
-          xml.tag! :AVSname, (creditcard&.name ? creditcard.name[0..29] : nil)
+          xml.tag! :AVSname, (payment_source&.name ? payment_source.name[0..29] : nil)
           xml.tag! :AVScountryCode, (avs_supported ? byte_limit(format_address_field(address[:country]), 2) : '')
 
           # Needs to come after AVScountryCode

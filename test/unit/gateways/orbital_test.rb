@@ -604,6 +604,69 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_name_sends_for_credit_card_with_address
+    address = address(
+      dest_zip: '90001',
+      dest_address1: '456 Main St.',
+      dest_city: 'Somewhere',
+      dest_state: 'CA',
+      dest_name: 'Joan Smith',
+      dest_phone: '(123) 456-7890',
+      dest_country: 'US'
+    )
+
+    card = credit_card('4242424242424242',
+      first_name: 'John',
+      last_name: 'Jacob Jingleheimer Smith-Jones')
+
+    response = stub_comms do
+      @gateway.purchase(50, card, order_id: 1, address: address)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/John Jacob/, data)
+      assert_no_match(/Jones/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
+  def test_name_sends_for_echeck_with_address
+    name_test_check = check(name: 'John Jacob Jingleheimer Smith-Jones',
+                   account_number: '072403004', account_type: 'checking', routing_number: '072403004')
+
+    response = stub_comms do
+      @gateway.purchase(50, name_test_check, order_id: 1)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/John Jacob/, data)
+      assert_no_match(/Jones/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
+  def test_name_sends_for_echeck_with_no_address
+    name_test_check = check(name: 'John Jacob Jingleheimer Smith-Jones',
+                            account_number: '072403004', account_type: 'checking', routing_number: '072403004')
+
+    response = stub_comms do
+      @gateway.purchase(50, name_test_check, order_id: 1, address: nil, billing_address: nil)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/John Jacob/, data)
+      assert_no_match(/Jones/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
+  def test_does_not_send_for_credit_card_with_no_address
+    card = credit_card('4242424242424242',
+      first_name: 'John',
+      last_name: 'Jacob Jingleheimer Smith-Jones')
+
+    response = stub_comms do
+      @gateway.purchase(50, card, order_id: 1, address: nil, billing_address: nil)
+    end.check_request do |_endpoint, data, _headers|
+      assert_no_match(/John Jacob/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
   def test_successful_purchase_with_negative_stored_credentials_indicator
     stub_comms do
       @gateway.purchase(50, credit_card, @options.merge(mit_stored_credential_ind: 'N'))

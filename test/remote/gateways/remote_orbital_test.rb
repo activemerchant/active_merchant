@@ -663,6 +663,47 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_success refund
   end
 
+  def test_echeck_purchase_with_address_responds_with_name
+    transcript = capture_transcript(@echeck_gateway) do
+      @echeck_gateway.authorize(@amount, @echeck, @options.merge(order_id: '2'))
+    end
+
+    assert_match(/<AVSname>Jim Smith/, transcript)
+    assert_match(/<RespCode>00/, transcript)
+    assert_match(/<StatusMsg>Approved/, transcript)
+  end
+
+  def test_echeck_purchase_with_no_address_responds_with_name
+    test_check_no_address = check(name: 'Test McTest')
+
+    transcript = capture_transcript(@echeck_gateway) do
+      @echeck_gateway.authorize(@amount, test_check_no_address, @options.merge(order_id: '2', address: nil, billing_address: nil))
+    end
+
+    assert_match(/<AVSname>Test McTest/, transcript)
+    assert_match(/<RespCode>00/, transcript)
+    assert_match(/<StatusMsg>Approved/, transcript)
+  end
+
+  def test_credit_purchase_with_address_responds_with_name
+    transcript = capture_transcript(@gateway) do
+      @gateway.authorize(@amount, @credit_card, @options.merge(order_id: '2'))
+    end
+
+    assert_match(/<AVSname>Longbob Longsen/, transcript)
+    assert_match(/<RespCode>00/, transcript)
+    assert_match(/<StatusMsg>Approved/, transcript)
+  end
+
+  def test_credit_purchase_with_no_address_responds_with_no_name
+    transcript = capture_transcript(@gateway) do
+      @gateway.authorize(@amount, @credit_card, @options.merge(order_id: '2', address: nil, billing_address: nil))
+    end
+
+    assert_match(/<RespCode>00/, transcript)
+    assert_match(/<StatusMsg>Approved/, transcript)
+  end
+
   # == Certification Tests
 
   # ==== Section A
