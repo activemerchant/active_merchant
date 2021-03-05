@@ -148,7 +148,6 @@ module ActiveMerchant #:nodoc:
       def add_payment(post, payment, options = {})
         post[:sg_ExpMonth] = format(payment.month, :two_digits)
         post[:sg_ExpYear] = format(payment.year, :two_digits)
-        post[:sg_CVV2] = payment.verification_value
         post[:sg_CardNumber] = payment.number
 
         if payment.is_a?(NetworkTokenizationCreditCard) && payment.source == :network_token
@@ -157,6 +156,7 @@ module ActiveMerchant #:nodoc:
           post[:sg_IsExternalMPI] = 1
           post[:sg_ExternalTokenProvider] = 5
         else
+          post[:sg_CVV2] = payment.verification_value
           post[:sg_NameOnCard] = payment.name
           post[:sg_StoredCredentialMode] = (options[:stored_credential_mode] == true ? 1 : 0)
         end
@@ -201,6 +201,7 @@ module ActiveMerchant #:nodoc:
             end
           end
         end
+        puts response
         response
       end
 
