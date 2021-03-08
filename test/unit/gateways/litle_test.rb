@@ -144,6 +144,30 @@ class LitleTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_passing_customer_id_on_purchase
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, customer_id: '8675309')
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r(customerId=\"8675309\">\n), data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_passing_customer_id_on_capture
+    stub_comms do
+      @gateway.capture(@amount, @credit_card, customer_id: '8675309')
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r(customerId=\"8675309\">\n), data)
+    end.respond_with(successful_capture_response)
+  end
+
+  def test_passing_customer_id_on_refund
+    stub_comms do
+      @gateway.credit(@amount, @credit_card, customer_id: '8675309')
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r(customerId=\"8675309\">\n), data)
+    end.respond_with(successful_credit_response)
+  end
+
   def test_passing_billing_address
     stub_comms do
       @gateway.purchase(@amount, @credit_card, billing_address: address)

@@ -98,6 +98,30 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert @gateway.authorize(10010, @credit_card1, options)
   end
 
+  def test_successful_capture_with_customer_id
+    options = @options.merge(customer_id: '8675309')
+    assert response = @gateway.authorize(1000, @credit_card1, options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_succesful_purchase_with_customer_id
+    options = @options.merge(customer_id: '8675309')
+    assert response = @gateway.purchase(1000, @credit_card1, options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_refund_with_customer_id
+    options = @options.merge(customer_id: '8675309')
+
+    assert purchase = @gateway.purchase(100, @credit_card1, options)
+
+    assert refund = @gateway.refund(444, purchase.authorization, options)
+    assert_success refund
+    assert_equal 'Approved', refund.message
+  end
+
   def test_successful_authorization_with_echeck
     options = @options.merge({
       order_id: '38',
