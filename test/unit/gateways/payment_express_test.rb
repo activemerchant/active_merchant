@@ -48,7 +48,7 @@ class PaymentExpressTest < Test::Unit::TestCase
   def test_successful_validation
     @gateway.expects(:ssl_post).returns(successful_validation_response)
 
-    assert response = @gateway.verify(@amount, @visa, @options)
+    assert response = @gateway.verify(@visa, @options)
     assert_success response
     assert response.test?
     assert_equal 'The Transaction was approved', response.message

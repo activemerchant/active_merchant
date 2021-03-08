@@ -86,8 +86,8 @@ module ActiveMerchant #:nodoc:
         refund(money, identification, options)
       end
 
-      def verify(money, payment_source, options = {})
-        request = build_purchase_or_authorization_request(money, payment_source, options)
+      def verify(payment_source, options = {})
+        request = build_purchase_or_authorization_request(nil, payment_source, options)
         commit(:validate, request)
       end
 
@@ -154,7 +154,7 @@ module ActiveMerchant #:nodoc:
           add_credit_card(result, payment_source)
         end
 
-        add_amount(result, money, options)
+        add_amount(result, money, options) if money
         add_invoice(result, options)
         add_address_verification_data(result, options)
         add_optional_elements(result, options)
