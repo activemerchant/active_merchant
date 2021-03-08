@@ -795,14 +795,21 @@ module ActiveMerchant #:nodoc:
           confirm: true,
           mandate_data: {
             customer_acceptance: {
-              type: "online",
-              online: {
-                ip_address: options.dig(:device_data, :ip),
-                user_agent: options.dig(:device_data, :user_agent)
-              }
             }
           }
         }
+
+        if options[:channel] == "api"
+          post[:mandate_data][:customer_acceptance] = { type: "offline" }
+        else
+          post[:mandate_data][:customer_acceptance] = {
+            type: "online",
+            online: {
+              ip_address: options.dig(:device_data, :ip),
+              user_agent: options.dig(:device_data, :user_agent)
+            }
+          }
+        end
 
         token_response = api_request(:post, "setup_intents", post)
         success = token_response["error"].nil?
