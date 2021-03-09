@@ -22,6 +22,7 @@
 * Orbital: Send AVSname for all eCheck transactions [jessiagee] #3911
 * Litle: update support of customerId field [cdmackeyfree] #3913
 * Payment Express: fix signature for `verify` [therufs] #3914
+* Forte: Send xdata fields [dsmcclain] #3915
 
 == Version 1.119.0 (February 9th, 2021)
 * Payment Express: support verify/validate [therufs] #3874
