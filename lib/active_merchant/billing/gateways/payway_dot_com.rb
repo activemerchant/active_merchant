@@ -1,8 +1,8 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PaywayDotComGateway < Gateway
-      self.test_url = 'https://devedgilpayway.net/PaywayWS/Payment/'
-      self.live_url = 'https://edgilpayway.com/PaywayWS/Payment/'
+      self.test_url = 'https://devedgilpayway.net/PaywayWS/Payment/CreditCard'
+      self.live_url = 'https://edgilpayway.com/PaywayWS/Payment/CreditCard'
 
       self.supported_countries = ['US', 'CA']
       self.default_currency = 'USD'
@@ -51,9 +51,6 @@ module ActiveMerchant #:nodoc:
         'I8'  => 'C', #  No Match
       }
 
-      CREDIT_CARD = 'CreditCard'
-      ACH = 'ACH'
-
       PAYWAY_WS_SUCCESS = '5000'
 
       SCRUB_PATTERNS = [
@@ -73,11 +70,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_common(post, options)
         add_card_payment(post, payment, options)
-        if payment.is_a?(CreditCard)
-          add_card_transaction(post, money, options)
-        else
-          add_ach_transaction(post, money, options)
-        end
+        add_card_transaction(post, money, options)
         add_address(post, payment, options)
 
         commit('sale', post)
@@ -105,11 +98,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_common(post, options)
         add_card_payment(post, payment, options)
-        if payment.is_a?(CreditCard)
-          add_card_transaction(post, money, options)
-        else
-          add_ach_transaction(post, money, options)
-        end
+        add_card_transaction(post, money, options)
         add_address(post, payment, options)
 
         commit('credit', post)
@@ -118,13 +107,8 @@ module ActiveMerchant #:nodoc:
       def void(authorization, options={})
         post = {}
         add_common(post, options)
-        # todo: need to read transaction name using Query to determine if credit card or ach/Check
-        # then check if have creditCard or bankAccount
         add_card_transaction_name_and_source(post, authorization, options)
-        #else
-        #  add_ach_transaction_name_and_source(post, authorization, options)
-        #end
-
+ 
         commit('void', post)
       end
 
@@ -153,20 +137,18 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(post, payment, options)
-        if payment.is_a?(CreditCard)
-          post[:cardAccount] ||= {}
-          address = options[:billing_address] || options[:address] || {}
-          first_name, last_name = split_names(address[:name])
-          full_address = "#{address[:address1]} #{address[:address2]}".strip
+        post[:cardAccount] ||= {}
+        address = options[:billing_address] || options[:address] || {}
+        first_name, last_name = split_names(address[:name])
+        full_address = "#{address[:address1]} #{address[:address2]}".strip
 
-          post[:cardAccount][:firstName] = first_name      if first_name
-          post[:cardAccount][:lastName]  = last_name       if last_name
-          post[:cardAccount][:address]   = full_address    if full_address
-          post[:cardAccount][:city]      = address[:city]  if address[:city]
-          post[:cardAccount][:state]     = address[:state] if address[:state]
-          post[:cardAccount][:zip]       = address[:zip]   if address[:zip]
-          post[:cardAccount][:phone]     = address[:phone] if address[:phone]
-        end
+        post[:cardAccount][:firstName] = first_name      if first_name
+        post[:cardAccount][:lastName]  = last_name       if last_name
+        post[:cardAccount][:address]   = full_address    if full_address
+        post[:cardAccount][:city]      = address[:city]  if address[:city]
+        post[:cardAccount][:state]     = address[:state] if address[:state]
+        post[:cardAccount][:zip]       = address[:zip]   if address[:zip]
+        post[:cardAccount][:phone]     = address[:phone] if address[:phone]
       end
 
       def add_card_transaction(post, money, options)
@@ -183,42 +165,16 @@ module ActiveMerchant #:nodoc:
         post[:cardTransaction][:tax] = options[:tax] if options[:tax]
       end
 
-      def add_ach_transaction(post, money, options)
-        post[:directDebitTransaction] ||= {}
-        post[:directDebitTransaction][:amount] = amount(money)
-        # need source, required or will return source not found
-        post[:directDebitTransaction][:idSource] = options[:source_id] if options[:source_id]
-        # optional tax amount
-        post[:directDebitTransaction][:tax] = options[:tax] if options[:tax]
-      end
-
       def add_card_payment(post, payment, options)
-        # check payment object: credit_card, etc.
-        if payment.is_a?(String)
-          # for future use, would also need payment type if not credit card
-          post[:accountInputMode] = "paywayAccountToken"
-          post[:paywayAccountToken] = payment
-        elsif payment.is_a?(CreditCard)
-          post[:accountInputMode] = "primaryAccountNumber"
+        # credit_card
+        post[:accountInputMode] = "primaryAccountNumber"
 
-          post[:cardAccount] ||= {}
-          post[:cardAccount][:accountNumber] = payment.number
-          post[:cardAccount][:fsv]           = payment.verification_value
-          post[:cardAccount][:expirationDate]    = expdate(payment)
-          # optional data
-          post[:cardAccount][:email]     = options[:email]
-        elsif payment.is_a?(Check)
-          post[:accountInputMode] = "primaryAccountNumber"
-
-          post[:bankAccount] ||= {}
-          post[:bankAccount][:accountNumber] = payment.account_number
-          post[:bankAccount][:routingNumber] = payment.routing_number
-          post[:bankAccount][:firstName] = payment.first_name
-          post[:bankAccount][:lastName] = payment.last_name
-          post[:bankAccount][:accountType] = payment.account_type
-          # optional data
-          post[:bankAccount][:email]     = options[:email]
-        end
+        post[:cardAccount] ||= {}
+        post[:cardAccount][:accountNumber] = payment.number
+        post[:cardAccount][:fsv]           = payment.verification_value
+        post[:cardAccount][:expirationDate]    = expdate(payment)
+        # optional data
+        post[:cardAccount][:email]     = options[:email]
       end
 
       def expdate(credit_card)
@@ -237,9 +193,7 @@ module ActiveMerchant #:nodoc:
         # set request name
         parameters[:request] = action
 
-        # check and set url for ACH, add check for Query or Payment later
-        creditCard_or_ACH = parameters[:cardTransaction].nil? ? ACH : CREDIT_CARD
-        url = (test? ? test_url + creditCard_or_ACH : live_url + creditCard_or_ACH)
+        url = (test? ? test_url : live_url)
         payload = parameters.to_json unless parameters.nil?
 
         response =
@@ -297,8 +251,6 @@ module ActiveMerchant #:nodoc:
         if success_from(response)
           if !response['cardTransaction'].nil?
             return response['cardTransaction']['name'] if response['cardTransaction']['name']
-          elsif !response['directDebitTransaction'].nil?
-            return response['directDebitTransaction']['name'] if response['directDebitTransaction']['name']
           end
         end
         ""

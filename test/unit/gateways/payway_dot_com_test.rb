@@ -65,7 +65,7 @@ class PaywayDotComTest < Test::Unit::TestCase
   def test_failed_authorize
     @gateway.expects(:ssl_request).returns(failed_authorize_response)
 
-    response = @gateway.authorize(105, @invalid_luhn_card, @options)
+    response = @gateway.authorize(105, @credit_card, @options)
     assert_failure response
     assert_equal '5035', response.message[0,4]
   end
