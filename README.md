@@ -237,6 +237,7 @@ The [ActiveMerchant Wiki](https://github.com/activemerchant/active_merchant/wiki
 * [Worldpay Global](http://www.worldpay.com/) - HK, GB, AU, AD, BE, CH, CY, CZ, DE, DK, ES, FI, FR, GI, GR, HU, IE, IL, IT, LI, LU, MC, MT, NL, NO, NZ, PL, PT, SE, SG, SI, SM, TR, UM, VA
 * [Worldpay Online](https://online.worldpay.com/) - HK, US, GB, AU, AD, BE, CH, CY, CZ, DE, DK, ES, FI, FR, GI, GR, HU, IE, IL, IT, LI, LU, MC, MT, NL, NO, NZ, PL, PT, SE, SG, SI, SM, TR, UM, VA
 * [Worldpay US](http://www.worldpay.com/us) - US
+* [Rocketgate](https://www.rocketgate.com) - US, CA, GB, RU, UA, FR, ES, SE, NO, DE, FI, PO, IT, RO, BY, KZ, GR, BG, IS, HU, PT, AT, CZ, RS, IE, LT, LV, HR, BA, SK, EE, DK, CH, NL, MD, BE, AM, AL, MK, TR, SI, ME, XK, AZ, CY, LU, GE, AD, MT, LI, SM, MC, VA
 
 ## API stability policy
 
