@@ -1323,3 +1323,7 @@ worldpay_us:
   acctid: MPNAB
   subid: SPREE
   merchantpin: "1234567890"
+
+rocketgate:
+  login: '1'
+  password: 'testpassword'
