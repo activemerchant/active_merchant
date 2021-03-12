@@ -133,7 +133,7 @@ module ActiveMerchant #:nodoc:
       def add_card_transaction_name_and_source(post, identifier, options)
         post[:cardTransaction] ||= {}
         post[:cardTransaction][:name] = identifier
-        post[:cardTransaction][:idSource] = options[:source_id] if options[:source_id]
+        post[:cardTransaction][:sourceId] = options[:source_id] if options[:source_id]
       end
 
       def add_address(post, payment, options)
@@ -158,7 +158,7 @@ module ActiveMerchant #:nodoc:
         eci_type = options[:eci_type].nil? ? "1" : options[:eci_type]
         post[:cardTransaction][:eciType] = eci_type
         # need source, required or will return source not found
-        post[:cardTransaction][:idSource] = options[:source_id] if options[:source_id]
+        post[:cardTransaction][:sourceId] = options[:source_id] if options[:source_id]
         # optional processorSoftDescriptor
         post[:cardTransaction][:processorSoftDescriptor] = options[:processor_soft_descriptor] if options[:processor_soft_descriptor]
         # optional tax amount
@@ -174,7 +174,7 @@ module ActiveMerchant #:nodoc:
         post[:cardAccount][:fsv]           = payment.verification_value
         post[:cardAccount][:expirationDate]    = expdate(payment)
         # optional data
-        post[:cardAccount][:email]     = options[:email]
+        post[:cardAccount][:email]     = options[:email] if options[:email]
       end
 
       def expdate(credit_card)
@@ -197,13 +197,13 @@ module ActiveMerchant #:nodoc:
         payload = parameters.to_json unless parameters.nil?
 
         response =
-          begin
-            parse(ssl_request(:post, url, payload, headers ))
-            rescue ResponseError => e
-            return Response.new(false, 'Invalid Login') if e.response.code == '401'
+        begin
+          parse(ssl_request(:post, url, payload, headers ))
+          rescue ResponseError => e
+          return Response.new(false, 'Invalid Login') if e.response.code == '401'
 
-            parse(e.response.body)
-          end
+          parse(e.response.body)
+        end
 
         success = success_from(response)
         avs_result_code = response['cardTransaction'].nil? || response['cardTransaction']['addressVerificationResults'].nil? ? "" : response['cardTransaction']['addressVerificationResults']
@@ -227,33 +227,26 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_code_from(response)
-        if success_from(response)
-          ''
-        else
-          error = !STANDARD_ERROR_CODE_MAPPING[response['paywayCode']].nil? ?
+        return '' if success_from(response)
+
+	error = !STANDARD_ERROR_CODE_MAPPING[response['paywayCode']].nil? ?
           STANDARD_ERROR_CODE_MAPPING[response['paywayCode']] :
           STANDARD_ERROR_CODE[:processing_error]
-        end
+        return error
       end
 
       def message_from(success, response)
-        if !response['paywayCode'].nil?
-          if success
-            return response['paywayCode'] + "-" + "success"
-          else
-            return response['paywayCode'] + "-" + response['paywayMessage']
-          end
-        end
-        ""
+        return '' if response['paywayCode'].nil?
+
+        return response['paywayCode'] + '-' + 'success' if success
+
+        response['paywayCode'] + '-' + response['paywayMessage']
       end
 
       def authorization_from(response)
-        if success_from(response)
-          if !response['cardTransaction'].nil?
-            return response['cardTransaction']['name'] if response['cardTransaction']['name']
-          end
-        end
-        ""
+        return '' if !success_from(response) || response['cardTransaction'].nil?
+
+        response['cardTransaction']['name']
       end
 
       # Builds the headers for the request

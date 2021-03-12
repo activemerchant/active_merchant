@@ -14,19 +14,11 @@ class RemotePaywayDotComTest < Test::Unit::TestCase
       # source_id must be provided, contact payway support for valid source_id(s)
       source_id: '67'
     }
-    @check = check(number: rand(0..100000), routing_number: '091000019')
-    @check_invalid_aba = check({
-      bank_name: 'TEST BANK',
-      account_number: '000123456789',
-      routing_number: '110000000'
-    })
-    @check_aba_too_short = check(routing_number: '54321')
   end
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    #assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
     assert_equal '5000', response.message[0,4]
   end
 
@@ -92,9 +84,15 @@ class RemotePaywayDotComTest < Test::Unit::TestCase
     assert_equal '5000', credit.message[0,4]
   end
 
+  def test_failed_credit
+    response = @gateway.credit(108, @invalid_luhn_card, @options)
+    assert_failure response
+    assert_equal '5035', response.message[0,4]
+  end
+
   # void authorization only
   def test_successful_void
-    auth = @gateway.authorize(108, @credit_card, @options)
+    auth = @gateway.authorize(109, @credit_card, @options)
     assert_success auth
 
     # need options for passing required source id
@@ -111,7 +109,7 @@ class RemotePaywayDotComTest < Test::Unit::TestCase
 
   # void of purchase (sale)
   def test_successful_void_of_sale
-    sale = @gateway.purchase(109, @credit_card, @options)
+    sale = @gateway.purchase(110, @credit_card, @options)
     assert_success sale
 
     # need options for passing required source id
@@ -122,7 +120,7 @@ class RemotePaywayDotComTest < Test::Unit::TestCase
 
   # void of credit
   def test_successful_void_of_credit
-    credit = @gateway.credit(110, @credit_card, @options)
+    credit = @gateway.credit(111, @credit_card, @options)
     assert_success credit
 
     # need options for passing required source id
@@ -137,15 +135,6 @@ class RemotePaywayDotComTest < Test::Unit::TestCase
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_match %r{5001}, response.message[0,4]
-  end
-
-  def test_dump_transcript
-    # This test will run a purchase transaction on your gateway
-    # and dump a transcript of the HTTP conversation so that
-    # you can use that transcript as a reference while
-    # implementing your scrubbing logic.  You can delete
-    # this helper after completing your scrub implementation.
-    ##dump_transcript_and_fail(@gateway, @amount, @credit_card, @options)
   end
 
   def test_transcript_scrubbing

@@ -6,7 +6,6 @@ class PaywayDotComTest < Test::Unit::TestCase
         login: 'sprerestwsdev',
         password: 'sprerestwsdev1!',
         company_id: '3')
-    @gateway2 = PaywayDotComGateway.new(login: '', password: '', company_id: '')
     @credit_card = credit_card
     @amount = 100
 
@@ -86,11 +85,19 @@ class PaywayDotComTest < Test::Unit::TestCase
     assert_equal '5000', credit.message[0,4]
   end
 
+  def test_failed_credit
+    @gateway.expects(:ssl_request).returns(failed_credit_response)
+  
+    response = @gateway.credit(108, @credit_card, @options)
+    assert_failure response
+    assert_equal '5035', response.message[0,4]
+  end
+
   # void authorization only
   def test_successful_void
     @gateway.expects(:ssl_request).returns(successful_auth_for_void_response)
   
-    auth = @gateway.authorize(108, @credit_card, @options)
+    auth = @gateway.authorize(109, @credit_card, @options)
     assert_success auth
 
     @gateway.expects(:ssl_request).returns(successful_void_auth_response)
@@ -113,7 +120,7 @@ class PaywayDotComTest < Test::Unit::TestCase
   def test_successful_void_of_sale
     @gateway.expects(:ssl_request).returns(successful_sale_for_void_response)
   
-    sale = @gateway.purchase(109, @credit_card, @options)
+    sale = @gateway.purchase(110, @credit_card, @options)
     assert_success sale
 
     @gateway.expects(:ssl_request).returns(successful_void_sale_response)
@@ -128,7 +135,7 @@ class PaywayDotComTest < Test::Unit::TestCase
   def test_successful_void_of_credit
     @gateway.expects(:ssl_request).returns(successful_credit_for_void_response)
   
-    credit = @gateway.credit(110, @credit_card, @options)
+    credit = @gateway.credit(111, @credit_card, @options)
     assert_success credit
 
     @gateway.expects(:ssl_request).returns(successful_credit_void_response)
@@ -140,6 +147,7 @@ class PaywayDotComTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
+    @gateway2 = PaywayDotComGateway.new(login: '', password: '', company_id: '')
     @gateway2.expects(:ssl_request).returns(failed_invalid_login_response)
 
     assert response = @gateway2.purchase(@amount, @credit_card, @options)
@@ -153,8 +161,6 @@ class PaywayDotComTest < Test::Unit::TestCase
   end
 
   private
-
-#<- "POST /PaywayWS/Payment/CreditCard HTTP/1.1\r\nContent-Type: application/json\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: devedgilpayway.net\r\nContent-Length: 436\r\n\r\n"
 
   def pre_scrubbed
     %q(
@@ -171,8 +177,6 @@ SSL established, protocol: TLSv1.2, cipher: AES256-GCM-SHA384
 -> "Content-Length: 2051\r\n"
 )
   end
-
-#<- "POST /PaywayWS/Payment/CreditCard HTTP/1.1\r\nContent-Type: application/json\r\nAccept: application/json\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nUser-Agent: Ruby\r\nHost: devedgilpayway.net\r\nContent-Length: 436\r\n\r\n"
 
   def post_scrubbed
     %q(
@@ -261,16 +265,6 @@ SSL established, protocol: TLSv1.2, cipher: AES256-GCM-SHA384
   }'
   end
   
-    %(
-      Easy to capture by setting the DEBUG_ACTIVE_MERCHANT environment variable
-      to "true" when running remote tests:
-
-      $ DEBUG_ACTIVE_MERCHANT=true ruby -Itest \
-        test/remote/gateways/remote_payway_dot_com_test.rb \
-        -n test_successful_purchase
-    )
-
-
   def failed_purchase_response
   '{
     "cardAccount": {
@@ -765,6 +759,77 @@ SSL established, protocol: TLSv1.2, cipher: AES256-GCM-SHA384
     },
     "paywayCode": "5000",
     "paywayMessage": ""
+  }'
+  end
+
+  def failed_credit_response
+  '{
+    "cardAccount": {
+        "accountNotes1": "",
+        "accountNotes2": "",
+        "accountNotes3": "",
+        "accountNumber": "400030******2221",
+        "account_number_masked": "400030******2221",
+        "address": "456 My Street Apt 1",
+        "auLastUpdate": "1999-01-01 00:00",
+        "auUpdateType": 0,
+        "cardType": 1,
+        "city": "Ottawa",
+        "commercialCardType": 0,
+        "divisionId": 7,
+        "email": "",
+        "expirationDate": "0922",
+        "firstFour": "4000",
+        "firstName": "Jim",
+        "fsv": "123",
+        "inputMode": 1,
+        "lastFour": "2221",
+        "lastName": "Smith",
+        "lastUsed": "1999-01-01 00:00",
+        "middleName": "",
+        "onlinePaymentCryptogram": "",
+        "p2peInput": "",
+        "paywayToken": 0,
+        "phone": "5555555555",
+        "state": "ON",
+        "status": 2,
+        "zip": "K1C2N6"
+    },
+    "cardTransaction": {
+        "addressVerificationResults": "",
+        "amount": 0,
+        "authorizationCode": "",
+        "authorizedTime": "1999-01-01",
+        "capturedTime": "1999-01-01",
+        "cbMode": 0,
+        "eciType": 0,
+        "fraudSecurityResults": "",
+        "fsvIndicator": "",
+        "name": "",
+        "pfpstatus": 3601,
+        "pfpstatusString": "PFP Not Enabled",
+        "processorErrorMessage": "",
+        "processorOrderId": "",
+        "processorRecurringAdvice": "",
+        "processorResponseDate": "",
+        "processorResultCode": "",
+        "processorSequenceNumber": 0,
+        "processorSoftDescriptor": "",
+        "referenceNumber": "",
+        "resultCode": 1,
+        "sessionToken_string": "0",
+        "settledTime": "1999-01-01 00:00",
+        "sourceId": 0,
+        "status": 0,
+        "tax": 0,
+        "testResultAVS": "",
+        "testResultFSV": "",
+        "transactionNotes1": "",
+        "transactionNotes2": "",
+        "transactionNotes3": ""
+    },
+    "paywayCode": "5035",
+    "paywayMessage": "Invalid account number: 4000300011112221"
   }'
   end
 
