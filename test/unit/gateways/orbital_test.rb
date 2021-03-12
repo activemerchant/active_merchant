@@ -1230,15 +1230,6 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_success response
   end
 
-  def test_payment_delivery_when_param_incorrect
-    response = stub_comms do
-      @gateway.purchase(50, @echeck, order_id: 1, payment_delivery: 'Z')
-    end.check_request do |_endpoint, data, _headers|
-      assert_match(/<BankPmtDelv>B/, data)
-    end.respond_with(successful_purchase_response)
-    assert_success response
-  end
-
   def test_payment_delivery_when_no_payment_delivery_param
     response = stub_comms do
       @gateway.purchase(50, @echeck, order_id: 1)

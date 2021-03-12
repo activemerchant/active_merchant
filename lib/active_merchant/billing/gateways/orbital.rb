@@ -190,31 +190,6 @@ module ActiveMerchant #:nodoc:
         'checking' => 'C'
       }
 
-      # Fixed possible values for orbital ECP attributes
-      # Auth methods for electronic checks can be:
-      # Written, Internet, Telephonic, Account Receivable, Point of Purchase.
-      # Default auth method for ECP is Internet (I).
-      # Bank payment delivery can be either ACH (Automated Clearing House) or Best Possible.
-      # Default Bank Payment Delivery is Best Possible (B).
-      # Action codes to be used for Early Warning System and additional validations.
-      # Valid combinations of Message Type and Action Code to be used are:
-      #   A   W1
-      #   AC  W1
-      #   FC  W4
-      #   R   W6
-      #   FC  W8
-      #   A   W3
-      #   AC  W3
-      #   FC  W5
-      #   R   W7
-      # Default Action code for ECP is nil.
-      # Electronic check to be processed on same day (Y) or next day (N).
-      # Default ECP Same Day Index is Yes (Y).
-      ECP_AUTH_METHODS = %w[W I T A P]
-      ECP_BANK_PAYMENT = %w[A B]
-      ECP_ACTION_CODES = %w[LO ND NC W1 W3 W4 W5 W6 W7 W8 W9]
-      ECP_SAME_DAY = %w[Y N]
-
       def initialize(options = {})
         requires!(options, :merchant_id)
         requires!(options, :login, :password) unless options[:ip_authentication]
@@ -545,9 +520,9 @@ module ActiveMerchant #:nodoc:
           xml.tag! :BCRtNum, check.routing_number
           xml.tag! :CheckDDA, check.account_number if check.account_number
           xml.tag! :BankAccountType, ACCOUNT_TYPE[check.account_type] if ACCOUNT_TYPE[check.account_type]
-          xml.tag! :ECPAuthMethod, options[:auth_method] if options[:auth_method] && ECP_AUTH_METHODS.include?(options[:auth_method])
+          xml.tag! :ECPAuthMethod, options[:auth_method] if options[:auth_method]
 
-          if options[:payment_delivery] && ECP_BANK_PAYMENT.include?(options[:payment_delivery])
+          if options[:payment_delivery]
             xml.tag! :BankPmtDelv, options[:payment_delivery]
           else
             xml.tag! :BankPmtDelv, 'B'
@@ -704,7 +679,7 @@ module ActiveMerchant #:nodoc:
       # Adds ECP conditional attributes depending on other attribute values
       def add_ecp_details(xml, payment_source, parameters = {})
         requires!(payment_source.account_number) if parameters[:auth_method]&.eql?('A') || parameters[:auth_method]&.eql?('P')
-        xml.tag! :ECPActionCode, parameters[:action_code] if parameters[:action_code] && ECP_ACTION_CODES.include?(parameters[:action_code])
+        xml.tag! :ECPActionCode, parameters[:action_code] if parameters[:action_code]
         xml.tag! :ECPCheckSerialNumber, payment_source.account_number if parameters[:auth_method]&.eql?('A') || parameters[:auth_method]&.eql?('P')
         if parameters[:auth_method]&.eql?('P')
           xml.tag! :ECPTerminalCity, parameters[:terminal_city] if parameters[:terminal_city]
@@ -874,7 +849,7 @@ module ActiveMerchant #:nodoc:
             add_aevv(xml, payment_source, three_d_secure)
             add_digital_token_cryptogram(xml, payment_source)
 
-            xml.tag! :ECPSameDayInd, parameters[:same_day] if parameters[:same_day] && ECP_SAME_DAY.include?(parameters[:same_day]) && payment_source.is_a?(Check)
+            xml.tag! :ECPSameDayInd, parameters[:same_day] if parameters[:same_day] && payment_source.is_a?(Check)
 
             set_recurring_ind(xml, parameters)
 

@@ -610,17 +610,6 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_equal 'Approved', auth.message
   end
 
-  def test_authorize_sends_with_incorrect_payment_delivery
-    transcript = capture_transcript(@echeck_gateway) do
-      @echeck_gateway.authorize(@amount, @echeck, @options.merge(order_id: '4', payment_delivery: 'X'))
-    end
-
-    assert_match(/<BankPmtDelv>B/, transcript)
-    assert_match(/<MessageType>A/, transcript)
-    assert_match(/<ApprovalStatus>1/, transcript)
-    assert_match(/<RespCode>00/, transcript)
-  end
-
   def test_default_payment_delivery_with_no_payment_delivery_sent
     transcript = capture_transcript(@echeck_gateway) do
       @echeck_gateway.authorize(@amount, @echeck, @options.merge(order_id: '4'))
