@@ -26,7 +26,7 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
       number: '4012001037490014',
       source: :network_token,
       month: '12',
-      year: 2020,
+      year: 2020
     })
   end
 
