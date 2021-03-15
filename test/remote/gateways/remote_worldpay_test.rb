@@ -18,7 +18,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     @naranja_card = credit_card('5895620000000002')
     @sodexo_voucher = credit_card('6060704495764400', brand: 'sodexo')
     @declined_card = credit_card('4111111111111111', first_name: nil, last_name: 'REFUSED')
-    @threeDS_card = credit_card('4111111111111111', first_name: nil, last_name: '3D')
+    @threeDS_card = credit_card('4111111111111111', first_name: nil, last_name: 'doot')
     @threeDS2_card = credit_card('4111111111111111', first_name: nil, last_name: '3DS_V2_FRICTIONLESS_IDENTIFIED')
     @threeDS_card_external_MPI = credit_card('4444333322221111', first_name: 'AA', last_name: 'BD')
 

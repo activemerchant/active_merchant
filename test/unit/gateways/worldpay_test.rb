@@ -706,7 +706,7 @@ class WorldpayTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
-  def test_3ds_name_coersion
+  def test_3ds_name_coersion_for_testing
     @options[:execute_threed] = true
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
@@ -716,7 +716,7 @@ class WorldpayTest < Test::Unit::TestCase
     assert_success response
   end
 
-  def test_3ds_name_coersion_based_on_version
+  def test_3ds_name_coersion_based_on_version_for_testing
     @options[:execute_threed] = true
     @options[:three_ds_version] = '2.0'
     response = stub_comms do
@@ -741,6 +741,20 @@ class WorldpayTest < Test::Unit::TestCase
       assert_match %r{<cardHolderName>3D</cardHolderName>}, data if /<submit>/.match?(data)
     end.respond_with(successful_authorize_response, successful_capture_response)
     assert_success response
+  end
+
+  def test_3ds_name_not_coerced_in_production
+    ActiveMerchant::Billing::Base.mode = :production
+
+    @options[:execute_threed] = true
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_not_match %r{<cardHolderName>3D</cardHolderName>}, data
+    end.respond_with(successful_authorize_response, successful_capture_response)
+  ensure
+    ActiveMerchant::Billing::Base.mode = :test
   end
 
   def test_3ds_additional_information
