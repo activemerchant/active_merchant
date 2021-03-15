@@ -430,7 +430,7 @@ module ActiveMerchant #:nodoc:
           )
         end
 
-        card_holder_name = options[:execute_threed] && !options[:three_ds_version]&.start_with?('2') ? '3D' : payment_method.name
+        card_holder_name = test? && options[:execute_threed] && !options[:three_ds_version]&.start_with?('2') ? '3D' : payment_method.name
         xml.cardHolderName card_holder_name
         xml.cvc payment_method.verification_value
 
