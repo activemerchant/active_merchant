@@ -201,7 +201,6 @@ module ActiveMerchant #:nodoc:
             end
           end
         end
-        puts response
         response
       end
 
