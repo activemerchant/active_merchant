@@ -748,7 +748,7 @@ class WorldpayTest < Test::Unit::TestCase
 
     @options[:execute_threed] = true
 
-    response = stub_comms do
+    stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
       assert_not_match %r{<cardHolderName>3D</cardHolderName>}, data

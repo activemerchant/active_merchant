@@ -249,9 +249,11 @@ module ActiveMerchant #:nodoc:
         commit(order, :refund, options[:retry_logic], options[:trace_number])
       end
 
-      def credit(money, authorization, options = {})
-        ActiveMerchant.deprecated CREDIT_DEPRECATION_MESSAGE
-        refund(money, authorization, options)
+      def credit(money, payment_method, options = {})
+        order = build_new_order_xml(REFUND, money, payment_method, options) do |xml|
+          add_payment_source(xml, payment_method, options)
+        end
+        commit(order, :refund, options[:retry_logic], options[:trace_number])
       end
 
       def void(authorization, options = {}, deprecated = {})
@@ -854,7 +856,7 @@ module ActiveMerchant #:nodoc:
             set_recurring_ind(xml, parameters)
 
             # Append Transaction Reference Number at the end for Refund transactions
-            if action == REFUND
+            if action == REFUND && parameters[:authorization]
               tx_ref_num, = split_authorization(parameters[:authorization])
               xml.tag! :TxRefNum, tx_ref_num
             end

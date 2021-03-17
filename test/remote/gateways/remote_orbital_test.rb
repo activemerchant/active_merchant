@@ -559,7 +559,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_success void
   end
 
-  def test_refund
+  def test_successful_refund
     amount = @amount
     assert response = @gateway.purchase(amount, @credit_card, @options)
     assert_success response
@@ -590,6 +590,12 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert response.authorization
     assert refund = @gateway.refund(amount, response.authorization, @options.merge(level_2_data: @level_2_options))
     assert_success refund
+  end
+
+  def test_successful_credit
+    payment_method = credit_card('5454545454545454')
+    assert response = @gateway.credit(@amount, payment_method, @options)
+    assert_success response
   end
 
   def test_failed_capture
