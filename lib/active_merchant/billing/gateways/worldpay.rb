@@ -71,7 +71,7 @@ module ActiveMerchant #:nodoc:
       def capture(money, authorization, options = {})
         authorization = order_id_from_authorization(authorization.to_s)
         MultiResponse.run do |r|
-          r.process { inquire_request(authorization, options, 'AUTHORISED') } unless options[:authorization_validated]
+          r.process { inquire_request(authorization, options, 'AUTHORISED', 'CAPTURED') } unless options[:authorization_validated]
           if r.params
             authorization_currency = r.params['amount_currency_code']
             options = options.merge(currency: authorization_currency) if authorization_currency.present?
@@ -91,7 +91,7 @@ module ActiveMerchant #:nodoc:
       def refund(money, authorization, options = {})
         authorization = order_id_from_authorization(authorization.to_s)
         response = MultiResponse.run do |r|
-          r.process { inquire_request(authorization, options, 'CAPTURED', 'SETTLED', 'SETTLED_BY_MERCHANT') } unless options[:authorization_validated]
+          r.process { inquire_request(authorization, options, 'CAPTURED', 'SETTLED', 'SETTLED_BY_MERCHANT', 'SENT_FOR_REFUND') } unless options[:authorization_validated]
           r.process { refund_request(money, authorization, options) }
         end
 
@@ -142,7 +142,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture_request(money, authorization, options)
-        commit('capture', build_capture_request(money, authorization, options), :ok, options)
+        commit('capture', build_capture_request(money, authorization, options), 'CAPTURED', :ok, options)
       end
 
       def cancel_request(authorization, options)
@@ -154,7 +154,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund_request(money, authorization, options)
-        commit('refund', build_refund_request(money, authorization, options), :ok, options)
+        commit('refund', build_refund_request(money, authorization, options), :ok, 'SENT_FOR_REFUND', options)
       end
 
       def credit_request(money, payment_method, options)
@@ -658,7 +658,9 @@ module ActiveMerchant #:nodoc:
       #   - An array of strings if one of many responses could be considered a
       #     success.
       def success_criteria_success?(raw, success_criteria)
-        success_criteria.include?(raw[:last_event]) || raw[:ok].present?
+        return if raw[:error]
+
+        raw[:ok].present? || (success_criteria.include?(raw[:last_event]) if raw[:last_event])
       end
 
       def action_success?(action, raw)

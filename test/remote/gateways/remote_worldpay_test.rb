@@ -668,6 +668,56 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_match %r{REFUSED}, response.message
   end
 
+  def test_authorize_and_capture_synchronous_response
+    card = credit_card('4111111111111111', verification_value: 555)
+    assert auth = @cftgateway.authorize(@amount, card, @options)
+    assert_success auth
+
+    assert capture = @cftgateway.capture(@amount, auth.authorization, @options.merge(authorization_validated: true))
+    assert_success capture
+
+    assert duplicate_capture = @cftgateway.capture(@amount, auth.authorization, @options.merge(authorization_validated: true))
+    assert_failure duplicate_capture
+  end
+
+  def test_capture_wrong_amount_synchronous_response
+    card = credit_card('4111111111111111', verification_value: 555)
+    assert auth = @cftgateway.authorize(@amount, card, @options)
+    assert_success auth
+
+    assert capture = @cftgateway.capture(@amount + 1, auth.authorization, @options.merge(authorization_validated: true))
+    assert_failure capture
+    assert_equal '5', capture.error_code
+    assert_equal 'Requested capture amount (GBP 1.01) exceeds the authorised balance for this payment (GBP 1.00)', capture.message
+  end
+
+  def test_successful_refund_synchronous_response
+    response = @cftgateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+    assert response.authorization
+
+    assert @cftgateway.refund(@amount, response.authorization, authorization_validated: true)
+  end
+
+  def test_failed_refund_synchronous_response
+    auth = @cftgateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert_equal 'SUCCESS', auth.message
+    assert auth.authorization
+
+    refund = @cftgateway.refund(@amount, auth.authorization, authorization_validated: true)
+    assert_failure refund
+    assert_equal 'This order is not refundable', refund.message
+
+    assert capture = @cftgateway.capture(@amount, auth.authorization, @options.merge(authorization_validated: true))
+    assert_success capture
+
+    refund = @cftgateway.refund(@amount * 2, auth.authorization, authorization_validated: true)
+    assert_failure refund
+    assert_equal 'Refund amount too high', refund.message
+  end
+
   private
 
   def risk_data

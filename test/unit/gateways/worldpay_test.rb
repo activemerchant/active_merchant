@@ -280,7 +280,7 @@ class WorldpayTest < Test::Unit::TestCase
       @gateway.refund(@amount, @options[:order_id], @options)
     end.respond_with(failed_refund_inquiry_response, successful_refund_response)
     assert_failure response
-    assert_equal "A transaction status of 'CAPTURED' or 'SETTLED' or 'SETTLED_BY_MERCHANT' is required.", response.message
+    assert_equal "A transaction status of 'CAPTURED' or 'SETTLED' or 'SETTLED_BY_MERCHANT' or 'SENT_FOR_REFUND' is required.", response.message
   end
 
   def test_full_refund_for_unsettled_payment_forces_void
@@ -1015,6 +1015,46 @@ class WorldpayTest < Test::Unit::TestCase
     assert_match "Unparsable response received from Worldpay. Please contact Worldpay if you continue to receive this message. \(The raw response returned by the API was: \"Temporary Failure, please Retry\"\)", response.message
   end
 
+  def test_successful_authorize_synchronous_response
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/4242424242424242/, data)
+    end.respond_with(successful_authorize_synchronous_response)
+    assert_success response
+    assert_equal 'fbe493442977787ea2fadabfb23c2574', response.authorization
+  end
+
+  def test_successful_capture_synchronous_response
+    response = stub_comms do
+      response = @gateway.authorize(@amount, @credit_card, @options)
+      @gateway.capture(@amount, response.authorization, @options)
+    end.respond_with(successful_authorize_synchronous_response, successful_capture_synchronous_response)
+    assert_success response
+  end
+
+  def test_failed_capture_synchronous_response
+    response = stub_comms do
+      response = @gateway.authorize(@amount, @credit_card, @options)
+      @gateway.capture(@amount, response.authorization, @options)
+    end.respond_with(successful_authorize_synchronous_response, failed_capture_synchronous_response)
+    assert_failure response
+  end
+
+  def test_successful_refund_synchronous_response
+    response = stub_comms do
+      @gateway.refund(@amount, @options[:order_id], @options)
+    end.respond_with(successful_refund_synchronous_response)
+    assert_success response
+  end
+
+  def test_failed_refund_synchronous_response
+    response = stub_comms do
+      @gateway.refund(@amount, @options[:order_id], @options)
+    end.respond_with(failed_refund_synchronous_response)
+    assert_failure response
+  end
+
   private
 
   def assert_date_element(expected_date_hash, date_element)
@@ -1151,6 +1191,32 @@ class WorldpayTest < Test::Unit::TestCase
     RESPONSE
   end
 
+  def successful_authorize_synchronous_response
+    <<~RESPONSE
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN"
+                                      "http://dtd.worldpay.com/paymentService_v1.dtd">
+      <paymentService version="1.4" merchantCode="SPREEDLYCFT">
+        <reply>
+          <orderStatus orderCode="fbe493442977787ea2fadabfb23c2574">
+            <payment>
+              <paymentMethod>VISA_CREDIT-SSL</paymentMethod>
+              <amount value="100" currencyCode="GBP" exponent="2" debitCreditIndicator="credit"/>
+              <lastEvent>AUTHORISED</lastEvent>
+              <CVCResultCode description="NOT SENT TO ACQUIRER"/>
+              <AVSResultCode description="NOT SUPPLIED BY SHOPPER"/>
+              <balance accountType="IN_PROCESS_AUTHORISED">
+                <amount value="100" currencyCode="GBP" exponent="2" debitCreditIndicator="credit"/>
+              </balance>
+              <cardNumber>4111********1111</cardNumber>
+              <riskScore value="1"/>
+            </payment>
+          </orderStatus>
+        </reply>
+      </paymentService>
+    RESPONSE
+  end
+
   def failed_authorize_response
     <<~RESPONSE
       <?xml version="1.0" encoding="UTF-8"?>
@@ -1195,6 +1261,46 @@ class WorldpayTest < Test::Unit::TestCase
               <amount value="100" currencyCode="GBP" exponent="2" debitCreditIndicator="credit"/>
             </captureReceived>
           </ok>
+        </reply>
+      </paymentService>
+    RESPONSE
+  end
+
+  def successful_capture_synchronous_response
+    <<~RESPONSE
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN"
+                                      "http://dtd.worldpay.com/paymentService_v1.dtd">
+      <paymentService version="1.4" merchantCode="SPREEDLYCFT">
+        <reply>
+          <orderStatus orderCode="fbe493442977787ea2fadabfb23c2574">
+            <payment>
+              <paymentMethod>VISA_CREDIT-SSL</paymentMethod>
+              <amount value="100" currencyCode="GBP" exponent="2" debitCreditIndicator="credit"/>
+              <lastEvent>CAPTURED</lastEvent>
+              <CVCResultCode description="NOT SENT TO ACQUIRER"/>
+              <AVSResultCode description="NOT SUPPLIED BY SHOPPER"/>
+              <balance accountType="IN_PROCESS_CAPTURED">
+                <amount value="100" currencyCode="GBP" exponent="2" debitCreditIndicator="credit"/>
+              </balance>
+              <riskScore value="1"/>
+            </payment>
+          </orderStatus>
+        </reply>
+      </paymentService>
+    RESPONSE
+  end
+
+  def failed_capture_synchronous_response
+    <<~RESPONSE
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN"
+                                      "http://dtd.worldpay.com/paymentService_v1.dtd">
+      <paymentService version="1.4" merchantCode="SPREEDLYCFT">
+        <reply>
+          <orderStatus orderCode="bb2e156f3eb9e210fe11777c1102ea4b">
+            <error code="5"><![CDATA[Requested capture amount (GBP 1.01) exceeds the authorised balance for this payment (GBP 1.00)]]></error>
+          </orderStatus>
         </reply>
       </paymentService>
     RESPONSE
@@ -1416,6 +1522,53 @@ class WorldpayTest < Test::Unit::TestCase
               <amount value="35" currencyCode="GBP" exponent="2" debitCreditIndicator="credit"/>
             </refundReceived>
           </ok>
+        </reply>
+      </paymentService>
+    RESPONSE
+  end
+
+  def successful_refund_synchronous_response
+    <<~RESPONSE
+      <paymentService version="1.4" merchantCode="MERCHANT-CODE">
+        <reply>
+          <orderStatus orderCode="testcentralcell0008">
+            <payment>
+              <paymentMethod>ECMC_CREDIT-SSL</paymentMethod>
+              <amount value="1000" currencyCode="ARS" exponent="2" debitCreditIndicator="credit"/>
+              <lastEvent>SENT_FOR_REFUND</lastEvent>
+              <AuthorisationId id="999999"/>
+              <CVCResultCode description="C"/>
+              <cardHolderName>
+                <![CDATA[CARDHOLDER_NAME]]>
+              </cardHolderName>
+              <issuerCountryCode>AR</issuerCountryCode>
+              <issuerName>ISSUER-NAME</issuerName>
+              <localAcquirer>WA</localAcquirer>
+              <schemeResponse>
+                <transactionIdentifier>999999999</transactionIdentifier>
+              </schemeResponse>
+            </payment>
+            <orderModification orderCode="testcentralcell0008">
+              <refund>
+                <amount value="1000" currencyCode="ARS" exponent="2" debitCreditIndicator="credit"/>
+              </refund>
+            </orderModification>
+          </orderStatus>
+        </reply>
+      </paymentService>
+    RESPONSE
+  end
+
+  def failed_refund_synchronous_response
+    <<~RESPONSE
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN"
+                                      "http://dtd.worldpay.com/paymentService_v1.dtd">
+      <paymentService version="1.4" merchantCode="SPREEDLYCFT">
+        <reply>
+          <orderStatus orderCode="49a9d4e8a52bccbd3a3a6ac228ae0998">
+            <error code="5"><![CDATA[Refund amount too high]]></error>
+          </orderStatus>
         </reply>
       </paymentService>
     RESPONSE
