@@ -137,6 +137,9 @@ module ActiveMerchant #:nodoc:
           post[:metadata] = {}
           post[:metadata][:email] = options[:email]
         end
+        if options[:three_d_secure]
+          add_3d_secure_options(post, options)
+        end
         post
       end
 
@@ -177,6 +180,22 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_3d_secure_options(post, options)
+        three_d_secure = options[:three_d_secure]
+        post[:threeDSecure] = {}
+
+        unless three_d_secure[:require_attempt].nil?
+          post[:threeDSecure][:requireAttempt] = three_d_secure[:require_attempt]
+        end
+        unless three_d_secure[:require_enrolled_card].nil?
+          post[:threeDSecure][:requireEnrolledCard] = three_d_secure[:require_enrolled_card]
+        end
+        unless three_d_secure[:require_successful_liability_shift_for_enrolled_card].nil?
+          post[:threeDSecure][:requireSuccessfulLiabilityShiftForEnrolledCard] =
+            three_d_secure[:require_successful_liability_shift_for_enrolled_card]
+        end
+      end
+
       def parse(body)
         JSON.parse(body)
       end
@@ -213,12 +232,12 @@ module ActiveMerchant #:nodoc:
         return nil unless params
 
         params.map do |key, value|
-          next if value.blank?
-
+          next if value.to_s.blank?
+          
           if value.is_a?(Hash)
             h = {}
             value.each do |k, v|
-              h["#{key}[#{k}]"] = v unless v.blank?
+              h["#{key}[#{k}]"] = v unless v.to_s.blank?
             end
             post_data(h)
           elsif value.is_a?(Array)
