@@ -208,6 +208,7 @@ module ActiveMerchant #:nodoc:
         data[:description] = options[:description]
         data[:store_in_vault] = options[:store]
         data[:sca_exemption] = options[:sca_exemption]
+        data[:sca_exemption_direct_payment_enabled] = options[:sca_exemption_direct_payment_enabled]
 
         commit data, options
       end
@@ -226,6 +227,7 @@ module ActiveMerchant #:nodoc:
         data[:description] = options[:description]
         data[:store_in_vault] = options[:store]
         data[:sca_exemption] = options[:sca_exemption]
+        data[:sca_exemption_direct_payment_enabled] = options[:sca_exemption_direct_payment_enabled]
 
         commit data, options
       end
@@ -397,7 +399,8 @@ module ActiveMerchant #:nodoc:
           REQUEST
           parse(ssl_post(threeds_url, request, headers(action)), action)
         else
-          parse(ssl_post(url, "entrada=#{CGI.escape(xml_request_from(data, options))}", headers), action)
+          xmlreq = xml_request_from(data, options)
+          parse(ssl_post(url, "entrada=#{CGI.escape(xmlreq)}", headers), action)
         end
       end
 
@@ -485,7 +488,14 @@ module ActiveMerchant #:nodoc:
           xml.DS_MERCHANT_TERMINAL           options[:terminal] || @options[:terminal]
           xml.DS_MERCHANT_MERCHANTCODE       @options[:login]
           xml.DS_MERCHANT_MERCHANTSIGNATURE  build_signature(data) unless sha256_authentication?
-          xml.DS_MERCHANT_EXCEP_SCA          data[:sca_exemption] if data[:sca_exemption]
+
+          action = determine_3ds_action(data[:threeds]) if data[:threeds]
+          if action == 'iniciaPeticion' && data[:sca_exemption]
+            xml.DS_MERCHANT_EXCEP_SCA 'Y'
+          else
+            xml.DS_MERCHANT_EXCEP_SCA data[:sca_exemption] if data[:sca_exemption]
+            xml.DS_MERCHANT_DIRECTPAYMENT data[:sca_exemption_direct_payment_enabled] if data[:sca_exemption_direct_payment_enabled]
+          end
 
           # Only when card is present
           if data[:card]

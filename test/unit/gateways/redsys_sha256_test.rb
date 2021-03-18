@@ -12,6 +12,7 @@ class RedsysSHA256Test < Test::Unit::TestCase
     }
     @gateway = RedsysGateway.new(@credentials)
     @credit_card = credit_card('4548812049400004')
+    @threeds2_credit_card = credit_card('4918019199883839')
     @headers = {
       'Content-Type' => 'application/x-www-form-urlencoded'
     }
@@ -123,6 +124,41 @@ class RedsysSHA256Test < Test::Unit::TestCase
     assert_equal response.authorization, '156270437866||'
   end
 
+  def test_successful_purchase_with_3ds
+    @gateway.expects(:ssl_post).returns(successful_authorize_with_3ds_response)
+    response = @gateway.purchase(100, credit_card, { execute_threed: true, order_id: '156270437866' })
+    assert response.test?
+    assert response.params['ds_emv3ds']
+    assert_equal response.message, 'CardConfiguration'
+    assert_equal response.authorization, '156270437866||'
+  end
+
+  def test_successful_purchase_with_3ds2
+    @gateway.expects(:ssl_post).returns(successful_authorize_with_3ds_response)
+    response = @gateway.purchase(100, @threeds2_credit_card, { execute_threed: true, order_id: '156270437866' })
+    assert response.test?
+    assert response.params['ds_emv3ds']
+    assert_equal response.message, 'CardConfiguration'
+    assert_equal response.authorization, '156270437866||'
+  end
+
+  def test_successful_purchase_with_3ds2_and_mit_exemption
+    @gateway.expects(:ssl_post).returns(successful_purchase_with_3ds2_and_mit_exemption_response)
+    response = @gateway.purchase(100, @threeds2_credit_card, { execute_threed: true, order_id: '161608782525', sca_exemption: 'MIT', sca_exemption_direct_payment_enabled: true })
+    assert response.test?
+    assert response.params['ds_emv3ds']
+
+    assert_equal response.message, 'CardConfiguration'
+    assert_equal response.authorization, '161608782525||'
+
+    assert response.params['ds_card_psd2']
+    assert_equal '2.1.0', JSON.parse(response.params['ds_emv3ds'])['protocolVersion']
+    assert_equal 'Y', response.params['ds_card_psd2']
+    assert_equal 'CardConfiguration', response.message
+
+    p response.params['ds_emv3ds']
+  end
+
   def test_3ds_data_passed
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(100, credit_card, { execute_threed: true, order_id: '156270437866', terminal: 12, sca_exemption: 'LWV' })
@@ -130,7 +166,9 @@ class RedsysSHA256Test < Test::Unit::TestCase
       assert_match(/iniciaPeticion/, data)
       assert_match(/<DS_MERCHANT_TERMINAL>12<\/DS_MERCHANT_TERMINAL>/, data)
       assert_match(/\"threeDSInfo\":\"CardData\"/, data)
-      assert_match(/<DS_MERCHANT_EXCEP_SCA>LWV<\/DS_MERCHANT_EXCEP_SCA>/, data)
+
+      # as per docs on Inicia Peticion Y must be passed
+      assert_match(/<DS_MERCHANT_EXCEP_SCA>Y<\/DS_MERCHANT_EXCEP_SCA>/, data)
     end.respond_with(successful_authorize_with_3ds_response)
   end
 
@@ -142,7 +180,9 @@ class RedsysSHA256Test < Test::Unit::TestCase
       assert_match(/iniciaPeticion/, data)
       assert_match(/<DS_MERCHANT_TERMINAL>12<\/DS_MERCHANT_TERMINAL>/, data)
       assert_match(/\"threeDSInfo\":\"CardData\"/, data)
-      assert_match(/<DS_MERCHANT_EXCEP_SCA>LWV<\/DS_MERCHANT_EXCEP_SCA>/, data)
+
+      # as per docs on Inicia Peticion Y must be passed
+      assert_match(/<DS_MERCHANT_EXCEP_SCA>Y<\/DS_MERCHANT_EXCEP_SCA>/, data)
       assert_match(/Juli%C3%A1n/, data)
       assert_match(/descripci%C3%B3n/, data)
     end.respond_with(successful_authorize_with_3ds_response)
@@ -417,6 +457,10 @@ class RedsysSHA256Test < Test::Unit::TestCase
 
   def successful_authorize_with_3ds_response
     '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soapenv:Header/><soapenv:Body><p231:iniciaPeticionResponse xmlns:p231="http://webservice.sis.sermepa.es"><p231:iniciaPeticionReturn>&lt;RETORNOXML&gt;&lt;CODIGO&gt;0&lt;/CODIGO&gt;&lt;INFOTARJETA&gt;&lt;Ds_Order&gt;156270437866&lt;/Ds_Order&gt;&lt;Ds_MerchantCode&gt;091952713&lt;/Ds_MerchantCode&gt;&lt;Ds_Terminal&gt;1&lt;/Ds_Terminal&gt;&lt;Ds_TransactionType&gt;0&lt;/Ds_TransactionType&gt;&lt;Ds_EMV3DS&gt;{&quot;protocolVersion&quot;:&quot;NO_3DS_v2&quot;,&quot;threeDSInfo&quot;:&quot;CardConfiguration&quot;}&lt;/Ds_EMV3DS&gt;&lt;Ds_Signature&gt;LIWUaQh+lwsE0DBNpv2EOYALCY6ZxHDQ6gLvOcWiSB4=&lt;/Ds_Signature&gt;&lt;/INFOTARJETA&gt;&lt;/RETORNOXML&gt;</p231:iniciaPeticionReturn></p231:iniciaPeticionResponse></soapenv:Body></soapenv:Envelope>'
+  end
+
+  def successful_purchase_with_3ds2_and_mit_exemption_response
+    '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soapenv:Header/><soapenv:Body><p231:iniciaPeticionResponse xmlns:p231="http://webservice.sis.sermepa.es"><p231:iniciaPeticionReturn>&lt;RETORNOXML&gt;&lt;CODIGO&gt;0&lt;/CODIGO&gt;&lt;INFOTARJETA&gt;&lt;Ds_Order&gt;161608782525&lt;/Ds_Order&gt;&lt;Ds_MerchantCode&gt;091952713&lt;/Ds_MerchantCode&gt;&lt;Ds_Terminal&gt;12&lt;/Ds_Terminal&gt;&lt;Ds_TransactionType&gt;0&lt;/Ds_TransactionType&gt;&lt;Ds_EMV3DS&gt;{&quot;protocolVersion&quot;:&quot;2.1.0&quot;,&quot;threeDSServerTransID&quot;:&quot;65120b61-28a3-476a-9aac-7b78c63a907a&quot;,&quot;threeDSInfo&quot;:&quot;CardConfiguration&quot;,&quot;threeDSMethodURL&quot;:&quot;https://sis-d.redsys.es/sis-simulador-web/threeDsMethod.jsp&quot;}&lt;/Ds_EMV3DS&gt;&lt;Ds_Card_PSD2&gt;Y&lt;/Ds_Card_PSD2&gt;&lt;Ds_Signature&gt;q4ija0q0x48NBb3O6EFLwEavCUMbtUWR/U38Iv0qSn0=&lt;/Ds_Signature&gt;&lt;/INFOTARJETA&gt;&lt;/RETORNOXML&gt;</p231:iniciaPeticionReturn></p231:iniciaPeticionResponse></soapenv:Body></soapenv:Envelope>'
   end
 
   def failed_authorize_response

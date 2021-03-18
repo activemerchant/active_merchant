@@ -30,6 +30,7 @@
 * SafeCharge (Nuvei): Fix NT related bug [jimilpatel24] #3921
 * Worldpay: Only override cardholdername for 3ds tests [curiousepic] #3918
 * Orbital: Add support for general credit [meagabeth] #3922
+* Banco Sabadell: Ensure sca_exemption field is used #3923
 
 == Version 1.119.0 (February 9th, 2021)
 * Payment Express: support verify/validate [therufs] #3874
