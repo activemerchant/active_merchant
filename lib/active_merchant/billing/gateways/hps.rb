@@ -175,7 +175,7 @@ module ActiveMerchant #:nodoc:
             xml.hps :CardHolderAddr, billing_address[:address1] if billing_address[:address1]
             xml.hps :CardHolderCity, billing_address[:city] if billing_address[:city]
             xml.hps :CardHolderState, billing_address[:state] if billing_address[:state]
-            xml.hps :CardHolderZip, billing_address[:zip] if billing_address[:zip]
+            xml.hps :CardHolderZip, alphanumeric_zip(billing_address[:zip]) if billing_address[:zip]
           end
         end
       end
@@ -437,6 +437,10 @@ module ActiveMerchant #:nodoc:
 
       def test?
         @options[:secret_api_key]&.include?('_cert_')
+      end
+
+      def alphanumeric_zip(zip)
+        zip.gsub(/[^0-9a-z]/i, '')
       end
 
       ISSUER_MESSAGES = {

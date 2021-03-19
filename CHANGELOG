@@ -32,6 +32,7 @@
 * Orbital: Add support for general credit [meagabeth] #3922
 * Banco Sabadell: Ensure sca_exemption field is used #3923
 * Redsys: Refactor XML character escape logic #3925
+* HPS: Strip zip codes of non-alphanumeric characters [dsmcclain] #3926
 
 == Version 1.119.0 (February 9th, 2021)
 * Payment Express: support verify/validate [therufs] #3874

@@ -53,6 +53,13 @@ class RemoteHpsTest < Test::Unit::TestCase
     assert_equal 'Success', response.message
   end
 
+  def test_successful_purchase_with_hyphenated_zip
+    @options[:billing_address][:zip] = '12345-1234'
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
   def test_successful_purchase_no_address
     options = {
       order_id: '1',

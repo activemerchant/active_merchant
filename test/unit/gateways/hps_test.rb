@@ -38,6 +38,18 @@ class HpsTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_zip_formatting
+    @options[:billing_address][:zip] = '12345-1234 '
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/<hps:CardHolderZip>123451234<\/hps:CardHolderZip>/, data)
+    end.respond_with(successful_swipe_purchase_response)
+
+    assert_success response
+  end
+
   def test_successful_check_purchase
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@check_amount, @check, @options)
