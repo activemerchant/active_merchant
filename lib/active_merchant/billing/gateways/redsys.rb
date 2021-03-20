@@ -293,6 +293,10 @@ module ActiveMerchant #:nodoc:
           gsub(%r((<DS_MERCHANT_CVV2>)\s+(</DS_MERCHANT_CVV2>))i, '\1[BLANK]\2')
       end
 
+      def commit(data, options = {})
+        commit_internal data, options
+      end
+
       private
 
       def add_action(data, action, options = {})
@@ -382,7 +386,7 @@ module ActiveMerchant #:nodoc:
                                   threeds_hash[:threeDSInfo] == 'ChallengeResponse'
       end
 
-      def commit(data, options = {})
+      def commit_internal(data, options = {})
         if data[:threeds]
           action = determine_3ds_action(data[:threeds])
           request = <<-REQUEST
