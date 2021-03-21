@@ -155,8 +155,6 @@ class RedsysSHA256Test < Test::Unit::TestCase
     assert_equal '2.1.0', JSON.parse(response.params['ds_emv3ds'])['protocolVersion']
     assert_equal 'Y', response.params['ds_card_psd2']
     assert_equal 'CardConfiguration', response.message
-
-    p response.params['ds_emv3ds']
   end
 
   def test_3ds_data_passed

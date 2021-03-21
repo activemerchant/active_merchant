@@ -470,6 +470,11 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
+      # Template Method to allow AM API clients to override decision to escape, based on their own criteria.
+      def escape_special_chars?(data, options = {})
+        data[:threeds]
+      end
+
       def build_merchant_data(xml, data, options = {})
         # See https://sis-t.redsys.es:25443/sis/services/SerClsWSEntradaV2/wsdl/SerClsWSEntradaV2.wsdl
         # (which results from calling #threeds_url + '?WSDL', https://sis-t.redsys.es:25443/sis/services/SerClsWSEntradaV2?WSDL)
@@ -480,7 +485,7 @@ module ActiveMerchant #:nodoc:
           xml.DS_MERCHANT_AMOUNT             data[:amount]
           xml.DS_MERCHANT_ORDER              data[:order_id]
           xml.DS_MERCHANT_TRANSACTIONTYPE    data[:action]
-          if data[:description] && data[:threeds]
+          if data[:description] && escape_special_chars?(data, options)
             xml.DS_MERCHANT_PRODUCTDESCRIPTION CGI.escape(data[:description])
           else
             xml.DS_MERCHANT_PRODUCTDESCRIPTION data[:description]
@@ -499,7 +504,7 @@ module ActiveMerchant #:nodoc:
 
           # Only when card is present
           if data[:card]
-            if data[:card][:name] && data[:threeds]
+            if data[:card][:name] && escape_special_chars?(data, options)
               xml.DS_MERCHANT_TITULAR    CGI.escape(data[:card][:name])
             else
               xml.DS_MERCHANT_TITULAR    data[:card][:name]
