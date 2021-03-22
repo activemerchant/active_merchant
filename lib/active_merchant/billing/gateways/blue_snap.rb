@@ -100,6 +100,10 @@ module ActiveMerchant
         end
       end
 
+      def payment_fields_token
+        commit(:get_payment_fields_token)
+      end
+
       def capture(money, authorization, options={})
         commit(:capture, :put) do |doc|
           doc.send('card-transaction-type', 'CAPTURE')
@@ -157,6 +161,7 @@ module ActiveMerchant
           add_vaulted_shopper_id(doc, options[:vaulted_shopper_id])
           add_credit_card_info(doc, options)
           add_fraud_info(doc, options)
+          add_3ds(doc, options[:three_d_secure])
           add_order(doc, options)
           doc.send('currency', options[:currency])
         end
@@ -245,6 +250,7 @@ module ActiveMerchant
       def add_auth_only(doc, money, payment_method, options)
         doc.send('card-transaction-type', 'AUTH_ONLY')
         add_order(doc, options)
+        add_3ds(doc, options[:three_d_secure])
         doc.send('store-card', options[:store_card] || false)
         add_amount(doc, money, options)
         add_fraud_info(doc, options)
@@ -306,7 +312,6 @@ module ActiveMerchant
       def add_order(doc, options)
         doc.send('merchant-transaction-id', truncate(options[:order_id], 50)) if options[:order_id]
         doc.send('soft-descriptor', options[:soft_descriptor]) if options[:soft_descriptor]
-        add_3ds(doc, options[:three_d_secure]) if options[:three_d_secure]
         add_level_3_data(doc, options)
       end
 
@@ -322,6 +327,8 @@ module ActiveMerchant
       end
 
       def add_3ds(doc, three_d_secure_options)
+        return unless three_d_secure_options
+
         eci = three_d_secure_options[:eci]
         cavv = three_d_secure_options[:cavv]
         xid = three_d_secure_options[:xid]
@@ -449,9 +456,12 @@ module ActiveMerchant
         doc.send('account-type', BANK_ACCOUNT_TYPE_MAPPING["#{check.account_holder_type}_#{check.account_type}"])
       end
 
-      def parse(response)
+      def parse(response, action = nil)
         return bad_authentication_response if response.code.to_i == 401
         return forbidden_response(response.body) if response.code.to_i == 403
+        if action == :get_payment_fields_token
+          return { payment_fields_token: response.to_hash['location'].first.split('/').last }
+        end
         return {} if response.body.blank?
 
         parsed = {}
@@ -491,13 +501,13 @@ module ActiveMerchant
           resource_url = "#{payment_method_details.resource_url}/#{options[:authorization]}/refund?cancelsubscriptions=false"
           resource_url += "&amount=#{options[:money]}" if options[:money].present?
           payment_method_details = OpenStruct.new(resource_url: resource_url)
-        else
+        elsif action != :get_payment_fields_token
           request = build_xml_request(action, payment_method_details) { |doc| yield(doc) }
         end
 
         response = api_request(action, request, verb, payment_method_details, options)
 
-        parsed = parse(response)
+        parsed = parse(response, action)
 
         succeeded = success_from(action, response)
         Response.new(
@@ -520,6 +530,8 @@ module ActiveMerchant
                      "recurring/ondemand"
                    elsif action == :charge_subscription
                      "recurring/ondemand/#{options[:subscription_id]}"
+                   elsif action == :get_payment_fields_token
+                     "payment-fields-tokens"
                    else
                      payment_method_details.resource_url
                    end

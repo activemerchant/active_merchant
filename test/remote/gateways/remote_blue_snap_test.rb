@@ -46,6 +46,14 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     }
   end
 
+  def test_payment_fields_token
+    assert response = @gateway.payment_fields_token
+    assert_success response
+    assert response.test?
+    assert_equal 'Success', response.message
+    assert_not_empty response.params['payment_fields_token']
+  end
+
   def test_successful_purchase
     subscription = @gateway.store(@credit_card)
     subscription_id = subscription.responses.last.params["subscription-id"]
