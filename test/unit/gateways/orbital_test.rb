@@ -142,6 +142,25 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_equal '5F8ED3D950A43BD63369845D5385B6354C3654B4;2930847bc732eb4e8102cf', response.authorization
   end
 
+  def test_successful_force_capture_with_echeck_prenote
+    @gateway.expects(:ssl_post).returns(successful_force_capture_with_echeck_prenote_response)
+
+    assert response = @gateway.authorize(0, @echeck, order_id: '2', force_capture: true, action_code: 'W9')
+    assert_instance_of Response, response
+    assert_match 'APPROVAL', response.message
+    assert_equal 'Approved and Completed', response.params['status_msg']
+    assert_equal '5F8ED3D950A43BD63369845D5385B6354C3654B4;2930847bc732eb4e8102cf', response.authorization
+  end
+
+  def test_failed_force_capture_with_echeck_prenote
+    @gateway.expects(:ssl_post).returns(failed_force_capture_with_echeck_prenote_response)
+
+    assert response = @gateway.authorize(0, @echeck, order_id: '2', force_capture: true, action_code: 'W7')
+    assert_instance_of Response, response
+    assert_failure response
+    assert_equal ' EWS: Invalid Action Code [W7], For Transaction Type [A].', response.message
+  end
+
   def test_level2_data
     stub_comms do
       @gateway.purchase(50, credit_card, @options.merge(level_2_data: @level2))
@@ -472,7 +491,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1,
-                                         billing_address: address_with_invalid_chars)
+                        billing_address: address_with_invalid_chars)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/456 Main Street</, data)
       assert_match(/Apt. Number One</, data)
@@ -519,7 +538,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.purchase(50, card, order_id: 1,
-                                  billing_address: long_address)
+                        billing_address: long_address)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/456 Stréêt Name is Really Lo</, data)
       assert_match(/Apårtmeñt 123456789012345678</, data)
@@ -581,7 +600,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1,
-                                         billing_address: billing_address)
+                        billing_address: billing_address)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<AVSDestzip>90001/, data)
       assert_match(/<AVSDestaddress1>456 Main St./, data)
@@ -597,7 +616,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     # non-AVS country
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1,
-                                         billing_address: billing_address.merge(dest_country: 'BR'))
+                        billing_address: billing_address.merge(dest_country: 'BR'))
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<AVSDestcountryCode></, data)
     end.respond_with(successful_purchase_response)
@@ -630,7 +649,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def test_name_sends_for_echeck_with_address
     name_test_check = check(name: 'John Jacob Jingleheimer Smith-Jones',
-                   account_number: '072403004', account_type: 'checking', routing_number: '072403004')
+                            account_number: '072403004', account_type: 'checking', routing_number: '072403004')
 
     response = stub_comms do
       @gateway.purchase(50, name_test_check, order_id: 1)
@@ -1365,6 +1384,14 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def successful_force_capture_with_echeck_response
     '<?xml version="1.0" encoding="UTF-8"?><Response><NewOrderResp><IndustryType></IndustryType><MessageType>FC</MessageType><MerchantID>041756</MerchantID><TerminalID>001</TerminalID><CardBrand>EC</CardBrand><AccountNum></AccountNum><OrderID>2930847bc732eb4e8102cf</OrderID><TxRefNum>5F8ED3D950A43BD63369845D5385B6354C3654B4</TxRefNum><TxRefIdx>2</TxRefIdx><ProcStatus>0</ProcStatus><ApprovalStatus>1</ApprovalStatus><RespCode>00</RespCode><AVSRespCode></AVSRespCode><CVV2RespCode></CVV2RespCode><AuthCode></AuthCode><RecurringAdviceCd></RecurringAdviceCd><CAVVRespCode></CAVVRespCode><StatusMsg>Approved and Completed</StatusMsg><RespMsg>APPROVAL        </RespMsg><HostRespCode></HostRespCode><HostAVSRespCode></HostAVSRespCode><HostCVV2RespCode></HostCVV2RespCode><CustomerRefNum></CustomerRefNum><CustomerName></CustomerName><ProfileProcStatus></ProfileProcStatus><CustomerProfileMessage></CustomerProfileMessage><RespTime>081105</RespTime><PartialAuthOccurred></PartialAuthOccurred><RequestedAmount></RequestedAmount><RedeemedAmount></RedeemedAmount><RemainingBalance></RemainingBalance><CountryFraudFilterStatus></CountryFraudFilterStatus><IsoCountryCode></IsoCountryCode></NewOrderResp></Response>'
+  end
+
+  def successful_force_capture_with_echeck_prenote_response
+    '<?xml version="1.0" encoding="UTF-8"?><Response><NewOrderResp><IndustryType></IndustryType><MessageType>FC</MessageType><MerchantID>041756</MerchantID><TerminalID>001</TerminalID><CardBrand>EC</CardBrand><AccountNum></AccountNum><OrderID>2930847bc732eb4e8102cf</OrderID><TxRefNum>5F8ED3D950A43BD63369845D5385B6354C3654B4</TxRefNum><TxRefIdx>2</TxRefIdx><ProcStatus>0</ProcStatus><ApprovalStatus>1</ApprovalStatus><RespCode>00</RespCode><AVSRespCode></AVSRespCode><CVV2RespCode></CVV2RespCode><AuthCode></AuthCode><RecurringAdviceCd></RecurringAdviceCd><CAVVRespCode></CAVVRespCode><StatusMsg>Approved and Completed</StatusMsg><RespMsg>APPROVAL        </RespMsg><HostRespCode></HostRespCode><HostAVSRespCode></HostAVSRespCode><HostCVV2RespCode></HostCVV2RespCode><CustomerRefNum></CustomerRefNum><CustomerName></CustomerName><ProfileProcStatus></ProfileProcStatus><CustomerProfileMessage></CustomerProfileMessage><RespTime>081105</RespTime><PartialAuthOccurred></PartialAuthOccurred><RequestedAmount></RequestedAmount><RedeemedAmount></RedeemedAmount><RemainingBalance></RemainingBalance><CountryFraudFilterStatus></CountryFraudFilterStatus><IsoCountryCode></IsoCountryCode></NewOrderResp></Response>'
+  end
+
+  def failed_force_capture_with_echeck_prenote_response
+    '<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response><QuickResp><ProcStatus>19784</ProcStatus><StatusMsg> EWS: Invalid Action Code [W7], For Transaction Type [A].</StatusMsg></QuickResp></Response>'
   end
 
   def failed_echeck_for_invalid_routing_response

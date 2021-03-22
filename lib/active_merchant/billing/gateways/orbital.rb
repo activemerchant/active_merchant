@@ -199,6 +199,14 @@ module ActiveMerchant #:nodoc:
 
       # A – Authorization request
       def authorize(money, payment_source, options = {})
+        # ECP for Orbital requires $0 prenotes so ensure
+        # if we are doing a force capture with a check, that
+        # we do a purchase here
+        if options[:force_capture] && payment_source.is_a?(Check) &&
+           (options[:action_code].include?('W8') || options[:action_code].include?('W9'))
+          return purchase(money, payment_source, options)
+        end
+
         order = build_new_order_xml(AUTH_ONLY, money, payment_source, options) do |xml|
           add_payment_source(xml, payment_source, options)
           add_address(xml, payment_source, options)

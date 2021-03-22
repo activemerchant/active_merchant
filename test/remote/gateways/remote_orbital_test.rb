@@ -490,6 +490,25 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_equal 'Error validating amount. Must be numerical and greater than 0 [-1]', capture.message
   end
 
+  def test_successful_force_capture_with_echeck_prenote_valid_action_code
+    @options[:force_capture] = true
+    @options[:action_code] = 'W8'
+    assert response = @echeck_gateway.authorize(0, @echeck, @options)
+    assert_success response
+    assert_match 'APPROVAL', response.message
+    assert_equal 'Approved and Completed', response.params['status_msg']
+    assert_false response.authorization.blank?
+  end
+
+  def test_failed_force_capture_with_echeck_prenote_invalid_action_code
+    @options[:force_capture] = true
+    @options[:action_code] = 'W7'
+    assert authorize = @echeck_gateway.authorize(0, @echeck, @options)
+    assert_failure authorize
+    assert_equal '19784', authorize.params['proc_status']
+    assert_equal ' EWS: Invalid Action Code [W7], For Transaction Type [A].', authorize.message
+  end
+
   # Amounts of x.01 will fail
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(101, @declined_card, @options)
