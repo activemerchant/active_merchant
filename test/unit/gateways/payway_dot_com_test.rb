@@ -151,40 +151,109 @@ class PaywayDotComTest < Test::Unit::TestCase
 
   def test_scrub
     assert @gateway.supports_scrubbing?
-    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+    assert_equal post_scrubbed, @gateway.scrub(pre_scrubbed)
+  end
+
+  def test_scrub_failed_purchase
+    assert @gateway.supports_scrubbing?
+    assert_equal post_scrubbed_failed_purchase, @gateway.scrub(pre_scrubbed_failed_purchase)
   end
 
   private
 
   def pre_scrubbed
     %q(
-    opening connection to devedgilpayway.net:443...
-    opened
-    starting SSL for devedgilpayway.net:443...
-    SSL established, protocol: TLSv1.2, cipher: AES256-GCM-SHA384
-    <- "{\"userName\":\"sprerestwsdev\",\"password\":\"sprerestwsdev1!\",\"companyId\":\"3\",\"accountInputMode\":\"primaryAccountNumber\",\"cardAccount\":{\"accountNumber\":\"4000100011112224\",\"fsv\":\"737\",\"expirationDate\":\"092022\",\"email\":null,\"firstName\":\"Jim\",\"lastName\":\"Smith\",\"address\":\"456 My Street Apt 1\",\"city\":\"Ottawa\",\"state\":\"ON\",\"zip\":\"K1C2N6\",\"phone\":\"(555)555-5555\"},\"cardTransaction\":{\"amount\":\"100\",\"eciType\":\"1\",\"idSource\":\"67\"},\"request\":\"sale\"}"
-    -> "HTTP/1.1 200 \r\n"
-    -> "Access-Control-Allow-Origin: *\r\n"
-    -> "Access-Control-Expose-Headers: Access-Control-Allow-Origin,Access-Control-Allow-Credentials\r\n"
-    -> "Content-Encoding: application/json\r\n"
-    -> "Content-Type: application/json\r\n"
-    -> "Content-Length: 2051\r\n"
+      opening connection to devedgilpayway.net:443...
+      opened
+      starting SSL for devedgilpayway.net:443...
+      SSL established, protocol: TLSv1.2, cipher: AES256-GCM-SHA384
+      <- "POST /PaywayWS/Payment/CreditCard HTTP/1.1\r\nContent-Type: application/json\r\nAccept: application/json\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nUser-Agent: Ruby\r\nHost: devedgilpayway.net\r\nContent-Length: 423\r\n\r\n"
+      <- "{\"userName\":\"sprerestwsdev\",\"password\":\"sprerestwsdev1!\",\"companyId\":\"3\",\"accountInputMode\":\"primaryAccountNumber\",\"cardAccount\":{\"accountNumber\":\"4000100011112224\",\"fsv\":\"737\",\"expirationDate\":\"092022\",\"firstName\":\"Jim\",\"lastName\":\"Smith\",\"address\":\"456 My Street Apt 1\",\"city\":\"Ottawa\",\"state\":\"ON\",\"zip\":\"K1C2N6\",\"phone\":\"(555)555-5555\"},\"cardTransaction\":{\"amount\":\"100\",\"eciType\":\"1\",\"sourceId\":\"67\"},\"request\":\"sale\"}"
+      -> "HTTP/1.1 200 \r\n"
+      -> "Access-Control-Allow-Origin: *\r\n"
+      -> "Access-Control-Expose-Headers: Access-Control-Allow-Origin,Access-Control-Allow-Credentials\r\n"
+      -> "Content-Encoding: application/json\r\n"
+      -> "Content-Type: application/json\r\n"
+      -> "Content-Length: 2051\r\n"
+      -> "Date: Mon, 22 Mar 2021 19:06:00 GMT\r\n"
+      -> "Connection: close\r\n"
+      -> "\r\n"
+      reading 2051 bytes...
+      -> "{\n    \"cardAccount\": {\n        \"accountNotes1\": \"\",\n        \"accountNotes2\": \"\",\n        \"accountNotes3\": \"\",\n        \"accountNumber\": \"400010******2224\",\n        \"account_number_masked\": \"400010******2224\",\n        \"address\": \"456 My Street Apt 1\",\n        \"auLastUpdate\": \"1999-01-01 00:00:00-05\",\n        \"auUpdateType\": 0,\n        \"cardType\": 1,\n        \"city\": \"Ottawa\",\n        \"commercialCardType\": 0,\n        \"divisionId\": 7,\n        \"email\": \"\",\n        \"expirationDate\": \"0922\",\n        \"firstFour\": \"4000\",\n        \"firstName\": \"Jim\",\n        \"fsv\": \"123\",\n        \"inputMode\": 1,\n        \"lastFour\": \"2224\",\n        \"lastName\": \"Smith\",\n        \"lastUsed\": \"1999-01-01 00:00:00-05\",\n        \"middleName\": \"\",\n        \"onlinePaymentCryptogram\": \"\",\n        \"p2peInput\": \"\",\n        \"paywayToken\": 10163736,\n        \"phone\": \"5555555555\",\n        \"state\": \"ON\",\n        \"status\": 2,\n        \"zip\": \"K1C2N6\"\n    },\n    \"cardTransaction\": {\n        \"addressVerificationResults\": \"\",\n        \"amount\": 100,\n        \"authorizationCode\": \"0987654321\",\n        \"authorizedTime\": \"2021-03-22 00:00:00-04\",\n        \"capturedTime\": \"2021-03-22 15:06:00\",\n        \"cbMode\": 2,\n        \"eciType\": 1,\n        \"fraudSecurityResults\": \"\",\n        \"fsvIndicator\": \"\",\n        \"name\": \"6720210322150600930144\",\n        \"pfpstatus\": 3601,\n        \"pfpstatusString\": \"PFP Not Enabled\",\n        \"processorErrorMessage\": \"\",\n        \"processorOrderId\": \"\",\n        \"processorRecurringAdvice\": \"\",\n        \"processorResponseDate\": \"\",\n        \"processorResultCode\": \"\",\n        \"processorSequenceNumber\": 0,\n        \"processorSoftDescriptor\": \"\",\n        \"referenceNumber\": \"123456\",\n        \"resultCode\": 0,\n        \"sessionToken_string\": \"0\",\n        \"settledTime\": \"1999-01-01 00:00\",\n        \"sourceId\": 67,\n        \"status\": 4,\n        \"tax\": 0,\n        \"testResultAVS\": \"\",\n        \"testResultFSV\": \"\",\n        \"transactionNotes1\": \"\",\n        \"transactionNotes2\": \"\",\n        \"transactionNotes3\": \"\"\n    },\n    \"paywayCode\": \"5000\",\n    \"paywayMessage\": \"\"\n}"
+      read 2051 bytes
+      Conn close
     )
   end
 
   def post_scrubbed
     %q(
-    opening connection to devedgilpayway.net:443...
-    opened
-    starting SSL for devedgilpayway.net:443...
-    SSL established, protocol: TLSv1.2, cipher: AES256-GCM-SHA384
-    <- "{\"userName\":\"sprerestwsdev\",\"password\":\"[FILTERED]\",\"companyId\":\"3\",\"accountInputMode\":\"primaryAccountNumber\",\"cardAccount\":{\"accountNumber\":\"[FILTERED]\",\"fsv\":\"[FILTERED]\",\"expirationDate\":\"092022\",\"email\":null,\"firstName\":\"Jim\",\"lastName\":\"Smith\",\"address\":\"456 My Street Apt 1\",\"city\":\"Ottawa\",\"state\":\"ON\",\"zip\":\"K1C2N6\",\"phone\":\"(555)555-5555\"},\"cardTransaction\":{\"amount\":\"100\",\"eciType\":\"1\",\"idSource\":\"67\"},\"request\":\"sale\"}"
-    -> "HTTP/1.1 200 \r\n"
-    -> "Access-Control-Allow-Origin: *\r\n"
-    -> "Access-Control-Expose-Headers: Access-Control-Allow-Origin,Access-Control-Allow-Credentials\r\n"
-    -> "Content-Encoding: application/json\r\n"
-    -> "Content-Type: application/json\r\n"
-    -> "Content-Length: 2051\r\n"
+      opening connection to devedgilpayway.net:443...
+      opened
+      starting SSL for devedgilpayway.net:443...
+      SSL established, protocol: TLSv1.2, cipher: AES256-GCM-SHA384
+      <- "POST /PaywayWS/Payment/CreditCard HTTP/1.1\r\nContent-Type: application/json\r\nAccept: application/json\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nUser-Agent: Ruby\r\nHost: devedgilpayway.net\r\nContent-Length: 423\r\n\r\n"
+      <- "{\"userName\":\"sprerestwsdev\",\"password\":\"[FILTERED]\",\"companyId\":\"3\",\"accountInputMode\":\"primaryAccountNumber\",\"cardAccount\":{\"accountNumber\":\"[FILTERED]\",\"fsv\":\"[FILTERED]\",\"expirationDate\":\"092022\",\"firstName\":\"Jim\",\"lastName\":\"Smith\",\"address\":\"456 My Street Apt 1\",\"city\":\"Ottawa\",\"state\":\"ON\",\"zip\":\"K1C2N6\",\"phone\":\"(555)555-5555\"},\"cardTransaction\":{\"amount\":\"100\",\"eciType\":\"1\",\"sourceId\":\"67\"},\"request\":\"sale\"}"
+      -> "HTTP/1.1 200 \r\n"
+      -> "Access-Control-Allow-Origin: *\r\n"
+      -> "Access-Control-Expose-Headers: Access-Control-Allow-Origin,Access-Control-Allow-Credentials\r\n"
+      -> "Content-Encoding: application/json\r\n"
+      -> "Content-Type: application/json\r\n"
+      -> "Content-Length: 2051\r\n"
+      -> "Date: Mon, 22 Mar 2021 19:06:00 GMT\r\n"
+      -> "Connection: close\r\n"
+      -> "\r\n"
+      reading 2051 bytes...
+      -> "{\n    \"cardAccount\": {\n        \"accountNotes1\": \"\",\n        \"accountNotes2\": \"\",\n        \"accountNotes3\": \"\",\n        \"accountNumber\": \"[FILTERED]\",\n        \"account_number_masked\": \"400010******2224\",\n        \"address\": \"456 My Street Apt 1\",\n        \"auLastUpdate\": \"1999-01-01 00:00:00-05\",\n        \"auUpdateType\": 0,\n        \"cardType\": 1,\n        \"city\": \"Ottawa\",\n        \"commercialCardType\": 0,\n        \"divisionId\": 7,\n        \"email\": \"\",\n        \"expirationDate\": \"0922\",\n        \"firstFour\": \"4000\",\n        \"firstName\": \"Jim\",\n        \"fsv\": \"[FILTERED]\",\n        \"inputMode\": 1,\n        \"lastFour\": \"2224\",\n        \"lastName\": \"Smith\",\n        \"lastUsed\": \"1999-01-01 00:00:00-05\",\n        \"middleName\": \"\",\n        \"onlinePaymentCryptogram\": \"\",\n        \"p2peInput\": \"\",\n        \"paywayToken\": 10163736,\n        \"phone\": \"5555555555\",\n        \"state\": \"ON\",\n        \"status\": 2,\n        \"zip\": \"K1C2N6\"\n    },\n    \"cardTransaction\": {\n        \"addressVerificationResults\": \"\",\n        \"amount\": 100,\n        \"authorizationCode\": \"0987654321\",\n        \"authorizedTime\": \"2021-03-22 00:00:00-04\",\n        \"capturedTime\": \"2021-03-22 15:06:00\",\n        \"cbMode\": 2,\n        \"eciType\": 1,\n        \"fraudSecurityResults\": \"\",\n        \"fsvIndicator\": \"\",\n        \"name\": \"6720210322150600930144\",\n        \"pfpstatus\": 3601,\n        \"pfpstatusString\": \"PFP Not Enabled\",\n        \"processorErrorMessage\": \"\",\n        \"processorOrderId\": \"\",\n        \"processorRecurringAdvice\": \"\",\n        \"processorResponseDate\": \"\",\n        \"processorResultCode\": \"\",\n        \"processorSequenceNumber\": 0,\n        \"processorSoftDescriptor\": \"\",\n        \"referenceNumber\": \"123456\",\n        \"resultCode\": 0,\n        \"sessionToken_string\": \"0\",\n        \"settledTime\": \"1999-01-01 00:00\",\n        \"sourceId\": 67,\n        \"status\": 4,\n        \"tax\": 0,\n        \"testResultAVS\": \"\",\n        \"testResultFSV\": \"\",\n        \"transactionNotes1\": \"\",\n        \"transactionNotes2\": \"\",\n        \"transactionNotes3\": \"\"\n    },\n    \"paywayCode\": \"5000\",\n    \"paywayMessage\": \"\"\n}"
+      read 2051 bytes
+      Conn close
+    )
+  end
+
+  def pre_scrubbed_failed_purchase
+    %q(
+      opening connection to devedgilpayway.net:443...
+      opened
+      starting SSL for devedgilpayway.net:443...
+      SSL established, protocol: TLSv1.2, cipher: AES256-GCM-SHA384
+      <- "POST /PaywayWS/Payment/CreditCard HTTP/1.1\r\nContent-Type: application/json\r\nAccept: application/json\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nUser-Agent: Ruby\r\nHost: devedgilpayway.net\r\nContent-Length: 423\r\n\r\n"
+      <- "{\"userName\":\"sprerestwsdev\",\"password\":\"sprerestwsdev1!\",\"companyId\":\"3\",\"accountInputMode\":\"primaryAccountNumber\",\"cardAccount\":{\"accountNumber\":\"4000300011112221\",\"fsv\":\"123\",\"expirationDate\":\"092022\",\"firstName\":\"Jim\",\"lastName\":\"Smith\",\"address\":\"456 My Street Apt 1\",\"city\":\"Ottawa\",\"state\":\"ON\",\"zip\":\"K1C2N6\",\"phone\":\"(555)555-5555\"},\"cardTransaction\":{\"amount\":\"102\",\"eciType\":\"1\",\"sourceId\":\"67\"},\"request\":\"sale\"}"
+      -> "HTTP/1.1 200 \r\n"
+      -> "Access-Control-Allow-Origin: *\r\n"
+      -> "Access-Control-Expose-Headers: Access-Control-Allow-Origin,Access-Control-Allow-Credentials\r\n"
+      -> "Content-Encoding: application/json\r\n"
+      -> "Content-Type: application/json\r\n"
+      -> "Content-Length: 2013\r\n"
+      -> "Date: Tue, 23 Mar 2021 15:04:53 GMT\r\n"
+      -> "Connection: close\r\n"
+      -> "\r\n"
+      reading 2013 bytes...
+      -> "{\n    \"cardAccount\": {\n        \"accountNotes1\": \"\",\n        \"accountNotes2\": \"\",\n        \"accountNotes3\": \"\",\n        \"accountNumber\": \"400030******2221\",\n        \"account_number_masked\": \"400030******2221\",\n        \"address\": \"456 My Street Apt 1\",\n        \"auLastUpdate\": \"1999-01-01 00:00\",\n        \"auUpdateType\": 0,\n        \"cardType\": 1,\n        \"city\": \"Ottawa\",\n        \"commercialCardType\": 0,\n        \"divisionId\": 7,\n        \"email\": \"\",\n        \"expirationDate\": \"0922\",\n        \"firstFour\": \"4000\",\n        \"firstName\": \"Jim\",\n        \"fsv\": \"123\",\n        \"inputMode\": 1,\n        \"lastFour\": \"2221\",\n        \"lastName\": \"Smith\",\n        \"lastUsed\": \"1999-01-01 00:00\",\n        \"middleName\": \"\",\n        \"onlinePaymentCryptogram\": \"\",\n        \"p2peInput\": \"\",\n        \"paywayToken\": 0,\n        \"phone\": \"5555555555\",\n        \"state\": \"ON\",\n        \"status\": 2,\n        \"zip\": \"K1C2N6\"\n    },\n    \"cardTransaction\": {\n        \"addressVerificationResults\": \"\",\n        \"amount\": 0,\n        \"authorizationCode\": \"\",\n        \"authorizedTime\": \"1999-01-01\",\n        \"capturedTime\": \"1999-01-01\",\n        \"cbMode\": 0,\n        \"eciType\": 0,\n        \"fraudSecurityResults\": \"\",\n        \"fsvIndicator\": \"\",\n        \"name\": \"\",\n        \"pfpstatus\": 3601,\n        \"pfpstatusString\": \"PFP Not Enabled\",\n        \"processorErrorMessage\": \"\",\n        \"processorOrderId\": \"\",\n        \"processorRecurringAdvice\": \"\",\n        \"processorResponseDate\": \"\",\n        \"processorResultCode\": \"\",\n        \"processorSequenceNumber\": 0,\n        \"processorSoftDescriptor\": \"\",\n        \"referenceNumber\": \"\",\n        \"resultCode\": 1,\n        \"sessionToken_string\": \"0\",\n        \"settledTime\": \"1999-01-01 00:00\",\n        \"sourceId\": 0,\n        \"status\": 0,\n        \"tax\": 0,\n        \"testResultAVS\": \"\",\n        \"testResultFSV\": \"\",\n        \"transactionNotes1\": \"\",\n        \"transactionNotes2\": \"\",\n        \"transactionNotes3\": \"\"\n    },\n    \"paywayCode\": \"5035\",\n    \"paywayMessage\": \"Invalid account number: 4000300011112221\"\n}"
+      read 2013 bytes
+      Conn close
+    )
+  end
+
+  def post_scrubbed_failed_purchase
+    %q(
+      opening connection to devedgilpayway.net:443...
+      opened
+      starting SSL for devedgilpayway.net:443...
+      SSL established, protocol: TLSv1.2, cipher: AES256-GCM-SHA384
+      <- "POST /PaywayWS/Payment/CreditCard HTTP/1.1\r\nContent-Type: application/json\r\nAccept: application/json\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nUser-Agent: Ruby\r\nHost: devedgilpayway.net\r\nContent-Length: 423\r\n\r\n"
+      <- "{\"userName\":\"sprerestwsdev\",\"password\":\"[FILTERED]\",\"companyId\":\"3\",\"accountInputMode\":\"primaryAccountNumber\",\"cardAccount\":{\"accountNumber\":\"[FILTERED]\",\"fsv\":\"[FILTERED]\",\"expirationDate\":\"092022\",\"firstName\":\"Jim\",\"lastName\":\"Smith\",\"address\":\"456 My Street Apt 1\",\"city\":\"Ottawa\",\"state\":\"ON\",\"zip\":\"K1C2N6\",\"phone\":\"(555)555-5555\"},\"cardTransaction\":{\"amount\":\"102\",\"eciType\":\"1\",\"sourceId\":\"67\"},\"request\":\"sale\"}"
+      -> "HTTP/1.1 200 \r\n"
+      -> "Access-Control-Allow-Origin: *\r\n"
+      -> "Access-Control-Expose-Headers: Access-Control-Allow-Origin,Access-Control-Allow-Credentials\r\n"
+      -> "Content-Encoding: application/json\r\n"
+      -> "Content-Type: application/json\r\n"
+      -> "Content-Length: 2013\r\n"
+      -> "Date: Tue, 23 Mar 2021 15:04:53 GMT\r\n"
+      -> "Connection: close\r\n"
+      -> "\r\n"
+      reading 2013 bytes...
+      -> "{\n    \"cardAccount\": {\n        \"accountNotes1\": \"\",\n        \"accountNotes2\": \"\",\n        \"accountNotes3\": \"\",\n        \"accountNumber\": \"[FILTERED]\",\n        \"account_number_masked\": \"400030******2221\",\n        \"address\": \"456 My Street Apt 1\",\n        \"auLastUpdate\": \"1999-01-01 00:00\",\n        \"auUpdateType\": 0,\n        \"cardType\": 1,\n        \"city\": \"Ottawa\",\n        \"commercialCardType\": 0,\n        \"divisionId\": 7,\n        \"email\": \"\",\n        \"expirationDate\": \"0922\",\n        \"firstFour\": \"4000\",\n        \"firstName\": \"Jim\",\n        \"fsv\": \"[FILTERED]\",\n        \"inputMode\": 1,\n        \"lastFour\": \"2221\",\n        \"lastName\": \"Smith\",\n        \"lastUsed\": \"1999-01-01 00:00\",\n        \"middleName\": \"\",\n        \"onlinePaymentCryptogram\": \"\",\n        \"p2peInput\": \"\",\n        \"paywayToken\": 0,\n        \"phone\": \"5555555555\",\n        \"state\": \"ON\",\n        \"status\": 2,\n        \"zip\": \"K1C2N6\"\n    },\n    \"cardTransaction\": {\n        \"addressVerificationResults\": \"\",\n        \"amount\": 0,\n        \"authorizationCode\": \"\",\n        \"authorizedTime\": \"1999-01-01\",\n        \"capturedTime\": \"1999-01-01\",\n        \"cbMode\": 0,\n        \"eciType\": 0,\n        \"fraudSecurityResults\": \"\",\n        \"fsvIndicator\": \"\",\n        \"name\": \"\",\n        \"pfpstatus\": 3601,\n        \"pfpstatusString\": \"PFP Not Enabled\",\n        \"processorErrorMessage\": \"\",\n        \"processorOrderId\": \"\",\n        \"processorRecurringAdvice\": \"\",\n        \"processorResponseDate\": \"\",\n        \"processorResultCode\": \"\",\n        \"processorSequenceNumber\": 0,\n        \"processorSoftDescriptor\": \"\",\n        \"referenceNumber\": \"\",\n        \"resultCode\": 1,\n        \"sessionToken_string\": \"0\",\n        \"settledTime\": \"1999-01-01 00:00\",\n        \"sourceId\": 0,\n        \"status\": 0,\n        \"tax\": 0,\n        \"testResultAVS\": \"\",\n        \"testResultFSV\": \"\",\n        \"transactionNotes1\": \"\",\n        \"transactionNotes2\": \"\",\n        \"transactionNotes3\": \"\"\n    },\n    \"paywayCode\": \"5035\",\n    \"paywayMessage\": \"Invalid account number: [FILTERED]\"\n}"
+      read 2013 bytes
+      Conn close
     )
   end
 

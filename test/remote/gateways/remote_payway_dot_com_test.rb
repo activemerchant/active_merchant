@@ -133,4 +133,14 @@ class RemotePaywayDotComTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:password], transcript)
   end
+
+  def test_transcript_scrubbing_failed_purchase
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @invalid_luhn_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+    assert_scrubbed(@invalid_luhn_card.number, transcript)
+    assert_scrubbed(@invalid_luhn_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
+  end
 end

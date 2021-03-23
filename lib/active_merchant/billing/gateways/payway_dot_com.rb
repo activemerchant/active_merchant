@@ -56,7 +56,10 @@ module ActiveMerchant #:nodoc:
       SCRUB_PATTERNS = [
         %r(("password\\?":\\?")[^\\]+),
         %r(("fsv\\?":\\?")\d+),
-        %r(("accountNumber\\?":\\?")\d+)
+        %r(("fsv\\?": \\?")\d+),
+        %r(("accountNumber\\?":\\?")\d+),
+        %r(("accountNumber\\?": \\?")[^\\]+),
+        %r(("Invalid account number: )\d+)
       ].freeze
 
       SCRUB_REPLACEMENT = '\1[FILTERED]'
