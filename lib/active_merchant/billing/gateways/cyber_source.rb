@@ -263,6 +263,7 @@ module ActiveMerchant #:nodoc:
         add_threeds_services(xml, options)
         add_payment_network_token(xml) if network_tokenization?(creditcard_or_reference)
         add_business_rules_data(xml, creditcard_or_reference, options)
+        add_stored_credential_subsequent_auth(xml, options)
         add_stored_credential_options(xml, options)
         xml.target!
       end
@@ -302,6 +303,7 @@ module ActiveMerchant #:nodoc:
           add_payment_network_token(xml) if network_tokenization?(payment_method_or_reference)
           add_business_rules_data(xml, payment_method_or_reference, options) unless options[:pinless_debit_card]
         end
+        add_stored_credential_subsequent_auth(xml, options)
         add_stored_credential_options(xml, options)
         xml.target!
       end
@@ -725,16 +727,19 @@ module ActiveMerchant #:nodoc:
         country_code&.code(:alpha2)
       end
 
-      def add_stored_credential_options(xml, options={})
+      # Temporary fix, revert and cherry-pick commits from the upstream AM
+      def add_stored_credential_subsequent_auth(xml, options = {})
         return unless options[:stored_credential]
-        if options[:stored_credential][:initial_transaction]
-          xml.tag! 'subsequentAuthFirst', 'true'
-        elsif options[:stored_credential][:reason_type] == 'unscheduled'
-          xml.tag! 'subsequentAuth', 'true'
-          xml.tag! 'subsequentAuthTransactionID', options[:stored_credential][:network_transaction_id]
-        else
-          xml.tag! 'subsequentAuthTransactionID', options[:stored_credential][:network_transaction_id]
-        end
+
+        xml.tag! 'subsequentAuth', 'true' if options.dig(:stored_credential, :initiator) == 'merchant'
+      end
+
+      # Temporary fix, revert and cherry-pick commits from the upstream AM
+      def add_stored_credential_options(xml, options = {})
+        return unless options[:stored_credential]
+
+        xml.tag! 'subsequentAuthFirst', 'true' if options.dig(:stored_credential, :initial_transaction)
+        xml.tag! 'subsequentAuthTransactionID', options.dig(:stored_credential, :network_transaction_id) if options.dig(:stored_credential, :initiator) == 'merchant'
       end
 
       # Where we actually build the full SOAP request using builder
