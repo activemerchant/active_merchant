@@ -34,6 +34,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_merchant_defined_fields(post, options)
         add_stored_credentials_options(post, options)
+        add_descriptor(post, options)
 
         commit("sale", post)
       end
@@ -214,6 +215,12 @@ module ActiveMerchant #:nodoc:
         end
 
         post[:initial_transaction_id] = stored_credential[:network_transaction_id]
+      end
+
+      def add_descriptor(post, options)
+        return unless options[:descriptor]
+
+        post[:descriptor] = options[:descriptor]
       end
 
       def exp_date(payment_method)

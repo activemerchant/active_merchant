@@ -31,6 +31,14 @@ class RemoteNmiTest < Test::Unit::TestCase
     assert response.authorization
   end
 
+  def test_successful_purchase_with_descriptor
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(descriptor: 'trial end'))
+    assert_success response
+    assert response.test?
+    assert_equal 'Succeeded', response.message
+    assert response.authorization
+  end
+
   def test_successful_purchase_sans_cvv
     @credit_card.verification_value = nil
     assert response = @gateway.purchase(@amount, @credit_card, @options)

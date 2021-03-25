@@ -51,6 +51,18 @@ class NmiTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_purchase_with_descriptor_includes_descriptor
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, descriptor: 'trial end')
+    end.check_request do |endpoint, data, headers|
+      assert_match(/descriptor=trial\+end/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert response.test?
+    assert_equal "2762757839#creditcard", response.authorization
+  end
+
   def test_failed_purchase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card)
