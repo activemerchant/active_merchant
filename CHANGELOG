@@ -36,6 +36,7 @@
 * Orbital: $0 PreNote using authorize for eCheck force_capture [jessiagee] #3927
 * Worldpay: synchronous response changes [naashton] #3928
 * PaywayDotCom: Add more thorough scrubbing [tatsianaclifton] #3929
+* Remove CONTRIBUTING.md and update README.md to reflect new repository wiki [dsmcclain] #3930
 
 == Version 1.119.0 (February 9th, 2021)
 * Payment Express: support verify/validate [therufs] #3874

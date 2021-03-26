@@ -17,7 +17,7 @@ from an ever-growing set of contributors.
 See [GettingStarted.md](GettingStarted.md) if you want to learn more about using Active Merchant in your
 applications.
 
-If you'd like to contribute to Active Merchant, please start with our [contribution guide](CONTRIBUTING.md).
+If you'd like to contribute to Active Merchant, please start with our [Contribution Guide](https://github.com/activemerchant/active_merchant/wiki/Contributing).
 
 ## Installation
 
@@ -80,6 +80,8 @@ if credit_card.validate.empty?
   end
 end
 ```
+
+## Contributing
 
 For more in-depth documentation and tutorials, see [GettingStarted.md](GettingStarted.md) and the
 [API documentation](http://www.rubydoc.info/github/activemerchant/active_merchant/).
