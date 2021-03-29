@@ -79,6 +79,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
+        add_stored_credential_options(post, options)
         add_transaction_data(post, options)
         add_3ds(post, options)
       end
@@ -136,6 +137,26 @@ module ActiveMerchant #:nodoc:
         post[:payment_type] = 'Recurring' if options[:transaction_indicator] == 2
         post[:payment_type] = 'MOTO' if options[:transaction_indicator] == 3 || options.dig(:metadata, :manual_entry)
         post[:previous_payment_id] = options[:previous_charge_id] if options[:previous_charge_id]
+      end
+
+      def add_stored_credential_options(post, options = {})
+        return unless options[:stored_credential]
+
+        case options[:stored_credential][:initial_transaction]
+        when true
+          post[:merchant_initiated] = false
+        when false
+          post[:'source.stored'] = true
+          post[:previous_payment_id] = options[:stored_credential][:network_transaction_id] if options[:stored_credential][:network_transaction_id]
+          post[:merchant_initiated] = true
+        end
+
+        case options[:stored_credential][:reason_type]
+        when 'recurring' || 'installment'
+          post[:payment_type] = 'Recurring'
+        when 'unscheduled'
+          return
+        end
       end
 
       def add_3ds(post, options)

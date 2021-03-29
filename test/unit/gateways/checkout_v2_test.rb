@@ -128,6 +128,42 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_successful_purchase_with_stored_credentials
+    initial_response = stub_comms do
+      initial_options = {
+        stored_credential: {
+          initial_transaction: true,
+          reason_type: 'recurring'
+        }
+      }
+      @gateway.purchase(@amount, @credit_card, initial_options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r{"payment_type":"Recurring"}, data)
+      assert_match(%r{"merchant_initiated":false}, data)
+    end.respond_with(successful_purchase_initial_stored_credential_response)
+
+    assert_success initial_response
+    assert_equal 'pay_7jcf4ovmwnqedhtldca3fjli2y', initial_response.params['id']
+    network_transaction_id = initial_response.params['id']
+
+    response = stub_comms do
+      options = {
+        stored_credential: {
+          initial_transaction: false,
+          reason_type: 'recurring',
+          network_transaction_id: network_transaction_id
+        }
+      }
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r{"previous_payment_id":"pay_7jcf4ovmwnqedhtldca3fjli2y"}, data)
+      assert_match(%r{"source.stored":true}, data)
+    end.respond_with(successful_purchase_using_stored_credential_response)
+
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
   def test_moto_transaction_is_properly_set
     response = stub_comms do
       options = {
@@ -362,6 +398,18 @@ class CheckoutV2Test < Test::Unit::TestCase
     purchase_response = JSON.parse(successful_purchase_response)
     purchase_response['source']['payment_account_reference'] = '2FCFE326D92D4C27EDD699560F484'
     purchase_response.to_json
+  end
+
+  def successful_purchase_initial_stored_credential_response
+    %(
+      {"id":"pay_7jcf4ovmwnqedhtldca3fjli2y","action_id":"act_7jcf4ovmwnqedhtldca3fjli2y","amount":200,"currency":"USD","approved":true,"status":"Authorized","auth_code":"587541","eci":"05","scheme_id":"776561034288791","response_code":"10000","response_summary":"Approved","risk":{"flagged":false},"source":{"id":"src_m2ooveyd2dxuzh277ft4obgkwm","type":"card","billing_address":{"address_line1":"456 My Street","address_line2":"Apt 1","city":"Ottawa","state":"ON","zip":"K1C2N6","country":"CA"},"expiry_month":6,"expiry_year":2025,"name":"Longbob Longsen","scheme":"Visa","last4":"4242","fingerprint":"9F3BAD2E48C6C8579F2F5DC0710B7C11A8ACD5072C3363A72579A6FB227D64BE","bin":"424242","card_type":"Credit","card_category":"Consumer","issuer":"JPMORGAN CHASE BANK NA","issuer_country":"US","product_id":"A","product_type":"Visa Traditional","avs_check":"S","cvv_check":"Y","payouts":true,"fast_funds":"d"},"customer":{"id":"cus_tr53e5z2dlmetpo2ehbsuk76yu","email":"longbob.longsen@example.com","name":"Longbob Longsen"},"processed_on":"2021-03-29T20:22:48Z","reference":"1","processing":{"acquirer_transaction_id":"8266949399","retrieval_reference_number":"731420439000"},"_links":{"self":{"href":"https://api.sandbox.checkout.com/payments/pay_7jcf4ovmwnqedhtldca3fjli2y"},"actions":{"href":"https://api.sandbox.checkout.com/payments/pay_7jcf4ovmwnqedhtldca3fjli2y/actions"},"capture":{"href":"https://api.sandbox.checkout.com/payments/pay_7jcf4ovmwnqedhtldca3fjli2y/captures"},"void":{"href":"https://api.sandbox.checkout.com/payments/pay_7jcf4ovmwnqedhtldca3fjli2y/voids"}}}
+    )
+  end
+
+  def successful_purchase_using_stored_credential_response
+    %(
+      {"id":"pay_udodtu4ogljupp2jvy2cxf4jme","action_id":"act_udodtu4ogljupp2jvy2cxf4jme","amount":200,"currency":"USD","approved":true,"status":"Authorized","auth_code":"680745","eci":"05","scheme_id":"491049486700108","response_code":"10000","response_summary":"Approved","risk":{"flagged":false},"source":{"id":"src_m2ooveyd2dxuzh277ft4obgkwm","type":"card","billing_address":{"address_line1":"456 My Street","address_line2":"Apt 1","city":"Ottawa","state":"ON","zip":"K1C2N6","country":"CA"},"expiry_month":6,"expiry_year":2025,"name":"Longbob Longsen","scheme":"Visa","last4":"4242","fingerprint":"9F3BAD2E48C6C8579F2F5DC0710B7C11A8ACD5072C3363A72579A6FB227D64BE","bin":"424242","card_type":"Credit","card_category":"Consumer","issuer":"JPMORGAN CHASE BANK NA","issuer_country":"US","product_id":"A","product_type":"Visa Traditional","avs_check":"S","cvv_check":"Y","payouts":true,"fast_funds":"d"},"customer":{"id":"cus_tr53e5z2dlmetpo2ehbsuk76yu","email":"longbob.longsen@example.com","name":"Longbob Longsen"},"processed_on":"2021-03-29T20:22:49Z","reference":"1","processing":{"acquirer_transaction_id":"4026777708","retrieval_reference_number":"633985559433"},"_links":{"self":{"href":"https://api.sandbox.checkout.com/payments/pay_udodtu4ogljupp2jvy2cxf4jme"},"actions":{"href":"https://api.sandbox.checkout.com/payments/pay_udodtu4ogljupp2jvy2cxf4jme/actions"},"capture":{"href":"https://api.sandbox.checkout.com/payments/pay_udodtu4ogljupp2jvy2cxf4jme/captures"},"void":{"href":"https://api.sandbox.checkout.com/payments/pay_udodtu4ogljupp2jvy2cxf4jme/voids"}}}
+    )
   end
 
   def failed_purchase_response

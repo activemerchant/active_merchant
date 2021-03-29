@@ -40,6 +40,7 @@
 * Adyen: Pass Network Tx Reference for MIT [curiousepic] #3932
 * Qvalent: Add customer_reference_number [fredo-] #3931
 * Orbital: Add 'ND' ECPActionCode to $0 Prenote Check [jessiagee] #3935
+* Checkout: Add support for stored_credential [meagabeth] #3934
 
 == Version 1.119.0 (February 9th, 2021)
 * Payment Express: support verify/validate [therufs] #3874
