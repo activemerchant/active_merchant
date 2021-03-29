@@ -924,6 +924,11 @@ quickpay_with_api_key:
   apikey: "fB46983ZwR5dzy46A3r6ngDx7P37N5YTu1F4S9W2JKCs9v4t5L9m2Q8Mlbjpa2I1"
   version: 7
 
+# To get this credential, log into: https://quickstream.support.qvalent.com/->click Administration->Facility Settings->
+# Authentication and Credentials->update "Technology" to SOAP and save->create cert and download .pfx file->
+# use the following command to get the Bag Attributes:
+# $ openssl pkcs12 -in filename.pfx -out cert.pem -nodes
+# open cert.pem file in a text editor (e.g. TextEdit) and you'll see the Bag Attributes to add below under "pem:" field
 qvalent:
   username: "QRSL"
   password: "QRSLTEST"

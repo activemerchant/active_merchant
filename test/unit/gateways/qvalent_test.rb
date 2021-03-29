@@ -192,7 +192,7 @@ class QvalentTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, { stored_credential: { initial_transaction: true, reason_type: 'unscheduled', initiator: 'merchant' } })
     end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/posEntryMode=MANUAL/, data)
-      assert_match(/storedCredentialUsage=INITIAL_STORAGE/, data)
+      assert_match(/storedCredentialUsage=UNSCHEDULED_MIT/, data)
       assert_match(/ECI=SSL/, data)
     end.respond_with(successful_purchase_response)
 
@@ -263,6 +263,34 @@ class QvalentTest < Test::Unit::TestCase
 
   def test_transcript_scrubbing
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
+  end
+
+  def test_default_add_card_reference_number
+    post = {}
+    @gateway.options[:order_id] = 1234534
+    @gateway.send(:add_card_reference, post)
+    assert_equal post['customer.customerReferenceNumber'], 1234534
+  end
+
+  def test_add_card_reference_number
+    post = {}
+    @gateway.options[:order_id] = 1234
+    @gateway.options[:customer_reference_number] = 4321
+    @gateway.send(:add_card_reference, post)
+    assert_equal post['customer.customerReferenceNumber'], 4321
+  end
+
+  def test_default_add_customer_reference_number
+    post = {}
+    @gateway.send(:add_customer_reference, post)
+    assert_nil post['customer.customerReferenceNumber']
+  end
+
+  def test_add_customer_reference_number
+    post = {}
+    @gateway.options[:customer_reference_number] = 4321
+    @gateway.send(:add_customer_reference, post)
+    assert_equal post['customer.customerReferenceNumber'], 4321
   end
 
   private
