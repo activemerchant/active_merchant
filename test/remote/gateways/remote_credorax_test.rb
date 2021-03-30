@@ -27,6 +27,7 @@ class RemoteCredoraxTest < Test::Unit::TestCase
       execute_threed: true,
       three_ds_version: '2',
       three_ds_challenge_window_size: '01',
+      three_ds_reqchallengeind: '04',
       stored_credential: { reason_type: 'unscheduled' },
       three_ds_2: {
         channel: 'browser',

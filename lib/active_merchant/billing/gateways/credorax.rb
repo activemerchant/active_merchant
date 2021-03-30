@@ -334,6 +334,7 @@ module ActiveMerchant #:nodoc:
           post[:f23] = options[:f23] if options[:f23]
           post[:'3ds_purchasedate'] = Time.now.utc.strftime('%Y%m%d%I%M%S')
           options.dig(:stored_credential, :initiator) == 'merchant' ? post[:'3ds_channel'] = '03' : post[:'3ds_channel'] = '02'
+          post[:'3ds_reqchallengeind'] = options[:three_ds_reqchallengeind] if options[:three_ds_reqchallengeind]
           post[:'3ds_redirect_url'] = three_ds_2_options[:notification_url]
           post[:'3ds_challengewindowsize'] = options[:three_ds_challenge_window_size] || '03'
           post[:d5] = browser_info[:user_agent]

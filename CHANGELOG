@@ -40,6 +40,7 @@
 * Qvalent: Add customer_reference_number [fredo-] #3931
 * Orbital: Add 'ND' ECPActionCode to $0 Prenote Check [jessiagee] #3935
 * Checkout: Add support for stored_credential [meagabeth] #3934
+* Credorax: Add support for 3ds_reqchallengeind [dsmcclain] #3936
 
 == Version 1.119.0 (February 9th, 2021)
 * Payment Express: support verify/validate [therufs] #3874

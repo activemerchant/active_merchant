@@ -1,4 +1,5 @@
 require 'test_helper'
+require 'pry'
 
 class CredoraxTest < Test::Unit::TestCase
   include CommStub
@@ -24,6 +25,7 @@ class CredoraxTest < Test::Unit::TestCase
       execute_threed: true,
       three_ds_initiate: '03',
       f23: '1',
+      three_ds_reqchallengeind: '04',
       three_ds_challenge_window_size: '01',
       stored_credential: { reason_type: 'unscheduled' },
       three_ds_2: {
@@ -257,6 +259,7 @@ class CredoraxTest < Test::Unit::TestCase
       assert_match(/3ds_transtype=01/, data)
       assert_match(/3ds_initiate=03/, data)
       assert_match(/f23=1/, data)
+      assert_match(/3ds_reqchallengeind=04/, data)
       assert_match(/3ds_redirect_url=www.example.com/, data)
       assert_match(/3ds_challengewindowsize=01/, data)
       assert_match(/d5=unknown/, data)
@@ -551,15 +554,6 @@ class CredoraxTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       assert_match(/h3=12345/, data)
     end.respond_with(successful_credit_response)
-  end
-
-  def test_supports_billing_descriptor
-    @options[:billing_descriptor] = 'abcdefghijkl'
-    stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |_endpoint, data, _headers|
-      assert_match(/i2=abcdefghijkl/, data)
-    end.respond_with(successful_purchase_response)
   end
 
   def test_purchase_adds_billing_descriptor
