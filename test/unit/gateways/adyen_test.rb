@@ -468,7 +468,7 @@ class AdyenTest < Test::Unit::TestCase
   end
 
   def test_stored_credential_recurring_cit_initial
-    options = options_with_stored_credentials(:cardholder, :recurring, :initial)
+    options = stored_credential_options(:cardholder, :recurring, :initial)
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
@@ -481,7 +481,7 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_stored_credential_recurring_cit_used
     @credit_card.verification_value = nil
-    options = options_with_stored_credentials(:cardholder, :recurring, id: 'abc123')
+    options = stored_credential_options(:cardholder, :recurring, id: 'abc123')
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
@@ -493,7 +493,7 @@ class AdyenTest < Test::Unit::TestCase
   end
 
   def test_stored_credential_recurring_mit_initial
-    options = options_with_stored_credentials(:merchant, :recurring, :initial)
+    options = stored_credential_options(:merchant, :recurring, :initial)
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
@@ -506,20 +506,19 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_stored_credential_recurring_mit_used
     @credit_card.verification_value = nil
-    options = options_with_stored_credentials(:merchant, :recurring, id: 'abc123')
+    options = stored_credential_options(:merchant, :recurring, id: 'abc123')
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/"shopperInteraction":"ContAuth"/, data)
       assert_match(/"recurringProcessingModel":"Subscription"/, data)
-      assert_match(/"additionalData":{"networkTxReference":"abc123"/, data)
     end.respond_with(successful_authorize_response)
 
     assert_success response
   end
 
   def test_stored_credential_unscheduled_cit_initial
-    options = options_with_stored_credentials(:cardholder, :unscheduled, :initial)
+    options = stored_credential_options(:cardholder, :unscheduled, :initial)
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
@@ -532,7 +531,7 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_stored_credential_unscheduled_cit_used
     @credit_card.verification_value = nil
-    options = options_with_stored_credentials(:cardholder, :unscheduled, id: 'abc123')
+    options = stored_credential_options(:cardholder, :unscheduled, id: 'abc123')
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
@@ -544,7 +543,7 @@ class AdyenTest < Test::Unit::TestCase
   end
 
   def test_stored_credential_unscheduled_mit_initial
-    options = options_with_stored_credentials(:merchant, :unscheduled, :initial)
+    options = stored_credential_options(:merchant, :unscheduled, :initial)
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
@@ -557,13 +556,12 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_stored_credential_unscheduled_mit_used
     @credit_card.verification_value = nil
-    options = options_with_stored_credentials(:merchant, :unscheduled, id: 'abc123')
+    options = stored_credential_options(:merchant, :unscheduled, id: 'abc123')
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/"shopperInteraction":"ContAuth"/, data)
       assert_match(/"recurringProcessingModel":"UnscheduledCardOnFile"/, data)
-      assert_match(/"additionalData":{"networkTxReference":"abc123"/, data)
     end.respond_with(successful_authorize_response)
 
     assert_success response
@@ -959,7 +957,7 @@ class AdyenTest < Test::Unit::TestCase
 
   private
 
-  def options_with_stored_credentials(*args, id: nil)
+  def stored_credential_options(*args, id: nil)
     {
       order_id: '#1001',
       description: 'AM test',

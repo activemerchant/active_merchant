@@ -278,7 +278,6 @@ module ActiveMerchant #:nodoc:
       def add_stored_credentials(post, payment, options)
         add_shopper_interaction(post, payment, options)
         add_recurring_processing_model(post, options)
-        add_network_tx_reference(post, options)
       end
 
       def add_merchant_account(post, options)
@@ -315,15 +314,6 @@ module ActiveMerchant #:nodoc:
         end
 
         post[:recurringProcessingModel] = options[:recurring_processing_model] || recurring_processing_model
-      end
-
-      def add_network_tx_reference(post, options)
-        return if options.dig(:stored_credential, :initial_transaction)
-        return unless post.dig(:shopperInteraction) == 'ContAuth'
-        return unless %w[Subscription UnscheduledCardOnFile].include?(post.dig(:recurringProcessingModel))
-
-        post[:additionalData] ||= {}
-        post[:additionalData][:networkTxReference] = options[:stored_credential][:network_transaction_id]
       end
 
       def add_address(post, options)
@@ -529,8 +519,7 @@ module ActiveMerchant #:nodoc:
           test: test?,
           error_code: success ? nil : error_code_from(response),
           avs_result: AVSResult.new(code: avs_code_from(response)),
-          cvv_result: CVVResult.new(cvv_result_from(response)),
-          network_transaction_id: network_transaction_id_from(response)
+          cvv_result: CVVResult.new(cvv_result_from(response))
         )
       end
 
@@ -615,10 +604,6 @@ module ActiveMerchant #:nodoc:
         recurring = response['recurringDetailReference'] if action == 'storeToken'
 
         "#{parameters[:originalReference]}##{response['pspReference']}##{recurring}"
-      end
-
-      def network_transaction_id_from(response)
-        response.dig('additionalData', 'networkTxReference')
       end
 
       def init_post(options = {})
