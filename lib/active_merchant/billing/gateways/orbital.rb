@@ -203,7 +203,7 @@ module ActiveMerchant #:nodoc:
         # if we are doing a force capture with a check, that
         # we do a purchase here
         if options[:force_capture] && payment_source.is_a?(Check) &&
-           (options[:action_code].include?('W8') || options[:action_code].include?('W9'))
+           (options[:action_code].include?('W8') || options[:action_code].include?('W9') || options[:action_code].include?('ND'))
           return purchase(money, payment_source, options)
         end
 

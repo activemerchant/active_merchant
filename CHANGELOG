@@ -39,6 +39,7 @@
 * Remove CONTRIBUTING.md and update README.md to reflect new repository wiki [dsmcclain] #3930
 * Adyen: Pass Network Tx Reference for MIT [curiousepic] #3932
 * Qvalent: Add customer_reference_number [fredo-] #3931
+* Orbital: Add 'ND' ECPActionCode to $0 Prenote Check [jessiagee] #3935
 
 == Version 1.119.0 (February 9th, 2021)
 * Payment Express: support verify/validate [therufs] #3874

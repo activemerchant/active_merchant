@@ -320,7 +320,7 @@ module ActiveMerchant #:nodoc:
       def add_network_tx_reference(post, options)
         return if options.dig(:stored_credential, :initial_transaction)
         return unless post.dig(:shopperInteraction) == 'ContAuth'
-        return unless ('Subscription' 'UnscheduledCardOnFile').include?(post.dig(:recurringProcessingModel))
+        return unless %w[Subscription UnscheduledCardOnFile].include?(post.dig(:recurringProcessingModel))
 
         post[:additionalData] ||= {}
         post[:additionalData][:networkTxReference] = options[:stored_credential][:network_transaction_id]
