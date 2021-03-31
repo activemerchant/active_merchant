@@ -41,6 +41,7 @@
 * Orbital: Add 'ND' ECPActionCode to $0 Prenote Check [jessiagee] #3935
 * Checkout: Add support for stored_credential [meagabeth] #3934
 * Credorax: Add support for 3ds_reqchallengeind [dsmcclain] #3936
+* Adyen: cancelOrRefund endpoint when passed as option [naashton] #3937
 
 == Version 1.119.0 (February 9th, 2021)
 * Payment Express: support verify/validate [therufs] #3874

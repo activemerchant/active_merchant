@@ -648,7 +648,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
   def test_failed_credit
     response = @gateway.credit(@amount, '')
     assert_failure response
-    assert_equal 'Reference Missing', response.message
+    assert_equal "Required field 'reference' is not provided.", response.message
   end
 
   def test_successful_void
@@ -973,7 +973,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
     card = credit_card('4242424242424242', month: 16)
     assert response = @gateway.purchase(@amount, card, @options)
     assert_failure response
-    assert_equal 'Expiry Date Invalid: Expiry month should be between 1 and 12 inclusive', response.message
+    assert_equal 'The provided Expiry Date is not valid.: Expiry month should be between 1 and 12 inclusive', response.message
   end
 
   def test_invalid_expiry_year_for_purchase
@@ -1134,6 +1134,23 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert response.test?
     refute response.authorization.blank?
     assert_success response
+  end
+
+  def test_successful_cancel_or_refund
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    assert cancel = @gateway.void(auth.authorization)
+    assert_success cancel
+    assert_equal '[cancel-received]', cancel.message
+
+    capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+
+    @options[:cancel_or_refund] = true
+    assert void = @gateway.void(auth.authorization, @options)
+    assert_success void
+    assert_equal '[cancelOrRefund-received]', void.message
   end
 
   private

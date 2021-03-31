@@ -88,8 +88,9 @@ module ActiveMerchant #:nodoc:
 
       def void(authorization, options = {})
         post = init_post(options)
+        endpoint = options[:cancel_or_refund] ? 'cancelOrRefund' : 'cancel'
         add_reference(post, authorization, options)
-        commit('cancel', post, options)
+        commit(endpoint, post, options)
       end
 
       def adjust(money, authorization, options = {})
@@ -564,11 +565,10 @@ module ActiveMerchant #:nodoc:
           response['refusalReason'] = 'Received unexpected 3DS authentication response. Use the execute_threed and/or threed_dynamic options to initiate a proper 3DS flow.'
           return false
         end
-
         case action.to_s
         when 'authorise', 'authorise3d'
           %w[Authorised Received RedirectShopper].include?(response['resultCode'])
-        when 'capture', 'refund', 'cancel'
+        when 'capture', 'refund', 'cancel', 'cancelOrRefund'
           response['response'] == "[#{action}-received]"
         when 'adjustAuthorisation'
           response['response'] == 'Authorised' || response['response'] == '[adjustAuthorisation-received]'

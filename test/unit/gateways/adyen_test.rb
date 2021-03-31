@@ -618,7 +618,7 @@ class AdyenTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(failed_credit_response)
     response = @gateway.refund(@amount, '')
     assert_nil response.authorization
-    assert_equal 'Reference Missing', response.message
+    assert_equal "Required field 'reference' is not provided.", response.message
     assert_failure response
   end
 
@@ -635,6 +635,14 @@ class AdyenTest < Test::Unit::TestCase
     response = @gateway.void('7914775043909934')
     assert_equal '7914775043909934#8614775821628806#', response.authorization
     assert_equal '[cancel-received]', response.message
+    assert response.test?
+  end
+
+  def test_successful_cancel_or_refund
+    @gateway.expects(:ssl_post).returns(successful_cancel_or_refund_response)
+    response = @gateway.void('7914775043909934')
+    assert_equal '7914775043909934#8614775821628806#', response.authorization
+    assert_equal '[cancelOrRefund-received]', response.message
     assert response.test?
   end
 
@@ -1233,7 +1241,7 @@ class AdyenTest < Test::Unit::TestCase
     {
       "status":422,
       "errorCode":"130",
-      "message":"Reference Missing",
+      "message":"Required field 'reference' is not provided.",
       "errorType":"validation"
     }
     RESPONSE
@@ -1244,6 +1252,15 @@ class AdyenTest < Test::Unit::TestCase
     {
       "pspReference":"8614775821628806",
       "response":"[cancel-received]"
+    }
+    RESPONSE
+  end
+
+  def successful_cancel_or_refund_response
+    <<-RESPONSE
+    {
+      "pspReference":"8614775821628806",
+      "response":"[cancelOrRefund-received]"
     }
     RESPONSE
   end
