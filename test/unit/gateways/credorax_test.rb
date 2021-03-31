@@ -1,5 +1,4 @@
 require 'test_helper'
-require 'pry'
 
 class CredoraxTest < Test::Unit::TestCase
   include CommStub
