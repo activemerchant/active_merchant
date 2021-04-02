@@ -531,7 +531,7 @@ module ActiveMerchant #:nodoc:
           error_code: success ? nil : error_code_from(response),
           avs_result: AVSResult.new(code: avs_code_from(response)),
           cvv_result: CVVResult.new(cvv_result_from(response)),
-          network_transaction_id: network_transaction_id_from(response)
+          network_transaction_id: network_transaction_id_from(response) || options[:stored_credential][:network_transaction_id]
         )
       end
 
@@ -618,7 +618,7 @@ module ActiveMerchant #:nodoc:
         "#{parameters[:originalReference]}##{response['pspReference']}##{recurring}"
       end
 
-      def network_transaction_id_from(response)
+      def network_transaction_id_from(response) || options
         response.dig('additionalData', 'networkTxReference')
       end
 
