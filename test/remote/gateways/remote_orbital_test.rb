@@ -553,6 +553,15 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_successful_authorize_and_capture_with_line_items
+    auth = @gateway.authorize(@amount, @credit_card, @options.merge(level_2_data: @level_2_options, level_3_data: @level_3_options_visa, line_items: @line_items_visa))
+    assert_success auth
+    assert_equal 'Approved', auth.message
+
+    capture = @gateway.capture(@amount, auth.authorization, @options.merge(level_2_data: @level_2_options, level_3_data: @level_3_options_visa, line_items: @line_items_visa))
+    assert_success capture
+  end
+
   def test_failed_authorize_with_echeck_due_to_invalid_amount
     assert auth = @echeck_gateway.authorize(-1, @echeck, @options.merge(order_id: '2'))
     assert_failure auth

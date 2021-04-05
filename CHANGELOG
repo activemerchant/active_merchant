@@ -43,6 +43,7 @@
 * Credorax: Add support for 3ds_reqchallengeind [dsmcclain] #3936
 * Adyen: cancelOrRefund endpoint when passed as option [naashton] #3937
 * Qvalent: Add customer reference number FIX [fredo-] #3939
+* Orbital: Pass line_items in capture [jessiagee] #3941
 
 == Version 1.119.0 (February 9th, 2021)
 * Payment Express: support verify/validate [therufs] #3874
