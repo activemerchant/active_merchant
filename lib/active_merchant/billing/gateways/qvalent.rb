@@ -30,7 +30,7 @@ module ActiveMerchant #:nodoc:
         add_stored_credential_data(post, payment_method, options)
         add_customer_data(post, options)
         add_soft_descriptors(post, options)
-        add_customer_reference(post)
+        add_customer_reference(post, options)
 
         commit('capture', post)
       end
@@ -44,7 +44,7 @@ module ActiveMerchant #:nodoc:
         add_stored_credential_data(post, payment_method, options)
         add_customer_data(post, options)
         add_soft_descriptors(post, options)
-        add_customer_reference(post)
+        add_customer_reference(post, options)
 
         commit('preauth', post)
       end
@@ -55,7 +55,7 @@ module ActiveMerchant #:nodoc:
         add_reference(post, authorization, options)
         add_customer_data(post, options)
         add_soft_descriptors(post, options)
-        add_customer_reference(post)
+        add_customer_reference(post, options)
 
         commit('captureWithoutAuth', post)
       end
@@ -67,7 +67,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_soft_descriptors(post, options)
         post['order.ECI'] = options[:eci] || 'SSL'
-        add_customer_reference(post)
+        add_customer_reference(post, options)
 
         commit('refund', post)
       end
@@ -80,7 +80,7 @@ module ActiveMerchant #:nodoc:
         add_payment_method(post, payment_method)
         add_customer_data(post, options)
         add_soft_descriptors(post, options)
-        add_customer_reference(post)
+        add_customer_reference(post, options)
 
         commit('refund', post)
       end
@@ -90,7 +90,7 @@ module ActiveMerchant #:nodoc:
         add_reference(post, authorization, options)
         add_customer_data(post, options)
         add_soft_descriptors(post, options)
-        add_customer_reference(post)
+        add_customer_reference(post, options)
 
         commit('reversal', post)
       end
@@ -98,7 +98,7 @@ module ActiveMerchant #:nodoc:
       def store(payment_method, options = {})
         post = {}
         add_payment_method(post, payment_method)
-        add_card_reference(post)
+        add_card_reference(post, options)
 
         commit('registerAccount', post)
       end
@@ -191,11 +191,11 @@ module ActiveMerchant #:nodoc:
         post['card.CVN'] = payment_method.verification_value
       end
 
-      def add_card_reference(post)
+      def add_card_reference(post, options)
         post['customer.customerReferenceNumber'] = options[:customer_reference_number] || options[:order_id]
       end
 
-      def add_customer_reference(post)
+      def add_customer_reference(post, options)
         post['customer.customerReferenceNumber'] = options[:customer_reference_number] if options[:customer_reference_number]
       end
 
