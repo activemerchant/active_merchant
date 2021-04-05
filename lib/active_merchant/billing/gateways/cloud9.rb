@@ -196,7 +196,7 @@ module ActiveMerchant #:nodoc: ALL
         void        = amount == 0
 
         post = {}
-        add_configure_group(post, options)
+        add_configure_group(post, options, password_required: true)
         add_request_amount_group(post, options, void ? nil : amount)
         add_trace_group(post, options, authorization)
         add_custom_group(post, void)
@@ -211,7 +211,7 @@ module ActiveMerchant #:nodoc: ALL
       # * <tt>options</tt> -- options to be passed to the processor
       def credit(amount, payment, options = {})
         post = {}
-        add_configure_group(post, options)
+        add_configure_group(post, options, password_required: true)
         add_request_amount_group(post, options, amount)
         add_action_group(post, options, payment)
         add_trace_group(post, options, authorization)
@@ -226,7 +226,7 @@ module ActiveMerchant #:nodoc: ALL
       # * <tt>options</tt> -- options to be passed to the processor
       def void(authorization, options = {})
         post = {}
-        add_configure_group(post, options)
+        add_configure_group(post, options, password_required: true)
         add_trace_group(post, options, authorization)
         add_request_extend_info_group(post, options)
         add_custom_group(post)
@@ -249,22 +249,30 @@ module ActiveMerchant #:nodoc: ALL
 
       # Add the Configure Group of options - used for ALL transactions
       #
-      # * <tt>terminal_id_required</tt> -- optional, defaults to true
-      # ==== Options
+      # == Options
+      # * <tt>:chain_id</tt> -- optional
       # * <tt>:merchant_id</tt> -- required
-      # * <tt>:terminal_id</tt> -- required
-      # * <tt>:password</tt> -- required
+      # * <tt>:terminal_id</tt> -- required if +terminal_id_required+
+      # * <tt>:password</tt> -- required if +password_required+
       # * <tt>:allow_partial_auth</tt> -- allow partial authorization if full amount is not available; defaults +false+
-      def add_configure_group(post, options, terminal_id_required = true)
-        if terminal_id_required
-          requires!(@options, :merchant_id, :password, :terminal_id)
+      # == Flags
+      # * <tt>:password_required</tt> -- optional, defaults to false (only needed for refunds)
+      # * <tt>:terminal_id_required</tt> -- optional, defaults to true
+      #
+      def add_configure_group(post, options, password_required: false, terminal_id_required: true)
+        if @options[:chain_id].present?
+          post[:GCID] = @options[:chain_id]
         else
-          requires!(@options, :merchant_id, :password)
-        end
+          if terminal_id_required
+            requires!(@options, :merchant_id, :terminal_id)
+          else
+            requires!(@options, :merchant_id)
+          end
 
-        post[:GMID] = @options[:merchant_id]
-        post[:GMPW] = @options[:password]
-        optional_assign(post, :GTID, @options[:terminal_id])
+          post[:GMID] = @options[:merchant_id]
+          optional_assign(post, :GTID, @options[:terminal_id]) if terminal_id_required
+          optional_assign(post, :GMPW, @options[:password]) if password_required
+        end
         optional_assign(post, :AllowsPartialAuth, options[:allow_partial_auth])
       end
 
