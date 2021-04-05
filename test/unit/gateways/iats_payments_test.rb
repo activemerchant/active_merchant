@@ -5,18 +5,18 @@ class IatsPaymentsTest < Test::Unit::TestCase
 
   def setup
     @gateway = IatsPaymentsGateway.new(
-      :agent_code => 'login',
-      :password => 'password',
-      :region => 'uk'
+      agent_code: 'login',
+      password: 'password',
+      region: 'uk'
     )
     @amount = 100
     @credit_card = credit_card
     @check = check
     @options = {
-      :ip => '71.65.249.145',
-      :order_id => generate_unique_id,
-      :billing_address => address,
-      :description => 'Store purchase'
+      ip: '71.65.249.145',
+      order_id: generate_unique_id,
+      billing_address: address,
+      description: 'Store purchase'
     }
   end
 
@@ -205,8 +205,8 @@ class IatsPaymentsTest < Test::Unit::TestCase
   def test_deprecated_options
     assert_deprecation_warning("The 'login' option is deprecated in favor of 'agent_code' and will be removed in a future version.") do
       @gateway = IatsPaymentsGateway.new(
-        :login => 'login',
-        :password => 'password'
+        login: 'login',
+        password: 'password'
       )
     end
 
@@ -223,9 +223,9 @@ class IatsPaymentsTest < Test::Unit::TestCase
 
   def test_region_urls
     @gateway = IatsPaymentsGateway.new(
-      :agent_code => 'code',
-      :password => 'password',
-      :region => 'na' # North america
+      agent_code: 'code',
+      password: 'password',
+      region: 'na' # North america
     )
 
     response = stub_comms do

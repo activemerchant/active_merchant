@@ -3,15 +3,15 @@ require 'test_helper'
 class NetRegistryTest < Test::Unit::TestCase
   def setup
     @gateway = NetRegistryGateway.new(
-      :login => 'X',
-      :password => 'Y'
+      login: 'X',
+      password: 'Y'
     )
 
     @amount = 100
     @credit_card = credit_card
     @options = {
-      :order_id => '1',
-      :billing_address => address
+      order_id: '1',
+      billing_address: address
     }
   end
 
@@ -67,7 +67,7 @@ class NetRegistryTest < Test::Unit::TestCase
     assert_success response
     assert_match %r{\A\d{6}\z}, response.authorization
 
-    response = @gateway.capture(@amount, response.authorization, :credit_card => @credit_card)
+    response = @gateway.capture(@amount, response.authorization, credit_card: @credit_card)
     assert_success response
   end
 
@@ -96,7 +96,7 @@ class NetRegistryTest < Test::Unit::TestCase
   end
 
   def test_bad_login
-    gateway = NetRegistryGateway.new(:login => 'bad-login', :password => 'bad-login')
+    gateway = NetRegistryGateway.new(login: 'bad-login', password: 'bad-login')
     gateway.stubs(:ssl_post).returns(bad_login_response)
 
     response = gateway.purchase(@amount, @credit_card, @options)

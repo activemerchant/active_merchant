@@ -5,18 +5,18 @@ class CecabankTest < Test::Unit::TestCase
 
   def setup
     @gateway = CecabankGateway.new(
-      :merchant_id  => '12345678',
-      :acquirer_bin => '12345678',
-      :terminal_id  => '00000003',
-      :key => 'enc_key'
+      merchant_id: '12345678',
+      acquirer_bin: '12345678',
+      terminal_id: '00000003',
+      key: 'enc_key'
     )
 
     @credit_card = credit_card
     @amount = 100
 
     @options = {
-      :order_id => '1',
-      :description => 'Store Purchase'
+      order_id: '1',
+      description: 'Store Purchase'
     }
   end
 

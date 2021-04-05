@@ -84,9 +84,10 @@ class BamboraApacTest < Test::Unit::TestCase
 
   def test_successful_void
     response = stub_comms do
-      @gateway.void(@amount, 'receipt')
+      @gateway.void('receipt', amount: 200)
     end.check_request do |endpoint, data, headers|
       assert_match(%r{<SubmitSingleVoid }, data)
+      assert_match(%r{<Amount>200<}, data)
     end.respond_with(successful_void_response)
 
     assert_success response

@@ -8,8 +8,8 @@ module ActiveMerchant #:nodoc:
       self.delimiter = "\r\n"
 
       self.actions = {
-        :purchase => 'SALE',
-        :credit => 'CREDIT'
+        purchase: 'SALE',
+        credit: 'CREDIT'
       }
 
       APPROVED = '0'
@@ -137,10 +137,10 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(test? ? self.test_url : self.live_url, post_data(parameters)))
 
         Response.new(response['result'] == APPROVED, message_from(response), response,
-          :test => @options[:test] || test?,
-          :authorization => authorization_from(response),
-          :avs_result => { :code => response['avs_response'] },
-          :cvv_result => response['cvv2_response']
+          test: @options[:test] || test?,
+          authorization: authorization_from(response),
+          avs_result: { code: response['avs_response'] },
+          cvv_result: response['cvv2_response']
         )
       end
 

@@ -115,14 +115,14 @@ class RemoteLitleTest < Test::Unit::TestCase
   def test_unsuccessful_authorization
     assert response = @gateway.authorize(60060, @credit_card2,
       {
-        :order_id=>'6',
-        :billing_address=>{
-          :name      => 'Joe Green',
-          :address1  => '6 Main St.',
-          :city      => 'Derry',
-          :state     => 'NH',
-          :zip       => '03038',
-          :country   => 'US'
+        order_id: '6',
+        billing_address: {
+          name: 'Joe Green',
+          address1: '6 Main St.',
+          city: 'Derry',
+          state: 'NH',
+          zip: '03038',
+          country: 'US'
         },
       }
     )
@@ -199,14 +199,14 @@ class RemoteLitleTest < Test::Unit::TestCase
 
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(60060, @credit_card2, {
-      :order_id=>'6',
-      :billing_address=>{
-        :name      => 'Joe Green',
-        :address1  => '6 Main St.',
-        :city      => 'Derry',
-        :state     => 'NH',
-        :zip       => '03038',
-        :country   => 'US'
+      order_id: '6',
+      billing_address: {
+        name: 'Joe Green',
+        address1: '6 Main St.',
+        city: 'Derry',
+        state: 'NH',
+        zip: '03038',
+        country: 'US'
       },
     })
     assert_failure response
@@ -544,8 +544,8 @@ class RemoteLitleTest < Test::Unit::TestCase
   end
 
   def test_store_successful
-    credit_card = CreditCard.new(@credit_card_hash.merge(:number => '4457119922390123'))
-    assert store_response = @gateway.store(credit_card, :order_id => '50')
+    credit_card = CreditCard.new(@credit_card_hash.merge(number: '4457119922390123'))
+    assert store_response = @gateway.store(credit_card, order_id: '50')
 
     assert_success store_response
     assert_equal 'Account number was successfully registered', store_response.message
@@ -557,7 +557,7 @@ class RemoteLitleTest < Test::Unit::TestCase
 
   def test_store_with_paypage_registration_id_successful
     paypage_registration_id = 'cDZJcmd1VjNlYXNaSlRMTGpocVZQY1NNlYE4ZW5UTko4NU9KK3p1L1p1VzE4ZWVPQVlSUHNITG1JN2I0NzlyTg='
-    assert store_response = @gateway.store(paypage_registration_id, :order_id => '50')
+    assert store_response = @gateway.store(paypage_registration_id, order_id: '50')
 
     assert_success store_response
     assert_equal 'Account number was successfully registered', store_response.message
@@ -566,8 +566,8 @@ class RemoteLitleTest < Test::Unit::TestCase
   end
 
   def test_store_unsuccessful
-    credit_card = CreditCard.new(@credit_card_hash.merge(:number => '4457119999999999'))
-    assert store_response = @gateway.store(credit_card, :order_id => '51')
+    credit_card = CreditCard.new(@credit_card_hash.merge(number: '4457119999999999'))
+    assert store_response = @gateway.store(credit_card, order_id: '51')
 
     assert_failure store_response
     assert_equal 'Credit card number was invalid', store_response.message
@@ -575,8 +575,8 @@ class RemoteLitleTest < Test::Unit::TestCase
   end
 
   def test_store_and_purchase_with_token_successful
-    credit_card = CreditCard.new(@credit_card_hash.merge(:number => '4100280190123000'))
-    assert store_response = @gateway.store(credit_card, :order_id => '50')
+    credit_card = CreditCard.new(@credit_card_hash.merge(number: '4100280190123000'))
+    assert store_response = @gateway.store(credit_card, order_id: '50')
     assert_success store_response
 
     token = store_response.authorization
@@ -623,8 +623,8 @@ class RemoteLitleTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_xml_schema_validation
-    credit_card = CreditCard.new(@credit_card_hash.merge(:number => '123456'))
-    assert store_response = @gateway.store(credit_card, :order_id => '51')
+    credit_card = CreditCard.new(@credit_card_hash.merge(number: '123456'))
+    assert store_response = @gateway.store(credit_card, order_id: '51')
 
     assert_failure store_response
     assert_match(/^Error validating xml data against the schema/, store_response.message)

@@ -166,7 +166,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_xml_request(action, data)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.Request(version: '1.0') do
           xml.Header do
             xml.Security(sender: @options[:sender], type: 'MERCHANT')

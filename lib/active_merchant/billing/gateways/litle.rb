@@ -164,21 +164,21 @@ module ActiveMerchant #:nodoc:
       }
 
       AVS_RESPONSE_CODE = {
-          '00' => 'Y',
-          '01' => 'X',
-          '02' => 'D',
-          '10' => 'Z',
-          '11' => 'W',
-          '12' => 'A',
-          '13' => 'A',
-          '14' => 'P',
-          '20' => 'N',
-          '30' => 'S',
-          '31' => 'R',
-          '32' => 'U',
-          '33' => 'R',
-          '34' => 'I',
-          '40' => 'E'
+        '00' => 'Y',
+        '01' => 'X',
+        '02' => 'D',
+        '10' => 'Z',
+        '11' => 'W',
+        '12' => 'A',
+        '13' => 'A',
+        '14' => 'P',
+        '20' => 'N',
+        '30' => 'S',
+        '31' => 'R',
+        '32' => 'U',
+        '33' => 'R',
+        '34' => 'I',
+        '40' => 'E'
       }
 
       def void_type(kind)
@@ -449,8 +449,8 @@ module ActiveMerchant #:nodoc:
         options = {
           authorization: authorization_from(kind, parsed, money),
           test: test?,
-          :avs_result => { :code => AVS_RESPONSE_CODE[parsed[:fraudResult_avsResult]] },
-          :cvv_result => parsed[:fraudResult_cardValidationResult]
+          avs_result: { code: AVS_RESPONSE_CODE[parsed[:fraudResult_avsResult]] },
+          cvv_result: parsed[:fraudResult_cardValidationResult]
         }
 
         Response.new(success_from(kind, parsed), parsed[:message], parsed, options)

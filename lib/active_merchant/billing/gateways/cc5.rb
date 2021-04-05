@@ -50,7 +50,7 @@ module ActiveMerchant #:nodoc:
       def build_sale_request(type, money, creditcard, options = {})
         requires!(options, :order_id)
 
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
 
         xml.tag! 'CC5Request' do
           add_login_tags(xml)
@@ -76,7 +76,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_capture_request(money, authorization, options = {})
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
 
         xml.tag! 'CC5Request' do
           add_login_tags(xml)
@@ -87,7 +87,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_void_request(authorization, options = {})
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
 
         xml.tag! 'CC5Request' do
           add_login_tags(xml)
@@ -97,7 +97,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_authorization_credit_request(money, authorization, options = {})
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
 
         xml.tag! 'CC5Request' do
           add_login_tags(xml)
@@ -108,7 +108,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_creditcard_credit_request(money, creditcard, options = {})
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
 
         xml.tag! 'CC5Request' do
           add_login_tags(xml)
@@ -157,8 +157,8 @@ module ActiveMerchant #:nodoc:
           success,
           (success ? 'Approved' : "Declined (Reason: #{response[:proc_return_code]} - #{response[:err_msg]})"),
           response,
-          :test => test?,
-          :authorization => response[:order_id]
+          test: test?,
+          authorization: response[:order_id]
         )
       end
 

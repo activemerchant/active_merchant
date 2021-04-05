@@ -99,7 +99,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>money</tt> -- The amount to be captured as an Integer value in cents.
       # * <tt>authorization</tt> -- The authorization returned from the previous authorize request.
       def capture(money, authorization, options = {})
-        post = {:trans_id => authorization}
+        post = {trans_id: authorization}
         add_customer_data(post, options)
         commit('PRIOR_AUTH_CAPTURE', money, post)
       end
@@ -110,7 +110,7 @@ module ActiveMerchant #:nodoc:
       #
       # * <tt>authorization</tt> - The authorization returned from the previous authorize request.
       def void(authorization, options = {})
-        post = {:trans_id => authorization}
+        post = {trans_id: authorization}
         add_duplicate_window(post)
         commit('VOID', nil, post)
       end
@@ -135,8 +135,8 @@ module ActiveMerchant #:nodoc:
       def refund(money, identification, options = {})
         requires!(options, :card_number)
 
-        post = { :trans_id => identification,
-                 :card_num => options[:card_number]}
+        post = { trans_id: identification,
+                 card_num: options[:card_number]}
 
         post[:first_name] = options[:first_name] if options[:first_name]
         post[:last_name] = options[:last_name] if options[:last_name]
@@ -176,11 +176,11 @@ module ActiveMerchant #:nodoc:
         test_mode = test? || message =~ /TESTMODE/
 
         Response.new(success?(response), message, response,
-          :test => test_mode,
-          :authorization => response[:transaction_id],
-          :fraud_review => fraud_review?(response),
-          :avs_result => { :code => response[:avs_result_code] },
-          :cvv_result => response[:card_code]
+          test: test_mode,
+          authorization: response[:transaction_id],
+          fraud_review: fraud_review?(response),
+          avs_result: { code: response[:avs_result_code] },
+          cvv_result: response[:card_code]
         )
       end
 
@@ -196,12 +196,12 @@ module ActiveMerchant #:nodoc:
         fields = split(body)
 
         results = {
-          :response_code => fields[RESPONSE_CODE].to_i,
-          :response_reason_code => fields[RESPONSE_REASON_CODE],
-          :response_reason_text => fields[RESPONSE_REASON_TEXT],
-          :avs_result_code => fields[AVS_RESULT_CODE],
-          :transaction_id => fields[TRANSACTION_ID],
-          :card_code => fields[CARD_CODE_RESPONSE_CODE]
+          response_code: fields[RESPONSE_CODE].to_i,
+          response_reason_code: fields[RESPONSE_REASON_CODE],
+          response_reason_text: fields[RESPONSE_REASON_TEXT],
+          avs_result_code: fields[AVS_RESULT_CODE],
+          transaction_id: fields[TRANSACTION_ID],
+          card_code: fields[CARD_CODE_RESPONSE_CODE]
         }
         results
       end

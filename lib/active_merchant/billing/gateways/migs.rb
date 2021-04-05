@@ -79,7 +79,7 @@ module ActiveMerchant #:nodoc:
       def capture(money, authorization, options = {})
         requires!(@options, :advanced_login, :advanced_password)
 
-        post = options.merge(:TransNo => authorization)
+        post = options.merge(TransNo: authorization)
 
         add_amount(post, money, options)
         add_advanced_user(post)
@@ -96,7 +96,7 @@ module ActiveMerchant #:nodoc:
       def refund(money, authorization, options = {})
         requires!(@options, :advanced_login, :advanced_password)
 
-        post = options.merge(:TransNo => authorization)
+        post = options.merge(TransNo: authorization)
 
         add_amount(post, money, options)
         add_advanced_user(post)
@@ -109,7 +109,7 @@ module ActiveMerchant #:nodoc:
       def void(authorization, options = {})
         requires!(@options, :advanced_login, :advanced_password)
 
-        post = options.merge(:TransNo => authorization)
+        post = options.merge(TransNo: authorization)
 
         add_advanced_user(post)
         add_standard_parameters('voidAuthorisation', post, options[:unique_id])
@@ -282,11 +282,11 @@ module ActiveMerchant #:nodoc:
         cvv_result_code = 'P' if cvv_result_code == 'Unsupported'
 
         Response.new(success?(response), response[:Message], response,
-          :test => test?,
-          :authorization => response[:TransactionNo],
-          :fraud_review => fraud_review?(response),
-          :avs_result => { :code => avs_response_code },
-          :cvv_result => cvv_result_code
+          test: test?,
+          authorization: response[:TransactionNo],
+          fraud_review: fraud_review?(response),
+          avs_result: { code: avs_response_code },
+          cvv_result: cvv_result_code
         )
       end
 
@@ -300,11 +300,11 @@ module ActiveMerchant #:nodoc:
 
       def add_standard_parameters(action, post, unique_id = nil)
         post.merge!(
-          :Version     => API_VERSION,
-          :Merchant    => @options[:login],
-          :AccessCode  => @options[:password],
-          :Command     => action,
-          :MerchTxnRef => unique_id || generate_unique_id.slice(0, 40)
+          Version: API_VERSION,
+          Merchant: @options[:login],
+          AccessCode: @options[:password],
+          Command: action,
+          MerchTxnRef: unique_id || generate_unique_id.slice(0, 40)
         )
       end
 

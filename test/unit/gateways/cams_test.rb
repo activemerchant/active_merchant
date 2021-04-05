@@ -7,8 +7,8 @@ class CamsTest < Test::Unit::TestCase
       password: 'password9'
     )
 
-    @credit_card = credit_card('4111111111111111', :month => 5, :year => 10)
-    @bad_credit_card = credit_card('4242424245555555', :month => 5, :year => 10)
+    @credit_card = credit_card('4111111111111111', month: 5, year: 10)
+    @bad_credit_card = credit_card('4242424245555555', month: 5, year: 10)
     @amount = 100
 
     @options = {

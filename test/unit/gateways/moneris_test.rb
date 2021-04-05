@@ -7,13 +7,13 @@ class MonerisTest < Test::Unit::TestCase
     Base.mode = :test
 
     @gateway = MonerisGateway.new(
-      :login => 'store3',
-      :password => 'yesguy'
+      login: 'store3',
+      password: 'yesguy'
     )
 
     @amount = 100
     @credit_card = credit_card('4242424242424242')
-    @options = { :order_id => '1', :customer => '1', :billing_address => address}
+    @options = { order_id: '1', customer: '1', billing_address: address}
   end
 
   def test_default_options
@@ -32,8 +32,8 @@ class MonerisTest < Test::Unit::TestCase
 
   def test_successful_first_purchase_with_credential_on_file
     gateway = MonerisGateway.new(
-      :login => 'store3',
-      :password => 'yesguy'
+      login: 'store3',
+      password: 'yesguy'
     )
     gateway.expects(:ssl_post).returns(successful_first_cof_purchase_response)
     assert response = gateway.purchase(
@@ -53,8 +53,8 @@ class MonerisTest < Test::Unit::TestCase
 
   def test_successful_subsequent_purchase_with_credential_on_file
     gateway = MonerisGateway.new(
-      :login => 'store3',
-      :password => 'yesguy'
+      login: 'store3',
+      password: 'yesguy'
     )
     gateway.expects(:ssl_post).returns(successful_first_cof_authorize_response)
     assert response = gateway.authorize(
@@ -129,11 +129,11 @@ class MonerisTest < Test::Unit::TestCase
 
   def test_preauth_is_valid_xml
     params = {
-      :order_id => 'order1',
-      :amount => '1.01',
-      :pan => '4242424242424242',
-      :expdate => '0303',
-      :crypt_type => 7,
+      order_id: 'order1',
+      amount: '1.01',
+      pan: '4242424242424242',
+      expdate: '0303',
+      crypt_type: 7,
     }
 
     assert data = @gateway.send(:post_data, 'preauth', params)
@@ -143,11 +143,11 @@ class MonerisTest < Test::Unit::TestCase
 
   def test_purchase_is_valid_xml
     params = {
-      :order_id => 'order1',
-      :amount => '1.01',
-      :pan => '4242424242424242',
-      :expdate => '0303',
-      :crypt_type => 7,
+      order_id: 'order1',
+      amount: '1.01',
+      pan: '4242424242424242',
+      expdate: '0303',
+      crypt_type: 7,
     }
 
     assert data = @gateway.send(:post_data, 'purchase', params)
@@ -157,11 +157,11 @@ class MonerisTest < Test::Unit::TestCase
 
   def test_capture_is_valid_xml
     params = {
-      :order_id => 'order1',
-      :amount => '1.01',
-      :pan => '4242424242424242',
-      :expdate => '0303',
-      :crypt_type => 7,
+      order_id: 'order1',
+      amount: '1.01',
+      pan: '4242424242424242',
+      expdate: '0303',
+      crypt_type: 7,
     }
 
     assert data = @gateway.send(:post_data, 'preauth', params)
@@ -231,7 +231,7 @@ class MonerisTest < Test::Unit::TestCase
   def test_successful_purchase_with_vault
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     test_successful_store
-    assert response = @gateway.purchase(100, @data_key, {:order_id => generate_unique_id, :customer => generate_unique_id})
+    assert response = @gateway.purchase(100, @data_key, {order_id: generate_unique_id, customer: generate_unique_id})
     assert_success response
     assert_equal 'Approved', response.message
     assert response.authorization.present?
@@ -251,7 +251,7 @@ class MonerisTest < Test::Unit::TestCase
   def test_successful_authorization_with_vault
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     test_successful_store
-    assert response = @gateway.authorize(100, @data_key, {:order_id => generate_unique_id, :customer => generate_unique_id})
+    assert response = @gateway.authorize(100, @data_key, {order_id: generate_unique_id, customer: generate_unique_id})
     assert_success response
     assert_equal 'Approved', response.message
     assert response.authorization.present?

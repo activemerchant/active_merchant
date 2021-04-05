@@ -37,20 +37,20 @@ module ActiveMerchant #:nodoc:
       XMLNS = 'http://www.paypal.com/XMLPay'
 
       CARD_MAPPING = {
-        :visa => 'Visa',
-        :master => 'MasterCard',
-        :discover => 'Discover',
-        :american_express => 'Amex',
-        :jcb => 'JCB',
-        :diners_club => 'DinersClub',
+        visa: 'Visa',
+        master: 'MasterCard',
+        discover: 'Discover',
+        american_express: 'Amex',
+        jcb: 'JCB',
+        diners_club: 'DinersClub',
       }
 
       TRANSACTIONS = {
-        :purchase       => 'Sale',
-        :authorization  => 'Authorization',
-        :capture        => 'Capture',
-        :void           => 'Void',
-        :credit         => 'Credit'
+        purchase: 'Sale',
+        authorization: 'Authorization',
+        capture: 'Capture',
+        void: 'Void',
+        credit: 'Credit'
       }
 
       CVV_CODE = {
@@ -117,7 +117,7 @@ module ActiveMerchant #:nodoc:
               xml.tag!('TotalAmt', amount(money), 'Currency' => options[:currency] || currency(money))
               xml.tag!('Description', options[:description]) unless options[:description].blank?
               xml.tag!('Comment', options[:comment]) unless options[:comment].blank?
-              xml.tag!('ExtData', 'Name'=> 'COMMENT2', 'Value'=> options[:comment2]) unless options[:comment2].blank?
+              xml.tag!('ExtData', 'Name' => 'COMMENT2', 'Value' => options[:comment2]) unless options[:comment2].blank?
               xml.tag!(
                 'ExtData',
                 'Name' => 'CAPTURECOMPLETE',

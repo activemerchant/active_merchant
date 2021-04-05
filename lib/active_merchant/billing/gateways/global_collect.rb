@@ -7,10 +7,10 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://eu.sandbox.api-ingenico.com'
       self.live_url = 'https://api.globalcollect.com'
 
-      self.supported_countries = ['AD', 'AE', 'AG', 'AI', 'AL', 'AM', 'AO', 'AR', 'AS', 'AT', 'AU', 'AW', 'AX', 'AZ', 'BA', 'BB', 'BD', 'BE', 'BF', 'BG', 'BH', 'BI', 'BJ', 'BL', 'BM', 'BN', 'BO', 'BQ', 'BR', 'BS', 'BT', 'BW', 'BY', 'BZ', 'CA', 'CC', 'CD', 'CF', 'CH', 'CI', 'CK', 'CL', 'CM', 'CN', 'CO', 'CR', 'CU', 'CV', 'CW', 'CX', 'CY', 'CZ', 'DE', 'DJ', 'DK', 'DM', 'DO', 'DZ', 'EC', 'EE', 'EG', 'ER', 'ES', 'ET', 'FI', 'FJ', 'FK', 'FM', 'FO', 'FR', 'GA', 'GB', 'GD', 'GE', 'GF', 'GH', 'GI', 'GL', 'GM', 'GN', 'GP', 'GQ', 'GR', 'GS', 'GT', 'GU', 'GW', 'GY', 'HK', 'HN', 'HR', 'HT', 'HU', 'ID', 'IE', 'IL', 'IM', 'IN', 'IS', 'IT', 'JM', 'JO', 'JP', 'KE', 'KG', 'KH', 'KI', 'KM', 'KN', 'KR', 'KW', 'KY', 'KZ', 'LA', 'LB', 'LC', 'LI', 'LK', 'LR', 'LS', 'LT', 'LU', 'LV', 'MA', 'MC', 'MD', 'ME', 'MF', 'MG', 'MH', 'MK', 'MM', 'MN', 'MO', 'MP', 'MQ', 'MR', 'MS', 'MT', 'MU', 'MV', 'MW', 'MX', 'MY', 'MZ', 'NA', 'NC', 'NE', 'NG', 'NI', 'NL', 'NO', 'NP', 'NR', 'NU', 'NZ', 'OM', 'PA', 'PE', 'PF', 'PG', 'PH', 'PL', 'PN', 'PS', 'PT', 'PW', 'QA', 'RE', 'RO', 'RS', 'RU', 'RW', 'SA', 'SB', 'SC', 'SE', 'SG', 'SH', 'SI', 'SJ', 'SK', 'SL', 'SM', 'SN', 'SR', 'ST', 'SV', 'SZ', 'TC', 'TD', 'TG', 'TH', 'TJ', 'TL', 'TM', 'TN', 'TO', 'TR', 'TT', 'TV', 'TW', 'TZ', 'UA', 'UG', 'US', 'UY', 'UZ', 'VC', 'VE', 'VG', 'VI', 'VN', 'WF', 'WS', 'ZA', 'ZM', 'ZW']
+      self.supported_countries = %w[AD AE AG AI AL AM AO AR AS AT AU AW AX AZ BA BB BD BE BF BG BH BI BJ BL BM BN BO BQ BR BS BT BW BY BZ CA CC CD CF CH CI CK CL CM CN CO CR CU CV CW CX CY CZ DE DJ DK DM DO DZ EC EE EG ER ES ET FI FJ FK FM FO FR GA GB GD GE GF GH GI GL GM GN GP GQ GR GS GT GU GW GY HK HN HR HT HU ID IE IL IM IN IS IT JM JO JP KE KG KH KI KM KN KR KW KY KZ LA LB LC LI LK LR LS LT LU LV MA MC MD ME MF MG MH MK MM MN MO MP MQ MR MS MT MU MV MW MX MY MZ NA NC NE NG NI NL NO NP NR NU NZ OM PA PE PF PG PH PL PN PS PT PW QA RE RO RS RU RW SA SB SC SE SG SH SI SJ SK SL SM SN SR ST SV SZ TC TD TG TH TJ TL TM TN TO TR TT TV TW TZ UA UG US UY UZ VC VE VG VI VN WF WS ZA ZM ZW]
       self.default_currency = 'USD'
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :naranja, :cabal]
+      self.supported_cardtypes = %i[visa master american_express discover naranja cabal]
 
       def initialize(options={})
         requires!(options, :merchant_id, :api_key_id, :secret_api_key)
@@ -20,7 +20,7 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment, options={})
         MultiResponse.run do |r|
           r.process { authorize(money, payment, options) }
-          r.process { capture(money, r.authorization, options) } unless capture_requested?(r)
+          r.process { capture(money, r.authorization, options) } if should_request_capture?(r, options[:requires_approval])
         end
       end
 
@@ -32,7 +32,6 @@ module ActiveMerchant #:nodoc:
         add_address(post, payment, options)
         add_creator_info(post, options)
         add_fraud_fields(post, options)
-
         commit(:authorize, post)
       end
 
@@ -156,16 +155,18 @@ module ActiveMerchant #:nodoc:
         pre_authorization = options[:pre_authorization] ? 'PRE_AUTHORIZATION' : 'FINAL_AUTHORIZATION'
 
         post['cardPaymentMethodSpecificInput'] = {
-            'paymentProductId' => BRAND_MAP[payment.brand],
-            'skipAuthentication' => 'true', # refers to 3DSecure
-            'skipFraudService' => 'true',
-            'authorizationMode' => pre_authorization
+          'paymentProductId' => BRAND_MAP[payment.brand],
+          'skipAuthentication' => 'true', # refers to 3DSecure
+          'skipFraudService' => 'true',
+          'authorizationMode' => pre_authorization
         }
+        post['cardPaymentMethodSpecificInput']['requiresApproval'] = options[:requires_approval] unless options[:requires_approval].nil?
+
         post['cardPaymentMethodSpecificInput']['card'] = {
-            'cvv' => payment.verification_value,
-            'cardNumber' => payment.number,
-            'expiryDate' => expirydate,
-            'cardholderName' => payment.name
+          'cvv' => payment.verification_value,
+          'cardNumber' => payment.number,
+          'expiryDate' => expirydate,
+          'cardholderName' => payment.name
         }
       end
 
@@ -283,7 +284,7 @@ module ActiveMerchant #:nodoc:
 
       def headers(action, post, authorization = nil)
         {
-          'Content-Type'  => content_type,
+          'Content-Type' => content_type,
           'Authorization' => auth_digest(action, post, authorization),
           'Date' => date
         }
@@ -314,18 +315,16 @@ POST
       end
 
       def message_from(succeeded, response)
-        if succeeded
-          'Succeeded'
+        return 'Succeeded' if succeeded
+
+        if errors = response['errors']
+          errors.first.try(:[], 'message')
+        elsif response['error_message']
+          response['error_message']
+        elsif response['status']
+          'Status: ' + response['status']
         else
-          if errors = response['errors']
-            errors.first.try(:[], 'message')
-          elsif response['error_message']
-            response['error_message']
-          elsif response['status']
-            'Status: ' + response['status']
-          else
-            'No message available'
-          end
+          'No message available'
         end
       end
 
@@ -340,19 +339,26 @@ POST
       end
 
       def error_code_from(succeeded, response)
-        unless succeeded
-          if errors = response['errors']
-            errors.first.try(:[], 'code')
-          elsif status = response.try(:[], 'statusOutput').try(:[], 'statusCode')
-            status.to_s
-          else
-            'No error code available'
-          end
+        return if succeeded
+
+        if errors = response['errors']
+          errors.first.try(:[], 'code')
+        elsif status = response.try(:[], 'statusOutput').try(:[], 'statusCode')
+          status.to_s
+        else
+          'No error code available'
         end
       end
 
       def nestable_hash
         Hash.new { |h, k| h[k] = Hash.new(&h.default_proc) }
+      end
+
+      # Capture hasn't already been requested,
+      # and
+      # `requires_approval` is not false
+      def should_request_capture?(response, requires_approval)
+        !capture_requested?(response) && requires_approval != false
       end
 
       def capture_requested?(response)

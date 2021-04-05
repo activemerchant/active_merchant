@@ -9,6 +9,8 @@ module ActiveMerchant
 
       self.default_currency = 'USD'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club, :maestro, :naranja, :cabal]
+      self.currencies_without_fractions = %w(BYR CLP ILS JPY KRW VND XOF)
+      self.currencies_with_three_decimal_places = %w(BHD JOD KWD OMR TND)
 
       self.homepage_url = 'https://home.bluesnap.com/'
       self.display_name = 'BlueSnap'
@@ -188,8 +190,9 @@ module ActiveMerchant
       end
 
       def add_amount(doc, money, options)
-        doc.amount(amount(money))
-        doc.currency(options[:currency] || currency(money))
+        currency = options[:currency] || currency(money)
+        doc.amount(localized_amount(money, currency))
+        doc.currency(currency)
       end
 
       def add_personal_info(doc, payment_method, options)

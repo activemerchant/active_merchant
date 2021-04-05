@@ -57,7 +57,7 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment_method, options = {})
         MultiResponse.run do |r|
           r.process { authorize(money, payment_method, options) }
-          r.process { capture(money, r.authorization, options.merge(:authorization_validated => true)) }
+          r.process { capture(money, r.authorization, options.merge(authorization_validated: true)) }
         end
       end
 
@@ -73,7 +73,7 @@ module ActiveMerchant #:nodoc:
           r.process { inquire_request(authorization, options, 'AUTHORISED') } unless options[:authorization_validated]
           if r.params
             authorization_currency = r.params['amount_currency_code']
-            options = options.merge(:currency => authorization_currency) if authorization_currency.present?
+            options = options.merge(currency: authorization_currency) if authorization_currency.present?
           end
           r.process { capture_request(money, authorization, options) }
         end
@@ -106,13 +106,13 @@ module ActiveMerchant #:nodoc:
       #   merchant ID.
       def credit(money, payment_method, options = {})
         payment_details = payment_details_from(payment_method)
-        credit_request(money, payment_method, payment_details.merge(:credit => true, **options))
+        credit_request(money, payment_method, payment_details.merge(credit: true, **options))
       end
 
       def verify(payment_method, options={})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, payment_method, options) }
-          r.process(:ignore_result) { void(r.authorization, options.merge(:authorization_validated => true)) }
+          r.process(:ignore_result) { void(r.authorization, options.merge(authorization_validated: true)) }
         end
       end
 
@@ -163,8 +163,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_request
-        xml = Builder::XmlMarkup.new :indent => 2
-        xml.instruct! :xml, :encoding => 'UTF-8'
+        xml = Builder::XmlMarkup.new indent: 2
+        xml.instruct! :xml, encoding: 'UTF-8'
         xml.declare! :DOCTYPE, :paymentService, :PUBLIC, '-//WorldPay//DTD WorldPay PaymentService v1//EN', 'http://dtd.worldpay.com/paymentService_v1.dtd'
         xml.paymentService 'version' => '1.4', 'merchantCode' => @options[:login] do
           yield xml
@@ -203,6 +203,7 @@ module ActiveMerchant #:nodoc:
               end
               add_payment_method(xml, money, payment_method, options)
               add_shopper(xml, options)
+              add_risk_data(xml, options[:risk_data]) if options[:risk_data]
               add_hcg_additional_data(xml, options) if options[:hcg_additional_data]
               add_instalments_data(xml, options) if options[:instalments]
               add_moto_flag(xml, options) if options.dig(:metadata, :manual_entry)
@@ -221,7 +222,7 @@ module ActiveMerchant #:nodoc:
         build_order_modify_request(authorization) do |xml|
           xml.capture do
             time = Time.now
-            xml.date 'dayOfMonth' => time.day, 'month' => time.month, 'year'=> time.year
+            xml.date 'dayOfMonth' => time.day, 'month' => time.month, 'year' => time.year
             add_amount(xml, money, options)
           end
         end
@@ -234,7 +235,7 @@ module ActiveMerchant #:nodoc:
       def build_refund_request(money, authorization, options)
         build_order_modify_request(authorization) do |xml|
           xml.refund do
-            add_amount(xml, money, options.merge(:debit_credit_indicator => 'credit'))
+            add_amount(xml, money, options.merge(debit_credit_indicator: 'credit'))
           end
         end
       end
@@ -261,6 +262,92 @@ module ActiveMerchant #:nodoc:
 
       def add_3ds_exemption(xml, options)
         xml.exemption 'type' => options[:exemption_type], 'placement' => options[:exemption_placement] || 'AUTHORISATION'
+      end
+
+      def add_risk_data(xml, risk_data)
+        xml.riskData do
+          add_authentication_risk_data(xml, risk_data[:authentication_risk_data])
+          add_shopper_account_risk_data(xml, risk_data[:shopper_account_risk_data])
+          add_transaction_risk_data(xml, risk_data[:transaction_risk_data])
+        end
+      end
+
+      def add_authentication_risk_data(xml, authentication_risk_data)
+        return unless authentication_risk_data
+
+        timestamp = authentication_risk_data.fetch(:authentication_date, {})
+
+        xml.authenticationRiskData('authenticationMethod' => authentication_risk_data[:authentication_method]) do
+          xml.authenticationTimestamp do
+            xml.date(
+              'dayOfMonth' => timestamp[:day_of_month],
+              'month' => timestamp[:month],
+              'year' => timestamp[:year],
+              'hour' => timestamp[:hour],
+              'minute' => timestamp[:minute],
+              'second' => timestamp[:second]
+            )
+          end
+        end
+      end
+
+      def add_shopper_account_risk_data(xml, shopper_account_risk_data)
+        return unless shopper_account_risk_data
+
+        data = {
+          'transactionsAttemptedLastDay' => shopper_account_risk_data[:transactions_attempted_last_day],
+          'transactionsAttemptedLastYear' => shopper_account_risk_data[:transactions_attempted_last_year],
+          'purchasesCompletedLastSixMonths' => shopper_account_risk_data[:purchases_completed_last_six_months],
+          'addCardAttemptsLastDay' => shopper_account_risk_data[:add_card_attempts_last_day],
+          'previousSuspiciousActivity' => shopper_account_risk_data[:previous_suspicious_activity],
+          'shippingNameMatchesAccountName' => shopper_account_risk_data[:shipping_name_matches_account_name],
+          'shopperAccountAgeIndicator' => shopper_account_risk_data[:shopper_account_age_indicator],
+          'shopperAccountChangeIndicator' => shopper_account_risk_data[:shopper_account_change_indicator],
+          'shopperAccountPasswordChangeIndicator' => shopper_account_risk_data[:shopper_account_password_change_indicator],
+          'shopperAccountShippingAddressUsageIndicator' => shopper_account_risk_data[:shopper_account_shipping_address_usage_indicator],
+          'shopperAccountPaymentAccountIndicator' => shopper_account_risk_data[:shopper_account_payment_account_indicator]
+        }.reject { |_k, v| v.nil? }
+
+        xml.shopperAccountRiskData(data) do
+          add_date_element(xml, 'shopperAccountCreationDate', shopper_account_risk_data[:shopper_account_creation_date])
+          add_date_element(xml, 'shopperAccountModificationDate', shopper_account_risk_data[:shopper_account_modification_date])
+          add_date_element(xml, 'shopperAccountPasswordChangeDate', shopper_account_risk_data[:shopper_account_password_change_date])
+          add_date_element(xml, 'shopperAccountShippingAddressFirstUseDate', shopper_account_risk_data[:shopper_account_shipping_address_first_use_date])
+          add_date_element(xml, 'shopperAccountPaymentAccountFirstUseDate', shopper_account_risk_data[:shopper_account_payment_account_first_use_date])
+        end
+      end
+
+      def add_transaction_risk_data(xml, transaction_risk_data)
+        return unless transaction_risk_data
+
+        data = {
+          'shippingMethod' => transaction_risk_data[:shipping_method],
+          'deliveryTimeframe' => transaction_risk_data[:delivery_timeframe],
+          'deliveryEmailAddress' => transaction_risk_data[:delivery_email_address],
+          'reorderingPreviousPurchases' => transaction_risk_data[:reordering_previous_purchases],
+          'preOrderPurchase' => transaction_risk_data[:pre_order_purchase],
+          'giftCardCount' => transaction_risk_data[:gift_card_count]
+        }.reject { |_k, v| v.nil? }
+
+        xml.transactionRiskData(data) do
+          xml.transactionRiskDataGiftCardAmount do
+            amount_hash = {
+              'value' => transaction_risk_data.dig(:transaction_risk_data_gift_card_amount, :value),
+              'currencyCode' => transaction_risk_data.dig(:transaction_risk_data_gift_card_amount, :currency),
+              'exponent' => transaction_risk_data.dig(:transaction_risk_data_gift_card_amount, :exponent)
+            }
+            debit_credit_indicator = transaction_risk_data.dig(:transaction_risk_data_gift_card_amount, :debit_credit_indicator)
+            amount_hash['debitCreditIndicator'] = debit_credit_indicator if debit_credit_indicator
+            xml.amount(amount_hash)
+          end
+          add_date_element(xml, 'transactionRiskDataPreOrderDate', transaction_risk_data[:transaction_risk_data_pre_order_date])
+        end
+      end
+
+      def add_date_element(xml, name, date)
+        xml.tag! name do
+          xml.date('dayOfMonth' => date[:day_of_month], 'month' => date[:month], 'year' => date[:year])
+        end
       end
 
       def add_amount(xml, money, options)
@@ -457,7 +544,7 @@ module ActiveMerchant #:nodoc:
         xml = xml.strip.gsub(/\&/, '&amp;')
         doc = Nokogiri::XML(xml, &:strict)
         doc.remove_namespaces!
-        resp_params = {:action => action}
+        resp_params = {action: action}
 
         parse_elements(doc.root, resp_params)
         resp_params
@@ -504,17 +591,17 @@ module ActiveMerchant #:nodoc:
           success,
           message,
           raw,
-          :authorization => authorization_from(action, raw, options),
-          :error_code => error_code_from(success, raw),
-          :test => test?,
-          :avs_result => AVSResult.new(code: AVS_CODE_MAP[raw[:avs_result_code_description]]),
-          :cvv_result => CVVResult.new(CVC_CODE_MAP[raw[:cvc_result_code_description]])
+          authorization: authorization_from(action, raw, options),
+          error_code: error_code_from(success, raw),
+          test: test?,
+          avs_result: AVSResult.new(code: AVS_CODE_MAP[raw[:avs_result_code_description]]),
+          cvv_result: CVVResult.new(CVC_CODE_MAP[raw[:cvc_result_code_description]])
         )
       rescue Nokogiri::SyntaxError
         unparsable_response(xml)
       rescue ActiveMerchant::ResponseError => e
         if e.response.code.to_s == '401'
-          return Response.new(false, 'Invalid credentials', {}, :test => test?)
+          return Response.new(false, 'Invalid credentials', {}, test: test?)
         else
           raise e
         end

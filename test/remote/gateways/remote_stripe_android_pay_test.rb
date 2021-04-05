@@ -8,9 +8,9 @@ class RemoteStripeAndroidPayTest < Test::Unit::TestCase
     @amount = 100
 
     @options = {
-      :currency => 'USD',
-      :description => 'ActiveMerchant Test Purchase',
-      :email => 'wow@example.com'
+      currency: 'USD',
+      description: 'ActiveMerchant Test Purchase',
+      email: 'wow@example.com'
     }
   end
 

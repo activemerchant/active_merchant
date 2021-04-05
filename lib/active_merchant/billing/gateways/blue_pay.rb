@@ -18,7 +18,7 @@ module ActiveMerchant #:nodoc:
         'TRANS_ID' => :transaction_id,
         'STATUS' => :response_code,
         'AVS' => :avs_result_code,
-        'CVV2'=> :card_code,
+        'CVV2' => :card_code,
         'AUTH_CODE' => :authorization,
         'MESSAGE' => :message,
         'REBID' => :rebid,
@@ -29,7 +29,7 @@ module ActiveMerchant #:nodoc:
 
       REBILL_FIELD_MAP = {
         'REBILL_ID' => :rebill_id,
-        'ACCOUNT_ID'=> :account_id,
+        'ACCOUNT_ID' => :account_id,
         'USER_ID' => :user_id,
         'TEMPLATE_ID' => :template_id,
         'STATUS' => :status,
@@ -343,8 +343,8 @@ module ActiveMerchant #:nodoc:
         message = parsed[:status]
 
         Response.new(success, message, parsed,
-          :test          => test?,
-          :authorization => parsed[:rebill_id])
+          test: test?,
+          authorization: parsed[:rebill_id])
       end
 
       def parse(body)
@@ -363,10 +363,10 @@ module ActiveMerchant #:nodoc:
         message = message_from(parsed)
         success = parsed[:response_code] == '1'
         Response.new(success, message, parsed,
-          :test          => test?,
-          :authorization => (parsed[:rebid] && parsed[:rebid] != '' ? parsed[:rebid] : parsed[:transaction_id]),
-          :avs_result    => { :code => parsed[:avs_result_code] },
-          :cvv_result    => parsed[:card_code]
+          test: test?,
+          authorization: (parsed[:rebid] && parsed[:rebid] != '' ? parsed[:rebid] : parsed[:transaction_id]),
+          avs_result: { code: parsed[:avs_result_code] },
+          cvv_result: parsed[:card_code]
         )
       end
 

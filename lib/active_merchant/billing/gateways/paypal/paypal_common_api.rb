@@ -586,7 +586,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'n2:OrderTotal', localized_amount(money, currency_code), 'currencyID' => currency_code
 
           # All of the values must be included together and add up to the order total
-          if [:subtotal, :shipping, :handling, :tax].all?{ |o| options.has_key?(o) }
+          if [:subtotal, :shipping, :handling, :tax].all?{ |o| options[o].present? }
             xml.tag! 'n2:ItemTotal', localized_amount(options[:subtotal], currency_code), 'currencyID' => currency_code
             xml.tag! 'n2:ShippingTotal', localized_amount(options[:shipping], currency_code),'currencyID' => currency_code
             xml.tag! 'n2:HandlingTotal', localized_amount(options[:handling], currency_code),'currencyID' => currency_code

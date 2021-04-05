@@ -5,16 +5,16 @@ class NabTransactTest < Test::Unit::TestCase
 
   def setup
     @gateway = NabTransactGateway.new(
-      :login => 'login',
-      :password => 'password'
+      login: 'login',
+      password: 'password'
     )
     @credit_card = credit_card
     @amount = 200
 
     @options = {
-      :order_id => '1',
-      :billing_address => address,
-      :description => 'Test NAB Purchase'
+      order_id: '1',
+      billing_address: address,
+      description: 'Test NAB Purchase'
     }
   end
 
@@ -33,7 +33,7 @@ class NabTransactTest < Test::Unit::TestCase
     name, location = 'Active Merchant', 'USA'
 
     response = assert_metadata(name, location) do
-      response = @gateway.purchase(@amount, @credit_card, @options.merge(:merchant_name => name, :merchant_location => location))
+      response = @gateway.purchase(@amount, @credit_card, @options.merge(merchant_name: name, merchant_location: location))
     end
 
     assert response
@@ -52,7 +52,7 @@ class NabTransactTest < Test::Unit::TestCase
     name, location = 'Active Merchant', 'USA'
 
     response = assert_metadata(name, location) do
-      response = @gateway.authorize(@amount, @credit_card, @options.merge(:merchant_name => name, :merchant_location => location))
+      response = @gateway.authorize(@amount, @credit_card, @options.merge(merchant_name: name, merchant_location: location))
     end
 
     assert response
@@ -71,7 +71,7 @@ class NabTransactTest < Test::Unit::TestCase
     name, location = 'Active Merchant', 'USA'
 
     response = assert_metadata(name, location) do
-      response = @gateway.capture(@amount, '009887*test*009887*200', @options.merge(:merchant_name => name, :merchant_location => location))
+      response = @gateway.capture(@amount, '009887*test*009887*200', @options.merge(merchant_name: name, merchant_location: location))
     end
 
     assert response
@@ -108,14 +108,14 @@ class NabTransactTest < Test::Unit::TestCase
 
   def test_successful_refund
     @gateway.expects(:ssl_post).with(&check_transaction_type(:refund)).returns(successful_refund_response)
-    assert_success @gateway.refund(@amount, '009887', {:order_id => '1'})
+    assert_success @gateway.refund(@amount, '009887', {order_id: '1'})
   end
 
   def test_successful_refund_with_merchant_descriptor
     name, location = 'Active Merchant', 'USA'
 
     response = assert_metadata(name, location) do
-      response = @gateway.refund(@amount, '009887', {:order_id => '1', :merchant_name => name, :merchant_location => location})
+      response = @gateway.refund(@amount, '009887', {order_id: '1', merchant_name: name, merchant_location: location})
     end
 
     assert response
@@ -125,13 +125,13 @@ class NabTransactTest < Test::Unit::TestCase
 
   def test_successful_credit
     @gateway.expects(:ssl_post).with(&check_transaction_type(:unmatched_refund)).returns(successful_refund_response)
-    assert_success @gateway.credit(@amount, @credit_card, {:order_id => '1'})
+    assert_success @gateway.credit(@amount, @credit_card, {order_id: '1'})
   end
 
   def test_failed_refund
     @gateway.expects(:ssl_post).with(&check_transaction_type(:refund)).returns(failed_refund_response)
 
-    response = @gateway.refund(@amount, '009887', {:order_id => '1'})
+    response = @gateway.refund(@amount, '009887', {order_id: '1'})
     assert_failure response
     assert_equal 'Only $1.00 available for refund', response.message
   end

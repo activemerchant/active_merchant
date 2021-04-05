@@ -12,6 +12,7 @@ class CreditCardMethodsTest < Test::Unit::TestCase
       5612590000000000 5817500000000000 5818000000000000
       6390000000000000 6390700000000000 6390990000000000
       6761999999999999 6763000000000000 6799999999999999
+      5000330000000000 5811499999999999
     ]
   end
 
@@ -146,6 +147,7 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_equal 'alelo', CreditCard.brand?('5067700000000028')
     assert_equal 'alelo', CreditCard.brand?('5067600000000036')
     assert_equal 'alelo', CreditCard.brand?('5067600000000044')
+    assert_equal 'alelo', CreditCard.brand?('5099920000000000')
   end
 
   def test_should_detect_naranja_card

@@ -26,6 +26,7 @@ module ActiveMerchant #:nodoc:
       DEFAULT_API_VERSION = '2015-04-07'
       STATEMENT_DESC_API_VERSION = '2019-02-19'
       CHARGE_REQ_API_VERSION = '2019-09-09'
+      CONNECTED_ACCOUNT_PREFIX = 'acct_'
 
       self.supported_countries = %w(AT AU BE BR CA CH DE DK EE ES FI FR GB GR HK IE IT JP LT LU LV MX NL NO NZ PL PT SE SG SI SK US)
       self.default_currency = 'USD'
@@ -349,6 +350,8 @@ module ActiveMerchant #:nodoc:
 
         if payment.is_a?(StripePaymentToken)
           add_payment_token(post, payment, options)
+        elsif connected_account?(payment)
+          add_source(post, payment)
         else
           add_creditcard(post, payment, options)
         end
@@ -380,6 +383,7 @@ module ActiveMerchant #:nodoc:
         add_exchange_rate(post, options)
         add_destination(post, options)
         add_level_three(post, options)
+        add_connected_account(post, options)
         post
       end
 
@@ -436,7 +440,7 @@ module ActiveMerchant #:nodoc:
 
       def add_external_account(post, card_params, payment)
         external_account = {}
-        external_account[:object] ='card'
+        external_account[:object] = 'card'
         external_account[:currency] = (options[:currency] || currency(payment)).downcase
         post[:external_account] = external_account.merge(card_params[:card])
       end
@@ -530,6 +534,10 @@ module ActiveMerchant #:nodoc:
         post[:card] = token.payment_data['id']
       end
 
+      def add_source(post, token)
+        post[:source] = token
+      end
+
       def add_customer(post, payment, options)
         post[:customer] = options[:customer] if options[:customer] && !payment.respond_to?(:number)
       end
@@ -569,6 +577,16 @@ module ActiveMerchant #:nodoc:
           post[:owner][:phone] = address[:phone] if address[:phone]
           post[:owner][:address] = owner_address
         end
+      end
+
+      def add_connected_account(post, options = {})
+        return unless options[:transfer_destination]
+
+        post[:transfer_data] = { destination: options[:transfer_destination] }
+        post[:transfer_data][:amount] = options[:transfer_amount] if options[:transfer_amount]
+        post[:on_behalf_of] = options[:on_behalf_of] if options[:on_behalf_of]
+        post[:transfer_group] = options[:transfer_group] if options[:transfer_group]
+        post[:application_fee_amount] = options[:application_fee_amount] if options[:application_fee_amount]
       end
 
       def parse(body)
@@ -619,7 +637,7 @@ module ActiveMerchant #:nodoc:
           'User-Agent' => "Stripe/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
           'Stripe-Version' => api_version(options),
           'X-Stripe-Client-User-Agent' => stripe_client_user_agent(options),
-          'X-Stripe-Client-User-Metadata' => {:ip => options[:ip]}.to_json
+          'X-Stripe-Client-User-Metadata' => { ip: options[:ip] }.to_json
         }
         headers['Idempotency-Key'] = idempotency_key if idempotency_key
         headers['Stripe-Account'] = options[:stripe_account] if options[:stripe_account]
@@ -663,12 +681,12 @@ module ActiveMerchant #:nodoc:
         Response.new(success,
           message_from(success, response),
           response,
-          :test => response_is_test?(response),
-          :authorization => authorization_from(success, url, method, response),
-          :avs_result => { :code => avs_code },
-          :cvv_result => cvc_code,
-          :emv_authorization => emv_authorization_from_response(response),
-          :error_code => success ? nil : error_code_from(response)
+          test: response_is_test?(response),
+          authorization: authorization_from(success, url, method, response),
+          avs_result: { code: avs_code },
+          cvv_result: cvc_code,
+          emv_authorization: emv_authorization_from_response(response),
+          error_code: success ? nil : error_code_from(response)
         )
       end
 
@@ -784,6 +802,10 @@ module ActiveMerchant #:nodoc:
         return 100 unless options[:currency]
 
         return MINIMUM_AUTHORIZE_AMOUNTS[options[:currency].upcase] || 100
+      end
+
+      def connected_account?(token)
+        token.kind_of?(String) && token.start_with?(CONNECTED_ACCOUNT_PREFIX)
       end
 
       def copy_when_present(dest, dest_path, source, source_path = nil)

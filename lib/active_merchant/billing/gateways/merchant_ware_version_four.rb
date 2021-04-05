@@ -16,12 +16,12 @@ module ActiveMerchant #:nodoc:
       TX_NAMESPACE = 'http://schemas.merchantwarehouse.com/merchantware/40/Credit/'
 
       ACTIONS = {
-        :purchase  => 'SaleKeyed',
-        :reference_purchase => 'RepeatSale',
-        :authorize => 'PreAuthorizationKeyed',
-        :capture   => 'PostAuthorization',
-        :void      => 'Void',
-        :refund    => 'Refund'
+        purchase: 'SaleKeyed',
+        reference_purchase: 'RepeatSale',
+        authorize: 'PreAuthorizationKeyed',
+        capture: 'PostAuthorization',
+        void: 'Void',
+        refund: 'Refund'
       }
 
       # Creates a new MerchantWareVersionFourGateway
@@ -129,7 +129,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def soap_request(action)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.instruct!
         xml.tag! 'soap:Envelope', ENV_NAMESPACES do
           xml.tag! 'soap:Body' do
@@ -271,10 +271,10 @@ module ActiveMerchant #:nodoc:
         end
 
         Response.new(response[:success], response[:message], response,
-          :test => test?,
-          :authorization => authorization_from(response),
-          :avs_result => { :code => response['AvsResponse'] },
-          :cvv_result => response['CvResponse']
+          test: test?,
+          authorization: authorization_from(response),
+          avs_result: { code: response['AvsResponse'] },
+          cvv_result: response['CvResponse']
         )
       end
 

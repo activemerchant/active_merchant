@@ -28,7 +28,7 @@ class ForteTest < Test::Unit::TestCase
 
   def test_purchase_passes_options
     options = { order_id: '1' }
-    @gateway.expects(:commit).with(anything, has_entries(:order_number => '1'))
+    @gateway.expects(:commit).with(anything, has_entries(order_number: '1'))
 
     stub_comms(@gateway, :raw_ssl_request) do
       @gateway.purchase(@amount, @credit_card, options)

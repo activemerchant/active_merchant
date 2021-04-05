@@ -9,8 +9,8 @@ class RemoteModernPaymentsCimTest < Test::Unit::TestCase
     @declined_card = credit_card('4000000000000000')
 
     @options = {
-      :billing_address => address,
-      :customer => 'JIMSMITH2000'
+      billing_address: address,
+      customer: 'JIMSMITH2000'
     }
   end
 
@@ -46,8 +46,8 @@ class RemoteModernPaymentsCimTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = ModernPaymentsCimGateway.new(
-      :login => '',
-      :password => ''
+      login: '',
+      password: ''
     )
     assert response = gateway.create_customer(@options)
     assert_failure response

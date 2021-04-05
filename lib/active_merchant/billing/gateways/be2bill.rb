@@ -92,8 +92,8 @@ module ActiveMerchant #:nodoc:
           successful?(response),
           message_from(response),
           response,
-          :authorization => response['TRANSACTIONID'],
-          :test          => test?
+          authorization: response['TRANSACTIONID'],
+          test: test?
         )
       end
 
@@ -111,8 +111,8 @@ module ActiveMerchant #:nodoc:
 
       def post_data(action, parameters = {})
         {
-          :method => action,
-          :params => parameters.merge(HASH: signature(parameters, action))
+          method: action,
+          params: parameters.merge(HASH: signature(parameters, action))
         }.to_query
       end
 

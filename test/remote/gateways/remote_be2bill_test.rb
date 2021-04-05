@@ -9,13 +9,13 @@ class RemoteBe2billTest < Test::Unit::TestCase
     @declined_card = credit_card('5555557376384001')
 
     @options = {
-      :order_id     => '1',
-      :description  => 'Store Purchase',
-      :client_id    => '1',
-      :referrer     => 'google.com',
-      :user_agent   => 'Firefox 25',
-      :ip           => '127.0.0.1',
-      :email        => 'customer@yopmail.com'
+      order_id: '1',
+      description: 'Store Purchase',
+      client_id: '1',
+      referrer: 'google.com',
+      user_agent: 'Firefox 25',
+      ip: '127.0.0.1',
+      email: 'customer@yopmail.com'
     }
   end
 
@@ -49,8 +49,8 @@ class RemoteBe2billTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = Be2billGateway.new(
-      :login    => '',
-      :password => ''
+      login: '',
+      password: ''
     )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response

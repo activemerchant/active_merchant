@@ -164,24 +164,24 @@ module ActiveMerchant #:nodoc:
         return Response.new(response['errorcode'] == '000',
           response['errormessage'],
           response,
-          :test => test?,
-          :authorization => response['transaction_id'])
+          test: test?,
+          authorization: response['transaction_id'])
       end
 
       def build_soap(request)
-        retval = Builder::XmlMarkup.new(:indent => 2)
-        retval.instruct!(:xml, :version => '1.0', :encoding => 'utf-8')
+        retval = Builder::XmlMarkup.new(indent: 2)
+        retval.instruct!(:xml, version: '1.0', encoding: 'utf-8')
         retval.tag!('soap:Envelope', {
-            'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance',
-            'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema',
-            'xmlns:soapenc' => 'http://schemas.xmlsoap.org/soap/encoding/',
-            'xmlns:tns' => 'urn:Interface',
-            'xmlns:types' => 'urn:Interface/encodedTypes',
-            'xmlns:soap' => 'http://schemas.xmlsoap.org/soap/envelope/'
+          'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance',
+          'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema',
+          'xmlns:soapenc' => 'http://schemas.xmlsoap.org/soap/encoding/',
+          'xmlns:tns' => 'urn:Interface',
+          'xmlns:types' => 'urn:Interface/encodedTypes',
+          'xmlns:soap' => 'http://schemas.xmlsoap.org/soap/envelope/'
         }) do
-          retval.tag!('soap:Body', {'soap:encodingStyle'=>'http://schemas.xmlsoap.org/soap/encoding/'}) do
+          retval.tag!('soap:Body', {'soap:encodingStyle' => 'http://schemas.xmlsoap.org/soap/encoding/'}) do
             retval.tag!("tns:#{request}") do
-              retval.tag!("#{request}Request", {'xsi:type'=>"tns:#{request}Request"}) do
+              retval.tag!("#{request}Request", {'xsi:type' => "tns:#{request}Request"}) do
                 yield retval
               end
             end

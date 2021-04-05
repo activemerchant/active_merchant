@@ -6,9 +6,9 @@ class RedsysTest < Test::Unit::TestCase
   def setup
     Base.mode = :test
     @credentials = {
-      :login      => '091952713',
-      :secret_key => 'qwertyasdf0123456789',
-      :terminal   => '1',
+      login: '091952713',
+      secret_key: 'qwertyasdf0123456789',
+      terminal: '1',
     }
     @gateway = RedsysGateway.new(@credentials)
     @headers = {
@@ -20,12 +20,12 @@ class RedsysTest < Test::Unit::TestCase
 
   def test_purchase_payload
     @gateway.expects(:ssl_post).with(RedsysGateway.test_url, purchase_request, @headers).returns(successful_purchase_response)
-    @gateway.purchase(123, credit_card, :order_id => '1001')
+    @gateway.purchase(123, credit_card, order_id: '1001')
   end
 
   def test_purchase_payload_with_credit_card_token
     @gateway.expects(:ssl_post).with(RedsysGateway.test_url, purchase_request_with_credit_card_token, @headers).returns(successful_purchase_response)
-    @gateway.purchase(123, '77bff3a969d6f97b2ec815448cdcff453971f573', :order_id => '1001')
+    @gateway.purchase(123, '77bff3a969d6f97b2ec815448cdcff453971f573', order_id: '1001')
   end
 
   def test_successful_purchase
@@ -161,7 +161,7 @@ class RedsysTest < Test::Unit::TestCase
       includes(CGI.escape('<DS_MERCHANT_CURRENCY>840</DS_MERCHANT_CURRENCY>')),
       anything
     ).returns(successful_purchase_response)
-    @gateway.authorize(123, credit_card, :order_id => '1001', :currency => 'USD')
+    @gateway.authorize(123, credit_card, order_id: '1001', currency: 'USD')
   end
 
   def test_successful_verify
@@ -210,10 +210,10 @@ class RedsysTest < Test::Unit::TestCase
   def test_overriding_options
     Base.mode = :production
     gw = RedsysGateway.new(
-      :terminal => 1,
-      :login => '1234',
-      :secret_key => '12345',
-      :test => true
+      terminal: 1,
+      login: '1234',
+      secret_key: '12345',
+      test: true
     )
     assert gw.test?
     assert_equal RedsysGateway.test_url, gw.send(:url)
@@ -222,9 +222,9 @@ class RedsysTest < Test::Unit::TestCase
   def test_production_mode
     Base.mode = :production
     gw = RedsysGateway.new(
-      :terminal => 1,
-      :login => '1234',
-      :secret_key => '12345'
+      terminal: 1,
+      login: '1234',
+      secret_key: '12345'
     )
     assert !gw.test?
     assert_equal RedsysGateway.live_url, gw.send(:url)

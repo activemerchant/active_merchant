@@ -103,10 +103,10 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(url, post_data(money, creditcard, options)))
 
         Response.new(successful?(response), message_from(response), response,
-          :test => test?,
-          :authorization => build_authorization(response),
-          :avs_result => { :code => response[:avsresult] },
-          :cvv_result => response[:cardidresult]
+          test: test?,
+          authorization: build_authorization(response),
+          avs_result: { code: response[:avsresult] },
+          cvv_result: response[:cardidresult]
         )
       end
 
@@ -119,7 +119,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(xml)
-        response = {:message => 'Global Error Receipt', :complete => false}
+        response = {message: 'Global Error Receipt', complete: false}
 
         xml = REXML::Document.new(xml)
         xml.elements.each('//Result/*') do |node|
@@ -144,26 +144,26 @@ module ActiveMerchant #:nodoc:
       def parameters(money, creditcard, options = {})
         params = {
           # General order parameters
-          :StoreID => @options[:login],
-          :Passphrase => @options[:password],
-          :TestResult => options[:test_result],
-          :OrderID => options[:order_id],
-          :UserID => options[:user_id],
-          :Phone => options[:phone],
-          :Fax => options[:fax],
-          :Email => options[:email],
-          :TransRefNumber => options[:trans_ref_number],
+          StoreID: @options[:login],
+          Passphrase: @options[:password],
+          TestResult: options[:test_result],
+          OrderID: options[:order_id],
+          UserID: options[:user_id],
+          Phone: options[:phone],
+          Fax: options[:fax],
+          Email: options[:email],
+          TransRefNumber: options[:trans_ref_number],
 
           # Credit Card parameters
-          :PaymentType => 'CC',
-          :CardAction => options[:CardAction],
+          PaymentType: 'CC',
+          CardAction: options[:CardAction],
 
           # Financial parameters
-          :CustomerIP => options[:ip],
-          :SubTotal => amount(money),
-          :Tax1 => options[:tax1],
-          :Tax2 => options[:tax2],
-          :ShippingTotal => options[:shipping_total],
+          CustomerIP: options[:ip],
+          SubTotal: amount(money),
+          Tax1: options[:tax1],
+          Tax2: options[:tax2],
+          ShippingTotal: options[:shipping_total],
         }
 
         if creditcard
@@ -172,11 +172,11 @@ module ActiveMerchant #:nodoc:
           card_id_code = (creditcard.verification_value.blank? ? nil : '1')
 
           params.update(
-            :CardNumber => creditcard.number,
-            :CardExpMonth => exp_month,
-            :CardExpYear => exp_year,
-            :CardIDCode => card_id_code,
-            :CardIDNumber => creditcard.verification_value
+            CardNumber: creditcard.number,
+            CardExpMonth: exp_month,
+            CardExpYear: exp_year,
+            CardIDCode: card_id_code,
+            CardIDNumber: creditcard.verification_value
           )
         end
 

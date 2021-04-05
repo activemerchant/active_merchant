@@ -32,3 +32,7 @@ Layout/DotPosition:
 
 Layout/CaseIndentation:
   EnforcedStyle: end
+
+Layout/IndentHash:
+  EnforcedStyle: consistent
+

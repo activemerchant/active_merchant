@@ -141,9 +141,9 @@ module ActiveMerchant #:nodoc:
         response = parse(data)
 
         Response.new(response[:success], response[:message], response,
-          :authorization => response[:transaction_id],
-          :avs_result => { :code => response[:avs_result] },
-          :cvv_result => response[:cvv_result]
+          authorization: response[:transaction_id],
+          avs_result: { code: response[:avs_result] },
+          cvv_result: response[:cvv_result]
         )
       end
 

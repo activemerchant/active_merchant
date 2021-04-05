@@ -266,7 +266,7 @@ module ActiveMerchant #:nodoc:
 
       def post_data(action, parameters = {})
         xml = Builder::XmlMarkup.new
-        xml.instruct!(:xml, :version => '1.0', :encoding => 'utf-8')
+        xml.instruct!(:xml, version: '1.0', encoding: 'utf-8')
         xml.tag! 'soap12:Envelope', envelope_namespaces do
           xml.tag! 'soap12:Body' do
             xml.tag! ACTIONS[action], { 'xmlns' => 'https://www.iatspayments.com/NetGate/' } do

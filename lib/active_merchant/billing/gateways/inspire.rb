@@ -51,13 +51,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options = {})
-        post ={}
+        post = {}
         post[:transactionid] = authorization
         commit('capture', money, post)
       end
 
       def void(authorization, options = {})
-        post ={}
+        post = {}
         post[:transactionid] = authorization
         commit('void', nil, post)
       end
@@ -93,7 +93,7 @@ module ActiveMerchant #:nodoc:
       # store and unstore need to be defined
       def store(creditcard, options = {})
         billing_id = options.delete(:billing_id).to_s || true
-        authorize(100, creditcard, options.merge(:store => billing_id))
+        authorize(100, creditcard, options.merge(store: billing_id))
       end
 
       alias_method :unstore, :delete
@@ -173,10 +173,10 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(self.live_url, post_data(action, parameters)))
 
         Response.new(response['response'] == '1', message_from(response), response,
-          :authorization => response['transactionid'],
-          :test => test?,
-          :cvv_result => response['cvvresponse'],
-          :avs_result => { :code => response['avsresponse'] }
+          authorization: response['transactionid'],
+          test: test?,
+          cvv_result: response['cvvresponse'],
+          avs_result: { code: response['avsresponse'] }
         )
       end
 

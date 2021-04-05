@@ -4,17 +4,17 @@ class PaystationTest < Test::Unit::TestCase
   include CommStub
   def setup
     @gateway = PaystationGateway.new(
-      :paystation_id => 'some_id_number',
-      :gateway_id    => 'another_id_number'
+      paystation_id: 'some_id_number',
+      gateway_id: 'another_id_number'
     )
 
     @credit_card = credit_card
     @amount = 100
 
     @options = {
-      :order_id => '1',
-      :customer => 'Joe Bloggs, Customer ID #56',
-      :description => 'Store Purchase'
+      order_id: '1',
+      customer: 'Joe Bloggs, Customer ID #56',
+      description: 'Store Purchase'
     }
   end
 
@@ -41,7 +41,7 @@ class PaystationTest < Test::Unit::TestCase
   def test_successful_store
     @gateway.expects(:ssl_post).returns(successful_store_response)
 
-    assert response = @gateway.store(@credit_card, @options.merge(:token => 'justatest1310263135'))
+    assert response = @gateway.store(@credit_card, @options.merge(token: 'justatest1310263135'))
     assert_success response
     assert response.test?
 
@@ -74,7 +74,7 @@ class PaystationTest < Test::Unit::TestCase
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
 
-    assert response = @gateway.capture(@amount, '0009062250-01', @options.merge(:credit_card_verification => 123))
+    assert response = @gateway.capture(@amount, '0009062250-01', @options.merge(credit_card_verification: 123))
     assert_success response
   end
 

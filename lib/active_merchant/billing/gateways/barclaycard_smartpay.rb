@@ -108,7 +108,7 @@ module ActiveMerchant #:nodoc:
       def store(creditcard, options = {})
         post = store_request(options)
         post[:card] = credit_card_hash(creditcard)
-        post[:recurring] = {:contract => 'RECURRING'}
+        post[:recurring] = {contract: 'RECURRING'}
 
         commit('store', post)
       end
@@ -161,20 +161,20 @@ module ActiveMerchant #:nodoc:
           message_from(response),
           response,
           test: test?,
-          avs_result: AVSResult.new(:code => parse_avs_code(response)),
+          avs_result: AVSResult.new(code: parse_avs_code(response)),
           authorization: response['recurringDetailReference'] || authorization_from(post, response)
         )
       rescue ResponseError => e
         case e.response.code
         when '401'
-          return Response.new(false, 'Invalid credentials', {}, :test => test?)
+          return Response.new(false, 'Invalid credentials', {}, test: test?)
         when '403'
-          return Response.new(false, 'Not allowed', {}, :test => test?)
+          return Response.new(false, 'Not allowed', {}, test: test?)
         when '422', '500'
           if e.response.body.split(/\W+/).any? { |word| %w(validation configuration security).include?(word) }
             error_message = e.response.body[/#{Regexp.escape('message=')}(.*?)#{Regexp.escape('&')}/m, 1].tr('+', ' ')
             error_code = e.response.body[/#{Regexp.escape('errorCode=')}(.*?)#{Regexp.escape('&')}/m, 1]
-            return Response.new(false, error_code + ': ' + error_message, {}, :test => test?)
+            return Response.new(false, error_code + ': ' + error_message, {}, test: test?)
           end
         end
         raise
