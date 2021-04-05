@@ -267,29 +267,32 @@ class QvalentTest < Test::Unit::TestCase
 
   def test_default_add_card_reference_number
     post = {}
-    @gateway.options[:order_id] = 1234534
-    @gateway.send(:add_card_reference, post)
+    options = {}
+    options[:order_id] = 1234534
+    @gateway.send(:add_card_reference, post, options)
     assert_equal post['customer.customerReferenceNumber'], 1234534
   end
 
   def test_add_card_reference_number
     post = {}
-    @gateway.options[:order_id] = 1234
-    @gateway.options[:customer_reference_number] = 4321
-    @gateway.send(:add_card_reference, post)
+    options = {}
+    options[:order_id] = 1234
+    options[:customer_reference_number] = 4321
+    @gateway.send(:add_card_reference, post, options)
     assert_equal post['customer.customerReferenceNumber'], 4321
   end
 
   def test_default_add_customer_reference_number
     post = {}
-    @gateway.send(:add_customer_reference, post)
+    @gateway.send(:add_customer_reference, post, {})
     assert_nil post['customer.customerReferenceNumber']
   end
 
   def test_add_customer_reference_number
     post = {}
-    @gateway.options[:customer_reference_number] = 4321
-    @gateway.send(:add_customer_reference, post)
+    options = {}
+    options[:customer_reference_number] = 4321
+    @gateway.send(:add_customer_reference, post, options)
     assert_equal post['customer.customerReferenceNumber'], 4321
   end
 
