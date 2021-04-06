@@ -947,6 +947,32 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal 'submitted_for_settlement', response.params['braintree_transaction']['status']
   end
 
+  def test_successful_authorize_expiration_date_response
+    assert response = @gateway.authorize(
+      @amount,
+      credit_card('4111111111111111',
+        first_name: 'Old First', last_name: 'Old Last',
+        month: 12, year: 2030),
+      @options
+    )
+    assert_success response
+    assert_equal '1000 Approved', response.message
+    assert_equal 'authorized', response.params['braintree_transaction']['status']
+    assert_equal '12/2030', response.params['braintree_transaction']['credit_card_details']['expiration_date']
+  end
+
+  def test_successful_three_d_secure_info_response
+    assert response = @gateway.authorize(
+      @amount,
+      'fake-three-d-secure-visa-full-authentication-nonce',
+      @options.merge({ payment_method_nonce: true })
+    )
+    assert_success response
+    assert_equal '1000 Approved', response.message
+    assert_equal 'authorized', response.params['braintree_transaction']['status']
+    assert_equal 'authenticate_successful', response.params['braintree_transaction']['three_d_secure_info']['status']
+  end
+
   private
 
   def stored_credential_options(*args, id: nil)

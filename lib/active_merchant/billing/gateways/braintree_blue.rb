@@ -532,7 +532,8 @@ module ActiveMerchant #:nodoc:
           'bin'                 => transaction.credit_card_details.bin,
           'last_4'              => transaction.credit_card_details.last_4,
           'card_type'           => transaction.credit_card_details.card_type,
-          'token'               => transaction.credit_card_details.token
+          'token'               => transaction.credit_card_details.token,
+          'expiration_date'     => transaction.credit_card_details.expiration_date
         }
 
         if transaction.risk_data
@@ -544,6 +545,15 @@ module ActiveMerchant #:nodoc:
           }
         else
           risk_data = nil
+        end
+
+        if transaction.three_d_secure_info
+          three_d_secure_info = {
+            'enrolled'                   => transaction.three_d_secure_info.enrolled,
+            'liability_shifted'          => transaction.three_d_secure_info.liability_shifted,
+            'liability_shifted_possible' => transaction.three_d_secure_info.liability_shift_possible,
+            'status'                     => transaction.three_d_secure_info.status,
+          }
         end
 
         {
@@ -558,7 +568,8 @@ module ActiveMerchant #:nodoc:
           'merchant_account_id'     => transaction.merchant_account_id,
           'risk_data'               => risk_data,
           'network_transaction_id'  => transaction.network_transaction_id || nil,
-          'processor_response_code' => response_code_from_result(result)
+          'processor_response_code' => response_code_from_result(result),
+          'three_d_secure_info'     => three_d_secure_info,
         }
       end
 
