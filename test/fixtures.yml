@@ -465,6 +465,11 @@ litle:
   password: MERCHANT
   merchant_id: 101
 
+litle_new:
+  login: ""
+  password: ""
+  merchant_id: 101
+
 # Working test credentials, no need to replace
 maxipago:
   login: "100"
