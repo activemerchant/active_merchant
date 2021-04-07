@@ -216,7 +216,7 @@ class MonerisTest < Test::Unit::TestCase
     assert_equal 'Successfully added token', response.message
     assert response.params['data_key'].present?
     assert response.params['masked_pan'].present?
-    assert response.params['expiry_date'].present?
+    assert response.params['expdate'].present?
     @data_key = response.params['data_key']
   end
 
@@ -919,7 +919,7 @@ class MonerisTest < Test::Unit::TestCase
           <PaymentType>cc</PaymentType>
           <IsVisaDebit>null</IsVisaDebit>
           <MaskedPan>1234********1234</MaskedPan>
-          <ExpiryDate>1122</ExpiryDate>
+          <Expdate>1122</Expdate>
           <ResolveData>
             <anc1/>
             <masked_pan>4242***4242</masked_pan>

@@ -206,6 +206,18 @@ class MonerisRemoteTest < Test::Unit::TestCase
     assert response.params['data_key'].present?
   end
 
+  def test_successful_store_with_token
+    assert response = @gateway.store(@credit_card, duration: 600)
+    assert_success response
+    assert response.params['data_key'].present?
+    assert response = @gateway.store(response.params['data_key'])
+    assert_success response
+    assert response.params['data_key'].present?
+    puts response.params
+    assert response.params['credit_card_details']['masked_pan'].present?
+    assert response.params['credit_card_details']['expdate'].present?
+  end
+
   # AVS result fields are stored in the vault and returned as part of the
   # XML response under <Receipt//ResolveData> (which isn't parsed by ActiveMerchant so
   # we can't test for it).

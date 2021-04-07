@@ -193,7 +193,7 @@ module ActiveMerchant #:nodoc:
 
       def add_token(token, options)
         post = {}
-        post[:data] = token
+        post[:data_key] = token
         post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
         add_stored_credential(post, options)
         commit('res_add_token', post)
@@ -345,9 +345,14 @@ module ActiveMerchant #:nodoc:
       def hashify_xml!(xml, response)
         xml = REXML::Document.new(xml)
         return if xml.root.nil?
+        response[:credit_card_details] = {}
 
         xml.elements.each('//receipt/*') do |node|
           response[node.name.underscore.to_sym] = normalize(node.text)
+        end
+
+        xml.elements.each('//receipt/ResolveData/*') do |node|
+          response[:credit_card_details][node.name.underscore.to_s] = normalize(node.text)
         end
       end
 
