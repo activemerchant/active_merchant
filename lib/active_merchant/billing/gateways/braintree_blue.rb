@@ -487,7 +487,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def transaction_hash(result)
-        return { 'processor_response_code' => response_code_from_result(result) } unless result.success?
+        unless result.transaction
+          return { 'processor_response_code' => response_code_from_result(result) }
+        end
 
         transaction = result.transaction
         if transaction.vault_customer

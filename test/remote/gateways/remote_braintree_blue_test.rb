@@ -973,6 +973,21 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal 'authenticate_successful', response.params['braintree_transaction']['three_d_secure_info']['status']
   end
 
+  def test_unsuccessful_response_to_have_transaction_details
+    assert response = @gateway.authorize(
+      250000,
+      credit_card(
+        '4111111111111111',
+        first_name: 'Old First',
+        last_name: 'Old Last',
+        month: 12, year: 2030
+      ),
+    )
+    assert_failure response
+    assert_equal 'processor_declined', response.params['braintree_transaction']['status']
+    assert_not_nil response.params['braintree_transaction']['credit_card_details']
+  end
+
   private
 
   def stored_credential_options(*args, id: nil)
