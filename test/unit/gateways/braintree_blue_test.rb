@@ -127,6 +127,23 @@ class BraintreeBlueTest < Test::Unit::TestCase
     assert !@gateway.verify_credentials
   end
 
+  def test_zero_dollar_verification_transaction
+    Braintree::CreditCardVerificationGateway.any_instance.expects(:create).
+      returns(braintree_result)
+
+    card = credit_card('4111111111111111')
+    options = {
+      allow_card_verification: true,
+      billing_address: {
+        zip: '10000'
+      }
+    }
+    response = @gateway.verify(card, options)
+    assert_success response
+    assert_equal 'transaction_id', response.params['authorization']
+    assert_equal true, response.params['test']
+  end
+
   def test_user_agent_includes_activemerchant_version
     assert @internal_gateway.config.user_agent.include?("(ActiveMerchant #{ActiveMerchant::VERSION})")
   end

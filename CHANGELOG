@@ -44,6 +44,7 @@
 * Adyen: cancelOrRefund endpoint when passed as option [naashton] #3937
 * Qvalent: Add customer reference number FIX [fredo-] #3939
 * Orbital: Pass line_items in capture [jessiagee] #3941
+* BraintreeBlue: Add support for $0 auth verification [meagabeth] #3944
 
 == Version 1.119.0 (February 9th, 2021)
 * Payment Express: support verify/validate [therufs] #3874

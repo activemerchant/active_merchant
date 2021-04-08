@@ -179,6 +179,13 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_match %r{number is not an accepted test number}, response.message
   end
 
+  def test_successful_credit_card_verification
+    card = credit_card('4111111111111111')
+    assert response = @gateway.verify(card, @options.merge({ allow_card_verification: true }))
+    assert_success response
+    assert_match 'OK', response.message
+  end
+
   def test_successful_verify_with_device_data
     # Requires Advanced Fraud Tools to be enabled
     assert response = @gateway.verify(@credit_card, @options.merge({ device_data: 'device data for verify' }))

@@ -115,10 +115,34 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def verify(credit_card, options = {})
-        MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
+      def verify(creditcard, options = {})
+        if options[:allow_card_verification] == true
+          options.delete(:allow_card_verification)
+          exp_month = creditcard.month.to_s
+          exp_year = creditcard.year.to_s
+          expiration = "#{exp_month}/#{exp_year}"
+          payload = {
+            credit_card: {
+              number: creditcard.number,
+              expiration_date: expiration,
+              cvv: creditcard.verification_value,
+              billing_address: {
+                postal_code: options[:billing_address][:zip]
+              }
+            }
+          }
+          commit do
+            result = @braintree_gateway.verification.create(payload)
+            response = Response.new(result.success?, message_from_transaction_result(result), response_options(result))
+            response.cvv_result['message'] = ''
+            response
+          end
+
+        else
+          MultiResponse.run(:use_first_response) do |r|
+            r.process { authorize(100, creditcard, options) }
+            r.process(:ignore_result) { void(r.authorization, options) }
+          end
         end
       end
 
