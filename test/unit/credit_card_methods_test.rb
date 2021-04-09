@@ -127,6 +127,12 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_equal 'diners_club', CreditCard.brand?('30401000000000')
   end
 
+  def test_should_detect_jcb_cards
+    assert_equal 'jcb', CreditCard.brand?('3528000000000000')
+    assert_equal 'jcb', CreditCard.brand?('3580000000000000')
+    assert_equal 'jcb', CreditCard.brand?('3088000000000017')
+  end
+
   def test_should_detect_maestro_dk_as_maestro
     assert_equal 'maestro', CreditCard.brand?('6769271000000000')
   end
