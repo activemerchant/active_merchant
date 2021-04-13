@@ -62,6 +62,7 @@
 * Worldpay: Correct Expiration Year Format [tatsianaclifton] #4076
 * Monei: Improve Scrub Regex [tatsianaclifton] #4072
 * Payflow: add THREEDSVERSION and DSTRANSACTIONID when present [bbraschi] #4075
+* CT Payments: update remote tests [cdmackeyfree] #3947
 
 == Version 1.121 (June 8th, 2021)
 * Braintree: Lift restriction on gem version to allow for backwards compatibility [naashton] #3993

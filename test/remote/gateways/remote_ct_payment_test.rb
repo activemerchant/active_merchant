@@ -5,7 +5,7 @@ class RemoteCtPaymentTest < Test::Unit::TestCase
     @gateway = CtPaymentGateway.new(fixtures(:ct_payment))
 
     @amount = 100
-    @credit_card = credit_card('4501161107217214', month: '07', year: 2020)
+    @credit_card = credit_card('4501161107217214')
     @declined_card = credit_card('4502244713161718')
     @options = {
       billing_address: address,
