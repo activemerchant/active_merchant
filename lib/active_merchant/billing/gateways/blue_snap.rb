@@ -223,8 +223,10 @@ module ActiveMerchant
       def add_credit_card_info(doc, options)
         doc.send('payment-source') do
           doc.send('credit-card-info') do
-            doc.send('card-last-four-digits', options[:last_four])
-            doc.send('card-type', options[:card_type])
+            doc.send('credit-card') do
+              doc.send('card-last-four-digits', options[:last_four])
+              doc.send('card-type', options[:card_type])
+            end
           end
         end
       end

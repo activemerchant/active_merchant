@@ -468,6 +468,21 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     assert_equal 'Success', response.message
   end
 
+  def test_successful_create_subscription
+    store_response = @gateway.store(@credit_card)
+
+    options = {
+      vaulted_shopper_id: store_response.responses.last.params["vaulted-shopper-id"],
+      last_four: store_response.responses.last.params["card-last-four-digits"],
+      card_type: store_response.responses.last.params["card-type"]
+    }
+
+    create_subscription_response = @gateway.create_subscription(options)
+
+    assert_success create_subscription_response
+    assert_equal 'Success', create_subscription_response.message
+  end
+
   def test_invalid_login
     gateway = BlueSnapGateway.new(api_username: 'unknown', api_password: 'unknown')
 

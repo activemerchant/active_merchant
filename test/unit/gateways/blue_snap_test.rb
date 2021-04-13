@@ -1,6 +1,7 @@
 # coding: utf-8
 
 require 'test_helper'
+require 'nokogiri'
 
 class BlueSnapCurrencyDocMock
   attr_accessor :received_amount
@@ -30,6 +31,11 @@ class BlueSnapTest < Test::Unit::TestCase
     @fraudulent_card = credit_card('4007702835532454')
 
     @options = { order_id: '1', personal_identification_number: 'CNPJ' }
+    @options_for_create_subscription = {
+      vaulted_shopper_id: "31327357",
+      last_four: "9299",
+      card_type: "VISA"
+    }
     @options_3ds2 = @options.merge(
       three_d_secure: {
         eci: '05',
@@ -292,6 +298,26 @@ class BlueSnapTest < Test::Unit::TestCase
     response = @gateway.store(@check, @options)
     assert_failure response
     assert_equal '10001', response.error_code
+  end
+
+  def test_successful_create_subscription
+    response = stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.create_subscription(@options_for_create_subscription)
+    end.check_request do |type, endpoint, data, headers|
+      xml_request = Nokogiri::XML.parse(data)
+
+      payment_source =  xml_request.search("payment-source")
+      credit_card_info = payment_source.search("credit-card-info")
+      credit_card = credit_card_info.search("credit-card")
+      card_last_four_digits = credit_card.search("card-last-four-digits").text
+      card_type = credit_card.search("card-type").text
+
+      assert_match("9299", card_last_four_digits)
+      assert_match("VISA", card_type)
+    end.respond_with(successful_create_subscription_response)
+
+    assert_success response
+    assert_equal "25328741", response.params["subscription-id"]
   end
 
   def test_currency_added_correctly
@@ -1084,6 +1110,54 @@ class BlueSnapTest < Test::Unit::TestCase
         </messages>
     XML
     MockResponse.new(400, body)
+  end
+
+
+  def successful_create_subscription_response
+    response = MockResponse.succeeded <<-XML
+      <?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
+        <charge xmlns=\"http://ws.plimus.com\">
+        <charge-id>21038255</charge-id>
+          <subscription-id>25328741</subscription-id>
+          <vaulted-shopper-id>31327509</vaulted-shopper-id>
+          <transaction-id>1043215089</transaction-id>
+          <transaction-date>2021-04-13</transaction-date>
+          <amount>0.00</amount>
+          <currency>USD</currency>
+          <soft-descriptor>BLS&#x2a;onboardingDefault</soft-descriptor>
+          <payment-source>
+          <credit-card-info>
+          <billing-contact-info>
+          <first-name>Longbob</first-name>
+          <last-name>Longsen</last-name>
+          </billing-contact-info>
+          <credit-card>
+          <card-last-four-digits>9299</card-last-four-digits>
+          <card-type>VISA</card-type>
+          <card-sub-type>CREDIT</card-sub-type>
+          <card-category>PLATINUM</card-category>
+          <bin-category>CONSUMER</bin-category>
+          <card-regulated>N</card-regulated>
+          <issuing-bank>ALLIED IRISH BANKS PLC</issuing-bank>
+          <expiration-month>02</expiration-month>
+          <expiration-year>2023</expiration-year>
+          <issuing-country-code>ie</issuing-country-code>
+          </credit-card>
+          </credit-card-info>
+          </payment-source>
+          <charge-info>
+          <charge-type>INITIAL</charge-type>
+          </charge-info>
+          <processing-info>
+          <processing-status>SUCCESS</processing-status>
+          <authorization-code>654321</authorization-code>
+          </processing-info>
+          <fraud-result-info/>
+        </charge>\n"
+    XML
+
+    response.headers = { 'content-location' => 'https://sandbox.bluesnap.com/services/2/recurring/ondemand' }
+    response
   end
 
   def credentials_are_legit_response
