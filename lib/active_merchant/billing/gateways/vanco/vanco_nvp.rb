@@ -24,6 +24,12 @@ module ActiveMerchant
         super
       end
 
+      def funds(session_id, options={})
+        results = MultiResponse.run do |r|
+          r.process { commit('funds', vanco_fund_list(session_id, options)) }
+        end
+      end
+
       def purchase(money, payment_method, options={})
         MultiResponse.run do |r|
           r.process { login }
@@ -142,6 +148,15 @@ module ActiveMerchant
         add_payment_method(doc, payment_method, options)
         add_options(doc, options)
         add_purchase_noise(doc)
+        doc
+      end
+
+      def vanco_fund_list(session_id, options)
+        doc = {}
+        doc['nvpvar'] = {}
+        add_auth(doc, 'eftgetfundlist', session_id)
+        add_client_id(doc)
+        add_options(doc, options)
         doc
       end
 
