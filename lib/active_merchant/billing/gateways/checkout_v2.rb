@@ -81,7 +81,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_stored_credential_options(post, options)
         add_transaction_data(post, options)
-        add_3ds(post, options)
+        add_3ds(post, payment_method, options)
       end
 
       def add_invoice(post, money, options)
@@ -159,10 +159,10 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_3ds(post, options)
+      def add_3ds(post, payment_method, options)
         if options[:three_d_secure] || options[:execute_threed]
           post[:'3ds'] = {}
-          post[:'3ds'][:enabled] = true
+          post[:'3ds'][:enabled] = three_d_secure_enabled?(payment_method, options[:three_d_secure]) || options[:execute_threed]
           post[:success_url] = options[:callback_url] if options[:callback_url]
           post[:failure_url] = options[:callback_url] if options[:callback_url]
           post[:'3ds'][:attempt_n3d] = options[:attempt_n3d] if options[:attempt_n3d]
@@ -174,6 +174,11 @@ module ActiveMerchant #:nodoc:
           post[:'3ds'][:version] = options[:three_d_secure][:version] if options[:three_d_secure][:version]
           post[:'3ds'][:xid] = options[:three_d_secure][:ds_transaction_id] || options[:three_d_secure][:xid]
         end
+      end
+
+      def three_d_secure_enabled?(payment_method, three_d_secure_options)
+        return false unless three_d_secure_options
+        ThreeDSecureEciMapper.map(payment_method.brand, three_d_secure_options[:eci]) != ThreeDSecureEciMapper::NON_THREE_D_SECURE_TRANSACTION
       end
 
       def commit(action, post, authorization = nil)
