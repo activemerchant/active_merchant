@@ -129,7 +129,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
 
   def test_zero_dollar_verification_transaction
     Braintree::CreditCardVerificationGateway.any_instance.expects(:create).
-      returns(braintree_result)
+      returns(braintree_result(cvv_response_code: 'M', avs_error_response_code: 'P'))
 
     card = credit_card('4111111111111111')
     options = {
@@ -142,6 +142,8 @@ class BraintreeBlueTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'transaction_id', response.params['authorization']
     assert_equal true, response.params['test']
+    assert_equal 'M', response.params['cvv_result']
+    assert_equal 'P', response.params['avs_result'][:code]
   end
 
   def test_user_agent_includes_activemerchant_version
