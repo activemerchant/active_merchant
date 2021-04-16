@@ -184,6 +184,8 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert response = @gateway.verify(card, @options.merge({ allow_card_verification: true }))
     assert_success response
     assert_match 'OK', response.message
+    assert_not_nil response.params['cvv_result']
+    assert_not_nil response.params['avs_result']
   end
 
   def test_successful_verify_with_device_data
@@ -197,7 +199,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert transaction['risk_data']['id']
     assert_equal 'Approve', transaction['risk_data']['decision']
     assert_equal false, transaction['risk_data']['device_data_captured']
-    assert_equal 'kount', transaction['risk_data']['fraud_service_provider']
+    assert_equal 'fraud_protection', transaction['risk_data']['fraud_service_provider']
   end
 
   def test_successful_validate_on_store
@@ -449,7 +451,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert transaction['risk_data']['id']
     assert_equal 'Approve', transaction['risk_data']['decision']
     assert_equal false, transaction['risk_data']['device_data_captured']
-    assert_equal 'kount', transaction['risk_data']['fraud_service_provider']
+    assert_equal 'fraud_protection', transaction['risk_data']['fraud_service_provider']
   end
 
   def test_purchase_with_store_using_random_customer_id

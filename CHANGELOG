@@ -47,6 +47,7 @@
 * BraintreeBlue: Add support for $0 auth verification [meagabeth] #3944
 * JCB: Add additional BIN ranges [dsmcclain] #3946
 * vPOS: Support new gateway type [therufs] #3906
+* Braintree: Add support for AVS and CVV results in $0 credit card verification transactions [meagabeth] #3951
 
 == Version 1.119.0 (February 9th, 2021)
 * Payment Express: support verify/validate [therufs] #3874
