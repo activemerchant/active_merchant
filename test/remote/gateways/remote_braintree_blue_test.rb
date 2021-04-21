@@ -184,8 +184,8 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert response = @gateway.verify(card, @options.merge({ allow_card_verification: true }))
     assert_success response
     assert_match 'OK', response.message
-    assert_not_nil response.params['cvv_result']
-    assert_not_nil response.params['avs_result']
+    assert_equal 'M', response.cvv_result['code']
+    assert_equal 'P', response.avs_result['code']
   end
 
   def test_successful_verify_with_device_data

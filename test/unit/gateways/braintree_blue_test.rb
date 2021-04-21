@@ -141,9 +141,8 @@ class BraintreeBlueTest < Test::Unit::TestCase
     response = @gateway.verify(card, options)
     assert_success response
     assert_equal 'transaction_id', response.params['authorization']
-    assert_equal true, response.params['test']
-    assert_equal 'M', response.params['cvv_result']
-    assert_equal 'P', response.params['avs_result'][:code]
+    assert_equal 'M', response.cvv_result['code']
+    assert_equal 'P', response.avs_result['code']
   end
 
   def test_user_agent_includes_activemerchant_version
