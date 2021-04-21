@@ -21,6 +21,11 @@ module ActiveMerchant #:nodoc:
         'unchecked' => 'P'
       }
 
+      DIRECT_DEBIT_SUPPORTED_CURRENCIES = [
+        "AUD",
+        "EUR"
+      ]
+
       self.supported_countries = %w(AT AU BE CA CH DE DK ES FI FR GB IE IT LU NL NO SE SG US)
       self.default_currency = 'USD'
       self.money_format = :cents
@@ -102,7 +107,10 @@ module ActiveMerchant #:nodoc:
           end
           r.process do
             post = create_post_for_auth_or_purchase(money, payment, options)
-            post[:payment_method_types] = ["sepa_debit"] if options[:use_sepa_debit]
+            payment_method_types = payment_method_types_for_direct_debit(options)
+            if options[:payment_type] == "bank_account" && payment_method_types
+              post[:payment_method_types] = payment_method_types
+            end
             commit(:post, use_payment_intents?(post, options) ? 'payment_intents' : 'charges', post, options)
           end
         end.responses.last
@@ -195,8 +203,7 @@ module ActiveMerchant #:nodoc:
         elsif payment.is_a?(StripePaymentToken)
           add_payment_token(params, payment, options)
         elsif payment.is_a?(Check)
-          if payment.iban.present?
-            # direct debit
+          if DIRECT_DEBIT_SUPPORTED_CURRENCIES.include?(options[:currency])
             direct_debit_token_response = tokenize_direct_debit(payment, options)
             return direct_debit_token_response unless direct_debit_token_response.success?
             params = { payment_method_id: direct_debit_token_response.authorization }
@@ -344,10 +351,10 @@ module ActiveMerchant #:nodoc:
           end
         end
 
-        if options[:use_sepa_debit]
+        if direct_debit_payment?(options)
           post[:off_session] = true
           post[:confirm] = true
-          post[:payment_method] = sepa_debit_payment_method_for_customer(options[:customer])
+          post[:payment_method] = debit_payment_method_for_customer(options[:customer], options[:currency])
         end
 
         unless emv_payment?(payment)
@@ -381,8 +388,8 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def sepa_debit_payment_method_for_customer(customer)
-        payment_methods = customer_payment_methods(customer, "sepa_debit")
+      def debit_payment_method_for_customer(customer, currency)
+        payment_methods = customer_payment_methods(customer, payment_method_type_for_direct_debit(currency))
         return payment_methods.default_payment_method if payment_methods.default_payment_method
 
         if payment_methods.count > 1
@@ -755,8 +762,32 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def tokenize_direct_debit(bank_account, options = {})
-        post = {
+      def direct_debit_payment?(options)
+        return false unless options[:payment_type] == "bank_account"
+
+        DIRECT_DEBIT_SUPPORTED_CURRENCIES.include?(options[:currency])
+      end
+
+      def payment_method_type_for_direct_debit(currency)
+        payment_method_types = {
+          sepa_debit: currency == "EUR",
+          au_becs_debit: currency == "AUD"
+        }
+
+        payment_method_type = payment_method_types.key(true)
+        payment_method_type ? payment_method_type.to_s : nil
+      end
+
+      def payment_method_types_for_direct_debit(options)
+        payment_method_type = payment_method_type_for_direct_debit(options[:currency])
+        return unless payment_method_type
+
+        Array(payment_method_type)
+      end
+
+
+      def initial_options_for_sepa_direct_debit(bank_account, options)
+        {
           type: 'sepa_debit',
           billing_details: {
             name: bank_account.name,
@@ -766,6 +797,34 @@ module ActiveMerchant #:nodoc:
             iban: bank_account.iban
           }
         }
+
+      end
+
+      def initial_options_for_becs_direct_debit(bank_account, options)
+        {
+          type: 'au_becs_debit',
+          billing_details: {
+            name: bank_account.name,
+            email: options[:email],
+          },
+          au_becs_debit: {
+            bsb_number: bank_account.branch_code,
+            account_number: bank_account.account_number
+          }
+        }
+      end
+
+      def initial_options_for_direct_debit(bank_account, options)
+        case options[:currency]
+        when "EUR"
+          initial_options_for_sepa_direct_debit(bank_account, options)
+        when "AUD"
+          initial_options_for_becs_direct_debit(bank_account, options)
+        end
+      end
+
+      def tokenize_direct_debit(bank_account, options = {})
+        post = initial_options_for_direct_debit(bank_account, options)
 
         if address = options[:billing_address] || options[:address]
           post[:billing_details][:address] = {}
@@ -789,7 +848,7 @@ module ActiveMerchant #:nodoc:
 
       def setup_intents(customer_id, payment_method_id, options)
         post = {
-          payment_method_types: ["sepa_debit"],
+          payment_method_types: payment_method_types_for_direct_debit(options),
           customer: customer_id,
           payment_method: payment_method_id,
           confirm: true,
@@ -822,7 +881,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def use_payment_intents?(post, options)
-        (options[:three_d_secure] && post[:payment_method]) || options[:use_sepa_debit]
+        (options[:three_d_secure] && post[:payment_method]) || direct_debit_payment?(options)
       end
 
       def ach?(payment_method)

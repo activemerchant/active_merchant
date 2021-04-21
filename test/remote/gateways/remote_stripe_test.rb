@@ -19,6 +19,11 @@ class RemoteStripeTest < Test::Unit::TestCase
       name: "John Sepa",
       iban: "DE89370400440532013000"
     })
+    @becs_direct_debit = check({
+      name: "John Becs",
+      branch_code: "000000",
+      account_number: "000123456"
+    })
     @verified_bank_account = fixtures(:stripe_verified_bank_account)
 
     @options = {
@@ -91,19 +96,38 @@ class RemoteStripeTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_stored_sepa_direct_debit
-    assert response = @gateway.store(@sepa_direct_debit, email: 'sepa@example.com', device_data: { ip: '127.0.0.1', user_agent: 'Firefox' })
+    assert response = @gateway.store(@sepa_direct_debit, email: 'sepa@example.com', device_data: { ip: '127.0.0.1', user_agent: 'Firefox' }, currency: 'EUR')
     assert_success response
     assert_equal 2, response.responses.size
 
     customer_response = response.responses[0]
     customer_id = customer_response.params["id"]
 
-    response = @gateway.purchase(@amount, nil, @options.merge(use_sepa_debit: true, customer: customer_id, payment_type: "bank_account", currency: "EUR"))
+    response = @gateway.purchase(@amount, nil, @options.merge(customer: customer_id, payment_type: "bank_account", currency: "EUR"))
     assert_success response
     assert response.test?
     assert_equal "Transaction approved", response.message
     assert_equal "processing", response.params["status"]
     assert_equal "eur", response.params["currency"]
+    assert_equal @amount, response.params["amount"]
+    assert_equal @amount, response.params["charges"]["data"].first["amount"]
+    assert_equal @amount, response.params["charges"]["data"].first["amount_captured"]
+  end
+
+  def test_successful_purchase_with_stored_becs_direct_debit
+    assert response = @gateway.store(@becs_direct_debit, email: 'becs@example.com', device_data: { ip: '127.0.0.1', user_agent: 'Firefox' }, currency: 'AUD')
+    assert_success response
+    assert_equal 2, response.responses.size
+
+    customer_response = response.responses[0]
+    customer_id = customer_response.params["id"]
+
+    response = @gateway.purchase(@amount, nil, @options.merge(customer: customer_id, payment_type: "bank_account", currency: "AUD"))
+    assert_success response
+    assert response.test?
+    assert_equal "Transaction approved", response.message
+    assert_equal "processing", response.params["status"]
+    assert_equal "aud", response.params["currency"]
     assert_equal @amount, response.params["amount"]
     assert_equal @amount, response.params["charges"]["data"].first["amount"]
     assert_equal @amount, response.params["charges"]["data"].first["amount_captured"]
@@ -254,7 +278,7 @@ class RemoteStripeTest < Test::Unit::TestCase
   end
 
   def test_successful_store_using_sepa_direct_debit_with_online_mandate
-    assert response = @gateway.store(@sepa_direct_debit, email: 'sepa@example.com', device_data: { ip: '127.0.0.1', user_agent: 'Firefox' })
+    assert response = @gateway.store(@sepa_direct_debit, email: 'sepa@example.com', device_data: { ip: '127.0.0.1', user_agent: 'Firefox' }, currency: 'EUR')
     assert_success response
     assert_equal 2, response.responses.size
 
@@ -273,7 +297,7 @@ class RemoteStripeTest < Test::Unit::TestCase
   end
 
   def test_successful_store_using_sepa_direct_debit_with_offline_mandate
-    assert response = @gateway.store(@sepa_direct_debit, email: 'sepa@example.com', channel: 'api')
+    assert response = @gateway.store(@sepa_direct_debit, email: 'sepa@example.com', channel: 'api', currency: 'EUR')
     assert_success response
     assert_equal 2, response.responses.size
 
@@ -290,6 +314,45 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_not_empty setup_intent_response.params["mandate"]
     assert_not_empty setup_intent_response.params["payment_method"]
   end
+
+  def test_successful_store_using_becs_direct_debit_with_online_mandate
+    assert response = @gateway.store(@becs_direct_debit, email: 'becs@example.com', device_data: { ip: '127.0.0.1', user_agent: 'Firefox' }, currency: 'AUD')
+    assert_success response
+    assert_equal 2, response.responses.size
+
+    customer_response = response.responses[0]
+    customer_id = customer_response.params["id"]
+
+    assert_equal "customer", customer_response.params["object"]
+    assert_equal "becs@example.com", customer_response.params["email"]
+
+    setup_intent_response = response.responses[1]
+    assert_equal "setup_intent", setup_intent_response.params["object"]
+    assert_equal customer_id, setup_intent_response.params["customer"]
+    assert_equal ["au_becs_debit"], setup_intent_response.params["payment_method_types"]
+    assert_not_empty setup_intent_response.params["mandate"]
+    assert_not_empty setup_intent_response.params["payment_method"]
+  end
+
+  def test_successful_store_using_becs_direct_debit_with_offline_mandate
+    assert response = @gateway.store(@becs_direct_debit, email: 'becs@example.com', channel: 'api', currency: 'AUD')
+    assert_success response
+    assert_equal 2, response.responses.size
+
+    customer_response = response.responses[0]
+    customer_id = customer_response.params["id"]
+
+    assert_equal "customer", customer_response.params["object"]
+    assert_equal "becs@example.com", customer_response.params["email"]
+
+    setup_intent_response = response.responses[1]
+    assert_equal "setup_intent", setup_intent_response.params["object"]
+    assert_equal customer_id, setup_intent_response.params["customer"]
+    assert_equal ["au_becs_debit"], setup_intent_response.params["payment_method_types"]
+    assert_not_empty setup_intent_response.params["mandate"]
+    assert_not_empty setup_intent_response.params["payment_method"]
+  end
+
 
   def test_successful_purchase_using_stored_card
     assert store = @gateway.store(@credit_card)
