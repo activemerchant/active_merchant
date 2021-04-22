@@ -85,6 +85,12 @@ class RemotePayeezyTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_customer_ref
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(level2: { customer_ref: 'An important customer' }))
+    assert_match(/Transaction Normal/, response.message)
+    assert_success response
+  end
+
   def test_successful_purchase_with_stored_credentials
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(@options_stored_credentials))
     assert_match(/Transaction Normal/, response.message)
