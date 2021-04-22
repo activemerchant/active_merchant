@@ -39,8 +39,8 @@ module ActiveMerchant #:nodoc:
 
         post = {}
         post[:token] = token
-        post[:commerce] = commerce
-        post[:commerce_branch] = commerce_branch
+        post[:commerce] = commerce.to_s
+        post[:commerce_branch] = commerce_branch.to_s
         post[:shop_process_id] = @shop_process_id
         post[:number_of_payments] = options[:number_of_payments] || 1
         post[:recursive] = options[:recursive] || false
@@ -106,7 +106,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, options)
-        post[:additional_data] = options[:additional_data] # must be passed even if empty
+        post[:additional_data] = options[:additional_data] || "" # must be passed even if empty
       end
 
       def parse(body)
