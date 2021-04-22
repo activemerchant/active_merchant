@@ -131,6 +131,17 @@ class PayeezyGateway < Test::Unit::TestCase
     assert_equal 'Transaction Normal - Approved', response.message
   end
 
+  def test_successful_purchase_with_customer_ref
+    options = @options.merge(level2: { customer_ref: 'An important customer' })
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/"level2":{"customer_ref":"An important customer"}/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_successful_purchase_with_stored_credentials
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(@options_stored_credentials))

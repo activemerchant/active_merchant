@@ -39,6 +39,7 @@ module ActiveMerchant
         add_address(params, options)
         add_amount(params, amount, options)
         add_soft_descriptors(params, options)
+        add_level2_data(params, options)
         add_stored_credentials(params, options)
 
         commit(params, options)
@@ -53,6 +54,7 @@ module ActiveMerchant
         add_address(params, options)
         add_amount(params, amount, options)
         add_soft_descriptors(params, options)
+        add_level2_data(params, options)
         add_stored_credentials(params, options)
 
         commit(params, options)
@@ -244,6 +246,13 @@ module ActiveMerchant
 
       def add_soft_descriptors(params, options)
         params[:soft_descriptors] = options[:soft_descriptors] if options[:soft_descriptors]
+      end
+
+      def add_level2_data(params, options)
+        return unless level2_data = options[:level2]
+
+        params[:level2] = {}
+        params[:level2][:customer_ref] = level2_data[:customer_ref]
       end
 
       def add_stored_credentials(params, options)
