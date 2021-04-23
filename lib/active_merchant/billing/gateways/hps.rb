@@ -98,6 +98,12 @@ module ActiveMerchant #:nodoc:
           end
         end
       end
+      
+      def store(card, options = {})
+        commit('Tokenize') do |xml|
+          add_card_or_token_payment(xml, card, options)
+        end
+      end
 
       def supports_scrubbing?
         true
