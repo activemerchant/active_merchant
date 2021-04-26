@@ -21,6 +21,7 @@
 * PayTrace: Adjust capture method [meagabeth] #4015
 * BarclaysEpdqExtraPlus: updated custom_eci test + remote tests [yyapuncich] #4022
 * CyberSource: Add customerID field [deemeyers] #4025
+* CyberSource: Adjust Auth [naashton] #3956
 
 == Version 1.121 (June 8th, 2021)
 * Braintree: Lift restriction on gem version to allow for backwards compatibility [naashton] #3993

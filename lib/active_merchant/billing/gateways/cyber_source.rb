@@ -153,6 +153,10 @@ module ActiveMerchant #:nodoc:
         commit(build_refund_request(money, identification, options), :refund, money, options)
       end
 
+      def adjust(money, authorization, options = {})
+        commit(build_adjust_request(money, authorization, options), :adjust, money, options)
+      end
+
       def verify(payment, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, payment, options) }
@@ -301,6 +305,15 @@ module ActiveMerchant #:nodoc:
         add_merchant_description(xml, options)
         add_sales_slip_number(xml, options)
         add_airline_data(xml, options)
+        xml.target!
+      end
+
+      def build_adjust_request(money, authorization, options)
+        _, request_id = authorization.split(';')
+
+        xml = Builder::XmlMarkup.new indent: 2
+        add_purchase_data(xml, money, true, options)
+        add_incremental_auth_service(xml, request_id, options)
         xml.target!
       end
 
@@ -663,6 +676,13 @@ module ActiveMerchant #:nodoc:
             xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
           end
         end
+      end
+
+      def add_incremental_auth_service(xml, authorization, options)
+        xml.tag! 'ccIncrementalAuthService', { 'run' => 'true' } do
+          xml.tag! 'authRequestID', authorization
+        end
+        xml.tag! 'subsequentAuthReason', options[:auth_reason]
       end
 
       def add_normalized_threeds_2_data(xml, payment_method, options)
