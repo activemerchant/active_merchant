@@ -531,6 +531,23 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_if_empty_tag_is_skipped_for_network_transaction_id
+    @gateway.stubs(:ssl_post).returns(successful_authorization_response)
+
+    @options[:stored_credential] = {
+      :initiator => 'merchant',
+      :reason_type => 'recurring',
+      :initial_transaction => false,
+      :network_transaction_id => nil
+    }
+
+    @gateway.stubs(:ssl_post).with do |host, request_body|
+      assert_not_match %r'<subsequentAuthTransactionID/>', request_body
+    end.returns(successful_purchase_response)
+
+    @gateway.purchase(@amount, @credit_card, @options)
+  end
+
   def test_nonfractional_currency_handling
     @gateway.expects(:ssl_post).with do |host, request_body|
       assert_match %r(<grandTotalAmount>1</grandTotalAmount>), request_body
