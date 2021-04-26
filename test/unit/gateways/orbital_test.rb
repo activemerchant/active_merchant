@@ -686,6 +686,52 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_avs_name_falls_back_to_billing_address
+    billing_address = address(
+      zip: '90001',
+      address1: '456 Main St.',
+      city: 'Somewhere',
+      state: 'CA',
+      name: 'Joan Smith',
+      phone: '(123) 456-7890',
+      country: 'US'
+    )
+
+    card = credit_card('4242424242424242',
+      first_name: nil,
+      last_name: '')
+
+    response = stub_comms do
+      @gateway.purchase(50, card, order_id: 1, billing_address: billing_address)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/Joan Smith/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
+  def test_completely_blank_name
+    billing_address = address(
+      zip: '90001',
+      address1: '456 Main St.',
+      city: 'Somewhere',
+      state: 'CA',
+      name: nil,
+      phone: '(123) 456-7890',
+      country: 'US'
+    )
+
+    card = credit_card('4242424242424242',
+      first_name: nil,
+      last_name: nil)
+
+    response = stub_comms do
+      @gateway.purchase(50, card, order_id: 1, billing_address: billing_address)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/\<AVSname\/>\n/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
   def test_successful_purchase_with_negative_stored_credentials_indicator
     stub_comms do
       @gateway.purchase(50, credit_card, @options.merge(mit_stored_credential_ind: 'N'))
