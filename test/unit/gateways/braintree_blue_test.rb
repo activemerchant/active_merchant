@@ -195,6 +195,17 @@ class BraintreeBlueTest < Test::Unit::TestCase
     @gateway.authorize(100, credit_card('41111111111111111111'), service_fee_amount: '2.31')
   end
 
+  def test_risk_data_can_be_specified
+    risk_data = {
+      customer_browser: 'User-Agent Header',
+      customer_ip: '127.0.0.1'
+    }
+    Braintree::TransactionGateway.any_instance.expects(:sale).
+      with(has_entries(risk_data: risk_data)).returns(braintree_result)
+
+    @gateway.authorize(100, credit_card('4111111111111111'), risk_data: risk_data)
+  end
+
   def test_hold_in_escrow_can_be_specified
     Braintree::TransactionGateway.any_instance.expects(:sale).with do |params|
       (params[:options][:hold_in_escrow] == true)

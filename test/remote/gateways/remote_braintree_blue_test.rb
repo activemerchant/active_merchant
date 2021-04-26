@@ -167,6 +167,17 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal '1000 Approved', response.message
   end
 
+  def test_successful_purchase_sending_risk_data
+    options = @options.merge(
+      risk_data: {
+        customer_browser: 'User-Agent Header',
+        customer_ip: '127.0.0.1'
+      }
+    )
+    assert response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+  end
+
   def test_successful_verify
     assert response = @gateway.verify(@credit_card, @options)
     assert_success response
