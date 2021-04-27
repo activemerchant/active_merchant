@@ -346,14 +346,7 @@ module ActiveMerchant #:nodoc:
           post[:d6] = browser_info[:language]
           post[:'3ds_browserjavaenabled'] = browser_info[:java]
           post[:'3ds_browseracceptheader'] = browser_info[:accept_header]
-          if (shipping_address = options[:shipping_address])
-            post[:'3ds_shipaddrstate'] = shipping_address[:state]
-            post[:'3ds_shipaddrpostcode'] = shipping_address[:zip]
-            post[:'3ds_shipaddrline2'] = shipping_address[:address2]
-            post[:'3ds_shipaddrline1'] = shipping_address[:address1]
-            post[:'3ds_shipaddrcountry'] = shipping_address[:country]
-            post[:'3ds_shipaddrcity'] = shipping_address[:city]
-          end
+          add_complete_shipping_address(post, options[:shipping_address]) if options[:shipping_address]
         elsif options[:three_d_secure]
           add_normalized_3d_secure_2_data(post, options)
         end
@@ -371,6 +364,17 @@ module ActiveMerchant #:nodoc:
           post[:i8] = build_i8(options[:eci], options[:cavv], options[:xid])
           post[:'3ds_version'] = options[:three_ds_version].nil? || options[:three_ds_version]&.start_with?('1') ? '1.0' : options[:three_ds_version]
         end
+      end
+
+      def add_complete_shipping_address(post, shipping_address)
+        return if shipping_address.values.any?(&:blank?)
+
+        post[:'3ds_shipaddrstate'] = shipping_address[:state]
+        post[:'3ds_shipaddrpostcode'] = shipping_address[:zip]
+        post[:'3ds_shipaddrline2'] = shipping_address[:address2]
+        post[:'3ds_shipaddrline1'] = shipping_address[:address1]
+        post[:'3ds_shipaddrcountry'] = shipping_address[:country]
+        post[:'3ds_shipaddrcity'] = shipping_address[:city]
       end
 
       def add_normalized_3d_secure_2_data(post, options)
