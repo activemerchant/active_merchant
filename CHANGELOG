@@ -54,6 +54,7 @@
 * Credorax: adjust logic for sending 3ds shipping address fields [dsmcclain] #3959
 * Orbital: Ensure ECP always sends AVSName [jessiagee] #3963
 * Orbital: Add middle name to EWSMiddleName for ECP [jessiagee] #3962
+* Support Canadian Bank Accounts [naashton] #3964
 
 == Version 1.119.0 (February 9th, 2021)
 * Payment Express: support verify/validate [therufs] #3874

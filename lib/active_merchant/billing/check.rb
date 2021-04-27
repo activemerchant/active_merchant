@@ -13,6 +13,14 @@ module ActiveMerchant #:nodoc:
       # Used for Canadian bank accounts
       attr_accessor :institution_number, :transit_number
 
+      # Canadian Institution Numbers
+      # Found here: https://en.wikipedia.org/wiki/Routing_number_(Canada)
+      INSTITUTION_NUMBERS = %w(
+        001 002 003 004	006 010 016 030 039 117 127 177 219 245 260 269 270 308
+        309 310 315 320	338 340 509 540 608 614 623 809 815 819 828 829 837 839
+        865 879 889 899
+      )
+
       def name
         @name ||= "#{first_name} #{last_name}".strip
       end
@@ -67,6 +75,8 @@ module ActiveMerchant #:nodoc:
           else
             false
           end
+        when 8
+          true if INSTITUTION_NUMBERS.include?(routing_number[0..2].to_s)
         else
           false
         end
