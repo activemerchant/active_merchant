@@ -51,6 +51,7 @@
 * Braintree: Return cvv_code and avs_code in response [meagabeth] #3952
 * vPOS: Stringify values [therufs] #3954
 * Payeezy: Send level2 fields [dsmcclain] #3953
+* Credorax: adjust logic for sending 3ds shipping address fields [dsmcclain] #3959
 
 == Version 1.119.0 (February 9th, 2021)
 * Payment Express: support verify/validate [therufs] #3874
