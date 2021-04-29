@@ -362,6 +362,7 @@ module ActiveMerchant
             add_shipping_fields(xml, options)
             add_tax_exempt_status(xml, options)
             add_po_number(xml, options)
+            add_settings(xml, nil, options)
             add_customer_data(xml, nil, options)
             add_user_fields(xml, amount, options)
           end
