@@ -1052,6 +1052,15 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_equal '1', response.params['approval_status']
   end
 
+  def test_always_send_avs_for_echeck
+    response = stub_comms do
+      @gateway.purchase(50, @echeck, order_id: 1, address: nil, billing_address: address(country: nil))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<AVSname>Jim Smith</, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
   def test_send_address_details_for_united_states
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1, billing_address: address)

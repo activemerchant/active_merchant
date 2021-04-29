@@ -235,6 +235,7 @@ module ActiveMerchant #:nodoc:
             add_managed_billing(xml, options)
           end
         end
+
         commit(order, :purchase, options[:retry_logic], options[:trace_number])
       end
 
@@ -449,15 +450,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(xml, payment_source, options)
-        address = (options[:billing_address] || options[:address])
-
-        # always send the AVSname if the payment is a check regardless
-        # if there's an address or not
-        if payment_source.is_a?(Check) && address.blank?
-          xml.tag! :AVSname, (payment_source&.name ? payment_source.name[0..29] : nil)
-
-          return
-        end
+        address = get_address(options)
 
         unless address.blank?
           avs_supported = AVS_SUPPORTED_COUNTRIES.include?(address[:country].to_s) || empty?(address[:country])
@@ -497,7 +490,9 @@ module ActiveMerchant #:nodoc:
 
       # For Profile requests
       def add_customer_address(xml, options)
-        if (address = (options[:billing_address] || options[:address]))
+        address = get_address(options)
+
+        unless address.blank?
           avs_supported = AVS_SUPPORTED_COUNTRIES.include?(address[:country].to_s)
 
           xml.tag! :CustomerAddress1, byte_limit(format_address_field(address[:address1]), 30)
@@ -537,6 +532,8 @@ module ActiveMerchant #:nodoc:
           else
             xml.tag! :BankPmtDelv, 'B'
           end
+
+          xml.tag! :AVSname, (check&.name ? check.name[0..29] : nil) if get_address(options).blank?
         end
       end
 
@@ -972,6 +969,10 @@ module ActiveMerchant #:nodoc:
 
       def salem_mid?
         @options[:merchant_id].length == 6
+      end
+
+      def get_address(options)
+        options[:billing_address] || options[:address]
       end
 
       # The valid characters include:
