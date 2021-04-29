@@ -666,7 +666,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_ews_details(xml, payment_source, parameters = {})
-        xml.tag! :EWSFirstName, payment_source.first_name
+        split_name = payment_source.first_name.split if payment_source.first_name
+        xml.tag! :EWSFirstName, split_name[0]
+        xml.tag! :EWSMiddleName, split_name[1..-1].join(' ')
         xml.tag! :EWSLastName, payment_source.last_name
         xml.tag! :EWSBusinessName, parameters[:company] if payment_source.first_name.empty? && payment_source.last_name.empty?
 

@@ -442,6 +442,20 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_splits_first_middle_name
+    name_test_check = check(name: 'Jane P Doe',
+                            account_number: '072403004', account_type: 'checking', routing_number: '072403004')
+
+    response = stub_comms do
+      @gateway.purchase(50, name_test_check, order_id: 1, action_code: 'W3')
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<EWSFirstName>Jane</, data)
+      assert_match(/<EWSMiddleName>P</, data)
+      assert_match(/<EWSLastName>Doe</, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
   def test_truncates_city
     long_city = 'Friendly Village of Crooked Creek'
 
