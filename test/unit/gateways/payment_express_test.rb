@@ -196,6 +196,24 @@ class PaymentExpressTest < Test::Unit::TestCase
     end
   end
 
+  def test_pass_enable_avs_data_and_avs_action
+    options = {
+      address: {
+        address1: '123 Pine Street',
+        zip: '12345'
+      },
+    enable_avs_data: 0,
+    avs_action: 3
+    }
+
+    stub_comms do
+      @gateway.purchase(@amount, @visa, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<EnableAvsData>0<\/EnableAvsData>/, data)
+      assert_match(/<AvsAction>3<\/AvsAction>/, data)
+    end.respond_with(successful_authorization_response)
+  end
+
   def test_pass_client_type_as_symbol_for_web
     options = { client_type: :web }
 
