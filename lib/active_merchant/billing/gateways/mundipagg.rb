@@ -40,6 +40,7 @@ module ActiveMerchant #:nodoc:
         add_shipping_address(post, options)
         add_payment(post, payment, options)
         add_submerchant(post, options)
+        add_items(post, money, options)
 
         commit('sale', post)
       end
@@ -52,6 +53,8 @@ module ActiveMerchant #:nodoc:
         add_payment(post, payment, options)
         add_capture_flag(post, payment)
         add_submerchant(post, options)
+        add_items(post, money, options)
+
         commit('authonly', post)
       end
 
@@ -229,6 +232,14 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_items(post, money, options)
+        post[:items] = [{
+          amount: money,
+          description: options.dig(:items, :description) || 'no description provided',
+          quantity: options.dig(:items, :quantity) || 1
+        }]
+      end
+
       def headers
         {
           'Authorization' => 'Basic ' + Base64.strict_encode64("#{@options[:api_key]}:"),
@@ -253,28 +264,33 @@ module ActiveMerchant #:nodoc:
         when 'capture'
           "#{url}/charges/#{auth}/capture/"
         else
-          "#{url}/charges/"
+          "#{url}/orders/"
         end
       end
 
       def commit(action, parameters, auth = nil)
         url = url_for(action, auth)
+
         parameters.merge!(parameters[:payment][:credit_card].delete(:card)).delete(:payment) if action == 'store'
+        parameters[:payments] = [parameters.delete(:payment)] if orders_endpoint?(url)
+
         response = if %w[refund void].include? action
                      parse(ssl_request(:delete, url, post_data(parameters), headers))
                    else
                      parse(ssl_post(url, post_data(parameters), headers))
                    end
 
+        charge = extract_charge_object_from_response(response, url)
+
         Response.new(
-          success_from(response),
-          message_from(response),
+          success_from(charge),
+          message_from(charge),
           response,
-          authorization: authorization_from(response, action),
-          avs_result: AVSResult.new(code: response['some_avs_response_key']),
-          cvv_result: CVVResult.new(response['some_cvv_response_key']),
+          authorization: authorization_from(charge, action),
+          avs_result: AVSResult.new(code: charge.try('some_avs_response_key')),
+          cvv_result: CVVResult.new(charge.try('some_cvv_response_key')),
           test: test?,
-          error_code: error_code_from(response)
+          error_code: error_code_from(charge)
         )
       rescue ResponseError => e
         message = get_error_messages(e)
@@ -288,14 +304,31 @@ module ActiveMerchant #:nodoc:
         )
       end
 
-      def success_from(response)
-        %w[pending paid processing canceled active].include? response['status']
+      def extract_charge_object_from_response(response, url)
+        orders_endpoint?(url) ? charge_object(response) : response
       end
 
-      def message_from(response)
-        return gateway_response_errors(response) if gateway_response_errors?(response)
-        return response['message'] if response['message']
-        return response['last_transaction']['acquirer_message'] if response['last_transaction']
+      def charge_object(response)
+        response.dig('charges', 0)
+      end
+
+      def orders_endpoint?(url)
+        url.include?('orders')
+      end
+
+      def success_from(charge)
+        return unless charge
+
+        %w[pending paid processing canceled active].include? charge['status']
+      end
+
+      def message_from(charge)
+        return unless charge
+
+        return gateway_response_errors(charge) if gateway_response_errors?(charge)
+        return charge['message'] if charge['message']
+
+        return charge.dig('last_transaction', 'acquirer_message')
       end
 
       def get_error_messages(error)
@@ -310,14 +343,14 @@ module ActiveMerchant #:nodoc:
         message
       end
 
-      def gateway_response_errors?(response)
-        response.try(:[], 'last_transaction').try(:[], 'gateway_response').try(:[], 'errors').present?
+      def gateway_response_errors?(charge)
+        charge.dig('last_transaction', 'gateway_response', 'errors').present?
       end
 
-      def gateway_response_errors(response)
+      def gateway_response_errors(charge)
         error_string = ''
 
-        response['last_transaction']['gateway_response']['errors']&.each do |error|
+        charge['last_transaction']['gateway_response']['errors']&.each do |error|
           error.each do |_key, value|
             error_string += ' | ' unless error_string.blank?
             error_string += value
@@ -327,10 +360,11 @@ module ActiveMerchant #:nodoc:
         error_string
       end
 
-      def authorization_from(response, action)
-        return "#{response['customer']['id']}|#{response['id']}" if action == 'store'
+      def authorization_from(charge, action)
+        return unless charge
+        return "#{charge['customer']['id']}|#{charge['id']}" if action == 'store'
 
-        response['id']
+        charge['id']
       end
 
       def parse_auth(auth)
@@ -341,9 +375,10 @@ module ActiveMerchant #:nodoc:
         parameters.to_json
       end
 
-      def error_code_from(response)
-        return if success_from(response)
-        return response['last_transaction']['acquirer_return_code'] if response['last_transaction']
+      def error_code_from(charge)
+        return unless charge
+        return if success_from(charge)
+        return charge.dig('last_transaction', 'acquirer_return_code') if charge['last_transaction']
 
         STANDARD_ERROR_CODE[:processing_error]
       end
