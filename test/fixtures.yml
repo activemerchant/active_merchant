@@ -263,6 +263,9 @@ dibs:
   merchant_id: SOMECREDENTIAL
   secret_key: NOPUBLICCREDENTIAL
 
+digital_river:
+  token: sk_test_a3bd3f2ba5db4e2db94dd6b02b4dec33
+
 # Working credentials, no need to replace
 digitzs:
   app_key: tcwtTux8SPZYO44Gf0UHZH74Z1HSutqCxmIV2PFj2jRc9Poroh3Z3R1BBQNRQ98Q
