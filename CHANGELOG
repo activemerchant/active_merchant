@@ -56,6 +56,7 @@
 * Orbital: Add middle name to EWSMiddleName for ECP [jessiagee] #3962
 * Support Canadian Bank Accounts [naashton] #3964
 * Windcave/Payment Express: Add support for AvsAction and EnableAVSData fields [meagabeth] #3967
+* CyberSource: Update XML tag for merchantDefinedData [meagabeth] #3969
 
 == Version 1.119.0 (February 9th, 2021)
 * Payment Express: support verify/validate [therufs] #3874

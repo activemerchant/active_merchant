@@ -604,7 +604,7 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'merchantDefinedData' do
           (1..100).each do |each|
             key = "mdd_field_#{each}".to_sym
-            xml.tag!("field#{each}", options[key]) if options[key]
+            xml.tag!('mddField', options[key], 'id' => each) if options[key]
           end
         end
       end

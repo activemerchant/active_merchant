@@ -99,7 +99,7 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(100, @credit_card, order_id: '1', mdd_field_2: 'CustomValue2', mdd_field_3: 'CustomValue3')
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/field2>CustomValue2.*field3>CustomValue3</m, data)
+      assert_match(/<mddField id=\"2\">CustomValue2</m, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -195,7 +195,7 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.authorize(100, @credit_card, order_id: '1', mdd_field_2: 'CustomValue2', mdd_field_3: 'CustomValue3')
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/field2>CustomValue2.*field3>CustomValue3</m, data)
+      assert_match(/<mddField id=\"2\">CustomValue2</m, data)
     end.respond_with(successful_authorization_response)
   end
 
@@ -387,7 +387,7 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.capture(100, '1846925324700976124593', order_id: '1', mdd_field_2: 'CustomValue2', mdd_field_3: 'CustomValue3')
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/field2>CustomValue2.*field3>CustomValue3</m, data)
+      assert_match(/<mddField id=\"2\">CustomValue2</m, data)
     end.respond_with(successful_capture_response)
   end
 
@@ -528,7 +528,7 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.credit(@amount, @credit_card, mdd_field_2: 'CustomValue2', mdd_field_3: 'CustomValue3')
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/field2>CustomValue2.*field3>CustomValue3</m, data)
+      assert_match(/<mddField id=\"2\">CustomValue2</m, data)
     end.respond_with(successful_card_credit_response)
   end
 
@@ -578,7 +578,7 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.void(authorization, mdd_field_2: 'CustomValue2', mdd_field_3: 'CustomValue3')
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/field2>CustomValue2.*field3>CustomValue3</m, data)
+      assert_match(/<mddField id=\"2\">CustomValue2</m, data)
     end.respond_with(successful_void_response)
   end
 
