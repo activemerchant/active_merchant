@@ -336,12 +336,27 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
   end
 
   def test_should_get_customer_profile_request
+    @profile[:email] = "johndoe@test.com"
+    @profile[:merchant_customer_id] = "1000"
+
     @gateway.expects(:ssl_post).returns(successful_get_customer_profile_response)
 
     assert response = @gateway.get_customer_profile(customer_profile_id: @customer_profile_id)
     assert_instance_of Response, response
     assert_success response
     assert_equal @customer_profile_id, response.authorization
+
+    @gateway.expects(:ssl_post).returns(successful_get_customer_profile_response)
+
+    assert response = @gateway.get_customer_profile(:email => @profile[:email])
+    assert_success response
+    assert_equal @profile[:email], response.params['email']
+
+    @gateway.expects(:ssl_post).returns(successful_get_customer_profile_response)
+
+    assert response = @gateway.get_customer_profile(:merchant_customer_id => @profile[:merchant_customer_id])
+    assert_success response
+    assert_equal @profile[:merchant_customer_id], response.params['merchant_customer_id']
   end
 
   def test_should_get_customer_profile_ids_request
@@ -815,6 +830,8 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
             <text>Successful.</text>
           </message>
         </messages>
+        <merchantCustomerId>#{@profile[:merchant_customer_id]}</merchantCustomerId>
+        <email>#{@profile[:email]}</email>
         <customerProfileId>#{@customer_profile_id}</customerProfileId>
         <profile>
           <paymentProfiles>
@@ -864,9 +881,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
           </message>
         </messages>
         <profile>
-          <merchantCustomerId>Up to 20 chars</merchantCustomerId>
           <description>Up to 255 Characters</description>
-          <email>Up to 255 Characters</email>
           <customerProfileId>#{@customer_profile_id}</customerProfileId>
           <paymentProfiles>
             <customerPaymentProfileId>1000</customerPaymentProfileId>

@@ -217,9 +217,11 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Options
       #
-      # * <tt>:customer_profile_id</tt> -- The Customer Profile ID of the customer to retrieve. (REQUIRED)
+      # * <tt>:customer_profile_id</tt> -- The Customer Profile ID of the customer to retrieve. (CONDITIONAL)
+      # * <tt>:email</tt> -- The Email address associated with the customer to retrieve. (CONDITIONAL)
+      # * <tt>:merchant_customer_id</tt> -- The Merchant assigned ID of the customer to retrieve. (CONDITIONAL)
       def get_customer_profile(options)
-        requires!(options, :customer_profile_id)
+        raise ArgumentError, "Requires one of customer_profile_id, email, or merchant_customer_id" unless options[:customer_profile_id] || options[:email] || options[:merchant_customer_id]
 
         request = build_request(:get_customer_profile, options)
         commit(:get_customer_profile, request)
@@ -562,7 +564,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_get_customer_profile_request(xml, options)
-        xml.tag!('customerProfileId', options[:customer_profile_id])
+        xml.tag!('customerProfileId', options[:customer_profile_id]) if options[:customer_profile_id]
+        xml.tag!('merchantCustomerId', options[:merchant_customer_id]) if options[:merchant_customer_id]
+        xml.tag!('email', options[:email]) if options[:email]
         xml.target!
       end
 
