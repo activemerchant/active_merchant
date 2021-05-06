@@ -39,6 +39,7 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, payment_method, options = {})
         request = build_xml_request do |xml|
+          xml.ssl_vendor_id         options[:ssl_vendor_id]
           xml.ssl_transaction_type  self.actions[:purchase]
           xml.ssl_amount            amount(money)
 
@@ -63,6 +64,7 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, creditcard, options = {})
         request = build_xml_request do |xml|
+          xml.ssl_vendor_id         options[:ssl_vendor_id]
           xml.ssl_transaction_type  self.actions[:authorize]
           xml.ssl_amount            amount(money)
 
@@ -82,6 +84,8 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, authorization, options = {})
         request = build_xml_request do |xml|
+          xml.ssl_vendor_id         options[:ssl_vendor_id]
+
           if options[:credit_card]
             xml.ssl_transaction_type self.actions[:capture]
             xml.ssl_amount amount(money)
@@ -107,6 +111,7 @@ module ActiveMerchant #:nodoc:
 
       def refund(money, identification, options = {})
         request = build_xml_request do |xml|
+          xml.ssl_vendor_id         options[:ssl_vendor_id]
           xml.ssl_transaction_type  self.actions[:refund]
           xml.ssl_amount            amount(money)
           add_txn_id(xml, identification)
@@ -117,6 +122,7 @@ module ActiveMerchant #:nodoc:
 
       def void(identification, options = {})
         request = build_xml_request do |xml|
+          xml.ssl_vendor_id         options[:ssl_vendor_id]
           xml.ssl_transaction_type  self.actions[:void]
 
           add_txn_id(xml, identification)
@@ -129,6 +135,7 @@ module ActiveMerchant #:nodoc:
         raise ArgumentError, 'Reference credits are not supported. Please supply the original credit card or use the #refund method.' if creditcard.is_a?(String)
 
         request = build_xml_request do |xml|
+          xml.ssl_vendor_id         options[:ssl_vendor_id]
           xml.ssl_transaction_type  self.actions[:credit]
           xml.ssl_amount            amount(money)
           add_invoice(xml, options)
@@ -143,6 +150,7 @@ module ActiveMerchant #:nodoc:
 
       def verify(credit_card, options = {})
         request = build_xml_request do |xml|
+          xml.ssl_vendor_id         options[:ssl_vendor_id]
           xml.ssl_transaction_type  self.actions[:verify]
           add_creditcard(xml, credit_card)
           add_address(xml, options)
@@ -154,6 +162,7 @@ module ActiveMerchant #:nodoc:
 
       def store(creditcard, options = {})
         request = build_xml_request do |xml|
+          xml.ssl_vendor_id         options[:ssl_vendor_id]
           xml.ssl_transaction_type  self.actions[:store]
           xml.ssl_add_token 'Y'
           add_creditcard(xml, creditcard)
@@ -167,6 +176,7 @@ module ActiveMerchant #:nodoc:
 
       def update(token, creditcard, options = {})
         request = build_xml_request do |xml|
+          xml.ssl_vendor_id         options[:ssl_vendor_id]
           xml.ssl_transaction_type  self.actions[:update]
           add_token(xml, token)
           add_creditcard(xml, creditcard)

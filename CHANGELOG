@@ -57,6 +57,7 @@
 * Support Canadian Bank Accounts [naashton] #3964
 * Windcave/Payment Express: Add support for AvsAction and EnableAVSData fields [meagabeth] #3967
 * CyberSource: Update XML tag for merchantDefinedData [meagabeth] #3969
+* Elavon: Send ssl_vendor_id field [dsmcclain] #3972
 
 == Version 1.119.0 (February 9th, 2021)
 * Payment Express: support verify/validate [therufs] #3874

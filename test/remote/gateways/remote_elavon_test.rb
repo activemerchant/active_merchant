@@ -3,7 +3,7 @@ require 'test_helper'
 class RemoteElavonTest < Test::Unit::TestCase
   def setup
     @gateway = ElavonGateway.new(fixtures(:elavon))
-    @tokenization_gateway = fixtures(:elavon_tokenization) ? ElavonGateway.new(fixtures(:elavon_tokenization)) : ElavonGateway.new(fixtures(:elavon))
+    @tokenization_gateway = all_fixtures[:elavon_tokenization] ? ElavonGateway.new(fixtures(:elavon_tokenization)) : ElavonGateway.new(fixtures(:elavon))
     @bad_creds_gateway = ElavonGateway.new(login: 'foo', password: 'bar', user: 'me')
     @multi_currency_gateway = ElavonGateway.new(fixtures(:elavon_multi_currency))
 
