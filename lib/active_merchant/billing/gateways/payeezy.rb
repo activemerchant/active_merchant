@@ -79,6 +79,14 @@ module ActiveMerchant
         commit(params, options)
       end
 
+      def credit(amount, payment_method, options = {})
+        params = { transaction_type: 'refund' }
+
+        add_amount(params, amount, options)
+        add_payment_method(params, payment_method, options)
+        commit(params, options)
+      end
+
       def store(payment_method, options = {})
         params = { transaction_type: 'store' }
 

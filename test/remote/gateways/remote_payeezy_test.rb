@@ -212,6 +212,14 @@ class RemotePayeezyTest < Test::Unit::TestCase
     assert response.authorization
   end
 
+  def test_successful_general_credit
+    assert response = @gateway.credit(@amount, @credit_card, @options)
+    assert_match(/Transaction Normal/, response.message)
+    assert_equal '100', response.params['bank_resp_code']
+    assert_equal nil, response.error_code
+    assert_success response
+  end
+
   def test_successful_void
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth

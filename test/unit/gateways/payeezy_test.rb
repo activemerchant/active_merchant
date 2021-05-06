@@ -233,6 +233,12 @@ class PayeezyGateway < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_successful_general_credit
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
+    assert response = @gateway.credit(@amount, @credit_card)
+    assert_success response
+  end
+
   def test_successful_void
     response = stub_comms do
       @gateway.void(@authorization, @options)
