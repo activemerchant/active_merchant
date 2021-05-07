@@ -712,6 +712,72 @@ class CredoraxTest < Test::Unit::TestCase
     end.respond_with(successful_credit_response)
   end
 
+  def test_purchase_adds_echo_field
+    @options[:echo] = 'Echo Parameter'
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/d2=Echo\+Parameter/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_authorize_adds_echo_field
+    @options[:echo] = 'Echo Parameter'
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/d2=Echo\+Parameter/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_capture_adds_echo_field
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card)
+    end.respond_with(successful_authorize_response)
+
+    @options[:echo] = 'Echo Parameter'
+    stub_comms do
+      @gateway.capture(@amount, response.authorization, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/d2=Echo\+Parameter/, data)
+    end.respond_with(successful_capture_response)
+  end
+
+  def test_void_adds_echo_field
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.respond_with(successful_authorize_response)
+
+    @options[:echo] = 'Echo Parameter'
+    stub_comms do
+      @gateway.void(response.authorization, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/d2=Echo\+Parameter/, data)
+    end.respond_with(successful_void_response)
+  end
+
+  def test_refund_adds_echo_field
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.respond_with(successful_purchase_response)
+
+    @options[:echo] = 'Echo Parameter'
+    stub_comms do
+      @gateway.refund(@amount, response.authorization, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/d2=Echo\+Parameter/, data)
+    end.respond_with(successful_refund_response)
+  end
+
+  def test_credit_adds_echo_field
+    @options[:echo] = 'Echo Parameter'
+    stub_comms do
+      @gateway.credit(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/d2=Echo\+Parameter/, data)
+    end.respond_with(successful_credit_response)
+  end
+
   def test_purchase_omits_phone_when_nil
     # purchase passes the phone number when provided
     @options[:billing_address][:phone] = '555-444-3333'

@@ -523,6 +523,13 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     assert_failure bad_response
   end
 
+  def test_purchase_passes_d2_field
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(echo: 'Echo Parameter'))
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal 'Echo Parameter', response.params['D2']
+  end
+
   # #########################################################################
   # # CERTIFICATION SPECIFIC REMOTE TESTS
   # #########################################################################
