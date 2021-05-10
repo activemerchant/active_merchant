@@ -555,6 +555,28 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_equal 'SUCCESS', refund.message
   end
 
+  def test_cancel_or_refund_non_captured_purchase
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(skip_capture: true))
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+    assert response.authorization
+
+    refund = @gateway.refund(@amount, response.authorization, authorization_validated: true, cancel_or_refund: true)
+    assert_success refund
+    assert_equal 'SUCCESS', refund.message
+  end
+
+  def test_cancel_or_refund_captured_purchase
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+    assert response.authorization
+
+    refund = @gateway.refund(@amount, response.authorization, authorization_validated: true, cancel_or_refund: true)
+    assert_success refund
+    assert_equal 'SUCCESS', refund.message
+  end
+
   def test_multiple_refunds
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
