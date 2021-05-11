@@ -306,6 +306,15 @@ module ActiveMerchant #:nodoc:
           end
         end
       end
+
+      def retry_until(timeout, msg = "failed", step = 0.1)
+        Timeout.timeout(timeout) do
+          sleep(step) until value = yield
+          return value
+        end
+      rescue Timeout::Error => e
+        raise e.class, "#{msg} in #{timeout} sec"
+      end
     end
   end
 end

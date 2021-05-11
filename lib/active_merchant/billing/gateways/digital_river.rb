@@ -47,7 +47,6 @@ module ActiveMerchant
             )
           end
           return r unless order_exists.success?
-
           if order_exists.value!.state == 'accepted'
             r.process do
               create_fulfillment(options[:order_id], items_from_order(order_exists.value!.items))
@@ -85,22 +84,28 @@ module ActiveMerchant
       end
 
       def get_charge_capture_id(order_id)
-        # we know that the order exists here from previous action
-        # so this will always be a success response
-        charge = @digital_river_gateway.order.find(order_id).value!.charges.first
-        # for now we assume only one charge will be processed at one order
+        charges = nil
+        retry_until(2, "charge not found", 0.5) do
+          charges = @digital_river_gateway.order.find(order_id).value!.charges
+          charges&.first.present?
+        end
 
-        capture = @digital_river_gateway.charge.find(charge.id).value!.captures.first
+        # for now we assume only one charge will be processed at one order
+        captures = nil
+        retry_until(2, "capture not found", 0.5) do
+          captures = @digital_river_gateway.charge.find(charges.first.id).value!.captures
+          captures&.first.present?
+        end
         ActiveMerchant::Billing::Response.new(
           true,
           "OK",
           {
             order_id: order_id,
-            charge_id: charge.id,
-            capture_id: capture.id,
-            source_id: charge.source_id
+            charge_id: charges.first.id,
+            capture_id: captures.first.id,
+            source_id: charges.first.source_id
           },
-          authorization: capture.id
+          authorization: captures.first.id
         )
       end
 
