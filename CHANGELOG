@@ -3,6 +3,7 @@
 == HEAD
 * PayTrace: Support gateway [meagabeth] #3985
 * vPOS: Support credit + refund [therufs] #3998
+* PayArc: Support gateway [senthil-code] #3974
 
 == Version 1.121 (June 8th, 2021)
 * Braintree: Lift restriction on gem version to allow for backwards compatibility [naashton] #3993

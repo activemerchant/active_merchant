@@ -657,6 +657,10 @@ pago_facil:
   service_id: 3
 
 # Working credentials, no need to replace
+pay_arc:
+  api_key: APIKEY
+
+# Working credentials, no need to replace
 pay_conex:
   account_id: '220614968961'
   api_accesskey: '69e9c4dd6b8ab9ab47da4e288df78315'
