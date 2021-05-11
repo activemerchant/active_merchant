@@ -1,7 +1,22 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
-
+* Element: Add duplicate_override_flag [almalee24] #4012
+* PayTrace: Support gateway [meagabeth] #3985
+* vPOS: Support credit + refund [therufs] #3998
+* PayArc: Support gateway [senthil-code] #3974
+* NMI: Support cardholder_auth field for 3DS2 [cdmackeyfree] #4002
+* Confiable: Support cardtype [therufs] #4004
+* Maestro: Add BIN [therufs] #4003
+* PayULatam: Ensure phone number is pulled from shipping_address correctly [dsmcclain] #4005
+* SafeCharge: Add challenge_preference for 3DS [klaiv] #3999
+* Adyen: Pass networkTxReference in all transactions [naashton] #4006
+* Adyen: Ensure correct transaction reference is selected [dsmcclain] #4007
+* PayTrace: Support level_3_data fields [meagabeth] #4008
+* BluePay: Add support for Stored Credentials [dsmcclain] #4009
+* Orbital: Add support for SCARecurringPayment [jessiagee] #4010
+* Braintree: Support recurring_first and moto reasons [curiousepic] #4013
+* PayTrace: Adjust capture method [meagabeth] #4015
 
 == Version 1.121 (June 8th, 2021)
 * Braintree: Lift restriction on gem version to allow for backwards compatibility [naashton] #3993
@@ -11,7 +26,6 @@
 * Checkout v2: Support metadata field [saschakala] #3992
 * Adyen: Support networkTxReference field [naashton] #3997
 * Paypal Express: Enable PayPal express reference transaction request to send merchant session id [janees-e] #3994
-* PayTrace: Support gateway [meagabeth] #3985
 
 == Version 1.120.0 (May 28th, 2021)
 * Braintree: Bump required braintree gem version to 3.0.1

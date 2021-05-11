@@ -287,6 +287,54 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_three_d_secure_data_on_master_sca_recurring
+    options_local = {
+      three_d_secure: {
+        eci: '7',
+        xid: 'TESTXID',
+        cavv: 'AAAEEEDDDSSSAAA2243234',
+        ds_transaction_id: '97267598FAE648F28083C23433990FBC',
+        version: 2
+      },
+      sca_recurring: 'Y'
+    }
+
+    stub_comms do
+      @gateway.authorize(50, credit_card(nil, brand: 'master'), @options.merge(options_local))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %{<AuthenticationECIInd>7</AuthenticationECIInd>}, data
+      assert_match %{<AAV>AAAEEEDDDSSSAAA2243234</AAV>}, data
+      assert_match %{<MCProgramProtocol>2</MCProgramProtocol>}, data
+      assert_match %{<MCDirectoryTransID>97267598FAE648F28083C23433990FBC</MCDirectoryTransID>}, data
+      assert_match %{<SCARecurringPayment>Y</SCARecurringPayment>}, data
+      assert_match %{<UCAFInd>4</UCAFInd>}, data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_three_d_secure_data_on_master_sca_recurring_with_invalid_eci
+    options_local = {
+      three_d_version: '2',
+      three_d_secure: {
+        eci: '5',
+        xid: 'TESTXID',
+        cavv: 'AAAEEEDDDSSSAAA2243234',
+        ds_transaction_id: '97267598FAE648F28083C23433990FBC',
+        version: 2
+      },
+      sca_recurring: 'Y'
+    }
+
+    stub_comms do
+      @gateway.authorize(50, credit_card(nil, brand: 'master'), @options.merge(options_local))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
+      assert_match %{<AAV>AAAEEEDDDSSSAAA2243234</AAV>}, data
+      assert_match %{<MCProgramProtocol>2</MCProgramProtocol>}, data
+      assert_match %{<MCDirectoryTransID>97267598FAE648F28083C23433990FBC</MCDirectoryTransID>}, data
+      assert_match %{<UCAFInd>4</UCAFInd>}, data
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_three_d_secure_data_on_american_express_purchase
     stub_comms do
       @gateway.purchase(50, credit_card(nil, brand: 'american_express'), @options.merge(@three_d_secure_options))

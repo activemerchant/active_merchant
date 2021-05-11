@@ -967,6 +967,25 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal 'submitted_for_settlement', response.params['braintree_transaction']['status']
   end
 
+  def test_successful_cardholder_purchase_initial_setup
+    creds_options = { initiator: 'merchant', reason_type: 'recurring_first', initial_transaction: true }
+    response = @gateway.purchase(@amount, credit_card('4111111111111111'), @options.merge(stored_credential: creds_options))
+    assert_success response
+    assert_equal '1000 Approved', response.message
+    assert_not_nil response.params['braintree_transaction']['network_transaction_id']
+    assert_equal 'submitted_for_settlement', response.params['braintree_transaction']['status']
+    assert_equal true, response.params['braintree_transaction']['recurring']
+  end
+
+  def test_successful_cardholder_purchase_initial_moto
+    creds_options = { initiator: 'merchant', reason_type: 'moto', initial_transaction: true }
+    response = @gateway.purchase(@amount, credit_card('4111111111111111'), @options.merge(stored_credential: creds_options))
+    assert_success response
+    assert_equal '1000 Approved', response.message
+    assert_not_nil response.params['braintree_transaction']['network_transaction_id']
+    assert_equal 'submitted_for_settlement', response.params['braintree_transaction']['status']
+  end
+
   private
 
   def stored_credential_options(*args, id: nil)
