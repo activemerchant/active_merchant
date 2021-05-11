@@ -97,6 +97,7 @@ module ActiveMerchant
       def initialize(options = {})
         requires!(options, :login, :password)
         super
+        p 'hello world'
       end
 
       def purchase(amount, payment, options = {})
