@@ -383,7 +383,7 @@ module ActiveMerchant #:nodoc:
         }
 
         card.delete_if { |_k, v| v.blank? }
-        card[:holderName] ||= 'Not Provided' if credit_card.is_a?(NetworkTokenizationCreditCard)
+        card[:holderName] ||= 'Not Provided'
         requires!(card, :expiryMonth, :expiryYear, :holderName, :number)
         post[:card] = card
       end

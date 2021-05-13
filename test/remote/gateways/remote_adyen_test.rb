@@ -409,6 +409,20 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal 'Authorised', response.message
   end
 
+  def test_successful_authorize_with_credit_card_no_name
+    credit_card_no_name = ActiveMerchant::Billing::CreditCard.new({
+      number: '4111111111111111',
+      month: 3,
+      year: 2030,
+      verification_value: '737',
+      brand: 'visa'
+    })
+
+    response = @gateway.authorize(@amount, credit_card_no_name, @options)
+    assert_success response
+    assert_equal 'Authorised', response.message
+  end
+
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response

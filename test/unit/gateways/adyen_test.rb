@@ -815,6 +815,23 @@ class AdyenTest < Test::Unit::TestCase
     assert_equal @options[:shipping_address][:country], post[:deliveryAddress][:country]
   end
 
+  def test_authorize_with_credit_card_no_name
+    credit_card_no_name = ActiveMerchant::Billing::CreditCard.new({
+      number: '4111111111111111',
+      month: 3,
+      year: 2030,
+      verification_value: '737',
+      brand: 'visa'
+    })
+
+    response = stub_comms do
+      @gateway.authorize(@amount, credit_card_no_name, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 'Not Provided', JSON.parse(data)['card']['holderName']
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
   def test_authorize_with_network_tokenization_credit_card_no_name
     @apple_pay_card.first_name = nil
     @apple_pay_card.last_name = nil
