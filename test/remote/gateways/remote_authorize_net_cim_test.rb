@@ -86,7 +86,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert response = @gateway.get_customer_profile(
       customer_profile_id: @customer_profile_id,
       unmask_expiration_date: true,
-      include_issuer_info: true,
+      include_issuer_info: true
     )
     assert response.test?
     assert_success response

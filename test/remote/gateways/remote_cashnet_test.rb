@@ -7,12 +7,19 @@ class CashnetTest < Test::Unit::TestCase
     @credit_card = credit_card(
       '5454545454545454',
       month: 12,
-      year: 2015
+      year: Time.new.year + 1
     )
     @options = {
       order_id: generate_unique_id,
       billing_address: address
     }
+  end
+
+  def test_successful_purchase
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+    assert purchase.test?
+    assert_equal 'Success', purchase.message
   end
 
   def test_successful_purchase_and_refund
