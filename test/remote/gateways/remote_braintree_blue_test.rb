@@ -119,8 +119,14 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal 'OK', response.message
   end
 
-  def test_successful_store_with_invalid_card
+  def test_successful_store_with_valid_card
     assert response = @gateway.store(@credit_card)
+    assert_success response
+    assert_equal 'OK', response.message
+  end
+
+  def test_successful_store_with_valid_card_and_empty_payment_method_nonce
+    assert response = @gateway.store(@credit_card, payment_method_nonce: "")
     assert_success response
     assert_equal 'OK', response.message
   end

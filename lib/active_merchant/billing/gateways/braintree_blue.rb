@@ -213,7 +213,7 @@ module ActiveMerchant #:nodoc:
 
       def add_customer_with_credit_card(creditcard, options)
         commit do
-          if options[:payment_method_nonce]
+          if options[:payment_method_nonce].present?
             credit_card_params = { payment_method_nonce: options[:payment_method_nonce] }
           else
             credit_card_params = {
@@ -294,7 +294,7 @@ module ActiveMerchant #:nodoc:
             :last_name => creditcard.last_name,
             :email => scrub_email(options[:email])
           }
-          
+
           parameters[:credit_card] = credit_card_params unless partial_credit_card_account_update?(creditcard)
           parameters[:device_data] = options[:device_data] if options[:device_data]
 
