@@ -62,6 +62,7 @@
 * Worldpay: support cancelOrRefund via options [therufs] #3975
 * Payeezy: support general credit [cdmackeyfree] #3977
 * Ripley and Hipercard: Add BIN ranges [naashton] #3978
+* Adyen: Default card holder name for credit cards [shasum] #3980
 
 == Version 1.119.0 (February 9th, 2021)
 * Payment Express: support verify/validate [therufs] #3874
