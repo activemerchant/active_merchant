@@ -10,9 +10,7 @@ class RemotePaywayDotComTest < Test::Unit::TestCase
     @invalid_luhn_card = credit_card('4000300011112221')
     @options = {
       billing_address: address,
-      description: 'Store Purchase',
-      # source_id must be provided, contact payway support for valid source_id(s)
-      source_id: '67'
+      description: 'Store Purchase'
     }
   end
 
@@ -27,7 +25,6 @@ class RemotePaywayDotComTest < Test::Unit::TestCase
       order_id: '1',
       ip: '127.0.0.1',
       email: 'joe@example.com',
-      source_id: '67',
       eci_type: '5',
       tax: '7',
       soft_descriptor: "Dan's Guitar Store"
@@ -117,7 +114,7 @@ class RemotePaywayDotComTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = PaywayDotComGateway.new(login: '', password: '', company_id: '')
+    gateway = PaywayDotComGateway.new(login: '', password: '', company_id: '', source_id: '')
 
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
