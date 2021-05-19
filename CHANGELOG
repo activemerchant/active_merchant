@@ -14,6 +14,7 @@
 * Synchrony: add card type [therufs] #4096
 * Maestro: support BINs without Luhn check [therufs] #4097
 * Maestro: support BINs [therufs] #4098
+* Redsys: Route MIT Exemptions to webservice endpoint [curiousepic] #4081
 
 == Version 1.122.0 (August 3rd, 2021)
 * Orbital: Correct success logic for refund [tatsianaclifton] #4014
