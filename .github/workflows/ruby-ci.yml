@@ -1,4 +1,4 @@
-name: Ruby CI
+name: CI
 
 on:
   pull_request:
@@ -11,12 +11,15 @@ on:
 jobs:
   build:
     name: Ruby ${{ matrix.version }} ${{ matrix.gemfile }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     env:
       BUNDLE_GEMFILE: ${{ matrix.gemfile }}
     strategy:
       matrix:
-        version: [2.5, 2.6, 2.7]
+        version:
+          - 2.5
+          - 2.6
+          - 2.7
         gemfile:
           - gemfiles/Gemfile.rails50
           - gemfiles/Gemfile.rails51
