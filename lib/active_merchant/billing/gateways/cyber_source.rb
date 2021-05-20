@@ -25,8 +25,8 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://ics2wsa.ic3.com/commerce/1.x/transactionProcessor'
 
       # Schema files can be found here: https://ics2ws.ic3.com/commerce/1.x/transactionProcessor/
-      TEST_XSD_VERSION = '1.164'
-      PRODUCTION_XSD_VERSION = '1.164'
+      TEST_XSD_VERSION = '1.181'
+      PRODUCTION_XSD_VERSION = '1.181'
       ECI_BRAND_MAPPING = {
         visa: 'vbv',
         master: 'spa',
@@ -298,6 +298,8 @@ module ActiveMerchant #:nodoc:
         add_partner_solution_id(xml)
         add_stored_credential_options(xml, options)
         add_merchant_description(xml, options)
+        add_sales_slip_number(xml, options)
+        add_airline_data(xml, options)
 
         xml.target!
       end
@@ -336,6 +338,8 @@ module ActiveMerchant #:nodoc:
         add_threeds_2_ucaf_data(xml, payment_method_or_reference, options)
         add_decision_manager_fields(xml, options)
         add_mdd_fields(xml, options)
+        add_sales_slip_number(xml, options)
+        add_airline_data(xml, options)
         if !payment_method_or_reference.is_a?(String) && card_brand(payment_method_or_reference) == 'check'
           add_check_service(xml)
           add_issuer_additional_data(xml, options)
@@ -523,6 +527,18 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_sales_slip_number(xml, options)
+        xml.tag! 'salesSlipNumber', options[:sales_slip_number] if options[:sales_slip_number]
+      end
+
+      def add_airline_data(xml, options)
+        return unless options[:airline_agent_code]
+
+        xml.tag! 'airlineData' do
+          xml.tag! 'agentCode', options[:airline_agent_code]
+        end
+      end
+
       def add_purchase_data(xml, money = 0, include_grand_total = false, options = {})
         xml.tag! 'purchaseTotals' do
           xml.tag! 'currency', options[:currency] || currency(money)
@@ -532,6 +548,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(xml, payment_method, address, options, shipTo = false)
         first_name, last_name = address_names(address[:name], payment_method)
+        bill_to_merchant_tax_id = options[:merchant_tax_id] unless shipTo
 
         xml.tag! shipTo ? 'shipTo' : 'billTo' do
           xml.tag! 'firstName',             first_name if first_name
@@ -549,6 +566,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'ipAddress',             options[:ip]                      unless options[:ip].blank? || shipTo
           xml.tag! 'driversLicenseNumber',  options[:drivers_license_number]  unless options[:drivers_license_number].blank?
           xml.tag! 'driversLicenseState',   options[:drivers_license_state]   unless options[:drivers_license_state].blank?
+          xml.tag! 'merchantTaxID',         bill_to_merchant_tax_id           unless bill_to_merchant_tax_id.blank?
         end
       end
 
@@ -853,6 +871,8 @@ module ActiveMerchant #:nodoc:
 
         xml.tag! 'installment' do
           xml.tag! 'totalCount', options[:installment_total_count]
+          xml.tag!('planType', options[:installment_plan_type]) if options[:installment_plan_type]
+          xml.tag!('firstInstallmentDate', options[:first_installment_date]) if options[:first_installment_date]
         end
       end
 

@@ -204,10 +204,29 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert !response.authorization.blank?
   end
 
-  def test_successful_authorization_with_installment_total_count
-    assert response = @gateway.authorize(@amount, @credit_card, installment_total_count: 5)
+  def test_successful_authorization_with_installment_data
+    options = @options.merge(installment_total_count: 5, installment_plan_type: 1, first_installment_date: '300101')
+    assert response = @gateway.authorize(@amount, @credit_card, options)
     assert_successful_response(response)
     assert !response.authorization.blank?
+  end
+
+  def test_successful_authorization_with_merchant_tax_id
+    options = @options.merge(merchant_tax_id: '123')
+    assert response = @gateway.authorize(@amount, @credit_card, options)
+    assert_successful_response(response)
+  end
+
+  def test_successful_authorization_with_sales_slip_number
+    options = @options.merge(sales_slip_number: '456')
+    assert response = @gateway.authorize(@amount, @credit_card, options)
+    assert_successful_response(response)
+  end
+
+  def test_successful_authorization_with_airline_agent_code
+    options = @options.merge(airline_agent_code: '7Q')
+    assert response = @gateway.authorize(@amount, @credit_card, options)
+    assert_successful_response(response)
   end
 
   def test_unsuccessful_authorization
@@ -396,7 +415,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_successful_response(response)
   end
 
-  def test_successful_pinless_debit_card_puchase
+  def test_successful_pinless_debit_card_purchase
     assert response = @gateway.purchase(@amount, @pinless_debit_card, @options.merge(pinless_debit_card: true))
     assert_successful_response(response)
   end

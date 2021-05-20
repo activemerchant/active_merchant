@@ -215,11 +215,36 @@ class CyberSourceTest < Test::Unit::TestCase
     end.respond_with(successful_authorization_response)
   end
 
-  def test_authorize_includes_installment_total_count
+  def test_authorize_includes_installment_data
     stub_comms do
-      @gateway.authorize(100, @credit_card, order_id: '1', installment_total_count: 5)
+      @gateway.authorize(100, @credit_card, order_id: '1', installment_total_count: 5, installment_plan_type: 1, first_installment_date: '300101')
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<installment>\s+<totalCount>5<\/totalCount>\s+<\/installment>/, data)
+      assert_match(/<installment>\s+<totalCount>5<\/totalCount>\s+<planType>1<\/planType>\s+<firstInstallmentDate>300101<\/firstInstallmentDate>\s+<\/installment>/, data)
+    end.respond_with(successful_authorization_response)
+  end
+
+  def test_authorize_includes_merchant_tax_id_in_billing_address_but_not_shipping_address
+    stub_comms do
+      @gateway.authorize(100, @credit_card, order_id: '1', merchant_tax_id: '123')
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r(<billTo>.*<merchantTaxID>123</merchantTaxID>.*</billTo>)m, data)
+      assert_not_match(%r(<shipTo>.*<merchantTaxID>123</merchantTaxID>.*</shipTo>)m, data)
+    end.respond_with(successful_authorization_response)
+  end
+
+  def test_authorize_includes_sales_slip_number
+    stub_comms do
+      @gateway.authorize(100, @credit_card, order_id: '1', sales_slip_number: '123')
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<salesSlipNumber>123<\/salesSlipNumber>/, data)
+    end.respond_with(successful_authorization_response)
+  end
+
+  def test_authorize_includes_airline_agent_code
+    stub_comms do
+      @gateway.authorize(100, @credit_card, order_id: '1', airline_agent_code: '7Q')
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<airlineData>\s+<agentCode>7Q<\/agentCode>\s+<\/airlineData>/, data)
     end.respond_with(successful_authorization_response)
   end
 
