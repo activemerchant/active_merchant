@@ -7,7 +7,7 @@ rescue LoadError
   raise 'Could not load the braintree gem.  Use `gem install braintree` to install it.'
 end
 
-raise "Need braintree gem >= 2.78.0. Run `gem install braintree --version '~>2.78'` to get the correct version." unless Braintree::Version::Major == 2 && Braintree::Version::Minor >= 78
+raise "Need braintree gem >= 3.4.0. Run `gem install braintree --version '~>3.4'` to get the correct version." unless Braintree::Version::Major == 3 && Braintree::Version::Minor >= 4
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -801,7 +801,7 @@ module ActiveMerchant #:nodoc:
                 eci_indicator: credit_card_or_vault_id.eci
               }
             elsif credit_card_or_vault_id.source == :android_pay || credit_card_or_vault_id.source == :google_pay
-              parameters[:android_pay_card] = {
+              parameters[:google_pay_card] = {
                 number: credit_card_or_vault_id.number,
                 cryptogram: credit_card_or_vault_id.payment_cryptogram,
                 expiration_month: credit_card_or_vault_id.month.to_s.rjust(2, '0'),

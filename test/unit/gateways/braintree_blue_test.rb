@@ -953,7 +953,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
                    first_name: 'Longbob', last_name: 'Longsen' },
         options: { store_in_vault: false, submit_for_settlement: nil, hold_in_escrow: nil },
         custom_fields: nil,
-        android_pay_card: {
+        google_pay_card: {
           number: '4111111111111111',
           expiration_month: '09',
           expiration_year: (Time.now.year + 1).to_s,
@@ -986,7 +986,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
                    first_name: 'Longbob', last_name: 'Longsen' },
         options: { store_in_vault: false, submit_for_settlement: nil, hold_in_escrow: nil },
         custom_fields: nil,
-        android_pay_card: {
+        google_pay_card: {
           number: '4111111111111111',
           expiration_month: '09',
           expiration_year: (Time.now.year + 1).to_s,
