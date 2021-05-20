@@ -66,6 +66,7 @@
 * PaywayDotCom: make `source_id` a required field [dsmcclain] # 3981 
 * Qvalent: remove `pem_password` from required credentials [dsmcclain] #3982
 * Authorize.net: Fix stored credentials [tatsianaclifton] #3971
+* CyberSource: Add support for multiple new fields [dsmcclain] #3984
 
 == Version 1.119.0 (February 9th, 2021)
 * Payment Express: support verify/validate [therufs] #3874
