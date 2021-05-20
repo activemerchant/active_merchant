@@ -688,6 +688,11 @@ pay_secure:
   login: LOGIN
   password: PASSWORD
 
+pay_trace:
+  username: USERNAME
+  password: PASSWORD
+  integrator_id: INTEGRATOR_ID
+
 paybox_direct:
   login: 1999888
   password: 1999888I
