@@ -17,6 +17,13 @@ class ElavonTest < Test::Unit::TestCase
       multi_currency: true
     )
 
+    @gateway_with_ssl_vendor_id = ElavonGateway.new(
+      login: 'login',
+      user: 'user',
+      password: 'password',
+      ssl_vendor_id: 'ABC123'
+    )
+
     @credit_card = credit_card
     @amount = 100
 
@@ -385,11 +392,19 @@ class ElavonTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_ssl_vendor_id_in_request
+  def test_ssl_vendor_id_from_gateway_credentials
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(ssl_vendor_id: 'ABC123'))
+      @gateway_with_ssl_vendor_id.purchase(@amount, @credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/<ssl_vendor_id>ABC123<\/ssl_vendor_id/, data)
+      assert_match(/<ssl_vendor_id>ABC123<\/ssl_vendor_id>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_ssl_vendor_id_from_options
+    stub_comms do
+      @gateway_with_ssl_vendor_id.purchase(@amount, @credit_card, @options.merge(ssl_vendor_id: 'My special ID'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<ssl_vendor_id>My special ID<\/ssl_vendor_id>/, data)
     end.respond_with(successful_purchase_response)
   end
 
