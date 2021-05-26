@@ -267,7 +267,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
       customer_type: 'individual',
       bill_to: @address,
       payment: {
-        credit_card: credit_card('1234123412341234')
+        credit_card: credit_card('4111111111111111')
       }
     }
     assert response = @gateway.create_customer_profile(@options)
@@ -288,8 +288,8 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
 
     assert response = @gateway.get_customer_profile(customer_profile_id: @customer_profile_id)
     assert_equal 2, response.params['profile']['payment_profiles'].size
-    assert_equal 'XXXX1234', response.params['profile']['payment_profiles'][0]['payment']['credit_card']['card_number']
-    assert_equal 'XXXX4242', response.params['profile']['payment_profiles'][1]['payment']['credit_card']['card_number']
+    assert(response.params['profile']['payment_profiles'].one? { |payment| payment['payment']['credit_card']['card_number'] == 'XXXX4242' })
+    assert(response.params['profile']['payment_profiles'].one? { |payment| payment['payment']['credit_card']['card_number'] == 'XXXX1111' })
   end
 
   def test_successful_delete_customer_payment_profile_request
