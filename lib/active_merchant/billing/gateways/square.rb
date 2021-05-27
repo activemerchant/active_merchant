@@ -2,7 +2,7 @@ require "square"
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-    class SquareNewGateway < Gateway
+    class SquareGateway < Gateway
       self.test_url = "https://connect.squareupsandbox.com/v2"
       self.live_url = "https://connect.squareup.com/v2"
 

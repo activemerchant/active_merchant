@@ -1,8 +1,8 @@
 require "test_helper"
 
-class RemoteSquareNewTest < Test::Unit::TestCase
+class RemoteSquareTest < Test::Unit::TestCase
   def setup
-    @gateway = SquareNewGateway.new(fixtures(:square_new))
+    @gateway = SquareGateway.new(fixtures(:square))
 
     @amount = 200
     @refund_amount = 100
