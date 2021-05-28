@@ -164,14 +164,38 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  def test_purchase_with_metadata
+    response = stub_comms do
+      options = {
+        metadata: {
+          coupon_code: "NY2018",
+          partner_id: "123989"
+        }
+      }
+      # puts options
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r{metadata:{"coupon_code":"NY2018"}}, data)
+      assert_match(%r{metadata:{"partner_id":"123989"}}, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end 
+
   def test_moto_transaction_is_properly_set
     response = stub_comms do
       options = {
-        metadata: { manual_entry: true }
+        metadata: { 
+          manual_entry: true,
+          # coupon_code: "NY2018",
+          # partner_id: "123989"
+        }
       }
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
       assert_match(%r{"payment_type":"MOTO"}, data)
+      # assert_match(%r{metadata:{"coupon_code":"NY2018"}}, data)
+      # assert_match(%r{metadata:{"partner_id":"123989"}}, data)
     end.respond_with(successful_authorize_response)
 
     assert_success response

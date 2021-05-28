@@ -155,6 +155,18 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  def test_successful_purchase_with_metadata
+    options = @options.merge(
+      metadata: {
+        "coupon_code": "NY2018",
+        "partner_id": 123989
+      }
+    )
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
   def test_successful_purchase_with_minimal_options
     response = @gateway.purchase(@amount, @credit_card, billing_address: address)
     assert_success response
@@ -223,6 +235,22 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_successful_authorize_and_capture_with_metadata
+    options = @options.merge(
+      metadata: {
+        "coupon_code": "NY2018",
+        "partner_id": 123989
+      }
+    )
+
+    auth = @gateway.authorize(@amount, @credit_card, options)
+    assert_success auth
+
+    assert capture = @gateway.capture(nil, auth.authorization)
+    assert_success capture
+  end
+
+
   def test_direct_3ds_authorize
     auth = @gateway.authorize(@amount, @threeds_card, @options.merge(execute_threed: true))
 
@@ -260,6 +288,24 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_success refund
   end
 
+  def test_successful_refund_with_metadata
+    options = @options.merge(
+      metadata: {
+        "coupon_code": "NY2018",
+        "partner_id": 123989
+      }
+    )
+
+    purchase = @gateway.purchase(@amount, @credit_card, options)
+    assert_success purchase
+
+    sleep 1
+
+    assert refund = @gateway.refund(@amount, purchase.authorization)
+    assert_success refund
+  end
+
+
   def test_partial_refund
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
@@ -277,6 +323,21 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
 
   def test_successful_void
     auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    assert void = @gateway.void(auth.authorization)
+    assert_success void
+  end
+
+  def test_successful_void_with_metadata
+    options = @options.merge(
+      metadata: {
+        "coupon_code": "NY2018",
+        "partner_id": 123989
+      }
+    )
+
+    auth = @gateway.authorize(@amount, @credit_card, options)
     assert_success auth
 
     assert void = @gateway.void(auth.authorization)

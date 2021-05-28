@@ -37,12 +37,15 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, amount, options)
         add_customer_data(post, options)
+        add_metadata(post, options)
 
         commit(:capture, post, authorization)
       end
 
       def void(authorization, _options = {})
         post = {}
+        add_metadata(post, options)
+
         commit(:void, post, authorization)
       end
 
@@ -50,6 +53,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, amount, options)
         add_customer_data(post, options)
+        add_metadata(post, options)
 
         commit(:refund, post, authorization)
       end
@@ -82,8 +86,9 @@ module ActiveMerchant #:nodoc:
         add_stored_credential_options(post, options)
         add_transaction_data(post, options)
         add_3ds(post, options)
+        add_metadata(post, options)
       end
-
+  
       def add_invoice(post, money, options)
         post[:amount] = localized_amount(money, options[:currency])
         post[:reference] = options[:order_id]
@@ -95,6 +100,14 @@ module ActiveMerchant #:nodoc:
         end
         post[:metadata] = {}
         post[:metadata][:udf5] = application_id || 'ActiveMerchant'
+      end
+
+      def add_metadata(post, options)
+        puts options[:metadata]
+        post[:metadata] = {} unless post[:metadata]
+        post[:metadata].merge(options[:metadata]) if options[:metadata]
+        # puts post[:metadata]
+        # puts options[:metadata]
       end
 
       def add_payment_method(post, payment_method, options)
