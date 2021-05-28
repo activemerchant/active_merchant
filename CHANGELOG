@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Braintree: Bump required braintree gem version to 3.0.1
 * Stripe PI: ensure `setup_future_sage` and `off_session` work when using SetupIntents.
 * Orbital: Update commit to accept retry_logic in params [jessiagee] #3890
 * Orbital: Update remote 3DS tests [jessiagee] #3892
