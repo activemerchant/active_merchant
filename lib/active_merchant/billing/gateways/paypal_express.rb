@@ -250,6 +250,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'n2:PaymentType', options[:payment_type] || 'Any'
               add_payment_details(xml, money, currency_code, options)
               xml.tag! 'n2:IPAddress', options[:ip]
+              xml.tag! 'n2:MerchantSessionId', options[:merchant_session_id] if options[:merchant_session_id].present?
             end
           end
         end
