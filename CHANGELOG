@@ -1,7 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
-
+* Braintree: Lift restriction on gem version to allow for backwards compatibility [naashton] #3993
 
 == Version 1.120.0 (May 28th, 2021)
 * Braintree: Bump required braintree gem version to 3.0.1
