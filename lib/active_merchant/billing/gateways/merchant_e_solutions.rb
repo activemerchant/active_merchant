@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['US']
 
       # The card types supported by the payment gateway
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb]
+      self.supported_cardtypes = %i[visa master american_express discover jcb]
 
       # The homepage URL of the gateway
       self.homepage_url = 'http://www.merchante-solutions.com/'
@@ -169,8 +169,7 @@ module ActiveMerchant #:nodoc:
           authorization: response['transaction_id'],
           test: test?,
           cvv_result: response['cvv2_result'],
-          avs_result: { code: response['avs_result'] }
-        )
+          avs_result: { code: response['avs_result'] })
       end
 
       def message_from(response)

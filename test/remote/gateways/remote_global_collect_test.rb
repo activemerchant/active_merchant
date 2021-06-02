@@ -14,6 +14,15 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
       billing_address: address,
       description: 'Store Purchase'
     }
+    @long_address = {
+      billing_address: {
+        address1: '1234 Supercalifragilisticexpialidociousthiscantbemorethanfiftycharacters',
+        city: '‎Portland',
+        state: 'ME',
+        zip: '09901',
+        country: 'US'
+      }
+    }
   end
 
   def test_successful_purchase
@@ -55,6 +64,13 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  def test_successful_purchase_with_installments
+    options = @options.merge(number_of_installments: 2)
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
   # When requires_approval is true (or not present),
   # `purchase` will make both an `auth` and a `capture` call
   def test_successful_purchase_with_requires_approval_true
@@ -77,6 +93,26 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     assert_equal 'CAPTURE_REQUESTED', response.params['payment']['status']
   end
 
+  def test_successful_authorize_via_normalized_3ds2_fields
+    options = @options.merge(
+      three_d_secure: {
+        version: '2.1.0',
+        eci: '05',
+        cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA=',
+        xid: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA=',
+        ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC',
+        acs_transaction_id: '13c701a3-5a88-4c45-89e9-ef65e50a8bf9',
+        cavv_algorithm: 1,
+        authentication_response_status: 'Y'
+      }
+    )
+
+    response = @gateway.authorize(@amount, @credit_card, options)
+    assert_success response
+    assert_match 'jJ81HADVRtXfCBATEp01CJUAAAA=', response.params['payment']['paymentOutput']['cardPaymentMethodSpecificOutput']['threeDSecureResults']['cavv']
+    assert_equal 'Succeeded', response.message
+  end
+
   def test_successful_purchase_with_airline_data
     options = @options.merge(
       airline_data: {
@@ -90,13 +126,13 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
             date: '20190810',
             carrier_code: 'SA',
             number: 596,
-            airline_class: 'ZZ'},
+            airline_class: 'ZZ' },
           { arrival_airport: 'RDU',
             origin_airport: 'BDL',
             date: '20190817',
             carrier_code: 'SA',
             number: 597,
-            airline_class: 'ZZ'}
+            airline_class: 'ZZ' }
         ]
       }
     )
@@ -123,7 +159,7 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_very_long_name
-    credit_card = credit_card('4567350000427977', { first_name: 'thisisaverylongfirstname'})
+    credit_card = credit_card('4567350000427977', { first_name: 'thisisaverylongfirstname' })
 
     response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response
@@ -131,9 +167,15 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_blank_name
-    credit_card = credit_card('4567350000427977', { first_name: nil, last_name: nil})
+    credit_card = credit_card('4567350000427977', { first_name: nil, last_name: nil })
 
     response = @gateway.purchase(@amount, credit_card, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_purchase_with_truncated_address
+    response = @gateway.purchase(@amount, @credit_card, @long_address)
     assert_success response
     assert_equal 'Succeeded', response.message
   end
@@ -227,7 +269,6 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = GlobalCollectGateway.new(merchant_id: '', api_key_id: '', secret_api_key: '')
-
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_match %r{MISSING_OR_INVALID_AUTHORIZATION}, response.message

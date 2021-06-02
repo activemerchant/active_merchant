@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
       TEST_XMLNS = 'https://secure.modpay.com/netservices/test/'
 
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.homepage_url = 'http://www.modpay.com'
       self.display_name = 'Modern Payments'
 
@@ -148,15 +148,13 @@ module ActiveMerchant #:nodoc:
       def commit(action, params)
         data = ssl_post(url(action), build_request(action, params),
           { 'Content-Type' => 'text/xml; charset=utf-8',
-            'SOAPAction' => "#{xmlns(action)}#{action}" }
-        )
+            'SOAPAction' => "#{xmlns(action)}#{action}" })
 
         response = parse(action, data)
         Response.new(successful?(action, response), message_from(action, response), response,
           test: test?,
           authorization: authorization_from(action, response),
-          avs_result: { code: response[:avs_code] }
-        )
+          avs_result: { code: response[:avs_code] })
       end
 
       def authorization_from(action, response)

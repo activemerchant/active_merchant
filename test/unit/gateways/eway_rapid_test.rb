@@ -58,7 +58,7 @@ class EwayRapidTest < Test::Unit::TestCase
   def test_purchase_passes_customer_data_from_payment_method_when_no_address_is_provided
     stub_comms do
       @gateway.purchase(@amount, @credit_card, { email: @email })
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_customer_data_passed(
         data,
         @credit_card.first_name,
@@ -71,7 +71,7 @@ class EwayRapidTest < Test::Unit::TestCase
   def test_purchase_passes_customer_data_from_billing_address
     stub_comms do
       @gateway.purchase(@amount, @credit_card, { billing_address: @address, email: @email })
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_customer_data_passed(
         data,
         @address[:name].split[0],
@@ -85,7 +85,7 @@ class EwayRapidTest < Test::Unit::TestCase
   def test_purchase_passes_customer_data_from_address
     stub_comms do
       @gateway.purchase(@amount, @credit_card, { address: @address, email: @email })
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_customer_data_passed(
         data,
         @address[:name].split[0],
@@ -99,21 +99,62 @@ class EwayRapidTest < Test::Unit::TestCase
   def test_purchase_passes_shipping_data
     stub_comms do
       @gateway.purchase(@amount, @credit_card, { shipping_address: @shipping_address, email: @email })
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_shipping_data_passed(data, @shipping_address, @email)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_3ds1_data
+    eci = '05'
+    cavv = 'AgAAAAAA4n1uzQPRaATeQAAAAAA='
+    xid = 'AAAAAAAA4n1uzQPRaATeQAAAAAA='
+    authentication_response_status = 'Y'
+    options_with_3ds1 = {
+      eci: eci,
+      cavv: cavv,
+      xid: xid,
+      authentication_response_status: authentication_response_status
+    }
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, { three_d_secure: options_with_3ds1 })
+    end.check_request do |_endpoint, data, _headers|
+      assert_3ds_data_passed(data, options_with_3ds1)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_3ds2_data
+    eci = '05'
+    cavv = 'AgAAAAAA4n1uzQPRaATeQAAAAAA='
+    authentication_response_status = 'Y'
+    version = '2.1.0'
+    ds_transaction_id = '8fe2e850-a028-407e-9a18-c8cf7598ca10'
+
+    options_with_3ds2 = {
+      version: version,
+      eci: eci,
+      cavv: cavv,
+      ds_transaction_id: ds_transaction_id,
+      authentication_response_status: authentication_response_status
+    }
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, { three_d_secure: options_with_3ds2 })
+    end.check_request do |_endpoint, data, _headers|
+      assert_3ds_data_passed(data, options_with_3ds2)
     end.respond_with(successful_purchase_response)
   end
 
   def test_localized_currency
     stub_comms do
       @gateway.purchase(100, @credit_card, currency: 'CAD')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match '"TotalAmount":"100"', data
     end.respond_with(successful_purchase_response)
 
     stub_comms do
       @gateway.purchase(100, @credit_card, currency: 'JPY')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match '"TotalAmount":"1"', data
     end.respond_with(successful_purchase_response)
   end
@@ -189,9 +230,8 @@ class EwayRapidTest < Test::Unit::TestCase
           country: 'US',
           phone: '1115555555',
           fax: '1115556666'
-        }
-      )
-    end.check_request do |endpoint, data, headers|
+        })
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{"TransactionType":"CustomTransactionType"}, data)
       assert_match(%r{"RedirectUrl":"http://awesomesauce.com"}, data)
       assert_match(%r{"CustomerIP":"0.0.0.0"}, data)
@@ -241,7 +281,7 @@ class EwayRapidTest < Test::Unit::TestCase
     ActiveMerchant::Billing::EwayRapidGateway.partner_id = 'SomePartner'
     stub_comms do
       @gateway.purchase(200, @credit_card)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{"PartnerID":"SomePartner"}, data)
     end.respond_with(successful_purchase_response)
   end
@@ -250,7 +290,7 @@ class EwayRapidTest < Test::Unit::TestCase
     ActiveMerchant::Billing::EwayRapidGateway.partner_id = 'SomePartner'
     stub_comms do
       @gateway.purchase(200, @credit_card, partner_id: 'OtherPartner')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{"PartnerID":"OtherPartner"}, data)
     end.respond_with(successful_purchase_response)
   end
@@ -258,7 +298,7 @@ class EwayRapidTest < Test::Unit::TestCase
   def test_partner_id_is_omitted_when_not_set
     stub_comms do
       @gateway.purchase(200, @credit_card)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_no_match(%r{"PartnerID":}, data)
     end.respond_with(successful_purchase_response)
   end
@@ -267,7 +307,7 @@ class EwayRapidTest < Test::Unit::TestCase
     partner_string = 'EWay Rapid PartnerID is capped at 50 characters and will truncate if it is too long.'
     stub_comms do
       @gateway.purchase(200, @credit_card, partner_id: partner_string)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{"PartnerID":"#{partner_string.slice(0, 50)}"}, data)
     end.respond_with(successful_purchase_response)
   end
@@ -285,7 +325,7 @@ class EwayRapidTest < Test::Unit::TestCase
   def test_authorize_passes_customer_data_from_payment_method_when_no_address_is_provided
     stub_comms do
       @gateway.authorize(@amount, @credit_card, { email: @email })
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_customer_data_passed(
         data,
         @credit_card.first_name,
@@ -298,7 +338,7 @@ class EwayRapidTest < Test::Unit::TestCase
   def test_authorize_passes_customer_data_from_billing_address
     stub_comms do
       @gateway.authorize(@amount, @credit_card, { billing_address: @address, email: @email })
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_customer_data_passed(
         data,
         @address[:name].split[0],
@@ -312,7 +352,7 @@ class EwayRapidTest < Test::Unit::TestCase
   def test_authorize_passes_customer_data_from_address
     stub_comms do
       @gateway.authorize(@amount, @credit_card, { address: @address, email: @email })
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_customer_data_passed(
         data,
         @address[:name].split[0],
@@ -326,7 +366,7 @@ class EwayRapidTest < Test::Unit::TestCase
   def test_authorize_passes_shipping_data
     stub_comms do
       @gateway.authorize(@amount, @credit_card, { shipping_address: @shipping_address, email: @email })
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_shipping_data_passed(data, @shipping_address, @email)
     end.respond_with(successful_authorize_response)
   end
@@ -396,7 +436,7 @@ class EwayRapidTest < Test::Unit::TestCase
         phone: '(555)555-5555',
         fax: '(555)555-6666'
       })
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match '"Method":"CreateTokenCustomer"', data
     end.respond_with(successful_store_response)
 
@@ -409,7 +449,7 @@ class EwayRapidTest < Test::Unit::TestCase
   def test_store_passes_customer_data_from_billing_address
     stub_comms do
       @gateway.store(@credit_card, { billing_address: @address, email: @email })
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_customer_data_passed(
         data,
         @address[:name].split[0],
@@ -426,7 +466,7 @@ class EwayRapidTest < Test::Unit::TestCase
         @credit_card,
         { shipping_address: @shipping_address, billing_address: @address, email: @email }
       )
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_shipping_data_passed(data, @shipping_address, @email)
     end.respond_with(successful_store_response)
   end
@@ -445,7 +485,7 @@ class EwayRapidTest < Test::Unit::TestCase
   def test_successful_update
     response = stub_comms do
       @gateway.update('faketoken', nil)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match '"Method":"UpdateTokenCustomer"', data
     end.respond_with(successful_update_response)
 
@@ -458,7 +498,7 @@ class EwayRapidTest < Test::Unit::TestCase
   def test_update_passes_customer_data_from_payment_method_when_no_address_is_provided
     stub_comms do
       @gateway.update('token', @credit_card, { email: @email })
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_customer_data_passed(
         data,
         @credit_card.first_name,
@@ -471,7 +511,7 @@ class EwayRapidTest < Test::Unit::TestCase
   def test_update_passes_customer_data_from_billing_address
     stub_comms do
       @gateway.update('token', @credit_card, { billing_address: @address, email: @email })
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_customer_data_passed(
         data,
         @address[:name].split[0],
@@ -485,7 +525,7 @@ class EwayRapidTest < Test::Unit::TestCase
   def test_update_passes_customer_data_from_address
     stub_comms do
       @gateway.update('token', @credit_card, { address: @address, email: @email })
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_customer_data_passed(
         data,
         @address[:name].split[0],
@@ -499,7 +539,7 @@ class EwayRapidTest < Test::Unit::TestCase
   def test_update_passes_shipping_data
     stub_comms do
       @gateway.update('token', @credit_card, { shipping_address: @shipping_address, email: @email })
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_shipping_data_passed(data, @shipping_address, @email)
     end.respond_with(successful_update_response)
   end
@@ -507,7 +547,7 @@ class EwayRapidTest < Test::Unit::TestCase
   def test_successful_refund
     response = stub_comms do
       @gateway.refund(@amount, '1234567')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |endpoint, data, _headers|
       assert_match %r{Transaction\/1234567\/Refund$}, endpoint
       json = JSON.parse(data)
       assert_equal '100', json['Refund']['TotalAmount']
@@ -534,7 +574,7 @@ class EwayRapidTest < Test::Unit::TestCase
   def test_successful_stored_card_purchase
     response = stub_comms do
       @gateway.purchase(100, 'the_customer_token', transaction_type: 'MOTO')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match '"Method":"TokenPayment"', data
       assert_match '"TransactionType":"MOTO"', data
     end.respond_with(successful_store_purchase_response)
@@ -597,6 +637,18 @@ class EwayRapidTest < Test::Unit::TestCase
       assert_equal customer['Phone'],       address[:phone]
       assert_equal customer['Fax'],         address[:fax]
     end
+  end
+
+  def assert_3ds_data_passed(data, threedsoption)
+    parsed_data = JSON.parse(data)
+    threeds = parsed_data['PaymentInstrument']['ThreeDSecureAuth']
+
+    assert_equal threeds['Cryptogram'], threedsoption[:cavv]
+    assert_equal threeds['ECI'], threedsoption[:eci]
+    assert_equal threeds['XID'], threedsoption[:xid]
+    assert_equal threeds['AuthStatus'], threedsoption[:authentication_response_status]
+    assert_equal threeds['dsTransactionId'], threedsoption[:ds_transaction_id]
+    assert_equal threeds['Version'], threedsoption[:version]
   end
 
   def assert_shipping_data_passed(data, address, email)

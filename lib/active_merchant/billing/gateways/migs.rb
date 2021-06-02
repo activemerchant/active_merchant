@@ -20,7 +20,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = %w(AU AE BD BN EG HK ID JO KW LB LK MU MV MY NZ OM PH QA SA SG TT VN)
 
       # The card types supported by the payment gateway
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
+      self.supported_cardtypes = %i[visa master american_express diners_club jcb]
 
       self.money_format = :cents
       self.currencies_without_fractions = %w(IDR)
@@ -70,7 +70,7 @@ module ActiveMerchant #:nodoc:
 
       # MiGS works by merchants being either purchase only or authorize/capture
       # So authorize is the same as purchase when in authorize mode
-      alias_method :authorize, :purchase
+      alias authorize purchase
 
       # ==== Options
       #
@@ -123,7 +123,7 @@ module ActiveMerchant #:nodoc:
         refund(money, authorization, options)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -286,8 +286,7 @@ module ActiveMerchant #:nodoc:
           authorization: response[:TransactionNo],
           fraud_review: fraud_review?(response),
           avs_result: { code: avs_response_code },
-          cvv_result: cvv_result_code
-        )
+          cvv_result: cvv_result_code)
       end
 
       def success?(response)

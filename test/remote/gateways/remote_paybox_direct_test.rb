@@ -4,11 +4,12 @@ require 'test_helper'
 
 class RemotePayboxDirectTest < Test::Unit::TestCase
   def setup
-    @gateway = PayboxDirectGateway.new(fixtures(:paybox_direct))
+    fixtures = fixtures(:paybox_direct)
+    @gateway = PayboxDirectGateway.new(fixtures)
 
     @amount = 100
-    @credit_card = credit_card('1111222233334444')
-    @declined_card = credit_card('1111222233334445')
+    @credit_card = credit_card(fixtures[:credit_card_ok])
+    @declined_card = credit_card(fixtures[:credit_card_nok])
 
     @options = {
       order_id: '1',
@@ -53,7 +54,7 @@ class RemotePayboxDirectTest < Test::Unit::TestCase
   def test_failed_capture
     assert response = @gateway.capture(@amount, '', order_id: '1')
     assert_failure response
-    assert_equal 'Invalid data', response.message
+    assert_equal 'Mandatory values missing keyword:13 Type:1', response.message
   end
 
   def test_purchase_and_partial_credit
@@ -61,7 +62,7 @@ class RemotePayboxDirectTest < Test::Unit::TestCase
     assert_success purchase
     assert_equal 'The transaction was approved', purchase.message
     assert purchase.authorization
-    assert credit = @gateway.credit(@amount / 2, purchase.authorization, order_id: '1')
+    assert credit = @gateway.refund(@amount / 2, purchase.authorization, order_id: '1')
     assert_equal 'The transaction was approved', credit.message
     assert_success credit
   end
@@ -85,7 +86,7 @@ class RemotePayboxDirectTest < Test::Unit::TestCase
   def test_failed_refund
     refund = @gateway.refund(@amount, '', order_id: '2')
     assert_failure refund
-    assert_equal 'Invalid data', refund.message
+    assert_equal 'Mandatory values missing keyword:13 Type:13', refund.message
   end
 
   def test_invalid_login
@@ -96,7 +97,7 @@ class RemotePayboxDirectTest < Test::Unit::TestCase
     )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal 'Non autorise', response.message
+    assert_equal 'HMAC requis', response.message
   end
 
   def test_invalid_login_without_rang
@@ -106,6 +107,6 @@ class RemotePayboxDirectTest < Test::Unit::TestCase
     )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal 'Non autorise', response.message
+    assert_equal "PAYBOX : Acc\xE8s refus\xE9 ou site/rang/cl\xE9 invalide".force_encoding('ASCII-8BIT'), response.message
   end
 end

@@ -28,8 +28,7 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
   def test_successful_purchase_with_network_tokenization
     @credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
-      verification_value: nil
-    )
+      verification_value: nil)
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'Transaction Normal - Approved', response.message
@@ -37,7 +36,7 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_specified_currency
-    options_with_specified_currency = @options.merge({currency: 'GBP'})
+    options_with_specified_currency = @options.merge({ currency: 'GBP' })
     assert response = @gateway.purchase(@amount, @credit_card, options_with_specified_currency)
     assert_match(/Transaction Normal/, response.message)
     assert_success response
@@ -119,7 +118,7 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
   end
 
   def test_purchase_and_credit_with_specified_currency
-    options_with_specified_currency = @options.merge({currency: 'GBP'})
+    options_with_specified_currency = @options.merge({ currency: 'GBP' })
     assert purchase = @gateway.purchase(@amount, @credit_card, options_with_specified_currency)
     assert_success purchase
     assert purchase.authorization
@@ -204,7 +203,7 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
   end
 
   def test_refund_with_specified_currency
-    options_with_specified_currency = @options.merge({currency: 'GBP'})
+    options_with_specified_currency = @options.merge({ currency: 'GBP' })
     assert purchase = @gateway.purchase(@amount, @credit_card, options_with_specified_currency)
     assert_match(/Transaction Normal/, purchase.message)
     assert_success purchase

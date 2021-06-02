@@ -18,7 +18,7 @@ module ActiveMerchant #:nodoc:
       NIL_ATTRIBUTE = { 'i:nil' => 'true' }
 
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.homepage_url = 'http://www.securenet.com/'
       self.display_name = 'SecureNet'
 
@@ -83,8 +83,7 @@ module ActiveMerchant #:nodoc:
           test: test?,
           authorization: build_authorization(response),
           avs_result: { code: response[:avs_result_code] },
-          cvv_result: response[:card_code_response_code]
-        )
+          cvv_result: response[:card_code_response_code])
       end
 
       def build_request(request)

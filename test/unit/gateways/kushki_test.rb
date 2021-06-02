@@ -68,10 +68,8 @@ class KushkiTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.purchase(amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
-      if /charges/ =~ endpoint
-        assert_no_match %r{extraTaxes}, data
-      end
+    end.check_request do |endpoint, data, _headers|
+      assert_no_match %r{extraTaxes}, data if /charges/.match?(endpoint)
     end.respond_with(successful_charge_response, successful_token_response)
 
     assert_success response
@@ -101,8 +99,8 @@ class KushkiTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.purchase(amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
-      if /charges/ =~ endpoint
+    end.check_request do |endpoint, data, _headers|
+      if /charges/.match?(endpoint)
         assert_match %r{extraTaxes}, data
         assert_no_match %r{propina}, data
         assert_match %r{iac}, data
@@ -138,8 +136,8 @@ class KushkiTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.purchase(amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
-      if /charges/ =~ endpoint
+    end.check_request do |endpoint, data, _headers|
+      if /charges/.match?(endpoint)
         assert_match %r{extraTaxes}, data
         assert_match %r{propina}, data
       end

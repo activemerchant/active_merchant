@@ -5,10 +5,10 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://sanalposprovtest.garanti.com.tr/VPServlet'
 
       # The countries the gateway supports merchants from as 2 digit ISO country codes
-      self.supported_countries = ['US', 'TR']
+      self.supported_countries = %w[US TR]
 
       # The card types supported by the payment gateway
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       # The homepage URL of the gateway
       self.homepage_url = 'https://sanalposweb.garanti.com.tr'

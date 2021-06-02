@@ -6,7 +6,7 @@ class TrustCommerceTest < Test::Unit::TestCase
 
     @credit_card = credit_card('4111111111111111')
     @declined_credit_card = credit_card('4111111111111112')
-    @check = check({account_number: 55544433221, routing_number: 789456124})
+    @check = check({ account_number: 55544433221, routing_number: 789456124 })
 
     @amount = 100
 
@@ -52,9 +52,9 @@ class TrustCommerceTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
 
     assert_equal Response, response.class
-    assert_equal ['error',
-                  'offenders',
-                  'status'], response.params.keys.sort
+    assert_equal %w[error
+                    offenders
+                    status], response.params.keys.sort
 
     assert_match %r{A field was improperly formatted, such as non-digit characters in a number field}, response.message
 

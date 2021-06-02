@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       self.homepage_url = 'https://cardconnect.com/'
       self.display_name = 'Card Connect'
@@ -233,7 +233,7 @@ module ActiveMerchant #:nodoc:
           post[:items] = options[:items].map do |item|
             updated = {}
             item.each_pair do |k, v|
-              updated.merge!(k.to_s.gsub(/_/, '') => v)
+              updated.merge!(k.to_s.delete('_') => v)
             end
             updated
           end

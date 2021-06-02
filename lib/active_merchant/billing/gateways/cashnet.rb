@@ -7,8 +7,8 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://train.cashnet.com/'
 
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
-      self.homepage_url        = 'http://www.higherone.com/'
+      self.supported_cardtypes = %i[visa master american_express discover diners_club jcb]
+      self.homepage_url        = 'https://transactcampus.com'
       self.display_name        = 'Cashnet'
       self.money_format        = :dollars
       self.max_retries         = 0
@@ -76,7 +76,7 @@ module ActiveMerchant #:nodoc:
 
         return unparsable_response(raw_response) unless parsed_response
 
-        success = (parsed_response[:result] == '0')
+        success = success?(parsed_response)
         Response.new(
           success,
           CASHNET_CODES[parsed_response[:result]],
@@ -84,6 +84,10 @@ module ActiveMerchant #:nodoc:
           test:          test?,
           authorization: (success ? parsed_response[:tx] : '')
         )
+      end
+
+      def success?(response)
+        response[:result] == '0'
       end
 
       def post_data(action, parameters = {})
@@ -191,6 +195,7 @@ module ActiveMerchant #:nodoc:
         '215' => 'Old PIN does not validate ',
         '221' => 'Invalid credit card processor type specified in location or payment code',
         '222' => 'Credit card processor error',
+        '230' => 'Host Error (USE VOID OR REVERSAL TO REFUND UNSETTLED TRANSACTIONS)',
         '280' => 'SmartPay transaction not posted',
         '301' => 'Original transaction not found for this customer',
         '302' => 'Amount to refund exceeds original payment amount or is missing',

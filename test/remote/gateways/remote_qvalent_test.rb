@@ -13,7 +13,8 @@ class RemoteQvalentTest < Test::Unit::TestCase
     @options = {
       order_id: generate_unique_id,
       billing_address: address,
-      description: 'Store Purchase'
+      description: 'Store Purchase',
+      customer_reference_number: generate_unique_id
     }
   end
 
@@ -60,9 +61,9 @@ class RemoteQvalentTest < Test::Unit::TestCase
       order_id: generate_unique_id,
       billing_address: address,
       description: 'Store Purchase',
-      xid: '123',
-      cavv: '456',
-      eci: '5'
+      xid: 'sgf7h125tr8gh24abmah',
+      cavv: 'MTIzNDU2Nzg5MDEyMzQ1Njc4OTA=',
+      eci: 'INS'
     }
 
     response = @gateway.purchase(@amount, @credit_card, options)

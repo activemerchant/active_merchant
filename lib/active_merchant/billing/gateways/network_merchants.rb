@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = self.test_url = 'https://secure.networkmerchants.com/api/transact.php'
 
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
       self.homepage_url = 'http://www.nmi.com/'
       self.display_name = 'Network Merchants (NMI)'
@@ -203,9 +203,8 @@ module ActiveMerchant #:nodoc:
         Response.new(success, raw['responsetext'], raw,
           test: test?,
           authorization: authorization,
-          avs_result: { code: raw['avsresponse']},
-          cvv_result: raw['cvvresponse']
-        )
+          avs_result: { code: raw['avsresponse'] },
+          cvv_result: raw['cvvresponse'])
       end
 
       def build_request(action, parameters)

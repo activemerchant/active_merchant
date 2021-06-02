@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'AUD'
       self.money_format = :cents
       self.supported_countries = ['AU']
-      self.supported_cardtypes = [:visa, :master, :american_express]
+      self.supported_cardtypes = %i[visa master american_express]
       self.homepage_url = 'http://www.pinpayments.com/'
       self.display_name = 'Pin Payments'
 
@@ -30,6 +30,7 @@ module ActiveMerchant #:nodoc:
         add_address(post, creditcard, options)
         add_capture(post, options)
         add_metadata(post, options)
+        add_3ds(post, options)
 
         commit(:post, 'charges', post, options)
       end
@@ -138,7 +139,7 @@ module ActiveMerchant #:nodoc:
             name: creditcard.name
           )
         elsif creditcard.kind_of?(String)
-          if creditcard =~ /^card_/
+          if /^card_/.match?(creditcard)
             post[:card_token] = get_card_token(creditcard)
           else
             post[:customer_token] = creditcard
@@ -156,6 +157,16 @@ module ActiveMerchant #:nodoc:
 
       def add_metadata(post, options)
         post[:metadata] = options[:metadata] if options[:metadata]
+      end
+
+      def add_3ds(post, options)
+        if options[:three_d_secure]
+          post[:three_d_secure] = {}
+          post[:three_d_secure][:version] = options[:three_d_secure][:version] if options[:three_d_secure][:version]
+          post[:three_d_secure][:eci] = options[:three_d_secure][:eci] if options[:three_d_secure][:eci]
+          post[:three_d_secure][:cavv] = options[:three_d_secure][:cavv] if options[:three_d_secure][:cavv]
+          post[:three_d_secure][:transaction_id] = options[:three_d_secure][:ds_transaction_id] || options[:three_d_secure][:xid]
+        end
       end
 
       def headers(params = {})

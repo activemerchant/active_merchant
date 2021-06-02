@@ -44,7 +44,7 @@ class RemoteMerchantESolutionTest < Test::Unit::TestCase
   end
 
   def test_purchase_with_long_order_id
-    options = {order_id: 'thisislongerthan17characters'}
+    options = { order_id: 'thisislongerthan17characters' }
     assert response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert_equal 'This transaction has been approved', response.message
@@ -193,7 +193,7 @@ class RemoteMerchantESolutionTest < Test::Unit::TestCase
   def test_successful_purchase_with_3dsecure_params
     options = @options.merge(
       { xid: 'ERERERERERERERERERERERERERE=',
-        cavv: 'ERERERERERERERERERERERERERE='}
+        cavv: 'ERERERERERERERERERERERERERE=' }
     )
     assert response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response

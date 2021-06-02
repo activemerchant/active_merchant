@@ -12,19 +12,19 @@ module ActiveMerchant #:nodoc:
       self.money_format = :cents
       self.supported_cardtypes = %i[visa master american_express discover naranja cabal]
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :merchant_id, :api_key_id, :secret_api_key)
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         MultiResponse.run do |r|
           r.process { authorize(money, payment, options) }
           r.process { capture(money, r.authorization, options) } if should_request_capture?(r, options[:requires_approval])
         end
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         post = nestable_hash
         add_order(post, money, options)
         add_payment(post, payment, options)
@@ -32,10 +32,11 @@ module ActiveMerchant #:nodoc:
         add_address(post, payment, options)
         add_creator_info(post, options)
         add_fraud_fields(post, options)
+        add_external_cardholder_authentication_data(post, options)
         commit(:authorize, post)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         post = nestable_hash
         add_order(post, money, options, capture: true)
         add_customer_data(post, options)
@@ -43,7 +44,7 @@ module ActiveMerchant #:nodoc:
         commit(:capture, post, authorization)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         post = nestable_hash
         add_amount(post, money, options)
         add_refund_customer_data(post, options)
@@ -51,13 +52,13 @@ module ActiveMerchant #:nodoc:
         commit(:refund, post, authorization)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = nestable_hash
         add_creator_info(post, options)
         commit(:void, post, authorization)
       end
 
-      def verify(payment, options={})
+      def verify(payment, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, payment, options) }
           r.process { void(r.authorization, options) }
@@ -100,6 +101,7 @@ module ActiveMerchant #:nodoc:
           'invoiceNumber' => options[:invoice]
         }
         add_airline_data(post, options) if options[:airline_data]
+        add_number_of_installments(post, options) if options[:number_of_installments]
       end
 
       def add_airline_data(post, options)
@@ -141,7 +143,7 @@ module ActiveMerchant #:nodoc:
         post['shoppingCartExtension']['extensionID'] = options[:extension_ID] if options[:extension_ID]
       end
 
-      def add_amount(post, money, options={})
+      def add_amount(post, money, options = {})
         post['amountOfMoney'] = {
           'amount' => amount(money),
           'currencyCode' => options[:currency] || currency(money)
@@ -199,21 +201,21 @@ module ActiveMerchant #:nodoc:
         shipping_address = options[:shipping_address]
         if billing_address = options[:billing_address] || options[:address]
           post['order']['customer']['billingAddress'] = {
-            'street' => billing_address[:address1],
-            'additionalInfo' => billing_address[:address2],
+            'street' => truncate(billing_address[:address1], 50),
+            'additionalInfo' => truncate(billing_address[:address2], 50),
             'zip' => billing_address[:zip],
             'city' => billing_address[:city],
-            'state' => billing_address[:state],
+            'state' => truncate(billing_address[:state], 35),
             'countryCode' => billing_address[:country]
           }
         end
         if shipping_address
           post['order']['customer']['shippingAddress'] = {
-            'street' => shipping_address[:address1],
-            'additionalInfo' => shipping_address[:address2],
+            'street' => truncate(shipping_address[:address1], 50),
+            'additionalInfo' => truncate(shipping_address[:address2], 50),
             'zip' => shipping_address[:zip],
             'city' => shipping_address[:city],
-            'state' => shipping_address[:state],
+            'state' => truncate(shipping_address[:state], 35),
             'countryCode' => shipping_address[:country]
           }
           post['order']['customer']['shippingAddress']['name'] = {
@@ -229,6 +231,28 @@ module ActiveMerchant #:nodoc:
         fraud_fields[:customerIpAddress] = options[:ip] if options[:ip]
 
         post['fraudFields'] = fraud_fields unless fraud_fields.empty?
+      end
+
+      def add_external_cardholder_authentication_data(post, options)
+        return unless threeds_2_options = options[:three_d_secure]
+
+        authentication_data = {}
+        authentication_data[:acsTransactionId] = threeds_2_options[:acs_transaction_id] if threeds_2_options[:acs_transaction_id]
+        authentication_data[:cavv] = threeds_2_options[:cavv] if threeds_2_options[:cavv]
+        authentication_data[:cavvAlgorithm] = threeds_2_options[:cavv_algorithm] if threeds_2_options[:cavv_algorithm]
+        authentication_data[:directoryServerTransactionId] = threeds_2_options[:ds_transaction_id] if threeds_2_options[:ds_transaction_id]
+        authentication_data[:eci] = threeds_2_options[:eci] if threeds_2_options[:eci]
+        authentication_data[:threeDSecureVersion] = threeds_2_options[:version] if threeds_2_options[:version]
+        authentication_data[:validationResult] = threeds_2_options[:authentication_response_status] if threeds_2_options[:authentication_response_status]
+        authentication_data[:xid] = threeds_2_options[:xid] if threeds_2_options[:xid]
+
+        post['cardPaymentMethodSpecificInput'] ||= {}
+        post['cardPaymentMethodSpecificInput']['threeDSecure'] ||= {}
+        post['cardPaymentMethodSpecificInput']['threeDSecure']['externalCardholderAuthenticationData'] = authentication_data unless authentication_data.empty?
+      end
+
+      def add_number_of_installments(post, options)
+        post['order']['additionalInput']['numberOfInstallments'] = options[:number_of_installments] if options[:number_of_installments]
       end
 
       def parse(body)
@@ -291,12 +315,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def auth_digest(action, post, authorization = nil)
-        data = <<-EOS
-POST
-#{content_type}
-#{date}
-#{uri(action, authorization)}
-        EOS
+        data = <<~REQUEST
+          POST
+          #{content_type}
+          #{date}
+          #{uri(action, authorization)}
+        REQUEST
         digest = OpenSSL::Digest.new('sha256')
         key = @options[:secret_api_key]
         "GCS v1HMAC:#{@options[:api_key_id]}:#{Base64.strict_encode64(OpenSSL::HMAC.digest(digest, key, data))}"

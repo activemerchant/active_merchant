@@ -17,7 +17,7 @@ class ItransactTest < Test::Unit::TestCase
       order_id: '1',
       billing_address: address,
       description: 'Store Purchase',
-      email_text: ['line1', 'line2', 'line3']
+      email_text: %w[line1 line2 line3]
     }
   end
 

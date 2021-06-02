@@ -13,7 +13,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['NZ']
 
       # TODO: check this with paystation (amex and diners need to be enabled)
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express diners_club]
 
       self.homepage_url        = 'http://paystation.co.nz'
       self.display_name        = 'Paystation'
@@ -74,7 +74,7 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         post = new_request
         add_amount(post, money, options)
         add_invoice(post, options)
@@ -83,7 +83,7 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         authorize(0, credit_card, options)
       end
 
@@ -179,8 +179,7 @@ module ActiveMerchant #:nodoc:
 
         PaystationResponse.new(success?(response), message, response,
           test: (response[:tm]&.casecmp('t')&.zero?),
-          authorization: response[:paystation_transaction_id]
-        )
+          authorization: response[:paystation_transaction_id])
       end
 
       def success?(response)

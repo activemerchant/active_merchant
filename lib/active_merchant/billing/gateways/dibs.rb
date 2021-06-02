@@ -6,24 +6,24 @@ module ActiveMerchant #:nodoc:
 
       self.live_url = 'https://api.dibspayment.com/merchant/v1/JSON/Transaction/'
 
-      self.supported_countries = ['US', 'FI', 'NO', 'SE', 'GB']
+      self.supported_countries = %w[US FI NO SE GB]
       self.default_currency = 'USD'
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :merchant_id, :secret_key)
         super
       end
 
-      def purchase(amount, payment_method, options={})
+      def purchase(amount, payment_method, options = {})
         MultiResponse.run(false) do |r|
           r.process { authorize(amount, payment_method, options) }
           r.process { capture(amount, r.authorization, options) }
         end
       end
 
-      def authorize(amount, payment_method, options={})
+      def authorize(amount, payment_method, options = {})
         post = {}
         add_amount(post, amount)
         add_invoice(post, amount, options)
@@ -36,7 +36,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def capture(amount, authorization, options={})
+      def capture(amount, authorization, options = {})
         post = {}
         add_amount(post, amount)
         add_reference(post, authorization)
@@ -44,14 +44,14 @@ module ActiveMerchant #:nodoc:
         commit(:capture, post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = {}
         add_reference(post, authorization)
 
         commit(:void, post)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, options = {})
         post = {}
         add_amount(post, amount)
         add_reference(post, authorization)
@@ -59,7 +59,7 @@ module ActiveMerchant #:nodoc:
         commit(:refund, post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -87,7 +87,7 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      CURRENCY_CODES = Hash.new { |h, k| raise ArgumentError.new("Unsupported currency: #{k}") }
+      CURRENCY_CODES = Hash.new { |_h, k| raise ArgumentError.new("Unsupported currency: #{k}") }
       CURRENCY_CODES['USD'] = '840'
       CURRENCY_CODES['DKK'] = '208'
       CURRENCY_CODES['NOK'] = '578'

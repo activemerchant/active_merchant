@@ -32,7 +32,7 @@ class WirecardTest < Test::Unit::TestCase
       city:      'Ottawa',
       zip:       'K12 P2A',
       country:   'CA',
-      state:     nil,
+      state:     nil
     }
 
     @address_avs = {
@@ -40,7 +40,7 @@ class WirecardTest < Test::Unit::TestCase
       city:      'London',
       zip:       'W8 2TE',
       country:   'GB',
-      state:     'London',
+      state:     'London'
     }
   end
 
@@ -192,7 +192,7 @@ class WirecardTest < Test::Unit::TestCase
 
     stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<FunctionID>32chars-------------------------<\/FunctionID>/, data)
     end.respond_with(successful_authorization_response)
   end
@@ -202,7 +202,7 @@ class WirecardTest < Test::Unit::TestCase
 
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<FunctionID>32chars-------------------------<\/FunctionID>/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -212,7 +212,7 @@ class WirecardTest < Test::Unit::TestCase
 
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<FunctionID>\?D\?nde est\? la estaci\?n\?<\/FunctionID>/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -236,7 +236,7 @@ class WirecardTest < Test::Unit::TestCase
 
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<CommerceType>MOTO<\/CommerceType>/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -244,7 +244,7 @@ class WirecardTest < Test::Unit::TestCase
   def test_store_sets_recurring_transaction_type_to_initial
     stub_comms do
       @gateway.store(@credit_card)
-    end.check_request do |endpoint, body, headers|
+    end.check_request do |_endpoint, body, _headers|
       assert_xml_element_text(body, '//RECURRING_TRANSACTION/Type', 'Initial')
     end.respond_with(successful_authorization_response)
   end
@@ -252,7 +252,7 @@ class WirecardTest < Test::Unit::TestCase
   def test_store_sets_amount_to_100_by_default
     stub_comms do
       @gateway.store(@credit_card)
-    end.check_request do |endpoint, body, headers|
+    end.check_request do |_endpoint, body, _headers|
       assert_xml_element_text(body, '//CC_TRANSACTION/Amount', '100')
     end.respond_with(successful_authorization_response)
   end
@@ -260,7 +260,7 @@ class WirecardTest < Test::Unit::TestCase
   def test_store_sets_amount_to_amount_from_options
     stub_comms do
       @gateway.store(@credit_card, amount: 120)
-    end.check_request do |endpoint, body, headers|
+    end.check_request do |_endpoint, body, _headers|
       assert_xml_element_text(body, '//CC_TRANSACTION/Amount', '120')
     end.respond_with(successful_authorization_response)
   end
@@ -268,7 +268,7 @@ class WirecardTest < Test::Unit::TestCase
   def test_authorization_using_reference_sets_proper_elements
     stub_comms do
       @gateway.authorize(@amount, '45678', @options)
-    end.check_request do |endpoint, body, headers|
+    end.check_request do |_endpoint, body, _headers|
       assert_xml_element_text(body, '//GuWID', '45678')
       assert_no_match(/<CREDIT_CARD_DATA>/, body)
     end.respond_with(successful_authorization_response)
@@ -277,7 +277,7 @@ class WirecardTest < Test::Unit::TestCase
   def test_purchase_using_reference_sets_proper_elements
     stub_comms do
       @gateway.purchase(@amount, '87654', @options)
-    end.check_request do |endpoint, body, headers|
+    end.check_request do |_endpoint, body, _headers|
       assert_xml_element_text(body, '//GuWID', '87654')
       assert_no_match(/<CREDIT_CARD_DATA>/, body)
     end.respond_with(successful_authorization_response)
@@ -286,7 +286,7 @@ class WirecardTest < Test::Unit::TestCase
   def test_authorization_with_recurring_transaction_type_initial
     stub_comms do
       @gateway.authorize(@amount, @credit_card, @options.merge(recurring: 'Initial'))
-    end.check_request do |endpoint, body, headers|
+    end.check_request do |_endpoint, body, _headers|
       assert_xml_element_text(body, '//RECURRING_TRANSACTION/Type', 'Initial')
     end.respond_with(successful_authorization_response)
   end
@@ -294,7 +294,7 @@ class WirecardTest < Test::Unit::TestCase
   def test_purchase_using_with_recurring_transaction_type_initial
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(recurring: 'Initial'))
-    end.check_request do |endpoint, body, headers|
+    end.check_request do |_endpoint, body, _headers|
       assert_xml_element_text(body, '//RECURRING_TRANSACTION/Type', 'Initial')
     end.respond_with(successful_authorization_response)
   end
@@ -329,42 +329,42 @@ class WirecardTest < Test::Unit::TestCase
 
   # Authorization success
   def successful_authorization_response
-    <<-XML
-    <?xml version="1.0" encoding="UTF-8"?>
-    <WIRECARD_BXML xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance" xsi:noNamespaceSchemaLocation="wirecard.xsd">
-    <W_RESPONSE>
-      <W_JOB>
-        <JobID>test dummy data</JobID>
-        <FNC_CC_PREAUTHORIZATION>
-          <FunctionID>Wirecard remote test purchase</FunctionID>
-          <CC_TRANSACTION>
-            <TransactionID>1</TransactionID>
-            <PROCESSING_STATUS>
-              <GuWID>C822580121385121429927</GuWID>
-              <AuthorizationCode>709678</AuthorizationCode>
-              <Info>THIS IS A DEMO TRANSACTION USING CREDIT CARD NUMBER 420000****0000. NO REAL MONEY WILL BE TRANSFERED.</Info>
-              <StatusType>INFO</StatusType>
-              <FunctionResult>ACK</FunctionResult>
-              <TimeStamp>2008-06-19 06:53:33</TimeStamp>
-            </PROCESSING_STATUS>
-          </CC_TRANSACTION>
-        </FNC_CC_PREAUTHORIZATION>
-      </W_JOB>
-  </W_RESPONSE>
-</WIRECARD_BXML>
+    <<~XML
+          <?xml version="1.0" encoding="UTF-8"?>
+          <WIRECARD_BXML xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance" xsi:noNamespaceSchemaLocation="wirecard.xsd">
+          <W_RESPONSE>
+            <W_JOB>
+              <JobID>test dummy data</JobID>
+              <FNC_CC_PREAUTHORIZATION>
+                <FunctionID>Wirecard remote test purchase</FunctionID>
+                <CC_TRANSACTION>
+                  <TransactionID>1</TransactionID>
+                  <PROCESSING_STATUS>
+                    <GuWID>C822580121385121429927</GuWID>
+                    <AuthorizationCode>709678</AuthorizationCode>
+                    <Info>THIS IS A DEMO TRANSACTION USING CREDIT CARD NUMBER 420000****0000. NO REAL MONEY WILL BE TRANSFERED.</Info>
+                    <StatusType>INFO</StatusType>
+                    <FunctionResult>ACK</FunctionResult>
+                    <TimeStamp>2008-06-19 06:53:33</TimeStamp>
+                  </PROCESSING_STATUS>
+                </CC_TRANSACTION>
+              </FNC_CC_PREAUTHORIZATION>
+            </W_JOB>
+        </W_RESPONSE>
+      </WIRECARD_BXML>
     XML
   end
 
   # Authorization failure
   # TODO: replace with real xml string here (current way seems to complicated)
   def wrong_creditcard_authorization_response
-    error = <<-XML
-            <ERROR>
-              <Type>DATA_ERROR</Type>
-              <Number>24997</Number>
-              <Message>Credit card number not allowed in demo mode.</Message>
-              <Advice>Only demo card number '4200000000000000' is allowed for VISA in demo mode.</Advice>
-            </ERROR>
+    error = <<~XML
+      <ERROR>
+        <Type>DATA_ERROR</Type>
+        <Number>24997</Number>
+        <Message>Credit card number not allowed in demo mode.</Message>
+        <Advice>Only demo card number '4200000000000000' is allowed for VISA in demo mode.</Advice>
+      </ERROR>
     XML
     result_node = '</FunctionResult>'
     auth = 'AuthorizationCode'
@@ -377,94 +377,94 @@ class WirecardTest < Test::Unit::TestCase
 
   # Capture success
   def successful_capture_response
-    <<-XML
-    <?xml version="1.0" encoding="UTF-8"?>
-    <WIRECARD_BXML xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance" xsi:noNamespaceSchemaLocation="wirecard.xsd">
-      <W_RESPONSE>
-        <W_JOB>
-          <JobID>test dummy data</JobID>
-          <FNC_CC_CAPTURE>
-            <FunctionID>Wirecard remote test purchase</FunctionID>
-            <CC_TRANSACTION>
-              <TransactionID>1</TransactionID>
-              <PROCESSING_STATUS>
-                <GuWID>C833707121385268439116</GuWID>
-                <AuthorizationCode>915025</AuthorizationCode>
-                <Info>THIS IS A DEMO TRANSACTION USING CREDIT CARD NUMBER 420000****0000. NO REAL MONEY WILL BE TRANSFERED.</Info>
-                <StatusType>INFO</StatusType>
-                <FunctionResult>ACK</FunctionResult>
-                <TimeStamp>2008-06-19 07:18:04</TimeStamp>
-              </PROCESSING_STATUS>
-            </CC_TRANSACTION>
-          </FNC_CC_CAPTURE>
-        </W_JOB>
-      </W_RESPONSE>
-    </WIRECARD_BXML>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <WIRECARD_BXML xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance" xsi:noNamespaceSchemaLocation="wirecard.xsd">
+        <W_RESPONSE>
+          <W_JOB>
+            <JobID>test dummy data</JobID>
+            <FNC_CC_CAPTURE>
+              <FunctionID>Wirecard remote test purchase</FunctionID>
+              <CC_TRANSACTION>
+                <TransactionID>1</TransactionID>
+                <PROCESSING_STATUS>
+                  <GuWID>C833707121385268439116</GuWID>
+                  <AuthorizationCode>915025</AuthorizationCode>
+                  <Info>THIS IS A DEMO TRANSACTION USING CREDIT CARD NUMBER 420000****0000. NO REAL MONEY WILL BE TRANSFERED.</Info>
+                  <StatusType>INFO</StatusType>
+                  <FunctionResult>ACK</FunctionResult>
+                  <TimeStamp>2008-06-19 07:18:04</TimeStamp>
+                </PROCESSING_STATUS>
+              </CC_TRANSACTION>
+            </FNC_CC_CAPTURE>
+          </W_JOB>
+        </W_RESPONSE>
+      </WIRECARD_BXML>
     XML
   end
 
   # Capture failure
   def unauthorized_capture_response
-    <<-XML
-    <?xml version="1.0" encoding="UTF-8"?>
-    <WIRECARD_BXML xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance" xsi:noNamespaceSchemaLocation="wirecard.xsd">
-      <W_RESPONSE>
-        <W_JOB>
-          <JobID>test dummy data</JobID>
-          <FNC_CC_CAPTURE>
-            <FunctionID>Test dummy FunctionID</FunctionID>
-            <CC_TRANSACTION>
-              <TransactionID>a2783d471ccc98825b8c498f1a62ce8f</TransactionID>
-              <PROCESSING_STATUS>
-                <GuWID>C833707121385268439116</GuWID>
-                <AuthorizationCode></AuthorizationCode>
-                <StatusType>INFO</StatusType>
-                <FunctionResult>NOK</FunctionResult>
-                <ERROR>
-                  <Type>DATA_ERROR</Type>
-                  <Number>20080</Number>
-                  <Message>Could not find referenced transaction for GuWID 1234567890123456789012.</Message>
-                </ERROR>
-                <TimeStamp>2008-06-19 08:09:20</TimeStamp>
-              </PROCESSING_STATUS>
-            </CC_TRANSACTION>
-          </FNC_CC_CAPTURE>
-        </W_JOB>
-      </W_RESPONSE>
-    </WIRECARD_BXML>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <WIRECARD_BXML xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance" xsi:noNamespaceSchemaLocation="wirecard.xsd">
+        <W_RESPONSE>
+          <W_JOB>
+            <JobID>test dummy data</JobID>
+            <FNC_CC_CAPTURE>
+              <FunctionID>Test dummy FunctionID</FunctionID>
+              <CC_TRANSACTION>
+                <TransactionID>a2783d471ccc98825b8c498f1a62ce8f</TransactionID>
+                <PROCESSING_STATUS>
+                  <GuWID>C833707121385268439116</GuWID>
+                  <AuthorizationCode></AuthorizationCode>
+                  <StatusType>INFO</StatusType>
+                  <FunctionResult>NOK</FunctionResult>
+                  <ERROR>
+                    <Type>DATA_ERROR</Type>
+                    <Number>20080</Number>
+                    <Message>Could not find referenced transaction for GuWID 1234567890123456789012.</Message>
+                  </ERROR>
+                  <TimeStamp>2008-06-19 08:09:20</TimeStamp>
+                </PROCESSING_STATUS>
+              </CC_TRANSACTION>
+            </FNC_CC_CAPTURE>
+          </W_JOB>
+        </W_RESPONSE>
+      </WIRECARD_BXML>
     XML
   end
 
   # Purchase success
   def successful_purchase_response
-    <<-XML
-    <?xml version="1.0" encoding="UTF-8"?>
-    <WIRECARD_BXML xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance" xsi:noNamespaceSchemaLocation="wirecard.xsd">
-      <W_RESPONSE>
-        <W_JOB>
-          <JobID>test dummy data</JobID>
-          <FNC_CC_PURCHASE>
-            <FunctionID>Wirecard remote test purchase</FunctionID>
-            <CC_TRANSACTION>
-              <TransactionID>1</TransactionID>
-              <PROCESSING_STATUS>
-                <GuWID>C865402121385575982910</GuWID>
-                <AuthorizationCode>531750</AuthorizationCode>
-                <Info>THIS IS A DEMO TRANSACTION USING CREDIT CARD NUMBER 420000****0000. NO REAL MONEY WILL BE TRANSFERED.</Info>
-                <StatusType>INFO</StatusType>
-                <FunctionResult>ACK</FunctionResult>
-                <TimeStamp>2008-06-19 08:09:19</TimeStamp>
-              </PROCESSING_STATUS>
-            </CC_TRANSACTION>
-          </FNC_CC_PURCHASE>
-        </W_JOB>
-      </W_RESPONSE>
-    </WIRECARD_BXML>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <WIRECARD_BXML xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance" xsi:noNamespaceSchemaLocation="wirecard.xsd">
+        <W_RESPONSE>
+          <W_JOB>
+            <JobID>test dummy data</JobID>
+            <FNC_CC_PURCHASE>
+              <FunctionID>Wirecard remote test purchase</FunctionID>
+              <CC_TRANSACTION>
+                <TransactionID>1</TransactionID>
+                <PROCESSING_STATUS>
+                  <GuWID>C865402121385575982910</GuWID>
+                  <AuthorizationCode>531750</AuthorizationCode>
+                  <Info>THIS IS A DEMO TRANSACTION USING CREDIT CARD NUMBER 420000****0000. NO REAL MONEY WILL BE TRANSFERED.</Info>
+                  <StatusType>INFO</StatusType>
+                  <FunctionResult>ACK</FunctionResult>
+                  <TimeStamp>2008-06-19 08:09:19</TimeStamp>
+                </PROCESSING_STATUS>
+              </CC_TRANSACTION>
+            </FNC_CC_PURCHASE>
+          </W_JOB>
+        </W_RESPONSE>
+      </WIRECARD_BXML>
     XML
   end
 
   def successful_refund_response
-    <<-XML
+    <<~XML
       <?xml version="1.0" encoding="UTF-8"?>
       <WIRECARD_BXML xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance" xsi:noNamespaceSchemaLocation="wirecard.xsd">
           <W_RESPONSE>
@@ -491,7 +491,7 @@ class WirecardTest < Test::Unit::TestCase
   end
 
   def failed_refund_response
-    <<-XML
+    <<~XML
       <?xml version="1.0" encoding="UTF-8"?>
       <WIRECARD_BXML xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance" xsi:noNamespaceSchemaLocation="wirecard.xsd">
         <W_RESPONSE>
@@ -522,7 +522,7 @@ class WirecardTest < Test::Unit::TestCase
   end
 
   def successful_void_response
-    <<-XML
+    <<~XML
        <?xml version="1.0" encoding="UTF-8"?>
        <WIRECARD_BXML xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance" xsi:noNamespaceSchemaLocation="wirecard.xsd">
         <W_RESPONSE>
@@ -549,7 +549,7 @@ class WirecardTest < Test::Unit::TestCase
   end
 
   def failed_void_response
-    <<-XML
+    <<~XML
       <?xml version="1.0" encoding="UTF-8"?>
       <WIRECARD_BXML xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance" xsi:noNamespaceSchemaLocation="wirecard.xsd">
           <W_RESPONSE>
@@ -581,202 +581,202 @@ class WirecardTest < Test::Unit::TestCase
 
   # Purchase failure
   def wrong_creditcard_purchase_response
-    <<-XML
-    <?xml version="1.0" encoding="UTF-8"?>
-    <WIRECARD_BXML xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance" xsi:noNamespaceSchemaLocation="wirecard.xsd">
-      <W_RESPONSE>
-        <W_JOB>
-          <JobID>test dummy data</JobID>
-          <FNC_CC_PURCHASE>
-            <FunctionID>Wirecard remote test purchase</FunctionID>
-            <CC_TRANSACTION>
-              <TransactionID>1</TransactionID>
-              <PROCESSING_STATUS>
-                <GuWID>C824697121385153203112</GuWID>
-                <AuthorizationCode></AuthorizationCode>
-                <StatusType>INFO</StatusType>
-                <FunctionResult>NOK</FunctionResult>
-                <ERROR>
-                  <Type>DATA_ERROR</Type>                                                    <Number>24997</Number>
-                  <Message>Credit card number not allowed in demo mode.</Message>
-                  <Advice>Only demo card number '4200000000000000' is allowed for VISA in demo mode.</Advice>
-                </ERROR>
-                <TimeStamp>2008-06-19 06:58:51</TimeStamp>
-              </PROCESSING_STATUS>
-            </CC_TRANSACTION>
-          </FNC_CC_PURCHASE>
-        </W_JOB>
-      </W_RESPONSE>
-    </WIRECARD_BXML>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <WIRECARD_BXML xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance" xsi:noNamespaceSchemaLocation="wirecard.xsd">
+        <W_RESPONSE>
+          <W_JOB>
+            <JobID>test dummy data</JobID>
+            <FNC_CC_PURCHASE>
+              <FunctionID>Wirecard remote test purchase</FunctionID>
+              <CC_TRANSACTION>
+                <TransactionID>1</TransactionID>
+                <PROCESSING_STATUS>
+                  <GuWID>C824697121385153203112</GuWID>
+                  <AuthorizationCode></AuthorizationCode>
+                  <StatusType>INFO</StatusType>
+                  <FunctionResult>NOK</FunctionResult>
+                  <ERROR>
+                    <Type>DATA_ERROR</Type>                                                    <Number>24997</Number>
+                    <Message>Credit card number not allowed in demo mode.</Message>
+                    <Advice>Only demo card number '4200000000000000' is allowed for VISA in demo mode.</Advice>
+                  </ERROR>
+                  <TimeStamp>2008-06-19 06:58:51</TimeStamp>
+                </PROCESSING_STATUS>
+              </CC_TRANSACTION>
+            </FNC_CC_PURCHASE>
+          </W_JOB>
+        </W_RESPONSE>
+      </WIRECARD_BXML>
     XML
   end
 
   # AVS failure
   def failed_avs_response
-    <<-XML
-    <?xml version="1.0" encoding="UTF-8"?>
-    <WIRECARD_BXML xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance" xsi:noNamespaceSchemaLocation="wirecard.xsd">
-      <W_RESPONSE>
-        <W_JOB>
-          <JobID></JobID>
-          <FNC_CC_PURCHASE>
-            <FunctionID></FunctionID>
-            <CC_TRANSACTION>
-              <TransactionID>E0BCBF30B82D0131000000000000E4CF</TransactionID>
-              <PROCESSING_STATUS>
-                <GuWID>C997753139988691610455</GuWID>
-                <AuthorizationCode>732129</AuthorizationCode>
-                <Info>THIS IS A DEMO TRANSACTION USING CREDIT CARD NUMBER 420000****0000. NO REAL MONEY WILL BE TRANSFERED.</Info>
-                <StatusType>INFO</StatusType>
-                <FunctionResult>PENDING</FunctionResult>
-                <AVS>
-                  <ResultCode>U</ResultCode>
-                  <Message>AVS Unavailable.</Message>
-                  <AuthorizationEntity>5</AuthorizationEntity>
-                  <AuthorizationEntityMessage>Response provided by issuer processor.</AuthorizationEntityMessage>
-                  <ProviderResultCode>A</ProviderResultCode>
-                  <ProviderResultMessage>Address information is unavailable, or the Issuer does not support AVS. Acquirer has representment rights.</ProviderResultMessage>
-                </AVS>
-                <TimeStamp>2014-05-12 11:28:36</TimeStamp>
-              </PROCESSING_STATUS>
-            </CC_TRANSACTION>
-          </FNC_CC_PURCHASE>
-        </W_JOB>
-      </W_RESPONSE>
-    </WIRECARD_BXML>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <WIRECARD_BXML xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance" xsi:noNamespaceSchemaLocation="wirecard.xsd">
+        <W_RESPONSE>
+          <W_JOB>
+            <JobID></JobID>
+            <FNC_CC_PURCHASE>
+              <FunctionID></FunctionID>
+              <CC_TRANSACTION>
+                <TransactionID>E0BCBF30B82D0131000000000000E4CF</TransactionID>
+                <PROCESSING_STATUS>
+                  <GuWID>C997753139988691610455</GuWID>
+                  <AuthorizationCode>732129</AuthorizationCode>
+                  <Info>THIS IS A DEMO TRANSACTION USING CREDIT CARD NUMBER 420000****0000. NO REAL MONEY WILL BE TRANSFERED.</Info>
+                  <StatusType>INFO</StatusType>
+                  <FunctionResult>PENDING</FunctionResult>
+                  <AVS>
+                    <ResultCode>U</ResultCode>
+                    <Message>AVS Unavailable.</Message>
+                    <AuthorizationEntity>5</AuthorizationEntity>
+                    <AuthorizationEntityMessage>Response provided by issuer processor.</AuthorizationEntityMessage>
+                    <ProviderResultCode>A</ProviderResultCode>
+                    <ProviderResultMessage>Address information is unavailable, or the Issuer does not support AVS. Acquirer has representment rights.</ProviderResultMessage>
+                  </AVS>
+                  <TimeStamp>2014-05-12 11:28:36</TimeStamp>
+                </PROCESSING_STATUS>
+              </CC_TRANSACTION>
+            </FNC_CC_PURCHASE>
+          </W_JOB>
+        </W_RESPONSE>
+      </WIRECARD_BXML>
     XML
   end
 
   def system_error_response
-    <<-XML
-    <?xml version="1.0" encoding="UTF-8"?>
-    <WIRECARD_BXML xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance" xsi:noNamespaceSchemaLocation="wirecard.xsd">
-      <W_RESPONSE>
-        <W_JOB>
-          <JobID></JobID>
-          <FNC_CC_PURCHASE>
-            <FunctionID></FunctionID>
-            <CC_TRANSACTION>
-              <TransactionID>3A368E50D50B01310000000000009153</TransactionID>
-              <PROCESSING_STATUS>
-                <GuWID>C967464140265180577024</GuWID>
-                <AuthorizationCode></AuthorizationCode>
-                <Info>THIS IS A DEMO TRANSACTION USING CREDIT CARD NUMBER 420000****0000. NO REAL MONEY WILL BE TRANSFERED.</Info>
-                <StatusType>INFO</StatusType>
-                <FunctionResult>NOK</FunctionResult>
-                <ERROR>
-                  <Type>SYSTEM_ERROR</Type>
-                  <Number>20205</Number>
-                  <Message></Message>
-                </ERROR>
-                <TimeStamp>2014-06-13 11:30:05</TimeStamp>
-              </PROCESSING_STATUS>
-            </CC_TRANSACTION>
-          </FNC_CC_PURCHASE>
-        </W_JOB>
-      </W_RESPONSE>
-    </WIRECARD_BXML>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <WIRECARD_BXML xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance" xsi:noNamespaceSchemaLocation="wirecard.xsd">
+        <W_RESPONSE>
+          <W_JOB>
+            <JobID></JobID>
+            <FNC_CC_PURCHASE>
+              <FunctionID></FunctionID>
+              <CC_TRANSACTION>
+                <TransactionID>3A368E50D50B01310000000000009153</TransactionID>
+                <PROCESSING_STATUS>
+                  <GuWID>C967464140265180577024</GuWID>
+                  <AuthorizationCode></AuthorizationCode>
+                  <Info>THIS IS A DEMO TRANSACTION USING CREDIT CARD NUMBER 420000****0000. NO REAL MONEY WILL BE TRANSFERED.</Info>
+                  <StatusType>INFO</StatusType>
+                  <FunctionResult>NOK</FunctionResult>
+                  <ERROR>
+                    <Type>SYSTEM_ERROR</Type>
+                    <Number>20205</Number>
+                    <Message></Message>
+                  </ERROR>
+                  <TimeStamp>2014-06-13 11:30:05</TimeStamp>
+                </PROCESSING_STATUS>
+              </CC_TRANSACTION>
+            </FNC_CC_PURCHASE>
+          </W_JOB>
+        </W_RESPONSE>
+      </WIRECARD_BXML>
     XML
   end
 
   def system_error_response_without_job
-    <<-XML
-    <?xml version="1.0" encoding="UTF-8"?>
-    <WIRECARD_BXML xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance" xsi:noNamespaceSchemaLocation="wirecard.xsd">
-      <W_RESPONSE>
-        <ERROR>
-          <Type>SYSTEM_ERROR</Type>
-          <Number>10003</Number>
-          <Message>Job Refused</Message>
-        </ERROR>
-      </W_RESPONSE>
-    </WIRECARD_BXML>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <WIRECARD_BXML xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance" xsi:noNamespaceSchemaLocation="wirecard.xsd">
+        <W_RESPONSE>
+          <ERROR>
+            <Type>SYSTEM_ERROR</Type>
+            <Number>10003</Number>
+            <Message>Job Refused</Message>
+          </ERROR>
+        </W_RESPONSE>
+      </WIRECARD_BXML>
     XML
   end
 
   def transcript
-    <<-XML
-    <WIRECARD_BXML>
-      <W_REQUEST>
-        <W_JOB>
-          <JobID></JobID>
-          <BusinessCaseSignature>00000031629CAFD5</BusinessCaseSignature>
-          <FNC_CC_PURCHASE>
-            <FunctionID>Wirecard remote test purchase</FunctionID>
-            <CC_TRANSACTION>
-              <TransactionID>1</TransactionID>
-              <Amount>100</Amount>
-              <Currency>EUR</Currency>
-              <CountryCode>CA</CountryCode>
-              <RECURRING_TRANSACTION>
-                <Type>Single</Type>
-              </RECURRING_TRANSACTION>
-              <CREDIT_CARD_DATA>
-                <CreditCardNumber>4200000000000000</CreditCardNumber>
-                <CVC2>123</CVC2>
-                <ExpirationYear>2016</ExpirationYear>
-                <ExpirationMonth>09</ExpirationMonth>
-                <CardHolderName>Longbob Longsen</CardHolderName>
-              </CREDIT_CARD_DATA>
-              <CORPTRUSTCENTER_DATA>
-                <ADDRESS>
-                  <Address1>456 My Street</Address1>
-                  <Address2>Apt 1</Address2>
-                  <City>Ottawa</City>
-                  <ZipCode>K1C2N6</ZipCode>
-                  <State>ON</State>
-                  <Country>CA</Country>
-                  <Email>soleone@example.com</Email>
-                </ADDRESS>
-              </CORPTRUSTCENTER_DATA>
-            </CC_TRANSACTION>
-          </FNC_CC_PURCHASE>
-        </W_JOB>
-      </W_REQUEST>
-    </WIRECARD_BXML>
+    <<~XML
+      <WIRECARD_BXML>
+        <W_REQUEST>
+          <W_JOB>
+            <JobID></JobID>
+            <BusinessCaseSignature>00000031629CAFD5</BusinessCaseSignature>
+            <FNC_CC_PURCHASE>
+              <FunctionID>Wirecard remote test purchase</FunctionID>
+              <CC_TRANSACTION>
+                <TransactionID>1</TransactionID>
+                <Amount>100</Amount>
+                <Currency>EUR</Currency>
+                <CountryCode>CA</CountryCode>
+                <RECURRING_TRANSACTION>
+                  <Type>Single</Type>
+                </RECURRING_TRANSACTION>
+                <CREDIT_CARD_DATA>
+                  <CreditCardNumber>4200000000000000</CreditCardNumber>
+                  <CVC2>123</CVC2>
+                  <ExpirationYear>2016</ExpirationYear>
+                  <ExpirationMonth>09</ExpirationMonth>
+                  <CardHolderName>Longbob Longsen</CardHolderName>
+                </CREDIT_CARD_DATA>
+                <CORPTRUSTCENTER_DATA>
+                  <ADDRESS>
+                    <Address1>456 My Street</Address1>
+                    <Address2>Apt 1</Address2>
+                    <City>Ottawa</City>
+                    <ZipCode>K1C2N6</ZipCode>
+                    <State>ON</State>
+                    <Country>CA</Country>
+                    <Email>soleone@example.com</Email>
+                  </ADDRESS>
+                </CORPTRUSTCENTER_DATA>
+              </CC_TRANSACTION>
+            </FNC_CC_PURCHASE>
+          </W_JOB>
+        </W_REQUEST>
+      </WIRECARD_BXML>
     XML
   end
 
   def scrubbed_transcript
-    <<-XML
-    <WIRECARD_BXML>
-      <W_REQUEST>
-        <W_JOB>
-          <JobID></JobID>
-          <BusinessCaseSignature>00000031629CAFD5</BusinessCaseSignature>
-          <FNC_CC_PURCHASE>
-            <FunctionID>Wirecard remote test purchase</FunctionID>
-            <CC_TRANSACTION>
-              <TransactionID>1</TransactionID>
-              <Amount>100</Amount>
-              <Currency>EUR</Currency>
-              <CountryCode>CA</CountryCode>
-              <RECURRING_TRANSACTION>
-                <Type>Single</Type>
-              </RECURRING_TRANSACTION>
-              <CREDIT_CARD_DATA>
-                <CreditCardNumber>[FILTERED]</CreditCardNumber>
-                <CVC2>[FILTERED]</CVC2>
-                <ExpirationYear>2016</ExpirationYear>
-                <ExpirationMonth>09</ExpirationMonth>
-                <CardHolderName>Longbob Longsen</CardHolderName>
-              </CREDIT_CARD_DATA>
-              <CORPTRUSTCENTER_DATA>
-                <ADDRESS>
-                  <Address1>456 My Street</Address1>
-                  <Address2>Apt 1</Address2>
-                  <City>Ottawa</City>
-                  <ZipCode>K1C2N6</ZipCode>
-                  <State>ON</State>
-                  <Country>CA</Country>
-                  <Email>soleone@example.com</Email>
-                </ADDRESS>
-              </CORPTRUSTCENTER_DATA>
-            </CC_TRANSACTION>
-          </FNC_CC_PURCHASE>
-        </W_JOB>
-      </W_REQUEST>
-    </WIRECARD_BXML>
+    <<~XML
+      <WIRECARD_BXML>
+        <W_REQUEST>
+          <W_JOB>
+            <JobID></JobID>
+            <BusinessCaseSignature>00000031629CAFD5</BusinessCaseSignature>
+            <FNC_CC_PURCHASE>
+              <FunctionID>Wirecard remote test purchase</FunctionID>
+              <CC_TRANSACTION>
+                <TransactionID>1</TransactionID>
+                <Amount>100</Amount>
+                <Currency>EUR</Currency>
+                <CountryCode>CA</CountryCode>
+                <RECURRING_TRANSACTION>
+                  <Type>Single</Type>
+                </RECURRING_TRANSACTION>
+                <CREDIT_CARD_DATA>
+                  <CreditCardNumber>[FILTERED]</CreditCardNumber>
+                  <CVC2>[FILTERED]</CVC2>
+                  <ExpirationYear>2016</ExpirationYear>
+                  <ExpirationMonth>09</ExpirationMonth>
+                  <CardHolderName>Longbob Longsen</CardHolderName>
+                </CREDIT_CARD_DATA>
+                <CORPTRUSTCENTER_DATA>
+                  <ADDRESS>
+                    <Address1>456 My Street</Address1>
+                    <Address2>Apt 1</Address2>
+                    <City>Ottawa</City>
+                    <ZipCode>K1C2N6</ZipCode>
+                    <State>ON</State>
+                    <Country>CA</Country>
+                    <Email>soleone@example.com</Email>
+                  </ADDRESS>
+                </CORPTRUSTCENTER_DATA>
+              </CC_TRANSACTION>
+            </FNC_CC_PURCHASE>
+          </W_JOB>
+        </W_REQUEST>
+      </WIRECARD_BXML>
     XML
   end
 end

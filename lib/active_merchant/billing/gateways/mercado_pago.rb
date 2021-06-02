@@ -3,19 +3,19 @@ module ActiveMerchant #:nodoc:
     class MercadoPagoGateway < Gateway
       self.live_url = self.test_url = 'https://api.mercadopago.com/v1'
 
-      self.supported_countries = ['AR', 'BR', 'CL', 'CO', 'MX', 'PE', 'UY']
-      self.supported_cardtypes = [:visa, :master, :american_express, :elo, :cabal, :naranja]
+      self.supported_countries = %w[AR BR CL CO MX PE UY]
+      self.supported_cardtypes = %i[visa master american_express elo cabal naranja creditel]
 
       self.homepage_url = 'https://www.mercadopago.com/'
       self.display_name = 'Mercado Pago'
       self.money_format = :dollars
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :access_token)
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         MultiResponse.run do |r|
           r.process { commit('tokenize', 'card_tokens', card_token_request(money, payment, options)) }
           options[:card_token] = r.authorization.split('|').first
@@ -23,7 +23,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         MultiResponse.run do |r|
           r.process { commit('tokenize', 'card_tokens', card_token_request(money, payment, options)) }
           options[:card_token] = r.authorization.split('|').first
@@ -31,28 +31,28 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         post = {}
-        authorization, _ = authorization.split('|')
+        authorization, = authorization.split('|')
         post[:capture] = true
         post[:transaction_amount] = amount(money).to_f
         commit('capture', "payments/#{authorization}", post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         post = {}
         authorization, original_amount = authorization.split('|')
         post[:amount] = amount(money).to_f if original_amount && original_amount.to_f > amount(money).to_f
         commit('refund', "payments/#{authorization}/refunds", post)
       end
 
-      def void(authorization, options={})
-        authorization, _ = authorization.split('|')
+      def void(authorization, options = {})
+        authorization, = authorization.split('|')
         post = { status: 'cancelled' }
         commit('void', "payments/#{authorization}", post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -98,13 +98,14 @@ module ActiveMerchant #:nodoc:
         add_processing_mode(post, options)
         add_net_amount(post, options)
         add_taxes(post, options)
+        add_notification_url(post, options)
         post[:binary_mode] = (options[:binary_mode].nil? ? true : options[:binary_mode])
         post
       end
 
       def authorize_request(money, payment, options = {})
         post = purchase_request(money, payment, options)
-        post[:capture] = false
+        post[:capture] = options[:capture] || false
         post
       end
 
@@ -113,6 +114,7 @@ module ActiveMerchant #:nodoc:
 
         post[:processing_mode] = options[:processing_mode]
         post[:merchant_account_id] = options[:merchant_account_id] if options[:merchant_account_id]
+        post[:payment_method_option_id] = options[:payment_method_option_id] if options[:payment_method_option_id]
         add_merchant_services(post, options)
       end
 
@@ -202,6 +204,10 @@ module ActiveMerchant #:nodoc:
         post[:net_amount] = Float(options[:net_amount]) if options[:net_amount]
       end
 
+      def add_notification_url(post, options)
+        post[:notification_url] = options[:notification_url] if options[:notification_url]
+      end
+
       def add_taxes(post, options)
         return unless (tax_object = options[:taxes])
 
@@ -250,7 +256,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, path, parameters)
-        if ['capture', 'void'].include?(action)
+        if %w[capture void].include?(action)
           response = parse(ssl_request(:put, url(path), post_data(parameters), headers))
         else
           response = parse(ssl_post(url(path), post_data(parameters), headers(parameters)))
@@ -270,7 +276,7 @@ module ActiveMerchant #:nodoc:
         if action == 'refund'
           response['status'] != 404 && response['error'].nil?
         else
-          ['active', 'approved', 'authorized', 'cancelled', 'in_process'].include?(response['status'])
+          %w[active approved authorized cancelled in_process].include?(response['status'])
         end
       end
 
@@ -305,7 +311,7 @@ module ActiveMerchant #:nodoc:
         headers = {
           'Content-Type' => 'application/json'
         }
-        headers['X-Device-Session-ID'] = options[:device_id] if options[:device_id]
+        headers['X-meli-session-id'] = options[:device_id] if options[:device_id]
         headers
       end
 

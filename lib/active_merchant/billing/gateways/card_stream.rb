@@ -7,8 +7,8 @@ module ActiveMerchant #:nodoc:
       self.money_format = :cents
       self.default_currency = 'GBP'
       self.currencies_without_fractions = %w(CVE ISK JPY UGX)
-      self.supported_countries = ['GB', 'US', 'CH', 'SE', 'SG', 'NO', 'JP', 'IS', 'HK', 'NL', 'CZ', 'CA', 'AU']
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :discover, :jcb, :maestro]
+      self.supported_countries = %w[GB US CH SE SG NO JP IS HK NL CZ CA AU]
+      self.supported_cardtypes = %i[visa master american_express diners_club discover jcb maestro]
       self.homepage_url = 'http://www.cardstream.com/'
       self.display_name = 'CardStream'
 
@@ -203,7 +203,7 @@ module ActiveMerchant #:nodoc:
         commit('CANCEL', post)
       end
 
-      def verify(creditcard, options={})
+      def verify(creditcard, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, creditcard, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -247,7 +247,7 @@ module ActiveMerchant #:nodoc:
         add_pair(post, :statementNarrative1, options[:merchant_name]) if options[:merchant_name]
         add_pair(post, :statementNarrative2, options[:dynamic_descriptor]) if options[:dynamic_descriptor]
         if credit_card_or_reference.respond_to?(:number)
-          if ['american_express', 'diners_club'].include?(card_brand(credit_card_or_reference).to_s)
+          if %w[american_express diners_club].include?(card_brand(credit_card_or_reference).to_s)
             add_pair(post, :item1Quantity, 1)
             add_pair(post, :item1Description, (options[:description] || options[:order_id]).slice(0, 15))
             add_pair(post, :item1GrossValue, localized_amount(money, options[:currency] || currency(money)))
@@ -282,7 +282,7 @@ module ActiveMerchant #:nodoc:
         add_pair(post, :threeDSRequired, options[:threeds_required] || @threeds_required ? 'Y' : 'N')
       end
 
-      def add_remote_address(post, options={})
+      def add_remote_address(post, options = {})
         add_pair(post, :remoteAddress, options[:ip] || '1.1.1.1')
       end
 
@@ -309,7 +309,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, parameters)
-        parameters.update(countryCode: self.supported_countries[0]) unless ['CAPTURE', 'CANCEL'].include?(action)
+        parameters.update(countryCode: self.supported_countries[0]) unless %w[CAPTURE CANCEL].include?(action)
         parameters.update(
           merchantID: @options[:login],
           action: action

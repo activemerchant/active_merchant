@@ -100,8 +100,8 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_line_items
     line_items = [
-      {sku: 'abc123', cost: 119, quantity: 1},
-      {sku: 'def456', cost: 200, quantity: 2, name: 'an item' }
+      { sku: 'abc123', cost: 119, quantity: 1 },
+      { sku: 'def456', cost: 200, quantity: 2, name: 'an item' }
     ]
 
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(line_items: line_items))

@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'GBP'
       self.money_format = :cents
       self.supported_countries = %w(HK GB AU AD AR BE BR CA CH CN CO CR CY CZ DE DK ES FI FR GI GR HU IE IN IT JP LI LU MC MT MY MX NL NO NZ PA PE PL PT SE SG SI SM TR UM VA)
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :maestro, :elo, :naranja, :cabal]
+      self.supported_cardtypes = %i[visa master american_express discover jcb maestro elo naranja cabal unionpay]
       self.currencies_without_fractions = %w(HUF IDR ISK JPY KRW)
       self.currencies_with_three_decimal_places = %w(BHD KWD OMR RSD TND)
       self.homepage_url = 'http://www.worldpay.com/'
@@ -26,6 +26,7 @@ module ActiveMerchant #:nodoc:
         'elo'              => 'ELO-SSL',
         'naranja'          => 'NARANJA-SSL',
         'cabal'            => 'CABAL-SSL',
+        'unionpay'         => 'CHINAUNIONPAY-SSL',
         'unknown'          => 'CARD-SSL'
       }
 
@@ -57,7 +58,7 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment_method, options = {})
         MultiResponse.run do |r|
           r.process { authorize(money, payment_method, options) }
-          r.process { capture(money, r.authorization, options.merge(authorization_validated: true)) }
+          r.process { capture(money, r.authorization, options.merge(authorization_validated: true)) } unless options[:skip_capture]
         end
       end
 
@@ -70,7 +71,7 @@ module ActiveMerchant #:nodoc:
       def capture(money, authorization, options = {})
         authorization = order_id_from_authorization(authorization.to_s)
         MultiResponse.run do |r|
-          r.process { inquire_request(authorization, options, 'AUTHORISED') } unless options[:authorization_validated]
+          r.process { inquire_request(authorization, options, 'AUTHORISED', 'CAPTURED') } unless options[:authorization_validated]
           if r.params
             authorization_currency = r.params['amount_currency_code']
             options = options.merge(currency: authorization_currency) if authorization_currency.present?
@@ -89,15 +90,19 @@ module ActiveMerchant #:nodoc:
 
       def refund(money, authorization, options = {})
         authorization = order_id_from_authorization(authorization.to_s)
+        success_criteria = %w(CAPTURED SETTLED SETTLED_BY_MERCHANT SENT_FOR_REFUND)
+        success_criteria.push('AUTHORIZED') if options[:cancel_or_refund]
         response = MultiResponse.run do |r|
-          r.process { inquire_request(authorization, options, 'CAPTURED', 'SETTLED', 'SETTLED_BY_MERCHANT') } unless options[:authorization_validated]
+          r.process { inquire_request(authorization, options, *success_criteria) } unless options[:authorization_validated]
           r.process { refund_request(money, authorization, options) }
         end
 
-        return response if response.success?
-        return response unless options[:force_full_refund_if_unsettled]
-
-        void(authorization, options) if response.params['last_event'] == 'AUTHORISED'
+        if !response.success? && options[:force_full_refund_if_unsettled] &&
+           response.params['last_event'] == 'AUTHORISED'
+          void(authorization, options)
+        else
+          response
+        end
       end
 
       # Credits only function on a Merchant ID/login/profile flagged for Payouts
@@ -109,14 +114,14 @@ module ActiveMerchant #:nodoc:
         credit_request(money, payment_method, payment_details.merge(credit: true, **options))
       end
 
-      def verify(payment_method, options={})
+      def verify(payment_method, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, payment_method, options) }
           r.process(:ignore_result) { void(r.authorization, options.merge(authorization_validated: true)) }
         end
       end
 
-      def store(credit_card, options={})
+      def store(credit_card, options = {})
         requires!(options, :customer)
         store_request(credit_card, options)
       end
@@ -139,7 +144,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture_request(money, authorization, options)
-        commit('capture', build_capture_request(money, authorization, options), :ok, options)
+        commit('capture', build_capture_request(money, authorization, options), 'CAPTURED', :ok, options)
       end
 
       def cancel_request(authorization, options)
@@ -151,7 +156,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund_request(money, authorization, options)
-        commit('refund', build_refund_request(money, authorization, options), :ok, options)
+        commit('refund', build_refund_request(money, authorization, options), :ok, 'SENT_FOR_REFUND', options)
       end
 
       def credit_request(money, payment_method, options)
@@ -203,6 +208,7 @@ module ActiveMerchant #:nodoc:
               end
               add_payment_method(xml, money, payment_method, options)
               add_shopper(xml, options)
+              add_statement_narrative(xml, options)
               add_risk_data(xml, options[:risk_data]) if options[:risk_data]
               add_hcg_additional_data(xml, options) if options[:hcg_additional_data]
               add_instalments_data(xml, options) if options[:instalments]
@@ -215,7 +221,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def order_tag_attributes(options)
-        { 'orderCode' => options[:order_id], 'installationId' => options[:inst_id] || @options[:inst_id] }.reject { |_, v| !v }
+        { 'orderCode' => options[:order_id], 'installationId' => options[:inst_id] || @options[:inst_id] }.reject { |_, v| !v.present? }
       end
 
       def build_capture_request(money, authorization, options)
@@ -234,8 +240,13 @@ module ActiveMerchant #:nodoc:
 
       def build_refund_request(money, authorization, options)
         build_order_modify_request(authorization) do |xml|
-          xml.refund do
-            add_amount(xml, money, options.merge(debit_credit_indicator: 'credit'))
+          if options[:cancel_or_refund]
+            # Worldpay docs claim amount must be passed. This causes an error.
+            xml.cancelOrRefund # { add_amount(xml, money, options.merge(debit_credit_indicator: 'credit')) }
+          else
+            xml.refund do
+              add_amount(xml, money, options.merge(debit_credit_indicator: 'credit'))
+            end
           end
         end
       end
@@ -257,7 +268,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_additional_3ds_data(xml, options)
-        xml.additional3DSData 'dfReferenceId' => options[:session_id]
+        additional_data = { 'dfReferenceId' => options[:session_id] }
+        additional_data['challengeWindowSize'] = options[:browser_size] if options[:browser_size]
+
+        xml.additional3DSData additional_data
       end
 
       def add_3ds_exemption(xml, options)
@@ -404,7 +418,7 @@ module ActiveMerchant #:nodoc:
       def add_three_d_secure(three_d_secure, xml)
         xml.info3DSecure do
           xml.threeDSVersion three_d_secure[:version]
-          if three_d_secure[:version] =~ /^2/
+          if /^2/.match?(three_d_secure[:version])
             xml.dsTransactionId three_d_secure[:ds_transaction_id]
           else
             xml.xid three_d_secure[:xid]
@@ -423,14 +437,14 @@ module ActiveMerchant #:nodoc:
           )
         end
 
-        card_holder_name = options[:execute_threed] && !options[:three_ds_version]&.start_with?('2') ? '3D' : payment_method.name
+        card_holder_name = test? && options[:execute_threed] && !options[:three_ds_version]&.start_with?('2') ? '3D' : payment_method.name
         xml.cardHolderName card_holder_name
         xml.cvc payment_method.verification_value
 
-        add_address(xml, (options[:billing_address] || options[:address]))
+        add_address(xml, (options[:billing_address] || options[:address]), options)
       end
 
-      def add_stored_credential_options(xml, options={})
+      def add_stored_credential_options(xml, options = {})
         if options[:stored_credential]
           add_stored_credential_using_normalized_fields(xml, options)
         else
@@ -479,11 +493,15 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_statement_narrative(xml, options)
+        xml.statementNarrative truncate(options[:statement_narrative], 50) if options[:statement_narrative]
+      end
+
       def add_authenticated_shopper_id(xml, options)
         xml.authenticatedShopperID options[:customer] if options[:customer]
       end
 
-      def add_address(xml, address)
+      def add_address(xml, address, options)
         return unless address
 
         address = address_with_defaults(address)
@@ -498,7 +516,7 @@ module ActiveMerchant #:nodoc:
             xml.address2 address[:address2] if address[:address2]
             xml.postalCode address[:zip]
             xml.city address[:city]
-            xml.state address[:state]
+            xml.state address[:state] unless address[:country] != 'US' && options[:execute_threed]
             xml.countryCode address[:country]
             xml.telephoneNumber address[:phone] if address[:phone]
           end
@@ -508,7 +526,7 @@ module ActiveMerchant #:nodoc:
       def add_hcg_additional_data(xml, options)
         xml.hcgAdditionalData do
           options[:hcg_additional_data].each do |k, v|
-            xml.param({name: k.to_s}, v)
+            xml.param({ name: k.to_s }, v)
           end
         end
       end
@@ -532,11 +550,10 @@ module ActiveMerchant #:nodoc:
 
       def default_address
         {
-          address1: 'N/A',
           zip: '0000',
+          country: 'US',
           city: 'N/A',
-          state: 'N/A',
-          country: 'US'
+          address1: 'N/A'
         }
       end
 
@@ -544,7 +561,7 @@ module ActiveMerchant #:nodoc:
         xml = xml.strip.gsub(/\&/, '&amp;')
         doc = Nokogiri::XML(xml, &:strict)
         doc.remove_namespaces!
-        resp_params = {action: action}
+        resp_params = { action: action }
 
         parse_elements(doc.root, resp_params)
         resp_params
@@ -566,6 +583,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def headers(options)
+        idempotency_key = options[:idempotency_key]
+
         headers = {
           'Content-Type' => 'text/xml',
           'Authorization' => encoded_credentials
@@ -573,6 +592,8 @@ module ActiveMerchant #:nodoc:
         if options[:cookie]
           headers['Cookie'] = options[:cookie] if options[:cookie]
         end
+
+        headers['Idempotency-Key'] = idempotency_key if idempotency_key
         headers
       end
 
@@ -580,7 +601,7 @@ module ActiveMerchant #:nodoc:
         xml = ssl_post(url, request, headers(options))
         raw = parse(action, xml)
         if options[:execute_threed]
-          raw[:cookie] = @cookie
+          raw[:cookie] = @cookie if defined?(@cookie)
           raw[:session_id] = options[:session_id]
           raw[:is3DSOrder] = true
         end
@@ -644,7 +665,9 @@ module ActiveMerchant #:nodoc:
       #   - An array of strings if one of many responses could be considered a
       #     success.
       def success_criteria_success?(raw, success_criteria)
-        success_criteria.include?(raw[:last_event]) || raw[:ok].present?
+        return if raw[:error]
+
+        raw[:ok].present? || (success_criteria.include?(raw[:last_event]) if raw[:last_event])
       end
 
       def action_success?(action, raw)
@@ -661,7 +684,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def required_status_message(raw, success_criteria)
-        "A transaction status of #{success_criteria.collect { |c| "'#{c}'" }.join(" or ")} is required." if !success_criteria.include?(raw[:last_event])
+        "A transaction status of #{success_criteria.collect { |c| "'#{c}'" }.join(' or ')} is required." if !success_criteria.include?(raw[:last_event])
       end
 
       def authorization_from(action, raw, options)
@@ -681,11 +704,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def order_id_from(raw)
-        pair = raw.detect { |k, v| k.to_s =~ /_order_code$/ }
+        pair = raw.detect { |k, _v| k.to_s =~ /_order_code$/ }
         (pair ? pair.last : nil)
       end
 
-      def authorization_from_token_details(options={})
+      def authorization_from_token_details(options = {})
         [options[:order_id], options[:token_id], options[:token_scope], options[:customer]].join('|')
       end
 
@@ -725,7 +748,7 @@ module ActiveMerchant #:nodoc:
       def credit_fund_transfer_attribute(options)
         return unless options[:credit]
 
-        {'action' => 'REFUND'}
+        { 'action' => 'REFUND' }
       end
 
       def encoded_credentials

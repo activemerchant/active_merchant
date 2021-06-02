@@ -369,13 +369,15 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert response = @gateway.get_customer_payment_profile(
       customer_profile_id: @customer_profile_id,
       customer_payment_profile_id: @customer_payment_profile_id,
-      unmask_expiration_date: true
+      unmask_expiration_date: true,
+      include_issuer_info: true
     )
     assert_instance_of Response, response
     assert_success response
     assert_nil response.authorization
     assert_equal @customer_payment_profile_id, response.params['profile']['payment_profiles']['customer_payment_profile_id']
     assert_equal formatted_expiration_date(@credit_card), response.params['profile']['payment_profiles']['payment']['credit_card']['expiration_date']
+    assert_equal @credit_card.first_digits, response.params['profile']['payment_profiles']['payment']['credit_card']['issuer_number']
   end
 
   def test_should_get_customer_shipping_address_request
@@ -434,7 +436,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
           }
         }
       )
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match %r{<cardNumber>XXXX4242</cardNumber>}, data
     end.respond_with(successful_update_customer_payment_profile_response)
 
@@ -602,7 +604,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
           recurring_billing: true
         }
       )
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match %r{<recurringBilling>true</recurringBilling>}, data
     end.respond_with(successful_create_customer_profile_transaction_response(:auth_capture))
 
@@ -823,6 +825,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
               <creditCard>
                   <cardNumber>#{@credit_card.number}</cardNumber>
                   <expirationDate>#{@gateway.send(:expdate, @credit_card)}</expirationDate>
+                  <issuerNumber>#{@credit_card.first_digits}</issuerNumber>
               </creditCard>
             </payment>
           </paymentProfiles>
@@ -874,6 +877,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
               <creditCard>
                 <cardNumber>#{@credit_card.number}</cardNumber>
                 <expirationDate>#{@gateway.send(:expdate, @credit_card)}</expirationDate>
+                <issuerNumber>#{@credit_card.first_digits}</issuerNumber>
               </creditCard>
             </payment>
           </paymentProfiles>
@@ -884,6 +888,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
               <creditCard>
                 <cardNumber>XXXX1234</cardNumber>
                 <expirationDate>XXXX</expirationDate>
+                <issuerNumber>424242</issuerNumber>
               </creditCard>
             </payment>
           </paymentProfiles>
@@ -914,6 +919,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
               <creditCard>
                   <cardNumber>#{@credit_card.number}</cardNumber>
                   <expirationDate>#{@gateway.send(:expdate, @credit_card)}</expirationDate>
+                  <issuerNumber>#{@credit_card.first_digits}</issuerNumber>
               </creditCard>
             </payment>
           </paymentProfiles>

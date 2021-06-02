@@ -76,10 +76,10 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://www.paygate.co.za/payxml/process.trans'
 
       # The countries the gateway supports merchants from as 2 digit ISO country codes
-      self.supported_countries = ['US', 'ZA']
+      self.supported_countries = %w[US ZA]
 
       # The card types supported by the payment gateway
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express diners_club]
 
       # The homepage URL of the gateway
       self.homepage_url = 'http://paygate.co.za/'
@@ -183,7 +183,7 @@ module ActiveMerchant #:nodoc:
         commit(action, build_request(action, options), authorization)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         action = 'refundtx'
 
         options[:money] = money
@@ -197,7 +197,7 @@ module ActiveMerchant #:nodoc:
         SUCCESS_CODES.include?(response[:res])
       end
 
-      def build_request(action, options={})
+      def build_request(action, options = {})
         xml = Builder::XmlMarkup.new
         xml.instruct!
 
@@ -220,7 +220,7 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
-      def build_authorization(xml, money, creditcard, options={})
+      def build_authorization(xml, money, creditcard, options = {})
         xml.tag! 'authtx', {
           cref: options[:order_id],
           cname: creditcard.name,
@@ -235,13 +235,13 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def build_capture(xml, money, authorization, options={})
+      def build_capture(xml, money, authorization, options = {})
         xml.tag! 'settletx', {
           tid: authorization
         }
       end
 
-      def build_refund(xml, money, authorization, options={})
+      def build_refund(xml, money, authorization, options = {})
         xml.tag! 'refundtx', {
           tid: authorization,
           amt: amount(money)
@@ -266,8 +266,7 @@ module ActiveMerchant #:nodoc:
         response = parse(action, ssl_post(self.live_url, request))
         Response.new(successful?(response), message_from(response), response,
           test: test?,
-          authorization: authorization || response[:tid]
-        )
+          authorization: authorization || response[:tid])
       end
 
       def message_from(response)

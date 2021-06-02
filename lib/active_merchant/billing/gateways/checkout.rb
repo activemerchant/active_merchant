@@ -7,8 +7,8 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'USD'
       self.money_format = :cents
 
-      self.supported_countries = ['AD', 'AT', 'BE', 'BG', 'CH', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FO', 'FI', 'FR', 'GB', 'GI', 'GL', 'GR', 'HR', 'HU', 'IE', 'IS', 'IL', 'IT', 'LI', 'LT', 'LU', 'LV', 'MC', 'MT', 'NL', 'NO', 'PL', 'PT', 'RO', 'SE', 'SI', 'SM', 'SK', 'SJ', 'TR', 'VA']
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
+      self.supported_countries = %w[AD AT BE BG CH CY CZ DE DK EE ES FO FI FR GB GI GL GR HR HU IE IS IL IT LI LT LU LV MC MT NL NO PL PT RO SE SI SM SK SJ TR VA]
+      self.supported_cardtypes = %i[visa master american_express diners_club]
 
       self.homepage_url = 'https://www.checkout.com/'
       self.display_name = 'Checkout.com'
@@ -83,7 +83,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -150,7 +150,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_reference(xml, authorization)
-        transid, trackid, _, _, _ = split_authorization(authorization)
+        transid, trackid, = split_authorization(authorization)
         xml.transid transid
         add_track_id(xml, trackid)
       end
@@ -159,7 +159,7 @@ module ActiveMerchant #:nodoc:
         xml.trackid(trackid) if trackid
       end
 
-      def commit(action, amount=nil, options={}, &builder)
+      def commit(action, amount = nil, options = {}, &builder)
         response = parse_xml(ssl_post(live_url, build_xml(action, &builder)))
         Response.new(
           (response[:responsecode] == '0'),

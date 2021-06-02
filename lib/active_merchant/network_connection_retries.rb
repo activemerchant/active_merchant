@@ -17,26 +17,24 @@ module ActiveMerchant
       base.send(:attr_accessor, :retry_safe)
     end
 
-    def retry_exceptions(options={})
+    def retry_exceptions(options = {})
       connection_errors = DEFAULT_CONNECTION_ERRORS.merge(options[:connection_exceptions] || {})
 
       retry_network_exceptions(options) do
-        begin
-          yield
-        rescue Errno::ECONNREFUSED => e
-          raise ActiveMerchant::RetriableConnectionError.new('The remote server refused the connection', e)
-        rescue OpenSSL::X509::CertificateError => e
-          NetworkConnectionRetries.log(options[:logger], :error, e.message, options[:tag])
-          raise ActiveMerchant::ClientCertificateError, 'The remote server did not accept the provided SSL certificate'
-        rescue Zlib::BufError
-          raise ActiveMerchant::InvalidResponseError, 'The remote server replied with an invalid response'
-        rescue *connection_errors.keys => e
-          raise ActiveMerchant::ConnectionError.new(derived_error_message(connection_errors, e.class), e)
-        end
+        yield
+      rescue Errno::ECONNREFUSED => e
+        raise ActiveMerchant::RetriableConnectionError.new('The remote server refused the connection', e)
+      rescue OpenSSL::X509::CertificateError => e
+        NetworkConnectionRetries.log(options[:logger], :error, e.message, options[:tag])
+        raise ActiveMerchant::ClientCertificateError, 'The remote server did not accept the provided SSL certificate'
+      rescue Zlib::BufError
+        raise ActiveMerchant::InvalidResponseError, 'The remote server replied with an invalid response'
+      rescue *connection_errors.keys => e
+        raise ActiveMerchant::ConnectionError.new(derived_error_message(connection_errors, e.class), e)
       end
     end
 
-    def self.log(logger, level, message, tag=nil)
+    def self.log(logger, level, message, tag = nil)
       #tag ||= self.class.to_s
       #message = "[#{tag}] #{message}"
       #logger&.send(level, message)

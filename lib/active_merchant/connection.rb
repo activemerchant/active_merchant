@@ -77,12 +77,12 @@ module ActiveMerchant
           #info "connection_http_method=#{method.to_s.upcase} connection_uri=#{endpoint} headers=#{headers.to_s}", tag
           info({ connection_http_method: method.to_s.upcase, connection_uri: endpoint, headers: headers }, tag)
 
-          result = nil
+        result = nil
 
-          realtime = Benchmark.realtime do
-            http.start unless http.started?
-            @ssl_connection = http.ssl_connection
-            #info "connection_ssl_version=#{ssl_connection[:version]} connection_ssl_cipher=#{ssl_connection[:cipher]}", tag
+        realtime = Benchmark.realtime do
+          http.start unless http.started?
+          @ssl_connection = http.ssl_connection
+          #info "connection_ssl_version=#{ssl_connection[:version]} connection_ssl_cipher=#{ssl_connection[:cipher]}", tag
             info({ connection_ssl_version: ssl_connection[:version], connection_ssl_cipher: ssl_connection[:cipher] }, tag)
 
             result = case method
@@ -116,11 +116,11 @@ module ActiveMerchant
             end
           end
 
-          #info '--> %d %s (%d %.4fs)' % [result.code, result.message, result.body ? result.body.length : 0, realtime], tag
-          info( {code: result.code, message: result.message, length: (result.body ? result.body.length : 0), time: realtime }, tag)
+        #info '--> %d %s (%d %.4fs)' % [result.code, result.message, result.body ? result.body.length : 0, realtime], tag
+        info( {code: result.code, message: result.message, length: (result.body ? result.body.length : 0), time: realtime }, tag)
           debug result.body
           result
-        end
+
       end
     ensure
       #info 'connection_request_total_time=%.4fs' % [Process.clock_gettime(Process::CLOCK_MONOTONIC) - request_start], tag

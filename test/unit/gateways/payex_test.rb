@@ -11,7 +11,7 @@ class PayexTest < Test::Unit::TestCase
     @amount = 1000
 
     @options = {
-      order_id: '1234',
+      order_id: '1234'
     }
   end
 
@@ -98,7 +98,7 @@ class PayexTest < Test::Unit::TestCase
 
   def test_successful_store
     @gateway.expects(:ssl_post).times(3).returns(successful_store_response, successful_initialize_response, successful_purchase_response)
-    assert response = @gateway.store(@credit_card, @options.merge({merchant_ref: '9876'}))
+    assert response = @gateway.store(@credit_card, @options.merge({ merchant_ref: '9876' }))
     assert_success response
     assert_equal 'OK', response.message
     assert_equal 'bcea4ac8d1f44640bff7a8c93caa249c', response.authorization
@@ -115,7 +115,7 @@ class PayexTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_stored_card
     @gateway.expects(:ssl_post).returns(successful_autopay_response)
-    assert response = @gateway.purchase(@amount, 'fakeauth', @options.merge({order_id: '5678'}))
+    assert response = @gateway.purchase(@amount, 'fakeauth', @options.merge({ order_id: '5678' }))
     assert_success response
     assert_equal 'OK', response.message
     assert_equal '2624657', response.authorization

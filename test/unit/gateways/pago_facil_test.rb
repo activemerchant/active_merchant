@@ -70,9 +70,9 @@ class PagoFacilTest < Test::Unit::TestCase
   private
 
   def successful_purchase_response
-    {'WebServices_Transacciones' =>
-      {'transaccion' =>
-        {'autorizado' => '1',
+    { 'WebServices_Transacciones' =>
+      { 'transaccion' =>
+        { 'autorizado' => '1',
          'autorizacion' => '305638',
          'transaccion' => 'S-PFE12S12I12568',
          'texto' => 'Transaction has been successful!-Approved',
@@ -87,7 +87,7 @@ class PagoFacilTest < Test::Unit::TestCase
          'param5' => '',
          'TipoTC' => 'Visa',
          'data' =>
-          {'anyoExpiracion' => '(2) **',
+          { 'anyoExpiracion' => '(2) **',
            'apellidos' => 'Reyes Garza',
            'calleyNumero' => 'Anatole France 311',
            'celular' => '5550123456',
@@ -108,9 +108,9 @@ class PagoFacilTest < Test::Unit::TestCase
            'pais' => 'Mexico',
            'telefono' => '5550220910',
            'transFechaHora' => '1393363998',
-           'bin' => '(6) ***1'},
+           'bin' => '(6) ***1' },
          'dataVal' =>
-          {'idSucursal' => '12',
+          { 'idSucursal' => '12',
            'cp' => '11560',
            'nombre' => 'Juan',
            'apellidos' => 'Reyes Garza',
@@ -138,13 +138,13 @@ class PagoFacilTest < Test::Unit::TestCase
            'noMail' => '',
            'notaMail' => '',
            'settingsTransaction' =>
-            {'noMontoMes' => '0.00',
+            { 'noMontoMes' => '0.00',
              'noTransaccionesDia' => '0',
              'minTransaccionTc' => '5',
              'tiempoDevolucion' => '30',
              'sendPdfTransCliente' => '1',
              'noMontoDia' => '0.00',
-             'noTransaccionesMes' => '0'},
+             'noTransaccionesMes' => '0' },
            'email' => 'comprador@correo.com',
            'telefono' => '5550220910',
            'celular' => '5550123456',
@@ -156,19 +156,19 @@ class PagoFacilTest < Test::Unit::TestCase
            'idCaja' => '',
            'paisDetectedIP' => 'MX',
            'qa' => '1',
-           'https' => 'on'},
-         'status' => 'success'}}}.to_json
+           'https' => 'on' },
+         'status' => 'success' } } }.to_json
   end
 
   def failed_purchase_response
-    {'WebServices_Transacciones' =>
-      {'transaccion' =>
-        {'autorizado' => '0',
+    { 'WebServices_Transacciones' =>
+      { 'transaccion' =>
+        { 'autorizado' => '0',
          'transaccion' => 'n/a',
          'autorizacion' => 'n/a',
          'texto' => 'Errores en los datos de entrada Validaciones',
          'error' =>
-          {'numeroTarjeta' => "'1111111111111111' no es de una institucion permitida"},
+          { 'numeroTarjeta' => "'1111111111111111' no es de una institucion permitida" },
          'empresa' => 'Sin determinar',
          'TransIni' => '16:10:20 pm 25/02/2014',
          'TransFin' => '16:10:20 pm 25/02/2014',
@@ -179,7 +179,7 @@ class PagoFacilTest < Test::Unit::TestCase
          'param5' => '',
          'TipoTC' => '',
          'data' =>
-          {'anyoExpiracion' => '(2) **',
+          { 'anyoExpiracion' => '(2) **',
            'apellidos' => 'Reyes Garza',
            'calleyNumero' => 'Anatole France 311',
            'celular' => '5550123456',
@@ -200,9 +200,9 @@ class PagoFacilTest < Test::Unit::TestCase
            'pais' => 'Mexico',
            'telefono' => '5550220910',
            'transFechaHora' => '1393366220',
-           'bin' => '(6) ***1'},
+           'bin' => '(6) ***1' },
          'dataVal' =>
-          {'email' => 'comprador@correo.com',
+          { 'email' => 'comprador@correo.com',
            'telefono' => '5550220910',
            'celular' => '5550123456',
            'calleyNumero' => 'Anatole France 311',
@@ -215,8 +215,8 @@ class PagoFacilTest < Test::Unit::TestCase
            'cvt' => '',
            'anyoExpiracion' => '',
            'mesExpiracion' => '',
-           'https' => 'on'},
-         'status' => 'success'}}}.to_json
+           'https' => 'on' },
+         'status' => 'success' } } }.to_json
   end
 
   def invalid_json_response

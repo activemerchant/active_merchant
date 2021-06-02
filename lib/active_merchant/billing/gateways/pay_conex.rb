@@ -8,36 +8,36 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = %w(US CA)
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express discover jcb diners_club]
 
       self.homepage_url = 'http://www.bluefincommerce.com/'
       self.display_name = 'PayConex'
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :account_id, :api_accesskey)
         super
       end
 
-      def purchase(money, payment_method, options={})
+      def purchase(money, payment_method, options = {})
         post = {}
         add_auth_purchase_params(post, money, payment_method, options)
         commit('SALE', post)
       end
 
-      def authorize(money, payment_method, options={})
+      def authorize(money, payment_method, options = {})
         post = {}
         add_auth_purchase_params(post, money, payment_method, options)
         commit('AUTHORIZATION', post)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         post = {}
         add_reference_params(post, authorization, options)
         add_amount(post, money, options)
         commit('CAPTURE', post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         post = {}
         add_reference_params(post, authorization, options)
         add_amount(post, money, options)
@@ -50,7 +50,7 @@ module ActiveMerchant #:nodoc:
         commit('REVERSAL', post)
       end
 
-      def credit(money, payment_method, options={})
+      def credit(money, payment_method, options = {})
         raise ArgumentError, 'Reference credits are not supported. Please supply the original credit card or use the #refund method.' if payment_method.is_a?(String)
 
         post = {}
@@ -58,11 +58,11 @@ module ActiveMerchant #:nodoc:
         commit('CREDIT', post)
       end
 
-      def verify(payment_method, options={})
+      def verify(payment_method, options = {})
         authorize(0, payment_method, options)
       end
 
-      def store(payment_method, options={})
+      def store(payment_method, options = {})
         post = {}
         add_credentials(post)
         add_payment_method(post, payment_method)

@@ -131,7 +131,7 @@ class RemoteEbanxTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    refund_options = @options.merge({description: 'full refund'})
+    refund_options = @options.merge({ description: 'full refund' })
     assert refund = @gateway.refund(@amount, purchase.authorization, refund_options)
     assert_success refund
     assert_equal 'Accepted', refund.message
@@ -201,6 +201,27 @@ class RemoteEbanxTest < Test::Unit::TestCase
 
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_match %r{Accepted}, response.message
+  end
+
+  def test_successful_verify_for_chile
+    options = @options.merge({
+      order_id: generate_unique_id,
+      ip: '127.0.0.1',
+      email: 'jose@example.com.cl',
+      birth_date: '10/11/1980',
+      billing_address: address({
+        address1: '1040 Rua E',
+        city: 'Medellín',
+        state: 'AN',
+        zip: '29269',
+        country: 'CL',
+        phone_number: '8522847035'
+      })
+    })
+
+    response = @gateway.verify(@credit_card, options)
     assert_success response
     assert_match %r{Accepted}, response.message
   end

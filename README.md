@@ -1,6 +1,6 @@
 # Active Merchant
-[![Build Status](https://travis-ci.org/activemerchant/active_merchant.png?branch=master)](https://travis-ci.org/activemerchant/active_merchant)
-[![Code Climate](https://codeclimate.com/github/activemerchant/active_merchant.png)](https://codeclimate.com/github/activemerchant/active_merchant)
+[![Build Status](https://github.com/activemerchant/active_merchant/workflows/CI/badge.svg?branch=master)](https://github.com/activemerchant/active_merchant/actions?query=workflow%3ACI)
+[![Code Climate](https://codeclimate.com/github/activemerchant/active_merchant.svg)](https://codeclimate.com/github/activemerchant/active_merchant)
 
 Active Merchant is an extraction from the ecommerce system [Shopify](http://www.shopify.com).
 Shopify's requirements for a simple and unified API to access dozens of different payment
@@ -17,7 +17,7 @@ from an ever-growing set of contributors.
 See [GettingStarted.md](GettingStarted.md) if you want to learn more about using Active Merchant in your
 applications.
 
-If you'd like to contribute to Active Merchant, please start with our [contribution guide](CONTRIBUTING.md).
+If you'd like to contribute to Active Merchant, please start with our [Contribution Guide](https://github.com/activemerchant/active_merchant/wiki/Contributing).
 
 ## Installation
 
@@ -80,6 +80,8 @@ if credit_card.validate.empty?
   end
 end
 ```
+
+## Contributing
 
 For more in-depth documentation and tutorials, see [GettingStarted.md](GettingStarted.md) and the
 [API documentation](http://www.rubydoc.info/github/activemerchant/active_merchant/).
@@ -244,4 +246,4 @@ Functionality or APIs that are deprecated will be marked as such. Deprecated fun
 
 ## Ruby and Rails compatibility policies
 
-Because Active Merchant is a payment library, it needs to take security seriously. For this reason, Active Merchant guarantees compatibility only with actively supported versions of Ruby and Rails. At the time of this writing, that means that Ruby 2.3+ and Rails 4.2+ are supported.
+Because Active Merchant is a payment library, it needs to take security seriously. For this reason, Active Merchant guarantees compatibility only with actively supported versions of Ruby and Rails. At the time of this writing, that means that Ruby 2.5+ and Rails 5.0+ are supported.

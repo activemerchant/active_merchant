@@ -6,24 +6,35 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://process.sandbox.safecharge.com/service.asmx/Process'
       self.live_url = 'https://process.safecharge.com/service.asmx/Process'
 
-      self.supported_countries = ['AT', 'BE', 'BG', 'CY', 'CZ', 'DE', 'DK', 'EE', 'GR', 'ES', 'FI', 'FR', 'GI', 'HK', 'HR', 'HU', 'IE', 'IS', 'IT', 'LI', 'LT', 'LU', 'LV', 'MT', 'MX', 'NL', 'NO', 'PL', 'PT', 'RO', 'SE', 'SG', 'SI', 'SK', 'GB', 'US']
+      self.supported_countries = %w[AT BE BG CY CZ DE DK EE GR ES FI FR GI HK HR HU IE IS IT LI LT LU LV MT MX NL NO PL PT RO SE SG SI SK GB US]
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master]
+      self.supported_cardtypes = %i[visa master]
 
       self.homepage_url = 'https://www.safecharge.com'
       self.display_name = 'SafeCharge'
 
       VERSION = '4.1.0'
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :client_login_id, :client_password)
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         post = {}
-        post[:sg_APIType] = 1 if options[:three_d_secure]
-        trans_type = options[:three_d_secure] ? 'Sale3D' : 'Sale'
+
+        # Determine if 3DS is requested, or there is standard external MPI data
+        if options[:three_d_secure]
+          if options[:three_d_secure].is_a?(Hash)
+            add_external_mpi_data(post, options)
+          else
+            post[:sg_APIType] = 1
+            trans_type = 'Sale3D'
+          end
+        end
+
+        trans_type ||= 'Sale'
+
         add_transaction_data(trans_type, post, money, options)
         add_payment(post, payment, options)
         add_customer_details(post, payment, options)
@@ -31,8 +42,10 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         post = {}
+
+        add_external_mpi_data(post, options) if options[:three_d_secure]&.is_a?(Hash)
         add_transaction_data('Auth', post, money, options)
         add_payment(post, payment, options)
         add_customer_details(post, payment, options)
@@ -40,10 +53,10 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         post = {}
         auth, transaction_id, token, exp_month, exp_year, _, original_currency = authorization.split('|')
-        add_transaction_data('Settle', post, money, options.merge!({currency: original_currency}))
+        add_transaction_data('Settle', post, money, options.merge!({ currency: original_currency }))
         post[:sg_AuthCode] = auth
         post[:sg_TransactionID] = transaction_id
         post[:sg_CCToken] = token
@@ -53,10 +66,10 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         post = {}
         auth, transaction_id, token, exp_month, exp_year, _, original_currency = authorization.split('|')
-        add_transaction_data('Credit', post, money, options.merge!({currency: original_currency}))
+        add_transaction_data('Credit', post, money, options.merge!({ currency: original_currency }))
         post[:sg_CreditType] = 2
         post[:sg_AuthCode] = auth
         post[:sg_TransactionID] = transaction_id
@@ -67,19 +80,21 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
-      def credit(money, payment, options={})
+      def credit(money, payment, options = {})
         post = {}
+
         add_payment(post, payment, options)
         add_transaction_data('Credit', post, money, options)
+
         post[:sg_CreditType] = 1
 
         commit(post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = {}
         auth, transaction_id, token, exp_month, exp_year, original_amount, original_currency = authorization.split('|')
-        add_transaction_data('Void', post, (original_amount.to_f * 100), options.merge!({currency: original_currency}))
+        add_transaction_data('Void', post, (original_amount.to_f * 100), options.merge!({ currency: original_currency }))
         post[:sg_CreditType] = 2
         post[:sg_AuthCode] = auth
         post[:sg_TransactionID] = transaction_id
@@ -90,7 +105,7 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -130,13 +145,21 @@ module ActiveMerchant #:nodoc:
         post[:sg_MerchantName] = options[:merchant_name] if options[:merchant_name]
       end
 
-      def add_payment(post, payment, options={})
-        post[:sg_NameOnCard] = payment.name
-        post[:sg_CardNumber] = payment.number
+      def add_payment(post, payment, options = {})
         post[:sg_ExpMonth] = format(payment.month, :two_digits)
         post[:sg_ExpYear] = format(payment.year, :two_digits)
-        post[:sg_CVV2] = payment.verification_value
-        post[:sg_StoredCredentialMode] = (options[:stored_credential_mode] == true ? 1 : 0)
+        post[:sg_CardNumber] = payment.number
+
+        if payment.is_a?(NetworkTokenizationCreditCard) && payment.source == :network_token
+          post[:sg_CAVV] = payment.payment_cryptogram
+          post[:sg_ECI] = options[:three_d_secure] && options[:three_d_secure][:eci] || '05'
+          post[:sg_IsExternalMPI] = 1
+          post[:sg_ExternalTokenProvider] = 5
+        else
+          post[:sg_CVV2] = payment.verification_value
+          post[:sg_NameOnCard] = payment.name
+          post[:sg_StoredCredentialMode] = (options[:stored_credential_mode] == true ? 1 : 0)
+        end
       end
 
       def add_customer_details(post, payment, options)
@@ -152,6 +175,16 @@ module ActiveMerchant #:nodoc:
         end
 
         post[:sg_Email] = options[:email]
+      end
+
+      def add_external_mpi_data(post, options)
+        post[:sg_ECI] = options[:three_d_secure][:eci] if options[:three_d_secure][:eci]
+        post[:sg_CAVV] = options[:three_d_secure][:cavv] if options[:three_d_secure][:cavv]
+        post[:sg_dsTransID] = options[:three_d_secure][:ds_transaction_id] if options[:three_d_secure][:ds_transaction_id]
+        post[:sg_threeDSProtocolVersion] = options[:three_d_secure][:ds_transaction_id] ? '2' : '1'
+        post[:sg_Xid] = options[:three_d_secure][:xid]
+        post[:sg_IsExternalMPI] = 1
+        post[:sg_EnablePartialApproval] = options[:is_partial_approval]
       end
 
       def parse(xml)

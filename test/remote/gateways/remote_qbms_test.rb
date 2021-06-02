@@ -11,7 +11,7 @@ class QbmsTest < Test::Unit::TestCase
     @card    = credit_card('4111111111111111')
 
     @options = {
-      billing_address: address,
+      billing_address: address
     }
   end
 

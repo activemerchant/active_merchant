@@ -13,10 +13,23 @@ class IatsPaymentsTest < Test::Unit::TestCase
       billing_address: address,
       description: 'Store purchase'
     }
+    @customer_details = {
+      phone: '5555555555',
+      email: 'test@example.com',
+      country: 'US'
+    }
   end
 
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert response.test?
+    assert_equal 'Success', response.message
+    assert response.authorization
+  end
+
+  def test_successful_purchase_with_customer_details
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(@customer_details))
     assert_success response
     assert response.test?
     assert_equal 'Success', response.message
@@ -61,7 +74,7 @@ class IatsPaymentsTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount, purchase.authorization)
+    assert refund = @gateway.refund(@amount + 50, purchase.authorization)
     assert_failure refund
   end
 
@@ -71,11 +84,8 @@ class IatsPaymentsTest < Test::Unit::TestCase
 
     assert refund = @gateway.refund(@amount, purchase.authorization)
 
-    # This is a dubious test. Basically testing that the refund failed b/c
-    # the original purchase hadn't yet cleared. No way to test immediate failure
-    # due to the delay in original tx processing, even for text txs.
-    assert_failure refund
-    assert_equal 'REJECT: 3', refund.message
+    assert_success refund
+    assert_equal 'Success', refund.message
   end
 
   def test_failed_check_refund
@@ -93,6 +103,21 @@ class IatsPaymentsTest < Test::Unit::TestCase
     assert unstore = @gateway.unstore(store.authorization, @options)
     assert_success unstore
     assert_equal 'Success', unstore.message
+  end
+
+  def test_successful_store_and_purchase_and_refund
+    assert store = @gateway.store(@credit_card, @options)
+    assert_success store
+    assert store.authorization
+    assert_equal 'Success', store.message
+
+    assert purchase = @gateway.purchase(@amount, store.authorization, @options)
+    assert_success purchase
+    assert purchase.authorization
+    assert_equal 'Success', purchase.message
+
+    assert refund = @gateway.refund(@amount, purchase.authorization)
+    assert_success refund
   end
 
   def test_failed_store

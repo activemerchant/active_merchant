@@ -11,22 +11,19 @@ class MercadoPagoTest < Test::Unit::TestCase
       year: 2020,
       first_name: 'John',
       last_name: 'Smith',
-      verification_value: '737'
-    )
+      verification_value: '737')
     @cabal_credit_card = credit_card('6035227716427021',
       month: 10,
       year: 2020,
       first_name: 'John',
       last_name: 'Smith',
-      verification_value: '737'
-    )
+      verification_value: '737')
     @naranja_credit_card = credit_card('5895627823453005',
       month: 10,
       year: 2020,
       first_name: 'John',
       last_name: 'Smith',
-      verification_value: '123'
-    )
+      verification_value: '123')
     @amount = 100
 
     @options = {
@@ -97,6 +94,17 @@ class MercadoPagoTest < Test::Unit::TestCase
 
     assert_equal '4261941|1.0', response.authorization
     assert_equal 'pending_capture', response.message
+    assert response.test?
+  end
+
+  def test_successful_authorize_with_capture_option
+    @gateway.expects(:ssl_post).at_most(2).returns(successful_authorize_with_capture_option_response)
+
+    response = @gateway.authorize(@amount, @credit_card, @options.merge(capture: true))
+    assert_success response
+
+    assert_equal '4261941|1.0', response.authorization
+    assert_equal 'accredited', response.message
     assert response.test?
   end
 
@@ -274,7 +282,7 @@ class MercadoPagoTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.purchase(@amount, credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |endpoint, data, _headers|
       assert_not_match(%r("payment_method_id":"amex"), data) if endpoint =~ /payments/
     end.respond_with(successful_purchase_response)
 
@@ -287,7 +295,7 @@ class MercadoPagoTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.purchase(@amount, credit_card, @options.merge(payment_method_id: 'diners'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |endpoint, data, _headers|
       assert_match(%r("payment_method_id":"diners"), data) if endpoint =~ /payments/
     end.respond_with(successful_purchase_response)
 
@@ -295,21 +303,31 @@ class MercadoPagoTest < Test::Unit::TestCase
     assert_equal '4141491|1.0', response.authorization
   end
 
+  def test_successful_purchase_with_notification_url
+    response = stub_comms do
+      @gateway.purchase(@amount, credit_card, @options.merge(notification_url: 'www.mercado-pago.com'))
+    end.check_request do |endpoint, data, _headers|
+      assert_match(%r("notification_url":"www.mercado-pago.com"), data) if endpoint =~ /payments/
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_includes_deviceid_header
     @options[:device_id] = '1a2b3c'
-    @gateway.expects(:ssl_post).with(anything, anything, {'Content-Type' => 'application/json'}).returns(successful_purchase_response)
-    @gateway.expects(:ssl_post).with(anything, anything, {'Content-Type' => 'application/json', 'X-Device-Session-ID' => '1a2b3c'}).returns(successful_purchase_response)
+    @gateway.expects(:ssl_post).with(anything, anything, { 'Content-Type' => 'application/json' }).returns(successful_purchase_response)
+    @gateway.expects(:ssl_post).with(anything, anything, { 'Content-Type' => 'application/json', 'X-meli-session-id' => '1a2b3c' }).returns(successful_purchase_response)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
   end
 
   def test_includes_additional_data
-    @options[:additional_info] = {'foo' => 'bar', 'baz' => 'quux'}
+    @options[:additional_info] = { 'foo' => 'bar', 'baz' => 'quux' }
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
-      if data =~ /payment_method_id/
+    end.check_request do |_endpoint, data, _headers|
+      if /payment_method_id/.match?(data)
         assert_match(/"foo":"bar"/, data)
         assert_match(/"baz":"quux"/, data)
       end
@@ -321,7 +339,7 @@ class MercadoPagoTest < Test::Unit::TestCase
   def test_includes_issuer_id
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(issuer_id: '1a2b3c4d'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |endpoint, data, _headers|
       assert_match(%r("issuer_id":"1a2b3c4d"), data) if endpoint =~ /payments/
     end.respond_with(successful_purchase_response)
 
@@ -337,7 +355,7 @@ class MercadoPagoTest < Test::Unit::TestCase
 
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(taxes: taxes_array))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |endpoint, data, _headers|
       single_pattern = "{\"value\":#{taxes_value},\"type\":\"#{taxes_type}\"}"
       pattern = "\"taxes\":[#{single_pattern},#{single_pattern}]"
       assert_match(pattern, data) if endpoint =~ /payments/
@@ -351,7 +369,7 @@ class MercadoPagoTest < Test::Unit::TestCase
 
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(taxes: taxes_object))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |endpoint, data, _headers|
       pattern = "\"taxes\":[{\"value\":#{taxes_value},\"type\":\"#{taxes_type}\"}]"
       assert_match(pattern, data) if endpoint =~ /payments/
     end.respond_with(successful_purchase_response)
@@ -362,7 +380,7 @@ class MercadoPagoTest < Test::Unit::TestCase
 
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(net_amount: net_amount))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |endpoint, data, _headers|
       assert_match("\"net_amount\":#{net_amount}", data) if endpoint =~ /payments/
     end.respond_with(successful_purchase_response)
   end
@@ -375,7 +393,7 @@ class MercadoPagoTest < Test::Unit::TestCase
 
     stub_comms do
       @gateway.authorize(@amount, @credit_card, @options.merge(taxes: taxes_array))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |endpoint, data, _headers|
       single_pattern = "{\"value\":#{taxes_value},\"type\":\"#{taxes_type}\"}"
       pattern = "\"taxes\":[#{single_pattern},#{single_pattern}]"
       assert_match(pattern, data) if endpoint =~ /payments/
@@ -389,7 +407,7 @@ class MercadoPagoTest < Test::Unit::TestCase
 
     stub_comms do
       @gateway.authorize(@amount, @credit_card, @options.merge(taxes: taxes_object))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |endpoint, data, _headers|
       pattern = "\"taxes\":[{\"value\":#{taxes_value},\"type\":\"#{taxes_type}\"}]"
       assert_match(pattern, data) if endpoint =~ /payments/
     end.respond_with(successful_authorize_response)
@@ -400,7 +418,7 @@ class MercadoPagoTest < Test::Unit::TestCase
 
     stub_comms do
       @gateway.authorize(@amount, @credit_card, @options.merge(net_amount: net_amount))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |endpoint, data, _headers|
       assert_match("\"net_amount\":#{net_amount}", data) if endpoint =~ /payments/
     end.respond_with(successful_authorize_response)
   end
@@ -574,6 +592,12 @@ class MercadoPagoTest < Test::Unit::TestCase
   def successful_authorize_response
     %(
       {"id":4261941,"date_created":"2017-07-13T14:24:46.000-04:00","date_approved":null,"date_last_updated":"2017-07-13T14:24:46.000-04:00","date_of_expiration":null,"money_release_date":null,"operation_type":"regular_payment","issuer_id":"25","payment_method_id":"visa","payment_type_id":"credit_card","status":"authorized","status_detail":"pending_capture","currency_id":"BRL","description":"Store Purchase","live_mode":false,"sponsor_id":null,"authorization_code":null,"related_exchange_rate":null,"collector_id":263489584,"payer":{"type":"guest","id":null,"email":"user+br@example.com","identification":{"type":null,"number":null},"phone":{"area_code":null,"number":null,"extension":null},"first_name":null,"last_name":null,"entity_type":null},"metadata":{},"additional_info":{"payer":{"address":{"zip_code":"K1C2N6","street_name":"My Street","street_number":"456"}}},"order":{"type":"mercadopago","id":"2294029672081601730"},"external_reference":null,"transaction_amount":5,"transaction_amount_refunded":0,"coupon_amount":0,"differential_pricing_id":null,"deduction_schema":null,"transaction_details":{"net_received_amount":0,"total_paid_amount":5,"overpaid_amount":0,"external_resource_url":null,"installment_amount":5,"financial_institution":null,"payment_method_reference_id":null,"payable_deferral_period":null,"acquirer_reference":null},"fee_details":[],"captured":false,"binary_mode":false,"call_for_authorize_id":null,"statement_descriptor":"WWW.MERCADOPAGO.COM","installments":1,"card":{"id":null,"first_six_digits":"450995","last_four_digits":"3704","expiration_month":9,"expiration_year":2018,"date_created":"2017-07-13T14:24:46.000-04:00","date_last_updated":"2017-07-13T14:24:46.000-04:00","cardholder":{"name":"Longbob Longsen","identification":{"number":null,"type":null}}},"notification_url":null,"refunds":[],"processing_mode":"aggregator","merchant_account_id":null,"acquirer":null,"merchant_number":null}
+    )
+  end
+
+  def successful_authorize_with_capture_option_response
+    %(
+      {"id":4261941,"date_created":"2017-07-13T14:24:46.000-04:00","date_approved":null,"date_last_updated":"2017-07-13T14:24:46.000-04:00","date_of_expiration":null,"money_release_date":null,"operation_type":"regular_payment","issuer_id":"25","payment_method_id":"visa","payment_type_id":"credit_card","status":"authorized","status_detail":"accredited","currency_id":"BRL","description":"Store Purchase","live_mode":false,"sponsor_id":null,"authorization_code":null,"related_exchange_rate":null,"collector_id":263489584,"payer":{"type":"guest","id":null,"email":"user+br@example.com","identification":{"type":null,"number":null},"phone":{"area_code":null,"number":null,"extension":null},"first_name":null,"last_name":null,"entity_type":null},"metadata":{},"additional_info":{"payer":{"address":{"zip_code":"K1C2N6","street_name":"My Street","street_number":"456"}}},"order":{"type":"mercadopago","id":"2294029672081601730"},"external_reference":null,"transaction_amount":5,"transaction_amount_refunded":0,"coupon_amount":0,"differential_pricing_id":null,"deduction_schema":null,"transaction_details":{"net_received_amount":0,"total_paid_amount":5,"overpaid_amount":0,"external_resource_url":null,"installment_amount":5,"financial_institution":null,"payment_method_reference_id":null,"payable_deferral_period":null,"acquirer_reference":null},"fee_details":[],"captured":false,"binary_mode":false,"call_for_authorize_id":null,"statement_descriptor":"WWW.MERCADOPAGO.COM","installments":1,"card":{"id":null,"first_six_digits":"450995","last_four_digits":"3704","expiration_month":9,"expiration_year":2018,"date_created":"2017-07-13T14:24:46.000-04:00","date_last_updated":"2017-07-13T14:24:46.000-04:00","cardholder":{"name":"Longbob Longsen","identification":{"number":null,"type":null}}},"notification_url":null,"refunds":[],"processing_mode":"aggregator","merchant_account_id":null,"acquirer":null,"merchant_number":null}
     )
   end
 

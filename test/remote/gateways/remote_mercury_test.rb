@@ -101,7 +101,7 @@ class RemoteMercuryTest < Test::Unit::TestCase
       },
       response.avs_result
     )
-    assert_equal({'code' => 'M', 'message' => 'CVV matches'}, response.cvv_result)
+    assert_equal({ 'code' => 'M', 'message' => 'CVV matches' }, response.cvv_result)
   end
 
   def test_avs_and_cvv_results_with_track_data
@@ -118,7 +118,7 @@ class RemoteMercuryTest < Test::Unit::TestCase
       },
       response.avs_result
     )
-    assert_equal({'code' => 'P', 'message' => 'CVV not processed'}, response.cvv_result)
+    assert_equal({ 'code' => 'P', 'message' => 'CVV not processed' }, response.cvv_result)
   end
 
   def test_partial_capture

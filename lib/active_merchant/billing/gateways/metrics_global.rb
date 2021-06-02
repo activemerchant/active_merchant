@@ -31,7 +31,7 @@ module ActiveMerchant #:nodoc:
       AVS_RESULT_CODE, TRANSACTION_ID, CARD_CODE_RESPONSE_CODE  = 5, 6, 38
 
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club jcb]
       self.homepage_url = 'http://www.metricsglobal.com'
       self.display_name = 'Metrics Global'
 
@@ -99,7 +99,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>money</tt> -- The amount to be captured as an Integer value in cents.
       # * <tt>authorization</tt> -- The authorization returned from the previous authorize request.
       def capture(money, authorization, options = {})
-        post = {trans_id: authorization}
+        post = { trans_id: authorization }
         add_customer_data(post, options)
         commit('PRIOR_AUTH_CAPTURE', money, post)
       end
@@ -110,7 +110,7 @@ module ActiveMerchant #:nodoc:
       #
       # * <tt>authorization</tt> - The authorization returned from the previous authorize request.
       def void(authorization, options = {})
-        post = {trans_id: authorization}
+        post = { trans_id: authorization }
         add_duplicate_window(post)
         commit('VOID', nil, post)
       end
@@ -136,7 +136,7 @@ module ActiveMerchant #:nodoc:
         requires!(options, :card_number)
 
         post = { trans_id: identification,
-                 card_num: options[:card_number]}
+                 card_num: options[:card_number] }
 
         post[:first_name] = options[:first_name] if options[:first_name]
         post[:last_name] = options[:last_name] if options[:last_name]
@@ -180,8 +180,7 @@ module ActiveMerchant #:nodoc:
           authorization: response[:transaction_id],
           fraud_review: fraud_review?(response),
           avs_result: { code: response[:avs_result_code] },
-          cvv_result: response[:card_code]
-        )
+          cvv_result: response[:card_code])
       end
 
       def success?(response)

@@ -44,8 +44,8 @@ module ActiveMerchant #:nodoc:
         'CUST_TOKEN' => :cust_token
       }
 
-      self.supported_countries = ['US', 'CA']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
+      self.supported_countries = %w[US CA]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club jcb]
       self.homepage_url        = 'http://www.bluepay.com/'
       self.display_name        = 'BluePay'
       self.money_format        = :dollars
@@ -332,7 +332,7 @@ module ActiveMerchant #:nodoc:
         parse(ssl_post(url, post_data(action, fields)))
       end
 
-      def parse_recurring(response_fields, opts={}) # expected status?
+      def parse_recurring(response_fields, opts = {}) # expected status?
         parsed = {}
         response_fields.each do |k, v|
           mapped_key = REBILL_FIELD_MAP.include?(k) ? REBILL_FIELD_MAP[k] : k
@@ -366,8 +366,7 @@ module ActiveMerchant #:nodoc:
           test: test?,
           authorization: (parsed[:rebid] && parsed[:rebid] != '' ? parsed[:rebid] : parsed[:transaction_id]),
           avs_result: { code: parsed[:avs_result_code] },
-          cvv_result: parsed[:card_code]
-        )
+          cvv_result: parsed[:card_code])
       end
 
       def message_from(parsed)
@@ -382,9 +381,9 @@ module ActiveMerchant #:nodoc:
           end
         elsif message == 'Missing ACCOUNT_ID'
           message = 'The merchant login ID or password is invalid'
-        elsif message =~ /Approved/
+        elsif /Approved/.match?(message)
           message = 'This transaction has been approved'
-        elsif message =~  /Expired/
+        elsif /Expired/.match?(message)
           message = 'The credit card has expired'
         end
         message

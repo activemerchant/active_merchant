@@ -4,6 +4,7 @@ class CheckTest < Test::Unit::TestCase
   VALID_ABA     = '111000025'
   INVALID_ABA   = '999999999'
   MALFORMED_ABA = 'I like fish'
+  VALID_CBA = '00194611'
 
   ACCOUNT_NUMBER = '123456789012'
 
@@ -77,5 +78,15 @@ class CheckTest < Test::Unit::TestCase
 
     c.account_type = nil
     assert !c.validate[:account_type]
+  end
+
+  def test_valid_canada_routing_number
+    assert_valid Check.new(
+      name: 'Tim Horton',
+      routing_number: VALID_CBA,
+      account_number: ACCOUNT_NUMBER,
+      account_holder_type: 'personal',
+      account_type: 'checking'
+    )
   end
 end

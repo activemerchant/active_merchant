@@ -10,7 +10,7 @@ class EpayTest < Test::Unit::TestCase
     )
 
     @credit_card = credit_card
-    @options = {three_d_secure: { eci: '7', xid: '123', cavv: '456', version: '2', ds_transaction_id: '798' }}
+    @options = { three_d_secure: { eci: '7', xid: '123', cavv: '456', version: '2', ds_transaction_id: '798' } }
   end
 
   def test_successful_purchase

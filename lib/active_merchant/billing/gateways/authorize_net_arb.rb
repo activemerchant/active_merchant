@@ -31,8 +31,8 @@ module ActiveMerchant #:nodoc:
 
       self.default_currency = 'USD'
 
-      self.supported_countries = ['US', 'CA', 'GB']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
+      self.supported_countries = %w[US CA GB]
+      self.supported_cardtypes = %i[visa master american_express discover diners_club jcb]
       self.homepage_url = 'http://www.authorize.net/'
       self.display_name = 'Authorize.Net'
 
@@ -82,9 +82,9 @@ module ActiveMerchant #:nodoc:
       #   +:interval => { :unit => :months, :length => 3 }+ (REQUIRED)
       # * <tt>:duration</tt> -- A hash containing keys for the <tt>:start_date</tt> the subscription begins (also the date the
       #   initial billing occurs) and the total number of billing <tt>:occurrences</tt> or payments for the subscription. (REQUIRED)
-      def recurring(money, creditcard, options={})
+      def recurring(money, creditcard, options = {})
         requires!(options, :interval, :duration, :billing_address)
-        requires!(options[:interval], :length, [:unit, :days, :months])
+        requires!(options[:interval], :length, %i[unit days months])
         requires!(options[:duration], :start_date, :occurrences)
         requires!(options[:billing_address], :first_name, :last_name)
 
@@ -110,7 +110,7 @@ module ActiveMerchant #:nodoc:
       #
       # * <tt>:subscription_id</tt> -- A string containing the <tt>:subscription_id</tt> of the recurring payment already in place
       #   for a given credit card. (REQUIRED)
-      def update_recurring(options={})
+      def update_recurring(options = {})
         requires!(options, :subscription_id)
         request = build_recurring_request(:update, options)
         recurring_commit(:update, request)
@@ -395,8 +395,7 @@ module ActiveMerchant #:nodoc:
 
         Response.new(success, message, response,
           test: test_mode,
-          authorization: response[:subscription_id]
-        )
+          authorization: response[:subscription_id])
       end
 
       def recurring_parse(action, xml)

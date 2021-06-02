@@ -20,7 +20,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['AU']
       self.homepage_url = 'http://www.commsecure.com.au/paysecure.shtml'
       self.display_name = 'PaySecure'
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express diners_club]
 
       def initialize(options = {})
         requires!(options, :login, :password)
@@ -70,8 +70,7 @@ module ActiveMerchant #:nodoc:
 
         Response.new(successful?(response), message_from(response), response,
           test: test_response?(response),
-          authorization: authorization_from(response)
-        )
+          authorization: authorization_from(response))
       end
 
       def successful?(response)
@@ -104,7 +103,7 @@ module ActiveMerchant #:nodoc:
         parameters[:merchant_id]      = @options[:login]
         parameters[:password]         = @options[:password]
 
-        parameters.reject { |k, v| v.blank? }.collect { |key, value| "#{key.to_s.upcase}=#{CGI.escape(value.to_s)}" }.join('&')
+        parameters.reject { |_k, v| v.blank? }.collect { |key, value| "#{key.to_s.upcase}=#{CGI.escape(value.to_s)}" }.join('&')
       end
     end
   end

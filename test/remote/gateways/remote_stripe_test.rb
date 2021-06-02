@@ -13,7 +13,7 @@ class RemoteStripeTest < Test::Unit::TestCase
     @check = check({
       bank_name: 'STRIPE TEST BANK',
       account_number: '000123456789',
-      routing_number: '110000000',
+      routing_number: '110000000'
     })
     @verified_bank_account = fixtures(:stripe_verified_bank_account)
 
@@ -46,7 +46,7 @@ class RemoteStripeTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_blank_referer
-    options = @options.merge({referrer: ''})
+    options = @options.merge({ referrer: '' })
     assert response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert_equal 'charge', response.params['object']
@@ -109,7 +109,7 @@ class RemoteStripeTest < Test::Unit::TestCase
         'product_description' => 'A totes different item',
         'tax_amount' => 10,
         'unit_cost' => 50,
-        'quantity' => 1,
+        'quantity' => 1
       }
     ]
 
@@ -178,6 +178,23 @@ class RemoteStripeTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @check, @options)
     assert_failure response
     assert_equal 'Direct bank account transactions are not supported. Bank accounts must be stored and verified before use.', response.message
+  end
+
+  def test_unsuccessful_echeck_auth_with_verified_account
+    customer_id = @verified_bank_account[:customer_id]
+    bank_account_id = @verified_bank_account[:bank_account_id]
+
+    payment = [customer_id, bank_account_id].join('|')
+
+    response = @gateway.authorize(@amount, payment, @options)
+    assert_failure response
+    assert_equal 'You cannot pass capture=false for this payment type.', response.message
+  end
+
+  def test_unsuccessful_direct_bank_account_auth
+    response = @gateway.authorize(@amount, @check, @options)
+    assert_failure response
+    assert_equal 'Direct bank account transactions are not supported for authorize.', response.message
   end
 
   def test_authorization_and_capture
@@ -502,7 +519,7 @@ class RemoteStripeTest < Test::Unit::TestCase
   end
 
   def test_successful_unstore
-    creation = @gateway.store(@credit_card, {description: 'Active Merchant Unstore Customer'})
+    creation = @gateway.store(@credit_card, { description: 'Active Merchant Unstore Customer' })
     card_id = creation.params['sources']['data'].first['id']
 
     assert response = @gateway.unstore(creation.authorization)
@@ -513,7 +530,7 @@ class RemoteStripeTest < Test::Unit::TestCase
   end
 
   def test_successful_unstore_using_deprecated_api
-    creation = @gateway.store(@credit_card, {description: 'Active Merchant Unstore Customer'})
+    creation = @gateway.store(@credit_card, { description: 'Active Merchant Unstore Customer' })
     card_id = creation.params['sources']['data'].first['id']
     customer_id = creation.params['id']
 
@@ -598,7 +615,7 @@ class RemoteStripeTest < Test::Unit::TestCase
   end
 
   def test_successful_update
-    creation    = @gateway.store(@credit_card, {description: 'Active Merchant Update Credit Card'})
+    creation    = @gateway.store(@credit_card, { description: 'Active Merchant Update Credit Card' })
     customer_id = creation.params['id']
     card_id     = creation.params['sources']['data'].first['id']
 

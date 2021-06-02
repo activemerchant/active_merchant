@@ -42,7 +42,7 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'MXN'
 
       # The card types supported by the payment gateway
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express diners_club]
 
       # The homepage URL of the gateway
       self.homepage_url = 'http://www.netpay.com.mx'
@@ -55,7 +55,7 @@ module ActiveMerchant #:nodoc:
       }
 
       # The header keys that we will provide in the response params hash
-      RESPONSE_KEYS = ['ResponseMsg', 'ResponseText', 'ResponseCode', 'TimeIn', 'TimeOut', 'AuthCode', 'OrderId', 'CardTypeName', 'MerchantId', 'IssuerAuthDate']
+      RESPONSE_KEYS = %w[ResponseMsg ResponseText ResponseCode TimeIn TimeOut AuthCode OrderId CardTypeName MerchantId IssuerAuthDate]
 
       def initialize(options = {})
         requires!(options, :store_id, :login, :password)

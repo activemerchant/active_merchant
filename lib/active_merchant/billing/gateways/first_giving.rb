@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://api.firstgiving.com'
 
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.homepage_url = 'http://www.firstgiving.com/'
       self.default_currency = 'USD'
       self.display_name = 'FirstGiving'
@@ -90,7 +90,7 @@ module ActiveMerchant #:nodoc:
         response
       end
 
-      def commit(action, post=nil)
+      def commit(action, post = nil)
         url = (test? ? self.test_url : self.live_url) + action
 
         begin

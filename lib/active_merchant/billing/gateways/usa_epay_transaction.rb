@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://www.usaepay.com/gate'
       self.test_url = 'https://sandbox.usaepay.com/gate'
 
-      self.supported_cardtypes  = [:visa, :master, :american_express]
+      self.supported_cardtypes  = %i[visa master american_express]
       self.supported_countries  = ['US']
       self.homepage_url         = 'http://www.usaepay.com/'
       self.display_name         = 'USA ePay'
@@ -198,7 +198,7 @@ module ActiveMerchant #:nodoc:
         post[:description]  = options[:description]
       end
 
-      def add_payment(post, payment, options={})
+      def add_payment(post, payment, options = {})
         if payment.respond_to?(:routing_number)
           post[:checkformat] = options[:check_format] if options[:check_format]
           if payment.account_type
@@ -279,7 +279,7 @@ module ActiveMerchant #:nodoc:
 
           {
             quantity: 'qty',
-            unit: 'um',
+            unit: 'um'
           }.each do |key, umkey|
             post["line#{index}#{umkey}"] = line_item[key.to_sym] if line_item.has_key?(key.to_sym)
           end
@@ -310,7 +310,7 @@ module ActiveMerchant #:nodoc:
           error_code: fields['UMerrorcode'],
           acs_url: fields['UMacsurl'],
           payload: fields['UMpayload']
-        }.delete_if { |k, v| v.nil? }
+        }.delete_if { |_k, v| v.nil? }
       end
 
       def commit(action, parameters)
@@ -324,8 +324,7 @@ module ActiveMerchant #:nodoc:
           authorization: response[:ref_num],
           cvv_result: response[:cvv2_result_code],
           avs_result: { code: response[:avs_result_code] },
-          error_code: error_code
-        )
+          error_code: error_code)
       end
 
       def message_from(response)

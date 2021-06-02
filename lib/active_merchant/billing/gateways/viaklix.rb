@@ -14,7 +14,7 @@ module ActiveMerchant #:nodoc:
 
       APPROVED = '0'
 
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.supported_countries = ['US']
       self.display_name = 'ViaKLIX'
       self.homepage_url = 'http://viaklix.com'
@@ -140,8 +140,7 @@ module ActiveMerchant #:nodoc:
           test: @options[:test] || test?,
           authorization: authorization_from(response),
           avs_result: { code: response['avs_response'] },
-          cvv_result: response['cvv2_response']
-        )
+          cvv_result: response['cvv2_response'])
       end
 
       def authorization_from(response)

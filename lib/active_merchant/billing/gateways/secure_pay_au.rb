@@ -15,7 +15,7 @@ module ActiveMerchant #:nodoc:
       self.live_periodic_url = 'https://api.securepay.com.au/xmlapi/periodic'
 
       self.supported_countries = ['AU']
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
+      self.supported_cardtypes = %i[visa master american_express diners_club jcb]
 
       # The homepage URL of the gateway
       self.homepage_url = 'http://securepay.com.au'
@@ -54,7 +54,7 @@ module ActiveMerchant #:nodoc:
         trigger:          nil
       }
 
-      SUCCESS_CODES = ['00', '08', '11', '16', '77']
+      SUCCESS_CODES = %w[00 08 11 16 77]
 
       def initialize(options = {})
         requires!(options, :login, :password)
@@ -185,8 +185,7 @@ module ActiveMerchant #:nodoc:
 
         Response.new(success?(response), message_from(response), response,
           test: test?,
-          authorization: authorization_from(response)
-        )
+          authorization: authorization_from(response))
       end
 
       def build_periodic_item(action, money, credit_card, options)
@@ -242,8 +241,7 @@ module ActiveMerchant #:nodoc:
 
         Response.new(success?(response), message_from(response), response,
           test: test?,
-          authorization: authorization_from(response)
-        )
+          authorization: authorization_from(response))
       end
 
       def success?(response)

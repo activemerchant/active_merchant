@@ -15,7 +15,7 @@ class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
       city: 'Broomfield',
       state: 'CO',
       zip: '85284',
-      phone: '(333) 444-5555',
+      phone: '(333) 444-5555'
     })
 
     @options = {
@@ -58,12 +58,12 @@ class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
     options = @options.dup
     options[:shipping_address] = {
       address1: '450 Main',
-      zip: '85284',
+      zip: '85284'
     }
 
     options[:billing_address] = {
       address1: '450 Main',
-      zip: '85284',
+      zip: '85284'
     }
 
     response = @gateway.purchase(@amount, @credit_card, options)
@@ -81,13 +81,13 @@ class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
     options[:shipping_address] = {
       address1: '450 Main',
       address2: '',
-      zip: '85284',
+      zip: '85284'
     }
 
     options[:billing_address] = {
       address1: '450 Main',
       address2: '',
-      zip: '85284',
+      zip: '85284'
     }
 
     response = @gateway.purchase(@amount, @credit_card, options)
