@@ -1,7 +1,8 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
-
+* PayTrace: Support gateway [meagabeth] #3985
+* vPOS: Support credit + refund [therufs] #3998
 
 == Version 1.121 (June 8th, 2021)
 * Braintree: Lift restriction on gem version to allow for backwards compatibility [naashton] #3993
@@ -11,7 +12,6 @@
 * Checkout v2: Support metadata field [saschakala] #3992
 * Adyen: Support networkTxReference field [naashton] #3997
 * Paypal Express: Enable PayPal express reference transaction request to send merchant session id [janees-e] #3994
-* PayTrace: Support gateway [meagabeth] #3985
 
 == Version 1.120.0 (May 28th, 2021)
 * Braintree: Bump required braintree gem version to 3.0.1
