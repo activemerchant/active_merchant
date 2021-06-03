@@ -28,7 +28,7 @@ class VposTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
 
-    assert_equal '701175', response.authorization
+    assert_equal '701175#233024225526089', response.authorization
     assert response.test?
   end
 
