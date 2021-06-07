@@ -239,7 +239,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_void_request(authorization, options)
-        build_order_modify_request(authorization, &:cancel)
+        if options[:cancel_or_refund]
+          build_order_modify_request(authorization, &:cancelOrRefund)
+        else
+          build_order_modify_request(authorization, &:cancel)
+        end
       end
 
       def build_refund_request(money, authorization, options)

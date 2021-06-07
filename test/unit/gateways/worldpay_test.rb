@@ -704,6 +704,24 @@ class WorldpayTest < Test::Unit::TestCase
     end.respond_with(successful_refund_inquiry_response('SENT_FOR_REFUND'), successful_cancel_or_refund_response)
   end
 
+  def test_cancel_or_refund_with_void
+    stub_comms do
+      @gateway.void(@options[:order_id], @options)
+    end.check_request do |_endpoint, data, _headers|
+      next if data =~ /<inquiry>/
+
+      refute_match(/<cancelOrRefund\/>/, data)
+    end.respond_with(successful_refund_inquiry_response, successful_refund_response)
+
+    stub_comms do
+      @gateway.void(@options[:order_id], @options.merge(cancel_or_refund: true))
+    end.check_request do |_endpoint, data, _headers|
+      next if data =~ /<inquiry>/
+
+      assert_match(/<cancelOrRefund\/>/, data)
+    end.respond_with(successful_refund_inquiry_response('SENT_FOR_REFUND'), successful_cancel_or_refund_response)
+  end
+
   def test_successful_verify
     @gateway.expects(:ssl_post).times(2).returns(successful_authorize_response, successful_void_response)
 
