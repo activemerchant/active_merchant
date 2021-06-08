@@ -855,6 +855,20 @@ class AdyenTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_authorize_and_capture_with_network_transaction_id
+    auth = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.respond_with(successful_authorize_response_with_network_tx_ref)
+    assert_equal auth.network_transaction_id, '858435661128555'
+
+    response = stub_comms do
+      @gateway.capture(@amount, auth.authorization, @options.merge(network_transaction_id: auth.network_transaction_id))
+    end.check_request do |_, data, _|
+      assert_match(/"networkTxReference":"#{auth.network_transaction_id}"/, data)
+    end.respond_with(successful_capture_response)
+    assert_success response
+  end
+
   def test_authorize_with_sub_merchant_id
     sub_merchant_data = {
       sub_merchant_id: '123451234512345',
@@ -1167,6 +1181,34 @@ class AdyenTest < Test::Unit::TestCase
       "resultCode":"Authorised",
       "authCode":"50055"
     }
+    RESPONSE
+  end
+
+  def successful_authorize_response_with_network_tx_ref
+    <<~RESPONSE
+      {
+        "additionalData": {
+          "liabilityShift": "false",
+          "authCode": "034788",
+          "avsResult": "2 Neither postal code nor address match",
+          "adjustAuthorisationData": "BQABAQAd37r69soYRcrrGlBumyPHvhurCKvze1aPCT2fztlUyUZZ0+5YZgh/rlmBjM9FNCm3Emv4awkiFXyaMJ4x+Jc7eGJpCaB9oq1QTkeMIw4yjvblij8nBmj8OIloKN/sKVF1WD4tSSC6ybgz0/ZxVZpn+l4TDcHJfGIYfELax7sMFfjGR6HEGw1Ac0we4FcLltxLL8x/aRRGOaadBO74wpvl8aatVYvgVKh42f09ovChJlDvcoIifAopkp5RxuzN1wqcad+ScHZsriVJVySuXgguAaLmEBpF6y/LQfej1pRW+zEEjYgFzrnbP+giWomBQcyY2mCnf6cBwVaeddavLSv6EMcmuplIfUPGDSr7NygJ2wkAAAEZmz6JwmlAmPoKMsuJPnnRNSBdG2EKTRBU139U2ytJuK8hVXNJc98A7bylLQqRc9zjSxJAOdX+KdaEY4KNASUqovgZ1ylPnRt/FYOqfraZcyQtl9otJjTl9oQkgSdfFeQEKg6OD9VVMzObShBEjuVFuT6HAAujEl79i1eS7QhD0w4/c8zW6tsSF29gbr7CPi/CHudeUuFHBPWGQ/NoIQXYKD+TfU+mKyPq0w8NYRdQyIiTHXHppDfrBJFbyCfE3+Dm80KKt3Kf94jvIs4xawFPURiB73GEELHufROqBQwPThWETrnTC0MwzdGB5r1KwKCtSPcV0V1zKd6pVEbjJjUvuE/9z5KaaSK8CwlHmMQcAlkYEpEmaY5bZ21gghsub9ukn/xcIhoERPi39ahnDya5thX+/+IyihGpRCIq3zMPkGKCqTokDRTv8tOK+6CMUlNbnnF95G4Kkar7lbbhxsHtElCsuVziBuoYt8n/l562uSx669+lkJ0X1w6yDPrsU9gWXkZQ8uozxKVdLIB2n0apQp8syqJ7I5atgyLnFYFnuIxW58D4evPdD5pO1d3DlCTA9DT8Df8kPRdIXNol4+skrTrP8YwMjvm3HZGusffseF0nNhOormhWdBSYIX89mu4uUus=",
+          "retry.attempt1.acquirerAccount": "TestPmmAcquirerAccount",
+          "threeDOffered": "false",
+          "retry.attempt1.avsResultRaw": "2",
+          "retry.attempt1.acquirer": "TestPmmAcquirer",
+          "networkTxReference": "858435661128555",
+          "authorisationMid": "1000",
+          "acquirerAccountCode": "TestPmmAcquirerAccount",
+          "cvcResult": "1 Matches",
+          "retry.attempt1.responseCode": "Approved",
+          "recurringProcessingModel": "Subscription",
+          "threeDAuthenticated": "false",
+          "retry.attempt1.rawResponse": "AUTHORISED"
+        },
+        "pspReference": "853623109930081E",
+        "resultCode": "Authorised",
+        "authCode": "034788"
+      }
     RESPONSE
   end
 

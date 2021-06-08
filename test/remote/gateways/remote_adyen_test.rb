@@ -1114,6 +1114,15 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_success purchase
   end
 
+  def test_auth_and_capture_with_network_txn_id
+    initial_options = stored_credential_options(:merchant, :recurring, :initial)
+    assert auth = @gateway.authorize(@amount, @credit_card, initial_options)
+    assert_success auth
+
+    capture = @gateway.capture(@amount, auth.authorization, { network_transaction_id: auth.network_transaction_id })
+    assert_success capture
+  end
+
   def test_successful_authorize_with_sub_merchant_data
     sub_merchant_data = {
       sub_merchant_id: '123451234512345',
