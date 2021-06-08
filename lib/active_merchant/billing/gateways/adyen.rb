@@ -397,6 +397,7 @@ module ActiveMerchant #:nodoc:
       def add_reference(post, authorization, options = {})
         _, psp_reference, = authorization.split('#')
         post[:originalReference] = single_reference(authorization) || psp_reference
+        post[:networkTxReference] = options[:network_transaction_id] if options[:network_transaction_id]
       end
 
       def add_original_reference(post, authorization, options = {})
@@ -511,6 +512,7 @@ module ActiveMerchant #:nodoc:
           raw_response = e.response.body
           response = parse(raw_response)
         end
+
         success = success_from(action, response, options)
         Response.new(
           success,
@@ -519,6 +521,7 @@ module ActiveMerchant #:nodoc:
           authorization: authorization_from(action, parameters, response),
           test: test?,
           error_code: success ? nil : error_code_from(response),
+          network_transaction_id: network_transaction_id_from(response),
           avs_result: AVSResult.new(code: avs_code_from(response)),
           cvv_result: CVVResult.new(cvv_result_from(response))
         )
@@ -619,6 +622,10 @@ module ActiveMerchant #:nodoc:
 
       def error_code_from(response)
         STANDARD_ERROR_CODE_MAPPING[response['errorCode']]
+      end
+
+      def network_transaction_id_from(response)
+        response.dig('additionalData', 'networkTxReference')
       end
 
       def add_browser_info(browser_info, post)
