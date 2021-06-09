@@ -34,6 +34,8 @@ module ActiveMerchant
       end
 
       def purchase(options)
+        return failed_order_response(options) if options[:order_failure_message].present?
+
         MultiResponse.new.tap do |r|
           order_exists = nil
           r.process do
@@ -162,6 +164,13 @@ module ActiveMerchant
         else
           ActiveMerchant::Billing::Response.new(false, "Customer '#{customer_vault_id}' not found", {exists: false})
         end
+      end
+
+      def failed_order_response(options)
+        ActiveMerchant::Billing::Response.new(
+          false,
+          options[:order_failure_message]
+        )
       end
 
       def headers(options)

@@ -153,6 +153,12 @@ class DigitalRiverTest < Test::Unit::TestCase
     assert_equal "A parameter is missing. (missing_parameter)", response.message
   end
 
+  def test_unsuccessful_purchase_passed_order_failure_message
+    assert response = @gateway.purchase(order_failure_message: 'Order failed')
+    assert_failure response
+    assert_equal "Order failed", response.message
+  end
+
   def test_purchase_with_order_in_review_state
     DigitalRiver::ApiClient
       .expects(:get)
