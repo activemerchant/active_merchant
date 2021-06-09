@@ -106,15 +106,15 @@ res = gateway.auto({
         :threeDSReqAuthMethod => '01', #???
         :threeDSReqAuthType => 'CIT', #??? W: CIT WO:MIT rec : REC
         :browser => {   #IF CIT
-            :accept: ''
-            :agent: ''
-            :ip => '127.0.01'
-            :java: 'navigator.javaEnabled()'
-            :lang => 'navigator.language'
-            :color => 'screen.colorDepth'
-            :height => 'screen.height'
-            :width => 'screen.width'
-            :tz => ' new Date().getTimezoneOffset()'
+            :accept => '',
+            :agent => '',
+            :ip => '127.0.01',
+            :java => 'navigator.javaEnabled()',
+            :lang => 'navigator.language',
+            :color => 'screen.colorDepth',
+            :height => 'screen.height',
+            :width => 'screen.width',
+            :tz => ' new Date().getTimezoneOffset()',
         },
         :address => {
             :name =>  'myname',
@@ -127,6 +127,11 @@ res = gateway.auto({
             :address2 => 'Address u.2',
             :phone => '06301111111'
         }
+    },
+    :threeDSExternal => {
+        :xid => "01234567980123456789",
+        :eci => "01",
+        :cavv => "ABCDEF"
     }
 })
 

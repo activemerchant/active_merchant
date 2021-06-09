@@ -12,7 +12,9 @@ module ActiveMerchant #:nodoc:
         :capture     => 'https://sandbox.simplepay.hu/payment/v2/finish',
         :refund      => 'https://sandbox.simplepay.hu/payment/v2/refund',
         :query       => 'https://sandbox.simplepay.hu/payment/v2/query',
+
         :auto        => 'https://sandbox.simplepay.hu/pay/pay/auto/pspHU',
+        
         :do          => 'https://sandbox.simplepay.hu/payment/v2/do',
         :dorecurring => 'https://sandbox.simplepay.hu/payment/v2/dorecurring',
         :cardquery   => 'https://sandbox.simplepay.hu/payment/v2/cardquery',
@@ -393,10 +395,10 @@ module ActiveMerchant #:nodoc:
               post[:threeDSReqAuthMethod] = options[:threeDS][:threeDSReqAuthMethod]
               post[:threeDSReqAuthType]   = options[:threeDS][:threeDSReqAuthType]
               post[:browser] = {
-                :accept: options[:threeDS][:browser][:accept],
-                :agent: options[:threeDS][:browser][:agent],
+                :accept  => options[:threeDS][:browser][:accept],
+                :agent  => options[:threeDS][:browser][:agent],
                 :ip => options[:threeDS][:browser][:ip],
-                :java: options[:threeDS][:browser][:java],
+                :java  => options[:threeDS][:browser][:java],
                 :lang => options[:threeDS][:browser][:lang],
                 :color => options[:threeDS][:browser][:color],
                 :height => options[:threeDS][:browser][:height],
