@@ -394,17 +394,19 @@ module ActiveMerchant #:nodoc:
             if options.key?(:threeDS)
               post[:threeDSReqAuthMethod] = options[:threeDS][:threeDSReqAuthMethod]
               post[:threeDSReqAuthType]   = options[:threeDS][:threeDSReqAuthType]
-              post[:browser] = {
-                :accept  => options[:threeDS][:browser][:accept],
-                :agent  => options[:threeDS][:browser][:agent],
-                :ip => options[:threeDS][:browser][:ip],
-                :java  => options[:threeDS][:browser][:java],
-                :lang => options[:threeDS][:browser][:lang],
-                :color => options[:threeDS][:browser][:color],
-                :height => options[:threeDS][:browser][:height],
-                :width => options[:threeDS][:browser][:width],
-                :tz => options[:threeDS][:browser][:tz]
-              }
+              if options[:threeDS].key?(:browser)
+                post[:browser] = {
+                  :accept  => options[:threeDS][:browser][:accept],
+                  :agent  => options[:threeDS][:browser][:agent],
+                  :ip => options[:threeDS][:browser][:ip],
+                  :java  => options[:threeDS][:browser][:java],
+                  :lang => options[:threeDS][:browser][:lang],
+                  :color => options[:threeDS][:browser][:color],
+                  :height => options[:threeDS][:browser][:height],
+                  :width => options[:threeDS][:browser][:width],
+                  :tz => options[:threeDS][:browser][:tz]
+                }
+              end
             end
         end
       end

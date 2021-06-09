@@ -18,76 +18,73 @@ gateway = ActiveMerchant::Billing::SimplePayGateway.new(
 #    :timeout => 'https://sdk.simplepay.hu/timeout.php'
 #}
 
-# res = gateway.purchase({
-#     :ammount => 2000,
-#     :email => 'email@email.hu',
-#     :threeDSReqAuthMethod => '01', #???
-#     :address => {
-#         :name =>  'myname',
-#         :company => 'company',
-#         :country => 'HU',
-#         :state => 'Budapest',
-#         :city => 'Budapest',
-#         :zip => '1111',
-#         :address1 => 'Address u.1',
-#         :address2 => 'Address u.2',
-#         :phone => '06301111111'
-#     },
-#     :items => [     #optional
-#         {
-#         :ref => "Product ID 2",
-#         :title => "Product name 2",
-#         :description => "Product description 2",
-#         :amount => "2",
-#         :price => "5",
-#         :tax => "0"
-#         }
-#     ]
-# })
+res = gateway.purchase({
+    :ammount => 2000,
+    :email => 'email@email.hu',
+    :threeDSReqAuthMethod => '01', #???
+    :address => {
+        :name =>  'myname',
+        :company => 'company',
+        :country => 'HU',
+        :state => 'Budapest',
+        :city => 'Budapest',
+        :zip => '1111',
+        :address1 => 'Address u.1',
+        :address2 => 'Address u.2',
+        :phone => '06301111111'
+    },
+    :items => [     #optional
+        {
+        :ref => "Product ID 2",
+        :title => "Product name 2",
+        :description => "Product description 2",
+        :amount => "2",
+        :price => "5",
+        :tax => "0"
+        }
+    ]
+})
 
-# res = gateway.authorize({
-#     :ammount => 2000,
-#     :email => 'email@email.hu',
-#     :threeDSReqAuthMethod => '01', #???
-#     :address => {
-#         :name =>  'myname',
-#         :company => 'company',
-#         :country => 'HU',
-#         :state => 'Budapest',
-#         :city => 'Budapest',
-#         :zip => '1111',
-#         :address1 => 'Address u.1',
-#         :address2 => 'Address u.2',
-#         :phone => '06301111111'
-#     },
-#     :items => [     #optional
-#         {
-#         :ref => "Product ID 2",
-#         :title => "Product name 2",
-#         :description => "Product description 2",
-#         :amount => "2",
-#         :price => "5",
-#         :tax => "0"
-#         }
-#     ]
-# })
-
-# res = gateway.capture({
-#     :orderRef = 'someRef',
-#     :originalTotal => 2000,
-#     :approveTotal => 1800
-# })
-
-# res = gateway.refund({
-#     :orderRef = 'someRef',
-#     :refundTotal => 2000
-# })
-
-# res = gateway.query({
-#     :transactionIds = ['id1', 'id2'],
-#     :detailed = true,   #optional
-#     :refunds = true     #optional
-# })
+res = gateway.authorize({
+    :ammount => 2000,
+    :email => 'email@email.hu',
+    :threeDSReqAuthMethod => '01', #???
+    :address => {
+        :name =>  'myname',
+        :company => 'company',
+        :country => 'HU',
+        :state => 'Budapest',
+        :city => 'Budapest',
+        :zip => '1111',
+        :address1 => 'Address u.1',
+        :address2 => 'Address u.2',
+        :phone => '06301111111'
+    },
+    :items => [     #optional
+        {
+        :ref => "Product ID 2",
+        :title => "Product name 2",
+        :description => "Product description 2",
+        :amount => "2",
+        :price => "5",
+        :tax => "0"
+        }
+    ]
+})
+res = gateway.capture({
+    :orderRef = 'someRef',
+    :originalTotal => 2000,
+    :approveTotal => 1800
+})
+res = gateway.refund({
+    :orderRef = 'someRef',
+    :refundTotal => 2000
+})
+res = gateway.query({
+    :transactionIds = ['id1', 'id2'],
+    :detailed = true,   #optional
+    :refunds = true     #optional
+})
 
 credit_card = ActiveMerchant::Billing::CreditCard.new(
   :number     => '4908366099900425',

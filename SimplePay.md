@@ -38,12 +38,12 @@ gateway = ActiveMerchant::Billing::SimplePayGateway.new(
 
 The gateways provides these methods for making transactions
     
-* purchase()
-* authorize()
-* capture()
-* refund()
-* query()
-* auto()
+* [purchase()](#purchase)
+* [authorize()](#authorize)
+* [capture()](#capture)
+* [refund()](#refund)
+* [query()](#query)
+* [auto()](#auto)
 
 ## Responses
 
@@ -54,7 +54,7 @@ res.message
 
 ### **purchase()**
 
-After sucessfull call, the response message will contain a :redirectURL, where the customer should be redirected, to finish the transaction.
+After sucessfull call, the response message will contain a *:redirectURL*, where the customer should be redirected, to finish the transaction.
 
 In case if collecting the card data, transaction is possible without redirection.
 [See auto method](#auto)
@@ -92,20 +92,23 @@ res = gateway.purchase({
 
 ### **auto()**
 
+**DISCLAIMER!**
+**The merchant system must achieve audited PCI-DSS compliance, too.**
+**Please don’t develop this function if your system does not meet these requirements.**
+
 threeDSReqAuthMethod: 
-* 01 - 
-* 02 - 
-* 05 - 
+* 01 - guest
+* 02 - registered with the merchant
+* 05 - registered with a third party ID (Google, Facebook, account, etc.) 
 
 threeDSReqAuthType: 
 * CIT - The customer is present.
 * MIT - The customer is not present.
 * REC - Recurring payment.
 
-In case of **CIT** type :browser is requiered, otherwise it shouldnt be included.
+In case of **CIT** type *:browser* is requiered and the response could contain a redirectURL for the challange.
 
-threeDSExternal:
-It is possible to use external 3DS challange option
+In case of MIT or REC the *:browser*, should not be included.
 
 ```ruby
 credit_card = ActiveMerchant::Billing::CreditCard.new(
@@ -134,25 +137,35 @@ res = gateway.auto({
             :height => 'screen.height',
             :width => 'screen.width',
             :tz => ' new Date().getTimezoneOffset()',
-        },
-        :address => {
-            :name =>  'myname',
-            :company => 'company',
-            :country => 'HU',
-            :state => 'Budapest',
-            :city => 'Budapest',
-            :zip => '1111',
-            :address1 => 'Address u.1',
-            :address2 => 'Address u.2',
-            :phone => '06301111111'
         }
     },
-    :threeDSExternal => {
-        :xid => "01234567980123456789",
-        :eci => "01",
-        :cavv => "ABCDEF"
+    :address => {
+        :name =>  'myname',
+        :company => 'company',
+        :country => 'HU',
+        :state => 'Budapest',
+        :city => 'Budapest',
+        :zip => '1111',
+        :address1 => 'Address u.1',
+        :address2 => 'Address u.2',
+        :phone => '06301111111'
     }
 })
+```
+
+threeDSExternal:
+It is possible to use external 3DS challange option, insead of *:threeDS*.
+
+* xid - XID, unique identifier generated for the identification request
+* eci - ECI (e-commerce indicator) the security level of the transaction which can be received in the form returned by the MPI )
+* cavv - CAVV/AAV/AEV, a cryptogram verifying identification or an attempted identification, in raw format
+
+```ruby
+:threeDSExternal => {
+    :xid => "01234567980123456789",
+    :eci => "01",
+    :cavv => "ABCDEF"
+}
 ```
 
 ### **authorize()**
@@ -161,9 +174,9 @@ As same as the **purchase()** method, except the transaction won't happen until 
 
 ### **capture()**
 
-:orderRef - On successfull authorization the response's message containt the reference number.
-:originalTotal - The authorized ammount
-:approveTotal - The ammount should be captured
+* *:orderRef* - On successfull authorization the response's message containt the reference number.
+* *:originalTotal* - The authorized ammount
+* *:approveTotal* - The ammount should be captured
 
 ```ruby
 res = gateway.capture({
@@ -173,10 +186,10 @@ res = gateway.capture({
 })
 ```
 
-### **capture()**
+### **refund()**
 
-:orderRef - On successfull authorization the response's message containt the reference number.
-:refundTotal - The ammount that should be refunded.
+* *:orderRef* - On successfull authorization the response's message containt the reference number.
+* *:refundTotal* - The ammount that should be refunded.
 
 ```ruby
 res = gateway.refund({
@@ -187,9 +200,9 @@ res = gateway.refund({
 
 ### **query()**
 
-:transactionIds - Transaction id's that we are querying for.
-:detailed - Do we need detailed informations?
-:refunds - Are refunds should be included?
+* *:transactionIds* - Transaction id's that we are querying for.
+* *:detailed* - Do we need detailed informations?
+* *:refunds* - Are refunds should be included?
 
 ```ruby
 res = gateway.query({
