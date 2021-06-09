@@ -38,12 +38,12 @@ gateway = ActiveMerchant::Billing::SimplePayGateway.new(
 
 The gateways provides these methods for making transactions
     
-    *purchase()
-    *authorize()
-    *capture()
-    *refund()
-    *query()
-    *auto()
+    * purchase()
+    * authorize()
+    * capture()
+    * refund()
+    * query()
+    * auto()
 
 ## Responses
 
@@ -88,14 +88,14 @@ res = gateway.purchase({
 ### **auto()**
 
 threeDSReqAuthMethod: 
-    *01 - 
-    *02 - 
-    *05 - 
+    * 01 - 
+    * 02 - 
+    * 05 - 
 
 threeDSReqAuthType: 
-    *CIT - The customer is present.
-    *MIT - The customer is not present.
-    *REC - Recurring payment.
+    * CIT - The customer is present.
+    * MIT - The customer is not present.
+    * REC - Recurring payment.
 
 In case of **CIT** type :browser is requiered, otherwise it shouldnt be included.
 
