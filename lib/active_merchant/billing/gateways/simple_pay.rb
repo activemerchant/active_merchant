@@ -11,7 +11,8 @@ module ActiveMerchant #:nodoc:
         :authorize   => 'https://sandbox.simplepay.hu/payment/v2/start',
         :capture     => 'https://sandbox.simplepay.hu/payment/v2/finish',
         :refund      => 'https://sandbox.simplepay.hu/payment/v2/refund',
-        :query       => 'https://sandbox.simplepay.hu/payment/v2/query'
+        :query       => 'https://sandbox.simplepay.hu/payment/v2/query',
+        :auto        => 'https://sandbox.simplepay.hu/pay/pay/auto/pspHU',
         :do          => 'https://sandbox.simplepay.hu/payment/v2/do',
         :dorecurring => 'https://sandbox.simplepay.hu/payment/v2/dorecurring',
         :cardquery   => 'https://sandbox.simplepay.hu/payment/v2/cardquery',
@@ -194,25 +195,25 @@ module ActiveMerchant #:nodoc:
       def authorize(options = {})
         post = {}
         generate_post_data(:authorize, post, options)
-        commit(:authorize, JSON[post]))
+        commit(:authorize, JSON[post])
       end
 
       def capture(options = {})
         post = {}
         generate_post_data(:capture, post, options)
-        commit(:capture, JSON[post]))
+        commit(:capture, JSON[post])
       end
 
       def refund(options = {})
         post = {}
         generate_post_data(:refund, post, options)
-        commit(:refund, JSON[post]))
+        commit(:refund, JSON[post])
       end
 
       def query(options = {})
         post = {}
         generate_post_data(:query, post, options)
-        commit(:query, JSON[post]))
+        commit(:query, JSON[post])
       end
 
       def void(authorization, options = {})
@@ -234,6 +235,12 @@ module ActiveMerchant #:nodoc:
           :sdkVersion => self.sdkVersion
         }
         return JSON[post]
+      end
+
+      def auto(options = {})
+        post = {}  
+        generate_post_data(:auto, post, options)
+        commit(:auto, JSON[post])
       end
 
       private
@@ -335,6 +342,9 @@ module ActiveMerchant #:nodoc:
             post[:refundTotal] = options[:refundTotal]
             post[:currency] = self.default_currency
             post[:sdkVersion] = self.sdkVersion
+          
+          
+          
           when :query
             post[:salt] = generate_salt()
             post[:merchant] = @options[:merchantID]
@@ -345,6 +355,54 @@ module ActiveMerchant #:nodoc:
             end
             if options.key?(:refund)
               post[:refund] = options[:refund]
+            end
+          when :auto
+            post[:salt] = generate_salt()
+            post[:merchant] = @options[:merchantID]
+            post[:orderRef] = generate_order_ref()
+            post[:currency] = self.default_currency
+            post[:customerEmail] = options[:email]
+            post[:language] = self.language
+            post[:sdkVersion] = self.sdkVersion
+            post[:methods] = ['CARD']
+            post[:total] = options[:ammount]
+            post[:timeout] = generate_timeout
+            post[:url] = @options[:redirectURL]
+            post[:twoStep] = false
+            post[:cardData] = {
+              :number => options[:credit_card].number,
+              :expiry => expdate(options[:credit_card]),
+              :cvc => options[:credit_card].verification_value,
+              :holder => options[:credit_card].first_name + ' ' + options[:credit_card].last_name
+            }
+            post[:invoice] = {
+              :name     => options[:address][:name],
+              :company  => options[:address][:company],
+              :country  => options[:address][:country],
+              :state    => options[:address][:state],
+              :city     => options[:address][:city],
+              :zip      => options[:address][:zip],
+              :address  => options[:address][:address1],
+              :address2 => options[:address][:address2],
+              :phone    => options[:address][:phone]
+            }
+            if options.key?(:items)
+              post[:items] = options[:items]
+            end
+            if options.key?(:threeDS)
+              post[:threeDSReqAuthMethod] = options[:threeDS][:threeDSReqAuthMethod]
+              post[:threeDSReqAuthType]   = options[:threeDS][:threeDSReqAuthType]
+              post[:browser] = {
+                :accept: options[:threeDS][:browser][:accept],
+                :agent: options[:threeDS][:browser][:agent],
+                :ip => options[:threeDS][:browser][:ip],
+                :java: options[:threeDS][:browser][:java],
+                :lang => options[:threeDS][:browser][:lang],
+                :color => options[:threeDS][:browser][:color],
+                :height => options[:threeDS][:browser][:height],
+                :width => options[:threeDS][:browser][:width],
+                :tz => options[:threeDS][:browser][:tz]
+              }
             end
         end
       end
@@ -358,6 +416,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, parameters)
+        puts parameters
         url = (test? ? test_url[action] : live_url[action])
         headers = parseHeaders(@options[:merchantKEY], parameters)
         response = JSON[ssl_post(url, parameters, headers)]
@@ -366,7 +425,7 @@ module ActiveMerchant #:nodoc:
 
         Response.new(
           success_from(response),
-          message_from(response),
+          response,
           response,
           authorization: authorization_from(response),
           #avs_result: AVSResult.new(code: response['some_avs_response_key']),
@@ -389,7 +448,7 @@ module ActiveMerchant #:nodoc:
             response["errorCodes"].each do |error|
               errors << STANDARD_ERROR_CODE_MAPPING[error.to_s]
             end
-          return errors
+            return errors
           rescue => exception
             return 'An error occurred.'
           end
