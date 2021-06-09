@@ -2,22 +2,44 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class SimplePayGateway < Gateway
 
+      require 'json'
       require 'base64'
       require 'openssl'
-      require 'json'
 
-      self.test_url = 'https://sandbox.simplepay.hu/payment/v2/start'
-      self.live_url = 'https://example.com/live'
+      self.test_url = {
+        :start       => 'https://sandbox.simplepay.hu/payment/v2/start',
+        :authorize   => 'https://sandbox.simplepay.hu/payment/v2/start',
+        :capture     => 'https://sandbox.simplepay.hu/payment/v2/finish',
+        :refund      => 'https://sandbox.simplepay.hu/payment/v2/refund',
+        :query       => 'https://sandbox.simplepay.hu/payment/v2/query'
+        :do          => 'https://sandbox.simplepay.hu/payment/v2/do',
+        :dorecurring => 'https://sandbox.simplepay.hu/payment/v2/dorecurring',
+        :cardquery   => 'https://sandbox.simplepay.hu/payment/v2/cardquery',
+        :cardcancel  => 'https://sandbox.simplepay.hu/payment/v2/cardcancel',
+        :tokenquery  => 'https://sandbox.simplepay.hu/payment/v2/tokenquery',
+        :tokencancel => 'https://sandbox.simplepay.hu/payment/v2/tokencancel'
+      }
+      self.live_url = {
+        :start       => 'https://secure.simplepay.hu/payment/v2/start',
+        :do          => 'https://secure.simplepay.hu/payment/v2/do',
+        :dorecurring => 'https://secure.simplepay.hu/payment/v2/dorecurring',
+        :cardquery   => 'https://secure.simplepay.hu/payment/v2/cardquery',
+        :cardcancel  => 'https://secure.simplepay.hu/payment/v2/cardcancel',
+        :tokenquery  => 'https://secure.simplepay.hu/payment/v2/tokenquery',
+        :tokencancel => 'https://secure.simplepay.hu/payment/v2/tokencancel'
+      }
 
       self.supported_countries = ['HU']
       self.default_currency = 'HUF'
       self.money_format = 'cents'
-      self.supported_cardtypes = %i[visa master american_express discover]
-      @@sdkVersion = 'SimplePayV2.1_Payment_PHP_SDK_2.0.7_190701:dd236896400d7463677a82a47f53e36e'
-      @@language = 'HU'
-
+      self.supported_cardtypes = %i[visa master maestro american_express]
       self.homepage_url = 'https://simplepay.hu/'
       self.display_name = 'Simple Pay'
+
+      class_attribute :sdkVersion, :language, :allowed_ip
+      self.sdkVersion = 'SimplePayV2.1_Payment_PHP_SDK_2.0.7_190701:dd236896400d7463677a82a47f53e36e'
+      self.language = 'HU'
+      self.allowed_ip = '94.199.53.96'
 
       STANDARD_ERROR_CODE_MAPPING = {
         '0'    => 'Sikeres művelet',
@@ -159,33 +181,38 @@ module ActiveMerchant #:nodoc:
       }
 
       def initialize(options = {})
-        requires!(options, :merchantID, :merchantKey, :redirectURL)
+        requires!(options, :merchantID, :merchantKEY, :redirectURL)
         super
       end
 
       def purchase(options = {})
         post = {}  
-        generate_purchase_data(post, options)
-        return JSON[post]
-        #commit('start', post)
+        generate_post_data(:start, post, options)
+        commit(:start, JSON[post])
       end
 
-      def authorize(money, payment, options = {})
+      def authorize(options = {})
         post = {}
-        add_invoice(post, money, options)
-        add_payment(post, payment)
-        add_address(post, payment, options)
-        add_customer_data(post, options)
-
-        commit('authonly', post)
+        generate_post_data(:authorize, post, options)
+        commit(:authorize, JSON[post]))
       end
 
-      def capture(money, authorization, options = {})
-        commit('capture', post)
+      def capture(options = {})
+        post = {}
+        generate_post_data(:capture, post, options)
+        commit(:capture, JSON[post]))
       end
 
-      def refund(money, authorization, options = {})
-        commit('refund', post)
+      def refund(options = {})
+        post = {}
+        generate_post_data(:refund, post, options)
+        commit(:refund, JSON[post]))
+      end
+
+      def query(options = {})
+        post = {}
+        generate_post_data(:query, post, options)
+        commit(:query, JSON[post]))
       end
 
       def void(authorization, options = {})
@@ -199,31 +226,27 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def supports_scrubbing?
-        true
-      end
-
-      def scrub(transcript)
-        transcript
-      end
-
-      def parseHeaderss(key, message)
-        return {
-          'Content-type' => 'application/json',
-          'Signature' => Base64.encode64(OpenSSL::HMAC.hexdigest(OpenSSL::Digest.new('sha384'), key, message))
+      def querytoken(token)
+        post = {
+          :token      => token,
+          :merchant   => @options[:merchantID],
+          :salt       => generate_salt,
+          :sdkVersion => self.sdkVersion
         }
+        return JSON[post]
       end
 
       private
 
       def generate_salt()
         chars = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
-        salt = (0...24).map { chars[rand(chars.length)] }.join
+        salt = (0...32).map { chars[rand(chars.length)] }.join
         return salt
       end
 
-      def generate_timeout()
-        
+      def generate_timeout(timeout = @options[:timeout] || 10)
+        now = Time.now + (timeout * 60)
+        return now.strftime('%FT%T%:z')
       end
 
       def generate_order_ref()
@@ -234,65 +257,154 @@ module ActiveMerchant #:nodoc:
         + (1000 + rand(9999)).to_s
       end
 
-      def generate_purchase_data(post, options)
-          post[:salt] = generate_salt()
-          post[:merchant] = :merchantID
-          post[:orderRef] = generate_order_ref()
-          post[:currency] = self.default_currency
-          post[:customerEmail] = options[:email]
-          post[:language] = @@language
-          post[:sdkVersion] = @@sdkVersion
-          post[:methods] = ['CARD']
-          post[:total] = options[:ammount]
-          post[:timeout] = '2019-09-11T19:14:08+00:00'
-          post[:url] = :redirectURL
-          post[:invoice] = {
-            :name     => options[:name],
-            :company  => options[:company],
-            :country  => options[:country],
-            :state    => options[:state],
-            :city     => options[:city],
-            :zip      => options[:zip],
-            :address1 => options[:address1],
-            :address2 => options[:address2],
-            :phone    => options[:phone]
-          }
+      def generate_post_data(action, post, options)
+        #requires! handle
+        case action
+          when :start
+            post[:salt] = generate_salt()
+            post[:merchant] = @options[:merchantID]
+            post[:orderRef] = generate_order_ref()
+            post[:currency] = self.default_currency
+            post[:customerEmail] = options[:email]
+            post[:language] = self.language
+            post[:sdkVersion] = self.sdkVersion
+            post[:methods] = ['CARD']
+            post[:total] = options[:ammount]
+            post[:timeout] = generate_timeout
+            post[:url] = @options[:redirectURL]
+            post[:twoStep] = false,
+            post[:invoice] = {
+              :name     => options[:address][:name],
+              :company  => options[:address][:company],
+              :country  => options[:address][:country],
+              :state    => options[:address][:state],
+              :city     => options[:address][:city],
+              :zip      => options[:address][:zip],
+              :address  => options[:address][:address1],
+              :address2 => options[:address][:address2],
+              :phone    => options[:address][:phone]
+            }
+            if options.key?(:items)
+              post[:items] = options[:items]
+            end
+            if options.key?(:threeDSReqAuthMethod)
+              post[:threeDSReqAuthMethod] = options[:threeDSReqAuthMethod]
+            end
+          when :authorize
+            post[:salt] = generate_salt()
+            post[:merchant] = @options[:merchantID]
+            post[:orderRef] = generate_order_ref()
+            post[:currency] = self.default_currency
+            post[:customerEmail] = options[:email]
+            post[:language] = self.language
+            post[:sdkVersion] = self.sdkVersion
+            post[:methods] = ['CARD']
+            post[:total] = options[:ammount]
+            post[:timeout] = generate_timeout
+            post[:url] = @options[:redirectURL]
+            post[:twoStep] = true,
+            post[:invoice] = {
+              :name     => options[:address][:name],
+              :company  => options[:address][:company],
+              :country  => options[:address][:country],
+              :state    => options[:address][:state],
+              :city     => options[:address][:city],
+              :zip      => options[:address][:zip],
+              :address  => options[:address][:address1],
+              :address2 => options[:address][:address2],
+              :phone    => options[:address][:phone]
+            }
+            if options.key?(:items)
+              post[:items] = options[:items]
+            end
+            if options.key?(:threeDSReqAuthMethod)
+              post[:threeDSReqAuthMethod] = options[:threeDSReqAuthMethod]
+            end
+          when :capture
+            post[:salt] = generate_salt()
+            post[:merchant] = @options[:merchantID]
+            post[:orderRef] = options[:orderRef]
+            post[:originalTotal] = options[:originalTotal]
+            post[:approveTotal] = options[:approveTotal]
+            post[:currency] = self.default_currency
+            post[:sdkVersion] = self.sdkVersion
+          when :refund
+            post[:salt] = generate_salt()
+            post[:merchant] = @options[:merchantID]
+            post[:orderRef] = options[:orderRef]
+            post[:refundTotal] = options[:refundTotal]
+            post[:currency] = self.default_currency
+            post[:sdkVersion] = self.sdkVersion
+          when :query
+            post[:salt] = generate_salt()
+            post[:merchant] = @options[:merchantID]
+            post[:transactionIds] = options[:transactionIds]
+            post[:sdkVersion] = self.sdkVersion
+            if options.key?(:detailed)
+              post[:detailed] = options[:detailed]
+            end
+            if options.key?(:refund)
+              post[:refund] = options[:refund]
+            end
+        end
       end
 
       def parseHeaders(key, message)
-        return {
-          'Content-type' => 'application/json',
-          'Signature' => Base64.encode64(OpenSSL::HMAC.hexdigest(OpenSSL::Digest.new('sha384'), key, message))
+        signature = Base64.encode64(OpenSSL::HMAC.digest(OpenSSL::Digest::SHA384.new, key, message)).gsub("\n", '')
+        {
+          'Content-Type' => 'application/json',
+          'Signature' => signature
         }
       end
 
       def commit(action, parameters)
-        url = (test? ? test_url : live_url)
-        response = ssl_post(url, post_data(action, parameters, parseHeaders(:merchantKey, parameters)))
+        url = (test? ? test_url[action] : live_url[action])
+        headers = parseHeaders(@options[:merchantKEY], parameters)
+        response = JSON[ssl_post(url, parameters, headers)]
 
-        parsed = JSON[response]
+        #return response
 
         Response.new(
           success_from(response),
           message_from(response),
           response,
           authorization: authorization_from(response),
-          avs_result: AVSResult.new(code: response['some_avs_response_key']),
-          cvv_result: CVVResult.new(response['some_cvv_response_key']),
+          #avs_result: AVSResult.new(code: response['some_avs_response_key']),
+          #cvv_result: CVVResult.new(response['some_cvv_response_key']),
           test: test?,
           error_code: error_code_from(response)
         )
       end
 
-      def success_from(response); end
+      def success_from(response)
+        !response.key?(:errorCodes)
+      end
 
-      def message_from(response); end
+      def message_from(response)
+        if success_from(response)
+          return response
+        else
+          errors = []
+          begin
+            response["errorCodes"].each do |error|
+              errors << STANDARD_ERROR_CODE_MAPPING[error.to_s]
+            end
+          return errors
+          rescue => exception
+            return 'An error occurred.'
+          end
+        end
+      end
 
-      def authorization_from(response); end
+      def authorization_from(response)
+        if success_from(response)
+          response[:paymentUrl]
+        end
+      end
 
       def error_code_from(response)
         unless success_from(response)
-          # TODO: lookup error code for this response
+          response["errorCodes"]
         end
       end
 
