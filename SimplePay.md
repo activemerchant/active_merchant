@@ -57,8 +57,7 @@ res.message
 After sucessfull call, the response message will contain a :redirectURL, where the customer should be redirected, to finish the transaction.
 
 In case if collecting the card data, transaction is possible without redirection.
-[See auto method]
-(### **auto()**)
+[See auto method](#auto)
 
 ```ruby
 res = gateway.purchase({
