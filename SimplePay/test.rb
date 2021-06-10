@@ -7,7 +7,8 @@ gateway = ActiveMerchant::Billing::SimplePayGateway.new(
     :merchantID  => 'PUBLICTESTHUF',
     :merchantKEY => 'FxDa5w314kLlNseq2sKuVwaqZshZT5d6',
     :redirectURL => 'https://127.0.0.1',
-    :timeout     => 30
+    :timeout     => 30,
+    :returnRequest => true
 )
 
 ## Possible URLS
@@ -19,9 +20,6 @@ gateway = ActiveMerchant::Billing::SimplePayGateway.new(
 #}
 
 res = gateway.purchase({
-    :token => 'SPT82SL7OMG2FI48N27D85KQX3H8MJ3JEQUD643VILLKTLDXRU7EMFPS8FSS3BBD',
-    :threeDSReqAuthMethod => '02',
-    :type => 'MIT',
     :amount => 2000,
     :email => 'email@email.hu',
     :address => {
@@ -36,6 +34,30 @@ res = gateway.purchase({
         :phone => '06301111111'
     },
 })
+
+puts "\n\n"
+puts res.success?
+puts res.message
+puts "\n\n"
+puts "-----------------------------------------"
+
+res = gateway.purchase({
+    :amount => 2000,
+    :email => 'email@email.hu',
+    :address => {
+        :name =>  'myname',
+        :company => 'company',
+        :country => 'HU',
+        :state => 'Budapest',
+        :city => 'Budapest',
+        :zip => '1111',
+        :address1 => 'Address u.1',
+        :address2 => 'Address u.2',
+        :phone => '06301111111'
+    },
+})
+
+puts res.message
 
 # res = gateway.authorize({
 #     :ammount => 2000,
@@ -125,4 +147,3 @@ res = gateway.purchase({
 # })
 
 puts res.message
-puts res.error_code

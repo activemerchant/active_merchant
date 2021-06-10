@@ -23,7 +23,10 @@ gateway = ActiveMerchant::Billing::SimplePayGateway.new(
     :merchantKEY => 'FxDa5w314kLlNseq2sKuVwaqZshZT5d6',
     :redirectURL => 'https://www.myawesomewebsite.com/redirect-back',
     :timeout     => 30,
-    :currency    => 'HUF'
+    :currency    => 'HUF',
+
+    #Otional, defines to return the JSON sent to Simple Pay
+    :returnRequest => true
 )
 
 # OR you can provide multiple urls, depending on the transaction status
@@ -67,6 +70,37 @@ res.message
 ```
 
 On error the response message will contain the error message.
+
+If *:returnRequest* is set to true in the constructor, the responses message will contain an array.
+
+* [0] element - request JSON
+* [1] element - response JSON / Errors
+
+## backRef / redirection
+
+After a transaction is made with redirection, the redirected URL will contain parameters about the transaction.
+
+Example
+
+https://sdk.simplepay.hu/back.php?**r**=eyJyIjowLCJ0Ijo5OTg0NDk0MiwiZSI6IlNVQ0NFU1MiLCJtIjoiUFVCTElDVEVTVEhVRiIsIm8iOiIxMDEwMTA1MTU2ODAyOTI0ODI2MDAifQ%3D%3D&
+**s**=El%2Fnvex9TjgjuORI63gEu5I5miGo4CS
+AD5lmEpKIxp7WuVRq6bBeh1QdyEvVGSsi
+
+**r** - base64 encoded json string
+
+```json
+{
+    "r": 'response code', 
+    "t": 'transaction id / Simple Pay ID ['THIS WILL BE USED FOR THE DO METHOD']',
+    "e": 'event [SUCESS, FAIL, TIMEOUT, CANCEL]',
+    "m": 'merchant',
+    "o": 'orderRef'
+}
+```
+
+**s** - Signature of the payment.
+
+The *Signature* is a base64 encoded SHA384 HASH.
 
 ## Methods
 
@@ -211,6 +245,23 @@ res = gateway.purchase({
     :maySelectDelivery => ["HU","AT","DE"]
 })
 ```
+
+#### oneClick payment:
+
+One click mayment is the method for creating a *:cardSecret*, which could be used on the second time to make a transaction. In that case the customer won't be redirected.
+
+**It is forbidden for the merchant to save the card secret.**
+
+```ruby
+res = gateway.purchase({
+    # MANDATORY FIELDS ...
+    :cardSecret => 'thesuperdupersecret'
+})
+```
+
+In case of forgotten *:cardSecret* you will need to use [cardcancel()](#cardcancel) method, and reregister the customer.
+
+After the card registration you can use the [do()](#do) method to start a transaction behid the scenes.
 
 #### Start a recurring payment:
 
@@ -420,18 +471,46 @@ One click transaction methods, with card secret.
 
 ### **do()**
 
-```ruby
+* *:cardId* - transaction ID provided by SimplePay [For more information see](#backRef)
+* *:threeDS* - this field is mandatory for the do() method. [Explained here : do()](#do)
 
+```ruby
+res = gateway.purchase({
+    # MANDATORY FIELDS ...
+    :cardId => 'SimpePayID',
+    :cardSecret => 'thesuperdupersecret',
+    :threeDS => {
+        :threeDSReqAuthMethod => '01', 
+        #:threeDSReqAuthType => 'CIT', this will always be CIT since, the customer is present
+        :browser => {
+            :accept => '',
+            :agent => '',
+            :ip => '127.0.01',
+            :java => 'navigator.javaEnabled()',
+            :lang => 'navigator.language',
+            :color => 'screen.colorDepth',
+            :height => 'screen.height',
+            :width => 'screen.width',
+            :tz => ' new Date().getTimezoneOffset()',
+        }
+    }
+})
 ```
 
 ### **cardquery()**
 
 ```ruby
-
+res = gateway.cardquery({
+    :cardId => 'Simple Pay ID'
+    :history => true #DEFAULT false
+})
 ```
 
 ### **cardcancel()**
 
 ```ruby
-
+res = gateway.cardcancel({
+    :cardId => 'Simple Pay ID'
+    :history => true #DEFAULT false
+})
 ```

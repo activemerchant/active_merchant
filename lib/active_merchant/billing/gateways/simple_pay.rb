@@ -46,10 +46,11 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://simplepay.hu/'
       self.display_name = 'Simple Pay'
 
-      class_attribute :sdkVersion, :language, :allowed_ip
+      class_attribute :sdkVersion, :language, :allowed_ip, :returnRequest
       self.sdkVersion = 'SimplePayV2.1_Payment_PHP_SDK_2.0.7_190701:dd236896400d7463677a82a47f53e36e'
       self.language = 'HU'
       self.allowed_ip = '94.199.53.96'
+      self.returnRequest = false
 
       STANDARD_ERROR_CODE_MAPPING = {
         '0'    => 'Sikeres művelet',
@@ -202,6 +203,9 @@ module ActiveMerchant #:nodoc:
         if !options.key?(:urls)
           requires!(options, :redirectURL)
         end
+        if !options.key?(:urls)
+          requires!(options, :redirectURL)
+        end
         super
       end
 
@@ -264,6 +268,15 @@ module ActiveMerchant #:nodoc:
         commit(:auto, JSON[post])
       end
 
+      def do(options = {})
+        post = {}
+        requires!(options, :amount, :email, :address, :cardId, :cardSecret, :threeDS)
+        requires!(options[:address], :name, :country, :state, :city, :zip, :address1)
+        requires!(options[:threeDS], :accept, :agent, :ip, :java, :lang, :color, :height, :width, :tz)
+        generate_post_data(:do, post, options)
+        commit(:do, JSON[post])
+      end
+
       def dorecurring(options = {})
         post = {}
         requires!(options, :amount, :email, :address, :token, :threeDSReqAuthMethod, :type)
@@ -286,9 +299,26 @@ module ActiveMerchant #:nodoc:
         commit(:tokencancel, JSON[post])
       end
 
-      def utilbackref(url){
-        
-      }
+      def cardquery(options = {})
+        post = {}
+        requires!(options, :cardId)
+        generate_post_data(:cardquery, post, options)
+        commit(:cardquery, JSON[post])
+      end
+
+      def cardcancel(options = {})
+        post = {}
+        requires!(options, :cardId)
+        generate_post_data(:cardcancel, post, options)
+        commit(:cardcancel, JSON[post])
+      end
+
+      def utilbackref(url)
+        uri    = URI.parse(url)
+        params = CGI.parse(uri.query)
+        params['r'] = Base64.decode64(params[r])
+        return params
+      end
 
       private
 
@@ -367,6 +397,9 @@ module ActiveMerchant #:nodoc:
             end
             if options.key?(:maySelectDelivery)
               post[:maySelectDelivery] = options[:maySelectDelivery]
+            end
+            if options.key?(:cardSecret)
+              post[:cardSecret] = options[:cardSecret]
             end
 
           when :authorize
@@ -480,6 +513,62 @@ module ActiveMerchant #:nodoc:
               end
             end
 
+          when :do
+            post[:salt] = generate_salt()
+            post[:merchant] = @options[:merchantID]
+            post[:orderRef] = options[:orderRef] || generate_order_ref()
+            post[:currency] = self.default_currency
+            post[:customerEmail] = options[:email]
+            post[:language] = self.language
+            post[:sdkVersion] = self.sdkVersion
+            post[:methods] = ['CARD']
+            post[:total] = options[:amount]
+            post[:cardId] = options[:cardId]
+            post[:cardSecret] = options[:cardSecret]
+            post[:invoice] = {
+              :name     => options[:address][:name],
+              :company  => options[:address][:company] || '',
+              :country  => options[:address][:country],
+              :state    => options[:address][:state],
+              :city     => options[:address][:city],
+              :zip      => options[:address][:zip],
+              :address  => options[:address][:address1],
+              :address2 => options[:address][:address2] || '',
+              :phone    => options[:address][:phone] || ''
+            }
+            if options.key?(:items)
+              post[:items] = options[:items]
+            end
+            if options.key?(:delivery)
+              post[:delivery] = options[:delivery]
+            end
+            if options.key?(:threeDS)
+              post[:threeDSReqAuthMethod] = options[:threeDS][:threeDSReqAuthMethod]
+              post[:type] = 'CIT'
+              if options[:threeDS].key?(:browser)
+                post[:browser] = {
+                  :accept  => options[:threeDS][:browser][:accept],
+                  :agent  => options[:threeDS][:browser][:agent],
+                  :ip => options[:threeDS][:browser][:ip],
+                  :java  => options[:threeDS][:browser][:java],
+                  :lang => options[:threeDS][:browser][:lang],
+                  :color => options[:threeDS][:browser][:color],
+                  :height => options[:threeDS][:browser][:height],
+                  :width => options[:threeDS][:browser][:width],
+                  :tz => options[:threeDS][:browser][:tz]
+                }
+              end
+            end
+            if options.key?(:maySelectEmail)
+              post[:maySelectEmail] = options[:maySelectEmail]
+            end
+            if options.key?(:maySelectInvoice)
+              post[:maySelectInvoice] = options[:maySelectInvoice]
+            end
+            if options.key?(:maySelectDelivery)
+              post[:maySelectDelivery] = options[:maySelectDelivery]
+            end
+
           when :dorecurring
             post[:salt] = generate_salt()
             post[:token] = options[:token]
@@ -516,9 +605,22 @@ module ActiveMerchant #:nodoc:
             post[:sdkVersion] = self.sdkVersion
 
           when :tokencancel
-            post[:token]      = options[:token],
-            post[:merchant]   = @options[:merchantID],
+            post[:token]      = options[:token]
+            post[:merchant]   = @options[:merchantID]
             post[:salt]       = generate_salt,
+            post[:sdkVersion] = self.sdkVersion
+        
+          when :cardquery
+            post[:cardId]      = options[:cardId]
+            post[:history]      = options[:history] || false
+            post[:merchant]   = @options[:merchantID]
+            post[:salt]       = generate_salt
+            post[:sdkVersion] = self.sdkVersion
+
+          when :cardcancel
+            post[:cardId]      = options[:cardId]
+            post[:merchant]   = @options[:merchantID]
+            post[:salt]       = generate_salt
             post[:sdkVersion] = self.sdkVersion
         end
       end
@@ -541,7 +643,7 @@ module ActiveMerchant #:nodoc:
 
         Response.new(
           success_from(response),
-          message_from(response),
+          message_from(response, parameters),
           response,
           #authorization: authorization_from(response),
           #avs_result: AVSResult.new(code: response['some_avs_response_key']),
@@ -557,6 +659,9 @@ module ActiveMerchant #:nodoc:
 
       def message_from(response)
         if success_from(response)
+          if self.returnRequest
+            return [parameters, response]
+          end
           return response
         else
           errors = []
@@ -564,8 +669,12 @@ module ActiveMerchant #:nodoc:
             response["errorCodes"].each do |error|
               errors << STANDARD_ERROR_CODE_MAPPING[error.to_s]
             end
+            if self.returnRequest
+              return [parameters, errors]
+            end
             return errors
           end
+          return 'Unknown failure.'
         end
       end
 
