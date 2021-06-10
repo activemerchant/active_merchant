@@ -37,7 +37,7 @@ module ActiveMerchant #:nodoc:
         :cardcancel  => 'https://secure.simplepay.hu/payment/v2/cardcancel',
         :tokenquery  => 'https://secure.simplepay.hu/payment/v2/tokenquery',
         :tokencancel => 'https://secure.simplepay.hu/payment/v2/tokencancel'
-      }}
+      }
 
       self.supported_countries = ['HU']
       self.default_currency = 'HUF'
@@ -192,29 +192,25 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options = {})
         requires!(options, :merchantID, :merchantKEY, :redirectURL)
-        if options[:currency] && ['HUF', 'EUR', 'USD'].inlude? options[:currency]
+        if ['HUF', 'EUR', 'USD'].include? options[:currency]
           self.default_currency = options[:currency]
+        end
+        if !options.key?(:redirectURL)
+          requires!(options, :urls)
+          requires!(options[:urls], :success, :fail, :cancel, :timeout)
+        end
+        if !options.key?(:urls)
+          requires!(options, :redirectURL)
         end
         super
       end
 
       def purchase(options = {})
         post = {}
-        requires! (options, :amount, :email, :address)
-        requires! (options[:address], :name, :country, :state, :city, :zip, :address1)
-        if options.key?(:threeDSReqAuthMethod)
-        elsif options.key?(:recurring)
-          requires! (options, :times, :until, :maxAmount)
-        elsif options.key?(:onlyCardReg)
-        else
-          requires! (options, :customerEmail, :amount, :invoice)
-          if !options.key?(:url)
-            requires! (options, :urls)
-            requires! (options[:urls], :success, :fail, :cancel, :timeout)
-          end
-          if
-            requires! (options, :url)
-          end
+        requires!(options, :amount, :email, :address)
+        requires!(options[:address], :name, :country, :state, :city, :zip, :address1)
+        if options.key?(:recurring)
+          requires!(options, :times, :until, :maxAmount)
         end
         generate_post_data(:start, post, options)
         commit(:start, JSON[post])
@@ -303,6 +299,7 @@ module ActiveMerchant #:nodoc:
       def generate_post_data(action, post, options)
         #requires! handle
         case action
+
           when :start
             post[:salt] = generate_salt()
             post[:merchant] = @options[:merchantID]
@@ -330,6 +327,9 @@ module ActiveMerchant #:nodoc:
             if options.key?(:items)
               post[:items] = options[:items]
             end
+            if options.key?(:delivery)
+              post[:delivery] = options[:delivery]
+            end
             if options.key?(:threeDSReqAuthMethod)
               post[:threeDSReqAuthMethod] = options[:threeDSReqAuthMethod]
             end
@@ -344,6 +344,16 @@ module ActiveMerchant #:nodoc:
               post[:onlyCardReg] = options[:onlyCardReg]
               post[:twoStep] = true
             end
+            if options.key?(:maySelectEmail)
+              post[:maySelectEmail] = options[:maySelectEmail]
+            end
+            if options.key?(:maySelectInvoice)
+              post[:maySelectInvoice] = options[:maySelectInvoice]
+            end
+            if options.key?(:maySelectDelivery)
+              post[:maySelectDelivery] = options[:maySelectDelivery]
+            end
+
           when :authorize
             post[:salt] = generate_salt()
             post[:merchant] = @options[:merchantID]
@@ -374,6 +384,7 @@ module ActiveMerchant #:nodoc:
             if options.key?(:threeDSReqAuthMethod)
               post[:threeDSReqAuthMethod] = options[:threeDSReqAuthMethod]
             end
+
           when :capture
             post[:salt] = generate_salt()
             post[:merchant] = @options[:merchantID]
@@ -382,6 +393,7 @@ module ActiveMerchant #:nodoc:
             post[:approveTotal] = options[:approveTotal]
             post[:currency] = self.default_currency
             post[:sdkVersion] = self.sdkVersion
+
           when :refund
             post[:salt] = generate_salt()
             post[:merchant] = @options[:merchantID]
@@ -389,8 +401,6 @@ module ActiveMerchant #:nodoc:
             post[:refundTotal] = options[:refundTotal]
             post[:currency] = self.default_currency
             post[:sdkVersion] = self.sdkVersion
-          
-          
           
           when :query
             post[:salt] = generate_salt()
@@ -403,6 +413,7 @@ module ActiveMerchant #:nodoc:
             if options.key?(:refund)
               post[:refund] = options[:refund]
             end
+
           when :auto
             post[:salt] = generate_salt()
             post[:merchant] = @options[:merchantID]
@@ -453,6 +464,7 @@ module ActiveMerchant #:nodoc:
                 }
               end
             end
+
           when :dorecurring
             post[:salt] = generate_salt()
             post[:token] = options[:token]
@@ -481,16 +493,18 @@ module ActiveMerchant #:nodoc:
             if options.key?(:items)
               post[:items] = options[:items]
             end
+
           when :tokenquery
-            post[:token]      => options[:token],
-            post[:merchant]   => @options[:merchantID],
-            post[:salt]       => generate_salt,
-            post[:sdkVersion] => self.sdkVersion
+            post[:token]      = options[:token],
+            post[:merchant]   = @options[:merchantID],
+            post[:salt]       = generate_salt,
+            post[:sdkVersion] = self.sdkVersion
+
           when :tokencancel
-            post[:token]      => options[:token],
-            post[:merchant]   => @options[:merchantID],
-            post[:salt]       => generate_salt,
-            post[:sdkVersion] => self.sdkVersion
+            post[:token]      = options[:token],
+            post[:merchant]   = @options[:merchantID],
+            post[:salt]       = generate_salt,
+            post[:sdkVersion] = self.sdkVersion
         end
       end
 

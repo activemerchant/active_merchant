@@ -13,7 +13,7 @@ The gateway provides **two different methods** for bank transactions. One when t
 ```ruby
 require 'active_merchant'
 
-#Enable testing mode.
+#Enable testing mode. ( SANDBOX )
 ActiveMerchant::Billing::Base.mode = :test 
 
 gateway = ActiveMerchant::Billing::SimplePayGateway.new(
@@ -59,10 +59,12 @@ The gateways provides these methods for making transactions
 
 ### Responses
 
-The response contains all the information about the transaction, in the reponses message.
+The response contains all the information about the transaction, in the reponses message. The responses are JSON strings wilth all the information about the transaction.
 ```ruby
 res.message
 ```
+
+On error the response message will contain the error message.
 
 ## Methods
 
@@ -72,6 +74,9 @@ After sucessfull call, the response message will contain a *:redirectURL*, where
 
 In case if collecting the card data, transaction is possible without redirection.
 [See auto method](#auto)
+
+**This is the least amount of information you will need to start a transaction.**
+**Later on they will be refered as # MANDATORY FIELDS...**
 
 ```ruby
 res = gateway.purchase({
@@ -90,6 +95,17 @@ res = gateway.purchase({
 
 #### Optional fields:
 
+##### *:orderRef:*
+
+Note: the gateway automaticly generates these numbers, but to ensure they are unique you should privide your own.
+
+```ruby
+res = gateway.purchase({
+    # MANDATORY FIELDS ...
+    :orderRef => 's0m30rd3r3fg3n3r4t3d'
+})
+```
+
 ##### *:invoice*
 
 * company
@@ -102,7 +118,7 @@ If both :amount, and :items are present, :amount will be ignored.
 
 ```ruby
 res = gateway.purchase({
-    # OTHER OPTIONS...
+    # MANDATORY FIELDS ...
     :items => [
         {
         :ref => "Product ID 2",
@@ -110,18 +126,43 @@ res = gateway.purchase({
         :description => "Product description 2",
         :amount => "2",
         :price => "5",
-        :tax => "0"
+        :tax => "0",
+        :shippingCost => '1',
+        :discount => '3',
+        :customer => 'IfDifferentThen [:address][:name]'
         }
     ]
 })
 ```
+
+##### *:delivery*
+
+```ruby
+res = gateway.purchase({
+    # MANDATORY FIELDS ...
+    :delivery => [
+        {
+        :name => "SimplePay V2 Tester",
+        :company => "Company name",
+        :country => "hu",
+        :state => "Budapest",
+        :city => "Budapest",
+        :zip => "1111",
+        :address => "Delivery address",
+        :address2 => "",
+        :phone => "06203164978"
+        }
+    ]
+})
+```
+
 ##### *:methods*
 
 If the payment method is not *CARD* you can set it in the options.
 
 ```ruby
 res = gateway.purchase({
-    # OTHER OPTIONS...
+    # MANDATORY FIELDS ...
     :methods => ['WIRE']
 })
 ```
@@ -137,6 +178,25 @@ res = gateway.purchase({
 * zip
 * address
 
+If they are not known, you can use *:maySelectEmail* or *:maySelectInvoice* options.
+
+```ruby
+res = gateway.purchase({
+    # MANDATORY FIELDS ...
+    :maySelectEmail => true,
+    :maySelectInvoice => true
+})
+```
+
+Also you could ask for delivery informations. You will need to specify the countires where delivery is possible.
+
+```ruby
+res = gateway.purchase({
+    # MANDATORY FIELDS ...
+    :maySelectDelivery => ["HU","AT","DE"]
+})
+```
+
 If you would like to start a recurring transaction these options must be present.
 
 * *:times* - How many tokens to generate?
@@ -148,17 +208,24 @@ Tokens will be created and avaiable in the respond's message.
 To start a recurring transaction behind the scenes (with a token) [See dorecurring()](#dorecurring)
 
 ```ruby
-:recurring => {
-    :times => 1,
-    :until => "2022-12-01T18:00:00+02:00",
-    :maxAmount => 2000
-}
+res = gateway.purchase({
+    # MANDATORY FIELDS ...
+    :recurring => {
+        :times => 1,
+        :until => "2022-12-01T18:00:00+02:00",
+        :maxAmount => 2000
+    }
+})
 ```
 
 This will charge the customer. If you would like to only register the card, add *:onlyCardReg* field to the options:
 
 ```ruby
-:onlyCardReg => true
+res = gateway.purchase({
+    # MANDATORY FIELDS ...
+    :onlyCardReg => true
+})
+
 ```
 
 ### **auto()**
@@ -192,9 +259,8 @@ credit_card = ActiveMerchant::Billing::CreditCard.new(
 )
 
 res = gateway.auto({
+    # MANDATORY FIELDS ...
     :credit_card => credit_card,
-    :amount => 2000,
-    :email => 'customer@email.hu',
     :threeDS => {
         :threeDSReqAuthMethod => '01', 
         :threeDSReqAuthType => 'CIT',
@@ -209,17 +275,6 @@ res = gateway.auto({
             :width => 'screen.width',
             :tz => ' new Date().getTimezoneOffset()',
         }
-    },
-    :address => {
-        :name =>  'Customer Name',
-        :company => 'company Name',
-        :country => 'HU',
-        :state => 'Budapest',
-        :city => 'Budapest',
-        :zip => '1111',
-        :address1 => 'Address u.1',
-        :address2 => 'Address u.2',
-        :phone => '06301111111'
     }
 })
 ```
@@ -232,11 +287,14 @@ It is possible to use external 3DS challange option, insead of *:threeDS*.
 * cavv - CAVV/AAV/AEV, a cryptogram verifying identification or an attempted identification, in raw format
 
 ```ruby
-:threeDSExternal => {
-    :xid => "01234567980123456789",
-    :eci => "01",
-    :cavv => "ABCDEF"
-}
+res = gateway.auto({
+    # MANDATORY FIELDS ...
+        :threeDSExternal => {
+        :xid => "01234567980123456789",
+        :eci => "01",
+        :cavv => "ABCDEF"
+    }
+})
 ```
 
 ### **authorize()**
@@ -294,10 +352,10 @@ res = gateway.dorecurring({
     :threeDSReqAuthMethod => '02',
     :type => 'MIT',
     :amount => 2000,
-    :email => 'email@email.hu',
+    :email => 'customer@email.hu',
     :address => {
         :name =>  'Customer Name',
-        :company => 'company Name',
+        :company => 'Company Name',
         :country => 'HU',
         :state => 'Budapest',
         :city => 'Budapest',
@@ -317,16 +375,16 @@ This method is responible for returning the token's status.
 
 ```ruby
 res = gateway.tokenquery({
-    token => 'myawesometoken'
+    :token => 'myawesometoken'
 })
 ```
 
 ### **tokencancel()**
 
 This method is responsible for cancelling a token.
-token - The token itself.
-status - Status of the token.
-expiry - Date of expiry.
+* token - The token itself.
+* status - Status of the token.
+* expiry - Date of expiry.
 
 ```ruby
 res = gateway.tokenquery({
