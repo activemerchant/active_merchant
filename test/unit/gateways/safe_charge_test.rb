@@ -45,7 +45,8 @@ class SafeChargeTest < Test::Unit::TestCase
         eci: '05',
         cavv: 'Vk83Y2t0cHRzRFZzRlZlR0JIQXo=',
         xid: '00000000000000000501',
-        ds_transaction_id: 'c5b808e7-1de1-4069-a17b-f70d3b3b1645'
+        ds_transaction_id: 'c5b808e7-1de1-4069-a17b-f70d3b3b1645',
+        challenge_preference: 'NoPreference'
       }
     })
   end
@@ -290,6 +291,7 @@ class SafeChargeTest < Test::Unit::TestCase
       assert_match(/sg_IsExternalMPI/, data)
       assert_match(/sg_dsTransID/, data)
       assert_match(/sg_threeDSProtocolVersion=2/, data)
+      assert_match(/sg_challengePreference/, data)
       refute_match(/sg_xid/, data)
     end.respond_with(successful_mpi_response)
 
@@ -305,6 +307,7 @@ class SafeChargeTest < Test::Unit::TestCase
       assert_match(/sg_ECI/, data)
       assert_match(/sg_IsExternalMPI/, data)
       assert_match(/sg_CardNumber/, data)
+      assert_match(/sg_challengePreference/, data)
     end.respond_with(successful_network_token_response)
 
     assert_success purchase

@@ -185,6 +185,7 @@ module ActiveMerchant #:nodoc:
         post[:sg_Xid] = options[:three_d_secure][:xid]
         post[:sg_IsExternalMPI] = 1
         post[:sg_EnablePartialApproval] = options[:is_partial_approval]
+        post[:sg_challengePreference] = options[:three_d_secure][:challenge_preference] if options[:three_d_secure][:challenge_preference]
       end
 
       def parse(xml)
