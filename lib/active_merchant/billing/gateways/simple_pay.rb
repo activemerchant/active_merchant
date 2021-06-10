@@ -218,24 +218,29 @@ module ActiveMerchant #:nodoc:
 
       def authorize(options = {})
         post = {}
+        requires!(options, :amount, :email, :address)
+        requires!(options[:address], :name, :country, :state, :city, :zip, :address1)
         generate_post_data(:authorize, post, options)
         commit(:authorize, JSON[post])
       end
 
       def capture(options = {})
         post = {}
+        requires!(options, :orderRef, :originalTotal, :approveTotal)
         generate_post_data(:capture, post, options)
         commit(:capture, JSON[post])
       end
 
       def refund(options = {})
         post = {}
+        requires!(options, :orderRef, :refundTotal)
         generate_post_data(:refund, post, options)
         commit(:refund, JSON[post])
       end
 
       def query(options = {})
         post = {}
+        requires!(options, :transactionIds)
         generate_post_data(:query, post, options)
         commit(:query, JSON[post])
       end
@@ -252,25 +257,31 @@ module ActiveMerchant #:nodoc:
       end
 
       def auto(options = {})
-        post = {}  
+        post = {}
+        requires!(options, :amount, :email, :address, :credit_card)
+        requires!(options[:address], :name, :country, :state, :city, :zip, :address1)
         generate_post_data(:auto, post, options)
         commit(:auto, JSON[post])
       end
 
       def dorecurring(options = {})
-        post = {}  
+        post = {}
+        requires!(options, :amount, :email, :address, :token, :threeDSReqAuthMethod, :type)
+        requires!(options[:address], :name, :country, :state, :city, :zip, :address1)
         generate_post_data(:dorecurring, post, options)
         commit(:dorecurring, JSON[post])
       end
 
       def tokenquery(options = {})
         post = {}
+        requires!(options, :tokenquery)
         generate_post_data(:tokenquery, post, options)
         commit(:tokenquery, JSON[post])
       end
 
       def tokencancel(options = {})
         post = {}
+        requires!(options, :tokencancel)
         generate_post_data(:tokencancel, post, options)
         commit(:tokencancel, JSON[post])
       end

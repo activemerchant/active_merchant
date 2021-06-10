@@ -269,12 +269,12 @@ res = gateway.auto({
 })
 ```
 
-threeDSReqAuthMethod: 
+*:threeDSReqAuthMethod* 
 * **01** - guest
 * **02** - registered with the merchant
 * **05** - registered with a third party ID (Google, Facebook, account, etc.) 
 
-threeDSReqAuthType: 
+*:threeDSReqAuthType*
 * **CIT** - The customer is present.
 * **MIT** - The customer is not present.
 * **REC** - Recurring payment.
@@ -304,7 +304,7 @@ res = gateway.auto({
 })
 ```
 
-threeDSExternal:
+*:threeDSExternal*
 It is possible to use external 3DS challange option, insead of *:threeDS*.
 
 * **xid** - XID, unique identifier generated for the identification request
@@ -379,21 +379,10 @@ Also *:threeDSReqAuthMethod* and *:type* fields are mandatory, using this method
 
 ```ruby
 res = gateway.dorecurring({
+    # MANDATORY FIELDS ...
     :token => 'SPT82SL7OMG2FI48N27D85KQX3H8MJ3JEQUD643VILLKTLDXRU7EMFPS8FSS3BBD',
     :threeDSReqAuthMethod => '02',
     :type => 'MIT',
-    :amount => 2000,
-    :email => 'customer@email.hu',
-    :address => {
-        :name =>  'Customer Name',
-        :company => 'Company Name',
-        :country => 'HU',
-        :state => 'Budapest',
-        :city => 'Budapest',
-        :zip => '1111',
-        :address1 => 'Address u.1',
-        :address2 => 'Address u.2',
-        :phone => '06301111111'
     }
 })
 ```
@@ -421,7 +410,7 @@ This method is responsible for cancelling a token.
 
 ```ruby
 res = gateway.tokenquery({
-    token => 'myawesometoken'
+    :token => 'myawesometoken'
 })
 ```
 
