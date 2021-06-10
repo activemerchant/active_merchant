@@ -275,6 +275,10 @@ module ActiveMerchant #:nodoc:
         commit(:tokencancel, JSON[post])
       end
 
+      def utilbackref(url){
+        
+      }
+
       private
 
       def generate_salt()

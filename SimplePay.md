@@ -4,6 +4,8 @@
 
 The gateway provides **two different methods** for bank transactions. One when the response contains a redirect URL, where the users can fulfill the transaction by providing their card data.
 
+[For more information about the methods go to Simple Pays website!](https://simplepay.hu/fejlesztoknek/)
+
 ### Initialize the gateway:
 
 * *:redirectURL* - The url, where the users will be redirected after the transactions
@@ -57,7 +59,7 @@ The gateways provides these methods for making transactions
     * [tokencancel()](#tokencancel)
     * [cardcancel()](#cardcancel)
 
-### Responses
+## Responses
 
 The response contains all the information about the transaction, in the reponses message. The responses are JSON strings wilth all the information about the transaction.
 ```ruby
@@ -72,11 +74,22 @@ On error the response message will contain the error message.
 
 After sucessfull call, the response message will contain a *:redirectURL*, where the customer should be redirected, to finish the transaction.
 
-In case if collecting the card data, transaction is possible without redirection.
+In case of collecting the card data, transaction is possible without redirection.
 [See auto method](#auto)
 
 **This is the least amount of information you will need to start a transaction.**
 **Later on they will be refered as # MANDATORY FIELDS...**
+
+**3DS Requirements**
+
+* **customerEmail**
+* **invoice**
+* **name**
+* **country**
+* **state**
+* **city**
+* **zip**
+* **address**
 
 ```ruby
 res = gateway.purchase({
@@ -114,7 +127,7 @@ res = gateway.purchase({
 
 ##### *:items*
 
-If both :amount, and :items are present, :amount will be ignored. 
+If both *:amount*, and *:items* are present, *:amount* will be ignored. 
 
 ```ruby
 res = gateway.purchase({
@@ -129,7 +142,7 @@ res = gateway.purchase({
         :tax => "0",
         :shippingCost => '1',
         :discount => '3',
-        :customer => 'IfDifferentThen [:address][:name]'
+        :customer => 'Customer Name' # If different from [:address][:name]
         }
     ]
 })
@@ -167,16 +180,18 @@ res = gateway.purchase({
 })
 ```
 
-**3DS Requirements**
+##### *:threeDSReqAuthMethod:*
 
-* customerEmail
-* invoice
-* name
-* country
-* state
-* city
-* zip
-* address
+* **01** - guest
+* **02** - registered with the merchant
+* **05** - registered with a third party ID (Google, Facebook, account, etc.) 
+
+```ruby
+res = gateway.purchase({
+    # MANDATORY FIELDS ...
+    :threeDSReqAuthMethod => '01'
+})
+```
 
 If they are not known, you can use *:maySelectEmail* or *:maySelectInvoice* options.
 
@@ -196,6 +211,8 @@ res = gateway.purchase({
     :maySelectDelivery => ["HU","AT","DE"]
 })
 ```
+
+#### Start a recurring payment:
 
 If you would like to start a recurring transaction these options must be present.
 
@@ -234,19 +251,7 @@ res = gateway.purchase({
 **The merchant system must achieve audited PCI-DSS compliance, too.**
 **Please don’t develop this function if your system does not meet these requirements.**
 
-threeDSReqAuthMethod: 
-* 01 - guest
-* 02 - registered with the merchant
-* 05 - registered with a third party ID (Google, Facebook, account, etc.) 
-
-threeDSReqAuthType: 
-* CIT - The customer is present.
-* MIT - The customer is not present.
-* REC - Recurring payment.
-
-In case of **CIT** type *:browser* is requiered and the response may contain a redirectURL for the challange.
-
-In case of MIT or REC the *:browser*, should not be included.
+This method is used to start a transaction without redirecting the customer.
 
 ```ruby
 credit_card = ActiveMerchant::Billing::CreditCard.new(
@@ -261,6 +266,26 @@ credit_card = ActiveMerchant::Billing::CreditCard.new(
 res = gateway.auto({
     # MANDATORY FIELDS ...
     :credit_card => credit_card,
+})
+```
+
+threeDSReqAuthMethod: 
+* **01** - guest
+* **02** - registered with the merchant
+* **05** - registered with a third party ID (Google, Facebook, account, etc.) 
+
+threeDSReqAuthType: 
+* **CIT** - The customer is present.
+* **MIT** - The customer is not present.
+* **REC** - Recurring payment.
+
+In case of **CIT** type *:browser* is requiered and the response may contain a redirectURL for the challange.
+
+In case of **MIT** or **REC** the *:browser*, should not be included.
+
+```ruby
+res = gateway.auto({
+    # MANDATORY FIELDS ...
     :threeDS => {
         :threeDSReqAuthMethod => '01', 
         :threeDSReqAuthType => 'CIT',
@@ -282,14 +307,14 @@ res = gateway.auto({
 threeDSExternal:
 It is possible to use external 3DS challange option, insead of *:threeDS*.
 
-* xid - XID, unique identifier generated for the identification request
-* eci - ECI (e-commerce indicator) the security level of the transaction which can be received in the form returned by the MPI )
-* cavv - CAVV/AAV/AEV, a cryptogram verifying identification or an attempted identification, in raw format
+* **xid** - XID, unique identifier generated for the identification request
+* **eci** - ECI (e-commerce indicator) the security level of the transaction which can be received in the form returned by the MPI )
+* **cavv** - CAVV/AAV/AEV, a cryptogram verifying identification or an attempted identification, in raw format
 
 ```ruby
 res = gateway.auto({
     # MANDATORY FIELDS ...
-        :threeDSExternal => {
+    :threeDSExternal => {
         :xid => "01234567980123456789",
         :eci => "01",
         :cavv => "ABCDEF"
@@ -299,9 +324,11 @@ res = gateway.auto({
 
 ### **authorize()**
 
-As same as the **purchase()** method, except the transaction won't happen until the capture is called.
+As same as the [**purchase()**](#purchase) method, except the transaction won't happen until the capture is called.
 
 ### **capture()**
+
+After successful authorization, capture the money.
 
 * *:orderRef* - On successfull authorization the response's message containt the reference number.
 * *:originalTotal* - The authorized amount
@@ -317,6 +344,8 @@ res = gateway.capture({
 
 ### **refund()**
 
+Method for refunding money.
+
 * *:orderRef* - On successfull authorization the response's message containt the reference number.
 * *:refundTotal* - The amount that should be refunded.
 
@@ -328,6 +357,8 @@ res = gateway.refund({
 ```
 
 ### **query()**
+
+The query method makes avaiable for querying fr the transactions. Note that both *:orderRef* and Simple Pay generated "Simple ID" would work.
 
 * *:transactionIds* - Transaction id's that we are querying for.
 * *:detailed* - Do we need detailed informations?
@@ -363,15 +394,16 @@ res = gateway.dorecurring({
         :address1 => 'Address u.1',
         :address2 => 'Address u.2',
         :phone => '06301111111'
-    },
+    }
 })
 ```
 
 ### **tokenquery()**
 
 This method is responible for returning the token's status.
-* status - If the token is active or not.
-* expiry - The date when the token will expire. 
+
+* **status** - If the token is active or not.
+* **expiry** - The date when the token will expire. 
 
 ```ruby
 res = gateway.tokenquery({
@@ -382,9 +414,10 @@ res = gateway.tokenquery({
 ### **tokencancel()**
 
 This method is responsible for cancelling a token.
-* token - The token itself.
-* status - Status of the token.
-* expiry - Date of expiry.
+
+* **token** - The token itself.
+* **status** - Status of the token.
+* **expiry** - Date of expiry.
 
 ```ruby
 res = gateway.tokenquery({
