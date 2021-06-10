@@ -34,14 +34,15 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment, options = {})
         commerce = options[:commerce] || @options[:commerce]
         commerce_branch = options[:commerce_branch] || @options[:commerce_branch]
+        shop_process_id = options[:shop_process_id] || @shop_process_id
 
-        token = generate_token(@shop_process_id, 'pay_pci', commerce, commerce_branch, amount(money), currency(money))
+        token = generate_token(shop_process_id, 'pay_pci', commerce, commerce_branch, amount(money), currency(money))
 
         post = {}
         post[:token] = token
         post[:commerce] = commerce.to_s
         post[:commerce_branch] = commerce_branch.to_s
-        post[:shop_process_id] = @shop_process_id
+        post[:shop_process_id] = shop_process_id
         post[:number_of_payments] = options[:number_of_payments] || 1
         post[:recursive] = options[:recursive] || false
 
@@ -52,11 +53,12 @@ module ActiveMerchant #:nodoc:
         commit(:pay_pci_buy_encrypted, post)
       end
 
-      def void(_authorization, options = {})
-        token = generate_token(@shop_process_id, 'rollback', '0.00')
+      def void(authorization, options = {})
+        _, shop_process_id = authorization.to_s.split('#')
+        token = generate_token(shop_process_id, 'rollback', '0.00')
         post = {
           token: token,
-          shop_process_id: @shop_process_id
+          shop_process_id: shop_process_id
         }
         commit(:pci_buy_rollback, post)
       end
@@ -151,7 +153,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
-        response.dig('confirmation', 'authorization_number')
+        authorization_number = response.dig('confirmation', 'authorization_number')
+        shop_process_id = response.dig('confirmation', 'shop_process_id')
+
+        "#{authorization_number}##{shop_process_id}"
       end
 
       def error_code_from(response)

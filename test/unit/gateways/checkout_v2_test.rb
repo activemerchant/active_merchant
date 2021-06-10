@@ -164,10 +164,53 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  def test_successful_purchase_with_metadata
+    response = stub_comms do
+      options = {
+        metadata: {
+          coupon_code: 'NY2018',
+          partner_id: '123989'
+        }
+      }
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r{"coupon_code":"NY2018"}, data)
+      assert_match(%r{"partner_id":"123989"}, data)
+    end.respond_with(successful_purchase_using_stored_credential_response)
+
+    assert_success response
+  end
+
+  def test_successful_authorize_and_capture_with_metadata
+    response = stub_comms do
+      options = {
+        metadata: {
+          coupon_code: 'NY2018',
+          partner_id: '123989'
+        }
+      }
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r{"coupon_code":"NY2018"}, data)
+      assert_match(%r{"partner_id":"123989"}, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+    assert_equal 'pay_fj3xswqe3emuxckocjx6td73ni', response.authorization
+
+    capture = stub_comms do
+      @gateway.capture(@amount, response.authorization)
+    end.respond_with(successful_capture_response)
+
+    assert_success capture
+  end
+
   def test_moto_transaction_is_properly_set
     response = stub_comms do
       options = {
-        metadata: { manual_entry: true }
+        metadata: {
+          manual_entry: true
+        }
       }
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
@@ -290,6 +333,30 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_success void
   end
 
+  def test_successful_void_with_metadata
+    response = stub_comms do
+      options = {
+        metadata: {
+          coupon_code: 'NY2018',
+          partner_id: '123989'
+        }
+      }
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r{"coupon_code":"NY2018"}, data)
+      assert_match(%r{"partner_id":"123989"}, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+    assert_equal 'pay_fj3xswqe3emuxckocjx6td73ni', response.authorization
+
+    void = stub_comms do
+      @gateway.void(response.authorization)
+    end.respond_with(successful_void_response)
+
+    assert_success void
+  end
+
   def test_failed_void
     response = stub_comms do
       @gateway.void('5d53a33d960c46d00f5dc061947d998c')
@@ -301,6 +368,30 @@ class CheckoutV2Test < Test::Unit::TestCase
   def test_successful_refund
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert_equal 'pay_bgv5tmah6fmuzcmcrcro6exe6m', response.authorization
+
+    refund = stub_comms do
+      @gateway.refund(@amount, response.authorization)
+    end.respond_with(successful_refund_response)
+
+    assert_success refund
+  end
+
+  def test_successful_refund_with_metadata
+    response = stub_comms do
+      options = {
+        metadata: {
+          coupon_code: 'NY2018',
+          partner_id: '123989'
+        }
+      }
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r{"coupon_code":"NY2018"}, data)
+      assert_match(%r{"partner_id":"123989"}, data)
     end.respond_with(successful_purchase_response)
 
     assert_success response

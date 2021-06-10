@@ -40,7 +40,7 @@ class CreditCardMethodsTest < Test::Unit::TestCase
        596245 596289 596399 596405 596590 596608 596645 596646 596791 596808 596815 596846 597077 597094
        597143 597370 597410 597765 597855 597862 598053 598054 598395 598585 598793 598794 598815 598835
        598838 598880 598889 599000 599069 599089 599148 599191 599310 599741 599742 599867 601070 604983
-       606126 636380 636422 636502 636639 637046 637756 639130 690032]
+       606126 636380 636422 636502 636639 637046 637756 639130 639229 690032]
   end
 
   def test_should_be_able_to_identify_valid_expiry_months
@@ -148,6 +148,12 @@ class CreditCardMethodsTest < Test::Unit::TestCase
   def test_should_detect_mastercard
     assert_equal 'master', CreditCard.brand?('2720890000000000')
     assert_equal 'master', CreditCard.brand?('5413031000000000')
+    assert_equal 'master', CreditCard.brand?('6052721000000000')
+    assert_equal 'master', CreditCard.brand?('6062821000000000')
+    assert_equal 'master', CreditCard.brand?('6370951000000000')
+    assert_equal 'master', CreditCard.brand?('6375681000000000')
+    assert_equal 'master', CreditCard.brand?('6375991000000000')
+    assert_equal 'master', CreditCard.brand?('6376091000000000')
   end
 
   def test_should_detect_forbrugsforeningen

@@ -5,7 +5,8 @@ class PaywayDotComTest < Test::Unit::TestCase
     @gateway = PaywayDotComGateway.new(
       login: 'sprerestwsdev',
       password: 'sprerestwsdev1!',
-      company_id: '3'
+      company_id: '3',
+      source_id: '67'
     )
     @credit_card = credit_card
     @amount = 100
@@ -13,8 +14,7 @@ class PaywayDotComTest < Test::Unit::TestCase
     @options = {
       order_id: '1',
       billing_address: address,
-      description: 'Store Purchase',
-      source_id: '67'
+      description: 'Store Purchase'
     }
   end
 
@@ -141,12 +141,17 @@ class PaywayDotComTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    @gateway2 = PaywayDotComGateway.new(login: '', password: '', company_id: '')
-    @gateway2.expects(:ssl_request).returns(failed_invalid_login_response)
+    gateway = PaywayDotComGateway.new(login: '', password: '', company_id: '', source_id: '')
+    gateway.expects(:ssl_request).returns(failed_invalid_login_response)
 
-    assert response = @gateway2.purchase(@amount, @credit_card, @options)
+    assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_match %r{5001}, response.message[0, 4]
+  end
+
+  def test_missing_source_id
+    error = assert_raises(ArgumentError) { PaywayDotComGateway.new(login: '', password: '', company_id: '') }
+    assert_equal 'Missing required parameter: source_id', error.message
   end
 
   def test_scrub

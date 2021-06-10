@@ -45,10 +45,18 @@ class PaymentExpressTest < Test::Unit::TestCase
     assert_equal '00000004011a2478', response.authorization
   end
 
+  def test_pass_currency_code_on_validation
+    stub_comms do
+      @gateway.verify(@amount, @visa, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<InputCurrency>NZD<\/InputCurrency>/, data)
+    end.respond_with(successful_validation_response)
+  end
+
   def test_successful_validation
     @gateway.expects(:ssl_post).returns(successful_validation_response)
 
-    assert response = @gateway.verify(@visa, @options)
+    assert response = @gateway.verify(@amount, @visa, @options)
     assert_success response
     assert response.test?
     assert_equal 'The Transaction was approved', response.message

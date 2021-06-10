@@ -32,7 +32,7 @@ class RemoteVposTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, options)
     assert_success purchase
 
-    assert void = @gateway.void(nil, options)
+    assert void = @gateway.void(purchase.authorization, options)
     assert_success void
     assert_equal 'RollbackSuccessful', void.message
   end
@@ -44,17 +44,17 @@ class RemoteVposTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, options)
     assert_success purchase
 
-    assert void = @gateway.void(nil, options)
+    assert void = @gateway.void(purchase.authorization, options)
     assert_success void
     assert_equal 'RollbackSuccessful', void.message
 
-    assert duplicate_void = @gateway.void(nil, options)
+    assert duplicate_void = @gateway.void(purchase.authorization, options)
     assert_failure duplicate_void
     assert_equal 'AlreadyRollbackedError', duplicate_void.message
   end
 
   def test_failed_void
-    response = @gateway.void('')
+    response = @gateway.void('abc#123')
     assert_failure response
     assert_equal 'BuyNotFoundError', response.message
   end
@@ -62,7 +62,7 @@ class RemoteVposTest < Test::Unit::TestCase
   def test_invalid_login
     gateway = VposGateway.new(private_key: '', public_key: '', commerce: 123, commerce_branch: 45)
 
-    response = gateway.void(nil)
+    response = gateway.void('')
     assert_failure response
     assert_match %r{InvalidPublicKeyError}, response.message
   end

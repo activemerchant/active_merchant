@@ -71,6 +71,12 @@ module ActiveMerchant #:nodoc:
       MASTERCARD_RANGES = [
         (222100..272099),
         (510000..559999),
+        [605272],
+        [606282],
+        [637095],
+        [637568],
+        (637599..637600),
+        [637609],
       ]
 
       MAESTRO_BINS = Set.new(
@@ -105,7 +111,7 @@ module ActiveMerchant #:nodoc:
             606126
             636380 636422 636502 636639
             637046 637756
-            639130
+            639130 639229
             690032]
       )
 
@@ -198,7 +204,7 @@ module ActiveMerchant #:nodoc:
       def self.in_bin_range?(number, ranges)
         bin = number.to_i
         ranges.any? do |range|
-          range.cover?(bin)
+          range.include?(bin)
         end
       end
 

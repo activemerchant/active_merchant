@@ -666,8 +666,26 @@ class WorldpayTest < Test::Unit::TestCase
         request_hash = Hash.from_xml(data)
         assert_equal 'credit', request_hash['paymentService']['modify']['orderModification']['refund']['amount']['debitCreditIndicator']
       end
-    end.respond_with(successful_refund_inquiry_response, successful_refund_response)
+    end.respond_with(successful_refund_inquiry_response('CAPTURED'), successful_refund_response)
     assert_success response
+  end
+
+  def test_cancel_or_refund
+    stub_comms do
+      @gateway.refund(@amount, @options[:order_id], @options)
+    end.check_request do |_endpoint, data, _headers|
+      next if data =~ /<inquiry>/
+
+      refute_match(/<cancelOrRefund\/>/, data)
+    end.respond_with(successful_refund_inquiry_response, successful_refund_response)
+
+    stub_comms do
+      @gateway.refund(@amount, @options[:order_id], @options.merge(cancel_or_refund: true))
+    end.check_request do |_endpoint, data, _headers|
+      next if data =~ /<inquiry>/
+
+      assert_match(/<cancelOrRefund\/>/, data)
+    end.respond_with(successful_refund_inquiry_response('SENT_FOR_REFUND'), successful_cancel_or_refund_response)
   end
 
   def test_successful_verify
@@ -1521,6 +1539,21 @@ class WorldpayTest < Test::Unit::TestCase
             <refundReceived orderCode="05d9f8c622553b1df1fe3a145ce91ccf">
               <amount value="35" currencyCode="GBP" exponent="2" debitCreditIndicator="credit"/>
             </refundReceived>
+          </ok>
+        </reply>
+      </paymentService>
+    RESPONSE
+  end
+
+  def successful_cancel_or_refund_response
+    <<~RESPONSE
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN"
+                                      "http://dtd.worldpay.com/paymentService_v1.dtd">
+      <paymentService version="1.4" merchantCode="SPREEDLY">
+        <reply>
+          <ok>
+            <voidReceived orderCode="afd85a0de932d5b7111b3eda78945544"></voidReceived>
           </ok>
         </reply>
       </paymentService>

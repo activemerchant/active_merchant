@@ -17,7 +17,7 @@ module ActiveMerchant #:nodoc:
       }
 
       def initialize(options = {})
-        requires!(options, :username, :password, :merchant, :pem, :pem_password)
+        requires!(options, :username, :password, :merchant, :pem)
         super
       end
 

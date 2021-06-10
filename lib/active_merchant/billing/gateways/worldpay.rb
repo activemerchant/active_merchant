@@ -90,8 +90,10 @@ module ActiveMerchant #:nodoc:
 
       def refund(money, authorization, options = {})
         authorization = order_id_from_authorization(authorization.to_s)
+        success_criteria = %w(CAPTURED SETTLED SETTLED_BY_MERCHANT SENT_FOR_REFUND)
+        success_criteria.push('AUTHORIZED') if options[:cancel_or_refund]
         response = MultiResponse.run do |r|
-          r.process { inquire_request(authorization, options, 'CAPTURED', 'SETTLED', 'SETTLED_BY_MERCHANT', 'SENT_FOR_REFUND') } unless options[:authorization_validated]
+          r.process { inquire_request(authorization, options, *success_criteria) } unless options[:authorization_validated]
           r.process { refund_request(money, authorization, options) }
         end
 
@@ -238,8 +240,13 @@ module ActiveMerchant #:nodoc:
 
       def build_refund_request(money, authorization, options)
         build_order_modify_request(authorization) do |xml|
-          xml.refund do
-            add_amount(xml, money, options.merge(debit_credit_indicator: 'credit'))
+          if options[:cancel_or_refund]
+            # Worldpay docs claim amount must be passed. This causes an error.
+            xml.cancelOrRefund # { add_amount(xml, money, options.merge(debit_credit_indicator: 'credit')) }
+          else
+            xml.refund do
+              add_amount(xml, money, options.merge(debit_credit_indicator: 'credit'))
+            end
           end
         end
       end

@@ -464,11 +464,19 @@ module ActiveMerchant #:nodoc:
             xml.tag! :AVSphoneNum, (address[:phone] ? address[:phone].scan(/\d/).join.to_s[0..13] : nil)
           end
 
-          xml.tag! :AVSname, (payment_source&.name ? payment_source.name[0..29] : nil)
+          xml.tag! :AVSname, billing_name(payment_source, options)
           xml.tag! :AVScountryCode, (avs_supported ? byte_limit(format_address_field(address[:country]), 2) : '')
 
           # Needs to come after AVScountryCode
           add_destination_address(xml, address) if avs_supported
+        end
+      end
+
+      def billing_name(payment_source, options)
+        if payment_source&.name.present?
+          payment_source.name[0..29]
+        elsif options[:billing_address][:name].present?
+          options[:billing_address][:name][0..29]
         end
       end
 
