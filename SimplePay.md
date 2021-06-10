@@ -8,6 +8,7 @@ The gateway provides **two different methods** for bank transactions. One when t
 
 ### Initialize the gateway:
 
+* *:merchantID* and *:merchantKEY* values are provided by Simple Pay.
 * *:redirectURL* - The url, where the users will be redirected after the transactions
 * *:timeout* - Time interval (in minutes) till the transaction can be completed.
 * *:currency* - Transactions currency. Avaiable choices ['HUF', 'EUR', 'USD'].
@@ -82,25 +83,48 @@ After a transaction is made with redirection, the redirected URL will contain pa
 
 Example
 
-https://sdk.simplepay.hu/back.php?**r**=eyJyIjowLCJ0Ijo5OTg0NDk0MiwiZSI6IlNVQ0NFU1MiLCJtIjoiUFVCTElDVEVTVEhVRiIsIm8iOiIxMDEwMTA1MTU2ODAyOTI0ODI2MDAifQ%3D%3D&
-**s**=El%2Fnvex9TjgjuORI63gEu5I5miGo4CS
+https://sdk.simplepay.hu/back.php
+**?r**=eyJyIjowLCJ0Ijo5OTg0NDk0MiwiZSI6IlNVQ0NFU1MiLCJtIjoiUFVCTElDVEVTVEhVRiIsIm8iOiIxMDEwMTA1MTU2ODAyOTI0ODI2MDAifQ%3D%3D
+**&s**=El%2Fnvex9TjgjuORI63gEu5I5miGo4CS
 AD5lmEpKIxp7WuVRq6bBeh1QdyEvVGSsi
 
 **r** - base64 encoded json string
 
 ```json
 {
-    "r": 'response code', 
-    "t": 'transaction id / Simple Pay ID ['THIS WILL BE USED FOR THE DO METHOD']',
-    "e": 'event [SUCESS, FAIL, TIMEOUT, CANCEL]',
-    "m": 'merchant',
-    "o": 'orderRef'
+    "r": "response code", 
+    "t": "transaction id / Simple Pay ID ['THIS WILL BE USED FOR THE DO METHOD']",
+    "e": "event [SUCESS, FAIL, TIMEOUT, CANCEL]",
+    "m": "merchant",
+    "o": "orderRef"
 }
 ```
 
 **s** - Signature of the payment.
 
 The *Signature* is a base64 encoded SHA384 HASH.
+
+Use **utilbackref()** util method to get the values in a hash.
+
+```ruby
+ActiveMerchant::Billing::SimplePayGateway.utilIPN(json, signature)
+```
+
+## IPN
+
+The gateways class provides a util method for checking the IPN's validity.
+
+```ruby
+ActiveMerchant::Billing::SimplePayGateway.utilIPN(json, signature)
+```
+
+Simple Pay will send you an HTTP POST request as an IPN. The allowed IP address is avaible at:
+
+```ruby
+ActiveMerchant::Billing::SimplePayGateway.allowed_ip
+```
+
+In the headers there will be a *Signature* key. Call the util method like utilIPN(requestbody, requestheader['Signature'])
 
 ## Methods
 
@@ -205,7 +229,7 @@ res = gateway.purchase({
 
 ##### *:methods*
 
-If the payment method is not *CARD* you can set it in the options.
+If the payment method is not *CARD* you can set it in the options. **WIRE** method is used for transfers.
 
 ```ruby
 res = gateway.purchase({

@@ -313,11 +313,27 @@ module ActiveMerchant #:nodoc:
         commit(:cardcancel, JSON[post])
       end
 
-      def utilbackref(url)
+      def self.utilbackref(url)
         uri    = URI.parse(url)
         params = CGI.parse(uri.query)
-        params['r'] = Base64.decode64(params[r])
-        return params
+        return {
+          :r => Base64.decode64(params['r'][0]),
+          :s => params['s'][0]
+        }
+      end
+
+      def self.utilIPN(json, signature)
+        if json.is_a? String
+          json = JSON[json]
+        end
+
+        if get_signature(:merchantKEY, json) == signature
+          json[:receiveDate] = generate_timeout(0)
+          commit(:IPN, json)
+          return true
+        else
+          return false
+        end
       end
 
       private
@@ -414,7 +430,7 @@ module ActiveMerchant #:nodoc:
             post[:total] = options[:amount]
             post[:timeout] = generate_timeout
             post[:url] = @options[:redirectURL]
-            post[:twoStep] = true,
+            post[:twoStep] = true
             post[:invoice] = {
               :name     => options[:address][:name],
               :company  => options[:address][:company],
@@ -458,8 +474,8 @@ module ActiveMerchant #:nodoc:
             if options.key?(:detailed)
               post[:detailed] = options[:detailed]
             end
-            if options.key?(:refund)
-              post[:refund] = options[:refund]
+            if options.key?(:refunds)
+              post[:refunds] = options[:refunds]
             end
 
           when :auto
@@ -633,6 +649,10 @@ module ActiveMerchant #:nodoc:
         }
       end
 
+      def get_signature(key, message)
+        return Base64.encode64(OpenSSL::HMAC.digest(OpenSSL::Digest::SHA384.new, key, message)).gsub("\n", '')
+      end
+
       def commit(action, parameters)
         puts parameters
         url = (test? ? test_url[action] : live_url[action])
@@ -657,7 +677,7 @@ module ActiveMerchant #:nodoc:
         !response.key?('errorCodes')
       end
 
-      def message_from(response)
+      def message_from(response, parameters)
         if success_from(response)
           if self.returnRequest
             return [parameters, response]
