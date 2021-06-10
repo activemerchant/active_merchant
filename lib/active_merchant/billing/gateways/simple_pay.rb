@@ -24,13 +24,20 @@ module ActiveMerchant #:nodoc:
       }
       self.live_url = {
         :start       => 'https://secure.simplepay.hu/payment/v2/start',
+        :authorize   => 'https://secure.simplepay.hu/payment/v2/start',
+        :capture     => 'https://secure.simplepay.hu/payment/v2/finish',
+        :refund      => 'https://secure.simplepay.hu/payment/v2/refund',
+        :query       => 'https://secure.simplepay.hu/payment/v2/query',
+
+        :auto        => 'https://secure.simplepay.hu/pay/pay/auto/pspHU',
+        
         :do          => 'https://secure.simplepay.hu/payment/v2/do',
         :dorecurring => 'https://secure.simplepay.hu/payment/v2/dorecurring',
         :cardquery   => 'https://secure.simplepay.hu/payment/v2/cardquery',
         :cardcancel  => 'https://secure.simplepay.hu/payment/v2/cardcancel',
         :tokenquery  => 'https://secure.simplepay.hu/payment/v2/tokenquery',
         :tokencancel => 'https://secure.simplepay.hu/payment/v2/tokencancel'
-      }
+      }}
 
       self.supported_countries = ['HU']
       self.default_currency = 'HUF'
@@ -185,11 +192,30 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options = {})
         requires!(options, :merchantID, :merchantKEY, :redirectURL)
+        if options[:currency] && ['HUF', 'EUR', 'USD'].inlude? options[:currency]
+          self.default_currency = options[:currency]
+        end
         super
       end
 
       def purchase(options = {})
-        post = {}  
+        post = {}
+        requires! (options, :amount, :email, :address)
+        requires! (options[:address], :name, :country, :state, :city, :zip, :address1)
+        if options.key?(:threeDSReqAuthMethod)
+        elsif options.key?(:recurring)
+          requires! (options, :times, :until, :maxAmount)
+        elsif options.key?(:onlyCardReg)
+        else
+          requires! (options, :customerEmail, :amount, :invoice)
+          if !options.key?(:url)
+            requires! (options, :urls)
+            requires! (options[:urls], :success, :fail, :cancel, :timeout)
+          end
+          if
+            requires! (options, :url)
+          end
+        end
         generate_post_data(:start, post, options)
         commit(:start, JSON[post])
       end
@@ -229,20 +255,28 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def querytoken(token)
-        post = {
-          :token      => token,
-          :merchant   => @options[:merchantID],
-          :salt       => generate_salt,
-          :sdkVersion => self.sdkVersion
-        }
-        return JSON[post]
-      end
-
       def auto(options = {})
         post = {}  
         generate_post_data(:auto, post, options)
         commit(:auto, JSON[post])
+      end
+
+      def dorecurring(options = {})
+        post = {}  
+        generate_post_data(:dorecurring, post, options)
+        commit(:dorecurring, JSON[post])
+      end
+
+      def tokenquery(options = {})
+        post = {}
+        generate_post_data(:tokenquery, post, options)
+        commit(:tokenquery, JSON[post])
+      end
+
+      def tokencancel(options = {})
+        post = {}
+        generate_post_data(:tokencancel, post, options)
+        commit(:tokencancel, JSON[post])
       end
 
       private
@@ -272,26 +306,26 @@ module ActiveMerchant #:nodoc:
           when :start
             post[:salt] = generate_salt()
             post[:merchant] = @options[:merchantID]
-            post[:orderRef] = generate_order_ref()
+            post[:orderRef] = options[:orderRef] || generate_order_ref()
             post[:currency] = self.default_currency
             post[:customerEmail] = options[:email]
             post[:language] = self.language
             post[:sdkVersion] = self.sdkVersion
-            post[:methods] = ['CARD']
-            post[:total] = options[:ammount]
+            post[:methods] = ['CARD'] || options[:methods]
+            post[:total] = options[:amount]
             post[:timeout] = generate_timeout
             post[:url] = @options[:redirectURL]
-            post[:twoStep] = false,
+            post[:twoStep] = options[:twoStep] || false
             post[:invoice] = {
               :name     => options[:address][:name],
-              :company  => options[:address][:company],
+              :company  => options[:address][:company] || '',
               :country  => options[:address][:country],
               :state    => options[:address][:state],
               :city     => options[:address][:city],
               :zip      => options[:address][:zip],
               :address  => options[:address][:address1],
-              :address2 => options[:address][:address2],
-              :phone    => options[:address][:phone]
+              :address2 => options[:address][:address2] || '',
+              :phone    => options[:address][:phone] || ''
             }
             if options.key?(:items)
               post[:items] = options[:items]
@@ -299,16 +333,27 @@ module ActiveMerchant #:nodoc:
             if options.key?(:threeDSReqAuthMethod)
               post[:threeDSReqAuthMethod] = options[:threeDSReqAuthMethod]
             end
+            if options.key?(:recurring)
+              post[:recurring] = {
+                :times => options[:recurring][:times],
+                :until => options[:recurring][:until],
+                :maxAmount => options[:recurring][:maxAmount]
+              }
+            end
+            if options.key?(:onlyCardReg)
+              post[:onlyCardReg] = options[:onlyCardReg]
+              post[:twoStep] = true
+            end
           when :authorize
             post[:salt] = generate_salt()
             post[:merchant] = @options[:merchantID]
-            post[:orderRef] = generate_order_ref()
+            post[:orderRef] = options[:orderRef] || generate_order_ref()
             post[:currency] = self.default_currency
             post[:customerEmail] = options[:email]
             post[:language] = self.language
             post[:sdkVersion] = self.sdkVersion
             post[:methods] = ['CARD']
-            post[:total] = options[:ammount]
+            post[:total] = options[:amount]
             post[:timeout] = generate_timeout
             post[:url] = @options[:redirectURL]
             post[:twoStep] = true,
@@ -361,13 +406,13 @@ module ActiveMerchant #:nodoc:
           when :auto
             post[:salt] = generate_salt()
             post[:merchant] = @options[:merchantID]
-            post[:orderRef] = generate_order_ref()
+            post[:orderRef] = options[:orderRef] || generate_order_ref()
             post[:currency] = self.default_currency
             post[:customerEmail] = options[:email]
             post[:language] = self.language
             post[:sdkVersion] = self.sdkVersion
             post[:methods] = ['CARD']
-            post[:total] = options[:ammount]
+            post[:total] = options[:amount]
             post[:timeout] = generate_timeout
             post[:url] = @options[:redirectURL]
             post[:twoStep] = false
@@ -408,6 +453,44 @@ module ActiveMerchant #:nodoc:
                 }
               end
             end
+          when :dorecurring
+            post[:salt] = generate_salt()
+            post[:token] = options[:token]
+            post[:merchant] = @options[:merchantID]
+            post[:orderRef] = options[:orderRef] || generate_order_ref()
+            post[:currency] = self.default_currency
+            post[:customerEmail] = options[:email]
+            post[:language] = self.language
+            post[:sdkVersion] = self.sdkVersion
+            post[:methods] = ['CARD']
+            post[:total] = options[:amount]
+            post[:timeout] = generate_timeout
+            post[:type] = options[:type]
+            post[:threeDSReqAuthMethod] = options[:threeDSReqAuthMethod]
+            post[:invoice] = {
+              :name     => options[:address][:name],
+              :company  => options[:address][:company],
+              :country  => options[:address][:country],
+              :state    => options[:address][:state],
+              :city     => options[:address][:city],
+              :zip      => options[:address][:zip],
+              :address  => options[:address][:address1],
+              :address2 => options[:address][:address2],
+              :phone    => options[:address][:phone]
+            }
+            if options.key?(:items)
+              post[:items] = options[:items]
+            end
+          when :tokenquery
+            post[:token]      => options[:token],
+            post[:merchant]   => @options[:merchantID],
+            post[:salt]       => generate_salt,
+            post[:sdkVersion] => self.sdkVersion
+          when :tokencancel
+            post[:token]      => options[:token],
+            post[:merchant]   => @options[:merchantID],
+            post[:salt]       => generate_salt,
+            post[:sdkVersion] => self.sdkVersion
         end
       end
 
@@ -429,9 +512,9 @@ module ActiveMerchant #:nodoc:
 
         Response.new(
           success_from(response),
+          message_from(response),
           response,
-          response,
-          authorization: authorization_from(response),
+          #authorization: authorization_from(response),
           #avs_result: AVSResult.new(code: response['some_avs_response_key']),
           #cvv_result: CVVResult.new(response['some_cvv_response_key']),
           test: test?,
@@ -440,7 +523,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        !response.key?(:errorCodes)
+        !response.key?('errorCodes')
       end
 
       def message_from(response)
@@ -448,20 +531,12 @@ module ActiveMerchant #:nodoc:
           return response
         else
           errors = []
-          begin
+          if response["errorCodes"].length > 0
             response["errorCodes"].each do |error|
               errors << STANDARD_ERROR_CODE_MAPPING[error.to_s]
             end
             return errors
-          rescue => exception
-            return 'An error occurred.'
           end
-        end
-      end
-
-      def authorization_from(response)
-        if success_from(response)
-          response[:paymentUrl]
         end
       end
 

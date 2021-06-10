@@ -1,10 +1,14 @@
 # Simple Pay Gateway
 
-## Usecases:
+## Usage:
 
-The gateway provides **two different methods** for bank transactions. One when the response contains a redirect URL, where the users can fulfill tthe transaction by providing their card data.
+The gateway provides **two different methods** for bank transactions. One when the response contains a redirect URL, where the users can fulfill the transaction by providing their card data.
 
 ### Initialize the gateway:
+
+* *:redirectURL* - The url, where the users will be redirected after the transactions
+* *:timeout* - Time interval (in minutes) till the transaction can be completed.
+* *:currency* - Transactions currency. Avaiable choices ['HUF', 'EUR', 'USD'].
 
 ```ruby
 require 'active_merchant'
@@ -12,13 +16,12 @@ require 'active_merchant'
 #Enable testing mode.
 ActiveMerchant::Billing::Base.mode = :test 
 
-#redirectURL: is the url, where the users will be redirected after the transactions
-#timeout: Time interval (in minutes) till the transaction can be completed.
 gateway = ActiveMerchant::Billing::SimplePayGateway.new(
     :merchantID  => 'PUBLICTESTHUF',
     :merchantKEY => 'FxDa5w314kLlNseq2sKuVwaqZshZT5d6',
     :redirectURL => 'https://www.myawesomewebsite.com/redirect-back',
-    :timeout     => 30
+    :timeout     => 30,
+    :currency    => 'HUF'
 )
 
 # OR you can provide multiple urls, depending on the transaction status
@@ -37,20 +40,31 @@ gateway = ActiveMerchant::Billing::SimplePayGateway.new(
 ```
 
 The gateways provides these methods for making transactions
-    
-* [purchase()](#purchase)
-* [authorize()](#authorize)
-* [capture()](#capture)
-* [refund()](#refund)
-* [query()](#query)
-* [auto()](#auto)
 
-## Responses
+* One time payments  
+    * [purchase()](#purchase)
+    * [authorize()](#authorize)
+    * [capture()](#capture)
+    * [refund()](#refund)
+    * [query()](#query)
+    * [auto()](#auto)
+
+* Recurring payments
+    * [dorecurring()](#dorecurring)
+    * [do()](#do)
+    * [tokenquery()](#tokenquery)
+    * [cardquery()](#cardquery)
+    * [tokencancel()](#tokencancel)
+    * [cardcancel()](#cardcancel)
+
+### Responses
 
 The response contains all the information about the transaction, in the reponses message.
 ```ruby
 res.message
 ```
+
+## Methods
 
 ### **purchase()**
 
@@ -61,22 +75,34 @@ In case if collecting the card data, transaction is possible without redirection
 
 ```ruby
 res = gateway.purchase({
-    :ammount => 2000,
+    :amount => 2000,
     :email => 'customer@email.hu',
-    :threeDSReqAuthMethod => '01', #???
     :address => {
-        :name =>  'myname',
-        :company => 'company',
+        :name =>  'Customer Name',
         :country => 'HU',
         :state => 'Budapest',
         :city => 'Budapest',
         :zip => '1111',
         :address1 => 'Address u.1',
-        :address2 => 'Address u.2',
-        :phone => '06301111111'
-    },
-    # Optionally you can define items for the transaction.
-    # If both :ammount, and :items are present, :ammount will be ignored.
+    }
+})
+```
+
+#### Optional fields:
+
+##### *:invoice*
+
+* company
+* address2
+* phone
+
+##### *:items*
+
+If both :amount, and :items are present, :amount will be ignored. 
+
+```ruby
+res = gateway.purchase({
+    # OTHER OPTIONS...
     :items => [
         {
         :ref => "Product ID 2",
@@ -88,6 +114,51 @@ res = gateway.purchase({
         }
     ]
 })
+```
+##### *:methods*
+
+If the payment method is not *CARD* you can set it in the options.
+
+```ruby
+res = gateway.purchase({
+    # OTHER OPTIONS...
+    :methods => ['WIRE']
+})
+```
+
+**3DS Requirements**
+
+* customerEmail
+* invoice
+* name
+* country
+* state
+* city
+* zip
+* address
+
+If you would like to start a recurring transaction these options must be present.
+
+* *:times* - How many tokens to generate?
+* *:until* - Expiary date of the token.
+* *:maxAmount* - Max amount to charge with the token.
+
+Tokens will be created and avaiable in the respond's message.
+
+To start a recurring transaction behind the scenes (with a token) [See dorecurring()](#dorecurring)
+
+```ruby
+:recurring => {
+    :times => 1,
+    :until => "2022-12-01T18:00:00+02:00",
+    :maxAmount => 2000
+}
+```
+
+This will charge the customer. If you would like to only register the card, add *:onlyCardReg* field to the options:
+
+```ruby
+:onlyCardReg => true
 ```
 
 ### **auto()**
@@ -106,7 +177,7 @@ threeDSReqAuthType:
 * MIT - The customer is not present.
 * REC - Recurring payment.
 
-In case of **CIT** type *:browser* is requiered and the response could contain a redirectURL for the challange.
+In case of **CIT** type *:browser* is requiered and the response may contain a redirectURL for the challange.
 
 In case of MIT or REC the *:browser*, should not be included.
 
@@ -122,7 +193,7 @@ credit_card = ActiveMerchant::Billing::CreditCard.new(
 
 res = gateway.auto({
     :credit_card => credit_card,
-    :ammount => 2000,
+    :amount => 2000,
     :email => 'customer@email.hu',
     :threeDS => {
         :threeDSReqAuthMethod => '01', 
@@ -140,8 +211,8 @@ res = gateway.auto({
         }
     },
     :address => {
-        :name =>  'myname',
-        :company => 'company',
+        :name =>  'Customer Name',
+        :company => 'company Name',
         :country => 'HU',
         :state => 'Budapest',
         :city => 'Budapest',
@@ -175,8 +246,8 @@ As same as the **purchase()** method, except the transaction won't happen until 
 ### **capture()**
 
 * *:orderRef* - On successfull authorization the response's message containt the reference number.
-* *:originalTotal* - The authorized ammount
-* *:approveTotal* - The ammount should be captured
+* *:originalTotal* - The authorized amount
+* *:approveTotal* - The amount should be captured
 
 ```ruby
 res = gateway.capture({
@@ -189,7 +260,7 @@ res = gateway.capture({
 ### **refund()**
 
 * *:orderRef* - On successfull authorization the response's message containt the reference number.
-* *:refundTotal* - The ammount that should be refunded.
+* *:refundTotal* - The amount that should be refunded.
 
 ```ruby
 res = gateway.refund({
@@ -210,4 +281,77 @@ res = gateway.query({
     :detailed = true,   #optional
     :refunds = true     #optional
 })
+```
+
+### **dorecurring()**
+
+To start a recurring payment, you will need a token, that **haven't been** used yet.
+Also *:threeDSReqAuthMethod* and *:type* fields are mandatory, using this method.
+
+```ruby
+res = gateway.dorecurring({
+    :token => 'SPT82SL7OMG2FI48N27D85KQX3H8MJ3JEQUD643VILLKTLDXRU7EMFPS8FSS3BBD',
+    :threeDSReqAuthMethod => '02',
+    :type => 'MIT',
+    :amount => 2000,
+    :email => 'email@email.hu',
+    :address => {
+        :name =>  'Customer Name',
+        :company => 'company Name',
+        :country => 'HU',
+        :state => 'Budapest',
+        :city => 'Budapest',
+        :zip => '1111',
+        :address1 => 'Address u.1',
+        :address2 => 'Address u.2',
+        :phone => '06301111111'
+    },
+})
+```
+
+### **tokenquery()**
+
+This method is responible for returning the token's status.
+* status - If the token is active or not.
+* expiry - The date when the token will expire. 
+
+```ruby
+res = gateway.tokenquery({
+    token => 'myawesometoken'
+})
+```
+
+### **tokencancel()**
+
+This method is responsible for cancelling a token.
+token - The token itself.
+status - Status of the token.
+expiry - Date of expiry.
+
+```ruby
+res = gateway.tokenquery({
+    token => 'myawesometoken'
+})
+```
+
+**UNDER DEVELOPMENT**
+
+One click transaction methods, with card secret.
+
+### **do()**
+
+```ruby
+
+```
+
+### **cardquery()**
+
+```ruby
+
+```
+
+### **cardcancel()**
+
+```ruby
+
 ```
