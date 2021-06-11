@@ -254,7 +254,7 @@ module ActiveMerchant #:nodoc:
         return unless options[:three_d_secure]
 
         if (three_d_secure = options[:three_d_secure])
-          post[:eci] = three_d_secure[:eci]
+          post[:cardholder_auth] = three_d_secure[:cardholder_auth]
           post[:cavv] = three_d_secure[:cavv]
           post[:xid] = three_d_secure[:xid]
           post[:three_ds_version] = three_d_secure[:version]

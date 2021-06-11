@@ -98,14 +98,14 @@ class NmiTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_3ds
     version = '2.1.0'
-    eci = '02'
+    cardholder_auth = 'verified'
     cavv = 'jJ81HADVRtXfCBATEp01CJUAAAA'
     ds_transaction_id = '97267598-FAE6-48F2-8083-C23433990FBC'
     xid = '00000000000000000501'
     options_with_3ds = @transaction_options.merge(
       three_d_secure: {
         version: version,
-        eci: eci,
+        cardholder_auth: cardholder_auth,
         cavv: cavv,
         ds_transaction_id: ds_transaction_id,
         xid: xid
@@ -116,7 +116,7 @@ class NmiTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, options_with_3ds)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/three_ds_version=2.1.0/, data)
-      assert_match(/eci=02/, data)
+      assert_match(/cardholder_auth=verified/, data)
       assert_match(/cavv=jJ81HADVRtXfCBATEp01CJUAAAA/, data)
       assert_match(/directory_server_id=97267598-FAE6-48F2-8083-C23433990FBC/, data)
       assert_match(/xid=00000000000000000501/, data)
