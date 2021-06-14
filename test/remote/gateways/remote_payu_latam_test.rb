@@ -5,9 +5,9 @@ class RemotePayuLatamTest < Test::Unit::TestCase
     @gateway = PayuLatamGateway.new(fixtures(:payu_latam).update(payment_country: 'AR'))
 
     @amount = 4000
-    @credit_card = credit_card('4097440000000004', verification_value: '444', first_name: 'APPROVED', last_name: '')
-    @declined_card = credit_card('4097440000000004', verification_value: '444', first_name: 'REJECTED', last_name: '')
-    @pending_card = credit_card('4097440000000004', verification_value: '444', first_name: 'PENDING', last_name: '')
+    @credit_card = credit_card('4097440000000004', verification_value: '777', first_name: 'APPROVED', last_name: '')
+    @declined_card = credit_card('4097440000000004', verification_value: '777', first_name: 'REJECTED', last_name: '')
+    @pending_card = credit_card('4097440000000004', verification_value: '777', first_name: 'PENDING', last_name: '')
     @naranja_credit_card = credit_card('5895620000000002', verification_value: '123', first_name: 'APPROVED', last_name: '', brand: 'naranja')
     @cabal_credit_card = credit_card('5896570000000004', verification_value: '123', first_name: 'APPROVED', last_name: '', brand: 'cabal')
     @invalid_cabal_card = credit_card('6271700000000000', verification_value: '123', first_name: 'APPROVED', last_name: '', brand: 'cabal')

@@ -7,6 +7,7 @@
 * NMI: Support cardholder_auth field for 3DS2 [cdmackeyfree] #4002
 * Confiable: Support cardtype [therufs] #4004
 * Maestro: Add BIN [therufs] #4003
+* PayULatam: Ensure phone number is pulled from shipping_address correctly [dsmcclain] #4005
 
 == Version 1.121 (June 8th, 2021)
 * Braintree: Lift restriction on gem version to allow for backwards compatibility [naashton] #3993
