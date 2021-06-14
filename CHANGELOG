@@ -6,6 +6,7 @@
 * PayArc: Support gateway [senthil-code] #3974
 * NMI: Support cardholder_auth field for 3DS2 [cdmackeyfree] #4002
 * Confiable: Support cardtype [therufs] #4004
+* Maestro: Add BIN [therufs] #4003
 
 == Version 1.121 (June 8th, 2021)
 * Braintree: Lift restriction on gem version to allow for backwards compatibility [naashton] #3993
