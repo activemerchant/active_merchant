@@ -180,6 +180,18 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     end
   end
 
+  def test_should_detect_confiable_card
+    assert_equal 'confiable', CreditCard.brand?('5607180000000000')
+  end
+
+  def test_confiable_number_not_validated
+    10.times do
+      number = rand(5607180000000001..5607189999999999).to_s
+      assert_equal 'confiable', CreditCard.brand?(number)
+      assert CreditCard.valid_number?(number)
+    end
+  end
+
   def test_should_detect_olimpica_card
     assert_equal 'olimpica', CreditCard.brand?('6368530000000000')
   end

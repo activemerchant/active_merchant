@@ -32,7 +32,8 @@ module ActiveMerchant #:nodoc:
           )
         },
         'olimpica' => ->(num) { num =~ /^636853\d{10}$/ },
-        'creditel' => ->(num) { num =~ /^601933\d{10}$/ }
+        'creditel' => ->(num) { num =~ /^601933\d{10}$/ },
+        'confiable' => ->(num) { num =~ /^560718\d{10}$/ }
       }
 
       # http://www.barclaycard.co.uk/business/files/bin_rules.pdf
@@ -356,6 +357,8 @@ module ActiveMerchant #:nodoc:
           when 'creditel'
             valid_creditel_algo?(numbers)
           when 'alia'
+            true
+          when 'confiable'
             true
           else
             valid_luhn?(numbers)
