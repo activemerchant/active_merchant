@@ -11,6 +11,7 @@
 * SafeCharge: Add challenge_preference for 3DS [klaiv] #3999
 * Adyen: Pass networkTxReference in all transactions [naashton] #4006
 * Adyen: Ensure correct transaction reference is selected [dsmcclain] #4007
+* PayTrace: Support level_3_data fields [meagabeth] #4008
 
 == Version 1.121 (June 8th, 2021)
 * Braintree: Lift restriction on gem version to allow for backwards compatibility [naashton] #3993

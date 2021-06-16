@@ -61,6 +61,104 @@ class RemotePayTraceTest < Test::Unit::TestCase
     assert_equal 'Your transaction was successfully approved.', response.message
   end
 
+  def test_successful_purchase_with_level_3_data_visa
+    options = {
+      visa_or_mastercard: 'visa',
+      invoice_id: 'inv12345',
+      customer_reference_id: '123abcd',
+      tax_amount: 499,
+      national_tax_amount: 172,
+      merchant_tax_id: '3456defg',
+      customer_tax_id: '3456test',
+      commodity_code: '4321',
+      discount_amount: 99,
+      freight_amount: 75,
+      duty_amount: 32,
+      source_address: {
+        zip: '94947'
+      },
+      shipping_address: {
+        zip: '94948',
+        country: 'US'
+      },
+      additional_tax_amount: 4,
+      additional_tax_rate: 1,
+      line_items: [
+        {
+          additional_tax_amount: 0,
+            additional_tax_rate: 8,
+            amount: 1999,
+            commodity_code: '123commodity',
+            description: 'plumbing',
+            discount_amount: 327,
+            product_id: 'skucode123',
+            quantity: 4,
+            unit_of_measure: 'EACH',
+            unit_cost: 424
+        }
+      ]
+    }
+
+    response = @gateway.purchase(250, @credit_card, options)
+    assert_success response
+    assert_equal 170, response.params['response_code']
+  end
+
+  def test_successful_purchase_with_level_3_data_mastercard
+    options = {
+      visa_or_mastercard: 'mastercard',
+      invoice_id: 'inv1234',
+      customer_reference_id: 'PO123456',
+      tax_amount: 810,
+      source_address: {
+        zip: '99201'
+      },
+      shipping_address: {
+        zip: '85284',
+        country: 'US'
+      },
+      additional_tax_amount: 40,
+      additional_tax_included: true,
+      line_items: [
+        {
+          additional_tax_amount: 40,
+          additional_tax_included: true,
+          additional_tax_rate: 8,
+          amount: 1999,
+          debit_or_credit: 'D',
+          description: 'business services',
+          discount_amount: 327,
+          discount_rate: 1,
+          discount_included: true,
+          merchant_tax_id: '12-123456',
+          product_id: 'sku1245',
+          quantity: 4,
+          tax_included: true,
+          unit_of_measure: 'EACH',
+          unit_cost: 524
+        }
+      ]
+    }
+
+    response = @gateway.purchase(250, @mastercard, options)
+    assert_success response
+    assert_equal 170, response.params['response_code']
+  end
+
+  # Level three data can only be added to approved sale transactions done with visa or mastercard.
+  # This test is to show that if a transaction were to come through with a different card type,
+  # the gateway integration would ignore the attempt to add level three data, but could still approve the sale transaction.
+  def test_successful_purchase_with_attempted_level_3
+    options = {
+      visa_or_mastercard: 'discover',
+      invoice_id: 'inv1234',
+      customer_reference_id: 'PO123456'
+    }
+
+    response = @gateway.purchase(300, @discover, @options.merge(options))
+    assert_success response
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(29, @amex, @options)
     assert_failure response
@@ -84,6 +182,37 @@ class RemotePayTraceTest < Test::Unit::TestCase
     response = @gateway.authorize(200, customer_id, @options)
     assert_success response
     assert_equal 'Your transaction was successfully approved.', response.message
+  end
+
+  def test_successful_authorize_and_capture_with_level_3_data
+    options = {
+      visa_or_mastercard: 'mastercard',
+      address: {
+        zip: '99201'
+      },
+      shipping_address: {
+        zip: '85284',
+        country: 'US'
+      },
+      line_items: [
+        {
+          description: 'office supplies',
+          product_id: 'sku9876'
+        },
+        {
+          description: 'business services',
+          product_id: 'sku3456'
+        }
+      ]
+    }
+    auth = @gateway.authorize(100, @mastercard, options)
+    assert_success auth
+
+    assert capture = @gateway.capture(auth.authorization, options)
+    assert_success capture
+
+    transaction_id = auth.authorization
+    assert_equal "Visa/MasterCard enhanced data was successfully added to Transaction ID #{transaction_id}. 2 line item records were created.", capture.message
   end
 
   def test_failed_authorize

@@ -31,7 +31,9 @@ module ActiveMerchant #:nodoc:
         transaction_refund: 'transactions/refund/for_transaction',
         transaction_void: 'transactions/void',
         store: 'customer/create',
-        redact: 'customer/delete'
+        redact: 'customer/delete',
+        level_3_visa: 'level_three/visa',
+        level_3_mastercard: 'level_three/mastercard'
       }
 
       def initialize(options = {})
@@ -40,40 +42,40 @@ module ActiveMerchant #:nodoc:
         acquire_access_token
       end
 
-      def purchase(money, payment_or_customerid, options = {})
+      def purchase(money, payment_or_customer_id, options = {})
         post = {}
         add_invoice(post, money, options)
-        if payment_or_customerid.class == String
-          post[:customer_id] = payment_or_customerid
-
-          response = commit(ENDPOINTS[:customer_id_sale], post)
-          check_token_response(response, ENDPOINTS[:customer_id_sale], post, options)
+        if customer_id?(payment_or_customer_id)
+          post[:customer_id] = payment_or_customer_id
+          endpoint = ENDPOINTS[:customer_id_sale]
         else
-          add_payment(post, payment_or_customerid)
-          add_address(post, payment_or_customerid, options)
+          add_payment(post, payment_or_customer_id)
+          add_address(post, payment_or_customer_id, options)
           add_customer_data(post, options)
-
-          response = commit(ENDPOINTS[:keyed_sale], post)
-          check_token_response(response, ENDPOINTS[:keyed_sale], post, options)
+          endpoint = ENDPOINTS[:keyed_sale]
         end
+        response = commit(endpoint, post)
+        check_token_response(response, endpoint, post, options)
+
+        return response unless visa_or_mastercard?(options)
+
+        send_level_3_data(response, options)
       end
 
-      def authorize(money, payment_or_customerid, options = {})
+      def authorize(money, payment_or_customer_id, options = {})
         post = {}
         add_invoice(post, money, options)
-        if payment_or_customerid.class == String
-          post[:customer_id] = payment_or_customerid
-
-          response = commit(ENDPOINTS[:customer_id_auth], post)
-          check_token_response(response, ENDPOINTS[:customer_id_auth], post, options)
+        if customer_id?(payment_or_customer_id)
+          post[:customer_id] = payment_or_customer_id
+          endpoint = ENDPOINTS[:customer_id_auth]
         else
-          add_payment(post, payment_or_customerid)
-          add_address(post, payment_or_customerid, options)
+          add_payment(post, payment_or_customer_id)
+          add_address(post, payment_or_customer_id, options)
           add_customer_data(post, options)
-
-          response = commit(ENDPOINTS[:keyed_auth], post)
-          check_token_response(response, ENDPOINTS[:keyed_auth], post, options)
+          endpoint = ENDPOINTS[:keyed_auth]
         end
+        response = commit(endpoint, post)
+        check_token_response(response, endpoint, post, options)
       end
 
       def capture(authorization, options = {})
@@ -82,6 +84,10 @@ module ActiveMerchant #:nodoc:
         post[:transaction_id] = authorization
         response = commit(ENDPOINTS[:capture], post)
         check_token_response(response, ENDPOINTS[:capture], post, options)
+
+        return response unless visa_or_mastercard?(options)
+
+        send_level_3_data(response, options)
       end
 
       def refund(authorization, options = {})
@@ -159,6 +165,27 @@ module ActiveMerchant #:nodoc:
 
       private
 
+      # method can only be used to add level 3 data to any approved and unsettled sale transaction so it is built into the standard purchase workflow above
+      def send_level_3_data(response, options)
+        post = {}
+        post[:transaction_id] = response.authorization
+        endpoint = ENDPOINTS[:"level_3_#{options[:visa_or_mastercard]}"]
+
+        add_level_3_data(post, options)
+        adjust = commit(endpoint, post)
+        check_token_response(adjust, endpoint, post, options)
+      end
+
+      def visa_or_mastercard?(options)
+        return false unless options[:visa_or_mastercard]
+
+        options[:visa_or_mastercard] == 'visa' || options[:visa_or_mastercard] == 'mastercard'
+      end
+
+      def customer_id?(payment_or_customer_id)
+        payment_or_customer_id.class == String
+      end
+
       def add_customer_data(post, options)
         return unless options[:email]
 
@@ -186,6 +213,77 @@ module ActiveMerchant #:nodoc:
         post[:credit_card][:number] = payment.number
         post[:credit_card][:expiration_month] = payment.month
         post[:credit_card][:expiration_year] = payment.year
+      end
+
+      def add_level_3_data(post, options)
+        post[:invoice_id] = options[:invoice_id] if options[:invoice_id]
+        post[:customer_reference_id] = options[:customer_reference_id] if options[:customer_reference_id]
+        post[:tax_amount] = amount(options[:tax_amount]) if options[:tax_amount]
+        post[:national_tax_amount] = amount(options[:national_tax_amount]) if options[:national_tax_amount]
+        post[:merchant_tax_id] = options[:merchant_tax_id] if options[:merchant_tax_id]
+        post[:customer_tax_id] = options[:customer_tax_id] if options[:customer_tax_id]
+        post[:commodity_code] = options[:commodity_code] if options[:commodity_code]
+        post[:discount_amount] = amount(options[:discount_amount]) if options[:discount_amount]
+        post[:freight_amount] = amount(options[:freight_amount]) if options[:freight_amount]
+        post[:duty_amount] = amount(options[:duty_amount]) if options[:duty_amount]
+        post[:additional_tax_amount] = amount(options[:additional_tax_amount]) if options[:additional_tax_amount]
+        post[:additional_tax_rate] = amount(options[:additional_tax_rate]) if options[:additional_tax_rate]
+
+        add_source_address(post, options)
+        add_shipping_address(post, options)
+        add_line_items(post, options)
+      end
+
+      def add_source_address(post, options)
+        return unless source_address =  options[:source_address] ||
+                                        options[:billing_address] ||
+                                        options[:address]
+
+        post[:source_address] = {}
+        post[:source_address][:zip] = source_address[:zip] if source_address[:zip]
+      end
+
+      def add_shipping_address(post, options)
+        return unless shipping_address = options[:shipping_address]
+
+        post[:shipping_address] = {}
+        post[:shipping_address][:name] = shipping_address[:name] if shipping_address[:name]
+        post[:shipping_address][:street_address] = shipping_address[:address1] if shipping_address[:address1]
+        post[:shipping_address][:street_address2] = shipping_address[:address2] if shipping_address[:address2]
+        post[:shipping_address][:city] = shipping_address[:city] if shipping_address[:city]
+        post[:shipping_address][:state] = shipping_address[:state] if shipping_address[:state]
+        post[:shipping_address][:zip] = shipping_address[:zip] if shipping_address[:zip]
+        post[:shipping_address][:country] = shipping_address[:country] if shipping_address[:country]
+      end
+
+      def add_line_items(post, options)
+        return unless options[:line_items]
+
+        line_items = []
+        options[:line_items].each do |li|
+          obj = {}
+
+          obj[:additional_tax_amount] = amount(li[:additional_tax_amount]) if li[:additional_tax_amount]
+          obj[:additional_tax_included] = li[:additional_tax_included] if li[:additional_tax_included]
+          obj[:additional_tax_rate] = amount(li[:additional_tax_rate]) if li[:additional_tax_rate]
+          obj[:amount] = amount(li[:amount]) if li[:amount]
+          obj[:commodity_code] = li[:commodity_code] if li[:commodity_code]
+          obj[:debit_or_credit] = li[:debit_or_credit] if li[:debit_or_credit]
+          obj[:description] = li[:description] if li[:description]
+          obj[:discount_amount] = amount(li[:discount_amount]) if li[:discount_amount]
+          obj[:discount_rate] = amount(li[:discount_rate]) if li[:discount_rate]
+          obj[:discount_included] = li[:discount_included] if li[:discount_included]
+          obj[:merchant_tax_id] = li[:merchant_tax_id] if li[:merchant_tax_id]
+          obj[:product_id] = li[:product_id] if li[:product_id]
+          obj[:quantity] = li[:quantity] if li[:quantity]
+          obj[:transaction_id] = li[:transaction_id] if li[:transaction_id]
+          obj[:tax_included] = li[:tax_included] if li[:tax_included]
+          obj[:unit_of_measure] = li[:unit_of_measure] if li[:unit_of_measure]
+          obj[:unit_cost] = amount(li[:unit_cost]) if li[:unit_cost]
+
+          line_items << obj
+        end
+        post[:line_items] = line_items
       end
 
       def check_token_response(response, endpoint, body = {}, options = {})
