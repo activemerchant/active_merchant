@@ -17,6 +17,7 @@
 * Orbital: Add support for SCARecurringPayment [jessiagee] #4010
 * Braintree: Support recurring_first and moto reasons [curiousepic] #4013
 * PayTrace: Adjust capture method [meagabeth] #4015
+* BarclaysEpdqExtraPlus: updated custom_eci test + remote tests [yyapuncich] #4022
 
 == Version 1.121 (June 8th, 2021)
 * Braintree: Lift restriction on gem version to allow for backwards compatibility [naashton] #3993
