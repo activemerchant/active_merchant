@@ -59,6 +59,7 @@ module ActiveMerchant #:nodoc:
         add_3ds_authenticated_data(post, options)
         add_splits(post, options)
         add_recurring_contract(post, options)
+        add_network_transaction_reference(post, options)
         commit('authorise', post, options)
       end
 
@@ -67,6 +68,7 @@ module ActiveMerchant #:nodoc:
         add_invoice_for_modification(post, money, options)
         add_reference(post, authorization, options)
         add_splits(post, options)
+        add_network_transaction_reference(post, options)
         commit('capture', post, options)
       end
 
@@ -75,6 +77,7 @@ module ActiveMerchant #:nodoc:
         add_invoice_for_modification(post, money, options)
         add_original_reference(post, authorization, options)
         add_splits(post, options)
+        add_network_transaction_reference(post, options)
         commit('refund', post, options)
       end
 
@@ -83,6 +86,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, money, options)
         add_payment(post, payment, options)
         add_shopper_reference(post, options)
+        add_network_transaction_reference(post, options)
         commit('refundWithData', post, options)
       end
 
@@ -90,6 +94,7 @@ module ActiveMerchant #:nodoc:
         post = init_post(options)
         endpoint = options[:cancel_or_refund] ? 'cancelOrRefund' : 'cancel'
         add_reference(post, authorization, options)
+        add_network_transaction_reference(post, options)
         commit(endpoint, post, options)
       end
 
@@ -397,7 +402,6 @@ module ActiveMerchant #:nodoc:
       def add_reference(post, authorization, options = {})
         _, psp_reference, = authorization.split('#')
         post[:originalReference] = single_reference(authorization) || psp_reference
-        post[:networkTxReference] = options[:network_transaction_id] if options[:network_transaction_id]
       end
 
       def add_original_reference(post, authorization, options = {})
@@ -407,6 +411,11 @@ module ActiveMerchant #:nodoc:
           original_psp_reference, = authorization.split('#')
         end
         post[:originalReference] = single_reference(authorization) || original_psp_reference
+      end
+
+      def add_network_transaction_reference(post, options)
+        post[:additionalData] = {} unless post[:additionalData]
+        post[:additionalData][:networkTxReference] = options[:network_transaction_id] if options[:network_transaction_id]
       end
 
       def add_mpi_data_for_network_tokenization_card(post, payment)
