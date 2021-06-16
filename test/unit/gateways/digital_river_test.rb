@@ -172,6 +172,68 @@ class DigitalRiverTest < Test::Unit::TestCase
     assert_equal "in_review", response.params["order_state"]
   end
 
+  def test_successful_full_refund
+    DigitalRiver::ApiClient
+      .expects(:post)
+      .with("/refunds", anything)
+      .returns(successful_full_refund_response)
+
+    options = { order_id: '123456780012', currency: 'USD' }
+    assert response = @gateway.refund(9.99, nil, options)
+    assert_success response
+    assert_equal "OK", response.message
+    assert_equal "re_123", response.params['refund_id']
+  end
+
+  def test_successful_partial_refund
+    DigitalRiver::ApiClient
+      .expects(:post)
+      .with("/refunds", anything)
+      .returns(successful_partial_refund_response)
+
+    options = { order_id: '123456780012', currency: 'USD' }
+    assert response = @gateway.refund(1.99, nil, options)
+    assert_success response
+    assert_equal "OK", response.message
+    assert_equal "re_456", response.params['refund_id']
+  end
+
+  def test_unsuccessful_refund_order_doesnt_exist
+    DigitalRiver::ApiClient
+      .expects(:post)
+      .with("/refunds", anything)
+      .returns(unsuccessful_refund_order_doesnt_exist_response)
+
+    options = { order_id: '123456780012', currency: 'USD' }
+    assert response = @gateway.refund(9.99, nil, options)
+    assert_failure response
+    assert_equal "Requisition not found. (invalid_parameter)", response.message
+  end
+
+  def test_unsuccessful_refund_order_in_fulfilled_state
+    DigitalRiver::ApiClient
+      .expects(:post)
+      .with("/refunds", anything)
+      .returns(unsuccessful_refund_order_in_fulfilled_state_response)
+
+    options = { order_id: '123456780012', currency: 'USD' }
+    assert response = @gateway.refund(9.99, nil, options)
+    assert_failure response
+    assert_equal "The requested refund amount is greater than the available amount. (invalid_parameter)", response.message
+  end
+
+  def test_unsuccessful_refund_amount_larger_than_available
+    DigitalRiver::ApiClient
+      .expects(:post)
+      .with("/refunds", anything)
+      .returns(unsuccessful_refund_amount_larger_than_available_response)
+
+    options = { order_id: '123456780012', currency: 'USD' }
+    assert response = @gateway.refund(10.00, nil, options)
+    assert_failure response
+    assert_equal "The requested refund amount is greater than the available amount. (invalid_parameter)", response.message
+  end
+
   def succcessful_customer_response
     stub(
       success?: true,
@@ -624,6 +686,80 @@ class DigitalRiverTest < Test::Unit::TestCase
             refunded: false,
             source_id: "source",
             type: "merchant_initiated"
+          }
+        ]
+      }
+    )
+  end
+
+  def successful_full_refund_response
+    stub(
+      success?: true,
+      parsed_response: {
+        id: "re_123",
+        currency: "USD",
+        amount: 0.999e1,
+        refunded_amount: 0.0,
+        state: "pending",
+      }
+    )
+  end
+
+  def successful_partial_refund_response
+    stub(
+      success?: true,
+      parsed_response: {
+        id: "re_456",
+        currency: "USD",
+        amount: 0.199e1,
+        refunded_amount: 0.0,
+        state: "pending",
+      }
+    )
+  end
+
+  def unsuccessful_refund_order_doesnt_exist_response
+    stub(
+      success?: false,
+      parsed_response: {
+        type: "bad_request",
+        errors: [
+          {
+            code: "invalid_parameter",
+            parameter: "order",
+            message: "Requisition not found."
+          }
+        ]
+      }
+    )
+  end
+
+  def unsuccessful_refund_order_in_fulfilled_state_response
+    stub(
+      success?: false,
+      parsed_response: {
+        type: "bad_request",
+        errors: [
+          {
+            code: "invalid_parameter",
+            parameter: "amountRequested",
+            message: "The requested refund amount is greater than the available amount."
+          }
+        ]
+      }
+    )
+  end
+
+  def unsuccessful_refund_amount_larger_than_available_response
+    stub(
+      success?: false,
+      parsed_response: {
+        type: "bad_request",
+        errors: [
+          {
+            code: "invalid_parameter",
+            parameter: "amountRequested",
+            message: "The requested refund amount is greater than the available amount."
           }
         ]
       }

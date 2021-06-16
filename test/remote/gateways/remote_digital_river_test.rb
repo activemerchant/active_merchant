@@ -116,6 +116,57 @@ class RemoteDigitalRiverTest < Test::Unit::TestCase
   #   assert response.params["order_state"].present?
   # end
 
+  def test_successful_full_refund
+    order = order_factory.find_or_create_complete.value!
+    options = { order_id: order.id, currency: 'USD' }
+
+    assert response = @gateway.refund(order.available_to_refund_amount, nil, options)
+    assert_success response
+    assert_equal "OK", response.message
+    assert response.params['refund_id'].present?
+  end
+
+  def test_successful_partial_refund
+    order = order_factory.find_or_create_complete.value!
+    options = { order_id: order.id, currency: 'USD' }
+    amount = if order.available_to_refund_amount == order.total_amount
+               order.total_amount - 0.1
+             else
+               order.available_to_refund_amount
+             end
+
+    assert response = @gateway.refund(amount, nil, options)
+    assert_success response
+    assert_equal "OK", response.message
+    assert response.params['refund_id'].present?
+  end
+
+  def test_unsuccessful_refund_order_doesnt_exist
+    options = { order_id: '123456780012', currency: 'USD' }
+
+    assert response = @gateway.refund(9.99, nil, options)
+    assert_failure response
+    assert_equal "Requisition not found. (invalid_parameter)", response.message
+  end
+
+  def test_unsuccessful_refund_order_in_fulfilled_state
+    order = order_factory.create_fulfilled.value!
+    options = { order_id: order.id, currency: 'USD' }
+
+    assert response = @gateway.refund(9.99, nil, options)
+    assert_failure response
+    assert_equal "The requested refund amount is greater than the available amount. (invalid_parameter)", response.message
+  end
+
+  def test_unsuccessful_refund_amount_larger_than_available
+    order = order_factory.find_or_create_complete.value!
+    options = { order_id: order.id, currency: 'USD' }
+
+    assert response = @gateway.refund(order.total_amount * 1000, nil, options)
+    assert_failure response
+    assert_equal "The requested refund amount is greater than the available amount. (invalid_parameter)", response.message
+  end
+
   def payment_source(number)
     @digital_river_backend.testing_source.create(
       {
@@ -172,5 +223,12 @@ class RemoteDigitalRiverTest < Test::Unit::TestCase
       }
     ).value!.id
   end
-end
 
+  def order_factory(number = '4444222233331111')
+    DigitalRiver::Testing::OrderFactory.new(
+      @digital_river_backend,
+      source_id: payment_source(number),
+      customer_id: @customer
+    )
+  end
+end
