@@ -234,6 +234,49 @@ class DigitalRiverTest < Test::Unit::TestCase
     assert_equal "The requested refund amount is greater than the available amount. (invalid_parameter)", response.message
   end
 
+  def test_successful_unstore
+    DigitalRiver::ApiClient
+      .expects(:delete)
+      .with("/customers/123/sources/456", anything)
+      .returns(successful_unstore_response)
+
+    assert response = @gateway.unstore('456', { customer_vault_token: '123' })
+    assert_success response
+  end
+
+  def test_unsuccessful_unstore
+    DigitalRiver::ApiClient
+      .expects(:delete)
+      .with("/customers/123/sources/456", anything)
+      .returns(unsuccessful_unstore_response)
+
+    assert response = @gateway.unstore('456', { customer_vault_token: '123' })
+    assert_failure response
+  end
+
+  def unsuccessful_unstore_response
+    stub(
+      success?: false,
+      parsed_response: {
+        type: "conflict",
+        errors: [
+          {
+            code: "not_found",
+            parameter: "sourceId",
+            message: "Source 'ea9e87a7-9f81-4448-82e3-d3028ea953c4' has not been attached to the customer."
+          }
+        ]
+      }
+    )
+  end
+
+  def successful_unstore_response
+    stub(
+      success?: true,
+      parsed_response: {}
+    )
+  end
+
   def succcessful_customer_response
     stub(
       success?: true,

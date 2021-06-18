@@ -33,6 +33,22 @@ module ActiveMerchant
         end
       end
 
+      def unstore(payment_method, options)
+        customer_id = options[:customer_vault_token]
+        result = @digital_river_gateway
+          .customer
+          .detach_source(
+            customer_id,
+            payment_method
+          )
+        ActiveMerchant::Billing::Response.new(
+          result.success?,
+          message_from_result(result),
+          { customer_id: customer_id },
+          authorization: customer_id
+        )
+      end
+
       def purchase(options)
         return failed_order_response(options) if options[:order_failure_message].present?
 

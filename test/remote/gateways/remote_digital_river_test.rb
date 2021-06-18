@@ -103,18 +103,17 @@ class RemoteDigitalRiverTest < Test::Unit::TestCase
     assert_equal "Order '123' not found. (not_found)", response.message
   end
 
-  # For now we do not have a card to test this scenario
-  # def test_purchase_with_order_in_pending_state
-  #   source = payment_source('?')
-  #   order = order_with_source(source)
-  #   purchase_options = { order_id: order }
-  #
-  #   assert response = @gateway.purchase(purchase_options)
-  #   assert_failure response
-  #   assert_equal "Order not in 'accepted' state", response.message
-  #   assert_equal order, response.params["order_id"]
-  #   assert response.params["order_state"].present?
-  # end
+  def test_purchase_with_order_in_pending_state
+    source = payment_source('4444222233331111', 'holdpass@fraud.com')
+    order = order_with_source(source)
+    purchase_options = { order_id: order }
+
+    assert response = @gateway.purchase(purchase_options)
+    assert_failure response
+    assert_equal "Order not in 'accepted' state", response.message
+    assert_equal order, response.params["order_id"]
+    assert response.params["order_state"].present?
+  end
 
   def test_successful_full_refund
     order = order_factory.find_or_create_complete.value!
@@ -167,14 +166,39 @@ class RemoteDigitalRiverTest < Test::Unit::TestCase
     assert_equal "The requested refund amount is greater than the available amount. (invalid_parameter)", response.message
   end
 
-  def payment_source(number)
+  def test_successful_unstore
+    source = payment_source('4444222233331111')
+    store_response = @gateway.store(source, @store_options)
+
+    source_id = store_response.params["payment_profile_token"]
+    customer_id = store_response.params["customer_vault_token"]
+
+    assert response = @gateway.unstore(source_id, { customer_vault_token: customer_id })
+    assert_success response
+  end
+
+  def test_unsuccessful_unstore
+    source = payment_source('4444222233331111')
+    store_response = @gateway.store(source, @store_options)
+    source_id = store_response.params["payment_profile_token"]
+    customer_id = store_response.params["customer_vault_token"]
+    @gateway.unstore(source_id, { customer_vault_token: customer_id })
+
+    assert response = @gateway.unstore(source_id, { customer_vault_token: customer_id })
+    assert_failure response
+    assert_equal "Source '#{source_id}' has not been attached to the customer. (not_found)", response.message
+    assert_equal customer_id, response.authorization
+    assert_equal customer_id, response.params["customer_id"]
+  end
+
+  def payment_source(number, email = 'testing@example.com')
     @digital_river_backend.testing_source.create(
       {
         "type": 'creditCard',
         "owner": {
           "firstName": 'William',
           "lastName": 'Brown',
-          "email": 'testing@example.com',
+          "email": email,
           "address": {
             "line1": '10380 Bren Road West',
             "city": 'Minnetonka',
