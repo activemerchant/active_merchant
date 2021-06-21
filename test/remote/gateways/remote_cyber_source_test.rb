@@ -371,6 +371,18 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_successful_response(response)
   end
 
+  def test_successful_authorize_with_customer_id
+    options = @options.merge(customer_id: '7500BB199B4270EFE05348D0AFCAD')
+    assert response = @gateway.authorize(@amount, @credit_card, options)
+    assert_successful_response(response)
+  end
+
+  def test_successful_purchase_with_customer_id
+    options = @options.merge(customer_id: '7500BB199B4270EFE00588D0AFCAD')
+    assert response = @gateway.purchase(@amount, @credit_card, options)
+    assert_successful_response(response)
+  end
+
   def test_successful_purchase_with_elo
     assert response = @gateway.purchase(@amount, @elo_credit_card, @options)
     assert_successful_response(response)

@@ -223,6 +223,14 @@ class CyberSourceTest < Test::Unit::TestCase
     end.respond_with(successful_authorization_response)
   end
 
+  def test_authorize_includes_customer_id
+    stub_comms do
+      @gateway.authorize(100, @credit_card, customer_id: '5afefb801188d70023b7debb')
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<customerID>5afefb801188d70023b7debb<\/customerID>/, data)
+    end.respond_with(successful_authorization_response)
+  end
+
   def test_authorize_includes_merchant_tax_id_in_billing_address_but_not_shipping_address
     stub_comms do
       @gateway.authorize(100, @credit_card, order_id: '1', merchant_tax_id: '123')

@@ -285,6 +285,7 @@ module ActiveMerchant #:nodoc:
 
       def build_auth_request(money, creditcard_or_reference, options)
         xml = Builder::XmlMarkup.new indent: 2
+        add_customer_id(xml, options)
         add_payment_method_or_subscription(xml, money, creditcard_or_reference, options)
         add_threeds_2_ucaf_data(xml, creditcard_or_reference, options)
         add_decision_manager_fields(xml, options)
@@ -300,7 +301,6 @@ module ActiveMerchant #:nodoc:
         add_merchant_description(xml, options)
         add_sales_slip_number(xml, options)
         add_airline_data(xml, options)
-
         xml.target!
       end
 
@@ -334,6 +334,7 @@ module ActiveMerchant #:nodoc:
 
       def build_purchase_request(money, payment_method_or_reference, options)
         xml = Builder::XmlMarkup.new indent: 2
+        add_customer_id(xml, options)
         add_payment_method_or_subscription(xml, money, payment_method_or_reference, options)
         add_threeds_2_ucaf_data(xml, payment_method_or_reference, options)
         add_decision_manager_fields(xml, options)
@@ -513,6 +514,12 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'invoiceHeader' do
           xml.tag! 'merchantDescriptor', options[:merchant_descriptor]
         end
+      end
+
+      def add_customer_id(xml, options)
+        return unless options[:customer_id]
+
+        xml.tag! 'customerID', options[:customer_id]
       end
 
       def add_merchant_description(xml, options)
