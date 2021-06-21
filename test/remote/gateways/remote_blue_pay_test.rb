@@ -41,6 +41,15 @@ class BluePayTest < Test::Unit::TestCase
     assert response.authorization
   end
 
+  def test_successful_purchase_with_stored_credential
+    options = @options.merge(stored_credential: { initiator: 'cardholder', reason_type: 'recurring' })
+    assert response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert response.test?
+    assert_equal 'This transaction has been approved', response.message
+    assert response.authorization
+  end
+
   def test_expired_credit_card
     @credit_card.year = 2004
     assert response = @gateway.purchase(@amount, @credit_card, @options)
