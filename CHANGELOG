@@ -13,6 +13,7 @@
 * Adyen: Ensure correct transaction reference is selected [dsmcclain] #4007
 * PayTrace: Support level_3_data fields [meagabeth] #4008
 * BluePay: Add support for Stored Credentials [dsmcclain] #4009
+* Orbital: Add support for SCARecurringPayment [jessiagee] #4010
 
 == Version 1.121 (June 8th, 2021)
 * Braintree: Lift restriction on gem version to allow for backwards compatibility [naashton] #3993
