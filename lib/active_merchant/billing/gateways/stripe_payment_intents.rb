@@ -155,7 +155,7 @@ module ActiveMerchant #:nodoc:
 
         # If customer option is provided, create a payment method and attach to customer id
         # Otherwise, create a customer, then attach
-        if payment_method.is_a?(StripePaymentToken) || payment_method.is_a?(ActiveMerchant::Billing::CreditCard)
+        if payment_method.is_a?(StripePaymentToken) || payment_method.is_a?(ActiveMerchant::Billing::CreditCard) || (payment_method.is_a?(String) && payment_method.starts_with?("pm_"))
           payment_method = add_payment_method_token(params, payment_method, options)
           return payment_method if payment_method.is_a?(ActiveMerchant::Billing::Response)
 
