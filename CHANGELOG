@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Element: Add duplicate_override_flag [almalee24] #4012
 * PayTrace: Support gateway [meagabeth] #3985
 * vPOS: Support credit + refund [therufs] #3998
 * PayArc: Support gateway [senthil-code] #3974

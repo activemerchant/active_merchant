@@ -225,6 +225,57 @@ class ElementTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_duplicate_override_flag
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_override_flag: true))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<DuplicateOverrideFlag>True</DuplicateOverrideFlag>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_override_flag: 'true'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<DuplicateOverrideFlag>True</DuplicateOverrideFlag>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_override_flag: false))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<DuplicateOverrideFlag>False</DuplicateOverrideFlag>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_override_flag: 'xxx'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<DuplicateOverrideFlag>False</DuplicateOverrideFlag>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(duplicate_override_flag: 'False'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<DuplicateOverrideFlag>False</DuplicateOverrideFlag>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+
+    # when duplicate_override_flag is NOT passed, should not be in XML at all
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.check_request do |_endpoint, data, _headers|
+      assert_no_match %r(<DuplicateOverrideFlag>False</DuplicateOverrideFlag>), data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_successful_purchase_with_terminal_id
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(terminal_id: '02'))
