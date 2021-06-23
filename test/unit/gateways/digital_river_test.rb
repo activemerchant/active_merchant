@@ -543,7 +543,24 @@ class DigitalRiverTest < Test::Unit::TestCase
         cancelled_amount: 0.0,
         available_to_refund_amount: 0.0,
         checkout_id: "20677c47-57cb-4447-b49d-6cb2fa038f37",
-        payment_session_id: "75eb52fa-9f0a-4488-bd48-aa800df0fe7e",
+        payment: {
+          session: {
+            id: "75eb52fa-9f0a-4488-bd48-aa800df0fe7e"
+          },
+          charges:  [
+            {
+              id: "456",
+              created_time: "2021-04-26T12:48:21Z",
+              currency: "USD",
+              amount: 249.99,
+              state: "capturable",
+              captured: false,
+              refunded: false,
+              source_id: "source",
+              type: "merchant_initiated"
+            }
+          ]
+        },
         sources:  [
           {
             id: "source",
@@ -567,19 +584,6 @@ class DigitalRiverTest < Test::Unit::TestCase
               expiration_year: 2027,
               last_four_digits: "1111"
             }
-          }
-        ],
-        charges:  [
-          {
-            id: "456",
-            created_time: "2021-04-26T12:48:21Z",
-            currency: "USD",
-            amount: 249.99,
-            state: "capturable",
-            captured: false,
-            refunded: false,
-            source_id: "source",
-            type: "merchant_initiated"
           }
         ]
       }
@@ -692,7 +696,24 @@ class DigitalRiverTest < Test::Unit::TestCase
         cancelled_amount: 0.0,
         available_to_refund_amount: 0.0,
         checkout_id: "20677c47-57cb-4447-b49d-6cb2fa038f37",
-        payment_session_id: "75eb52fa-9f0a-4488-bd48-aa800df0fe7e",
+        payment: {
+          session: {
+            id: "75eb52fa-9f0a-4488-bd48-aa800df0fe7e"
+          },
+          charges:  [
+            {
+              id: "456",
+              created_time: "2021-04-26T12:48:21Z",
+              currency: "USD",
+              amount: 249.99,
+              state: "capturable",
+              captured: false,
+              refunded: false,
+              source_id: "source",
+              type: "merchant_initiated"
+            }
+          ]
+        },
         sources:  [
           {
             id: "source",
@@ -716,19 +737,6 @@ class DigitalRiverTest < Test::Unit::TestCase
               expiration_year: 2027,
               last_four_digits: "1111"
             }
-          }
-        ],
-        charges:  [
-          {
-            id: "456",
-            created_time: "2021-04-26T12:48:21Z",
-            currency: "USD",
-            amount: 249.99,
-            state: "capturable",
-            captured: false,
-            refunded: false,
-            source_id: "source",
-            type: "merchant_initiated"
           }
         ]
       }

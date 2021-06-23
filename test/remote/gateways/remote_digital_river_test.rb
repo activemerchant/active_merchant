@@ -38,7 +38,7 @@ class RemoteDigitalRiverTest < Test::Unit::TestCase
       }
     }
 
-    @sku = 'sku_14ce5d3f-b931-4fbc-8f87-88b82888f670' #sku created for the test account
+    @sku = 'CHECKOUT_SKU' #sku created for the test account
   end
 
   def test_successful_store_without_customer_vault_token

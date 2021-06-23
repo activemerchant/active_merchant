@@ -125,7 +125,7 @@ module ActiveMerchant
       def get_charge_capture_id(order_id)
         charges = nil
         retry_until(2, "charge not found", 0.5) do
-          charges = @digital_river_gateway.order.find(order_id).value!.charges
+          charges = @digital_river_gateway.order.find(order_id).value!.payment.charges
           charges&.first.present?
         end
 
