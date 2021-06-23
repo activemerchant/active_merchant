@@ -588,7 +588,8 @@ module ActiveMerchant #:nodoc:
           'merchant_account_id'     => transaction.merchant_account_id,
           'risk_data'               => risk_data,
           'network_transaction_id'  => transaction.network_transaction_id || nil,
-          'processor_response_code' => response_code_from_result(result)
+          'processor_response_code' => response_code_from_result(result),
+          'recurring'               => transaction.recurring
         }
       end
 
@@ -770,6 +771,8 @@ module ActiveMerchant #:nodoc:
           else
             parameters[:transaction_source] = stored_credential[:reason_type]
           end
+        elsif %w(recurring_first moto).include?(stored_credential[:reason_type])
+          parameters[:transaction_source] = stored_credential[:reason_type]
         else
           parameters[:transaction_source] = ''
         end
