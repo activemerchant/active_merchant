@@ -11,3 +11,4 @@ Gemfile*.lock
 /doc/
 .ruby-version
 /SimpePay
+SimplePay.md

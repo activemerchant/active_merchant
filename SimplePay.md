@@ -1,5 +1,11 @@
 # Simple Pay Gateway
 
+## TESTS
+
+#                                                    #
+# ruby -I test test/unit/gateways/simple_pay_test.rb #
+#                                                    #
+
 ## Usage:
 
 The gateway provides **two different methods** for bank transactions. One when the response contains a redirect URL, where the users can fulfill the transaction by providing their card data and another which happens behind the scenes.

@@ -203,51 +203,35 @@ module ActiveMerchant #:nodoc:
         if !options.key?(:urls)
           requires!(options, :redirectURL)
         end
-        if !options.key?(:urls)
-          requires!(options, :redirectURL)
-        end
         super
       end
 
       def purchase(options = {})
         post = {}
-        #requires!(options, :amount, :email, :address)
-        #requires!(options[:address], :name, :country, :state, :city, :zip, :address)
-        if options.key?(:recurring)
-          #requires!(options, :times, :until, :maxAmount)
-        end
         generate_post_data(:start, post, options)
         commit(:start, JSON[post])
       end
 
       def authorize(options = {})
         post = {}
-        #requires!(options, :amount, :email, :address)
-        #requires!(options[:address], :name, :country, :state, :city, :zip, :address)
         generate_post_data(:authorize, post, options)
         commit(:authorize, JSON[post])
       end
 
       def capture(options = {})
         post = {}
-        #requires!(options, :orderRef, :originalTotal, :approveTotal)
         generate_post_data(:capture, post, options)
         commit(:capture, JSON[post])
       end
 
       def refund(options = {})
         post = {}
-        #requires!(options, :orderRef, :refundTotal)
         generate_post_data(:refund, post, options)
         commit(:refund, JSON[post])
       end
 
       def query(options = {})
         post = {}
-        if !options.key?(:transactionIds)
-          #requires!(options, :orderRefs)
-        end
-        #requires!(options, :transactionIds)
         generate_post_data(:query, post, options)
         commit(:query, JSON[post])
       end
@@ -265,53 +249,42 @@ module ActiveMerchant #:nodoc:
 
       def auto(options = {})
         post = {}
-        #requires!(options, :amount, :email, :address, :credit_card)
-        #requires!(options[:address], :name, :country, :state, :city, :zip, :address)
         generate_post_data(:auto, post, options)
         commit(:auto, JSON[post])
       end
 
       def do(options = {})
         post = {}
-        #requires!(options, :amount, :email, :address, :cardId, :cardSecret, :threeDS)
-        #requires!(options[:address], :name, :country, :state, :city, :zip, :address)
-        #requires!(options[:threeDS], :accept, :agent, :ip, :java, :lang, :color, :height, :width, :tz)
         generate_post_data(:do, post, options)
         commit(:do, JSON[post])
       end
 
       def dorecurring(options = {})
         post = {}
-        #requires!(options, :amount, :email, :address, :token, :threeDSReqAuthMethod, :type)
-        #requires!(options[:address], :name, :country, :state, :city, :zip, :address)
         generate_post_data(:dorecurring, post, options)
         commit(:dorecurring, JSON[post])
       end
 
       def tokenquery(options = {})
         post = {}
-        #requires!(options, :tokenquery)
         generate_post_data(:tokenquery, post, options)
         commit(:tokenquery, JSON[post])
       end
 
       def tokencancel(options = {})
         post = {}
-        #requires!(options, :tokencancel)
         generate_post_data(:tokencancel, post, options)
         commit(:tokencancel, JSON[post])
       end
 
       def cardquery(options = {})
         post = {}
-        #requires!(options, :cardId)
         generate_post_data(:cardquery, post, options)
         commit(:cardquery, JSON[post])
       end
 
       def cardcancel(options = {})
         post = {}
-        #requires!(options, :cardId)
         generate_post_data(:cardcancel, post, options)
         commit(:cardcancel, JSON[post])
       end
@@ -364,9 +337,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def generate_post_data(action, post, options)
-        #requires! handle
         case action
-
           when :start
             post[:salt] = generate_salt()
             post[:merchant] = @options[:merchantID]
@@ -600,7 +571,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def parseHeaders(key, message)
+      def parse_headers(key, message)
         signature = Base64.encode64(OpenSSL::HMAC.digest(OpenSSL::Digest::SHA384.new, key, message)).gsub("\n", '')
         {
           'Content-Type' => 'application/json',
@@ -614,13 +585,8 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, parameters)
         url = (test? ? test_url[action] : live_url[action])
-        headers = parseHeaders(@options[:merchantKEY], parameters)
+        headers = parse_headers(@options[:merchantKEY], parameters)
         response = JSON[ssl_post(url, parameters, headers)]
-
-        #return response
-        puts action
-        puts parameters
-        puts "\n"
 
         Response.new(
           success_from(response),
