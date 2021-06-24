@@ -42,6 +42,7 @@ module ActiveMerchant #:nodoc:
       }
 
       SUCCESS = '0'
+      APPROVAL_SUCCESS = '1'
 
       APPROVED = [
         '00', # Approved
@@ -807,8 +808,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def success?(response, message_type)
-        if %i[refund void].include?(message_type)
+        if %i[void].include?(message_type)
           response[:proc_status] == SUCCESS
+        elsif %i[refund].include?(message_type)
+          response[:proc_status] == SUCCESS && response[:approval_status] == APPROVAL_SUCCESS
         elsif response[:customer_profile_action]
           response[:profile_proc_status] == SUCCESS
         else

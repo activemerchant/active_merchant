@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Orbital: Correct success logic for refund [tatsianaclifton] #4014
 * usaepay: Added pin gateway setting [DustinHaefele] #4026
 * MercadoPago: Added external_reference, more payer object options, and metadata field [DustinHaefele] #4020
 * Element: Add duplicate_override_flag [almalee24] #4012

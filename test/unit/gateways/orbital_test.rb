@@ -1151,6 +1151,30 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_equal '9806', response.params['proc_status']
   end
 
+  def test_successful_refund
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
+
+    assert response = @gateway.refund(100, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_success response
+  end
+
+  def test_failed_refund
+    @gateway.expects(:ssl_post).returns(failed_refund_response)
+
+    assert response = @gateway.refund(100, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_failure response
+  end
+
+  def test_not_approved_refund
+    @gateway.expects(:ssl_post).returns(not_approved_refund_response)
+
+    assert response = @gateway.refund(100, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_failure response
+  end
+
   def test_successful_credit
     @gateway.expects(:ssl_post).returns(successful_credit_response)
 
@@ -1158,6 +1182,22 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
     assert_equal '1', response.params['approval_status']
+  end
+
+  def test_failed_credit
+    @gateway.expects(:ssl_post).returns(failed_credit_response)
+
+    assert response = @gateway.credit(100, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_failure response
+  end
+
+  def test_not_approved_credit
+    @gateway.expects(:ssl_post).returns(not_approved_credit_response)
+
+    assert response = @gateway.credit(100, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_failure response
   end
 
   def test_always_send_avs_for_echeck
@@ -1531,8 +1571,28 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     '<?xml version="1.0" encoding="UTF-8"?><Response><QuickResp><ProcStatus>9806</ProcStatus><StatusMsg>Refund Transactions By TxRefNum Are Only Valid When The Original Transaction Was An AUTH Or AUTH CAPTURE.</StatusMsg></QuickResp></Response>'
   end
 
+  def successful_refund_response
+    '<?xml version="1.0" encoding="UTF-8"?><Response><NewOrderResp><IndustryType></IndustryType><MessageType>R</MessageType><MerchantID>253997</MerchantID><TerminalID>001</TerminalID><CardBrand>VI</CardBrand><AccountNum>4556761029983886</AccountNum><OrderID>0c1792db5d167e0b96dd9c</OrderID><TxRefNum>60D1E12322FD50E1517A2598593A48EEA9965469</TxRefNum><TxRefIdx>2</TxRefIdx><ProcStatus>0</ProcStatus><ApprovalStatus>1</ApprovalStatus><RespCode>00</RespCode><AVSRespCode>3 </AVSRespCode><CVV2RespCode> </CVV2RespCode><AuthCode>tst743</AuthCode><RecurringAdviceCd></RecurringAdviceCd><CAVVRespCode></CAVVRespCode><StatusMsg>Approved</StatusMsg><RespMsg></RespMsg><HostRespCode>100</HostRespCode><HostAVSRespCode>  </HostAVSRespCode><HostCVV2RespCode>  </HostCVV2RespCode><CustomerRefNum></CustomerRefNum><CustomerName></CustomerName><ProfileProcStatus></ProfileProcStatus><CustomerProfileMessage></CustomerProfileMessage><RespTime>090955</RespTime><PartialAuthOccurred></PartialAuthOccurred><RequestedAmount></RequestedAmount><RedeemedAmount></RedeemedAmount><RemainingBalance></RemainingBalance><CountryFraudFilterStatus></CountryFraudFilterStatus><IsoCountryCode></IsoCountryCode></NewOrderResp></Response>'
+  end
+
+  def failed_refund_response
+    '<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response><QuickResp><ProcStatus>881</ProcStatus><StatusMsg>The LIDM you supplied (3F3F3F) does not match with any existing transaction</StatusMsg></QuickResp></Response>'
+  end
+
+  def not_approved_refund_response
+    '<?xml version="1.0" encoding="UTF-8"?><Response><NewOrderResp><IndustryType></IndustryType><MessageType>R</MessageType><MerchantID>253997</MerchantID><TerminalID>001</TerminalID><CardBrand>VI</CardBrand><AccountNum>4556761029983886</AccountNum><OrderID>0c1792db5d167e0b96dd9f</OrderID><TxRefNum>60D1E12322FD50E1517A2598593A48EEA9965445</TxRefNum><TxRefIdx>2</TxRefIdx><ProcStatus>0</ProcStatus><ApprovalStatus>0</ApprovalStatus><RespCode>12</RespCode><AVSRespCode>3 </AVSRespCode><CVV2RespCode> </CVV2RespCode><AuthCode></AuthCode><RecurringAdviceCd></RecurringAdviceCd><CAVVRespCode></CAVVRespCode><StatusMsg>Invalid Transaction Type</StatusMsg><RespMsg></RespMsg><HostRespCode>606</HostRespCode><HostAVSRespCode>  </HostAVSRespCode><HostCVV2RespCode>  </HostCVV2RespCode><CustomerRefNum></CustomerRefNum><CustomerName></CustomerName><ProfileProcStatus></ProfileProcStatus><CustomerProfileMessage></CustomerProfileMessage><RespTime>110503</RespTime><PartialAuthOccurred></PartialAuthOccurred><RequestedAmount></RequestedAmount><RedeemedAmount></RedeemedAmount><RemainingBalance></RemainingBalance><CountryFraudFilterStatus></CountryFraudFilterStatus><IsoCountryCode></IsoCountryCode></NewOrderResp></Response>'
+  end
+
   def successful_credit_response
     '<?xml version="1.0" encoding="UTF-8"?><Response><NewOrderResp><IndustryType></IndustryType><MessageType>R</MessageType><MerchantID>253997</MerchantID><TerminalID>001</TerminalID><CardBrand>MC</CardBrand><AccountNum>XXXXX5454</AccountNum><OrderID>6102f8d4ca9d5c08d6ea02</OrderID><TxRefNum>605266890AF5BA833E6190D89256B892981C531D</TxRefNum><TxRefIdx>1</TxRefIdx><ProcStatus>0</ProcStatus><ApprovalStatus>1</ApprovalStatus><RespCode>00</RespCode><AVSRespCode>3</AVSRespCode><CVV2RespCode>M</CVV2RespCode><AuthCode>tst627</AuthCode><RecurringAdviceCd></RecurringAdviceCd><CAVVRespCode></CAVVRespCode><StatusMsg>Approved</StatusMsg><RespMsg></RespMsg><HostRespCode>100</HostRespCode><HostAVSRespCode></HostAVSRespCode><HostCVV2RespCode></HostCVV2RespCode><CustomerRefNum></CustomerRefNum><CustomerName></CustomerName><ProfileProcStatus></ProfileProcStatus><CustomerProfileMessage></CustomerProfileMessage><RespTime>162857</RespTime><PartialAuthOccurred></PartialAuthOccurred><RequestedAmount></RequestedAmount><RedeemedAmount></RedeemedAmount><RemainingBalance></RemainingBalance><CountryFraudFilterStatus></CountryFraudFilterStatus><IsoCountryCode></IsoCountryCode></NewOrderResp></Response>'
+  end
+
+  def failed_credit_response
+    '<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response><QuickResp><ProcStatus>881</ProcStatus><StatusMsg>The LIDM you supplied (3F3F3F) does not match with any existing transaction</StatusMsg></QuickResp></Response>'
+  end
+
+  def not_approved_credit_response
+    '<?xml version="1.0" encoding="UTF-8"?><Response><NewOrderResp><IndustryType></IndustryType><MessageType>R</MessageType><MerchantID>253997</MerchantID><TerminalID>001</TerminalID><CardBrand>VI</CardBrand><AccountNum>4556761029983886</AccountNum><OrderID>0c1792db5d167e0b96dd9f</OrderID><TxRefNum>60D1E12322FD50E1517A2598593A48EEA9965445</TxRefNum><TxRefIdx>2</TxRefIdx><ProcStatus>0</ProcStatus><ApprovalStatus>0</ApprovalStatus><RespCode>12</RespCode><AVSRespCode>3 </AVSRespCode><CVV2RespCode> </CVV2RespCode><AuthCode></AuthCode><RecurringAdviceCd></RecurringAdviceCd><CAVVRespCode></CAVVRespCode><StatusMsg>Invalid Transaction Type</StatusMsg><RespMsg></RespMsg><HostRespCode>606</HostRespCode><HostAVSRespCode>  </HostAVSRespCode><HostCVV2RespCode>  </HostCVV2RespCode><CustomerRefNum></CustomerRefNum><CustomerName></CustomerName><ProfileProcStatus></ProfileProcStatus><CustomerProfileMessage></CustomerProfileMessage><RespTime>110503</RespTime><PartialAuthOccurred></PartialAuthOccurred><RequestedAmount></RequestedAmount><RedeemedAmount></RedeemedAmount><RemainingBalance></RemainingBalance><CountryFraudFilterStatus></CountryFraudFilterStatus><IsoCountryCode></IsoCountryCode></NewOrderResp></Response>'
   end
 
   def pre_scrubbed

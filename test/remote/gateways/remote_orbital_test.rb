@@ -617,6 +617,12 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_success refund
   end
 
+  def test_failed_refund
+    assert refund = @gateway.refund(@amount, '123;123', @options)
+    assert_failure refund
+    assert_equal '881', refund.params['proc_status']
+  end
+
   def test_successful_refund_with_echeck
     assert response = @echeck_gateway.purchase(@amount, @echeck, @options)
     assert_success response
