@@ -464,11 +464,6 @@ linkpoint:
     PASTE YOUR PEM FILE HERE
 
 litle:
-  login: ACTIVE
-  password: MERCHANT
-  merchant_id: 101
-
-litle_new:
   login: ""
   password: ""
   merchant_id: 101
