@@ -169,7 +169,7 @@ class RemotePayTraceTest < Test::Unit::TestCase
     auth = @gateway.authorize(300, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(auth.authorization, @options.merge(amount: 300))
+    assert capture = @gateway.capture(@amount, auth.authorization, @options)
     assert_success capture
     assert_equal 'Your transaction was successfully captured.', capture.message
   end
@@ -208,7 +208,7 @@ class RemotePayTraceTest < Test::Unit::TestCase
     auth = @gateway.authorize(100, @mastercard, options)
     assert_success auth
 
-    assert capture = @gateway.capture(auth.authorization, options)
+    assert capture = @gateway.capture(@amount, auth.authorization, options)
     assert_success capture
 
     transaction_id = auth.authorization
@@ -225,12 +225,12 @@ class RemotePayTraceTest < Test::Unit::TestCase
     auth = @gateway.authorize(500, @amex, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(auth.authorization, @options.merge(amount: 300))
+    assert capture = @gateway.capture(200, auth.authorization, @options.merge(include_capture_amount: true))
     assert_success capture
   end
 
   def test_failed_capture
-    response = @gateway.capture('')
+    response = @gateway.capture(@amount, '')
     assert_failure response
     assert_equal 'One or more errors has occurred.', response.message
   end

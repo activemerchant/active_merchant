@@ -44,7 +44,7 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, payment_or_customer_id, options = {})
         post = {}
-        add_invoice(post, money, options)
+        add_amount(post, money, options)
         if customer_id?(payment_or_customer_id)
           post[:customer_id] = payment_or_customer_id
           endpoint = ENDPOINTS[:customer_id_sale]
@@ -64,7 +64,7 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, payment_or_customer_id, options = {})
         post = {}
-        add_invoice(post, money, options)
+        add_amount(post, money, options)
         if customer_id?(payment_or_customer_id)
           post[:customer_id] = payment_or_customer_id
           endpoint = ENDPOINTS[:customer_id_auth]
@@ -78,10 +78,10 @@ module ActiveMerchant #:nodoc:
         check_token_response(response, endpoint, post, options)
       end
 
-      def capture(authorization, options = {})
+      def capture(money, authorization, options = {})
         post = {}
-        post[:amount] = amount(options[:amount]) if options[:amount]
         post[:transaction_id] = authorization
+        add_amount(post, money, options) if options[:include_capture_amount] == true
         response = commit(ENDPOINTS[:capture], post)
         check_token_response(response, ENDPOINTS[:capture], post, options)
 
@@ -204,7 +204,7 @@ module ActiveMerchant #:nodoc:
         post[:billing_address][:zip] = address[:zip]
       end
 
-      def add_invoice(post, money, options)
+      def add_amount(post, money, options)
         post[:amount] = amount(money)
       end
 

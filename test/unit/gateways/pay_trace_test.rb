@@ -104,7 +104,16 @@ class PayTraceTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_capture_response)
     transaction_id = 10598543
 
-    response = @gateway.capture(transaction_id, @options)
+    response = @gateway.capture(@amount, transaction_id, @options)
+    assert_success response
+    assert_equal 'Your transaction was successfully captured.', response.message
+  end
+
+  def test_successful_partial_capture
+    @gateway.expects(:ssl_post).returns(successful_capture_response)
+    transaction_id = 11223344
+
+    response = @gateway.capture(@amount, transaction_id, @options.merge(include_capture_amount: true))
     assert_success response
     assert_equal 'Your transaction was successfully captured.', response.message
   end
@@ -118,7 +127,7 @@ class PayTraceTest < Test::Unit::TestCase
       }
     }
     stub_comms(@gateway) do
-      @gateway.capture(authorization, options)
+      @gateway.capture(@amount, authorization, options)
     end.check_request do |endpoint, data, _headers|
       next unless endpoint == 'https://api.paytrace.com/v1/level_three/visa'
 
@@ -129,7 +138,7 @@ class PayTraceTest < Test::Unit::TestCase
   def test_failed_capture
     @gateway.expects(:ssl_post).returns(failed_capture_response)
 
-    response = @gateway.capture('', @options)
+    response = @gateway.capture(@amount, '', @options)
     assert_failure response
     assert_equal 'One or more errors has occurred.', response.message
   end
