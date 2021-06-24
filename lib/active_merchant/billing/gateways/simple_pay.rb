@@ -211,10 +211,10 @@ module ActiveMerchant #:nodoc:
 
       def purchase(options = {})
         post = {}
-        requires!(options, :amount, :email, :address)
-        requires!(options[:address], :name, :country, :state, :city, :zip, :address1)
+        #requires!(options, :amount, :email, :address)
+        #requires!(options[:address], :name, :country, :state, :city, :zip, :address)
         if options.key?(:recurring)
-          requires!(options, :times, :until, :maxAmount)
+          #requires!(options, :times, :until, :maxAmount)
         end
         generate_post_data(:start, post, options)
         commit(:start, JSON[post])
@@ -222,29 +222,32 @@ module ActiveMerchant #:nodoc:
 
       def authorize(options = {})
         post = {}
-        requires!(options, :amount, :email, :address)
-        requires!(options[:address], :name, :country, :state, :city, :zip, :address1)
+        #requires!(options, :amount, :email, :address)
+        #requires!(options[:address], :name, :country, :state, :city, :zip, :address)
         generate_post_data(:authorize, post, options)
         commit(:authorize, JSON[post])
       end
 
       def capture(options = {})
         post = {}
-        requires!(options, :orderRef, :originalTotal, :approveTotal)
+        #requires!(options, :orderRef, :originalTotal, :approveTotal)
         generate_post_data(:capture, post, options)
         commit(:capture, JSON[post])
       end
 
       def refund(options = {})
         post = {}
-        requires!(options, :orderRef, :refundTotal)
+        #requires!(options, :orderRef, :refundTotal)
         generate_post_data(:refund, post, options)
         commit(:refund, JSON[post])
       end
 
       def query(options = {})
         post = {}
-        requires!(options, :transactionIds)
+        if !options.key?(:transactionIds)
+          #requires!(options, :orderRefs)
+        end
+        #requires!(options, :transactionIds)
         generate_post_data(:query, post, options)
         commit(:query, JSON[post])
       end
@@ -262,53 +265,53 @@ module ActiveMerchant #:nodoc:
 
       def auto(options = {})
         post = {}
-        requires!(options, :amount, :email, :address, :credit_card)
-        requires!(options[:address], :name, :country, :state, :city, :zip, :address1)
+        #requires!(options, :amount, :email, :address, :credit_card)
+        #requires!(options[:address], :name, :country, :state, :city, :zip, :address)
         generate_post_data(:auto, post, options)
         commit(:auto, JSON[post])
       end
 
       def do(options = {})
         post = {}
-        requires!(options, :amount, :email, :address, :cardId, :cardSecret, :threeDS)
-        requires!(options[:address], :name, :country, :state, :city, :zip, :address1)
-        requires!(options[:threeDS], :accept, :agent, :ip, :java, :lang, :color, :height, :width, :tz)
+        #requires!(options, :amount, :email, :address, :cardId, :cardSecret, :threeDS)
+        #requires!(options[:address], :name, :country, :state, :city, :zip, :address)
+        #requires!(options[:threeDS], :accept, :agent, :ip, :java, :lang, :color, :height, :width, :tz)
         generate_post_data(:do, post, options)
         commit(:do, JSON[post])
       end
 
       def dorecurring(options = {})
         post = {}
-        requires!(options, :amount, :email, :address, :token, :threeDSReqAuthMethod, :type)
-        requires!(options[:address], :name, :country, :state, :city, :zip, :address1)
+        #requires!(options, :amount, :email, :address, :token, :threeDSReqAuthMethod, :type)
+        #requires!(options[:address], :name, :country, :state, :city, :zip, :address)
         generate_post_data(:dorecurring, post, options)
         commit(:dorecurring, JSON[post])
       end
 
       def tokenquery(options = {})
         post = {}
-        requires!(options, :tokenquery)
+        #requires!(options, :tokenquery)
         generate_post_data(:tokenquery, post, options)
         commit(:tokenquery, JSON[post])
       end
 
       def tokencancel(options = {})
         post = {}
-        requires!(options, :tokencancel)
+        #requires!(options, :tokencancel)
         generate_post_data(:tokencancel, post, options)
         commit(:tokencancel, JSON[post])
       end
 
       def cardquery(options = {})
         post = {}
-        requires!(options, :cardId)
+        #requires!(options, :cardId)
         generate_post_data(:cardquery, post, options)
         commit(:cardquery, JSON[post])
       end
 
       def cardcancel(options = {})
         post = {}
-        requires!(options, :cardId)
+        #requires!(options, :cardId)
         generate_post_data(:cardcancel, post, options)
         commit(:cardcancel, JSON[post])
       end
@@ -374,17 +377,7 @@ module ActiveMerchant #:nodoc:
             post[:timeout] = generate_timeout
             post[:url] = @options[:redirectURL]
             post[:twoStep] = options[:twoStep] || false
-            post[:invoice] = {
-              :name     => options[:address][:name],
-              :company  => options[:address][:company] || '',
-              :country  => options[:address][:country],
-              :state    => options[:address][:state],
-              :city     => options[:address][:city],
-              :zip      => options[:address][:zip],
-              :address  => options[:address][:address1],
-              :address2 => options[:address][:address2] || '',
-              :phone    => options[:address][:phone] || ''
-            }
+            post[:invoice] = options[:address]
             if options.key?(:items)
               post[:items] = options[:items]
             end
@@ -431,17 +424,7 @@ module ActiveMerchant #:nodoc:
             post[:timeout] = generate_timeout
             post[:url] = @options[:redirectURL]
             post[:twoStep] = true
-            post[:invoice] = {
-              :name     => options[:address][:name],
-              :company  => options[:address][:company],
-              :country  => options[:address][:country],
-              :state    => options[:address][:state],
-              :city     => options[:address][:city],
-              :zip      => options[:address][:zip],
-              :address  => options[:address][:address1],
-              :address2 => options[:address][:address2],
-              :phone    => options[:address][:phone]
-            }
+            post[:invoice] = options[:address]
             if options.key?(:items)
               post[:items] = options[:items]
             end
@@ -469,7 +452,8 @@ module ActiveMerchant #:nodoc:
           when :query
             post[:salt] = generate_salt()
             post[:merchant] = @options[:merchantID]
-            post[:transactionIds] = options[:transactionIds]
+            post[:transactionIds] = options[:transactionIds] || []
+            post[:orderRefs] = options[:orderRefs] || []
             post[:sdkVersion] = self.sdkVersion
             if options.key?(:detailed)
               post[:detailed] = options[:detailed]
@@ -497,17 +481,7 @@ module ActiveMerchant #:nodoc:
               :cvc => options[:credit_card].verification_value,
               :holder => options[:credit_card].first_name + ' ' + options[:credit_card].last_name
             }
-            post[:invoice] = {
-              :name     => options[:address][:name],
-              :company  => options[:address][:company],
-              :country  => options[:address][:country],
-              :state    => options[:address][:state],
-              :city     => options[:address][:city],
-              :zip      => options[:address][:zip],
-              :address  => options[:address][:address1],
-              :address2 => options[:address][:address2],
-              :phone    => options[:address][:phone]
-            }
+            post[:invoice] = options[:address]
             if options.key?(:items)
               post[:items] = options[:items]
             end
@@ -541,17 +515,7 @@ module ActiveMerchant #:nodoc:
             post[:total] = options[:amount]
             post[:cardId] = options[:cardId]
             post[:cardSecret] = options[:cardSecret]
-            post[:invoice] = {
-              :name     => options[:address][:name],
-              :company  => options[:address][:company] || '',
-              :country  => options[:address][:country],
-              :state    => options[:address][:state],
-              :city     => options[:address][:city],
-              :zip      => options[:address][:zip],
-              :address  => options[:address][:address1],
-              :address2 => options[:address][:address2] || '',
-              :phone    => options[:address][:phone] || ''
-            }
+            post[:invoice] = options[:address]
             if options.key?(:items)
               post[:items] = options[:items]
             end
@@ -599,17 +563,7 @@ module ActiveMerchant #:nodoc:
             post[:timeout] = generate_timeout
             post[:type] = options[:type]
             post[:threeDSReqAuthMethod] = options[:threeDSReqAuthMethod]
-            post[:invoice] = {
-              :name     => options[:address][:name],
-              :company  => options[:address][:company],
-              :country  => options[:address][:country],
-              :state    => options[:address][:state],
-              :city     => options[:address][:city],
-              :zip      => options[:address][:zip],
-              :address  => options[:address][:address1],
-              :address2 => options[:address][:address2],
-              :phone    => options[:address][:phone]
-            }
+            post[:invoice] = options[:address]
             if options.key?(:items)
               post[:items] = options[:items]
             end
@@ -654,12 +608,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, parameters)
-        puts parameters
         url = (test? ? test_url[action] : live_url[action])
         headers = parseHeaders(@options[:merchantKEY], parameters)
         response = JSON[ssl_post(url, parameters, headers)]
 
         #return response
+        puts action
+        puts parameters
+        puts "\n"
 
         Response.new(
           success_from(response),

@@ -159,7 +159,7 @@ res = gateway.purchase({
         :state => 'Budapest',
         :city => 'Budapest',
         :zip => '1111',
-        :address1 => 'Address u.1',
+        :address => 'Address u.1',
     }
 })
 ```
@@ -433,9 +433,9 @@ res = gateway.refund({
 
 ### **query()**
 
-The query method makes avaiable for querying fr the transactions. Note that both *:orderRef* and Simple Pay generated "Simple ID" would work.
+The query method makes avaiable for querying for the transactions. Note that both *:orderRef* and Simple Pay generated *:transactionId* would work, but they are defined different.
 
-* *:transactionIds* - Transaction id's that we are querying for.
+* *:transactionIds* - Transaction id's that we are querying for, or *:orderRefs*
 * *:detailed* - Do we need detailed informations?
 * *:refunds* - Are refunds should be included?
 

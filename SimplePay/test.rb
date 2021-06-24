@@ -1,3 +1,7 @@
+#                                                    #
+# ruby -I test test/unit/gateways/simple_pay_test.rb #
+#                                                    #
+
 require 'active_merchant'
 require '../lib/active_merchant/billing/gateways/simple_pay.rb'
 
@@ -10,10 +14,6 @@ gateway = ActiveMerchant::Billing::SimplePayGateway.new({
     :timeout     => 30,
     :returnRequest => true
 })
-
-puts ActiveMerchant::Billing::SimplePayGateway.allowed_ip
-
-puts ActiveMerchant::Billing::SimplePayGateway.utilbackref('https://sdk.simplepay.hu/back.php?r=eyJyIjowLCJ0Ijo5OTg0NDk0MiwiZSI6IlNVQ0NFU1MiLCJtIjoiUFVCTElDVEVTVEhVRiIsIm8iOiIxMDEwMTA1MTU2ODAyOTI0ODI2MDAifQ%3D%3D&s=El%2Fnvex9TjgjuORI63gEu5I5miGo4CSAD5lmEpKIxp7WuVRq6bBeh1QdyEvVGSsi')
 
 ## Possible URLS
 #:urls => {
@@ -34,25 +34,22 @@ res = gateway.purchase({
         :state => 'Budapest',
         :city => 'Budapest',
         :zip => '1111',
-        :address1 => 'Address u.1',
+        :address => 'Address u.1',
         :address2 => 'Address u.2',
         :phone => '06301111111'
     },
-    :items => [
-        {
-        :ref => "Product ID 2",
-        :title => "Product name 2",
-        :description => "Product description 2",
-        :amount => "2",
-        :price => "5",
-        :tax => "0"
-        }
-    ],
-    :threeDSReqAuthMethod => '01',
-    :maySelectEmail => true,
-    :maySelectInvoice => true,
-    :maySelectDelivery => ["HU","AT","DE"]
+    :recurring => {
+        :times => 1,
+        :until => "2022-12-01T18:00:00+02:00",
+        :maxAmount => 2000
+    }
 })
+
+puts "\n\n"
+puts res.success?
+puts res.message
+puts "\n\n"
+puts "-----------------------------------------"
 
 # :delivery => [
 #     {
@@ -68,126 +65,120 @@ res = gateway.purchase({
 #     }
 # ],
 
-puts "\n\n"
-puts res.success?
-puts res.message
-puts "\n\n"
-puts "-----------------------------------------"
+# res = gateway.purchase({
+#     :amount => 2000,
+#     :email => 'email@email.hu',
+#     :cardSecret => 'thesuperdupersecret',
+#     :address => {
+#         :name =>  'myname',
+#         :company => 'company',
+#         :country => 'HU',
+#         :state => 'Budapest',
+#         :city => 'Budapest',
+#         :zip => '1111',
+#         :address1 => 'Address u.1',
+#         :address2 => 'Address u.2',
+#         :phone => '06301111111'
+#     },
+# })
 
-res = gateway.purchase({
-    :amount => 2000,
-    :email => 'email@email.hu',
-    :cardSecret => 'thesuperdupersecret',
-    :address => {
-        :name =>  'myname',
-        :company => 'company',
-        :country => 'HU',
-        :state => 'Budapest',
-        :city => 'Budapest',
-        :zip => '1111',
-        :address1 => 'Address u.1',
-        :address2 => 'Address u.2',
-        :phone => '06301111111'
-    },
-})
+# puts "\n\n"
+# puts res.success?
+# puts res.message
+# puts "\n\n"
+# puts "AUTH-----------------------------------------"
 
-puts "\n\n"
-puts res.success?
-puts res.message
-puts "\n\n"
-puts "-----------------------------------------"
+# res = gateway.authorize({
+#     :orderRef => 'authorderref',
+#     :amount => 2000,
+#     :email => 'email@email.hu',
+#     :address => {
+#         :name =>  'myname',
+#         :company => 'company',
+#         :country => 'HU',
+#         :state => 'Budapest',
+#         :city => 'Budapest',
+#         :zip => '1111',
+#         :address1 => 'Address u.1',
+#         :address2 => 'Address u.2',
+#         :phone => '06301111111'
+#     }
+# })
 
-res = gateway.authorize({
-    :orderRef => 'authorderref',
-    :amount => 2000,
-    :email => 'email@email.hu',
-    :address => {
-        :name =>  'myname',
-        :company => 'company',
-        :country => 'HU',
-        :state => 'Budapest',
-        :city => 'Budapest',
-        :zip => '1111',
-        :address1 => 'Address u.1',
-        :address2 => 'Address u.2',
-        :phone => '06301111111'
-    }
-})
+# puts "\n\n"
+# puts res.success?
+# puts res.message
+# puts "\n\n"
+# puts "-----------------------------------------"
 
-puts "\n\n"
-puts res.success?
-puts res.message
-puts "\n\n"
-puts "-----------------------------------------"
+# res = gateway.capture({
+#     :orderRef => 'authorderref',
+#     :originalTotal => 2000,
+#     :approveTotal => 1800
+# })
 
-res = gateway.capture({
-    :orderRef => 'authorderref',
-    :originalTotal => 2000,
-    :approveTotal => 1800
-})
+# puts "\n\n"
+# puts res.success?
+# puts res.message
+# puts "\n\n"
+# puts "-----------------------------------------"
 
-puts "\n\n"
-puts res.success?
-puts res.message
-puts "\n\n"
-puts "-----------------------------------------"
+# res = gateway.refund({
+#     :orderRef => 'authorderref',
+#     :refundTotal => 200
+# })
 
-res = gateway.refund({
-    :orderRef => 'authorderref',
-    :refundTotal => 200
-})
-
-puts "\n\n"
-puts res.success?
-puts res.message
-puts "\n\n"
-puts "-----------------------------------------"
+# puts "\n\n"
+# puts res.success?
+# puts res.message
+# puts "\n\n"
+# puts "-----------------------------------------"
 
 
 ## OR orderRefs
-res = gateway.query({
-    :transactionIds => ['501167933'],
-})
+# res = gateway.query({
+#     :transactionIds => ['501167933'],
+# })
 
-puts "\n\n"
-puts res.success?
-puts res.message
-puts "\n\n"
-puts "-----------------------------------------"
+# puts "\n\n"
+# puts res.success?
+# puts res.message
+# puts "\n\n"
+# puts "-----------------------------------------"
 
-credit_card = ActiveMerchant::Billing::CreditCard.new(
-  :number     => '4908366099900425',
-  :month      => '10',
-  :year       => '2021',
-  :first_name => 'v2 AUTO',
-  :last_name  => 'Tester',
-  :verification_value  => '579'
-)
+# credit_card = ActiveMerchant::Billing::CreditCard.new(
+#   :number     => '4908366099900425',
+#   :month      => '10',
+#   :year       => '2021',
+#   :first_name => 'v2 AUTO',
+#   :last_name  => 'Tester',
+#   :verification_value  => '579'
+# )
 
 
-res = gateway.auto({
-    :credit_card => credit_card,
-    :amount => 2000,
-    :email => 'email@email.hu',
-    :threeDS => {
-        :threeDSReqAuthMethod => '01', 
-        :threeDSReqAuthType => 'MIT',
-    },
-    :address => {
-        :name =>  'myname',
-        :company => 'company',
-        :country => 'HU',
-        :state => 'Budapest',
-        :city => 'Budapest',
-        :zip => '1111',
-        :address1 => 'Address u.1',
-        :address2 => 'Address u.2',
-        :phone => '06301111111'
-    }
-})
+# res = gateway.auto({
+#     :credit_card => credit_card,
+#     :amount => 2000,
+#     :email => 'email@email.hu',
+#     :threeDS => {
+#         :threeDSReqAuthMethod => '01', 
+#         :threeDSReqAuthType => 'MIT',
+#     },
+#     :address => {
+#         :name =>  'myname',
+#         :company => 'company',
+#         :country => 'HU',
+#         :state => 'Budapest',
+#         :city => 'Budapest',
+#         :zip => '1111',
+#         :address1 => 'Address u.1',
+#         :address2 => 'Address u.2',
+#         :phone => '06301111111'
+#     }
+# })
 
-puts "\n\n"
-puts res.success?
-puts res.message
-puts "\n\n"
-puts "-----------------------------------------"
+# puts "\n\n"
+# puts res.success?
+# puts res.message
+# puts "\n\n"
+# puts "-----------------------------------------"
