@@ -1,16 +1,19 @@
 require 'test_helper'
 
 class SimplePayTest < Test::Unit::TestCase
+
+  self.test_order = :defined
+  attr_accessor :token, :orderRef
+
   def setup
     @gateway = SimplePayGateway.new({
       :merchantID  => 'PUBLICTESTHUF',
       :merchantKEY => 'FxDa5w314kLlNseq2sKuVwaqZshZT5d6',
       :redirectURL => 'https://127.0.0.1',
-      :timeout     => 30,
+      :timeout     => 1,
       :returnRequest => true
     })
 
-    @token = []
     @cardSecret = 'thesuperdupersecret'
     
     @credit_card = CreditCard.new(
@@ -74,6 +77,8 @@ class SimplePayTest < Test::Unit::TestCase
       }
     }
 
+    @options_with_token
+
     @fail_options = {
       :email => 'email@email.hu'
     }
@@ -85,9 +90,9 @@ class SimplePayTest < Test::Unit::TestCase
     #@gateway.expects(:ssl_post).returns(successful_purchase_response)
 
     response = @gateway.purchase(@options)
+    
     assert_success response
-
-    assert_match response.message['paymentUrl'], !nil
+    assert response.message.key?('paymentUrl')
     assert response.test?
   end
 
@@ -95,26 +100,19 @@ class SimplePayTest < Test::Unit::TestCase
     response = @gateway.purchase(@options_with_secret)
     assert_success response
 
-    assert_match response.message.has_key?('paymentUrl'), true
+    assert response.message.key?('paymentUrl')
     assert response.test?
   end
 
   def test_successful_recurring_purchase
+    p :a
     response = @gateway.purchase(@options_with_recurring)
-    assert_success response
+    
+    self.token = response.message['tokens']
 
-    assert_match response.message.has_key?('tokens'), true
+    assert_success response
+    assert response.message.key?('tokens')
     assert response.test?
-    
-    @token = JSON[response]['tokens']
-    
-    options_with_token = @options
-    options_with_token[:token] = @token[0]
-    options_with_token[:threeDSReqAuthMethod ] = '02'
-    options_with_token[:type ] = 'MIT'
-
-    response = @gateway.dorecurring(options_with_token)
-    assert_success response
   end
 
   def test_failed_purchase
@@ -122,51 +120,51 @@ class SimplePayTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  #TODO OTP ERROR
   def test_successful_authorize
     response = @gateway.authorize(@options_for_auth)
     assert_success response
 
-    assert_match response.message.has_key?('paymentUrl'), true
+    assert response.message.key?('paymentUrl')
     assert response.test?
   end
 
-  #TODO OTP ERROR
-  # def test_failed_authorize
-  #   response = @gateway.authorize(@fail_options)
-  #   assert_failure response
-  # end
+  def test_failed_authorize
+    response = @gateway.authorize(@fail_options)
+    assert_failure response
+  end
 
-  # def test_successful_capture
-  #   response = @gateway.capture({
-  #     :orderRef => 'authorizationorderreffortesting',
-  #     :originalTotal => @amount,
-  #     :approveTotal => @amount / 2
-  #   })
-  #   assert_success response
-  # end
+  def test_successful_capture
+    response = @gateway.capture({
+      :orderRef => 'authorizationorderreffortesting',
+      :originalTotal => @amount,
+      :approveTotal => @amount / 2
+    })
+    assert_success response
+  end
 
-  # def test_failed_capture
-  #   response = @gateway.capture({
-  #     :originalTotal => @amount,
-  #     :approveTotal => @amount
-  #   })
-  #   assert_failure response
-  # end
+  def test_failed_capture
+    response = @gateway.capture({
+      :originalTotal => @amount,
+      :approveTotal => @amount
+    })
+    assert_failure response
+  end
 
-  # def test_successful_refund
-  #   response = @gateway.refund({
-  #     :orderRef => 'authorizationorderreffortesting',
-  #     :refundTotal  => @amount / 2
-  #   })
-  #   assert_success response
-  # end
+  def test_successful_refund
+    response = @gateway.refund({
+      :orderRef => 'AMSP202106242139058912',
+      :refundTotal  => @amount / 2
+    })
+    assert_success response
+  end
 
-  # def test_failed_refund
-  #   response = @gateway.refund({
-  #     :refundTotal  => @amount
-  #   })
-  #   assert_failure response
-  # end
+  def test_failed_refund
+    response = @gateway.refund({
+      :refundTotal  => @amount
+    })
+    assert_failure response
+  end
   #TODO OTP ERROR
   
   def test_succesfull_auto
@@ -177,6 +175,17 @@ class SimplePayTest < Test::Unit::TestCase
   def test_unsuccesfull_auto
     response = @gateway.auto(@fail_options)
     assert_failure response
+  end
+
+  def test_succesfull_dorecurring
+    p :b
+    @options_with_token = @options
+    @options_with_token[:token] = self.token[0]
+    @options_with_token[:threeDSReqAuthMethod ] = '02'
+    @options_with_token[:type ] = 'MIT'
+
+    response = @gateway.dorecurring(@options_with_token)
+    assert_success response
   end
 
   def test_unsuccesfull_dorecurring

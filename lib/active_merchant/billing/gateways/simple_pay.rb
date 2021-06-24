@@ -353,11 +353,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def generate_order_ref()
-        return "EG" + Time.now.to_s[0..18]
-        .gsub!('-', '')
-        .gsub!(' ', '')
-        .gsub!(':', '')
-        + (1000 + rand(9999)).to_s
+        srand
+        time = Time.now.to_s[0..18]
+        formatted = time
+            .gsub!('-', '')
+            .gsub!(' ', '')
+            .gsub!(':', '')
+        return "AMSP" + formatted + (0 + rand(9999)).to_s
+
       end
 
       def generate_post_data(action, post, options)
@@ -475,12 +478,14 @@ module ActiveMerchant #:nodoc:
             post[:timeout] = generate_timeout
             post[:url] = @options[:redirectURL]
             post[:twoStep] = false
-            post[:cardData] = {
+            if options.key?(:credit_card)
+              post[:cardData] = {
               :number => options[:credit_card].number,
               :expiry => expdate(options[:credit_card]),
               :cvc => options[:credit_card].verification_value,
               :holder => options[:credit_card].first_name + ' ' + options[:credit_card].last_name
             }
+            end
             post[:invoice] = options[:address]
             if options.key?(:items)
               post[:items] = options[:items]
