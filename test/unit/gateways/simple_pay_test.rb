@@ -11,6 +11,8 @@ class SimplePayTest < Test::Unit::TestCase
       :returnRequest => true
     })
 
+    @merchant = 'PUBLICTESTHUF'
+
     @cardSecret = 'thesuperdupersecret'
     
     @credit_card = CreditCard.new(
@@ -88,6 +90,8 @@ class SimplePayTest < Test::Unit::TestCase
     
     assert_success response
     assert response.message.key?('paymentUrl')
+    assert_equal response.message['merchant'], @merchant 
+    assert !response.message.key?('errorCodes')
     assert response.test?
   end
 

@@ -588,6 +588,10 @@ module ActiveMerchant #:nodoc:
         headers = parse_headers(@options[:merchantKEY], parameters)
         response = JSON[ssl_post(url, parameters, headers)]
 
+        puts action
+        puts parameters
+        puts response
+
         Response.new(
           success_from(response),
           message_from(response, parameters),
