@@ -19,6 +19,10 @@ class WorldpayTest < Test::Unit::TestCase
       last_name: 'Smith',
       verification_value: '737',
       brand: 'elo')
+    @nt_credit_card = network_tokenization_credit_card('4895370015293175',
+      brand: 'visa',
+      source: :network_token,
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
     @sodexo_voucher = credit_card('6060704495764400', brand: 'sodexo')
     @options = { order_id: 1 }
     @store_options = {
@@ -169,6 +173,13 @@ class WorldpayTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options.merge(skip_capture: true))
     end.respond_with(successful_authorize_response, successful_capture_response)
     assert response.responses.length == 1
+    assert_success response
+  end
+
+  def test_successful_purchase_with_network_token
+    response = stub_comms do
+      @gateway.purchase(@amount, @nt_credit_card, @options)
+    end.respond_with(successful_authorize_response, successful_capture_response)
     assert_success response
   end
 
