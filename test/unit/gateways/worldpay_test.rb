@@ -251,6 +251,10 @@ class WorldpayTest < Test::Unit::TestCase
     assert_equal "A transaction status of 'AUTHORISED' is required.", response.message
   end
 
+  def test_supports_network_tokenization
+    assert_instance_of TrueClass, @gateway.supports_network_tokenization?
+  end
+
   def test_void_using_order_id_embedded_with_token
     response = stub_comms do
       authorization = "#{@options[:order_id]}|99411111780163871111|shopper|59424549c291397379f30c5c082dbed8"
