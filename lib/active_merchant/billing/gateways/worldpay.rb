@@ -747,7 +747,7 @@ module ActiveMerchant #:nodoc:
 
       def payment_details_from(payment_method)
         payment_details = {}
-        if payment_method.is_a?(NetworkTokenizationCreditCard)
+        if payment_method.is_a?(NetworkTokenizationCreditCard) && payment_method.source == :network_token
           payment_details[:payment_type] = :network_token
         elsif payment_method.respond_to?(:number)
           payment_details[:payment_type] = :credit
