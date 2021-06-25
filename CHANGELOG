@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* MercadoPago: Added external_reference, more payer object options, and metadata field [DustinHaefele] #4020
 * Element: Add duplicate_override_flag [almalee24] #4012
 * PayTrace: Support gateway [meagabeth] #3985
 * vPOS: Support credit + refund [therufs] #3998
