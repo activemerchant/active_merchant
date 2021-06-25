@@ -428,7 +428,7 @@ module ActiveMerchant #:nodoc:
               )
             end
             xml.cryptogram payment_method.payment_cryptogram
-            xml.eciIndicator payment_method.eci
+            xml.eciIndicator format(payment_method.eci, :two_digits)
           end
         end
       end
