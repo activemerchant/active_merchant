@@ -21,6 +21,7 @@ class WorldpayTest < Test::Unit::TestCase
       brand: 'elo')
     @nt_credit_card = network_tokenization_credit_card('4895370015293175',
       brand: 'visa',
+      eci: '07',
       source: :network_token,
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
     @sodexo_voucher = credit_card('6060704495764400', brand: 'sodexo')

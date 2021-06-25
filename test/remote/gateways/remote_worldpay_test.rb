@@ -23,6 +23,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     @threeDS_card_external_MPI = credit_card('4444333322221111', first_name: 'AA', last_name: 'BD')
     @nt_credit_card = network_tokenization_credit_card('4895370015293175',
       brand: 'visa',
+      eci: '07',
       source: :network_token,
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
 

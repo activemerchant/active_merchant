@@ -390,7 +390,7 @@ module ActiveMerchant #:nodoc:
             end
           end
         elsif options[:payment_type] == :network_token
-          add_network_tokenization(xml, payment_method)
+          add_network_tokenization_card(xml, payment_method)
         else
           xml.paymentDetails credit_fund_transfer_attribute(options) do
             if options[:payment_type] == :token
@@ -417,7 +417,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_network_tokenization(xml, payment_method)
+      def add_network_tokenization_card(xml, payment_method)
         xml.paymentDetails do
           xml.tag! 'EMVCO_TOKEN-SSL', 'type' => 'NETWORKTOKEN' do
             xml.tokenNumber payment_method.number
@@ -428,6 +428,7 @@ module ActiveMerchant #:nodoc:
               )
             end
             xml.cryptogram payment_method.payment_cryptogram
+            xml.eciIndicator payment_method.eci
           end
         end
       end
