@@ -130,6 +130,10 @@ module ActiveMerchant #:nodoc:
         true
       end
 
+      def supports_network_tokenization?
+        true
+      end
+
       def scrub(transcript)
         transcript.
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
