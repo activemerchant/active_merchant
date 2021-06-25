@@ -113,6 +113,25 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
     assert_equal 'https://www.spreedly.com/', response.params['notification_url']
   end
 
+  def test_successful_purchase_with_payer_passthrough
+    payer = { 'entity_type' => 'individual',
+      'type' => 'guest',
+      'identification' => { 'name' => 'spreedly' },
+      'phone' => { 'number' => '1234567890' } }
+    response = @gateway.purchase(@amount, @credit_card, @options.merge({ 'payer' => payer }))
+    assert_success response
+    assert_equal 'accredited', response.message
+  end
+
+  def test_successful_purchase_with_metadata_passthrough
+    metadata = { 'key_1' => 'value_1',
+      'key_2' => 'value_2',
+      'key_3' => { 'nested_key_1' => 'value_3' } }
+    response = @gateway.purchase(@amount, @credit_card, @options.merge({ metadata: metadata }))
+    assert_success response
+    assert_equal metadata, response.params['metadata']
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response

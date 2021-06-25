@@ -129,6 +129,7 @@ module ActiveMerchant #:nodoc:
 
       def add_additional_data(post, options)
         post[:sponsor_id] = options[:sponsor_id]
+        post[:metadata] = options[:metadata] if options[:metadata]
         post[:device_id] = options[:device_id] if options[:device_id]
         post[:additional_info] = {
           ip_address: options[:ip_address]
@@ -143,7 +144,7 @@ module ActiveMerchant #:nodoc:
           email: options[:email],
           first_name: payment.first_name,
           last_name: payment.last_name
-        }
+        }.merge(options[:payer] || {})
       end
 
       def add_address(post, options)
@@ -191,7 +192,7 @@ module ActiveMerchant #:nodoc:
         post[:description] = options[:description]
         post[:installments] = options[:installments] ? options[:installments].to_i : 1
         post[:statement_descriptor] = options[:statement_descriptor] if options[:statement_descriptor]
-        post[:external_reference] = options[:order_id] || SecureRandom.hex(16)
+        post[:external_reference] = options[:order_id] || options[:external_reference] || SecureRandom.hex(16)
       end
 
       def add_payment(post, options)
