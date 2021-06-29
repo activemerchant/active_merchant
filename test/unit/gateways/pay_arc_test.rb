@@ -6,8 +6,8 @@ class PayArcTest < Test::Unit::TestCase
     credit_card_options = {
       month: '12',
       year: '2022',
-      first_name: 'Rex',
-      last_name: 'Joseph',
+      first_name: 'Rex Joseph',
+      last_name: '',
       verification_value: '999'
     }
     @credit_card = credit_card('4111111111111111', credit_card_options)

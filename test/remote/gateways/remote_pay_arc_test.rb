@@ -41,9 +41,10 @@ class RemotePayArcTest < Test::Unit::TestCase
     extra_options = {
       order_id: '1',
       ip: '127.0.0.1',
-      email: 'joe@example.com'
+      email: 'joe@example.com',
+      tip_amount: 10
     }
-    response = @gateway.purchase(@amount, @credit_card, @options.merge(extra_options))
+    response = @gateway.purchase(1500, @credit_card, @options.merge(extra_options))
     assert_success response
     assert_block do
       PayArcGateway::SUCCESS_STATUS.include? response.message
@@ -51,28 +52,28 @@ class RemotePayArcTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase
-    response = @gateway.purchase(@amount, @invalid_credit_card, @options)
+    response = @gateway.purchase(1300, @invalid_credit_card, @options)
     assert_failure response
     assert_equal 'error', response.params['status']
   end
 
   def test_successful_authorize
-    response = @gateway.authorize(@amount, @credit_card, @options)
+    response = @gateway.authorize(1100, @credit_card, @options)
     assert_success response
     assert_equal 'authorized', response.message
   end
 
   # Failed due to invalid CVV
   def test_failed_authorize
-    response = @gateway.authorize(@amount, @invalid_cvv_card, @options)
+    response = @gateway.authorize(500, @invalid_cvv_card, @options)
     assert_failure response
     assert_equal 'error', response.params['status']
   end
 
   def test_successful_authorize_and_capture
-    authorize_response = @gateway.authorize(@amount, @credit_card, @options)
+    authorize_response = @gateway.authorize(2000, @credit_card, @options)
     assert_success authorize_response
-    response = @gateway.capture(@amount, authorize_response.authorization, @options)
+    response = @gateway.capture(2000, authorize_response.authorization, @options)
     assert_success response
     assert_block do
       PayArcGateway::SUCCESS_STATUS.include? response.message
@@ -80,13 +81,13 @@ class RemotePayArcTest < Test::Unit::TestCase
   end
 
   def test_failed_capture
-    response = @gateway.capture(@amount, 'invalid_txn_refernece', @options)
+    response = @gateway.capture(2000, 'invalid_txn_refernece', @options)
     assert_failure response
     assert_equal 'error', response.params['status']
   end
 
   def test_successful_void
-    charge_response = @gateway.purchase(@amount, @credit_card, @options)
+    charge_response = @gateway.purchase(1200, @credit_card, @options)
     assert_success charge_response
 
     assert void = @gateway.void(charge_response.authorization, @options)
@@ -114,10 +115,10 @@ class RemotePayArcTest < Test::Unit::TestCase
   end
 
   def test_successful_refund
-    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    purchase = @gateway.purchase(900, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount, purchase.authorization)
+    assert refund = @gateway.refund(900, purchase.authorization)
     assert_success refund
     assert_block do
       PayArcGateway::SUCCESS_STATUS.include? refund.message
@@ -138,7 +139,22 @@ class RemotePayArcTest < Test::Unit::TestCase
   end
 
   def test_failed_refund
-    response = @gateway.refund(@amount, '')
+    response = @gateway.refund(1200, '')
+    assert_failure response
+    assert_equal 'error', response.params['status']
+  end
+
+  def test_successful_credit
+    response = @gateway.credit(250, @credit_card, @options)
+    assert_success response
+    assert_block do
+      PayArcGateway::SUCCESS_STATUS.include? response.message
+    end
+    assert_equal 'refunded', response.message
+  end
+
+  def test_failed_credit
+    response = @gateway.credit('', @invalid_credit_card, @options)
     assert_failure response
     assert_equal 'error', response.params['status']
   end
@@ -151,6 +167,9 @@ class RemotePayArcTest < Test::Unit::TestCase
   def test_failed_verify
     response = @gateway.verify(@invalid_credit_card, @options)
     assert_failure response
+    assert_block do
+      not (200..299).include? response.error_code
+    end
   end
 
   def test_invalid_login
@@ -159,6 +178,9 @@ class RemotePayArcTest < Test::Unit::TestCase
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'error', response.params['status']
+    assert_block do
+      not (200..299).include? response.error_code
+    end
   end
 
   def test_transcript_scrubbing
