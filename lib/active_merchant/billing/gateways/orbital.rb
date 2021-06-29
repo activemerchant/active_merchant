@@ -612,10 +612,18 @@ module ActiveMerchant #:nodoc:
         xml.tag!(:MCDirectoryTransID, three_d_secure[:ds_transaction_id]) if three_d_secure[:ds_transaction_id]
       end
 
-      def add_ucafind(xml, creditcard, three_d_secure)
+      def add_mc_ucafind(xml, creditcard, three_d_secure)
         return unless three_d_secure && creditcard.brand == 'master'
 
         xml.tag! :UCAFInd, '4'
+      end
+
+      def add_mc_scarecurring(xml, creditcard, parameters, three_d_secure)
+        return unless parameters && parameters[:sca_recurring] && creditcard.brand == 'master'
+
+        valid_eci = three_d_secure && three_d_secure[:eci] && three_d_secure[:eci] == '7'
+
+        xml.tag!(:SCARecurringPayment, parameters[:sca_recurring]) if valid_eci
       end
 
       def add_dpanind(xml, creditcard)
@@ -884,9 +892,10 @@ module ActiveMerchant #:nodoc:
             add_card_indicators(xml, parameters)
             add_stored_credentials(xml, parameters)
             add_pymt_brand_program_code(xml, payment_source, three_d_secure)
+            add_mc_scarecurring(xml, payment_source, parameters, three_d_secure)
             add_mc_program_protocol(xml, payment_source, three_d_secure)
             add_mc_directory_trans_id(xml, payment_source, three_d_secure)
-            add_ucafind(xml, payment_source, three_d_secure)
+            add_mc_ucafind(xml, payment_source, three_d_secure)
           end
         end
         xml.target!

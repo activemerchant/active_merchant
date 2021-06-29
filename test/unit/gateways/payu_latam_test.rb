@@ -202,6 +202,15 @@ class PayuLatamTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_successful_purchase_with_phone_number
+    options = @options.merge(billing_address: {}, shipping_address: { phone_number: 5555555555 })
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 5555555555, JSON.parse(data)['transaction']['order']['buyer']['contactPhone']
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_verify_good_credentials
     @gateway.expects(:ssl_post).returns(credentials_are_legit_response)
     assert @gateway.verify_credentials
@@ -287,7 +296,7 @@ class PayuLatamTest < Test::Unit::TestCase
         state: 'SP',
         country: 'BR',
         zip: '01019-030',
-        phone: '(11)756312345'
+        phone_number: '(11)756312345'
       ),
       buyer: {
         name: 'Jorge Borges',
@@ -361,7 +370,7 @@ class PayuLatamTest < Test::Unit::TestCase
         state: 'SP',
         country: 'BR',
         zip: '01019-030',
-        phone: '(11)756312633'
+        phone_number: '(11)756312633'
       ),
       buyer: {
         cnpj: '32593371000110'
@@ -396,7 +405,7 @@ class PayuLatamTest < Test::Unit::TestCase
         state: 'Bogota DC',
         country: 'CO',
         zip: '01019-030',
-        phone: '(11)756312633'
+        phone_number: '(11)756312633'
       ),
       tx_tax: '3193',
       tx_tax_return_base: '16806'
@@ -430,7 +439,7 @@ class PayuLatamTest < Test::Unit::TestCase
         state: 'Jalisco',
         country: 'MX',
         zip: '01019-030',
-        phone: '(11)756312633'
+        phone_number: '(11)756312633'
       ),
       birth_date: '1985-05-25'
     }

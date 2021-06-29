@@ -16,7 +16,7 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
 
     @three_ds_options = @options.merge(three_d_secure: true)
     @three_ds_gateway = SafeChargeGateway.new(fixtures(:safe_charge_three_ds))
-    @three_ds_enrolled_card = credit_card('4012 0010 3749 0014')
+    @three_ds_enrolled_card = credit_card('4407 1064 3967 1112')
     @three_ds_non_enrolled_card = credit_card('5333 3062 3122 6927')
     @three_ds_invalid_pa_res_card = credit_card('4012 0010 3749 0006')
 
@@ -85,7 +85,8 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
         version: '2.1.0',
         ds_transaction_id: 'c5b808e7-1de1-4069-a17b-f70d3b3b1645',
         eci: '05',
-        cavv: 'Vk83Y2t0cHRzRFZzRlZlR0JIQXo='
+        cavv: 'Vk83Y2t0cHRzRFZzRlZlR0JIQXo=',
+        challenge_preference: 'NoPreference'
       }
     })
 
@@ -112,7 +113,8 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
         version: '2.1.0',
         ds_transaction_id: 'c5b808e7-1de1-4069-a17b-f70d3b3b1645',
         eci: '05',
-        cavv: 'Vk83Y2t0cHRzRFZzRlZlR0JIQXo='
+        cavv: 'Vk83Y2t0cHRzRFZzRlZlR0JIQXo=',
+        challenge_preference: 'NoPreference'
       }
     })
 
@@ -127,7 +129,8 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
         version: '2.1.0',
         ds_transaction_id: 'c5b808e7-1de1-4069-a17b-f70d3b3b1645',
         eci: '05',
-        cavv: 'Vk83Y2t0cHRzRFZzRlZlR0JIQXo='
+        cavv: 'Vk83Y2t0cHRzRFZzRlZlR0JIQXo=',
+        challenge_preference: 'NoPreference'
       }
     })
 

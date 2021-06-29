@@ -25,6 +25,8 @@ module ActiveMerchant #:nodoc:
     # * UnionPay
     # * Alia
     # * Olimpica
+    # * Creditel
+    # * Confiable
     #
     # For testing purposes, use the 'bogus' credit card brand. This skips the vast majority of
     # validations, allowing you to focus on your core concerns until you're ready to be more concerned
@@ -103,6 +105,7 @@ module ActiveMerchant #:nodoc:
       # * +'alia'+
       # * +'olimpica'+
       # * +'creditel'+
+      # * +'confiable'+
       #
       # Or, if you wish to test your implementation, +'bogus'+.
       #

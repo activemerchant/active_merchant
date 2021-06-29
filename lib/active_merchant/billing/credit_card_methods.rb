@@ -32,7 +32,8 @@ module ActiveMerchant #:nodoc:
           )
         },
         'olimpica' => ->(num) { num =~ /^636853\d{10}$/ },
-        'creditel' => ->(num) { num =~ /^601933\d{10}$/ }
+        'creditel' => ->(num) { num =~ /^601933\d{10}$/ },
+        'confiable' => ->(num) { num =~ /^560718\d{10}$/ }
       }
 
       # http://www.barclaycard.co.uk/business/files/bin_rules.pdf
@@ -106,7 +107,7 @@ module ActiveMerchant #:nodoc:
             597077 597094 597143 597370 597410 597765 597855 597862
             598053 598054 598395 598585 598793 598794 598815 598835 598838 598880 598889
             599000 599069 599089 599148 599191 599310 599741 599742 599867
-            601070
+            601070 601638
             604983
             606126
             636380 636422 636502 636639
@@ -356,6 +357,8 @@ module ActiveMerchant #:nodoc:
           when 'creditel'
             valid_creditel_algo?(numbers)
           when 'alia'
+            true
+          when 'confiable'
             true
           else
             valid_luhn?(numbers)

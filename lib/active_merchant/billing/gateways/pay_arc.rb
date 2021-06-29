@@ -2,13 +2,13 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PayArcGateway < Gateway
       self.test_url = 'https://testapi.payarc.net/v1'
-      self.live_url = 'https://testapi.payarc.net/v1'
+      self.live_url = 'https://api.payarc.net/v1'
 
       self.supported_countries = ['US']
       self.default_currency = 'usd'
       self.supported_cardtypes = %i[visa master american_express discover jcb]
 
-      self.homepage_url = 'www.payarc.net/dashboard/'
+      self.homepage_url = 'https://www.payarc.net/'
       self.display_name = 'PAYARC Gateway'
 
       STANDARD_ERROR_CODE_MAPPING = {}
@@ -53,7 +53,6 @@ module ActiveMerchant #:nodoc:
       # * <tt>:address_line2</tt> -- Address Line 2 (OPTIONAL)
       # * <tt>:state </tt> -- State (OPTIONAL)
       # * <tt>:country </tt> -- Country (OPTIONAL)
-      # * <tt>:currency </tt> -- Three-letter ISO currency code, in lowercase (REQUIRED)
       # * <tt>:statement_description </tt> -- An arbitrary string to be displayed on your costomer's credit card statement. This may be up to 22 characters. (OPTIONAL)
       # * <tt> :card_level </tt> -- Commercial card level - "LEVEL2" OR "LEVEL3" (OPTIONAL)
       # * <tt> :sales_tax  </tt> -- A positive integer in cents representing sales tax. (OPTIONAL)
@@ -81,9 +80,9 @@ module ActiveMerchant #:nodoc:
       # * <tt> :phone_number </tt> -- Customer's contact phone number.
 
       def purchase(money, creditcard, options = {})
-        options['capture'] = 1
+        options[:capture] = 1
         MultiResponse.run do |r|
-          r.process { token(money, creditcard, options) }
+          r.process { token(creditcard, options) }
           r.process { charge(money, r.authorization, options) }
         end
       end
@@ -106,7 +105,6 @@ module ActiveMerchant #:nodoc:
       # * <tt>:address_line2</tt> -- Address Line 2 (OPTIONAL)
       # * <tt>:state </tt> -- State (OPTIONAL)
       # * <tt>:country </tt> -- Country (OPTIONAL)
-      # * <tt>:currency </tt> -- Three-letter ISO currency code, in lowercase (REQUIRED)
       # * <tt>:statement_description </tt> -- An arbitrary string to be displayed on your costomer's credit card statement. This may be up to 22 characters. (OPTIONAL)
       # * <tt> :card_level </tt> -- Commercial card level - "LEVEL2" OR "LEVEL3" (OPTIONAL)
       # * <tt> :sales_tax  </tt> -- A positive integer in cents representing sales tax. (OPTIONAL)
@@ -134,9 +132,9 @@ module ActiveMerchant #:nodoc:
       # * <tt> :phone_number </tt> -- Customer's contact phone number.
 
       def authorize(money, creditcard, options = {})
-        options['capture'] = '0'
+        options[:capture] = '0'
         MultiResponse.run do |r|
-          r.process { token(money, creditcard, options) }
+          r.process { token(creditcard, options) }
           r.process { charge(money, r.authorization, options) }
         end
       end
@@ -210,25 +208,16 @@ module ActiveMerchant #:nodoc:
       # * <tt>:country </tt> -- Country (OPTIONAL)
 
       def verify(creditcard, options = {})
-        post = {}
-        post['authorize_card'] = 0
-        post['card_source'] = options[:card_source]
-        add_creditcard(post, creditcard)
-        add_address(post, creditcard, options)
-        add_customer_data(post, options)
-        post = options.update(post)
-        commit(STANDARD_ACTIONS[:token], post)
+        token(creditcard, options)
       end
 
       #:nodoc:
-      def token(money, creditcard, options = {})
+      def token(creditcard, options = {})
         post = {}
         post['authorize_card'] = 1
         post['card_source'] = options[:card_source]
-        add_money(post, money, options)
-        add_creditcard(post, creditcard)
+        add_creditcard(post, creditcard, options)
         add_address(post, creditcard, options)
-        add_customer_data(post, options)
         post = options.update(post)
         commit(STANDARD_ACTIONS[:token], post)
       end
@@ -250,20 +239,17 @@ module ActiveMerchant #:nodoc:
       def charge(money, authorization, options = {})
         post = {}
         post['token_id'] = authorization
-        post['capture'] = options['capture'] || 1
+        post['capture'] = options[:capture] || 1
         add_money(post, money, options)
         commit(STANDARD_ACTIONS[:capture], post)
       end
 
-      def add_creditcard(post, creditcard)
+      def add_creditcard(post, creditcard, options)
         post['card_number'] = creditcard.number
         post['exp_month'] = creditcard.month
         post['exp_year'] = creditcard.year
         post['cvv'] = creditcard.verification_value unless creditcard.verification_value.nil?
-      end
-
-      def add_customer_data(post, options)
-        post['card_holder_name'] = options[:card_holder_name]
+        post['card_holder_name'] = options[:card_holder_name] || "#{creditcard.first_name} #{creditcard.last_name}"
       end
 
       def add_address(post, creditcard, options)
@@ -278,7 +264,7 @@ module ActiveMerchant #:nodoc:
       def add_money(post, money, options)
         post['amount'] = money
         post['currency'] = (options[:currency] || currency(money))
-        post['statement_description'] = options['statement_description']
+        post['statement_description'] = options[:statement_description]
       end
 
       def headers(api_key)

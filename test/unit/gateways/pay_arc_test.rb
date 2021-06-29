@@ -6,8 +6,8 @@ class PayArcTest < Test::Unit::TestCase
     credit_card_options = {
       month: '12',
       year: '2022',
-      first_name: 'Rex Joseph',
-      last_name: '',
+      first_name: 'Rex',
+      last_name: 'Joseph',
       verification_value: '999'
     }
     @credit_card = credit_card('4111111111111111', credit_card_options)
@@ -58,14 +58,14 @@ class PayArcTest < Test::Unit::TestCase
   # Failed due to invalid credit card
   def test_failed_token
     @gateway.expects(:ssl_post).returns(failed_token_response)
-    response = @gateway.token(@amount, @invalid_credit_card, @options)
+    response = @gateway.token(@invalid_credit_card, @options)
     assert_failure response
   end
 
   # Failed due to invalid cvv
   def test_invalid_cvv
     @gateway.expects(:ssl_post).returns(failed_token_response)
-    response = @gateway.token(@amount, @invalid_cvv_card, @options)
+    response = @gateway.token(@invalid_cvv_card, @options)
     assert_failure response
   end
 
@@ -178,12 +178,104 @@ class PayArcTest < Test::Unit::TestCase
 
   def successful_purchase_response
     %(
-      Easy to capture by setting the DEBUG_ACTIVE_MERCHANT environment variable
-      to "true" when running remote tests:
-
-      $ DEBUG_ACTIVE_MERCHANT=true ruby -Itest \
-        test/remote/gateways/remote_pay_arc_test.rb \
-        -n test_successful_purchase
+        {
+          "data": {
+              "object": "Charge",
+              "id": "LDoBnOnRnRWLOyWX",
+              "amount": 1010,
+              "amount_approved": 0,
+              "amount_refunded": 0,
+              "amount_captured": 1010,
+              "amount_voided": 0,
+              "application_fee_amount": 0,
+              "tip_amount": 0,
+              "payarc_fees": 0,
+              "type": "Sale",
+              "net_amount": 0,
+              "captured": 1,
+              "is_refunded": 0,
+              "status": "Bad Request - Try Again",
+              "auth_code": null,
+              "failure_code": "E0911",
+              "failure_message": "SystemError",
+              "charge_description": null,
+              "statement_description": "Bubbles Shop",
+              "invoice": null,
+              "under_review": 0,
+              "created_at": 1622000885,
+              "updated_at": 1622000896,
+              "email": null,
+              "phone_number": null,
+              "card_level": "LEVEL2",
+              "sales_tax": 10,
+              "purchase_order": "ABCD",
+              "supplier_reference_number": null,
+              "customer_ref_id": null,
+              "ship_to_zip": null,
+              "amex_descriptor": null,
+              "customer_vat_number": null,
+              "summary_commodity_code": null,
+              "shipping_charges": null,
+              "duty_charges": null,
+              "ship_from_zip": null,
+              "destination_country_code": null,
+              "vat_invoice": null,
+              "order_date": null,
+              "tax_category": null,
+              "tax_type": null,
+              "tax_rate": null,
+              "tax_amount": null,
+              "created_by": "bubbles@eyepaste.com",
+              "terminal_register": null,
+              "tip_amount_refunded": null,
+              "sales_tax_refunded": null,
+              "shipping_charges_refunded": null,
+              "duty_charges_refunded": null,
+              "pax_reference_number": null,
+              "refund_reason": null,
+              "refund_description": null,
+              "surcharge": 0,
+              "toll_amount": null,
+              "refund": {
+                  "data": []
+              },
+              "card": {
+                  "data": {
+                      "object": "Card",
+                      "id": "15y2901NPMP90MLv",
+                      "address1": "920 Sunnyslope Ave",
+                      "address2": "Bronx",
+                      "card_source": "INTERNET",
+                      "card_holder_name": "Rex Joseph",
+                      "is_default": 0,
+                      "exp_month": "12",
+                      "exp_year": "2022",
+                      "is_verified": 0,
+                      "fingerprint": "1Lv0NN9LyN5Pm105",
+                      "city": "New York",
+                      "state": "New York",
+                      "zip": "10469",
+                      "brand": "V",
+                      "last4digit": "1111",
+                      "first6digit": 411111,
+                      "country": "USA",
+                      "avs_status": null,
+                      "cvc_status": null,
+                      "address_check_passed": 0,
+                      "zip_check_passed": 0,
+                      "customer_id": null,
+                      "created_at": 1622000879,
+                      "updated_at": 1622000896
+                  }
+              }
+          },
+          "meta": {
+              "include": [
+                  "review"
+              ],
+              "custom": []
+          }
+      }
     )
   end
 

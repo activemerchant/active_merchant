@@ -144,7 +144,7 @@ class RemotePayArcTest < Test::Unit::TestCase
   end
 
   def test_successful_verify
-    response = @gateway.verify(@invalid_cvv_card, @options)
+    response = @gateway.verify(@credit_card, @options)
     assert_success response
   end
 
@@ -167,7 +167,7 @@ class RemotePayArcTest < Test::Unit::TestCase
     end
     transcript = @gateway.scrub(transcript)
     assert_scrubbed(fixtures(:pay_arc), transcript)
-    assert_scrubbed(@credit_card.number, transcript)
-    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(/card_number=#{@credit_card.number}/, transcript)
+    assert_scrubbed(/cvv=#{@credit_card.verification_value}/, transcript)
   end
 end

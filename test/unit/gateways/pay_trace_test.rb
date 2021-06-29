@@ -11,6 +11,8 @@ module ActiveMerchant #:nodoc:
 end
 
 class PayTraceTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = PayTraceGateway.new(username: 'username', password: 'password', integrator_id: 'uniqueintegrator')
     @credit_card = credit_card
@@ -27,6 +29,51 @@ class PayTraceTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 392483066, response.authorization
+  end
+
+  def test_successful_purchase_with_level_3_data
+    @gateway.expects(:ssl_post).times(2).returns(successful_purchase_response).then.returns(successful_level_3_response)
+
+    options = {
+      visa_or_mastercard: 'visa',
+      invoice_id: 'inv12345',
+      customer_reference_id: '123abcd',
+      tax_amount: 499,
+      national_tax_amount: 172,
+      merchant_tax_id: '3456defg',
+      customer_tax_id: '3456test',
+      commodity_code: '4321',
+      discount_amount: 99,
+      freight_amount: 75,
+      duty_amount: 32,
+      source_address: {
+        zip: '94947'
+      },
+      shipping_address: {
+        zip: '94948',
+        country: 'US'
+      },
+      additional_tax_amount: 4,
+      additional_tax_rate: 1,
+      line_items: [
+        {
+          additional_tax_amount: 0,
+            additional_tax_rate: 8,
+            amount: 1999,
+            commodity_code: '123commodity',
+            description: 'plumbing',
+            discount_amount: 327,
+            product_id: 'skucode123',
+            quantity: 4,
+            unit_of_measure: 'EACH',
+            unit_cost: 424
+        }
+      ]
+    }
+
+    response = @gateway.purchase(100, @credit_card, options)
+    assert_success response
+    assert_equal 170, response.params['response_code']
   end
 
   def test_failed_purchase
@@ -57,15 +104,41 @@ class PayTraceTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_capture_response)
     transaction_id = 10598543
 
-    response = @gateway.capture(transaction_id, @options)
+    response = @gateway.capture(@amount, transaction_id, @options)
     assert_success response
     assert_equal 'Your transaction was successfully captured.', response.message
+  end
+
+  def test_successful_partial_capture
+    @gateway.expects(:ssl_post).returns(successful_capture_response)
+    transaction_id = 11223344
+
+    response = @gateway.capture(@amount, transaction_id, @options.merge(include_capture_amount: true))
+    assert_success response
+    assert_equal 'Your transaction was successfully captured.', response.message
+  end
+
+  def test_successful_level_3_data_field_mapping
+    authorization = 123456789
+    options = {
+      visa_or_mastercard: 'visa',
+      address: {
+        zip: '99201'
+      }
+    }
+    stub_comms(@gateway) do
+      @gateway.capture(@amount, authorization, options)
+    end.check_request do |endpoint, data, _headers|
+      next unless endpoint == 'https://api.paytrace.com/v1/level_three/visa'
+
+      assert_match(/"source_address":{"zip":"99201"}/, data)
+    end.respond_with(successful_level_3_visa)
   end
 
   def test_failed_capture
     @gateway.expects(:ssl_post).returns(failed_capture_response)
 
-    response = @gateway.capture('', @options)
+    response = @gateway.capture(@amount, '', @options)
     assert_failure response
     assert_equal 'One or more errors has occurred.', response.message
   end
@@ -246,6 +319,14 @@ class PayTraceTest < Test::Unit::TestCase
 
   def successful_purchase_response
     '{"success":true,"response_code":101,"status_message":"Your transaction was successfully approved.","transaction_id":392483066,"approval_code":"TAS610","approval_message":"  NO  MATCH - Approved and completed","avs_response":"No Match","csc_response":"","external_transaction_id":"","masked_card_number":"xxxxxxxxxxxx5439"}'
+  end
+
+  def successful_level_3_response
+    '{"success":true,"response_code":170,"status_message":"Visa/MasterCard enhanced data was successfully added to Transaction ID 392483066. 1 line item records were created."}'
+  end
+
+  def successful_level_3_visa
+    '{"success":true,"response_code":170,"status_message":"Visa/MasterCard enhanced data was successfully added to Transaction ID 123456789. 2 line item records were created."}'
   end
 
   def failed_purchase_response

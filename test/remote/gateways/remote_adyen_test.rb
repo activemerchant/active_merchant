@@ -1117,10 +1117,22 @@ class RemoteAdyenTest < Test::Unit::TestCase
   def test_auth_and_capture_with_network_txn_id
     initial_options = stored_credential_options(:merchant, :recurring, :initial)
     assert auth = @gateway.authorize(@amount, @credit_card, initial_options)
-    assert_success auth
+    assert auth.network_transaction_id
 
-    capture = @gateway.capture(@amount, auth.authorization, { network_transaction_id: auth.network_transaction_id })
+    assert capture = @gateway.capture(@amount, auth.authorization, @options.merge(network_transaction_id: auth.network_transaction_id))
     assert_success capture
+  end
+
+  def test_auth_capture_refund_with_network_txn_id
+    initial_options = stored_credential_options(:merchant, :recurring, :initial)
+    assert auth = @gateway.authorize(@amount, @credit_card, initial_options)
+    assert auth.network_transaction_id
+
+    assert capture = @gateway.capture(@amount, auth.authorization, @options.merge(network_transaction_id: auth.network_transaction_id))
+    assert_success capture
+
+    assert refund = @gateway.refund(@amount, auth.authorization, @options.merge(network_transaction_id: auth.network_transaction_id))
+    assert_success refund
   end
 
   def test_successful_authorize_with_sub_merchant_data
@@ -1174,6 +1186,32 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert void = @gateway.void(auth.authorization, @options)
     assert_success void
     assert_equal '[cancelOrRefund-received]', void.message
+    assert_void_references_original_authorization(void, auth)
+  end
+
+  def test_successful_cancel_or_refund_passing_purchase
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    @options[:cancel_or_refund] = true
+    assert void = @gateway.void(purchase.authorization, @options)
+    assert_success void
+    assert_equal '[cancelOrRefund-received]', void.message
+    assert_void_references_original_authorization(void, purchase.responses.first)
+  end
+
+  def test_successful_cancel_or_refund_passing_capture
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+
+    @options[:cancel_or_refund] = true
+    assert void = @gateway.void(capture.authorization, @options)
+    assert_success void
+    assert_equal '[cancelOrRefund-received]', void.message
+    assert_void_references_original_authorization(void, auth)
   end
 
   private
@@ -1181,5 +1219,9 @@ class RemoteAdyenTest < Test::Unit::TestCase
   def stored_credential_options(*args, id: nil)
     @options.merge(order_id: generate_unique_id,
                    stored_credential: stored_credential(*args, id: id))
+  end
+
+  def assert_void_references_original_authorization(void, auth)
+    assert_equal void.authorization.split('#').first, auth.params['pspReference']
   end
 end

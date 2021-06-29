@@ -208,7 +208,7 @@ module ActiveMerchant #:nodoc:
           buyer[:merchantBuyerId] = buyer_hash[:merchant_buyer_id]
           buyer[:cnpj] = buyer_hash[:cnpj] if @options[:payment_country] == 'BR'
           buyer[:emailAddress] = buyer_hash[:email]
-          buyer[:contactPhone] = (options[:billing_address][:phone] if options[:billing_address]) || (options[:shipping_address][:phone] if options[:shipping_address]) || ''
+          buyer[:contactPhone] = (options[:billing_address][:phone] if options[:billing_address]) || (options[:shipping_address][:phone_number] if options[:shipping_address]) || ''
           buyer[:shippingAddress] = shipping_address_fields(options) if options[:shipping_address]
         else
           buyer[:fullName] = payment_method.name.strip
@@ -217,7 +217,7 @@ module ActiveMerchant #:nodoc:
           buyer[:merchantBuyerId] = options[:merchant_buyer_id]
           buyer[:cnpj] = options[:cnpj] if @options[:payment_country] == 'BR'
           buyer[:emailAddress] = options[:email]
-          buyer[:contactPhone] = (options[:billing_address][:phone] if options[:billing_address]) || (options[:shipping_address][:phone] if options[:shipping_address]) || ''
+          buyer[:contactPhone] = (options[:billing_address][:phone] if options[:billing_address]) || (options[:shipping_address][:phone_number] if options[:shipping_address]) || ''
           buyer[:shippingAddress] = shipping_address_fields(options) if options[:shipping_address]
         end
         post[:transaction][:order][:buyer] = buyer
@@ -233,7 +233,7 @@ module ActiveMerchant #:nodoc:
         shipping_address[:state] = address[:state]
         shipping_address[:country] = address[:country]
         shipping_address[:postalCode] = address[:zip]
-        shipping_address[:phone] = address[:phone]
+        shipping_address[:phone] = address[:phone_number]
         shipping_address
       end
 
