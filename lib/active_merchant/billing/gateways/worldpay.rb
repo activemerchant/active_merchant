@@ -213,8 +213,8 @@ module ActiveMerchant #:nodoc:
               add_hcg_additional_data(xml, options) if options[:hcg_additional_data]
               add_instalments_data(xml, options) if options[:instalments]
               add_moto_flag(xml, options) if options.dig(:metadata, :manual_entry)
-			  if three_d_secure = options[:three_d_secure]
-              add_three_d_secure(three_d_secure, xml)
+			        if three_d_secure = options[:three_d_secure]
+                add_three_d_secure(three_d_secure, xml)
               end
               add_additional_3ds_data(xml, options) if options[:execute_threed] && options[:three_ds_version] && options[:three_ds_version] =~ /^2/
               add_3ds_exemption(xml, options) if options[:exemption_type]
