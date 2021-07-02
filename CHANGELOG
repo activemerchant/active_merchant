@@ -24,6 +24,7 @@
 * CyberSource: Adjust Auth [naashton] #3956
 * Valid Canadian Institution Numbers [naashton] #4024
 * PayTrace: Adjust purchase and capture methods to handle MultiResponse scenarios [meagabeth] #4027
+* Payflow: Add support for MERCHDESCR field [rachelkirk] #4028
 
 == Version 1.121 (June 8th, 2021)
 * Braintree: Lift restriction on gem version to allow for backwards compatibility [naashton] #3993

@@ -22,7 +22,8 @@ class RemotePayflowTest < Test::Unit::TestCase
       description: 'Description string',
       order_desc: 'OrderDesc string',
       comment: 'Comment string',
-      comment2: 'Comment2 string'
+      comment2: 'Comment2 string',
+      merch_descr: 'MerchDescr string'
     }
 
     @check = check(
