@@ -24,7 +24,6 @@ module ActiveMerchant #:nodoc:
       }
 
       DEFAULT_API_VERSION = '2015-04-07'
-      STATEMENT_DESC_API_VERSION = '2019-02-19'
       CHARGE_REQ_API_VERSION = '2019-09-09'
       CONNECTED_ACCOUNT_PREFIX = 'acct_'
 
@@ -232,6 +231,7 @@ module ActiveMerchant #:nodoc:
             end
           end
         else
+          post[:expand] = ['sources']
           commit(:post, 'customers', post.merge(params), options)
         end
       end
@@ -375,9 +375,7 @@ module ActiveMerchant #:nodoc:
           add_customer_data(post, options)
           post[:description] = options[:description]
           post[:statement_descriptor] = options[:statement_description]
-          if api_version(options) >= STATEMENT_DESC_API_VERSION
-            post[:statement_descriptor_suffix] = options[:statement_descriptor_suffix]
-          end
+          post[:statement_descriptor_suffix] = options[:statement_descriptor_suffix]
           post[:receipt_email] = options[:receipt_email] if options[:receipt_email]
           add_customer(post, payment, options)
           add_flags(post, options)
@@ -698,7 +696,7 @@ module ActiveMerchant #:nodoc:
       def authorization_from(success, url, method, response)
         return response.fetch('error', {})['charge'] unless success
 
-        if url == 'customers'
+        if url == 'customers' && response.key?('sources')
           [response['id'], response.dig('sources', 'data').first&.dig('id')].join('|')
         elsif method == :post && (url.match(/customers\/.*\/cards/) || url.match(/payment_methods\/.*\/attach/))
           [response['customer'], response['id']].join('|')

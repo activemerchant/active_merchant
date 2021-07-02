@@ -14,6 +14,20 @@ module ActiveMerchant #:nodoc: ALL
       self.supported_countries = %w[CA US]
       self.supported_cardtypes = %i[visa master american_express jcb discover]
 
+      CARD_TYPE_MAPPING        = {
+        'Visa'             => 'Visa',
+        'VISA'             => 'Visa',
+        'Master'           => 'Mastercard',
+        'MasterCard'       => 'Mastercard',
+        'Master Card'      => 'Mastercard',
+        'Discover'         => 'Discover',
+        'American Express' => 'American Express',
+        'Amex'             => 'American Express',
+        'DinersClub'       => 'Diners Club',
+        'Diners Club'      => 'Diners Club',
+        'JCB'              => 'JCB',
+      }.freeze
+
       # TRANSACTION_TYPES = [AUTHORIZE, PURCHASE, CAPTURE, ADD_TIP, VOID, REFUND, INQUIRY, MODIFY, BATCH]
       AUTHORIZE = 'Auth'
       PURCHASE = 'Sale'
@@ -242,7 +256,19 @@ module ActiveMerchant #:nodoc: ALL
         add_configure_group(post, options)
         add_action_group(post, options, card)
         add_request_card_info_group(post, card, options)
-        commit(CREATE_TOKEN, 'restApi', post)
+
+        response = commit(CREATE_TOKEN, 'restApi', post)
+        return response unless response.success?
+
+        Response.new(
+          true,
+          response.message,
+          card_attributes(response).as_json,
+          test: test?,
+          authorization: response.authorization,
+          avs_result:    response.avs_result,
+          cvv_result:    response.cvv_result[:code],
+        )
       end
 
       private
@@ -405,6 +431,19 @@ module ActiveMerchant #:nodoc: ALL
       # <tt>void</tt> -- set to true if command would be VOID
       def add_custom_group(post, void = true)
         post[:CreditOnFailure] = 'Y' if void
+      end
+
+      def card_attributes(response)
+        response.params['Brand'] = CARD_TYPE_MAPPING[response.params['Brand']]
+        response.params['ExpDate'] = response.params['ExpDate'].rjust(4, '0')
+        {
+          token:     response.params['CardToken'],
+          last4:     response.params.dig('AccountNum')[-4..-1],
+          brand:     response.params['Brand'],
+          funding:   response.params['Medium'].downcase,
+          exp_month: response.params['ExpDate'][0..1],
+          exp_year:  '20' + response.params['ExpDate'][2..3]
+        }
       end
 
       def error_code_from(response)
