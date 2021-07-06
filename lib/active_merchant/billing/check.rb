@@ -15,7 +15,7 @@ module ActiveMerchant #:nodoc:
 
       # Canadian Institution Numbers
       # Found here: https://en.wikipedia.org/wiki/Routing_number_(Canada)
-      INSTITUTION_NUMBERS = %w(
+      CAN_INSTITUTION_NUMBERS = %w(
         001 002 003 004	006 010 016 030 039 117 127 177 219 245 260 269 270 308
         309 310 315 320	338 340 509 540 608 614 623 809 815 819 828 829 837 839
         865 879 889 899 241 242 248 250 265 275 277 290 294 301 303 307 311 314
@@ -66,22 +66,17 @@ module ActiveMerchant #:nodoc:
       # See http://en.wikipedia.org/wiki/Routing_transit_number#Internal_checksums
       def valid_routing_number?
         digits = routing_number.to_s.split('').map(&:to_i).select { |d| (0..9).cover?(d) }
-        case digits.size
-        when 9
+        if digits.size == 9
           checksum = ((3 * (digits[0] + digits[3] + digits[6])) +
-                      (7 * (digits[1] + digits[4] + digits[7])) +
-                           (digits[2] + digits[5] + digits[8])) % 10
-          case checksum
-          when 0
-            true
-          else
-            false
-          end
-        when 8
-          true if INSTITUTION_NUMBERS.include?(routing_number[0..2].to_s)
-        else
-          false
+            (7 * (digits[1] + digits[4] + digits[7])) +
+            (digits[2] + digits[5] + digits[8])) % 10
+
+          return checksum == 0
         end
+
+        return CAN_INSTITUTION_NUMBERS.include?(routing_number[0..2]) if digits.size == 8
+
+        false
       end
     end
   end

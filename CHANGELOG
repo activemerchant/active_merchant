@@ -28,6 +28,7 @@
 * Payflow: Add support for MERCHDESCR field [rachelkirk] #4028
 * PayTrace: Support $0 authorize in verify method [meagabeth] #4030
 * PayArc: Add error_code in response [cdm-83] #4021
+* Update bank routing account validation check [jessiagee] #4029
 
 == Version 1.121 (June 8th, 2021)
 * Braintree: Lift restriction on gem version to allow for backwards compatibility [naashton] #3993

@@ -5,6 +5,8 @@ class CheckTest < Test::Unit::TestCase
   INVALID_ABA   = '999999999'
   MALFORMED_ABA = 'I like fish'
   VALID_CBA = '00194611'
+  INVALID_NINE_DIGIT_CBA = '012345678'
+  INVALID_SEVEN_DIGIT_ROUTING_NUMBER = '0123456'
 
   ACCOUNT_NUMBER = '123456789012'
 
@@ -88,5 +90,29 @@ class CheckTest < Test::Unit::TestCase
       account_holder_type: 'personal',
       account_type: 'checking'
     )
+  end
+
+  def test_invalid_nine_digit_canada_routing_number
+    errors = assert_not_valid Check.new(
+      name: 'Tim Horton',
+      routing_number: INVALID_NINE_DIGIT_CBA,
+      account_number: ACCOUNT_NUMBER,
+      account_holder_type: 'personal',
+      account_type: 'checking'
+    )
+
+    assert_equal ['is invalid'], errors[:routing_number]
+  end
+
+  def test_invalid_routing_number_length
+    errors = assert_not_valid Check.new(
+      name: 'Routing Shortlength',
+      routing_number: INVALID_SEVEN_DIGIT_ROUTING_NUMBER,
+      account_number: ACCOUNT_NUMBER,
+      account_holder_type: 'personal',
+      account_type: 'checking'
+    )
+
+    assert_equal ['is invalid'], errors[:routing_number]
   end
 end
