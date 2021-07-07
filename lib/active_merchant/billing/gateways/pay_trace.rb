@@ -90,7 +90,7 @@ module ActiveMerchant #:nodoc:
       def refund(money, authorization, options = {})
         # currently only support full and partial refunds of settled transactions via a transaction ID
         post = {}
-        add_amount(post, money, options) if money.class == Integer
+        add_amount(post, money, options)
         post[:transaction_id] = authorization
         response = commit(ENDPOINTS[:transaction_refund], post)
         check_token_response(response, ENDPOINTS[:transaction_refund], post, options)
@@ -105,10 +105,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify(credit_card, options = {})
-        MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
-        end
+        authorize(0, credit_card, options)
       end
 
       # The customer_IDs that come from storing cards can be used for auth and purchase transaction types
@@ -179,7 +176,7 @@ module ActiveMerchant #:nodoc:
       def build_capture_request(money, authorization, options)
         post = {}
         post[:transaction_id] = authorization
-        add_amount(post, money, options) if options[:include_capture_amount] == true
+        add_amount(post, money, options)
 
         post
       end

@@ -16,7 +16,7 @@ class RemotePayTraceTest < Test::Unit::TestCase
   def setup
     @gateway = PayTraceGateway.new(fixtures(:pay_trace))
 
-    @amount = 1000
+    @amount = 100
     @credit_card = credit_card('4012000098765439')
     @mastercard = credit_card('5499740000000057')
     @invalid_card = credit_card('54545454545454', month: '14', year: '1999')
@@ -39,7 +39,7 @@ class RemotePayTraceTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    response = @gateway.purchase(@amount, @credit_card, @options)
+    response = @gateway.purchase(1000, @credit_card, @options)
     assert_success response
     assert_equal 'Your transaction was successfully approved.', response.message
   end
@@ -173,11 +173,11 @@ class RemotePayTraceTest < Test::Unit::TestCase
     assert_equal 'Errors- code:35, message:["Please provide a valid Credit Card Number."] code:43, message:["Please provide a valid Expiration Month."]', response.message
   end
 
-  def test_successful_authorize_and_capture
-    auth = @gateway.authorize(300, @credit_card, @options)
+  def test_successful_authorize_and_full_capture
+    auth = @gateway.authorize(4000, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount, auth.authorization, @options)
+    assert capture = @gateway.capture(4000, auth.authorization, @options)
     assert_success capture
     assert_equal 'Your transaction was successfully captured.', capture.message
   end
@@ -213,7 +213,7 @@ class RemotePayTraceTest < Test::Unit::TestCase
         }
       ]
     }
-    auth = @gateway.authorize(100, @mastercard, options)
+    auth = @gateway.authorize(@amount, @mastercard, options)
     assert_success auth
 
     assert capture = @gateway.capture(@amount, auth.authorization, options)
@@ -233,7 +233,7 @@ class RemotePayTraceTest < Test::Unit::TestCase
     auth = @gateway.authorize(500, @amex, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(200, auth.authorization, @options.merge(include_capture_amount: true))
+    assert capture = @gateway.capture(200, auth.authorization, @options)
     assert_success capture
   end
 
@@ -277,7 +277,7 @@ class RemotePayTraceTest < Test::Unit::TestCase
     settle = @gateway.settle()
     assert_success settle
 
-    refund = @gateway.refund('', authorization)
+    refund = @gateway.refund(@amount, authorization)
     assert_success refund
     assert_equal 'Your transaction was successfully refunded.', refund.message
   end

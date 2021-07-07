@@ -109,15 +109,6 @@ class PayTraceTest < Test::Unit::TestCase
     assert_equal 'Your transaction was successfully captured.', response.message
   end
 
-  def test_successful_partial_capture
-    @gateway.expects(:ssl_post).returns(successful_capture_response)
-    transaction_id = 11223344
-
-    response = @gateway.capture(@amount, transaction_id, @options.merge(include_capture_amount: true))
-    assert_success response
-    assert_equal 'Your transaction was successfully captured.', response.message
-  end
-
   def test_successful_level_3_data_field_mapping
     authorization = 123456789
     options = {
@@ -178,21 +169,14 @@ class PayTraceTest < Test::Unit::TestCase
   end
 
   def test_successful_verify
-    @gateway.expects(:ssl_post).times(2).returns(successful_authorize_response).then.returns(successful_void_response)
-
-    response = @gateway.verify(@credit_card, @options)
-    assert_success response
-  end
-
-  def test_successful_verify_with_failed_void
-    @gateway.expects(:ssl_post).times(2).returns(successful_authorize_response).then.returns(failed_void_response)
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
 
     response = @gateway.verify(@credit_card, @options)
     assert_success response
   end
 
   def test_failed_verify
-    @gateway.expects(:ssl_post).times(1).returns(failed_authorize_response)
+    @gateway.expects(:ssl_post).returns(failed_authorize_response)
 
     response = @gateway.verify(@credit_card, @options)
     assert_failure response
