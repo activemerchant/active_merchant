@@ -53,6 +53,30 @@ class GoCardlessTest < Test::Unit::TestCase
     assert_equal 1000, response.params['payments']['amount']
   end
 
+  def test_unstore_customer
+    bank_account = mock_bank_account_with_iban
+    stub_requests_to_be_successful
+    stub_unstore_requests_to_be_successful
+
+    response = @gateway.store(@customer_attributes, bank_account)
+
+    assert customer_id = response.responses.first.params["customers"]["id"]
+    delete_response = @gateway.unstore(customer_id)
+    assert_success delete_response
+  end
+
+  def test_cancel_mandate
+    bank_account = mock_bank_account_with_iban
+    stub_requests_to_be_successful
+    stub_cancel_requests_to_be_successful
+
+    response = @gateway.store(@customer_attributes, bank_account)
+
+    assert bank_account_id = response.params["customer_bank_accounts"]["id"]
+    cancel_response = @gateway.cancel_mandate(bank_account_id)
+    assert_success cancel_response
+  end
+
   def test_successful_refund
     @gateway.expects(:ssl_request)
        .with(:post, 'https://api-sandbox.gocardless.com/refunds', anything, anything)
@@ -101,6 +125,16 @@ class GoCardlessTest < Test::Unit::TestCase
     @gateway.expects(:ssl_request)
       .with(:post, 'https://api-sandbox.gocardless.com/mandates', anything, anything)
       .returns(successful_create_mandate_response)
+  end
+
+  def stub_unstore_requests_to_be_successful
+    @gateway.expects(:ssl_request)
+      .with(:delete, 'https://api-sandbox.gocardless.com/customers/CU0004CKN9T1HZ', anything, anything)
+  end
+
+  def stub_cancel_requests_to_be_successful
+    @gateway.expects(:ssl_request)
+      .with(:post, 'https://api-sandbox.gocardless.com/mandates/BA0004687N7GD5/actions/cancel', anything, anything)
   end
 
   def successful_purchase_response

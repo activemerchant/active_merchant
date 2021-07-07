@@ -55,6 +55,14 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def unstore(customer_id, options = {})
+        commit(:delete, "/customers/#{customer_id}", nil, options)
+      end
+
+      def cancel_mandate(mandate, options = {})
+        commit(:post, "/mandates/#{mandate}/actions/cancel", options)
+      end
+
       def refund(money, identification, options = {})
         res = nil
         money_in_cents = money.respond_to?(:cents) ? money.cents : money.to_i
@@ -96,6 +104,8 @@ module ActiveMerchant #:nodoc:
       private
 
       def test?
+        return true if @options[:access_token].nil?
+
         @options[:access_token].start_with?('sandbox_')
       end
 
@@ -104,7 +114,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(response)
-        JSON.parse(response)
+        JSON.parse(response || '{}')
       end
 
       def commit(method, action, params, options={})
