@@ -8,7 +8,7 @@ module ActiveMerchant
         super
 
         token = options[:token]
-        @digital_river_gateway = DigitalRiver::Gateway.new(token)
+        @digital_river_gateway = DigitalRiver::Gateway.new(token, wiredump_device)
       end
 
       def store(payment_method, options = {})
@@ -106,6 +106,15 @@ module ActiveMerchant
             refund_id: (result.value!.id if result.success?)
           }
         )
+      end
+
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript
+          .gsub(%r((Authorization: Bearer )\w+)i, '\1[FILTERED]\2')
       end
 
       private

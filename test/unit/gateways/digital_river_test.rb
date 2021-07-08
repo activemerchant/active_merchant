@@ -254,6 +254,11 @@ class DigitalRiverTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_scrub
+    assert @gateway.supports_scrubbing?
+    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
   def unsuccessful_unstore_response
     stub(
       success?: false,
@@ -815,5 +820,31 @@ class DigitalRiverTest < Test::Unit::TestCase
         ]
       }
     )
+  end
+
+  def pre_scrubbed
+    %q{
+      opening connection to api.digitalriver.com:443...
+      opened
+      starting SSL for api.digitalriver.com:443...
+      SSL established, protocol: TLSv1.3, cipher: TLS_AES_128_GCM_SHA256
+      <- "POST /customers HTTP/1.1\r\nAuthorization: Bearer sk_test_a3bd3f2ba5db4e2db94dd6b02b4dec33\r\nContent-Type: application/json\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api.digitalriver.com\r\nContent-Length: 202\r\n\r\n"
+      <- "{\"email\":\"holdpass@fraud.com\",\"shipping\":{\"name\":\"Jane Doe\",\"organization\":null,\"phone\":\"123456789\",\"address\":{\"line1\":\"Test\",\"line2\":\"\",\"city\":\"Test\",\"state\":\"AL\",\"postalCode\":\"12345\",\"country\":\"US\"}}}"
+      -> "HTTP/1.1 201 \r\n"
+      -> "access-control-allow-credentials: true\r\n"
+    }
+  end
+
+  def post_scrubbed
+    %q{
+      opening connection to api.digitalriver.com:443...
+      opened
+      starting SSL for api.digitalriver.com:443...
+      SSL established, protocol: TLSv1.3, cipher: TLS_AES_128_GCM_SHA256
+      <- "POST /customers HTTP/1.1\r\nAuthorization: Bearer [FILTERED]\r\nContent-Type: application/json\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api.digitalriver.com\r\nContent-Length: 202\r\n\r\n"
+      <- "{\"email\":\"holdpass@fraud.com\",\"shipping\":{\"name\":\"Jane Doe\",\"organization\":null,\"phone\":\"123456789\",\"address\":{\"line1\":\"Test\",\"line2\":\"\",\"city\":\"Test\",\"state\":\"AL\",\"postalCode\":\"12345\",\"country\":\"US\"}}}"
+      -> "HTTP/1.1 201 \r\n"
+      -> "access-control-allow-credentials: true\r\n"
+    }
   end
 end
