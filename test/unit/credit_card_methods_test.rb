@@ -128,9 +128,41 @@ class CreditCardMethodsTest < Test::Unit::TestCase
   end
 
   def test_should_detect_jcb_cards
+    # 35280000 - 35899999
+    assert_not_equal 'jcb', CreditCard.brand?('3527999900000000')
     assert_equal 'jcb', CreditCard.brand?('3528000000000000')
-    assert_equal 'jcb', CreditCard.brand?('3580000000000000')
-    assert_equal 'jcb', CreditCard.brand?('3088000000000017')
+    assert_equal 'jcb', CreditCard.brand?('3589999999999999')
+    assert_not_equal 'jcb', CreditCard.brand?('3590000000000000')
+
+    # 30880000 - 30949999
+    assert_not_equal 'jcb', CreditCard.brand?('3087999900000000')
+    assert_equal 'jcb', CreditCard.brand?('3088000000000000')
+    assert_equal 'jcb', CreditCard.brand?('3094999999999999')
+    assert_not_equal 'jcb', CreditCard.brand?('3095000000000000')
+
+    # 30960000 - 3102999999999999
+    assert_not_equal 'jcb', CreditCard.brand?('3095999900000000')
+    assert_equal 'jcb', CreditCard.brand?('3096000000000000')
+    assert_equal 'jcb', CreditCard.brand?('3102999999999999')
+    assert_not_equal 'jcb', CreditCard.brand?('3103000000000000')
+
+    # 31120000 - 31209999
+    assert_not_equal 'jcb', CreditCard.brand?('3111999900000000')
+    assert_equal 'jcb', CreditCard.brand?('3112000000000000')
+    assert_equal 'jcb', CreditCard.brand?('3120999999999999')
+    assert_not_equal 'jcb', CreditCard.brand?('3121000000000000')
+
+    # 31580000 - 31599999
+    assert_not_equal 'jcb', CreditCard.brand?('3157999900000000')
+    assert_equal 'jcb', CreditCard.brand?('3158000000000000')
+    assert_equal 'jcb', CreditCard.brand?('3159999999999999')
+    assert_not_equal 'jcb', CreditCard.brand?('3160000000000000')
+
+    # 33370000 - 33499999
+    assert_not_equal 'jcb', CreditCard.brand?('3336999900000000')
+    assert_equal 'jcb', CreditCard.brand?('3337000000000000')
+    assert_equal 'jcb', CreditCard.brand?('3349999999999999')
+    assert_not_equal 'jcb', CreditCard.brand?('3350000000000000')
   end
 
   def test_should_detect_maestro_dk_as_maestro
