@@ -28,6 +28,15 @@ class KushkiTest < Test::Unit::TestCase
         subtotal_iva: '10',
         iva: '1.54',
         ice: '3.50'
+      },
+      contact_details: {
+        document_type: 'CC',
+        document_number: '123456',
+        email: 'who_dis@monkeys.tv',
+        first_name: 'Who',
+        last_name: 'Dis',
+        second_last_name: 'Buscemi',
+        phone_number: '+13125556789'
       }
     }
 
