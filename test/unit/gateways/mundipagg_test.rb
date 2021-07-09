@@ -93,6 +93,19 @@ class MundipaggTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_item_description_and_quantity
+    @options[:items] = { description: 'my cart item', quantity: 29 }
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/my cart item/, data)
+      assert_match(/"quantity":29/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert response.test?
+  end
+
   def test_successful_purchase_with_submerchant
     options = @options.update(@submerchant_options)
     response = stub_comms do
@@ -149,7 +162,7 @@ class MundipaggTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase_with_gateway_response_errors
-    @gateway.expects(:ssl_post).returns(failed_response_with_gateway_response_errors)
+    @gateway.expects(:ssl_post).returns(failed_orders_response_with_gateway_response_errors)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
 
@@ -173,7 +186,7 @@ class MundipaggTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
 
-    assert_equal 'ch_gm5wrlGMI2Fb0x6K', response.authorization
+    assert_equal 'ch_My6K2q8H5HjYEQRO', response.authorization
     assert response.test?
   end
 
@@ -187,7 +200,7 @@ class MundipaggTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options.merge(shipping_address: shipping_address))
     assert_success response
 
-    assert_equal 'ch_gm5wrlGMI2Fb0x6K', response.authorization
+    assert_equal 'ch_My6K2q8H5HjYEQRO', response.authorization
     assert response.test?
   end
 
@@ -198,7 +211,7 @@ class MundipaggTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, options)
     assert_success response
 
-    assert_equal 'ch_gm5wrlGMI2Fb0x6K', response.authorization
+    assert_equal 'ch_My6K2q8H5HjYEQRO', response.authorization
     assert response.test?
   end
 
@@ -220,7 +233,7 @@ class MundipaggTest < Test::Unit::TestCase
   end
 
   def test_failed_authorize_with_gateway_response_errors
-    @gateway.expects(:ssl_post).returns(failed_response_with_gateway_response_errors)
+    @gateway.expects(:ssl_post).returns(failed_orders_response_with_gateway_response_errors)
 
     response = @gateway.authorize(@amount, @credit_card, @options)
 
@@ -234,7 +247,7 @@ class MundipaggTest < Test::Unit::TestCase
     response = @gateway.capture(@amount, @credit_card, @options)
     assert_success response
 
-    assert_equal 'ch_gm5wrlGMI2Fb0x6K', response.authorization
+    assert_equal 'ch_My6K2q8H5HjYEQRO', response.authorization
     assert response.test?
   end
 
@@ -267,10 +280,10 @@ class MundipaggTest < Test::Unit::TestCase
   def test_successful_void
     @gateway.expects(:ssl_request).returns(successful_void_response)
 
-    response = @gateway.void('ch_RbPVPWMH2bcGA50z')
+    response = @gateway.void('ch_My6K2q8H5HjYEQRO')
     assert_success response
 
-    assert_equal 'ch_RbPVPWMH2bcGA50z', response.authorization
+    assert_equal 'ch_My6K2q8H5HjYEQRO', response.authorization
     assert response.test?
   end
 
@@ -283,13 +296,13 @@ class MundipaggTest < Test::Unit::TestCase
   end
 
   def test_successful_verify
-    @gateway.expects(:ssl_request).returns(successful_authorize_response)
-    @gateway.expects(:ssl_post).returns(successful_verify_response)
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+    @gateway.expects(:ssl_request).returns(successful_verify_response)
 
     response = @gateway.verify(@credit_card, @options)
     assert_success response
 
-    assert_equal 'ch_G9rB74PI3uoDMxAo', response.authorization
+    assert_equal 'ch_My6K2q8H5HjYEQRO', response.authorization
     assert response.test?
   end
 
@@ -355,7 +368,7 @@ class MundipaggTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, card, @options)
     assert_success response
 
-    assert_equal 'ch_90Vjq8TrwfP74XJO', response.authorization
+    assert_equal 'ch_g7VlJ7QIbumjX0yE', response.authorization
     assert response.test?
   end
 
@@ -430,71 +443,108 @@ class MundipaggTest < Test::Unit::TestCase
   def successful_purchase_response
     %(
       {
-        "id": "ch_90Vjq8TrwfP74XJO",
-        "code": "ME0KIN4A0O",
-        "gateway_id": "162bead8-23a0-4708-b687-078a69a1aa7c",
+        "id": "or_b4Q7wZpUDRCx3dye",
+        "code": "K2EWSNJAXW",
         "amount": 100,
-        "paid_amount": 100,
-        "status": "paid",
         "currency": "USD",
-        "payment_method": "credit_card",
-        "paid_at": "2018-02-01T18:41:05Z",
-        "created_at": "2018-02-01T18:41:04Z",
-        "updated_at": "2018-02-01T18:41:04Z",
+        "closed": true,
+        "items": [{
+          "id": "oi_d612X95cEH3kXBpg",
+          "type": "product",
+          "description": "no description provided",
+          "amount": 100,
+          "quantity": 1,
+          "status": "active",
+          "created_at": "2021-04-30T16:43:38Z",
+          "updated_at": "2021-04-30T16:43:38Z"
+        }],
         "customer": {
-          "id": "cus_VxJX2NmTqyUnXgL9",
+          "id": "cus_6ra8zgvhjT5Kem37",
           "name": "Longbob Longsen",
-          "email": "",
           "delinquent": false,
-          "created_at": "2018-02-01T18:41:04Z",
-          "updated_at": "2018-02-01T18:41:04Z",
+          "created_at": "2021-04-30T16:43:38Z",
+          "updated_at": "2021-04-30T16:43:38Z",
           "phones": {}
         },
-        "last_transaction": {
-          "id": "tran_JNzjzadcVZHlG8K2",
-          "transaction_type": "credit_card",
-          "gateway_id": "c579c8fa-53d7-41a8-b4cc-a03c712ebbb7",
+        "status": "paid",
+        "created_at": "2021-04-30T16:43:38Z",
+        "updated_at": "2021-04-30T16:43:38Z",
+        "closed_at": "2021-04-30T16:43:38Z",
+        "charges": [{
+          "id": "ch_g7VlJ7QIbumjX0yE",
+          "code": "K2EWSNJAXW",
+          "gateway_id": "821bb8b9-e20e-4f8e-b50e-5c970006030b",
           "amount": 100,
-          "status": "captured",
-          "success": true,
-          "installments": 1,
-          "acquirer_name": "simulator",
-          "acquirer_affiliation_code": "",
-          "acquirer_tid": "198548",
-          "acquirer_nsu": "866277",
-          "acquirer_auth_code": "713736",
-          "acquirer_message": "Simulator|Transação de simulação autorizada com sucesso",
-          "acquirer_return_code": "0",
-          "operation_type": "auth_and_capture",
-          "card": {
-            "id": "card_pD02Q6WtOTB7a3kE",
-            "first_six_digits": "400010",
-            "last_four_digits": "2224",
-            "brand": "Visa",
-            "holder_name": "Longbob Longsen",
-            "exp_month": 9,
-            "exp_year": 2019,
-            "status": "active",
-            "created_at": "2018-02-01T18:41:04Z",
-            "updated_at": "2018-02-01T18:41:04Z",
-            "billing_address": {
-              "street": "My Street",
-              "number": "456",
-              "zip_code": "K1C2N6",
-              "neighborhood": "Sesame Street",
-              "city": "Ottawa",
-              "state": "ON",
-              "country": "CA",
-              "line_1": "456, My Street, Sesame Street"
-            },
-            "type": "credit"
+          "paid_amount": 100,
+          "status": "paid",
+          "currency": "USD",
+          "payment_method": "credit_card",
+          "paid_at": "2021-04-30T16:43:38Z",
+          "created_at": "2021-04-30T16:43:38Z",
+          "updated_at": "2021-04-30T16:43:38Z",
+          "customer": {
+            "id": "cus_6ra8zgvhjT5Kem37",
+            "name": "Longbob Longsen",
+            "delinquent": false,
+            "created_at": "2021-04-30T16:43:38Z",
+            "updated_at": "2021-04-30T16:43:38Z",
+            "phones": {}
           },
-          "created_at": "2018-02-01T18:41:04Z",
-          "updated_at": "2018-02-01T18:41:04Z",
-          "gateway_response": {
-            "code": "201"
+          "last_transaction": {
+            "id": "tran_l2JY8EnHoLHm0VOp",
+            "transaction_type": "credit_card",
+            "gateway_id": "a3945451-4a6f-40cc-9822-c9cacee9ca88",
+            "amount": 100,
+            "status": "captured",
+            "success": true,
+            "installments": 1,
+            "acquirer_name": "simulator",
+            "acquirer_affiliation_code": "",
+            "acquirer_tid": "874198",
+            "acquirer_nsu": "568947",
+            "acquirer_auth_code": "54305",
+            "acquirer_message": "Simulator|Transação de simulação autorizada com sucesso",
+            "acquirer_return_code": "0",
+            "operation_type": "auth_and_capture",
+            "card": {
+              "id": "card_963VOepvibTZwmZ7",
+              "first_six_digits": "400010",
+              "last_four_digits": "2224",
+              "brand": "Visa",
+              "holder_name": "Longbob Longsen",
+              "exp_month": 9,
+              "exp_year": 2022,
+              "status": "active",
+              "type": "credit",
+              "created_at": "2021-04-30T16:43:38Z",
+              "updated_at": "2021-04-30T16:43:38Z",
+              "billing_address": {
+                "street": "My Street",
+                "number": "456",
+                "zip_code": "K1C2N6",
+                "neighborhood": "Sesame Street",
+                "city": "Ottawa",
+                "state": "ON",
+                "country": "CA",
+                "line_1": "456, My Street, Sesame Street"
+              }
+            },
+            "created_at": "2021-04-30T16:43:38Z",
+            "updated_at": "2021-04-30T16:43:38Z",
+            "gateway_response": {
+              "code": "201",
+              "errors": []
+            },
+            "antifraud_response": {},
+            "metadata": {
+              "mundipagg_payment_method_code": "1"
+            }
+          },
+          "metadata": {
+            "mundipagg_payment_method_code": "1"
           }
-        }
+        }],
+        "checkouts": []
       }
     )
   end
@@ -502,66 +552,103 @@ class MundipaggTest < Test::Unit::TestCase
   def failed_purchase_response
     %(
       {
-        "id": "ch_ykXLG3RfVfNE4dZe",
-        "code": "3W80HGVS0R",
-        "gateway_id": "79ae6732-1b60-4008-80f5-0d1be8ec41a7",
+        "id": "or_Ml6zxlkcOqfkjLvd",
+        "code": "1ZKEBKA261",
         "amount": 105200,
-        "status": "failed",
         "currency": "USD",
-        "payment_method": "credit_card",
-        "created_at": "2018-02-01T18:42:44Z",
-        "updated_at": "2018-02-01T18:42:45Z",
+        "closed": true,
+        "items": [{
+          "id": "oi_O7VvL8OtYpIjv3P9",
+          "type": "product",
+          "description": "no description provided",
+          "amount": 105200,
+          "quantity": 1,
+          "status": "active",
+          "created_at": "2021-04-30T16:47:43Z",
+          "updated_at": "2021-04-30T16:47:43Z"
+        }],
         "customer": {
-          "id": "cus_0JnywlzI3hV6ZNe2",
+          "id": "cus_JoA38P5Cw6tXEQ9a",
           "name": "Longbob Longsen",
-          "email": "",
           "delinquent": false,
-          "created_at": "2018-02-01T18:42:44Z",
-          "updated_at": "2018-02-01T18:42:44Z",
+          "created_at": "2021-04-30T16:47:43Z",
+          "updated_at": "2021-04-30T16:47:43Z",
           "phones": {}
         },
-        "last_transaction": {
-          "id": "tran_nVx8730IjhOR8PD2",
-          "transaction_type": "credit_card",
-          "gateway_id": "f3993413-73a0-4e8d-a7bc-eb3ed198c770",
+        "status": "failed",
+        "created_at": "2021-04-30T16:47:43Z",
+        "updated_at": "2021-04-30T16:47:43Z",
+        "closed_at": "2021-04-30T16:47:43Z",
+        "charges": [{
+          "id": "ch_xwV2mrDiAGiWepZa",
+          "code": "1ZKEBKA261",
+          "gateway_id": "13a59ae1-f006-4895-b2b9-9759a653d4c0",
           "amount": 105200,
-          "status": "not_authorized",
-          "success": false,
-          "installments": 1,
-          "acquirer_name": "simulator",
-          "acquirer_affiliation_code": "",
-          "acquirer_message": "Simulator|Transação de simulada negada por falta de crédito, utilizado para realizar simulação de autorização parcial.",
-          "acquirer_return_code": "92",
-          "operation_type": "auth_and_capture",
-          "card": {
-            "id": "card_VrxnWlrsOHOpzMj5",
-            "first_six_digits": "400030",
-            "last_four_digits": "2220",
-            "brand": "Visa",
-            "holder_name": "Longbob Longsen",
-            "exp_month": 9,
-            "exp_year": 2019,
-            "status": "active",
-            "created_at": "2018-02-01T18:42:44Z",
-            "updated_at": "2018-02-01T18:42:44Z",
-            "billing_address": {
-              "street": "My Street",
-              "number": "456",
-              "zip_code": "K1C2N6",
-              "neighborhood": "Sesame Street",
-              "city": "Ottawa",
-              "state": "ON",
-              "country": "CA",
-              "line_1": "456, My Street, Sesame Street"
-            },
-            "type": "credit"
+          "status": "failed",
+          "currency": "USD",
+          "payment_method": "credit_card",
+          "created_at": "2021-04-30T16:47:43Z",
+          "updated_at": "2021-04-30T16:47:43Z",
+          "customer": {
+            "id": "cus_JoA38P5Cw6tXEQ9a",
+            "name": "Longbob Longsen",
+            "delinquent": false,
+            "created_at": "2021-04-30T16:47:43Z",
+            "updated_at": "2021-04-30T16:47:43Z",
+            "phones": {}
           },
-          "created_at": "2018-02-01T18:42:44Z",
-          "updated_at": "2018-02-01T18:42:44Z",
-          "gateway_response": {
-            "code": "201"
+          "last_transaction": {
+            "id": "tran_JG1EjJyt1IrzEm26",
+            "transaction_type": "credit_card",
+            "gateway_id": "c4200e2f-ddeb-45cf-99bd-12c109ae91ce",
+            "amount": 105200,
+            "status": "not_authorized",
+            "success": false,
+            "installments": 1,
+            "acquirer_name": "simulator",
+            "acquirer_affiliation_code": "",
+            "acquirer_message": "Simulator|Transação de simulada negada por falta de crédito, utilizado para realizar simulação de autorização parcial.",
+            "acquirer_return_code": "92",
+            "operation_type": "auth_and_capture",
+            "card": {
+              "id": "card_pNoVAEzFrtrLGXy3",
+              "first_six_digits": "400030",
+              "last_four_digits": "2220",
+              "brand": "Visa",
+              "holder_name": "Longbob Longsen",
+              "exp_month": 9,
+              "exp_year": 2022,
+              "status": "active",
+              "type": "credit",
+              "created_at": "2021-04-30T16:47:43Z",
+              "updated_at": "2021-04-30T16:47:43Z",
+              "billing_address": {
+                "street": "My Street",
+                "number": "456",
+                "zip_code": "K1C2N6",
+                "neighborhood": "Sesame Street",
+                "city": "Ottawa",
+                "state": "ON",
+                "country": "CA",
+                "line_1": "456, My Street, Sesame Street"
+              }
+            },
+            "created_at": "2021-04-30T16:47:43Z",
+            "updated_at": "2021-04-30T16:47:43Z",
+            "gateway_response": {
+              "code": "201",
+              "errors": []
+            },
+            "antifraud_response": {},
+            "metadata": {
+              "mundipagg_payment_method_code": "1"
+            }
+          },
+          "metadata": {
+            "mundipagg_payment_method_code": "1"
           }
-        }
+        }],
+        "checkouts": []
       }
     )
   end
@@ -690,18 +777,124 @@ class MundipaggTest < Test::Unit::TestCase
     )
   end
 
+  def failed_orders_response_with_gateway_response_errors
+    %(
+      {
+        "id": "or_Ml6zxlkcOqfkjLvd",
+        "code": "1ZKEBKA261",
+        "amount": 105200,
+        "currency": "USD",
+        "closed": true,
+        "items": [{
+          "id": "oi_O7VvL8OtYpIjv3P9",
+          "type": "product",
+          "description": "no description provided",
+          "amount": 105200,
+          "quantity": 1,
+          "status": "active",
+          "created_at": "2021-04-30T16:47:43Z",
+          "updated_at": "2021-04-30T16:47:43Z"
+        }],
+        "customer": {
+          "id": "cus_VxJX2NmTqyUnXgL9",
+          "name": "Longbob Longsen",
+          "email": "",
+          "delinquent": false,
+          "created_at": "2018-02-01T18:41:04Z",
+          "updated_at": "2018-02-01T18:41:04Z",
+          "phones": {}
+        },
+        "status": "failed",
+        "created_at": "2021-04-30T16:47:43Z",
+        "updated_at": "2021-04-30T16:47:43Z",
+        "closed_at": "2021-04-30T16:47:43Z",
+        "charges":[{
+          "id": "ch_90Vjq8TrwfP74XJO",
+          "code": "ME0KIN4A0O",
+          "gateway_id": "162bead8-23a0-4708-b687-078a69a1aa7c",
+          "amount": 100,
+          "paid_amount": 100,
+          "status": "paid",
+          "currency": "USD",
+          "payment_method": "credit_card",
+          "paid_at": "2018-02-01T18:41:05Z",
+          "created_at": "2018-02-01T18:41:04Z",
+          "updated_at": "2018-02-01T18:41:04Z",
+          "customer": {
+            "id": "cus_VxJX2NmTqyUnXgL9",
+            "name": "Longbob Longsen",
+            "email": "",
+            "delinquent": false,
+            "created_at": "2018-02-01T18:41:04Z",
+            "updated_at": "2018-02-01T18:41:04Z",
+            "phones": {}
+          },
+          "last_transaction": {
+            "id": "tran_JNzjzadcVZHlG8K2",
+            "transaction_type": "credit_card",
+            "gateway_id": "c579c8fa-53d7-41a8-b4cc-a03c712ebbb7",
+            "amount": 100,
+            "status": "captured",
+            "success": true,
+            "installments": 1,
+            "operation_type": "auth_and_capture",
+            "card": {
+              "id": "card_pD02Q6WtOTB7a3kE",
+              "first_six_digits": "400010",
+              "last_four_digits": "2224",
+              "brand": "Visa",
+              "holder_name": "Longbob Longsen",
+              "exp_month": 9,
+              "exp_year": 2019,
+              "status": "active",
+              "created_at": "2018-02-01T18:41:04Z",
+              "updated_at": "2018-02-01T18:41:04Z",
+              "billing_address": {
+                "street": "My Street",
+                "number": "456",
+                "zip_code": "K1C2N6",
+                "neighborhood": "Sesame Street",
+                "city": "Ottawa",
+                "state": "ON",
+                "country": "CA",
+                "line_1": "456, My Street, Sesame Street"
+              },
+              "type": "credit"
+            },
+            "created_at": "2018-02-01T18:41:04Z",
+            "updated_at": "2018-02-01T18:41:04Z",
+            "gateway_response": {
+              "code": "400",
+              "errors": [
+                {
+                  "message": "Esta loja n??o possui um meio de pagamento configurado para a bandeira VR"
+                }
+              ]
+            }
+          }
+        }]
+      }
+    )
+  end
+
   def failed_response_with_acquirer_return_code
     %(
       {
-        "id": "ch_9qY3lpeCJyTe2Gxz",
-        "code": "3Y4ZFENCK4",
-        "gateway_id": "db9a46cb-2c59-4663-a658-e7817302d97c",
-        "amount": 2946,
-        "status": "failed",
-        "currency": "BRL",
-        "payment_method": "credit_card",
-        "created_at": "2019-11-15T16:21:58Z",
-        "updated_at": "2019-11-15T16:21:59Z",
+        "id": "or_Ml6zxlkcOqfkjLvd",
+        "code": "1ZKEBKA261",
+        "amount": 105200,
+        "currency": "USD",
+        "closed": true,
+        "items": [{
+          "id": "oi_O7VvL8OtYpIjv3P9",
+          "type": "product",
+          "description": "no description provided",
+          "amount": 105200,
+          "quantity": 1,
+          "status": "active",
+          "created_at": "2021-04-30T16:47:43Z",
+          "updated_at": "2021-04-30T16:47:43Z"
+        }],
         "customer": {
           "id": "cus_KD14bY1F51UR1GrX",
           "name": "JOSE NETO",
@@ -711,54 +904,79 @@ class MundipaggTest < Test::Unit::TestCase
           "updated_at": "2019-11-15T16:21:58Z",
           "phones": {}
         },
-        "last_transaction": {
-          "id": "tran_P2zwvPztdVCg6pvA",
-          "transaction_type": "credit_card",
-          "gateway_id": "174a1d12-cbea-4c09-a27a-23bbad992cc9",
+        "status": "failed",
+        "created_at": "2021-04-30T16:47:43Z",
+        "updated_at": "2021-04-30T16:47:43Z",
+        "closed_at": "2021-04-30T16:47:43Z",
+        "charges": [{
+          "id": "ch_9qY3lpeCJyTe2Gxz",
+          "code": "3Y4ZFENCK4",
+          "gateway_id": "db9a46cb-2c59-4663-a658-e7817302d97c",
           "amount": 2946,
-          "status": "not_authorized",
-          "success": false,
-          "installments": 1,
-          "acquirer_name": "vr",
-          "acquirer_affiliation_code": "",
-          "acquirer_tid": "28128131916",
-          "acquirer_nsu": "281281",
-          "acquirer_message": "VR|",
-          "acquirer_return_code": "14",
-          "operation_type": "auth_and_capture",
-          "card": {
-            "id": "card_V2pQo2IbjtPqaXRZ",
-            "first_six_digits": "627416",
-            "last_four_digits": "7116",
-            "brand": "VR",
-            "holder_name": "JOSE NETO",
-            "holder_document": "27207590822",
-            "exp_month": 8,
-            "exp_year": 2029,
-            "status": "active",
-            "type": "voucher",
+          "status": "failed",
+          "currency": "BRL",
+          "payment_method": "credit_card",
+          "created_at": "2019-11-15T16:21:58Z",
+          "updated_at": "2019-11-15T16:21:59Z",
+          "customer": {
+            "id": "cus_KD14bY1F51UR1GrX",
+            "name": "JOSE NETO",
+            "email": "jose_bar@uol.com.br",
+            "delinquent": false,
             "created_at": "2019-11-15T16:21:58Z",
             "updated_at": "2019-11-15T16:21:58Z",
-            "billing_address": {
-              "street": "R.Dr.Eduardo de Souza Aranha,",
-              "number": "67",
-              "zip_code": "04530030",
-              "neighborhood": "Av Das Nacoes Unidas 6873",
-              "city": "Sao Paulo",
-              "state": "SP",
-              "country": "BR",
-              "line_1": "67, R.Dr.Eduardo de Souza Aranha,, Av Das Nacoes Unidas 6873"
-            }
+            "phones": {}
           },
-          "created_at": "2019-11-15T16:21:58Z",
-          "updated_at": "2019-11-15T16:21:58Z",
-          "gateway_response": {
-            "code": "201",
-            "errors": []
-          },
-          "antifraud_response": {},
-          "metadata": {}
-        }
+          "last_transaction": {
+            "id": "tran_P2zwvPztdVCg6pvA",
+            "transaction_type": "credit_card",
+            "gateway_id": "174a1d12-cbea-4c09-a27a-23bbad992cc9",
+            "amount": 2946,
+            "status": "not_authorized",
+            "success": false,
+            "installments": 1,
+            "acquirer_name": "vr",
+            "acquirer_affiliation_code": "",
+            "acquirer_tid": "28128131916",
+            "acquirer_nsu": "281281",
+            "acquirer_message": "VR|",
+            "acquirer_return_code": "14",
+            "operation_type": "auth_and_capture",
+            "card": {
+              "id": "card_V2pQo2IbjtPqaXRZ",
+              "first_six_digits": "627416",
+              "last_four_digits": "7116",
+              "brand": "VR",
+              "holder_name": "JOSE NETO",
+              "holder_document": "27207590822",
+              "exp_month": 8,
+              "exp_year": 2029,
+              "status": "active",
+              "type": "voucher",
+              "created_at": "2019-11-15T16:21:58Z",
+              "updated_at": "2019-11-15T16:21:58Z",
+              "billing_address": {
+                "street": "R.Dr.Eduardo de Souza Aranha,",
+                "number": "67",
+                "zip_code": "04530030",
+                "neighborhood": "Av Das Nacoes Unidas 6873",
+                "city": "Sao Paulo",
+                "state": "SP",
+                "country": "BR",
+                "line_1": "67, R.Dr.Eduardo de Souza Aranha,, Av Das Nacoes Unidas 6873"
+              }
+            },
+            "created_at": "2019-11-15T16:21:58Z",
+            "updated_at": "2019-11-15T16:21:58Z",
+            "gateway_response": {
+              "code": "201",
+              "errors": []
+            },
+            "antifraud_response": {},
+            "metadata": {}
+          }
+        }],
+        "checkouts": []
       }
     )
   end
@@ -766,69 +984,106 @@ class MundipaggTest < Test::Unit::TestCase
   def successful_authorize_response
     %(
       {
-        "id": "ch_gm5wrlGMI2Fb0x6K",
-        "code": "K1J5B1YFLE",
-        "gateway_id": "3b6c0f72-c4b3-48b2-8eb7-2424321a6c93",
+        "id": "or_YeZW1NpspOIgg6yd",
+        "code": "DM3NBQS5XM",
         "amount": 100,
-        "status": "pending",
         "currency": "USD",
-        "payment_method": "credit_card",
-        "created_at": "2018-02-01T16:43:30Z",
-        "updated_at": "2018-02-01T16:43:30Z",
+        "closed": true,
+        "items": [{
+          "id": "oi_yWdp0M8FMLuWEXKD",
+          "type": "product",
+          "description": "no description provided",
+          "amount": 100,
+          "quantity": 1,
+          "status": "active",
+          "created_at": "2021-04-30T16:09:30Z",
+          "updated_at": "2021-04-30T16:09:30Z"
+        }],
         "customer": {
-          "id": "cus_bVWYqeTmpu9VYLd9",
+          "id": "cus_DAQbKrDFbIav1xo0",
           "name": "Longbob Longsen",
-          "email": "",
           "delinquent": false,
-          "created_at": "2018-02-01T16:43:30Z",
-          "updated_at": "2018-02-01T16:43:30Z",
+          "created_at": "2021-04-30T16:09:30Z",
+          "updated_at": "2021-04-30T16:09:30Z",
           "phones": {}
         },
-        "last_transaction": {
-          "id": "tran_DWJlEApZI9UL2qR9",
-          "transaction_type": "credit_card",
-          "gateway_id": "6dae95a7-6b7f-4431-be33-cb3ecf21287a",
+        "status": "pending",
+        "created_at": "2021-04-30T16:09:30Z",
+        "updated_at": "2021-04-30T16:09:30Z",
+        "closed_at": "2021-04-30T16:09:30Z",
+        "charges": [{
+          "id": "ch_My6K2q8H5HjYEQRO",
+          "code": "DM3NBQS5XM",
+          "gateway_id": "b7501920-84f3-431d-8521-6c8f67921293",
           "amount": 100,
-          "status": "authorized_pending_capture",
-          "success": true,
-          "installments": 1,
-          "acquirer_name": "simulator",
-          "acquirer_affiliation_code": "",
-          "acquirer_tid": "25970",
-          "acquirer_nsu": "506128",
-          "acquirer_auth_code": "523448",
-          "acquirer_message": "Simulator|Transação de simulação autorizada com sucesso",
-          "acquirer_return_code": "0",
-          "operation_type": "auth_only",
-          "card": {
-            "id": "card_J26O3K2hvPc2vOQG",
-            "first_six_digits": "400010",
-            "last_four_digits": "2224",
-            "brand": "Visa",
-            "holder_name": "Longbob Longsen",
-            "exp_month": 9,
-            "exp_year": 2019,
-            "status": "active",
-            "created_at": "2018-02-01T16:43:30Z",
-            "updated_at": "2018-02-01T16:43:30Z",
-            "billing_address": {
-              "street": "My Street",
-              "number": "456",
-              "zip_code": "K1C2N6",
-              "neighborhood": "Sesame Street",
-              "city": "Ottawa",
-              "state": "ON",
-              "country": "CA",
-              "line_1": "456, My Street, Sesame Street"
-            },
-            "type": "credit"
+          "status": "pending",
+          "currency": "USD",
+          "payment_method": "credit_card",
+          "created_at": "2021-04-30T16:09:30Z",
+          "updated_at": "2021-04-30T16:09:30Z",
+          "customer": {
+            "id": "cus_DAQbKrDFbIav1xo0",
+            "name": "Longbob Longsen",
+            "delinquent": false,
+            "created_at": "2021-04-30T16:09:30Z",
+            "updated_at": "2021-04-30T16:09:30Z",
+            "phones": {}
           },
-          "created_at": "2018-02-01T16:43:31Z",
-          "updated_at": "2018-02-01T16:43:31Z",
-          "gateway_response": {
-            "code": "201"
+          "last_transaction": {
+            "id": "tran_1q5DqrFQYI0OW0Xn",
+            "transaction_type": "credit_card",
+            "gateway_id": "ef704498-cc7d-4365-8f7e-ba098f003e17",
+            "amount": 100,
+            "status": "authorized_pending_capture",
+            "success": true,
+            "installments": 1,
+            "acquirer_name": "simulator",
+            "acquirer_affiliation_code": "",
+            "acquirer_tid": "74087",
+            "acquirer_nsu": "564666",
+            "acquirer_auth_code": "542710",
+            "acquirer_message": "Simulator|Transação de simulação autorizada com sucesso",
+            "acquirer_return_code": "0",
+            "operation_type": "auth_only",
+            "card": {
+              "id": "card_bQ8jkwjUwc62JOew",
+              "first_six_digits": "400010",
+              "last_four_digits": "2224",
+              "brand": "Visa",
+              "holder_name": "Longbob Longsen",
+              "exp_month": 9,
+              "exp_year": 2022,
+              "status": "active",
+              "type": "credit",
+              "created_at": "2021-04-30T16:09:30Z",
+              "updated_at": "2021-04-30T16:09:30Z",
+              "billing_address": {
+                "street": "My Street",
+                "number": "456",
+                "zip_code": "K1C2N6",
+                "neighborhood": "Sesame Street",
+                "city": "Ottawa",
+                "state": "ON",
+                "country": "CA",
+                "line_1": "456, My Street, Sesame Street"
+              }
+            },
+            "created_at": "2021-04-30T16:09:30Z",
+            "updated_at": "2021-04-30T16:09:30Z",
+            "gateway_response": {
+              "code": "201",
+              "errors": []
+            },
+            "antifraud_response": {},
+            "metadata": {
+              "mundipagg_payment_method_code": "1"
+            }
+          },
+          "metadata": {
+            "mundipagg_payment_method_code": "1"
           }
-        }
+        }],
+       "checkouts": []
       }
     )
   end
@@ -836,66 +1091,103 @@ class MundipaggTest < Test::Unit::TestCase
   def failed_authorize_response
     %(
       {
-        "id": "ch_O4bW13ukwF5XpmLg",
-        "code": "2KW1C5VSZO",
-        "gateway_id": "9bf24ea7-e913-44bc-92ca-50491ffcd7a1",
+        "id": "or_Bq9g6zLh0hqrG0Jv",
+        "code": "10Z6F5F30L",
         "amount": 105200,
-        "status": "failed",
         "currency": "USD",
-        "payment_method": "credit_card",
-        "created_at": "2018-02-01T18:46:06Z",
-        "updated_at": "2018-02-01T18:46:06Z",
+        "closed": true,
+        "items": [{
+          "id": "oi_5rADnw6i3i02OEJw",
+          "type": "product",
+          "description": "no description provided",
+          "amount": 105200,
+          "quantity": 1,
+          "status": "active",
+          "created_at": "2021-04-30T16:52:24Z",
+          "updated_at": "2021-04-30T16:52:24Z"
+        }],
         "customer": {
-          "id": "cus_7VGAGxqI4OUwZ392",
+          "id": "cus_l6X1k3KFPFLkyGmM",
           "name": "Longbob Longsen",
-          "email": "",
           "delinquent": false,
-          "created_at": "2018-02-01T18:46:06Z",
-          "updated_at": "2018-02-01T18:46:06Z",
+          "created_at": "2021-04-30T16:52:24Z",
+          "updated_at": "2021-04-30T16:52:24Z",
           "phones": {}
         },
-        "last_transaction": {
-          "id": "tran_g0JYdDXcDesqd36E",
-          "transaction_type": "credit_card",
-          "gateway_id": "c0896dd6-0d5c-4e8b-9d92-df5a70e3fb76",
+        "status": "failed",
+        "created_at": "2021-04-30T16:52:24Z",
+        "updated_at": "2021-04-30T16:52:24Z",
+        "closed_at": "2021-04-30T16:52:24Z",
+        "charges": [{
+          "id": "ch_kEW5QPouruNZ36dv",
+          "code": "10Z6F5F30L",
+          "gateway_id": "a4a36c32-c4bd-4473-bc32-52188dcc4ccd",
           "amount": 105200,
-          "status": "not_authorized",
-          "success": false,
-          "installments": 1,
-          "acquirer_name": "simulator",
-          "acquirer_affiliation_code": "",
-          "acquirer_message": "Simulator|Transação de simulada negada por falta de crédito, utilizado para realizar simulação de autorização parcial.",
-          "acquirer_return_code": "92",
-          "operation_type": "auth_only",
-          "card": {
-            "id": "card_LR0A1vcVbsmY3wzY",
-            "first_six_digits": "400030",
-            "last_four_digits": "2220",
-            "brand": "Visa",
-            "holder_name": "Longbob Longsen",
-            "exp_month": 9,
-            "exp_year": 2019,
-            "status": "active",
-            "created_at": "2018-02-01T18:46:06Z",
-            "updated_at": "2018-02-01T18:46:06Z",
-            "billing_address": {
-              "street": "My Street",
-              "number": "456",
-              "zip_code": "K1C2N6",
-              "neighborhood": "Sesame Street",
-              "city": "Ottawa",
-              "state": "ON",
-              "country": "CA",
-              "line_1": "456, My Street, Sesame Street"
-            },
-            "type": "credit"
+          "status": "failed",
+          "currency": "USD",
+          "payment_method": "credit_card",
+          "created_at": "2021-04-30T16:52:24Z",
+          "updated_at": "2021-04-30T16:52:24Z",
+          "customer": {
+            "id": "cus_l6X1k3KFPFLkyGmM",
+            "name": "Longbob Longsen",
+            "delinquent": false,
+            "created_at": "2021-04-30T16:52:24Z",
+            "updated_at": "2021-04-30T16:52:24Z",
+            "phones": {}
           },
-          "created_at": "2018-02-01T18:46:06Z",
-          "updated_at": "2018-02-01T18:46:06Z",
-          "gateway_response": {
-            "code": "201"
+          "last_transaction": {
+            "id": "tran_jK4WqOJsdsRGZ7A8",
+            "transaction_type": "credit_card",
+            "gateway_id": "d022493a-2017-409d-8bea-a4d266ac598a",
+            "amount": 105200,
+            "status": "not_authorized",
+            "success": false,
+            "installments": 1,
+            "acquirer_name": "simulator",
+            "acquirer_affiliation_code": "",
+            "acquirer_message": "Simulator|Transação de simulada negada por falta de crédito, utilizado para realizar simulação de autorização parcial.",
+            "acquirer_return_code": "92",
+            "operation_type": "auth_only",
+            "card": {
+              "id": "card_L9ebA4niRiZmaoZg",
+              "first_six_digits": "400030",
+              "last_four_digits": "2220",
+              "brand": "Visa",
+              "holder_name": "Longbob Longsen",
+              "exp_month": 9,
+              "exp_year": 2022,
+              "status": "active",
+              "type": "credit",
+              "created_at": "2021-04-30T16:52:24Z",
+              "updated_at": "2021-04-30T16:52:24Z",
+              "billing_address": {
+                "street": "My Street",
+                "number": "456",
+                "zip_code": "K1C2N6",
+                "neighborhood": "Sesame Street",
+                "city": "Ottawa",
+                "state": "ON",
+                "country": "CA",
+                "line_1": "456, My Street, Sesame Street"
+              }
+            },
+            "created_at": "2021-04-30T16:52:24Z",
+            "updated_at": "2021-04-30T16:52:24Z",
+            "gateway_response": {
+              "code": "201",
+              "errors": []
+            },
+            "antifraud_response": {},
+            "metadata": {
+              "mundipagg_payment_method_code": "1"
+            }
+          },
+          "metadata": {
+            "mundipagg_payment_method_code": "1"
           }
-        }
+        }],
+        "checkouts": []
       }
     )
   end
@@ -903,44 +1195,56 @@ class MundipaggTest < Test::Unit::TestCase
   def successful_capture_response
     %(
       {
-        "id": "ch_gm5wrlGMI2Fb0x6K",
-        "code": "ch_gm5wrlGMI2Fb0x6K",
-        "gateway_id": "3b6c0f72-c4b3-48b2-8eb7-2424321a6c93",
+        "id": "ch_My6K2q8H5HjYEQRO",
+        "code": "ch_My6K2q8H5HjYEQRO",
+        "gateway_id": "b7501920-84f3-431d-8521-6c8f67921293",
         "amount": 100,
         "paid_amount": 100,
         "status": "paid",
         "currency": "USD",
         "payment_method": "credit_card",
-        "paid_at": "2018-02-01T16:43:33Z",
-        "created_at": "2018-02-01T16:43:30Z",
-        "updated_at": "2018-02-01T16:43:33Z",
+        "paid_at": "2021-04-30T16:26:21Z",
+        "created_at": "2021-04-30T16:25:57Z",
+        "updated_at": "2021-04-30T16:26:21Z",
+        "order": {
+          "id": "or_YeZW1NpspOIgg6yd",
+          "code": "ch_My6K2q8H5HjYEQRO",
+          "amount": 100,
+          "closed": true,
+          "created_at": "2021-04-30T16:09:30Z",
+          "updated_at": "2021-04-30T16:09:30Z",
+          "closed_at": "2021-04-30T16:09:30Z",
+          "currency": "USD",
+          "status": "paid",
+          "customer_id": "cus_DAQbKrDFbIav1xo0"
+        },
         "customer": {
-          "id": "cus_bVWYqeTmpu9VYLd9",
+          "id": "cus_DAQbKrDFbIav1xo0",
           "name": "Longbob Longsen",
           "email": "",
           "delinquent": false,
-          "created_at": "2018-02-01T16:43:30Z",
-          "updated_at": "2018-02-01T16:43:30Z",
+          "created_at": "2021-04-30T16:25:57Z",
+          "updated_at": "2021-04-30T16:25:57Z",
           "phones": {}
         },
         "last_transaction": {
-          "id": "tran_wL9APd6cws19WNJ7",
+          "id": "tran_PX7jaEi8OC0WjbZG",
           "transaction_type": "credit_card",
-          "gateway_id": "6dae95a7-6b7f-4431-be33-cb3ecf21287a",
+          "gateway_id": "ef704498-cc7d-4365-8f7e-ba098f003e17",
           "amount": 100,
           "status": "captured",
           "success": true,
           "installments": 1,
           "acquirer_name": "simulator",
           "acquirer_affiliation_code": "",
-          "acquirer_tid": "299257",
-          "acquirer_nsu": "894685",
-          "acquirer_auth_code": "523448",
+          "acquirer_tid": "524023",
+          "acquirer_nsu": "727476",
+          "acquirer_auth_code": "542710",
           "acquirer_message": "Simulator|Transação de simulação capturada com sucesso",
           "acquirer_return_code": "0",
           "operation_type": "capture",
           "card": {
-            "id": "card_J26O3K2hvPc2vOQG",
+            "id": "card_bQ8jkwjUwc62JOew",
             "first_six_digits": "400010",
             "last_four_digits": "2224",
             "brand": "Visa",
@@ -948,8 +1252,8 @@ class MundipaggTest < Test::Unit::TestCase
             "exp_month": 9,
             "exp_year": 2019,
             "status": "active",
-            "created_at": "2018-02-01T16:43:30Z",
-            "updated_at": "2018-02-01T16:43:30Z",
+            "created_at": "2021-04-30T16:25:57Z",
+            "updated_at": "2021-04-30T16:25:57Z",
             "billing_address": {
               "street": "My Street",
               "number": "456",
@@ -962,8 +1266,8 @@ class MundipaggTest < Test::Unit::TestCase
             },
             "type": "credit"
           },
-          "created_at": "2018-02-01T16:43:33Z",
-          "updated_at": "2018-02-01T16:43:33Z",
+          "created_at": "2021-04-30T16:26:21Z",
+          "updated_at": "2021-04-30T16:26:21Z",
           "gateway_response": {
             "code": "200"
           }
@@ -1053,51 +1357,67 @@ class MundipaggTest < Test::Unit::TestCase
   def successful_void_response
     %(
       {
-        "id": "ch_RbPVPWMH2bcGA50z",
-        "code": "O5L5A4VCRK",
-        "gateway_id": "d77c6a32-e1c8-42d4-bd1b-e92b36f054f9",
+        "id": "ch_My6K2q8H5HjYEQRO",
+        "code": "ch_My6K2q8H5HjYEQRO",
+        "gateway_id": "b7501920-84f3-431d-8521-6c8f67921293",
         "amount": 100,
+        "paid_amount": 100,
         "canceled_amount": 100,
         "status": "canceled",
         "currency": "USD",
         "payment_method": "credit_card",
-        "canceled_at": "2018-02-01T16:34:07Z",
-        "created_at": "2018-02-01T16:34:07Z",
-        "updated_at": "2018-02-01T16:34:07Z",
+        "paid_at": "2021-04-30T16:26:21Z",
+        "canceled_at": "2021-04-30T18:07:30Z",
+        "created_at": "2021-04-30T16:25:57Z",
+        "updated_at": "2021-04-30T18:07:30Z",
+        "order": {
+          "id": "or_YeZW1NpspOIgg6yd",
+          "code": "ch_My6K2q8H5HjYEQRO",
+          "amount": 100,
+          "closed": true,
+          "created_at": "2021-04-30T16:25:57Z",
+          "updated_at": "2021-04-30T18:07:30Z",
+          "closed_at": "2021-04-30T16:25:57Z",
+          "currency": "USD",
+          "status": "canceled",
+          "customer_id": "cus_DAQbKrDFbIav1xo0"
+        },
         "customer": {
-          "id": "cus_odYDGxQirlcp693a",
+          "id": "cus_DAQbKrDFbIav1xo0",
           "name": "Longbob Longsen",
-          "email": "",
           "delinquent": false,
-          "created_at": "2018-02-01T16:34:07Z",
-          "updated_at": "2018-02-01T16:34:07Z",
+          "created_at": "2021-04-30T16:25:57Z",
+          "updated_at": "2021-04-30T16:25:57Z",
           "phones": {}
         },
         "last_transaction": {
-          "id": "tran_m1prZBNTgUmZrGzZ",
+          "id": "tran_ZKwg8JHAMiE2VjAz",
           "transaction_type": "credit_card",
-          "gateway_id": "23648dca-07dc-4f31-9b24-26aa702dc7e8",
+          "gateway_id": "ef704498-cc7d-4365-8f7e-ba098f003e17",
           "amount": 100,
           "status": "voided",
           "success": true,
+          "installments": 1,
           "acquirer_name": "simulator",
           "acquirer_affiliation_code": "",
-          "acquirer_tid": "489627",
-          "acquirer_nsu": "174061",
-          "acquirer_auth_code": "433589",
+          "acquirer_tid": "823745",
+          "acquirer_nsu": "606180",
+          "acquirer_auth_code": "542710",
+          "acquirer_message": "Simulator|Transação de simulação cancelada com sucesso",
           "acquirer_return_code": "0",
           "operation_type": "cancel",
           "card": {
-            "id": "card_8PaGBMOhXwi9Q24z",
+            "id": "card_bQ8jkwjUwc62JOew",
             "first_six_digits": "400010",
             "last_four_digits": "2224",
             "brand": "Visa",
             "holder_name": "Longbob Longsen",
             "exp_month": 9,
-            "exp_year": 2019,
+            "exp_year": 2022,
             "status": "active",
-            "created_at": "2018-02-01T16:34:07Z",
-            "updated_at": "2018-02-01T16:34:07Z",
+            "type": "credit",
+            "created_at": "2021-04-30T16:25:57Z",
+            "updated_at": "2021-04-30T16:25:57Z",
             "billing_address": {
               "street": "My Street",
               "number": "456",
@@ -1107,14 +1427,21 @@ class MundipaggTest < Test::Unit::TestCase
               "state": "ON",
               "country": "CA",
               "line_1": "456, My Street, Sesame Street"
-            },
-            "type": "credit"
+            }
           },
-          "created_at": "2018-02-01T16:34:07Z",
-          "updated_at": "2018-02-01T16:34:07Z",
+          "created_at": "2021-04-30T18:07:30Z",
+          "updated_at": "2021-04-30T18:07:30Z",
           "gateway_response": {
-            "code": "200"
+            "code": "200",
+            "errors": []
+          },
+          "antifraud_response": {},
+          "metadata": {
+            "mundipagg_payment_method_code": "1"
           }
+        },
+        "metadata": {
+          "mundipagg_payment_method_code": "1"
         }
       }
     )

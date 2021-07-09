@@ -97,7 +97,7 @@ class RemoteMundipaggTest < Test::Unit::TestCase
     options = @options.update(@submerchant_options)
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
-    assert_equal 'Simulator|Transação de simulação autorizada com sucesso', response.message
+    assert_equal 'Simulator|Transação de simulação autorizada com sucesso', response.params['charges'].first['last_transaction']['acquirer_message']
   end
 
   def test_failed_purchase
