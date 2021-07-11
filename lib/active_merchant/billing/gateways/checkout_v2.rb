@@ -184,6 +184,17 @@ module ActiveMerchant #:nodoc:
           post[:'3ds'][:version] = options[:three_d_secure][:version] if options[:three_d_secure][:version]
           post[:'3ds'][:xid] = options[:three_d_secure][:ds_transaction_id] || options[:three_d_secure][:xid]
         end
+        shipping_address = options[:shipping_address]
+        if(shipping_address)
+          post[:shipping_address] = {}
+          post[:shipping_address][:address1] = shipping_address[:address1]
+          post[:shipping_address][:address2] = shipping_address[:address2]
+          post[:shipping_address][:city] = shipping_address[:city]
+          post[:shipping_address][:state] = shipping_address[:state]
+          post[:shipping_address][:country] = shipping_address[:country]
+          post[:shipping_address][:postcode] = shipping_address[:zip]
+          post[:shipping_address][:phone] = { number: shipping_address[:phone] } unless shipping_address[:phone].blank?
+        end
       end
 
       def commit(action, post, authorization = nil)
