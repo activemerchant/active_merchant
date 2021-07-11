@@ -1138,6 +1138,10 @@ redsys_sha256:
   secret_key: SECRET KEY
   signature_algorithm: 'sha256'
 
+rocketgate:
+  login: '1'
+  password: 'testpassword'
+
 # Working credentials, no need to replace
 s5:
   mode: CONNECTOR_TEST
