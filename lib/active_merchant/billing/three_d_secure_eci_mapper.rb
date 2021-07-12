@@ -1,6 +1,6 @@
 module ActiveMerchant
   module Billing
-    class ThreeDSecureEciMapper
+    module ThreeDSecureEciMapper
 
       NON_THREE_D_SECURE_TRANSACTION = :non_three_d_secure_transaction
       ATTEMPTED_AUTHENTICATION_TRANSACTION = :attempted_authentication_transaction
