@@ -24,6 +24,7 @@ module ActiveMerchant #:nodoc:
       }
 
       DEFAULT_API_VERSION = '2015-04-07'
+      CONNECTED_ACCOUNT_PREFIX = 'acct_'
 
       self.supported_countries = %w(AT AU BE BG BR CA CH CY CZ DE DK EE ES FI FR GB GR HK IE IT JP LT LU LV MT MX NL NO NZ PL PT RO SE SG SI SK US)
       self.default_currency = 'USD'
@@ -203,7 +204,6 @@ module ActiveMerchant #:nodoc:
         elsif payment.is_a?(Check)
           bank_token_response = tokenize_bank_account(payment)
           return bank_token_response unless bank_token_response.success?
-
           params = { source: bank_token_response.params['token']['id'] }
         else
           add_creditcard(params, payment, options)
@@ -217,15 +217,20 @@ module ActiveMerchant #:nodoc:
           add_external_account(post, params, payment)
           commit(:post, "accounts/#{CGI.escape(options[:account])}/external_accounts", post, options)
         elsif options[:customer]
-          MultiResponse.run(:first) do |r|
-            # The /cards endpoint does not update other customer parameters.
-            r.process { commit(:post, "customers/#{CGI.escape(options[:customer])}/cards", params, options) }
+          if payment.is_a?(Check) # bank account
+            commit(:post, "customers/#{CGI.escape(options[:customer])}/sources", params, options)
+          else # credit card
+            MultiResponse.run(:first) do |r|
+              # The /cards endpoint does not update other customer parameters.
+              r.process { commit(:post, "customers/#{CGI.escape(options[:customer])}/cards", params, options) }
 
-            post[:default_card] = r.params['id'] if options[:set_default] && r.success? && !r.params['id'].blank?
+              post[:default_card] = r.params['id'] if options[:set_default] && r.success? && !r.params['id'].blank?
 
-            r.process { update_customer(options[:customer], post) } if post.count > 0
+              r.process { update_customer(options[:customer], post) } if post.count > 0
+            end
           end
         else
+          post[:expand] = ['sources']
           commit(:post, 'customers', post.merge(params), options)
         end
       end
@@ -349,6 +354,8 @@ module ActiveMerchant #:nodoc:
 
         if payment.is_a?(StripePaymentToken)
           add_payment_token(post, payment, options)
+        elsif connected_account?(payment)
+          add_source(post, payment)
         else
           add_creditcard(post, payment, options)
         end
@@ -367,7 +374,7 @@ module ActiveMerchant #:nodoc:
           add_customer_data(post, options)
           post[:description] = options[:description]
           post[:statement_descriptor] = options[:statement_description]
-          post[:statement_descriptor_suffix] = options[:statement_descriptor_suffix] if options[:statement_descriptor_suffix]
+          post[:statement_descriptor_suffix] = options[:statement_descriptor_suffix]
           post[:receipt_email] = options[:receipt_email] if options[:receipt_email]
           add_customer(post, payment, options)
           add_flags(post, options)
@@ -389,7 +396,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_application_fee(post, options)
-        post[:application_fee] = options[:application_fee] if options[:application_fee]
+        post[:application_fee_amount] = options[:application_fee] if options[:application_fee]
       end
 
       def add_exchange_rate(post, options)
@@ -422,11 +429,18 @@ module ActiveMerchant #:nodoc:
         post[:expand].concat(Array.wrap(options[:expand]).map(&:to_sym)).uniq!
       end
 
-      def add_external_account(post, card_params, payment)
+      def add_external_account(post, payment_params, payment)
         external_account = {}
-        external_account[:object] = 'card'
-        external_account[:currency] = (options[:currency] || currency(payment)).downcase
-        post[:external_account] = external_account.merge(card_params[:card])
+        if payment_params.dig(:card)&.is_a?(String)
+          external_account = payment_params[:card]
+        elsif payment_params.dig(:source)&.is_a?(String)
+          external_account = payment_params[:source]
+        else
+          external_account[:object] = 'card'
+          external_account[:currency] = currency(payment).downcase
+          external_account.merge!(payment_params[:card])
+        end
+        post[:external_account] = external_account
       end
 
       def add_customer_data(post, options)
@@ -516,6 +530,10 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_token(post, token, options = {})
         post[:card] = token.payment_data['id']
+      end
+
+      def add_source(post, token)
+        post[:source] = token
       end
 
       def add_customer(post, payment, options)
@@ -673,7 +691,7 @@ module ActiveMerchant #:nodoc:
       def authorization_from(success, url, method, response)
         return response.fetch('error', {})['charge'] unless success
 
-        if url == 'customers'
+        if url == 'customers' && response.key?('sources')
           [response['id'], response.dig('sources', 'data').first&.dig('id')].join('|')
         elsif method == :post && (url.match(/customers\/.*\/cards/) || url.match(/payment_methods\/.*\/attach/))
           [response['customer'], response['id']].join('|')
@@ -782,6 +800,10 @@ module ActiveMerchant #:nodoc:
         return 100 unless options[:currency]
 
         return MINIMUM_AUTHORIZE_AMOUNTS[options[:currency].upcase] || 100
+      end
+
+      def connected_account?(token)
+        token.kind_of?(String) && token.start_with?(CONNECTED_ACCOUNT_PREFIX)
       end
 
       def copy_when_present(dest, dest_path, source, source_path = nil)

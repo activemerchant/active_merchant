@@ -66,11 +66,11 @@ module ActiveMerchant #:nodoc:
       def create_payment_method_data(payment_method, options = {})
         post_data = {}
         post_data[:type] = 'card'
-        post_data[:card] = {}
-        post_data[:card][:number] = payment_method.number
-        post_data[:card][:exp_month] = payment_method.month
-        post_data[:card][:exp_year] = payment_method.year
-        post_data[:card][:cvc] = payment_method.verification_value if payment_method.verification_value
+          post_data[:card] = {}
+          post_data[:card][:number] = payment_method.number
+          post_data[:card][:exp_month] = payment_method.month
+          post_data[:card][:exp_year] = payment_method.year
+          post_data[:card][:cvc] = payment_method.verification_value if payment_method.verification_value
         add_billing_address(post_data, options)
         post_data
       end
@@ -176,7 +176,7 @@ module ActiveMerchant #:nodoc:
 
         # If customer option is provided, create a payment method and attach to customer id
         # Otherwise, create a customer, then attach
-        if payment_method.is_a?(StripePaymentToken) || payment_method.is_a?(ActiveMerchant::Billing::CreditCard)
+        if payment_method.is_a?(StripePaymentToken) || payment_method.is_a?(ActiveMerchant::Billing::CreditCard) || (payment_method.is_a?(ActiveMerchant::Billing::Check) && payment_method.country != 'US')
           payment_method = add_payment_method_token(params, payment_method, options)
           return payment_method if payment_method.is_a?(ActiveMerchant::Billing::Response)
 
@@ -186,8 +186,10 @@ module ActiveMerchant #:nodoc:
             post[:description] = options[:description] if options[:description]
             post[:email] = options[:email] if options[:email]
             options = format_idempotency_key(options, 'customer')
-            customer = commit(:post, 'customers', post, options)
-            customer_id = customer.params['id']
+            response = commit(:post, 'customers', post, options)
+            return response unless response.success?
+
+            customer_id = response.params['id']
           end
           options = format_idempotency_key(options, 'attach')
           attach_parameters = { customer: customer_id }
@@ -252,6 +254,18 @@ module ActiveMerchant #:nodoc:
         return if payment_method.nil?
 
         if payment_method.is_a?(ActiveMerchant::Billing::CreditCard)
+          if off_session_request?(options)
+            post[:payment_method_data] = create_payment_method_data(payment_method, options)
+            return
+          else
+            p = create_payment_method(payment_method, options)
+            return p unless p.success?
+
+            payment_method = p.params['id']
+          end
+        end
+
+        if payment_method.is_a?(ActiveMerchant::Billing::Check)
           if off_session_request?(options)
             post[:payment_method_data] = create_payment_method_data(payment_method, options)
             return
