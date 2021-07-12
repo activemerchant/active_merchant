@@ -21,7 +21,7 @@ module ActiveMerchant
       }.freeze
 
       def self.map(brand, eci)
-        BRAND_TO_ECI_MAP[brand].try(:[], eci)
+        BRAND_TO_ECI_MAP.dig(brand, eci)
       end
     end
   end
