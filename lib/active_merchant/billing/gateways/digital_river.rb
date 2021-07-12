@@ -133,8 +133,11 @@ module ActiveMerchant
 
       def get_charge_capture_id(order_id)
         charges = nil
+        sources = nil
         retry_until(2, "charge not found", 0.5) do
-          charges = @digital_river_gateway.order.find(order_id).value!.payment.charges
+          order = @digital_river_gateway.order.find(order_id).value!
+          charges = order.payment.charges
+          sources = order.payment.sources
           charges&.first.present?
         end
 
@@ -151,7 +154,7 @@ module ActiveMerchant
             order_id: order_id,
             charge_id: charges.first.id,
             capture_id: captures.first.id,
-            source_id: charges.first.source_id
+            source_id: sources.detect { |s| s.type == 'creditCard' }.id
           },
           authorization: captures.first.id
         )
