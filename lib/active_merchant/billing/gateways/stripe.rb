@@ -24,7 +24,6 @@ module ActiveMerchant #:nodoc:
       }
 
       DEFAULT_API_VERSION = '2015-04-07'
-      CHARGE_REQ_API_VERSION = '2019-09-09'
       CONNECTED_ACCOUNT_PREFIX = 'acct_'
 
       self.supported_countries = %w(AT AU BE BG BR CA CH CY CZ DE DK EE ES FI FR GB GR HK IE IT JP LT LU LV MT MX NL NO NZ PL PT RO SE SG SI SK US)
@@ -406,20 +405,9 @@ module ActiveMerchant #:nodoc:
 
       def add_destination(post, options)
         if options[:destination]
-          if api_version(options) < CHARGE_REQ_API_VERSION
-            # Deprecated
-            post[:destination] = {}
-            post[:destination][:account] = options[:destination]
-            post[:destination][:amount] = options[:destination_amount] if options[:destination_amount]
-          else
-            # When using transfer_data[destination], the settlement merchant can be specified with on_behalf_of. If you
-            # need to retain the behavior of destination[account], on_behalf_of must be explicitly set to the same value
-            # as transfer_data[destination].
-            post[:transfer_data] = {}
-            post[:transfer_data][:destination] = options[:destination]
-            post[:transfer_data][:amount] = options[:destination_amount] if options[:destination_amount]
-            post[:on_behalf_of] = options[:destination]
-          end
+          post[:destination] = {}
+          post[:destination][:account] = options[:destination]
+          post[:destination][:amount] = options[:destination_amount] if options[:destination_amount]
         end
       end
 
@@ -441,11 +429,18 @@ module ActiveMerchant #:nodoc:
         post[:expand].concat(Array.wrap(options[:expand]).map(&:to_sym)).uniq!
       end
 
-      def add_external_account(post, card_params, payment)
+      def add_external_account(post, payment_params, payment)
         external_account = {}
-        external_account[:object] = 'card'
-        external_account[:currency] = (options[:currency] || currency(payment)).downcase
-        post[:external_account] = external_account.merge(card_params[:card])
+        if payment_params.dig(:card)&.is_a?(String)
+          external_account = payment_params[:card]
+        elsif payment_params.dig(:source)&.is_a?(String)
+          external_account = payment_params[:source]
+        else
+          external_account[:object] = 'card'
+          external_account[:currency] = currency(payment).downcase
+          external_account.merge!(payment_params[:card])
+        end
+        post[:external_account] = external_account
       end
 
       def add_customer_data(post, options)
