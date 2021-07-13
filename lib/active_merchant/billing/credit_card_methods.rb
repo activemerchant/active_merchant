@@ -11,7 +11,7 @@ module ActiveMerchant #:nodoc:
         'american_express'   => ->(num) { num =~ /^3[47]\d{13}$/ },
         'naranja'            => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), NARANJA_RANGES) },
         'diners_club'        => ->(num) { num =~ /^3(0[0-5]|[68]\d)\d{11,16}$/ },
-        'jcb'                => ->(num) { num =~ /^(35(28|29|[3-8]\d)\d{12}|308800\d{10})$/ },
+        'jcb'                => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 4), JCB_RANGES) },
         'dankort'            => ->(num) { num =~ /^5019\d{12}$/ },
         'maestro'            => lambda { |num|
           (12..19).cover?(num&.size) && (
@@ -196,6 +196,10 @@ module ActiveMerchant #:nodoc:
       # Because UnionPay cards are able to run on Discover rails, this was kept the same.
       UNIONPAY_RANGES = [
         81000000..81099999, 81100000..81319999, 81320000..81519999, 81520000..81639999, 81640000..81719999
+      ]
+
+      JCB_RANGES = [
+        3528..3589, 3088..3094, 3096..3102, 3112..3120, 3158..3159, 3337..3349
       ]
 
       def self.included(base)
