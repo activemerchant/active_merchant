@@ -188,7 +188,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
       }
     )
     assert first_message = @gateway.authorize(@amount, @threeDS_card, options)
-    assert_equal "A transaction status of 'AUTHORISED' is required.", first_message.message
+    assert_equal "A transaction status of 'AUTHORISED' or 'CAPTURED' is required.", first_message.message
     assert first_message.test?
     refute first_message.authorization.blank?
     refute first_message.params['issuer_url'].blank?
@@ -283,7 +283,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
       }
     )
     assert first_message = @gateway.authorize(@amount, @threeDS_card, options)
-    assert_equal "A transaction status of 'AUTHORISED' is required.", first_message.message
+    assert_equal "A transaction status of 'AUTHORISED' or 'CAPTURED' is required.", first_message.message
     assert first_message.test?
     refute first_message.authorization.blank?
     refute first_message.params['issuer_url'].blank?
@@ -306,7 +306,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
       }
     )
     assert first_message = @gateway.authorize(@amount, @threeDS_card, options)
-    assert_equal "A transaction status of 'AUTHORISED' is required.", first_message.message
+    assert_equal "A transaction status of 'AUTHORISED' or 'CAPTURED' is required.", first_message.message
     assert first_message.test?
     refute first_message.authorization.blank?
     refute first_message.params['issuer_url'].blank?
@@ -771,6 +771,20 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     refund = @cftgateway.refund(@amount * 2, auth.authorization, authorization_validated: true)
     assert_failure refund
     assert_equal 'Refund amount too high', refund.message
+  end
+
+  def test_successful_purchase_with_options_synchronous_response
+    options = @options
+    stored_credential_params = {
+      initial_transaction: true,
+      reason_type: 'unscheduled',
+      initiator: 'merchant',
+      network_transaction_id: nil
+    }
+    options.merge(stored_credential: stored_credential_params)
+
+    assert purchase = @cftgateway.purchase(@amount, @credit_card, options.merge(instalments: 3, skip_capture: true, authorization_validated: true))
+    assert_success purchase
   end
 
   private
