@@ -1,7 +1,6 @@
 module ActiveMerchant
   module Billing
     module ThreeDSecureEciMapper
-
       NON_THREE_D_SECURE_TRANSACTION = :non_three_d_secure_transaction
       ATTEMPTED_AUTHENTICATION_TRANSACTION = :attempted_authentication_transaction
       FULLY_AUTHENTICATED_TRANSACTION = :fully_authenticated_transaction
@@ -17,7 +16,7 @@ module ActiveMerchant
         jcb: ECI_05_06_07_MAP,
         maestro: ECI_00_01_02_MAP,
         master: ECI_00_01_02_MAP,
-        visa: ECI_05_06_07_MAP,
+        visa: ECI_05_06_07_MAP
       }.freeze
 
       def self.map(brand, eci)

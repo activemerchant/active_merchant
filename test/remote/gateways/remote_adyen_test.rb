@@ -132,6 +132,8 @@ class RemoteAdyenTest < Test::Unit::TestCase
       }
     }
 
+    @long_order_id = 'asdfjkl;asdfjkl;asdfj;aiwyutinvpoaieryutnmv;203987528752098375j3q-p489756ijmfpvbijpq348nmdf;vbjp3845'
+
     @sub_seller_options = {
       "subMerchant.numberOfSubSellers": '2',
       "subMerchant.subSeller1.id": '111111111',
@@ -503,6 +505,12 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_google_pay
     response = @gateway.purchase(@amount, @google_pay_card, @options)
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
+
+  def test_successful_purchase_with_google_pay_and_truncate_order_id
+    response = @gateway.purchase(@amount, @google_pay_card, @options.merge(order_id: @long_order_id))
     assert_success response
     assert_equal '[capture-received]', response.message
   end
