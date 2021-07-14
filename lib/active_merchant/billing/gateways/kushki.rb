@@ -37,6 +37,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         post[:ticketNumber] = authorization
         add_invoice(action, post, amount, options)
+        add_full_response(post, options)
 
         commit(action, post)
       end
@@ -46,6 +47,7 @@ module ActiveMerchant #:nodoc:
 
         post = {}
         post[:ticketNumber] = authorization
+        add_full_response(post, options)
 
         commit(action, post)
       end
@@ -55,6 +57,7 @@ module ActiveMerchant #:nodoc:
 
         post = {}
         post[:ticketNumber] = authorization
+        add_full_response(post, options)
 
         commit(action, post)
       end
@@ -78,6 +81,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(action, post, amount, options)
         add_payment_method(post, payment_method, options)
+        add_full_response(post, options)
 
         commit(action, post)
       end
@@ -89,6 +93,7 @@ module ActiveMerchant #:nodoc:
         add_reference(post, authorization, options)
         add_invoice(action, post, amount, options)
         add_contact_details(post, options[:contact_details]) if options[:contact_details]
+        add_full_response(post, options)
 
         commit(action, post)
       end
@@ -99,6 +104,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_reference(post, authorization, options)
         add_invoice(action, post, amount, options)
+        add_full_response(post, options)
 
         commit(action, post)
       end
@@ -165,6 +171,10 @@ module ActiveMerchant #:nodoc:
         contact_details[:secondLastName] = contact_details_options[:second_last_name] if contact_details_options[:second_last_name]
         contact_details[:phoneNumber] = contact_details_options[:phone_number] if contact_details_options[:phone_number]
         post[:contactDetails] = contact_details
+      end
+
+      def add_full_response(post, options)
+        post[:fullResponse] = options[:full_response] if options[:full_response]
       end
 
       ENDPOINT = {

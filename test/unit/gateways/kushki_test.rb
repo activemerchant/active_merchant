@@ -279,6 +279,23 @@ class KushkiTest < Test::Unit::TestCase
     assert_equal '205', response.error_code
   end
 
+  def test_successful_purchase_with_full_response_flag
+    options = {
+      full_response: 'true'
+    }
+
+    @gateway.expects(:ssl_post).returns(successful_charge_response)
+    @gateway.expects(:ssl_post).returns(successful_token_response)
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_includes data, 'fullResponse'
+    end.respond_with(successful_token_response, successful_charge_response)
+
+    assert_success response
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
