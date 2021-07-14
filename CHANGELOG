@@ -31,7 +31,6 @@
 * Update bank routing account validation check [jessiagee] #4029
 * Kushki: Add 'contactDetails' fields [mbreenlyles] #4033
 * Adyen: Truncating order_id and remote test [yyapuncich] #4036
-* Worldpay: Synchronous Response with purchase transaction [naashton] #4037
 
 == Version 1.121 (June 8th, 2021)
 * Braintree: Lift restriction on gem version to allow for backwards compatibility [naashton] #3993

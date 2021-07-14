@@ -1067,15 +1067,6 @@ class WorldpayTest < Test::Unit::TestCase
     assert_match "Unparsable response received from Worldpay. Please contact Worldpay if you continue to receive this message. \(The raw response returned by the API was: \"Temporary Failure, please Retry\"\)", response.message
   end
 
-  def test_successful_purchase_synchronous_response
-    response = stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(skip_capture: true))
-    end.check_request do |_endpoint, data, _headers|
-    end.respond_with(successful_purchase_synchronous_response)
-    assert_success response
-    assert_equal 'CAPTURED', response.params.dig('last_event')
-  end
-
   def test_successful_authorize_synchronous_response
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
@@ -1644,34 +1635,6 @@ class WorldpayTest < Test::Unit::TestCase
         <reply>
           <orderStatus orderCode="49a9d4e8a52bccbd3a3a6ac228ae0998">
             <error code="5"><![CDATA[Refund amount too high]]></error>
-          </orderStatus>
-        </reply>
-      </paymentService>
-    RESPONSE
-  end
-
-  def successful_purchase_synchronous_response
-    <<~RESPONSE
-      <?xml version="1.0" encoding="UTF-8"?>
-      <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN"
-                                      "http://dtd.worldpay.com/paymentService_v1.dtd">
-      <paymentService version="1.4" merchantCode="RAPPICLP">
-        <reply>
-          <orderStatus orderCode="60117615_20210707170459921">
-            <payment>
-              <paymentMethod>VISA-SSL</paymentMethod>
-              <amount value="7277500" currencyCode="CLP" exponent="2" debitCreditIndicator="credit"/>
-              <lastEvent>CAPTURED</lastEvent>
-              <AuthorisationId id="443754"/>
-              <CVCResultCode description="NOT SUPPLIED BY SHOPPER"/>
-              <cardHolderName>
-                <![CDATA[JAVIER PEREZ CERDA]]>
-              </cardHolderName>
-              <issuerCountryCode>CL</issuerCountryCode>
-              <balance accountType="IN_PROCESS_CAPTURED">
-                <amount value="7277500" currencyCode="CLP" exponent="2" debitCreditIndicator="credit"/>
-              </balance>
-            </payment>
           </orderStatus>
         </reply>
       </paymentService>

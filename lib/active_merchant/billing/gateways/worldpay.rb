@@ -144,7 +144,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def authorize_request(money, payment_method, options)
-        commit('authorize', build_authorization_request(money, payment_method, options), 'AUTHORISED', 'CAPTURED', options)
+        commit('authorize', build_authorization_request(money, payment_method, options), 'AUTHORISED', options)
       end
 
       def capture_request(money, authorization, options)
