@@ -486,8 +486,8 @@ module ActiveMerchant #:nodoc:
 
         unless network_tokenization?(payment_method)
           xml.tag! 'businessRules' do
-            xml.tag!('ignoreAVSResult', 'true') if extract_option(prioritized_options, :ignore_avs)
-            xml.tag!('ignoreCVResult', 'true') if extract_option(prioritized_options, :ignore_cvv)
+            xml.tag!('ignoreAVSResult', 'true') if extract_option(prioritized_options, :ignore_avs).to_s == 'true'
+            xml.tag!('ignoreCVResult', 'true') if extract_option(prioritized_options, :ignore_cvv).to_s == 'true'
           end
         end
       end
@@ -605,7 +605,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'accountNumber', creditcard.number
           xml.tag! 'expirationMonth', format(creditcard.month, :two_digits)
           xml.tag! 'expirationYear', format(creditcard.year, :four_digits)
-          xml.tag!('cvNumber', creditcard.verification_value) unless @options[:ignore_cvv] || creditcard.verification_value.blank?
+          xml.tag!('cvNumber', creditcard.verification_value) unless @options[:ignore_cvv].to_s == 'true' || creditcard.verification_value.blank?
           xml.tag! 'cardType', @@credit_card_codes[card_brand(creditcard).to_sym]
         end
       end

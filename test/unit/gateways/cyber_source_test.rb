@@ -301,6 +301,16 @@ class CyberSourceTest < Test::Unit::TestCase
     options = @options.merge(ignore_avs: false)
     assert response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
+
+    @gateway.expects(:ssl_post).with do |_host, request_body|
+      assert_not_match %r'<ignoreAVSResult>', request_body
+      assert_not_match %r'<ignoreCVResult>', request_body
+      true
+    end.returns(successful_purchase_response)
+
+    options = @options.merge(ignore_avs: 'false')
+    assert response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
   end
 
   def test_successful_credit_cart_purchase_single_request_ignore_ccv
@@ -325,6 +335,17 @@ class CyberSourceTest < Test::Unit::TestCase
 
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(
                                                                  ignore_cvv: false
+                                                               ))
+    assert_success response
+
+    @gateway.expects(:ssl_post).with do |_host, request_body|
+      assert_not_match %r'<ignoreAVSResult>', request_body
+      assert_not_match %r'<ignoreCVResult>', request_body
+      true
+    end.returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(
+                                                                 ignore_cvv: 'false'
                                                                ))
     assert_success response
   end
