@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Decidir: Update validation error message handling. #4042
 * Kushki: Add support for fullResponse field [rachelkirk] #4040
 * Orbital: Correct success logic for refund [tatsianaclifton] #4014
 * usaepay: Added pin gateway setting [DustinHaefele] #4026
