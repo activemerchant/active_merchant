@@ -68,6 +68,17 @@ class RemoteKushkiTest < Test::Unit::TestCase
     assert_match %r(^\d+$), response.authorization
   end
 
+  def test_approval_code_comes_back_when_passing_full_response
+    options = {
+      full_response: true
+    }
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+
+    assert_not_empty response.params.dig('details', 'approvalCode')
+    assert_equal 'Succeeded', response.message
+  end
+
   def test_failed_authorize
     options = {
       amount: {
