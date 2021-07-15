@@ -1050,6 +1050,16 @@ class AuthorizeNetTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_does_not_add_cardholder_authentication_element_without_relevant_values
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.check_request do |_endpoint, data, _headers|
+      parse(data) do |doc|
+        assert !doc.at_xpath('//cardholderAuthentication'), data
+      end
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_capture_passing_extra_info
     response = stub_comms do
       @gateway.capture(50, '123456789', description: 'Yo', order_id: 'Sweetness')
