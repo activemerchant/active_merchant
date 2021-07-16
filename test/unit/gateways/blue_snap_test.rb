@@ -481,6 +481,14 @@ class BlueSnapTest < Test::Unit::TestCase
     assert_equal '<xml>You are not authorized to perform this request due to inappropriate role permissions.</xml>', response.message
   end
 
+  def test_failed_rate_limit_response
+    @gateway.expects(:raw_ssl_request).returns(rate_limit_response)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal '<xml>Client request rate is too high</xml>', response.message
+  end
+
   def test_does_not_send_level_3_when_empty
     response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options)
@@ -1229,6 +1237,10 @@ class BlueSnapTest < Test::Unit::TestCase
 
   def forbidden_response
     MockResponse.new(403, '<xml>You are not authorized to perform this request due to inappropriate role permissions.</xml>')
+  end
+
+  def rate_limit_response
+    MockResponse.new(429, '<xml>Client request rate is too high</xml>')
   end
 
   def fraudulent_purchase_response

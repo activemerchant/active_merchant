@@ -386,7 +386,7 @@ module ActiveMerchant
 
       def parse(response)
         return bad_authentication_response if response.code.to_i == 401
-        return forbidden_response(response.body) if response.code.to_i == 403
+        return generic_error_response(response.body) if [403, 429].include?(response.code.to_i)
 
         parsed = {}
         doc = Nokogiri::XML(response.body)
@@ -564,7 +564,7 @@ module ActiveMerchant
         { 'description' => 'Unable to authenticate.  Please check your credentials.' }
       end
 
-      def forbidden_response(body)
+      def generic_error_response(body)
         { 'description' => body }
       end
     end
