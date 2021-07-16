@@ -199,6 +199,14 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal 'P', response.avs_result['code']
   end
 
+  def test_failed_credit_card_verification
+    credit_card = credit_card('378282246310005', verification_value: '544')
+
+    assert response = @gateway.verify(credit_card, @options.merge({ allow_card_verification: true }))
+    assert_failure response
+    assert_match 'CVV must be 4 digits for American Express and 3 digits for other card types. (81707)', response.message
+  end
+
   def test_successful_verify_with_device_data
     # Requires Advanced Fraud Tools to be enabled
     assert response = @gateway.verify(@credit_card, @options.merge({ device_data: 'device data for verify' }))
