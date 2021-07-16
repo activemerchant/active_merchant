@@ -51,6 +51,8 @@ module ActiveMerchant
 
       def purchase(options)
         return failed_order_response(options) if options[:order_failure_message].present?
+        return pending_order_with_success_response(options) if options[:success_pending_order].present? &&
+                                                                 options[:source_id].present?
 
         MultiResponse.new.tap do |r|
           order_exists = nil
@@ -108,29 +110,6 @@ module ActiveMerchant
         )
       end
 
-      def supports_scrubbing?
-        true
-      end
-
-      def scrub(transcript)
-        transcript
-          .gsub(%r((Authorization: Bearer )\w+)i, '\1[FILTERED]\2')
-      end
-
-      private
-
-      def create_fulfillment(order_id, items)
-        fulfillment_params = { order_id: order_id, items: items }
-        result = @digital_river_gateway.fulfillment.create(fulfillment_params)
-        ActiveMerchant::Billing::Response.new(
-          result.success?,
-          message_from_result(result),
-          {
-            fulfillment_id: (result.value!.id if result.success?)
-          }
-        )
-      end
-
       def get_charge_capture_id(order_id)
         charges = nil
         sources = nil
@@ -157,6 +136,29 @@ module ActiveMerchant
             source_id: sources.detect { |s| s.type == 'creditCard' }.id
           },
           authorization: captures.first.id
+        )
+      end
+
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript
+          .gsub(%r((Authorization: Bearer )\w+)i, '\1[FILTERED]\2')
+      end
+
+      private
+
+      def create_fulfillment(order_id, items)
+        fulfillment_params = { order_id: order_id, items: items }
+        result = @digital_river_gateway.fulfillment.create(fulfillment_params)
+        ActiveMerchant::Billing::Response.new(
+          result.success?,
+          message_from_result(result),
+          {
+            fulfillment_id: (result.value!.id if result.success?)
+          }
         )
       end
 
@@ -219,6 +221,18 @@ module ActiveMerchant
         ActiveMerchant::Billing::Response.new(
           false,
           options[:order_failure_message]
+        )
+      end
+
+      def pending_order_with_success_response(options)
+        ActiveMerchant::Billing::Response.new(
+          true,
+          "Order not in 'accepted' state",
+          {
+            order_id: options[:order_id],
+            source_id: options[:source_id]
+          },
+          authorization: options[:order_id]
         )
       end
 
