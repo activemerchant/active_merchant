@@ -408,8 +408,8 @@ module ActiveMerchant #:nodoc:
               xml.session 'id' => options[:session_id] if options[:session_id]
             end
             if three_d_secure = options[:three_d_secure]
-               add_three_d_secure(three_d_secure, xml)
-              end
+              add_three_d_secure(three_d_secure, xml)
+            end
           end
         end
       end
