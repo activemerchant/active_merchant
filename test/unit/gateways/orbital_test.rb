@@ -13,6 +13,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       merchant_id: 'merchant_id'
     )
     @customer_ref_num = 'ABC'
+    @credit_card = credit_card('4556761029983886')
     # Electronic Check object with test credentials of saving account
     @echeck = check(account_number: '072403004', account_type: 'savings', routing_number: '072403004')
 
@@ -1152,9 +1153,10 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   end
 
   def test_successful_refund
+    authorization = '123456789;abc987654321'
     @gateway.expects(:ssl_post).returns(successful_refund_response)
 
-    assert response = @gateway.refund(100, @credit_card, @options)
+    assert response = @gateway.refund(100, authorization, @options)
     assert_instance_of Response, response
     assert_success response
   end
@@ -1162,7 +1164,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   def test_failed_refund
     @gateway.expects(:ssl_post).returns(failed_refund_response)
 
-    assert response = @gateway.refund(100, @credit_card, @options)
+    assert response = @gateway.refund(100, '', @options)
     assert_instance_of Response, response
     assert_failure response
   end
@@ -1170,7 +1172,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   def test_not_approved_refund
     @gateway.expects(:ssl_post).returns(not_approved_refund_response)
 
-    assert response = @gateway.refund(100, @credit_card, @options)
+    assert response = @gateway.refund(100, '123;123', @options)
     assert_instance_of Response, response
     assert_failure response
   end

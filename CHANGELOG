@@ -36,6 +36,7 @@
 * Decidir: Update validation error message handling [arbianchi] #4042
 * Authorize.net: Remove cardholderAuthentication for non-3DS transactions [BritneyS] #4045
 * BlueSnap: Handle 429 errors [britth] #4044
+* Orbital: Update unit test files [meagabeth] #4046
 
 == Version 1.121 (June 8th, 2021)
 * Braintree: Lift restriction on gem version to allow for backwards compatibility [naashton] #3993
