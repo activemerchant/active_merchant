@@ -754,7 +754,7 @@ module ActiveMerchant #:nodoc:
 
       def parse(body)
         response = {}
-        xml = REXML::Document.new(body)
+        xml = REXML::Document.new(strip_invalid_xml_chars(body))
         root = REXML::XPath.first(xml, '//Response') ||
                REXML::XPath.first(xml, '//ErrorResponse')
         if root
@@ -995,6 +995,12 @@ module ActiveMerchant #:nodoc:
 
       def get_address(options)
         options[:billing_address] || options[:address]
+      end
+
+      # Null characters are possible in some responses (namely, the respMsg field), causing XML parsing errors
+      # Prevent by substituting these with a valid placeholder string
+      def strip_invalid_xml_chars(xml)
+        xml.gsub(/\u0000/, '[null]')
       end
 
       # The valid characters include:
