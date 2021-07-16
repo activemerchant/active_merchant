@@ -39,6 +39,7 @@
 * Orbital: Update unit test files [meagabeth] #4046
 * Orbital: Strip null characters from responses [britth] #4041
 * Merchant Warrior: Handle invalid XML responses [arbianchi] #4047
+* Braintree: Fix NoMethodError for failed card verification [molbrown] #4048
 
 == Version 1.121 (June 8th, 2021)
 * Braintree: Lift restriction on gem version to allow for backwards compatibility [naashton] #3993

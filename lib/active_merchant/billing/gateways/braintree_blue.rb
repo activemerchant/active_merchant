@@ -135,8 +135,8 @@ module ActiveMerchant #:nodoc:
             result = @braintree_gateway.verification.create(payload)
             response = Response.new(result.success?, message_from_transaction_result(result), response_options(result))
             response.cvv_result['message'] = ''
-            response.cvv_result['code'] = response.params['cvv_result']
-            response.avs_result['code'] = response.params['avs_result'][:code]
+            response.cvv_result['code'] = response.params['cvv_result'] if response.params['cvv_result']
+            response.avs_result['code'] = response.params['avs_result'][:code] if response.params.dig('avs_result', :code)
             response
           end
 
