@@ -359,7 +359,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
       {
         three_d_secure: {
           version: '1.0.2',
-          xid: '',
+          xid: 'z9UKb06xLziZMOXBEmWSVA1kwG0=',
           cavv: 'MAAAAAAAAAAAAAAAAAAAAAAAAAA=',
           eci: '05'
         }
@@ -377,7 +377,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
       {
         three_d_secure: {
           version: '2.1.0',
-          xid: 'A' * 40,
+          ds_transaction_id: 'c5b808e7-1de1-4069-a17b-f70d3b3b1645',
           cavv: 'MAAAAAAAAAAAAAAAAAAAAAAAAAA=',
           eci: '05'
         }

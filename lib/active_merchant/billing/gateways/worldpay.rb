@@ -417,7 +417,6 @@ module ActiveMerchant #:nodoc:
               xml.session 'shopperIPAddress' => options[:ip] if options[:ip]
               xml.session 'id' => options[:session_id] if options[:session_id]
             end
-
             if three_d_secure = options[:three_d_secure]
               add_three_d_secure(three_d_secure, xml)
             end
@@ -444,7 +443,7 @@ module ActiveMerchant #:nodoc:
       def add_three_d_secure(three_d_secure, xml)
         xml.info3DSecure do
           xml.threeDSVersion three_d_secure[:version]
-          if /^2/.match?(three_d_secure[:version])
+          if three_d_secure[:version] && three_d_secure[:ds_transaction_id]
             xml.dsTransactionId three_d_secure[:ds_transaction_id]
           else
             xml.xid three_d_secure[:xid]
