@@ -42,6 +42,7 @@
 * Braintree: Fix NoMethodError for failed card verification [molbrown] #4048
 * Worldpay: Accepting 3DS1 and 3DS2 authentication data from external MPI [chandan-PS] #4017
 * PayArc: PayArc currency and parameters updates [jessiagee] #4051
+* Elavon: Add support for special characters [mbreenlyles] #4049
 
 == Version 1.121 (June 8th, 2021)
 * Braintree: Lift restriction on gem version to allow for backwards compatibility [naashton] #3993

@@ -424,6 +424,30 @@ class RemoteElavonTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_special_character_encoding_truncation
+    special_card = credit_card('4000000000000002')
+    special_card.first_name = 'CÃ©saire'
+    special_card.last_name = 'Castañeda&%'
+
+    response = @gateway.purchase(@amount, special_card, @options)
+
+    assert_success response
+    assert response.test?
+    assert_equal 'APPROVAL', response.message
+    assert_equal 'CÃ©saire', response.params['first_name']
+    assert_equal 'Castañeda&%', response.params['last_name']
+    assert response.authorization
+  end
+
+  def test_invalid_byte_sequence
+    special_card = credit_card('4000000000000002')
+    special_card.last_name = "Castaneda \255" # add invalid utf-8 byte
+
+    response = @gateway.purchase(@amount, special_card, @options)
+    assert_success response
+    assert response.test?
+  end
+
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card, @options)
