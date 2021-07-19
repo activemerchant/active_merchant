@@ -41,6 +41,7 @@
 * Merchant Warrior: Handle invalid XML responses [arbianchi] #4047
 * Braintree: Fix NoMethodError for failed card verification [molbrown] #4048
 * Worlpay: Accepting 3DS1 and 3DS2 authentication data from external MPI [chandan-PS] #4017
+
 == Version 1.121 (June 8th, 2021)
 * Braintree: Lift restriction on gem version to allow for backwards compatibility [naashton] #3993
 * Payment Express/Windcave: Send amount on verify calls [cdmackeyfree] #3995
