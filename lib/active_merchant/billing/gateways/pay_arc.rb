@@ -296,7 +296,7 @@ module ActiveMerchant #:nodoc:
 
       def add_money(post, money, options)
         post['amount'] = money
-        post['currency'] = (options[:currency] || currency(money))
+        post['currency'] = currency(money) unless options[:currency]
         post['statement_description'] = options[:statement_description]
       end
 
@@ -315,7 +315,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def filter_gateway_fields(post, options, gateway_fields)
-        filtered_options = options.slice(*gateway_fields)
+        filtered_options = options.slice(*gateway_fields).compact
         post.update(filtered_options)
         post
       end
