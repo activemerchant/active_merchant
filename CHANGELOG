@@ -1,6 +1,9 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Orbital: Correct success logic for refund [tatsianaclifton] #4014
+* usaepay: Added pin gateway setting [DustinHaefele] #4026
+* MercadoPago: Added external_reference, more payer object options, and metadata field [DustinHaefele] #4020
 * Element: Add duplicate_override_flag [almalee24] #4012
 * PayTrace: Support gateway [meagabeth] #3985
 * vPOS: Support credit + refund [therufs] #3998
@@ -17,6 +20,27 @@
 * Orbital: Add support for SCARecurringPayment [jessiagee] #4010
 * Braintree: Support recurring_first and moto reasons [curiousepic] #4013
 * PayTrace: Adjust capture method [meagabeth] #4015
+* Worlpay: Accepting 3DS1 and 3DS2 authentication data from external MPI [chandan-PS] #4017
+* BarclaysEpdqExtraPlus: updated custom_eci test + remote tests [yyapuncich] #4022
+* CyberSource: Add customerID field [deemeyers] #4025
+* CyberSource: Adjust Auth [naashton] #3956
+* Valid Canadian Institution Numbers [naashton] #4024
+* PayTrace: Adjust purchase and capture methods to handle MultiResponse scenarios [meagabeth] #4027
+* Payflow: Add support for MERCHDESCR field [rachelkirk] #4028
+* PayTrace: Support $0 authorize in verify method [meagabeth] #4030
+* PayArc: Add error_code in response [cdm-83] #4021
+* Update bank routing account validation check [jessiagee] #4029
+* Kushki: Add 'contactDetails' fields [mbreenlyles] #4033
+* Adyen: Truncating order_id and remote test [yyapuncich] #4036
+* Kushki: Add support for fullResponse field [rachelkirk] #4040
+* CyberSource: Allow string content for Ignore AVS/CVV flags [curiousepic] #4043
+* Decidir: Update validation error message handling [arbianchi] #4042
+* Authorize.net: Remove cardholderAuthentication for non-3DS transactions [BritneyS] #4045
+* BlueSnap: Handle 429 errors [britth] #4044
+* Orbital: Update unit test files [meagabeth] #4046
+* Orbital: Strip null characters from responses [britth] #4041
+* Merchant Warrior: Handle invalid XML responses [arbianchi] #4047
+* Braintree: Fix NoMethodError for failed card verification [molbrown] #4048
 
 == Version 1.121 (June 8th, 2021)
 * Braintree: Lift restriction on gem version to allow for backwards compatibility [naashton] #3993
