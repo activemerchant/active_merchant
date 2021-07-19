@@ -3,6 +3,9 @@ require 'digital_river'
 module ActiveMerchant
   module Billing
     class DigitalRiverGateway < Gateway
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb, :maestro]
+      self.default_currency = 'USD'
+
       def initialize(options = {})
         requires!(options, :token)
         super

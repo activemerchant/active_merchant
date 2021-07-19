@@ -857,4 +857,8 @@ class DigitalRiverTest < Test::Unit::TestCase
       -> "access-control-allow-credentials: true\r\n"
     }
   end
+
+  def test_supported_cardtypes
+    assert_equal [:visa, :master, :american_express, :discover, :diners_club, :jcb, :maestro], DigitalRiverGateway.supported_cardtypes
+  end
 end
