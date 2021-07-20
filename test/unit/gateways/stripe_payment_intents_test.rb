@@ -320,6 +320,37 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     end
   end
 
+  def test_sends_network_transaction_id_separate_from_stored_creds
+    network_transaction_id = '1098510912210968'
+    options = @options.merge(
+      network_transaction_id: network_transaction_id
+    )
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @visa_token, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(%r{payment_method_options\[card\]\[mit_exemption\]\[network_transaction_id\]=#{network_transaction_id}}, data)
+    end.respond_with(successful_create_intent_response)
+  end
+
+  def test_stored_credentials_does_not_override_ntid_field
+    network_transaction_id = '1098510912210968'
+    sc_network_transaction_id = '1078784111114777'
+    options = @options.merge(
+      network_transaction_id: network_transaction_id,
+      stored_credential: {
+        network_transaction_id: sc_network_transaction_id,
+        ds_transaction_id: 'null'
+      }
+    )
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @visa_token, options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(%r{payment_method_options\[card\]\[mit_exemption\]\[network_transaction_id\]=#{network_transaction_id}}, data)
+    end.respond_with(successful_create_intent_response)
+  end
+
   def test_store_does_not_pass_validation_to_attach_by_default
     stub_comms(@gateway, :ssl_request) do
       @gateway.store(@credit_card)

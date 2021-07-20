@@ -31,6 +31,7 @@ module ActiveMerchant #:nodoc:
         setup_future_usage(post, options)
         add_exemption(post, options)
         add_stored_credentials(post, options)
+        add_ntid(post, options)
         add_error_on_requires_action(post, options)
         request_three_d_secure(post, options)
 
@@ -295,6 +296,11 @@ module ActiveMerchant #:nodoc:
         post[:payment_method_options][:card][:moto] = true if options[:moto]
       end
 
+      # Stripe Payment Intents does not pass any parameters for cardholder/merchant initiated
+      # it also does not support installments for any country other than Mexico (reason for this is unknown)
+      # The only thing that Stripe PI requires for stored credentials to work currently is the network_transaction_id
+      # network_transaction_id is created when the card is authenticated using the field `setup_for_future_usage` with the value `off_session` see def setup_future_usage below
+
       def add_stored_credentials(post, options = {})
         return unless options[:stored_credential] && !options[:stored_credential].values.all?(&:nil?)
 
@@ -304,8 +310,20 @@ module ActiveMerchant #:nodoc:
         post[:payment_method_options][:card][:mit_exemption] = {}
 
         # Stripe PI accepts network_transaction_id and ds_transaction_id via mit field under card.
-        post[:payment_method_options][:card][:mit_exemption][:network_transaction_id] = stored_credential[:network_transaction_id] if stored_credential[:network_transaction_id]
+        # The network_transaction_id can be sent in nested under stored credentials OR as its own field (add_ntid handles when it is sent in on its own)
+        # If it is sent is as its own field AND under stored credentials, the value sent under its own field is what will send.
         post[:payment_method_options][:card][:mit_exemption][:ds_transaction_id] = stored_credential[:ds_transaction_id] if stored_credential[:ds_transaction_id]
+        post[:payment_method_options][:card][:mit_exemption][:network_transaction_id] = stored_credential[:network_transaction_id] if stored_credential[:network_transaction_id]
+      end
+
+      def add_ntid(post, options = {})
+        return unless options[:network_transaction_id]
+
+        post[:payment_method_options] ||= {}
+        post[:payment_method_options][:card] ||= {}
+        post[:payment_method_options][:card][:mit_exemption] = {}
+
+        post[:payment_method_options][:card][:mit_exemption][:network_transaction_id] = options[:network_transaction_id] if options[:network_transaction_id]
       end
 
       def add_error_on_requires_action(post, options = {})

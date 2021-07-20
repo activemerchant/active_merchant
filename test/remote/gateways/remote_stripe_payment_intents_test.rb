@@ -14,19 +14,19 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     @three_ds_off_session_credit_card = credit_card('4000002500003155',
       verification_value: '737',
       month: 10,
-      year: 2022)
+      year: 2028)
     @three_ds_1_credit_card = credit_card('4000000000003063',
       verification_value: '737',
       month: 10,
-      year: 2021)
+      year: 2028)
     @three_ds_credit_card = credit_card('4000000000003220',
       verification_value: '737',
       month: 10,
-      year: 2021)
+      year: 2028)
     @three_ds_not_required_card = credit_card('4000000000003055',
       verification_value: '737',
       month: 10,
-      year: 2021)
+      year: 2028)
     @three_ds_external_data_card = credit_card('4000002760003184',
       verification_value: '737',
       month: 10,
@@ -34,7 +34,7 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     @visa_card = credit_card('4242424242424242',
       verification_value: '737',
       month: 10,
-      year: 2021)
+      year: 2028)
     @destination_account = fixtures(:stripe_destination)[:stripe_user_id]
   end
 
@@ -408,6 +408,22 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     end
   end
 
+  def test_purchase_sends_network_transaction_id_separate_from_stored_creds
+    [@visa_card, @three_ds_authentication_required_setup_for_off_session].each do |card_to_use|
+      assert purchase = @gateway.purchase(@amount, card_to_use, {
+        currency: 'USD',
+        execute_threed: true,
+        confirm: true,
+        off_session: true,
+        network_transaction_id: '1234567891011'
+      })
+      assert_success purchase
+      assert_equal 'succeeded', purchase.params['status']
+      assert purchase.params.dig('charges', 'data')[0]['captured']
+      assert purchase.params.dig('charges', 'data')[0]['payment_method_details']['card']['network_transaction_id']
+    end
+  end
+
   def test_purchase_works_with_stored_credentials
     [@three_ds_off_session_credit_card, @three_ds_authentication_required_setup_for_off_session].each do |card_to_use|
       assert purchase = @gateway.purchase(@amount, card_to_use, {
@@ -415,6 +431,7 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
         execute_threed: true,
         confirm: true,
         off_session: true,
+        setup_future_usage: true,
         stored_credential: {
           network_transaction_id: '1098510912210968', # TEST env seems happy with any value :/
           ds_transaction_id: 'null' # this is not req
@@ -442,6 +459,26 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
       assert_success purchase
       assert_equal 'succeeded', purchase.params['status']
       assert purchase.params.dig('charges', 'data')[0]['captured']
+    end
+  end
+
+  def test_succeeds_with_ntid_in_stored_credentials_and_separately
+    [@visa_card, @three_ds_authentication_required_setup_for_off_session].each do |card_to_use|
+      assert purchase = @gateway.purchase(@amount, card_to_use, {
+        currency: 'USD',
+        execute_threed: true,
+        confirm: true,
+        off_session: true,
+        network_transaction_id: '1078784111114777',
+        stored_credential: {
+          network_transaction_id: '1098510912210968',
+          ds_transaction_id: 'null'
+        }
+      })
+      assert_success purchase
+      assert_equal 'succeeded', purchase.params['status']
+      assert purchase.params.dig('charges', 'data')[0]['captured']
+      assert purchase.params.dig('charges', 'data')[0]['payment_method_details']['card']['network_transaction_id']
     end
   end
 
