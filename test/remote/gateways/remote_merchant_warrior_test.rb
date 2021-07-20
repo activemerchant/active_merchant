@@ -76,7 +76,7 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
 
   def test_failed_refund
     assert refund = @gateway.refund(@success_amount, 'invalid-transaction-id')
-    assert_match %r{'transactionID' not found}, refund.message
+    assert_match %r{MW - 011:Invalid transactionID}, refund.message
     assert_failure refund
   end
 
@@ -91,7 +91,7 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
 
   def test_failed_void
     assert void = @gateway.void('invalid-transaction-id', amount: @success_amount)
-    assert_match %r{'transactionID' not found}, void.message
+    assert_match %r{MW - 011:Invalid transactionID}, void.message
     assert_failure void
   end
 

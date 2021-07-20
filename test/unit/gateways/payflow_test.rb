@@ -78,7 +78,8 @@ class PayflowTest < Test::Unit::TestCase
         description: 'Description string',
         order_desc: 'OrderDesc string',
         comment: 'Comment string',
-        comment2: 'Comment2 string'
+        comment2: 'Comment2 string',
+        merch_descr: 'MerchDescr string'
       }
     )
 
@@ -91,6 +92,7 @@ class PayflowTest < Test::Unit::TestCase
       assert_match %r(<Comment>Comment string</Comment>), data
       assert_match %r(<ExtData Name=\"COMMENT2\" Value=\"Comment2 string\"/>), data
       assert_match %r(</PayData><ExtData Name=\"BUTTONSOURCE\" Value=\"partner_id\"/></Authorization>), data
+      assert_match %r(<MerchDescr>MerchDescr string</MerchDescr>), data
     end.respond_with(successful_authorization_response)
     assert_equal 'Approved', response.message
     assert_success response

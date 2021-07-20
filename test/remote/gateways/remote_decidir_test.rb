@@ -176,8 +176,8 @@ class RemoteDecidirTest < Test::Unit::TestCase
   def test_failed_authorize
     response = @gateway_for_auth.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'PEDIR AUTORIZACION | request_authorization_card', response.message
-    assert_match 'call_issuer', response.error_code
+    assert_equal 'COMERCIO INVALIDO | invalid_card', response.message
+    assert_match '3, config_error', response.error_code
   end
 
   def test_failed_partial_capture
@@ -251,7 +251,7 @@ class RemoteDecidirTest < Test::Unit::TestCase
   def test_failed_verify
     response = @gateway_for_auth.verify(@declined_card, @options)
     assert_failure response
-    assert_match %r{PEDIR AUTORIZACION | request_authorization_card}, response.message
+    assert_match %r{COMERCIO INVALIDO | invalid_card}, response.message
   end
 
   def test_invalid_login_without_api_key

@@ -19,6 +19,11 @@ class WorldpayTest < Test::Unit::TestCase
       last_name: 'Smith',
       verification_value: '737',
       brand: 'elo')
+    @nt_credit_card = network_tokenization_credit_card('4895370015293175',
+      brand: 'visa',
+      eci: '07',
+      source: :network_token,
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
     @sodexo_voucher = credit_card('6060704495764400', brand: 'sodexo')
     @options = { order_id: 1 }
     @store_options = {
@@ -172,6 +177,13 @@ class WorldpayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_network_token
+    response = stub_comms do
+      @gateway.purchase(@amount, @nt_credit_card, @options)
+    end.respond_with(successful_authorize_response, successful_capture_response)
+    assert_success response
+  end
+
   def test_successful_purchase_with_elo
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(currency: 'BRL'))
@@ -237,6 +249,10 @@ class WorldpayTest < Test::Unit::TestCase
     end.respond_with(failed_void_inquiry_response, successful_void_response)
     assert_failure response
     assert_equal "A transaction status of 'AUTHORISED' is required.", response.message
+  end
+
+  def test_supports_network_tokenization
+    assert_instance_of TrueClass, @gateway.supports_network_tokenization?
   end
 
   def test_void_using_order_id_embedded_with_token
@@ -681,6 +697,24 @@ class WorldpayTest < Test::Unit::TestCase
 
     stub_comms do
       @gateway.refund(@amount, @options[:order_id], @options.merge(cancel_or_refund: true))
+    end.check_request do |_endpoint, data, _headers|
+      next if data =~ /<inquiry>/
+
+      assert_match(/<cancelOrRefund\/>/, data)
+    end.respond_with(successful_refund_inquiry_response('SENT_FOR_REFUND'), successful_cancel_or_refund_response)
+  end
+
+  def test_cancel_or_refund_with_void
+    stub_comms do
+      @gateway.void(@options[:order_id], @options)
+    end.check_request do |_endpoint, data, _headers|
+      next if data =~ /<inquiry>/
+
+      refute_match(/<cancelOrRefund\/>/, data)
+    end.respond_with(successful_refund_inquiry_response, successful_refund_response)
+
+    stub_comms do
+      @gateway.void(@options[:order_id], @options.merge(cancel_or_refund: true))
     end.check_request do |_endpoint, data, _headers|
       next if data =~ /<inquiry>/
 

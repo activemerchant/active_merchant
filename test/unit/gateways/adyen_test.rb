@@ -93,6 +93,8 @@ class AdyenTest < Test::Unit::TestCase
         }
       }
     }
+
+    @long_order_id = 'asdfjkl;asdfjkl;asdfj;aiwyutinvpoaieryutnmv;203987528752098375j3q-p489756ijmfpvbijpq348nmdf;vbjp3845'
   end
 
   # Subdomains are only valid for production gateways, so the test_url check must be manually bypassed for this test to pass.
@@ -813,6 +815,16 @@ class AdyenTest < Test::Unit::TestCase
     assert_equal @options[:shipping_address][:zip], post[:deliveryAddress][:postalCode]
     assert_equal @options[:shipping_address][:city], post[:deliveryAddress][:city]
     assert_equal @options[:shipping_address][:country], post[:deliveryAddress][:country]
+  end
+
+  def test_purchase_with_long_order_id
+    options = @options.merge({ order_id: @long_order_id })
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal @long_order_id[0..79], JSON.parse(data)['reference']
+    end.respond_with(successful_authorize_response, successful_capture_response)
+    assert_success response
   end
 
   def test_authorize_with_credit_card_no_name

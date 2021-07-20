@@ -153,6 +153,10 @@ module ActiveMerchant #:nodoc:
         commit(build_refund_request(money, identification, options), :refund, money, options)
       end
 
+      def adjust(money, authorization, options = {})
+        commit(build_adjust_request(money, authorization, options), :adjust, money, options)
+      end
+
       def verify(payment, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, payment, options) }
@@ -285,6 +289,7 @@ module ActiveMerchant #:nodoc:
 
       def build_auth_request(money, creditcard_or_reference, options)
         xml = Builder::XmlMarkup.new indent: 2
+        add_customer_id(xml, options)
         add_payment_method_or_subscription(xml, money, creditcard_or_reference, options)
         add_threeds_2_ucaf_data(xml, creditcard_or_reference, options)
         add_decision_manager_fields(xml, options)
@@ -300,7 +305,15 @@ module ActiveMerchant #:nodoc:
         add_merchant_description(xml, options)
         add_sales_slip_number(xml, options)
         add_airline_data(xml, options)
+        xml.target!
+      end
 
+      def build_adjust_request(money, authorization, options)
+        _, request_id = authorization.split(';')
+
+        xml = Builder::XmlMarkup.new indent: 2
+        add_purchase_data(xml, money, true, options)
+        add_incremental_auth_service(xml, request_id, options)
         xml.target!
       end
 
@@ -334,6 +347,7 @@ module ActiveMerchant #:nodoc:
 
       def build_purchase_request(money, payment_method_or_reference, options)
         xml = Builder::XmlMarkup.new indent: 2
+        add_customer_id(xml, options)
         add_payment_method_or_subscription(xml, money, payment_method_or_reference, options)
         add_threeds_2_ucaf_data(xml, payment_method_or_reference, options)
         add_decision_manager_fields(xml, options)
@@ -472,8 +486,8 @@ module ActiveMerchant #:nodoc:
 
         unless network_tokenization?(payment_method)
           xml.tag! 'businessRules' do
-            xml.tag!('ignoreAVSResult', 'true') if extract_option(prioritized_options, :ignore_avs)
-            xml.tag!('ignoreCVResult', 'true') if extract_option(prioritized_options, :ignore_cvv)
+            xml.tag!('ignoreAVSResult', 'true') if extract_option(prioritized_options, :ignore_avs).to_s == 'true'
+            xml.tag!('ignoreCVResult', 'true') if extract_option(prioritized_options, :ignore_cvv).to_s == 'true'
           end
         end
       end
@@ -513,6 +527,12 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'invoiceHeader' do
           xml.tag! 'merchantDescriptor', options[:merchant_descriptor]
         end
+      end
+
+      def add_customer_id(xml, options)
+        return unless options[:customer_id]
+
+        xml.tag! 'customerID', options[:customer_id]
       end
 
       def add_merchant_description(xml, options)
@@ -585,7 +605,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'accountNumber', creditcard.number
           xml.tag! 'expirationMonth', format(creditcard.month, :two_digits)
           xml.tag! 'expirationYear', format(creditcard.year, :four_digits)
-          xml.tag!('cvNumber', creditcard.verification_value) unless @options[:ignore_cvv] || creditcard.verification_value.blank?
+          xml.tag!('cvNumber', creditcard.verification_value) unless @options[:ignore_cvv].to_s == 'true' || creditcard.verification_value.blank?
           xml.tag! 'cardType', @@credit_card_codes[card_brand(creditcard).to_sym]
         end
       end
@@ -656,6 +676,13 @@ module ActiveMerchant #:nodoc:
             xml.tag!('reconciliationID', options[:reconciliation_id]) if options[:reconciliation_id]
           end
         end
+      end
+
+      def add_incremental_auth_service(xml, authorization, options)
+        xml.tag! 'ccIncrementalAuthService', { 'run' => 'true' } do
+          xml.tag! 'authRequestID', authorization
+        end
+        xml.tag! 'subsequentAuthReason', options[:auth_reason]
       end
 
       def add_normalized_threeds_2_data(xml, payment_method, options)

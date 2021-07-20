@@ -145,6 +145,21 @@ class BraintreeBlueTest < Test::Unit::TestCase
     assert_equal 'P', response.avs_result['code']
   end
 
+  def test_failed_verification_transaction
+    Braintree::CreditCardVerificationGateway.any_instance.expects(:create).
+      returns(braintree_error_result(message: 'CVV must be 4 digits for American Express and 3 digits for other card types. (81707)'))
+
+    card = credit_card('4111111111111111')
+    options = {
+      allow_card_verification: true,
+      billing_address: {
+        zip: '10000'
+      }
+    }
+    response = @gateway.verify(card, options)
+    assert_failure response
+  end
+
   def test_user_agent_includes_activemerchant_version
     assert @internal_gateway.config.user_agent.include?("(ActiveMerchant #{ActiveMerchant::VERSION})")
   end

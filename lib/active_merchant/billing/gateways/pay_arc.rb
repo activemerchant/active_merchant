@@ -13,10 +13,29 @@ module ActiveMerchant #:nodoc:
 
       STANDARD_ERROR_CODE_MAPPING = {}
       STANDARD_ACTIONS = {
-        token: 'tokens',
-        capture: 'charges',
-        void: 'charges/{{chargeID}}/void',
-        refund: 'charges/{{charge_id}}/refunds'
+        token:
+          { end_point: 'tokens',
+            allowed_fields: %i[card_source card_number exp_month exp_year cvv card_holder_name
+                               address_line1 address_line2 city state zip country] },
+        capture:
+          { end_point: 'charges',
+            allowed_fields: %i[amount statement_description card_id currency customer_id token_id card_source tip_amount
+                               card_level sales_tax purchase_order supplier_reference_number customer_ref_id ship_to_zip
+                               amex_descriptor customer_vat_number summary_commodity_code shipping_charges duty_charges
+                               ship_from_zip destination_country_code vat_invoice order_date tax_category tax_type
+                               tax_amount address_line1 zip terminal_id surcharge description email receipt_phone
+                               statement_descriptor ] },
+        void:
+          { end_point: 'charges/{{chargeID}}/void',
+            allowed_fields: %i[reason void_description] },
+        refund:
+          { end_point: 'charges/{{charge_id}}/refunds',
+            allowed_fields: %i[amount reason description] },
+        credit:
+          { end_point: 'refunds/wo_reference',
+            allowed_fields: %i[amount charge_description statement_description terminal_id card_source card_number
+                               exp_month exp_year cvv card_holder_name address_line1 address_line2 city state zip
+                               country currency reason receipt_phone receipt_email  ] }
       }
 
       SUCCESS_STATUS = %w[
@@ -153,7 +172,8 @@ module ActiveMerchant #:nodoc:
       def capture(money, tx_reference, options = {})
         post = {}
         add_money(post, money, options)
-        action = "#{STANDARD_ACTIONS[:capture]}/#{tx_reference}/capture"
+        action = "#{STANDARD_ACTIONS[:capture][:end_point]}/#{tx_reference}/capture"
+        post = filter_gateway_fields(post, options, STANDARD_ACTIONS[:capture][:allowed_fields])
         commit(action, post)
       end
 
@@ -171,7 +191,8 @@ module ActiveMerchant #:nodoc:
       def void(tx_reference, options = {})
         post = {}
         post['reason'] = options[:reason] || 'duplicate'
-        action = STANDARD_ACTIONS[:void].gsub(/{{chargeID}}/, tx_reference)
+        action = STANDARD_ACTIONS[:void][:end_point].gsub(/{{chargeID}}/, tx_reference)
+        post = filter_gateway_fields(post, options, STANDARD_ACTIONS[:void][:allowed_fields])
         commit(action, post)
       end
 
@@ -187,7 +208,18 @@ module ActiveMerchant #:nodoc:
       def refund(money, tx_reference, options = {})
         post = {}
         add_money(post, money, options)
-        action = STANDARD_ACTIONS[:refund].gsub(/{{charge_id}}/, tx_reference)
+        action = STANDARD_ACTIONS[:refund][:end_point].gsub(/{{charge_id}}/, tx_reference)
+        post = filter_gateway_fields(post, options, STANDARD_ACTIONS[:refund][:allowed_fields])
+        commit(action, post)
+      end
+
+      def credit(money, creditcard, options = {})
+        post = {}
+        add_money(post, money, options)
+        add_creditcard(post, creditcard, options)
+        add_address(post, creditcard, options)
+        action = STANDARD_ACTIONS[:credit][:end_point]
+        post = filter_gateway_fields(post, options, STANDARD_ACTIONS[:credit][:allowed_fields])
         commit(action, post)
       end
 
@@ -218,8 +250,8 @@ module ActiveMerchant #:nodoc:
         post['card_source'] = options[:card_source]
         add_creditcard(post, creditcard, options)
         add_address(post, creditcard, options)
-        post = options.update(post)
-        commit(STANDARD_ACTIONS[:token], post)
+        post = filter_gateway_fields(post, options, STANDARD_ACTIONS[:token][:allowed_fields])
+        commit(STANDARD_ACTIONS[:token][:end_point], post)
       end
 
       def supports_scrubbing? #:nodoc:
@@ -241,7 +273,8 @@ module ActiveMerchant #:nodoc:
         post['token_id'] = authorization
         post['capture'] = options[:capture] || 1
         add_money(post, money, options)
-        commit(STANDARD_ACTIONS[:capture], post)
+        post = filter_gateway_fields(post, options, STANDARD_ACTIONS[:capture][:allowed_fields])
+        commit(STANDARD_ACTIONS[:capture][:end_point], post)
       end
 
       def add_creditcard(post, creditcard, options)
@@ -281,12 +314,18 @@ module ActiveMerchant #:nodoc:
         body
       end
 
+      def filter_gateway_fields(post, options, gateway_fields)
+        filtered_options = options.slice(*gateway_fields)
+        post.update(filtered_options)
+        post
+      end
+
       def commit(action, parameters)
         url = (test? ? test_url : live_url)
         headers = headers(@options[:api_key])
         end_point = "#{url}/#{action}"
         begin
-          response = ssl_post(end_point, post_data(action, parameters), headers)
+          response = ssl_post(end_point, post_data(parameters), headers)
           parsed_response = parse(response)
 
           Response.new(
@@ -294,7 +333,8 @@ module ActiveMerchant #:nodoc:
             message_from(parsed_response, action),
             parsed_response,
             test: test?,
-            authorization: parse_response_id(parsed_response)
+            authorization: parse_response_id(parsed_response),
+            error_code: error_code_from(parsed_response, action)
           )
         rescue ResponseError => e
           parsed_response = parse(e.response.body)
@@ -303,13 +343,14 @@ module ActiveMerchant #:nodoc:
             message_from(parsed_response, action),
             parsed_response,
             test: test?,
-            authorization: nil
+            authorization: nil,
+            error_code: error_code_from(parsed_response, action)
           )
         end
       end
 
       def success_from(response, action)
-        if action == STANDARD_ACTIONS[:token]
+        if action == STANDARD_ACTIONS[:token][:end_point]
           token = parse_response_id(response)
           (!token.nil? && !token.empty?)
         elsif response
@@ -319,7 +360,7 @@ module ActiveMerchant #:nodoc:
 
       def message_from(response, action)
         if success_from(response, action)
-          if action == STANDARD_ACTIONS[:token]
+          if action == STANDARD_ACTIONS[:token][:end_point]
             return response['data']['id']
           else
             return response['data']['status']
@@ -333,11 +374,11 @@ module ActiveMerchant #:nodoc:
         response['data']['id'] if response && response['data']
       end
 
-      def post_data(action, params)
+      def post_data(params)
         params.map { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join('&')
       end
 
-      def error_code_from(response)
+      def error_code_from(response, action)
         response['status_code'] unless success_from(response, action)
       end
     end
