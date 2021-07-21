@@ -51,6 +51,57 @@ class RemotePayArcTest < Test::Unit::TestCase
     end
   end
 
+  def test_successful_two_digit_card_exp_month
+    credit_card_options = {
+      month: '02',
+      year: '2022',
+      first_name: 'Rex Joseph',
+      last_name: '',
+      verification_value: '999'
+    }
+    credit_card = credit_card('4111111111111111', credit_card_options)
+
+    response = @gateway.purchase(1022, credit_card, @options)
+    assert_success response
+
+    assert_block do
+      PayArcGateway::SUCCESS_STATUS.include? response.message
+    end
+  end
+
+  def test_successful_one_digit_card_exp_month
+    credit_card_options = {
+      month: '2',
+      year: '2022',
+      first_name: 'Rex Joseph',
+      last_name: '',
+      verification_value: '999'
+    }
+    credit_card = credit_card('4111111111111111', credit_card_options)
+
+    response = @gateway.purchase(1022, credit_card, @options)
+    assert_success response
+
+    assert_block do
+      PayArcGateway::SUCCESS_STATUS.include? response.message
+    end
+  end
+
+  def test_failed_three_digit_card_exp_month
+    credit_card_options = {
+      month: '200',
+      year: '2022',
+      first_name: 'Rex Joseph',
+      last_name: '',
+      verification_value: '999'
+    }
+    credit_card = credit_card('4111111111111111', credit_card_options)
+
+    response = @gateway.purchase(1022, credit_card, @options)
+    assert_failure response
+    assert_equal 'error', response.params['status']
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(1300, @invalid_credit_card, @options)
     assert_failure response
@@ -87,6 +138,7 @@ class RemotePayArcTest < Test::Unit::TestCase
   end
 
   def test_successful_void
+    @options.update(reason: 'duplicate')
     charge_response = @gateway.purchase(1200, @credit_card, @options)
     assert_success charge_response
 

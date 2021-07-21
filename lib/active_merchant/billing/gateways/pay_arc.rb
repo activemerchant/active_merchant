@@ -23,7 +23,7 @@ module ActiveMerchant #:nodoc:
                                card_level sales_tax purchase_order supplier_reference_number customer_ref_id ship_to_zip
                                amex_descriptor customer_vat_number summary_commodity_code shipping_charges duty_charges
                                ship_from_zip destination_country_code vat_invoice order_date tax_category tax_type
-                               tax_amount address_line1 zip terminal_id surcharge description email receipt_phone
+                               tax_amount tax_rate address_line1 zip terminal_id surcharge description email receipt_phone
                                statement_descriptor ] },
         void:
           { end_point: 'charges/{{chargeID}}/void',
@@ -190,7 +190,7 @@ module ActiveMerchant #:nodoc:
 
       def void(tx_reference, options = {})
         post = {}
-        post['reason'] = options[:reason] || 'duplicate'
+        post['reason'] = options[:reason]
         action = STANDARD_ACTIONS[:void][:end_point].gsub(/{{chargeID}}/, tx_reference)
         post = filter_gateway_fields(post, options, STANDARD_ACTIONS[:void][:allowed_fields])
         commit(action, post)
@@ -279,7 +279,7 @@ module ActiveMerchant #:nodoc:
 
       def add_creditcard(post, creditcard, options)
         post['card_number'] = creditcard.number
-        post['exp_month'] = creditcard.month
+        post['exp_month'] = format(creditcard.month, :two_digits)
         post['exp_year'] = creditcard.year
         post['cvv'] = creditcard.verification_value unless creditcard.verification_value.nil?
         post['card_holder_name'] = options[:card_holder_name] || "#{creditcard.first_name} #{creditcard.last_name}"
