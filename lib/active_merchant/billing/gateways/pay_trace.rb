@@ -43,23 +43,19 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, payment_or_customer_id, options = {})
-        post = {}
-        add_amount(post, money, options)
-        if customer_id?(payment_or_customer_id)
-          post[:customer_id] = payment_or_customer_id
-          endpoint = ENDPOINTS[:customer_id_sale]
+        if visa_or_mastercard?(options)
+          MultiResponse.run(:use_first_response) do |r|
+            endpoint = customer_id?(payment_or_customer_id) ? ENDPOINTS[:customer_id_sale] : ENDPOINTS[:keyed_sale]
+
+            r.process { commit(endpoint, build_purchase_request(money, payment_or_customer_id, options)) }
+            r.process { commit(ENDPOINTS[:"level_3_#{options[:visa_or_mastercard]}"], send_level_3_data(r, options)) }
+          end
         else
-          add_payment(post, payment_or_customer_id)
-          add_address(post, payment_or_customer_id, options)
-          add_customer_data(post, options)
-          endpoint = ENDPOINTS[:keyed_sale]
+          post = build_purchase_request(money, payment_or_customer_id, options)
+          post[:customer_id] ? endpoint = ENDPOINTS[:customer_id_sale] : endpoint = ENDPOINTS[:keyed_sale]
+          response = commit(endpoint, post)
+          check_token_response(response, endpoint, post, options)
         end
-        response = commit(endpoint, post)
-        check_token_response(response, endpoint, post, options)
-
-        return response unless visa_or_mastercard?(options)
-
-        send_level_3_data(response, options)
       end
 
       def authorize(money, payment_or_customer_id, options = {})
@@ -79,21 +75,22 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options = {})
-        post = {}
-        post[:transaction_id] = authorization
-        add_amount(post, money, options) if options[:include_capture_amount] == true
-        response = commit(ENDPOINTS[:capture], post)
-        check_token_response(response, ENDPOINTS[:capture], post, options)
-
-        return response unless visa_or_mastercard?(options)
-
-        send_level_3_data(response, options)
+        if visa_or_mastercard?(options)
+          MultiResponse.run do |r|
+            r.process { commit(ENDPOINTS[:capture], build_capture_request(money, authorization, options)) }
+            r.process { commit(ENDPOINTS[:"level_3_#{options[:visa_or_mastercard]}"], send_level_3_data(r, options)) }
+          end
+        else
+          post = build_capture_request(money, authorization, options)
+          response = commit(ENDPOINTS[:capture], post)
+          check_token_response(response, ENDPOINTS[:capture], post, options)
+        end
       end
 
-      def refund(authorization, options = {})
+      def refund(money, authorization, options = {})
         # currently only support full and partial refunds of settled transactions via a transaction ID
         post = {}
-        post[:amount] = amount(options[:amount]) if options[:amount]
+        add_amount(post, money, options)
         post[:transaction_id] = authorization
         response = commit(ENDPOINTS[:transaction_refund], post)
         check_token_response(response, ENDPOINTS[:transaction_refund], post, options)
@@ -108,10 +105,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify(credit_card, options = {})
-        MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
-        end
+        authorize(0, credit_card, options)
       end
 
       # The customer_IDs that come from storing cards can be used for auth and purchase transaction types
@@ -165,15 +159,35 @@ module ActiveMerchant #:nodoc:
 
       private
 
+      def build_purchase_request(money, payment_or_customer_id, options)
+        post = {}
+        add_amount(post, money, options)
+        if customer_id?(payment_or_customer_id)
+          post[:customer_id] = payment_or_customer_id
+        else
+          add_payment(post, payment_or_customer_id)
+          add_address(post, payment_or_customer_id, options)
+          add_customer_data(post, options)
+        end
+
+        post
+      end
+
+      def build_capture_request(money, authorization, options)
+        post = {}
+        post[:transaction_id] = authorization
+        add_amount(post, money, options)
+
+        post
+      end
+
       # method can only be used to add level 3 data to any approved and unsettled sale transaction so it is built into the standard purchase workflow above
       def send_level_3_data(response, options)
         post = {}
         post[:transaction_id] = response.authorization
-        endpoint = ENDPOINTS[:"level_3_#{options[:visa_or_mastercard]}"]
-
         add_level_3_data(post, options)
-        adjust = commit(endpoint, post)
-        check_token_response(adjust, endpoint, post, options)
+
+        post
       end
 
       def visa_or_mastercard?(options)
@@ -306,9 +320,9 @@ module ActiveMerchant #:nodoc:
 
         Response.new(
           success,
-          message_from(response),
+          message_from(success, response),
           response,
-          authorization: authorization_from(response),
+          authorization: authorization_from(action, response),
           avs_result: AVSResult.new(code: response['avs_response']),
           cvv_result: response['csc_response'],
           test: test?,
@@ -335,12 +349,28 @@ module ActiveMerchant #:nodoc:
         response['success']
       end
 
-      def message_from(response)
-        response['status_message']
+      def message_from(success, response)
+        return response['status_message'] if success
+
+        if error = response['errors']
+          message = 'Errors-'
+          error.each do |k, v|
+            message.concat(" code:#{k}, message:#{v}")
+          end
+        else
+          message = response['status_message'].to_s + " #{response['approval_message']}"
+        end
+
+        message
       end
 
-      def authorization_from(response)
-        response['transaction_id']
+      # store transactions do not return a transaction_id, but they return a customer_id that will then be used as the third_party_token for the stored payment method
+      def authorization_from(action, response)
+        if action == ENDPOINTS[:store]
+          response['customer_id']
+        else
+          response['transaction_id']
+        end
       end
 
       def post_data(parameters = {})

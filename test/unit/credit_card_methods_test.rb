@@ -131,6 +131,15 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_equal 'jcb', CreditCard.brand?('3528000000000000')
     assert_equal 'jcb', CreditCard.brand?('3580000000000000')
     assert_equal 'jcb', CreditCard.brand?('3088000000000017')
+    assert_equal 'jcb', CreditCard.brand?('3094000000000017')
+    assert_equal 'jcb', CreditCard.brand?('3096000000000000')
+    assert_equal 'jcb', CreditCard.brand?('3102000000000017')
+    assert_equal 'jcb', CreditCard.brand?('3112000000000000')
+    assert_equal 'jcb', CreditCard.brand?('3120000000000017')
+    assert_equal 'jcb', CreditCard.brand?('3158000000000000')
+    assert_equal 'jcb', CreditCard.brand?('3159000000000017')
+    assert_equal 'jcb', CreditCard.brand?('3337000000000000')
+    assert_equal 'jcb', CreditCard.brand?('3349000000000017')
   end
 
   def test_should_detect_maestro_dk_as_maestro

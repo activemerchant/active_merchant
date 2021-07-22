@@ -42,6 +42,7 @@ module ActiveMerchant #:nodoc:
       }
 
       SUCCESS = '0'
+      APPROVAL_SUCCESS = '1'
 
       APPROVED = [
         '00', # Approved
@@ -753,7 +754,7 @@ module ActiveMerchant #:nodoc:
 
       def parse(body)
         response = {}
-        xml = REXML::Document.new(body)
+        xml = REXML::Document.new(strip_invalid_xml_chars(body))
         root = REXML::XPath.first(xml, '//Response') ||
                REXML::XPath.first(xml, '//ErrorResponse')
         if root
@@ -807,8 +808,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def success?(response, message_type)
-        if %i[refund void].include?(message_type)
+        if %i[void].include?(message_type)
           response[:proc_status] == SUCCESS
+        elsif %i[refund].include?(message_type)
+          response[:proc_status] == SUCCESS && response[:approval_status] == APPROVAL_SUCCESS
         elsif response[:customer_profile_action]
           response[:profile_proc_status] == SUCCESS
         else
@@ -992,6 +995,12 @@ module ActiveMerchant #:nodoc:
 
       def get_address(options)
         options[:billing_address] || options[:address]
+      end
+
+      # Null characters are possible in some responses (namely, the respMsg field), causing XML parsing errors
+      # Prevent by substituting these with a valid placeholder string
+      def strip_invalid_xml_chars(xml)
+        xml.gsub(/\u0000/, '[null]')
       end
 
       # The valid characters include:

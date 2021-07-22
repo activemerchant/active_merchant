@@ -416,8 +416,23 @@ class ElavonTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
-      check = '<ssl_first_name>Ricky ™ Martínez </ssl_first_name>'
-      assert_match(/#{check}/, data)
+      check = 'Ricky %E2%84%A2 Mart'
+      assert_match(/<ssl_first_name>#{check}<\/ssl_first_name>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_special_character_encoding_truncation
+    special_card = @credit_card
+    special_card.first_name = 'Fear & Loathing'
+    special_card.last_name = 'Castañeda'
+
+    stub_comms do
+      @gateway.purchase(@amount, special_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      first = 'Fear %26amp; Loathin'
+      last = 'Casta%C3%B1eda'
+      assert_match(/<ssl_first_name>#{first}<\/ssl_first_name>/, data)
+      assert_match(/<ssl_last_name>#{last}<\/ssl_last_name>/, data)
     end.respond_with(successful_purchase_response)
   end
 

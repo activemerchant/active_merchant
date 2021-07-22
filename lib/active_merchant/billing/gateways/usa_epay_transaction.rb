@@ -343,7 +343,7 @@ module ActiveMerchant #:nodoc:
         parameters[:software] = 'Active Merchant'
         parameters[:testmode] = (@options[:test] ? 1 : 0) unless parameters.has_key?(:testmode)
         seed = SecureRandom.hex(32).upcase
-        hash = Digest::SHA1.hexdigest("#{parameters[:command]}:#{@options[:password]}:#{parameters[:amount]}:#{parameters[:invoice]}:#{seed}")
+        hash = Digest::SHA1.hexdigest("#{parameters[:command]}:#{@options[:pin] || @options[:password]}:#{parameters[:amount]}:#{parameters[:invoice]}:#{seed}")
         parameters[:hash] = "s/#{seed}/#{hash}/n"
 
         parameters.collect { |key, value| "UM#{key}=#{CGI.escape(value.to_s)}" }.join('&')

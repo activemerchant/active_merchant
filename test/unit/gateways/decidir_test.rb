@@ -146,7 +146,7 @@ class DecidirTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase_error_response
-    @gateway_for_purchase.expects(:ssl_request).returns(unique_error_response)
+    @gateway_for_purchase.expects(:ssl_request).returns(unique_purchase_error_response)
 
     response = @gateway_for_purchase.purchase(@amount, @credit_card, @options)
     assert_failure response
@@ -301,6 +301,16 @@ class DecidirTest < Test::Unit::TestCase
     assert_failure response
 
     assert_equal 'not_found_error', response.message
+    assert response.test?
+  end
+
+  def test_successful_verify_with_failed_void_unique_error_message
+    @gateway_for_auth.expects(:ssl_request).at_most(3).returns(unique_void_error_response)
+
+    response = @gateway_for_auth.verify(@credit_card, @options)
+    assert_failure response
+
+    assert_equal 'invalid_status_error - status: refunded', response.message
     assert response.test?
   end
 
@@ -539,9 +549,15 @@ class DecidirTest < Test::Unit::TestCase
     )
   end
 
-  def unique_error_response
+  def unique_purchase_error_response
     %{
       {\"error\":{\"error_type\":\"invalid_request_error\",\"validation_errors\":[{\"code\":\"invalid_param\",\"param\":\"payment_type\"}]}}
+    }
+  end
+
+  def unique_void_error_response
+    %{
+      {\"error_type\":\"invalid_status_error\",\"validation_errors\":{\"status\":\"refunded\"}}
     }
   end
 

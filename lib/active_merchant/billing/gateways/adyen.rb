@@ -608,7 +608,7 @@ module ActiveMerchant #:nodoc:
       def init_post(options = {})
         post = {}
         add_merchant_account(post, options)
-        post[:reference] = options[:order_id] if options[:order_id]
+        post[:reference] = options[:order_id][0..79] if options[:order_id]
         post
       end
 

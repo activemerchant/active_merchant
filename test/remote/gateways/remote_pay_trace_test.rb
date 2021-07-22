@@ -19,6 +19,7 @@ class RemotePayTraceTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card('4012000098765439')
     @mastercard = credit_card('5499740000000057')
+    @invalid_card = credit_card('54545454545454', month: '14', year: '1999')
     @discover = credit_card('6011000993026909')
     @amex = credit_card('371449635392376')
     @options = {
@@ -38,7 +39,7 @@ class RemotePayTraceTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    response = @gateway.purchase(@amount, @credit_card, @options)
+    response = @gateway.purchase(1000, @credit_card, @options)
     assert_success response
     assert_equal 'Your transaction was successfully approved.', response.message
   end
@@ -99,9 +100,10 @@ class RemotePayTraceTest < Test::Unit::TestCase
       ]
     }
 
-    response = @gateway.purchase(250, @credit_card, options)
+    response = @gateway.purchase(3000, @credit_card, options)
     assert_success response
-    assert_equal 170, response.params['response_code']
+    assert_equal 101, response.params['response_code']
+    assert_not_nil response.authorization
   end
 
   def test_successful_purchase_with_level_3_data_mastercard
@@ -142,7 +144,7 @@ class RemotePayTraceTest < Test::Unit::TestCase
 
     response = @gateway.purchase(250, @mastercard, options)
     assert_success response
-    assert_equal 170, response.params['response_code']
+    assert_equal 101, response.params['response_code']
   end
 
   # Level three data can only be added to approved sale transactions done with visa or mastercard.
@@ -165,11 +167,17 @@ class RemotePayTraceTest < Test::Unit::TestCase
     assert_equal false, response.success?
   end
 
-  def test_successful_authorize_and_capture
-    auth = @gateway.authorize(300, @credit_card, @options)
+  def test_failed_purchase_with_multiple_errors
+    response = @gateway.purchase(25000, @invalid_card, @options)
+    assert_failure response
+    assert_equal 'Errors- code:35, message:["Please provide a valid Credit Card Number."] code:43, message:["Please provide a valid Expiration Month."]', response.message
+  end
+
+  def test_successful_authorize_and_full_capture
+    auth = @gateway.authorize(4000, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount, auth.authorization, @options)
+    assert capture = @gateway.capture(4000, auth.authorization, @options)
     assert_success capture
     assert_equal 'Your transaction was successfully captured.', capture.message
   end
@@ -205,7 +213,7 @@ class RemotePayTraceTest < Test::Unit::TestCase
         }
       ]
     }
-    auth = @gateway.authorize(100, @mastercard, options)
+    auth = @gateway.authorize(@amount, @mastercard, options)
     assert_success auth
 
     assert capture = @gateway.capture(@amount, auth.authorization, options)
@@ -218,21 +226,21 @@ class RemotePayTraceTest < Test::Unit::TestCase
   def test_failed_authorize
     response = @gateway.authorize(29, @mastercard, @options)
     assert_failure response
-    assert_equal 'Your transaction was not approved.', response.message
+    assert_equal 'Your transaction was not approved.   EXPIRED CARD - Expired card', response.message
   end
 
   def test_partial_capture
     auth = @gateway.authorize(500, @amex, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(200, auth.authorization, @options.merge(include_capture_amount: true))
+    assert capture = @gateway.capture(200, auth.authorization, @options)
     assert_success capture
   end
 
   def test_failed_capture
     response = @gateway.capture(@amount, '')
     assert_failure response
-    assert_equal 'One or more errors has occurred.', response.message
+    assert_equal 'Errors- code:58, message:["Please provide a valid Transaction ID."]', response.message
   end
 
   def test_successful_refund
@@ -243,7 +251,7 @@ class RemotePayTraceTest < Test::Unit::TestCase
     settle = @gateway.settle()
     assert_success settle
 
-    refund = @gateway.refund(authorization, @options.merge(amount: 200))
+    refund = @gateway.refund(200, authorization, @options)
     assert_success refund
     assert_equal 'Your transaction was successfully refunded.', refund.message
   end
@@ -256,7 +264,7 @@ class RemotePayTraceTest < Test::Unit::TestCase
     settle = @gateway.settle()
     assert_success settle
 
-    refund = @gateway.refund(authorization, @options.merge(amount: 300))
+    refund = @gateway.refund(300, authorization, @options)
     assert_success refund
     assert_equal 'Your transaction was successfully refunded.', refund.message
   end
@@ -269,15 +277,19 @@ class RemotePayTraceTest < Test::Unit::TestCase
     settle = @gateway.settle()
     assert_success settle
 
-    refund = @gateway.refund(authorization)
+    refund = @gateway.refund(@amount, authorization)
     assert_success refund
     assert_equal 'Your transaction was successfully refunded.', refund.message
   end
 
   def test_failed_refund
-    response = @gateway.refund('', @options)
+    purchase = @gateway.purchase(2000, @credit_card, @options)
+    assert_success purchase
+    authorization = purchase.authorization
+
+    response = @gateway.refund(2000, authorization, @options)
     assert_failure response
-    assert_equal 'One or more errors has occurred.', response.message
+    assert_equal 'Errors- code:817, message:["The Transaction ID that you provided could not be refunded. Only settled transactions can be refunded.  Please try to void the transaction instead."]', response.message
   end
 
   def test_successful_void
@@ -292,13 +304,18 @@ class RemotePayTraceTest < Test::Unit::TestCase
   def test_failed_void
     response = @gateway.void('')
     assert_failure response
-    assert_equal 'One or more errors has occurred.', response.message
+    assert_equal 'Errors- code:58, message:["Please provide a valid Transaction ID."]', response.message
   end
 
   def test_successful_verify
     response = @gateway.verify(@mastercard, @options)
     assert_success response
     assert_equal 'Your transaction was successfully approved.', response.message
+  end
+
+  def test_successful_store
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
   end
 
   def test_successful_store_and_redact_customer_profile

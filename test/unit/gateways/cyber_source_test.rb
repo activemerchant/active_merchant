@@ -223,6 +223,14 @@ class CyberSourceTest < Test::Unit::TestCase
     end.respond_with(successful_authorization_response)
   end
 
+  def test_authorize_includes_customer_id
+    stub_comms do
+      @gateway.authorize(100, @credit_card, customer_id: '5afefb801188d70023b7debb')
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<customerID>5afefb801188d70023b7debb<\/customerID>/, data)
+    end.respond_with(successful_authorization_response)
+  end
+
   def test_authorize_includes_merchant_tax_id_in_billing_address_but_not_shipping_address
     stub_comms do
       @gateway.authorize(100, @credit_card, order_id: '1', merchant_tax_id: '123')
@@ -293,6 +301,16 @@ class CyberSourceTest < Test::Unit::TestCase
     options = @options.merge(ignore_avs: false)
     assert response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
+
+    @gateway.expects(:ssl_post).with do |_host, request_body|
+      assert_not_match %r'<ignoreAVSResult>', request_body
+      assert_not_match %r'<ignoreCVResult>', request_body
+      true
+    end.returns(successful_purchase_response)
+
+    options = @options.merge(ignore_avs: 'false')
+    assert response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
   end
 
   def test_successful_credit_cart_purchase_single_request_ignore_ccv
@@ -317,6 +335,17 @@ class CyberSourceTest < Test::Unit::TestCase
 
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(
                                                                  ignore_cvv: false
+                                                               ))
+    assert_success response
+
+    @gateway.expects(:ssl_post).with do |_host, request_body|
+      assert_not_match %r'<ignoreAVSResult>', request_body
+      assert_not_match %r'<ignoreCVResult>', request_body
+      true
+    end.returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(
+                                                                 ignore_cvv: 'false'
                                                                ))
     assert_success response
   end
@@ -514,6 +543,13 @@ class CyberSourceTest < Test::Unit::TestCase
     @gateway.stubs(:ssl_post).returns(successful_card_credit_response)
 
     assert_success(@gateway.credit(@amount, @credit_card, @options))
+  end
+
+  def test_successful_adjust_auth_request
+    @gateway.stubs(:ssl_post).returns(successful_incremental_auth_response)
+    assert_success(response = @gateway.authorize(@amount, @credit_card, @options))
+
+    assert_success(@gateway.adjust(@amount, response.authorization, @options))
   end
 
   def test_authorization_under_review_request
@@ -1456,6 +1492,14 @@ class CyberSourceTest < Test::Unit::TestCase
       <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
       <soap:Header>
       <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"><wsu:Timestamp xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="Timestamp-5589339"><wsu:Created>2008-01-21T16:00:38.927Z</wsu:Created></wsu:Timestamp></wsse:Security></soap:Header><soap:Body><c:replyMessage xmlns:c="urn:schemas-cybersource-com:transaction-data-1.32"><c:merchantReferenceCode>TEST11111111111</c:merchantReferenceCode><c:requestID>2009312387810008401927</c:requestID><c:decision>ACCEPT</c:decision><c:reasonCode>100</c:reasonCode><c:requestToken>Af/vj7OzPmut/eogHFCrBiwYsWTJy1r127CpCn0KdOgyTZnzKwVYCmzPmVgr9ID5H1WGTSTKuj0i30IE4+zsz2d/QNzwBwAACCPA</c:requestToken><c:purchaseTotals><c:currency>USD</c:currency></c:purchaseTotals><c:ccCreditReply><c:reasonCode>100</c:reasonCode><c:requestDateTime>2008-01-21T16:00:38Z</c:requestDateTime><c:amount>1.00</c:amount><c:reconciliationID>010112295WW70TBOPSSP2</c:reconciliationID></c:ccCreditReply></c:replyMessage></soap:Body></soap:Envelope>
+    XML
+  end
+
+  def successful_incremental_auth_response
+    <<~XML
+      <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+      <soap:Header>
+      <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"><wsu:Timestamp xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="Timestamp-1873579750"><wsu:Created>2021-06-28T14:24:21.043Z</wsu:Created></wsu:Timestamp></wsse:Security></soap:Header><soap:Body><c:replyMessage xmlns:c="urn:schemas-cybersource-com:transaction-data-1.164"><c:merchantReferenceCode>26be3073f9e9d3ae20a1219085d66a31</c:merchantReferenceCode><c:requestID>6248902608336713204007</c:requestID><c:decision>ACCEPT</c:decision><c:reasonCode>120</c:reasonCode><c:requestToken>Axj37wSTUsDxxi1huMEn/6As2ZNHDlgybMGrJs2bOHLZg0YMWACojiSd78TSAAk3DxpJl6MV4IPICcmpYHjhsUsHHNVA1F6v</c:requestToken><c:purchaseTotals><c:currency>USD</c:currency></c:purchaseTotals><c:ccIncrementalAuthReply><c:reasonCode>120</c:reasonCode><c:amount>0.00</c:amount><c:authorizationCode>831000</c:authorizationCode><c:processorResponse>00</c:processorResponse><c:authorizedDateTime>2021-06-28T14:24:21Z</c:authorizedDateTime><c:reconciliationID>6248902605266689604010</c:reconciliationID><c:paymentNetworkTransactionID>016153570198200</c:paymentNetworkTransactionID><c:cardCategory>A </c:cardCategory></c:ccIncrementalAuthReply><c:receiptNumber>118962</c:receiptNumber><c:additionalData>!010</c:additionalData><c:promotion><c:discountedAmount>0.00</c:discountedAmount><c:type>V1</c:type><c:code>001BP</c:code><c:receiptData>Discount: 0.10 ; Max Units: 20.00</c:receiptData><c:discountApplied>2.00</c:discountApplied><c:description>BP VISA Discount</c:description></c:promotion></c:replyMessage></soap:Body></soap:Envelope>
     XML
   end
 

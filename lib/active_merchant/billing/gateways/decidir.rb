@@ -282,7 +282,13 @@ module ActiveMerchant #:nodoc:
         if error = response.dig('status_details', 'error')
           message = "#{error.dig('reason', 'description')} | #{error['type']}"
         elsif response['error_type']
-          message = response['validation_errors'].map { |errors| "#{errors['code']}: #{errors['param']}" }.join(', ') if response['validation_errors']
+          if response['validation_errors'].is_a?(Array)
+            message = response['validation_errors'].map { |errors| "#{errors['code']}: #{errors['param']}" }.join(', ')
+          elsif response['validation_errors'].is_a?(Hash)
+            errors = response['validation_errors'].map { |k, v| "#{k}: #{v}" }.join(', ')
+            message = "#{response['error_type']} - #{errors}"
+          end
+
           message ||= response['error_type']
         end
 

@@ -246,6 +246,10 @@ cyber_source:
   login: X
   password: Y
 
+cyber_source_latam_pe:
+  login: merchant_id
+  password: soap_key
+
 # Working credentials, no need to replace
 d_local:
   login: aeaf9bbfa1

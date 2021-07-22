@@ -141,6 +141,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'FreightAmt', options[:freightamt] unless options[:freightamt].blank?
               xml.tag! 'DutyAmt', options[:dutyamt] unless options[:dutyamt].blank?
               xml.tag! 'DiscountAmt', options[:discountamt] unless options[:discountamt].blank?
+              xml.tag! 'MerchDescr', options[:merch_descr] unless options[:merch_descr].blank?
 
               billing_address = options[:billing_address] || options[:address]
               add_address(xml, 'BillTo', billing_address, options) if billing_address
@@ -176,6 +177,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'DutyAmt', options[:dutyamt] unless options[:dutyamt].blank?
               xml.tag! 'DiscountAmt', options[:discountamt] unless options[:discountamt].blank?
               xml.tag! 'EMail', options[:email] unless options[:email].nil?
+              xml.tag! 'MerchDescr', options[:merch_descr] unless options[:merch_descr].blank?
 
               billing_address = options[:billing_address] || options[:address]
               add_address(xml, 'BillTo', billing_address, options) if billing_address
@@ -239,6 +241,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'InvNum', options[:order_id].to_s.gsub(/[^\w.]/, '') unless options[:order_id].blank?
               xml.tag! 'Description', options[:description] unless options[:description].blank?
               xml.tag! 'OrderDesc', options[:order_desc] unless options[:order_desc].blank?
+              xml.tag! 'MerchDescr', options[:merch_descr] unless options[:merch_descr].blank?
               xml.tag! 'BillTo' do
                 xml.tag! 'Name', check.name
               end
