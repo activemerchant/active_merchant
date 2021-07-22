@@ -89,7 +89,7 @@ class RemotePayArcTest < Test::Unit::TestCase
   def test_successful_void
     charge_response = @gateway.purchase(1200, @credit_card, @options)
     assert_success charge_response
-
+    @options.update(reason: 'duplicate')
     assert void = @gateway.void(charge_response.authorization, @options)
     assert_success void
     assert_block do

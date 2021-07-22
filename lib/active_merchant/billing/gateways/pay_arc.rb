@@ -190,7 +190,7 @@ module ActiveMerchant #:nodoc:
 
       def void(tx_reference, options = {})
         post = {}
-        post['reason'] = options[:reason] || 'duplicate'
+        post['reason'] = options[:reason]
         action = STANDARD_ACTIONS[:void][:end_point].gsub(/{{chargeID}}/, tx_reference)
         post = filter_gateway_fields(post, options, STANDARD_ACTIONS[:void][:allowed_fields])
         commit(action, post)
