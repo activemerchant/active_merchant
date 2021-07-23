@@ -31,7 +31,6 @@
 * Update bank routing account validation check [jessiagee] #4029
 * Kushki: Add 'contactDetails' fields [mbreenlyles] #4033
 * Adyen: Truncating order_id and remote test [yyapuncich] #4036
-* Kushki: Add support for fullResponse field [rachelkirk] #4040
 * CyberSource: Allow string content for Ignore AVS/CVV flags [curiousepic] #4043
 * Decidir: Update validation error message handling [arbianchi] #4042
 * Authorize.net: Remove cardholderAuthentication for non-3DS transactions [BritneyS] #4045
@@ -44,6 +43,7 @@
 * PayArc: Currency and parameters updates [jessiagee] #4051
 * Elavon: Add support for special characters [mbreenlyles] #4049
 * PayArc: Formatting CC month, adding tax_rate, removing default void reason [jessiagee] #4053
+* Kushki: Add support for fullResponse field [rachelkirk] #4057
 
 == Version 1.121 (June 8th, 2021)
 * Braintree: Lift restriction on gem version to allow for backwards compatibility [naashton] #3993

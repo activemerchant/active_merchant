@@ -174,7 +174,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_full_response(post, options)
-        post[:fullResponse] = options[:full_response] if options[:full_response]
+        post[:fullResponse] = options[:full_response].to_s.casecmp('true').zero? if options[:full_response]
       end
 
       ENDPOINT = {

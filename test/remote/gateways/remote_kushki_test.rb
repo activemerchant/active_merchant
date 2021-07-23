@@ -74,7 +74,6 @@ class RemoteKushkiTest < Test::Unit::TestCase
     }
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
-
     assert_not_empty response.params.dig('details', 'approvalCode')
     assert_equal 'Succeeded', response.message
   end
