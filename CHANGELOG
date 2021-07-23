@@ -45,6 +45,7 @@
 * PayArc: Formatting CC month, adding tax_rate, removing default void reason [jessiagee] #4053
 * Kushki: Add support for fullResponse field [rachelkirk] #4057
 * Element: Add support for `MerchantDescriptor` field [BritneyS] #4058
+* PayArc: Added email and phone to credit and charge [jessiagee] #4056
 
 == Version 1.121 (June 8th, 2021)
 * Braintree: Lift restriction on gem version to allow for backwards compatibility [naashton] #3993

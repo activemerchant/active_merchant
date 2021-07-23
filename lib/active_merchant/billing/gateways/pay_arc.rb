@@ -23,8 +23,7 @@ module ActiveMerchant #:nodoc:
                                card_level sales_tax purchase_order supplier_reference_number customer_ref_id ship_to_zip
                                amex_descriptor customer_vat_number summary_commodity_code shipping_charges duty_charges
                                ship_from_zip destination_country_code vat_invoice order_date tax_category tax_type
-                               tax_amount tax_rate address_line1 zip terminal_id surcharge description email receipt_phone
-                               statement_descriptor ] },
+                               tax_amount tax_rate address_line1 zip terminal_id surcharge description email receipt_phone statement_descriptor ] },
         void:
           { end_point: 'charges/{{chargeID}}/void',
             allowed_fields: %i[reason void_description] },
@@ -68,8 +67,8 @@ module ActiveMerchant #:nodoc:
       # * <tt>:card_source </tt> -- Source of payment (REQUIRED) ( INTERNET, SWIPE, PHONE, MAIL, MANUAL )
       # * <tt>:currency </tt> -- Three-letter ISO currency code, in lowercase (REQUIRED)
       # * <tt>:card_holder_name</tt> --Name of the Card Holder (OPTIONAL)
-      # * <tt>:address_line1</tt> -- Address Line 1 (OPTIONAL)
-      # * <tt>:address_line2</tt> -- Address Line 2 (OPTIONAL)
+      # * <tt>:address_line1</tt> -- Set in payment method's billing address (OPTIONAL)
+      # * <tt>:address_line2</tt> -- Set in payment method's billing address (OPTIONAL)
       # * <tt>:state </tt> -- State (OPTIONAL)
       # * <tt>:country </tt> -- Country (OPTIONAL)
       # * <tt>:statement_description </tt> -- An arbitrary string to be displayed on your costomer's credit card statement. This may be up to 22 characters. (OPTIONAL)
@@ -95,8 +94,7 @@ module ActiveMerchant #:nodoc:
       # * <tt> :tax_type  </tt> -- Applicable for Level3 Charge. The type of tax. For example, VAT, NATIONAL, Service Tax. Format: Alphanumeric and Special Character
       # * <tt> :vat_invoice </tt> -- Applicable for Level3 Charge. The Value Added Tax (VAT) invoice number associated with the transaction. Format: Alphanumeric and Special Character |Min Length=0 Max Length=15|Allowed character: a-z A-Z 0-9 Space <>
       # * <tt> :tax_rate </tt> -- Applicable for Level3 Charge. The type of tax rate. This field is used if taxCategory is not used. Default sale tax rate in percentage Must be between 0.1% - 22% ,Applicable only Level 2 AutoFill. Format: Decimal Number |Max Length=4|Allowed characters: 0-9 .(dot) Allowed range: 0.01 - 100
-      # * <tt> :email </tt> -- Customer's email address.
-      # * <tt> :phone_number </tt> -- Customer's contact phone number.
+      # * <tt> :email </tt> -- Customer's email address sent with payment method.
 
       def purchase(money, creditcard, options = {})
         options[:capture] = 1
@@ -120,8 +118,8 @@ module ActiveMerchant #:nodoc:
       # * <tt>:card_source </tt> -- Source of payment (REQUIRED) ( INTERNET, SWIPE, PHONE, MAIL, MANUAL )
       # * <tt>:currency </tt> -- Three-letter ISO currency code, in lowercase (REQUIRED)
       # * <tt>:card_holder_name</tt> --Name of the Card Holder (OPTIONAL)
-      # * <tt>:address_line1</tt> -- Address Line 1 (OPTIONAL)
-      # * <tt>:address_line2</tt> -- Address Line 2 (OPTIONAL)
+      # * <tt>:address_line1</tt> -- Set in payment method's billing address (OPTIONAL)
+      # * <tt>:address_line2</tt> -- Set in payment method's billing address (OPTIONAL)
       # * <tt>:state </tt> -- State (OPTIONAL)
       # * <tt>:country </tt> -- Country (OPTIONAL)
       # * <tt>:statement_description </tt> -- An arbitrary string to be displayed on your costomer's credit card statement. This may be up to 22 characters. (OPTIONAL)
@@ -148,7 +146,6 @@ module ActiveMerchant #:nodoc:
       # * <tt> :vat_invoice </tt> -- Applicable for Level3 Charge. The Value Added Tax (VAT) invoice number associated with the transaction. Format: Alphanumeric and Special Character |Min Length=0 Max Length=15|Allowed character: a-z A-Z 0-9 Space <>
       # * <tt> :tax_rate </tt> -- Applicable for Level3 Charge. The type of tax rate. This field is used if taxCategory is not used. Default sale tax rate in percentage Must be between 0.1% - 22% ,Applicable only Level 2 AutoFill. Format: Decimal Number |Max Length=4|Allowed characters: 0-9 .(dot) Allowed range: 0.01 - 100
       # * <tt> :email </tt> -- Customer's email address.
-      # * <tt> :phone_number </tt> -- Customer's contact phone number.
 
       def authorize(money, creditcard, options = {})
         options[:capture] = '0'
@@ -217,7 +214,9 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_money(post, money, options)
         add_creditcard(post, creditcard, options)
-        add_address(post, creditcard, options)
+        add_address(post, options)
+        add_phone(post, options)
+        post['receipt_email'] = options[:email] if options[:email]
         action = STANDARD_ACTIONS[:credit][:end_point]
         post = filter_gateway_fields(post, options, STANDARD_ACTIONS[:credit][:allowed_fields])
         commit(action, post)
@@ -234,8 +233,8 @@ module ActiveMerchant #:nodoc:
       #
       # * <tt>:card_source </tt> -- Source of payment (REQUIRED) ( INTERNET, SWIPE, PHONE, MAIL, MANUAL )
       # * <tt>:card_holder_name</tt> --Name of the Card Holder (OPTIONAL)
-      # * <tt>:address_line1</tt> -- Address Line 1 (OPTIONAL)
-      # * <tt>:address_line2</tt> -- Address Line 2 (OPTIONAL)
+      # * <tt>:address_line1</tt> -- Set in payment method's billing address (OPTIONAL)
+      # * <tt>:address_line2</tt> -- Set in payment method's billing address (OPTIONAL)
       # * <tt>:state </tt> -- State (OPTIONAL)
       # * <tt>:country </tt> -- Country (OPTIONAL)
 
@@ -249,7 +248,7 @@ module ActiveMerchant #:nodoc:
         post['authorize_card'] = 1
         post['card_source'] = options[:card_source]
         add_creditcard(post, creditcard, options)
-        add_address(post, creditcard, options)
+        add_address(post, options)
         post = filter_gateway_fields(post, options, STANDARD_ACTIONS[:token][:allowed_fields])
         commit(STANDARD_ACTIONS[:token][:end_point], post)
       end
@@ -273,6 +272,7 @@ module ActiveMerchant #:nodoc:
         post['token_id'] = authorization
         post['capture'] = options[:capture] || 1
         add_money(post, money, options)
+        add_phone(post, options)
         post = filter_gateway_fields(post, options, STANDARD_ACTIONS[:capture][:allowed_fields])
         commit(STANDARD_ACTIONS[:capture][:end_point], post)
       end
@@ -285,13 +285,17 @@ module ActiveMerchant #:nodoc:
         post['card_holder_name'] = options[:card_holder_name] || "#{creditcard.first_name} #{creditcard.last_name}"
       end
 
-      def add_address(post, creditcard, options)
-        post['address_line1'] = options[:address_line1]
-        post['address_line2'] = options[:address_line2]
-        post['city'] = options[:city]
-        post['state'] = options[:state]
-        post['zip'] = options[:zip]
-        post['country'] = options[:country]
+      def add_address(post, options)
+        post['address_line1'] = options[:billing_address][:address1]
+        post['address_line2'] = options[:billing_address][:address2]
+        post['city'] = options[:billing_address][:city]
+        post['state'] = options[:billing_address][:state]
+        post['zip'] = options[:billing_address][:zip]
+        post['country'] = options[:billing_address][:country]
+      end
+
+      def add_phone(post, options)
+        post['receipt_phone'] = options[:billing_address][:phone] if options[:billing_address][:phone]
       end
 
       def add_money(post, money, options)

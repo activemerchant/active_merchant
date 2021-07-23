@@ -17,15 +17,11 @@ class RemotePayArcTest < Test::Unit::TestCase
     @amount = 100
 
     @options = {
-      billing_address: address,
       description: 'Store Purchase',
       card_source: 'INTERNET',
-      address_line1: '920 Sunnyslope Ave',
-      address_line2: 'Bronx',
-      city: 'New York',
-      state: 'New York',
-      zip: '10469',
-      country: 'USA'
+      billing_address: address.update(phone: '8772036624'),
+      email: 'testy@test.com',
+      phone: '8772036624'
     }
   end
 
@@ -100,6 +96,17 @@ class RemotePayArcTest < Test::Unit::TestCase
     response = @gateway.purchase(1022, credit_card, @options)
     assert_failure response
     assert_equal 'error', response.params['status']
+  end
+
+  def test_successful_adds_phone_number_for_purchase
+    response = @gateway.purchase(250, @credit_card, @options)
+    assert_success response
+
+    assert_block do
+      PayArcGateway::SUCCESS_STATUS.include? response.message
+    end
+
+    assert_equal '8772036624', response.params['receipt_phone']
   end
 
   def test_failed_purchase
