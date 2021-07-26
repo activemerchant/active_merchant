@@ -193,6 +193,7 @@ module ActiveMerchant #:nodoc:
           xml.SubmissionType options[:submission_type] if options[:submission_type]
           xml.DuplicateCheckDisableFlag options[:duplicate_check_disable_flag].to_s == 'true' ? 'True' : 'False' unless options[:duplicate_check_disable_flag].nil?
           xml.DuplicateOverrideFlag options[:duplicate_override_flag].to_s == 'true' ? 'True' : 'False' unless options[:duplicate_override_flag].nil?
+          xml.MerchantDescriptor options[:merchant_descriptor] if options[:merchant_descriptor]
         end
       end
 

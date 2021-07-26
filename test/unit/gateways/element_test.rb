@@ -286,6 +286,16 @@ class ElementTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_merchant_descriptor
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(merchant_descriptor: 'Flowerpot Florists'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<MerchantDescriptor>Flowerpot Florists</MerchantDescriptor>', data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
