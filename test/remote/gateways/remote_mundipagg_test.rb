@@ -22,6 +22,8 @@ class RemoteMundipaggTest < Test::Unit::TestCase
       description: 'Store Purchase'
     }
 
+    @authorization_secret_options = { authorization_secret_key: fixtures(:mundipagg)[:api_key] }
+
     @submerchant_options = {
       submerchant: {
         "merchant_category_code": '44444',
@@ -249,6 +251,18 @@ class RemoteMundipaggTest < Test::Unit::TestCase
 
   def test_successful_store_and_purchase_with_alelo_card
     test_successful_store_and_purchase_with(@alelo_voucher)
+  end
+
+  def test_invalid_login_with_bad_api_key_overwrite
+    response = @gateway.purchase(@amount, @credit_card, @options.merge({ authorization_secret_key: 'bad_key' }))
+    assert_failure response
+    assert_match %r{Invalid API key; Authorization has been denied for this request.}, response.message
+  end
+
+  def test_successful_purchase_with_api_key_overwrite
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(@authorization_secret_options))
+    assert_success response
+    assert_equal 'Simulator|Transação de simulação autorizada com sucesso', response.message
   end
 
   def test_failed_store_with_top_level_errors
