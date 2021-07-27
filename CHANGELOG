@@ -46,6 +46,7 @@
 * Kushki: Add support for fullResponse field [rachelkirk] #4057
 * Element: Add support for `MerchantDescriptor` field [BritneyS] #4058
 * PayArc: Added email and phone to credit and charge [jessiagee] #4056
+* Mundipagg: Added support for 'authentication_secret_key' for 'api_key' overwrite [DustinHaefele] #4059
 
 == Version 1.121 (June 8th, 2021)
 * Braintree: Lift restriction on gem version to allow for backwards compatibility [naashton] #3993
