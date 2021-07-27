@@ -52,10 +52,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify(credit_card, options = {})
-        MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
-        end
+        authorize(0, credit_card, options.merge(verify: 'true'))
       end
 
       def supports_scrubbing?
@@ -80,6 +77,7 @@ module ActiveMerchant #:nodoc:
         add_card(post, card, action, options)
         post[:order_id] = options[:order_id] || generate_unique_id
         post[:description] = options[:description] if options[:description]
+        post[:card][:verify] = true if options[:verify].to_s == 'true'
       end
 
       def add_invoice(post, money, options)
@@ -184,7 +182,7 @@ module ActiveMerchant #:nodoc:
       def success_from(action, response)
         return false unless response['status_code']
 
-        %w[100 200 400 600].include? response['status_code'].to_s
+        %w[100 200 400 600 700].include? response['status_code'].to_s
       end
 
       def message_from(action, response)
