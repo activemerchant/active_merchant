@@ -93,6 +93,39 @@ class MundipaggTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_authorization_secret_key
+    options = {
+      gateway_affiliation_id: 'abc123',
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase',
+      authorization_secret_key: 'secret_token'
+    }
+    basic_token = Base64.strict_encode64("#{options[:authorization_secret_key]}:")
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, _data, headers|
+      assert_match(basic_token, headers['Authorization'])
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert_equal 'Simulator|Transação de simulação autorizada com sucesso', response.message
+    assert response.test?
+  end
+
+  def test_api_key_in_headers
+    basic_token = Base64.strict_encode64("#{@gateway.options[:api_key]}:")
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, _data, headers|
+      assert_match(basic_token, headers['Authorization'])
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert_equal 'Simulator|Transação de simulação autorizada com sucesso', response.message
+    assert response.test?
+  end
+
   def test_successful_purchase_with_submerchant
     options = @options.update(@submerchant_options)
     response = stub_comms do
