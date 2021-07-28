@@ -56,6 +56,10 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def store(payment, options = {})
+        raise ArgumentError, 'Store is not supported on Payflow gateways'
+      end
+
       def verify_credentials
         response = void('0')
         response.params['result'] != '26'

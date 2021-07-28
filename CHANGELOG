@@ -47,6 +47,7 @@
 * Element: Add support for `MerchantDescriptor` field [BritneyS] #4058
 * PayArc: Added email and phone to credit and charge [jessiagee] #4056
 * Mundipagg: Added support for 'authentication_secret_key' for 'api_key' overwrite [DustinHaefele] #4059
+* Payflow: Raise an error if store method is called [dsmcclain] #4066
 
 == Version 1.121 (June 8th, 2021)
 * Braintree: Lift restriction on gem version to allow for backwards compatibility [naashton] #3993

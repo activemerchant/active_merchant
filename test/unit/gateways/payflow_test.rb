@@ -311,6 +311,11 @@ class PayflowTest < Test::Unit::TestCase
     assert_equal 'Declined', response.message
   end
 
+  def test_store_returns_error
+    error = assert_raises(ArgumentError) { @gateway.store(@credit_card, @options) }
+    assert_equal 'Store is not supported on Payflow gateways', error.message
+  end
+
   def test_initial_recurring_transaction_missing_parameters
     assert_raises ArgumentError do
       assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
