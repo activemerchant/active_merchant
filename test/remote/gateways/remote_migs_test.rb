@@ -57,6 +57,32 @@ class RemoteMigsTest < Test::Unit::TestCase
     end
   end
 
+  def test_server_purchase_post_url_and_data
+    options = {
+      order_id: 1,
+      unique_id: 9,
+      return_url: 'http://localhost:8080/payments/return',
+      currency: 'SAR',
+      offsite_post_flow: true
+    }
+
+    choice_url, form = @gateway.purchase_offsite_url(@amount, options).values_at(:url, :data)
+
+    assert_response_match(/Pay securely .* by clicking on the card logo below/, choice_url, form)
+
+    responses = {
+      'visa'             => /You have chosen .*VISA.*/,
+      'master'           => /You have chosen .*MasterCard.*/
+    }
+
+    responses.each_pair do |card_type, response_text|
+      options.merge!(card_type: card_type)
+      url, form = @gateway.purchase_offsite_url(@amount, options).values
+
+      assert_response_match response_text, url, form
+    end
+  end
+
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
@@ -204,15 +230,15 @@ class RemoteMigsTest < Test::Unit::TestCase
 
   private
 
-  def assert_response_match(regexp, url)
-    response = https_response(url)
+  def assert_response_match(regexp, url, data = nil)
+    response = https_response(url, data ? URI.encode_www_form(data) : nil)
     assert_match regexp, response.body
   end
 
-  def https_response(url, cookie = nil)
+  def https_response(url, cookie = nil, data = nil)
     retry_exceptions do
       headers = cookie ? { 'Cookie' => cookie } : {}
-      response = raw_ssl_request(:get, url, nil, headers)
+      response = raw_ssl_request(data ? :post : :get, url, data, headers)
       if response.is_a?(Net::HTTPRedirection)
         new_cookie = [cookie, response['Set-Cookie']].compact.join(';')
         response = https_response(response['Location'], new_cookie)

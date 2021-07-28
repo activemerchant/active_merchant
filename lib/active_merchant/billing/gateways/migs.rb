@@ -148,7 +148,7 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
-      # Generates a URL to redirect user to MiGS to process payment
+      # Generates a URL (GET) or URL with data (POST) to redirect user to MiGS to process payment
       # Once user is finished MiGS will redirect back to specified URL
       # With a response hash which can be turned into a Response object
       # with purchase_offsite_response
@@ -163,6 +163,8 @@ module ActiveMerchant #:nodoc:
       #   Values are ActiveMerchant formats: e.g. master, visa, american_express, diners_club
       # * <tt>:unique_id</tt> -- Unique id of transaction to find.
       #   If not supplied one will be generated.
+      # * <tt>:offsite_post_flow</tt> -- Specifies post request flow to intiate the payment.
+      #   Defaults to false for get flow.
       def purchase_offsite_url(money, options = {})
         requires!(options, :order_id, :return_url)
         requires!(@options, :secure_hash)
@@ -172,6 +174,7 @@ module ActiveMerchant #:nodoc:
         add_amount(post, money, options)
         add_invoice(post, options)
         add_creditcard_type(post, options[:card_type]) if options[:card_type]
+        add_creditcard(post, options[:creditcard]) if options[:creditcard]
 
         post[:Locale] = options[:locale] || 'en'
         post[:ReturnURL] = options[:return_url]
@@ -180,7 +183,11 @@ module ActiveMerchant #:nodoc:
 
         add_secure_hash(post)
 
-        self.server_hosted_url + '?' + post_data(post)
+        if options[:offsite_post_flow]
+          { url: self.server_hosted_url, data: offsite_post_data(post) }
+        else
+          self.server_hosted_url + '?' + post_data(post)
+        end
       end
 
       # Parses a response from purchase_offsite_url once user is redirected back
@@ -309,6 +316,10 @@ module ActiveMerchant #:nodoc:
 
       def post_data(post)
         post.collect { |key, value| "vpc_#{key}=#{CGI.escape(value.to_s)}" }.join('&')
+      end
+
+      def offsite_post_data(post)
+        Hash[post.collect {|key, value| [:"vpc_#{key}", value.to_s] }]
       end
 
       def add_secure_hash(post)
