@@ -23,6 +23,7 @@ module ActiveMerchant #:nodoc:
         payment_method = add_payment_method_token(post, payment_method, options)
         return payment_method if payment_method.is_a?(ActiveMerchant::Billing::Response)
 
+        add_payment_method_types(post, options)
         add_external_three_d_secure_auth_data(post, options)
         add_metadata(post, options)
         add_return_url(post, options)
