@@ -160,7 +160,7 @@ The [ActiveMerchant Wiki](https://github.com/activemerchant/active_merchant/wiki
 * [Metrics Global](http://www.metricsglobal.com) - US
 * [MasterCard Internet Gateway Service (MiGS)](http://mastercard.com/mastercardsps) - AU, AE, BD, BN, EG, HK, ID, IN, JO, KW, LB, LK, MU, MV, MY, NZ, OM, PH, QA, SA, SG, TT, VN
 * [Modern Payments](http://www.modpay.com) - US
-* [MONEI](http://www.monei.net/) - AD, AT, BE, BG, CA, CH, CY, CZ, DE, DK, EE, ES, FI, FO, FR, GB, GI, GR, HU, IE, IL, IS, IT, LI, LT, LU, LV, MT, NL, NO, PL, PT, RO, SE, SI, SK, TR, US, VA
+* [MONEI](http://www.monei.com/) - AD, AT, BE, BG, CA, CH, CY, CZ, DE, DK, EE, ES, FI, FO, FR, GB, GI, GR, HU, IE, IL, IS, IT, LI, LT, LU, LV, MT, NL, NO, PL, PT, RO, SE, SI, SK, TR, US, VA
 * [Moneris](http://www.moneris.com/) - CA
 * [MoneyMovers](http://mmoa.us/) - US
 * [NAB Transact](http://transact.nab.com.au) - AU
