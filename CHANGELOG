@@ -50,6 +50,7 @@
 * Payflow: Raise an error if store method is called [dsmcclain] #4066
 * Monei: JSON API implementation [jimmyn] #3613
 * Maestro: Update BINs [therufs] #4067
+* Monei: Change domain to monei.com [jimmyn] #4068
 
 == Version 1.121 (June 8th, 2021)
 * Braintree: Lift restriction on gem version to allow for backwards compatibility [naashton] #3993
