@@ -116,7 +116,7 @@ module ActiveMerchant #:nodoc:
             690032]
       )
 
-      # https://www.mastercard.us/content/dam/mccom/global/documents/mastercard-rules.pdf, page 73
+      # https://www.mastercard.us/content/dam/mccom/global/documents/mastercard-rules.pdf, page 79
       MAESTRO_RANGES = [
         (500032..500033),
         (501015..501016),
@@ -132,11 +132,13 @@ module ActiveMerchant #:nodoc:
         (501107..501108),
         (501104..501105),
         (501107..501108),
+        (502000..502099),
         (561200..561269),
         (561271..561299),
         (561320..561356),
         (581700..581751),
         (581753..581800),
+        (589300..589399),
         (589998..591259),
         (591261..596770),
         (596772..598744),
@@ -150,6 +152,7 @@ module ActiveMerchant #:nodoc:
         (601640..601652),
         (601689..601700),
         (602011..602050),
+        (630400..630499),
         (639000..639099),
         (670000..679999),
       ]
