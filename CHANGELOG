@@ -53,6 +53,7 @@
 * Monei: Change domain to monei.com [jimmyn] #4068
 * Spreedly: Support gateway_specific_response_fields in response params [abarrak] #4064
 * Payeezy: Add support for `add_soft_descriptors` [rachelkirk] #4069
+* Stripe Payment Intents: Add support for network_transaction_id field [cdmackeyfree] #4060
 
 == Version 1.121 (June 8th, 2021)
 * Braintree: Lift restriction on gem version to allow for backwards compatibility [naashton] #3993
