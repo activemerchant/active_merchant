@@ -200,6 +200,17 @@ module ActiveMerchant #:nodoc:
         payment_or_customer_id.class == String
       end
 
+      def string_literal_to_boolean(value)
+        return value unless value.class == String
+
+        if value.casecmp('true').zero?
+          true
+        elsif value.casecmp('false').zero?
+          false
+        else return nil
+        end
+      end
+
       def add_customer_data(post, options)
         return unless options[:email]
 
@@ -232,16 +243,16 @@ module ActiveMerchant #:nodoc:
       def add_level_3_data(post, options)
         post[:invoice_id] = options[:invoice_id] if options[:invoice_id]
         post[:customer_reference_id] = options[:customer_reference_id] if options[:customer_reference_id]
-        post[:tax_amount] = amount(options[:tax_amount]) if options[:tax_amount]
-        post[:national_tax_amount] = amount(options[:national_tax_amount]) if options[:national_tax_amount]
+        post[:tax_amount] = options[:tax_amount].to_i if options[:tax_amount]
+        post[:national_tax_amount] = options[:national_tax_amount].to_i if options[:national_tax_amount]
         post[:merchant_tax_id] = options[:merchant_tax_id] if options[:merchant_tax_id]
         post[:customer_tax_id] = options[:customer_tax_id] if options[:customer_tax_id]
         post[:commodity_code] = options[:commodity_code] if options[:commodity_code]
-        post[:discount_amount] = amount(options[:discount_amount]) if options[:discount_amount]
-        post[:freight_amount] = amount(options[:freight_amount]) if options[:freight_amount]
-        post[:duty_amount] = amount(options[:duty_amount]) if options[:duty_amount]
-        post[:additional_tax_amount] = amount(options[:additional_tax_amount]) if options[:additional_tax_amount]
-        post[:additional_tax_rate] = amount(options[:additional_tax_rate]) if options[:additional_tax_rate]
+        post[:discount_amount] = options[:discount_amount].to_i if options[:discount_amount]
+        post[:freight_amount] = options[:freight_amount].to_i if options[:freight_amount]
+        post[:duty_amount] = options[:duty_amount].to_i if options[:duty_amount]
+        post[:additional_tax_amount] = options[:additional_tax_amount].to_i if options[:additional_tax_amount]
+        post[:additional_tax_rate] = options[:additional_tax_rate].to_i if options[:additional_tax_rate]
 
         add_source_address(post, options)
         add_shipping_address(post, options)
@@ -277,23 +288,23 @@ module ActiveMerchant #:nodoc:
         options[:line_items].each do |li|
           obj = {}
 
-          obj[:additional_tax_amount] = amount(li[:additional_tax_amount]) if li[:additional_tax_amount]
-          obj[:additional_tax_included] = li[:additional_tax_included] if li[:additional_tax_included]
-          obj[:additional_tax_rate] = amount(li[:additional_tax_rate]) if li[:additional_tax_rate]
-          obj[:amount] = amount(li[:amount]) if li[:amount]
+          obj[:additional_tax_amount] = li[:additional_tax_amount].to_i if li[:additional_tax_amount]
+          obj[:additional_tax_included] = string_literal_to_boolean(li[:additional_tax_included]) if li[:additional_tax_included]
+          obj[:additional_tax_rate] = li[:additional_tax_rate].to_i if li[:additional_tax_rate]
+          obj[:amount] = li[:amount].to_i if li[:amount]
           obj[:commodity_code] = li[:commodity_code] if li[:commodity_code]
           obj[:debit_or_credit] = li[:debit_or_credit] if li[:debit_or_credit]
           obj[:description] = li[:description] if li[:description]
-          obj[:discount_amount] = amount(li[:discount_amount]) if li[:discount_amount]
-          obj[:discount_rate] = amount(li[:discount_rate]) if li[:discount_rate]
-          obj[:discount_included] = li[:discount_included] if li[:discount_included]
+          obj[:discount_amount] = li[:discount_amount].to_i if li[:discount_amount]
+          obj[:discount_rate] = li[:discount_rate].to_i if li[:discount_rate]
+          obj[:discount_included] = string_literal_to_boolean(li[:discount_included]) if li[:discount_included]
           obj[:merchant_tax_id] = li[:merchant_tax_id] if li[:merchant_tax_id]
           obj[:product_id] = li[:product_id] if li[:product_id]
           obj[:quantity] = li[:quantity] if li[:quantity]
           obj[:transaction_id] = li[:transaction_id] if li[:transaction_id]
-          obj[:tax_included] = li[:tax_included] if li[:tax_included]
+          obj[:tax_included] = string_literal_to_boolean(li[:tax_included]) if li[:tax_included]
           obj[:unit_of_measure] = li[:unit_of_measure] if li[:unit_of_measure]
-          obj[:unit_cost] = amount(li[:unit_cost]) if li[:unit_cost]
+          obj[:unit_cost] = li[:unit_cost].to_i if li[:unit_cost]
 
           line_items << obj
         end

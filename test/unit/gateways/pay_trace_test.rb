@@ -76,6 +76,27 @@ class PayTraceTest < Test::Unit::TestCase
     assert_equal 101, response.params['response_code']
   end
 
+  def test_omitting_level_3_fields_with_nil_values
+    options = {
+      visa_or_mastercard: 'mastercard',
+      additional_tax_included: nil,
+      line_items: [
+        {
+          description: 'business services',
+          discount_included: nil
+        }
+      ]
+    }
+    stub_comms(@gateway) do
+      @gateway.purchase(100, @credit_card, options)
+    end.check_request do |endpoint, data, _headers|
+      next unless endpoint == 'https://api.paytrace.com/v1/level_three/mastercard'
+
+      refute_includes data, 'discount_included'
+      refute_includes data, 'additional_tax_included'
+    end.respond_with(successful_level_3_response)
+  end
+
   def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
 
