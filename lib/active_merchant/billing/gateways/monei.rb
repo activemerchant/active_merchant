@@ -132,9 +132,9 @@ module ActiveMerchant #:nodoc:
       def scrub(transcript)
         transcript.
           gsub(%r((Authorization: )\w+), '\1[FILTERED]').
-          gsub(%r(("number":")\d+), '\1[FILTERED]').
-          gsub(%r(("cvc":")\d+), '\1[FILTERED]').
-          gsub(%r(("cavv":")[\w=]+), '\1[FILTERED]')
+          gsub(%r(("number\\?":\\?")[^"]*)i, '\1[FILTERED]').
+          gsub(%r(("cvc\\?":\\?")[^"]*)i, '\1[FILTERED]').
+          gsub(%r(("cavv\\?":\\?")[^"]*)i, '\1[FILTERED]')
       end
 
       private
@@ -206,8 +206,7 @@ module ActiveMerchant #:nodoc:
 
       # Private: Add customer part to request
       def add_customer(request, payment_method, options)
-        requires!(options, :billing_address)
-        address = options[:billing_address] || options[:address]
+        address = options[:billing_address] || options[:address] || {}
 
         request[:customer] = {}
         request[:customer][:email] = options[:email] || 'support@monei.net'
