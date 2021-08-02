@@ -368,6 +368,16 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(response), scrubbed_invalid_json_plus
   end
 
+  def test_authorize_with_optional_idempotency_key_header
+    response = stub_comms do
+      @gateway.authorize(@accepted_amount, @credit_card, @options.merge(idempotency_key: 'test123'))
+    end.check_request do |_endpoint, _data, headers|
+      assert_equal headers['X-GCS-Idempotence-Key'], 'test123'
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
   private
 
   def pre_scrubbed

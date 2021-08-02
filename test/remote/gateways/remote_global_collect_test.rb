@@ -195,6 +195,12 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     assert_equal 'Succeeded', capture.message
   end
 
+  def test_authorize_with_optional_idempotency_key_header
+    response = @gateway.authorize(@accepted_amount, @credit_card, @options.merge(idempotency_key: 'test123'))
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response

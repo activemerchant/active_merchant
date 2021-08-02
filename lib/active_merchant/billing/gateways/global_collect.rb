@@ -33,7 +33,7 @@ module ActiveMerchant #:nodoc:
         add_creator_info(post, options)
         add_fraud_fields(post, options)
         add_external_cardholder_authentication_data(post, options)
-        commit(:authorize, post)
+        commit(:authorize, post, options: options)
       end
 
       def capture(money, authorization, options = {})
@@ -41,7 +41,7 @@ module ActiveMerchant #:nodoc:
         add_order(post, money, options, capture: true)
         add_customer_data(post, options)
         add_creator_info(post, options)
-        commit(:capture, post, authorization)
+        commit(:capture, post, authorization: authorization)
       end
 
       def refund(money, authorization, options = {})
@@ -49,13 +49,13 @@ module ActiveMerchant #:nodoc:
         add_amount(post, money, options)
         add_refund_customer_data(post, options)
         add_creator_info(post, options)
-        commit(:refund, post, authorization)
+        commit(:refund, post, authorization: authorization)
       end
 
       def void(authorization, options = {})
         post = nestable_hash
         add_creator_info(post, options)
-        commit(:void, post, authorization)
+        commit(:void, post, authorization: authorization)
       end
 
       def verify(payment, options = {})
@@ -277,9 +277,13 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def commit(action, post, authorization = nil)
+      def idempotency_key_for_signature(options)
+        "x-gcs-idempotence-key:#{options[:idempotency_key]}" if options[:idempotency_key]
+      end
+
+      def commit(action, post, authorization: nil, options: {})
         begin
-          raw_response = ssl_post(url(action, authorization), post.to_json, headers(action, post, authorization))
+          raw_response = ssl_post(url(action, authorization), post.to_json, headers(action, post, authorization, options))
           response = parse(raw_response)
         rescue ResponseError => e
           response = parse(e.response.body) if e.response.code.to_i >= 400
@@ -306,21 +310,26 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def headers(action, post, authorization = nil)
-        {
+      def headers(action, post, authorization = nil, options = {})
+        headers = {
           'Content-Type' => content_type,
-          'Authorization' => auth_digest(action, post, authorization),
+          'Authorization' => auth_digest(action, post, authorization, options),
           'Date' => date
         }
+
+        headers['X-GCS-Idempotence-Key'] = options[:idempotency_key] if options[:idempotency_key]
+        headers
       end
 
-      def auth_digest(action, post, authorization = nil)
+      def auth_digest(action, post, authorization = nil, options = {})
         data = <<~REQUEST
           POST
           #{content_type}
           #{date}
+          #{idempotency_key_for_signature(options)}
           #{uri(action, authorization)}
         REQUEST
+        data = data.each_line.reject { |line| line.strip == '' }.join
         digest = OpenSSL::Digest.new('sha256')
         key = @options[:secret_api_key]
         "GCS v1HMAC:#{@options[:api_key_id]}:#{Base64.strict_encode64(OpenSSL::HMAC.digest(digest, key, data))}"
