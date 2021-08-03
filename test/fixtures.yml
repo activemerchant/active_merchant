@@ -554,7 +554,10 @@ modern_payments:
 
 # Working credentials, no need to replace
 monei:
-  api_key: pk_test_3cb2d54b7ee145fa92d683c01816ad15
+  sender_id: 8a829417488d34c401489a5cd1350977
+  channel_id: 8a829417488d34c401489a5de5dd097b
+  login: 8a829417488d34c401489a5cd1360979
+  pwd: GyNSEAp2
 
 # Working credentials, no need to replace
 moneris:
