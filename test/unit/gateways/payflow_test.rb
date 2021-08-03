@@ -461,8 +461,18 @@ class PayflowTest < Test::Unit::TestCase
       brand: 'maestro'
     )
 
-    @gateway.send(:add_credit_card, xml, credit_card, @options.merge(three_d_secure_option_challenge_required))
-    assert_three_d_secure_challenge_required REXML::Document.new(xml.target!), '/Card/BuyerAuthResult'
+    three_d_secure_option = three_d_secure_option(
+      options: {
+        authentication_response_status: nil,
+        directory_response_status: CHALLENGE_REQUIRED_AUTHENTICATION_STATUS
+      }
+    )
+    @gateway.send(:add_credit_card, xml, credit_card, @options.merge(three_d_secure_option))
+    assert_three_d_secure(
+      REXML::Document.new(xml.target!),
+      '/Card/BuyerAuthResult',
+      expected_status: CHALLENGE_REQUIRED_AUTHENTICATION_STATUS
+    )
   end
 
   def test_duplicate_response_flag
@@ -889,18 +899,28 @@ class PayflowTest < Test::Unit::TestCase
     XML
   end
 
-  def assert_three_d_secure(xml_doc, buyer_auth_result_path)
-    assert_equal SUCCESSFUL_AUTHENTICATION_STATUS, REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/Status").text
-    assert_equal 'QvDbSAxSiaQs241899E0', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/AuthenticationId").text
-    assert_equal 'pareq block', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/PAReq").text
-    assert_equal 'https://bankacs.bank.com/ascurl', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/ACSUrl").text
-    assert_equal '02', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/ECI").text
-    assert_equal 'jGvQIvG/5UhjAREALGYa6Vu/hto=', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/CAVV").text
-    assert_equal 'UXZEYlNBeFNpYVFzMjQxODk5RTA=', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/XID").text
+  def three_d_secure_option(options: {})
+    {
+      three_d_secure: {
+        authentication_id: 'QvDbSAxSiaQs241899E0',
+        authentication_response_status: SUCCESSFUL_AUTHENTICATION_STATUS,
+        pareq: 'pareq block',
+        acs_url: 'https://bankacs.bank.com/ascurl',
+        eci: '02',
+        cavv: 'jGvQIvG/5UhjAREALGYa6Vu/hto=',
+        xid: 'UXZEYlNBeFNpYVFzMjQxODk5RTA='
+      }.
+        merge(options).
+        compact
+    }
   end
 
-  def assert_three_d_secure_challenge_required(xml_doc, buyer_auth_result_path)
-    assert_equal CHALLENGE_REQUIRED_AUTHENTICATION_STATUS, REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/Status").text
+  def assert_three_d_secure(
+    xml_doc,
+    buyer_auth_result_path,
+    expected_status: SUCCESSFUL_AUTHENTICATION_STATUS
+  )
+    assert_equal expected_status, REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/Status").text
     assert_equal 'QvDbSAxSiaQs241899E0', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/AuthenticationId").text
     assert_equal 'pareq block', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/PAReq").text
     assert_equal 'https://bankacs.bank.com/ascurl', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/ACSUrl").text
@@ -915,33 +935,5 @@ class PayflowTest < Test::Unit::TestCase
 
   def purchase_buyer_auth_result_path
     '/XMLPayRequest/RequestData/Transactions/Transaction/Sale/PayData/Tender/Card/BuyerAuthResult'
-  end
-
-  def three_d_secure_option
-    {
-      three_d_secure: {
-        authentication_id: 'QvDbSAxSiaQs241899E0',
-        authentication_response_status: SUCCESSFUL_AUTHENTICATION_STATUS,
-        pareq: 'pareq block',
-        acs_url: 'https://bankacs.bank.com/ascurl',
-        eci: '02',
-        cavv: 'jGvQIvG/5UhjAREALGYa6Vu/hto=',
-        xid: 'UXZEYlNBeFNpYVFzMjQxODk5RTA='
-      }
-    }
-  end
-
-  def three_d_secure_option_challenge_required
-    {
-      three_d_secure: {
-        authentication_id: 'QvDbSAxSiaQs241899E0',
-        directory_response_status: CHALLENGE_REQUIRED_AUTHENTICATION_STATUS,
-        pareq: 'pareq block',
-        acs_url: 'https://bankacs.bank.com/ascurl',
-        eci: '02',
-        cavv: 'jGvQIvG/5UhjAREALGYa6Vu/hto=',
-        xid: 'UXZEYlNBeFNpYVFzMjQxODk5RTA='
-      }
-    }
   end
 end
