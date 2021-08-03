@@ -289,6 +289,8 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'ECI', three_d_secure[:eci] unless three_d_secure[:eci].blank?
             xml.tag! 'CAVV', three_d_secure[:cavv] unless three_d_secure[:cavv].blank?
             xml.tag! 'XID', three_d_secure[:xid] unless three_d_secure[:xid].blank?
+            xml.tag! 'THREEDSVERSION', three_d_secure[:version] unless three_d_secure[:version].blank?
+            xml.tag! 'DSTRANSACTIONID', three_d_secure[:ds_transaction_id] unless three_d_secure[:ds_transaction_id].blank?
           end
         end
       end

@@ -71,6 +71,24 @@ class PayflowTest < Test::Unit::TestCase
     refute response.fraud_review?
   end
 
+  def test_authorization_with_three_d_secure_option_without_version_does_not_include_three_ds_version
+    three_d_secure_option = three_d_secure_option(options: { version: nil })
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(three_d_secure_option))
+    end.check_request do |_endpoint, data, _headers|
+      assert_three_d_secure REXML::Document.new(data), authorize_buyer_auth_result_path, expected_version: nil
+    end.respond_with(successful_authorization_response)
+  end
+
+  def test_authorization_with_three_d_secure_option_without_ds_transaction_id_does_not_include_ds_transaction_id
+    three_d_secure_option = three_d_secure_option(options: { ds_transaction_id: nil })
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(three_d_secure_option))
+    end.check_request do |_endpoint, data, _headers|
+      assert_three_d_secure REXML::Document.new(data), authorize_buyer_auth_result_path, expected_ds_transaction_id: nil
+    end.respond_with(successful_authorization_response)
+  end
+
   def test_successful_authorization_with_more_options
     partner_id = 'partner_id'
     PayflowGateway.application_id = partner_id
@@ -908,7 +926,9 @@ class PayflowTest < Test::Unit::TestCase
         acs_url: 'https://bankacs.bank.com/ascurl',
         eci: '02',
         cavv: 'jGvQIvG/5UhjAREALGYa6Vu/hto=',
-        xid: 'UXZEYlNBeFNpYVFzMjQxODk5RTA='
+        xid: 'UXZEYlNBeFNpYVFzMjQxODk5RTA=',
+        version: 'any version',
+        ds_transaction_id: 'any ds_transaction_id'
       }.
         merge(options).
         compact
@@ -918,7 +938,9 @@ class PayflowTest < Test::Unit::TestCase
   def assert_three_d_secure(
     xml_doc,
     buyer_auth_result_path,
-    expected_status: SUCCESSFUL_AUTHENTICATION_STATUS
+    expected_status: SUCCESSFUL_AUTHENTICATION_STATUS,
+    expected_version: 'any version',
+    expected_ds_transaction_id: 'any ds_transaction_id'
   )
     assert_equal expected_status, REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/Status").text
     assert_equal 'QvDbSAxSiaQs241899E0', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/AuthenticationId").text
@@ -927,6 +949,16 @@ class PayflowTest < Test::Unit::TestCase
     assert_equal '02', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/ECI").text
     assert_equal 'jGvQIvG/5UhjAREALGYa6Vu/hto=', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/CAVV").text
     assert_equal 'UXZEYlNBeFNpYVFzMjQxODk5RTA=', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/XID").text
+    assert_text_value_or_nil(expected_version, REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/THREEDSVERSION"))
+    assert_text_value_or_nil(expected_ds_transaction_id, REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/DSTRANSACTIONID"))
+  end
+
+  def assert_text_value_or_nil(expected_text_value, xml_element)
+    if expected_text_value
+      assert_equal expected_text_value, xml_element.text
+    else
+      assert_nil xml_element
+    end
   end
 
   def authorize_buyer_auth_result_path

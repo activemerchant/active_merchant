@@ -59,6 +59,7 @@
 * PayTrace: Adjust handling of line_items subfields [meagabeth] #4074
 * Worldpay: Correct Expiration Year Format [tatsianaclifton] #4076
 * Monei: Improve Scrub Regex [tatsianaclifton] #4072
+* Payflow: add THREEDSVERSION and DSTRANSACTIONID when present [bbraschi] #4075
 
 == Version 1.121 (June 8th, 2021)
 * Braintree: Lift restriction on gem version to allow for backwards compatibility [naashton] #3993
