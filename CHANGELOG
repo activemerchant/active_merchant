@@ -57,6 +57,7 @@
 * Worldpay: Support 'CAPTURED' response for authorize transactions [naashton] #4070
 * Ingenico (Global Collect): New idempotence key header [BritneyS] #4073
 * PayTrace: Adjust handling of line_items subfields [meagabeth] #4074
+* Worldpay: Correct Expiration Year Format [tatsianaclifton] #4076
 
 == Version 1.121 (June 8th, 2021)
 * Braintree: Lift restriction on gem version to allow for backwards compatibility [naashton] #3993

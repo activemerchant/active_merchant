@@ -24,6 +24,12 @@ class WorldpayTest < Test::Unit::TestCase
       eci: '07',
       source: :network_token,
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
+    @credit_card_with_two_digits_year = credit_card('4514 1600 0000 0008',
+      month: 10,
+      year: 22,
+      first_name: 'John',
+      last_name: 'Smith',
+      verification_value: '737')
     @sodexo_voucher = credit_card('6060704495764400', brand: 'sodexo')
     @options = { order_id: 1 }
     @store_options = {
@@ -196,6 +202,13 @@ class WorldpayTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options.merge(currency: 'CAD'))
     end.check_request do |_endpoint, data, _headers|
       assert_match(/CAD/, data)
+    end.respond_with(successful_authorize_response, successful_capture_response)
+    assert_success response
+  end
+
+  def test_successful_purchase_with_two_digits_year
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card_with_two_digits_year, @options)
     end.respond_with(successful_authorize_response, successful_capture_response)
     assert_success response
   end

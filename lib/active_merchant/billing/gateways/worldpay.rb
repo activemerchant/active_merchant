@@ -431,7 +431,7 @@ module ActiveMerchant #:nodoc:
             xml.expiryDate do
               xml.date(
                 'month' => format(payment_method.month, :two_digits),
-                'year' => format(payment_method.year, :four_digits)
+                'year' => format(payment_method.year, :four_digits_year)
               )
             end
             xml.cryptogram payment_method.payment_cryptogram
@@ -458,7 +458,7 @@ module ActiveMerchant #:nodoc:
         xml.expiryDate do
           xml.date(
             'month' => format(payment_method.month, :two_digits),
-            'year' => format(payment_method.year, :four_digits)
+            'year' => format(payment_method.year, :four_digits_year)
           )
         end
 
