@@ -785,6 +785,11 @@ paypal_signature:
   password: HBC6A84QLRWC923A
   signature: AFcWxV21C7fd0v3bYYYRCpSSRl31AC-11AKBL8FFO9tjImL311y8a0hx
 
+paysafe:
+  login: SOMECREDENTIAL
+  secret_key: ANOTHERCREDENTIAL
+  account_id: CREDENTIAL
+
 payscout:
   username: demo
   password: password
