@@ -824,6 +824,11 @@ plugnpay:
   password: PASSWORD
 
 # Working credentials, no need to replace
+priority:
+  some_credential: SOMECREDENTIAL
+  another_credential: ANOTHERCREDENTIAL
+
+# Working credentials, no need to replace
 pro_pay:
   cert_str: "5ab9cddef2e4911b77e0c4ffb70f03"
 
