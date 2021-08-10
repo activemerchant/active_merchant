@@ -15,6 +15,16 @@ class PaysafeTest < Test::Unit::TestCase
         dynamic_descriptor: 'Store Purchase'
       }
     }
+
+    @more_options = {
+      phone: '111-222-3456',
+      email: 'profile@memail.com',
+      date_of_birth: {
+        month: 1,
+        year: 1979,
+        day: 1
+      }
+    }
   end
 
   def test_successful_purchase
@@ -195,23 +205,13 @@ class PaysafeTest < Test::Unit::TestCase
   end
 
   def test_successful_store
-    profile_options = {
-      phone: '111-222-3456',
-      email: 'profile@memail.com',
-      date_of_birth: {
-        month: 1,
-        year: 1979,
-        day: 1
-      }
-    }
-    response = stub_comms(@gateway, :ssl_request) do
-      @gateway.store(@credit_card, profile_options)
-    end.check_request do |_method, _endpoint, data, _headers|
-      assert_match(/"holderName":"Longbob Longsen"/, data)
-      assert_match(/"dateOfBirth":{"year":1979,"month":1,"day":1}/, data)
-    end.respond_with(successful_store_response)
+    @gateway.expects(:ssl_request).returns(successful_store_response)
 
+    response = @gateway.store(@credit_card, @more_options)
     assert_success response
+
+    assert_equal '111-222-3456', response.params['phone']
+    assert_equal 'Longbob Longsen', response.params['cards'].first['holderName']
   end
 
   def test_scrub

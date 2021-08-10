@@ -136,13 +136,12 @@ module ActiveMerchant #:nodoc:
       def add_address_for_vaulting(post, options)
         return unless address = options[:billing_address] || options[:address]
 
-        post[:card][:billingAddress] = {}
-        post[:card][:billingAddress][:street] = address[:address1]
-        post[:card][:billingAddress][:street2] = address[:address2]
-        post[:card][:billingAddress][:city] = address[:city]
-        post[:card][:billingAddress][:zip] = address[:zip]
-        post[:card][:billingAddress][:country] = address[:country]
-        post[:card][:billingAddress][:state] = address[:state] if address[:state]
+        post[:billingAddress] = {}
+        post[:billingAddress][:street] = address[:address1]
+        post[:billingAddress][:city] = address[:city]
+        post[:billingAddress][:zip] = address[:zip]
+        post[:billingAddress][:country] = address[:country]
+        post[:billingAddress][:state] = address[:state] if address[:state]
       end
 
       # This data is specific to creating a profile at the gateway's vault level
