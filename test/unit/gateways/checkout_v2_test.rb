@@ -10,6 +10,12 @@ class CheckoutV2Test < Test::Unit::TestCase
 
     @credit_card = credit_card
     @amount = 100
+    @payment_token = {
+      token: "token"
+    }
+    @token_payment_options = {
+      type: "id"
+    }
   end
 
   def test_successful_purchase
@@ -17,6 +23,15 @@ class CheckoutV2Test < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card)
     end.respond_with(successful_purchase_response)
 
+    assert_success response
+    assert_equal 'pay_bgv5tmah6fmuzcmcrcro6exe6m', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_purchase_with_source_token
+    response = stub_comms do
+      @gateway.purchase(@amount, @payment_token, @token_payment_options)
+    end.respond_with(successful_purchase_response)
     assert_success response
     assert_equal 'pay_bgv5tmah6fmuzcmcrcro6exe6m', response.authorization
     assert response.test?
@@ -87,6 +102,15 @@ class CheckoutV2Test < Test::Unit::TestCase
     end.respond_with(failed_purchase_response)
     assert_failure response
     assert_equal Gateway::STANDARD_ERROR_CODE[:invalid_number], response.error_code
+  end
+
+  def test_failed_purchase_using_source_id
+    response = stub_comms do
+      @gateway.purchase(@amount, @payment_token, @token_payment_options)
+    end.respond_with(failed_token_purchase_response)
+    assert_failure response
+    p response
+    assert_equal 'request_invalid: source_id_invalid', response.error_code
   end
 
   def test_successful_authorize_and_capture
@@ -521,6 +545,16 @@ class CheckoutV2Test < Test::Unit::TestCase
          "cvvCheck":"Y",
          "avsCheck":"S"
        }
+      }
+    )
+  end
+
+  def failed_token_purchase_response
+    %(
+      {
+        "request_id": "234b437b-e041-471d-a538-59118c04d23a",
+        "error_type": "request_invalid",
+        "error_codes": ["source_id_invalid"]
       }
     )
   end
