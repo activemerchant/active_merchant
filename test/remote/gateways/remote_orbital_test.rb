@@ -875,6 +875,18 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_scrubbed(@gateway.options[:merchant_id], transcript)
   end
 
+  def test_transcript_scrubbing_echeck
+    transcript = capture_transcript(@echeck_gateway) do
+      @echeck_gateway.purchase(20, @echeck, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@echeck.account_number, transcript)
+    assert_scrubbed(@echeck_gateway.options[:password], transcript)
+    assert_scrubbed(@echeck_gateway.options[:login], transcript)
+    assert_scrubbed(@echeck_gateway.options[:merchant_id], transcript)
+  end
+
   private
 
   def stored_credential_options(*args, id: nil)

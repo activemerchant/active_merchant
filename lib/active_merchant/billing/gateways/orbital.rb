@@ -335,7 +335,9 @@ module ActiveMerchant #:nodoc:
           gsub(%r((<CardSecVal>).+(</CardSecVal>)), '\1[FILTERED]\2').
           gsub(%r((<MerchantID>).+(</MerchantID>)), '\1[FILTERED]\2').
           gsub(%r((<CustomerMerchantID>).+(</CustomerMerchantID>)), '\1[FILTERED]\2').
-          gsub(%r((<CustomerProfileMessage>).+(</CustomerProfileMessage>)), '\1[FILTERED]\2')
+          gsub(%r((<CustomerProfileMessage>).+(</CustomerProfileMessage>)), '\1[FILTERED]\2').
+          gsub(%r((<CheckDDA>).+(</CheckDDA>)), '\1[FILTERED]\2').
+          gsub(%r((<BCRtNum>).+(</BCRtNum>)), '\1[FILTERED]\2')
       end
 
       private
