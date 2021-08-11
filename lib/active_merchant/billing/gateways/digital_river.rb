@@ -116,7 +116,7 @@ module ActiveMerchant
       def get_charge_capture_id(order_id)
         charges = nil
         sources = nil
-        retry_until(2, "charge not found", 0.5) do
+        retry_until(5, "charge not found", 0.5) do
           order = @digital_river_gateway.order.find(order_id).value!
           charges = order.payment.charges
           sources = order.payment.sources
