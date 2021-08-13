@@ -552,6 +552,11 @@ modern_payments:
   login: login
   password: password
 
+moka:
+  dealer_code: DEALER_CODE
+  username: USERNAME
+  password: PASSWORD
+
 # Working credentials, no need to replace
 monei:
   api_key: pk_test_3cb2d54b7ee145fa92d683c01816ad15
