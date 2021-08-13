@@ -17,6 +17,14 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
       source:             :network_token,
       verification_value: nil)
 
+    @source_id_payment_info = psp_tokenized_card()
+
+    @source_id_payment_options = {
+      currency: 'USD'
+    }
+
+    @invalid_source_id_payment_info = psp_tokenized_card("Invalid Token")
+
     @options = {
       order_id: '1',
       billing_address: address,
@@ -71,6 +79,12 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_success response
     assert_equal 'Succeeded', response.message
     assert_not_nil response.params['source']['payment_account_reference']
+  end
+
+  def test_successful_purchase_with_source_token
+    response = @gateway.purchase(100, @source_id_payment_info, @source_id_payment_options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
   end
 
   def test_successful_purchase_with_additional_options
@@ -369,5 +383,12 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_failure response
     assert_equal 'request_invalid: card_expired', response.message
     assert_equal 'request_invalid: card_expired', response.error_code
+  end
+
+  def test_failure_purchase_with_source_token
+    response = @gateway.purchase(100, @invalid_source_id_payment_info, @source_id_payment_options)
+    assert_failure response
+    assert_equal 'request_invalid: source_id_invalid', response.message
+    assert_equal 'request_invalid: source_id_invalid', response.error_code
   end
 end

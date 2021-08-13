@@ -99,7 +99,7 @@ module ActiveMerchant #:nodoc:
           post[:billing_descriptor][:city] = options[:descriptor_city] if options[:descriptor_city]
         end
         post[:metadata] = {}
-        post[:metadata][:udf5] = application_id || 'ActiveMerchant'
+        post[:metadata][:udf5] = application_id || ''
       end
 
       def add_metadata(post, options)
@@ -109,6 +109,11 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_method(post, payment_method, options)
         post[:source] = {}
+        if payment_method.is_a?(PspTokenizedCard)
+          post[:source][:type] = payment_method.payment_data[:type]
+          post[:source][:id] = payment_method.payment_data[:token]
+          return
+        end
         if payment_method.is_a?(NetworkTokenizationCreditCard) && payment_method.source == :network_token
           post[:source][:type] = 'network_token'
           post[:source][:token] = payment_method.number

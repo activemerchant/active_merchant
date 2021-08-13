@@ -179,7 +179,7 @@ checkout:
   password: Password1!
 
 checkout_v2:
-  secret_key: secret_key
+  secret_key: sk_test_a0c1975f-2dfa-490a-8a2b-d11b2f978d0d
 
 citrus_pay:
   userid: CPF00001
