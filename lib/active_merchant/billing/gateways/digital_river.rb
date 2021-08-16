@@ -125,7 +125,7 @@ module ActiveMerchant
 
         # for now we assume only one charge will be processed at one order
         captures = nil
-        retry_until(2, "capture not found", 0.5) do
+        retry_until(5, "capture not found", 0.5) do
           captures = @digital_river_gateway.charge.find(charges.first.id).value!.captures
           captures&.first.present?
         end
