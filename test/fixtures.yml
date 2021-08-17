@@ -184,6 +184,7 @@ checkout:
   password: Password1!
 
 checkout_v2:
+  public_key: public_key
   secret_key: secret_key
 
 citrus_pay:
