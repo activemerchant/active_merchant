@@ -57,4 +57,16 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_scrubbed(@gateway.options[:login], transcript)
     assert_scrubbed(@gateway.options[:password], transcript)
   end
+
+  def test_set_express_order
+    @options.update(
+      :return_url => 'http://example.com',
+      :cancel_return_url => 'http://example.com',
+      :email => 'Buyer1@paypal.com'
+    )
+    response = @gateway.setup_order(500, @options)
+    assert response.success?
+    assert response.test?
+    assert !response.params['token'].blank?
+  end
 end
