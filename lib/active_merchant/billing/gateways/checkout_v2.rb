@@ -84,6 +84,10 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def unstore(authorization)
+        commit(:delete_card, nil, authorization)
+      end
+
       def supports_scrubbing?
         true
       end
@@ -230,8 +234,15 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, post, authorization = nil)
         begin
-          raw_response = (action == :verify_payment ? ssl_get("#{base_url}/payments/#{post}", headers(action)) : ssl_post(url(post, action, authorization), post.to_json, headers(action)))
-          response = parse(raw_response)
+          raw_response = if action == :verify_payment
+            ssl_get("#{base_url}/payments/#{post}", headers(action))
+          elsif action == :delete_card
+            ssl_request(:delete, url(post, action, authorization), nil, headers(action))
+          else
+            ssl_post(url(post, action, authorization), post.to_json, headers(action))
+          end
+
+          response = parse(raw_response || "{}")
           response['id'] = response['_links']['payment']['href'].split('/')[-1] if action == :capture && response.key?('_links')
         rescue ResponseError => e
           raise unless e.response.code.to_s =~ /4\d\d/
@@ -281,6 +292,8 @@ module ActiveMerchant #:nodoc:
           "#{base_url}/instruments"
         elsif action == :tokens
           "#{base_url}/tokens"
+        elsif action == :delete_card
+          "#{base_url}/instruments/#{authorization}"
         else
           "#{base_url}/payments/#{authorization}/#{action}"
         end
@@ -313,6 +326,7 @@ module ActiveMerchant #:nodoc:
       def success_from(response, action)
         return true if action == :instruments && response['id'].present?
         return true if action == :tokens && response['token'].present?
+        return true if action == :delete_card && response == {}
 
         response['response_summary'] == 'Approved' || response['approved'] == true || !response.key?('response_summary') && response.key?('action_id')
       end
