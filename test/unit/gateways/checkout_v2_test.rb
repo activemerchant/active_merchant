@@ -12,7 +12,7 @@ class CheckoutV2Test < Test::Unit::TestCase
     @credit_card = credit_card
     @amount = 100
 
-    @declined_card = credit_card(credit_card.number, year: 2020)
+    @declined_card = credit_card(credit_card.number, verification_value: 123)
   end
 
   def test_successful_purchase
@@ -28,21 +28,22 @@ class CheckoutV2Test < Test::Unit::TestCase
   def test_successful_store
     response = stub_comms do
       @gateway.store(@credit_card)
-    end.respond_with(successful_tokens_response, successful_instruments_response)
+    end.respond_with(successful_tokens_response, successful_card_verification_response)
 
     assert_success response
-    assert_equal 'src_c5mb23t5utzepfhmeyxbvfrxru', response.authorization
-    assert_equal 'cus_nxwog7ivr6letlb6mz7yzysmny', response.params["customer"]["id"]
+    assert_equal 'pay_7chindgcm4f2flygnskuvh5ouu', response.authorization
+    assert_equal 'src_hjodtc4srmvuxon2cmgyrfdnau', response.params["source"]["id"]
+    assert_equal 'cus_bwz32ftnduhu7mieggn5owxahm', response.params["customer"]["id"]
     assert response.test?
   end
 
   def test_failed_store
     response = stub_comms do
       @gateway.store(@declined_card)
-    end.respond_with(failed_tokens_response)
+    end.respond_with(successful_tokens_response, failed_card_verification_response)
 
     assert_failure response
-    assert_equal 'request_invalid: card_expired', response.message
+    assert_equal 'Bad Track Data', response.message
     assert response.test?
   end
 
@@ -515,15 +516,15 @@ class CheckoutV2Test < Test::Unit::TestCase
     )
   end
 
-  def successful_instruments_response
+  def successful_card_verification_response
     %(
-      {"id":"src_c5mb23t5utzepfhmeyxbvfrxru","type":"card","expiry_month":6,"expiry_year":2025,"scheme":"Visa","last4":"2220","bin":"400030","fingerprint":"03760ed13e710de06677bb53990ec5060bd7630cda76e92b414efa8faaa392ae","customer":{"id":"cus_nxwog7ivr6letlb6mz7yzysmny","email":"JohnTest2@test.com","name":"John Test2"}}
+      {"id":"pay_7chindgcm4f2flygnskuvh5ouu","action_id":"act_7chindgcm4f2flygnskuvh5ouu","amount":0,"currency":"EUR","approved":true,"status":"Card Verified","auth_code":"559852","eci":"05","scheme_id":"607488912295348","response_code":"10000","response_summary":"Approved","risk":{"flagged":false},"source":{"id":"src_hjodtc4srmvuxon2cmgyrfdnau","type":"card","billing_address":{"address_line1":"Checkout.com","address_line2":"90 Tottenham Court Road","city":"London","state":"London","zip":"W1T 4TJ","country":"GB"},"phone":{"country_code":"1","number":"4155552671"},"expiry_month":6,"expiry_year":2022,"name":"Bruce Wayne","scheme":"Visa","last4":"4242","fingerprint":"6D3472691B8A164144D5D4C3237AF81B29F7A19258335387397AAC2AC71237F6","bin":"424242","card_type":"Credit","card_category":"Consumer","issuer":"JPMORGAN CHASE BANK NA","issuer_country":"US","product_id":"A","product_type":"Visa Traditional","avs_check":"S","cvv_check":"Y","payouts":true,"fast_funds":"d"},"customer":{"id":"cus_bwz32ftnduhu7mieggn5owxahm","email":"john@example.com"},"processed_on":"2021-08-13T07:53:52Z","processing":{"acquirer_transaction_id":"2308472529","retrieval_reference_number":"625942996863"},"_links":{"self":{"href":"https://api.sandbox.checkout.com/payments/pay_7chindgcm4f2flygnskuvh5ouu"},"actions":{"href":"https://api.sandbox.checkout.com/payments/pay_7chindgcm4f2flygnskuvh5ouu/actions"}}}
     )
   end
 
-  def failed_tokens_response
+  def failed_card_verification_response
     %(
-      {"request_id":"189a1d1c-a7d1-4504-959b-5b119c1b5245","error_type":"request_invalid","error_codes":["card_expired"]}
+      {"id":"pay_ntgujyyksnk2jekxls7ddhkbwm","action_id":"act_ntgujyyksnk2jekxls7ddhkbwm","amount":0,"currency":"EUR","approved":false,"status":"Declined","auth_code":"095972","eci":"05","scheme_id":"525838625103408","response_code":"20087","response_summary":"Bad Track Data","risk":{"flagged":false},"source":{"id":"src_hjodtc4srmvuxon2cmgyrfdnau","type":"card","billing_address":{"address_line1":"Checkout.com","address_line2":"90 Tottenham Court Road","city":"London","state":"London","zip":"W1T 4TJ","country":"GB"},"phone":{"country_code":"1","number":"4155552671"},"expiry_month":6,"expiry_year":2022,"name":"Bruce Wayne","scheme":"Visa","last4":"4242","fingerprint":"6D3472691B8A164144D5D4C3237AF81B29F7A19258335387397AAC2AC71237F6","bin":"424242","card_type":"Credit","card_category":"Consumer","issuer":"JPMORGAN CHASE BANK NA","issuer_country":"US","product_id":"A","product_type":"Visa Traditional","avs_check":"UM","cvv_check":"D","payouts":true,"fast_funds":"d"},"customer":{"id":"cus_bwz32ftnduhu7mieggn5owxahm","email":"john@example.com"},"processed_on":"2021-08-13T12:28:50Z","processing":{"acquirer_transaction_id":"0349746892","retrieval_reference_number":"470951685034"},"_links":{"self":{"href":"https://api.sandbox.checkout.com/payments/pay_ntgujyyksnk2jekxls7ddhkbwm"},"actions":{"href":"https://api.sandbox.checkout.com/payments/pay_ntgujyyksnk2jekxls7ddhkbwm/actions"}}}
     )
   end
 

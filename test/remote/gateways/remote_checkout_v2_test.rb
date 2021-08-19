@@ -8,6 +8,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     @credit_card = credit_card('4242424242424242', verification_value: '100', month: '6', year: '2025')
     @expired_card = credit_card('4242424242424242', verification_value: '100', month: '6', year: '2010')
     @declined_card = credit_card('42424242424242424', verification_value: '234', month: '6', year: '2025')
+    @declined_card_with_invalid_cvv = credit_card('4242424242424242', verification_value: '123', month: '6', year: '2025')
     @threeds_card = credit_card('4485040371536584', verification_value: '100', month: '12', year: '2020')
 
     @network_token = network_tokenization_credit_card('4242424242424242',
@@ -21,7 +22,8 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
       order_id: '1',
       billing_address: address,
       description: 'Purchase',
-      email: 'longbob.longsen@example.com'
+      email: 'longbob.longsen@example.com',
+      currency: 'USD'
     }
     @additional_options = @options.merge(
       card_on_file: true,
@@ -128,16 +130,16 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_failed_store
-    response = @gateway.store(@expired_card, @options)
+    response = @gateway.store(@declined_card_with_invalid_cvv, @options)
     assert_failure response
-    assert_equal 'request_invalid: card_expired', response.message
+    assert_equal 'Bad Track Data', response.message
   end
 
   def test_successful_unstore
     response = @gateway.store(@credit_card, @options)
     assert_success response
 
-    authorization = response.params["id"]
+    authorization = response.params["source"]["id"]
     unstore_response = @gateway.unstore(authorization)
     assert_success unstore_response
   end
