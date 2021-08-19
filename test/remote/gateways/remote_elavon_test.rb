@@ -235,6 +235,42 @@ class RemoteElavonTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_successful_recurring_purchase
+    options = {
+      email: 'human@domain.com',
+      description: 'Test Transaction',
+      billing_address: address,
+      ip: '203.0.113.0',
+      merchant_initiated_unscheduled: 'Y'
+
+    }
+
+    stored_credential_params = {
+      initial_transaction: true,
+      reason_type: 'recurring',
+      initiator: 'merchant',
+      network_transaction_id: nil
+    }
+
+    assert first_purchase = @gateway.purchase(@amount, @credit_card, options.merge({ stored_credential: stored_credential_params }))
+
+    assert_success first_purchase
+    assert_equal 'APPROVAL', first_purchase.message
+
+    second_sc_params = {
+      initial_transaction: false,
+      reason_type: 'recurring',
+      initiator: 'merchant',
+      network_transaction_id: first_purchase.network_transaction_id
+    }
+
+    assert next_purchase = @gateway.purchase(@amount, @credit_card, options.merge({ stored_credential: second_sc_params }))
+    assert next_purchase.authorization
+
+    assert_success next_purchase
+    assert_equal 'APPROVAL', next_purchase.message
+  end
+
   def test_successful_auth_and_capture_with_unscheduled_stored_credential
     stored_credential_params = {
       initial_transaction: true,

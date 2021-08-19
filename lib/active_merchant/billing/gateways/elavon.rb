@@ -301,6 +301,7 @@ module ActiveMerchant #:nodoc:
         xml.ssl_entry_mode                      entry_mode(options) if entry_mode(options)
         add_custom_fields(xml, options) if options[:custom_fields]
         add_stored_credential(xml, options) if options[:stored_credential]
+        recurring_transaction(xml, options) if options[:stored_credential] && options.dig(:stored_credential, :reason_type) == 'recurring'
       end
 
       def add_custom_fields(xml, options)
@@ -367,7 +368,16 @@ module ActiveMerchant #:nodoc:
 
       def merchant_initiated_unscheduled(options)
         return options[:merchant_initiated_unscheduled] if options[:merchant_initiated_unscheduled]
-        return 'Y' if options.dig(:stored_credential, :initiator) == 'merchant' && options.dig(:stored_credential, :reason_type) == 'unscheduled'
+        return 'Y' if options.dig(:stored_credential, :initiator) == 'merchant' && options.dig(:stored_credential, :reason_type) == 'unscheduled' || options.dig(:stored_credential, :reason_type) == 'recurring'
+      end
+
+      def recurring_transaction(xml, options)
+        init_txn = options.dig(:stored_credential, :initial_transaction)
+        if init_txn == true
+          xml.ssl_add_token     'Y'
+        else
+          xml.ssl_add_token     'N'
+        end
       end
 
       def entry_mode(options)
