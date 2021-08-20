@@ -7,6 +7,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card('4111111111111111')
+    @amex_card = credit_card('3714 496353 98431')
     @elo_credit_card = credit_card('4514 1600 0000 0008',
       month: 10,
       year: 2020,
@@ -495,6 +496,20 @@ class RemoteWorldpayTest < Test::Unit::TestCase
 
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_match %r{SUCCESS}, response.message
+  end
+
+  def test_successful_verify_with_0_auth
+    options = @options.merge(zero_dollar_auth: true)
+    response = @gateway.verify(@credit_card, options)
+    assert_success response
+    assert_match %r{SUCCESS}, response.message
+  end
+
+  def test_successful_verify_with_0_auth_and_ineligible_card
+    options = @options.merge(zero_dollar_auth: true)
+    response = @gateway.verify(@amex_card, options)
     assert_success response
     assert_match %r{SUCCESS}, response.message
   end
