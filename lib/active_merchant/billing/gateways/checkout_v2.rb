@@ -78,9 +78,33 @@ module ActiveMerchant #:nodoc:
             post = {}
             post[:currency] = options[:currency]
             add_payment_method(post, r.authorization, options)
-            add_customer_data(post, options)
+            add_customer_data(post, options, :source)
 
             commit(:card_verification, post)
+          end
+        end
+      end
+
+      def update(paymethod_token, customer_token, options = {})
+        return unless paymethod_token
+        return unless customer_token
+
+        MultiResponse.run do |r|
+          r.process do
+            post = {}
+            add_address(post, options, :account_holder)
+            post[:name] = options[:billing_address][:name]
+            post[:expiry_month] = options[:expiration_month] if options[:expiration_month]
+            post[:expiry_year] = options[:expiration_year] if options[:expiration_year]
+
+            commit(:update_card, post, paymethod_token)
+          end
+
+          r.process do
+            post = {}
+            post[:name] = options[:billing_address][:name]
+
+            commit(:update_customer, post, customer_token)
           end
         end
       end
@@ -123,7 +147,7 @@ module ActiveMerchant #:nodoc:
       def build_auth_or_purchase(post, amount, payment_method, options)
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method, options)
-        add_customer_data(post, options)
+        add_customer_data(post, options, :source)
         add_stored_credential_options(post, options)
         add_transaction_data(post, options)
         add_3ds(post, options)
@@ -177,23 +201,32 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_customer_data(post, options)
+      def add_customer_data(post, options, billing_address_key=nil)
         post[:customer] = {}
         post[:customer][:email] = options[:email] || nil
         post[:customer][:name] = options[:name]
         post[:payment_ip] = options[:ip] if options[:ip]
+
+        add_address(post, options, billing_address_key)
+      end
+
+      def add_address(post, options, billing_address_key=nil)
         address = options[:billing_address]
         if address
-          post[:customer][:name] = options[:billing_address][:name]
-          billing_address = {}
-          billing_address[:billing_address] = {}
+          post[:customer][:name] = options[:billing_address][:name] if post[:customer]
+          billing_address = { billing_address: {} }
           billing_address[:billing_address][:address_line1] = address[:address1] unless address[:address1].blank?
           billing_address[:billing_address][:address_line2] = address[:address2] unless address[:address2].blank?
           billing_address[:billing_address][:city] = address[:city] unless address[:city].blank?
           billing_address[:billing_address][:state] = address[:state] unless address[:state].blank?
           billing_address[:billing_address][:country] = address[:country] unless address[:country].blank?
           billing_address[:billing_address][:zip] = address[:zip] unless address[:zip].blank?
-          post[:source] ? post[:source].merge!(billing_address) : post.merge!(billing_address)
+          if billing_address_key
+            post[billing_address_key] ||= {}
+            post[billing_address_key].merge!(billing_address)
+          else
+            post.merge!(billing_address)
+          end
         end
       end
 
@@ -243,13 +276,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, post, authorization = nil)
         begin
-          raw_response = if action == :verify_payment
-            ssl_get("#{base_url}/payments/#{post}", headers(action))
-          elsif action == :delete_card
-            ssl_request(:delete, url(post, action, authorization), nil, headers(action))
-          else
-            ssl_post(url(post, action, authorization), post.to_json, headers(action))
-          end
+          raw_response = ssl_request(http_method(action), url(post, action, authorization), http_data(action, post), headers(action))
 
           response = parse(raw_response || "{}")
           response['id'] = response['_links']['payment']['href'].split('/')[-1] if action == :capture && response.key?('_links')
@@ -288,9 +315,11 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def url(_post, action, authorization)
+      def url(post, action, authorization)
         if %i[authorize purchase card_verification].include?(action)
           "#{base_url}/payments"
+        elsif action == :verify_payment
+          "#{base_url}/payments/#{post}"
         elsif action == :capture
           "#{base_url}/payments/#{authorization}/captures"
         elsif action == :refund
@@ -301,10 +330,33 @@ module ActiveMerchant #:nodoc:
           "#{base_url}/instruments"
         elsif action == :tokens
           "#{base_url}/tokens"
-        elsif action == :delete_card
+        elsif [:update_card, :delete_card].include?(action)
           "#{base_url}/instruments/#{authorization}"
+        elsif action == :update_customer
+          "#{base_url}/customers/#{authorization}"
         else
           "#{base_url}/payments/#{authorization}/#{action}"
+        end
+      end
+
+      def http_method(action)
+        case action
+        when :verify_payment
+          :get
+        when :delete_card
+          :delete
+        when :update_card, :update_customer
+          :patch
+        else
+          :post
+        end
+      end
+
+      def http_data(action, post)
+        if [:verify_payment, :delete_card].include?(action)
+          nil
+        else
+          post.to_json
         end
       end
 
@@ -335,7 +387,8 @@ module ActiveMerchant #:nodoc:
       def success_from(response, action)
         return true if action == :card_verification && response['approved'] && response["status"] == "Card Verified"
         return true if action == :tokens && response['token'].present?
-        return true if action == :delete_card && response == {}
+        return true if action == :update_card && response['fingerprint'].present?
+        return true if [:delete_card, :update_customer].include?(action) && response == {}
 
         response['response_summary'] == 'Approved' || response['approved'] == true || !response.key?('response_summary') && response.key?('action_id')
       end

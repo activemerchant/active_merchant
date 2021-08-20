@@ -144,6 +144,24 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_success unstore_response
   end
 
+  def test_successful_update
+    response = @gateway.store(@credit_card, @options)  
+
+    paymethod_token = response.params["source"]["id"]
+    customer_token = response.params["customer"]["id"]
+    options = {
+      billing_address: {
+        name: "Jane Smith",
+        zip: "000"
+      }
+    }
+
+    response = @gateway.update(paymethod_token, customer_token, options)
+
+    assert_success response
+    assert_equal "card", response.responses[0].params["type"]
+  end
+
   def test_successful_authorize_includes_avs_result
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
