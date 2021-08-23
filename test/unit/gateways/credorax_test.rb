@@ -980,6 +980,41 @@ class CredoraxTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
+  # Can be removed after August 31 8:00 UTC
+  def test_isk_passed_as_nonfractional_on_test
+    stub_comms do
+      @gateway.authorize(200, @credit_card, @options.merge(currency: 'ISK'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/a4=2&a1=/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  # Can be removed after August 31 8:00 UTC
+  def test_isk_passed_as_two_decimal_on_live_before_august_31
+    ActiveMerchant::Billing::Base.mode = :production
+
+    stub_comms do
+      @gateway.authorize(200, @credit_card, @options.merge(currency: 'ISK', current_time_test_value: 1630396799)) # August 31 7:59:59 UTC
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/a4=200&a1=/, data)
+    end.respond_with(successful_authorize_response)
+  ensure
+    ActiveMerchant::Billing::Base.mode = :test
+  end
+
+  # Can be removed after August 31 8:00 UTC
+  def test_isk_passed_as_nonfractional_on_live_after_august_31
+    ActiveMerchant::Billing::Base.mode = :production
+
+    stub_comms do
+      @gateway.authorize(200, @credit_card, @options.merge(currency: 'ISK', current_time_test_value: 1630396801)) # August 31 8:01 UTC
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/a4=2&a1=/, data)
+    end.respond_with(successful_authorize_response)
+  ensure
+    ActiveMerchant::Billing::Base.mode = :test
+  end
+
   def test_3ds_2_optional_fields_adds_fields_to_the_root_of_the_post
     post = {}
     options = { three_ds_2: { optional: { '3ds_optional_field_1': :a, '3ds_optional_field_2': :b } } }

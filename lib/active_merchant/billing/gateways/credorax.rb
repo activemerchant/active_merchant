@@ -20,8 +20,9 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://assigned-subdomain.credorax.net/crax_gate/service/gateway'
 
       self.supported_countries = %w(AD AT BE BG HR CY CZ DK EE FR DE GI GR GG HU IS IE IM IT JE LV LI LT LU MT MC NO PL PT RO SM SK ES SE CH GB)
+
       self.default_currency = 'EUR'
-      self.currencies_without_fractions = %w(BIF CLP DJF GNF JPY KMF KRW PYG RWF VND VUV XAF XOF XPF)
+      self.currencies_without_fractions = %w(BIF CLP DJF GNF ISK JPY KMF KRW PYG RWF VND VUV XAF XOF XPF)
       self.currencies_with_three_decimal_places = %w(BHD IQD JOD KWD LYD OMR TND)
 
       self.money_format = :cents
@@ -120,6 +121,10 @@ module ActiveMerchant #:nodoc:
         'R3' => 'Revocation of all Authorisations Order',
         '1A' => 'Strong Customer Authentication required'
       }
+
+      # Can be removed when no longer used after August 31 2021 8:00 UTC
+      LIVE_ISK_CHANGE_TIME = 1630396800 # August 31 2021 8:00 UTC
+      TEST_ISK_CHANGE_TIME = 1629619200 # August 22 2021 8:00 UTC
 
       def initialize(options = {})
         requires!(options, :merchant_id, :cipher_key)
@@ -253,10 +258,28 @@ module ActiveMerchant #:nodoc:
 
       private
 
+      # Can be removed after 2021 August 31 8:01 UTC
+      def current_time(options)
+        options[:current_time_test_value] || Time.now.utc
+      end
+
+      # Can be removed after 2021 August 31 8:01 UTC
+      def isk_change_check(money, options)
+        isk_change_time = test? ? TEST_ISK_CHANGE_TIME : LIVE_ISK_CHANGE_TIME
+        amount = amount(money)
+
+        if current_time(options).to_i >= isk_change_time
+          return sprintf('%.0f', amount.to_f / 100)
+        else
+          return amount
+        end
+      end
+
       def add_invoice(post, money, options)
         currency = options[:currency] || currency(money)
 
-        post[:a4] = localized_amount(money, currency)
+        # ISK change check can be removed after 2021 August 31 8:01 UTC
+        post[:a4] = currency == 'ISK' ? isk_change_check(money, options) : localized_amount(money, currency)
         post[:a1] = generate_unique_id
         post[:a5] = currency
         post[:h9] = options[:order_id]
