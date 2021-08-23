@@ -206,7 +206,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
         xid: 'TESTXID',
         cavv: 'AAAEEEDDDSSSAAA2243234',
         ds_transaction_id: '97267598FAE648F28083C23433990FBC',
-        version: 2
+        version: '2.2.0'
       },
       sca_recurring: 'Y'
     }
@@ -350,7 +350,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
         eci: '5',
         cavv: 'AAAEEEDDDSSSAAA2243234',
         xid: 'Asju1ljfl86bAAAAAACm9zU6aqY=',
-        version: '2',
+        version: '2.2.0',
         ds_transaction_id: '8dh4htokdf84jrnxyemfiosheuyfjt82jiek'
       },
       address: {

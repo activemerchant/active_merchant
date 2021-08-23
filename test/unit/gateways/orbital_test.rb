@@ -98,7 +98,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
         eci: '5',
         xid: 'TESTXID',
         cavv: 'TESTCAVV',
-        version: '2',
+        version: '2.2.0',
         ds_transaction_id: '97267598FAE648F28083C23433990FBC'
       }
     }
@@ -295,7 +295,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
         xid: 'TESTXID',
         cavv: 'AAAEEEDDDSSSAAA2243234',
         ds_transaction_id: '97267598FAE648F28083C23433990FBC',
-        version: 2
+        version: '2.2.0'
       },
       sca_recurring: 'Y'
     }
@@ -314,13 +314,12 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def test_three_d_secure_data_on_master_sca_recurring_with_invalid_eci
     options_local = {
-      three_d_version: '2',
       three_d_secure: {
         eci: '5',
         xid: 'TESTXID',
         cavv: 'AAAEEEDDDSSSAAA2243234',
         ds_transaction_id: '97267598FAE648F28083C23433990FBC',
-        version: 2
+        version: '2.2.0'
       },
       sca_recurring: 'Y'
     }

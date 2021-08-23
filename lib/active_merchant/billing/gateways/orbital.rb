@@ -605,8 +605,10 @@ module ActiveMerchant #:nodoc:
 
       def add_mc_program_protocol(xml, creditcard, three_d_secure)
         return unless three_d_secure && creditcard.brand == 'master'
+        return unless three_d_secure[:version]
 
-        xml.tag!(:MCProgramProtocol, three_d_secure[:version]) if three_d_secure[:version]
+        truncated_version = three_d_secure[:version].to_s[0]
+        xml.tag!(:MCProgramProtocol, truncated_version)
       end
 
       def add_mc_directory_trans_id(xml, creditcard, three_d_secure)
