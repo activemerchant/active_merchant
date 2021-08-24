@@ -293,15 +293,16 @@ module ActiveMerchant #:nodoc:
         xml.ssl_cardholder_ip options[:ip] if options.has_key?(:ip)
       end
 
+      # add_recurring_token is a field that can be sent in to obtain a token from Elavon for use with their tokenization program
       def add_auth_purchase_params(xml, options)
         xml.ssl_dynamic_dba                     options[:dba] if options.has_key?(:dba)
         xml.ssl_merchant_initiated_unscheduled  merchant_initiated_unscheduled(options) if merchant_initiated_unscheduled(options)
+        xml.ssl_add_token                       options[:add_recurring_token] if options.has_key?(:add_recurring_token)
         xml.ssl_customer_code                   options[:customer] if options.has_key?(:customer)
         xml.ssl_customer_number                 options[:customer_number] if options.has_key?(:customer_number)
         xml.ssl_entry_mode                      entry_mode(options) if entry_mode(options)
         add_custom_fields(xml, options) if options[:custom_fields]
         add_stored_credential(xml, options) if options[:stored_credential]
-        recurring_transaction(xml, options) if options[:stored_credential] && options.dig(:stored_credential, :reason_type) == 'recurring'
       end
 
       def add_custom_fields(xml, options)
@@ -369,15 +370,6 @@ module ActiveMerchant #:nodoc:
       def merchant_initiated_unscheduled(options)
         return options[:merchant_initiated_unscheduled] if options[:merchant_initiated_unscheduled]
         return 'Y' if options.dig(:stored_credential, :initiator) == 'merchant' && options.dig(:stored_credential, :reason_type) == 'unscheduled' || options.dig(:stored_credential, :reason_type) == 'recurring'
-      end
-
-      def recurring_transaction(xml, options)
-        init_txn = options.dig(:stored_credential, :initial_transaction)
-        if init_txn == true
-          xml.ssl_add_token     'Y'
-        else
-          xml.ssl_add_token     'N'
-        end
       end
 
       def entry_mode(options)
