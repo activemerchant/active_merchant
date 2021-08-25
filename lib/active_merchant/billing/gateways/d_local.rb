@@ -102,7 +102,13 @@ module ActiveMerchant #:nodoc:
       def add_payer(post, card, options)
         address = options[:billing_address] || options[:address]
         post[:payer] = {}
-        post[:payer][:name] = card.name
+        if card.is_a?(CreditCard)
+          post[:payer][:name] = card.name
+        elsif card.is_a?(PspTokenizedCard)
+          post[:payer][:name] = options[:name]
+        else
+          post[:payer][:name] = ""
+        end
         post[:payer][:email] = options[:email] if options[:email]
         post[:payer][:birth_date] = options[:birth_date] if options[:birth_date]
         post[:payer][:phone] = address[:phone] if address && address[:phone]
@@ -140,11 +146,16 @@ module ActiveMerchant #:nodoc:
 
       def add_card(post, card, action, options = {})
         post[:card] = {}
-        post[:card][:holder_name] = card.name
-        post[:card][:expiration_month] = card.month
-        post[:card][:expiration_year] = card.year
-        post[:card][:number] = card.number
-        post[:card][:cvv] = card.verification_value
+        if card.is_a?(PspTokenizedCard)
+          post[:card][:card_id] = card.payment_data[:token]
+        else
+          post[:card][:holder_name] = card.name
+          post[:card][:expiration_month] = card.month
+          post[:card][:expiration_year] = card.year
+          post[:card][:number] = card.number
+          post[:card][:cvv] = card.verification_value
+        end
+        post[:card][:save] = options[:save_card]
         post[:card][:descriptor] = options[:dynamic_descriptor] if options[:dynamic_descriptor]
         post[:card][:capture] = (action == 'purchase')
         post[:card][:installments] = options[:installments] if options[:installments]

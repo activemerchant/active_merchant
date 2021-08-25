@@ -42,10 +42,35 @@ class RemoteDLocalTest < Test::Unit::TestCase
       document: '184853849',
       currency: 'PEN'
     }
+    @card_save_options = {
+      billing_address: address(country: 'Brazil'),
+      document: '71575743221',
+      currency: 'BRL',
+      save_card: true
+    }
   end
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_match 'The payment was paid', response.message
+  end
+
+  def test_successful_card_save
+    response = @gateway.verify(@credit_card, @card_save_options)
+    assert_success response.primary_response
+    assert_match 'The payment was authorized', response.message
+    assert response.primary_response.params["card"].key?("card_id")
+  end
+
+  def test_successful_token_payment
+    response = @gateway.verify(@credit_card, @card_save_options)
+    assert_success response.primary_response
+    assert_match 'The payment was authorized', response.message
+
+    token = response.primary_response.params['card']['card_id']
+    token_payment = psp_tokenized_card(token)
+    response = @gateway.purchase(@amount, token_payment, @options)
     assert_success response
     assert_match 'The payment was paid', response.message
   end
@@ -117,6 +142,24 @@ class RemoteDLocalTest < Test::Unit::TestCase
 
   def test_failed_purchase
     response = @gateway.purchase(@amount, @credit_card, @options.merge(description: '300'))
+    assert_failure response
+    assert_match 'The payment was rejected', response.message
+  end
+
+  def test_failed_card_save
+    response = @gateway.verify(@credit_card, @card_save_options.merge(description: '300'))
+    assert_failure response.primary_response
+    assert_match 'The payment was rejected', response.message
+  end
+
+  def test_failed_token_payment
+    response = @gateway.verify(@credit_card, @card_save_options)
+    assert_success response.primary_response
+    assert_match 'The payment was authorized', response.message
+
+    token = response.primary_response.params['card']['card_id']
+    token_payment = psp_tokenized_card(token)
+    response = @gateway.purchase(@amount, token_payment, @options.merge(description: '300'))
     assert_failure response
     assert_match 'The payment was rejected', response.message
   end

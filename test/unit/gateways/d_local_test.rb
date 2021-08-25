@@ -6,6 +6,7 @@ class DLocalTest < Test::Unit::TestCase
   def setup
     @gateway = DLocalGateway.new(login: 'login', trans_key: 'password', secret_key: 'shhhhh_key')
     @credit_card = credit_card
+    @psp_tokenized_card = psp_tokenized_card('CV-993903e4-0b33-48fd-8d9b-99fd6c3f0d1a')
     @amount = 100
 
     @options = {
@@ -28,6 +29,54 @@ class DLocalTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal '300', response.error_code
+  end
+
+  def test_successful_card_save
+    @gateway.expects(:ssl_post).times(2).returns(successful_authorize_response, successful_void_response)
+
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+
+    assert_equal 'D-15104-be03e883-3e6b-497d-840e-54c8b6209bc3', response.authorization
+    assert_equal 'CV-ecd897ac-5361-45a1-a407-aaab044ce87e', response.primary_response.params['card']['card_id']
+    assert response.test?
+  end
+
+  def test_failed_verify_during_card_save
+    @gateway.expects(:ssl_post).returns(failed_authorize_response)
+
+    response = @gateway.verify(@credit_card, @options)
+    assert_failure response
+    assert_equal '309', response.error_code
+  end
+
+  def test_failed_void_during_card_save_and_verification
+    @gateway.expects(:ssl_request).times(2).returns(successful_authorize_response, failed_void_response)
+
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+
+    assert_equal 'D-15104-be03e883-3e6b-497d-840e-54c8b6209bc3', response.authorization
+    assert_equal 'CV-ecd897ac-5361-45a1-a407-aaab044ce87e', response.primary_response.params['card']['card_id']
+    assert response.test?
+  end
+
+  def test_successful_purchase_using_token
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    response = @gateway.purchase(@amount, @psp_tokenized_card, @options)
+    assert_success response
+
+    assert_equal 'D-15104-05b0ec0c-5a1e-470a-b342-eb5f20758ef7', response.authorization
+    assert response.test?
+  end
+
+  def test_failed_purchase_using_token
+    @gateway.expects(:ssl_post).returns(failed_purchase_response)
+
+    response = @gateway.purchase(@amount, @psp_tokenized_card, @options)
     assert_failure response
     assert_equal '300', response.error_code
   end
