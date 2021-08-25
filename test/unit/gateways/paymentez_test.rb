@@ -279,6 +279,17 @@ class PaymentezTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_successful_void_with_more_info
+    @gateway.expects(:ssl_post).returns(successful_void_response_with_more_info)
+
+    response = @gateway.void('1234', @options.merge(more_info: true))
+    assert_success response
+    assert_equal 'Completed', response.message
+    assert_equal '00', response.params['transaction']['carrier_code']
+    assert_equal 'Reverse by mock', response.params['transaction']['message']
+    assert response.test?
+  end
+
   def test_simple_store
     @gateway.expects(:ssl_post).returns(successful_store_response)
 
@@ -607,8 +618,13 @@ Conn close
     '{"status": "failure", "detail": "Invalid Status"}'
   end
 
+  def successful_void_response_with_more_info
+    '{"status": "success", "detail": "Completed", "transaction": {"carrier_code": "00", "message": "Reverse by mock"}}'
+  end
+
   alias successful_refund_response successful_void_response
   alias failed_refund_response failed_void_response
+  alias successful_refund_response_with_more_info successful_void_response_with_more_info
 
   def already_stored_response
     '{"error": {"type": "Card already added: 14436664108567261211", "help": "If you want to update the card, first delete it", "description": "{}"}}'

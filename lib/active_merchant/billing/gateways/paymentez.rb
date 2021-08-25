@@ -82,6 +82,7 @@ module ActiveMerchant #:nodoc:
       def refund(money, authorization, options = {})
         post = { transaction: { id: authorization } }
         post[:order] = { amount: amount(money).to_f } if money
+        add_more_info(post, options)
 
         commit_transaction('refund', post)
       end
@@ -196,6 +197,10 @@ module ActiveMerchant #:nodoc:
         return if auth_data.empty?
 
         extra_params[:auth_data] = auth_data
+      end
+
+      def add_more_info(post, options)
+        post[:more_info] = options[:more_info] if options[:more_info]
       end
 
       def parse(body)

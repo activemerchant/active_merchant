@@ -142,6 +142,17 @@ class RemotePaymentezTest < Test::Unit::TestCase
     assert_equal 'Completed', refund.message
   end
 
+  def test_successful_refund_with_more_info
+    auth = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success auth
+
+    assert refund = @gateway.refund(@amount, auth.authorization, @options.merge(more_info: true))
+    assert_success refund
+    assert_equal 'Completed', refund.message
+    assert_equal '00', refund.params['transaction']['carrier_code']
+    assert_equal 'Reverse by mock', refund.params['transaction']['message']
+  end
+
   def test_successful_refund_with_elo
     auth = @gateway.purchase(@amount, @elo_credit_card, @options)
     assert_success auth

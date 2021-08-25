@@ -5,6 +5,7 @@
 * Elavon: Support recurring transactions with stored credentials [cdmackeyfree] #4086
 * Orbital: Truncate three_d_secure[:version] [carrigan] #4087
 * Credorax: Determine ISK decimal by datetime [curiousepic] #4088
+* Paymentez: Add more_info field [reblevins] #4091
 
 == Version 1.122.0 (August 3rd, 2021)
 * Orbital: Correct success logic for refund [tatsianaclifton] #4014
