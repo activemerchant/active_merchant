@@ -77,6 +77,9 @@ module ActiveMerchant #:nodoc:
           r.process do
             post = {}
             post[:currency] = options[:currency]
+            post[:payment_type] = "Recurring" if credit_card.type == "visa"
+            post[:merchant_initiated] = false
+
             add_payment_method(post, r.authorization, options)
             add_customer_data(post, options, :source)
 
@@ -244,7 +247,7 @@ module ActiveMerchant #:nodoc:
         when true
           post[:merchant_initiated] = false
         when false
-          post[:'source.stored'] = true
+          post[:'source.stored'] = true if options[:stored_credential][:full_card_api]
           post[:previous_payment_id] = options[:stored_credential][:network_transaction_id] if options[:stored_credential][:network_transaction_id]
           post[:merchant_initiated] = true
         end

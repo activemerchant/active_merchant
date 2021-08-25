@@ -176,7 +176,8 @@ class CheckoutV2Test < Test::Unit::TestCase
         stored_credential: {
           initial_transaction: false,
           reason_type: 'recurring',
-          network_transaction_id: network_transaction_id
+          network_transaction_id: network_transaction_id,
+          full_card_api: true
         }
       }
       @gateway.purchase(@amount, @credit_card, options)

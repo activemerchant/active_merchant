@@ -91,7 +91,8 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
       stored_credential: {
         initial_transaction: false,
         reason_type: 'installment',
-        network_transaction_id: network_transaction_id
+        network_transaction_id: network_transaction_id,
+        full_card_api: true
       }
     )
     response = @gateway.purchase(@amount, @credit_card, stored_options)
