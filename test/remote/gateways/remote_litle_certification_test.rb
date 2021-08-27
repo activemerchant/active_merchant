@@ -171,7 +171,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
     puts "Test #{options[:order_id]} Sale: #{txn_id(response)}"
 
     # 6A. void
-    assert response = @gateway.void(response.authorization, {order_id: '6A'})
+    assert response = @gateway.void(response.authorization, { order_id: '6A' })
     assert_equal '360', response.params['response']
     assert_equal 'No transaction found with specified transaction Id', response.message
     puts "Test #{options[:order_id]}A: #{txn_id(response)}"
@@ -1048,7 +1048,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
 
   def test_apple_pay_purchase
     options = {
-      order_id: transaction_id,
+      order_id: transaction_id
     }
     decrypted_apple_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
       {
@@ -1057,7 +1057,8 @@ class RemoteLitleCertification < Test::Unit::TestCase
         brand: 'visa',
         number:  '4457000300000007',
         payment_cryptogram: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA='
-      })
+      }
+    )
 
     assert response = @gateway.purchase(10010, decrypted_apple_pay, options)
     assert_success response
@@ -1066,7 +1067,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
 
   def test_android_pay_purchase
     options = {
-      order_id: transaction_id,
+      order_id: transaction_id
     }
     decrypted_android_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
       {
@@ -1076,7 +1077,8 @@ class RemoteLitleCertification < Test::Unit::TestCase
         brand: 'visa',
         number:  '4457000300000007',
         payment_cryptogram: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA='
-      })
+      }
+    )
 
     assert response = @gateway.purchase(10010, decrypted_android_pay, options)
     assert_success response
@@ -1161,7 +1163,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
 
   private
 
-  def auth_assertions(amount, card, options, assertions={})
+  def auth_assertions(amount, card, options, assertions = {})
     # 1: authorize
     assert response = @gateway.authorize(amount, card, options)
     assert_success response
@@ -1171,19 +1173,19 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert_equal auth_code(options[:order_id]), response.params['authCode']
 
     # 1A: capture
-    assert response = @gateway.capture(amount, response.authorization, {id: transaction_id})
+    assert response = @gateway.capture(amount, response.authorization, { id: transaction_id })
     assert_equal 'Approved', response.message
 
     # 1B: credit
-    assert response = @gateway.credit(amount, response.authorization, {id: transaction_id})
+    assert response = @gateway.credit(amount, response.authorization, { id: transaction_id })
     assert_equal 'Approved', response.message
 
     # 1C: void
-    assert response = @gateway.void(response.authorization, {id: transaction_id})
+    assert response = @gateway.void(response.authorization, { id: transaction_id })
     assert_equal 'Approved', response.message
   end
 
-  def authorize_avs_assertions(credit_card, options, assertions={})
+  def authorize_avs_assertions(credit_card, options, assertions = {})
     assert response = @gateway.authorize(000, credit_card, options)
     assert_equal assertions.key?(:success) ? assertions[:success] : true, response.success?
     assert_equal assertions[:message] || 'Approved', response.message
@@ -1191,7 +1193,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert_equal assertions[:cvv], response.cvv_result['code'], caller.inspect if assertions[:cvv]
   end
 
-  def sale_assertions(amount, card, options, assertions={})
+  def sale_assertions(amount, card, options, assertions = {})
     # 1: sale
     assert response = @gateway.purchase(amount, card, options)
     assert_success response
@@ -1201,11 +1203,11 @@ class RemoteLitleCertification < Test::Unit::TestCase
     # assert_equal auth_code(options[:order_id]), response.params['authCode']
 
     # 1B: credit
-    assert response = @gateway.credit(amount, response.authorization, {id: transaction_id})
+    assert response = @gateway.credit(amount, response.authorization, { id: transaction_id })
     assert_equal 'Approved', response.message
 
     # 1C: void
-    assert response = @gateway.void(response.authorization, {id: transaction_id})
+    assert response = @gateway.void(response.authorization, { id: transaction_id })
     assert_equal 'Approved', response.message
   end
 

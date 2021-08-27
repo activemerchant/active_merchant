@@ -8,7 +8,7 @@ class RemoteBraintreeTest < Test::Unit::TestCase
     @credit_card = credit_card('4111111111111111', brand: 'visa')
     @declined_amount = rand(99)
     @options = {  order_id: generate_unique_id,
-                  billing_address: address}
+                  billing_address: address }
   end
 
   def test_successful_purchase

@@ -58,7 +58,7 @@ module ActiveMerchant
         'line1: N, zip: M, name: N' => 'W',
         'line1: N, zip: N, name: U' => 'N',
         'line1: N, zip: N, name: M' => 'K',
-        'line1: N, zip: N, name: N' => 'N',
+        'line1: N, zip: N, name: N' => 'N'
       }
 
       BANK_ACCOUNT_TYPE_MAPPING = {
@@ -70,12 +70,12 @@ module ActiveMerchant
 
       STATE_CODE_COUNTRIES = %w(US CA)
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :api_username, :api_password)
         super
       end
 
-      def purchase(money, payment_method, options={})
+      def purchase(money, payment_method, options = {})
         payment_method_details = PaymentMethodDetails.new(payment_method)
 
         commit(:purchase, :post, payment_method_details) do |doc|
@@ -87,13 +87,13 @@ module ActiveMerchant
         end
       end
 
-      def authorize(money, payment_method, options={})
+      def authorize(money, payment_method, options = {})
         commit(:authorize) do |doc|
           add_auth_purchase(doc, money, payment_method, options)
         end
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         commit(:capture, :put) do |doc|
           add_authorization(doc, authorization)
           add_order(doc, options)
@@ -101,7 +101,7 @@ module ActiveMerchant
         end
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         commit(:refund, :put) do |doc|
           add_authorization(doc, authorization)
           add_amount(doc, money, options)
@@ -109,14 +109,14 @@ module ActiveMerchant
         end
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         commit(:void, :put) do |doc|
           add_authorization(doc, authorization)
           add_order(doc, options)
         end
       end
 
-      def verify(payment_method, options={})
+      def verify(payment_method, options = {})
         authorize(0, payment_method, options)
       end
 
@@ -177,7 +177,7 @@ module ActiveMerchant
         add_order(doc, options)
         doc.send('store-card', options[:store_card] || false)
         add_amount(doc, money, options)
-        add_fraud_info(doc, options)
+        add_fraud_info(doc, payment_method, options)
 
         if payment_method.is_a?(String)
           doc.send('vaulted-shopper-id', payment_method)
@@ -200,6 +200,7 @@ module ActiveMerchant
         doc.send('last-name', payment_method.last_name)
         doc.send('personal-identification-number', options[:personal_identification_number]) if options[:personal_identification_number]
         doc.email(options[:email]) if options[:email]
+        doc.phone(options[:phone_number]) if options[:phone_number]
         add_address(doc, options)
       end
 
@@ -212,12 +213,28 @@ module ActiveMerchant
         end
       end
 
-      def add_description(doc, description)
+      def add_metadata(doc, options)
+        transaction_meta_data = options[:transaction_meta_data] || []
+        return if transaction_meta_data.empty? && !options[:description]
+
         doc.send('transaction-meta-data') do
-          doc.send('meta-data') do
-            doc.send('meta-key', 'description')
-            doc.send('meta-value', truncate(description, 500))
-            doc.send('meta-description', 'Description')
+          # ensure backwards compatibility for calls expecting :description
+          # to become meta-data fields.
+          if options[:description]
+            doc.send('meta-data') do
+              doc.send('meta-key', 'description')
+              doc.send('meta-value', truncate(options[:description], 500))
+              doc.send('meta-description', 'Description')
+            end
+          end
+
+          # https://developers.bluesnap.com/v8976-XML/docs/meta-data
+          transaction_meta_data.each do |entry|
+            doc.send('meta-data') do
+              doc.send('meta-key', truncate(entry[:meta_key], 40))
+              doc.send('meta-value', truncate(entry[:meta_value], 500))
+              doc.send('meta-description', truncate(entry[:meta_description], 40))
+            end
           end
         end
       end
@@ -225,7 +242,7 @@ module ActiveMerchant
       def add_order(doc, options)
         doc.send('merchant-transaction-id', truncate(options[:order_id], 50)) if options[:order_id]
         doc.send('soft-descriptor', options[:soft_descriptor]) if options[:soft_descriptor]
-        add_description(doc, options[:description]) if options[:description]
+        add_metadata(doc, options)
         add_3ds(doc, options[:three_d_secure]) if options[:three_d_secure]
         add_level_3_data(doc, options)
       end
@@ -236,7 +253,8 @@ module ActiveMerchant
 
         doc.country(address[:country]) if address[:country]
         doc.state(address[:state]) if address[:state] && STATE_CODE_COUNTRIES.include?(address[:country])
-        doc.address(address[:address]) if address[:address]
+        doc.address(address[:address1]) if address[:address1]
+        doc.address2(address[:address2]) if address[:address2]
         doc.city(address[:city]) if address[:city]
         doc.zip(address[:zip]) if address[:zip]
       end
@@ -298,9 +316,32 @@ module ActiveMerchant
         doc.send('transaction-id', authorization)
       end
 
-      def add_fraud_info(doc, options)
+      def add_fraud_info(doc, payment_method, options)
         doc.send('transaction-fraud-info') do
           doc.send('shopper-ip-address', options[:ip]) if options[:ip]
+          if fraud_info = options[:transaction_fraud_info]
+            doc.send('fraud-session-id', fraud_info[:fraud_session_id]) if fraud_info[:fraud_session_id]
+          end
+          unless payment_method.is_a? String
+            doc.send('shipping-contact-info') do
+              add_shipping_contact_info(doc, payment_method, options)
+            end
+          end
+        end
+      end
+
+      def add_shipping_contact_info(doc, payment_method, options)
+        if address = options[:shipping_address]
+          # https://developers.bluesnap.com/v8976-XML/docs/shipping-contact-info
+          doc.send('first-name', payment_method.first_name)
+          doc.send('last-name', payment_method.last_name)
+
+          doc.country(address[:country]) if address[:country]
+          doc.state(address[:state]) if address[:state] && STATE_CODE_COUNTRIES.include?(address[:country])
+          doc.address1(address[:address1]) if address[:address1]
+          doc.address2(address[:address2]) if address[:address2]
+          doc.city(address[:city]) if address[:city]
+          doc.zip(address[:zip]) if address[:zip]
         end
       end
 
@@ -314,8 +355,8 @@ module ActiveMerchant
 
         add_echeck_transaction(doc, payment_method_details.payment_method, options, vaulted_shopper_id.present?) if payment_method_details.check?
 
-        add_fraud_info(doc, options)
-        add_description(doc, options)
+        add_fraud_info(doc, payment_method_details.payment_method, options)
+        add_metadata(doc, options)
       end
 
       def add_echeck_transaction(doc, check, options, vaulted_shopper)
@@ -345,22 +386,43 @@ module ActiveMerchant
 
       def parse(response)
         return bad_authentication_response if response.code.to_i == 401
-        return forbidden_response(response.body) if response.code.to_i == 403
+        return generic_error_response(response.body) if [403, 429].include?(response.code.to_i)
 
         parsed = {}
         doc = Nokogiri::XML(response.body)
         doc.root.xpath('*').each do |node|
+          name = node.name.downcase
+
           if node.elements.empty?
-            parsed[node.name.downcase] = node.text
+            parsed[name] = node.text
+          elsif name == 'transaction-meta-data'
+            metadata = []
+            node.elements.each { |m|
+              metadata.push parse_metadata_entry(m)
+            }
+
+            parsed['transaction-meta-data'] = metadata
           else
-            node.elements.each do |childnode|
+            node.elements.each { |childnode|
               parse_element(parsed, childnode)
-            end
+            }
           end
         end
 
         parsed['content-location-header'] = response['content-location']
         parsed
+      end
+
+      def parse_metadata_entry(node)
+        entry = {}
+
+        node.elements.each { |e|
+          entry = entry.merge({
+            e.name => e.text
+          })
+        }
+
+        entry
       end
 
       def parse_element(parsed, node)
@@ -476,7 +538,7 @@ module ActiveMerchant
       def headers
         {
           'Content-Type' => 'application/xml',
-          'Authorization' => ('Basic ' + Base64.strict_encode64("#{@options[:api_username]}:#{@options[:api_password]}").strip),
+          'Authorization' => ('Basic ' + Base64.strict_encode64("#{@options[:api_username]}:#{@options[:api_password]}").strip)
         }
       end
 
@@ -502,7 +564,7 @@ module ActiveMerchant
         { 'description' => 'Unable to authenticate.  Please check your credentials.' }
       end
 
-      def forbidden_response(body)
+      def generic_error_response(body)
         { 'description' => body }
       end
     end

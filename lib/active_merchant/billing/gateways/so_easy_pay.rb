@@ -39,11 +39,11 @@ module ActiveMerchant #:nodoc:
         commit('CaptureTransaction', do_capture(money, authorization, options), options)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         commit('RefundTransaction', do_refund(money, authorization, options), options)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         commit('CancelTransaction', do_void(authorization, options), options)
       end
 
@@ -139,7 +139,7 @@ module ActiveMerchant #:nodoc:
         soap.tag!('cardExpireYear', card.year.to_s)
       end
 
-      def fill_order_info(soap, money, options, skip_currency=false)
+      def fill_order_info(soap, money, options, skip_currency = false)
         soap.tag!('orderID', options[:order_id].to_s)
         soap.tag!('orderDescription', "Order #{options[:order_id]}")
         soap.tag!('amount', amount(money).to_s)
@@ -157,8 +157,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(soap_action, soap, options)
-        headers = {'SOAPAction' => "\"urn:Interface##{soap_action}\"",
-                   'Content-Type' => 'text/xml; charset=utf-8'}
+        headers = { 'SOAPAction' => "\"urn:Interface##{soap_action}\"",
+                   'Content-Type' => 'text/xml; charset=utf-8' }
         response_string = ssl_post(test? ? self.test_url : self.live_url, soap, headers)
         response = parse(response_string, soap_action)
         return Response.new(response['errorcode'] == '000',
@@ -179,9 +179,9 @@ module ActiveMerchant #:nodoc:
           'xmlns:types' => 'urn:Interface/encodedTypes',
           'xmlns:soap' => 'http://schemas.xmlsoap.org/soap/envelope/'
         }) do
-          retval.tag!('soap:Body', {'soap:encodingStyle' => 'http://schemas.xmlsoap.org/soap/encoding/'}) do
+          retval.tag!('soap:Body', { 'soap:encodingStyle' => 'http://schemas.xmlsoap.org/soap/encoding/' }) do
             retval.tag!("tns:#{request}") do
-              retval.tag!("#{request}Request", {'xsi:type' => "tns:#{request}Request"}) do
+              retval.tag!("#{request}Request", { 'xsi:type' => "tns:#{request}Request" }) do
                 yield retval
               end
             end

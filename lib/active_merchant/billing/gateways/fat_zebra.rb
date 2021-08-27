@@ -57,7 +57,7 @@ module ActiveMerchant #:nodoc:
         commit(:post, "purchases/#{CGI.escape(txn_id)}/capture", post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         txn_id, = authorization.to_s.split('|')
         post = {}
 
@@ -69,13 +69,13 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'refunds', post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         txn_id, endpoint = authorization.to_s.split('|')
 
         commit(:post, "#{endpoint}/void?id=#{txn_id}", {})
       end
 
-      def store(creditcard, options={})
+      def store(creditcard, options = {})
         post = {}
 
         add_creditcard(post, creditcard)
@@ -147,7 +147,7 @@ module ActiveMerchant #:nodoc:
         post[:metadata] = options.fetch(:metadata, {})
       end
 
-      def commit(method, uri, parameters=nil)
+      def commit(method, uri, parameters = nil)
         response =
           begin
             parse(ssl_request(method, get_url(uri), parameters.to_json, headers))

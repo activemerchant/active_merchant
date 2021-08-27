@@ -32,7 +32,7 @@ module ActiveMerchant #:nodoc:
       base.class_attribute :proxy_port
     end
 
-    def ssl_get(endpoint, headers={})
+    def ssl_get(endpoint, headers = {})
       ssl_request(:get, endpoint, nil, headers)
     end
 

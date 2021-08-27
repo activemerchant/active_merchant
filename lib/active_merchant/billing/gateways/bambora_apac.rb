@@ -18,15 +18,15 @@ module ActiveMerchant #:nodoc:
         '05' => STANDARD_ERROR_CODE[:card_declined],
         '06' => STANDARD_ERROR_CODE[:processing_error],
         '14' => STANDARD_ERROR_CODE[:invalid_number],
-        '54' => STANDARD_ERROR_CODE[:expired_card],
+        '54' => STANDARD_ERROR_CODE[:expired_card]
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :username, :password)
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         commit('SubmitSinglePayment') do |xml|
           xml.Transaction do
             xml.CustRef options[:order_id]
@@ -39,7 +39,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         commit('SubmitSinglePayment') do |xml|
           xml.Transaction do
             xml.CustRef options[:order_id]
@@ -52,7 +52,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         commit('SubmitSingleCapture') do |xml|
           xml.Capture do
             xml.Receipt authorization
@@ -62,7 +62,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         commit('SubmitSingleRefund') do |xml|
           xml.Refund do
             xml.Receipt authorization
@@ -72,7 +72,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         commit('SubmitSingleVoid') do |xml|
           xml.Void do
             xml.Receipt authorization
@@ -82,7 +82,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def store(payment, options={})
+      def store(payment, options = {})
         commit('TokeniseCreditCard') do |xml|
           xml.TokeniseCreditCard do
             xml.CardNumber payment.number

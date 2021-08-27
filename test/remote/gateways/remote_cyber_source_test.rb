@@ -5,7 +5,8 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
   def setup
     Base.mode = :test
 
-    @gateway = CyberSourceGateway.new({nexus: 'NC'}.merge(fixtures(:cyber_source)))
+    @gateway = CyberSourceGateway.new({ nexus: 'NC' }.merge(fixtures(:cyber_source)))
+    @gateway_latam = CyberSourceGateway.new({}.merge(fixtures(:cyber_source_latam_pe)))
 
     @credit_card = credit_card('4111111111111111', verification_value: '987')
     @declined_card = credit_card('801111111111111')
@@ -14,32 +15,27 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
       verification_value: '321',
       month: '12',
       year: (Time.now.year + 2).to_s,
-      brand: :elo
-    )
+      brand: :elo)
     @three_ds_unenrolled_card = credit_card('4000000000000051',
       verification_value: '321',
       month: '12',
       year: (Time.now.year + 2).to_s,
-      brand: :visa
-    )
+      brand: :visa)
     @three_ds_enrolled_card = credit_card('4000000000000002',
       verification_value: '321',
       month: '12',
       year: (Time.now.year + 2).to_s,
-      brand: :visa
-    )
+      brand: :visa)
     @three_ds_invalid_card = credit_card('4000000000000010',
       verification_value: '321',
       month: '12',
       year: (Time.now.year + 2).to_s,
-      brand: :visa
-    )
+      brand: :visa)
     @three_ds_enrolled_mastercard = credit_card('5200000000001005',
       verification_value: '321',
       month: '12',
       year: (Time.now.year + 2).to_s,
-      brand: :master
-    )
+      brand: :master)
 
     @amount = 100
 
@@ -97,8 +93,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4111111111111111',
       brand: 'visa',
       eci: '05',
-      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
-    )
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
 
     transcript = capture_transcript(@gateway) do
       @gateway.authorize(@amount, credit_card, @options)
@@ -123,6 +118,32 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert !response.authorization.blank?
   end
 
+  def test_successful_authorize_with_solution_id
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = 'A1000000'
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_successful_response(response)
+    assert !response.authorization.blank?
+  ensure
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = nil
+  end
+
+  def test_successful_authorize_with_solution_id_and_stored_creds
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = 'A1000000'
+    @options[:stored_credential] = {
+      initiator: 'cardholder',
+      reason_type: '',
+      initial_transaction: true,
+      network_transaction_id: ''
+    }
+    @options[:commerce_indicator] = 'internet'
+
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_successful_response(response)
+    assert !response.authorization.blank?
+  ensure
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = nil
+  end
+
   def test_successful_authorization_with_issuer_additional_data
     @options[:issuer_additional_data] = @issuer_additional_data
 
@@ -131,16 +152,82 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert !response.authorization.blank?
   end
 
+  def test_successful_authorization_with_issuer_additional_data_and_partner_solution_id
+    @options[:issuer_additional_data] = @issuer_additional_data
+
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = 'A1000000'
+
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_successful_response(auth)
+
+    assert void = @gateway.void(auth.authorization, @options)
+    assert_successful_response(void)
+  ensure
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = nil
+  end
+
+  def test_successful_authorize_with_merchant_descriptor_and_partner_solution_id
+    @options[:merchant_descriptor] = 'Spreedly'
+
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = 'A1000000'
+
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_successful_response(auth)
+
+    assert void = @gateway.void(auth.authorization, @options)
+    assert_successful_response(void)
+  ensure
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = nil
+  end
+
+  def test_successful_authorize_with_issuer_additional_data_stored_creds_merchant_desc_and_partner_solution_id
+    @options[:issuer_additional_data] = @issuer_additional_data
+    @options[:stored_credential] = {
+      initiator: 'cardholder',
+      reason_type: '',
+      initial_transaction: true,
+      network_transaction_id: ''
+    }
+    @options[:commerce_indicator] = 'internet'
+    @options[:merchant_descriptor] = 'Spreedly'
+
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = 'A1000000'
+
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_successful_response(auth)
+  ensure
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = nil
+  end
+
   def test_successful_authorization_with_elo
     assert response = @gateway.authorize(@amount, @elo_credit_card, @options)
     assert_successful_response(response)
     assert !response.authorization.blank?
   end
 
-  def test_successful_authorization_with_installment_total_count
-    assert response = @gateway.authorize(@amount, @credit_card, installment_total_count: 5)
+  def test_successful_authorization_with_installment_data
+    options = @options.merge(installment_total_count: 5, installment_plan_type: 1, first_installment_date: '300101')
+    assert response = @gateway.authorize(@amount, @credit_card, options)
     assert_successful_response(response)
     assert !response.authorization.blank?
+  end
+
+  def test_successful_authorization_with_merchant_tax_id
+    options = @options.merge(merchant_tax_id: '123')
+    assert response = @gateway.authorize(@amount, @credit_card, options)
+    assert_successful_response(response)
+  end
+
+  def test_successful_authorization_with_sales_slip_number
+    options = @options.merge(sales_slip_number: '456')
+    assert response = @gateway.authorize(@amount, @credit_card, options)
+    assert_successful_response(response)
+  end
+
+  def test_successful_authorization_with_airline_agent_code
+    options = @options.merge(airline_agent_code: '7Q')
+    assert response = @gateway.authorize(@amount, @credit_card, options)
+    assert_successful_response(response)
   end
 
   def test_unsuccessful_authorization
@@ -155,6 +242,15 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_successful_response(purchase)
     assert void = @gateway.void(purchase.authorization, @options)
     assert_successful_response(void)
+  end
+
+  def test_successful_asynchronous_adjust
+    assert authorize = @gateway_latam.authorize(@amount, @credit_card, @options)
+    assert_successful_response(authorize)
+    assert adjust = @gateway_latam.adjust(@amount * 2, authorize.authorization, @options)
+    assert_success adjust
+    assert capture = @gateway_latam.capture(@amount, authorize.authorization, @options)
+    assert_successful_response(capture)
   end
 
   def test_authorize_and_void
@@ -200,6 +296,18 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_successful_response(void)
   end
 
+  def test_successful_void_with_solution_id
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = 'A1000000'
+
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_successful_response(auth)
+
+    assert void = @gateway.void(auth.authorization, @options)
+    assert_successful_response(void)
+  ensure
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = nil
+  end
+
   def test_successful_tax_calculation
     assert response = @gateway.calculate_tax(@credit_card, @options)
     assert response.params['totalTaxAmount']
@@ -226,8 +334,61 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_successful_response(response)
   end
 
+  def test_successful_purchase_with_issuer_additional_data_and_partner_solution_id
+    @options[:issuer_additional_data] = @issuer_additional_data
+
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = 'A1000000'
+
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_successful_response(purchase)
+  ensure
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = nil
+  end
+
+  def test_successful_purchase_with_merchant_descriptor_and_partner_solution_id
+    @options[:merchant_descriptor] = 'Spreedly'
+
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = 'A1000000'
+
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_successful_response(purchase)
+  ensure
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = nil
+  end
+
+  def test_successful_purchase_with_issuer_additional_data_stored_creds_merchant_desc_and_partner_solution_id
+    @options[:issuer_additional_data] = @issuer_additional_data
+    @options[:stored_credential] = {
+      initiator: 'cardholder',
+      reason_type: '',
+      initial_transaction: true,
+      network_transaction_id: ''
+    }
+    @options[:commerce_indicator] = 'internet'
+    @options[:merchant_descriptor] = 'Spreedly'
+
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = 'A1000000'
+
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_successful_response(purchase)
+  ensure
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = nil
+  end
+
   def test_successful_purchase_with_reconciliation_id
     options = @options.merge(reconciliation_id: '1936831')
+    assert response = @gateway.purchase(@amount, @credit_card, options)
+    assert_successful_response(response)
+  end
+
+  def test_successful_authorize_with_customer_id
+    options = @options.merge(customer_id: '7500BB199B4270EFE05348D0AFCAD')
+    assert response = @gateway.authorize(@amount, @credit_card, options)
+    assert_successful_response(response)
+  end
+
+  def test_successful_purchase_with_customer_id
+    options = @options.merge(customer_id: '7500BB199B4270EFE00588D0AFCAD')
     assert response = @gateway.purchase(@amount, @credit_card, options)
     assert_successful_response(response)
   end
@@ -244,9 +405,16 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_billing_address_override
-    @options[:billing_address] = address
+    billing_address = {
+      address1: '111 North Pole Lane',
+      city: 'Santaland',
+      state: '',
+      phone: nil
+    }
+    @options[:billing_address] = billing_address
     @options[:email] = 'override@example.com'
     assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_equal true, response.success?
     assert_successful_response(response)
   end
 
@@ -269,8 +437,40 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_successful_response(response)
   end
 
-  def test_successful_pinless_debit_card_puchase
+  def test_successful_pinless_debit_card_purchase
     assert response = @gateway.purchase(@amount, @pinless_debit_card, @options.merge(pinless_debit_card: true))
+    assert_successful_response(response)
+  end
+
+  def test_successful_purchase_with_solution_id
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = 'A1000000'
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_successful_response(response)
+    assert !response.authorization.blank?
+  ensure
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = nil
+  end
+
+  def test_successful_purchase_with_solution_id_and_stored_creds
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = 'A1000000'
+    @options[:stored_credential] = {
+      initiator: 'cardholder',
+      reason_type: '',
+      initial_transaction: true,
+      network_transaction_id: ''
+    }
+    @options[:commerce_indicator] = 'internet'
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_successful_response(response)
+    assert !response.authorization.blank?
+  ensure
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = nil
+  end
+
+  def test_successful_purchase_with_country_submitted_as_empty_string
+    @options[:billing_address] = { country: '' }
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_successful_response(response)
   end
 
@@ -304,6 +504,18 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert response = @gateway.capture(@amount, auth.authorization)
     assert_successful_response(response)
     assert !response.authorization.blank?
+  end
+
+  def test_successful_capture_with_solution_id
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = 'A1000000'
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_successful_response(auth)
+
+    assert response = @gateway.capture(@amount, auth.authorization, @options)
+    assert_successful_response(response)
+    assert !response.authorization.blank?
+  ensure
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = nil
   end
 
   def test_successful_authorization_and_failed_capture
@@ -340,6 +552,18 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_successful_response(response)
   end
 
+  def test_successful_refund_with_solution_id
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = 'A1000000'
+
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_successful_response(purchase)
+
+    assert refund = @gateway.refund(@amount, purchase.authorization, @options)
+    assert_successful_response(refund)
+  ensure
+    ActiveMerchant::Billing::CyberSourceGateway.application_id = nil
+  end
+
   def test_successful_validate_pinless_debit_card
     assert response = @gateway.validate_pinless_debit_card(@pinless_debit_card, @options)
     assert response.test?
@@ -351,8 +575,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4111111111111111',
       brand: 'visa',
       eci: '05',
-      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
-    )
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
 
     assert auth = @gateway.authorize(@amount, credit_card, @options)
     assert_successful_response(auth)
@@ -389,7 +612,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
         merchantDescriptor: {
           name: 'Test Name',
           address1: '123 Main Dr',
-          locality: 'Durham',
+          locality: 'Durham'
         }
       }
     }
@@ -502,7 +725,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
   end
 
   def test_successful_create_subscription_with_monthly_options
-    response = @gateway.store(@credit_card, @subscription_options.merge(setup_fee: 99.0, subscription: {amount: 49.0, automatic_renew: false, frequency: 'monthly'}))
+    response = @gateway.store(@credit_card, @subscription_options.merge(setup_fee: 99.0, subscription: { amount: 49.0, automatic_renew: false, frequency: 'monthly' }))
     assert_equal 'Successful transaction', response.message
     response = @gateway.retrieve(response.authorization, order_id: @subscription_options[:order_id])
     assert_equal '0.49', response.params['recurringAmount']
@@ -513,7 +736,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert response = @gateway.store(@credit_card, @subscription_options)
     assert_successful_response(response)
 
-    assert response = @gateway.update(response.authorization, @credit_card, {order_id: generate_unique_id, setup_fee: 100})
+    assert response = @gateway.update(response.authorization, @credit_card, { order_id: generate_unique_id, setup_fee: 100 })
     assert_successful_response(response)
   end
 
@@ -522,7 +745,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_successful_response(response)
 
     assert response = @gateway.update(response.authorization, nil,
-      {order_id: generate_unique_id, setup_fee: 100, billing_address: address, email: 'someguy1232@fakeemail.net'})
+      { order_id: generate_unique_id, setup_fee: 100, billing_address: address, email: 'someguy1232@fakeemail.net' })
 
     assert_successful_response(response)
   end
@@ -742,22 +965,6 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     }
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_successful_response(response)
-  end
-
-  def test_missing_field
-    @options = @options.merge({
-      address: {
-        address1: 'Unspecified',
-        city: 'Unspecified',
-        state: 'NC',
-        zip: '00000',
-        country: ''
-      }
-    })
-
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_failure response
-    assert_equal 'Request is missing one or more required fields: c:billTo/c:country', response.message
   end
 
   def test_invalid_field

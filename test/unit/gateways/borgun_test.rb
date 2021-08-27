@@ -49,7 +49,7 @@ class BorgunTest < Test::Unit::TestCase
 
     capture = stub_comms do
       @gateway.capture(@amount, response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/140601083732/, data)
     end.respond_with(successful_capture_response)
 
@@ -65,8 +65,8 @@ class BorgunTest < Test::Unit::TestCase
       'PassengerName' => 'Jane Doe'
     }
     response = stub_comms do
-      @gateway.authorize(@amount, @credit_card, {passenger_itinerary_data: passenger_itinerary_data})
-    end.check_request do |endpoint, data, headers|
+      @gateway.authorize(@amount, @credit_card, { passenger_itinerary_data: passenger_itinerary_data })
+    end.check_request do |_endpoint, data, _headers|
       assert_match('PassengerItineraryData', data)
     end.respond_with(successful_authorize_response)
 
@@ -83,7 +83,7 @@ class BorgunTest < Test::Unit::TestCase
 
     refund = stub_comms do
       @gateway.refund(@amount, response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/140216103700/, data)
     end.respond_with(successful_refund_response)
 
@@ -100,7 +100,7 @@ class BorgunTest < Test::Unit::TestCase
 
     refund = stub_comms do
       @gateway.void(response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/140216103700/, data)
     end.respond_with(successful_void_response)
 
@@ -110,7 +110,7 @@ class BorgunTest < Test::Unit::TestCase
   def test_passing_cvv
     stub_comms do
       @gateway.purchase(@amount, @credit_card)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/#{@credit_card.verification_value}/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -118,7 +118,7 @@ class BorgunTest < Test::Unit::TestCase
   def test_passing_terminal_id
     stub_comms do
       @gateway.purchase(@amount, @credit_card, { terminal_id: '3' })
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/TerminalID&gt;3/, data)
     end.respond_with(successful_purchase_response)
   end

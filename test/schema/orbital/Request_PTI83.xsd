@@ -98,6 +98,13 @@
 			<xs:element name="DWSLI" type="xs:string" minOccurs="0"/>
 			<xs:element name="DWIncentiveInd" type="xs:string" minOccurs="0"/>
 			<xs:element name="DigitalWalletType" type="xs:string" minOccurs="0"/>
+			<xs:element name="PieSubscriberID" type="xs:string" minOccurs="0"/>
+	                <xs:element name="PieFormatID" type="xs:string" minOccurs="0"/>
+	                <xs:element name="PieIntegrityCheck" type="xs:string" minOccurs="0"/>
+        	        <xs:element name="PieKeyID" type="xs:string" minOccurs="0"/>
+	                <xs:element name="PiePhaseID" type="xs:string" minOccurs="0"/>
+	                <xs:element name="PieMode" type="xs:string" minOccurs="0"/>
+            		<xs:element name="DebitRoutingNetwork" type="xs:string" minOccurs="0"/>
 		</xs:sequence>
 	</xs:complexType>
 
@@ -317,9 +324,9 @@
 			<xs:element name="PCardDtlTaxAmount2Ind" type="xs:string" minOccurs="0"/>
 			<xs:element name="PCardDtlTaxAmount2" type="xs:string" minOccurs="0"/>
 			<xs:element name="DigitalTokenCryptogram" type="xs:string" minOccurs="0"/>
-                        <xs:element name="PCardNationalTaxRate" type="xs:string" minOccurs="0"/>
-                        <xs:element name="PCardLocalTaxAmount" type="xs:string" minOccurs="0"/>
-                        <xs:element name="EWSFirstName" type="xs:string" minOccurs="0"/>
+            <xs:element name="PCardNationalTaxRate" type="xs:string" minOccurs="0"/>
+            <xs:element name="PCardLocalTaxAmount" type="xs:string" minOccurs="0"/>
+            <xs:element name="EWSFirstName" type="xs:string" minOccurs="0"/>
 			<xs:element name="EWSMiddleName" type="xs:string" minOccurs="0"/>
 			<xs:element name="EWSLastName" type="xs:string" minOccurs="0"/>
 			<xs:element name="EWSBusinessName" type="xs:string" minOccurs="0"/>
@@ -336,15 +343,15 @@
 			<xs:element name="EWSIDType" type="xs:string" minOccurs="0"/>
 			<xs:element name="EWSIDNumber" type="xs:string" minOccurs="0"/>
 			<xs:element name="EWSIDState" type="xs:string" minOccurs="0"/>
-                        <xs:element name="ECPSameDayInd" type="xs:string" minOccurs="0"/>
+            <xs:element name="ECPSameDayInd" type="xs:string" minOccurs="0"/>
 			<xs:element name="ECPReDepositFreq" type="xs:string" minOccurs="0"/>
 			<xs:element name="ECPReDepositInd" type="xs:string" minOccurs="0"/>
-                         <xs:element name="FXOptoutInd" type="xs:string" minOccurs="0"/>
-                        <xs:element name="FXRateHandlingInd" type="xs:string" minOccurs="0"/>
-                        <xs:element name="FXRateID" type="xs:string" minOccurs="0"/>
-                        <xs:element name="FXExchangeRate" type="xs:string" minOccurs="0"/>
-                        <xs:element name="FXPresentmentCurrency" type="xs:string" minOccurs="0"/>
-                        <xs:element name="FXSettlementCurrency" type="xs:string" minOccurs="0"/>
+            <xs:element name="FXOptoutInd" type="xs:string" minOccurs="0"/>
+            <xs:element name="FXRateHandlingInd" type="xs:string" minOccurs="0"/>
+            <xs:element name="FXRateID" type="xs:string" minOccurs="0"/>
+            <xs:element name="FXExchangeRate" type="xs:string" minOccurs="0"/>
+            <xs:element name="FXPresentmentCurrency" type="xs:string" minOccurs="0"/>
+            <xs:element name="FXSettlementCurrency" type="xs:string" minOccurs="0"/>
 			<xs:element name="MITMsgType" type="xs:string" minOccurs="0"/> 
 			<xs:element name="MITStoredCredentialInd" type="xs:string" minOccurs="0"/>
 			<xs:element name="MITSubmittedTransactionID" type="xs:string" minOccurs="0"/>
@@ -364,7 +371,16 @@
             <xs:element name="MCProgramProtocol" type="xs:string" minOccurs="0"/>
             <xs:element name="MCDirectoryTransID" type="xs:string" minOccurs="0"/>
             <xs:element name="UCAFInd" type="xs:string" minOccurs="0"/>
-            <!-- ?&AUTO_ADD_FIELD_NewOrder -->
+            <xs:element name="DsrpCryptogram" type="xs:string" minOccurs="0"/>
+            <xs:element name="TargetCardBrand" type="xs:string" minOccurs="0"/>
+            <xs:element name="PieSubscriberID" type="xs:string" minOccurs="0"/>
+            <xs:element name="PieFormatID" type="xs:string" minOccurs="0"/>
+            <xs:element name="PieIntegrityCheck" type="xs:string" minOccurs="0"/>
+            <xs:element name="PieKeyID" type="xs:string" minOccurs="0"/>
+            <xs:element name="PiePhaseID" type="xs:string" minOccurs="0"/>
+            <xs:element name="PieMode" type="xs:string" minOccurs="0"/>
+            <xs:element name="DebitRoutingNetwork" type="xs:string" minOccurs="0"/>
+            <!-- ?&AUTO_ADD_FIELD_NewOrder?& -->
             <!-- DONOT TOUCH THE ABOVE LINE -->
         </xs:sequence>
 	</xs:complexType>

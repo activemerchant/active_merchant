@@ -10,12 +10,12 @@ module ActiveMerchant
       self.homepage_url = 'http://www.ezic.com/'
       self.display_name = 'Ezic'
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :account_id)
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         post = {}
 
         add_account_id(post)
@@ -26,7 +26,7 @@ module ActiveMerchant
         commit('S', post)
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         post = {}
 
         add_account_id(post)
@@ -37,7 +37,7 @@ module ActiveMerchant
         commit('A', post)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         post = {}
 
         add_account_id(post)
@@ -48,7 +48,7 @@ module ActiveMerchant
         commit('D', post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         post = {}
 
         add_account_id(post)
@@ -59,7 +59,7 @@ module ActiveMerchant
         commit('R', post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = {}
 
         add_account_id(post)
@@ -69,7 +69,7 @@ module ActiveMerchant
         commit('U', post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -187,7 +187,7 @@ module ActiveMerchant
 
       def headers
         {
-          'User-Agent' => "ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
+          'User-Agent' => "ActiveMerchantBindings/#{ActiveMerchant::VERSION}"
         }
       end
     end

@@ -3,6 +3,9 @@ require 'test_helper'
 class PayflowTest < Test::Unit::TestCase
   include CommStub
 
+  SUCCESSFUL_AUTHENTICATION_STATUS = 'Y'
+  CHALLENGE_REQUIRED_AUTHENTICATION_STATUS = 'C'
+
   def setup
     Base.mode = :test
 
@@ -58,7 +61,7 @@ class PayflowTest < Test::Unit::TestCase
   def test_authorization_with_three_d_secure_option
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options.merge(three_d_secure_option))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_three_d_secure REXML::Document.new(data), authorize_buyer_auth_result_path
     end.respond_with(successful_authorization_response)
     assert_equal 'Approved', response.message
@@ -68,25 +71,49 @@ class PayflowTest < Test::Unit::TestCase
     refute response.fraud_review?
   end
 
+  def test_authorization_with_three_d_secure_option_without_version_does_not_include_three_ds_version
+    three_d_secure_option = three_d_secure_option(options: { version: nil })
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(three_d_secure_option))
+    end.check_request do |_endpoint, data, _headers|
+      assert_three_d_secure REXML::Document.new(data), authorize_buyer_auth_result_path, expected_version: nil
+    end.respond_with(successful_authorization_response)
+  end
+
+  def test_authorization_with_three_d_secure_option_without_ds_transaction_id_does_not_include_ds_transaction_id
+    three_d_secure_option = three_d_secure_option(options: { ds_transaction_id: nil })
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(three_d_secure_option))
+    end.check_request do |_endpoint, data, _headers|
+      assert_three_d_secure REXML::Document.new(data), authorize_buyer_auth_result_path, expected_ds_transaction_id: nil
+    end.respond_with(successful_authorization_response)
+  end
+
   def test_successful_authorization_with_more_options
+    partner_id = 'partner_id'
+    PayflowGateway.application_id = partner_id
+
     options = @options.merge(
       {
         order_id: '123',
         description: 'Description string',
         order_desc: 'OrderDesc string',
         comment: 'Comment string',
-        comment2: 'Comment2 string'
+        comment2: 'Comment2 string',
+        merch_descr: 'MerchDescr string'
       }
     )
 
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match %r(<InvNum>123</InvNum>), data
       assert_match %r(<Description>Description string</Description>), data
       assert_match %r(<OrderDesc>OrderDesc string</OrderDesc>), data
       assert_match %r(<Comment>Comment string</Comment>), data
       assert_match %r(<ExtData Name=\"COMMENT2\" Value=\"Comment2 string\"/>), data
+      assert_match %r(</PayData><ExtData Name=\"BUTTONSOURCE\" Value=\"partner_id\"/></Authorization>), data
+      assert_match %r(<MerchDescr>MerchDescr string</MerchDescr>), data
     end.respond_with(successful_authorization_response)
     assert_equal 'Approved', response.message
     assert_success response
@@ -107,7 +134,7 @@ class PayflowTest < Test::Unit::TestCase
   def test_successful_purchase_with_three_d_secure_option
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(three_d_secure_option))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_three_d_secure REXML::Document.new(data), purchase_buyer_auth_result_path
     end.respond_with(successful_purchase_with_fraud_review_response)
     assert_success response
@@ -120,7 +147,7 @@ class PayflowTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match %r(<AcctNum>6355059797</AcctNum>), data
       assert_match %r(<ACH><AcctType>), data.tr("\n ", '')
     end.respond_with(successful_l2_response)
@@ -135,7 +162,7 @@ class PayflowTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match %r(<Date>20190104</Date>), data
       assert_match %r(<Amount>3.23</Amount>), data
       assert_match %r(<Level3Invoice><CountyTax><Amount>), data.tr("\n ", '')
@@ -151,7 +178,7 @@ class PayflowTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match %r(<Date>20190104</Date>), data
       assert_match %r(<Amount>3.23</Amount>), data
       assert_match %r(<AcctNum>6355059797</AcctNum>), data
@@ -305,13 +332,17 @@ class PayflowTest < Test::Unit::TestCase
     assert_equal 'Declined', response.message
   end
 
+  def test_store_returns_error
+    error = assert_raises(ArgumentError) { @gateway.store(@credit_card, @options) }
+    assert_equal 'Store is not supported on Payflow gateways', error.message
+  end
+
   def test_initial_recurring_transaction_missing_parameters
     assert_raises ArgumentError do
       assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
         @gateway.recurring(@amount, @credit_card,
           periodicity: :monthly,
-          initial_transaction: { }
-        )
+          initial_transaction: {})
       end
     end
   end
@@ -321,8 +352,7 @@ class PayflowTest < Test::Unit::TestCase
       assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
         @gateway.recurring(@amount, @credit_card,
           periodicity: :monthly,
-          initial_transaction: { amount: :purchase }
-        )
+          initial_transaction: { amount: :purchase })
       end
     end
   end
@@ -442,15 +472,25 @@ class PayflowTest < Test::Unit::TestCase
     assert_three_d_secure REXML::Document.new(xml.target!), '/Card/BuyerAuthResult'
   end
 
-  def test_add_credit_card_with_three_d_secure_frictionless
+  def test_add_credit_card_with_three_d_secure_challenge_required
     xml = Builder::XmlMarkup.new
     credit_card = credit_card(
       '5641820000000005',
       brand: 'maestro'
     )
 
-    @gateway.send(:add_credit_card, xml, credit_card, @options.merge(three_d_secure_option_frictionless))
-    assert_three_d_secure_frictionless REXML::Document.new(xml.target!), '/Card/BuyerAuthResult'
+    three_d_secure_option = three_d_secure_option(
+      options: {
+        authentication_response_status: nil,
+        directory_response_status: CHALLENGE_REQUIRED_AUTHENTICATION_STATUS
+      }
+    )
+    @gateway.send(:add_credit_card, xml, credit_card, @options.merge(three_d_secure_option))
+    assert_three_d_secure(
+      REXML::Document.new(xml.target!),
+      '/Card/BuyerAuthResult',
+      expected_status: CHALLENGE_REQUIRED_AUTHENTICATION_STATUS
+    )
   end
 
   def test_duplicate_response_flag
@@ -476,7 +516,7 @@ class PayflowTest < Test::Unit::TestCase
   end
 
   def test_name_field_are_included_instead_of_first_and_last
-    @gateway.expects(:ssl_post).returns(successful_authorization_response).with do |url, data|
+    @gateway.expects(:ssl_post).returns(successful_authorization_response).with do |_url, data|
       data !~ /FirstName/ && data !~ /LastName/ && data =~ /<Name>/
     end
     response = @gateway.authorize(@amount, @credit_card, @options)
@@ -513,7 +553,7 @@ class PayflowTest < Test::Unit::TestCase
   private
 
   def pre_scrubbed
-    <<~EOS
+    <<~REQUEST
       opening connection to pilot-payflowpro.paypal.com:443...
       opened
       starting SSL for pilot-payflowpro.paypal.com:443...
@@ -532,11 +572,11 @@ class PayflowTest < Test::Unit::TestCase
       -> "<XMLPayResponse  xmlns=\"http://www.paypal.com/XMLPay\"><ResponseData><Vendor></Vendor><Partner></Partner><TransactionResults><TransactionResult><Result>4</Result><Message>Invalid amount</Message></TransactionResult></TransactionResults></ResponseData></XMLPayResponse>"
       read 267 bytes
       Conn close
-    EOS
+    REQUEST
   end
 
   def post_scrubbed
-    <<~EOS
+    <<~REQUEST
       opening connection to pilot-payflowpro.paypal.com:443...
       opened
       starting SSL for pilot-payflowpro.paypal.com:443...
@@ -555,11 +595,11 @@ class PayflowTest < Test::Unit::TestCase
       -> "<XMLPayResponse  xmlns=\"http://www.paypal.com/XMLPay\"><ResponseData><Vendor></Vendor><Partner></Partner><TransactionResults><TransactionResult><Result>4</Result><Message>Invalid amount</Message></TransactionResult></TransactionResults></ResponseData></XMLPayResponse>"
       read 267 bytes
       Conn close
-    EOS
+    REQUEST
   end
 
   def pre_scrubbed_check
-    <<~EOS
+    <<~REQUEST
       opening connection to pilot-payflowpro.paypal.com:443...
       opened
       starting SSL for pilot-payflowpro.paypal.com:443...
@@ -578,11 +618,11 @@ class PayflowTest < Test::Unit::TestCase
       -> "<XMLPayResponse  xmlns=\"http://www.paypal.com/XMLPay\"><ResponseData><Vendor></Vendor><Partner></Partner><TransactionResults><TransactionResult><Result>4</Result><Message>Invalid amount</Message></TransactionResult></TransactionResults></ResponseData></XMLPayResponse>"
       read 267 bytes
       Conn close
-    EOS
+    REQUEST
   end
 
   def post_scrubbed_check
-    <<~EOS
+    <<~REQUEST
       opening connection to pilot-payflowpro.paypal.com:443...
       opened
       starting SSL for pilot-payflowpro.paypal.com:443...
@@ -601,7 +641,7 @@ class PayflowTest < Test::Unit::TestCase
       -> "<XMLPayResponse  xmlns=\"http://www.paypal.com/XMLPay\"><ResponseData><Vendor></Vendor><Partner></Partner><TransactionResults><TransactionResult><Result>4</Result><Message>Invalid amount</Message></TransactionResult></TransactionResults></ResponseData></XMLPayResponse>"
       read 267 bytes
       Conn close
-    EOS
+    REQUEST
   end
 
   def successful_recurring_response
@@ -877,24 +917,48 @@ class PayflowTest < Test::Unit::TestCase
     XML
   end
 
-  def assert_three_d_secure(xml_doc, buyer_auth_result_path)
-    assert_equal 'Y', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/Status").text
-    assert_equal 'QvDbSAxSiaQs241899E0', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/AuthenticationId").text
-    assert_equal 'pareq block', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/PAReq").text
-    assert_equal 'https://bankacs.bank.com/ascurl', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/ACSUrl").text
-    assert_equal '02', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/ECI").text
-    assert_equal 'jGvQIvG/5UhjAREALGYa6Vu/hto=', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/CAVV").text
-    assert_equal 'UXZEYlNBeFNpYVFzMjQxODk5RTA=', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/XID").text
+  def three_d_secure_option(options: {})
+    {
+      three_d_secure: {
+        authentication_id: 'QvDbSAxSiaQs241899E0',
+        authentication_response_status: SUCCESSFUL_AUTHENTICATION_STATUS,
+        pareq: 'pareq block',
+        acs_url: 'https://bankacs.bank.com/ascurl',
+        eci: '02',
+        cavv: 'jGvQIvG/5UhjAREALGYa6Vu/hto=',
+        xid: 'UXZEYlNBeFNpYVFzMjQxODk5RTA=',
+        version: 'any version',
+        ds_transaction_id: 'any ds_transaction_id'
+      }.
+        merge(options).
+        compact
+    }
   end
 
-  def assert_three_d_secure_frictionless(xml_doc, buyer_auth_result_path)
-    assert_equal 'C', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/Status").text
+  def assert_three_d_secure(
+    xml_doc,
+    buyer_auth_result_path,
+    expected_status: SUCCESSFUL_AUTHENTICATION_STATUS,
+    expected_version: 'any version',
+    expected_ds_transaction_id: 'any ds_transaction_id'
+  )
+    assert_equal expected_status, REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/Status").text
     assert_equal 'QvDbSAxSiaQs241899E0', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/AuthenticationId").text
     assert_equal 'pareq block', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/PAReq").text
     assert_equal 'https://bankacs.bank.com/ascurl', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/ACSUrl").text
     assert_equal '02', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/ECI").text
     assert_equal 'jGvQIvG/5UhjAREALGYa6Vu/hto=', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/CAVV").text
     assert_equal 'UXZEYlNBeFNpYVFzMjQxODk5RTA=', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/XID").text
+    assert_text_value_or_nil(expected_version, REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/THREEDSVERSION"))
+    assert_text_value_or_nil(expected_ds_transaction_id, REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/DSTRANSACTIONID"))
+  end
+
+  def assert_text_value_or_nil(expected_text_value, xml_element)
+    if expected_text_value
+      assert_equal expected_text_value, xml_element.text
+    else
+      assert_nil xml_element
+    end
   end
 
   def authorize_buyer_auth_result_path
@@ -903,33 +967,5 @@ class PayflowTest < Test::Unit::TestCase
 
   def purchase_buyer_auth_result_path
     '/XMLPayRequest/RequestData/Transactions/Transaction/Sale/PayData/Tender/Card/BuyerAuthResult'
-  end
-
-  def three_d_secure_option
-    {
-      three_d_secure: {
-        authentication_id: 'QvDbSAxSiaQs241899E0',
-        authentication_response_status: 'Y',
-        pareq: 'pareq block',
-        acs_url: 'https://bankacs.bank.com/ascurl',
-        eci: '02',
-        cavv: 'jGvQIvG/5UhjAREALGYa6Vu/hto=',
-        xid: 'UXZEYlNBeFNpYVFzMjQxODk5RTA='
-      }
-    }
-  end
-
-  def three_d_secure_option_frictionless
-    {
-      three_d_secure: {
-        authentication_id: 'QvDbSAxSiaQs241899E0',
-        directory_response_status: 'C',
-        pareq: 'pareq block',
-        acs_url: 'https://bankacs.bank.com/ascurl',
-        eci: '02',
-        cavv: 'jGvQIvG/5UhjAREALGYa6Vu/hto=',
-        xid: 'UXZEYlNBeFNpYVFzMjQxODk5RTA='
-      }
-    }
   end
 end

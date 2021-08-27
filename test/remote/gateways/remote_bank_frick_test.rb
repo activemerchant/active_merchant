@@ -24,7 +24,7 @@ class RemoteBankFrickTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_minimal_options
-    assert response = @gateway.purchase(@amount, @credit_card, {address: address})
+    assert response = @gateway.purchase(@amount, @credit_card, { address: address })
     assert_success response
     assert response.test?
     assert_match %r{Transaction succeeded}, response.message

@@ -56,7 +56,7 @@ module ActiveMerchant #:nodoc:
         commit("gateways/#{@options[:gateway_token]}/authorize.xml", request)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         request = build_xml_request('transaction') do |doc|
           add_invoice(doc, money, options)
         end
@@ -64,7 +64,7 @@ module ActiveMerchant #:nodoc:
         commit("transactions/#{authorization}/capture.xml", request)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         request = build_xml_request('transaction') do |doc|
           add_invoice(doc, money, options)
           add_extra_options(:gateway_specific_fields, doc, options)
@@ -73,7 +73,7 @@ module ActiveMerchant #:nodoc:
         commit("transactions/#{authorization}/credit.xml", request)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         commit("transactions/#{authorization}/void.xml", '')
       end
 
@@ -98,7 +98,7 @@ module ActiveMerchant #:nodoc:
       #
       # credit_card    - The CreditCard to store
       # options        - A standard ActiveMerchant options hash
-      def store(credit_card, options={})
+      def store(credit_card, options = {})
         retain = (options.has_key?(:retain) ? options[:retain] : true)
         save_card(retain, credit_card, options)
       end
@@ -108,7 +108,7 @@ module ActiveMerchant #:nodoc:
       #
       # credit_card    - The CreditCard to store
       # options        - A standard ActiveMerchant options hash
-      def unstore(authorization, options={})
+      def unstore(authorization, options = {})
         commit("payment_methods/#{authorization}/redact.xml", '', :put)
       end
 
@@ -117,7 +117,7 @@ module ActiveMerchant #:nodoc:
         commit("transactions/#{transaction_token}.xml", nil, :get)
       end
 
-      alias_method :status, :find
+      alias status find
 
       def supports_scrubbing?
         true
@@ -254,11 +254,20 @@ module ActiveMerchant #:nodoc:
       end
 
       def childnode_to_response(response, node, childnode)
-        name = "#{node.name.downcase}_#{childnode.name.downcase}"
-        if name == 'payment_method_data' && !childnode.elements.empty?
-          response[name.to_sym] = Hash.from_xml(childnode.to_s).values.first
+        node_name = node.name.downcase
+        childnode_name = childnode.name.downcase
+        composed_name = "#{node_name}_#{childnode_name}"
+
+        childnodes_present = !childnode.elements.empty?
+
+        if childnodes_present && composed_name == 'payment_method_data'
+          response[composed_name.to_sym] = Hash.from_xml(childnode.to_s).values.first
+        elsif childnodes_present && node_name == 'gateway_specific_response_fields'
+          response[node_name.to_sym] = {
+            childnode_name => Hash.from_xml(childnode.to_s).values.first
+          }
         else
-          response[name.to_sym] = childnode.text
+          response[composed_name.to_sym] = childnode.text
         end
       end
 

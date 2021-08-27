@@ -17,7 +17,7 @@ module ActiveMerchant #:nodoc:
         'Y' => 'M',
         'N' => 'N',
         'X' => 'P',
-        'E' => 'U',
+        'E' => 'U'
       }
 
       AVS_CODE_TRANSLATOR = {
@@ -28,12 +28,12 @@ module ActiveMerchant #:nodoc:
         'E' => 'R'
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :merchant_id, :api_key)
         super
       end
 
-      def purchase(amount, payment_method, options={})
+      def purchase(amount, payment_method, options = {})
         commit(:purchase, amount, options[:currency]) do |doc|
           add_invoice(doc, 'sale', amount, payment_method, options)
           add_payment_method(doc, payment_method, options)
@@ -41,7 +41,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def authorize(amount, payment_method, options={})
+      def authorize(amount, payment_method, options = {})
         commit(:authorize, amount, options[:currency]) do |doc|
           add_invoice(doc, 'auth', amount, payment_method, options)
           add_payment_method(doc, payment_method, options)
@@ -49,26 +49,26 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def capture(amount, authorization, options={})
+      def capture(amount, authorization, options = {})
         commit(:capture) do |doc|
           add_invoice(doc, 'capture', amount, authorization, options)
         end
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         _, amount, currency = split_authorization(authorization)
         commit(:void) do |doc|
           add_invoice(doc, 'void', amount.to_i, authorization, options.merge(currency: currency))
         end
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, options = {})
         commit(:refund) do |doc|
           add_invoice(doc, 'refund', amount, authorization, options)
         end
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         commit(:verify) do |doc|
           add_invoice(doc, 'verify', 100, credit_card, options)
           add_payment_method(doc, credit_card, options)
@@ -162,7 +162,7 @@ module ActiveMerchant #:nodoc:
         country.code(:alpha2)
       end
 
-      def commit(action, amount=nil, currency=nil)
+      def commit(action, amount = nil, currency = nil)
         currency = default_currency if currency == nil
         request = build_xml_request { |doc| yield(doc) }
         response = ssl_post(live_url, request, headers)

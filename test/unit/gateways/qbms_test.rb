@@ -7,7 +7,8 @@ class QbmsTest < Test::Unit::TestCase
     @gateway = QbmsGateway.new(
       login: 'test',
       ticket: 'abc123',
-      pem: 'PEM')
+      pem: 'PEM'
+    )
 
     @amount = 100
     @card = credit_card('4111111111111111')
@@ -175,7 +176,7 @@ class QbmsTest < Test::Unit::TestCase
     opts = {
       avs_street: 'Pass',
       avs_zip: 'Pass',
-      card_security_code_match: 'Pass',
+      card_security_code_match: 'Pass'
     }.merge(opts)
 
     wrap 'CustomerCreditCardAuth', opts, <<-"XML"
@@ -202,7 +203,7 @@ class QbmsTest < Test::Unit::TestCase
     opts = {
       avs_street: 'Pass',
       avs_zip: 'Pass',
-      card_security_code_match: 'Pass',
+      card_security_code_match: 'Pass'
     }.merge(opts)
 
     wrap 'CustomerCreditCardCharge', opts, <<-"XML"
@@ -238,7 +239,7 @@ class QbmsTest < Test::Unit::TestCase
     opts = {
       signon_status_code: 0,
       request_id: 'x',
-      status_code: 0,
+      status_code: 0
     }.merge(opts)
 
     <<-"XML"

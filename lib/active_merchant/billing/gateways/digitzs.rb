@@ -14,19 +14,19 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://digitzs.com'
       self.display_name = 'Digitzs'
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :app_key, :api_key)
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         MultiResponse.run do |r|
           r.process { commit('auth/token', app_token_request(options)) }
           r.process { commit('payments', purchase_request(money, payment, options), options.merge({ app_token: app_token_from(r) })) }
         end
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         MultiResponse.run do |r|
           r.process { commit('auth/token', app_token_request(options)) }
           r.process { commit('payments', refund_request(money, authorization, options), options.merge({ app_token: app_token_from(r) })) }
@@ -151,7 +151,7 @@ module ActiveMerchant #:nodoc:
         post[:data][:type] = 'payments'
         post[:data][:attributes][:merchantId] = options[:merchant_id]
         post[:data][:attributes][:paymentType] = 'cardRefund'
-        post[:data][:attributes][:originalTransaction] = {id: authorization}
+        post[:data][:attributes][:originalTransaction] = { id: authorization }
         add_transaction(post, money, options)
 
         post
@@ -175,7 +175,7 @@ module ActiveMerchant #:nodoc:
         post[:data][:attributes] = {
           tokenType: 'card',
           customerId: options[:customer_id],
-          label: 'Credit Card',
+          label: 'Credit Card'
         }
         add_payment(post, payment, options)
         add_address(post, options)
@@ -206,7 +206,7 @@ module ActiveMerchant #:nodoc:
         JSON.parse(body)
       end
 
-      def commit(action, parameters, options={})
+      def commit(action, parameters, options = {})
         url = (test? ? test_url : live_url)
         response = parse(ssl_post(url + "/#{action}", parameters.to_json, headers(options)))
 

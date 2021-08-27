@@ -13,12 +13,12 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'USD'
       self.supported_cardtypes = %i[visa master american_express discover diners_club jcb]
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :user_name, :password)
         super
       end
 
-      def purchase(amount, payment_method, options={})
+      def purchase(amount, payment_method, options = {})
         post = initialize_required_fields('Sale')
 
         # Allow the same amount in multiple transactions.
@@ -30,7 +30,7 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
-      def authorize(amount, payment_method, options={})
+      def authorize(amount, payment_method, options = {})
         post = initialize_required_fields('Auth')
 
         add_invoice(post, amount, options)
@@ -40,7 +40,7 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
-      def capture(amount, authorization, options={})
+      def capture(amount, authorization, options = {})
         post = initialize_required_fields('Force')
 
         add_invoice(post, amount, options)
@@ -50,7 +50,7 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, options = {})
         post = initialize_required_fields('Return')
 
         add_invoice(post, amount, options)
@@ -59,7 +59,7 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = initialize_required_fields('Void')
 
         add_reference(post, authorization)
@@ -74,7 +74,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def store(creditcard, options={})
+      def store(creditcard, options = {})
         post = initialize_required_fields('')
         post[:transaction] = 'Create'
         post[:CardNumber] = creditcard.number

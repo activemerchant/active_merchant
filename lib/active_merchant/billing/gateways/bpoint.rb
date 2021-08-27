@@ -12,12 +12,12 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://www.bpoint.com.au/bpoint'
       self.display_name = 'BPoint'
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :username, :password, :merchant_number)
         super
       end
 
-      def store(credit_card, options={})
+      def store(credit_card, options = {})
         options[:crn1] ||= 'DEFAULT'
         request_body = soap_request do |xml|
           add_token(xml, credit_card, options)
@@ -25,7 +25,7 @@ module ActiveMerchant #:nodoc:
         commit(request_body)
       end
 
-      def purchase(amount, credit_card, options={})
+      def purchase(amount, credit_card, options = {})
         request_body = soap_request do |xml|
           process_payment(xml) do |payment_xml|
             add_purchase(payment_xml, amount, credit_card, options)
@@ -34,7 +34,7 @@ module ActiveMerchant #:nodoc:
         commit(request_body)
       end
 
-      def authorize(amount, credit_card, options={})
+      def authorize(amount, credit_card, options = {})
         request_body = soap_request do |xml|
           process_payment(xml) do |payment_xml|
             add_authorize(payment_xml, amount, credit_card, options)
@@ -43,7 +43,7 @@ module ActiveMerchant #:nodoc:
         commit(request_body)
       end
 
-      def capture(amount, authorization, options={})
+      def capture(amount, authorization, options = {})
         request_body = soap_request do |xml|
           process_payment(xml) do |payment_xml|
             add_capture(payment_xml, amount, authorization, options)
@@ -52,7 +52,7 @@ module ActiveMerchant #:nodoc:
         commit(request_body)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, options = {})
         request_body = soap_request do |xml|
           process_payment(xml) do |payment_xml|
             add_refund(payment_xml, amount, authorization, options)
@@ -61,7 +61,7 @@ module ActiveMerchant #:nodoc:
         commit(request_body)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         request_body = soap_request do |xml|
           process_payment(xml) do |payment_xml|
             add_void(payment_xml, authorization, options)
@@ -70,7 +70,7 @@ module ActiveMerchant #:nodoc:
         commit(request_body)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options.merge(amount: 100)) }

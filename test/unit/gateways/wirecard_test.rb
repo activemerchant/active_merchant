@@ -32,7 +32,7 @@ class WirecardTest < Test::Unit::TestCase
       city:      'Ottawa',
       zip:       'K12 P2A',
       country:   'CA',
-      state:     nil,
+      state:     nil
     }
 
     @address_avs = {
@@ -40,7 +40,7 @@ class WirecardTest < Test::Unit::TestCase
       city:      'London',
       zip:       'W8 2TE',
       country:   'GB',
-      state:     'London',
+      state:     'London'
     }
   end
 
@@ -192,7 +192,7 @@ class WirecardTest < Test::Unit::TestCase
 
     stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<FunctionID>32chars-------------------------<\/FunctionID>/, data)
     end.respond_with(successful_authorization_response)
   end
@@ -202,7 +202,7 @@ class WirecardTest < Test::Unit::TestCase
 
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<FunctionID>32chars-------------------------<\/FunctionID>/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -212,7 +212,7 @@ class WirecardTest < Test::Unit::TestCase
 
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<FunctionID>\?D\?nde est\? la estaci\?n\?<\/FunctionID>/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -236,7 +236,7 @@ class WirecardTest < Test::Unit::TestCase
 
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<CommerceType>MOTO<\/CommerceType>/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -244,7 +244,7 @@ class WirecardTest < Test::Unit::TestCase
   def test_store_sets_recurring_transaction_type_to_initial
     stub_comms do
       @gateway.store(@credit_card)
-    end.check_request do |endpoint, body, headers|
+    end.check_request do |_endpoint, body, _headers|
       assert_xml_element_text(body, '//RECURRING_TRANSACTION/Type', 'Initial')
     end.respond_with(successful_authorization_response)
   end
@@ -252,7 +252,7 @@ class WirecardTest < Test::Unit::TestCase
   def test_store_sets_amount_to_100_by_default
     stub_comms do
       @gateway.store(@credit_card)
-    end.check_request do |endpoint, body, headers|
+    end.check_request do |_endpoint, body, _headers|
       assert_xml_element_text(body, '//CC_TRANSACTION/Amount', '100')
     end.respond_with(successful_authorization_response)
   end
@@ -260,7 +260,7 @@ class WirecardTest < Test::Unit::TestCase
   def test_store_sets_amount_to_amount_from_options
     stub_comms do
       @gateway.store(@credit_card, amount: 120)
-    end.check_request do |endpoint, body, headers|
+    end.check_request do |_endpoint, body, _headers|
       assert_xml_element_text(body, '//CC_TRANSACTION/Amount', '120')
     end.respond_with(successful_authorization_response)
   end
@@ -268,7 +268,7 @@ class WirecardTest < Test::Unit::TestCase
   def test_authorization_using_reference_sets_proper_elements
     stub_comms do
       @gateway.authorize(@amount, '45678', @options)
-    end.check_request do |endpoint, body, headers|
+    end.check_request do |_endpoint, body, _headers|
       assert_xml_element_text(body, '//GuWID', '45678')
       assert_no_match(/<CREDIT_CARD_DATA>/, body)
     end.respond_with(successful_authorization_response)
@@ -277,7 +277,7 @@ class WirecardTest < Test::Unit::TestCase
   def test_purchase_using_reference_sets_proper_elements
     stub_comms do
       @gateway.purchase(@amount, '87654', @options)
-    end.check_request do |endpoint, body, headers|
+    end.check_request do |_endpoint, body, _headers|
       assert_xml_element_text(body, '//GuWID', '87654')
       assert_no_match(/<CREDIT_CARD_DATA>/, body)
     end.respond_with(successful_authorization_response)
@@ -286,7 +286,7 @@ class WirecardTest < Test::Unit::TestCase
   def test_authorization_with_recurring_transaction_type_initial
     stub_comms do
       @gateway.authorize(@amount, @credit_card, @options.merge(recurring: 'Initial'))
-    end.check_request do |endpoint, body, headers|
+    end.check_request do |_endpoint, body, _headers|
       assert_xml_element_text(body, '//RECURRING_TRANSACTION/Type', 'Initial')
     end.respond_with(successful_authorization_response)
   end
@@ -294,7 +294,7 @@ class WirecardTest < Test::Unit::TestCase
   def test_purchase_using_with_recurring_transaction_type_initial
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(recurring: 'Initial'))
-    end.check_request do |endpoint, body, headers|
+    end.check_request do |_endpoint, body, _headers|
       assert_xml_element_text(body, '//RECURRING_TRANSACTION/Type', 'Initial')
     end.respond_with(successful_authorization_response)
   end

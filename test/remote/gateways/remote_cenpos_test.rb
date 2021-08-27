@@ -17,7 +17,7 @@ class RemoteCenposTest < Test::Unit::TestCase
         name:     'Jim Smith',
         address1: 'D8320',
         zip:      'D5284'
-      },
+      }
     }
   end
 

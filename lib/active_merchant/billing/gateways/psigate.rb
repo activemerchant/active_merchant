@@ -106,8 +106,7 @@ module ActiveMerchant #:nodoc:
           test: test?,
           authorization: build_authorization(response),
           avs_result: { code: response[:avsresult] },
-          cvv_result: response[:cardidresult]
-        )
+          cvv_result: response[:cardidresult])
       end
 
       def url
@@ -119,7 +118,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(xml)
-        response = {message: 'Global Error Receipt', complete: false}
+        response = { message: 'Global Error Receipt', complete: false }
 
         xml = REXML::Document.new(xml)
         xml.elements.each('//Result/*') do |node|
@@ -163,7 +162,7 @@ module ActiveMerchant #:nodoc:
           SubTotal: amount(money),
           Tax1: options[:tax1],
           Tax2: options[:tax2],
-          ShippingTotal: options[:shipping_total],
+          ShippingTotal: options[:shipping_total]
         }
 
         if creditcard

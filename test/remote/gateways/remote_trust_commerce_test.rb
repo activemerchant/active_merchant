@@ -6,7 +6,7 @@ class TrustCommerceTest < Test::Unit::TestCase
 
     @credit_card = credit_card('4111111111111111')
     @declined_credit_card = credit_card('4111111111111112')
-    @check = check({account_number: 55544433221, routing_number: 789456124})
+    @check = check({ account_number: 55544433221, routing_number: 789456124 })
 
     @amount = 100
 

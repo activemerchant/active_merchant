@@ -233,7 +233,7 @@ module ActiveMerchant #:nodoc:
           post[:items] = options[:items].map do |item|
             updated = {}
             item.each_pair do |k, v|
-              updated.merge!(k.to_s.gsub(/_/, '') => v)
+              updated.merge!(k.to_s.delete('_') => v)
             end
             updated
           end

@@ -39,6 +39,32 @@ class MundipaggTest < Test::Unit::TestCase
       description: 'Store Purchase'
     }
 
+    @submerchant_options = {
+      submerchant: {
+        "merchant_category_code": '44444',
+        "payment_facilitator_code": '5555555',
+        "code": 'code2',
+        "name": 'Sub Tony Stark',
+        "document": '123456789',
+        "type": 'individual',
+        "phone": {
+          "country_code": '55',
+          "number": '000000000',
+          "area_code": '21'
+        },
+        "address": {
+          "street": 'Malibu Point',
+          "number": '10880',
+          "complement": 'A',
+          "neighborhood": 'Central Malibu',
+          "city": 'Malibu',
+          "state": 'CA',
+          "country": 'US',
+          "zip_code": '24210-460'
+        }
+      }
+    }
+
     @gateway_response_error = 'Esta loja n??o possui um meio de pagamento configurado para a bandeira VR'
     @acquirer_message = 'Simulator|Transação de simulada negada por falta de crédito, utilizado para realizar simulação de autorização parcial.'
   end
@@ -59,7 +85,7 @@ class MundipaggTest < Test::Unit::TestCase
     @options[:holder_document] = 'a1b2c3d4'
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/a1b2c3d4/, data)
     end.respond_with(successful_purchase_response)
 
@@ -67,11 +93,73 @@ class MundipaggTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_authorization_secret_key
+    options = {
+      gateway_affiliation_id: 'abc123',
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase',
+      authorization_secret_key: 'secret_token'
+    }
+    basic_token = Base64.strict_encode64("#{options[:authorization_secret_key]}:")
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, _data, headers|
+      assert_match(basic_token, headers['Authorization'])
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert_equal 'Simulator|Transação de simulação autorizada com sucesso', response.message
+    assert response.test?
+  end
+
+  def test_api_key_in_headers
+    basic_token = Base64.strict_encode64("#{@gateway.options[:api_key]}:")
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, _data, headers|
+      assert_match(basic_token, headers['Authorization'])
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert_equal 'Simulator|Transação de simulação autorizada com sucesso', response.message
+    assert response.test?
+  end
+
+  def test_successful_purchase_with_submerchant
+    options = @options.update(@submerchant_options)
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/44444/, data)
+      assert_match(/5555555/, data)
+      assert_match(/code2/, data)
+      assert_match(/Sub Tony Stark/, data)
+      assert_match(/123456789/, data)
+      assert_match(/individual/, data)
+      assert_match(/55/, data)
+      assert_match(/000000000/, data)
+      assert_match(/21/, data)
+      assert_match(/Malibu Point/, data)
+      assert_match(/10880/, data)
+      assert_match(/A/, data)
+      assert_match(/Central Malibu/, data)
+      assert_match(/Malibu/, data)
+      assert_match(/CA/, data)
+      assert_match(/US/, data)
+      assert_match(/24210-460/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert_equal 'Simulator|Transação de simulação autorizada com sucesso', response.message
+    assert response.test?
+  end
+
   def test_billing_not_sent
     @options.delete(:billing_address)
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       refute data['billing_address']
     end.respond_with(successful_purchase_response)
   end
@@ -130,6 +218,17 @@ class MundipaggTest < Test::Unit::TestCase
 
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
     response = @gateway.authorize(@amount, @credit_card, @options.merge(shipping_address: shipping_address))
+    assert_success response
+
+    assert_equal 'ch_gm5wrlGMI2Fb0x6K', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_authorize_with_submerchant
+    options = @options.update(@submerchant_options)
+
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+    response = @gateway.authorize(@amount, @credit_card, options)
     assert_success response
 
     assert_equal 'ch_gm5wrlGMI2Fb0x6K', response.authorization
@@ -271,7 +370,7 @@ class MundipaggTest < Test::Unit::TestCase
     }
     stub_comms do
       gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/"gateway_affiliation_id":"abc123"/, data)
     end.respond_with(successful_purchase_response)
   end

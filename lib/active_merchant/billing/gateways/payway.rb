@@ -83,7 +83,7 @@ module ActiveMerchant
         store: 'registerAccount'
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         @options = options
 
         @options[:merchant] ||= 'TEST' if test?
@@ -92,7 +92,7 @@ module ActiveMerchant
         @options[:eci] ||= 'SSL'
       end
 
-      def authorize(amount, payment_method, options={})
+      def authorize(amount, payment_method, options = {})
         requires!(options, :order_id)
 
         post = {}
@@ -101,7 +101,7 @@ module ActiveMerchant
         commit(:authorize, post)
       end
 
-      def capture(amount, authorization, options={})
+      def capture(amount, authorization, options = {})
         requires!(options, :order_id)
 
         post = {}
@@ -110,7 +110,7 @@ module ActiveMerchant
         commit(:capture, post)
       end
 
-      def purchase(amount, payment_method, options={})
+      def purchase(amount, payment_method, options = {})
         requires!(options, :order_id)
 
         post = {}
@@ -119,7 +119,7 @@ module ActiveMerchant
         commit(:purchase, post)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, options = {})
         requires!(options, :order_id)
 
         post = {}
@@ -128,7 +128,7 @@ module ActiveMerchant
         commit(:refund, post)
       end
 
-      def store(credit_card, options={})
+      def store(credit_card, options = {})
         requires!(options, :billing_id)
 
         post = {}
@@ -137,7 +137,7 @@ module ActiveMerchant
         commit(:store, post)
       end
 
-      def status(options={})
+      def status(options = {})
         requires!(options, :order_id)
 
         commit(:status, 'customer.orderNumber' => options[:order_id])
@@ -194,8 +194,7 @@ module ActiveMerchant
 
         Response.new(success, message, params,
           test: (@options[:merchant].to_s == 'TEST'),
-          authorization: post[:order_number]
-        )
+          authorization: post[:order_number])
       rescue ActiveMerchant::ResponseError => e
         raise unless e.response.code == '403'
 

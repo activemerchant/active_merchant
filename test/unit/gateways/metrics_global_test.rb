@@ -45,7 +45,7 @@ class MetricsGlobalTest < Test::Unit::TestCase
   def test_add_address_outsite_north_america
     result = {}
 
-    @gateway.send(:add_address, result, billing_address: {address1: '164 Waverley Street', country: 'DE', state: ''})
+    @gateway.send(:add_address, result, billing_address: { address1: '164 Waverley Street', country: 'DE', state: '' })
 
     assert_equal %w[address city company country phone state zip], result.stringify_keys.keys.sort
     assert_equal 'n/a', result[:state]
@@ -56,7 +56,7 @@ class MetricsGlobalTest < Test::Unit::TestCase
   def test_add_address
     result = {}
 
-    @gateway.send(:add_address, result, billing_address: {address1: '164 Waverley Street', country: 'US', state: 'CO'})
+    @gateway.send(:add_address, result, billing_address: { address1: '164 Waverley Street', country: 'US', state: 'CO' })
 
     assert_equal %w[address city company country phone state zip], result.stringify_keys.keys.sort
     assert_equal 'CO', result[:state]
@@ -101,7 +101,7 @@ class MetricsGlobalTest < Test::Unit::TestCase
 
   def test_purchase_meets_minimum_requirements
     params = {
-      amount: '1.01',
+      amount: '1.01'
     }
 
     @gateway.send(:add_creditcard, params, @credit_card)
@@ -122,7 +122,7 @@ class MetricsGlobalTest < Test::Unit::TestCase
   def test_refund_passing_extra_info
     response = stub_comms do
       @gateway.refund(50, '123456789', card_number: @credit_card.number, first_name: 'Bob', last_name: 'Smith', zip: '12345')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/x_first_name=Bob/, data)
       assert_match(/x_last_name=Smith/, data)
       assert_match(/x_zip=12345/, data)
@@ -193,7 +193,7 @@ class MetricsGlobalTest < Test::Unit::TestCase
       card_code: 'N',
       avs_result_code: 'A',
       response_reason_code: '27',
-      response_reason_text: 'Failure.',
+      response_reason_text: 'Failure.'
     }
     assert_equal 'CVV does not match', @gateway.message_from(result)
 

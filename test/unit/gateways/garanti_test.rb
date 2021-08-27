@@ -58,11 +58,11 @@ class GarantiTest < Test::Unit::TestCase
   end
 
   def test_strip_invalid_xml_chars
-    xml = <<EOF
+    xml = <<XML
       <response>
         <element>Parse the First & but not this &tilde; &x002a;</element>
       </response>
-EOF
+XML
     parsed_xml = @gateway.send(:strip_invalid_xml_chars, xml)
 
     assert REXML::Document.new(parsed_xml)
@@ -75,7 +75,7 @@ EOF
 
   # Place raw successful response from gateway here
   def successful_purchase_response
-    <<~EOF
+    <<~XML
       <GVPSResponse>
             <Mode></Mode>
             <Order>
@@ -105,12 +105,12 @@ EOF
                   </RewardInqResult>
             </Transaction>
       </GVPSResponse>
-    EOF
+    XML
   end
 
   # Place raw failed response from gateway here
   def failed_purchase_response
-    <<~EOF
+    <<~XML
       <GVPSResponse>
             <Mode></Mode>
             <Order>
@@ -140,6 +140,6 @@ EOF
                   </RewardInqResult>
             </Transaction>
       </GVPSResponse>
-    EOF
+    XML
   end
 end

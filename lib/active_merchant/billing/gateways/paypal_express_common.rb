@@ -17,7 +17,7 @@ module ActiveMerchant
       end
 
       def redirect_url_for(token, options = {})
-        options = {review: true, mobile: false}.update(options)
+        options = { review: true, mobile: false }.update(options)
 
         cmd  = options[:mobile] ? '_express-checkout-mobile' : '_express-checkout'
         url  = "#{redirect_url}?cmd=#{cmd}&token=#{token}"

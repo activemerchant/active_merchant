@@ -4,7 +4,7 @@ class HpsTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    @gateway = HpsGateway.new({secret_api_key: '12'})
+    @gateway = HpsGateway.new({ secret_api_key: '12' })
 
     @credit_card = credit_card
     @amount = 100
@@ -38,10 +38,22 @@ class HpsTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_zip_formatting
+    @options[:billing_address][:zip] = '12345-1234 '
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/<hps:CardHolderZip>123451234<\/hps:CardHolderZip>/, data)
+    end.respond_with(successful_swipe_purchase_response)
+
+    assert_success response
+  end
+
   def test_successful_check_purchase
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@check_amount, @check, @options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/<hps:CheckSale><hps:Block1><hps:CheckAction>SALE<\/hps:CheckAction>/, data)
     end.respond_with(successful_check_purchase_response)
 
@@ -53,7 +65,7 @@ class HpsTest < Test::Unit::TestCase
     check.account_type = nil
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@check_amount, check, @options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/<hps:CheckSale><hps:Block1><hps:CheckAction>SALE<\/hps:CheckAction>/, data)
     end.respond_with(successful_check_purchase_response)
 
@@ -65,7 +77,7 @@ class HpsTest < Test::Unit::TestCase
     check.account_holder_type = nil
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@check_amount, check, @options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/<hps:CheckSale><hps:Block1><hps:CheckAction>SALE<\/hps:CheckAction>/, data)
     end.respond_with(successful_check_purchase_response)
 
@@ -142,6 +154,20 @@ class HpsTest < Test::Unit::TestCase
     assert_failure refund
   end
 
+  def test_successful_credit
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
+
+    credit = @gateway.credit(@amount, @credit_card)
+    assert_success credit
+  end
+
+  def test_failed_credit
+    @gateway.expects(:ssl_post).returns(failed_refund_response)
+
+    credit = @gateway.refund(@amount, @credit_card)
+    assert_failure credit
+  end
+
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_void_response)
 
@@ -153,7 +179,7 @@ class HpsTest < Test::Unit::TestCase
   def test_successful_check_void
     void = stub_comms(@gateway, :ssl_request) do
       @gateway.void('169054', check_void: true)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/<hps:Transaction><hps:CheckVoid>/, data)
     end.respond_with(successful_check_void_response)
 
@@ -166,6 +192,18 @@ class HpsTest < Test::Unit::TestCase
     void = @gateway.void('169054')
     assert_instance_of Response, void
     assert_failure void
+  end
+
+  def test_successful_recurring_purchase
+    stored_credential_params = {
+      reason_type: 'recurring'
+    }
+
+    @gateway.expects(:ssl_post).returns(successful_charge_response)
+
+    response = @gateway.purchase(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
+    assert_instance_of Response, response
+    assert_success response
   end
 
   def test_successful_purchase_with_swipe_no_encryption
@@ -250,8 +288,7 @@ class HpsTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :apple_pay
-    )
+      source: :apple_pay)
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -264,8 +301,7 @@ class HpsTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :apple_pay
-    )
+      source: :apple_pay)
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_failure response
     assert_equal 'The card was declined.', response.message
@@ -277,8 +313,7 @@ class HpsTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :apple_pay
-    )
+      source: :apple_pay)
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -290,8 +325,7 @@ class HpsTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :apple_pay
-    )
+      source: :apple_pay)
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_failure response
     assert_equal 'The card was declined.', response.message
@@ -304,8 +338,7 @@ class HpsTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :apple_pay
-    )
+      source: :apple_pay)
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -318,8 +351,7 @@ class HpsTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :apple_pay
-    )
+      source: :apple_pay)
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_failure response
     assert_equal 'The card was declined.', response.message
@@ -331,8 +363,7 @@ class HpsTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :apple_pay
-    )
+      source: :apple_pay)
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -344,8 +375,7 @@ class HpsTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :apple_pay
-    )
+      source: :apple_pay)
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_failure response
     assert_equal 'The card was declined.', response.message
@@ -358,8 +388,7 @@ class HpsTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :android_pay
-    )
+      source: :android_pay)
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -372,8 +401,7 @@ class HpsTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :android_pay
-    )
+      source: :android_pay)
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_failure response
     assert_equal 'The card was declined.', response.message
@@ -385,8 +413,7 @@ class HpsTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :android_pay
-    )
+      source: :android_pay)
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -398,8 +425,7 @@ class HpsTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :android_pay
-    )
+      source: :android_pay)
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_failure response
     assert_equal 'The card was declined.', response.message
@@ -412,8 +438,7 @@ class HpsTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :android_pay
-    )
+      source: :android_pay)
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -426,8 +451,7 @@ class HpsTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :android_pay
-    )
+      source: :android_pay)
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_failure response
     assert_equal 'The card was declined.', response.message
@@ -439,8 +463,7 @@ class HpsTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :android_pay
-    )
+      source: :android_pay)
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -452,8 +475,7 @@ class HpsTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :android_pay
-    )
+      source: :android_pay)
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_failure response
     assert_equal 'The card was declined.', response.message
@@ -466,8 +488,7 @@ class HpsTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :google_pay
-    )
+      source: :google_pay)
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -480,8 +501,7 @@ class HpsTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :google_pay
-    )
+      source: :google_pay)
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_failure response
     assert_equal 'The card was declined.', response.message
@@ -493,8 +513,7 @@ class HpsTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :google_pay
-    )
+      source: :google_pay)
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -506,8 +525,7 @@ class HpsTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :google_pay
-    )
+      source: :google_pay)
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_failure response
     assert_equal 'The card was declined.', response.message
@@ -520,8 +538,7 @@ class HpsTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :google_pay
-    )
+      source: :google_pay)
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -534,8 +551,7 @@ class HpsTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :google_pay
-    )
+      source: :google_pay)
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_failure response
     assert_equal 'The card was declined.', response.message
@@ -547,8 +563,7 @@ class HpsTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :google_pay
-    )
+      source: :google_pay)
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -560,8 +575,7 @@ class HpsTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :google_pay
-    )
+      source: :google_pay)
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_failure response
     assert_equal 'The card was declined.', response.message
@@ -581,7 +595,7 @@ class HpsTest < Test::Unit::TestCase
 
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/<hps:SecureECommerce>(.*)<\/hps:SecureECommerce>/, data)
       assert_match(/<hps:PaymentDataSource>Visa 3DSecure<\/hps:PaymentDataSource>/, data)
       assert_match(/<hps:TypeOfPaymentData>3DSecure<\/hps:TypeOfPaymentData>/, data)
@@ -608,7 +622,7 @@ class HpsTest < Test::Unit::TestCase
 
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/<hps:SecureECommerce>(.*)<\/hps:SecureECommerce>/, data)
       assert_match(/<hps:PaymentDataSource>MasterCard 3DSecure<\/hps:PaymentDataSource>/, data)
       assert_match(/<hps:TypeOfPaymentData>3DSecure<\/hps:TypeOfPaymentData>/, data)
@@ -635,7 +649,7 @@ class HpsTest < Test::Unit::TestCase
 
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/<hps:SecureECommerce>(.*)<\/hps:SecureECommerce>/, data)
       assert_match(/<hps:PaymentDataSource>Discover 3DSecure<\/hps:PaymentDataSource>/, data)
       assert_match(/<hps:TypeOfPaymentData>3DSecure<\/hps:TypeOfPaymentData>/, data)
@@ -662,7 +676,7 @@ class HpsTest < Test::Unit::TestCase
 
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/<hps:SecureECommerce>(.*)<\/hps:SecureECommerce>/, data)
       assert_match(/<hps:PaymentDataSource>AMEX 3DSecure<\/hps:PaymentDataSource>/, data)
       assert_match(/<hps:TypeOfPaymentData>3DSecure<\/hps:TypeOfPaymentData>/, data)
@@ -689,7 +703,7 @@ class HpsTest < Test::Unit::TestCase
 
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       refute_match(/<hps:SecureECommerce>(.*)<\/hps:SecureECommerce>/, data)
       refute_match(/<hps:PaymentDataSource>(.*)<\/hps:PaymentDataSource>/, data)
       refute_match(/<hps:TypeOfPaymentData>3DSecure<\/hps:TypeOfPaymentData>/, data)
@@ -702,10 +716,41 @@ class HpsTest < Test::Unit::TestCase
     assert_equal 'Success', response.message
   end
 
+  def test_successful_auth_with_stored_credentials
+    stored_credential_params = {
+      initial_transaction: false,
+      reason_type: 'recurring',
+      initiator: 'customer',
+      network_transaction_id: 12345
+    }
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/<hps:CardOnFile>C<\/hps:CardOnFile>/, data)
+      assert_match(/<hps:CardBrandTxnId>12345<\/hps:CardBrandTxnId>/, data)
+      assert_match(/<hps:OneTime>N<\/hps:OneTime>/, data)
+    end.respond_with(successful_charge_response)
+
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_truncates_long_invoicenbr
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@check_amount, @check, @options.merge(order_id: '04863692e6b56aaed85760b3d0879afd18b980da0521f6454c007a838435e561'))
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/<hps:InvoiceNbr>04863692e6b56aaed85760b3d0879afd18b980da0521f6454c007a838435<\/hps:InvoiceNbr>/, data)
+    end.respond_with(successful_check_purchase_response)
+
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
   private
 
   def successful_charge_response
-    <<~RESPONSE
+    <<~XML
       <?xml version="1.0" encoding="UTF-8"?>
       <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <soap:Body>
@@ -739,11 +784,11 @@ class HpsTest < Test::Unit::TestCase
            </PosResponse>
         </soap:Body>
       </soap:Envelope>
-    RESPONSE
+    XML
   end
 
   def successful_check_purchase_response
-    <<~RESPONSE
+    <<~XML
       <?xml version="1.0" encoding="UTF-8"?>
       <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <soap:Body>
@@ -768,11 +813,11 @@ class HpsTest < Test::Unit::TestCase
           </PosResponse>
         </soap:Body>
       </soap:Envelope>
-    RESPONSE
+    XML
   end
 
   def failed_charge_response
-    <<~RESPONSE
+    <<~XML
       <?xml version="1.0" encoding="UTF-8"?>
       <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <soap:Body>
@@ -802,11 +847,11 @@ class HpsTest < Test::Unit::TestCase
            </PosResponse>
         </soap:Body>
       </soap:Envelope>
-    RESPONSE
+    XML
   end
 
   def failed_charge_response_decline
-    <<~RESPONSE
+    <<~XML
       <?xml version="1.0" encoding="UTF-8"?>
       <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <soap:Body>
@@ -836,11 +881,11 @@ class HpsTest < Test::Unit::TestCase
            </PosResponse>
         </soap:Body>
       </soap:Envelope>
-    RESPONSE
+    XML
   end
 
   def successful_authorize_response
-    <<~RESPONSE
+    <<~XML
       <?xml version="1.0" encoding="UTF-8"?>
       <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <soap:Body>
@@ -874,11 +919,11 @@ class HpsTest < Test::Unit::TestCase
            </PosResponse>
         </soap:Body>
       </soap:Envelope>
-    RESPONSE
+    XML
   end
 
   def failed_authorize_response
-    <<~RESPONSE
+    <<~XML
       <?xml version="1.0" encoding="UTF-8"?>
       <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <soap:Body>
@@ -908,11 +953,11 @@ class HpsTest < Test::Unit::TestCase
           </PosResponse>
         </soap:Body>
       </soap:Envelope>
-    RESPONSE
+    XML
   end
 
   def failed_authorize_response_decline
-    <<~RESPONSE
+    <<~XML
       <?xml version="1.0" encoding="UTF-8"?>
       <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <soap:Body>
@@ -942,11 +987,11 @@ class HpsTest < Test::Unit::TestCase
           </PosResponse>
         </soap:Body>
       </soap:Envelope>
-    RESPONSE
+    XML
   end
 
   def successful_capture_response
-    <<~RESPONSE
+    <<~XML
       <?xml version="1.0" encoding="utf-8"?>
       <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
         <soap:Body>
@@ -968,11 +1013,11 @@ class HpsTest < Test::Unit::TestCase
           </PosResponse>
         </soap:Body>
       </soap:Envelope>
-    RESPONSE
+    XML
   end
 
   def failed_capture_response
-    <<~Response
+    <<~XML
       <?xml version="1.0" encoding="UTF-8"?>
       <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <soap:Body>
@@ -991,11 +1036,11 @@ class HpsTest < Test::Unit::TestCase
            </PosResponse>
         </soap:Body>
       </soap:Envelope>
-    Response
+    XML
   end
 
   def successful_refund_response
-    <<~RESPONSE
+    <<~XML
       <?xml version="1.0" encoding="UTF-8"?>
       <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <soap:Body>
@@ -1018,11 +1063,11 @@ class HpsTest < Test::Unit::TestCase
            </PosResponse>
         </soap:Body>
       </soap:Envelope>
-    RESPONSE
+    XML
   end
 
   def failed_refund_response
-    <<~RESPONSE
+    <<~XML
       <?xml version="1.0" encoding="UTF-8"?>
       <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <soap:Body>
@@ -1042,11 +1087,11 @@ class HpsTest < Test::Unit::TestCase
            </PosResponse>
         </soap:Body>
       </soap:Envelope>
-    RESPONSE
+    XML
   end
 
   def successful_void_response
-    <<~RESPONSE
+    <<~XML
       <?xml version="1.0" encoding="UTF-8"?>
       <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <soap:Body>
@@ -1068,11 +1113,11 @@ class HpsTest < Test::Unit::TestCase
            </PosResponse>
         </soap:Body>
       </soap:Envelope>
-    RESPONSE
+    XML
   end
 
   def successful_check_void_response
-    <<~RESPONSE
+    <<~XML
       <?xml version="1.0" encoding="UTF-8"?>
       <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <soap:Body>
@@ -1097,11 +1142,11 @@ class HpsTest < Test::Unit::TestCase
           </PosResponse>
         </soap:Body>
       </soap:Envelope>
-    RESPONSE
+    XML
   end
 
   def failed_void_response
-    <<~RESPONSE
+    <<~XML
       <?xml version="1.0" encoding="UTF-8"?>
       <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <soap:Body>
@@ -1120,11 +1165,11 @@ class HpsTest < Test::Unit::TestCase
            </PosResponse>
         </soap:Body>
       </soap:Envelope>
-    RESPONSE
+    XML
   end
 
   def successful_swipe_purchase_response
-    <<~RESPONSE
+    <<~XML
       <?xml version="1.0" encoding="UTF-8"?>
       <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
          <soap:Body>
@@ -1155,11 +1200,11 @@ class HpsTest < Test::Unit::TestCase
             </PosResponse>
          </soap:Body>
       </soap:Envelope>
-    RESPONSE
+    XML
   end
 
   def failed_swipe_purchase_response
-    <<~RESPONSE
+    <<~XML
       <?xml version="1.0" encoding="UTF-8"?>
       <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
          <soap:Body>
@@ -1178,11 +1223,11 @@ class HpsTest < Test::Unit::TestCase
             </PosResponse>
          </soap:Body>
       </soap:Envelope>
-    RESPONSE
+    XML
   end
 
   def successful_verify_response
-    <<~RESPONSE
+    <<~XML
       <?xml version="1.0" encoding="UTF-8"?>
       <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
          <soap:Body>
@@ -1215,11 +1260,11 @@ class HpsTest < Test::Unit::TestCase
             </PosResponse>
          </soap:Body>
       </soap:Envelope>
-    RESPONSE
+    XML
   end
 
   def failed_verify_response
-    <<~RESPONSE
+    <<~XML
       <?xml version="1.0" encoding="UTF-8"?>
       <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
          <soap:Body>
@@ -1239,7 +1284,7 @@ class HpsTest < Test::Unit::TestCase
             </PosResponse>
          </soap:Body>
       </soap:Envelope>
-    RESPONSE
+    XML
   end
 
   def pre_scrub

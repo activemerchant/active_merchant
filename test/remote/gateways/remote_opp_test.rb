@@ -25,7 +25,7 @@ class RemoteOppTest < Test::Unit::TestCase
         city:     'Test',
         state:    'TE',
         zip:      'AB12CD',
-        country:  'GB',
+        country:  'GB'
       },
       shipping_address: {
         name:     'Muton DeMicelis',
@@ -33,7 +33,7 @@ class RemoteOppTest < Test::Unit::TestCase
         city:     'Munich',
         state:    'Bov',
         zip:      '81675',
-        country:  'DE',
+        country:  'DE'
       },
       customer: {
         merchant_customer_id:  'your merchant/customer id',
@@ -46,13 +46,13 @@ class RemoteOppTest < Test::Unit::TestCase
         company_name:  'JJ Ltd.',
         identification_doctype:  'PASSPORT',
         identification_docid:  'FakeID2342431234123',
-        ip:  ip,
-      },
+        ip:  ip
+      }
     }
 
     @minimal_request_options = {
       order_id: "Order #{time}",
-      description: 'Store Purchase - Books',
+      description: 'Store Purchase - Books'
     }
 
     @complete_request_options['customParameters[SHOPPER_test124TestName009]'] = 'customParameters_test'

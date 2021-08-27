@@ -203,7 +203,7 @@ module ActiveMerchant #:nodoc:
         commit('CANCEL', post)
       end
 
-      def verify(creditcard, options={})
+      def verify(creditcard, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, creditcard, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -282,7 +282,7 @@ module ActiveMerchant #:nodoc:
         add_pair(post, :threeDSRequired, options[:threeds_required] || @threeds_required ? 'Y' : 'N')
       end
 
-      def add_remote_address(post, options={})
+      def add_remote_address(post, options = {})
         add_pair(post, :remoteAddress, options[:ip] || '1.1.1.1')
       end
 

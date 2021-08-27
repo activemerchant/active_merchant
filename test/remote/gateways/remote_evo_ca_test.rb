@@ -102,7 +102,7 @@ class RemoteEvoCaTest < Test::Unit::TestCase
 
   def test_avs_match
     # To simulate an AVS Match, pass 888 in the address1 field, 77777 for zip.
-    opts = @options.merge(billing_address: address({address1: '888', zip: '77777'}))
+    opts = @options.merge(billing_address: address({ address1: '888', zip: '77777' }))
     assert response = @gateway.purchase(@amount, @credit_card, opts)
     assert_success response
     assert_equal 'Y', response.avs_result['code']

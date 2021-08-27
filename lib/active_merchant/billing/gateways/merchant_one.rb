@@ -79,7 +79,7 @@ module ActiveMerchant #:nodoc:
         post['ccexp'] = "#{sprintf('%02d', creditcard.month)}#{creditcard.year.to_s[-2, 2]}"
       end
 
-      def commit(action, money, parameters={})
+      def commit(action, money, parameters = {})
         parameters['username'] = @options[:username]
         parameters['password'] = @options[:password]
         parse(ssl_post(BASE_URL, post_data(action, parameters)))

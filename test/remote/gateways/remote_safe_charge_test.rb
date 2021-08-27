@@ -16,9 +16,18 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
 
     @three_ds_options = @options.merge(three_d_secure: true)
     @three_ds_gateway = SafeChargeGateway.new(fixtures(:safe_charge_three_ds))
-    @three_ds_enrolled_card = credit_card('4012 0010 3749 0014')
+    @three_ds_enrolled_card = credit_card('4407 1064 3967 1112')
     @three_ds_non_enrolled_card = credit_card('5333 3062 3122 6927')
     @three_ds_invalid_pa_res_card = credit_card('4012 0010 3749 0006')
+
+    @network_token_credit_card = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
+      brand: 'Visa',
+      payment_cryptogram: 'UnVBR0RlYm42S2UzYWJKeWJBdWQ=',
+      number: '4012001037490014',
+      source: :network_token,
+      month: '12',
+      year: 2020
+    })
   end
 
   def test_successful_3ds_purchase
@@ -52,6 +61,80 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_purchase_with_mpi_options_3ds_1
+    options = @options.merge({
+      three_d_secure: {
+        xid: '00000000000000000501',
+        eci: '05',
+        cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA='
+      }
+    })
+
+    response = @gateway.purchase(@amount, @three_ds_enrolled_card, options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_purchase_with_mpi_options_3ds_2
+    options = @options.merge({
+      three_d_secure: {
+        version: '2.1.0',
+        ds_transaction_id: 'c5b808e7-1de1-4069-a17b-f70d3b3b1645',
+        eci: '05',
+        cavv: 'Vk83Y2t0cHRzRFZzRlZlR0JIQXo=',
+        challenge_preference: 'NoPreference'
+      }
+    })
+
+    response = @gateway.purchase(@amount, @three_ds_enrolled_card, options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_network_tokenization_request
+    options = @options.merge({
+      three_d_secure: {
+        eci: '05'
+      }
+    })
+
+    response = @gateway.purchase(@amount, @network_token_credit_card, options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_failed_purchase_with_mpi_options_3ds_2
+    options = @options.merge({
+      three_d_secure: {
+        version: '2.1.0',
+        ds_transaction_id: 'c5b808e7-1de1-4069-a17b-f70d3b3b1645',
+        eci: '05',
+        cavv: 'Vk83Y2t0cHRzRFZzRlZlR0JIQXo=',
+        challenge_preference: 'NoPreference'
+      }
+    })
+
+    response = @gateway.purchase(@amount, @declined_card, options)
+    assert_failure response
+    assert_equal 'Decline', response.message
+  end
+
+  def test_successful_authorize_with_mpi_options_3ds_2
+    options = @options.merge({
+      three_d_secure: {
+        version: '2.1.0',
+        ds_transaction_id: 'c5b808e7-1de1-4069-a17b-f70d3b3b1645',
+        eci: '05',
+        cavv: 'Vk83Y2t0cHRzRFZzRlZlR0JIQXo=',
+        challenge_preference: 'NoPreference'
+      }
+    })
+
+    response = @gateway.authorize(@amount, @three_ds_enrolled_card, options)
     assert_success response
     assert_equal 'Success', response.message
   end

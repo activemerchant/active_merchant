@@ -7,51 +7,50 @@ class RemoteAdyenTest < Test::Unit::TestCase
     @amount = 100
 
     @credit_card = credit_card('4111111111111111',
-      month: 10,
-      year: 2020,
+      month: 3,
+      year: 2030,
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'visa'
-    )
+      brand: 'visa')
 
     @avs_credit_card = credit_card('4400000000000008',
-      month: 10,
-      year: 2020,
+      month: 3,
+      year: 2030,
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'visa'
-    )
+      brand: 'visa')
 
     @elo_credit_card = credit_card('5066 9911 1111 1118',
-      month: 10,
-      year: 2020,
+      month: 3,
+      year: 2030,
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'elo'
-    )
+      brand: 'elo')
 
-    @three_ds_enrolled_card = credit_card('4917610000000000', month: 10, year: 2020, verification_value: '737', brand: :visa)
+    @three_ds_enrolled_card = credit_card('4917610000000000',
+      month: 3,
+      year: 2030,
+      verification_value: '737',
+      brand: :visa)
 
     @cabal_credit_card = credit_card('6035 2277 1642 7021',
-      month: 10,
-      year: 2020,
+      month: 3,
+      year: 2030,
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'cabal'
-    )
+      brand: 'cabal')
 
     @invalid_cabal_credit_card = credit_card('6035 2200 0000 0006',
-      month: 10,
-      year: 2020,
+      month: 3,
+      year: 2030,
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'cabal'
-    )
+      brand: 'cabal')
 
     @unionpay_credit_card = credit_card('8171 9999 0000 0000 021',
       month: 10,
@@ -59,8 +58,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'unionpay'
-    )
+      brand: 'unionpay')
 
     @invalid_unionpay_credit_card = credit_card('8171 9999 1234 0000 921',
       month: 10,
@@ -68,8 +66,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'unionpay'
-    )
+      brand: 'unionpay')
 
     @declined_card = credit_card('4000300011112220')
 
@@ -83,18 +80,20 @@ class RemoteAdyenTest < Test::Unit::TestCase
       brand: 'mastercard'
     )
 
-    @apple_pay_card = network_tokenization_credit_card('4111111111111111',
+    @apple_pay_card = network_tokenization_credit_card(
+      '4761209980011439',
       payment_cryptogram: 'YwAAAAAABaYcCMX/OhNRQAAAAAA=',
-      month: '08',
-      year: '2018',
+      month: '11',
+      year: '2022',
       source: :apple_pay,
-      verification_value: nil
+      verification_value: 569
     )
 
-    @google_pay_card = network_tokenization_credit_card('4111111111111111',
+    @google_pay_card = network_tokenization_credit_card(
+      '4761209980011439',
       payment_cryptogram: 'YwAAAAAABaYcCMX/OhNRQAAAAAA=',
-      month: '08',
-      year: '2018',
+      month: '11',
+      year: '2022',
       source: :google_pay,
       verification_value: nil
     )
@@ -106,7 +105,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
       shopper_reference: 'John Smith',
       billing_address: address(),
       order_id: '123',
-      stored_credential: {reason_type: 'unscheduled'},
+      stored_credential: { reason_type: 'unscheduled' }
     }
 
     @normalized_3ds_2_options = {
@@ -116,7 +115,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
       shopper_reference: 'John Smith',
       billing_address: address(),
       order_id: '123',
-      stored_credential: {reason_type: 'unscheduled'},
+      stored_credential: { reason_type: 'unscheduled' },
       three_ds_2: {
         channel: 'browser',
         notification_url: 'https://example.com/notification',
@@ -131,6 +130,46 @@ class RemoteAdyenTest < Test::Unit::TestCase
           user_agent: 'unknown'
         }
       }
+    }
+
+    @long_order_id = 'asdfjkl;asdfjkl;asdfj;aiwyutinvpoaieryutnmv;203987528752098375j3q-p489756ijmfpvbijpq348nmdf;vbjp3845'
+
+    @sub_seller_options = {
+      "subMerchant.numberOfSubSellers": '2',
+      "subMerchant.subSeller1.id": '111111111',
+      "subMerchant.subSeller1.name": 'testSub1',
+      "subMerchant.subSeller1.street": 'Street1',
+      "subMerchant.subSeller1.postalCode": '12242840',
+      "subMerchant.subSeller1.city": 'Sao jose dos campos',
+      "subMerchant.subSeller1.state": 'SP',
+      "subMerchant.subSeller1.country": 'BRA',
+      "subMerchant.subSeller1.taxId": '12312312340',
+      "subMerchant.subSeller1.mcc": '5691',
+      "subMerchant.subSeller1.debitSettlementBank": '1',
+      "subMerchant.subSeller1.debitSettlementAgency": '1',
+      "subMerchant.subSeller1.debitSettlementAccountType": '1',
+      "subMerchant.subSeller1.debitSettlementAccount": '1',
+      "subMerchant.subSeller1.creditSettlementBank": '1',
+      "subMerchant.subSeller1.creditSettlementAgency": '1',
+      "subMerchant.subSeller1.creditSettlementAccountType": '1',
+      "subMerchant.subSeller1.creditSettlementAccount": '1',
+      "subMerchant.subSeller2.id": '22222222',
+      "subMerchant.subSeller2.name": 'testSub2',
+      "subMerchant.subSeller2.street": 'Street2',
+      "subMerchant.subSeller2.postalCode": '12300000',
+      "subMerchant.subSeller2.city": 'Jacarei',
+      "subMerchant.subSeller2.state": 'SP',
+      "subMerchant.subSeller2.country": 'BRA',
+      "subMerchant.subSeller2.taxId": '12312312340',
+      "subMerchant.subSeller2.mcc": '5691',
+      "subMerchant.subSeller2.debitSettlementBank": '1',
+      "subMerchant.subSeller2.debitSettlementAgency": '1',
+      "subMerchant.subSeller2.debitSettlementAccountType": '1',
+      "subMerchant.subSeller2.debitSettlementAccount": '1',
+      "subMerchant.subSeller2.creditSettlementBank": '1',
+      "subMerchant.subSeller2.creditSettlementAgency": '1',
+      "subMerchant.subSeller2.creditSettlementAccountType": '1',
+      "subMerchant.subSeller2.creditSettlementAccount": '1'
     }
   end
 
@@ -258,9 +297,9 @@ class RemoteAdyenTest < Test::Unit::TestCase
       shopper_reference: 'John Smith',
       billing_address: address(),
       order_id: '123',
-      stored_credential: {reason_type: 'unscheduled'},
+      stored_credential: { reason_type: 'unscheduled' },
       three_ds_2: {
-        channel: 'app',
+        channel: 'app'
       }
     }
 
@@ -278,13 +317,12 @@ class RemoteAdyenTest < Test::Unit::TestCase
   # with rule set in merchant account to skip 3DS for cards of this brand
   def test_successful_authorize_with_3ds_dynamic_rule_broken
     mastercard_threed = credit_card('5212345678901234',
-      month: 10,
-      year: 2020,
+      month: 3,
+      year: 2030,
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'mastercard'
-    )
+      brand: 'mastercard')
     assert response = @gateway.authorize(@amount, mastercard_threed, @options.merge(threed_dynamic: true))
     assert response.test?
     refute response.authorization.blank?
@@ -373,6 +411,20 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal 'Authorised', response.message
   end
 
+  def test_successful_authorize_with_credit_card_no_name
+    credit_card_no_name = ActiveMerchant::Billing::CreditCard.new({
+      number: '4111111111111111',
+      month: 3,
+      year: 2030,
+      verification_value: '737',
+      brand: 'visa'
+    })
+
+    response = @gateway.authorize(@amount, credit_card_no_name, @options)
+    assert_success response
+    assert_equal 'Authorised', response.message
+  end
+
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
@@ -399,7 +451,8 @@ class RemoteAdyenTest < Test::Unit::TestCase
       installments: 2,
       shopper_statement: 'statement note',
       device_fingerprint: 'm7Cmrf++0cW4P6XfF7m/rA',
-      capture_delay_hours: 4)
+      capture_delay_hours: 4
+    )
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert_equal '[capture-received]', response.message
@@ -439,13 +492,25 @@ class RemoteAdyenTest < Test::Unit::TestCase
   end
 
   def test_succesful_purchase_with_brand_override
-    response = @gateway.purchase(@amount, @improperly_branded_maestro, @options.merge({overwrite_brand: true, selected_brand: 'maestro'}))
+    response = @gateway.purchase(@amount, @improperly_branded_maestro, @options.merge({ overwrite_brand: true, selected_brand: 'maestro' }))
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
+
+  def test_succesful_purchase_with_brand_override_with_execute_threed_false
+    response = @gateway.purchase(@amount, @improperly_branded_maestro, @options.merge({ execute_threed: false, overwrite_brand: true, selected_brand: 'maestro' }))
     assert_success response
     assert_equal '[capture-received]', response.message
   end
 
   def test_successful_purchase_with_google_pay
     response = @gateway.purchase(@amount, @google_pay_card, @options)
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
+
+  def test_successful_purchase_with_google_pay_and_truncate_order_id
+    response = @gateway.purchase(@amount, @google_pay_card, @options.merge(order_id: @long_order_id))
     assert_success response
     assert_equal '[capture-received]', response.message
   end
@@ -545,6 +610,16 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal '[refund-received]', refund.message
   end
 
+  def test_successful_refund_with_auth_original_reference
+    auth_response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth_response
+    assert_equal 'Authorised', auth_response.message
+
+    refund_resp = @gateway.refund(@amount, auth_response.authorization)
+    assert_success refund_resp
+    assert_equal '[refund-received]', refund_resp.message
+  end
+
   def test_successful_refund_with_elo_card
     purchase = @gateway.purchase(@amount, @elo_credit_card, @options)
     assert_success purchase
@@ -584,6 +659,18 @@ class RemoteAdyenTest < Test::Unit::TestCase
     response = @gateway.refund(@amount, '')
     assert_failure response
     assert_equal 'Original pspReference required for this operation', response.message
+  end
+
+  def test_successful_credit
+    response = @gateway.credit(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Received', response.message
+  end
+
+  def test_failed_credit
+    response = @gateway.credit(@amount, '')
+    assert_failure response
+    assert_equal "Required field 'reference' is not provided.", response.message
   end
 
   def test_successful_void
@@ -770,7 +857,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
   end
 
   def test_successful_tokenize_only_store
-    assert response = @gateway.store(@credit_card, @options.merge({tokenize_only: true}))
+    assert response = @gateway.store(@credit_card, @options.merge({ tokenize_only: true }))
 
     assert_success response
     assert !response.authorization.split('#')[2].nil?
@@ -908,7 +995,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
     card = credit_card('4242424242424242', month: 16)
     assert response = @gateway.purchase(@amount, card, @options)
     assert_failure response
-    assert_equal 'Expiry Date Invalid: Expiry month should be between 1 and 12 inclusive', response.message
+    assert_equal 'The provided Expiry Date is not valid.: Expiry month should be between 1 and 12 inclusive', response.message
   end
 
   def test_invalid_expiry_year_for_purchase
@@ -1035,10 +1122,114 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_success purchase
   end
 
+  def test_auth_and_capture_with_network_txn_id
+    initial_options = stored_credential_options(:merchant, :recurring, :initial)
+    assert auth = @gateway.authorize(@amount, @credit_card, initial_options)
+    assert auth.network_transaction_id
+
+    assert capture = @gateway.capture(@amount, auth.authorization, @options.merge(network_transaction_id: auth.network_transaction_id))
+    assert_success capture
+  end
+
+  def test_auth_capture_refund_with_network_txn_id
+    initial_options = stored_credential_options(:merchant, :recurring, :initial)
+    assert auth = @gateway.authorize(@amount, @credit_card, initial_options)
+    assert auth.network_transaction_id
+
+    assert capture = @gateway.capture(@amount, auth.authorization, @options.merge(network_transaction_id: auth.network_transaction_id))
+    assert_success capture
+
+    assert refund = @gateway.refund(@amount, auth.authorization, @options.merge(network_transaction_id: auth.network_transaction_id))
+    assert_success refund
+  end
+
+  def test_successful_authorize_with_sub_merchant_data
+    sub_merchant_data = {
+      sub_merchant_id: '123451234512345',
+      sub_merchant_name: 'Wildsea',
+      sub_merchant_street: '1234 Street St',
+      sub_merchant_city: 'Night City',
+      sub_merchant_state: 'East Block',
+      sub_merchant_postal_code: '112233',
+      sub_merchant_country: 'EUR',
+      sub_merchant_tax_id: '12345abcde67',
+      sub_merchant_mcc: '1234'
+    }
+    options = @options.update({
+      installments: 2,
+      billing_address: {
+        address1: 'Infinite Loop',
+        address2: 1,
+        country: 'US',
+        city: 'Cupertino',
+        state: 'CA',
+        zip: '95014'
+      }
+    })
+    assert response = @gateway.authorize(@amount, @avs_credit_card, options.merge(sub_merchant_data))
+    assert response.test?
+    refute response.authorization.blank?
+    assert_success response
+  end
+
+  def test_successful_authorize_with_sub_merchant_sub_seller_data
+    assert response = @gateway.authorize(@amount, @avs_credit_card, @options.merge(sub_merchant_data: @sub_seller_options))
+    assert response.test?
+    refute response.authorization.blank?
+    assert_success response
+  end
+
+  def test_successful_cancel_or_refund
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    assert cancel = @gateway.void(auth.authorization)
+    assert_success cancel
+    assert_equal '[cancel-received]', cancel.message
+
+    capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+
+    @options[:cancel_or_refund] = true
+    assert void = @gateway.void(auth.authorization, @options)
+    assert_success void
+    assert_equal '[cancelOrRefund-received]', void.message
+    assert_void_references_original_authorization(void, auth)
+  end
+
+  def test_successful_cancel_or_refund_passing_purchase
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    @options[:cancel_or_refund] = true
+    assert void = @gateway.void(purchase.authorization, @options)
+    assert_success void
+    assert_equal '[cancelOrRefund-received]', void.message
+    assert_void_references_original_authorization(void, purchase.responses.first)
+  end
+
+  def test_successful_cancel_or_refund_passing_capture
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+
+    @options[:cancel_or_refund] = true
+    assert void = @gateway.void(capture.authorization, @options)
+    assert_success void
+    assert_equal '[cancelOrRefund-received]', void.message
+    assert_void_references_original_authorization(void, auth)
+  end
+
   private
 
   def stored_credential_options(*args, id: nil)
     @options.merge(order_id: generate_unique_id,
                    stored_credential: stored_credential(*args, id: id))
+  end
+
+  def assert_void_references_original_authorization(void, auth)
+    assert_equal void.authorization.split('#').first, auth.params['pspReference']
   end
 end

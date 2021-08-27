@@ -117,39 +117,39 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://docs.oppwa.com'
       self.display_name = 'Open Payment Platform'
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :access_token, :entity_id)
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         # debit
         options[:registrationId] = payment if payment.is_a?(String)
         execute_dbpa(options[:risk_workflow] ? 'PA.CP' : 'DB',
           money, payment, options)
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         # preauthorization PA
         execute_dbpa('PA', money, payment, options)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         # capture CP
         execute_referencing('CP', money, authorization, options)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         # refund RF
         execute_referencing('RF', money, authorization, options)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         # reversal RV
         execute_referencing('RV', nil, authorization, options)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -243,7 +243,7 @@ module ActiveMerchant #:nodoc:
           city: address[:city],
           state: address[:state],
           postcode: address[:zip],
-          country: address[:country],
+          country: address[:country]
         }
       end
 
@@ -260,7 +260,7 @@ module ActiveMerchant #:nodoc:
 
         if options[:registrationId]
           post[:card] = {
-            cvv: payment.verification_value,
+            cvv: payment.verification_value
           }
         else
           post[:paymentBrand] = payment.brand.upcase
@@ -269,7 +269,7 @@ module ActiveMerchant #:nodoc:
             number: payment.number,
             expiryMonth: '%02d' % payment.month,
             expiryYear: payment.year,
-            cvv: payment.verification_value,
+            cvv: payment.verification_value
           }
         end
       end
@@ -287,7 +287,7 @@ module ActiveMerchant #:nodoc:
       def add_options(post, options)
         post[:createRegistration] = options[:create_registration] if options[:create_registration] && !options[:registrationId]
         post[:testMode] = options[:test_mode] if test? && options[:test_mode]
-        options.each { |key, value| post[key] = value if key.to_s.match('customParameters\[[a-zA-Z0-9\._]{3,64}\]') }
+        options.each { |key, value| post[key] = value if key.to_s =~ /'customParameters\[[a-zA-Z0-9\._]{3,64}\]'/ }
         post['customParameters[SHOPPER_pluginId]'] = 'activemerchant'
         post['customParameters[custom_disable3DSecure]'] = options[:disable_3d_secure] if options[:disable_3d_secure]
       end
@@ -349,7 +349,7 @@ module ActiveMerchant #:nodoc:
 
       def json_error(body)
         message = "Invalid response received #{body.inspect}"
-        { 'result' => {'description' => message, 'code' => 'unknown' } }
+        { 'result' => { 'description' => message, 'code' => 'unknown' } }
       end
 
       def success_from(response)

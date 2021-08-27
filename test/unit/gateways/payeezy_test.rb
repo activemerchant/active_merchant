@@ -22,6 +22,14 @@ class PayeezyGateway < Test::Unit::TestCase
       initiator: 'MERCHANT',
       auth_type_override: 'A'
     }
+    @options_standardized_stored_credentials = {
+      stored_credential: {
+        network_transaction_id: 'abc123',
+        initial_transaction: false,
+        reason_type: 'recurring',
+        initiator: 'cardholder'
+      }
+    }
     @authorization = 'ET1700|106625152|credit_card|4738'
     @reversal_id = SecureRandom.random_number(1000000).to_s
   end
@@ -113,7 +121,7 @@ class PayeezyGateway < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.purchase(@amount, check_without_number, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/001/, data)
     end.respond_with(successful_purchase_echeck_response)
 
@@ -123,10 +131,33 @@ class PayeezyGateway < Test::Unit::TestCase
     assert_equal 'Transaction Normal - Approved', response.message
   end
 
+  def test_successful_purchase_with_customer_ref
+    options = @options.merge(level2: { customer_ref: 'An important customer' })
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/"level2":{"customer_ref":"An important customer"}/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_successful_purchase_with_stored_credentials
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(@options_stored_credentials))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/stored_credentials/, data)
+    end.respond_with(successful_purchase_stored_credentials_response)
+
+    assert_success response
+    assert response.test?
+    assert_equal 'Transaction Normal - Approved', response.message
+  end
+
+  def test_successful_purchase_with_standardized_stored_credentials
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(@options_standardized_stored_credentials))
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/stored_credentials/, data)
     end.respond_with(successful_purchase_stored_credentials_response)
 
@@ -141,6 +172,15 @@ class PayeezyGateway < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_failure response
     assert_equal response.error_code, 'card_expired'
+  end
+
+  def test_failed_purchase_with_insufficient_funds
+    response = stub_comms do
+      @gateway.purchase(530200, @credit_card, @options)
+    end.respond_with(failed_purchase_response_for_insufficient_funds)
+
+    assert_failure response
+    assert_equal '302', response.error_code
   end
 
   def test_successful_authorize
@@ -193,10 +233,16 @@ class PayeezyGateway < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_successful_general_credit
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
+    assert response = @gateway.credit(@amount, @credit_card)
+    assert_success response
+  end
+
   def test_successful_void
     response = stub_comms do
       @gateway.void(@authorization, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       json = '{"transaction_type":"void","method":"credit_card","transaction_tag":"106625152","currency_code":"USD","amount":"4738"}'
       assert_match json, data
     end.respond_with(successful_void_response)
@@ -207,7 +253,7 @@ class PayeezyGateway < Test::Unit::TestCase
   def test_successful_void_with_reversal_id
     stub_comms do
       @gateway.void(@authorization, @options.merge(reversal_id: @reversal_id))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       json = "{\"transaction_type\":\"void\",\"method\":\"credit_card\",\"reversal_id\":\"#{@reversal_id}\",\"currency_code\":\"USD\",\"amount\":\"4738\"}"
       assert_match json, data
     end.respond_with(successful_void_response)
@@ -239,7 +285,9 @@ class PayeezyGateway < Test::Unit::TestCase
     assert response = @gateway.capture(@amount, @authorization)
     assert_instance_of Response, response
     assert_failure response
-    assert_equal response.error_code, 'server_error'
+    error_msg = response.params['Error']['messages']
+    error_code = error_msg.map { |x| x.values[0] }
+    assert_equal error_code[0], 'server_error'
     assert_equal response.message, 'ProcessedBad Request (69) - Invalid Transaction Tag'
   end
 
@@ -268,7 +316,7 @@ class PayeezyGateway < Test::Unit::TestCase
   def test_requests_include_verification_string
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       json_address = '{"street":"456 My Street","city":"Ottawa","state_province":"ON","zip_postal_code":"K1C2N6","country":"CA"}'
       assert_match json_address, data
     end.respond_with(successful_purchase_response)
@@ -550,6 +598,10 @@ class PayeezyGateway < Test::Unit::TestCase
       message:
     RESPONSE
     YAML.safe_load(yamlexcep, ['Net::HTTPBadRequest', 'ActiveMerchant::ResponseError'])
+  end
+
+  def failed_purchase_response_for_insufficient_funds
+    '{"correlation_id":"124.1342365067332","transaction_status":"declined","validation_status":"success","transaction_type":"purchase","transaction_tag":"4611610442","method":"credit_card","amount":"530200","currency":"USD","avs":"4","cvv2":"M","token":{"token_type":"FDToken", "token_data":{"value":"0788934280684242"}},"card":{"type":"Visa","cardholder_name":"Longbob Longsen","card_number":"4242","exp_date":"0922"},"bank_resp_code":"302","bank_message":"Insufficient Funds","gateway_resp_code":"00","gateway_message":"Transaction Normal"}'
   end
 
   def successful_authorize_response
