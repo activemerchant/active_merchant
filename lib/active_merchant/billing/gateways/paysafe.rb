@@ -22,8 +22,10 @@ module ActiveMerchant #:nodoc:
         add_payment(post, payment)
         add_billing_address(post, options)
         add_merchant_details(post, options)
+        add_airline_travel_details(post, options)
         add_customer_data(post, payment, options) unless payment.is_a?(String)
         add_three_d_secure(post, payment, options) if options[:three_d_secure]
+        add_split_pay_details(post, options)
         post[:settleWithAuth] = true
 
         commit(:post, 'auths', post, options)
@@ -135,12 +137,13 @@ module ActiveMerchant #:nodoc:
       def add_address_for_vaulting(post, options)
         return unless address = options[:billing_address] || options[:address]
 
-        post[:billingAddress] = {}
-        post[:billingAddress][:street] = address[:address1]
-        post[:billingAddress][:city] = address[:city]
-        post[:billingAddress][:zip] = address[:zip]
-        post[:billingAddress][:country] = address[:country]
-        post[:billingAddress][:state] = address[:state] if address[:state]
+        post[:card][:billingAddress] = {}
+        post[:card][:billingAddress][:street] = address[:address1]
+        post[:card][:billingAddress][:street2] = address[:address2]
+        post[:card][:billingAddress][:city] = address[:city]
+        post[:card][:billingAddress][:zip] = address[:zip]
+        post[:card][:billingAddress][:country] = address[:country]
+        post[:card][:billingAddress][:state] = address[:state] if address[:state]
       end
 
       # This data is specific to creating a profile at the gateway's vault level
@@ -204,6 +207,84 @@ module ActiveMerchant #:nodoc:
         post[:authentication][:directoryServerTransactionId] = three_d_secure[:ds_transaction_id] unless payment.is_a?(String) || payment.brand != 'mastercard'
       end
 
+      def add_airline_travel_details(post, options)
+        return unless options[:airline_travel_details]
+
+        post[:airlineTravelDetails] = {}
+        post[:airlineTravelDetails][:passengerName] = options[:airline_travel_details][:passenger_name] if options[:airline_travel_details][:passenger_name]
+        post[:airlineTravelDetails][:departureDate] = options[:airline_travel_details][:departure_date] if options[:airline_travel_details][:departure_date]
+        post[:airlineTravelDetails][:origin] = options[:airline_travel_details][:origin] if options[:airline_travel_details][:origin]
+        post[:airlineTravelDetails][:computerizedReservationSystem] = options[:airline_travel_details][:computerized_reservation_system] if options[:airline_travel_details][:computerized_reservation_system]
+        post[:airlineTravelDetails][:customerReferenceNumber] = options[:airline_travel_details][:customer_reference_number] if options[:airline_travel_details][:customer_reference_number]
+
+        add_ticket_details(post, options)
+        add_travel_agency_details(post, options)
+        add_trip_legs(post, options)
+      end
+
+      def add_ticket_details(post, options)
+        return unless ticket = options[:airline_travel_details][:ticket]
+
+        post[:airlineTravelDetails][:ticket] = {}
+        post[:airlineTravelDetails][:ticket][:ticketNumber] = ticket[:ticket_number] if ticket[:ticket_number]
+        post[:airlineTravelDetails][:ticket][:isRestrictedTicket] = ticket[:is_restricted_ticket] if ticket[:is_restricted_ticket]
+      end
+
+      def add_travel_agency_details(post, options)
+        return unless agency = options[:airline_travel_details][:travel_agency]
+
+        post[:airlineTravelDetails][:travelAgency] = {}
+        post[:airlineTravelDetails][:travelAgency][:name] = agency[:name] if agency[:name]
+        post[:airlineTravelDetails][:travelAgency][:code] = agency[:code] if agency[:code]
+      end
+
+      def add_trip_legs(post, options)
+        return unless trip_legs = options[:airline_travel_details][:trip_legs]
+
+        trip_legs_hash = {}
+        trip_legs.each.with_index(1) do |leg, i|
+          my_leg = "leg#{i}".to_sym
+          details = add_leg_details(my_leg, leg[1])
+
+          trip_legs_hash[my_leg] = details
+        end
+        post[:airlineTravelDetails][:tripLegs] = trip_legs_hash
+      end
+
+      def add_leg_details(obj, leg)
+        details = {}
+        add_flight_details(details, obj, leg)
+        details[:serviceClass] = leg[:service_class] if leg[:service_class]
+        details[:isStopOverAllowed] = leg[:is_stop_over_allowed] if leg[:is_stop_over_allowed]
+        details[:destination] = leg[:destination] if leg[:destination]
+        details[:fareBasis] = leg[:fare_basis] if leg[:fare_basis]
+        details[:departureDate] = leg[:departure_date] if leg[:departure_date]
+
+        details
+      end
+
+      def add_flight_details(details, obj, leg)
+        details[:flight] = {}
+        details[:flight][:carrierCode] = leg[:flight][:carrier_code] if leg[:flight][:carrier_code]
+        details[:flight][:flightNumber] = leg[:flight][:flight_number] if leg[:flight][:flight_number]
+      end
+
+      def add_split_pay_details(post, options)
+        return unless options[:split_pay]
+
+        split_pay = []
+        options[:split_pay].each do |pmnt|
+          split = {}
+
+          split[:linkedAccount] = pmnt[:linked_account]
+          split[:amount] = pmnt[:amount] if pmnt[:amount]
+          split[:percent] = pmnt[:percent] if pmnt[:percent]
+
+          split_pay << split
+        end
+        post[:splitpay] = split_pay
+      end
+
       def parse(body)
         JSON.parse(body)
       end
@@ -218,7 +299,7 @@ module ActiveMerchant #:nodoc:
           success,
           message_from(success, response),
           response,
-          authorization: authorization_from(response),
+          authorization: authorization_from(action, response),
           avs_result: AVSResult.new(code: response['avsResponse']),
           cvv_result: CVVResult.new(response['cvvVerification']),
           test: test?,
@@ -266,8 +347,12 @@ module ActiveMerchant #:nodoc:
         "Error(s)- code:#{response['error']['code']}, message:#{response['error']['message']}"
       end
 
-      def authorization_from(response)
-        response['id']
+      def authorization_from(action, response)
+        if action == 'profiles'
+          response['cards'].first['paymentToken']
+        else
+          response['id']
+        end
       end
 
       def post_data(parameters = {}, options = {})
