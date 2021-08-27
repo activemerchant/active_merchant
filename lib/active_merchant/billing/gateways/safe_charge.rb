@@ -143,6 +143,7 @@ module ActiveMerchant #:nodoc:
         post[:sg_Descriptor] = options[:merchant_descriptor] if options[:merchant_descriptor]
         post[:sg_MerchantPhoneNumber] = options[:merchant_phone_number] if options[:merchant_phone_number]
         post[:sg_MerchantName] = options[:merchant_name] if options[:merchant_name]
+        post[:sg_ProductID] = options[:product_id] if options[:product_id]
       end
 
       def add_payment(post, payment, options = {})

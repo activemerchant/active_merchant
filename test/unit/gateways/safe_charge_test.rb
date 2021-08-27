@@ -26,7 +26,8 @@ class SafeChargeTest < Test::Unit::TestCase
     @merchant_options = @options.merge(
       merchant_descriptor: 'Test Descriptor',
       merchant_phone_number: '(555)555-5555',
-      merchant_name: 'Test Merchant'
+      merchant_name: 'Test Merchant',
+      product_id: 'Test Product'
     )
 
     @three_ds_options = @options.merge(three_d_secure: true)

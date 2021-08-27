@@ -9,6 +9,7 @@
 * Paymentez: Add more_info field [reblevins] #4091
 * Worldpay: Support $0 auth [therufs] #4092
 * Elavon: Support recurring transactions with token, revert stored credentials recurring [cdmackeyfree] #4089
+* SafeCharge(Nuvei): Add support for product_id [rachelkirk] #4095
 
 == Version 1.122.0 (August 3rd, 2021)
 * Orbital: Correct success logic for refund [tatsianaclifton] #4014
