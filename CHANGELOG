@@ -7,7 +7,6 @@
 * Credorax: Determine ISK decimal by datetime [curiousepic] #4088
 * Moka: support new gateway type [dsmcclain] #4089
 * Paymentez: Add more_info field [reblevins] #4091
-* Visanet Peru: use timestamp instead of random for purchaseNumber [therufs] #4093
 * Worldpay: Support $0 auth [therufs] #4092
 
 == Version 1.122.0 (August 3rd, 2021)
