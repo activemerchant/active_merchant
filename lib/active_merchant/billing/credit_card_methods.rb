@@ -19,6 +19,7 @@ module ActiveMerchant #:nodoc:
             MAESTRO_BINS.any? { |bin| num.slice(0, bin.size) == bin }
           )
         },
+        'maestro_no_luhn'    => ->(num) { num =~ /^(501080|501081|501082)\d{10}$/ },
         'forbrugsforeningen' => ->(num) { num =~ /^600722\d{10}$/ },
         'sodexo'             => ->(num) { num =~ /^(606071|603389|606070|606069|606068|600818)\d{10}$/ },
         'alia'               => ->(num) { num =~ /^(504997|505878|601030|601073|505874)\d{10}$/ },
@@ -83,7 +84,7 @@ module ActiveMerchant #:nodoc:
 
       MAESTRO_BINS = Set.new(
         %w[ 500057
-            501018 501043 501045 501047 501049 501051 501072 501075 501087 501089 501095
+            501018 501043 501045 501047 501049 501051 501072 501075 501083 501087 501089 501095
             501500
             501879 502113 502301 503175
             503645 503670
@@ -127,7 +128,6 @@ module ActiveMerchant #:nodoc:
         (501053..501058),
         (501060..501063),
         (501066..501067),
-        (501080..501083),
         (501091..501092),
         (501104..501105),
         (501107..501108),
@@ -364,9 +364,7 @@ module ActiveMerchant #:nodoc:
             valid_naranja_algo?(numbers)
           when 'creditel'
             valid_creditel_algo?(numbers)
-          when 'alia'
-            true
-          when 'confiable'
+          when 'alia', 'confiable', 'maestro_no_luhn'
             true
           else
             valid_luhn?(numbers)
