@@ -75,6 +75,8 @@ module ActiveMerchant
 
         add_authorization_info(params, authorization)
         add_amount(params, (amount || amount_from_authorization(authorization)), options)
+        add_soft_descriptors(params, options)
+        add_invoice(params, options)
 
         commit(params, options)
       end
@@ -85,6 +87,7 @@ module ActiveMerchant
         add_amount(params, amount, options)
         add_payment_method(params, payment_method, options)
         add_soft_descriptors(params, options)
+        add_invoice(params, options)
         commit(params, options)
       end
 

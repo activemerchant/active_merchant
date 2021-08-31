@@ -16,6 +16,8 @@
 * Maestro: support BINs [therufs] #4098
 * Redsys: Route MIT Exemptions to webservice endpoint [curiousepic] #4081
 * Adyen: Update Classic Integration API to v64 and Recurring API to v49 [almalee24] #4090
+* Payeezy: support soft_descriptor and merchant_ref [cdmackeyfree] #4099
+
 
 == Version 1.122.0 (August 3rd, 2021)
 * Orbital: Correct success logic for refund [tatsianaclifton] #4014
