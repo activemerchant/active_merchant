@@ -106,6 +106,7 @@ module ActiveMerchant #:nodoc:
           r.process do
             post = {}
             post[:name] = options[:billing_address][:name]
+            post[:email] = options[:email] if options[:email]
 
             commit(:update_customer, post, customer_token)
           end
