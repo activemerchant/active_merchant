@@ -98,6 +98,15 @@ class RemoteAdyenTest < Test::Unit::TestCase
       verification_value: nil
     )
 
+    @nt_credit_card = network_tokenization_credit_card(
+      '4895370015293175',
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
+      eci: '07',
+      source: :network_token,
+      verification_value: '737',
+      brand: 'visa'
+    )
+
     @options = {
       reference: '345123',
       email: 'john.smith@test.com',
@@ -265,6 +274,12 @@ class RemoteAdyenTest < Test::Unit::TestCase
     refute response.params['additionalData']['threeds2.threeDS2Token'].blank?
     refute response.params['additionalData']['threeds2.threeDSServerTransID'].blank?
     refute response.params['additionalData']['threeds2.threeDSMethodURL'].blank?
+  end
+
+  def test_successful_authorize_with_network_token
+    response = @gateway.authorize(@amount, @nt_credit_card, @options)
+    assert_success response
+    assert_equal 'Authorised', response.message
   end
 
   def test_successful_purchase_with_3ds2_exemption_requested_and_execute_threed_false
@@ -529,6 +544,12 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_unionpay_card
     response = @gateway.purchase(@amount, @unionpay_credit_card, @options.merge(currency: 'CNY'))
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
+
+  def test_successful_purchase_with_network_token
+    response = @gateway.purchase(@amount, @nt_credit_card, @options)
     assert_success response
     assert_equal '[capture-received]', response.message
   end
