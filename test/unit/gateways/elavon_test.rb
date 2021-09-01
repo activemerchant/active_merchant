@@ -155,6 +155,16 @@ class ElavonTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_sends_ssl_token_field
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(ssl_token: '8675309'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<ssl_token>8675309<\/ssl_token>/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_successful_authorization_with_dynamic_dba
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options.merge(dba: 'MANYMAG*BAKERS MONTHLY'))
