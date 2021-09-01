@@ -16,7 +16,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    response = stub_comms do
+    response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.purchase(@amount, @credit_card)
     end.respond_with(successful_purchase_response)
 
@@ -26,7 +26,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_store
-    response = stub_comms do
+    response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.store(@credit_card)
     end.respond_with(successful_tokens_response, successful_card_verification_response)
 
@@ -38,7 +38,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_failed_store
-    response = stub_comms do
+    response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.store(@declined_card)
     end.respond_with(successful_tokens_response, failed_card_verification_response)
 
@@ -48,7 +48,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_purchase_includes_avs_result
-    response = stub_comms do
+    response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.purchase(@amount, @credit_card)
     end.respond_with(successful_purchase_response)
 
@@ -59,7 +59,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_purchase_includes_cvv_result
-    response = stub_comms do
+    response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.purchase(@amount, @credit_card)
     end.respond_with(successful_purchase_response)
 
@@ -68,7 +68,7 @@ class CheckoutV2Test < Test::Unit::TestCase
 
   def test_successful_purchase_using_network_token
     network_token = network_tokenization_credit_card({ source: :network_token })
-    response = stub_comms do
+    response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.purchase(@amount, network_token)
     end.respond_with(successful_purchase_with_network_token_response)
 
@@ -78,7 +78,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_authorize_includes_avs_result
-    response = stub_comms do
+    response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.authorize(@amount, @credit_card)
     end.respond_with(successful_authorize_response)
 
@@ -89,7 +89,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_authorize_includes_cvv_result
-    response = stub_comms do
+    response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.authorize(@amount, @credit_card)
     end.respond_with(successful_authorize_response)
 
@@ -97,9 +97,9 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_purchase_with_additional_fields
-    response = stub_comms do
+    response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.purchase(@amount, @credit_card, { descriptor_city: 'london', descriptor_name: 'sherlock' })
-    end.check_request do |_endpoint, data, _headers|
+    end.check_request do |_method, _url, data|
       assert_match(/"billing_descriptor\":{\"name\":\"sherlock\",\"city\":\"london\"}/, data)
     end.respond_with(successful_purchase_response)
 
@@ -107,7 +107,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_failed_purchase
-    response = stub_comms do
+    response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.purchase(@amount, @credit_card)
     end.respond_with(failed_purchase_response)
     assert_failure response
@@ -115,29 +115,29 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_authorize_and_capture
-    response = stub_comms do
+    response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.authorize(@amount, @credit_card)
     end.respond_with(successful_authorize_response)
 
     assert_success response
     assert_equal 'pay_fj3xswqe3emuxckocjx6td73ni', response.authorization
 
-    capture = stub_comms do
+    response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.capture(@amount, response.authorization)
     end.respond_with(successful_capture_response)
 
-    assert_success capture
+    assert_success response
   end
 
   def test_successful_authorize_and_capture_with_additional_options
-    response = stub_comms do
+    response = stub_comms(@gateway, :raw_ssl_request) do
       options = {
         card_on_file: true,
         transaction_indicator: 2,
         previous_charge_id: 'pay_123'
       }
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |_endpoint, data, _headers|
+    end.check_request do |_method, _url, data|
       assert_match(%r{"stored":"true"}, data)
       assert_match(%r{"payment_type":"Recurring"}, data)
       assert_match(%r{"previous_payment_id":"pay_123"}, data)
@@ -146,15 +146,15 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_success response
     assert_equal 'pay_fj3xswqe3emuxckocjx6td73ni', response.authorization
 
-    capture = stub_comms do
+    response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.capture(@amount, response.authorization)
     end.respond_with(successful_capture_response)
 
-    assert_success capture
+    assert_success response
   end
 
   def test_successful_purchase_with_stored_credentials
-    initial_response = stub_comms do
+    response = stub_comms(@gateway, :raw_ssl_request) do
       initial_options = {
         stored_credential: {
           initial_transaction: true,
@@ -162,16 +162,16 @@ class CheckoutV2Test < Test::Unit::TestCase
         }
       }
       @gateway.purchase(@amount, @credit_card, initial_options)
-    end.check_request do |_endpoint, data, _headers|
+    end.check_request do |_method, _url, data|
       assert_match(%r{"payment_type":"Recurring"}, data)
       assert_match(%r{"merchant_initiated":false}, data)
     end.respond_with(successful_purchase_initial_stored_credential_response)
 
-    assert_success initial_response
-    assert_equal 'pay_7jcf4ovmwnqedhtldca3fjli2y', initial_response.params['id']
-    network_transaction_id = initial_response.params['id']
+    assert_success response
+    assert_equal 'pay_7jcf4ovmwnqedhtldca3fjli2y', response.params['id']
+    network_transaction_id = response.params['id']
 
-    response = stub_comms do
+    response = stub_comms(@gateway, :raw_ssl_request) do
       options = {
         stored_credential: {
           initial_transaction: false,
@@ -181,7 +181,7 @@ class CheckoutV2Test < Test::Unit::TestCase
         }
       }
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |_endpoint, data, _headers|
+    end.check_request do |_method, _url, data|
       assert_match(%r{"previous_payment_id":"pay_7jcf4ovmwnqedhtldca3fjli2y"}, data)
       assert_match(%r{"source.stored":true}, data)
     end.respond_with(successful_purchase_using_stored_credential_response)
@@ -191,7 +191,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_metadata
-    response = stub_comms do
+    response = stub_comms(@gateway, :raw_ssl_request) do
       options = {
         metadata: {
           coupon_code: 'NY2018',
@@ -199,7 +199,7 @@ class CheckoutV2Test < Test::Unit::TestCase
         }
       }
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |_endpoint, data, _headers|
+    end.check_request do |_method, _url, data|
       assert_match(%r{"coupon_code":"NY2018"}, data)
       assert_match(%r{"partner_id":"123989"}, data)
     end.respond_with(successful_purchase_using_stored_credential_response)
@@ -208,7 +208,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_authorize_and_capture_with_metadata
-    response = stub_comms do
+    response = stub_comms(@gateway, :raw_ssl_request) do
       options = {
         metadata: {
           coupon_code: 'NY2018',
@@ -216,7 +216,7 @@ class CheckoutV2Test < Test::Unit::TestCase
         }
       }
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |_endpoint, data, _headers|
+    end.check_request do |_method, _url, data|
       assert_match(%r{"coupon_code":"NY2018"}, data)
       assert_match(%r{"partner_id":"123989"}, data)
     end.respond_with(successful_authorize_response)
@@ -224,41 +224,65 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_success response
     assert_equal 'pay_fj3xswqe3emuxckocjx6td73ni', response.authorization
 
-    capture = stub_comms do
+    response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.capture(@amount, response.authorization)
     end.respond_with(successful_capture_response)
 
-    assert_success capture
+    assert_success response
   end
 
   def test_moto_transaction_is_properly_set
-    response = stub_comms do
+    response = stub_comms(@gateway, :raw_ssl_request) do
       options = {
         metadata: {
           manual_entry: true
         }
       }
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |_endpoint, data, _headers|
+    end.check_request do |_method, _url, data|
       assert_match(%r{"payment_type":"MOTO"}, data)
     end.respond_with(successful_authorize_response)
 
     assert_success response
   end
 
-  def test_3ds_passed
-    response = stub_comms do
+  def test_3ds_passed_for_authorize
+    response = stub_comms(@gateway, :raw_ssl_request) do
       options = {
-        execute_threed: true,
-        callback_url: 'https://www.example.com'
+        three_d_secure: {
+          success_url: 'https://www.example.com',
+          failure_url: 'https://www.example.com'
+        }
       }
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |_endpoint, data, _headers|
+    end.check_request do |_method, _url, data|
       assert_match(%r{"success_url"}, data)
       assert_match(%r{"failure_url"}, data)
     end.respond_with(successful_authorize_response)
 
     assert_success response
+  end
+
+  def test_3ds_passed_for_store
+    response = stub_comms(@gateway, :raw_ssl_request) do
+      options = {
+        three_d_secure: {
+          success_url: 'https://www.example.com',
+          failure_url: 'https://www.example.com'
+        }
+      }
+      @gateway.store(@credit_card, options)
+    end.check_request do |_method, url, data|
+      if url == "https://api.sandbox.checkout.com/payments"
+        assert_match(%r{"success_url"}, data)
+        assert_match(%r{"failure_url"}, data)
+      end
+    end.respond_with(successful_tokens_response, successful_card_verification_with_3ds_response)
+
+    assert_failure response
+    assert_equal 'pay_4diurxowfup27isncyao6au2wi', response.authorization
+    assert_equal 'Pending', response.params["status"]
+    assert_equal 'https://3ds2-sandbox.ckotech.co/interceptor/3ds_iswgtd7o4z2edjngqk43acqxg4', response.params["_links"]["redirect"]["href"]
   end
 
   def test_successful_verify_payment
@@ -278,7 +302,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_authorize_and_capture_with_3ds
-    response = stub_comms do
+    response = stub_comms(@gateway, :raw_ssl_request) do
       options = {
         execute_threed: true,
         attempt_n3d: true,
@@ -295,15 +319,15 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_success response
     assert_equal 'pay_fj3xswqe3emuxckocjx6td73ni', response.authorization
 
-    capture = stub_comms do
+    response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.capture(@amount, response.authorization)
     end.respond_with(successful_capture_response)
 
-    assert_success capture
+    assert_success response
   end
 
   def test_successful_authorize_and_capture_with_3ds2
-    response = stub_comms do
+    response = stub_comms(@gateway, :raw_ssl_request) do
       options = {
         execute_threed: true,
         three_d_secure: {
@@ -319,15 +343,15 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_success response
     assert_equal 'pay_fj3xswqe3emuxckocjx6td73ni', response.authorization
 
-    capture = stub_comms do
+    response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.capture(@amount, response.authorization)
     end.respond_with(successful_capture_response)
 
-    assert_success capture
+    assert_success response
   end
 
   def test_failed_authorize
-    response = stub_comms do
+    response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.authorize(@amount, @credit_card)
     end.respond_with(failed_authorize_response)
 
@@ -345,22 +369,22 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_void
-    response = stub_comms do
+    response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.authorize(@amount, @credit_card)
     end.respond_with(successful_authorize_response)
 
     assert_success response
     assert_equal 'pay_fj3xswqe3emuxckocjx6td73ni', response.authorization
 
-    void = stub_comms do
+    response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.void(response.authorization)
     end.respond_with(successful_void_response)
 
-    assert_success void
+    assert_success response
   end
 
   def test_successful_void_with_metadata
-    response = stub_comms do
+    response = stub_comms(@gateway, :raw_ssl_request) do
       options = {
         metadata: {
           coupon_code: 'NY2018',
@@ -368,9 +392,11 @@ class CheckoutV2Test < Test::Unit::TestCase
         }
       }
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |_endpoint, data, _headers|
-      assert_match(%r{"coupon_code":"NY2018"}, data)
-      assert_match(%r{"partner_id":"123989"}, data)
+    end.check_request do |_method, url, data|
+      if url == "https://api.sandbox.checkout.com/payments"
+        assert_match(%r{"coupon_code":"NY2018"}, data)
+        assert_match(%r{"partner_id":"123989"}, data)
+      end
     end.respond_with(successful_authorize_response)
 
     assert_success response
@@ -392,22 +418,22 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_refund
-    response = stub_comms do
+    response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.purchase(@amount, @credit_card)
     end.respond_with(successful_purchase_response)
 
     assert_success response
     assert_equal 'pay_bgv5tmah6fmuzcmcrcro6exe6m', response.authorization
 
-    refund = stub_comms do
+    response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.refund(@amount, response.authorization)
     end.respond_with(successful_refund_response)
 
-    assert_success refund
+    assert_success response
   end
 
   def test_successful_refund_with_metadata
-    response = stub_comms do
+    response = stub_comms(@gateway, :raw_ssl_request) do
       options = {
         metadata: {
           coupon_code: 'NY2018',
@@ -415,7 +441,7 @@ class CheckoutV2Test < Test::Unit::TestCase
         }
       }
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |_endpoint, data, _headers|
+    end.check_request do |_method, url, data|
       assert_match(%r{"coupon_code":"NY2018"}, data)
       assert_match(%r{"partner_id":"123989"}, data)
     end.respond_with(successful_purchase_response)
@@ -423,15 +449,15 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_success response
     assert_equal 'pay_bgv5tmah6fmuzcmcrcro6exe6m', response.authorization
 
-    refund = stub_comms do
+    response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.refund(@amount, response.authorization)
     end.respond_with(successful_refund_response)
 
-    assert_success refund
+    assert_success response
   end
 
   def test_failed_refund
-    response = stub_comms do
+    response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.refund(nil, '')
     end.respond_with(failed_refund_response)
 
@@ -439,7 +465,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_verify
-    response = stub_comms do
+    response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.verify(@credit_card)
     end.respond_with(successful_verify_response)
     assert_success response
@@ -447,7 +473,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_failed_verify
-    response = stub_comms do
+    response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.verify(@credit_card)
     end.respond_with(failed_verify_response)
     assert_failure response
@@ -459,7 +485,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_invalid_json
-    response = stub_comms do
+    response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.purchase(@amount, @credit_card)
     end.respond_with(invalid_json_response)
 
@@ -468,7 +494,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_error_code_returned
-    response = stub_comms do
+    response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.purchase(@amount, @credit_card)
     end.respond_with(error_code_response)
 
@@ -477,7 +503,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_4xx_error_message
-    @gateway.expects(:ssl_post).raises(error_4xx_response)
+    @gateway.expects(:raw_ssl_request).raises(error_4xx_response)
 
     assert response = @gateway.purchase(@amount, @credit_card)
 
@@ -506,155 +532,250 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def successful_purchase_response
-    %(
+    MockResponse.succeeded <<-JSON
       {"id":"pay_bgv5tmah6fmuzcmcrcro6exe6m","action_id":"act_bgv5tmah6fmuzcmcrcro6exe6m","amount":200,"currency":"USD","approved":true,"status":"Authorized","auth_code":"127172","eci":"05","scheme_id":"096091887499308","response_code":"10000","response_summary":"Approved","risk":{"flagged":false},"source":{"id":"src_fzp3cwkf4ygebbmvrxdhyrwmbm","type":"card","billing_address":{"address_line1":"456 My Street","address_line2":"Apt 1","city":"Ottawa","state":"ON","zip":"K1C2N6","country":"CA"},"expiry_month":6,"expiry_year":2025,"name":"Longbob Longsen","scheme":"Visa","last4":"4242","fingerprint":"9F3BAD2E48C6C8579F2F5DC0710B7C11A8ACD5072C3363A72579A6FB227D64BE","bin":"424242","card_type":"Credit","card_category":"Consumer","issuer":"JPMORGAN CHASE BANK NA","issuer_country":"US","product_id":"A","product_type":"Visa Traditional","avs_check":"S","cvv_check":"Y","payouts":true,"fast_funds":"d"},"customer":{"id":"cus_tz76qzbwr44ezdfyzdvrvlwogy","email":"longbob.longsen@example.com","name":"Longbob Longsen"},"processed_on":"2020-09-11T13:58:32Z","reference":"1","processing":{"acquirer_transaction_id":"9819327011","retrieval_reference_number":"861613285622"},"_links":{"self":{"href":"https://api.sandbox.checkout.com/payments/pay_bgv5tmah6fmuzcmcrcro6exe6m"},"actions":{"href":"https://api.sandbox.checkout.com/payments/pay_bgv5tmah6fmuzcmcrcro6exe6m/actions"},"capture":{"href":"https://api.sandbox.checkout.com/payments/pay_bgv5tmah6fmuzcmcrcro6exe6m/captures"},"void":{"href":"https://api.sandbox.checkout.com/payments/pay_bgv5tmah6fmuzcmcrcro6exe6m/voids"}}}
-    )
+    JSON
   end
 
   def successful_tokens_response
-    %(
+    MockResponse.succeeded <<-JSON
       {"type": "card","token": "tok_6vakdyuqpggexn33v5qv7yds5e","expires_on": "2021-08-12T07:45:35Z","billing_address":{"address_line1":"Checkout.com","address_line2":"90 Tottenham Court Road","city":"London","state":"London","zip":"W1T 4TJ","country":"GB"},"phone":{"country_code": "1","number":"4155552671"},"expiry_month":6,"expiry_year":2025,"name":"Bruce Wayne","last4":"2220","bin":"400030"}
-    )
+    JSON
   end
 
   def successful_card_verification_response
-    %(
+    MockResponse.succeeded <<-JSON
       {"id":"pay_7chindgcm4f2flygnskuvh5ouu","action_id":"act_7chindgcm4f2flygnskuvh5ouu","amount":0,"currency":"EUR","approved":true,"status":"Card Verified","auth_code":"559852","eci":"05","scheme_id":"607488912295348","response_code":"10000","response_summary":"Approved","risk":{"flagged":false},"source":{"id":"src_hjodtc4srmvuxon2cmgyrfdnau","type":"card","billing_address":{"address_line1":"Checkout.com","address_line2":"90 Tottenham Court Road","city":"London","state":"London","zip":"W1T 4TJ","country":"GB"},"phone":{"country_code":"1","number":"4155552671"},"expiry_month":6,"expiry_year":2022,"name":"Bruce Wayne","scheme":"Visa","last4":"4242","fingerprint":"6D3472691B8A164144D5D4C3237AF81B29F7A19258335387397AAC2AC71237F6","bin":"424242","card_type":"Credit","card_category":"Consumer","issuer":"JPMORGAN CHASE BANK NA","issuer_country":"US","product_id":"A","product_type":"Visa Traditional","avs_check":"S","cvv_check":"Y","payouts":true,"fast_funds":"d"},"customer":{"id":"cus_bwz32ftnduhu7mieggn5owxahm","email":"john@example.com"},"processed_on":"2021-08-13T07:53:52Z","processing":{"acquirer_transaction_id":"2308472529","retrieval_reference_number":"625942996863"},"_links":{"self":{"href":"https://api.sandbox.checkout.com/payments/pay_7chindgcm4f2flygnskuvh5ouu"},"actions":{"href":"https://api.sandbox.checkout.com/payments/pay_7chindgcm4f2flygnskuvh5ouu/actions"}}}
-    )
+    JSON
+  end
+
+  def successful_card_verification_with_3ds_response
+    MockResponse.succeeded <<-JSON
+      {
+        "id": "pay_4diurxowfup27isncyao6au2wi",
+        "status": "Pending",
+        "customer": {
+            "id": "cus_bwz32ftnduhu7mieggn5owxahm",
+            "email": "john@example.com"
+        },
+        "3ds": {
+            "downgraded": false,
+            "enrolled": "Y"
+        },
+        "_links": {
+            "self": {
+                "href": "https://api.sandbox.checkout.com/payments/pay_4diurxowfup27isncyao6au2wi"
+            },
+            "redirect": {
+                "href": "https://3ds2-sandbox.ckotech.co/interceptor/3ds_iswgtd7o4z2edjngqk43acqxg4"
+            }
+        }
+      }
+    JSON
   end
 
   def failed_card_verification_response
-    %(
+    MockResponse.succeeded <<-JSON
       {"id":"pay_ntgujyyksnk2jekxls7ddhkbwm","action_id":"act_ntgujyyksnk2jekxls7ddhkbwm","amount":0,"currency":"EUR","approved":false,"status":"Declined","auth_code":"095972","eci":"05","scheme_id":"525838625103408","response_code":"20087","response_summary":"Bad Track Data","risk":{"flagged":false},"source":{"id":"src_hjodtc4srmvuxon2cmgyrfdnau","type":"card","billing_address":{"address_line1":"Checkout.com","address_line2":"90 Tottenham Court Road","city":"London","state":"London","zip":"W1T 4TJ","country":"GB"},"phone":{"country_code":"1","number":"4155552671"},"expiry_month":6,"expiry_year":2022,"name":"Bruce Wayne","scheme":"Visa","last4":"4242","fingerprint":"6D3472691B8A164144D5D4C3237AF81B29F7A19258335387397AAC2AC71237F6","bin":"424242","card_type":"Credit","card_category":"Consumer","issuer":"JPMORGAN CHASE BANK NA","issuer_country":"US","product_id":"A","product_type":"Visa Traditional","avs_check":"UM","cvv_check":"D","payouts":true,"fast_funds":"d"},"customer":{"id":"cus_bwz32ftnduhu7mieggn5owxahm","email":"john@example.com"},"processed_on":"2021-08-13T12:28:50Z","processing":{"acquirer_transaction_id":"0349746892","retrieval_reference_number":"470951685034"},"_links":{"self":{"href":"https://api.sandbox.checkout.com/payments/pay_ntgujyyksnk2jekxls7ddhkbwm"},"actions":{"href":"https://api.sandbox.checkout.com/payments/pay_ntgujyyksnk2jekxls7ddhkbwm/actions"}}}
-    )
+    JSON
   end
 
   def successful_purchase_with_network_token_response
-    purchase_response = JSON.parse(successful_purchase_response)
-    purchase_response['source']['payment_account_reference'] = '2FCFE326D92D4C27EDD699560F484'
-    purchase_response.to_json
+    MockResponse.succeeded <<-JSON
+      {
+        "id": "pay_bgv5tmah6fmuzcmcrcro6exe6m",
+        "action_id": "act_bgv5tmah6fmuzcmcrcro6exe6m",
+        "amount": 200,
+        "currency": "USD",
+        "approved": true,
+        "status": "Authorized",
+        "auth_code": "127172",
+        "eci": "05",
+        "scheme_id": "096091887499308",
+        "response_code": "10000",
+        "response_summary": "Approved",
+        "risk": {
+          "flagged": false
+        },
+        "source": {
+          "id": "src_fzp3cwkf4ygebbmvrxdhyrwmbm",
+          "type": "card",
+          "billing_address": {
+            "address_line1": "456 My Street",
+            "address_line2": "Apt 1",
+            "city": "Ottawa",
+            "state": "ON",
+            "zip": "K1C2N6",
+            "country": "CA"
+          },
+          "expiry_month": 6,
+          "expiry_year": 2025,
+          "name": "Longbob Longsen",
+          "scheme": "Visa",
+          "last4": "4242",
+          "fingerprint": "9F3BAD2E48C6C8579F2F5DC0710B7C11A8ACD5072C3363A72579A6FB227D64BE",
+          "bin": "424242",
+          "card_type": "Credit",
+          "card_category": "Consumer",
+          "issuer": "JPMORGAN CHASE BANK NA",
+          "issuer_country": "US",
+          "product_id": "A",
+          "product_type": "Visa Traditional",
+          "avs_check": "S",
+          "cvv_check": "Y",
+          "payouts": true,
+          "fast_funds": "d",
+          "payment_account_reference": "2FCFE326D92D4C27EDD699560F484"
+        },
+        "customer": {
+          "id": "cus_tz76qzbwr44ezdfyzdvrvlwogy",
+          "email": "longbob.longsen@example.com",
+          "name": "Longbob Longsen"
+        },
+        "processed_on": "2020-09-11T13:58:32Z",
+        "reference": "1",
+        "processing": {
+          "acquirer_transaction_id": "9819327011",
+          "retrieval_reference_number": "861613285622"
+        },
+        "_links": {
+          "self": {
+            "href": "https://api.sandbox.checkout.com/payments/pay_bgv5tmah6fmuzcmcrcro6exe6m"
+          },
+          "actions": {
+            "href": "https://api.sandbox.checkout.com/payments/pay_bgv5tmah6fmuzcmcrcro6exe6m/actions"
+          },
+          "capture": {
+            "href": "https://api.sandbox.checkout.com/payments/pay_bgv5tmah6fmuzcmcrcro6exe6m/captures"
+          },
+          "void": {
+            "href": "https://api.sandbox.checkout.com/payments/pay_bgv5tmah6fmuzcmcrcro6exe6m/voids"
+          }
+        }
+      }
+    JSON
   end
 
   def successful_purchase_initial_stored_credential_response
-    %(
+    MockResponse.succeeded <<-JSON
       {"id":"pay_7jcf4ovmwnqedhtldca3fjli2y","action_id":"act_7jcf4ovmwnqedhtldca3fjli2y","amount":200,"currency":"USD","approved":true,"status":"Authorized","auth_code":"587541","eci":"05","scheme_id":"776561034288791","response_code":"10000","response_summary":"Approved","risk":{"flagged":false},"source":{"id":"src_m2ooveyd2dxuzh277ft4obgkwm","type":"card","billing_address":{"address_line1":"456 My Street","address_line2":"Apt 1","city":"Ottawa","state":"ON","zip":"K1C2N6","country":"CA"},"expiry_month":6,"expiry_year":2025,"name":"Longbob Longsen","scheme":"Visa","last4":"4242","fingerprint":"9F3BAD2E48C6C8579F2F5DC0710B7C11A8ACD5072C3363A72579A6FB227D64BE","bin":"424242","card_type":"Credit","card_category":"Consumer","issuer":"JPMORGAN CHASE BANK NA","issuer_country":"US","product_id":"A","product_type":"Visa Traditional","avs_check":"S","cvv_check":"Y","payouts":true,"fast_funds":"d"},"customer":{"id":"cus_tr53e5z2dlmetpo2ehbsuk76yu","email":"longbob.longsen@example.com","name":"Longbob Longsen"},"processed_on":"2021-03-29T20:22:48Z","reference":"1","processing":{"acquirer_transaction_id":"8266949399","retrieval_reference_number":"731420439000"},"_links":{"self":{"href":"https://api.sandbox.checkout.com/payments/pay_7jcf4ovmwnqedhtldca3fjli2y"},"actions":{"href":"https://api.sandbox.checkout.com/payments/pay_7jcf4ovmwnqedhtldca3fjli2y/actions"},"capture":{"href":"https://api.sandbox.checkout.com/payments/pay_7jcf4ovmwnqedhtldca3fjli2y/captures"},"void":{"href":"https://api.sandbox.checkout.com/payments/pay_7jcf4ovmwnqedhtldca3fjli2y/voids"}}}
-    )
+    JSON
   end
 
   def successful_purchase_using_stored_credential_response
-    %(
+    MockResponse.succeeded <<-JSON
       {"id":"pay_udodtu4ogljupp2jvy2cxf4jme","action_id":"act_udodtu4ogljupp2jvy2cxf4jme","amount":200,"currency":"USD","approved":true,"status":"Authorized","auth_code":"680745","eci":"05","scheme_id":"491049486700108","response_code":"10000","response_summary":"Approved","risk":{"flagged":false},"source":{"id":"src_m2ooveyd2dxuzh277ft4obgkwm","type":"card","billing_address":{"address_line1":"456 My Street","address_line2":"Apt 1","city":"Ottawa","state":"ON","zip":"K1C2N6","country":"CA"},"expiry_month":6,"expiry_year":2025,"name":"Longbob Longsen","scheme":"Visa","last4":"4242","fingerprint":"9F3BAD2E48C6C8579F2F5DC0710B7C11A8ACD5072C3363A72579A6FB227D64BE","bin":"424242","card_type":"Credit","card_category":"Consumer","issuer":"JPMORGAN CHASE BANK NA","issuer_country":"US","product_id":"A","product_type":"Visa Traditional","avs_check":"S","cvv_check":"Y","payouts":true,"fast_funds":"d"},"customer":{"id":"cus_tr53e5z2dlmetpo2ehbsuk76yu","email":"longbob.longsen@example.com","name":"Longbob Longsen"},"processed_on":"2021-03-29T20:22:49Z","reference":"1","processing":{"acquirer_transaction_id":"4026777708","retrieval_reference_number":"633985559433"},"_links":{"self":{"href":"https://api.sandbox.checkout.com/payments/pay_udodtu4ogljupp2jvy2cxf4jme"},"actions":{"href":"https://api.sandbox.checkout.com/payments/pay_udodtu4ogljupp2jvy2cxf4jme/actions"},"capture":{"href":"https://api.sandbox.checkout.com/payments/pay_udodtu4ogljupp2jvy2cxf4jme/captures"},"void":{"href":"https://api.sandbox.checkout.com/payments/pay_udodtu4ogljupp2jvy2cxf4jme/voids"}}}
-    )
+    JSON
   end
 
   def failed_purchase_response
-    %(
-     {
-       "id":"pay_awjzhfj776gulbp2nuslj4agbu",
-       "amount":200,
-       "currency":"USD",
-       "reference":"1",
-       "response_summary": "Invalid Card Number",
-       "response_code":"20014",
-       "customer": {
-        "id": "cus_zvnv7gsblfjuxppycd7bx4erue",
-        "email": "longbob.longsen@example.com",
-        "name": "Sarah Mitchell"
-       },
-       "source": {
-         "cvvCheck":"Y",
-         "avsCheck":"S"
-       }
+    MockResponse.succeeded <<-JSON
+      {
+        "id":"pay_awjzhfj776gulbp2nuslj4agbu",
+        "amount":200,
+        "currency":"USD",
+        "reference":"1",
+        "response_summary": "Invalid Card Number",
+        "response_code":"20014",
+        "customer": {
+          "id": "cus_zvnv7gsblfjuxppycd7bx4erue",
+          "email": "longbob.longsen@example.com",
+          "name": "Sarah Mitchell"
+        },
+        "source": {
+          "cvvCheck":"Y",
+          "avsCheck":"S"
+        }
       }
-    )
+    JSON
   end
 
   def successful_authorize_response
-    %(
-    {
-      "id": "pay_fj3xswqe3emuxckocjx6td73ni",
-      "action_id": "act_fj3xswqe3emuxckocjx6td73ni",
-      "amount": 200,
-      "currency": "USD",
-      "approved": true,
-      "status": "Authorized",
-      "auth_code": "858188",
-      "eci": "05",
-      "scheme_id": "638284745624527",
-      "response_code": "10000",
-      "response_summary": "Approved",
-      "risk": {
-        "flagged": false
-      },
-      "source": {
-        "id": "src_nq6m5dqvxmsunhtzf7adymbq3i",
-        "type": "card",
-        "expiry_month": 8,
-        "expiry_year": 2025,
-        "name": "Sarah Mitchell",
-        "scheme": "Visa",
-        "last4": "4242",
-        "fingerprint": "5CD3B9CB15338683110959D165562D23084E1FF564F420FE9A990DF0BCD093FC",
-        "bin": "424242",
-        "card_type": "Credit",
-        "card_category": "Consumer",
-        "issuer": "JPMORGAN CHASE BANK NA",
-        "issuer_country": "US",
-        "product_id": "A",
-        "product_type": "Visa Traditional",
-        "avs_check": "S",
-        "cvv_check": "Y"
-      },
-      "customer": {
-        "id": "cus_ssxcidkqvfde7lfn5n7xzmgv2a",
-        "email": "longbob.longsen@example.com",
-        "name": "Sarah Mitchell"
-      },
-      "processed_on": "2019-03-24T10:14:32Z",
-      "reference": "ORD-5023-4E89",
-      "_links": {
-        "self": {
-          "href": "https://api.sandbox.checkout.com/payments/pay_fj3xswqe3emuxckocjx6td73ni"
+    MockResponse.succeeded <<-JSON
+      {
+        "id": "pay_fj3xswqe3emuxckocjx6td73ni",
+        "action_id": "act_fj3xswqe3emuxckocjx6td73ni",
+        "amount": 200,
+        "currency": "USD",
+        "approved": true,
+        "status": "Authorized",
+        "auth_code": "858188",
+        "eci": "05",
+        "scheme_id": "638284745624527",
+        "response_code": "10000",
+        "response_summary": "Approved",
+        "risk": {
+          "flagged": false
         },
-        "actions": {
-          "href": "https://api.sandbox.checkout.com/payments/pay_fj3xswqe3emuxckocjx6td73ni/actions"
+        "source": {
+          "id": "src_nq6m5dqvxmsunhtzf7adymbq3i",
+          "type": "card",
+          "expiry_month": 8,
+          "expiry_year": 2025,
+          "name": "Sarah Mitchell",
+          "scheme": "Visa",
+          "last4": "4242",
+          "fingerprint": "5CD3B9CB15338683110959D165562D23084E1FF564F420FE9A990DF0BCD093FC",
+          "bin": "424242",
+          "card_type": "Credit",
+          "card_category": "Consumer",
+          "issuer": "JPMORGAN CHASE BANK NA",
+          "issuer_country": "US",
+          "product_id": "A",
+          "product_type": "Visa Traditional",
+          "avs_check": "S",
+          "cvv_check": "Y"
         },
-        "capture": {
-          "href": "https://api.sandbox.checkout.com/payments/pay_fj3xswqe3emuxckocjx6td73ni/captures"
+        "customer": {
+          "id": "cus_ssxcidkqvfde7lfn5n7xzmgv2a",
+          "email": "longbob.longsen@example.com",
+          "name": "Sarah Mitchell"
         },
-        "void": {
-          "href": "https://api.sandbox.checkout.com/payments/pay_fj3xswqe3emuxckocjx6td73ni/voids"
+        "processed_on": "2019-03-24T10:14:32Z",
+        "reference": "ORD-5023-4E89",
+        "_links": {
+          "self": {
+            "href": "https://api.sandbox.checkout.com/payments/pay_fj3xswqe3emuxckocjx6td73ni"
+          },
+          "actions": {
+            "href": "https://api.sandbox.checkout.com/payments/pay_fj3xswqe3emuxckocjx6td73ni/actions"
+          },
+          "capture": {
+            "href": "https://api.sandbox.checkout.com/payments/pay_fj3xswqe3emuxckocjx6td73ni/captures"
+          },
+          "void": {
+            "href": "https://api.sandbox.checkout.com/payments/pay_fj3xswqe3emuxckocjx6td73ni/voids"
+          }
         }
       }
-    }
-  )
+    JSON
   end
 
   def failed_authorize_response
-    %(
-     {
-       "id":"pay_awjzhfj776gulbp2nuslj4agbu",
-       "amount":200,
-       "currency":"USD",
-       "reference":"1",
-       "customer": {
-        "id": "cus_zvnv7gsblfjuxppycd7bx4erue",
-        "email": "longbob.longsen@example.com",
-        "name": "Sarah Mitchell"
-       },
-       "response_summary": "Invalid Card Number",
-       "response_code":"20014"
+    MockResponse.succeeded <<-JSON
+      {
+        "id":"pay_awjzhfj776gulbp2nuslj4agbu",
+        "amount":200,
+        "currency":"USD",
+        "reference":"1",
+        "customer": {
+          "id": "cus_zvnv7gsblfjuxppycd7bx4erue",
+          "email": "longbob.longsen@example.com",
+          "name": "Sarah Mitchell"
+        },
+        "response_summary": "Invalid Card Number",
+        "response_code":"20014"
       }
-    )
+    JSON
   end
 
   def successful_capture_response
-    %(
-    {
-     "action_id": "act_2f56bhkau5dubequbv5aa6w4qi",
-     "reference": "1"
-    }
-    )
+    MockResponse.succeeded <<-JSON
+      {
+        "action_id": "act_2f56bhkau5dubequbv5aa6w4qi",
+        "reference": "1"
+      }
+    JSON
   end
 
   def failed_capture_response
@@ -663,26 +784,27 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def successful_refund_response
-    %(
-    {
-     "action_id": "act_2f56bhkau5dubequbv5aa6w4qi",
-     "reference": "1"
-    }
-    )
+    MockResponse.succeeded <<-JSON
+      {
+        "action_id": "act_2f56bhkau5dubequbv5aa6w4qi",
+        "reference": "1"
+      }
+    JSON
   end
 
   def failed_refund_response
-    %(
-    )
+    MockResponse.succeeded <<-JSON
+      {}
+    JSON
   end
 
   def successful_void_response
-    %(
-    {
-     "action_id": "act_2f56bhkau5dubequbv5aa6w4qi",
-     "reference": "1"
-    }
-    )
+    MockResponse.succeeded <<-JSON
+      {
+        "action_id": "act_2f56bhkau5dubequbv5aa6w4qi",
+        "reference": "1"
+      }
+    JSON
   end
 
   def failed_void_response
@@ -691,18 +813,19 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def invalid_json_response
-    %(
-    {
-      "id": "pay_123",
-    )
+    MockResponse.succeeded <<-JSON
+      {
+        "id": "pay_123",
+      )
+    JSON
   end
 
   def error_code_response
-    %(
+    MockResponse.succeeded <<-JSON
       {
         "request_id": "e5a3ce6f-a4e9-4445-9ec7-e5975e9a6213","error_type": "request_invalid","error_codes": ["card_expired"]
       }
-    )
+    JSON
   end
 
   def error_4xx_response
@@ -713,22 +836,91 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def successful_verify_payment_response
-    %(
-      {"id":"pay_tkvif5mf54eerhd3ysuawfcnt4","requested_on":"2019-08-14T18:13:54Z","source":{"id":"src_lot2ch4ygk3ehi4fugxmk7r2di","type":"card","expiry_month":12,"expiry_year":2020,"name":"Jane Doe","scheme":"Visa","last4":"0907","fingerprint":"E4048195442B0059D73FD47F6E1961A02CD085B0B34B7703CE4A93750DB5A0A1","bin":"457382","avs_check":"S","cvv_check":"Y"},"amount":100,"currency":"USD","payment_type":"Regular","reference":"Dvy8EMaEphrMWolKsLVHcUqPsyx","status":"Authorized","approved":true,"3ds":{"downgraded":false,"enrolled":"Y","authentication_response":"Y","cryptogram":"ce49b5c1-5d3c-4864-bd16-2a8c","xid":"95202312-f034-48b4-b9b2-54254a2b49fb","version":"2.1.0"},"risk":{"flagged":false},"customer":{"id":"cus_zt5pspdtkypuvifj7g6roy7p6y","name":"Jane Doe"},"billing_descriptor":{"name":"","city":"London"},"payment_ip":"127.0.0.1","metadata":{"Udf5":"ActiveMerchant"},"eci":"05","scheme_id":"638284745624527","actions":[{"id":"act_tkvif5mf54eerhd3ysuawfcnt4","type":"Authorization","response_code":"10000","response_summary":"Approved"}],"_links":{"self":{"href":"https://api.sandbox.checkout.com/payments/pay_tkvif5mf54eerhd3ysuawfcnt4"},"actions":{"href":"https://api.sandbox.checkout.com/payments/pay_tkvif5mf54eerhd3ysuawfcnt4/actions"},"capture":{"href":"https://api.sandbox.checkout.com/payments/pay_tkvif5mf54eerhd3ysuawfcnt4/captures"},"void":{"href":"https://api.sandbox.checkout.com/payments/pay_tkvif5mf54eerhd3ysuawfcnt4/voids"}}}
-    )
+    {
+      "id": "pay_tkvif5mf54eerhd3ysuawfcnt4",
+      "requested_on": "2019-08-14T18:13:54Z",
+      "source": {
+        "id": "src_lot2ch4ygk3ehi4fugxmk7r2di",
+        "type": "card",
+        "expiry_month": 12,
+        "expiry_year": 2020,
+        "name": "Jane Doe",
+        "scheme": "Visa",
+        "last4": "0907",
+        "fingerprint": "E4048195442B0059D73FD47F6E1961A02CD085B0B34B7703CE4A93750DB5A0A1",
+        "bin": "457382",
+        "avs_check": "S",
+        "cvv_check": "Y"
+      },
+      "amount": 100,
+      "currency": "USD",
+      "payment_type": "Regular",
+      "reference": "Dvy8EMaEphrMWolKsLVHcUqPsyx",
+      "status": "Authorized",
+      "approved": true,
+      "3ds": {
+        "downgraded": false,
+        "enrolled": "Y",
+        "authentication_response": "Y",
+        "cryptogram": "ce49b5c1-5d3c-4864-bd16-2a8c",
+        "xid": "95202312-f034-48b4-b9b2-54254a2b49fb",
+        "version": "2.1.0"
+      },
+      "risk": {
+        "flagged": false
+      },
+      "customer": {
+        "id": "cus_zt5pspdtkypuvifj7g6roy7p6y",
+        "name": "Jane Doe"
+      },
+      "billing_descriptor": {
+        "name": "",
+        "city": "London"
+      },
+      "payment_ip": "127.0.0.1",
+      "metadata": {
+        "Udf5": "ActiveMerchant"
+      },
+      "eci": "05",
+      "scheme_id": "638284745624527",
+      "actions": [
+        {
+          "id": "act_tkvif5mf54eerhd3ysuawfcnt4",
+          "type": "Authorization",
+          "response_code": "10000",
+          "response_summary": "Approved"
+        }
+      ],
+      "_links": {
+        "self": {
+          "href": "https://api.sandbox.checkout.com/payments/pay_tkvif5mf54eerhd3ysuawfcnt4"
+        },
+        "actions": {
+          "href": "https://api.sandbox.checkout.com/payments/pay_tkvif5mf54eerhd3ysuawfcnt4/actions"
+        },
+        "capture": {
+          "href": "https://api.sandbox.checkout.com/payments/pay_tkvif5mf54eerhd3ysuawfcnt4/captures"
+        },
+        "void": {
+          "href": "https://api.sandbox.checkout.com/payments/pay_tkvif5mf54eerhd3ysuawfcnt4/voids"
+        }
+      }
+    }.to_json
   end
 
   def failed_verify_payment_response
-    %(
-      {"id":"pay_xrwmaqlar73uhjtyoghc7bspa4","requested_on":"2019-08-14T18:32:50Z","source":{"type":"card","expiry_month":12,"expiry_year":2020,"name":"Jane Doe","scheme":"Visa","last4":"7863","fingerprint":"DC20145B78E242C561A892B83CB64471729D7A5063E5A5B341035713B8FDEC92","bin":"453962"},"amount":100,"currency":"USD","payment_type":"Regular","reference":"EuyOZtgt8KI4tolEH8lqxCclWqz","status":"Declined","approved":false,"3ds":{"downgraded":false,"enrolled":"Y","version":"2.1.0"},"risk":{"flagged":false},"customer":{"id":"cus_bb4b7eu35sde7o33fq2xchv7oq","name":"Jane Doe"},"payment_ip":"127.0.0.1","metadata":{"Udf5":"ActiveMerchant"},"_links":{"self":{"href":"https://api.sandbox.checkout.com/payments/pay_xrwmaqlar73uhjtyoghc7bspa4"},"actions":{"href":"https://api.sandbox.checkout.com/payments/pay_xrwmaqlar73uhjtyoghc7bspa4/actions"}}}
-    )
+    {"id":"pay_xrwmaqlar73uhjtyoghc7bspa4","requested_on":"2019-08-14T18:32:50Z","source":{"type":"card","expiry_month":12,"expiry_year":2020,"name":"Jane Doe","scheme":"Visa","last4":"7863","fingerprint":"DC20145B78E242C561A892B83CB64471729D7A5063E5A5B341035713B8FDEC92","bin":"453962"},"amount":100,"currency":"USD","payment_type":"Regular","reference":"EuyOZtgt8KI4tolEH8lqxCclWqz","status":"Declined","approved":false,"3ds":{"downgraded":false,"enrolled":"Y","version":"2.1.0"},"risk":{"flagged":false},"customer":{"id":"cus_bb4b7eu35sde7o33fq2xchv7oq","name":"Jane Doe"},"payment_ip":"127.0.0.1","metadata":{"Udf5":"ActiveMerchant"},"_links":{"self":{"href":"https://api.sandbox.checkout.com/payments/pay_xrwmaqlar73uhjtyoghc7bspa4"},"actions":{"href":"https://api.sandbox.checkout.com/payments/pay_xrwmaqlar73uhjtyoghc7bspa4/actions"}}}.to_json
   end
 
   def successful_verify_response
-    %({"id":"pay_ij6bctwxpzdulm53xyksio7gm4","action_id":"act_ij6bctwxpzdulm53xyksio7gm4","amount":0,"currency":"USD","approved":true,"status":"Card Verified","auth_code":"881790","eci":"05","scheme_id":"305756859646779","response_code":"10000","response_summary":"Approved","risk":{"flagged":false},"source":{"id":"src_nica37p5k7aufhs3rsv2te7xye","type":"card","billing_address":{"address_line1":"456 My Street","address_line2":"Apt 1","city":"Ottawa","state":"ON","zip":"K1C2N6","country":"CA"},"expiry_month":6,"expiry_year":2025,"name":"Longbob Longsen","scheme":"Visa","last4":"4242","fingerprint":"9F3BAD2E48C6C8579F2F5DC0710B7C11A8ACD5072C3363A72579A6FB227D64BE","bin":"424242","card_type":"Credit","card_category":"Consumer","issuer":"JPMORGAN CHASE BANK NA","issuer_country":"US","product_id":"A","product_type":"Visa Traditional","avs_check":"S","cvv_check":"Y","payouts":true,"fast_funds":"d"},"customer":{"id":"cus_r2yb7f2upmsuhm6nbruoqn657y","email":"longbob.longsen@example.com","name":"Longbob Longsen"},"processed_on":"2020-09-18T18:17:45Z","reference":"1","processing":{"acquirer_transaction_id":"4932795322","retrieval_reference_number":"954188232380"},"_links":{"self":{"href":"https://api.sandbox.checkout.com/payments/pay_ij6bctwxpzdulm53xyksio7gm4"},"actions":{"href":"https://api.sandbox.checkout.com/payments/pay_ij6bctwxpzdulm53xyksio7gm4/actions"}}})
+    MockResponse.succeeded <<-JSON
+      {"id":"pay_ij6bctwxpzdulm53xyksio7gm4","action_id":"act_ij6bctwxpzdulm53xyksio7gm4","amount":0,"currency":"USD","approved":true,"status":"Card Verified","auth_code":"881790","eci":"05","scheme_id":"305756859646779","response_code":"10000","response_summary":"Approved","risk":{"flagged":false},"source":{"id":"src_nica37p5k7aufhs3rsv2te7xye","type":"card","billing_address":{"address_line1":"456 My Street","address_line2":"Apt 1","city":"Ottawa","state":"ON","zip":"K1C2N6","country":"CA"},"expiry_month":6,"expiry_year":2025,"name":"Longbob Longsen","scheme":"Visa","last4":"4242","fingerprint":"9F3BAD2E48C6C8579F2F5DC0710B7C11A8ACD5072C3363A72579A6FB227D64BE","bin":"424242","card_type":"Credit","card_category":"Consumer","issuer":"JPMORGAN CHASE BANK NA","issuer_country":"US","product_id":"A","product_type":"Visa Traditional","avs_check":"S","cvv_check":"Y","payouts":true,"fast_funds":"d"},"customer":{"id":"cus_r2yb7f2upmsuhm6nbruoqn657y","email":"longbob.longsen@example.com","name":"Longbob Longsen"},"processed_on":"2020-09-18T18:17:45Z","reference":"1","processing":{"acquirer_transaction_id":"4932795322","retrieval_reference_number":"954188232380"},"_links":{"self":{"href":"https://api.sandbox.checkout.com/payments/pay_ij6bctwxpzdulm53xyksio7gm4"},"actions":{"href":"https://api.sandbox.checkout.com/payments/pay_ij6bctwxpzdulm53xyksio7gm4/actions"}}}
+    JSON
   end
 
   def failed_verify_response
-    %({"request_id":"911829c3-519a-47e8-bbc1-17337789fda0","error_type":"request_invalid","error_codes":["card_number_invalid"]})
+    MockResponse.succeeded <<-JSON
+      {"request_id":"911829c3-519a-47e8-bbc1-17337789fda0","error_type":"request_invalid","error_codes":["card_number_invalid"]}
+    JSON
   end
 end
