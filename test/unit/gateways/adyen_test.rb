@@ -51,6 +51,12 @@ class AdyenTest < Test::Unit::TestCase
       source: :apple_pay,
       verification_value: nil)
 
+    @nt_credit_card = network_tokenization_credit_card('4895370015293175',
+      brand: 'visa',
+      eci: '07',
+      source: :network_token,
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
+
     @amount = 100
 
     @options = {
@@ -879,6 +885,24 @@ class AdyenTest < Test::Unit::TestCase
       assert_match(/"networkTxReference":"#{auth.network_transaction_id}"/, data)
     end.respond_with(successful_capture_response)
     assert_success response
+  end
+
+  def test_authorize_with_network_token
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+
+    response = @gateway.authorize(@amount, @nt_credit_card, @options)
+    assert_success response
+  end
+
+  def test_successful_purchase_with_network_token
+    response = stub_comms do
+      @gateway.purchase(@amount, @nt_credit_card, @options)
+    end.respond_with(successful_authorize_response, successful_capture_response)
+    assert_success response
+  end
+
+  def test_supports_network_tokenization
+    assert_instance_of TrueClass, @gateway.supports_network_tokenization?
   end
 
   def test_authorize_with_sub_merchant_id
