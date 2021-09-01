@@ -18,12 +18,13 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, payment, options = {})
         post = {}
-        post[:settleWithAuth] = true
         add_invoice(post, money, options)
         add_payment(post, payment)
         add_billing_address(post, options)
         add_merchant_details(post, options)
         add_customer_data(post, payment, options) unless payment.is_a?(String)
+        add_three_d_secure(post, payment, options) if options[:three_d_secure]
+        post[:settleWithAuth] = true
 
         commit(:post, 'auths', post, options)
       end
@@ -35,6 +36,7 @@ module ActiveMerchant #:nodoc:
         add_billing_address(post, options)
         add_merchant_details(post, options)
         add_customer_data(post, payment, options) unless payment.is_a?(String)
+        add_three_d_secure(post, payment, options) if options[:three_d_secure]
 
         commit(:post, 'auths', post, options)
       end
@@ -188,6 +190,17 @@ module ActiveMerchant #:nodoc:
         post[:merchantDescriptor] = {}
         post[:merchantDescriptor][:dynamicDescriptor] = options[:merchant_descriptor][:dynamic_descriptor] if options[:merchant_descriptor][:dynamic_descriptor]
         post[:merchantDescriptor][:phone] = options[:merchant_descriptor][:phone] if options[:merchant_descriptor][:phone]
+      end
+
+      def add_three_d_secure(post, payment, options)
+        three_d_secure = options[:three_d_secure]
+
+        post[:authentication] = {}
+        post[:authentication][:eci] = three_d_secure[:eci]
+        post[:authentication][:cavv] = three_d_secure[:cavv]
+        post[:authentication][:xid] = three_d_secure[:xid] if three_d_secure[:xid]
+        post[:authentication][:threeDSecureVersion] = three_d_secure[:version]
+        post[:authentication][:directoryServerTransactionId] = three_d_secure[:ds_transaction_id] unless payment.is_a?(String) || payment.brand != 'mastercard'
       end
 
       def parse(body)

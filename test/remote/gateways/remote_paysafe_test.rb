@@ -6,6 +6,7 @@ class RemotePaysafeTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card('4107857757053670')
+    @mastercard = credit_card('5186750368967720', brand: 'mastercard')
     @pm_token = 'Ci3S9DWyOP9CiJ5'
     @options = {
       billing_address: address,
@@ -23,6 +24,42 @@ class RemotePaysafeTest < Test::Unit::TestCase
       email: 'profile@memail.com',
       phone: '111-222-3456',
       address: address
+    }
+    @mc_three_d_secure_2_options = {
+      currency: 'EUR',
+      three_d_secure: {
+        eci: 0,
+        cavv: 'AAABBhkXYgAAAAACBxdiENhf7A+=',
+        version: '2.1.0',
+        ds_transaction_id: 'a3a721f3-b6fa-4cb5-84ea-c7b5c39890a2'
+      }
+    }
+    @visa_three_d_secure_2_options = {
+      currency: 'EUR',
+      three_d_secure: {
+        eci: 5,
+        cavv: 'AAABBhkXYgAAAAACBxdiENhf7A+=',
+        version: '2.1.0'
+      }
+    }
+    @mc_three_d_secure_1_options = {
+      currency: 'EUR',
+      three_d_secure: {
+        eci: 0,
+        cavv: 'AAABBhkXYgAAAAACBxdiENhf7A+=',
+        xid: 'aWg4N1ZZOE53TkFrazJuMmkyRDA=',
+        version: '1.0.2',
+        ds_transaction_id: 'a3a721f3-b6fa-4cb5-84ea-c7b5c39890a2'
+      }
+    }
+    @visa_three_d_secure_1_options = {
+      currency: 'EUR',
+      three_d_secure: {
+        eci: 5,
+        cavv: 'AAABBhkXYgAAAAACBxdiENhf7A+=',
+        xid: 'aWg4N1ZZOE53TkFrazJuMmkyRDA=',
+        version: '1.0.2'
+      }
     }
   end
 
@@ -44,8 +81,39 @@ class RemotePaysafeTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_token
-    purchase = @gateway.purchase(200, @pm_token, @options)
-    assert_success purchase
+    response = @gateway.purchase(200, @pm_token, @options)
+    assert_success response
+    assert_equal 'COMPLETED', response.message
+  end
+
+  def test_successful_purchase_with_token_3ds2
+    response = @gateway.purchase(200, @pm_token, @options.merge(@visa_three_d_secure_2_options))
+    assert_success response
+    assert_equal 'COMPLETED', response.message
+  end
+
+  def test_successful_purchase_with_mastercard_3ds1
+    response = @gateway.purchase(@amount, @mastercard, @options.merge(@mc_three_d_secure_1_options))
+    assert_success response
+    assert_equal 'COMPLETED', response.message
+  end
+
+  def test_successful_purchase_with_mastercard_3ds2
+    response = @gateway.purchase(@amount, @mastercard, @options.merge(@mc_three_d_secure_2_options))
+    assert_success response
+    assert_equal 'COMPLETED', response.message
+  end
+
+  def test_successful_purchase_with_visa_3ds1
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(@visa_three_d_secure_1_options))
+    assert_success response
+    assert_equal 'COMPLETED', response.message
+  end
+
+  def test_successful_purchase_with_visa_3ds2
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(@visa_three_d_secure_2_options))
+    assert_success response
+    assert_equal 'COMPLETED', response.message
   end
 
   def test_failed_purchase
@@ -72,6 +140,24 @@ class RemotePaysafeTest < Test::Unit::TestCase
     assert_equal 'PENDING', capture.message
   end
 
+  def test_successful_authorize_with_token
+    response = @gateway.authorize(250, @pm_token, @options)
+    assert_success response
+    assert_equal 'COMPLETED', response.message
+  end
+
+  def test_successful_authorize_with_token_3ds1
+    response = @gateway.authorize(200, @pm_token, @options.merge(@visa_three_d_secure_1_options))
+    assert_success response
+    assert_equal 'COMPLETED', response.message
+  end
+
+  def test_successful_authorize_with_token_3ds2
+    response = @gateway.authorize(200, @pm_token, @options.merge(@visa_three_d_secure_2_options))
+    assert_success response
+    assert_equal 'COMPLETED', response.message
+  end
+
   def test_failed_authorize
     response = @gateway.authorize(5, @credit_card, @options)
     assert_failure response
@@ -94,21 +180,21 @@ class RemotePaysafeTest < Test::Unit::TestCase
 
   # Can test refunds by logging into our portal and grabbing transaction IDs from settled transactions
   # Refunds will return 'PENDING' status until they are batch processed at EOD
-  # def test_successful_refund
-  #   auth = ''
+  def test_successful_refund
+    auth = 'e25875b2-2a72-4a31-924c-66667507cad6'
 
-  #   assert refund = @gateway.refund(@amount, auth)
-  #   assert_failure refund
-  #   assert_equal 'PENDING', refund.message
-  # end
+    assert refund = @gateway.refund(@amount, auth)
+    assert_success refund
+    assert_equal 'PENDING', refund.message
+  end
 
-  # def test_partial_refund
-  #   auth = ''
+  def test_partial_refund
+    auth = 'cb6fed1e-1c71-4e87-abbb-3beae97d7775'
 
-  #   assert refund = @gateway.refund(@amount - 1, auth)
-  #   assert_success refund
-  #   assert_equal 'PENDING', refund.message
-  # end
+    assert refund = @gateway.refund(@amount - 1, auth)
+    assert_success refund
+    assert_equal 'PENDING', refund.message
+  end
 
   def test_failed_refund
     response = @gateway.refund(@amount, 'thisisnotavalidtrasactionid')
