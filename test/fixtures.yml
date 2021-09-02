@@ -823,6 +823,14 @@ plugnpay:
   login: LOGIN
   password: PASSWORD
 
+ppcp:
+  client_id: "ASs8Osqge6KT3OdLtkNhD20VP8lsrqRUlRjLo-e5s75SHz-2ffMMzCos_odQGjGYpPcGlxJVQ5fXMz9q"
+  client_secret: "EKj_bMZn0CkOhOvFwJMX2WwhtCq2A0OtlOd5T-zUhKIf9WQxvgPasNX0Kr1U4TjFj8ZN6XCMF5NM30Z_"
+  card_number:             "4032039317984658"
+  cvc:                     "111"
+  month:                   "07"
+  year:                    "2023"
+
 # Working credentials, no need to replace
 pro_pay:
   cert_str: "5ab9cddef2e4911b77e0c4ffb70f03"
