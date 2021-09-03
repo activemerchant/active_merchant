@@ -122,10 +122,6 @@ module ActiveMerchant #:nodoc:
         '1A' => 'Strong Customer Authentication required'
       }
 
-      # Can be removed when no longer used after August 31 2021 8:00 UTC
-      LIVE_ISK_CHANGE_TIME = 1630396800 # August 31 2021 8:00 UTC
-      TEST_ISK_CHANGE_TIME = 1629619200 # August 22 2021 8:00 UTC
-
       def initialize(options = {})
         requires!(options, :merchant_id, :cipher_key)
         super
@@ -258,28 +254,10 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      # Can be removed after 2021 August 31 8:01 UTC
-      def current_time(options)
-        options[:current_time_test_value] || Time.now.utc
-      end
-
-      # Can be removed after 2021 August 31 8:01 UTC
-      def isk_change_check(money, options)
-        isk_change_time = test? ? TEST_ISK_CHANGE_TIME : LIVE_ISK_CHANGE_TIME
-        amount = amount(money)
-
-        if current_time(options).to_i >= isk_change_time
-          return sprintf('%.0f', amount.to_f / 100)
-        else
-          return amount
-        end
-      end
-
       def add_invoice(post, money, options)
         currency = options[:currency] || currency(money)
 
-        # ISK change check can be removed after 2021 August 31 8:01 UTC
-        post[:a4] = currency == 'ISK' ? isk_change_check(money, options) : localized_amount(money, currency)
+        post[:a4] = localized_amount(money, currency)
         post[:a1] = generate_unique_id
         post[:a5] = currency
         post[:h9] = options[:order_id]
