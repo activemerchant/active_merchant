@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
         'master'             => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), MASTERCARD_RANGES) },
         'elo'                => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), ELO_RANGES) },
         'alelo'              => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), ALELO_RANGES) },
-        'discover'           => ->(num) { num =~ /^(6011|65\d{2}|64[4-9]\d)\d{12,15}|(62\d{14,17})$/ },
+        'discover'           => ->(num) { num =~ /^(6011|65\d{2}|64[4-9]\d)\d{12,15}$/ },
         'american_express'   => ->(num) { num =~ /^3[47]\d{13}$/ },
         'naranja'            => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), NARANJA_RANGES) },
         'diners_club'        => ->(num) { num =~ /^3(0[0-5]|[68]\d)\d{11,16}$/ },
@@ -196,11 +196,9 @@ module ActiveMerchant #:nodoc:
         589562..589562
       ]
 
-      # In addition to the BIN ranges listed here that all begin with 81, UnionPay cards
-      # include many ranges that start with 62.
-      # Prior to adding UnionPay, cards that start with 62 were all classified as Discover.
-      # Because UnionPay cards are able to run on Discover rails, this was kept the same.
+      # https://www.discoverglobalnetwork.com/content/dam/discover/en_us/dgn/pdfs/IPP-VAR-Enabler-Compliance.pdf
       UNIONPAY_RANGES = [
+        62212600..62379699, 62400000..62699999, 62820000..62889999,
         81000000..81099999, 81100000..81319999, 81320000..81519999, 81520000..81639999, 81640000..81719999
       ]
 
