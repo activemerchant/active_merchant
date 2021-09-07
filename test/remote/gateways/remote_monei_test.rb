@@ -31,6 +31,35 @@ class RemoteMoneiTest < Test::Unit::TestCase
     assert_equal 'Transaction approved', response.message
   end
 
+  def test_successful_purchase_with_no_billing_address
+    options = {
+      order_id: random_order_id,
+      description: 'Store Purchase'
+    }
+    response = @gateway.purchase(@amount, @credit_card, options)
+
+    assert_success response
+    assert_equal 'Transaction approved', response.message
+  end
+
+  def test_successful_purchase_with_partial_billing_address
+    partial_address = {
+      name:     'Jim Smith',
+      address1: '456 My Street',
+      city:     'MIlan',
+      zip:      'K1C2N6'
+    }
+    options = {
+      billing_address: partial_address,
+      order_id: random_order_id,
+      description: 'Store Purchase'
+    }
+    response = @gateway.purchase(@amount, @credit_card, options)
+
+    assert_success response
+    assert_equal 'Transaction approved', response.message
+  end
+
   def test_successful_purchase_with_3ds
     options = @options.merge!({
       order_id: random_order_id,
