@@ -26,6 +26,7 @@
 * Monei: Update Creation of Billing Details [tatsianaclifton] #4107
 * Monei: Typo Correction on Billing Details [tatsianaclifton] #4108
 * Paysafe: Add support for 3DS [meagabeth] #4109
+* Adyen: Add ACH Support [almalee24] #4105
 
 == Version 1.122.0 (August 3rd, 2021)
 * Orbital: Correct success logic for refund [tatsianaclifton] #4014

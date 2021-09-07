@@ -6,6 +6,12 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
     @amount = 100
 
+    @bank_account = check(account_number: '123456789', routing_number: '121000358')
+
+    @declined_bank_account = check(account_number: '123456789', routing_number: '121000348')
+
+    @general_bank_account = check(name: 'A. Klaassen', account_number: '123456789', routing_number: 'NL13TEST0123456789')
+
     @credit_card = credit_card('4111111111111111',
       month: 3,
       year: 2030,
@@ -112,7 +118,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
       email: 'john.smith@test.com',
       ip: '77.110.174.153',
       shopper_reference: 'John Smith',
-      billing_address: address(),
+      billing_address: address(country: 'US', state: 'CA'),
       order_id: '123',
       stored_credential: { reason_type: 'unscheduled' }
     }
@@ -184,6 +190,12 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
   def test_successful_authorize
     response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Authorised', response.message
+  end
+
+  def test_successful_authorize_with_bank_account
+    response = @gateway.authorize(@amount, @bank_account, @options)
     assert_success response
     assert_equal 'Authorised', response.message
   end
@@ -446,8 +458,20 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal 'Refused', response.message
   end
 
+  def test_failed_authorize_with_bank_account
+    response = @gateway.authorize(@amount, @declined_bank_account, @options)
+    assert_failure response
+    assert_equal 'Bank Account or Bank Location Id not valid or missing', response.message
+  end
+
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
+
+  def test_successful_purchase_with_bank_account
+    response = @gateway.purchase(@amount, @bank_account, @options)
     assert_success response
     assert_equal '[capture-received]', response.message
   end
@@ -560,6 +584,12 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal 'Refused', response.message
   end
 
+  def test_failed_purchase_with_bank_account
+    response = @gateway.purchase(@amount, @declined_bank_account, @options)
+    assert_failure response
+    assert_equal 'Bank Account or Bank Location Id not valid or missing', response.message
+  end
+
   def test_failed_purchase_with_invalid_cabal_card
     response = @gateway.purchase(@amount, @invalid_cabal_credit_card, @options)
     assert_failure response
@@ -631,6 +661,15 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal '[refund-received]', refund.message
   end
 
+  def test_successful_refund_with_bank_account
+    purchase = @gateway.purchase(@amount, @bank_account, @options)
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount, purchase.authorization)
+    assert_success refund
+    assert_equal '[refund-received]', refund.message
+  end
+
   def test_successful_refund_with_auth_original_reference
     auth_response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth_response
@@ -676,6 +715,14 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_success refund
   end
 
+  def test_partial_refund_with_bank_account
+    purchase = @gateway.purchase(@amount, @bank_account, @options)
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization)
+    assert_success refund
+  end
+
   def test_failed_refund
     response = @gateway.refund(@amount, '')
     assert_failure response
@@ -684,6 +731,16 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
   def test_successful_credit
     response = @gateway.credit(@amount, @credit_card, @options)
+
+    assert_success response
+    assert_equal 'Received', response.message
+  end
+
+  def test_successful_credit_with_bank_account
+    @options[:currency] = 'EUR'
+    @options[:billing_address][:country] = 'NL'
+    response = @gateway.credit(1500, @general_bank_account, @options)
+
     assert_success response
     assert_equal 'Received', response.message
   end
@@ -696,6 +753,15 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
   def test_successful_void
     auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    assert void = @gateway.void(auth.authorization)
+    assert_success void
+    assert_equal '[cancel-received]', void.message
+  end
+
+  def test_successful_void_with_bank_account
+    auth = @gateway.authorize(@amount, @bank_account, @options)
     assert_success auth
 
     assert void = @gateway.void(auth.authorization)
@@ -839,8 +905,32 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal 'Authorised', response.message
   end
 
+  def test_successful_store_with_bank_account
+    assert response = @gateway.store(@bank_account, @options)
+
+    assert_success response
+    assert !response.authorization.split('#')[2].nil?
+    assert_equal 'Authorised', response.message
+  end
+
   def test_successful_unstore
     assert response = @gateway.store(@credit_card, @options)
+
+    assert !response.authorization.split('#')[2].nil?
+    assert_equal 'Authorised', response.message
+
+    shopper_reference = response.params['additionalData']['recurring.shopperReference']
+    recurring_detail_reference = response.params['additionalData']['recurring.recurringDetailReference']
+
+    assert response = @gateway.unstore(shopper_reference: shopper_reference,
+                                       recurring_detail_reference: recurring_detail_reference)
+
+    assert_success response
+    assert_equal '[detail-successfully-disabled]', response.message
+  end
+
+  def test_successful_unstore_with_bank_account
+    assert response = @gateway.store(@bank_account, @options)
 
     assert !response.authorization.split('#')[2].nil?
     assert_equal 'Authorised', response.message
@@ -948,6 +1038,12 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_match 'Authorised', response.message
   end
 
+  def test_successful_verify_with_bank_account
+    response = @gateway.verify(@bank_account, @options)
+    assert_success response
+    assert_match 'Authorised', response.message
+  end
+
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
@@ -984,6 +1080,17 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
+  end
+
+  def test_transcript_scrubbing_with_bank_account
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @bank_account, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@bank_account.account_number, transcript)
+    assert_scrubbed(@bank_account.routing_number, transcript)
     assert_scrubbed(@gateway.options[:password], transcript)
   end
 

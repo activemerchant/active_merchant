@@ -10,6 +10,8 @@ class AdyenTest < Test::Unit::TestCase
       merchant_account: 'merchantAccount'
     )
 
+    @bank_account = check()
+
     @credit_card = credit_card('4111111111111111',
       month: 8,
       year: 2018,
@@ -126,6 +128,18 @@ class AdyenTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
 
     response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+
+    assert_equal '#7914775043909934#', response.authorization
+    assert_equal 'R', response.avs_result['code']
+    assert_equal 'M', response.cvv_result['code']
+    assert response.test?
+  end
+
+  def test_successful_authorize_bank_account
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+
+    response = @gateway.authorize(@amount, @bank_account, @options)
     assert_success response
 
     assert_equal '#7914775043909934#', response.authorization
@@ -262,9 +276,18 @@ class AdyenTest < Test::Unit::TestCase
     assert_failure response
   end
 
-  def test_successful_purchase
+  def test_successful_purchase_with_credit_card
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(successful_authorize_response, successful_capture_response)
+    assert_success response
+    assert_equal '7914775043909934#8814775564188305#', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_purchase_with_bank_account
+    response = stub_comms do
+      @gateway.purchase(@amount, @bank_account, @options)
     end.respond_with(successful_authorize_response, successful_capture_response)
     assert_success response
     assert_equal '7914775043909934#8814775564188305#', response.authorization
@@ -708,6 +731,16 @@ class AdyenTest < Test::Unit::TestCase
     assert_equal '#8835205392522157#8315202663743702', response.authorization
   end
 
+  def test_successful_store_with_bank_account
+    response = stub_comms do
+      @gateway.store(@bank_account, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 'CardOnFile', JSON.parse(data)['recurringProcessingModel']
+    end.respond_with(successful_store_response)
+    assert_success response
+    assert_equal '#8835205392522157#8315202663743702', response.authorization
+  end
+
   def test_successful_store_with_recurring_contract_type
     stub_comms do
       @gateway.store(@credit_card, @options.merge({ recurring_contract_type: 'ONECLICK' }))
@@ -758,9 +791,29 @@ class AdyenTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_verify_with_bank_account
+    response = stub_comms do
+      @gateway.verify(@bank_account, @options)
+    end.respond_with(successful_verify_response)
+    assert_success response
+    assert_equal '#7914776426645103#', response.authorization
+    assert_equal 'Authorised', response.message
+    assert response.test?
+  end
+
   def test_failed_verify
     response = stub_comms do
       @gateway.verify(@credit_card, @options)
+    end.respond_with(failed_verify_response)
+    assert_failure response
+    assert_equal '#7914776433387947#', response.authorization
+    assert_equal 'Refused', response.message
+    assert response.test?
+  end
+
+  def test_failed_verify_with_bank_account
+    response = stub_comms do
+      @gateway.verify(@bank_account, @options)
     end.respond_with(failed_verify_response)
     assert_failure response
     assert_equal '#7914776433387947#', response.authorization
@@ -781,9 +834,14 @@ class AdyenTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
+  def test_scrub_bank_account
+    assert @gateway.supports_scrubbing?
+    assert_equal @gateway.scrub(pre_scrubbed_bank_account), post_scrubbed_bank_account
+  end
+
   def test_scrub_network_tokenization_card
     assert @gateway.supports_scrubbing?
-    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+    assert_equal @gateway.scrub(pre_scrubbed_network_tokenization_card), post_scrubbed_network_tokenization_card
   end
 
   def test_shopper_data
@@ -1106,6 +1164,70 @@ class AdyenTest < Test::Unit::TestCase
     POST_SCRUBBED
   end
 
+  def pre_scrubbed_bank_account
+    <<-PRE_SCRUBBED
+      opening connection to pal-test.adyen.com:443...
+      opened
+      starting SSL for pal-test.adyen.com:443...
+      SSL established
+      <- "POST /pal/servlet/Payment/v18/authorise HTTP/1.1\r\nContent-Type: application/json\r\nAuthorization: Basic d3NfMTYzMjQ1QENvbXBhbnkuRGFuaWVsYmFra2Vybmw6eXU0aD50ZlxIVEdydSU1PDhxYTVMTkxVUw==\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: pal-test.adyen.com\r\nContent-Length: 308\r\n\r\n"
+      <- "{\"merchantAccount\":\"DanielbakkernlNL\",\"reference\":\"345123\",\"amount\":{\"value\":\"100\",\"currency\":\"USD\"},\"bankAccount\":{\"bankAccountNumber\":\"15378535\",\"bankLocationId\":\"244183602\",\"ownerName\":\"Jim Smith\",\"shopperEmail\":\"john.smith@test.com\",\"shopperIP\":\"77.110.174.153\",\"shopperReference\":\"John Smith\"}"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Date: Thu, 27 Oct 2016 11:37:13 GMT\r\n"
+      -> "Server: Apache\r\n"
+      -> "Set-Cookie: JSESSIONID=C0D66C19173B3491D862B8FDBFD72FD7.test3e; Path=/pal/; Secure; HttpOnly\r\n"
+      -> "pspReference: 8514775682339577\r\n"
+      -> "Connection: close\r\n"
+      -> "Transfer-Encoding: chunked\r\n"
+      -> "Content-Type: application/json;charset=utf-8\r\n"
+      -> "\r\n"
+      -> "50\r\n"
+      reading 80 bytes...
+      -> ""
+      -> "{\"pspReference\":\"8514775682339577\",\"resultCode\":\"Authorised\",\"authCode\":\"31845\"}"
+      read 80 bytes
+      reading 2 bytes...
+      -> ""
+      -> "\r\n"
+      read 2 bytes
+      -> "0\r\n"
+      -> "\r\n"
+      Conn close
+    PRE_SCRUBBED
+  end
+
+  def post_scrubbed_bank_account
+    <<-POST_SCRUBBED
+      opening connection to pal-test.adyen.com:443...
+      opened
+      starting SSL for pal-test.adyen.com:443...
+      SSL established
+      <- "POST /pal/servlet/Payment/v18/authorise HTTP/1.1\r\nContent-Type: application/json\r\nAuthorization: Basic [FILTERED]==\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: pal-test.adyen.com\r\nContent-Length: 308\r\n\r\n"
+      <- "{\"merchantAccount\":\"DanielbakkernlNL\",\"reference\":\"345123\",\"amount\":{\"value\":\"100\",\"currency\":\"USD\"},\"bankAccount\":{\"bankAccountNumber\":\"[FILTERED]\",\"bankLocationId\":\"[FILTERED]\",\"ownerName\":\"Jim Smith\",\"shopperEmail\":\"john.smith@test.com\",\"shopperIP\":\"77.110.174.153\",\"shopperReference\":\"John Smith\"}"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Date: Thu, 27 Oct 2016 11:37:13 GMT\r\n"
+      -> "Server: Apache\r\n"
+      -> "Set-Cookie: JSESSIONID=C0D66C19173B3491D862B8FDBFD72FD7.test3e; Path=/pal/; Secure; HttpOnly\r\n"
+      -> "pspReference: 8514775682339577\r\n"
+      -> "Connection: close\r\n"
+      -> "Transfer-Encoding: chunked\r\n"
+      -> "Content-Type: application/json;charset=utf-8\r\n"
+      -> "\r\n"
+      -> "50\r\n"
+      reading 80 bytes...
+      -> ""
+      -> "{\"pspReference\":\"8514775682339577\",\"resultCode\":\"Authorised\",\"authCode\":\"31845\"}"
+      read 80 bytes
+      reading 2 bytes...
+      -> ""
+      -> "\r\n"
+      read 2 bytes
+      -> "0\r\n"
+      -> "\r\n"
+      Conn close
+    POST_SCRUBBED
+  end
+
   def pre_scrubbed_network_tokenization_card
     <<-PRE_SCRUBBED
       opening connection to pal-test.adyen.com:443...
@@ -1250,6 +1372,16 @@ class AdyenTest < Test::Unit::TestCase
 
   def successful_authorize_with_3ds_response
     '{"pspReference":"8835440446784145","resultCode":"RedirectShopper","issuerUrl":"https:\\/\\/test.adyen.com\\/hpp\\/3d\\/validate.shtml","md":"djIhcWk3MUhlVFlyQ1h2UC9NWmhpVm10Zz09IfIxi5eDMZgG72AUXy7PEU86esY68wr2cunaFo5VRyNPuWg3ZSvEIFuielSuoYol5WhjCH+R6EJTjVqY8eCTt+0wiqHd5btd82NstIc8idJuvg5OCu2j8dYo0Pg7nYxW\\/2vXV9Wy\\/RYvwR8tFfyZVC\\/U2028JuWtP2WxrBTqJ6nV2mDoX2chqMRSmX8xrL6VgiLoEfzCC\\/c+14r77+whHP0Mz96IGFf4BIA2Qo8wi2vrTlccH\\/zkLb5hevvV6QH3s9h0\\/JibcUrpoXH6M903ulGuikTr8oqVjEB9w8\\/WlUuxukHmqqXqAeOPA6gScehs6SpRm45PLpLysCfUricEIDhpPN1QCjjgw8+qVf3Ja1SzwfjCVocU","paRequest":"eNpVUctuwjAQ\\/BXaD2Dt4JCHFkspqVQOBChwriJnBanIAyepoF9fG5LS+jQz612PZ3F31ETxllSnSeKSmiY90CjPZs+h709cIZgQU88XXLjPEtfRO50lfpFu8qqUfMzGDsJATbtWx7RsJabq\\/LJIJHcmwp0i9BQL0otY7qhp10URqXOXa9IIdxnLtCC5jz6i+VO4rY2v7HSdr5ZOIBBuNVRVV7b6Kn3BEAaCnT7JY9vWIUDTt41VVSDYAsLD1bqzqDGDLnkmV\\/HhO9lt2DLesORTiSR+ZckmsmeGYG9glrYkHcZ97jB35PCQe6HrI9x0TAvrQO638cgkYRz1Atb2nehOuC38FdBEralUwy8GhnSpq5LMDRPpL0Z4mJ6\\/2WBVa7ISzj1azw+YQZ6N+FawU3ITCg9YcBtjCYJthX570G\\/ZoH\\/b\\/wFlSqpp"}'
+  end
+
+  def failed_authorize_response
+    <<-RESPONSE
+    {
+      "pspReference": "8514775559925128",
+      "refusalReason": "Expired Card",
+      "resultCode": "Refused"
+    }
+    RESPONSE
   end
 
   def failed_authorize_response

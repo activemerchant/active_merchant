@@ -82,12 +82,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def credit(money, payment, options = {})
+        action = 'refundWithData'
         post = init_post(options)
         add_invoice(post, money, options)
-        add_payment(post, payment, options)
+        add_payment(post, payment, options, action)
         add_shopper_reference(post, options)
         add_network_transaction_reference(post, options)
-        commit('refundWithData', post, options)
+        commit(action, post, options)
       end
 
       def void(authorization, options = {})
@@ -159,9 +160,12 @@ module ActiveMerchant #:nodoc:
       def scrub(transcript)
         transcript.
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
-          gsub(%r(("number\\?":\\?")[^"]*)i, '\1[FILTERED]').
-          gsub(%r(("cvc\\?":\\?")[^"]*)i, '\1[FILTERED]').
-          gsub(%r(("cavv\\?":\\?")[^"]*)i, '\1[FILTERED]')
+          gsub(%r(("number\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
+          gsub(%r(("cvc\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
+          gsub(%r(("cavv\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
+          gsub(%r(("bankLocationId\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
+          gsub(%r(("iban\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
+          gsub(%r(("bankAccountNumber\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]')
       end
 
       private
@@ -336,7 +340,7 @@ module ActiveMerchant #:nodoc:
           post[:deliveryAddress][:stateOrProvince] = get_state(address)
           post[:deliveryAddress][:country] = address[:country] if address[:country]
         end
-        return unless post[:card]&.kind_of?(Hash)
+        return unless post[:bankAccount]&.kind_of?(Hash) || post[:card]&.kind_of?(Hash)
 
         if (address = options[:billing_address] || options[:address]) && address[:country]
           post[:billingAddress] = {}
@@ -359,6 +363,7 @@ module ActiveMerchant #:nodoc:
           value: localized_amount(money, currency),
           currency: currency
         }
+
         post[:amount] = amount
       end
 
@@ -371,15 +376,30 @@ module ActiveMerchant #:nodoc:
         post[:modificationAmount] = amount
       end
 
-      def add_payment(post, payment, options)
+      def add_payment(post, payment, options, action = nil)
         if payment.is_a?(String)
           _, _, recurring_detail_reference = payment.split('#')
           post[:selectedRecurringDetailReference] = recurring_detail_reference
           options[:recurring_contract_type] ||= 'RECURRING'
+        elsif payment.is_a?(Check)
+          add_bank_account(post, payment, options, action)
         else
           add_mpi_data_for_network_tokenization_card(post, payment) if payment.is_a?(NetworkTokenizationCreditCard)
           add_card(post, payment)
         end
+      end
+
+      def add_bank_account(post, bank_account, options, action)
+        bank = {
+          bankAccountNumber: bank_account.account_number,
+          ownerName: bank_account.name,
+          countryCode: options[:billing_address][:country]
+        }
+
+        action == 'refundWithData' ? bank[:iban] = bank_account.routing_number : bank[:bankLocationId] = bank_account.routing_number
+
+        requires!(bank, :bankAccountNumber, :ownerName, :countryCode)
+        post[:bankAccount] = bank
       end
 
       def add_card(post, credit_card)
@@ -512,7 +532,7 @@ module ActiveMerchant #:nodoc:
           raw_response = e.response.body
           response = parse(raw_response)
         end
-
+        
         success = success_from(action, response, options)
         Response.new(
           success,
