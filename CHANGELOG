@@ -1,6 +1,8 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+
+== Version 1.123.0 (September 10th, 2021)
 * Paysafe: Add gateway integration [meagabeth] #4085
 * Elavon: Support recurring transactions with stored credentials [cdmackeyfree] #4086
 * Orbital: Truncate three_d_secure[:version] [carrigan] #4087
