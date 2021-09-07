@@ -225,7 +225,7 @@ module ActiveMerchant #:nodoc:
           request[:billingDetails][:address][:city] = address[:city] if address[:city]
           request[:billingDetails][:address][:state] = address[:state] if address[:state].present?
           request[:billingDetails][:address][:zip] = address[:zip].to_s if address[:zip]
-          request[:billingDetails][:address][:country] = address[:country] if address[:coutry]
+          request[:billingDetails][:address][:country] = address[:country] if address[:country]
         end
 
         request[:sessionDetails] = {}
