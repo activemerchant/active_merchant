@@ -207,7 +207,7 @@ class RemoteRedsysSHA256Test < Test::Unit::TestCase
     assert_equal 'Y', response.params['ds_card_psd2']
     assert_equal 'CardConfiguration', response.message
 
-    # ensure MIT is supported
+    # ensure MIT exemption is recognized
     assert response.params['ds_excep_sca']
     assert_match 'MIT', response.params['ds_excep_sca']
   end
@@ -222,7 +222,7 @@ class RemoteRedsysSHA256Test < Test::Unit::TestCase
     assert_equal 'Y', response.params['ds_card_psd2']
     assert_equal 'CardConfiguration', response.message
 
-    # ensure MIT is supported
+    # ensure MIT exemption is recognized
     assert response.params['ds_excep_sca']
     assert_match 'MIT', response.params['ds_excep_sca']
   end

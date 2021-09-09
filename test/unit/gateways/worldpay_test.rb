@@ -742,6 +742,22 @@ class WorldpayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_verify_with_0_auth
+    stub_comms do
+      @gateway.verify(@credit_card, @options.merge(zero_dollar_auth: true))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/amount value="0"/, data) if /<submit>/.match?(data)
+    end.respond_with(successful_authorize_response, successful_void_response)
+  end
+
+  def test_successful_verify_with_0_auth_and_ineligible_card
+    stub_comms do
+      @gateway.verify(@elo_credit_card, @options.merge(zero_dollar_auth: true))
+    end.check_request do |_endpoint, data, _headers|
+      refute_match(/amount value="0"/, data)
+    end.respond_with(successful_authorize_response, successful_void_response)
+  end
+
   def test_successful_verify_with_elo
     @gateway.expects(:ssl_post).times(2).returns(successful_authorize_with_elo_response, successful_void_with_elo_response)
 

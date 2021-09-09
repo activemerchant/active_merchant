@@ -251,15 +251,20 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_three_d_secure(post, options)
-        return unless options[:three_d_secure]
+        three_d_secure = options[:three_d_secure]
+        return unless three_d_secure
 
-        if (three_d_secure = options[:three_d_secure])
-          post[:cardholder_auth] = three_d_secure[:cardholder_auth]
-          post[:cavv] = three_d_secure[:cavv]
-          post[:xid] = three_d_secure[:xid]
-          post[:three_ds_version] = three_d_secure[:version]
-          post[:directory_server_id] = three_d_secure[:ds_transaction_id]
-        end
+        post[:cardholder_auth] = cardholder_auth(three_d_secure[:authentication_response_status])
+        post[:cavv] = three_d_secure[:cavv]
+        post[:xid] = three_d_secure[:xid]
+        post[:three_ds_version] = three_d_secure[:version]
+        post[:directory_server_id] = three_d_secure[:ds_transaction_id]
+      end
+
+      def cardholder_auth(trans_status)
+        return nil if trans_status.nil?
+
+        trans_status == 'Y' ? 'verified' : 'attempted'
       end
 
       def add_reference(post, authorization)

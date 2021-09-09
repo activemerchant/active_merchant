@@ -1,6 +1,28 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Paysafe: Add gateway integration [meagabeth] #4085
+* Elavon: Support recurring transactions with stored credentials [cdmackeyfree] #4086
+* Orbital: Truncate three_d_secure[:version] [carrigan] #4087
+* Credorax: Determine ISK decimal by datetime [curiousepic] #4088
+* Moka: support new gateway type [dsmcclain] #4089
+* Paymentez: Add more_info field [reblevins] #4091
+* Worldpay: Support $0 auth [therufs] #4092
+* Elavon: Support recurring transactions with token, revert stored credentials recurring [cdmackeyfree] #4089
+* SafeCharge(Nuvei): Add support for product_id [rachelkirk] #4095
+* NMI: Change cardholder_auth 3DS field population [carrigan] #4094
+* Synchrony: add card type [therufs] #4096
+* Maestro: support BINs without Luhn check [therufs] #4097
+* Maestro: support BINs [therufs] #4098
+* Redsys: Route MIT Exemptions to webservice endpoint [curiousepic] #4081
+* Adyen: Update Classic Integration API to v64 and Recurring API to v49 [almalee24] #4090
+* Payeezy: support soft_descriptor and merchant_ref [cdmackeyfree] #4099
+* Elavon: add ssl_token field [cdmackeyfree] #4100
+* Credorax: Remove special logic for ISK [curiousepic] #4102
+* UnionPay: Pull UnionPay's 62* BIN ranges out of Discover's #4103
+* Monei: Update Creation of Billing Details [tatsianaclifton] #4107
+* Monei: Typo Correction on Billing Details [tatsianaclifton] #4108
+* Paysafe: Add support for 3DS [meagabeth] #4109
 
 == Version 1.122.0 (August 3rd, 2021)
 * Orbital: Correct success logic for refund [tatsianaclifton] #4014
@@ -63,6 +85,7 @@
 * Monei: Improve Scrub Regex [tatsianaclifton] #4072
 * Payflow: add THREEDSVERSION and DSTRANSACTIONID when present [bbraschi] #4075
 * CT Payments: update remote tests [cdmackeyfree] #3947
+* Orbital: Ensure full e-check scrubbing [mbreenlyles] #4079
 
 == Version 1.121 (June 8th, 2021)
 * Braintree: Lift restriction on gem version to allow for backwards compatibility [naashton] #3993

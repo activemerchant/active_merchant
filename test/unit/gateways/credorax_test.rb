@@ -974,7 +974,7 @@ class CredoraxTest < Test::Unit::TestCase
 
   def test_nonfractional_currency_handling
     stub_comms do
-      @gateway.authorize(200, @credit_card, @options.merge(currency: 'JPY'))
+      @gateway.authorize(200, @credit_card, @options.merge(currency: 'ISK'))
     end.check_request do |_endpoint, data, _headers|
       assert_match(/a4=2&a1=/, data)
     end.respond_with(successful_authorize_response)

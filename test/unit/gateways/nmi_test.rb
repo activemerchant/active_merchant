@@ -96,16 +96,16 @@ class NmiTest < Test::Unit::TestCase
     assert_equal 'FAILED', response.message
   end
 
-  def test_successful_purchase_with_3ds
+  def test_successful_purchase_with_3ds_verified
     version = '2.1.0'
-    cardholder_auth = 'verified'
+    authentication_response_status = 'Y'
     cavv = 'jJ81HADVRtXfCBATEp01CJUAAAA'
     ds_transaction_id = '97267598-FAE6-48F2-8083-C23433990FBC'
     xid = '00000000000000000501'
     options_with_3ds = @transaction_options.merge(
       three_d_secure: {
         version: version,
-        cardholder_auth: cardholder_auth,
+        authentication_response_status: authentication_response_status,
         cavv: cavv,
         ds_transaction_id: ds_transaction_id,
         xid: xid
@@ -117,6 +117,37 @@ class NmiTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       assert_match(/three_ds_version=2.1.0/, data)
       assert_match(/cardholder_auth=verified/, data)
+      assert_match(/cavv=jJ81HADVRtXfCBATEp01CJUAAAA/, data)
+      assert_match(/directory_server_id=97267598-FAE6-48F2-8083-C23433990FBC/, data)
+      assert_match(/xid=00000000000000000501/, data)
+    end.respond_with(successful_3ds_purchase_response)
+
+    assert_success response
+    assert response.test?
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_purchase_with_3ds_attempted
+    version = '2.1.0'
+    authentication_response_status = 'A'
+    cavv = 'jJ81HADVRtXfCBATEp01CJUAAAA'
+    ds_transaction_id = '97267598-FAE6-48F2-8083-C23433990FBC'
+    xid = '00000000000000000501'
+    options_with_3ds = @transaction_options.merge(
+      three_d_secure: {
+        version: version,
+        authentication_response_status: authentication_response_status,
+        cavv: cavv,
+        ds_transaction_id: ds_transaction_id,
+        xid: xid
+      }
+    )
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options_with_3ds)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/three_ds_version=2.1.0/, data)
+      assert_match(/cardholder_auth=attempted/, data)
       assert_match(/cavv=jJ81HADVRtXfCBATEp01CJUAAAA/, data)
       assert_match(/directory_server_id=97267598-FAE6-48F2-8083-C23433990FBC/, data)
       assert_match(/xid=00000000000000000501/, data)

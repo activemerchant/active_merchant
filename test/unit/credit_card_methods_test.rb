@@ -28,9 +28,9 @@ class CreditCardMethodsTest < Test::Unit::TestCase
   def maestro_bins
     %w[500032 500057 501015 501016 501018 501020 501021 501023 501024 501025 501026 501027 501028 501029
        501038 501039 501040 501041 501043 501045 501047 501049 501051 501053 501054 501055 501056 501057
-       501058 501060 501061 501062 501063 501066 501067 501072 501075 501080 501081 501082 501083 501087
-       501089 501091 501092 501095 501104 501105 501107 501108 501500 501879
-       502000 502113 502301 503175 503645
+       501058 501060 501061 501062 501063 501066 501067 501072 501075 501083 501087
+       501800 501089 501091 501092 501095 501104 501105 501107 501108 501500 501879
+       502000 502113 502301 503175 503645 503800
        503670 504310 504338 504363 504533 504587 504620 504639 504656 504738 504781 504910
        507001 507002 507004 507082 507090 560014 560565 561033 572402 572610 572626 576904 578614
        585274 585697 586509 588729 588792 589244 589300 589407 589471 589605 589633 589647 589671
@@ -204,6 +204,20 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     end
   end
 
+  def test_should_detect_maestro_no_luhn_card
+    assert_equal 'maestro_no_luhn', CreditCard.brand?('5010800000000000')
+    assert_equal 'maestro_no_luhn', CreditCard.brand?('5010810000000000')
+    assert_equal 'maestro_no_luhn', CreditCard.brand?('5010820000000000')
+  end
+
+  def test_maestro_no_luhn_number_not_validated
+    10.times do
+      number = rand(5010800000000001..5010829999999999).to_s
+      assert_equal 'maestro_no_luhn', CreditCard.brand?(number)
+      assert CreditCard.valid_number?(number)
+    end
+  end
+
   def test_should_detect_olimpica_card
     assert_equal 'olimpica', CreditCard.brand?('6368530000000000')
   end
@@ -258,21 +272,18 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_equal 'cabal', CreditCard.brand?('6035224400000000')
   end
 
-  # UnionPay BINs beginning with 62 overlap with Discover's range of valid card numbers.
-  # We intentionally misidentify these cards as Discover, which works because transactions with
-  # UnionPay cards will run on Discover rails.
-  def test_should_detect_unionpay_cards_beginning_with_62_as_discover
-    assert_equal 'discover', CreditCard.brand?('6212345678901265')
-    assert_equal 'discover', CreditCard.brand?('6221260000000000')
-    assert_equal 'discover', CreditCard.brand?('6250941006528599')
-    assert_equal 'discover', CreditCard.brand?('6212345678900000003')
-  end
-
   def test_should_detect_unionpay_card
+    assert_equal 'unionpay', CreditCard.brand?('6221260000000000')
+    assert_equal 'unionpay', CreditCard.brand?('6250941006528599')
+    assert_equal 'unionpay', CreditCard.brand?('6282000000000000')
     assert_equal 'unionpay', CreditCard.brand?('8100000000000000')
     assert_equal 'unionpay', CreditCard.brand?('814400000000000000')
     assert_equal 'unionpay', CreditCard.brand?('8171999927660000')
     assert_equal 'unionpay', CreditCard.brand?('8171999900000000021')
+  end
+
+  def test_should_detect_synchrony_card
+    assert_equal 'synchrony', CreditCard.brand?('7006000000000000')
   end
 
   def test_should_detect_when_an_argument_brand_does_not_match_calculated_brand

@@ -206,7 +206,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
         xid: 'TESTXID',
         cavv: 'AAAEEEDDDSSSAAA2243234',
         ds_transaction_id: '97267598FAE648F28083C23433990FBC',
-        version: 2
+        version: '2.2.0'
       },
       sca_recurring: 'Y'
     }
@@ -350,7 +350,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
         eci: '5',
         cavv: 'AAAEEEDDDSSSAAA2243234',
         xid: 'Asju1ljfl86bAAAAAACm9zU6aqY=',
-        version: '2',
+        version: '2.2.0',
         ds_transaction_id: '8dh4htokdf84jrnxyemfiosheuyfjt82jiek'
       },
       address: {
@@ -873,6 +873,18 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_scrubbed(@gateway.options[:password], transcript)
     assert_scrubbed(@gateway.options[:login], transcript)
     assert_scrubbed(@gateway.options[:merchant_id], transcript)
+  end
+
+  def test_transcript_scrubbing_echeck
+    transcript = capture_transcript(@echeck_gateway) do
+      @echeck_gateway.purchase(20, @echeck, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@echeck.account_number, transcript)
+    assert_scrubbed(@echeck_gateway.options[:password], transcript)
+    assert_scrubbed(@echeck_gateway.options[:login], transcript)
+    assert_scrubbed(@echeck_gateway.options[:merchant_id], transcript)
   end
 
   private

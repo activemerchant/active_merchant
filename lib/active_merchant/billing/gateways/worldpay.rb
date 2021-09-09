@@ -115,8 +115,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify(payment_method, options = {})
+        amount = (eligible_for_0_auth?(payment_method, options) ? 0 : 100)
         MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, payment_method, options) }
+          r.process { authorize(amount, payment_method, options) }
           r.process(:ignore_result) { void(r.authorization, options.merge(authorization_validated: true)) }
         end
       end
@@ -792,6 +793,10 @@ module ActiveMerchant #:nodoc:
 
       def card_code_for(payment_method)
         CARD_CODES[card_brand(payment_method)] || CARD_CODES['unknown']
+      end
+
+      def eligible_for_0_auth?(payment_method, options = {})
+        payment_method.is_a?(CreditCard) && %w(visa master).include?(payment_method.brand) && options[:zero_dollar_auth]
       end
     end
   end

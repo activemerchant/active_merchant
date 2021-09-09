@@ -552,6 +552,11 @@ modern_payments:
   login: login
   password: password
 
+moka:
+  dealer_code: DEALER_CODE
+  username: USERNAME
+  password: PASSWORD
+
 # Working credentials, no need to replace
 monei:
   api_key: pk_test_3cb2d54b7ee145fa92d683c01816ad15
@@ -784,6 +789,11 @@ paypal_signature:
   login: activemerchant-test_api1.example.com
   password: HBC6A84QLRWC923A
   signature: AFcWxV21C7fd0v3bYYYRCpSSRl31AC-11AKBL8FFO9tjImL311y8a0hx
+
+paysafe:
+  login: SOMECREDENTIAL
+  secret_key: ANOTHERCREDENTIAL
+  account_id: CREDENTIAL
 
 payscout:
   username: demo

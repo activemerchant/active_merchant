@@ -16,8 +16,8 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://www.adyen.com/'
       self.display_name = 'Adyen'
 
-      PAYMENT_API_VERSION = 'v40'
-      RECURRING_API_VERSION = 'v30'
+      PAYMENT_API_VERSION = 'v64'
+      RECURRING_API_VERSION = 'v49'
 
       STANDARD_ERROR_CODE_MAPPING = {
         '101' => STANDARD_ERROR_CODE[:incorrect_number],

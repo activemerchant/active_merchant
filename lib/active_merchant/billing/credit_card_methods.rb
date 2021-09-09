@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
         'master'             => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), MASTERCARD_RANGES) },
         'elo'                => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), ELO_RANGES) },
         'alelo'              => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), ALELO_RANGES) },
-        'discover'           => ->(num) { num =~ /^(6011|65\d{2}|64[4-9]\d)\d{12,15}|(62\d{14,17})$/ },
+        'discover'           => ->(num) { num =~ /^(6011|65\d{2}|64[4-9]\d)\d{12,15}$/ },
         'american_express'   => ->(num) { num =~ /^3[47]\d{13}$/ },
         'naranja'            => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), NARANJA_RANGES) },
         'diners_club'        => ->(num) { num =~ /^3(0[0-5]|[68]\d)\d{11,16}$/ },
@@ -19,6 +19,7 @@ module ActiveMerchant #:nodoc:
             MAESTRO_BINS.any? { |bin| num.slice(0, bin.size) == bin }
           )
         },
+        'maestro_no_luhn'    => ->(num) { num =~ /^(501080|501081|501082)\d{10}$/ },
         'forbrugsforeningen' => ->(num) { num =~ /^600722\d{10}$/ },
         'sodexo'             => ->(num) { num =~ /^(606071|603389|606070|606069|606068|600818)\d{10}$/ },
         'alia'               => ->(num) { num =~ /^(504997|505878|601030|601073|505874)\d{10}$/ },
@@ -33,7 +34,8 @@ module ActiveMerchant #:nodoc:
         },
         'olimpica' => ->(num) { num =~ /^636853\d{10}$/ },
         'creditel' => ->(num) { num =~ /^601933\d{10}$/ },
-        'confiable' => ->(num) { num =~ /^560718\d{10}$/ }
+        'confiable' => ->(num) { num =~ /^560718\d{10}$/ },
+        'synchrony' => ->(num) { num =~ /^700600\d{10}$/ }
       }
 
       # http://www.barclaycard.co.uk/business/files/bin_rules.pdf
@@ -82,7 +84,7 @@ module ActiveMerchant #:nodoc:
 
       MAESTRO_BINS = Set.new(
         %w[ 500057
-            501018 501043 501045 501047 501049 501051 501072 501075 501087 501089 501095
+            501018 501043 501045 501047 501049 501051 501072 501075 501083 501087 501089 501095
             501500
             501879 502113 502301 503175
             503645 503670
@@ -126,13 +128,14 @@ module ActiveMerchant #:nodoc:
         (501053..501058),
         (501060..501063),
         (501066..501067),
-        (501080..501083),
         (501091..501092),
         (501104..501105),
         (501107..501108),
         (501104..501105),
         (501107..501108),
+        (501800..501899),
         (502000..502099),
+        (503800..503899),
         (561200..561269),
         (561271..561299),
         (561320..561356),
@@ -193,11 +196,9 @@ module ActiveMerchant #:nodoc:
         589562..589562
       ]
 
-      # In addition to the BIN ranges listed here that all begin with 81, UnionPay cards
-      # include many ranges that start with 62.
-      # Prior to adding UnionPay, cards that start with 62 were all classified as Discover.
-      # Because UnionPay cards are able to run on Discover rails, this was kept the same.
+      # https://www.discoverglobalnetwork.com/content/dam/discover/en_us/dgn/pdfs/IPP-VAR-Enabler-Compliance.pdf
       UNIONPAY_RANGES = [
+        62212600..62379699, 62400000..62699999, 62820000..62889999,
         81000000..81099999, 81100000..81319999, 81320000..81519999, 81520000..81639999, 81640000..81719999
       ]
 
@@ -363,9 +364,7 @@ module ActiveMerchant #:nodoc:
             valid_naranja_algo?(numbers)
           when 'creditel'
             valid_creditel_algo?(numbers)
-          when 'alia'
-            true
-          when 'confiable'
+          when 'alia', 'confiable', 'maestro_no_luhn'
             true
           else
             valid_luhn?(numbers)

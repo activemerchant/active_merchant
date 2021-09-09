@@ -150,7 +150,8 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
       merchant_descriptor: 'Test Descriptor',
       merchant_phone_number: '(555)555-5555',
       merchant_name: 'Test Merchant',
-      stored_credential_mode: true
+      stored_credential_mode: true,
+      product_id: 'Test Product'
     }
 
     response = @gateway.purchase(@amount, @credit_card, options)
@@ -184,7 +185,8 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
       merchant_descriptor: 'Test Descriptor',
       merchant_phone_number: '(555)555-5555',
       merchant_name: 'Test Merchant',
-      stored_credential_mode: true
+      stored_credential_mode: true,
+      product_id: 'Test Product'
     }
     auth = @gateway.authorize(@amount, @credit_card, extra)
     assert_success auth
@@ -254,7 +256,8 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
       merchant_descriptor: 'Test Descriptor',
       merchant_phone_number: '(555)555-5555',
       merchant_name: 'Test Merchant',
-      stored_credential_mode: true
+      stored_credential_mode: true,
+      product_id: 'Test Product'
     }
 
     response = @gateway.credit(@amount, credit_card('4444436501403986'), extra)

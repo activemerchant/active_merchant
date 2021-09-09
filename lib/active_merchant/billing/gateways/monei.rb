@@ -206,19 +206,27 @@ module ActiveMerchant #:nodoc:
 
       # Private: Add customer part to request
       def add_customer(request, payment_method, options)
-        address = options[:billing_address] || options[:address] || {}
+        address = options[:billing_address] || options[:address]
 
         request[:customer] = {}
         request[:customer][:email] = options[:email] || 'support@monei.net'
-        request[:customer][:name] = address[:name].to_s
 
-        request[:billingDetails] = {}
-        request[:billingDetails][:address] = {}
-        request[:billingDetails][:address][:line1] = address[:address1].to_s
-        request[:billingDetails][:address][:city] = address[:city].to_s
-        request[:billingDetails][:address][:state] = address[:state].to_s if address.has_key? :state
-        request[:billingDetails][:address][:zip] = address[:zip].to_s
-        request[:billingDetails][:address][:country] = address[:country].to_s
+        if address
+          request[:customer][:name] = address[:name].to_s if address[:name]
+
+          request[:billingDetails] = {}
+          request[:billingDetails][:email] = options[:email] if options[:email]
+          request[:billingDetails][:name] = address[:name] if address[:name]
+          request[:billingDetails][:company] = address[:company] if address[:company]
+          request[:billingDetails][:phone] = address[:phone] if address[:phone]
+          request[:billingDetails][:address] = {}
+          request[:billingDetails][:address][:line1] = address[:address1] if address[:address1]
+          request[:billingDetails][:address][:line2] = address[:address2] if address[:address2]
+          request[:billingDetails][:address][:city] = address[:city] if address[:city]
+          request[:billingDetails][:address][:state] = address[:state] if address[:state].present?
+          request[:billingDetails][:address][:zip] = address[:zip].to_s if address[:zip]
+          request[:billingDetails][:address][:country] = address[:country] if address[:country]
+        end
 
         request[:sessionDetails] = {}
         request[:sessionDetails][:ip] = options[:ip] if options[:ip]

@@ -138,10 +138,28 @@ class ElavonTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_unscheduled
-    response = stub_comms do
+    stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(merchant_initiated_unscheduled: 'Y'))
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<ssl_merchant_initiated_unscheduled>Y<\/ssl_merchant_initiated_unscheduled>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_sends_ssl_add_token_field
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(add_recurring_token: 'Y'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<ssl_add_token>Y<\/ssl_add_token>/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_sends_ssl_token_field
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(ssl_token: '8675309'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<ssl_token>8675309<\/ssl_token>/, data)
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -168,13 +186,11 @@ class ElavonTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_without_multi_currency
-    response = stub_comms do
+    stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(currency: 'EUR', multi_currency: false))
     end.check_request do |_endpoint, data, _headers|
       assert_no_match(/ssl_transaction_currency=EUR/, data)
     end.respond_with(successful_purchase_response)
-
-    assert_success response
   end
 
   def test_failed_capture

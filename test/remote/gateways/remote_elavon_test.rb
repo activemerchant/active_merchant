@@ -235,6 +235,38 @@ class RemoteElavonTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_successful_purchase_with_recurring_token
+    options = {
+      email: 'human@domain.com',
+      description: 'Test Transaction',
+      billing_address: address,
+      ip: '203.0.113.0',
+      merchant_initiated_unscheduled: 'Y',
+      add_recurring_token: 'Y'
+    }
+
+    purchase = @gateway.purchase(@amount, @credit_card, options)
+
+    assert_success purchase
+    assert_equal 'APPROVAL', purchase.message
+  end
+
+  def test_successful_purchase_with_ssl_token
+    options = {
+      email: 'paul@domain.com',
+      description: 'Test Transaction',
+      billing_address: address,
+      ip: '203.0.113.0',
+      merchant_initiated_unscheduled: 'Y',
+      ssl_token: '4000000000000002'
+    }
+
+    purchase = @gateway.purchase(@amount, @credit_card, options)
+
+    assert_success purchase
+    assert_equal 'APPROVAL', purchase.message
+  end
+
   def test_successful_auth_and_capture_with_unscheduled_stored_credential
     stored_credential_params = {
       initial_transaction: true,

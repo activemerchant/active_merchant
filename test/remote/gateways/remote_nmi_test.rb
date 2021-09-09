@@ -107,7 +107,7 @@ class RemoteNmiTest < Test::Unit::TestCase
     three_d_secure_options = @options.merge({
       three_d_secure: {
         version: '2.1.0',
-        cardholder_auth: 'verified',
+        authentication_response_status: 'Y',
         cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA',
         ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC'
       }

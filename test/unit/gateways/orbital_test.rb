@@ -98,7 +98,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
         eci: '5',
         xid: 'TESTXID',
         cavv: 'TESTCAVV',
-        version: '2',
+        version: '2.2.0',
         ds_transaction_id: '97267598FAE648F28083C23433990FBC'
       }
     }
@@ -295,7 +295,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
         xid: 'TESTXID',
         cavv: 'AAAEEEDDDSSSAAA2243234',
         ds_transaction_id: '97267598FAE648F28083C23433990FBC',
-        version: 2
+        version: '2.2.0'
       },
       sca_recurring: 'Y'
     }
@@ -314,13 +314,12 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def test_three_d_secure_data_on_master_sca_recurring_with_invalid_eci
     options_local = {
-      three_d_version: '2',
       three_d_secure: {
         eci: '5',
         xid: 'TESTXID',
         cavv: 'AAAEEEDDDSSSAAA2243234',
         ds_transaction_id: '97267598FAE648F28083C23433990FBC',
-        version: 2
+        version: '2.2.0'
       },
       sca_recurring: 'Y'
     }
@@ -1518,6 +1517,11 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
+  def test_scrub_echeck
+    assert @gateway.supports_scrubbing?
+    assert_equal @gateway.scrub(pre_scrubbed_echeck), post_scrubbed_echeck
+  end
+
   private
 
   def stored_credential_options(*args, id: nil)
@@ -1667,6 +1671,76 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   def post_scrubbed_profile
     <<~REQUEST
       <?xml version="1.0" encoding="UTF-8"?><Response><ProfileResp><CustomerBin>000001</CustomerBin><CustomerMerchantID>[FILTERED]</CustomerMerchantID><CustomerName>LONGBOB LONGSEN</CustomerName><CustomerRefNum>109273631</CustomerRefNum><CustomerProfileAction>CREATE</CustomerProfileAction><ProfileProcStatus>0</ProfileProcStatus><CustomerProfileMessage>Profile Request Processed</CustomerProfileMessage><CustomerAddress1>456 MY STREET</CustomerAddress1><CustomerAddress2>APT 1</CustomerAddress2><CustomerCity>OTTAWA</CustomerCity><CustomerState>ON</CustomerState><CustomerZIP>K1C2N6</CustomerZIP><CustomerEmail></CustomerEmail><CustomerPhone>5555555555</CustomerPhone><CustomerCountryCode>CA</CustomerCountryCode><CustomerProfileOrderOverrideInd>NO</CustomerProfileOrderOverrideInd><OrderDefaultDescription></OrderDefaultDescription><OrderDefaultAmount></OrderDefaultAmount><CustomerAccountType>CC</CustomerAccountType><Status>A</Status><CCAccountNum>[FILTERED]</CCAccountNum><CCExpireDate>0919</CCExpireDate><ECPAccountDDA></ECPAccountDDA><ECPAccountType></ECPAccountType><ECPAccountRT></ECPAccountRT><ECPBankPmtDlv></ECPBankPmtDlv><SwitchSoloStartDate></SwitchSoloStartDate><SwitchSoloIssueNum></SwitchSoloIssueNum><RespTime></RespTime></ProfileResp></Response>
+    REQUEST
+  end
+
+  def pre_scrubbed_echeck
+    <<~REQUEST
+      opening connection to orbitalvar1.chasepaymentech.com:443...
+      opened
+      starting SSL for orbitalvar1.chasepaymentech.com:443...
+      SSL established, protocol: TLSv1.2, cipher: AES128-GCM-SHA256
+      <- "POST /authorize HTTP/1.1\r\nContent-Type: application/PTI81\r\nMime-Version: 1.1\r\nContent-Transfer-Encoding: text\r\nRequest-Number: 1\r\nDocument-Type: Request\r\nInterface-Version: Ruby|ActiveMerchant|Proprietary Gateway\r\nContent-Length: 999\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: orbitalvar1.chasepaymentech.com\r\n\r\n"
+      <- "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Request>\n  <NewOrder>\n    <OrbitalConnectionUsername>SPREEDLYTEST1</OrbitalConnectionUsername>\n    <OrbitalConnectionPassword>2NnPnYZylV8ft</OrbitalConnectionPassword>\n    <IndustryType>EC</IndustryType>\n    <MessageType>AC</MessageType>\n    <BIN>000001</BIN>\n    <MerchantID>408449</MerchantID>\n    <TerminalID>001</TerminalID>\n    <CardBrand>EC</CardBrand>\n    <CurrencyCode>124</CurrencyCode>\n    <CurrencyExponent>2</CurrencyExponent>\n    <BCRtNum>072403004</BCRtNum>\n    <CheckDDA>072403004</CheckDDA>\n    <BankAccountType>S</BankAccountType>\n    <BankPmtDelv>B</BankPmtDelv>\n    <AVSzip>K1C2N6</AVSzip>\n    <AVSaddress1>456 My Street</AVSaddress1>\n    <AVSaddress2>Apt 1</AVSaddress2>\n    <AVScity>Ottawa</AVScity>\n    <AVSstate>ON</AVSstate>\n    <AVSphoneNum>5555555555</AVSphoneNum>\n    <AVSname>Jim Smith</AVSname>\n    <AVScountryCode>CA</AVScountryCode>\n    <OrderID>5fe1bb6dcd2cd401f2a277</OrderID>\n    <Amount>20</Amount>\n  </NewOrder>\n</Request>\n"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Date: Mon, 09 Aug 2021 21:00:41 GMT\r\n"
+      -> "Strict-Transport-Security: max-age=63072000; includeSubdomains; preload\r\n"
+      -> "X-Frame-Options: SAMEORIGIN\r\n"
+      -> "Access-Control-Allow-Methods: POST, GET, OPTIONS, DELETE, PUT\r\n"
+      -> "Access-Control-Max-Age: 1000\r\n"
+      -> "Access-Control-Allow-Headers: x-requested-with, Content-Type, origin, authorization, accept, client-security-token, MerchantID, OrbitalConnectionUsername, OrbitalConnectionPassword\r\n"
+      -> "Access-Control-Allow-credentials: true\r\n"
+      -> "content-type: text/plain; charset=ISO-8859-1\r\n"
+      -> "content-length: 1185\r\n"
+      -> "content-transfer-encoding: text/xml\r\n"
+      -> "document-type: Response\r\n"
+      -> "mime-version: 1.0\r\n"
+      -> "X-Frame-Options: SAMEORIGIN\r\n"
+      -> "Strict-Transport-Security: max-age=31536000; includeSubDomains; preload\r\n"
+      -> "X-XSS-Protection: 1; mode=block\r\n"
+      -> "X-Content-Type-Options: nosniff\r\n"
+      -> "Connection: close\r\n"
+      -> "\r\n"
+      reading 1185 bytes...
+      -> "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response><NewOrderResp><IndustryType></IndustryType><MessageType>AC</MessageType><MerchantID>408449</MerchantID><TerminalID>001</TerminalID><CardBrand>EC</CardBrand><AccountNum></AccountNum><OrderID>5fe1bb6dcd2cd401f2a277</OrderID><TxRefNum>611197795A217041FDC714407285C2FC74F9533B</TxRefNum><TxRefIdx>1</TxRefIdx><ProcStatus>0</ProcStatus><ApprovalStatus>1</ApprovalStatus><RespCode>00</RespCode><AVSRespCode>3 </AVSRespCode><CVV2RespCode> </CVV2RespCode><AuthCode>123456</AuthCode><RecurringAdviceCd></RecurringAdviceCd><CAVVRespC"
+      -> "ode></CAVVRespCode><StatusMsg>Approved</StatusMsg><RespMsg></RespMsg><HostRespCode>102</HostRespCode><HostAVSRespCode>  </HostAVSRespCode><HostCVV2RespCode>  </HostCVV2RespCode><CustomerRefNum></CustomerRefNum><CustomerName></CustomerName><ProfileProcStatus></ProfileProcStatus><CustomerProfileMessage></CustomerProfileMessage><RespTime>170041</RespTime><PartialAuthOccurred></PartialAuthOccurred><RequestedAmount></RequestedAmount><RedeemedAmount></RedeemedAmount><RemainingBalance></RemainingBalance><CountryFraudFilterStatus></CountryFraudFilterStatus><IsoCountryCode></IsoCountryCode></NewOrderResp></Response>"
+      read 1185 bytes
+      Conn close
+    REQUEST
+  end
+
+  def post_scrubbed_echeck
+    <<~REQUEST
+      opening connection to orbitalvar1.chasepaymentech.com:443...
+      opened
+      starting SSL for orbitalvar1.chasepaymentech.com:443...
+      SSL established, protocol: TLSv1.2, cipher: AES128-GCM-SHA256
+      <- "POST /authorize HTTP/1.1\r\nContent-Type: application/PTI81\r\nMime-Version: 1.1\r\nContent-Transfer-Encoding: text\r\nRequest-Number: 1\r\nDocument-Type: Request\r\nInterface-Version: Ruby|ActiveMerchant|Proprietary Gateway\r\nContent-Length: 999\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: orbitalvar1.chasepaymentech.com\r\n\r\n"
+      <- "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Request>\n  <NewOrder>\n    <OrbitalConnectionUsername>[FILTERED]</OrbitalConnectionUsername>\n    <OrbitalConnectionPassword>[FILTERED]</OrbitalConnectionPassword>\n    <IndustryType>EC</IndustryType>\n    <MessageType>AC</MessageType>\n    <BIN>000001</BIN>\n    <MerchantID>[FILTERED]</MerchantID>\n    <TerminalID>001</TerminalID>\n    <CardBrand>EC</CardBrand>\n    <CurrencyCode>124</CurrencyCode>\n    <CurrencyExponent>2</CurrencyExponent>\n    <BCRtNum>[FILTERED]</BCRtNum>\n    <CheckDDA>[FILTERED]</CheckDDA>\n    <BankAccountType>S</BankAccountType>\n    <BankPmtDelv>B</BankPmtDelv>\n    <AVSzip>K1C2N6</AVSzip>\n    <AVSaddress1>456 My Street</AVSaddress1>\n    <AVSaddress2>Apt 1</AVSaddress2>\n    <AVScity>Ottawa</AVScity>\n    <AVSstate>ON</AVSstate>\n    <AVSphoneNum>5555555555</AVSphoneNum>\n    <AVSname>Jim Smith</AVSname>\n    <AVScountryCode>CA</AVScountryCode>\n    <OrderID>5fe1bb6dcd2cd401f2a277</OrderID>\n    <Amount>20</Amount>\n  </NewOrder>\n</Request>\n"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Date: Mon, 09 Aug 2021 21:00:41 GMT\r\n"
+      -> "Strict-Transport-Security: max-age=63072000; includeSubdomains; preload\r\n"
+      -> "X-Frame-Options: SAMEORIGIN\r\n"
+      -> "Access-Control-Allow-Methods: POST, GET, OPTIONS, DELETE, PUT\r\n"
+      -> "Access-Control-Max-Age: 1000\r\n"
+      -> "Access-Control-Allow-Headers: x-requested-with, Content-Type, origin, authorization, accept, client-security-token, MerchantID, OrbitalConnectionUsername, OrbitalConnectionPassword\r\n"
+      -> "Access-Control-Allow-credentials: true\r\n"
+      -> "content-type: text/plain; charset=ISO-8859-1\r\n"
+      -> "content-length: 1185\r\n"
+      -> "content-transfer-encoding: text/xml\r\n"
+      -> "document-type: Response\r\n"
+      -> "mime-version: 1.0\r\n"
+      -> "X-Frame-Options: SAMEORIGIN\r\n"
+      -> "Strict-Transport-Security: max-age=31536000; includeSubDomains; preload\r\n"
+      -> "X-XSS-Protection: 1; mode=block\r\n"
+      -> "X-Content-Type-Options: nosniff\r\n"
+      -> "Connection: close\r\n"
+      -> "\r\n"
+      reading 1185 bytes...
+      -> "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response><NewOrderResp><IndustryType></IndustryType><MessageType>AC</MessageType><MerchantID>[FILTERED]</MerchantID><TerminalID>001</TerminalID><CardBrand>EC</CardBrand><AccountNum></AccountNum><OrderID>5fe1bb6dcd2cd401f2a277</OrderID><TxRefNum>611197795A217041FDC714407285C2FC74F9533B</TxRefNum><TxRefIdx>1</TxRefIdx><ProcStatus>0</ProcStatus><ApprovalStatus>1</ApprovalStatus><RespCode>00</RespCode><AVSRespCode>3 </AVSRespCode><CVV2RespCode> </CVV2RespCode><AuthCode>123456</AuthCode><RecurringAdviceCd></RecurringAdviceCd><CAVVRespC"
+      -> "ode></CAVVRespCode><StatusMsg>Approved</StatusMsg><RespMsg></RespMsg><HostRespCode>102</HostRespCode><HostAVSRespCode>  </HostAVSRespCode><HostCVV2RespCode>  </HostCVV2RespCode><CustomerRefNum></CustomerRefNum><CustomerName></CustomerName><ProfileProcStatus></ProfileProcStatus><CustomerProfileMessage></CustomerProfileMessage><RespTime>170041</RespTime><PartialAuthOccurred></PartialAuthOccurred><RequestedAmount></RequestedAmount><RedeemedAmount></RedeemedAmount><RemainingBalance></RemainingBalance><CountryFraudFilterStatus></CountryFraudFilterStatus><IsoCountryCode></IsoCountryCode></NewOrderResp></Response>"
+      read 1185 bytes
+      Conn close
     REQUEST
   end
 end
