@@ -14,23 +14,20 @@ module ActiveMerchant #:nodoc:
 
       self.test_auth = 'Contact priority for token'
       self.live_auth = 'Contact priority for token'
+
       self.test_env_verify = 'qa-aus'
       self.live_env_verify = 'qa-aus'
-
-      require 'byebug'
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
       self.supported_cardtypes = %i[visa master american_express discover]
 
-      self.homepage_url = 'http://www.example.net/'
+      self.homepage_url = 'https://mxmerchant.com/'
       self.display_name = 'Priority'
-      # byebug
+
       STANDARD_ERROR_CODE_MAPPING = {}
 
       def initialize(options = {})
-        # requires!(options, :key, :secret)
-        # @key, @secret = options.values_at(:key, :secret)
         super
       end
 
@@ -55,83 +52,61 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(amount, credit_card, options = {})
-        # byebug
         params = {}
-        action = 'purchase'
-        authOnly = false
-        isSettleFunds = true
-        add_bank_amount_purchase(params, amount, authOnly)
-        add_credit_card(params, credit_card, action)
-        add_type_merchant_purchase(params, options[:merchant], isSettleFunds, options)
-        commit(action, params, '', '', options)
+        add_bank_amount_purchase(params, amount, false)
+        add_credit_card(params, credit_card, 'purchase', options)
+        add_type_merchant_purchase(params, options[:merchant], true, options)
+        commit('purchase', params, '', '', options)
       end
 
       def authorize(amount, credit_card, options = {})
-        #   byebug
         params = {}
-        action = 'purchase'
-        authOnly = true
-        isSettleFunds = false
-        add_bank_amount_purchase(params, amount, authOnly)
-        add_credit_card(params, credit_card, action)
-        add_type_merchant_purchase(params, options[:merchant], isSettleFunds, options)
-        commit(action, params, '', '', options)
+        add_bank_amount_purchase(params, amount, true)
+        add_credit_card(params, credit_card, 'purchase', options)
+        add_type_merchant_purchase(params, options[:merchant], false, options)
+        commit('purchase', params, '', '', options)
       end
 
-      def refund(amount, credit_card, authCode, options, key_secret)
-        #   byebug
+      def refund(amount, credit_card, options)
         params = {}
-        action = 'refund'
-        add_bank_amount_refund(params, amount, authCode)
-        add_credit_card(params, credit_card, action)
+
+        add_bank_amount_refund(params, amount, options[:authCode])
+        add_credit_card(params, credit_card, 'refund', options)
         add_type_merchant_refund(params, options)
-        commit(action, params, '', '', key_secret)
+        commit('refund', params, '', '', options)
       end
 
-      def capture(amount, authorization, authCode, options = {})
-        #   byebug
+      def capture(amount, authorization, options = {})
         params = {}
-        action = 'capture'
-        add_capture(params, amount, authorization, authCode, options)
-        commit(action, params, '', '', options)
-      end
-
-      def add_capture(params, amount, authorization, authCode, options)
-        # byebug
         params['amount'] = amount
-        params['authCode'] = authCode
+        params['authCode'] = options[:authCode]
         params['merchantId'] = options[:merchant]
         params['paymentToken'] = authorization
         params['shouldGetCreditCardLevel'] = true
         params['source'] = 'Spreedly'
         params['tenderType'] = 'Card'
+
+        commit('capture', params, '', '', options)
       end
 
       def void(iid, options)
-        # byebug
-        action = 'void'
-        commit(action, '', iid, '', options)
+        commit('void', '', iid, '', options)
       end
 
       def verify(creditcardnumber)
-        # byebug
-        #   test = request_verify_headers
-        action = 'verify'
-        commit(action, '', '', creditcardnumber, '')
-      end
-
-      def getpaymentstatus(batchid, options)
-        action = 'getpaymentstatus'
-        commit(action, batchid, '', '', options)
-      end
-
-      def closebatch(batchid, options)
-        action = 'closebatch'
-        commit(action, batchid, '', '', options)
+        commit('verify', '', '', creditcardnumber, '')
       end
 
       def supports_scrubbing?
         true
+      end
+
+      def getpaymentstatus(batchid, options)
+        commit('getpaymentstatus', batchid, '', '', options)
+      end
+
+      def closebatch(batchid, options)
+        commit('closebatch', batchid, '', '', options)
       end
 
       def scrub(transcript)
@@ -140,11 +115,6 @@ module ActiveMerchant #:nodoc:
           gsub(%r((number)\W+\d+), '\1[FILTERED]').
           gsub(%r((cvv)\W+\d+), '\1[FILTERED]')
       end
-      # private
-
-      def add_customer_data(post, options); end
-
-      def add_address(post, creditcard); end
 
       def add_bank_amount_purchase(params, amount, authOnly)
         params['achIndicator'] = nil
@@ -157,24 +127,23 @@ module ActiveMerchant #:nodoc:
       def add_bank_amount_refund(params, amount, authCode)
         params['amount'] = amount
         params['authCode'] = authCode
-        params['authMessage'] = 'Approved or completed successfully.'
+        params['authMessage'] = ''
         params['authOnly'] = false
         params['availableAuthAmount'] = 0
         params['batch'] = nil
         params['batchId'] = nil
       end
 
-      def add_credit_card(params, credit_card, action)
+      def add_credit_card(params, credit_card, action, options)
         return unless credit_card
 
-        # byebug
         params['cardAccount'] ||= {}
         card_details = params['cardAccount'] = {}
 
         case action
         when 'purchase'
-          card_details['avsStreet'] = '1'
-          card_details['avsZip'] = '88888'
+          card_details['avsStreet'] = options[:avsStreet]
+          card_details['avsZip'] = options[:avsZip]
           card_details['cvv'] = credit_card.verification_value
           card_details['entryMode'] = 'Keyed'
           card_details['expiryDate'] = expdate(credit_card)
@@ -196,7 +165,6 @@ module ActiveMerchant #:nodoc:
           card_details['last4'] = credit_card['last4']
           card_details['token'] = credit_card['token']
         end
-        # byebug
       end
 
       def expdate(credit_card)
@@ -205,22 +173,9 @@ module ActiveMerchant #:nodoc:
 
       @request_params = {
         achIndicator: nil,
-        # amount: 5.44,
         authCode: nil,
         authOnly: false,
         bankAccount: nil,
-        # cardAccount: {
-        #   avsStreet: '1',
-        #   avsZip: '55044',
-        #   cvv: '123',
-        #   entryMode: 'Keyed',
-        #   expiryDate: '01/29',
-        #   expiryMonth: '01',
-        #   expiryYear: '29',
-        #   last4: nil,
-        #   magstripe: nil,
-        #   number: '4111111111111111'
-        # },
         cardPresent: false,
         cardPresentType: 'CardNotPresent',
         isAuth: true,
@@ -257,12 +212,6 @@ module ActiveMerchant #:nodoc:
         params['bankAccount'] = nil
 
         params['purchases'] = purchases
-        # tax1 = {}
-        # tax1['taxRate'] = 0.0000
-        # tax1['additionalTaxRate'] = nil
-        # tax1['discountRate'] = nil
-        # params['purchases'] << tax1
-
         params['shouldGetCreditCardLevel'] = true
         params['shouldVaultCard'] = true
         params['source'] = 'Spreedly'
@@ -287,30 +236,8 @@ module ActiveMerchant #:nodoc:
         params['paymentToken'] = options['cardAccount']['token']
 
         params['posData'] = options['posData']
-        # posdata = params['posData'] = {}
-        # posdata['panCaptureMethod'] = 'Manual'
 
         params['purchases'] = options['purchases']
-        # tax1 = {}
-
-        # tax1['code'] = 'MISC'
-        # tax1['dateCreated'] = '0001-01-01T00:00:00'
-        # tax1['description'] = 'Miscellaneous'
-        # tax1['discountAmount'] = '0'
-        # tax1['discountRate'] = '0'
-        # tax1['extendedAmount'] = '6.66'
-        # tax1['iId'] = '11036306'
-        # tax1['lineItemId'] = 0
-        # tax1['name'] = 'Miscellaneous'
-        # tax1['quantity'] = '1'
-        # tax1['taxAmount'] = '0.2'
-        # tax1['taxRate'] = '0.01'
-        # tax1['transactionIId'] = 0
-        # tax1['transactionId'] = '10000001610532'
-        # tax1['unitOfMeasure'] = 'EA'
-        # tax1['unitPrice'] = '1.51'
-
-        # params['purchases'] << tax1
 
         params['reference'] = options['reference']
         params['replayId'] = nil
@@ -318,13 +245,6 @@ module ActiveMerchant #:nodoc:
         params['reviewIndicator'] = nil
 
         params['risk'] = options['risk']
-        # risk = params['risk'] = {}
-        # risk['avsAddressMatch'] = false
-        # risk['avsResponse'] = 'No Response from AVS'
-        # risk['avsZipMatch'] = false
-        # risk['cvvMatch'] = true
-        # risk['cvvResponse'] = 'Match'
-        # risk['cvvResponseCode'] = 'M'
 
         params['settledAmount'] = options['settledAmount']
         params['settledCurrency'] = options['settledCurrency']
@@ -340,13 +260,6 @@ module ActiveMerchant #:nodoc:
         params['type'] = options['type']
       end
 
-      def add_invoice(post, money, options)
-        post[:amount] = amount(money)
-        post[:currency] = (options[:currency] || currency(money))
-      end
-
-      def add_payment(post, payment); end
-
       def commit(action, params, iid, creditcardnumber, options)
         response =
           begin
@@ -356,15 +269,11 @@ module ActiveMerchant #:nodoc:
               parse(ssl_invoke(action, params, iid, creditcardnumber, options))
             end
           rescue ResponseError => e
-            #   byebug
             parse(e.response.body)
           end
-        #   byebug
         success = success_from(response)
 
-        if response == '' 
-            response = { 'code' => '204' }
-        end
+        response = { 'code' => '204' } if response == ''
         Response.new(
           success,
           message_from(success, response),
@@ -376,8 +285,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def handle_response(response)
-        #   byebug
-        # return response.body
         if response.code != '204' && (200...300).cover?(response.code.to_i)
           response.body
         else
@@ -391,9 +298,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def ssl_invoke(action, params, refnumber, creditcardnumber, options)
-        # byebug
         if action == 'void'
-          # ssl_request_priority(:delete, url(action, params, refnumber, ''), nil, request_headers(options))
           ssl_request(:delete, url(action, params, refnumber, ''), nil, request_headers(options))
         else
           if action == 'verify'
@@ -443,7 +348,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        # byebug
         return true if response['paymentToken'] || response['status'] == 'Approved' || response['code'] == '204' || response['tenderType'] == 'Card' || response == ''
       end
 

@@ -1,5 +1,4 @@
 require 'test_helper'
-require 'byebug'
 
 class PriorityTest < Test::Unit::TestCase
   include CommStub
@@ -12,15 +11,14 @@ class PriorityTest < Test::Unit::TestCase
     # byebug -Itest test/unit/gateways/card_stream_test.rb
 
     @gateway = PriorityGateway.new(
-      key: '',
-      secret: '=',
-      auth: '',
+      key: 'Consumer API Key',
+      secret: 'Consumer API Secret',
+      auth: 'contact priority for key',
       env_verify: 'qa-aus',
       test_url_verify: 'contact priority for url',
       live_url_verify: 'contact priority for url',
       cardnumber: '411111'
     )
-    # byebug
 
     @action = 'purchase'
     @amount = 3.33
@@ -60,7 +58,6 @@ class PriorityTest < Test::Unit::TestCase
       last4: '1111',
       token: 'P6NyKC5UfmZjgAlF3ZEd3YSaJG9qKT6E'
     }
-    # def add_type_merchant_purchase(params, merchant, isSettleFunds)
 
     @option_purchase = {
       cardPresent: false,
@@ -82,11 +79,6 @@ class PriorityTest < Test::Unit::TestCase
             discountRate: nil
           }
         ],
-        # tax1 = {}
-        # tax1['taxRate'] = 0.0000
-        # tax1['additionalTaxRate'] = nil
-        # tax1['discountRate'] = nil
-        # params['purchases'] << tax1
 
         shouldGetCreditCardLevel: true,
         shouldVaultCard: true,
@@ -240,61 +232,12 @@ class PriorityTest < Test::Unit::TestCase
         "shouldGetCreditCardLevel": false
     }
 
-    # @iid = '10000001608410'
-    # @request_params = {
-    #   'achIndicator' => nil,
-    #   'amount' => 4.44,
-    #   'authCode' => nil,
-    #   'authOnly' => false,
-    #   'bankAccount' => nil,
-    #   'cardAccount' => {
-    #     'avsStreet' => '1',
-    #     'avsZip' => '55044',
-    #     'cvv' => '123',
-    #     'entryMode' => 'Keyed',
-    #     'expiryDate' => '01/29',
-    #     'expiryMonth' => '01',
-    #     'expiryYear' => '29',
-    #     'last4' => nil,
-    #     'magstripe' => nil,
-    #     'number' => '4111111111111111'
-    #   },
-    #   'cardPresent' => false,
-    #   'cardPresentType' => 'CardNotPresent',
-    #   'isAuth' => true,
-    #   'isSettleFunds' => true,
-    #   'isTicket' => false,
-    #   'merchantId' => 514_391_592,
-    #   'mxAdvantageEnabled' => false,
-    #   'mxAdvantageFeeLabel' => '',
-    #   'paymentType' => 'Sale',
-    #   'purchases' => [{ 'taxRate' => '0.0000', 'additionalTaxRate' => nil, 'discountRate' => nil }],
-    #   'shouldGetCreditCardLevel' => true,
-    #   'shouldVaultCard' => true,
-    #   'source' => 'QuickPay',
-    #   'sourceZip' => '94102',
-    #   'taxExempt' => false,
-    #   'tenderType' => 'Card',
-    #   'terminals' => []
-    # }
     @request_params = {
       achIndicator: nil,
       amount: 5.44,
       authCode: nil,
       authOnly: false,
       bankAccount: nil,
-      # cardAccount: {
-      #   avsStreet: '1',
-      #   avsZip: '55044',
-      #   cvv: '123',
-      #   entryMode: 'Keyed',
-      #   expiryDate: '01/29',
-      #   expiryMonth: '01',
-      #   expiryYear: '29',
-      #   last4: nil,
-      #   magstripe: nil,
-      #   number: '4111111111111111'
-      # },
       cardPresent: false,
       cardPresentType: 'CardNotPresent',
       isAuth: true,
@@ -317,13 +260,17 @@ class PriorityTest < Test::Unit::TestCase
     # purchase params success
     @amount_purchase = 4.11
     @credit_card_purchase_success = credit_card('4111111111111111', month: '01', year: '2029', first_name: 'Marcus', last_name: 'Rashford', verification_value: '123')
+
+    # Update 'key' and 'secret' with API keys. Note the 'avsStreet' and 'avsZip' are the values obtained from credi card input on MX Merchant
     @option_spr = {
       merchant: 514391592,
       billing_address: address,
-      key: '',
-      secret: '='
+      key: 'Consumer API Key',
+      secret: 'Consumer API Secret',
+      avsStreet: '666',
+      avsZip: '55044'
     }
-    # purchase params success end
+
 
     # purchase params fail
     @credit_card_purchase_fail = credit_card('4111', month: '01', year: '2029', first_name: 'Marcus', last_name: 'Rashford', verification_value: '123')
@@ -335,13 +282,11 @@ class PriorityTest < Test::Unit::TestCase
       @gateway.purchase(@amount_purchase, @credit_card_purchase_success, @option_spr)
     end.respond_with(successful_purchase_response)
 
-    # byebug
     assert_success response
     assert_equal 'Succeeded', response.message
-    # byebug
     assert_equal 'Approved', response.params['status']
     assert_equal 'Sale', response.params['type']
-    # byebug
+
     assert response.test?
   end
 
@@ -354,22 +299,17 @@ class PriorityTest < Test::Unit::TestCase
     assert_equal 'Declined', response.params['status']
 
     assert_equal 'Invalid card number', response.params['authMessage']
-    # assert_nil response.authorization
     assert response.test?
   end
 
   def test_successful_authorize
-    # byebug
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card_purchase_success, @option_spr)
     end.respond_with(successful_authorize_response)
-    # byebug
     assert_success response
     assert_equal 'Succeeded', response.message
-    # byebug
     assert_equal 'Approved', response.params['status']
     assert_equal 'Authorization', response.params['type']
-    # byebug
     assert response.test?
   end
 
@@ -378,7 +318,6 @@ class PriorityTest < Test::Unit::TestCase
       @gateway.purchase(@amount_purchase, @credit_card_purchase_fail, @option_spr)
     end.respond_with(failed_authorize_response)
 
-    # byebug
     assert_success response
     assert_equal 'Declined', response.params['status']
 
@@ -389,10 +328,8 @@ class PriorityTest < Test::Unit::TestCase
 
   def test_successful_capture
     response = stub_comms do
-    #   byebug
       @gateway.capture(@amount_authorize, 'authobj', @option_spr)
     end.respond_with(successful_capture_response)
-    # byebug
     assert_success response
     assert_equal 'Succeeded', response.message
     assert_equal 'PaQLIYLRdWtcFKl5VaKTdUVxMutXJ5Ru', response.authorization
@@ -400,47 +337,22 @@ class PriorityTest < Test::Unit::TestCase
 
   def test_failed_capture
     response = stub_comms do
-      @gateway.capture(@amount_authorize, 'bogus', '', {})
+      @gateway.capture(@amount_authorize, 'bogus', {})
     end.respond_with(failed_capture_response)
-    # byebug
     assert_failure response
     assert_equal 'Validation error happened', response.params['message']
-    # byebug
     assert_equal nil, response.authorization
   end
 
-#   def test_successful_void
-#     response = stub_comms do
-#       @gateway.void(12345678, @option_spr)
-#     end.respond_with(successful_void_response)
-#     byebug
-#     assert_success response
-#     assert_equal '204', response.code
-#   end
-
   def test_failed_void
     response = stub_comms do
-      @gateway.void(123456,  @option_spr)
+      @gateway.void(123456, @option_spr)
     end.respond_with(failed_void_response)
-    # byebug
     assert_failure response
     assert_equal 'Unauthorized', response.params['message']
 
     assert_equal 'Original Payment Not Found Or You Do Not Have Access.', response.params['details'][0]
   end
-
-  # def test_authorize_passes_customer_data_from_payment_method_when_no_address_is_provided
-  #   stub_comms do
-  #     @gateway.authorize(@amount, @credit_card, { email: @email })
-  #   end.check_request do |_endpoint, data, _headers|
-  #     assert_customer_data_passed(
-  #       data,
-  #       @credit_card.first_name,
-  #       @credit_card.last_name,
-  #       @email
-  #     )
-  #   end.respond_with(successful_authorize_response)
-  # end
 
   def test_successful_refund_purchase_response
     @responseStringObj = @response_purchase.transform_keys(&:to_s)
@@ -450,50 +362,35 @@ class PriorityTest < Test::Unit::TestCase
     @responseStringObj['posData'] = @responseStringObj['posData'].transform_keys(&:to_s)
     @responseStringObj['purchases'][0] = @responseStringObj['purchases'][0].transform_keys(&:to_s)
     @responseStringObj['risk'] = @responseStringObj['risk'].transform_keys(&:to_s)
+    # key and secret is from MX Merchant settings API Key
+    @responseStringObj.update(key: @option_spr[:key])
+    @responseStringObj.update(secret: @option_spr[:secret])
 
     response = stub_comms do
-      @gateway.refund(@amount_refund, @credit_card, @responseStringObj['authCode'], @responseStringObj, @option_spr)
+      @gateway.refund(@amount_refund, @credit_card, @responseStringObj)
     end.check_request do |_endpoint, data, _headers|
-    #   byebug
-      # assert_match %r{Transaction\/1234567\/Refund$}, endpoint
       json = JSON.parse(data)
 
       assert_equal json['amount'], @amount_refund
-      assert_equal json['authCode'], @responseStringObj['authCode']
       assert_creditcard_data_passed(data, @credit_card)
       asset_refund_data_passed(data, @responseStringObj)
     end.respond_with(successful_refund_purchase_response)
-    # byebug
     assert_success response
     assert_equal 'PU2QSwaBlKx5OEzBKavi1L0Dy9yIMSEx', response.authorization
     assert response.test?
   end
 
-#   def test_successful_refund
-#     response = stub_comms do
-#       @gateway.refund(@amount, '1234567')
-#     end.check_request do |endpoint, data, _headers|
-#         byebug
-#       assert_match %r{Transaction\/1234567\/Refund$}, endpoint
-#       json = JSON.parse(data)
-#       assert_equal '100', json['Refund']['TotalAmount']
-#       assert_equal '1234567', json['Refund']['TransactionID']
-#     end.respond_with(successful_refund_response)
-
-#     assert_success response
-#     assert_equal 'Transaction Approved Successful', response.message
-#     assert_equal 10488258, response.authorization
-#     assert response.test?
-#   end
   def test_successful_refund
     @responseStringObj = @response_purchase.transform_keys(&:to_s)
     @amount_refund = @responseStringObj['amount'].to_f * -1
     @credit_refund = @responseStringObj['cardAccount'].transform_keys(&:to_s)
     @responseStringObj['cardAccount'] = @responseStringObj['cardAccount'].transform_keys(&:to_s)
+    # key and secret is from MX Merchant settings API Key
+    @responseStringObj.update(key: @option_spr[:key])
+    @responseStringObj.update(secret: @option_spr[:secret])
     response = stub_comms do
-      @gateway.refund(@amount_refund, @credit_refund, @responseStringObj['authCode'], @responseStringObj,@option_spr)
+      @gateway.refund(@amount_refund, @credit_refund, @responseStringObj)
     end.respond_with(successful_refund_response)
-    # byebug
     assert_success response
     assert_equal 'Approved', response.params['status']
     assert_equal 'Approved or completed successfully. ', response.params['authMessage']
@@ -506,180 +403,29 @@ class PriorityTest < Test::Unit::TestCase
     @amount_refund = @responseStringObj['amount'].to_f * -1
     @credit_refund = @responseStringObj['cardAccount'].transform_keys(&:to_s)
     @responseStringObj['cardAccount'] = @responseStringObj['cardAccount'].transform_keys(&:to_s)
+    # key and secret is from MX Merchant settings API Key
+    @responseStringObj.update(key: @option_spr[:key])
+    @responseStringObj.update(secret: @option_spr[:secret])
+
     response = stub_comms do
-      @gateway.refund(@amount_refund, @credit_refund, @responseStringObj['authCode'], @responseStringObj,@option_spr)
+      @gateway.refund(@amount_refund, @credit_refund, @responseStringObj)
     end.respond_with(failed_refund_purchase_response)
-    # byebug
     assert_success response
     assert_equal 'Declined', response.params['status']
     assert_equal 'Payment already refunded', response.params['authMessage']
     assert response.test?
   end
 
-  # def test_authorize_passes_customer_data_from_payment_method_when_no_address_is_provided
-  #   stub_comms do
-  #     @gateway.authorize(@amount, @credit_card, { email: @email })
-  #   end.check_request do |_endpoint, data, _headers|
-  #     assert_customer_data_passed(
-  #       data,
-  #       @credit_card.first_name,
-  #       @credit_card.last_name,
-  #       @email
-  #     )
-  #   end.respond_with(successful_authorize_response)
-  # end
-
   def test_getpaymentstatus
-    # byebug
     assert void = @gateway.getpaymentstatus(10000000227555, @option_spr)
     assert_success void
-    # byebug
     assert_equal 'Card', void.params['tenderType']
   end
 
-  # def test_successful_refund_purchase_failed_as_batch_not_closed
-  #   response = @gateway.purchase(@amount_purchase, @credit_card_purchase_success, @option_spr)
-  #   byebug
-  #   assert_success response
-  #   byebug
-  #   @amount_refund = response.params['amount'].to_f * -1
-  #   refund = @gateway.refund(@amount_refund, response.params['cardAccount'], response.params['authCode'], response.params)
-  #   assert_success refund
-  #   byebug
-  #   assert_equal 'Succeeded', refund.message
-  # end
-
-  # def test_successful_refund
-  #   byebug
-  #   response = @gateway.refund(@amount_refund, @credit_card_refund, @authCode_refund, @options_refund)
-  #   byebug
-  #   @gateway.expects(:ssl_post).returns(successful_purchase_response)
-
-  #   assert_success response
-
-  #   assert_equal 'REPLACE', response.authorization
-  #   assert response.test?
-  # end
-
-  # def test_successful_void
-  #   byebug
-  #   response = @gateway.void(@cardnumber_verify)
-  #   puts response
-  #   @gateway.expects(:ssl_post).returns(successful_purchase_response)
-  #   byebug
-  #   assert_success response
-
-  #   assert_equal 'REPLACE', response.authorization
-  #   assert response.test?
-  # end
-
-  # def test_successful_verify
-  #   byebug
-  #   response = @gateway.verify(@cardnumber_verify)
-  #   puts response
-  #   @gateway.expects(:ssl_post).returns(successful_purchase_response)
-  #   byebug
-  #   assert_success response
-
-  #   assert_equal 'REPLACE', response.authorization
-  #   assert response.test?
-  # end
-
-  # def test_transcript_scrubbing
-  #   response = @gateway.scrub(transcript)
-  #   byebug
-  #   put response
-  #   # assert_equal scrubbed_transcript,
-  # end
-
-  #   def test_successful_authorize
-  #     byebug
-  #     response = @gateway.authorize(@amount, @credit_card_purchase, @merchant, @option_purchase)
-  #     byebug
-  #     @gateway.expects(:ssl_post).returns(successful_purchase_response)
-
-  #     assert_success response
-
-  #     assert_equal 'REPLACE', response.authorization
-  #     assert response.test?
-  #  end
-
-  # def test_failed_purchase
-  #   puts 'Hello Ruby test world'
-  #   @gateway.expects(:ssl_post).returns(failed_purchase_response)
-
-  #   response = @gateway.purchase(@amount, @credit_card, @options)
-  #   assert_failure response
-  #   assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
-  # end
-
-  # def test_successful_authorize; end
-
-  # def test_failed_authorize; end
-
-  # def test_successful_capture; end
-
-  # def test_failed_capture; end
-
-  # def test_successful_refund; end
-
-  # def test_failed_refund; end
-
-  # def test_successful_void; end
-
-  # def test_failed_void; end
-
-  # def test_successful_verify; end
-
-  # def test_successful_verify_with_failed_void; end
-
-  # def test_failed_verify; end
-
   def test_scrub
-    # byebug
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
-    # byebug
   end
-
-  # private
-
-  # def pre_scrubbed
-  #   '
-  #     Run the remote tests for this gateway, and then put the contents of transcript.log here.
-  #   '
-  # end
-
-  # def post_scrubbed
-  #   '
-  #     Put the scrubbed contents of transcript.log here after implementing your scrubbing function.
-  #     Things to scrub:
-  #       - Credit card number
-  #       - CVV
-  #       - Sensitive authentication details
-  #   '
-  # end
-
-  # def successful_purchase_response
-  #   %(
-  #     Easy to capture by setting the DEBUG_ACTIVE_MERCHANT environment variable
-  #     to "true" when running remote tests:
-
-  #     $ DEBUG_ACTIVE_MERCHANT=true ruby -Itest \
-  #       test/remote/gateways/remote_card_stream_test.rb \
-  #       -n test_successful_purchase
-  #   )
-  # end
-
-  # def failed_purchase_response; end
-
-  # def successful_authorize_response; end
-
-  # def failed_authorize_response; end
-
-  # def successful_capture_response; end
-
-  # def failed_capture_response; end
 
   def successful_refund_response
     %(
@@ -757,10 +503,6 @@ class PriorityTest < Test::Unit::TestCase
     )
 end
 
-  # def failed_refund_response; end
-
-  # def successful_void_response; end
-
   def assert_creditcard_data_passed(data, creditcard)
     parsed_data = JSON.parse(data)
     card_data = parsed_data['cardAccount']
@@ -778,8 +520,6 @@ end
     assert_equal card_data['cardPresent'], creditcard['cardPresent']
     assert_equal card_data['isDebit'], creditcard['isDebit']
     assert_equal card_data['isCorp'], creditcard['isCorp']
-    # Test is asset test is working
-    # assert_equal card_data['last4'], 7777
   end
 
   def asset_refund_data_passed(data, purchaseresponse)
@@ -802,14 +542,9 @@ end
     purchaseresponseposdata = purchaseresponse['posData']
 
     assert_equal posdata['panCaptureMethod'], purchaseresponseposdata['panCaptureMethod']
-    # posdata , params['posData'] , {}
-    # posdata['panCaptureMethod'] , 'Manual'
 
     purchasesdata = parsed_data['purchases'][0]
     purchaseresponsepurchase = purchaseresponse['purchases'][0]
-
-    # params['purchases'] = options['purchases']
-    # tax1 = {}
 
     assert_equal purchasesdata['code'], purchaseresponsepurchase['code']
     assert_equal purchasesdata['dateCreated'], purchaseresponsepurchase['dateCreated']
@@ -828,18 +563,14 @@ end
     assert_equal purchasesdata['unitOfMeasure'], purchaseresponsepurchase['unitOfMeasure']
     assert_equal purchasesdata['unitPrice'], purchaseresponsepurchase['unitPrice']
 
-    # params['purchases'] << tax1
-
     assert_equal parsed_data['reference'], purchaseresponse['reference']
     assert_equal parsed_data['replayId'], nil
     assert_equal parsed_data['requireSignature'], false
     assert_equal parsed_data['reviewIndicator'], nil
 
-    # params['risk'] = options['risk']
     riskdata = parsed_data['risk']
     purchaseresponserisk = purchaseresponse['risk']
 
-    # risk = params['risk'] = {}
     assert_equal riskdata['avsAddressMatch'], purchaseresponserisk['avsAddressMatch']
     assert_equal riskdata['avsResponse'], purchaseresponserisk['avsResponse']
     assert_equal riskdata['avsZipMatch'], purchaseresponserisk['avsZipMatch']
@@ -1315,9 +1046,6 @@ end
     %(
       #<Net::HTTPNoContent 204 No Content readbody=true>
     )
-    # %(
-    #   "code"=>"204"
-    # )
   end
 
   def successful_refund_purchase_response
