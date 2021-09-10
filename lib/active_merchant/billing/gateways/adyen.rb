@@ -532,7 +532,7 @@ module ActiveMerchant #:nodoc:
           raw_response = e.response.body
           response = parse(raw_response)
         end
-        
+
         success = success_from(action, response, options)
         Response.new(
           success,
