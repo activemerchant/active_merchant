@@ -1384,16 +1384,6 @@ class AdyenTest < Test::Unit::TestCase
     RESPONSE
   end
 
-  def failed_authorize_response
-    <<-RESPONSE
-    {
-      "pspReference": "8514775559925128",
-      "refusalReason": "Expired Card",
-      "resultCode": "Refused"
-    }
-    RESPONSE
-  end
-
   def failed_authorize_3ds2_response
     <<-RESPONSE
     {

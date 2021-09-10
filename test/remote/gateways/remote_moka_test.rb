@@ -10,6 +10,11 @@ class RemoteMokaTest < Test::Unit::TestCase
     @options = {
       description: 'Store Purchase'
     }
+    @three_ds_options = @options.merge({
+      execute_threed: true,
+      redirect_type: 1,
+      redirect_url: 'www.example.com'
+    })
   end
 
   def test_invalid_login
@@ -164,6 +169,42 @@ class RemoteMokaTest < Test::Unit::TestCase
     assert_failure response
     assert_match 'PaymentDealer.DoDirectPayment.VirtualPosNotAvailable', response.message
   end
+
+  # 3ds Tests
+
+  def test_successful_initiation_of_3ds_authorize
+    response = @gateway.authorize(@amount, @credit_card, @three_ds_options)
+
+    assert_success response
+    assert_equal 'Success', response.message
+    assert response.params['Data']['Url'].present?
+    assert response.params['Data']['CodeForHash'].present?
+  end
+
+  def test_failed_3ds_authorize
+    response = @gateway.authorize(@amount, @declined_card, @three_ds_options)
+
+    assert_failure response
+    assert_equal 'PaymentDealer.DoDirectPayment3dRequest.VirtualPosNotAvailable', response.message
+  end
+
+  def test_successful_initiation_of_3ds_purchase
+    response = @gateway.purchase(@amount, @credit_card, @three_ds_options)
+
+    assert_success response
+    assert_equal 'Success', response.message
+    assert response.params['Data']['Url'].present?
+    assert response.params['Data']['CodeForHash'].present?
+  end
+
+  def test_failed_3ds_purchase
+    response = @gateway.purchase(@amount, @declined_card, @three_ds_options)
+
+    assert_failure response
+    assert_equal 'PaymentDealer.DoDirectPayment3dRequest.VirtualPosNotAvailable', response.message
+  end
+
+  # Scrubbing Tests
 
   def test_transcript_scrubbing_with_string_dealer_code
     gateway = MokaGateway.new(fixtures(:moka))

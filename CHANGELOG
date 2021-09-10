@@ -27,6 +27,7 @@
 * Monei: Typo Correction on Billing Details [tatsianaclifton] #4108
 * Paysafe: Add support for 3DS [meagabeth] #4109
 * Adyen: Add ACH Support [almalee24] #4105
+* Moka: Support 3DS endpoint and update test url [dsmcclain] #4110
 
 == Version 1.122.0 (August 3rd, 2021)
 * Orbital: Correct success logic for refund [tatsianaclifton] #4014

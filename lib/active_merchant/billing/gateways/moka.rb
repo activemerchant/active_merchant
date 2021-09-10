@@ -1,7 +1,7 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class MokaGateway < Gateway
-      self.test_url = 'https://service.testmoka.com'
+      self.test_url = 'https://service.refmoka.com'
       self.live_url = 'https://service.moka.com'
 
       self.supported_countries = %w[GB TR US]
@@ -55,8 +55,10 @@ module ActiveMerchant #:nodoc:
         post[:PaymentDealerRequest] = {}
         options[:pre_auth] = 0
         add_auth_purchase(post, money, payment, options)
+        add_3ds_data(post, options) if options[:execute_threed]
 
-        commit('purchase', post)
+        action = options[:execute_threed] ? 'three_ds_purchase' : 'purchase'
+        commit(action, post)
       end
 
       def authorize(money, payment, options = {})
@@ -64,8 +66,10 @@ module ActiveMerchant #:nodoc:
         post[:PaymentDealerRequest] = {}
         options[:pre_auth] = 1
         add_auth_purchase(post, money, payment, options)
+        add_3ds_data(post, options) if options[:execute_threed]
 
-        commit('authorize', post)
+        action = options[:execute_threed] ? 'three_ds_authorize' : 'authorize'
+        commit(action, post)
       end
 
       def capture(money, authorization, options = {})
@@ -132,6 +136,12 @@ module ActiveMerchant #:nodoc:
         add_additional_transaction_data(post, options)
         add_buyer_information(post, payment, options)
         add_basket_product(post, options[:basket_product]) if options[:basket_product]
+      end
+
+      def add_3ds_data(post, options)
+        post[:PaymentDealerRequest][:ReturnHash] = 1
+        post[:PaymentDealerRequest][:RedirectUrl] = options[:redirect_url] || ''
+        post[:PaymentDealerRequest][:RedirectType] = options[:redirect_type] || 0
       end
 
       def add_payment_dealer_authentication(post)
@@ -232,6 +242,8 @@ module ActiveMerchant #:nodoc:
 
       def endpoint(action)
         case action
+        when 'three_ds_authorize', 'three_ds_purchase'
+          'DoDirectPaymentThreeD'
         when 'purchase', 'authorize'
           'DoDirectPayment'
         when 'capture'
@@ -256,7 +268,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response.dig('Data', 'IsSuccessful')
+        return response.dig('Data', 'IsSuccessful') if response.dig('Data', 'IsSuccessful').to_s.present?
+
+        response['ResultCode']&.casecmp('success') == 0
       end
 
       def message_from(response)
