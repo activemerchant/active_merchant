@@ -191,6 +191,26 @@ module ActiveMerchant
         end
       end
 
+      def retrieve(vault_token, options = {})
+        action = :retrieve
+        payment_method_details = PaymentMethodDetails.new(vault_token)
+        response = api_request(action, nil, :get, payment_method_details, nil)
+
+        parsed = parse(response, action)
+
+        succeeded = success_from(action, response)
+        Response.new(
+          succeeded,
+          message_from(succeeded, response),
+          parsed,
+          authorization: authorization_from(action, parsed, payment_method_details),
+          avs_result: avs_result(parsed),
+          cvv_result: cvv_result(parsed),
+          error_code: error_code_from(parsed),
+          test: test?
+        )
+      end
+
       def verify_credentials
         begin
           ssl_get(url.to_s, headers)
@@ -526,7 +546,7 @@ module ActiveMerchant
 
       def url(action = nil, payment_method_details = PaymentMethodDetails.new(), options = {})
         base = test? ? test_url : live_url
-        resource = if [:store, :update].include?(action)
+        resource = if [:store, :update, :retrieve].include?(action)
                      "vaulted-shoppers"
                    elsif action == :create_subscription
                      "recurring/ondemand"

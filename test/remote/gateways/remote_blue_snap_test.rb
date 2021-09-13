@@ -483,6 +483,16 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     assert_equal 'Success', create_subscription_response.message
   end
 
+  def test_successful_retrieve_subscription
+    assert response = @gateway.store(@credit_card)
+    assert response.success?
+    assert response.test?
+
+    assert response = @gateway.retrieve(response.responses.last.params["vaulted-shopper-id"])
+    assert response.success?
+    assert response.test?
+  end
+
   def test_invalid_login
     gateway = BlueSnapGateway.new(api_username: 'unknown', api_password: 'unknown')
 

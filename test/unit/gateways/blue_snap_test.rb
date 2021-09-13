@@ -300,6 +300,16 @@ class BlueSnapTest < Test::Unit::TestCase
     assert_equal '10001', response.error_code
   end
 
+  def test_successful_credit_card_retrieve_request
+    @gateway.stubs(:raw_ssl_request).returns(successful_store_response, successful_retrieve_subscription_response)
+    assert response = @gateway.store(@credit_card, @options)
+    assert response.success?
+    assert response.test?
+    assert response = @gateway.retrieve("32926979")
+    assert response.success?
+    assert response.test?
+  end
+
   def test_successful_create_subscription
     response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.create_subscription(@options_for_create_subscription)
@@ -1157,6 +1167,67 @@ class BlueSnapTest < Test::Unit::TestCase
     XML
 
     response.headers = { 'content-location' => 'https://sandbox.bluesnap.com/services/2/recurring/ondemand' }
+    response
+  end
+
+  def successful_retrieve_subscription_response
+    response = MockResponse.succeeded <<-XML
+      <?xml version=\"1.0\" encoding=\"UTF-8\"?>
+      <vaulted-shopper xmlns=\"http://ws.plimus.com\">
+        <vaulted-shopper-id>32926979</vaulted-shopper-id>
+        <first-name>Lafayette</first-name>
+        <last-name>Cronin</last-name>
+        <email>Martin_Yundt78@example.org</email>
+        <country>us</country>
+        <state>SC</state>
+        <city>Gloverhaven</city>
+        <zip>62956</zip>
+        <shopper-currency>USD</shopper-currency>
+        <payment-sources>
+            <credit-card-info>
+              <billing-contact-info>
+                  <first-name>Lafayette</first-name>
+                  <last-name>Cronin</last-name>
+                  <city>Gloverhaven</city>
+                  <state>SC</state>
+                  <zip>62956</zip>
+                  <country>us</country>
+              </billing-contact-info>
+              <credit-card>
+                  <card-last-four-digits>1096</card-last-four-digits>
+                  <card-type>MASTERCARD</card-type>
+                  <card-sub-type>CREDIT</card-sub-type>
+                  <card-category>STANDARD</card-category>
+                  <bin-category>CONSUMER</bin-category>
+                  <card-regulated>N</card-regulated>
+                  <issuing-bank>PUBLIC BANK BERHAD</issuing-bank>
+                  <expiration-month>09</expiration-month>
+                  <expiration-year>2022</expiration-year>
+                  <issuing-country-code>fr</issuing-country-code>
+              </credit-card>
+              <processing-info>
+                  <cvv-response-code>ND</cvv-response-code>
+                  <avs-response-code-zip>U</avs-response-code-zip>
+                  <avs-response-code-address>U</avs-response-code-address>
+                  <avs-response-code-name>U</avs-response-code-name>
+              </processing-info>
+              <date-created>09/13/2021</date-created>
+              <time-created>03:12:02</time-created>
+            </credit-card-info>
+        </payment-sources>
+        <last-payment-info>
+            <payment-method>CC</payment-method>
+            <credit-card>
+              <card-last-four-digits>1096</card-last-four-digits>
+              <card-type>MASTERCARD</card-type>
+            </credit-card>
+        </last-payment-info>
+        <date-created>09/13/2021</date-created>
+        <time-created>03:12:01</time-created>
+      </vaulted-shopper>"
+    XML
+
+    response.headers = { 'content-location' => 'https://sandbox.bluesnap.com/services/2/vaulted-shoppers/32926979' }
     response
   end
 
