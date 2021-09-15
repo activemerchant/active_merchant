@@ -32,6 +32,7 @@ module ActiveMerchant #:nodoc:
         add_exemption(post, options)
         add_stored_credentials(post, options)
         add_ntid(post, options)
+        add_claim_without_transaction_id(post, options)
         add_error_on_requires_action(post, options)
         request_three_d_secure(post, options)
 
@@ -324,6 +325,19 @@ module ActiveMerchant #:nodoc:
         post[:payment_method_options][:card][:mit_exemption] = {}
 
         post[:payment_method_options][:card][:mit_exemption][:network_transaction_id] = options[:network_transaction_id] if options[:network_transaction_id]
+      end
+
+      def add_claim_without_transaction_id(post, options = {})
+        return if options[:stored_credential] || options[:network_transaction_id] || options[:ds_transaction_id]
+        return unless options[:claim_without_transaction_id]
+
+        post[:payment_method_options] ||= {}
+        post[:payment_method_options][:card] ||= {}
+        post[:payment_method_options][:card][:mit_exemption] = {}
+
+        # Stripe PI accepts claim_without_transaction_id for transactions without transaction ids.
+        # Gateway validation for this field occurs through a different service, before the transaction request is sent to the gateway.
+        post[:payment_method_options][:card][:mit_exemption][:claim_without_transaction_id] = options[:claim_without_transaction_id]
       end
 
       def add_error_on_requires_action(post, options = {})

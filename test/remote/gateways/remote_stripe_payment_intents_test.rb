@@ -482,6 +482,50 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     end
   end
 
+  def test_successful_off_session_purchase_when_claim_without_transaction_id_present
+    [@three_ds_off_session_credit_card, @three_ds_authentication_required_setup_for_off_session].each do |card_to_use|
+      assert response = @gateway.purchase(@amount, card_to_use, {
+        currency: 'USD',
+        execute_thread: true,
+        confirm: true,
+        off_session: true,
+        claim_without_transaction_id: true
+      })
+      assert_success response
+      assert_equal 'succeeded', response.params['status']
+      assert response.params.dig('charges', 'data')[0]['captured']
+    end
+  end
+
+  def test_successful_off_session_purchase_with_authentication_when_claim_without_transaction_id_is_false
+    assert response = @gateway.purchase(@amount, @three_ds_authentication_required_setup_for_off_session, {
+      currency: 'USD',
+      execute_thread: true,
+      confirm: true,
+      off_session: true,
+      claim_without_transaction_id: false
+    })
+    # Purchase should succeed since other credentials are passed
+    assert_success response
+    assert_equal 'succeeded', response.params['status']
+    assert response.params.dig('charges', 'data')[0]['captured']
+  end
+
+  def test_failed_off_session_purchase_with_card_when_claim_without_transaction_id_is_false
+    assert response = @gateway.purchase(@amount, @three_ds_off_session_credit_card, {
+      currency: 'USD',
+      execute_thread: true,
+      confirm: true,
+      off_session: true,
+      claim_without_transaction_id: false
+    })
+    # Purchase should fail since no other credentials are passed,
+    # and Stripe will not manage the transaction without a transaction id
+    assert_failure response
+    assert_equal 'failed', response.params.dig('error', 'payment_intent', 'charges', 'data')[0]['status']
+    assert !response.params.dig('error', 'payment_intent', 'charges', 'data')[0]['captured']
+  end
+
   def test_purchase_fails_on_unexpected_3ds_initiation
     options = {
       currency: 'USD',
