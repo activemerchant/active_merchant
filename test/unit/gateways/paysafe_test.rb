@@ -12,6 +12,16 @@ class PaysafeTest < Test::Unit::TestCase
         dynamic_descriptor: 'Store Purchase'
       }
     }
+
+    @more_options = {
+      phone: '111-222-3456',
+      email: 'profile@memail.com',
+      date_of_birth: {
+        month: 1,
+        year: 1979,
+        day: 1
+      }
+    }
   end
 
   def test_successful_purchase
@@ -121,6 +131,16 @@ class PaysafeTest < Test::Unit::TestCase
     assert_equal '493936', response.params['authCode']
   end
 
+  def test_successful_store
+    @gateway.expects(:ssl_request).returns(successful_store_response)
+
+    response = @gateway.store(@credit_card, @more_options)
+    assert_success response
+
+    assert_equal '111-222-3456', response.params['phone']
+    assert_equal 'Longbob Longsen', response.params['cards'].first['holderName']
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
@@ -214,5 +234,9 @@ class PaysafeTest < Test::Unit::TestCase
 
   def failed_void_response
     '{"error":{"code":"5023","message":"Request method POST not supported","links":[{"rel":"errorinfo","href":"https://developer.paysafe.com/en/rest-api/cards/test-and-go-live/card-errors/#ErrorCode5023"}]}}'
+  end
+
+  def successful_store_response
+    '{"id":"bd4e8c66-b023-4b38-b499-bc6d447d1466","status":"ACTIVE","merchantCustomerId":"965d3aff71fb93343ee48513","locale":"en_US","firstName":"Longbob","lastName":"Longsen","dateOfBirth":{"year":1979,"month":1,"day":1},"paymentToken":"PnCQ1xyGCB4sOEq","phone":"111-222-3456","email":"profile@memail.com","addresses":[],"cards":[{"status":"ACTIVE","id":"77685b40-e953-4999-a161-d13b46a8232a","cardBin":"411111","lastDigits":"1111","cardExpiry":{"year":2022,"month":9},"holderName":"Longbob Longsen","cardType":"VI","cardCategory":"CREDIT","paymentToken":"Ct0RrnyIs4lizeH","defaultCardIndicator":true}]}'
   end
 end

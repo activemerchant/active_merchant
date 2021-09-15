@@ -1,9 +1,12 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Adyen: Add network tokenization support to Adyen gateway [mymir] #4101
+* Adyen: Add ACH Support [almalee24] #4105
+* Moka: Support 3DS endpoint and update test url [dsmcclain] #4110
+* Paysafe: Adjust profile data [meagabeth] #4112
 
 == Version 1.123.0 (September 10th, 2021)
-* Adyen: Add network tokenization support to Adyen gateway [mymir] #4101
 * Paysafe: Add gateway integration [meagabeth] #4085
 * Elavon: Support recurring transactions with stored credentials [cdmackeyfree] #4086
 * Orbital: Truncate three_d_secure[:version] [carrigan] #4087
@@ -26,8 +29,6 @@
 * Monei: Update Creation of Billing Details [tatsianaclifton] #4107
 * Monei: Typo Correction on Billing Details [tatsianaclifton] #4108
 * Paysafe: Add support for 3DS [meagabeth] #4109
-* Adyen: Add ACH Support [almalee24] #4105
-* Moka: Support 3DS endpoint and update test url [dsmcclain] #4110
 
 == Version 1.122.0 (August 3rd, 2021)
 * Orbital: Correct success logic for refund [tatsianaclifton] #4014
