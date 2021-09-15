@@ -180,21 +180,21 @@ class RemotePaysafeTest < Test::Unit::TestCase
 
   # Can test refunds by logging into our portal and grabbing transaction IDs from settled transactions
   # Refunds will return 'PENDING' status until they are batch processed at EOD
-  def test_successful_refund
-    auth = 'e25875b2-2a72-4a31-924c-66667507cad6'
+  # def test_successful_refund
+  #   auth = ''
 
-    assert refund = @gateway.refund(@amount, auth)
-    assert_success refund
-    assert_equal 'PENDING', refund.message
-  end
+  #   assert refund = @gateway.refund(@amount, auth)
+  #   assert_success refund
+  #   assert_equal 'PENDING', refund.message
+  # end
 
-  def test_partial_refund
-    auth = 'cb6fed1e-1c71-4e87-abbb-3beae97d7775'
+  # def test_partial_refund
+  #   auth = ''
 
-    assert refund = @gateway.refund(@amount - 1, auth)
-    assert_success refund
-    assert_equal 'PENDING', refund.message
-  end
+  #   assert refund = @gateway.refund(@amount - 1, auth)
+  #   assert_success refund
+  #   assert_equal 'PENDING', refund.message
+  # end
 
   def test_failed_refund
     response = @gateway.refund(@amount, 'thisisnotavalidtrasactionid')

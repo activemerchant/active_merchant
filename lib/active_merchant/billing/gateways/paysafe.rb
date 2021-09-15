@@ -119,9 +119,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_billing_address(post, options)
-        return unless options[:billing_address] || options[:address]
+        return unless address = options[:billing_address] || options[:address]
 
-        address = options[:billing_address] || options[:address]
         post[:billingDetails] = {}
         post[:billingDetails][:street] = address[:address1]
         post[:billingDetails][:city] = address[:city]
@@ -134,9 +133,8 @@ module ActiveMerchant #:nodoc:
       # The add_address_for_vaulting method is applicable to the store method, as the APIs address
       # object is formatted differently from the standard transaction billing address
       def add_address_for_vaulting(post, options)
-        return unless options[:billing_address || options[:address]]
+        return unless address = options[:billing_address] || options[:address]
 
-        address = options[:billing_address] || options[:address]
         post[:billingAddress] = {}
         post[:billingAddress][:street] = address[:address1]
         post[:billingAddress][:city] = address[:city]
@@ -147,8 +145,6 @@ module ActiveMerchant #:nodoc:
 
       # This data is specific to creating a profile at the gateway's vault level
       def add_profile_data(post, payment, options)
-        address = options[:billing_address] || options[:address]
-
         post[:firstName] = payment.first_name
         post[:lastName] = payment.last_name
         post[:dateOfBirth] = {}
@@ -156,8 +152,13 @@ module ActiveMerchant #:nodoc:
         post[:dateOfBirth][:month] = options[:date_of_birth][:month]
         post[:dateOfBirth][:day] = options[:date_of_birth][:day]
         post[:email] = options[:email] if options[:email]
-        post[:phone] = (address[:phone] || options[:phone]) if address[:phone] || options[:phone]
         post[:ip] = options[:ip] if options[:ip]
+
+        if options[:phone]
+          post[:phone] = options[:phone]
+        elsif address = options[:billing_address] || options[:address]
+          post[:phone] = address[:phone] if address[:phone]
+        end
       end
 
       def add_store_data(post, payment, options)
