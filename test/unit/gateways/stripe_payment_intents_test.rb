@@ -351,6 +351,53 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     end.respond_with(successful_create_intent_response)
   end
 
+  def test_successful_off_session_intent_creation_when_claim_without_transaction_id_present
+    [@three_ds_off_session_credit_card, @three_ds_authentication_required_setup_for_off_session].each do |card_to_use|
+      stub_comms(@gateway, :ssl_request) do
+        @gateway.purchase(@amount, card_to_use, {
+          currency: 'USD',
+          execute_threed: true,
+          confirm: true,
+          off_session: true,
+          claim_without_transaction_id: true
+        })
+      end.check_request do |_method, _endpoint, data, _headers|
+        assert_match(%r{payment_method_options\[card\]\[mit_exemption\]\[claim_without_transaction_id\]=true}, data)
+      end.respond_with(successful_create_intent_response)
+    end
+  end
+
+  def test_successful_off_session_intent_creation_when_claim_without_transaction_id_is_false
+    [@three_ds_off_session_credit_card, @three_ds_authentication_required_setup_for_off_session].each do |card_to_use|
+      stub_comms(@gateway, :ssl_request) do
+        @gateway.purchase(@amount, card_to_use, {
+          currency: 'USD',
+          execute_threed: true,
+          confirm: true,
+          off_session: true,
+          claim_without_transaction_id: false
+        })
+      end.check_request do |_method, _endpoint, data, _headers|
+        assert_no_match(%r{payment_method_options\[card\]\[mit_exemption\]\[claim_without_transaction_id\]}, data)
+      end.respond_with(successful_create_intent_response)
+    end
+  end
+
+  def test_successful_off_session_intent_creation_without_claim_without_transaction_id
+    [@three_ds_off_session_credit_card, @three_ds_authentication_required_setup_for_off_session].each do |card_to_use|
+      stub_comms(@gateway, :ssl_request) do
+        @gateway.purchase(@amount, card_to_use, {
+          currency: 'USD',
+          execute_threed: true,
+          confirm: true,
+          off_session: true
+        })
+      end.check_request do |_method, _endpoint, data, _headers|
+        assert_no_match(%r{payment_method_options\[card\]\[mit_exemption\]\[claim_without_transaction_id\]}, data)
+      end.respond_with(successful_create_intent_response)
+    end
+  end
+
   def test_store_does_not_pass_validation_to_attach_by_default
     stub_comms(@gateway, :ssl_request) do
       @gateway.store(@credit_card)
