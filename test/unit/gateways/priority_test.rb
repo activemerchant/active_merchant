@@ -13,10 +13,6 @@ class PriorityTest < Test::Unit::TestCase
     @gateway = PriorityGateway.new(
       key: 'Consumer API Key',
       secret: 'Consumer API Secret',
-      auth: 'contact priority for key',
-      env_verify: 'qa-aus',
-      test_url_verify: 'contact priority for url',
-      live_url_verify: 'contact priority for url',
       cardnumber: '411111'
     )
 
@@ -270,7 +266,6 @@ class PriorityTest < Test::Unit::TestCase
       avsStreet: '666',
       avsZip: '55044'
     }
-
 
     # purchase params fail
     @credit_card_purchase_fail = credit_card('4111', month: '01', year: '2029', first_name: 'Marcus', last_name: 'Rashford', verification_value: '123')

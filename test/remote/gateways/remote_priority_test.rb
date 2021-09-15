@@ -65,83 +65,83 @@ class RemotePriorityTest < Test::Unit::TestCase
 
     # Used by Refund tests
     @response_purchase = {
-      "created": "2021-09-08T18:47:38.543Z",
-      "paymentToken": "PfD0LBepsr2cRR9H5qrUsGrpvHFIs7eG",
+      "created": '2021-09-08T18:47:38.543Z',
+      "paymentToken": 'PfD0LBepsr2cRR9H5qrUsGrpvHFIs7eG',
       "id": 10000001649674,
-      "creatorName": "Mike B",
+      "creatorName": 'Mike B',
       "isDuplicate": false,
       "shouldVaultCard": true,
       "merchantId": 514391592,
-      "batch": "0042",
+      "batch": '0042',
       "batchId": 10000000229441,
-      "tenderType": "Card",
-      "currency": "USD",
-      "amount": "3.33",
+      "tenderType": 'Card',
+      "currency": 'USD',
+      "amount": '3.33',
       "cardAccount": {
-          "cardType": "Visa",
-          "entryMode": "Keyed",
-          "last4": "1111",
-          "cardId": "y15QvOteHZGBm7LH3GNIlTWbA1If",
-          "token": "PfD0LBepsr2cRR9H5qrUsGrpvHFIs7eG",
-          "expiryMonth": "02",
-          "expiryYear": "29",
+        "cardType": 'Visa',
+          "entryMode": 'Keyed',
+          "last4": '1111',
+          "cardId": 'y15QvOteHZGBm7LH3GNIlTWbA1If',
+          "token": 'PfD0LBepsr2cRR9H5qrUsGrpvHFIs7eG',
+          "expiryMonth": '02',
+          "expiryYear": '29',
           "hasContract": false,
           "cardPresent": false,
           "isDebit": false,
           "isCorp": false
       },
       "posData": {
-          "panCaptureMethod": "Manual"
+        "panCaptureMethod": 'Manual'
       },
       "authOnly": false,
-      "authCode": "PPS6fd",
-      "status": "Approved",
+      "authCode": 'PPS6fd',
+      "status": 'Approved',
       "risk": {
-          "cvvResponseCode": "M",
-          "cvvResponse": "Match",
+        "cvvResponseCode": 'M',
+          "cvvResponse": 'Match',
           "cvvMatch": true,
-          "avsResponse": "No Response from AVS",
+          "avsResponse": 'No Response from AVS',
           "avsAddressMatch": false,
           "avsZipMatch": false
       },
       "requireSignature": false,
-      "settledAmount": "0",
-      "settledCurrency": "USD",
+      "settledAmount": '0',
+      "settledCurrency": 'USD',
       "cardPresent": false,
-      "authMessage": "Approved or completed successfully. ",
-      "availableAuthAmount": "0",
-      "reference": "125118000500",
-      "tax": "0.04",
-      "invoice": "T004AAIY",
-      "customerCode": "PTHLT004AAIY",
-      "shipToCountry": "USA",
+      "authMessage": 'Approved or completed successfully. ',
+      "availableAuthAmount": '0',
+      "reference": '125118000500',
+      "tax": '0.04',
+      "invoice": 'T004AAIY',
+      "customerCode": 'PTHLT004AAIY',
+      "shipToCountry": 'USA',
       "purchases": [
-          {
-              "dateCreated": "0001-01-01T00:00:00",
-              "iId": 0,
-              "transactionIId": 0,
-              "transactionId": "0",
-              "name": "Miscellaneous",
-              "description": "Miscellaneous",
-              "code": "MISC",
-              "unitOfMeasure": "EA",
-              "unitPrice": "3.29",
-              "quantity": 1,
-              "taxRate": "0.0121580547112462006079027356",
-              "taxAmount": "0.04",
-              "discountRate": "0",
-              "discountAmount": "0",
-              "extendedAmount": "3.33",
-              "lineItemId": 0
-          }
+        {
+          "dateCreated": '0001-01-01T00:00:00',
+            "iId": 0,
+            "transactionIId": 0,
+            "transactionId": '0',
+            "name": 'Miscellaneous',
+            "description": 'Miscellaneous',
+            "code": 'MISC',
+            "unitOfMeasure": 'EA',
+            "unitPrice": '3.29',
+            "quantity": 1,
+            "taxRate": '0.0121580547112462006079027356',
+            "taxAmount": '0.04',
+            "discountRate": '0',
+            "discountAmount": '0',
+            "extendedAmount": '3.33',
+            "lineItemId": 0
+        }
       ],
-      "clientReference": "PTHLT004AAIY",
-      "type": "Sale",
+      "clientReference": 'PTHLT004AAIY',
+      "type": 'Sale',
       "taxExempt": false,
       "reviewIndicator": 1,
-      "source": "QuickPay",
+      "source": 'QuickPay',
       "shouldGetCreditCardLevel": false
-  }
+    }
     # Refund params end
   end
 
@@ -283,16 +283,40 @@ class RemotePriorityTest < Test::Unit::TestCase
     assert_equal 'Invalid JSON response', batchcheck.params['message'][0..20]
   end
 
+  # Must enter 6 to 10 numbers from start of card to test
   def test_successful_verify
-    response = @gateway.verify(@cardnumber_verify)
+    # Generate jwt token from key and secret. Pass generated jwt to verify function. The verify function requries a jwt for header authorization.
+    jwtresponse = @gateway.createjwt(@option_spr)
+    response = @gateway.verify(@cardnumber_verify, jwtresponse.params['jwtToken'])
     assert_failure response
     assert_match 'JPMORGAN CHASE BANK, N.A.', response.params['bank']['name']
-   end
+  end
 
+  # Must enter 6 to 10 numbers from start of card to test
   def test_failed_verify
-    response = @gateway.verify(12345)
-    assert_failure response
-    assert_match %r{Invalid bank bin number, must be 6-10 digits}, response.params['message']
+    # Generate jwt token from key and secret. Pass generated jwt to verify function. The verify function requries a jwt for header authorization.
+    jwtresponse = @gateway.createjwt(@option_spr)
+    response = @gateway.verify('123456', jwtresponse.params['jwtToken'])
+  rescue StandardError => e
+    if e.to_s.include? 'No bank information found for bin number'
+      response = { 'error' => 'No bank information found for bin number' }
+      assert_match 'No bank information found for bin number', response['error']
+    else
+      assert_match 'No bank information found for bin number', 'error'
+    end
+  end
+
+  def test_failed_verify_must_be_6_to_10_digits
+    # Generate jwt token from key and secret. Pass generated jwt to verify function. The verify function requries a jwt for header authorization.
+    jwtresponse = @gateway.createjwt(@option_spr)
+    response = @gateway.verify('12345', jwtresponse.params['jwtToken'])
+  rescue StandardError => e
+    if e.to_s.include? 'Invalid bank bin number, must be 6-10 digits'
+      response = { 'error' => 'Invalid bank bin number, must be 6-10 digits' }
+      assert_match 'Invalid bank bin number, must be 6-10 digits', response['error']
+    else
+      assert_match 'Invalid bank bin number, must be 6-10 digits', 'error'
+    end
   end
 
   def test_transcript_scrubbing

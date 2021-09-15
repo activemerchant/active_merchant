@@ -1,22 +1,24 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PriorityGateway < Gateway
-      self.test_url = 'https://qa.api.mxmerchant.com/checkout/v3/payment'
-      self.live_url = 'https://qa.api.mxmerchant.com/checkout/v3/payment'
 
-      class_attribute :test_url_verify, :live_url_verify, :test_auth, :live_auth, :test_env_verify, :live_env_verify, :test_url_batch, :live_url_batch, :merchant
+      # UAT
+      self.test_url = 'https://uat.api.mxmerchant.com/checkout/v3/payment'
+      self.live_url = 'https://uat.api.mxmerchant.com/checkout/v3/payment'
 
-      self.test_url_verify = 'Contact priority for url'
-      self.live_url_verify = 'Contact priority for url'
+      class_attribute :test_url_verify, :live_url_verify, :test_auth, :live_auth, :test_env_verify, :live_env_verify, :test_url_batch, :live_url_batch, :test_url_jwt, :live_url_jwt, :merchant
 
-      self.test_url_batch = 'https://qa.api.mxmerchant.com/checkout/v3/batch'
-      self.live_url_batch = 'https://qa.api.mxmerchant.com/checkout/v3/batch'
+      # UAT
+      self.test_url_verify = 'https://uat-api2.mxmerchant.com/merchant/v1/bin'
+      self.live_url_verify = 'https://uat-api2.mxmerchant.com/merchant/v1/bin'
 
-      self.test_auth = 'Contact priority for token'
-      self.live_auth = 'Contact priority for token'
+      # UAT
+      self.test_url_batch = 'https://uat.api.mxmerchant.com/checkout/v3/batch'
+      self.live_url_batch = 'https://uat.api.mxmerchant.com/checkout/v3/batch'
 
-      self.test_env_verify = 'qa-aus'
-      self.live_env_verify = 'qa-aus'
+      # UAT
+      self.test_url_jwt = 'https://uat-api2.mxmerchant.com/security/v1/application/merchantId'
+      self.live_url_jwt = 'https://uat-api2.mxmerchant.com/security/v1/application/merchantId'
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
@@ -28,6 +30,8 @@ module ActiveMerchant #:nodoc:
       STANDARD_ERROR_CODE_MAPPING = {}
 
       def initialize(options = {})
+        # requires!(options, :key, :secret)
+        # @key, @secret = options.values_at(:key, :secret)
         super
       end
 
@@ -42,12 +46,10 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def request_verify_headers
+      def request_verify_headers(jwt)
         auth = test? ? self.test_auth : self.live_auth
-        env_verify = test? ? self.test_env_verify : self.live_env_verify
         {
-          'Authorization' => auth.to_s,
-          'EOS-Virtual-Environment' => env_verify.to_s
+          'Authorization' => "Bearer #{jwt}"
         }
       end
 
@@ -93,8 +95,8 @@ module ActiveMerchant #:nodoc:
         commit('void', '', iid, '', options)
       end
 
-      def verify(creditcardnumber)
-        commit('verify', '', '', creditcardnumber, '')
+      def verify(creditcardnumber, jwt)
+        commit('verify', '', '', creditcardnumber, jwt)
       end
 
       def supports_scrubbing?
@@ -107,6 +109,10 @@ module ActiveMerchant #:nodoc:
 
       def closebatch(batchid, options)
         commit('closebatch', batchid, '', '', options)
+      end
+
+      def createjwt(options)
+        commit('createjwt', options[:merchant], '', '', options)
       end
 
       def scrub(transcript)
@@ -212,6 +218,7 @@ module ActiveMerchant #:nodoc:
         params['bankAccount'] = nil
 
         params['purchases'] = purchases
+
         params['shouldGetCreditCardLevel'] = true
         params['shouldVaultCard'] = true
         params['source'] = 'Spreedly'
@@ -302,16 +309,16 @@ module ActiveMerchant #:nodoc:
           ssl_request(:delete, url(action, params, refnumber, ''), nil, request_headers(options))
         else
           if action == 'verify'
-            ssl_get(url(action, params, '', creditcardnumber), request_verify_headers)
+            ssl_get(url(action, params, '', creditcardnumber), request_verify_headers(options))
           else
-            if action == 'getpaymentstatus'
+            if action == 'getpaymentstatus' || action == 'createjwt'
               ssl_get(url(action, params, refnumber, ''), request_headers(options))
             else
               if action == 'closebatch'
                 ssl_request(:put, url(action, params, refnumber, ''), nil, request_headers(options))
               else
                 ssl_post(url(action, params), post_data(params), request_headers(options))
-                end
+              end
             end
           end
         end
@@ -321,17 +328,22 @@ module ActiveMerchant #:nodoc:
         base_url = test? ? test_url : live_url
         base_url_verify = test? ? self.test_url_verify : self.live_url_verify
         base_url_batch = test? ? self.test_url_batch : self.live_url_batch
+        base_url_jwt = test? ? self.test_url_jwt : self.live_url_jwt
 
         if action == 'void'
           base_url += "?id=#{refnumber}&force=true"
         else
           if action == 'verify'
-            base_url = base_url_verify + (creditcardnumber[0, 6]).to_s
+            base_url = (base_url_verify + '?search=') + (creditcardnumber[0, 6]).to_s
           else
             if action == 'getpaymentstatus' || action == 'closebatch'
               base_url = base_url_batch + "/#{params}"
             else
-              base_url + '?includeCustomerMatches=false&echo=true'
+              if action == 'createjwt'
+                base_url = base_url_jwt + "/#{params}/token"
+              else
+                base_url + '?includeCustomerMatches=false&echo=true'
+              end
             end
           end
         end
