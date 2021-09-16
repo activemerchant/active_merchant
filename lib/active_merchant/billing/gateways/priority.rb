@@ -3,22 +3,22 @@ module ActiveMerchant #:nodoc:
     class PriorityGateway < Gateway
 
       # UAT
-      self.test_url = 'https://uat.api.mxmerchant.com/checkout/v3/payment'
-      self.live_url = 'https://uat.api.mxmerchant.com/checkout/v3/payment'
+      self.test_url = 'https://sandbox.api.mxmerchant.com/checkout/v3/payment'
+      self.live_url = 'https://api.mxmerchant.com/checkout/v3/payment'
 
       class_attribute :test_url_verify, :live_url_verify, :test_auth, :live_auth, :test_env_verify, :live_env_verify, :test_url_batch, :live_url_batch, :test_url_jwt, :live_url_jwt, :merchant
 
       # UAT
-      self.test_url_verify = 'https://uat-api2.mxmerchant.com/merchant/v1/bin'
-      self.live_url_verify = 'https://uat-api2.mxmerchant.com/merchant/v1/bin'
+      self.test_url_verify = 'https://sandbox-api2.mxmerchant.com/merchant/v1/bin'
+      self.live_url_verify = 'https://api2.mxmerchant.com/merchant/v1/bin'
 
       # UAT
-      self.test_url_batch = 'https://uat.api.mxmerchant.com/checkout/v3/batch'
-      self.live_url_batch = 'https://uat.api.mxmerchant.com/checkout/v3/batch'
+      self.test_url_batch = 'https://sandbox.api.mxmerchant.com/checkout/v3/batch'
+      self.live_url_batch = 'https://api.mxmerchant.com/checkout/v3/batch'
 
       # UAT
-      self.test_url_jwt = 'https://uat-api2.mxmerchant.com/security/v1/application/merchantId'
-      self.live_url_jwt = 'https://uat-api2.mxmerchant.com/security/v1/application/merchantId'
+      self.test_url_jwt = 'https://sandbox-api2.mxmerchant.com/security/v1/application/merchantId'
+      self.live_url_jwt = 'https://api2.mxmerchant.com/security/v1/application/merchantId'
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
