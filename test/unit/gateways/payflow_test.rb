@@ -71,21 +71,23 @@ class PayflowTest < Test::Unit::TestCase
     refute response.fraud_review?
   end
 
-  def test_authorization_with_three_d_secure_option_without_version_does_not_include_three_ds_version
-    three_d_secure_option = three_d_secure_option(options: { version: nil })
+  def test_authorization_with_three_d_secure_option_with_version_includes_three_ds_version
+    expected_version = '1.0.2'
+    three_d_secure_option = three_d_secure_option(options: { version: expected_version })
     stub_comms do
       @gateway.authorize(@amount, @credit_card, @options.merge(three_d_secure_option))
     end.check_request do |_endpoint, data, _headers|
-      assert_three_d_secure REXML::Document.new(data), authorize_buyer_auth_result_path, expected_version: nil
+      assert_three_d_secure REXML::Document.new(data), authorize_buyer_auth_result_path, expected_version: expected_version
     end.respond_with(successful_authorization_response)
   end
 
-  def test_authorization_with_three_d_secure_option_without_ds_transaction_id_does_not_include_ds_transaction_id
-    three_d_secure_option = three_d_secure_option(options: { ds_transaction_id: nil })
+  def test_authorization_with_three_d_secure_option_with_ds_transaction_id_includes_ds_transaction_id
+    expected_ds_transaction_id = 'any ds_transaction id'
+    three_d_secure_option = three_d_secure_option(options: { ds_transaction_id: expected_ds_transaction_id })
     stub_comms do
       @gateway.authorize(@amount, @credit_card, @options.merge(three_d_secure_option))
     end.check_request do |_endpoint, data, _headers|
-      assert_three_d_secure REXML::Document.new(data), authorize_buyer_auth_result_path, expected_ds_transaction_id: nil
+      assert_three_d_secure REXML::Document.new(data), authorize_buyer_auth_result_path, expected_ds_transaction_id: expected_ds_transaction_id
     end.respond_with(successful_authorization_response)
   end
 
@@ -926,9 +928,7 @@ class PayflowTest < Test::Unit::TestCase
         acs_url: 'https://bankacs.bank.com/ascurl',
         eci: '02',
         cavv: 'jGvQIvG/5UhjAREALGYa6Vu/hto=',
-        xid: 'UXZEYlNBeFNpYVFzMjQxODk5RTA=',
-        version: 'any version',
-        ds_transaction_id: 'any ds_transaction_id'
+        xid: 'UXZEYlNBeFNpYVFzMjQxODk5RTA='
       }.
         merge(options).
         compact
@@ -939,16 +939,16 @@ class PayflowTest < Test::Unit::TestCase
     xml_doc,
     buyer_auth_result_path,
     expected_status: SUCCESSFUL_AUTHENTICATION_STATUS,
-    expected_version: 'any version',
-    expected_ds_transaction_id: 'any ds_transaction_id'
+    expected_version: nil,
+    expected_ds_transaction_id: nil
   )
-    assert_equal expected_status, REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/Status").text
-    assert_equal 'QvDbSAxSiaQs241899E0', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/AuthenticationId").text
-    assert_equal 'pareq block', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/PAReq").text
-    assert_equal 'https://bankacs.bank.com/ascurl', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/ACSUrl").text
-    assert_equal '02', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/ECI").text
-    assert_equal 'jGvQIvG/5UhjAREALGYa6Vu/hto=', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/CAVV").text
-    assert_equal 'UXZEYlNBeFNpYVFzMjQxODk5RTA=', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/XID").text
+    assert_text_value_or_nil expected_status, REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/Status")
+    assert_text_value_or_nil 'QvDbSAxSiaQs241899E0', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/AuthenticationId")
+    assert_text_value_or_nil 'pareq block', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/PAReq")
+    assert_text_value_or_nil 'https://bankacs.bank.com/ascurl', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/ACSUrl")
+    assert_text_value_or_nil '02', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/ECI")
+    assert_text_value_or_nil 'jGvQIvG/5UhjAREALGYa6Vu/hto=', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/CAVV")
+    assert_text_value_or_nil 'UXZEYlNBeFNpYVFzMjQxODk5RTA=', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/XID")
     assert_text_value_or_nil(expected_version, REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/THREEDSVERSION"))
     assert_text_value_or_nil(expected_ds_transaction_id, REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/DSTRANSACTIONID"))
   end
