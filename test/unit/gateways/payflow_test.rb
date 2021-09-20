@@ -949,8 +949,8 @@ class PayflowTest < Test::Unit::TestCase
     assert_text_value_or_nil '02', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/ECI")
     assert_text_value_or_nil 'jGvQIvG/5UhjAREALGYa6Vu/hto=', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/CAVV")
     assert_text_value_or_nil 'UXZEYlNBeFNpYVFzMjQxODk5RTA=', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/XID")
-    assert_text_value_or_nil(expected_version, REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/THREEDSVERSION"))
-    assert_text_value_or_nil(expected_ds_transaction_id, REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/DSTRANSACTIONID"))
+    assert_text_value_or_nil(expected_version, REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/ThreeDSVersion"))
+    assert_text_value_or_nil(expected_ds_transaction_id, REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/DSTransactionID"))
   end
 
   def assert_text_value_or_nil(expected_text_value, xml_element)
