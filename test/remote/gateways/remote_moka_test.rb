@@ -5,7 +5,7 @@ class RemoteMokaTest < Test::Unit::TestCase
     @gateway = MokaGateway.new(fixtures(:moka))
 
     @amount = 100
-    @credit_card = credit_card('5269111122223332', month: '10')
+    @credit_card = credit_card('5269111122223332')
     @declined_card = credit_card('4000300011112220')
     @options = {
       description: 'Store Purchase'
@@ -26,6 +26,13 @@ class RemoteMokaTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_purchase_with_single_digit_exp_month
+    @credit_card.month = 1
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
