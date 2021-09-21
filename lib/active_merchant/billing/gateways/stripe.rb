@@ -379,6 +379,7 @@ module ActiveMerchant #:nodoc:
         add_destination(post, options)
         add_level_three(post, options)
         add_connected_account(post, options)
+        add_radar_data(post, options)
         post
       end
 
@@ -568,6 +569,14 @@ module ActiveMerchant #:nodoc:
         post[:transfer_data][:amount] = options[:transfer_amount] if options[:transfer_amount]
         post[:transfer_group] = options[:transfer_group] if options[:transfer_group]
         post[:application_fee_amount] = options[:application_fee_amount] if options[:application_fee_amount]
+      end
+
+      def add_radar_data(post, options = {})
+        return unless options[:radar_session_id]
+
+        post[:radar_options] = {
+          session: options[:radar_session_id]
+        }
       end
 
       def parse(body)

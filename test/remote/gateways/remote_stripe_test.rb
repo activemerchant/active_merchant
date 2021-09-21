@@ -25,13 +25,14 @@ class RemoteStripeTest < Test::Unit::TestCase
   end
 
   def test_transcript_scrubbing
+    credit_card = credit_card('4242424242424242', verification_value: '745')
     transcript = capture_transcript(@gateway) do
-      @gateway.purchase(@amount, @credit_card, @options)
+      @gateway.purchase(@amount, credit_card, @options)
     end
     transcript = @gateway.scrub(transcript)
 
-    assert_scrubbed(@credit_card.number, transcript)
-    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(credit_card.number, transcript)
+    assert_scrubbed(credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:login], transcript)
   end
 
@@ -146,6 +147,16 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal destination, response.params.dig('transfer_data', 'destination')
   end
 
+  def test_successful_purchase_with_radar_session
+    options = @options.merge(radar_session_id: 'rse_1JXSfZAWOtgoysogUpPJa4sm')
+    assert response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'charge', response.params['object']
+    assert response.params['paid']
+    assert_equal 'ActiveMerchant Test Purchase', response.params['description']
+    assert_equal 'wow@example.com', response.params['metadata']['email']
+  end
+
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
@@ -231,6 +242,18 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_success authorization
     refute authorization.params['captured']
     assert_equal destination, authorization.params['destination']
+    assert_equal 'ActiveMerchant Test Purchase', authorization.params['description']
+    assert_equal 'wow@example.com', authorization.params['metadata']['email']
+
+    assert capture = @gateway.capture(@amount, authorization.authorization)
+    assert_success capture
+  end
+
+  def test_successful_authorization_and_capture_with_radar_session
+    options = @options.merge(radar_session_id: 'rse_1JXSfZAWOtgoysogUpPJa4sm')
+    assert authorization = @gateway.authorize(@amount, @credit_card, options)
+    assert_success authorization
+    refute authorization.params['captured']
     assert_equal 'ActiveMerchant Test Purchase', authorization.params['description']
     assert_equal 'wow@example.com', authorization.params['metadata']['email']
 

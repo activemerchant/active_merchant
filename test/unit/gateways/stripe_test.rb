@@ -1007,6 +1007,26 @@ class StripeTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_radar_session_is_submitted_for_purchase
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, {
+        radar_session_id: 'test_radar_session_id'
+      })
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/radar_options\[session\]=test_radar_session_id/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_radar_session_is_submitted_for_authorize
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@amount, @credit_card, {
+        radar_session_id: 'test_radar_session_id'
+      })
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/radar_options\[session\]=test_radar_session_id/, data)
+    end.respond_with(successful_authorization_response)
+  end
+
   def test_client_data_submitted_with_purchase
     stub_comms(@gateway, :ssl_request) do
       updated_options = @options.merge({ description: 'a test customer', ip: '127.127.127.127', user_agent: 'some browser', order_id: '42', email: 'foo@wonderfullyfakedomain.com', receipt_email: 'receipt-receiver@wonderfullyfakedomain.com', referrer: 'http://www.shopify.com' })

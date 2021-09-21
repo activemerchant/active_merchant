@@ -430,6 +430,26 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     end.respond_with(successful_payment_method_response, successful_create_customer_response, successful_payment_method_attach_response)
   end
 
+  def test_succesful_purchase_with_radar_session
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, {
+        radar_session_id: 'test_radar_session_id'
+      })
+    end.check_request do |_method, endpoint, data, _headers|
+      assert_match(/radar_options\[session\]=test_radar_session_id/, data) if /payment_intents/.match?(endpoint)
+    end.respond_with(successful_create_intent_response)
+  end
+
+  def test_succesful_authorize_with_radar_session
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@amount, @credit_card, {
+        radar_session_id: 'test_radar_session_id'
+      })
+    end.check_request do |_method, endpoint, data, _headers|
+      assert_match(/radar_options\[session\]=test_radar_session_id/, data) if /payment_intents/.match?(endpoint)
+    end.respond_with(successful_create_intent_response)
+  end
+
   private
 
   def successful_create_intent_response

@@ -189,6 +189,16 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert purchase.params.dig('charges', 'data')[0]['captured']
   end
 
+  def test_successful_purchase_with_radar_session
+    options = {
+      radar_session_id: 'rse_1JXSfZAWOtgoysogUpPJa4sm'
+    }
+    assert purchase = @gateway.purchase(@amount, @visa_card, options)
+
+    assert_equal 'succeeded', purchase.params['status']
+    assert purchase.params.dig('charges', 'data')[0]['captured']
+  end
+
   def test_successful_authorization_with_external_auth_data_3ds_2
     options = {
       currency: 'GBP',
@@ -201,6 +211,16 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     }
 
     assert authorization = @gateway.authorize(@amount, @three_ds_external_data_card, options)
+
+    assert_equal 'requires_capture', authorization.params['status']
+    refute authorization.params.dig('charges', 'data')[0]['captured']
+  end
+
+  def test_successful_authorization_with_radar_session
+    options = {
+      radar_session_id: 'rse_1JXSfZAWOtgoysogUpPJa4sm'
+    }
+    assert authorization = @gateway.authorize(@amount, @visa_card, options)
 
     assert_equal 'requires_capture', authorization.params['status']
     refute authorization.params.dig('charges', 'data')[0]['captured']

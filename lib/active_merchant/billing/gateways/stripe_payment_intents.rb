@@ -27,6 +27,7 @@ module ActiveMerchant #:nodoc:
         add_metadata(post, options)
         add_return_url(post, options)
         add_connected_account(post, options)
+        add_radar_data(post, options)
         add_shipping_address(post, options)
         setup_future_usage(post, options)
         add_exemption(post, options)
