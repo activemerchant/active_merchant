@@ -72,6 +72,7 @@ class RemoteDLocalTest < Test::Unit::TestCase
     options = @options.merge(
       order_id: '1',
       ip: '127.0.0.1',
+      device_id: '123',
       email: 'joe@example.com',
       birth_date: '03-01-1970',
       document2: '87648987569',
@@ -79,6 +80,15 @@ class RemoteDLocalTest < Test::Unit::TestCase
       user_reference: generate_unique_id
     )
 
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_match 'The payment was paid', response.message
+  end
+
+  def test_successful_purchase_with_additional_data
+    options = @options.merge(
+      additional_data: { submerchant: { name: 'socks' } }
+    )
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert_match 'The payment was paid', response.message

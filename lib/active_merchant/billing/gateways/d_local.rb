@@ -78,6 +78,7 @@ module ActiveMerchant #:nodoc:
         add_country(post, card, options)
         add_payer(post, card, options)
         add_card(post, card, action, options)
+        add_additional_data(post, options)
         post[:order_id] = options[:order_id] || generate_unique_id
         post[:description] = options[:description] if options[:description]
       end
@@ -85,6 +86,10 @@ module ActiveMerchant #:nodoc:
       def add_invoice(post, money, options)
         post[:amount] = amount(money)
         post[:currency] = (options[:currency] || currency(money))
+      end
+
+      def add_additional_data(post, options)
+        post[:additional_risk_data] = options[:additional_data]
       end
 
       def add_country(post, card, options)
@@ -109,6 +114,8 @@ module ActiveMerchant #:nodoc:
         post[:payer][:document] = options[:document] if options[:document]
         post[:payer][:document2] = options[:document2] if options[:document2]
         post[:payer][:user_reference] = options[:user_reference] if options[:user_reference]
+        post[:payer][:event_uuid] = options[:device_id] if options[:device_id]
+        post[:payer][:onboarding_ip_address] = options[:ip] if options[:ip]
         post[:payer][:address] = add_address(post, card, options)
       end
 

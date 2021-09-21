@@ -44,6 +44,16 @@ class DLocalTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_successful_purchase_with_additional_data
+    additional_data = { 'submerchant' => { 'name' => 'socks' } }
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(additional_data: additional_data))
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal additional_data, JSON.parse(data)['additional_risk_data']
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_successful_authorize
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
 
