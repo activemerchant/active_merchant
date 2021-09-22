@@ -887,6 +887,23 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_scrubbed(@echeck_gateway.options[:merchant_id], transcript)
   end
 
+  def test_transcript_scrubbing_network_card
+    network_card = network_tokenization_credit_card(
+      '4788250000028291',
+      payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
+      transaction_id: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
+      verification_value: '111',
+      brand: 'visa',
+      eci: '5'
+    )
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, network_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(network_card.payment_cryptogram, transcript)
+  end
+
   private
 
   def stored_credential_options(*args, id: nil)
