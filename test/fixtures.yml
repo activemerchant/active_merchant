@@ -1046,6 +1046,10 @@ qvalent:
     RFjxWKtn9pXbM1PLmUXCkKQnSJSeD1K0NjV+g8KFChTEgmhnLogyF/7YYw/amfc=
     -----END CERTIFICATE-----
 
+razorpay:
+  key_id: rzp_test_AZ0AENk1ltLtD2
+  key_secret: Z1vx29vcNv2pC2y4n6MQRtRw
+
 raven_pac_net:
   user: ernest
   secret: "all good men die young"
