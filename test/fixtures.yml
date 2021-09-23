@@ -833,10 +833,10 @@ plugnpay:
   login: LOGIN
   password: PASSWORD
 
-# Working credentials, no need to replace
+# Working credentials, Not used
 priority:
-  some_credential: SOMECREDENTIAL
-  another_credential: ANOTHERCREDENTIAL
+  some_credential: not used
+  another_credential: not used
 
 # Working credentials, no need to replace
 pro_pay:

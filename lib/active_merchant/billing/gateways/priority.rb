@@ -47,7 +47,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def request_verify_headers(jwt)
-        auth = test? ? self.test_auth : self.live_auth
         {
           'Authorization' => "Bearer #{jwt}"
         }
@@ -103,16 +102,16 @@ module ActiveMerchant #:nodoc:
         true
       end
 
-      def getpaymentstatus(batchid, options)
-        commit('getpaymentstatus', batchid, '', '', options)
+      def get_payment_status(batchid, options)
+        commit('get_payment_status', batchid, '', '', options)
       end
 
-      def closebatch(batchid, options)
-        commit('closebatch', batchid, '', '', options)
+      def close_batch(batchid, options)
+        commit('close_batch', batchid, '', '', options)
       end
 
-      def createjwt(options)
-        commit('createjwt', options[:merchant], '', '', options)
+      def create_jwt(options)
+        commit('create_jwt', options[:merchant], '', '', options)
       end
 
       def scrub(transcript)
@@ -185,7 +184,7 @@ module ActiveMerchant #:nodoc:
         cardPresent: false,
         cardPresentType: 'CardNotPresent',
         isAuth: true,
-        isSettleFunds: true,
+        is_Settle_Funds: true,
         isTicket: false,
         merchantId: 514_391_592,
         mxAdvantageEnabled: false,
@@ -204,11 +203,11 @@ module ActiveMerchant #:nodoc:
         [{ taxRate: '0.0000', additionalTaxRate: nil, discountRate: nil }]
       end
 
-      def add_type_merchant_purchase(params, merchant, isSettleFunds, options)
+      def add_type_merchant_purchase(params, merchant, is_Settle_Funds, options)
         params['cardPresent'] = false
         params['cardPresentType'] = 'CardNotPresent'
         params['isAuth'] = true
-        params['isSettleFunds'] = isSettleFunds
+        params['is_Settle_Funds'] = is_Settle_Funds
         params['isTicket'] = false
 
         params['merchantId'] = merchant
@@ -270,7 +269,7 @@ module ActiveMerchant #:nodoc:
       def commit(action, params, iid, creditcardnumber, options)
         response =
           begin
-            if action == 'void' || action == 'closebatch'
+            if action == 'void' || action == 'close_batch'
               ssl_invoke(action, params, iid, creditcardnumber, options)
             else
               parse(ssl_invoke(action, params, iid, creditcardnumber, options))
@@ -311,10 +310,10 @@ module ActiveMerchant #:nodoc:
           if action == 'verify'
             ssl_get(url(action, params, '', creditcardnumber), request_verify_headers(options))
           else
-            if action == 'getpaymentstatus' || action == 'createjwt'
+            if action == 'get_payment_status' || action == 'create_jwt'
               ssl_get(url(action, params, refnumber, ''), request_headers(options))
             else
-              if action == 'closebatch'
+              if action == 'close_batch'
                 ssl_request(:put, url(action, params, refnumber, ''), nil, request_headers(options))
               else
                 ssl_post(url(action, params), post_data(params), request_headers(options))
@@ -336,10 +335,10 @@ module ActiveMerchant #:nodoc:
           if action == 'verify'
             base_url = (base_url_verify + '?search=') + (creditcardnumber[0, 6]).to_s
           else
-            if action == 'getpaymentstatus' || action == 'closebatch'
+            if action == 'get_payment_status' || action == 'close_batch'
               base_url = base_url_batch + "/#{params}"
             else
-              if action == 'createjwt'
+              if action == 'create_jwt'
                 base_url = base_url_jwt + "/#{params}/token"
               else
                 base_url + '?includeCustomerMatches=false&echo=true'

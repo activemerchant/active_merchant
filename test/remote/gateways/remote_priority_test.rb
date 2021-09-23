@@ -245,7 +245,7 @@ class RemotePriorityTest < Test::Unit::TestCase
     assert_success response
 
     # check is this transaction associated batch is "Closed".
-    batchcheck = @gateway.getpaymentstatus(response.params['batchId'], @option_spr)
+    batchcheck = @gateway.get_payment_status(response.params['batchId'], @option_spr)
     # if batch Open then fail test. Batch must be closed to perform a Refund
     if batchcheck.params['status'] == 'Open'
       assert void = @gateway.void(response.params['id'], @option_spr)
@@ -264,20 +264,20 @@ class RemotePriorityTest < Test::Unit::TestCase
     assert_equal 'Original Payment Not Found Or You Do Not Have Access.', void.params['details'][0]
   end
 
-  def test_success_getpaymentstatus
+  def test_success_get_payment_status
     response = @gateway.purchase(@amount_purchase, @credit_card_purchase_success, @option_spr)
     assert_success response
 
     # check is this transaction associated batch is "Closed".
-    batchcheck = @gateway.getpaymentstatus(response.params['batchId'], @option_spr)
+    batchcheck = @gateway.get_payment_status(response.params['batchId'], @option_spr)
 
     assert_success batchcheck
     assert_equal 'Open', batchcheck.params['status']
   end
 
-  def test_failed_getpaymentstatus
+  def test_failed_get_payment_status
     # check is this transaction associated batch is "Closed".
-    batchcheck = @gateway.getpaymentstatus(123456, @option_spr)
+    batchcheck = @gateway.get_payment_status(123456, @option_spr)
 
     assert_failure batchcheck
     assert_equal 'Invalid JSON response', batchcheck.params['message'][0..20]
@@ -286,7 +286,7 @@ class RemotePriorityTest < Test::Unit::TestCase
   # Must enter 6 to 10 numbers from start of card to test
   def test_successful_verify
     # Generate jwt token from key and secret. Pass generated jwt to verify function. The verify function requries a jwt for header authorization.
-    jwtresponse = @gateway.createjwt(@option_spr)
+    jwtresponse = @gateway.create_jwt(@option_spr)
     response = @gateway.verify(@cardnumber_verify, jwtresponse.params['jwtToken'])
     assert_failure response
     assert_match 'JPMORGAN CHASE BANK, N.A.', response.params['bank']['name']
@@ -295,7 +295,7 @@ class RemotePriorityTest < Test::Unit::TestCase
   # Must enter 6 to 10 numbers from start of card to test
   def test_failed_verify
     # Generate jwt token from key and secret. Pass generated jwt to verify function. The verify function requries a jwt for header authorization.
-    jwtresponse = @gateway.createjwt(@option_spr)
+    jwtresponse = @gateway.create_jwt(@option_spr)
     response = @gateway.verify('123456', jwtresponse.params['jwtToken'])
   rescue StandardError => e
     if e.to_s.include? 'No bank information found for bin number'
@@ -308,7 +308,7 @@ class RemotePriorityTest < Test::Unit::TestCase
 
   def test_failed_verify_must_be_6_to_10_digits
     # Generate jwt token from key and secret. Pass generated jwt to verify function. The verify function requries a jwt for header authorization.
-    jwtresponse = @gateway.createjwt(@option_spr)
+    jwtresponse = @gateway.create_jwt(@option_spr)
     response = @gateway.verify('12345', jwtresponse.params['jwtToken'])
   rescue StandardError => e
     if e.to_s.include? 'Invalid bank bin number, must be 6-10 digits'
@@ -363,10 +363,10 @@ class RemotePriorityTest < Test::Unit::TestCase
     assert_success response
 
     # check is this transaction associated batch is "Closed".
-    batchcheck = @gateway.getpaymentstatus(response.params['batchId'], @option_spr)
+    batchcheck = @gateway.get_payment_status(response.params['batchId'], @option_spr)
     # if batch Open then fail test. Batch must be closed to perform a Refund
     if batchcheck.params['status'] == 'Open'
-      closebatch = @gateway.closebatch(response.params['batchId'], @option_spr)
+      close_batch = @gateway.close_batch(response.params['batchId'], @option_spr)
       # add key and secret to response.params
       # key and secret is from MX Merchant settings API Key
       response.params.update(key: @option_spr[:key])
@@ -408,7 +408,7 @@ class RemotePriorityTest < Test::Unit::TestCase
     @responseStringObj['risk'] = @responseStringObj['risk'].transform_keys(&:to_s)
 
     # check is this transaction associated batch is "Closed".
-    batchcheck = @gateway.getpaymentstatus(@responseStringObj['batchId'], @option_spr)
+    batchcheck = @gateway.get_payment_status(@responseStringObj['batchId'], @option_spr)
 
     # if batch Open then fail test. Batch must be closed to perform a Refund
     if batchcheck.params['status'] == 'Open'
