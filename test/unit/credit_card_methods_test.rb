@@ -228,6 +228,7 @@ class CreditCardMethodsTest < Test::Unit::TestCase
 
   def test_should_detect_vr_card
     assert_equal 'vr', CreditCard.brand?('6370364495764400')
+    assert_equal 'vr', CreditCard.brand?('6274160000000001')
   end
 
   def test_should_detect_elo_card
@@ -366,6 +367,7 @@ class CreditCardMethodsTest < Test::Unit::TestCase
       6046220312312312
       6393889871239871
       5022751231231231
+      6275350000000001
     ]
     numbers.each do |num|
       assert_equal 16, num.length
