@@ -290,6 +290,7 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     number = '7006760000000000000'
     assert_equal 'routex', CreditCard.brand?(number)
     assert CreditCard.valid_number?(number)
+    assert_equal 'routex', CreditCard.brand?('7006789224703725591')
   end
 
   def test_should_detect_when_an_argument_brand_does_not_match_calculated_brand

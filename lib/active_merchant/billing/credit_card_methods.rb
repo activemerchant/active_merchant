@@ -36,7 +36,7 @@ module ActiveMerchant #:nodoc:
         'creditel' => ->(num) { num =~ /^601933\d{10}$/ },
         'confiable' => ->(num) { num =~ /^560718\d{10}$/ },
         'synchrony' => ->(num) { num =~ /^700600\d{10}$/ },
-        'routex' => ->(num) { num =~ /^700676\d{13}$/ }
+        'routex' => ->(num) { num =~ /^(700676|700678)\d{13}$/ }
       }
 
       # http://www.barclaycard.co.uk/business/files/bin_rules.pdf
