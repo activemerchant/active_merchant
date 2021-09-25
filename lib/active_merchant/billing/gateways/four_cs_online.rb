@@ -94,7 +94,7 @@ module ActiveMerchant #:nodoc:
       def parse(response, action)
         result = {}
         document = REXML::Document.new(response)
-        response_element = document.root.get_elements("//response").first
+        response_element = document.root.get_elements('//response').first
         response_element.elements.each do |element|
           result[element.name.underscore] = element.text
         end
@@ -151,9 +151,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_code_from(response)
-        unless success_from(response)
-          response['error_message']
-        end
+        response['error_message'] unless success_from(response)
       end
     end
   end
