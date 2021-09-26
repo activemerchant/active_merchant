@@ -6,7 +6,7 @@ class EwayRapidTest < Test::Unit::TestCase
   def setup
     ActiveMerchant::Billing::EwayRapidGateway.partner_id = nil
     @gateway = EwayRapidGateway.new(
-      login: 'login',
+      api_key: 'api_key',
       password: 'password'
     )
 
