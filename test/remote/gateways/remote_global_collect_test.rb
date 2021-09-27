@@ -12,7 +12,8 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     @options = {
       email: 'example@example.com',
       billing_address: address,
-      description: 'Store Purchase'
+      description: 'Store Purchase',
+      url_override: 'preproduction'
     }
     @long_address = {
       billing_address: {

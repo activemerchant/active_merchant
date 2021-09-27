@@ -47,6 +47,21 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_successful_preproduction_url
+    @gateway = GlobalCollectGateway.new(
+      merchant_id: '1234',
+      api_key_id: '39u4193urng12',
+      secret_api_key: '109H/288H*50Y18W4/0G8571F245KA=',
+      url_override: 'preproduction'
+    )
+
+    stub_comms do
+      @gateway.authorize(@accepted_amount, @credit_card)
+    end.check_request do |endpoint, _data, _headers|
+      assert_match(/world\.preprod\.api-ingenico\.com/, endpoint)
+    end.respond_with(successful_authorize_response)
+  end
+
   # When requires_approval is true (or not present),
   # a `purchase` makes two calls (`auth` and `capture`).
   def test_successful_purchase_with_requires_approval_true
