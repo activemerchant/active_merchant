@@ -45,11 +45,11 @@ module ActiveMerchant #:nodoc:
           commit(:post, 'capture', parameters, post)
         end
   
-        def refund(money, payment_id, options={})
+        def refund(payment_id, options={})
           parameters = {}
           post = {}
           parameters[:authorization_id] = payment_id
-          add_amount(post, money)
+          add_amount(post, options[:amount]) if options[:amount]
           commit(:post, 'refund', parameters, post)
         end
   
