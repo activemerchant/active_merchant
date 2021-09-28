@@ -15,8 +15,9 @@
 * PayArc: Fix billing address nil and phone_number issues [dsmcclain] #4114
 * Routex: Update BIN numbers [rachelkirk] #4123
 * UnionPay: Add Stripe's UnionPay test card to UnionPay BIN range #4122
-* GlobalCollect: Support URL override #4127
+* GlobalCollect: Support URL override [naashton] #4127
 * PayConex: scrub bank account info from transcripts [mbreenlyles] #4128
+* Moka: Remove additional transaction data from subsequent calls [naashton] #4129
 
 == Version 1.123.0 (September 10th, 2021)
 * Paysafe: Add gateway integration [meagabeth] #4085

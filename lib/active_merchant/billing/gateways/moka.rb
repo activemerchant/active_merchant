@@ -77,7 +77,6 @@ module ActiveMerchant #:nodoc:
         post[:PaymentDealerRequest] = {}
         add_payment_dealer_authentication(post)
         add_transaction_reference(post, authorization)
-        add_additional_transaction_data(post, options)
 
         commit('capture', post)
       end
@@ -87,7 +86,6 @@ module ActiveMerchant #:nodoc:
         post[:PaymentDealerRequest] = {}
         add_payment_dealer_authentication(post)
         add_transaction_reference(post, authorization)
-        add_additional_transaction_data(post, options)
         add_void_refund_reason(post)
         add_amount(post, money)
 
@@ -99,7 +97,6 @@ module ActiveMerchant #:nodoc:
         post[:PaymentDealerRequest] = {}
         add_payment_dealer_authentication(post)
         add_transaction_reference(post, authorization)
-        add_additional_transaction_data(post, options)
         add_void_refund_reason(post)
 
         commit('void', post)
