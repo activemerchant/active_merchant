@@ -184,7 +184,7 @@ module ActiveMerchant #:nodoc:
         cardPresent: false,
         cardPresentType: 'CardNotPresent',
         isAuth: true,
-        is_Settle_Funds: true,
+        is_settle_funds: true,
         isTicket: false,
         merchantId: 514_391_592,
         mxAdvantageEnabled: false,
@@ -203,11 +203,11 @@ module ActiveMerchant #:nodoc:
         [{ taxRate: '0.0000', additionalTaxRate: nil, discountRate: nil }]
       end
 
-      def add_type_merchant_purchase(params, merchant, is_Settle_Funds, options)
+      def add_type_merchant_purchase(params, merchant, is_settle_funds, options)
         params['cardPresent'] = false
         params['cardPresentType'] = 'CardNotPresent'
         params['isAuth'] = true
-        params['is_Settle_Funds'] = is_Settle_Funds
+        params['is_settle_funds'] = is_settle_funds
         params['isTicket'] = false
 
         params['merchantId'] = merchant
