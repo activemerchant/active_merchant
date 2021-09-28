@@ -165,7 +165,7 @@ module ActiveMerchant #:nodoc:
         post[:PaymentDealerRequest][:CardNumber] = card.number
         post[:PaymentDealerRequest][:ExpMonth] = card.month.to_s.rjust(2, '0')
         post[:PaymentDealerRequest][:ExpYear] = card.year
-        post[:PaymentDealerRequest][:CvcNumber] = card.verification_value
+        post[:PaymentDealerRequest][:CvcNumber] = card.verification_value || ''
       end
 
       def add_amount(post, money)

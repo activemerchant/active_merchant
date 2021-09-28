@@ -87,6 +87,15 @@ class RemoteMokaTest < Test::Unit::TestCase
     assert_equal 'Success', response.message
   end
 
+  def test_successful_purchase_with_nil_cvv
+    test_card = credit_card('5269111122223332')
+    test_card.verification_value = nil
+
+    response = @gateway.purchase(@amount, test_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
