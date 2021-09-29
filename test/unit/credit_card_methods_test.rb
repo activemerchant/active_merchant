@@ -281,6 +281,7 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_equal 'unionpay', CreditCard.brand?('814400000000000000')
     assert_equal 'unionpay', CreditCard.brand?('8171999927660000')
     assert_equal 'unionpay', CreditCard.brand?('8171999900000000021')
+    assert_equal 'unionpay', CreditCard.brand?('6200000000000005')
   end
 
   def test_should_detect_synchrony_card
