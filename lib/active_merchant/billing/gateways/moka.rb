@@ -77,6 +77,7 @@ module ActiveMerchant #:nodoc:
         post[:PaymentDealerRequest] = {}
         add_payment_dealer_authentication(post)
         add_transaction_reference(post, authorization)
+        add_invoice(post, money, options)
 
         commit('capture', post)
       end

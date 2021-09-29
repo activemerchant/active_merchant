@@ -112,6 +112,16 @@ class RemoteMokaTest < Test::Unit::TestCase
     assert_equal 'Success', capture.message
   end
 
+  def test_successful_authorize_and_capture_using_non_default_currency
+    options = @options.merge(currency: 'USD')
+    auth = @gateway.authorize(@amount, @credit_card, options)
+    assert_success auth
+
+    assert capture = @gateway.capture(@amount, auth.authorization, currency: 'USD')
+    assert_success capture
+    assert_equal 'Success', capture.message
+  end
+
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
