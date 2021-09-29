@@ -176,29 +176,6 @@ module ActiveMerchant #:nodoc:
         "#{format(credit_card.month, :two_digits)}/#{format(credit_card.year, :two_digits)}"
       end
 
-      @request_params = {
-        achIndicator: nil,
-        authCode: nil,
-        authOnly: false,
-        bankAccount: nil,
-        cardPresent: false,
-        cardPresentType: 'CardNotPresent',
-        isAuth: true,
-        is_settle_funds: true,
-        isTicket: false,
-        merchantId: 514_391_592,
-        mxAdvantageEnabled: false,
-        mxAdvantageFeeLabel: '',
-        paymentType: 'Sale',
-        purchases: [{ taxRate: '0.0000', additionalTaxRate: nil, discountRate: nil }],
-        shouldGetCreditCardLevel: true,
-        shouldVaultCard: true,
-        source: 'QuickPay',
-        sourceZip: '94102',
-        taxExempt: false,
-        tenderType: 'Card',
-        terminals: []
-      }
       def purchases
         [{ taxRate: '0.0000', additionalTaxRate: nil, discountRate: nil }]
       end
@@ -207,7 +184,7 @@ module ActiveMerchant #:nodoc:
         params['cardPresent'] = false
         params['cardPresentType'] = 'CardNotPresent'
         params['isAuth'] = true
-        params['is_settle_funds'] = is_settle_funds
+        params['isSettleFunds'] = is_settle_funds
         params['isTicket'] = false
 
         params['merchantId'] = merchant
