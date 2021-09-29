@@ -208,6 +208,8 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_equal 'maestro_no_luhn', CreditCard.brand?('5010800000000000')
     assert_equal 'maestro_no_luhn', CreditCard.brand?('5010810000000000')
     assert_equal 'maestro_no_luhn', CreditCard.brand?('5010820000000000')
+    assert_equal 'maestro_no_luhn', CreditCard.brand?('501082000000')
+    assert_equal 'maestro_no_luhn', CreditCard.brand?('5010820000000000000')
   end
 
   def test_maestro_no_luhn_number_not_validated

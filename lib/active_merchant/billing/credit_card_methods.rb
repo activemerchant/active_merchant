@@ -19,7 +19,7 @@ module ActiveMerchant #:nodoc:
             MAESTRO_BINS.any? { |bin| num.slice(0, bin.size) == bin }
           )
         },
-        'maestro_no_luhn'    => ->(num) { num =~ /^(501080|501081|501082)\d{10}$/ },
+        'maestro_no_luhn'    => ->(num) { num =~ /^(501080|501081|501082)\d{6,13}$/ },
         'forbrugsforeningen' => ->(num) { num =~ /^600722\d{10}$/ },
         'sodexo'             => ->(num) { num =~ /^(606071|603389|606070|606069|606068|600818)\d{10}$/ },
         'alia'               => ->(num) { num =~ /^(504997|505878|601030|601073|505874)\d{10}$/ },
