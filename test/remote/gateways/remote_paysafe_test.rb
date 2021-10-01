@@ -5,8 +5,8 @@ class RemotePaysafeTest < Test::Unit::TestCase
     @gateway = PaysafeGateway.new(fixtures(:paysafe))
 
     @amount = 100
-    @credit_card = credit_card('4107857757053670')
-    @mastercard = credit_card('5186750368967720', brand: 'mastercard')
+    @credit_card = credit_card('4037111111000000')
+    @mastercard = credit_card('5200400000000009', brand: 'mastercard')
     @pm_token = 'Ci3S9DWyOP9CiJ5'
     @options = {
       billing_address: address,
@@ -124,22 +124,21 @@ class RemotePaysafeTest < Test::Unit::TestCase
     assert_equal '127.0.0.1', response.params['customerIp']
   end
 
-  # Currently, our account is not setup to support split payments
-  #  so we can't test it until it is enabled.
-  # def test_successful_purchase_with_split_payouts
-  #   options = {
-  #     split_pay: [
-  #       {
-  #         linked_account: '1002179730',
-  #         percent: 50
-  #       }
-  #     ]
-  #   }
-
-  #   response = @gateway.purchase(5000, @credit_card, @options.merge(options))
-  #   assert_success response
-  #   assert_equal '987987987', response.params['splitpay'].first['linkedAccount']
-  # end
+  # Merchant account must be setup to support split pay transactions using a specific account_id
+  def test_successful_purchase_with_split_payouts
+    @split_pay = PaysafeGateway.new(fixtures(:paysafe_split_pay))
+    options = {
+      split_pay: [
+        {
+          linked_account: '1002179730',
+          percent: 50
+        }
+      ]
+    }
+    response = @split_pay.purchase(5000, @credit_card, @options.merge(options))
+    assert_success response
+    assert_equal 2500, response.params['settlements'].first['splitpay'].first['amount']
+  end
 
   def test_successful_purchase_with_airline_details
     response = @gateway.purchase(@amount, @credit_card, @options.merge(@airline_details))

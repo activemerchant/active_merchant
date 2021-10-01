@@ -20,6 +20,7 @@
 * Moka: Remove additional transaction data from subsequent calls [naashton] #4129
 * Moka: Ensure CvcNumber can be an empty string [jessiagee] #4130
 * Maestro: Allow more card lengths for Luhnless bins [therufs] #4131
+* Paysafe: Update supported countries [meagabeth] #4135
 
 == Version 1.123.0 (September 10th, 2021)
 * Paysafe: Add gateway integration [meagabeth] #4085
