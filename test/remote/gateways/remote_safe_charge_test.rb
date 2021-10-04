@@ -65,6 +65,15 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
     assert_equal 'Success', response.message
   end
 
+  def test_successful_purchase_with_non_fractional_currency
+    options = @options.merge(currency: 'CLP')
+    response = @gateway.purchase(127999, @credit_card, options)
+
+    assert_success response
+    assert_equal 'Success', response.message
+    assert_equal '1279', response.params['requestedamount']
+  end
+
   def test_successful_purchase_with_mpi_options_3ds_1
     options = @options.merge({
       three_d_secure: {

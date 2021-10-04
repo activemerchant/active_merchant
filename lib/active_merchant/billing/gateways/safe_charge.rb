@@ -126,9 +126,11 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_transaction_data(trans_type, post, money, options)
+        currency = options[:currency] || currency(money)
+
         post[:sg_TransType] = trans_type
-        post[:sg_Currency] = (options[:currency] || currency(money))
-        post[:sg_Amount] = amount(money)
+        post[:sg_Currency] = currency
+        post[:sg_Amount] = localized_amount(money, currency)
         post[:sg_ClientLoginID] = @options[:client_login_id]
         post[:sg_ClientPassword] = @options[:client_password]
         post[:sg_ResponseFormat] = '4'
