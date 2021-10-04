@@ -30,19 +30,19 @@ module ActiveMerchant #:nodoc:
       STANDARD_ERROR_CODE_MAPPING = {}
 
       def initialize(options = {})
-        # requires!(options, :key, :secret)
-        # @key, @secret = options.values_at(:key, :secret)
+        requires!(options, :merchant_id)
+        requires!(options, :key, :secret)
         super
       end
 
-      def basic_auth(key, secret)
-        Base64.strict_encode64("#{key}:#{secret}")
+      def basic_auth
+        Base64.strict_encode64("#{@options[:key]}:#{@options[:secret]}")
       end
 
-      def request_headers(options)
+      def request_headers
         {
           'Content-Type' => 'application/json',
-          'Authorization' => "Basic #{basic_auth(options[:key], options[:secret])}"
+          'Authorization' => "Basic #{basic_auth}"
         }
       end
 
@@ -56,7 +56,7 @@ module ActiveMerchant #:nodoc:
         params = {}
         add_bank_amount_purchase(params, amount, false)
         add_credit_card(params, credit_card, 'purchase', options)
-        add_type_merchant_purchase(params, options[:merchant], true, options)
+        add_type_merchant_purchase(params, @options[:merchant_id], true, options)
         commit('purchase', params, '', '', options)
       end
 
@@ -64,7 +64,7 @@ module ActiveMerchant #:nodoc:
         params = {}
         add_bank_amount_purchase(params, amount, true)
         add_credit_card(params, credit_card, 'purchase', options)
-        add_type_merchant_purchase(params, options[:merchant], false, options)
+        add_type_merchant_purchase(params, @options[:merchant_id], false, options)
         commit('purchase', params, '', '', options)
       end
 
@@ -81,7 +81,7 @@ module ActiveMerchant #:nodoc:
         params = {}
         params['amount'] = amount
         params['authCode'] = options[:authCode]
-        params['merchantId'] = options[:merchant]
+        params['merchantId'] = @options[:merchant_id]
         params['paymentToken'] = authorization
         params['shouldGetCreditCardLevel'] = true
         params['source'] = 'Spreedly'
@@ -111,7 +111,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def create_jwt(options)
-        commit('create_jwt', options[:merchant], '', '', options)
+        commit('create_jwt', @options[:merchant_id], '', '', options)
       end
 
       def scrub(transcript)
@@ -215,8 +215,8 @@ module ActiveMerchant #:nodoc:
         params['id'] = 0
         params['invoice'] = options['invoice']
         params['isDuplicate'] = false
-        params['merchantId'] = options['merchantId']
-        params['paymentToken'] = options['cardAccount']['token']
+        params['merchantId'] = @options[:merchant_id]
+        params['paymentToken'] = options['cardAccount']['token'] if options['cardAccount']
 
         params['posData'] = options['posData']
 
@@ -282,18 +282,18 @@ module ActiveMerchant #:nodoc:
 
       def ssl_invoke(action, params, refnumber, creditcardnumber, options)
         if action == 'void'
-          ssl_request(:delete, url(action, params, refnumber, ''), nil, request_headers(options))
+          ssl_request(:delete, url(action, params, refnumber, ''), nil, request_headers)
         else
           if action == 'verify'
             ssl_get(url(action, params, '', creditcardnumber), request_verify_headers(options))
           else
             if action == 'get_payment_status' || action == 'create_jwt'
-              ssl_get(url(action, params, refnumber, ''), request_headers(options))
+              ssl_get(url(action, params, refnumber, ''), request_headers)
             else
               if action == 'close_batch'
-                ssl_request(:put, url(action, params, refnumber, ''), nil, request_headers(options))
+                ssl_request(:put, url(action, params, refnumber, ''), nil, request_headers)
               else
-                ssl_post(url(action, params), post_data(params), request_headers(options))
+                ssl_post(url(action, params), post_data(params), request_headers)
               end
             end
           end

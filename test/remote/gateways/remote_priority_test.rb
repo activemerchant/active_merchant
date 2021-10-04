@@ -20,10 +20,7 @@ class RemotePriorityTest < Test::Unit::TestCase
     @credit_card_purchase_success = credit_card('4111111111111111', month: '01', year: '2029', first_name: 'Marcus', last_name: 'Rashford', verification_value: '123')
 
     @option_spr = {
-      merchant: 514391592,
       billing_address: address,
-      key: 'Generated in MX Merchant for specific test merchant',
-      secret: 'Generated in MX Merchant for specific test merchant',
       avsStreet: '666',
       avsZip: '55044'
     }
@@ -71,7 +68,6 @@ class RemotePriorityTest < Test::Unit::TestCase
       "creatorName": 'Mike B',
       "isDuplicate": false,
       "shouldVaultCard": true,
-      "merchantId": 514391592,
       "batch": '0042',
       "batchId": 10000000229441,
       "tenderType": 'Card',
