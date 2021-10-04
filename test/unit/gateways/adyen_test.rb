@@ -881,6 +881,26 @@ class AdyenTest < Test::Unit::TestCase
     assert_equal @options[:shipping_address][:country], post[:deliveryAddress][:country]
   end
 
+  def test_successful_auth_phone
+    options = @options.merge(billing_address: { phone: 1234567890 })
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 1234567890, JSON.parse(data)['telephoneNumber']
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_successful_auth_phone_number
+    options = @options.merge(billing_address: { phone_number: 987654321, phone: 1234567890 })
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 987654321, JSON.parse(data)['telephoneNumber']
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
   def test_purchase_with_long_order_id
     options = @options.merge({ order_id: @long_order_id })
     response = stub_comms do

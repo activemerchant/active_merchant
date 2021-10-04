@@ -217,7 +217,7 @@ module ActiveMerchant #:nodoc:
       }
 
       def add_extra_data(post, payment, options)
-        post[:telephoneNumber] = options[:billing_address][:phone] if options.dig(:billing_address, :phone)
+        post[:telephoneNumber] = (options[:billing_address][:phone_number] if options.dig(:billing_address, :phone_number)) || (options[:billing_address][:phone] if options.dig(:billing_address, :phone)) || ''
         post[:fraudOffset] = options[:fraud_offset] if options[:fraud_offset]
         post[:selectedBrand] = options[:selected_brand] if options[:selected_brand]
         post[:selectedBrand] ||= NETWORK_TOKENIZATION_CARD_SOURCE[payment.source.to_s] if payment.is_a?(NetworkTokenizationCreditCard)

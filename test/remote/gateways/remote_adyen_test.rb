@@ -1190,6 +1190,19 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_authorize_phone
+    @options[:billing_address][:phone] = '1234567890'
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+  end
+
+  def test_successful_authorize_phone_number
+    @options[:billing_address].delete(:phone)
+    @options[:billing_address][:phone_number] = '0987654321'
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+  end
+
   def test_purchase_using_stored_credential_recurring_cit
     initial_options = stored_credential_options(:cardholder, :recurring, :initial)
     assert auth = @gateway.authorize(@amount, @credit_card, initial_options)
