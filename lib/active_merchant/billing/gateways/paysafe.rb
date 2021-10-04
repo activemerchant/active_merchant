@@ -276,8 +276,8 @@ module ActiveMerchant #:nodoc:
           split = {}
 
           split[:linkedAccount] = pmnt[:linked_account]
-          split[:amount] = pmnt[:amount] if pmnt[:amount]
-          split[:percent] = pmnt[:percent] if pmnt[:percent]
+          split[:amount] = pmnt[:amount].to_i if pmnt[:amount]
+          split[:percent] = pmnt[:percent].to_i if pmnt[:percent]
 
           split_pay << split
         end
