@@ -246,6 +246,16 @@ class CardStreamTest < Test::Unit::TestCase
     assert_equal 'APPROVED', response.message
   end
 
+  def test_adding_country_code
+    %i[authorize purchase refund].each do |action|
+      stub_comms do
+        @gateway.send(action, 142, @visacreditcard, @visacredit_options.merge(country_code: 'US'))
+      end.check_request do |_endpoint, data, _headers|
+        assert_match(/&countryCode=US/, data)
+      end.respond_with(successful_purchase_response)
+    end
+  end
+
   def test_hmac_signature_added_to_post
     post_params = "action=SALE&amount=10000&captureDelay=0&cardCVV=356&cardExpiryMonth=12&cardExpiryYear=14&cardNumber=4929421234600821&countryCode=GB&currencyCode=826&customerAddress=Flat+6%2C+Primrose+Rise+347+Lavender+Road&customerCountryCode=GB&customerName=Longbob+Longsen&customerPostCode=NN17+8YG+&merchantID=login&orderRef=AM+test+purchase&remoteAddress=1.1.1.1&threeDSRequired=N&transactionUnique=#{@visacredit_options[:order_id]}&type=1"
     expected_signature = Digest::SHA512.hexdigest("#{post_params}#{@gateway.options[:shared_secret]}")

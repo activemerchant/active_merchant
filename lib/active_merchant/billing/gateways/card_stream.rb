@@ -150,23 +150,13 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, credit_card_or_reference, options = {})
         post = {}
-        add_pair(post, :captureDelay, -1)
-        add_amount(post, money, options)
-        add_invoice(post, credit_card_or_reference, money, options)
-        add_credit_card_or_reference(post, credit_card_or_reference)
-        add_customer_data(post, options)
-        add_remote_address(post, options)
+        add_auth_purchase(post, -1, money, credit_card_or_reference, options)
         commit('SALE', post)
       end
 
       def purchase(money, credit_card_or_reference, options = {})
         post = {}
-        add_pair(post, :captureDelay, 0)
-        add_amount(post, money, options)
-        add_invoice(post, credit_card_or_reference, money, options)
-        add_credit_card_or_reference(post, credit_card_or_reference)
-        add_customer_data(post, options)
-        add_remote_address(post, options)
+        add_auth_purchase(post, 0, money, credit_card_or_reference, options)
         commit('SALE', post)
       end
 
@@ -184,6 +174,7 @@ module ActiveMerchant #:nodoc:
         add_pair(post, :xref, authorization)
         add_amount(post, money, options)
         add_remote_address(post, options)
+        add_country_code(post, options)
         response = commit('REFUND_SALE', post)
 
         return response if response.success?
@@ -222,6 +213,16 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
+      def add_auth_purchase(post, pair_value, money, credit_card_or_reference, options)
+        add_pair(post, :captureDelay, pair_value)
+        add_amount(post, money, options)
+        add_invoice(post, credit_card_or_reference, money, options)
+        add_credit_card_or_reference(post, credit_card_or_reference)
+        add_customer_data(post, options)
+        add_remote_address(post, options)
+        add_country_code(post, options)
+      end
 
       def add_amount(post, money, options)
         currency = options[:currency] || currency(money)
@@ -286,6 +287,10 @@ module ActiveMerchant #:nodoc:
         add_pair(post, :remoteAddress, options[:ip] || '1.1.1.1')
       end
 
+      def add_country_code(post, options)
+        post[:countryCode] = options[:country_code] || self.supported_countries[0]
+      end
+
       def normalize_line_endings(str)
         str.gsub(/%0D%0A|%0A%0D|%0D/, '%0A')
       end
@@ -309,7 +314,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, parameters)
-        parameters.update(countryCode: self.supported_countries[0]) unless %w[CAPTURE CANCEL].include?(action)
         parameters.update(
           merchantID: @options[:login],
           action: action
