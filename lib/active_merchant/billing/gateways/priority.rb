@@ -307,16 +307,16 @@ module ActiveMerchant #:nodoc:
         base_url_jwt = test? ? self.test_url_jwt : self.live_url_jwt
 
         if action == 'void'
-          base_url += "?id=#{refnumber}&force=true"
+          base_url + "/#{refnumber}?force=true"
         else
           if action == 'verify'
-            base_url = (base_url_verify + '?search=') + (creditcardnumber[0, 6]).to_s
+            (base_url_verify + '?search=') + (creditcardnumber[0, 6]).to_s
           else
             if action == 'get_payment_status' || action == 'close_batch'
-              base_url = base_url_batch + "/#{params}"
+              base_url_batch + "/#{params}"
             else
               if action == 'create_jwt'
-                base_url = base_url_jwt + "/#{params}/token"
+                base_url_jwt + "/#{params}/token"
               else
                 base_url + '?includeCustomerMatches=false&echo=true'
               end

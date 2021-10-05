@@ -4,16 +4,13 @@ class PriorityTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    # Consumer API Key:
-    # Consumer API Secret:
-
     # run command below to run tests in debug (byebug)
-    # byebug -Itest test/unit/gateways/card_stream_test.rb
+    # byebug -Itest test/unit/gateways/priority_test.rb
 
-    @gateway = PriorityGateway.new(
-      key: 'Consumer API Key',
-      secret: 'Consumer API Secret',
-      cardnumber: '411111'
+    @gateway = ActiveMerchant::Billing::PriorityGateway.new(
+      key: 'key',
+      secret: 'secret',
+      merchant_id: 'merchant_id'
     )
 
     @action = 'purchase'
@@ -257,12 +254,9 @@ class PriorityTest < Test::Unit::TestCase
     @amount_purchase = 4.11
     @credit_card_purchase_success = credit_card('4111111111111111', month: '01', year: '2029', first_name: 'Marcus', last_name: 'Rashford', verification_value: '123')
 
-    # Update 'key' and 'secret' with API keys. Note the 'avsStreet' and 'avsZip' are the values obtained from credi card input on MX Merchant
+    # Note the 'avsStreet' and 'avsZip' are the values obtained from credit card input on MX Merchant
     @option_spr = {
-      merchant: 514391592,
       billing_address: address,
-      key: 'Consumer API Key',
-      secret: 'Consumer API Secret',
       avsStreet: '666',
       avsZip: '55044'
     }
@@ -357,9 +351,6 @@ class PriorityTest < Test::Unit::TestCase
     @responseStringObj['posData'] = @responseStringObj['posData'].transform_keys(&:to_s)
     @responseStringObj['purchases'][0] = @responseStringObj['purchases'][0].transform_keys(&:to_s)
     @responseStringObj['risk'] = @responseStringObj['risk'].transform_keys(&:to_s)
-    # key and secret is from MX Merchant settings API Key
-    @responseStringObj.update(key: @option_spr[:key])
-    @responseStringObj.update(secret: @option_spr[:secret])
 
     response = stub_comms do
       @gateway.refund(@amount_refund, @credit_card, @responseStringObj)
@@ -368,7 +359,7 @@ class PriorityTest < Test::Unit::TestCase
 
       assert_equal json['amount'], @amount_refund
       assert_creditcard_data_passed(data, @credit_card)
-      asset_refund_data_passed(data, @responseStringObj)
+      assert_refund_data_passed(data, @responseStringObj)
     end.respond_with(successful_refund_purchase_response)
     assert_success response
     assert_equal 'PU2QSwaBlKx5OEzBKavi1L0Dy9yIMSEx', response.authorization
@@ -380,9 +371,6 @@ class PriorityTest < Test::Unit::TestCase
     @amount_refund = @responseStringObj['amount'].to_f * -1
     @credit_refund = @responseStringObj['cardAccount'].transform_keys(&:to_s)
     @responseStringObj['cardAccount'] = @responseStringObj['cardAccount'].transform_keys(&:to_s)
-    # key and secret is from MX Merchant settings API Key
-    @responseStringObj.update(key: @option_spr[:key])
-    @responseStringObj.update(secret: @option_spr[:secret])
     response = stub_comms do
       @gateway.refund(@amount_refund, @credit_refund, @responseStringObj)
     end.respond_with(successful_refund_response)
@@ -398,9 +386,6 @@ class PriorityTest < Test::Unit::TestCase
     @amount_refund = @responseStringObj['amount'].to_f * -1
     @credit_refund = @responseStringObj['cardAccount'].transform_keys(&:to_s)
     @responseStringObj['cardAccount'] = @responseStringObj['cardAccount'].transform_keys(&:to_s)
-    # key and secret is from MX Merchant settings API Key
-    @responseStringObj.update(key: @option_spr[:key])
-    @responseStringObj.update(secret: @option_spr[:secret])
 
     response = stub_comms do
       @gateway.refund(@amount_refund, @credit_refund, @responseStringObj)
@@ -517,7 +502,7 @@ end
     assert_equal card_data['isCorp'], creditcard['isCorp']
   end
 
-  def asset_refund_data_passed(data, purchaseresponse)
+  def assert_refund_data_passed(data, purchaseresponse)
     parsed_data = JSON.parse(data)
 
     assert_equal parsed_data['cardPresent'], purchaseresponse['cardPresent']
