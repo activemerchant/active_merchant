@@ -219,7 +219,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, parameters)
-        json_str = parameters.to_json
+        json_str = JSON.generate(parameters)
         cleaned_str = json_str.gsub('\n', '')
         raw_response = ssl_post(live_url, cleaned_str, { 'Content-type' => 'application/json' })
         response = JSON.parse(decrypt(raw_response, @options[:key_session]))
