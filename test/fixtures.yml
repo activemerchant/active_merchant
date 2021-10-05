@@ -842,9 +842,9 @@ plugnpay:
   password: PASSWORD
 
 priority:
-  key: 'your_sandbox_key'
-  secret: 'your_sandbox_secret'
-  merchant_id: 'your_merchant_id'
+  # key: 'your_sandbox_key'
+  # secret: 'your_sandbox_secret'
+  # merchant_id: 'your_merchant_id'
 
 # Working credentials, no need to replace
 pro_pay:

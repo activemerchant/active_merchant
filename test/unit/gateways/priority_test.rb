@@ -7,15 +7,11 @@ class PriorityTest < Test::Unit::TestCase
     # run command below to run tests in debug (byebug)
     # byebug -Itest test/unit/gateways/priority_test.rb
 
-    @gateway = ActiveMerchant::Billing::PriorityGateway.new(
-      key: 'key',
-      secret: 'secret',
-      merchant_id: 'merchant_id'
-    )
+    @gateway = PriorityGateway.new(fixtures(:priority))
 
     @action = 'purchase'
     @amount = 3.33
-    @merchant = 514391592
+    @merchant = 1000003310
     @is_settle_funds_purchase = true
     @is_settle_funds_auth = false
     @credit_card_purchase = {
@@ -153,7 +149,7 @@ class PriorityTest < Test::Unit::TestCase
         "creatorName": 'Mike B',
         "isDuplicate": false,
         "shouldVaultCard": true,
-        "merchantId": 514391592,
+        "merchantId": 1000003310,
         "batch": '0033',
         "batchId": 10000000227555,
         "tenderType": 'Card',
@@ -264,6 +260,9 @@ class PriorityTest < Test::Unit::TestCase
     # purchase params fail
     @credit_card_purchase_fail = credit_card('4111', month: '01', year: '2029', first_name: 'Marcus', last_name: 'Rashford', verification_value: '123')
     # purchase params fail end
+
+    # authorize params success
+    @amount_authorize = 7.99
   end
 
   def test_successful_purchase
@@ -337,7 +336,9 @@ class PriorityTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.void(123456, @option_spr)
     end.respond_with(failed_void_response)
+
     assert_failure response
+
     assert_equal 'Unauthorized', response.params['message']
 
     assert_equal 'Original Payment Not Found Or You Do Not Have Access.', response.params['details'][0]
@@ -397,9 +398,11 @@ class PriorityTest < Test::Unit::TestCase
   end
 
   def test_get_payment_status
-    assert void = @gateway.get_payment_status(10000000227555, @option_spr)
-    assert_success void
-    assert_equal 'Card', void.params['tenderType']
+    # check is this transaction associated batch is "Closed".
+    batchcheck = @gateway.get_payment_status(123456, @option_spr)
+
+    assert_failure batchcheck
+    assert_equal 'Invalid JSON response', batchcheck.params['message'][0..20]
   end
 
   def test_scrub
@@ -416,7 +419,7 @@ class PriorityTest < Test::Unit::TestCase
             "id": 10000001625074,
             "creatorName": "spreedly-api",
             "isDuplicate": false,
-            "merchantId": 514391592,
+            "merchantId": 1000003310,
             "batch": "0001",
             "batchId": 10000000227764,
             "tenderType": "Card",
@@ -515,7 +518,7 @@ end
     assert_equal parsed_data['id'], 0
     assert_equal parsed_data['invoice'], purchaseresponse['invoice']
     assert_equal parsed_data['isDuplicate'], false
-    assert_equal parsed_data['merchantId'], purchaseresponse['merchantId']
+    assert_equal parsed_data['merchantId'], purchaseresponse['merchantId'].to_s
     assert_equal parsed_data['paymentToken'], purchaseresponse['cardAccount']['token']
 
     posdata = parsed_data['posData']
@@ -638,7 +641,7 @@ end
       "creatorName": "Mike B",
       "isDuplicate": false,
       "shouldVaultCard": true,
-      "merchantId": 514391592,
+      "merchantId": 1000003310,
       "batch": "0009",
       "batchId": 10000000227516,
       "tenderType": "Card",
@@ -721,7 +724,7 @@ end
       "creatorName": "spreedly-api",
       "isDuplicate": false,
       "shouldVaultCard": true,
-      "merchantId": 514391592,
+      "merchantId": 1000003310,
       "batch": "0009",
       "batchId": 10000000227516,
       "tenderType": "Card",
@@ -794,7 +797,7 @@ end
         "creatorName": "Mike B",
         "isDuplicate": false,
         "shouldVaultCard": true,
-        "merchantId": 514391592,
+        "merchantId": 1000003310,
         "tenderType": "Card",
         "currency": "USD",
         "amount": "3.32",
@@ -874,7 +877,7 @@ end
         "creatorName": "spreedly-api",
         "isDuplicate": false,
         "shouldVaultCard": true,
-        "merchantId": 514391592,
+        "merchantId": 1000003310,
         "tenderType": "Card",
         "currency": "USD",
         "amount": "4.11",
@@ -944,7 +947,7 @@ end
             "id": 10000001625061,
             "creatorName": "spreedly-api",
             "isDuplicate": false,
-            "merchantId": 514391592,
+            "merchantId": 1000003310,
             "batch": "0016",
             "batchId": 10000000227758,
             "tenderType": "Card",
@@ -1037,7 +1040,7 @@ end
         "id": 10000001620801,
         "creatorName": "Mike B",
         "isDuplicate": false,
-        "merchantId": 514391592,
+        "merchantId": 1000003310,
         "batch": "0001",
         "batchId": 10000000227556,
         "tenderType": "Card",
@@ -1113,7 +1116,7 @@ end
         "id": 10000001620802,
         "creatorName": "spreedly-api",
         "isDuplicate": false,
-        "merchantId": 514391592,
+        "merchantId": 1000003310,
         "batch": "0001",
         "batchId": 10000000227556,
         "tenderType": "Card",
@@ -1181,13 +1184,13 @@ end
 
   def pre_scrubbed
     %(
-      {\"achIndicator\":null,\"amount\":2.11,\"authCode\":null,\"authOnly\":false,\"bankAccount\":null,\"cardAccount\":{\"avsStreet\":\"1\",\"avsZip\":\"88888\",\"cvv\":\"123\",\"entryMode\":\"Keyed\",\"expiryDate\":\"01/29\",\"expiryMonth\":\"01\",\"expiryYear\":\"29\",\"last4\":null,\"magstripe\":null,\"number\":\"4111111111111111\"},\"cardPresent\":false,\"cardPresentType\":\"CardNotPresent\",\"isAuth\":true,\"isSettleFunds\":true,\"isTicket\":false,\"merchantId\":514391592,\"mxAdvantageEnabled\":false,\"mxAdvantageFeeLabel\":\"\",\"paymentType\":\"Sale\",\"purchases\":[{\"taxRate\":\"0.0000\",\"additionalTaxRate\":null,\"discountRate\":null}],\"shouldGetCreditCardLevel\":true,\"shouldVaultCard\":true,\"source\":\"Spreedly\",\"sourceZip\":\"K1C2N6\",\"taxExempt\":false,\"tenderType\":\"Card\",\"terminals\":[]}
+      {\"achIndicator\":null,\"amount\":2.11,\"authCode\":null,\"authOnly\":false,\"bankAccount\":null,\"cardAccount\":{\"avsStreet\":\"1\",\"avsZip\":\"88888\",\"cvv\":\"123\",\"entryMode\":\"Keyed\",\"expiryDate\":\"01/29\",\"expiryMonth\":\"01\",\"expiryYear\":\"29\",\"last4\":null,\"magstripe\":null,\"number\":\"4111111111111111\"},\"cardPresent\":false,\"cardPresentType\":\"CardNotPresent\",\"isAuth\":true,\"isSettleFunds\":true,\"isTicket\":false,\"merchantId\":1000003310,\"mxAdvantageEnabled\":false,\"mxAdvantageFeeLabel\":\"\",\"paymentType\":\"Sale\",\"purchases\":[{\"taxRate\":\"0.0000\",\"additionalTaxRate\":null,\"discountRate\":null}],\"shouldGetCreditCardLevel\":true,\"shouldVaultCard\":true,\"source\":\"Spreedly\",\"sourceZip\":\"K1C2N6\",\"taxExempt\":false,\"tenderType\":\"Card\",\"terminals\":[]}
      )
   end
 
   def post_scrubbed
     %(
-      {\"achIndicator\":null,\"amount\":2.11,\"authCode\":null,\"authOnly\":false,\"bankAccount\":null,\"cardAccount\":{\"avsStreet\":\"1\",\"avsZip\":\"88888\",\"cvv[FILTERED]\",\"entryMode\":\"Keyed\",\"expiryDate\":\"01/29\",\"expiryMonth\":\"01\",\"expiryYear\":\"29\",\"last4\":null,\"magstripe\":null,\"number[FILTERED]\"},\"cardPresent\":false,\"cardPresentType\":\"CardNotPresent\",\"isAuth\":true,\"isSettleFunds\":true,\"isTicket\":false,\"merchantId\":514391592,\"mxAdvantageEnabled\":false,\"mxAdvantageFeeLabel\":\"\",\"paymentType\":\"Sale\",\"purchases\":[{\"taxRate\":\"0.0000\",\"additionalTaxRate\":null,\"discountRate\":null}],\"shouldGetCreditCardLevel\":true,\"shouldVaultCard\":true,\"source\":\"Spreedly\",\"sourceZip\":\"K1C2N6\",\"taxExempt\":false,\"tenderType\":\"Card\",\"terminals\":[]}
+      {\"achIndicator\":null,\"amount\":2.11,\"authCode\":null,\"authOnly\":false,\"bankAccount\":null,\"cardAccount\":{\"avsStreet\":\"1\",\"avsZip\":\"88888\",\"cvv[FILTERED]\",\"entryMode\":\"Keyed\",\"expiryDate\":\"01/29\",\"expiryMonth\":\"01\",\"expiryYear\":\"29\",\"last4\":null,\"magstripe\":null,\"number[FILTERED]\"},\"cardPresent\":false,\"cardPresentType\":\"CardNotPresent\",\"isAuth\":true,\"isSettleFunds\":true,\"isTicket\":false,\"merchantId\":1000003310,\"mxAdvantageEnabled\":false,\"mxAdvantageFeeLabel\":\"\",\"paymentType\":\"Sale\",\"purchases\":[{\"taxRate\":\"0.0000\",\"additionalTaxRate\":null,\"discountRate\":null}],\"shouldGetCreditCardLevel\":true,\"shouldVaultCard\":true,\"source\":\"Spreedly\",\"sourceZip\":\"K1C2N6\",\"taxExempt\":false,\"tenderType\":\"Card\",\"terminals\":[]}
      )
   end
 end

@@ -36,6 +36,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def basic_auth
+
         Base64.strict_encode64("#{@options[:key]}:#{@options[:secret]}")
       end
 
