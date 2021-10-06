@@ -36,6 +36,14 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_scrubbed(@gateway.options[:login], transcript)
   end
 
+  def test_check_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.store(@check)
+    end
+    transcript = @gateway.scrub(transcript)
+    assert_scrubbed(@check.account_number, transcript)
+  end
+
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
