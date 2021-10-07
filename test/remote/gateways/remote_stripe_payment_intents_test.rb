@@ -593,6 +593,19 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert_equal 'Ottawa', billing['city']
   end
 
+  def test_create_payment_intent_with_name_if_billing_address_absent
+    options = {
+      currency: 'USD',
+      customer: @customer,
+      confirm: true
+    }
+    name_on_card = [@visa_card.first_name, @visa_card.last_name].join(' ')
+
+    assert response = @gateway.create_intent(@amount, @visa_card, options)
+    assert_success response
+    assert_equal name_on_card, response.params.dig('charges', 'data')[0].dig('billing_details', 'name')
+  end
+
   def test_create_payment_intent_with_connected_account
     transfer_group = 'XFERGROUP'
     application_fee = 100

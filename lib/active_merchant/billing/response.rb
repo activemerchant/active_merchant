@@ -10,6 +10,10 @@ module ActiveMerchant #:nodoc:
         @success
       end
 
+      def failure?
+        !success?
+      end
+
       def test?
         @test
       end

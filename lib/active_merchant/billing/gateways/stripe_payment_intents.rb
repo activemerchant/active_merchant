@@ -20,8 +20,8 @@ module ActiveMerchant #:nodoc:
         add_capture_method(post, options)
         add_confirmation_method(post, options)
         add_customer(post, options)
-        payment_method = add_payment_method_token(post, payment_method, options)
-        return payment_method if payment_method.is_a?(ActiveMerchant::Billing::Response)
+        result = add_payment_method_token(post, payment_method, options)
+        return result if result.is_a?(ActiveMerchant::Billing::Response)
 
         add_external_three_d_secure_auth_data(post, options)
         add_metadata(post, options)
@@ -50,8 +50,8 @@ module ActiveMerchant #:nodoc:
 
       def confirm_intent(intent_id, payment_method, options = {})
         post = {}
-        payment_method = add_payment_method_token(post, payment_method, options)
-        return payment_method if payment_method.is_a?(ActiveMerchant::Billing::Response)
+        result = add_payment_method_token(post, payment_method, options)
+        return result if result.is_a?(ActiveMerchant::Billing::Response)
 
         CONFIRM_INTENT_ATTRIBUTES.each do |attribute|
           add_whitelisted_attribute(post, options, attribute)
@@ -60,13 +60,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def create_payment_method(payment_method, options = {})
-        post_data = create_payment_method_data(payment_method, options)
+        post_data = add_payment_method_data(payment_method, options)
 
         options = format_idempotency_key(options, 'pm')
         commit(:post, 'payment_methods', post_data, options)
       end
 
-      def create_payment_method_data(payment_method, options = {})
+      def add_payment_method_data(payment_method, options = {})
         post_data = {}
         post_data[:type] = 'card'
         post_data[:card] = {}
@@ -75,6 +75,7 @@ module ActiveMerchant #:nodoc:
         post_data[:card][:exp_year] = payment_method.year
         post_data[:card][:cvc] = payment_method.verification_value if payment_method.verification_value
         add_billing_address(post_data, options)
+        add_name_only(post_data, payment_method) if post_data[:billing_details].nil?
         post_data
       end
 
@@ -82,8 +83,8 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_amount(post, money, options)
 
-        payment_method = add_payment_method_token(post, payment_method, options)
-        return payment_method if payment_method.is_a?(ActiveMerchant::Billing::Response)
+        result = add_payment_method_token(post, payment_method, options)
+        return result if result.is_a?(ActiveMerchant::Billing::Response)
 
         add_payment_method_types(post, options)
         add_customer(post, options)
@@ -100,8 +101,8 @@ module ActiveMerchant #:nodoc:
       def create_setup_intent(payment_method, options = {})
         post = {}
         add_customer(post, options)
-        payment_method = add_payment_method_token(post, payment_method, options)
-        return payment_method if payment_method.is_a?(ActiveMerchant::Billing::Response)
+        result = add_payment_method_token(post, payment_method, options)
+        return result if result.is_a?(ActiveMerchant::Billing::Response)
 
         add_metadata(post, options)
         add_return_url(post, options)
@@ -180,8 +181,8 @@ module ActiveMerchant #:nodoc:
         # If customer option is provided, create a payment method and attach to customer id
         # Otherwise, create a customer, then attach
         if payment_method.is_a?(StripePaymentToken) || payment_method.is_a?(ActiveMerchant::Billing::CreditCard)
-          payment_method = add_payment_method_token(params, payment_method, options)
-          return payment_method if payment_method.is_a?(ActiveMerchant::Billing::Response)
+          result = add_payment_method_token(params, payment_method, options)
+          return result if result.is_a?(ActiveMerchant::Billing::Response)
 
           if options[:customer]
             customer_id = options[:customer]
@@ -252,35 +253,36 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment_method_token(post, payment_method, options)
-        return if payment_method.nil?
-
-        if payment_method.is_a?(ActiveMerchant::Billing::CreditCard)
-          if off_session_request?(options)
-            post[:payment_method_data] = create_payment_method_data(payment_method, options)
-            return
-          else
-            p = create_payment_method(payment_method, options)
-            return p unless p.success?
-
-            payment_method = p.params['id']
-          end
-        end
-
         case payment_method
         when StripePaymentToken
           post[:payment_method] = payment_method.payment_data['id']
         when String
-          if payment_method.include?('|')
-            customer_id, payment_method_id = payment_method.split('|')
-            token = payment_method_id
-            post[:customer] = customer_id
-          else
-            token = payment_method
-          end
-          post[:payment_method] = token
+          extract_token_from_string_and_maybe_add_customer_id(post, payment_method)
+        when ActiveMerchant::Billing::CreditCard
+          get_payment_method_data_from_card(post, payment_method, options)
+        end
+      end
+
+      def extract_token_from_string_and_maybe_add_customer_id(post, payment_method)
+        if payment_method.include?('|')
+          customer_id, payment_method = payment_method.split('|')
+          post[:customer] = customer_id
         end
 
-        post
+        post[:payment_method] = payment_method
+      end
+
+      def get_payment_method_data_from_card(post, payment_method, options)
+        return create_payment_method_and_extract_token(post, payment_method, options) unless off_session_request?(options)
+
+        post[:payment_method_data] = add_payment_method_data(payment_method, options)
+      end
+
+      def create_payment_method_and_extract_token(post, payment_method, options)
+        payment_method_response = create_payment_method(payment_method, options)
+        return payment_method_response if payment_method_response.failure?
+
+        add_payment_method_token(post, payment_method_response.params['id'], options)
       end
 
       def add_payment_method_types(post, options)
@@ -388,6 +390,13 @@ module ActiveMerchant #:nodoc:
         post[:billing_details][:email] = billing[:email] if billing[:email]
         post[:billing_details][:name] = billing[:name] if billing[:name]
         post[:billing_details][:phone] = billing[:phone] if billing[:phone]
+      end
+
+      def add_name_only(post, payment_method)
+        post[:billing_details] = {} unless post[:billing_details]
+
+        name = [payment_method.first_name, payment_method.last_name].compact.join(' ')
+        post[:billing_details][:name] = name
       end
 
       def add_shipping_address(post, options = {})
