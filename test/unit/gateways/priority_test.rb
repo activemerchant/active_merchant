@@ -46,100 +46,6 @@ class PriorityTest < Test::Unit::TestCase
       token: 'P6NyKC5UfmZjgAlF3ZEd3YSaJG9qKT6E'
     }
 
-    @option_purchase = {
-      cardPresent: false,
-        cardPresentType: 'CardNotPresent',
-        isAuth: true,
-        isSettleFunds: @is_settle_funds_purchase,
-        isTicket: nil,
-
-        merchantId: @merchant,
-        mxAdvantageEnabled: false,
-        mxAdvantageFeeLabel: '',
-        paymentType: 'Sale',
-        bankAccount: nil,
-
-        purchases: [
-          {
-            taxRate: 0.0000,
-            additionalTaxRate: nil,
-            discountRate: nil
-          }
-        ],
-
-        shouldGetCreditCardLevel: true,
-        shouldVaultCard: true,
-        source: 'QuickPay',
-        sourceZip: '94102',
-        taxExempt: false,
-        tenderType: 'Card',
-        terminals: []
-    }
-    # Options  - A standard ActiveMerchant options hash:
-    @options_refund = {
-      cardPresent: false,
-      clientReference: 'PTHER000IKZK',
-      created: '2021-07-01T19:01:57.69Z',
-      creatorName: 'Mike Saylor',
-      currency: 'USD',
-      customerCode: 'PTHER000IKZK',
-      enteredAmount: 9.51,
-      id: nil,
-      invoice: 'R000IKZK',
-      isDuplicate: false,
-      merchantId: @merchant,
-      paymentToken: 'P6NyKC5UfmZjgAlF3ZEd3YSaJG9qKT6E',
-
-      posData: { panCaptureMethod: 'Manual' },
-
-      purchases: [
-        {
-          code: 'MISC',
-          dateCreated: '0001-01-01T00:00:00',
-          description: 'Miscellaneous',
-          discountAmount: '0',
-          discountRate: '0',
-          extendedAmount: '9.51',
-          iId: '11036546',
-          lineItemId: 0,
-          name: 'Miscellaneous',
-          quantity: '1',
-          taxAmount: '0.2',
-          taxRate: '0.01',
-          transactionIId: 0,
-          transactionId: '10000001610620',
-          unitOfMeasure: 'EA',
-          unitPrice: '1.51'
-        }
-      ],
-      reference: @reference_refund,
-      replayId: nil,
-      requireSignature: false,
-      reviewIndicator: nil,
-
-      risk: {
-        avsAddressMatch: false,
-        avsResponse: 'No Response from AVS',
-        avsZipMatch: false,
-        cvvMatch: true,
-        cvvResponse: 'Match',
-        cvvResponseCode: 'M'
-      },
-
-      settledAmount: '0',
-      settledCurrency: 'USD',
-      settledDate: '2021-07-01T19:02:21.553',
-      shipToCountry: 'USA',
-      shouldGetCreditCardLevel: true,
-      source: 'QuickPay',
-      sourceZip: '94102',
-      status: 'Settled',
-      tax: '0.12',
-      taxExempt: false,
-      tenderType: 'Card',
-      type: 'Sale'
-    }
-
     @response_purchase = {
       "created": '2021-07-27T02:01:52.003Z',
         "paymentToken": 'P3hhDiddFRFTlsa8xmv7LHBGK9aI70UR',
@@ -215,7 +121,7 @@ class PriorityTest < Test::Unit::TestCase
         "type": 'Sale',
         "taxExempt": false,
         "reviewIndicator": 1,
-        "source": 'QuickPay',
+        "source": 'Tester1',
         "shouldGetCreditCardLevel": false
     }
 
@@ -237,7 +143,7 @@ class PriorityTest < Test::Unit::TestCase
       purchases: [{ taxRate: '0.0000', additionalTaxRate: nil, discountRate: nil }],
       shouldGetCreditCardLevel: true,
       shouldVaultCard: true,
-      source: 'QuickPay',
+      source: 'Tester1',
       sourceZip: '94102',
       taxExempt: false,
       tenderType: 'Card',
@@ -261,6 +167,104 @@ class PriorityTest < Test::Unit::TestCase
 
     # authorize params success
     @amount_authorize = 7.99
+
+    setup_options_hashes
+  end
+
+  def setup_options_hashes
+    @option_purchase = {
+      cardPresent: false,
+      cardPresentType: 'CardNotPresent',
+      isAuth: true,
+      isSettleFunds: @is_settle_funds_purchase,
+      isTicket: nil,
+
+      merchantId: @merchant,
+      mxAdvantageEnabled: false,
+      mxAdvantageFeeLabel: '',
+      paymentType: 'Sale',
+      bankAccount: nil,
+
+      purchases: [
+        {
+          taxRate: 0.0000,
+          additionalTaxRate: nil,
+          discountRate: nil
+        }
+      ],
+
+      shouldGetCreditCardLevel: true,
+      shouldVaultCard: true,
+      source: 'Tester1',
+      sourceZip: '94102',
+      taxExempt: false,
+      tenderType: 'Card',
+      terminals: []
+    }
+    # Options  - A standard ActiveMerchant options hash:
+    @options_refund = {
+      cardPresent: false,
+      clientReference: 'PTHER000IKZK',
+      created: '2021-07-01T19:01:57.69Z',
+      creatorName: 'Mike Saylor',
+      currency: 'USD',
+      customerCode: 'PTHER000IKZK',
+      enteredAmount: 9.51,
+      id: nil,
+      invoice: 'R000IKZK',
+      isDuplicate: false,
+      merchantId: @merchant,
+      paymentToken: 'P6NyKC5UfmZjgAlF3ZEd3YSaJG9qKT6E',
+
+      posData: { panCaptureMethod: 'Manual' },
+
+      purchases: [
+        {
+          code: 'MISC',
+          dateCreated: '0001-01-01T00:00:00',
+          description: 'Miscellaneous',
+          discountAmount: '0',
+          discountRate: '0',
+          extendedAmount: '9.51',
+          iId: '11036546',
+          lineItemId: 0,
+          name: 'Miscellaneous',
+          quantity: '1',
+          taxAmount: '0.2',
+          taxRate: '0.01',
+          transactionIId: 0,
+          transactionId: '10000001610620',
+          unitOfMeasure: 'EA',
+          unitPrice: '1.51'
+        }
+      ],
+      reference: @reference_refund,
+      replayId: nil,
+      requireSignature: false,
+      reviewIndicator: nil,
+
+      risk: {
+        avsAddressMatch: false,
+        avsResponse: 'No Response from AVS',
+        avsZipMatch: false,
+        cvvMatch: true,
+        cvvResponse: 'Match',
+        cvvResponseCode: 'M'
+      },
+
+      settledAmount: '0',
+      settledCurrency: 'USD',
+      settledDate: '2021-07-01T19:02:21.553',
+      shipToCountry: 'USA',
+      shouldGetCreditCardLevel: true,
+      source: 'Tester1',
+      sourceZip: '94102',
+      status: 'Settled',
+      tax: '0.12',
+      taxExempt: false,
+      tenderType: 'Card',
+      type: 'Sale'
+    }
   end
 
   def test_successful_purchase
@@ -343,22 +347,23 @@ class PriorityTest < Test::Unit::TestCase
   end
 
   def test_successful_refund_purchase_response
-    @responsestringobj = @response_purchase.transform_keys(&:to_s)
-    @amount_refund = @responsestringobj['amount'].to_f * -1
-    @credit_card = @responsestringobj['cardAccount'].transform_keys(&:to_s)
-    @responsestringobj['cardAccount'] = @responsestringobj['cardAccount'].transform_keys(&:to_s)
-    @responsestringobj['posData'] = @responsestringobj['posData'].transform_keys(&:to_s)
-    @responsestringobj['purchases'][0] = @responsestringobj['purchases'][0].transform_keys(&:to_s)
-    @responsestringobj['risk'] = @responsestringobj['risk'].transform_keys(&:to_s)
+    @response_string_obj = @response_purchase.transform_keys(&:to_s)
+    @amount_refund = @response_string_obj['amount'].to_f * -1
+    @credit_card = @response_string_obj['cardAccount'].transform_keys(&:to_s)
+    @response_string_obj['cardAccount'] = @response_string_obj['cardAccount'].transform_keys(&:to_s)
+    @response_string_obj['posData'] = @response_string_obj['posData'].transform_keys(&:to_s)
+    @response_string_obj['purchases'][0] = @response_string_obj['purchases'][0].transform_keys(&:to_s)
+    @response_string_obj['risk'] = @response_string_obj['risk'].transform_keys(&:to_s)
+    @response_string_obj['source'] = 'Tester'
 
     response = stub_comms do
-      @gateway.refund(@amount_refund, @credit_card, @responsestringobj)
+      @gateway.refund(@amount_refund, @credit_card, @response_string_obj)
     end.check_request do |_endpoint, data, _headers|
       json = JSON.parse(data)
 
       assert_equal json['amount'], @amount_refund
-      assert_creditcard_data_passed(data, @credit_card)
-      assert_refund_data_passed(data, @responsestringobj)
+      assert_credit_card_data_passed(data, @credit_card)
+      assert_refund_data_passed(data, @response_string_obj)
     end.respond_with(successful_refund_purchase_response)
     assert_success response
     assert_equal 'PU2QSwaBlKx5OEzBKavi1L0Dy9yIMSEx', response.authorization
@@ -366,12 +371,12 @@ class PriorityTest < Test::Unit::TestCase
   end
 
   def test_successful_refund
-    @responsestringobj = @response_purchase.transform_keys(&:to_s)
-    @amount_refund = @responsestringobj['amount'].to_f * -1
-    @credit_refund = @responsestringobj['cardAccount'].transform_keys(&:to_s)
-    @responsestringobj['cardAccount'] = @responsestringobj['cardAccount'].transform_keys(&:to_s)
+    @response_string_obj = @response_purchase.transform_keys(&:to_s)
+    @amount_refund = @response_string_obj['amount'].to_f * -1
+    @credit_refund = @response_string_obj['cardAccount'].transform_keys(&:to_s)
+    @response_string_obj['cardAccount'] = @response_string_obj['cardAccount'].transform_keys(&:to_s)
     response = stub_comms do
-      @gateway.refund(@amount_refund, @credit_refund, @responsestringobj)
+      @gateway.refund(@amount_refund, @credit_refund, @response_string_obj)
     end.respond_with(successful_refund_response)
     assert_success response
     assert_equal 'Approved', response.params['status']
@@ -381,13 +386,13 @@ class PriorityTest < Test::Unit::TestCase
 
   # Payment already refunded
   def test_failed_refund_purchase_response
-    @responsestringobj = @response_purchase.transform_keys(&:to_s)
-    @amount_refund = @responsestringobj['amount'].to_f * -1
-    @credit_refund = @responsestringobj['cardAccount'].transform_keys(&:to_s)
-    @responsestringobj['cardAccount'] = @responsestringobj['cardAccount'].transform_keys(&:to_s)
+    @response_string_obj = @response_purchase.transform_keys(&:to_s)
+    @amount_refund = @response_string_obj['amount'].to_f * -1
+    @credit_refund = @response_string_obj['cardAccount'].transform_keys(&:to_s)
+    @response_string_obj['cardAccount'] = @response_string_obj['cardAccount'].transform_keys(&:to_s)
 
     response = stub_comms do
-      @gateway.refund(@amount_refund, @credit_refund, @responsestringobj)
+      @gateway.refund(@amount_refund, @credit_refund, @response_string_obj)
     end.respond_with(failed_refund_purchase_response)
     assert_success response
     assert_equal 'Declined', response.params['status']
@@ -415,7 +420,7 @@ class PriorityTest < Test::Unit::TestCase
             "paymentToken": "PdSp5zrZBr0Jwx34gbEGoZHkPzWRxXBJ",
             "originalId": 10000001625073,
             "id": 10000001625074,
-            "creatorName": "spreedly-api",
+            "creatorName": "tester-api",
             "isDuplicate": false,
             "merchantId": 1000003310,
             "batch": "0001",
@@ -478,99 +483,99 @@ class PriorityTest < Test::Unit::TestCase
             "type": "Return",
             "taxExempt": false,
             "reviewIndicator": 0,
-            "source": "Spreedly",
+            "source": "Tester",
             "shouldGetCreditCardLevel": false
         }
     )
   end
 
-  def assert_creditcard_data_passed(data, creditcard)
+  def assert_credit_card_data_passed(data, credit_card)
     parsed_data = JSON.parse(data)
     card_data = parsed_data['cardAccount']
 
-    assert_equal card_data['cardType'], creditcard['cardType']
-    assert_equal card_data['entryMode'], creditcard['entryMode']
+    assert_equal card_data['cardType'], credit_card['cardType']
+    assert_equal card_data['entryMode'], credit_card['entryMode']
 
-    assert_equal card_data['last4'], creditcard['last4']
-    assert_equal card_data['cardId'], creditcard['cardId']
-    assert_equal card_data['token'], creditcard['token']
-    assert_equal card_data['expiryMonth'], creditcard['expiryMonth']
-    assert_equal card_data['expiryYear'], creditcard['expiryYear']
-    assert_equal card_data['hasContract'], creditcard['hasContract']
+    assert_equal card_data['last4'], credit_card['last4']
+    assert_equal card_data['cardId'], credit_card['cardId']
+    assert_equal card_data['token'], credit_card['token']
+    assert_equal card_data['expiryMonth'], credit_card['expiryMonth']
+    assert_equal card_data['expiryYear'], credit_card['expiryYear']
+    assert_equal card_data['hasContract'], credit_card['hasContract']
 
-    assert_equal card_data['cardPresent'], creditcard['cardPresent']
-    assert_equal card_data['isDebit'], creditcard['isDebit']
-    assert_equal card_data['isCorp'], creditcard['isCorp']
+    assert_equal card_data['cardPresent'], credit_card['cardPresent']
+    assert_equal card_data['isDebit'], credit_card['isDebit']
+    assert_equal card_data['isCorp'], credit_card['isCorp']
   end
 
-  def assert_refund_data_passed(data, purchaseresponse)
+  def assert_refund_data_passed(data, purchase_resp)
     parsed_data = JSON.parse(data)
 
-    assert_equal parsed_data['cardPresent'], purchaseresponse['cardPresent']
-    assert_equal parsed_data['clientReference'], purchaseresponse['clientReference']
-    assert_equal parsed_data['created'], purchaseresponse['created']
-    assert_equal parsed_data['creatorName'], purchaseresponse['creatorName']
-    assert_equal parsed_data['currency'], purchaseresponse['currency']
-    assert_equal parsed_data['customerCode'], purchaseresponse['customerCode']
-    assert_equal parsed_data['enteredAmount'], purchaseresponse['amount']
+    assert_equal parsed_data['cardPresent'], purchase_resp['cardPresent']
+    assert_equal parsed_data['clientReference'], purchase_resp['clientReference']
+    assert_equal parsed_data['created'], purchase_resp['created']
+    assert_equal parsed_data['creatorName'], purchase_resp['creatorName']
+    assert_equal parsed_data['currency'], purchase_resp['currency']
+    assert_equal parsed_data['customerCode'], purchase_resp['customerCode']
+    assert_equal parsed_data['enteredAmount'], purchase_resp['amount']
     assert_equal parsed_data['id'], 0
-    assert_equal parsed_data['invoice'], purchaseresponse['invoice']
+    assert_equal parsed_data['invoice'], purchase_resp['invoice']
     assert_equal parsed_data['isDuplicate'], false
-    assert_equal parsed_data['merchantId'], purchaseresponse['merchantId'].to_s
-    assert_equal parsed_data['paymentToken'], purchaseresponse['cardAccount']['token']
+    assert_equal parsed_data['merchantId'], purchase_resp['merchantId'].to_s
+    assert_equal parsed_data['paymentToken'], purchase_resp['cardAccount']['token']
 
-    posdata = parsed_data['posData']
-    purchaseresponseposdata = purchaseresponse['posData']
+    pos_data = parsed_data['posData']
+    purchase_resp_pos_data = purchase_resp['posData']
 
-    assert_equal posdata['panCaptureMethod'], purchaseresponseposdata['panCaptureMethod']
+    assert_equal pos_data['panCaptureMethod'], purchase_resp_pos_data['panCaptureMethod']
 
-    purchasesdata = parsed_data['purchases'][0]
-    purchaseresponsepurchase = purchaseresponse['purchases'][0]
+    purchases_data = parsed_data['purchases'][0]
+    purchase_resp_purchase = purchase_resp['purchases'][0]
 
-    assert_equal purchasesdata['code'], purchaseresponsepurchase['code']
-    assert_equal purchasesdata['dateCreated'], purchaseresponsepurchase['dateCreated']
-    assert_equal purchasesdata['description'], purchaseresponsepurchase['description']
-    assert_equal purchasesdata['discountAmount'], purchaseresponsepurchase['discountAmount']
-    assert_equal purchasesdata['discountRate'], purchaseresponsepurchase['discountRate']
-    assert_equal purchasesdata['extendedAmount'], purchaseresponsepurchase['extendedAmount']
-    assert_equal purchasesdata['iId'], purchaseresponsepurchase['iId']
-    assert_equal purchasesdata['lineItemId'], purchaseresponsepurchase['lineItemId']
-    assert_equal purchasesdata['name'], purchaseresponsepurchase['name']
-    assert_equal purchasesdata['quantity'], purchaseresponsepurchase['quantity']
-    assert_equal purchasesdata['taxAmount'], purchaseresponsepurchase['taxAmount']
-    assert_equal purchasesdata['taxRate'], purchaseresponsepurchase['taxRate']
-    assert_equal purchasesdata['transactionIId'], purchaseresponsepurchase['transactionIId']
-    assert_equal purchasesdata['transactionId'], purchaseresponsepurchase['transactionId']
-    assert_equal purchasesdata['unitOfMeasure'], purchaseresponsepurchase['unitOfMeasure']
-    assert_equal purchasesdata['unitPrice'], purchaseresponsepurchase['unitPrice']
+    assert_equal purchases_data['code'], purchase_resp_purchase['code']
+    assert_equal purchases_data['dateCreated'], purchase_resp_purchase['dateCreated']
+    assert_equal purchases_data['description'], purchase_resp_purchase['description']
+    assert_equal purchases_data['discountAmount'], purchase_resp_purchase['discountAmount']
+    assert_equal purchases_data['discountRate'], purchase_resp_purchase['discountRate']
+    assert_equal purchases_data['extendedAmount'], purchase_resp_purchase['extendedAmount']
+    assert_equal purchases_data['iId'], purchase_resp_purchase['iId']
+    assert_equal purchases_data['lineItemId'], purchase_resp_purchase['lineItemId']
+    assert_equal purchases_data['name'], purchase_resp_purchase['name']
+    assert_equal purchases_data['quantity'], purchase_resp_purchase['quantity']
+    assert_equal purchases_data['taxAmount'], purchase_resp_purchase['taxAmount']
+    assert_equal purchases_data['taxRate'], purchase_resp_purchase['taxRate']
+    assert_equal purchases_data['transactionIId'], purchase_resp_purchase['transactionIId']
+    assert_equal purchases_data['transactionId'], purchase_resp_purchase['transactionId']
+    assert_equal purchases_data['unitOfMeasure'], purchase_resp_purchase['unitOfMeasure']
+    assert_equal purchases_data['unitPrice'], purchase_resp_purchase['unitPrice']
 
-    assert_equal parsed_data['reference'], purchaseresponse['reference']
+    assert_equal parsed_data['reference'], purchase_resp['reference']
     assert_equal parsed_data['replayId'], nil
     assert_equal parsed_data['requireSignature'], false
     assert_equal parsed_data['reviewIndicator'], nil
 
-    riskdata = parsed_data['risk']
-    purchaseresponserisk = purchaseresponse['risk']
+    risk_data = parsed_data['risk']
+    purchase_resp_risk = purchase_resp['risk']
 
-    assert_equal riskdata['avsAddressMatch'], purchaseresponserisk['avsAddressMatch']
-    assert_equal riskdata['avsResponse'], purchaseresponserisk['avsResponse']
-    assert_equal riskdata['avsZipMatch'], purchaseresponserisk['avsZipMatch']
-    assert_equal riskdata['cvvMatch'], purchaseresponserisk['cvvMatch']
-    assert_equal riskdata['cvvResponse'], purchaseresponserisk['cvvResponse']
-    assert_equal riskdata['cvvResponseCode'], purchaseresponserisk['cvvResponseCode']
+    assert_equal risk_data['avsAddressMatch'], purchase_resp_risk['avsAddressMatch']
+    assert_equal risk_data['avsResponse'], purchase_resp_risk['avsResponse']
+    assert_equal risk_data['avsZipMatch'], purchase_resp_risk['avsZipMatch']
+    assert_equal risk_data['cvvMatch'], purchase_resp_risk['cvvMatch']
+    assert_equal risk_data['cvvResponse'], purchase_resp_risk['cvvResponse']
+    assert_equal risk_data['cvvResponseCode'], purchase_resp_risk['cvvResponseCode']
 
-    assert_equal parsed_data['settledAmount'], purchaseresponse['settledAmount']
-    assert_equal parsed_data['settledCurrency'], purchaseresponse['settledCurrency']
-    assert_equal parsed_data['settledDate'], purchaseresponse['created']
-    assert_equal parsed_data['shipToCountry'], purchaseresponse['shipToCountry']
-    assert_equal parsed_data['shouldGetCreditCardLevel'], purchaseresponse['shouldGetCreditCardLevel']
-    assert_equal parsed_data['source'], 'Spreedly'
+    assert_equal parsed_data['settledAmount'], purchase_resp['settledAmount']
+    assert_equal parsed_data['settledCurrency'], purchase_resp['settledCurrency']
+    assert_equal parsed_data['settledDate'], purchase_resp['created']
+    assert_equal parsed_data['shipToCountry'], purchase_resp['shipToCountry']
+    assert_equal parsed_data['shouldGetCreditCardLevel'], purchase_resp['shouldGetCreditCardLevel']
+    assert_equal parsed_data['source'], 'Tester'
     assert_equal parsed_data['sourceZip'], nil
-    assert_equal parsed_data['status'], purchaseresponse['status']
-    assert_equal parsed_data['tax'], purchaseresponse['tax']
-    assert_equal parsed_data['taxExempt'], purchaseresponse['taxExempt']
+    assert_equal parsed_data['status'], purchase_resp['status']
+    assert_equal parsed_data['tax'], purchase_resp['tax']
+    assert_equal parsed_data['taxExempt'], purchase_resp['taxExempt']
     assert_equal parsed_data['tenderType'], 'Card'
-    assert_equal parsed_data['type'], purchaseresponse['type']
+    assert_equal parsed_data['type'], purchase_resp['type']
   end
 
   def failed_void_response
@@ -707,7 +712,7 @@ class PriorityTest < Test::Unit::TestCase
       "type": "Sale",
       "taxExempt": false,
       "reviewIndicator": 1,
-      "source": "QuickPay",
+      "source": "Tester1",
       "shouldGetCreditCardLevel": false
   }
 )
@@ -719,7 +724,7 @@ class PriorityTest < Test::Unit::TestCase
       "created": "2021-07-25T14:59:46.617Z",
       "paymentToken": "P3AmSeSyXQDRM0ioGlP05Q6ykRXXVaGx",
       "id": 10000001620267,
-      "creatorName": "spreedly-api",
+      "creatorName": "tester-api",
       "isDuplicate": false,
       "shouldVaultCard": true,
       "merchantId": 1000003310,
@@ -780,7 +785,7 @@ class PriorityTest < Test::Unit::TestCase
       "clientReference": "PTHGV009M2JZ",
       "type": "Sale",
       "taxExempt": false,
-      "source": "Spreedly",
+      "source": "Tester",
       "shouldGetCreditCardLevel": false
   }
 )
@@ -860,7 +865,7 @@ class PriorityTest < Test::Unit::TestCase
         "type": "Authorization",
         "taxExempt": false,
         "reviewIndicator": 1,
-        "source": "QuickPay",
+        "source": "Tester1",
         "shouldGetCreditCardLevel": false
     }
     )
@@ -872,7 +877,7 @@ class PriorityTest < Test::Unit::TestCase
         "created": "2021-07-25T20:32:47.84Z",
         "paymentToken": "PyzLzQBl8xAgjKYyrDfbA0Dbs39mopvN",
         "id": 10000001620269,
-        "creatorName": "spreedly-api",
+        "creatorName": "tester-api",
         "isDuplicate": false,
         "shouldVaultCard": true,
         "merchantId": 1000003310,
@@ -930,7 +935,7 @@ class PriorityTest < Test::Unit::TestCase
         "clientReference": "PTHGV00LIC5Y",
         "type": "Authorization",
         "taxExempt": false,
-        "source": "Spreedly",
+        "source": "Tester",
         "shouldGetCreditCardLevel": false
     }
     )
@@ -943,7 +948,7 @@ class PriorityTest < Test::Unit::TestCase
             "paymentToken": "PaQLIYLRdWtcFKl5VaKTdUVxMutXJ5Ru",
             "originalId": 10000001625060,
             "id": 10000001625061,
-            "creatorName": "spreedly-api",
+            "creatorName": "tester-api",
             "isDuplicate": false,
             "merchantId": 1000003310,
             "batch": "0016",
@@ -1004,7 +1009,7 @@ class PriorityTest < Test::Unit::TestCase
             "clientReference": "PTHHV00ICLFZ",
             "type": "SaleCompletion",
             "reviewIndicator": 0,
-            "source": "Spreedly",
+            "source": "Tester",
             "shouldGetCreditCardLevel": false
         }
     )
@@ -1099,7 +1104,7 @@ class PriorityTest < Test::Unit::TestCase
         "type": "Return",
         "taxExempt": false,
         "reviewIndicator": 0,
-        "source": "QuickPay",
+        "source": "Tester",
         "shouldGetCreditCardLevel": false
     }
     )
@@ -1112,7 +1117,7 @@ class PriorityTest < Test::Unit::TestCase
         "paymentToken": "P9cjoRNccieQXBmDxEmXi2NjLKWtVF9A",
         "originalId": 10000001620798,
         "id": 10000001620802,
-        "creatorName": "spreedly-api",
+        "creatorName": "tester-api",
         "isDuplicate": false,
         "merchantId": 1000003310,
         "batch": "0001",
@@ -1174,7 +1179,7 @@ class PriorityTest < Test::Unit::TestCase
         "clientReference": "PTHGZ001MFP5",
         "type": "Return",
         "taxExempt": false,
-        "source": "Spreedly",
+        "source": "Tester",
         "shouldGetCreditCardLevel": false
       }
     )
@@ -1182,13 +1187,13 @@ class PriorityTest < Test::Unit::TestCase
 
   def pre_scrubbed
     %(
-      {\"achIndicator\":null,\"amount\":2.11,\"authCode\":null,\"authOnly\":false,\"bankAccount\":null,\"cardAccount\":{\"avsStreet\":\"1\",\"avsZip\":\"88888\",\"cvv\":\"123\",\"entryMode\":\"Keyed\",\"expiryDate\":\"01/29\",\"expiryMonth\":\"01\",\"expiryYear\":\"29\",\"last4\":null,\"magstripe\":null,\"number\":\"4111111111111111\"},\"cardPresent\":false,\"cardPresentType\":\"CardNotPresent\",\"isAuth\":true,\"isSettleFunds\":true,\"isTicket\":false,\"merchantId\":1000003310,\"mxAdvantageEnabled\":false,\"mxAdvantageFeeLabel\":\"\",\"paymentType\":\"Sale\",\"purchases\":[{\"taxRate\":\"0.0000\",\"additionalTaxRate\":null,\"discountRate\":null}],\"shouldGetCreditCardLevel\":true,\"shouldVaultCard\":true,\"source\":\"Spreedly\",\"sourceZip\":\"K1C2N6\",\"taxExempt\":false,\"tenderType\":\"Card\",\"terminals\":[]}
+      {\"achIndicator\":null,\"amount\":2.11,\"authCode\":null,\"authOnly\":false,\"bankAccount\":null,\"cardAccount\":{\"avsStreet\":\"1\",\"avsZip\":\"88888\",\"cvv\":\"123\",\"entryMode\":\"Keyed\",\"expiryDate\":\"01/29\",\"expiryMonth\":\"01\",\"expiryYear\":\"29\",\"last4\":null,\"magstripe\":null,\"number\":\"4111111111111111\"},\"cardPresent\":false,\"cardPresentType\":\"CardNotPresent\",\"isAuth\":true,\"isSettleFunds\":true,\"isTicket\":false,\"merchantId\":1000003310,\"mxAdvantageEnabled\":false,\"mxAdvantageFeeLabel\":\"\",\"paymentType\":\"Sale\",\"purchases\":[{\"taxRate\":\"0.0000\",\"additionalTaxRate\":null,\"discountRate\":null}],\"shouldGetCreditCardLevel\":true,\"shouldVaultCard\":true,\"source\":\"Tester\",\"sourceZip\":\"K1C2N6\",\"taxExempt\":false,\"tenderType\":\"Card\",\"terminals\":[]}
      )
   end
 
   def post_scrubbed
     %(
-      {\"achIndicator\":null,\"amount\":2.11,\"authCode\":null,\"authOnly\":false,\"bankAccount\":null,\"cardAccount\":{\"avsStreet\":\"1\",\"avsZip\":\"88888\",\"cvv[FILTERED]\",\"entryMode\":\"Keyed\",\"expiryDate\":\"01/29\",\"expiryMonth\":\"01\",\"expiryYear\":\"29\",\"last4\":null,\"magstripe\":null,\"number[FILTERED]\"},\"cardPresent\":false,\"cardPresentType\":\"CardNotPresent\",\"isAuth\":true,\"isSettleFunds\":true,\"isTicket\":false,\"merchantId\":1000003310,\"mxAdvantageEnabled\":false,\"mxAdvantageFeeLabel\":\"\",\"paymentType\":\"Sale\",\"purchases\":[{\"taxRate\":\"0.0000\",\"additionalTaxRate\":null,\"discountRate\":null}],\"shouldGetCreditCardLevel\":true,\"shouldVaultCard\":true,\"source\":\"Spreedly\",\"sourceZip\":\"K1C2N6\",\"taxExempt\":false,\"tenderType\":\"Card\",\"terminals\":[]}
+      {\"achIndicator\":null,\"amount\":2.11,\"authCode\":null,\"authOnly\":false,\"bankAccount\":null,\"cardAccount\":{\"avsStreet\":\"1\",\"avsZip\":\"88888\",\"cvv[FILTERED]\",\"entryMode\":\"Keyed\",\"expiryDate\":\"01/29\",\"expiryMonth\":\"01\",\"expiryYear\":\"29\",\"last4\":null,\"magstripe\":null,\"number[FILTERED]\"},\"cardPresent\":false,\"cardPresentType\":\"CardNotPresent\",\"isAuth\":true,\"isSettleFunds\":true,\"isTicket\":false,\"merchantId\":1000003310,\"mxAdvantageEnabled\":false,\"mxAdvantageFeeLabel\":\"\",\"paymentType\":\"Sale\",\"purchases\":[{\"taxRate\":\"0.0000\",\"additionalTaxRate\":null,\"discountRate\":null}],\"shouldGetCreditCardLevel\":true,\"shouldVaultCard\":true,\"source\":\"Tester\",\"sourceZip\":\"K1C2N6\",\"taxExempt\":false,\"tenderType\":\"Card\",\"terminals\":[]}
      )
   end
 end

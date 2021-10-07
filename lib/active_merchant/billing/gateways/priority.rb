@@ -70,7 +70,7 @@ module ActiveMerchant #:nodoc:
       def refund(amount, credit_card, options)
         params = {}
 
-        add_bank_amount_refund(params, amount, options[:authCode])
+        add_bank_amount_refund(params, amount, options[:auth_code])
         add_credit_card(params, credit_card, 'refund', options)
         add_type_merchant_refund(params, options)
         commit('refund', params, '', '', options)
@@ -83,7 +83,7 @@ module ActiveMerchant #:nodoc:
         params['merchantId'] = @options[:merchant_id]
         params['paymentToken'] = authorization
         params['shouldGetCreditCardLevel'] = true
-        params['source'] = 'Spreedly'
+        params['source'] = options['source']
         params['tenderType'] = 'Card'
 
         commit('capture', params, '', '', options)
@@ -120,17 +120,17 @@ module ActiveMerchant #:nodoc:
           gsub(%r((cvv)\W+\d+), '\1[FILTERED]')
       end
 
-      def add_bank_amount_purchase(params, amount, authonly)
+      def add_bank_amount_purchase(params, amount, auth_only)
         params['achIndicator'] = nil
         params['amount'] = amount
         params['authCode'] = nil
-        params['authOnly'] = authonly
+        params['authOnly'] = auth_only
         params['bankAccount'] = nil
       end
 
-      def add_bank_amount_refund(params, amount, authcode)
+      def add_bank_amount_refund(params, amount, auth_code)
         params['amount'] = amount
-        params['authCode'] = authcode
+        params['authCode'] = auth_code
         params['authMessage'] = ''
         params['authOnly'] = false
         params['availableAuthAmount'] = 0
@@ -196,7 +196,7 @@ module ActiveMerchant #:nodoc:
 
         params['shouldGetCreditCardLevel'] = true
         params['shouldVaultCard'] = true
-        params['source'] = 'Spreedly'
+        params['source'] = options['source']
         params['sourceZip'] = options[:billing_address][:zip]
         params['taxExempt'] = false
         params['tenderType'] = 'Card'
@@ -233,7 +233,7 @@ module ActiveMerchant #:nodoc:
         params['settledDate'] = options['created']
         params['shipToCountry'] = options['shipToCountry']
         params['shouldGetCreditCardLevel'] = options['shouldGetCreditCardLevel']
-        params['source'] = 'Spreedly'
+        params['source'] = options['source']
         params['sourceZip'] = nil
         params['status'] = options['status']
         params['tax'] = options['tax']
@@ -242,14 +242,14 @@ module ActiveMerchant #:nodoc:
         params['type'] = options['type']
       end
 
-      def commit(action, params, iid, creditcardnumber, options)
+      def commit(action, params, iid, credit_card, options)
         response =
           begin
             case action
             when 'void'
               ssl_request(:delete, url(action, params, iid, ''), nil, request_headers)
             when 'verify'
-              parse(ssl_get(url(action, params, '', creditcardnumber), request_verify_headers(options)))
+              parse(ssl_get(url(action, params, '', credit_card), request_verify_headers(options)))
             when 'get_payment_status', 'create_jwt'
               parse(ssl_get(url(action, params, iid, ''), request_headers))
             when 'close_batch'
