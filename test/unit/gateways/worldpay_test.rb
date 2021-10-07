@@ -36,6 +36,13 @@ class WorldpayTest < Test::Unit::TestCase
       customer: '59424549c291397379f30c5c082dbed8',
       email: 'wow@example.com'
     }
+    @sub_merchant_options = {
+      sub_merchant_data: {
+        pf_id: '12345678901',
+        sub_name: 'Example Shop',
+        sub_id: '1234567',
+      }
+    }
   end
 
   def test_successful_authorize
@@ -159,6 +166,18 @@ class WorldpayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_authorize_passes_sub_merchant_data
+    options = @options.merge(@sub_merchant_options)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r(<pfId>12345678901</pfId>), data
+      assert_match %r(<subName>Example Shop</subName>), data
+      assert_match %r(<subId>1234567</subId>), data
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
   def test_failed_authorize
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
@@ -171,6 +190,14 @@ class WorldpayTest < Test::Unit::TestCase
   def test_successful_purchase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(successful_authorize_response, successful_capture_response)
+    assert_success response
+  end
+
+  def test_successful_purchase_with_sub_merchant_data
+    options = @options.merge(@sub_merchant_options)
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
     end.respond_with(successful_authorize_response, successful_capture_response)
     assert_success response
   end

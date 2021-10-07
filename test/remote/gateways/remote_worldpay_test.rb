@@ -39,6 +39,20 @@ class RemoteWorldpayTest < Test::Unit::TestCase
       customer: generate_unique_id,
       email: 'wow@example.com'
     }
+
+    @sub_merchant_options = {
+      sub_merchant_data: {
+        pf_id: '12345678901',
+        sub_name: 'Example Shop',
+        sub_id: '1234567',
+        sub_street: '123 Street',
+        sub_city: 'San Francisco',
+        sub_state: 'CA',
+        sub_country_code: '840',
+        sub_postal_code: '94101',
+        sub_tax_id: '987-65-4321'
+      }
+    }
   end
 
   def test_successful_purchase
@@ -93,6 +107,13 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_match %r{CVV matches}, response.cvv_result['message']
   end
 
+  def test_successful_authorize_with_sub_merchant_data
+    options = @options.merge(@sub_merchant_options)
+    assert response = @gateway.authorize(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
   def test_successful_3ds2_authorize
     options = @options.merge({ execute_threed: true, three_ds_version: '2.0' })
     assert response = @gateway.authorize(@amount, @threeDS2_card, options)
@@ -110,6 +131,13 @@ class RemoteWorldpayTest < Test::Unit::TestCase
   def test_successful_authorize_with_risk_data
     options = @options.merge({ execute_threed: true, three_ds_version: '2.0', risk_data: risk_data })
     assert response = @gateway.authorize(@amount, @threeDS2_card, options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_purchase_with_sub_merchant_data
+    options = @options.merge(@sub_merchant_options)
+    assert response = @gateway.authorize(@amount, @credit_card, options)
     assert_success response
     assert_equal 'SUCCESS', response.message
   end

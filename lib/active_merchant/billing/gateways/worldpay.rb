@@ -215,6 +215,7 @@ module ActiveMerchant #:nodoc:
               add_shopper(xml, options)
               add_statement_narrative(xml, options)
               add_risk_data(xml, options[:risk_data]) if options[:risk_data]
+              add_sub_merchant_data(xml, options[:sub_merchant_data]) if options[:sub_merchant_data]
               add_hcg_additional_data(xml, options) if options[:hcg_additional_data]
               add_instalments_data(xml, options) if options[:instalments]
               add_moto_flag(xml, options) if options.dig(:metadata, :manual_entry)
@@ -311,6 +312,20 @@ module ActiveMerchant #:nodoc:
               'second' => timestamp[:second]
             )
           end
+        end
+      end
+
+      def add_sub_merchant_data(xml, options) 
+        xml.subMerchantData do 
+          xml.pfId options[:pf_id] if options[:pf_id]
+          xml.subName options[:sub_name] if options[:sub_name]
+          xml.subId options[:sub_id] if options[:sub_id]
+          xml.subStreet options[:sub_street] if options[:sub_street]
+          xml.subCity options[:sub_city] if options[:sub_city]
+          xml.subState options[:sub_state] if options[:sub_state]
+          xml.subCountryCode options[:sub_country_code] if options[:sub_country_code]
+          xml.subPostalCode options[:sub_postal_code] if options[:sub_postal_code]
+          xml.subTaxId options[:sub_tax_id] if options[:sub_tax_id]
         end
       end
 
