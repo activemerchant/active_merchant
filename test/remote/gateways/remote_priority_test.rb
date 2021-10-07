@@ -58,7 +58,6 @@ class RemotePriorityTest < Test::Unit::TestCase
       last4: '1111',
       token: 'P4A4gziiGpRgiHyAec1rl1FLafaVUMY6'
     }
-    @authCode_refund = 'PPS16f'
 
     # Used by Refund tests
     @response_purchase = {
@@ -176,14 +175,14 @@ class RemotePriorityTest < Test::Unit::TestCase
   end
 
   # Authorize tests
-  def test_successful_Authorize
+  def test_successful_authorize
     response = @gateway.authorize(@amount_purchase, @credit_card_purchase_success, @option_spr)
     assert_success response
     assert_equal 'Approved', response.params['status']
   end
 
   # Invalid card number
-  def test_failed_Authorize
+  def test_failed_authorize
     response = @gateway.authorize(@amount_purchase, @credit_card_purchase_fail_invalid_number, @option_spr)
     assert_success response
 
@@ -192,7 +191,7 @@ class RemotePriorityTest < Test::Unit::TestCase
   end
 
   # Missing card number month
-  def test_failed_Authorize_missing_card_month
+  def test_failed_authorize_missing_card_month
     response = @gateway.authorize(@amount_purchase, @credit_card_purchase_fail_missing_month, @option_spr)
     assert_failure response
 
@@ -202,7 +201,7 @@ class RemotePriorityTest < Test::Unit::TestCase
   end
 
   # Missing card verification number
-  def test_failed_Authorize_missing_card_verification_number
+  def test_failed_authorize_missing_card_verification_number
     response = @gateway.authorize(@amount_purchase, @credit_card_purchase_fail_missing_verification, @option_spr)
     assert_success response
 
@@ -292,7 +291,7 @@ class RemotePriorityTest < Test::Unit::TestCase
   def test_failed_verify
     # Generate jwt token from key and secret. Pass generated jwt to verify function. The verify function requries a jwt for header authorization.
     jwtresponse = @gateway.create_jwt(@option_spr)
-    response = @gateway.verify('123456', jwtresponse.params['jwtToken'])
+    @gateway.verify('123456', jwtresponse.params['jwtToken'])
   rescue StandardError => e
     if e.to_s.include? 'No bank information found for bin number'
       response = { 'error' => 'No bank information found for bin number' }
@@ -305,7 +304,7 @@ class RemotePriorityTest < Test::Unit::TestCase
   def test_failed_verify_must_be_6_to_10_digits
     # Generate jwt token from key and secret. Pass generated jwt to verify function. The verify function requries a jwt for header authorization.
     jwtresponse = @gateway.create_jwt(@option_spr)
-    response = @gateway.verify('12345', jwtresponse.params['jwtToken'])
+    @gateway.verify('12345', jwtresponse.params['jwtToken'])
   rescue StandardError => e
     if e.to_s.include? 'Invalid bank bin number, must be 6-10 digits'
       response = { 'error' => 'Invalid bank bin number, must be 6-10 digits' }
@@ -324,30 +323,6 @@ class RemotePriorityTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card_purchase_success.verification_value.to_s, clean_transcript)
   end
 
-  # Tests that will fail as we need to manually set threshold to above exceed limit
-
-  # Login to MXC and for client set in Advanced tab "Daily Authorization Decline Percent to 1".
-  # This will set threshold exceeded limit.
-  # Then run this test
-  def test_fail_purchase_threshold_exceeded
-    response = @gateway.purchase(@amount_purchase, @credit_card_purchase_success, @option_spr)
-    assert_success response
-    assert_equal 'Decline threshold exceeded', response.params['authMessage']
-    assert_equal 'Declined', response.params['status']
-  end
-
-  # Login to MXC and for client set in Advanced tab "Daily Authorization Decline Percent to 1".
-  # This will set threshold exceeded limit.
-  # Then run this test
-  def test_fail_Authorize_threshold_exceeded
-    response = @gateway.authorize(@amount_purchase, @credit_card_purchase_success, @option_spr)
-
-    assert_success response
-    assert_equal 'Decline threshold exceeded', response.params['authMessage']
-    assert_equal 'Declined', response.params['status']
-  end
-  # end of threshold exceeded limit
-
   # Refund tests
   # Test if we can perform a refund by following steps. This is the happy path.
   #   1. Create Sale/Purchase
@@ -362,7 +337,7 @@ class RemotePriorityTest < Test::Unit::TestCase
     batchcheck = @gateway.get_payment_status(response.params['batchId'], @option_spr)
     # if batch Open then fail test. Batch must be closed to perform a Refund
     if batchcheck.params['status'] == 'Open'
-      close_batch = @gateway.close_batch(response.params['batchId'], @option_spr)
+      @gateway.close_batch(response.params['batchId'], @option_spr)
       # add key and secret to response.params
       # key and secret is from MX Merchant settings API Key
       response.params.update(key: @option_spr[:key])
@@ -376,49 +351,6 @@ class RemotePriorityTest < Test::Unit::TestCase
 
     else
       assert_failure response
-    end
-  end
-
-  # This test will happen when Spreedly tries to refund a transaction when linked batch is in 'Open' status
-  # using capture response body from sale/purchase. Copy to variable @response_purchase
-  # perform following steps and run 2 tests against "test_successful_refund_purchase_response"
-
-  # Test 1 (will fail!)
-  # 1). run sale purchase
-  # 2). capture sale/purchase response object and save to @response_purchase variable
-  # 3). Run test_successful_refund_purchase_response (with linked batch status of 'Open')
-
-  # Test 2 (will pass)
-  # 1). run sale purchase
-  # 2). capture sale/purchase response object and save to @response_purchase variable
-  # 3). close batch
-  # 4). Run test_successful_refund_purchase_response
-
-  def test_successful_refund_purchase_response
-    @responseStringObj = @response_purchase.transform_keys(&:to_s)
-    @amount_refund = @responseStringObj['amount'].to_f * -1
-    @credit_card = @responseStringObj['cardAccount'].transform_keys(&:to_s)
-    @responseStringObj['cardAccount'] = @responseStringObj['cardAccount'].transform_keys(&:to_s)
-    @responseStringObj['posData'] = @responseStringObj['posData'].transform_keys(&:to_s)
-    @responseStringObj['purchases'][0] = @responseStringObj['purchases'][0].transform_keys(&:to_s)
-    @responseStringObj['risk'] = @responseStringObj['risk'].transform_keys(&:to_s)
-
-    # check is this transaction associated batch is "Closed".
-    batchcheck = @gateway.get_payment_status(@responseStringObj['batchId'], @option_spr)
-
-    # if batch Open then fail test. Batch must be closed to perform a Refund
-    if batchcheck.params['status'] == 'Open'
-      assert_equal '1', '2'
-    else
-      # add key and secret to response.params
-      # key and secret is from MX Merchant settings API Key
-      @responseStringObj.update(key: @option_spr[:key])
-      @responseStringObj.update(secret: @option_spr[:secret])
-
-      refund = @gateway.refund(@amount_refund, @credit_card, @responseStringObj)
-      assert_success refund
-      assert refund.params['status'] == 'Approved'
-      assert_equal 'Succeeded', refund.message
     end
   end
 end

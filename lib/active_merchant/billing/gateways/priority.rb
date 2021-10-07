@@ -1,7 +1,6 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PriorityGateway < Gateway
-
       # Sandbox and Production
       self.test_url = 'https://sandbox.api.mxmerchant.com/checkout/v3/payment'
       self.live_url = 'https://api.mxmerchant.com/checkout/v3/payment'
@@ -36,7 +35,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def basic_auth
-
         Base64.strict_encode64("#{@options[:key]}:#{@options[:secret]}")
       end
 
@@ -122,17 +120,17 @@ module ActiveMerchant #:nodoc:
           gsub(%r((cvv)\W+\d+), '\1[FILTERED]')
       end
 
-      def add_bank_amount_purchase(params, amount, authOnly)
+      def add_bank_amount_purchase(params, amount, authonly)
         params['achIndicator'] = nil
         params['amount'] = amount
         params['authCode'] = nil
-        params['authOnly'] = authOnly
+        params['authOnly'] = authonly
         params['bankAccount'] = nil
       end
 
-      def add_bank_amount_refund(params, amount, authCode)
+      def add_bank_amount_refund(params, amount, authcode)
         params['amount'] = amount
-        params['authCode'] = authCode
+        params['authCode'] = authcode
         params['authMessage'] = ''
         params['authOnly'] = false
         params['availableAuthAmount'] = 0
@@ -247,10 +245,17 @@ module ActiveMerchant #:nodoc:
       def commit(action, params, iid, creditcardnumber, options)
         response =
           begin
-            if action == 'void' || action == 'close_batch'
-              ssl_invoke(action, params, iid, creditcardnumber, options)
+            case action
+            when 'void'
+              ssl_request(:delete, url(action, params, iid, ''), nil, request_headers)
+            when 'verify'
+              parse(ssl_get(url(action, params, '', creditcardnumber), request_verify_headers(options)))
+            when 'get_payment_status', 'create_jwt'
+              parse(ssl_get(url(action, params, iid, ''), request_headers))
+            when 'close_batch'
+              ssl_request(:put, url(action, params, iid, ''), nil, request_headers)
             else
-              parse(ssl_invoke(action, params, iid, creditcardnumber, options))
+              parse(ssl_post(url(action, params), post_data(params), request_headers))
             end
           rescue ResponseError => e
             parse(e.response.body)
@@ -271,33 +276,10 @@ module ActiveMerchant #:nodoc:
       def handle_response(response)
         if response.code != '204' && (200...300).cover?(response.code.to_i)
           response.body
+        elsif response.code == '204' || response == ''
+          response.body = { 'code' => '204' }
         else
-
-          if response.code == '204' || response == ''
-            response.body = { 'code' => '204' }
-          else
-            raise ResponseError.new(response)
-          end
-        end
-      end
-
-      def ssl_invoke(action, params, refnumber, creditcardnumber, options)
-        if action == 'void'
-          ssl_request(:delete, url(action, params, refnumber, ''), nil, request_headers)
-        else
-          if action == 'verify'
-            ssl_get(url(action, params, '', creditcardnumber), request_verify_headers(options))
-          else
-            if action == 'get_payment_status' || action == 'create_jwt'
-              ssl_get(url(action, params, refnumber, ''), request_headers)
-            else
-              if action == 'close_batch'
-                ssl_request(:put, url(action, params, refnumber, ''), nil, request_headers)
-              else
-                ssl_post(url(action, params), post_data(params), request_headers)
-              end
-            end
-          end
+          raise ResponseError.new(response)
         end
       end
 
@@ -307,22 +289,17 @@ module ActiveMerchant #:nodoc:
         base_url_batch = test? ? self.test_url_batch : self.live_url_batch
         base_url_jwt = test? ? self.test_url_jwt : self.live_url_jwt
 
-        if action == 'void'
+        case action
+        when 'void'
           base_url + "/#{refnumber}?force=true"
+        when 'verify'
+          (base_url_verify + '?search=') + (creditcardnumber[0, 6]).to_s
+        when 'get_payment_status', 'close_batch'
+          base_url_batch + "/#{params}"
+        when 'create_jwt'
+          base_url_jwt + "/#{params}/token"
         else
-          if action == 'verify'
-            (base_url_verify + '?search=') + (creditcardnumber[0, 6]).to_s
-          else
-            if action == 'get_payment_status' || action == 'close_batch'
-              base_url_batch + "/#{params}"
-            else
-              if action == 'create_jwt'
-                base_url_jwt + "/#{params}/token"
-              else
-                base_url + '?includeCustomerMatches=false&echo=true'
-              end
-            end
-          end
+          base_url + '?includeCustomerMatches=false&echo=true'
         end
       end
 

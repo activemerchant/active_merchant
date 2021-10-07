@@ -1,5 +1,4 @@
 require 'test_helper'
-
 class PriorityTest < Test::Unit::TestCase
   include CommStub
 
@@ -29,7 +28,6 @@ class PriorityTest < Test::Unit::TestCase
     # Refund params
     @reference_refund = '118819000095'
     @amount_refund = -9.51
-    @authCode_refund = 'PPSf03'
 
     @iid = '10000001610661'
     @cardnumber_verify = '4111111111111111'
@@ -345,22 +343,22 @@ class PriorityTest < Test::Unit::TestCase
   end
 
   def test_successful_refund_purchase_response
-    @responseStringObj = @response_purchase.transform_keys(&:to_s)
-    @amount_refund = @responseStringObj['amount'].to_f * -1
-    @credit_card = @responseStringObj['cardAccount'].transform_keys(&:to_s)
-    @responseStringObj['cardAccount'] = @responseStringObj['cardAccount'].transform_keys(&:to_s)
-    @responseStringObj['posData'] = @responseStringObj['posData'].transform_keys(&:to_s)
-    @responseStringObj['purchases'][0] = @responseStringObj['purchases'][0].transform_keys(&:to_s)
-    @responseStringObj['risk'] = @responseStringObj['risk'].transform_keys(&:to_s)
+    @responsestringobj = @response_purchase.transform_keys(&:to_s)
+    @amount_refund = @responsestringobj['amount'].to_f * -1
+    @credit_card = @responsestringobj['cardAccount'].transform_keys(&:to_s)
+    @responsestringobj['cardAccount'] = @responsestringobj['cardAccount'].transform_keys(&:to_s)
+    @responsestringobj['posData'] = @responsestringobj['posData'].transform_keys(&:to_s)
+    @responsestringobj['purchases'][0] = @responsestringobj['purchases'][0].transform_keys(&:to_s)
+    @responsestringobj['risk'] = @responsestringobj['risk'].transform_keys(&:to_s)
 
     response = stub_comms do
-      @gateway.refund(@amount_refund, @credit_card, @responseStringObj)
+      @gateway.refund(@amount_refund, @credit_card, @responsestringobj)
     end.check_request do |_endpoint, data, _headers|
       json = JSON.parse(data)
 
       assert_equal json['amount'], @amount_refund
       assert_creditcard_data_passed(data, @credit_card)
-      assert_refund_data_passed(data, @responseStringObj)
+      assert_refund_data_passed(data, @responsestringobj)
     end.respond_with(successful_refund_purchase_response)
     assert_success response
     assert_equal 'PU2QSwaBlKx5OEzBKavi1L0Dy9yIMSEx', response.authorization
@@ -368,12 +366,12 @@ class PriorityTest < Test::Unit::TestCase
   end
 
   def test_successful_refund
-    @responseStringObj = @response_purchase.transform_keys(&:to_s)
-    @amount_refund = @responseStringObj['amount'].to_f * -1
-    @credit_refund = @responseStringObj['cardAccount'].transform_keys(&:to_s)
-    @responseStringObj['cardAccount'] = @responseStringObj['cardAccount'].transform_keys(&:to_s)
+    @responsestringobj = @response_purchase.transform_keys(&:to_s)
+    @amount_refund = @responsestringobj['amount'].to_f * -1
+    @credit_refund = @responsestringobj['cardAccount'].transform_keys(&:to_s)
+    @responsestringobj['cardAccount'] = @responsestringobj['cardAccount'].transform_keys(&:to_s)
     response = stub_comms do
-      @gateway.refund(@amount_refund, @credit_refund, @responseStringObj)
+      @gateway.refund(@amount_refund, @credit_refund, @responsestringobj)
     end.respond_with(successful_refund_response)
     assert_success response
     assert_equal 'Approved', response.params['status']
@@ -383,13 +381,13 @@ class PriorityTest < Test::Unit::TestCase
 
   # Payment already refunded
   def test_failed_refund_purchase_response
-    @responseStringObj = @response_purchase.transform_keys(&:to_s)
-    @amount_refund = @responseStringObj['amount'].to_f * -1
-    @credit_refund = @responseStringObj['cardAccount'].transform_keys(&:to_s)
-    @responseStringObj['cardAccount'] = @responseStringObj['cardAccount'].transform_keys(&:to_s)
+    @responsestringobj = @response_purchase.transform_keys(&:to_s)
+    @amount_refund = @responsestringobj['amount'].to_f * -1
+    @credit_refund = @responsestringobj['cardAccount'].transform_keys(&:to_s)
+    @responsestringobj['cardAccount'] = @responsestringobj['cardAccount'].transform_keys(&:to_s)
 
     response = stub_comms do
-      @gateway.refund(@amount_refund, @credit_refund, @responseStringObj)
+      @gateway.refund(@amount_refund, @credit_refund, @responsestringobj)
     end.respond_with(failed_refund_purchase_response)
     assert_success response
     assert_equal 'Declined', response.params['status']
@@ -484,7 +482,7 @@ class PriorityTest < Test::Unit::TestCase
             "shouldGetCreditCardLevel": false
         }
     )
-end
+  end
 
   def assert_creditcard_data_passed(data, creditcard)
     parsed_data = JSON.parse(data)
@@ -586,7 +584,7 @@ end
         "responseCode": "egYl4vLdB6WIk4ocQBuIPvA"
     }
     )
- end
+  end
 
   def transcript
     '{
@@ -1010,7 +1008,7 @@ end
             "shouldGetCreditCardLevel": false
         }
     )
-end
+  end
 
   def failed_capture_response
     %(
