@@ -317,7 +317,8 @@ module ActiveMerchant #:nodoc:
           gsub(%r((<[^>]+pan>)[^<]+(<))i, '\1[FILTERED]\2').
           gsub(%r((<[^>]+sec>)[^<]+(<))i, '\1[FILTERED]\2').
           gsub(%r((<[^>]+id>)[^<]+(<))i, '\1[FILTERED]\2').
-          gsub(%r((<[^>]+regKey>)[^<]+(<))i, '\1[FILTERED]\2')
+          gsub(%r((<[^>]+regKey>)[^<]+(<))i, '\1[FILTERED]\2').
+          gsub(%r((<[^>]+acctNr>)[^<]+(<))i, '\1[FILTERED]\2')
       end
 
       private
