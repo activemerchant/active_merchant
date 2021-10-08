@@ -28,6 +28,7 @@
 * Mit: Change how parameters are converted to JSON [tatsianaclifton] #4140
 * Stripe: Add account_number to scrubbing [aenand] #4145
 * Stripe PI: add name on card to billing_details [dsmcclain] #4146
+* TrustCommerce: Scrub bank account info [mbreenlyles] #4149
 
 == Version 1.123.0 (September 10th, 2021)
 * Paysafe: Add gateway integration [meagabeth] #4085
