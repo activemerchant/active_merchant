@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://sandbox.dlocal.com'
       self.live_url = 'https://api.dlocal.com'
 
-      self.supported_countries = %w[AR BR CL CO MX PE UY TR]
+      self.supported_countries = %w[AR BD BO BR CL CM CN CO CR DO EC EG GH IN ID KE MY MX MA NG PA PY PE PH SN ZA TR UY VN]
       self.default_currency = 'USD'
       self.supported_cardtypes = %i[visa master american_express discover jcb diners_club maestro naranja cabal elo alia carnet]
 

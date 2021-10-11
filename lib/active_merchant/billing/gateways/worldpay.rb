@@ -315,8 +315,8 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_sub_merchant_data(xml, options) 
-        xml.subMerchantData do 
+      def add_sub_merchant_data(xml, options)
+        xml.subMerchantData do
           xml.pfId options[:pf_id] if options[:pf_id]
           xml.subName options[:sub_name] if options[:sub_name]
           xml.subId options[:sub_id] if options[:sub_id]

@@ -40,7 +40,7 @@ class WorldpayTest < Test::Unit::TestCase
       sub_merchant_data: {
         pf_id: '12345678901',
         sub_name: 'Example Shop',
-        sub_id: '1234567',
+        sub_id: '1234567'
       }
     }
   end
