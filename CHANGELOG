@@ -30,6 +30,7 @@
 * Stripe PI: add name on card to billing_details [dsmcclain] #4146
 * TrustCommerce: Scrub bank account info [mbreenlyles] #4149
 * TransFirst: Scrub account number [aenand] #4152
+* Paysafe: Update supported countries list [meagabeth] #4154
 
 == Version 1.123.0 (September 10th, 2021)
 * Paysafe: Add gateway integration [meagabeth] #4085

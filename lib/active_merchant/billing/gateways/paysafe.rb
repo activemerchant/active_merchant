@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://api.test.paysafe.com'
       self.live_url = 'https://api.paysafe.com'
 
-      self.supported_countries = %w(US FR CA GB AU NZ HK PL ZA SG)
+      self.supported_countries = %w(AL AT BE BA BG CA HR CY CZ DK EE FI FR DE GR HU IS IE IT LV LI LT LU MT ME NL MK NO PL PT RO RS SK SI ES SE CH TR GB US XK)
       self.supported_cardtypes = %i[visa master american_express discover]
 
       self.homepage_url = 'https://www.paysafe.com/'
