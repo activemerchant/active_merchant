@@ -267,7 +267,8 @@ module ActiveMerchant #:nodoc:
               customer_vault_id: (result.customer.id if result.success?),
               credit_card_token: (result.customer.credit_cards[0].token if result.success?)
             },
-            authorization: (result.customer.id if result.success?))
+            authorization: (result.customer.id if result.success?),
+            error_code: error_code_from_result(result))
         end
       end
 
@@ -296,7 +297,8 @@ module ActiveMerchant #:nodoc:
               customer_vault_id: (result.credit_card.customer_id if result.success?),
               credit_card_token: (result.credit_card.token if result.success?)
             },
-            authorization: (result.credit_card.customer_id if result.success?)
+            authorization: (result.credit_card.customer_id if result.success?),
+            error_code: error_code_from_result(result)
           )
         end
       end
@@ -381,6 +383,7 @@ module ActiveMerchant #:nodoc:
           message_from_result(result),
           response_hash,
           authorization: result.transaction&.id,
+          error_code: error_code_from_result(result),
           test: test?
         )
       end
@@ -394,6 +397,9 @@ module ActiveMerchant #:nodoc:
 
       def response_options(result)
         options = {}
+        unless result.success?
+          options[:error_code] = error_code_from_result(result)
+        end
         if result.credit_card_verification
           options[:authorization] = result.credit_card_verification.id
           options[:avs_result] = { code: avs_code_from(result.credit_card_verification) }
@@ -466,6 +472,13 @@ module ActiveMerchant #:nodoc:
         elsif result.errors.size > 0
           result.errors.first.code
         end
+      end
+
+      def error_code_from_result(result)
+        if result.success?
+          return nil
+        end
+        response_code_from_result(result)
       end
 
       def create_transaction(transaction_type, money, credit_card_or_vault_id, options)
