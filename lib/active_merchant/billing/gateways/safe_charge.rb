@@ -62,6 +62,7 @@ module ActiveMerchant #:nodoc:
         post[:sg_CCToken] = token
         post[:sg_ExpMonth] = exp_month
         post[:sg_ExpYear] = exp_year
+        post[:sg_Email] = options[:email]
 
         commit(post)
       end

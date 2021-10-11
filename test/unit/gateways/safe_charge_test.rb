@@ -148,6 +148,16 @@ class SafeChargeTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_capture_with_options
+    capture = stub_comms do
+      @gateway.capture(@amount, 'auth|transaction_id|token|month|year|amount|currency', @options.merge(email: 'slowturtle86@aol.com'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/sg_Email/, data)
+    end.respond_with(successful_capture_response)
+
+    assert_success capture
+  end
+
   def test_failed_capture
     @gateway.expects(:ssl_post).returns(failed_capture_response)
 

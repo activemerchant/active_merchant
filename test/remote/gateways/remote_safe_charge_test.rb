@@ -200,7 +200,7 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, extra)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert capture = @gateway.capture(@amount, auth.authorization, extra)
     assert_success capture
     assert_equal 'Success', capture.message
   end
