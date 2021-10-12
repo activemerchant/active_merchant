@@ -170,7 +170,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_amount(post, money)
-        post[:PaymentDealerRequest][:Amount] = money || 0
+        post[:PaymentDealerRequest][:Amount] = amount(money) || 0
       end
 
       def add_additional_auth_purchase_data(post, options)

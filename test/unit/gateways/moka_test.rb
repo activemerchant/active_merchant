@@ -83,6 +83,14 @@ class MokaTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_partial_refund
+    stub_comms do
+      @gateway.refund(50, 'Test-9732c2ce-08d9-4ff6-a89f-bd3fa345811c')
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal '0.50', JSON.parse(data)['PaymentDealerRequest']['Amount']
+    end.respond_with(successful_refund_response)
+  end
+
   def test_failed_refund
     @gateway.expects(:ssl_post).returns(failed_refund_response)
 
