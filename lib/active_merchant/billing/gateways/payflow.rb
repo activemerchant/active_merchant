@@ -300,7 +300,7 @@ module ActiveMerchant #:nodoc:
                    three_d_secure[:authentication_response_status]
                  elsif three_d_secure[:directory_response_status].present?
                    three_d_secure[:directory_response_status]
-        end
+                 end
         if status.present?
           xml.tag! 'Status', status
           xml.tag! 'AuthenticationStatus', status if version_2_or_newer?(three_d_secure)
