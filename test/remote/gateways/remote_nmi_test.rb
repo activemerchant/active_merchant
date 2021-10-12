@@ -24,6 +24,18 @@ class RemoteNmiTest < Test::Unit::TestCase
     @level3_options = {
       tax: 5.25, shipping: 10.51, ponumber: 1002
     }
+    @descriptor_options = {
+      descriptor: 'test',
+      descriptor_phone: '123',
+      descriptor_address: 'address',
+      descriptor_city: 'city',
+      descriptor_state: 'state',
+      descriptor_postal: 'postal',
+      descriptor_country: 'country',
+      descriptor_mcc: 'mcc',
+      descriptor_merchant_id: '120',
+      descriptor_url: 'url'
+    }
   end
 
   def test_invalid_login
@@ -125,6 +137,16 @@ class RemoteNmiTest < Test::Unit::TestCase
 
     assert response = @gateway.authorize(@amount, @credit_card, options)
     assert_success response
+    assert_equal 'Succeeded', response.message
+    assert response.authorization
+  end
+
+  def test_successful_purchase_with_descriptors
+    options = @options.merge({ descriptors: @descriptor_options })
+
+    assert response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert response.test?
     assert_equal 'Succeeded', response.message
     assert response.authorization
   end

@@ -35,6 +35,7 @@
 * dLocal: Update supported countries list [mbreenlyles] #4155
 * SafeCharge: Add support for email field in capture [rachelkirk] #4153
 * Paysafe: Remove invalid code [meagabeth] #4156
+* NMI: Add descriptor fields [ajawadmirza] #4157
 
 == Version 1.123.0 (September 10th, 2021)
 * Paysafe: Add gateway integration [meagabeth] #4085

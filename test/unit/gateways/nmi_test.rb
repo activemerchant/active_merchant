@@ -16,6 +16,18 @@ class NmiTest < Test::Unit::TestCase
       recurring: true, order_id: '#1001', description: 'AM test', currency: 'GBP', dup_seconds: 15,
       customer: '123', tax: 5.25, shipping: 10.51, ponumber: 1002
     }
+    @descriptor_options = {
+      descriptor: 'test',
+      descriptor_phone: '123',
+      descriptor_address: 'address',
+      descriptor_city: 'city',
+      descriptor_state: 'state',
+      descriptor_postal: 'postal',
+      descriptor_country: 'country',
+      descriptor_mcc: 'mcc',
+      descriptor_merchant_id: '120',
+      descriptor_url: 'url'
+    }
   end
 
   def test_successful_purchase
@@ -156,6 +168,27 @@ class NmiTest < Test::Unit::TestCase
     assert_success response
     assert response.test?
     assert_equal 'Succeeded', response.message
+  end
+
+  def test_purchase_with_descriptor_options
+    options = @transaction_options.merge({ descriptors: @descriptor_options })
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/descriptor=test/, data)
+      assert_match(/descriptor_phone=123/, data)
+      assert_match(/descriptor_address=address/, data)
+      assert_match(/descriptor_city=city/, data)
+      assert_match(/descriptor_state=state/, data)
+      assert_match(/descriptor_postal=postal/, data)
+      assert_match(/descriptor_country=country/, data)
+      assert_match(/descriptor_mcc=mcc/, data)
+      assert_match(/descriptor_merchant_id=120/, data)
+      assert_match(/descriptor_url=url/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
   end
 
   def test_authorize_with_options
