@@ -827,6 +827,15 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert_scrubbed(@gateway.options[:password], transcript)
   end
 
+  def test_account_number_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @check, @options)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@check.account_number, clean_transcript)
+  end
+
   def test_verify_credentials
     assert @gateway.verify_credentials
 

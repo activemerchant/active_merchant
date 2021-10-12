@@ -234,6 +234,16 @@ class RemoteForteTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value, transcript)
   end
 
+  def test_account_number_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @check, @options)
+    end
+
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@check.account_number, clean_transcript)
+  end
+
   private
 
   def wait_for_authorization_to_clear
