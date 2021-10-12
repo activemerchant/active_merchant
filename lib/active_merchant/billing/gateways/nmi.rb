@@ -236,6 +236,19 @@ module ActiveMerchant #:nodoc:
           post[:shipping_zip] = shipping_address[:zip]
           post[:shipping_phone] = shipping_address[:phone]
         end
+
+        if (descriptor = options[:descriptors])
+          post[:descriptor] = descriptor[:descriptor]
+          post[:descriptor_phone] = descriptor[:descriptor_phone]
+          post[:descriptor_address] = descriptor[:descriptor_address]
+          post[:descriptor_city] = descriptor[:descriptor_city]
+          post[:descriptor_state] = descriptor[:descriptor_state]
+          post[:descriptor_postal] = descriptor[:descriptor_postal]
+          post[:descriptor_country] = descriptor[:descriptor_country]
+          post[:descriptor_mcc] = descriptor[:descriptor_mcc]
+          post[:descriptor_merchant_id] = descriptor[:descriptor_merchant_id]
+          post[:descriptor_url] = descriptor[:descriptor_url]
+        end
       end
 
       def add_vendor_data(post, options)
