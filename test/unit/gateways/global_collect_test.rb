@@ -58,7 +58,7 @@ class GlobalCollectTest < Test::Unit::TestCase
     stub_comms do
       @gateway.authorize(@accepted_amount, @credit_card)
     end.check_request do |endpoint, _data, _headers|
-      assert_match(/world\.preprod\.api-ingenico\.com/, endpoint)
+      assert_match(/world\.preprod\.api-ingenico\.com\/v1\/#{@gateway.options[:merchant_id]}/, endpoint)
     end.respond_with(successful_authorize_response)
   end
 

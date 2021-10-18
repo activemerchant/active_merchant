@@ -38,6 +38,7 @@
 * NMI: Add descriptor fields [ajawadmirza] #4157
 * Authorize.net: Add tests for scrubbing banking account info (in addition to BluePay, BridgePay, Forte, HPS, and Vanco Gateways)[aenand] #4159
 * Moka: Send refund amount with decimal [dsmcclain] #4160
+* GlobalCollect: Append URI to the URL [naashton] #4162
 
 == Version 1.123.0 (September 10th, 2021)
 * Paysafe: Add gateway integration [meagabeth] #4085

@@ -263,7 +263,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def url(action, authorization)
-        return preproduction_url if @options[:url_override].to_s == 'preproduction'
+        return preproduction_url + uri(action, authorization) if @options[:url_override].to_s == 'preproduction'
 
         (test? ? test_url : live_url) + uri(action, authorization)
       end
