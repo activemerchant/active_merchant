@@ -1190,6 +1190,22 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_auth_application_info
+    options = @options.merge!(
+      externalPlatform: {
+        name: 'Acme',
+        version: '1',
+        integrator: 'abc'
+      },
+      merchantApplication: {
+        name: 'Acme Inc.',
+        version: '2'
+      }
+    )
+    response = @gateway.authorize(@amount, @credit_card, options)
+    assert_success response
+  end
+
   def test_successful_authorize_phone
     @options[:billing_address][:phone] = '1234567890'
     response = @gateway.authorize(@amount, @credit_card, @options)

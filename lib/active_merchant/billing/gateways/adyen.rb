@@ -60,6 +60,7 @@ module ActiveMerchant #:nodoc:
         add_splits(post, options)
         add_recurring_contract(post, options)
         add_network_transaction_reference(post, options)
+        add_application_info(post, options)
         commit('authorise', post, options)
       end
 
@@ -449,6 +450,31 @@ module ActiveMerchant #:nodoc:
         }
 
         post[:recurring] = recurring
+      end
+
+      def add_application_info(post, options)
+        post[:applicationInfo] ||= {}
+        add_external_platform(post, options)
+        add_merchant_application(post, options)
+      end
+
+      def add_external_platform(post, options)
+        return unless options[:externalPlatform]
+
+        post[:applicationInfo][:externalPlatform] = {
+          name: options[:externalPlatform][:name],
+          version: options[:externalPlatform][:version],
+          integrator: options[:externalPlatform][:integrator]
+        }
+      end
+
+      def add_merchant_application(post, options)
+        return unless options[:merchantApplication]
+
+        post[:applicationInfo][:merchantApplication] = {
+          name: options[:merchantApplication][:name],
+          version: options[:merchantApplication][:version]
+        }
       end
 
       def add_installments(post, options)

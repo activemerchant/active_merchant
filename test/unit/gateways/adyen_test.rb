@@ -901,6 +901,30 @@ class AdyenTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_auth_application_info
+    options = @options.merge!(
+      externalPlatform: {
+        name: 'Acme',
+        version: '1',
+        integrator: 'abc'
+      },
+      merchantApplication: {
+        name: 'Acme Inc.',
+        version: '2'
+      }
+    )
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 'Acme', JSON.parse(data)['applicationInfo']['externalPlatform']['name']
+      assert_equal '1', JSON.parse(data)['applicationInfo']['externalPlatform']['version']
+      assert_equal 'abc', JSON.parse(data)['applicationInfo']['externalPlatform']['integrator']
+      assert_equal 'Acme Inc.', JSON.parse(data)['applicationInfo']['merchantApplication']['name']
+      assert_equal '2', JSON.parse(data)['applicationInfo']['merchantApplication']['version']
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
   def test_purchase_with_long_order_id
     options = @options.merge({ order_id: @long_order_id })
     response = stub_comms do
