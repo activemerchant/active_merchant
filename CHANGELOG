@@ -40,6 +40,7 @@
 * Moka: Send refund amount with decimal [dsmcclain] #4160
 * GlobalCollect: Append URI to the URL [naashton] #4162
 * Adyen: Add application info fields [aenand] #4163
+* Adyen: Send NTID from stored cred hash [curiousepic] #4164
 
 == Version 1.123.0 (September 10th, 2021)
 * Paysafe: Add gateway integration [meagabeth] #4085

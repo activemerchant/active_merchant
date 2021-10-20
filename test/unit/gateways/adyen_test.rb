@@ -512,7 +512,7 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_stored_credential_recurring_cit_used
     @credit_card.verification_value = nil
-    options = stored_credential_options(:cardholder, :recurring, id: 'abc123')
+    options = stored_credential_options(:cardholder, :recurring, ntid: 'abc123')
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
@@ -537,7 +537,7 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_stored_credential_recurring_mit_used
     @credit_card.verification_value = nil
-    options = stored_credential_options(:merchant, :recurring, id: 'abc123')
+    options = stored_credential_options(:merchant, :recurring, ntid: 'abc123')
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
@@ -562,7 +562,7 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_stored_credential_unscheduled_cit_used
     @credit_card.verification_value = nil
-    options = stored_credential_options(:cardholder, :unscheduled, id: 'abc123')
+    options = stored_credential_options(:cardholder, :unscheduled, ntid: 'abc123')
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
@@ -587,7 +587,7 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_stored_credential_unscheduled_mit_used
     @credit_card.verification_value = nil
-    options = stored_credential_options(:merchant, :unscheduled, id: 'abc123')
+    options = stored_credential_options(:merchant, :unscheduled, ntid: 'abc123')
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
@@ -989,6 +989,20 @@ class AdyenTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_authorize_and_capture_with_network_transaction_id_from_stored_cred_hash
+    auth = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.respond_with(successful_authorize_response_with_network_tx_ref)
+    assert_equal auth.network_transaction_id, '858435661128555'
+
+    response = stub_comms do
+      @gateway.capture(@amount, auth.authorization, @options.merge(stored_credential: { network_transaction_id: auth.network_transaction_id }))
+    end.check_request do |_, data, _|
+      assert_match(/"networkTxReference":"#{auth.network_transaction_id}"/, data)
+    end.respond_with(successful_capture_response)
+    assert_success response
+  end
+
   def test_authorize_with_network_token
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
 
@@ -1134,13 +1148,13 @@ class AdyenTest < Test::Unit::TestCase
 
   private
 
-  def stored_credential_options(*args, id: nil)
+  def stored_credential_options(*args, ntid: nil)
     {
       order_id: '#1001',
       description: 'AM test',
       currency: 'GBP',
       customer: '123',
-      stored_credential: stored_credential(*args, id: id)
+      stored_credential: stored_credential(*args, ntid: ntid)
     }
   end
 
