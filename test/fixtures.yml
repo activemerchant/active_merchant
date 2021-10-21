@@ -849,6 +849,11 @@ plugnpay:
   login: LOGIN
   password: PASSWORD
 
+priority:
+  key: SANDBOX_KEY
+  secret: SECRET
+  merchant_id: MERCHANT_ID
+
 # Working credentials, no need to replace
 pro_pay:
   cert_str: "5ab9cddef2e4911b77e0c4ffb70f03"
