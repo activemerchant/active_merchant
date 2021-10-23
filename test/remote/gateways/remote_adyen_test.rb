@@ -1228,7 +1228,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_success capture
     assert_equal '[capture-received]', capture.message
 
-    used_options = stored_credential_options(:recurring, :cardholder, ntid: auth.network_transaction_id)
+    used_options = stored_credential_options(:recurring, :cardholder, ntid: auth.network_transaction_id, original_ntid: auth.network_transaction_id)
     assert purchase = @gateway.purchase(@amount, @credit_card, used_options)
     assert_success purchase
   end
@@ -1242,7 +1242,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_success capture
     assert_equal '[capture-received]', capture.message
 
-    used_options = stored_credential_options(:recurring, :cardholder, ntid: auth.network_transaction_id)
+    used_options = stored_credential_options(:recurring, :cardholder, ntid: auth.network_transaction_id, original_ntid: auth.network_transaction_id)
     assert purchase = @gateway.purchase(@amount, @credit_card, used_options)
     assert_success purchase
   end
@@ -1256,7 +1256,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_success capture
     assert_equal '[capture-received]', capture.message
 
-    used_options = stored_credential_options(:unscheduled, :cardholder, ntid: auth.network_transaction_id)
+    used_options = stored_credential_options(:unscheduled, :cardholder, ntid: auth.network_transaction_id, original_ntid: auth.network_transaction_id)
     assert purchase = @gateway.purchase(@amount, @credit_card, used_options)
     assert_success purchase
   end
@@ -1270,7 +1270,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_success capture
     assert_equal '[capture-received]', capture.message
 
-    used_options = stored_credential_options(:unscheduled, :cardholder, ntid: auth.network_transaction_id)
+    used_options = stored_credential_options(:unscheduled, :cardholder, ntid: auth.network_transaction_id, original_ntid: auth.network_transaction_id)
     assert purchase = @gateway.purchase(@amount, @credit_card, used_options)
     assert_success purchase
   end
@@ -1386,9 +1386,9 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
   private
 
-  def stored_credential_options(*args, ntid: nil)
+  def stored_credential_options(*args, ntid: nil, original_ntid: nil)
     @options.merge(order_id: generate_unique_id,
-                   stored_credential: stored_credential(*args, network_transaction_id: ntid))
+                   stored_credential: stored_credential(*args, original_network_transaction_id: original_ntid, network_transaction_id: ntid))
   end
 
   def assert_void_references_original_authorization(void, auth)

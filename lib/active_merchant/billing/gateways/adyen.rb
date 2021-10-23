@@ -425,7 +425,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_network_transaction_reference(post, options)
-        return unless ntid = options[:network_transaction_id] || options.dig(:stored_credential, :network_transaction_id)
+        stored_ntid = options.dig(:stored_credential, :original_network_transaction_id) || options.dig(:stored_credential, :network_transaction_id)
+        return unless ntid = options[:network_transaction_id] || stored_ntid
 
         post[:additionalData] = {} unless post[:additionalData]
         post[:additionalData][:networkTxReference] = ntid

@@ -1003,6 +1003,20 @@ class AdyenTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_auth_capture_with_stored_credential_original_ntid
+    auth = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.respond_with(successful_authorize_response_with_network_tx_ref)
+    assert_equal auth.network_transaction_id, '858435661128555'
+
+    response = stub_comms do
+      @gateway.capture(@amount, auth.authorization, @options.merge(stored_credential: { original_network_transaction_id: auth.network_transaction_id }))
+    end.check_request do |_, data, _|
+      assert_match(/"networkTxReference":"#{auth.network_transaction_id}"/, data)
+    end.respond_with(successful_capture_response)
+    assert_success response
+  end
+
   def test_authorize_with_network_token
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
 
