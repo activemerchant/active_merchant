@@ -52,7 +52,7 @@ class PinTest < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal ['AU'], PinGateway.supported_countries
+    assert_equal %w(AU NZ), PinGateway.supported_countries
   end
 
   def test_supported_cardtypes
