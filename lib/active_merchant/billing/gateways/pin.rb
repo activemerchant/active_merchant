@@ -65,6 +65,11 @@ module ActiveMerchant #:nodoc:
         commit(:put, "charges/#{CGI.escape(token)}/capture", { amount: amount(money) }, options)
       end
 
+      # Voids a previously authorized charge.
+      def void(token, options = {})
+        commit(:put, "charges/#{CGI.escape(token)}/void", {}, options)
+      end
+
       # Updates the credit card for the customer.
       def update(token, creditcard, options = {})
         post = {}
