@@ -203,7 +203,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_success capture
   end
 
-  def test_authorize_and_purchase_with_instalments
+  def test_authorize_and_purchase_with_installments
     assert auth = @gateway.authorize(@amount, @credit_card, @options.merge(instalment: 3))
     assert_success auth
     assert_equal 'SUCCESS', auth.message

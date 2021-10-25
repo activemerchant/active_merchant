@@ -151,11 +151,27 @@ class WorldpayTest < Test::Unit::TestCase
     assert_success response
   end
 
-  def test_authorize_passes_stored_credential_options
+  def test_authorize_passes_stored_credential_options_using_gateway_specific_fields
     options = @options.merge(
       stored_credential_usage: 'USED',
       stored_credential_initiated_reason: 'UNSCHEDULED',
       stored_credential_transaction_id: '000000000000020005060720116005060'
+    )
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<storedCredentials usage\=\"USED\" merchantInitiatedReason\=\"UNSCHEDULED\"\>/, data)
+      assert_match(/<schemeTransactionIdentifier\>000000000000020005060720116005060\<\/schemeTransactionIdentifier\>/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_authorize_passes_stored_credential_options_using_normalized_fields
+    options = @options.merge(
+      stored_credential: {
+        reason_type: 'unscheduled',
+        network_transaction_id: '000000000000020005060720116005060'
+      }
     )
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
@@ -213,6 +229,41 @@ class WorldpayTest < Test::Unit::TestCase
   def test_successful_purchase_with_network_token
     response = stub_comms do
       @gateway.purchase(@amount, @nt_credit_card, @options)
+    end.respond_with(successful_authorize_response, successful_capture_response)
+    assert_success response
+  end
+
+  def test_purchase_passes_stored_credential_options_using_gateway_specific_fields
+    options = @options.merge(
+      stored_credential_usage: 'USED',
+      stored_credential_initiated_reason: 'UNSCHEDULED',
+      stored_credential_transaction_id: '000000000000020005060720116005060'
+    )
+    response = stub_comms do
+      @gateway.purchase(@amount, @nt_credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      if data.match?('<description>Purchase</description>')
+        assert_match(/<storedCredentials usage\=\"USED\" merchantInitiatedReason\=\"UNSCHEDULED\"\>/, data)
+        assert_match(/<schemeTransactionIdentifier\>000000000000020005060720116005060\<\/schemeTransactionIdentifier\>/, data)
+      end
+    end.respond_with(successful_authorize_response, successful_capture_response)
+    assert_success response
+  end
+
+  def test_purchase_passes_stored_credential_options_using_normalized_fields
+    options = @options.merge(
+      stored_credential: {
+        reason_type: 'unscheduled',
+        network_transaction_id: '000000000000020005060720116005060'
+      }
+    )
+    response = stub_comms do
+      @gateway.purchase(@amount, @nt_credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      if data.match?('<description>Purchase</description>')
+        assert_match(/<storedCredentials usage\=\"USED\" merchantInitiatedReason\=\"UNSCHEDULED\"\>/, data)
+        assert_match(/<schemeTransactionIdentifier\>000000000000020005060720116005060\<\/schemeTransactionIdentifier\>/, data)
+      end
     end.respond_with(successful_authorize_response, successful_capture_response)
     assert_success response
   end

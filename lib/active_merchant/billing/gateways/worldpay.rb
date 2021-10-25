@@ -453,6 +453,7 @@ module ActiveMerchant #:nodoc:
             xml.cryptogram payment_method.payment_cryptogram
             xml.eciIndicator format(payment_method.eci, :two_digits)
           end
+          add_stored_credential_options(xml, options)
         end
       end
 
