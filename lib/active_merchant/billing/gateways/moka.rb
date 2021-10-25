@@ -175,7 +175,8 @@ module ActiveMerchant #:nodoc:
 
       def add_additional_auth_purchase_data(post, options)
         post[:PaymentDealerRequest][:IsPreAuth] = options[:pre_auth]
-        post[:PaymentDealerRequest][:Description] = options[:order_id] if options[:order_id]
+        post[:PaymentDealerRequest][:Description] = options[:description] if options[:description]
+        post[:PaymentDealerRequest][:InstallmentNumber] = options[:installment_number].to_i if options[:installment_number]
         post[:SubMerchantName] = options[:sub_merchant_name] if options[:sub_merchant_name]
         post[:IsPoolPayment] = options[:is_pool_payment] || 0
       end

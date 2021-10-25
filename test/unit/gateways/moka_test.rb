@@ -184,6 +184,24 @@ class MokaTest < Test::Unit::TestCase
     end.respond_with(successful_response)
   end
 
+  def test_additional_auth_purchase_fields_are_passed
+    options = @options.merge({
+      description: 'custom purchase',
+      installment_number: 12,
+      sub_merchant_name: 'testco',
+      is_pool_payment: 1
+    })
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      response = JSON.parse(data)
+      assert_equal response['PaymentDealerRequest']['Description'], 'custom purchase'
+      assert_equal response['PaymentDealerRequest']['InstallmentNumber'], 12
+      assert_equal response['SubMerchantName'], 'testco'
+      assert_equal response['IsPoolPayment'], 1
+    end.respond_with(successful_response)
+  end
+
   private
 
   def pre_scrubbed
