@@ -33,7 +33,7 @@ class RemoteRealexTest < Test::Unit::TestCase
   end
 
   def card_fixtures(name)
-    credit_card(nil, fixtures(name))
+    credit_card(nil, fixtures(name).merge({ month: 1, year: Time.now.year + 1 }))
   end
 
   def test_realex_purchase
@@ -143,6 +143,37 @@ class RemoteRealexTest < Test::Unit::TestCase
     assert_success response
     assert response.test?
     assert_equal 'Successful', response.message
+  end
+
+  def test_initial_purchase_with_stored_credential
+    options = {
+      stored_credential: {
+        initial_transaction: true,
+        reason_type: 'unscheduled',
+        initiator: 'cardholder',
+        network_transaction_id: nil
+      }
+    }
+    response = @gateway.purchase(@amount, @visa, options.merge(order_id: generate_unique_id))
+    assert_success response
+  end
+
+  def test_subsequent_purchase_with_stored_credential
+    initial_response = @gateway.purchase(@amount, @visa, order_id: generate_unique_id)
+    assert_success initial_response
+    network_id = initial_response.params['srd']
+
+    options = {
+      stored_credential: {
+        initial_transaction: false,
+        reason_type: 'recurring',
+        initiator: 'merchant',
+        network_transaction_id: network_id
+      }
+    }
+
+    subsequent_response = @gateway.purchase(@amount, @visa, options.merge(order_id: generate_unique_id))
+    assert_success subsequent_response
   end
 
   def test_realex_purchase_referral_b

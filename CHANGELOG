@@ -42,6 +42,7 @@
 * Adyen: Add application info fields [aenand] #4163
 * Adyen: Send NTID from stored cred hash [curiousepic] #4164
 * Payflow: use proper case for 3DS 2.x element names [bbraschi] #4113
+* Realex: Add support for stored credentials [dsmcclain] #4170
 
 == Version 1.123.0 (September 10th, 2021)
 * Paysafe: Add gateway integration [meagabeth] #4085
