@@ -296,11 +296,19 @@ module ActiveMerchant #:nodoc:
       end
 
       def authentication_status(three_d_secure, xml)
-        if three_d_secure[:authentication_response_status].present?
-          xml.tag! 'Status', three_d_secure[:authentication_response_status]
-        elsif three_d_secure[:directory_response_status].present?
-          xml.tag! 'Status', three_d_secure[:directory_response_status]
+        status = if three_d_secure[:authentication_response_status].present?
+                   three_d_secure[:authentication_response_status]
+                 elsif three_d_secure[:directory_response_status].present?
+                   three_d_secure[:directory_response_status]
         end
+        if status.present?
+          xml.tag! 'Status', status
+          xml.tag! 'AuthenticationStatus', status if version_2_or_newer?(three_d_secure)
+        end
+      end
+
+      def version_2_or_newer?(three_d_secure)
+        three_d_secure[:version]&.start_with?('2')
       end
 
       def credit_card_type(credit_card)
