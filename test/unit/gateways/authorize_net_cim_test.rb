@@ -419,6 +419,33 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert_nil response.authorization
   end
 
+  def test_should_update_customer_payment_profile_request_for_bank_account_with_long_name_on_account
+    response = stub_comms do
+      @gateway.update_customer_payment_profile(
+        :customer_profile_id => @customer_profile_id,
+        :payment_profile => {
+          :payment => {
+            :bank_account => {
+              :bank_name => "Test",
+              :name_on_account => "John111111111111111111111 Doe22222222222222222",
+              :routing_number => "091207582",
+              :account_number => "123456789",
+              :account_type => :checking,
+              :account_holder_type => "personal",
+              :echeck_type => :web
+            }
+          },
+          :customer_payment_profile_id => @customer_payment_profile_id
+        }
+      )
+    end.check_request do |endpoint, data, headers|
+      assert_match %r{<nameOnAccount>John111111111111111111</nameOnAccount>}, data
+    end.respond_with(successful_update_customer_payment_profile_response)
+    assert_instance_of Response, response
+    assert_success response
+    assert_nil response.authorization
+  end
+
   def test_should_update_customer_payment_profile_request_with_last_four_digits
     last_four_credit_card = ActiveMerchant::Billing::CreditCard.new(:number => "4242") #Credit card with only last four digits
 

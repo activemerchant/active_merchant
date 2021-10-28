@@ -827,7 +827,7 @@ module ActiveMerchant #:nodoc:
           xml.tag!('accountNumber', bank_account[:account_number])
           # The full name of the individual associated
           # with the bank account number
-          xml.tag!('nameOnAccount', bank_account[:name_on_account])
+          xml.tag!('nameOnAccount', truncate(bank_account[:name_on_account], 22))
           # The type of electronic check transaction
           xml.tag!('echeckType', ECHECK_TYPES[bank_account[:echeck_type]])
           # The full name of the individual associated
