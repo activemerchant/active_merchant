@@ -53,6 +53,16 @@ class RemoteWorldpayTest < Test::Unit::TestCase
         sub_tax_id: '987-65-4321'
       }
     }
+    @apple_pay_network_token = network_tokenization_credit_card('4895370015293175',
+      month: 10,
+      year: Time.new.year + 2,
+      first_name: 'John',
+      last_name: 'Smith',
+      verification_value: '737',
+      payment_cryptogram: 'abc1234567890',
+      eci: '07',
+      transaction_id: 'abc123',
+      source: :apple_pay)
   end
 
   def test_successful_purchase
@@ -65,6 +75,62 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @nt_credit_card, @options)
     assert_success response
     assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_authorize_without_card_holder_name_apple_pay
+    @apple_pay_network_token.first_name = ''
+    @apple_pay_network_token.last_name = ''
+
+    response = @gateway.authorize(@amount, @apple_pay_network_token, @options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_authorize_with_card_holder_name_apple_pay
+    response = @gateway.authorize(@amount, @apple_pay_network_token, @options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_unsucessfull_authorize_without_token_number_apple_pay
+    @apple_pay_network_token.number = nil
+    response = @gateway.authorize(@amount, @apple_pay_network_token, @options)
+    assert_failure response
+    assert_equal "Element 'tokenNumber' must have valid numeric content.", response.message
+  end
+
+  def test_unsucessfull_authorize_with_token_number_as_empty_string_apple_pay
+    @apple_pay_network_token.number = ''
+    response = @gateway.authorize(@amount, @apple_pay_network_token, @options)
+    assert_failure response
+    assert_equal "Element 'tokenNumber' must have valid numeric content.", response.message
+  end
+
+  def test_unsucessfull_authorize_with_invalid_token_number_apple_pay
+    @apple_pay_network_token.first_name = 'REFUSED'
+    @apple_pay_network_token.last_name = ''
+
+    response = @gateway.authorize(@amount, @apple_pay_network_token, @options)
+    assert_failure response
+    assert_equal 'REFUSED', response.message
+  end
+
+  def test_unsuccessful_authorize_with_overdue_expire_date_apple_pay
+    @apple_pay_network_token.month = 10
+    @apple_pay_network_token.year = 2019
+
+    response = @gateway.authorize(@amount, @apple_pay_network_token, @options)
+    assert_failure response
+    assert_equal 'Invalid payment details : Expiry date = 10/2019', response.message
+  end
+
+  def test_unsuccessful_authorize_without_expire_date
+    @apple_pay_network_token.month = nil
+    @apple_pay_network_token.year = nil
+
+    response = @gateway.authorize(@amount, @apple_pay_network_token, @options)
+    assert_failure response
+    assert_match(/of type NMTOKEN must be a name token/, response.message)
   end
 
   def test_successful_purchase_with_elo
