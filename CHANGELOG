@@ -1,6 +1,8 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+
+== Version 1.124.0 (October 28th, 2021)
 * Worldpay: Add Support for Submerchant Data on Worldpay [almalee24] #4147
 * dlocal: Add device_id and ip to payer object and add additional_data [aenand] #4116
 * Adyen: Add network tokenization support to Adyen gateway [mymir] #4101
