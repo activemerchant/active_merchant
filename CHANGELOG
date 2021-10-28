@@ -44,6 +44,7 @@
 * Payflow: use proper case for 3DS 2.x element names [bbraschi] #4113
 * Realex: Add support for stored credentials [dsmcclain] #4170
 * Moka: Add support for InstallmentNumber field [dsmcclain] #4172
+* Payflow: include AuthenticationStatus for 3DS 2.x [bbraschi] #4168
 
 == Version 1.123.0 (September 10th, 2021)
 * Paysafe: Add gateway integration [meagabeth] #4085

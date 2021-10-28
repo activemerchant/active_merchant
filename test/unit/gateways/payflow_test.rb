@@ -91,6 +91,28 @@ class PayflowTest < Test::Unit::TestCase
     end.respond_with(successful_authorization_response)
   end
 
+  def test_authorization_with_three_d_secure_option_with_version_2_x_and_authentication_response_status_include_authentication_status
+    expected_version = '2.2.0'
+    expected_authentication_status = SUCCESSFUL_AUTHENTICATION_STATUS
+    three_d_secure_option = three_d_secure_option(options: { version: expected_version })
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(three_d_secure_option))
+    end.check_request do |_endpoint, data, _headers|
+      assert_three_d_secure REXML::Document.new(data), authorize_buyer_auth_result_path, expected_version: expected_version, expected_authentication_status: expected_authentication_status
+    end.respond_with(successful_authorization_response)
+  end
+
+  def test_authorization_with_three_d_secure_option_with_version_1_x_and_authentication_response_status_does_not_include_authentication_status
+    expected_version = '1.0.2'
+    expected_authentication_status = nil
+    three_d_secure_option = three_d_secure_option(options: { version: expected_version })
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(three_d_secure_option))
+    end.check_request do |_endpoint, data, _headers|
+      assert_three_d_secure REXML::Document.new(data), authorize_buyer_auth_result_path, expected_version: expected_version, expected_authentication_status: expected_authentication_status
+    end.respond_with(successful_authorization_response)
+  end
+
   def test_successful_authorization_with_more_options
     partner_id = 'partner_id'
     PayflowGateway.application_id = partner_id
@@ -939,10 +961,12 @@ class PayflowTest < Test::Unit::TestCase
     xml_doc,
     buyer_auth_result_path,
     expected_status: SUCCESSFUL_AUTHENTICATION_STATUS,
+    expected_authentication_status: nil,
     expected_version: nil,
     expected_ds_transaction_id: nil
   )
     assert_text_value_or_nil expected_status, REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/Status")
+    assert_text_value_or_nil(expected_authentication_status, REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/AuthenticationStatus"))
     assert_text_value_or_nil 'QvDbSAxSiaQs241899E0', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/AuthenticationId")
     assert_text_value_or_nil 'pareq block', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/PAReq")
     assert_text_value_or_nil 'https://bankacs.bank.com/ascurl', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/ACSUrl")
