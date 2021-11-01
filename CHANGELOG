@@ -2,6 +2,7 @@
 
 == HEAD
 * Wompi: support gateway [therufs] #4173
+* Stripe Payment Intents: Add setup_purchase [aenand] #4178
 
 == Version 1.124.0 (October 28th, 2021)
 * Worldpay: Add Support for Submerchant Data on Worldpay [almalee24] #4147

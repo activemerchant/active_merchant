@@ -1003,6 +1003,29 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert_equal 'succeeded', purchase.params['status']
   end
 
+  def test_setup_purchase
+    options = {
+      currency: 'USD',
+      payment_method_types: %w[afterpay_clearpay card]
+    }
+
+    assert response = @gateway.setup_purchase(@amount, options)
+    assert_equal 'requires_payment_method', response.params['status']
+    assert response.params['client_secret'].start_with?('pi')
+    assert_instance_of StripePaymentIntentsResponse, response
+  end
+
+  def test_failed_setup_purchase
+    options = {
+      currency: 'GBP',
+      payment_method_types: %w[afterpay_clearpay card]
+    }
+
+    assert response = @gateway.setup_purchase(@amount, options)
+    assert_failure response
+    assert_match 'The currency provided (gbp) is invalid for one or more payment method types on this PaymentIntent.', response.message
+  end
+
   def test_transcript_scrubbing
     options = {
       currency: 'GBP',

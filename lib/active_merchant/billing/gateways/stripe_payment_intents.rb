@@ -215,6 +215,16 @@ module ActiveMerchant #:nodoc:
         create_setup_intent(payment_method, options.merge!(confirm: true))
       end
 
+      def setup_purchase(money, options = {})
+        requires!(options, :payment_method_types)
+        post = {}
+        add_currency(post, options, money)
+        add_amount(post, money, options)
+        add_payment_method_types(post, options)
+        options[:response_class] = StripePaymentIntentsResponse
+        commit(:post, 'payment_intents', post, options)
+      end
+
       private
 
       def off_session_request?(options = {})
@@ -431,6 +441,10 @@ module ActiveMerchant #:nodoc:
         end
 
         super(response, options)
+      end
+
+      def add_currency(post, options, money)
+        post[:currency] = options[:currency] || currency(money)
       end
     end
   end

@@ -450,7 +450,79 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     end.respond_with(successful_create_intent_response)
   end
 
+  def test_successful_setup_purchase
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.setup_purchase(@amount, { payment_method_types: %w[afterpay_clearpay card] })
+    end.check_request do |_method, endpoint, data, _headers|
+      assert_match(/payment_method_types\[0\]=afterpay_clearpay&payment_method_types\[1\]=card/, data) if /payment_intents/.match?(endpoint)
+    end.respond_with(successful_setup_purchase)
+  end
+
   private
+
+  def successful_setup_purchase
+    <<-RESPONSE
+    {
+      "id": "pi_3Jr0wXAWOtgoysog2Sp0iKjo",
+      "object": "payment_intent",
+      "amount": 2000,
+      "amount_capturable": 0,
+      "amount_received": 0,
+      "application": null,
+      "application_fee_amount": null,
+      "canceled_at": null,
+      "cancellation_reason": null,
+      "capture_method": "automatic",
+      "charges": {
+        "object": "list",
+        "data": [
+
+        ],
+        "has_more": false,
+        "total_count": 0,
+        "url": "/v1/charges?payment_intent=pi_3Jr0wXAWOtgoysog2Sp0iKjo"
+      },
+      "client_secret": "pi_3Jr0wXAWOtgoysog2Sp0iKjo_secret_1l5cE3MskZ8AMOZaNdpmgZDCn",
+      "confirmation_method": "automatic",
+      "created": 1635774777,
+      "currency": "usd",
+      "customer": null,
+      "description": null,
+      "invoice": null,
+      "last_payment_error": null,
+      "livemode": false,
+      "metadata": {
+      },
+      "next_action": null,
+      "on_behalf_of": null,
+      "payment_method": null,
+      "payment_method_options": {
+        "afterpay_clearpay": {
+          "reference": null
+        },
+        "card": {
+          "installments": null,
+          "network": null,
+          "request_three_d_secure": "automatic"
+        }
+      },
+      "payment_method_types": [
+        "afterpay_clearpay",
+        "card"
+      ],
+      "receipt_email": null,
+      "review": null,
+      "setup_future_usage": null,
+      "shipping": null,
+      "source": null,
+      "statement_descriptor": null,
+      "statement_descriptor_suffix": null,
+      "status": "requires_payment_method",
+      "transfer_data": null,
+      "transfer_group": null
+    }
+    RESPONSE
+  end
 
   def successful_create_intent_response
     <<-RESPONSE
