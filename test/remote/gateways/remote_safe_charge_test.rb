@@ -205,6 +205,16 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
     assert_equal 'Success', capture.message
   end
 
+  def test_successful_authorize_and_capture_with_not_use_cvv
+    @credit_card.verification_value = nil
+    auth = @gateway.authorize(@amount, @credit_card, @options.merge!({ not_use_cvv: true }))
+    assert_success auth
+
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+    assert_equal 'Success', capture.message
+  end
+
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response

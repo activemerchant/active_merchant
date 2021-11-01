@@ -128,6 +128,17 @@ class SafeChargeTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_authorize_with_not_use_cvv
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ not_use_cvv: true }))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/sg_NotUseCVV=1/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+    assert response.test?
+  end
+
   def test_failed_authorize
     @gateway.expects(:ssl_post).returns(failed_authorize_response)
 
