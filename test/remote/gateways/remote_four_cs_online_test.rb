@@ -10,7 +10,7 @@ class RemoteFourCsOnlineTest < Test::Unit::TestCase
     @incomplete_card = credit_card('4444111122225551')
     @expired_card = credit_card('4444111122223333', year: Time.now.year - 1)
     @options = {
-      invoice: '12345',
+      invoice: Time.now.to_i,
       transaction_id: Time.now.to_i,
       billing_address: address,
       description: 'Store Purchase'
@@ -24,8 +24,8 @@ class RemoteFourCsOnlineTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_more_options
-    invoice = '98765'
-    transaction_id = Time.now.to_i.to_s
+    invoice = Time.now.to_i.to_s
+    transaction_id = invoice
 
     options = {
       invoice: invoice,

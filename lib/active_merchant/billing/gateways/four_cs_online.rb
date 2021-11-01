@@ -20,12 +20,12 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, payment, options = {})
         soap = do_authorization_and_post(money, payment, options)
-        commit('AuthOnly', soap)
+        commit('AuthAndPost', soap)
       end
 
       def authorize(money, payment, options = {})
         soap = do_authorization(money, payment, options)
-        commit('AuthAndPost', soap)
+        commit('AuthOnly', soap)
       end
 
       private
