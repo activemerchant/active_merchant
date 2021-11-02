@@ -15,6 +15,12 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://www.worldpay.com/'
       self.display_name = 'Worldpay Global'
 
+      NETWORK_TOKEN_TYPE = {
+        apple_pay: 'APPLEPAY',
+        google_pay: 'GOOGLEPAY',
+        network_token: 'NETWORKTOKEN'
+      }
+
       CARD_CODES = {
         'visa'             => 'VISA-SSL',
         'master'           => 'ECMC-SSL',
@@ -441,8 +447,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_network_tokenization_card(xml, payment_method)
+        token_type = NETWORK_TOKEN_TYPE.fetch(payment_method.source, 'NETWORKTOKEN')
+
         xml.paymentDetails do
-          xml.tag! 'EMVCO_TOKEN-SSL', 'type' => 'NETWORKTOKEN' do
+          xml.tag! 'EMVCO_TOKEN-SSL', 'type' => token_type do
             xml.tokenNumber payment_method.number
             xml.expiryDate do
               xml.date(
@@ -450,6 +458,8 @@ module ActiveMerchant #:nodoc:
                 'year' => format(payment_method.year, :four_digits_year)
               )
             end
+            name = card_holder_name(payment_method, options)
+            xml.cardHolderName name if name.present?
             xml.cryptogram payment_method.payment_cryptogram
             xml.eciIndicator format(payment_method.eci, :two_digits)
           end
@@ -477,9 +487,7 @@ module ActiveMerchant #:nodoc:
             'year' => format(payment_method.year, :four_digits_year)
           )
         end
-
-        card_holder_name = test? && options[:execute_threed] && !options[:three_ds_version]&.start_with?('2') ? '3D' : payment_method.name
-        xml.cardHolderName card_holder_name
+        xml.cardHolderName card_holder_name(payment_method, options)
         xml.cvc payment_method.verification_value
 
         add_address(xml, (options[:billing_address] || options[:address]), options)
@@ -771,7 +779,7 @@ module ActiveMerchant #:nodoc:
 
       def payment_details_from(payment_method)
         payment_details = {}
-        if payment_method.is_a?(NetworkTokenizationCreditCard) && payment_method.source == :network_token
+        if payment_method.is_a?(NetworkTokenizationCreditCard) && %i{network_token apple_pay google_pay}.include?(payment_method.source)
           payment_details[:payment_type] = :network_token
         elsif payment_method.respond_to?(:number)
           payment_details[:payment_type] = :credit
@@ -812,6 +820,10 @@ module ActiveMerchant #:nodoc:
 
       def eligible_for_0_auth?(payment_method, options = {})
         payment_method.is_a?(CreditCard) && %w(visa master).include?(payment_method.brand) && options[:zero_dollar_auth]
+      end
+
+      def card_holder_name(payment_method, options)
+        test? && options[:execute_threed] && !options[:three_ds_version]&.start_with?('2') ? '3D' : payment_method.name
       end
     end
   end
