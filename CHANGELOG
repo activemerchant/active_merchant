@@ -5,6 +5,7 @@
 * Stripe Payment Intents: Add setup_purchase [aenand] #4178
 * Ipg: Add new gateway [ajawadmirza] #4171
 * Worldpay: Adding support for google pay and apple pay [cristian] #4180
+* Worldpay: Adding scrubbing for network token transactions [cristian] #4181
 
 == Version 1.124.0 (October 28th, 2021)
 * Worldpay: Add Support for Submerchant Data on Worldpay [almalee24] #4147

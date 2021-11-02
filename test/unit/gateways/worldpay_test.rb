@@ -903,6 +903,10 @@ class WorldpayTest < Test::Unit::TestCase
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end
 
+  def test_transcript_scrubbing_on_network_token
+    assert_equal network_token_transcript_scrubbed, @gateway.scrub(network_token_transcript)
+  end
+
   def test_3ds_version_1_request
     stub_comms do
       @gateway.authorize(@amount, @credit_card, @options.merge(three_d_secure_option(version: '1.0.2', xid: 'xid')))
@@ -1939,6 +1943,72 @@ class WorldpayTest < Test::Unit::TestCase
         </submit>
       </paymentService>
     TRANSCRIPT
+  end
+
+  def network_token_transcript
+    <<~RESPONSE
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN" "http://dtd.worldpay.com/paymentService_v1.dtd">
+      <paymentService version="1.4" merchantCode="SPREEDLY">
+          <submit>
+              <order orderCode="c293b34a70aee391193a1c08168b6c91">
+                  <description>Purchase</description>
+                  <amount value="100" currencyCode="GBP" exponent="2" />
+                  <paymentDetails>
+                      <EMVCO_TOKEN-SSL type="APPLEPAY">
+                          <tokenNumber>4895370015293175</tokenNumber>
+                          <expiryDate>
+                              <date month="10" year="2024" />
+                          </expiryDate>
+                          <cardHolderName>PedroPerez</cardHolderName>
+                          <cryptogram>axxxxxxxxx</cryptogram>
+                          <eciIndicator>07</eciIndicator>
+                      </EMVCO_TOKEN-SSL>
+                  </paymentDetails>
+                  <shopper>
+                      <shopperEmailAddress>wow@ example.com</shopperEmailAddress>
+                      <browser>
+                          <acceptHeader />
+                          <userAgentHeader />
+                      </browser>
+                  </shopper>
+              </order>
+          </submit>
+      </paymentService>
+    RESPONSE
+  end
+
+  def network_token_transcript_scrubbed
+    <<~RESPONSE
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN" "http://dtd.worldpay.com/paymentService_v1.dtd">
+      <paymentService version="1.4" merchantCode="SPREEDLY">
+          <submit>
+              <order orderCode="c293b34a70aee391193a1c08168b6c91">
+                  <description>Purchase</description>
+                  <amount value="100" currencyCode="GBP" exponent="2" />
+                  <paymentDetails>
+                      <EMVCO_TOKEN-SSL type="APPLEPAY">
+                          <tokenNumber>[FILTERED]</tokenNumber>
+                          <expiryDate>
+                              <date month="10" year="2024" />
+                          </expiryDate>
+                          <cardHolderName>PedroPerez</cardHolderName>
+                          <cryptogram>[FILTERED]</cryptogram>
+                          <eciIndicator>07</eciIndicator>
+                      </EMVCO_TOKEN-SSL>
+                  </paymentDetails>
+                  <shopper>
+                      <shopperEmailAddress>wow@ example.com</shopperEmailAddress>
+                      <browser>
+                          <acceptHeader />
+                          <userAgentHeader />
+                      </browser>
+                  </shopper>
+              </order>
+          </submit>
+      </paymentService>
+    RESPONSE
   end
 
   def failed_with_unknown_card_response
