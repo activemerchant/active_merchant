@@ -17,6 +17,7 @@ module ActiveMerchant #:nodoc:
       BRAND_MAP = {
         'visa' => 'VISA',
         'master' => 'MASTERCARD',
+        'maestro' => 'MASTERCARD',
         'american_express' => 'AMEX',
         'diners_club' => 'DINERS',
         'naranja' => 'NARANJA',
@@ -278,6 +279,10 @@ module ActiveMerchant #:nodoc:
         Digest::MD5.hexdigest(signature_string)
       end
 
+      def codensa_bin?(number)
+        number.start_with?('590712')
+      end
+
       def add_payment_method(post, payment_method, options)
         if payment_method.is_a?(String)
           brand, token = split_authorization(payment_method)
@@ -295,7 +300,7 @@ module ActiveMerchant #:nodoc:
           credit_card[:name] = payment_method.name.strip
           credit_card[:processWithoutCvv2] = true if add_process_without_cvv2(payment_method, options)
           post[:transaction][:creditCard] = credit_card
-          post[:transaction][:paymentMethod] = BRAND_MAP[payment_method.brand.to_s]
+          post[:transaction][:paymentMethod] = codensa_bin?(payment_method.number) ? 'CODENSA' : BRAND_MAP[payment_method.brand.to_s]
         end
       end
 

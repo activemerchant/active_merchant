@@ -3,14 +3,16 @@ require 'test_helper'
 class RemotePayuLatamTest < Test::Unit::TestCase
   def setup
     @gateway = PayuLatamGateway.new(fixtures(:payu_latam).update(payment_country: 'AR'))
+    @colombia_gateway = PayuLatamGateway.new(fixtures(:payu_latam).update(payment_country: 'CO', account_id: '512321'))
 
     @amount = 4000
-    @credit_card = credit_card('4097440000000004', verification_value: '777', first_name: 'APPROVED', last_name: '')
+    @credit_card = credit_card('4097440000000004', month: 6, year: 2035, verification_value: '777', first_name: 'APPROVED', last_name: '')
     @declined_card = credit_card('4097440000000004', verification_value: '777', first_name: 'REJECTED', last_name: '')
     @pending_card = credit_card('4097440000000004', verification_value: '777', first_name: 'PENDING', last_name: '')
     @naranja_credit_card = credit_card('5895620000000002', verification_value: '123', first_name: 'APPROVED', last_name: '', brand: 'naranja')
     @cabal_credit_card = credit_card('5896570000000004', verification_value: '123', first_name: 'APPROVED', last_name: '', brand: 'cabal')
     @invalid_cabal_card = credit_card('6271700000000000', verification_value: '123', first_name: 'APPROVED', last_name: '', brand: 'cabal')
+    @condensa_card = credit_card('5907120000000009', month: 6, year: 2035, verification_value: '777', first_name: 'APPROVED', brand: 'condensa')
 
     @options = {
       dni_number: '5415668464654',
@@ -62,6 +64,13 @@ class RemotePayuLatamTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_cabal_card
     response = @gateway.purchase(@amount, @cabal_credit_card, @options)
+    assert_success response
+    assert_equal 'APPROVED', response.message
+    assert response.test?
+  end
+
+  def test_successful_purchase_with_condensa_card
+    response = @colombia_gateway.purchase(@amount, @condensa_card, @options.merge(currency: 'COP'))
     assert_success response
     assert_equal 'APPROVED', response.message
     assert response.test?
@@ -338,12 +347,13 @@ class RemotePayuLatamTest < Test::Unit::TestCase
   #   assert response.test?
   # end
 
-  def test_well_formed_refund_fails_as_expected
+  def test_successful_refund
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
     assert refund = @gateway.refund(@amount, purchase.authorization, @options)
-    assert_equal 'The payment plan id cannot be empty', refund.message
+    assert_success refund
+    assert_equal 'APPROVED', refund.message
   end
 
   def test_failed_refund
