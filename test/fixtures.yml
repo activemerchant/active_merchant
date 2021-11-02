@@ -432,6 +432,14 @@ instapay:
   password:
 
 # Working credentials, no need to replace
+ipg:
+  store_id: "YOUR STORE ID"
+  user_id: "YOUR USER ID"
+  password: "YOUR PASSWORD"
+  pem_password: "CERTIFICATE PASSWORD"
+  pem: "YOUR CERTIFICATE WITH PRIVATE KEY"
+
+# Working credentials, no need to replace
 ipp:
   username: nmi.api
   password: qwerty123
