@@ -7,7 +7,8 @@
 * Worldpay: Adding support for google pay and apple pay [cristian] #4180
 * Worldpay: Adding scrubbing for network token transactions [cristian] #4181
 * SafeCharge: Add sg_NotUseCVV field [ajawadmirza] #4177
-* PayULatam: Correctly map maestro and condensa card types [dsmcclain] $4182
+* PayULatam: Correctly map maestro and condensa card types [dsmcclain] #4182
+* StripePaymentIntents: Refactor response for setup_purchase [aenand] #4183
 
 == Version 1.124.0 (October 28th, 2021)
 * Worldpay: Add Support for Submerchant Data on Worldpay [almalee24] #4147

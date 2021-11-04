@@ -1012,7 +1012,6 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert response = @gateway.setup_purchase(@amount, options)
     assert_equal 'requires_payment_method', response.params['status']
     assert response.params['client_secret'].start_with?('pi')
-    assert_instance_of StripePaymentIntentsResponse, response
   end
 
   def test_failed_setup_purchase

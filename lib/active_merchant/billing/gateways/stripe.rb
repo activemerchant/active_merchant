@@ -1,5 +1,4 @@
 require 'active_support/core_ext/hash/slice'
-require 'active_merchant/billing/gateways/stripe/stripe_payment_intents_response'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -669,8 +668,7 @@ module ActiveMerchant #:nodoc:
         card = card_from_response(response)
         avs_code = AVS_CODE_TRANSLATOR["line1: #{card['address_line1_check']}, zip: #{card['address_zip_check']}"]
         cvc_code = CVC_CODE_TRANSLATOR[card['cvc_check']]
-        response_class = options[:response_class] || Response
-        response_class.new(success,
+        Response.new(success,
           message_from(success, response),
           response,
           test: response_is_test?(response),

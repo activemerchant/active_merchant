@@ -221,7 +221,6 @@ module ActiveMerchant #:nodoc:
         add_currency(post, options, money)
         add_amount(post, money, options)
         add_payment_method_types(post, options)
-        options[:response_class] = StripePaymentIntentsResponse
         commit(:post, 'payment_intents', post, options)
       end
 
