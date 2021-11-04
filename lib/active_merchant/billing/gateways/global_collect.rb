@@ -103,37 +103,71 @@ module ActiveMerchant #:nodoc:
         post['order']['references']['invoiceData'] = {
           'invoiceNumber' => options[:invoice]
         }
-        add_airline_data(post, options) if options[:airline_data]
+        add_airline_data(post, options)
         add_lodging_data(post, options)
         add_number_of_installments(post, options) if options[:number_of_installments]
       end
 
       def add_airline_data(post, options)
+        return unless airline_options = options[:airline_data]
+
         airline_data = {}
 
-        flight_date = options[:airline_data][:flight_date]
-        passenger_name = options[:airline_data][:passenger_name]
-        code = options[:airline_data][:code]
-        name = options[:airline_data][:name]
+        airline_data['flightDate'] = airline_options[:flight_date] if airline_options[:flight_date]
+        airline_data['passengerName'] = airline_options[:passenger_name] if airline_options[:passenger_name]
+        airline_data['code'] = airline_options[:code] if airline_options[:code]
+        airline_data['name'] = airline_options[:name] if airline_options[:name]
+        airline_data['invoiceNumber'] = options[:airline_data][:invoice_number] if options[:airline_data][:invoice_number]
+        airline_data['isETicket'] = options[:airline_data][:is_eticket] if options[:airline_data][:is_eticket]
+        airline_data['isRestrictedTicket'] = options[:airline_data][:is_restricted_ticket] if options[:airline_data][:is_restricted_ticket]
+        airline_data['isThirdParty'] = options[:airline_data][:is_third_party] if options[:airline_data][:is_third_party]
+        airline_data['issueDate'] = options[:airline_data][:issue_date] if options[:airline_data][:issue_date]
+        airline_data['merchantCustomerId'] = options[:airline_data][:merchant_customer_id] if options[:airline_data][:merchant_customer_id]
+        airline_data['flightLegs'] = add_flight_legs(airline_options)
+        airline_data['passengers'] = add_passengers(airline_options)
 
-        airline_data['flightDate'] = flight_date if flight_date
-        airline_data['passengerName'] = passenger_name if passenger_name
-        airline_data['code'] = code if code
-        airline_data['name'] = name if name
+        post['order']['additionalInput']['airlineData'] = airline_data
+      end
 
+      def add_flight_legs(airline_options)
         flight_legs = []
-        options[:airline_data][:flight_legs]&.each do |fl|
+        airline_options[:flight_legs]&.each do |fl|
           leg = {}
+          leg['airlineClass'] = fl[:airline_class] if fl[:airline_class]
           leg['arrivalAirport'] = fl[:arrival_airport] if fl[:arrival_airport]
-          leg['originAirport'] = fl[:origin_airport] if fl[:origin_airport]
-          leg['date'] = fl[:date] if fl[:date]
-          leg['number'] = fl[:number] if fl[:number]
+          leg['arrivalTime'] = fl[:arrival_time] if fl[:arrival_time]
           leg['carrierCode'] = fl[:carrier_code] if fl[:carrier_code]
-          leg['airlineClass'] = fl[:carrier_code] if fl[:airline_class]
+          leg['conjunctionTicket'] = fl[:conjunction_ticket] if fl[:conjunction_ticket]
+          leg['couponNumber'] = fl[:coupon_number] if fl[:coupon_number]
+          leg['date'] = fl[:date] if fl[:date]
+          leg['departureTime'] = fl[:departure_time] if fl[:departure_time]
+          leg['endorsementOrRestriction'] = fl[:endorsement_or_restriction] if fl[:endorsement_or_restriction]
+          leg['exchangeTicket'] = fl[:exchange_ticket] if fl[:exchange_ticket]
+          leg['fare'] = fl[:fare] if fl[:fare]
+          leg['fareBasis'] = fl[:fare_basis] if fl[:fare_basis]
+          leg['fee'] = fl[:fee] if fl[:fee]
+          leg['flightNumber'] = fl[:flight_number] if fl[:flight_number]
+          leg['number'] = fl[:number] if fl[:number]
+          leg['originAirport'] = fl[:origin_airport] if fl[:origin_airport]
+          leg['passengerClass'] = fl[:passenger_class] if fl[:passenger_class]
+          leg['stopoverCode'] = fl[:stopover_code] if fl[:stopover_code]
+          leg['taxes'] = fl[:taxes] if fl[:taxes]
           flight_legs << leg
         end
-        airline_data['flightLegs'] = flight_legs
-        post['order']['additionalInput']['airlineData'] = airline_data
+        flight_legs
+      end
+
+      def add_passengers(airline_options)
+        passengers = []
+        airline_options[:passengers]&.each do |flyer|
+          passenger = {}
+          passenger['firstName'] = flyer[:first_name] if flyer[:first_name]
+          passenger['surname'] = flyer[:surname] if flyer[:surname]
+          passenger['surnamePrefix'] = flyer[:surname_prefix] if flyer[:surname_prefix]
+          passenger['title'] = flyer[:title] if flyer[:title]
+          passengers << passenger
+        end
+        passengers
       end
 
       def add_lodging_data(post, options)

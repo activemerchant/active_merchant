@@ -155,6 +155,29 @@ class GlobalCollectTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response, successful_capture_response)
   end
 
+  def test_successful_purchase_passenger_fields
+    options = @options.merge(
+      airline_data: {
+        passengers: [
+          { first_name: 'Randi',
+            surname: 'Smith',
+            surname_prefix: 'S',
+            title: 'Mr' },
+          { first_name: 'Julia',
+            surname: 'Smith',
+            surname_prefix: 'S',
+            title: 'Mrs' }
+        ]
+      }
+    )
+    stub_comms do
+      @gateway.purchase(@accepted_amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 'Julia', JSON.parse(data)['order']['additionalInput']['airlineData']['passengers'][1]['firstName']
+      assert_equal 2, JSON.parse(data)['order']['additionalInput']['airlineData']['passengers'].length
+    end.respond_with(successful_authorize_response, successful_capture_response)
+  end
+
   def test_purchase_passes_installments
     stub_comms do
       @gateway.purchase(@accepted_amount, @credit_card, @options.merge(number_of_installments: '3'))

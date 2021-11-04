@@ -57,6 +57,7 @@
 * IPG: Update authorization to support `store` method token. [ajawadmirza] #4233
 * Paymentez: Update card mappings [ajawadmirza] #4237
 * Priority: Update parsing for error messages [jessiagee] #4245
+* GlobalCollect: Support for Airline Data [naashton] #4187
 
 == Version 1.124.0 (October 28th, 2021)
 * Worldpay: Add Support for Submerchant Data on Worldpay [almalee24] #4147
