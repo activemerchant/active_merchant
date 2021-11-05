@@ -8,6 +8,7 @@ class RemoteDLocalTest < Test::Unit::TestCase
     @credit_card = credit_card('4111111111111111')
     @credit_card_naranja = credit_card('5895627823453005')
     @cabal_credit_card = credit_card('5896 5700 0000 0004')
+    @wallet_token = wallet_token()
     # No test card numbers, all txns are approved by default,
     # but errors can be invoked directly with the `description` field
     @options = {
@@ -48,6 +49,36 @@ class RemoteDLocalTest < Test::Unit::TestCase
       currency: 'BRL',
       save_card: true
     }
+    @offsite_payment_options = {
+      billing_address: address(country: 'Indonesia'),
+      document: '1234567890123456',
+      currency: 'IDR',
+      label: 'Test payment',
+      payment_method_id: 'XW',
+      payment_method_flow: 'REDIRECT',
+      callback_url: 'https://example.com/callback',
+      notification_url: 'https://example.com/notify'
+    }
+    @offsite_payment_options_india = {
+      billing_address: address(country: 'India'),
+      document: 'ABCDE1111N',
+      currency: 'INR',
+      label: 'Test payment',
+      payment_method_id: 'PW',
+      payment_method_flow: 'REDIRECT',
+      callback_url: 'https://example.com/callback',
+      notification_url: 'https://example.com/notify'
+    }
+    @offsite_payment_options_mexico = {
+      billing_address: address(country: 'Mexico'),
+      document: '42243309114',
+      currency: 'MXN',
+      label: 'Test payment',
+      payment_method_id: 'SE',
+      payment_method_flow: 'REDIRECT',
+      callback_url: 'https://example.com/callback',
+      notification_url: 'https://example.com/notify'
+    }
   end
 
   def test_successful_purchase
@@ -61,6 +92,30 @@ class RemoteDLocalTest < Test::Unit::TestCase
     assert_success response.primary_response
     assert_match 'The payment was authorized', response.message
     assert response.primary_response.params["card"].key?("card_id")
+  end
+
+  def test_successful_offsite_payment_initiation
+    order_id = SecureRandom.hex(16)
+    @offsite_payment_options.update(
+      :order_id => order_id
+    )
+    response = @gateway.initiate(@amount, @wallet_token, @offsite_payment_options)
+    assert_success response
+    assert_match 'The payment is pending', response.message
+    assert_match order_id, response.params["order_id"]
+    assert response.params["redirect_url"] != nil
+  end
+
+  def test_successful_offsite_payment_initiation_paytm_india
+    order_id = SecureRandom.hex(16)
+    @offsite_payment_options_india.update(
+      :order_id => order_id
+    )
+    response = @gateway.initiate(@amount, @wallet_token, @offsite_payment_options_india)
+    assert_success response
+    assert_match 'The payment is pending', response.message
+    assert_match order_id, response.params["order_id"]
+    assert response.params["redirect_url"] != nil
   end
 
   def test_successful_token_payment
@@ -168,6 +223,48 @@ class RemoteDLocalTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options.merge(document: 'bad_document'))
     assert_failure response
     assert_match 'Invalid parameter: payer.document', response.message
+  end
+
+  def test_failed_offsite_invalid_document
+    response = @gateway.initiate(@amount, @wallet_token, @offsite_payment_options.merge(document: 'bad_document'))
+    assert_failure response
+    assert_match 'Invalid parameter: payer.document', response.message
+  end
+
+  def test_failed_offsite_verify_with_nonzero_amount
+    response = @gateway.initiate(@amount, @wallet_token, @offsite_payment_options.merge(verify: true))
+    assert_failure response
+    assert_match 'Invalid parameter: wallet.verify', response.message
+  end
+
+  def test_offsite_payment_when_address_empty_and_country_india_then_failed
+    response = @gateway.initiate(@amount, @wallet_token, @offsite_payment_options_india.update(billing_address: {'country': 'IN'}))
+    assert_failure response
+    assert_match 'Missing parameter: payer.address', response.message
+  end
+
+  def test_failed_offsite_save_with_0_payment
+    response = @gateway.initiate(0, @wallet_token, @offsite_payment_options.merge(save: true))
+    assert_failure response
+    assert_match 'Amount too low', response.message
+  end
+
+  def test_offsite_payment_mexico_SE_REDIRECT
+    response = @gateway.initiate(100, nil, @offsite_payment_options_mexico)
+    assert_success response
+    assert_match 'The payment is pending.', response.message
+    assert_equal '100', response.params["status_code"]
+    assert response.params["redirect_url"].present?
+    assert response.authorization.present?
+  end
+
+  def test_offsite_payment_mexico_OX_REDIRECT
+    response = @gateway.initiate(100, nil, @offsite_payment_options_mexico.update({payment_method_id: 'OX'}))
+    assert_success response
+    assert_match 'The payment is pending.', response.message
+    assert_equal '100', response.params["status_code"]
+    assert response.params["redirect_url"].present?
+    assert response.authorization.present?
   end
 
   def test_successful_authorize_and_capture

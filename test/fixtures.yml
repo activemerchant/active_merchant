@@ -252,9 +252,9 @@ cyber_source_latam_pe:
 
 # Working credentials, no need to replace
 d_local:
-  login: aeaf9bbfa1
-  trans_key: 9de3769b7e
-  secret_key: ae132899f56162a669b38dab5927862f3
+  login: 64387f3e7b
+  trans_key: 17b125865c
+  secret_key: 284e9d515f2a91518e96b9eaad336c1b5
 
 data_cash:
   login: X

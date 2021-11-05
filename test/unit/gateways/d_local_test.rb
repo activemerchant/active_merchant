@@ -6,6 +6,7 @@ class DLocalTest < Test::Unit::TestCase
   def setup
     @gateway = DLocalGateway.new(login: 'login', trans_key: 'password', secret_key: 'shhhhh_key')
     @credit_card = credit_card
+    @wallet_token = wallet_token
     @psp_tokenized_card = psp_tokenized_card('CV-993903e4-0b33-48fd-8d9b-99fd6c3f0d1a')
     @amount = 100
 
@@ -31,6 +32,26 @@ class DLocalTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal '300', response.error_code
+  end
+
+  def test_successful_offsite_payment_initiation
+    @gateway.expects(:ssl_post).returns(successful_offsite_payment_response)
+
+    response = @gateway.initiate(@amount, @wallet_token, @options)
+    assert_success response
+
+    assert_equal 'D-15104-c3027e67-21f8-4308-8c94-06c44ffcea67', response.authorization
+    assert_match 'The payment is pending', response.message
+    assert response.test?
+  end
+
+  def test_failed_offsite_payment_initiation
+    @gateway.expects(:ssl_post).returns(failed_offsite_payment_response)
+
+    response = @gateway.initiate(@amount, @wallet_token, @options)
+    assert_failure response
+    assert_match 'Invalid request', response.message
+    assert response.test?
   end
 
   def test_successful_card_save
@@ -300,6 +321,14 @@ class DLocalTest < Test::Unit::TestCase
 
   def successful_purchase_response
     '{"id":"D-15104-05b0ec0c-5a1e-470a-b342-eb5f20758ef7","amount":1.00,"currency":"BRL","payment_method_id":"CARD","payment_method_type":"CARD","payment_method_flow":"DIRECT","country":"BR","card":{"holder_name":"Longbob Longsen","expiration_month":9,"expiration_year":2019,"brand":"VI","last4":"1111","card_id":"CV-993903e4-0b33-48fd-8d9b-99fd6c3f0d1a"},"created_date":"2018-12-06T20:20:41.000+0000","approved_date":"2018-12-06T20:20:42.000+0000","status":"PAID","status_detail":"The payment was paid","status_code":"200","order_id":"15940ef43d39331bc64f31341f8ccd93"}'
+  end
+
+  def successful_offsite_payment_response
+    '{"id":"D-15104-c3027e67-21f8-4308-8c94-06c44ffcea67","amount":10.0,"currency":"INR","payment_method_id":"PW","payment_method_type":"BANK_TRANSFER","payment_method_flow":"REDIRECT","country":"IN","created_date":"2021-08-19T06:42:57.000+0000","status":"PENDING","status_detail":"The payment is pending.","status_code":"100","order_id":"758c4ddf04ab6db119ec93aee2b7f64c","description":"","notification_url":"https://harish.local.inai-dev.com/notify","redirect_url":"https://sandbox.dlocal.com/collect/pay/pay/M-898eae4f-4e04-496e-ac4e-0dfc298cfae5?xtid=CATH-ST-1629355377-1016569328"}'
+  end
+
+  def failed_offsite_payment_response
+    '{"code":5001,"message":"Invalid request"}'
   end
 
   def successful_purchase_with_installments_response

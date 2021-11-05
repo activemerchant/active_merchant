@@ -197,6 +197,14 @@ module ActiveMerchant
       Billing::PspTokenizedCard.new(defaults)
     end
 
+    def wallet_token(token = "", options = {})
+      defaults = {
+        token: token
+      }.update(options)
+
+      Billing::WalletToken.new(defaults)
+    end
+
     def check(options = {})
       defaults = {
         name: 'Jim Smith',
