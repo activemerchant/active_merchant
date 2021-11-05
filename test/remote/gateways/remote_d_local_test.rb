@@ -224,13 +224,15 @@ class RemoteDLocalTest < Test::Unit::TestCase
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response
-    assert_match %r{The payment was authorized}, response.message
+    assert_equal 0, response.params['amount']
+    assert_match %r{The payment was verified}, response.message
   end
 
   def test_successful_verify_with_cabal
     response = @gateway.verify(@cabal_credit_card, @options)
     assert_success response
-    assert_match %r{The payment was authorized}, response.message
+    assert_equal 0, response.params['amount']
+    assert_match %r{The payment was verified}, response.message
   end
 
   def test_failed_verify
