@@ -135,6 +135,24 @@ class SafeChargeTest < Test::Unit::TestCase
       assert_match(/sg_NotUseCVV=1/, data)
     end.respond_with(successful_authorize_response)
 
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ not_use_cvv: 'true' }))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/sg_NotUseCVV=1/, data)
+    end.respond_with(successful_authorize_response)
+
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ not_use_cvv: false }))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/sg_NotUseCVV=0/, data)
+    end.respond_with(successful_authorize_response)
+
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ not_use_cvv: 'false' }))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/sg_NotUseCVV=0/, data)
+    end.respond_with(successful_authorize_response)
+
     assert_success response
     assert response.test?
   end

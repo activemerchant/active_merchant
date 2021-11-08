@@ -147,7 +147,7 @@ module ActiveMerchant #:nodoc:
         post[:sg_MerchantPhoneNumber] = options[:merchant_phone_number] if options[:merchant_phone_number]
         post[:sg_MerchantName] = options[:merchant_name] if options[:merchant_name]
         post[:sg_ProductID] = options[:product_id] if options[:product_id]
-        post[:sg_NotUseCVV] = options[:not_use_cvv] ? 1 : 0 if options[:not_use_cvv]
+        post[:sg_NotUseCVV] = options[:not_use_cvv].to_s == 'true' ? 1 : 0 unless options[:not_use_cvv].nil?
       end
 
       def add_payment(post, payment, options = {})
