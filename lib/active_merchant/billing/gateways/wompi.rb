@@ -131,7 +131,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        response.dig('data', 'status_message') || response.dig('error', 'reason') || response.dig('error', 'messages')
+        response.dig('data', 'status_message') || response.dig('error', 'reason') || response.dig('error', 'messages').to_json
       end
 
       def authorization_from(response)

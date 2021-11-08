@@ -69,7 +69,8 @@ class WompiTest < Test::Unit::TestCase
 
     response = @gateway.refund(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal 'transaction_id Debe ser completado', response.message['transaction_id'].first
+    message = JSON.parse(response.message)
+    assert_equal 'transaction_id Debe ser completado', message['transaction_id'].first
   end
 
   def test_successful_void
