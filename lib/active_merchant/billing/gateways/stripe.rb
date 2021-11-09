@@ -534,7 +534,6 @@ module ActiveMerchant #:nodoc:
         post[:metadata].merge!(options[:metadata]) if options[:metadata]
         post[:metadata][:email] = options[:email] if options[:email]
         post[:metadata][:order_id] = options[:order_id] if options[:order_id]
-        post.delete(:metadata) if post[:metadata].empty?
       end
 
       def add_emv_metadata(post, creditcard)

@@ -30,7 +30,7 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     @three_ds_external_data_card = credit_card('4000002760003184',
       verification_value: '737',
       month: 10,
-      year: 2021)
+      year: 2031)
     @visa_card = credit_card('4242424242424242',
       verification_value: '737',
       month: 10,
@@ -303,13 +303,15 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
       receipt_email: 'test@example.com',
       statement_descriptor: 'Statement Descriptor',
       statement_descriptor_suffix: suffix,
-      metadata: { key_1: 'value_1', key_2: 'value_2' }
+      metadata: { key_1: 'value_1', key_2: 'value_2' },
+      event_type: 'concert'
     }
 
     assert response = @gateway.create_intent(@amount, nil, options)
 
     assert_success response
     assert_equal 'value_1', response.params['metadata']['key_1']
+    assert_equal 'concert', response.params['metadata']['event_type']
     assert_equal 'ActiveMerchant Test Purchase', response.params['description']
     assert_equal 'test@example.com', response.params['receipt_email']
     assert_equal 'Statement Descriptor', response.params['statement_descriptor']
@@ -628,6 +630,16 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert_equal transfer_group, response.params['transfer_group']
     assert_equal @destination_account, response.params['on_behalf_of']
     assert_equal @destination_account, response.params.dig('transfer_data', 'destination')
+  end
+
+  def test_create_payment_intent_with_fulfillment_date
+    options = {
+      currency: 'USD',
+      customer: @customer,
+      fulfillment_date: 1636756194
+    }
+    assert response = @gateway.authorize(@amount, @visa_payment_method, options)
+    assert_success response
   end
 
   def test_create_a_payment_intent_and_confirm

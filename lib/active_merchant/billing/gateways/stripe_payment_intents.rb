@@ -35,6 +35,7 @@ module ActiveMerchant #:nodoc:
         add_ntid(post, options)
         add_claim_without_transaction_id(post, options)
         add_error_on_requires_action(post, options)
+        add_fulfillment_date(post, options)
         request_three_d_secure(post, options)
 
         CREATE_INTENT_ATTRIBUTES.each do |attribute|
@@ -56,6 +57,7 @@ module ActiveMerchant #:nodoc:
         CONFIRM_INTENT_ATTRIBUTES.each do |attribute|
           add_whitelisted_attribute(post, options, attribute)
         end
+
         commit(:post, "payment_intents/#{intent_id}/confirm", post, options)
       end
 
@@ -91,6 +93,7 @@ module ActiveMerchant #:nodoc:
         add_metadata(post, options)
         add_shipping_address(post, options)
         add_connected_account(post, options)
+        add_fulfillment_date(post, options)
 
         UPDATE_INTENT_ATTRIBUTES.each do |attribute|
           add_whitelisted_attribute(post, options, attribute)
@@ -106,6 +109,7 @@ module ActiveMerchant #:nodoc:
 
         add_metadata(post, options)
         add_return_url(post, options)
+        add_fulfillment_date(post, options)
         post[:on_behalf_of] = options[:on_behalf_of] if options[:on_behalf_of]
         post[:usage] = options[:usage] if %w(on_session off_session).include?(options[:usage])
         post[:description] = options[:description] if options[:description]
@@ -252,6 +256,16 @@ module ActiveMerchant #:nodoc:
       def add_customer(post, options)
         customer = options[:customer].to_s
         post[:customer] = customer if customer.start_with?('cus_')
+      end
+
+      def add_fulfillment_date(post, options)
+        post[:fulfillment_date] = options[:fulfillment_date].to_i if options[:fulfillment_date]
+      end
+
+      def add_metadata(post, options = {})
+        super
+
+        post[:metadata][:event_type] = options[:event_type] if options[:event_type]
       end
 
       def add_return_url(post, options)

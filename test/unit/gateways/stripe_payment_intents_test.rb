@@ -450,6 +450,20 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     end.respond_with(successful_create_intent_response)
   end
 
+  def test_successful_authorization_with_event_type_metadata
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@amount, @credit_card, {
+        email: 'wow@example.com',
+        event_type: 'concert'
+      })
+    end.check_request do |_method, endpoint, data, _headers|
+      if /payment_intents/.match?(endpoint)
+        assert_match(/metadata\[email\]=wow%40example.com/, data)
+        assert_match(/metadata\[event_type\]=concert/, data)
+      end
+    end.respond_with(successful_create_intent_response)
+  end
+
   def test_successful_setup_purchase
     stub_comms(@gateway, :ssl_request) do
       @gateway.setup_purchase(@amount, { payment_method_types: %w[afterpay_clearpay card] })
