@@ -499,7 +499,7 @@ class NmiTest < Test::Unit::TestCase
       assert_match(/initiated_by=customer/, data)
       assert_match(/stored_credential_indicator=used/, data)
       assert_match(/billing_method=recurring/, data)
-      assert_match(/initial_transaction_id=abc123/, data)
+      refute_match(/initial_transaction_id/, data)
     end.respond_with(successful_authorization_response)
 
     assert_success response
@@ -555,7 +555,7 @@ class NmiTest < Test::Unit::TestCase
       assert_match(/initiated_by=customer/, data)
       assert_match(/stored_credential_indicator=used/, data)
       assert_match(/billing_method=installment/, data)
-      assert_match(/initial_transaction_id=abc123/, data)
+      refute_match(/initial_transaction_id/, data)
     end.respond_with(successful_authorization_response)
 
     assert_success response
@@ -611,7 +611,7 @@ class NmiTest < Test::Unit::TestCase
       assert_match(/initiated_by=customer/, data)
       assert_match(/stored_credential_indicator=used/, data)
       refute_match(/billing_method/, data)
-      assert_match(/initial_transaction_id=abc123/, data)
+      refute_match(/initial_transaction_id/, data)
     end.respond_with(successful_authorization_response)
 
     assert_success response
