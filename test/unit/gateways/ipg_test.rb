@@ -56,6 +56,56 @@ class IpgTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_submerchant
+    submerchant = {
+      mcc: '6513',
+      legal_name: 'KINDERLAND',
+      address: {
+        address1: 'ALVARADO 494',
+        address2: 'Street 2',
+        zip: '1704',
+        city: 'BUENOS AIRES',
+        state: 'BUENOS AIRES',
+        country: 'ARG'
+      },
+      document: {
+        type: 'SINGLE_CODE_OF_LABOR_IDENTIFICATION',
+        number: '30710655479'
+      },
+      merchant_id: '12345678'
+    }
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge({ submerchant: submerchant }))
+    end.check_request do |_endpoint, data, _headers|
+      doc = REXML::Document.new(data)
+      assert_match(submerchant[:mcc], REXML::XPath.first(doc, '//v1:SubMerchant//v1:Mcc').text)
+      assert_match(submerchant[:legal_name], REXML::XPath.first(doc, '//v1:SubMerchant//v1:LegalName').text)
+      assert_match(submerchant[:address][:address1], REXML::XPath.first(doc, '//v1:SubMerchant//v1:Address//v1:Address1').text)
+      assert_match(submerchant[:address][:address2], REXML::XPath.first(doc, '//v1:SubMerchant//v1:Address//v1:Address2').text)
+      assert_match(submerchant[:address][:zip], REXML::XPath.first(doc, '//v1:SubMerchant//v1:Address//v1:Zip').text)
+      assert_match(submerchant[:address][:city], REXML::XPath.first(doc, '//v1:SubMerchant//v1:Address//v1:City').text)
+      assert_match(submerchant[:address][:state], REXML::XPath.first(doc, '//v1:SubMerchant//v1:Address//v1:State').text)
+      assert_match(submerchant[:address][:country], REXML::XPath.first(doc, '//v1:SubMerchant//v1:Address//v1:Country').text)
+      assert_match(submerchant[:document][:type], REXML::XPath.first(doc, '//v1:SubMerchant//v1:Document//v1:Type').text)
+      assert_match(submerchant[:document][:number], REXML::XPath.first(doc, '//v1:SubMerchant//v1:Document//v1:Number').text)
+      assert_match(submerchant[:merchant_id], REXML::XPath.first(doc, '//v1:SubMerchant//v1:MerchantID').text)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_recurring_type
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge({ recurring_type: 'FIRST' }))
+    end.check_request do |_endpoint, data, _headers|
+      doc = REXML::Document.new(data)
+      assert_match('FIRST', REXML::XPath.first(doc, '//v1:recurringType').text)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
 
@@ -88,7 +138,7 @@ class IpgTest < Test::Unit::TestCase
   def test_successful_capture
     order_id = generate_unique_id
     response = stub_comms do
-      @gateway.capture(@amount, { order_id: order_id }, @options)
+      @gateway.capture(@amount, order_id, @options)
     end.check_request do |_endpoint, data, _headers|
       doc = REXML::Document.new(data)
       assert_match('postAuth', REXML::XPath.first(doc, '//v1:CreditCardTxType//v1:Type').text)
@@ -101,7 +151,7 @@ class IpgTest < Test::Unit::TestCase
   def test_failed_capture
     @gateway.expects(:ssl_post).returns(failed_capture_response)
 
-    response = @gateway.capture(@amount, { order_id: '123' }, @options)
+    response = @gateway.capture(@amount, '123', @options)
     assert_failure response
     assert_equal 'FAILED', response.message
   end
@@ -109,7 +159,7 @@ class IpgTest < Test::Unit::TestCase
   def test_successful_refund
     order_id = generate_unique_id
     response = stub_comms do
-      @gateway.refund(@amount, { order_id: order_id }, @options)
+      @gateway.refund(@amount, order_id, @options)
     end.check_request do |_endpoint, data, _headers|
       doc = REXML::Document.new(data)
       assert_match('return', REXML::XPath.first(doc, '//v1:CreditCardTxType//v1:Type').text)
@@ -122,7 +172,7 @@ class IpgTest < Test::Unit::TestCase
   def test_failed_refund
     @gateway.expects(:ssl_post).returns(failed_refund_response)
 
-    response = @gateway.refund(@amount, { order_id: '123' }, @options)
+    response = @gateway.refund(@amount, '123', @options)
     assert_failure response
     assert_equal 'FAILED', response.message
   end
@@ -130,7 +180,7 @@ class IpgTest < Test::Unit::TestCase
   def test_successful_void
     order_id = generate_unique_id
     response = stub_comms do
-      @gateway.void({ order_id: order_id }, @options)
+      @gateway.void(order_id, @options)
     end.check_request do |_endpoint, data, _headers|
       doc = REXML::Document.new(data)
       assert_match('void', REXML::XPath.first(doc, '//v1:CreditCardTxType//v1:Type').text)
@@ -143,7 +193,7 @@ class IpgTest < Test::Unit::TestCase
   def test_failed_void
     @gateway.expects(:ssl_post).returns(failed_void_response)
 
-    response = @gateway.void({}, @options)
+    response = @gateway.void('', @options)
     assert_failure response
     assert_equal 'FAILED', response.message
   end

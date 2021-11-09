@@ -5,8 +5,8 @@ class RemoteIpgTest < Test::Unit::TestCase
     @gateway = IpgGateway.new(fixtures(:ipg))
 
     @amount = 100
-    @credit_card = credit_card('5165850000000008', brand: 'mastercard', verification_value: '123', month: '12', year: '22')
-    @declined_card = credit_card('4000300011112220', brand: 'mastercard', verification_value: '123', month: '12', year: '22')
+    @credit_card = credit_card('5165850000000008', brand: 'mastercard', verification_value: '123', month: '12', year: '2022')
+    @declined_card = credit_card('4000300011112220', brand: 'mastercard', verification_value: '123', month: '12', year: '2022')
     @options = {
       currency: 'ARS'
     }
@@ -78,7 +78,7 @@ class RemoteIpgTest < Test::Unit::TestCase
   end
 
   def test_failed_capture
-    response = @gateway.capture(@amount, { order_id: '' }, @options)
+    response = @gateway.capture(@amount, '', @options)
     assert_failure response
     assert_equal 'FAILED', response.message
     assert_equal 'SGS-005001', response.error_code
@@ -95,7 +95,7 @@ class RemoteIpgTest < Test::Unit::TestCase
   end
 
   def test_failed_void
-    response = @gateway.void({ order_id: '' }, @options)
+    response = @gateway.void('', @options)
     assert_failure response
   end
 
@@ -109,7 +109,7 @@ class RemoteIpgTest < Test::Unit::TestCase
   end
 
   def test_failed_refund
-    response = @gateway.refund(@amount, { order_id: '' }, @options)
+    response = @gateway.refund(@amount, '', @options)
     assert_failure response
     assert_equal 'FAILED', response.message
     assert_equal 'SGS-005001', response.error_code
