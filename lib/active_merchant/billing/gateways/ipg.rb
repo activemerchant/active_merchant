@@ -48,7 +48,7 @@ module ActiveMerchant #:nodoc:
 
       def void(authorization, options = {})
         xml = Builder::XmlMarkup.new(indent: 2)
-        add_transaction_details(xml, authorization)
+        add_transaction_details(xml, options.merge!({ order_id: authorization }))
 
         commit('void', xml)
       end
@@ -86,8 +86,9 @@ module ActiveMerchant #:nodoc:
       def build_purchase_and_authorize_request(money, payment, options)
         xml = Builder::XmlMarkup.new(indent: 2)
         add_payment(xml, payment, options)
+        add_sub_merchant(xml, options[:submerchant]) if options[:submerchant]
         add_three_d_secure(xml, options[:three_d_secure]) if options[:three_d_secure]
-        add_stored_credentials(xml, options[:stored_credential]) if options[:stored_credential]
+        add_stored_credentials(xml, options) if options[:stored_credential] || options[:recurring_type]
         add_amount(xml, money, options)
         add_transaction_details(xml, options)
         add_billing(xml, options[:billing]) if options[:billing]
@@ -98,7 +99,7 @@ module ActiveMerchant #:nodoc:
       def build_capture_and_refund_request(money, authorization, options)
         xml = Builder::XmlMarkup.new(indent: 2)
         add_amount(xml, money, options)
-        add_transaction_details(xml, authorization, true)
+        add_transaction_details(xml, options.merge!({ order_id: authorization }), true)
         xml
       end
 
@@ -132,7 +133,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_stored_credentials(xml, params)
-        recurring_type = params[:initial_transaction] ? 'FIRST' : 'REPEAT'
+        recurring_type = params[:stored_credential][:initial_transaction] ? 'FIRST' : 'REPEAT' if params[:stored_credential]
+        recurring_type = params[:recurring_type] if params[:recurring_type]
         xml.tag!('v1:recurringType', recurring_type)
       end
 
@@ -160,7 +162,7 @@ module ActiveMerchant #:nodoc:
           xml.tag!("#{credit_envelope}:CreditCardData") do
             xml.tag!('v1:CardNumber', payment.number) if payment.number
             xml.tag!('v1:ExpMonth', payment.month) if payment.month
-            xml.tag!('v1:ExpYear', payment.year) if payment.year
+            xml.tag!('v1:ExpYear', format(payment.year, :two_digits)) if payment.year
             xml.tag!('v1:CardCodeValue', payment.verification_value) if payment.verification_value
             xml.tag!('v1:Brand', options[:brand]) if options[:brand]
           end
@@ -176,6 +178,34 @@ module ActiveMerchant #:nodoc:
           xml.tag!("#{credit_envelope}:CreditCardData") do
             xml.tag!('v1:TrackData', options[:track_data])
           end
+        end
+      end
+
+      def add_sub_merchant(xml, submerchant)
+        xml.tag!('v1:SubMerchant') do
+          xml.tag!('v1:Mcc', submerchant[:mcc]) if submerchant[:mcc]
+          xml.tag!('v1:LegalName', submerchant[:legal_name]) if submerchant[:legal_name]
+          add_address(xml, submerchant[:address]) if submerchant[:address]
+          add_document(xml, submerchant[:document]) if submerchant[:document]
+          xml.tag!('v1:MerchantID', submerchant[:merchant_id]) if submerchant[:merchant_id]
+        end
+      end
+
+      def add_address(xml, address)
+        xml.tag!('v1:Address') do
+          xml.tag!('v1:Address1', address[:address1]) if address[:address1]
+          xml.tag!('v1:Address2', address[:address2]) if address[:address2]
+          xml.tag!('v1:Zip', address[:zip]) if address[:zip]
+          xml.tag!('v1:City', address[:city]) if address[:city]
+          xml.tag!('v1:State', address[:state]) if address[:state]
+          xml.tag!('v1:Country', address[:country]) if address[:country]
+        end
+      end
+
+      def add_document(xml, document)
+        xml.tag!('v1:Document') do
+          xml.tag!('v1:Type', document[:type]) if document[:type]
+          xml.tag!('v1:Number', document[:number]) if document[:number]
         end
       end
 
@@ -217,12 +247,12 @@ module ActiveMerchant #:nodoc:
           xml.tag!('v1:HostedDataID', options[:hosted_data_id]) if options[:hosted_data_id]
           xml.tag!('v1:HostedDataStoreID', options[:hosted_data_store_id]) if options[:hosted_data_store_id]
           xml.tag!('v1:DeclineHostedDataDuplicates', options[:decline_hosted_data_duplicates]) if options[:decline_hosted_data_duplicates]
-          xml.tag!('v1:numberOfInstallments', options[:number_of_installments]) if options[:number_of_installments]
           xml.tag!('v1:SubTotal', options[:sub_total]) if options[:sub_total]
           xml.tag!('v1:ValueAddedTax', options[:value_added_tax]) if options[:value_added_tax]
           xml.tag!('v1:DeliveryAmount', options[:delivery_amount]) if options[:delivery_amount]
           xml.tag!('v1:ChargeTotal', money)
           xml.tag!('v1:Currency', CURRENCY_CODES[options[:currency]])
+          xml.tag!('v1:numberOfInstallments', options[:number_of_installments]) if options[:number_of_installments]
         end
       end
 
@@ -336,10 +366,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
-        {
-          order_id: response[:OrderId],
-          ipg_transaction_id: response[:IpgTransactionId]
-        }
+        response[:OrderId]
       end
 
       def error_code_from(response)
