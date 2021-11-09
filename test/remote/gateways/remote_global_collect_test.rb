@@ -159,6 +159,45 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     assert property_names.include? 'order.additionalInput.airlineData.name'
   end
 
+  def test_successful_purchase_with_lodging_data
+    options = @options.merge(
+      lodging_data: {
+        charges: [
+          { charge_amount: '1000',
+            charge_amount_currency_code: 'USD',
+            charge_type: 'giftshop' }
+        ],
+        check_in_date: '20211223',
+        check_out_date: '20211227',
+        folio_number: 'randAssortmentofChars',
+        is_confirmed_reservation: 'true',
+        is_facility_fire_safety_conform: 'true',
+        is_no_show: 'false',
+        is_preference_smoking_room: 'false',
+        number_of_adults: '2',
+        number_of_nights: '1',
+        number_of_rooms: '1',
+        program_code: 'advancedDeposit',
+        property_customer_service_phone_number: '5555555555',
+        property_phone_number: '5555555555',
+        renter_name: 'Guy',
+        rooms: [
+          { daily_room_rate: '25000',
+            daily_room_rate_currency_code: 'USD',
+            daily_room_tax_amount: '5',
+            daily_room_tax_amount_currency_code: 'USD',
+            number_of_nights_at_room_rate: '1',
+            room_location: 'Courtyard',
+            type_of_bed: 'Queen',
+            type_of_room: 'Walled' }
+        ]
+      }
+    )
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+  end
+
   def test_successful_purchase_with_very_long_name
     credit_card = credit_card('4567350000427977', { first_name: 'thisisaverylongfirstname' })
 

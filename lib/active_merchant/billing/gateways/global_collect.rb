@@ -104,6 +104,7 @@ module ActiveMerchant #:nodoc:
           'invoiceNumber' => options[:invoice]
         }
         add_airline_data(post, options) if options[:airline_data]
+        add_lodging_data(post, options)
         add_number_of_installments(post, options) if options[:number_of_installments]
       end
 
@@ -133,6 +134,61 @@ module ActiveMerchant #:nodoc:
         end
         airline_data['flightLegs'] = flight_legs
         post['order']['additionalInput']['airlineData'] = airline_data
+      end
+
+      def add_lodging_data(post, options)
+        return unless lodging_options = options[:lodging_data]
+
+        lodging_data = {}
+
+        lodging_data['charges'] = add_charges(lodging_options)
+        lodging_data['checkInDate'] = lodging_options[:check_in_date] if lodging_options[:check_in_date]
+        lodging_data['checkOutDate'] = lodging_options[:check_out_date] if lodging_options[:check_out_date]
+        lodging_data['folioNumber'] = lodging_options[:folio_number] if lodging_options[:folio_number]
+        lodging_data['isConfirmedReservation'] = lodging_options[:is_confirmed_reservation] if lodging_options[:is_confirmed_reservation]
+        lodging_data['isFacilityFireSafetyConform'] = lodging_options[:is_facility_fire_safety_conform] if lodging_options[:is_facility_fire_safety_conform]
+        lodging_data['isNoShow'] = lodging_options[:is_no_show] if lodging_options[:is_no_show]
+        lodging_data['isPreferenceSmokingRoom'] = lodging_options[:is_preference_smoking_room] if lodging_options[:is_preference_smoking_room]
+        lodging_data['numberOfAdults'] = lodging_options[:number_of_adults] if lodging_options[:number_of_adults]
+        lodging_data['numberOfNights'] = lodging_options[:number_of_nights] if lodging_options[:number_of_nights]
+        lodging_data['numberOfRooms'] = lodging_options[:number_of_rooms] if lodging_options[:number_of_rooms]
+        lodging_data['programCode'] = lodging_options[:program_code] if lodging_options[:program_code]
+        lodging_data['propertyCustomerServicePhoneNumber'] = lodging_options[:property_customer_service_phone_number] if lodging_options[:property_customer_service_phone_number]
+        lodging_data['propertyPhoneNumber'] = lodging_options[:property_phone_number] if lodging_options[:property_phone_number]
+        lodging_data['renterName'] = lodging_options[:renter_name] if lodging_options[:renter_name]
+        lodging_data['rooms'] = add_rooms(lodging_options)
+
+        post['order']['additionalInput']['lodgingData'] = lodging_data
+      end
+
+      def add_charges(lodging_options)
+        charges = []
+        lodging_options[:charges]&.each do |item|
+          charge = {}
+          charge['chargeAmount'] = item[:charge_amount] if item[:charge_amount]
+          charge['chargeAmountCurrencyCode'] = item[:charge_amount_currency_code] if item[:charge_amount_currency_code]
+          charge['chargeType'] = item[:charge_type] if item[:charge_type]
+          charges << charge
+        end
+        charges
+      end
+
+      def add_rooms(lodging_options)
+        rooms = []
+        lodging_options[:rooms]&.each do |item|
+          room = {}
+          room['dailyRoomRate'] = item[:daily_room_rate] if item[:daily_room_rate]
+          room['dailyRoomRateCurrencyCode'] = item[:daily_room_rate_currency_code] if item[:daily_room_rate_currency_code]
+          room['dailyRoomTaxAmount'] = item[:daily_room_tax_amount] if item[:daily_room_tax_amount]
+          room['dailyRoomTaxAmountCurrencyCode'] = item[:daily_room_tax_amount_currency_code] if item[:daily_room_tax_amount_currency_code]
+          room['numberOfNightsAtRoomRate'] = item[:number_of_nights_at_room_rate] if item[:number_of_nights_at_room_rate]
+          room['roomLocation'] = item[:room_location] if item[:room_location]
+          room['roomNumber'] = item[:room_number] if item[:room_number]
+          room['typeOfBed'] = item[:type_of_bed] if item[:type_of_bed]
+          room['typeOfRoom'] = item[:type_of_room] if item[:type_of_room]
+          rooms << room
+        end
+        rooms
       end
 
       def add_creator_info(post, options)
