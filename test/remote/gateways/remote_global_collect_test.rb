@@ -3,6 +3,8 @@ require 'test_helper'
 class RemoteGlobalCollectTest < Test::Unit::TestCase
   def setup
     @gateway = GlobalCollectGateway.new(fixtures(:global_collect))
+    @gateway_preprod = GlobalCollectGateway.new(fixtures(:global_collect_preprod))
+    @gateway_preprod.options[:url_override] = 'preproduction'
 
     @amount = 100
     @credit_card = credit_card('4567350000427977')
@@ -12,8 +14,7 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     @options = {
       email: 'example@example.com',
       billing_address: address,
-      description: 'Store Purchase',
-      url_override: 'preproduction'
+      description: 'Store Purchase'
     }
     @long_address = {
       billing_address: {
@@ -23,6 +24,10 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
         zip: '09901',
         country: 'US'
       }
+    }
+    @preprod_options = {
+      email: 'email@example.com',
+      billing_address: address
     }
   end
 
@@ -356,5 +361,31 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
 
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@gateway.options[:secret_api_key], transcript)
+  end
+
+  def test_successful_preprod_auth_and_capture
+    options = @preprod_options.merge(order_id: rand(1000), requires_approval: true)
+    auth = @gateway_preprod.authorize(@accepted_amount, @credit_card, options)
+    assert_success auth
+
+    assert capture = @gateway_preprod.capture(@amount, auth.authorization, options)
+    assert_success capture
+    assert_equal 'CAPTURE_REQUESTED', capture.params['payment']['status']
+  end
+
+  def test_successful_preprod_purchase
+    options = @preprod_options.merge(order_id: rand(1000), requires_approval: true)
+    assert purchase = @gateway_preprod.purchase(@accepted_amount, @credit_card, options)
+    assert_success purchase
+  end
+
+  def test_successful_preprod_void
+    options = @preprod_options.merge(order_id: rand(1000), requires_approval: true)
+    auth = @gateway_preprod.authorize(@amount, @credit_card, options)
+    assert_success auth
+
+    assert void = @gateway_preprod.void(auth.authorization)
+    assert_success void
+    assert_equal 'Succeeded', void.message
   end
 end
