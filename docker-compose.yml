@@ -1,0 +1,26 @@
+version: "3.2"
+
+services:
+  gem:
+    build:
+      context: .
+      args:
+        - GITHUB_USERNAME
+        - GITHUB_TOKEN
+    volumes:
+      - .:/var/app
+      - bundle_cache:/usr/local/bundle
+    environment:
+      GITHUB_USERNAME: ${GITHUB_USERNAME}
+      GITHUB_TOKEN: ${GITHUB_TOKEN}
+
+  postgres:
+    image: postgres:9.5
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: "postgres"
+      POSTGRES_HOST_AUTH_METHOD: "trust"
+
+volumes:
+  bundle_cache:

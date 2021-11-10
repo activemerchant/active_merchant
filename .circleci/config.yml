@@ -17,3 +17,12 @@ jobs:
       - run:
           name: build_image
           command: make build
+      - run:
+          name: brakeman
+          command: make brakeman
+      - run:
+          name: bundle-audit
+          command: make bundle-audit
+      - run:
+          name: rubocop
+          command: make rubocop
