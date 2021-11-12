@@ -34,7 +34,7 @@ module ActiveMerchant #:nodoc:
           public_key: public_key
         }
         add_invoice(post, money, options)
-        add_card(post, payment)
+        add_card(post, payment, options)
 
         commit('sale', post, '/transactions_sync')
       end
@@ -84,13 +84,15 @@ module ActiveMerchant #:nodoc:
         post[:currency] = (options[:currency] || currency(money))
       end
 
-      def add_card(post, card)
+      def add_card(post, card, options)
+        installments = options[:installments] ? options[:installments].to_i : 1
+
         payment_method = {
           type: 'CARD',
           number: card.number,
           exp_month: card.month.to_s.rjust(2, '0'),
           exp_year: card.year.to_s[2..3],
-          installments: 1,
+          installments: installments,
           cvc: card.verification_value,
           card_holder: card.name
         }

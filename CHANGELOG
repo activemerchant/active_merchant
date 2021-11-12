@@ -14,6 +14,7 @@
 * Priority: Support Priority Payment Systems gateway [jessiagee] #4166
 * GlobalCollect: Support for Lodging Data [naashton] #4190
 * IPG: Add support for sub-merchant and recurring type fields [ajawadmirza] # 4188
+* Wompi: Support `installments` option [therufs] #4192
 
 == Version 1.124.0 (October 28th, 2021)
 * Worldpay: Add Support for Submerchant Data on Worldpay [almalee24] #4147
