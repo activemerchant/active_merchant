@@ -106,6 +106,45 @@ class IpgTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_payment_token
+    payment_token = 'ABC123'
+
+    response = stub_comms do
+      @gateway.purchase(@amount, payment_token, @options)
+    end.check_request do |_endpoint, data, _headers|
+      doc = REXML::Document.new(data)
+      assert_match(payment_token, REXML::XPath.first(doc, '//v1:Payment//v1:HostedDataID').text)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_3ds2
+    three_d_options = {
+      three_d_secure: {
+        version: '2.1.0',
+        cavv: 'jEET5Odser3oCRAyNTY5BVgAAAA=',
+        xid: 'jHDMyjJJF9bLBCFT/YUbqMhoQ0s=',
+        directory_response_status: 'Y',
+        authentication_response_status: 'Y',
+        ds_transaction_id: '925a0317-9143-5130-8000-0000000f8742'
+      }
+    }
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(three_d_options))
+    end.check_request do |_endpoint, data, _headers|
+      doc = REXML::Document.new(data)
+      assert_match(three_d_options[:three_d_secure][:cavv], REXML::XPath.first(doc, '//v1:CreditCard3DSecure//v1:AuthenticationValue').text)
+      assert_match(three_d_options[:three_d_secure][:version], REXML::XPath.first(doc, '//v1:CreditCard3DSecure//v1:Secure3DProtocolVersion').text)
+      assert_match(three_d_options[:three_d_secure][:xid], REXML::XPath.first(doc, '//v1:CreditCard3DSecure//v1:XID').text)
+      assert_match(three_d_options[:three_d_secure][:authentication_response_status], REXML::XPath.first(doc, '//v1:CreditCard3DSecure//v1:Secure3D2AuthenticationResponse').text)
+      assert_match(three_d_options[:three_d_secure][:ds_transaction_id], REXML::XPath.first(doc, '//v1:CreditCard3DSecure//v1:DirectoryServerTransactionId').text)
+      assert_match(three_d_options[:three_d_secure][:directory_response_status], REXML::XPath.first(doc, '//v1:CreditCard3DSecure//v1:Secure3D2TransactionStatus').text)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
 

@@ -54,6 +54,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def store(credit_card, options = {})
+        @hosted_data_id = options[:hosted_data_id] || generate_unique_id
         xml = Builder::XmlMarkup.new(indent: 2)
         add_storage_item(xml, credit_card, options)
 
@@ -85,11 +86,12 @@ module ActiveMerchant #:nodoc:
 
       def build_purchase_and_authorize_request(money, payment, options)
         xml = Builder::XmlMarkup.new(indent: 2)
-        add_payment(xml, payment, options)
+
+        add_credit_card(xml, payment, options)
         add_sub_merchant(xml, options[:submerchant]) if options[:submerchant]
         add_three_d_secure(xml, options[:three_d_secure]) if options[:three_d_secure]
         add_stored_credentials(xml, options) if options[:stored_credential] || options[:recurring_type]
-        add_amount(xml, money, options)
+        add_payment(xml, money, payment, options)
         add_transaction_details(xml, options)
         add_billing(xml, options[:billing]) if options[:billing]
         add_shipping(xml, options[:shipping]) if options[:shipping]
@@ -98,7 +100,7 @@ module ActiveMerchant #:nodoc:
 
       def build_capture_and_refund_request(money, authorization, options)
         xml = Builder::XmlMarkup.new(indent: 2)
-        add_amount(xml, money, options)
+        add_payment(xml, money, nil, options)
         add_transaction_details(xml, options.merge!({ order_id: authorization }), true)
         xml
       end
@@ -139,12 +141,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_storage_item(xml, credit_card, options)
-        requires!(options.merge!({ credit_card: credit_card }), :credit_card, :hosted_data_id)
+        requires!(options.merge!({ credit_card: credit_card, hosted_data_id: @hosted_data_id }), :credit_card, :hosted_data_id)
         xml.tag!('ns2:StoreHostedData') do
           xml.tag!('ns2:DataStorageItem') do
-            add_payment(xml, credit_card, {}, 'ns2')
+            add_credit_card(xml, credit_card, {}, 'ns2')
             add_three_d_secure(xml, options[:three_d_secure]) if options[:three_d_secure]
-            xml.tag!('ns2:HostedDataID', options[:hosted_data_id]) if options[:hosted_data_id]
+            xml.tag!('ns2:HostedDataID', @hosted_data_id) if @hosted_data_id
           end
         end
       end
@@ -156,9 +158,10 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_payment(xml, payment, options = {}, credit_envelope = 'v1')
-        requires!(options.merge!({ card_number: payment.number, month: payment.month, year: payment.year }), :card_number, :month, :year) if payment
-        if payment
+      def add_credit_card(xml, payment, options = {}, credit_envelope = 'v1')
+        if payment&.is_a?(CreditCard)
+          requires!(options.merge!({ card_number: payment.number, month: payment.month, year: payment.year }), :card_number, :month, :year)
+
           xml.tag!("#{credit_envelope}:CreditCardData") do
             xml.tag!('v1:CardNumber', payment.number) if payment.number
             xml.tag!('v1:ExpMonth', payment.month) if payment.month
@@ -241,10 +244,10 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_amount(xml, money, options)
+      def add_payment(xml, money, payment, options)
         requires!(options.merge!({ money: money }), :currency, :money)
         xml.tag!('v1:Payment') do
-          xml.tag!('v1:HostedDataID', options[:hosted_data_id]) if options[:hosted_data_id]
+          xml.tag!('v1:HostedDataID', payment) if payment&.is_a?(String)
           xml.tag!('v1:HostedDataStoreID', options[:hosted_data_store_id]) if options[:hosted_data_store_id]
           xml.tag!('v1:DeclineHostedDataDuplicates', options[:decline_hosted_data_duplicates]) if options[:decline_hosted_data_duplicates]
           xml.tag!('v1:SubTotal', options[:sub_total]) if options[:sub_total]
@@ -344,6 +347,7 @@ module ActiveMerchant #:nodoc:
         root.elements.to_a.each do |node|
           parse_element(reply, node)
         end
+        reply[:hosted_data_id] = @hosted_data_id if @hosted_data_id
         return reply
       end
 
