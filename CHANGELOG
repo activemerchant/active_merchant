@@ -16,6 +16,7 @@
 * IPG: Add support for sub-merchant and recurring type fields [ajawadmirza] # 4188
 * Wompi: Support `installments` option [therufs] #4192
 * Stripe PI: add support for `fulfillment_date` and `event_type` [dsmcclain] #4193
+* Paysafe: Adjust logic for sending 3DS field [meagabeth] #4194
 
 == Version 1.124.0 (October 28th, 2021)
 * Worldpay: Add Support for Submerchant Data on Worldpay [almalee24] #4147

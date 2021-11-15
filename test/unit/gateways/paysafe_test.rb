@@ -6,7 +6,7 @@ class PaysafeTest < Test::Unit::TestCase
   def setup
     @gateway = PaysafeGateway.new(username: 'username', password: 'password', account_id: 'account_id')
     @credit_card = credit_card
-    @mastercard = credit_card('5186750368967720', brand: 'mastercard')
+    @mastercard = credit_card('5454545454545454', brand: 'master')
     @amount = 100
 
     @options = {

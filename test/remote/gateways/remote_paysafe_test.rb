@@ -6,7 +6,7 @@ class RemotePaysafeTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card('4037111111000000')
-    @mastercard = credit_card('5200400000000009', brand: 'mastercard')
+    @mastercard = credit_card('5200400000000009', brand: 'master')
     @pm_token = 'Ci3S9DWyOP9CiJ5'
     @options = {
       billing_address: address,

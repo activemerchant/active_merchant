@@ -203,7 +203,7 @@ module ActiveMerchant #:nodoc:
         post[:authentication][:cavv] = three_d_secure[:cavv]
         post[:authentication][:xid] = three_d_secure[:xid] if three_d_secure[:xid]
         post[:authentication][:threeDSecureVersion] = three_d_secure[:version]
-        post[:authentication][:directoryServerTransactionId] = three_d_secure[:ds_transaction_id] unless payment.is_a?(String) || payment.brand != 'mastercard'
+        post[:authentication][:directoryServerTransactionId] = three_d_secure[:ds_transaction_id] unless payment.is_a?(String) || !mastercard?(payment)
       end
 
       def add_airline_travel_details(post, options)
@@ -282,6 +282,12 @@ module ActiveMerchant #:nodoc:
           split_pay << split
         end
         post[:splitpay] = split_pay
+      end
+
+      def mastercard?(payment)
+        return false unless payment.respond_to?(:brand)
+
+        payment.brand == 'master'
       end
 
       def parse(body)
