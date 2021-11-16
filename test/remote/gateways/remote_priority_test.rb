@@ -237,8 +237,9 @@ class RemotePriorityTest < Test::Unit::TestCase
     # if batch Open then fail test. Batch must be closed to perform a Refund
     if batch_check.params['status'] == 'Open'
       @gateway.close_batch(response.params['batchId'], @option_spr)
+      refund_params = @option_spr.merge(response.params).deep_transform_keys { |key| key.to_s.underscore }.transform_keys(&:to_sym)
 
-      refund = @gateway.refund(response.params['amount'].to_f * 100, @credit_card, @option_spr.merge(response.params))
+      refund = @gateway.refund(response.params['amount'].to_f * 100, @credit_card, refund_params)
       assert_success refund
       assert refund.params['status'] == 'Approved'
 
