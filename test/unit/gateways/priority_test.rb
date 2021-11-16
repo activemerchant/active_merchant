@@ -6,8 +6,7 @@ class PriorityTest < Test::Unit::TestCase
     # run command below to run tests in debug (byebug)
     # byebug -Itest test/unit/gateways/priority_test.rb
 
-    @gateway = PriorityGateway.new(fixtures(:priority))
-    @merchant = '1000003310'
+    @gateway = PriorityGateway.new(key: 'sandbox_key', secret: 'secret', merchant_id: 'merchant_id')
 
     # purchase params success
     @amount_purchase = 4
@@ -41,7 +40,7 @@ class PriorityTest < Test::Unit::TestCase
       customer_code: 'PTHER000IKZK',
       invoice: 'R000IKZK',
       is_duplicate: false,
-      merchant_id: @merchant,
+      merchant_id: @gateway.options[:merchant_id],
       payment_token: 'P6NyKC5UfmZjgAlF3ZEd3YSaJG9qKT6E',
       card_type: 'Visa',
       entry_mode: 'Keyed',
@@ -170,14 +169,11 @@ class PriorityTest < Test::Unit::TestCase
   end
 
   def test_failed_void
-    response = stub_comms do
-      @gateway.void(123456, @option_spr)
-    end.respond_with(failed_void_response)
+    @gateway.expects(:ssl_request).returns(failed_void_response)
 
+    response = @gateway.void(123456, @option_spr)
     assert_failure response
-
     assert_equal 'Unauthorized', response.params['message']
-
     assert_equal 'Original Payment Not Found Or You Do Not Have Access.', response.params['details'][0]
   end
 
@@ -221,8 +217,9 @@ class PriorityTest < Test::Unit::TestCase
 
   def test_get_payment_status
     # check is this transaction associated batch is "Closed".
-    batch_check = @gateway.get_payment_status(123456, @option_spr)
+    @gateway.expects(:ssl_request).returns('')
 
+    batch_check = @gateway.get_payment_status(123456, @option_spr)
     assert_failure batch_check
     assert_equal 'Invalid JSON response', batch_check.params['message'][0..20]
   end
@@ -241,7 +238,7 @@ class PriorityTest < Test::Unit::TestCase
             "id": 10000001625074,
             "creatorName": "tester-api",
             "isDuplicate": false,
-            "merchantId": 1000003310,
+            "merchantId": 12345678,
             "batch": "0001",
             "batchId": 10000000227764,
             "tenderType": "Card",
@@ -329,7 +326,6 @@ class PriorityTest < Test::Unit::TestCase
 
   def assert_refund_data_passed(data, purchase_resp)
     parsed_data = JSON.parse(data)
-
     assert_equal parsed_data['cardAccount']['cardPresent'], purchase_resp[:card_present]
     assert_equal parsed_data['clientReference'], purchase_resp[:client_ref]
     assert_equal parsed_data['created'], purchase_resp[:created]
@@ -340,7 +336,7 @@ class PriorityTest < Test::Unit::TestCase
     assert_equal parsed_data['id'], 0
     assert_equal parsed_data['invoice'], purchase_resp[:invoice]
     assert_equal parsed_data['isDuplicate'], false
-    assert_equal parsed_data['merchantId'], @merchant
+    assert_equal parsed_data['merchantId'], purchase_resp[:merchant_id]
     assert_equal parsed_data['paymentToken'], purchase_resp[:payment_token]
 
     pos_data = parsed_data['posData']
@@ -398,16 +394,14 @@ class PriorityTest < Test::Unit::TestCase
   end
 
   def failed_void_response
-    %(
-      {
-        "errorCode": "Unauthorized",
-        "message": "Unauthorized",
-        "details": [
-            "Original Payment Not Found Or You Do Not Have Access."
-        ],
-        "responseCode": "egYl4vLdB6WIk4ocQBuIPvA"
+    {
+      'errorCode': 'Unauthorized',
+      'message': 'Unauthorized',
+      'details': [
+        'Original Payment Not Found Or You Do Not Have Access.'
+      ],
+      'responseCode': 'eer9iUr2GboeBU1YQxAHa0w'
     }
-    )
   end
 
   def transcript
@@ -463,7 +457,7 @@ class PriorityTest < Test::Unit::TestCase
       "creatorName": "Mike B",
       "isDuplicate": false,
       "shouldVaultCard": true,
-      "merchantId": 1000003310,
+      "merchantId": 12345678,
       "batch": "0009",
       "batchId": 10000000227516,
       "tenderType": "Card",
@@ -546,7 +540,7 @@ class PriorityTest < Test::Unit::TestCase
       "creatorName": "tester-api",
       "isDuplicate": false,
       "shouldVaultCard": true,
-      "merchantId": 1000003310,
+      "merchantId": 12345678,
       "batch": "0009",
       "batchId": 10000000227516,
       "tenderType": "Card",
@@ -619,7 +613,7 @@ class PriorityTest < Test::Unit::TestCase
         "creatorName": "Mike B",
         "isDuplicate": false,
         "shouldVaultCard": true,
-        "merchantId": 1000003310,
+        "merchantId": 12345678,
         "tenderType": "Card",
         "currency": "USD",
         "amount": "3.32",
@@ -699,7 +693,7 @@ class PriorityTest < Test::Unit::TestCase
         "creatorName": "tester-api",
         "isDuplicate": false,
         "shouldVaultCard": true,
-        "merchantId": 1000003310,
+        "merchantId": 12345678,
         "tenderType": "Card",
         "currency": "USD",
         "amount": "411",
@@ -769,7 +763,7 @@ class PriorityTest < Test::Unit::TestCase
             "id": 10000001625061,
             "creatorName": "tester-api",
             "isDuplicate": false,
-            "merchantId": 1000003310,
+            "merchantId": 12345678,
             "batch": "0016",
             "batchId": 10000000227758,
             "tenderType": "Card",
@@ -862,7 +856,7 @@ class PriorityTest < Test::Unit::TestCase
         "id": 10000001620801,
         "creatorName": "Mike B",
         "isDuplicate": false,
-        "merchantId": 1000003310,
+        "merchantId": 12345678,
         "batch": "0001",
         "batchId": 10000000227556,
         "tenderType": "Card",
@@ -938,7 +932,7 @@ class PriorityTest < Test::Unit::TestCase
         "id": 10000001620802,
         "creatorName": "tester-api",
         "isDuplicate": false,
-        "merchantId": 1000003310,
+        "merchantId": 12345678,
         "batch": "0001",
         "batchId": 10000000227556,
         "tenderType": "Card",
@@ -1006,13 +1000,13 @@ class PriorityTest < Test::Unit::TestCase
 
   def pre_scrubbed
     %(
-      {\"achIndicator\":null,\"amount\":2.11,\"authCode\":null,\"authOnly\":false,\"bankAccount\":null,\"cardAccount\":{\"avsStreet\":\"1\",\"avsZip\":\"88888\",\"cvv\":\"123\",\"entryMode\":\"Keyed\",\"expiryDate\":\"01/29\",\"expiryMonth\":\"01\",\"expiryYear\":\"29\",\"last4\":null,\"magstripe\":null,\"number\":\"4111111111111111\"},\"cardPresent\":false,\"cardPresentType\":\"CardNotPresent\",\"isAuth\":true,\"isSettleFunds\":true,\"isTicket\":false,\"merchantId\":1000003310,\"mxAdvantageEnabled\":false,\"mxAdvantageFeeLabel\":\"\",\"paymentType\":\"Sale\",\"purchases\":[{\"taxRate\":\"0.0000\",\"additionalTaxRate\":null,\"discountRate\":null}],\"shouldGetCreditCardLevel\":true,\"shouldVaultCard\":true,\"source\":\"Tester\",\"sourceZip\":\"K1C2N6\",\"taxExempt\":false,\"tenderType\":\"Card\",\"terminals\":[]}
+      {\"achIndicator\":null,\"amount\":2.11,\"authCode\":null,\"authOnly\":false,\"bankAccount\":null,\"cardAccount\":{\"avsStreet\":\"1\",\"avsZip\":\"88888\",\"cvv\":\"123\",\"entryMode\":\"Keyed\",\"expiryDate\":\"01/29\",\"expiryMonth\":\"01\",\"expiryYear\":\"29\",\"last4\":null,\"magstripe\":null,\"number\":\"4111111111111111\"},\"cardPresent\":false,\"cardPresentType\":\"CardNotPresent\",\"isAuth\":true,\"isSettleFunds\":true,\"isTicket\":false,\"merchantId\":12345678,\"mxAdvantageEnabled\":false,\"mxAdvantageFeeLabel\":\"\",\"paymentType\":\"Sale\",\"purchases\":[{\"taxRate\":\"0.0000\",\"additionalTaxRate\":null,\"discountRate\":null}],\"shouldGetCreditCardLevel\":true,\"shouldVaultCard\":true,\"source\":\"Tester\",\"sourceZip\":\"K1C2N6\",\"taxExempt\":false,\"tenderType\":\"Card\",\"terminals\":[]}
      )
   end
 
   def post_scrubbed
     %(
-      {\"achIndicator\":null,\"amount\":2.11,\"authCode\":null,\"authOnly\":false,\"bankAccount\":null,\"cardAccount\":{\"avsStreet\":\"1\",\"avsZip\":\"88888\",\"cvv\":\"[FILTERED]\",\"entryMode\":\"Keyed\",\"expiryDate\":\"01/29\",\"expiryMonth\":\"01\",\"expiryYear\":\"29\",\"last4\":null,\"magstripe\":null,\"number\":\"[FILTERED]\"},\"cardPresent\":false,\"cardPresentType\":\"CardNotPresent\",\"isAuth\":true,\"isSettleFunds\":true,\"isTicket\":false,\"merchantId\":1000003310,\"mxAdvantageEnabled\":false,\"mxAdvantageFeeLabel\":\"\",\"paymentType\":\"Sale\",\"purchases\":[{\"taxRate\":\"0.0000\",\"additionalTaxRate\":null,\"discountRate\":null}],\"shouldGetCreditCardLevel\":true,\"shouldVaultCard\":true,\"source\":\"Tester\",\"sourceZip\":\"K1C2N6\",\"taxExempt\":false,\"tenderType\":\"Card\",\"terminals\":[]}
+      {\"achIndicator\":null,\"amount\":2.11,\"authCode\":null,\"authOnly\":false,\"bankAccount\":null,\"cardAccount\":{\"avsStreet\":\"1\",\"avsZip\":\"88888\",\"cvv\":\"[FILTERED]\",\"entryMode\":\"Keyed\",\"expiryDate\":\"01/29\",\"expiryMonth\":\"01\",\"expiryYear\":\"29\",\"last4\":null,\"magstripe\":null,\"number\":\"[FILTERED]\"},\"cardPresent\":false,\"cardPresentType\":\"CardNotPresent\",\"isAuth\":true,\"isSettleFunds\":true,\"isTicket\":false,\"merchantId\":12345678,\"mxAdvantageEnabled\":false,\"mxAdvantageFeeLabel\":\"\",\"paymentType\":\"Sale\",\"purchases\":[{\"taxRate\":\"0.0000\",\"additionalTaxRate\":null,\"discountRate\":null}],\"shouldGetCreditCardLevel\":true,\"shouldVaultCard\":true,\"source\":\"Tester\",\"sourceZip\":\"K1C2N6\",\"taxExempt\":false,\"tenderType\":\"Card\",\"terminals\":[]}
      )
   end
 end
