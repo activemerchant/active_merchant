@@ -18,6 +18,7 @@
 * Stripe PI: add support for `fulfillment_date` and `event_type` [dsmcclain] #4193
 * Paysafe: Adjust logic for sending 3DS field [meagabeth] #4194
 * Priority: Fix unit test cases [ajawadmirza] #4195
+* EBANX: New Gateway Specific Receiver [spreedly-kledoux] #4198
 
 == Version 1.124.0 (October 28th, 2021)
 * Worldpay: Add Support for Submerchant Data on Worldpay [almalee24] #4147

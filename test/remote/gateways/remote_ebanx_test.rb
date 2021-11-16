@@ -46,6 +46,13 @@ class RemoteEbanxTest < Test::Unit::TestCase
     assert_equal 'Accepted', response.message
   end
 
+  def test_successful_purchase_passing_processing_type_in_header
+    response = @gateway.purchase(@amount, @credit_card, @options.merge({ processing_type: 'local' }))
+
+    assert_success response
+    assert_equal 'Accepted', response.message
+  end
+
   def test_successful_purchase_as_brazil_business_with_responsible_fields
     options = @options.update(document: '32593371000110',
                               person_type: 'business',
