@@ -235,7 +235,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def order_tag_attributes(options)
-        { 'orderCode' => options[:order_id], 'installationId' => options[:inst_id] || @options[:inst_id] }.reject { |_, v| !v.present? }
+        { 'orderCode' => clean_order_id(options[:order_id]), 'installationId' => options[:inst_id] || @options[:inst_id] }.reject { |_, v| !v.present? }
+      end
+
+      def clean_order_id(order_id)
+        order_id.to_s.gsub(/(\s|\||<|>|'|")/, '')[0..64]
       end
 
       def build_capture_request(money, authorization, options)
