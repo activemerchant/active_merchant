@@ -1210,6 +1210,16 @@ class WorldpayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_order_id_crop_and_clean
+    @options[:order_id] = "abc1234 abc1234 'abc1234' <abc1234> \"abc1234\" | abc1234 abc1234 abc1234 abc1234 abc1234"
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r(<order orderCode="abc1234abc1234abc1234abc1234abc1234abc1234abc1234abc1234abc1234ab">), data
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
   private
 
   def assert_date_element(expected_date_hash, date_element)
