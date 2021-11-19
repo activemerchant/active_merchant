@@ -6,6 +6,7 @@ class RemoteWompiTest < Test::Unit::TestCase
 
     @amount = 150000
     @credit_card = credit_card('4242424242424242')
+    @credit_card_without_cvv = credit_card('4242424242424242', verification_value: nil)
     @declined_card = credit_card('4111111111111111')
     @options = {
       billing_address: address,
@@ -26,6 +27,11 @@ class RemoteWompiTest < Test::Unit::TestCase
     response_data = response.params['data']
     assert_equal response_data.dig('reference'), reference
     assert_equal response_data.dig('payment_method', 'installments'), 3
+  end
+
+  def test_successful_purchase_without_cvv
+    response = @gateway.purchase(@amount, @credit_card_without_cvv, @options)
+    assert_success response
   end
 
   def test_failed_purchase

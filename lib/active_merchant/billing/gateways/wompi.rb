@@ -86,6 +86,7 @@ module ActiveMerchant #:nodoc:
 
       def add_card(post, card, options)
         installments = options[:installments] ? options[:installments].to_i : 1
+        cvc = card.verification_value || nil
 
         payment_method = {
           type: 'CARD',
@@ -93,9 +94,9 @@ module ActiveMerchant #:nodoc:
           exp_month: card.month.to_s.rjust(2, '0'),
           exp_year: card.year.to_s[2..3],
           installments: installments,
-          cvc: card.verification_value,
           card_holder: card.name
         }
+        payment_method[:cvc] = cvc if cvc && !cvc.empty?
         post[:payment_method] = payment_method
       end
 
