@@ -18,6 +18,8 @@ class RemotePriorityTest < Test::Unit::TestCase
     # purchase params success
     @amount_purchase = 2
     @credit_card = credit_card('4111111111111111', month: '01', year: '2029', first_name: 'Marcus', last_name: 'Rashford', verification_value: '999')
+    @invalid_credit_card = credit_card('123456', month: '01', year: '2029', first_name: 'Marcus', last_name: 'Rashford', verification_value: '999')
+    @faulty_credit_card = credit_card('12345', month: '01', year: '2029', first_name: 'Marcus', last_name: 'Rashford', verification_value: '999')
 
     @option_spr = {
       billing_address: address(),
@@ -116,7 +118,7 @@ class RemotePriorityTest < Test::Unit::TestCase
     # add auth code to options
     @option_spr.update(auth_code: auth_obj.params['authCode'])
 
-    capture = @gateway.capture(@amount_authorize, auth_obj.authorization, @option_spr)
+    capture = @gateway.capture(@amount_authorize, auth_obj.authorization.to_s, @option_spr)
     assert_success capture
     assert_equal 'Approved', capture.params['authMessage']
     assert_equal 'Approved', capture.params['status']
@@ -126,7 +128,7 @@ class RemotePriorityTest < Test::Unit::TestCase
   def test_failed_capture
     # add auth code to options
     @option_spr.update(auth_code: '12345')
-    capture = @gateway.capture(@amount_authorize, 'bogus', @option_spr)
+    capture = @gateway.capture(@amount_authorize, { 'payment_token' => 'bogus' }.to_s, @option_spr)
     assert_failure capture
 
     assert_equal 'Original Transaction Not Found', capture.params['authMessage']
@@ -143,7 +145,7 @@ class RemotePriorityTest < Test::Unit::TestCase
     batch_check = @gateway.get_payment_status(response.params['batchId'], @option_spr)
     # if batch Open then fail test. Batch must be closed to perform a Refund
     if batch_check.params['status'] == 'Open'
-      @gateway.void(response.params['id'], @option_spr)
+      @gateway.void({ 'id' => response.params['id'] }.to_s, @option_spr)
       assert_success response
     else
       assert_failure response
@@ -151,7 +153,7 @@ class RemotePriorityTest < Test::Unit::TestCase
   end
 
   def test_failed_void
-    assert void = @gateway.void(123456, @option_spr)
+    assert void = @gateway.void({ 'id' => 123456 }.to_s, @option_spr)
     assert_failure void
     assert_equal 'Unauthorized', void.params['errorCode']
     assert_equal 'Unauthorized', void.params['message']
@@ -181,8 +183,8 @@ class RemotePriorityTest < Test::Unit::TestCase
   def test_successful_verify
     # Generate jwt token from key and secret. Pass generated jwt to verify function. The verify function requries a jwt for header authorization.
     jwt_response = @gateway.create_jwt(@option_spr)
-    response = @gateway.verify(4111111111111111, jwt_response.params['jwtToken'])
-    assert_failure response
+    response = @gateway.verify(@credit_card, { jwt_token: jwt_response.params['jwtToken'] })
+    assert_success response
     assert_match 'JPMORGAN CHASE BANK, N.A.', response.params['bank']['name']
   end
 
@@ -190,7 +192,7 @@ class RemotePriorityTest < Test::Unit::TestCase
   def test_failed_verify
     # Generate jwt token from key and secret. Pass generated jwt to verify function. The verify function requries a jwt for header authorization.
     jwt_response = @gateway.create_jwt(@option_spr)
-    @gateway.verify('123456', jwt_response.params['jwtToken'])
+    @gateway.verify(@invalid_credit_card, { jwt_token: jwt_response.params['jwtToken'] })
   rescue StandardError => e
     if e.to_s.include? 'No bank information found for bin number'
       response = { 'error' => 'No bank information found for bin number' }
@@ -203,7 +205,7 @@ class RemotePriorityTest < Test::Unit::TestCase
   def test_failed_verify_must_be_6_to_10_digits
     # Generate jwt token from key and secret. Pass generated jwt to verify function. The verify function requries a jwt for header authorization.
     jwt_response = @gateway.create_jwt(@option_spr)
-    @gateway.verify('12345', jwt_response.params['jwtToken'])
+    @gateway.verify(@faulty_credit_card, { jwt_token: jwt_response.params['jwtToken'] })
   rescue StandardError => e
     if e.to_s.include? 'Invalid bank bin number, must be 6-10 digits'
       response = { 'error' => 'Invalid bank bin number, must be 6-10 digits' }
@@ -256,7 +258,7 @@ class RemotePriorityTest < Test::Unit::TestCase
 
     @gateway.close_batch(response.params['batchId'], @option_spr) if batch_check.params['status'] == 'Open'
 
-    void = @gateway.void(response.params['id'], @option_spr)
+    void = @gateway.void({ 'id' => response.params['id'] }.to_s, @option_spr)
     assert void.params['code'] == '204'
 
     payment_status = @gateway.get_payment_status(response.params['batchId'], @option_spr)
