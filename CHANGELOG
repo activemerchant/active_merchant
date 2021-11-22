@@ -23,6 +23,7 @@
 * Wompi: Don't send CVV field if no CVV provided [therufs] #4199
 * Worldpay: cleaning order_id according to worldpay rules [cristian] #4197
 * Paysafe: Concatenate credentials for headers [meagabeth] #4201
+* Stripe Payment Intents: Add metadata to setup_purchase [aenand] #4202
 
 == Version 1.124.0 (October 28th, 2021)
 * Worldpay: Add Support for Submerchant Data on Worldpay [almalee24] #4147

@@ -840,7 +840,7 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert_equal 'You cannot cancel this PaymentIntent because ' \
       'it has a status of succeeded. Only a PaymentIntent with ' \
       'one of the following statuses may be canceled: ' \
-      'requires_payment_method, requires_capture, requires_confirmation, requires_action.', cancel_response.message
+      'requires_payment_method, requires_capture, requires_confirmation, requires_action, processing.', cancel_response.message
   end
 
   def test_refund_a_payment_intent
@@ -1018,11 +1018,14 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
   def test_setup_purchase
     options = {
       currency: 'USD',
-      payment_method_types: %w[afterpay_clearpay card]
+      payment_method_types: %w[afterpay_clearpay card],
+      metadata: { key_1: 'value_1', key_2: 'value_2' }
     }
 
     assert response = @gateway.setup_purchase(@amount, options)
     assert_equal 'requires_payment_method', response.params['status']
+    assert_equal 'value_1', response.params['metadata']['key_1']
+    assert_equal 'value_2', response.params['metadata']['key_2']
     assert response.params['client_secret'].start_with?('pi')
   end
 

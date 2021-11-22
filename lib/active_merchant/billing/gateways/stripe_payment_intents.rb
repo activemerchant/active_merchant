@@ -225,6 +225,7 @@ module ActiveMerchant #:nodoc:
         add_currency(post, options, money)
         add_amount(post, money, options)
         add_payment_method_types(post, options)
+        add_metadata(post, options)
         commit(:post, 'payment_intents', post, options)
       end
 
