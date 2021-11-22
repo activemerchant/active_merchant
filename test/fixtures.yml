@@ -806,6 +806,13 @@ paypal_signature:
   password: HBC6A84QLRWC923A
   signature: AFcWxV21C7fd0v3bYYYRCpSSRl31AC-11AKBL8FFO9tjImL311y8a0hx
 
+# Working credentials, no need to replace
+payrix:
+  login: 90024.1456
+  password: PASSWORD
+  business_id: 90024
+  service: hpp
+
 paysafe:
   login: SOMECREDENTIAL
   secret_key: ANOTHERCREDENTIAL
