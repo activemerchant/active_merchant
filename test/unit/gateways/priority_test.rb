@@ -152,16 +152,16 @@ class PriorityTest < Test::Unit::TestCase
 
   def test_successful_capture
     response = stub_comms do
-      @gateway.capture(@amount_authorize, 'authobj', @option_spr)
+      @gateway.capture(@amount_authorize, { 'payment_token' => 'authobj' }.to_s, @option_spr)
     end.respond_with(successful_capture_response)
     assert_success response
     assert_equal 'Approved', response.params['status']
-    assert_equal 'PaQLIYLRdWtcFKl5VaKTdUVxMutXJ5Ru', response.authorization
+    assert_equal 'PaQLIYLRdWtcFKl5VaKTdUVxMutXJ5Ru', response.authorization['payment_token']
   end
 
   def test_failed_capture
     response = stub_comms do
-      @gateway.capture(@amount_authorize, params: 'bogus', jwt: {})
+      @gateway.capture(@amount_authorize, { 'payment_token' => 'bogus' }.to_s, jwt: {})
     end.respond_with(failed_capture_response)
     assert_failure response
     assert_equal 'Validation error happened', response.params['message']
@@ -171,7 +171,7 @@ class PriorityTest < Test::Unit::TestCase
   def test_failed_void
     @gateway.expects(:ssl_request).returns(failed_void_response)
 
-    response = @gateway.void(123456, @option_spr)
+    response = @gateway.void({ 'id' => 123456 }.to_s, @option_spr)
     assert_failure response
     assert_equal 'Unauthorized', response.params['message']
     assert_equal 'Original Payment Not Found Or You Do Not Have Access.', response.params['details'][0]
@@ -190,7 +190,7 @@ class PriorityTest < Test::Unit::TestCase
       assert_refund_data_passed(data, refund)
     end.respond_with(successful_refund_purchase_response)
     assert_success response
-    assert_equal 'PU2QSwaBlKx5OEzBKavi1L0Dy9yIMSEx', response.authorization
+    assert_equal 'PU2QSwaBlKx5OEzBKavi1L0Dy9yIMSEx', response.authorization['payment_token']
     assert response.test?
   end
 

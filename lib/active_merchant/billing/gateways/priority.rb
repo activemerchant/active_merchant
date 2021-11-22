@@ -72,7 +72,6 @@ module ActiveMerchant #:nodoc:
         params = {}
         # refund amounts must be negative
         params['amount'] = ('-' + localized_amount(amount.to_f, options[:currency])).to_f
-
         add_bank(params, options[:auth_code])
         add_credit_card(params, credit_card, 'refund', options) unless options[:auth_code]
         add_type_merchant_refund(params, options)
@@ -84,7 +83,7 @@ module ActiveMerchant #:nodoc:
         params['amount'] = localized_amount(amount.to_f, options[:currency])
         params['authCode'] = options[:authCode]
         params['merchantId'] = @options[:merchant_id]
-        params['paymentToken'] = authorization
+        params['paymentToken'] = get_hash(authorization)['payment_token']
         params['shouldGetCreditCardLevel'] = true
         params['source'] = options['source']
         params['tenderType'] = options[:tender_type]
@@ -92,12 +91,13 @@ module ActiveMerchant #:nodoc:
         commit('capture', params: params, jwt: options)
       end
 
-      def void(iid, options)
-        commit('void', iid: iid, jwt: options)
+      def void(authorization, options)
+        commit('void', iid: get_hash(authorization)['id'], jwt: options)
       end
 
-      def verify(credit_card, jwt)
-        commit('verify', card_number: credit_card, jwt: jwt)
+      def verify(credit_card, options)
+        jwt = options[:jwt_token]
+        commit('verify', card_number: credit_card.number, jwt: jwt)
       end
 
       def supports_scrubbing?
@@ -130,7 +130,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_credit_card(params, credit_card, action, options)
-        return unless credit_card
+        return unless credit_card&.is_a?(CreditCard)
 
         card_details = {}
 
@@ -245,8 +245,7 @@ module ActiveMerchant #:nodoc:
           rescue ResponseError => e
             parse(e.response.body)
           end
-        success = success_from(response)
-
+        success = success_from(response, action)
         response = { 'code' => '204' } if response == ''
         Response.new(
           success,
@@ -309,8 +308,11 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def success_from(response)
-        response['status'] == 'Approved' || response['status'] == 'Open' if response['status']
+      def success_from(response, action)
+        success = response['status'] == 'Approved' || response['status'] == 'Open' if response['status']
+        success = response['code'] == '204' if action == 'void'
+        success = !response['bank'].empty? if action == 'verify' && response['bank']
+        success
       end
 
       def message_from(succeeded, response)
@@ -322,7 +324,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
-        response['paymentToken']
+        {
+          'payment_token' => response['paymentToken'],
+          'id' => response['id']
+        }
       end
 
       def error_from(response)
@@ -375,6 +380,10 @@ module ActiveMerchant #:nodoc:
         risk['avsZipMatch'] = options[:avs_zip_match]
 
         risk
+      end
+
+      def get_hash(string)
+        JSON.parse(string.gsub('=>', ':'))
       end
     end
   end
