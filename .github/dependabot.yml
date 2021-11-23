@@ -1,0 +1,12 @@
+version: 2
+registries:
+  ruby-github:
+    type: rubygems-server
+    url: https://rubygems.pkg.github.com/paywith/github_api
+    token: ${{secrets.GIT_DEPENDABOT_TOKEN}}
+updates:
+  - package-ecosystem: "bundler"
+    directory: "/"
+    registries: "*"
+    schedule:
+      interval: "daily"
