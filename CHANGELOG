@@ -26,6 +26,7 @@
 * Stripe Payment Intents: Add metadata to setup_purchase [aenand] #4202
 * Priority: Add gateway standard changes [ajawadmirza] #4200
 * IPG: Add support for payment by token [ajawadmirza] #4191
+* Element (Vantiv Express): Add support for general credit [dsmcclain] #4203
 
 == Version 1.124.0 (October 28th, 2021)
 * Worldpay: Add Support for Submerchant Data on Worldpay [almalee24] #4147
