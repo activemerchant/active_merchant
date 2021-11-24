@@ -8,10 +8,14 @@ module ActiveMerchant #:nodoc:
 
       self.default_currency = 'GBP'
       self.money_format = :cents
-      self.supported_countries = %w(HK GB AU AD AR BE BR CA CH CN CO CR CY CZ DE DK ES FI FR GI GR HU IE IN IT JP LI LU MC MT MY MX NL NO NZ PA PE PL PT SE SG SI SM TR UM VA)
+      self.supported_countries = %w(AF AX AL DZ AS AD AO AI AQ AG AR AM AW AU AT AZ BS BH BD BB BY BE BZ BJ BM BT BO BQ BA BW BV BR IO BN BG BF BI KH CM CA CV KY CF TD CL CN CX
+        CC CO KM CG CD CK CR CI HR CU CW CY CZ DK DJ DM DO TP EC EG SV GQ ER EE ET FK FO FJ FI FR FX GF PF TF GA GM GE DE GH GI GR GL GD GP GU GT GG GN GW GY HT HM HN HK HU IS
+         IN ID IR IQ IE IM IL IT JM JP JE JO KZ KE KI KS KW KG LA LV LB LS LR LY LI LT LU MO MK MG MW MY MV ML MT MH MQ MR MU YT MX FM MD MC MN MS MA MZ MM NA NR NP NL NC NZ NI
+         NE NG NU NF MP NO OM PK PW PS PA PG PY KP PE PH PN PL PT PR QA KR ME RS RE RO RU RW GS BL KN LC MF WS SM ST SA SN CS SC SL SG SX SK SI SB SO ZA ES LK SH PM VC SD SR SJ
+         SZ SE CH SY TW TJ TZ TH TL TG TK TO TT TN TR TM TC TV UG UA AE GB US UY UM UZ VU VA VE VN VG VI WF EH YE YU ZR ZM ZW)
       self.supported_cardtypes = %i[visa master american_express discover jcb maestro elo naranja cabal unionpay]
-      self.currencies_without_fractions = %w(HUF IDR ISK JPY KRW)
-      self.currencies_with_three_decimal_places = %w(BHD KWD OMR RSD TND)
+      self.currencies_without_fractions = %w(HUF IDR ISK JPY KRW BEF XOF XAF XPF KMD GRD GNF ITL LUF MGA MGF PYG PTE RWF ESP TRL VND)
+      self.currencies_with_three_decimal_places = %w(BHD KWD OMR RSD TND LYD JOD IQD)
       self.homepage_url = 'http://www.worldpay.com/'
       self.display_name = 'Worldpay Global'
 
