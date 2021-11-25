@@ -12,6 +12,14 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     @declined_card = credit_card('4000300011112220')
     # Electronic Check object with test credentials of saving account
     @echeck = check(account_number: '072403004', account_type: 'savings', routing_number: '072403004')
+    @google_pay_card = network_tokenization_credit_card(
+      '4777777777777778',
+      payment_cryptogram: 'BwAQCFVQdwEAABNZI1B3EGLyGC8=',
+      verification_value: '987',
+      source: :google_pay,
+      brand: 'visa',
+      eci: '5'
+    )
 
     @options = {
       order_id: generate_unique_id,
@@ -494,6 +502,12 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_purchase_with_google_pay
+    response = @gateway.purchase(@amount, @google_pay_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
   def test_successful_force_capture_with_echeck
     @options[:force_capture] = true
     assert response = @echeck_gateway.purchase(@amount, @echeck, @options)
@@ -583,6 +597,15 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_successful_authorize_and_capture_with_google_pay
+    auth = @gateway.authorize(@amount, @google_pay_card, @options)
+    assert_success auth
+    assert_equal 'Approved', auth.message
+
+    capture = @gateway.capture(@amount, auth.authorization, @options)
+    assert_success capture
+  end
+
   def test_failed_authorize_with_echeck_due_to_invalid_amount
     assert auth = @echeck_gateway.authorize(-1, @echeck, @options.merge(order_id: '2'))
     assert_failure auth
@@ -608,6 +631,16 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_success void
   end
 
+  def test_authorize_and_void_using_google_pay
+    assert auth = @gateway.authorize(@amount, @google_pay_card, @options)
+    assert_success auth
+    assert_equal 'Approved', auth.message
+
+    assert auth.authorization
+    assert void = @gateway.void(auth.authorization)
+    assert_success void
+  end
+
   def test_successful_refund
     amount = @amount
     assert response = @gateway.purchase(amount, @credit_card, @options)
@@ -621,6 +654,19 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert refund = @gateway.refund(@amount, '123;123', @options)
     assert_failure refund
     assert_equal '881', refund.params['proc_status']
+  end
+
+  def test_successful_refund_with_google_pay
+    auth = @gateway.authorize(@amount, @google_pay_card, @options)
+    assert_success auth
+    assert_equal 'Approved', auth.message
+
+    capture = @gateway.capture(@amount, auth.authorization, @options)
+    assert_success capture
+
+    assert capture.authorization
+    assert refund = @gateway.refund(@amount, capture.authorization, @options)
+    assert_success refund
   end
 
   def test_successful_refund_with_echeck
