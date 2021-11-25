@@ -5,8 +5,6 @@ module ActiveMerchant #:nodoc:
     # This gateway uses the current Stripe {Payment Intents API}[https://stripe.com/docs/api/payment_intents].
     # For the legacy API, see the Stripe gateway
     class StripePaymentIntentsGateway < StripeGateway
-      self.supported_countries = %w(AT AU BE BG BR CA CH CY CZ DE DK EE ES FI FR GB GR HK IE IT JP LT LU LV MT MX NL NO NZ PL PT RO SE SG SI SK US)
-
       ALLOWED_METHOD_STATES = %w[automatic manual].freeze
       ALLOWED_CANCELLATION_REASONS = %w[duplicate fraudulent requested_by_customer abandoned].freeze
       CREATE_INTENT_ATTRIBUTES = %i[description statement_descriptor_suffix statement_descriptor receipt_email save_payment_method]
