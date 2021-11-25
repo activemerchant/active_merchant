@@ -25,7 +25,7 @@ module ActiveMerchant #:nodoc:
 
       DEFAULT_API_VERSION = '2015-04-07'
 
-      self.supported_countries = %w(AT AU BE BG BR CA CH CY CZ DE DK EE ES FI FR GB GR HK IE IT JP LT LU LV MT MX NL NO NZ PL PT RO SE SG SI SK US)
+      self.supported_countries = %w(AE AT AU BE BG BR CA CH CY CZ DE DK EE ES FI FR GB GR HK HU IE IN IT JP LT LU LV MT MX MY NL NO NZ PL PT RO SE SG SI SK US)
       self.default_currency = 'USD'
       self.money_format = :cents
       self.supported_cardtypes = %i[visa master american_express discover jcb diners_club maestro unionpay]
