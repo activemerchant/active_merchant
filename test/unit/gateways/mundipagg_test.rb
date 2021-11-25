@@ -126,6 +126,15 @@ class MundipaggTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_failed_with_voucher
+    @gateway.expects(:ssl_post).returns(failed_voucher_response)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'General Failure', response.message
+    assert_equal '500', response.params['last_transaction']['gateway_response']['code']
+  end
+
   def test_successful_purchase_with_submerchant
     options = @options.update(@submerchant_options)
     response = stub_comms do
@@ -527,6 +536,82 @@ class MundipaggTest < Test::Unit::TestCase
           "gateway_response": {
             "code": "201"
           }
+        }
+      }
+    )
+  end
+
+  def failed_voucher_response
+    %(
+      {
+        "id": "FILTERED",
+        "code": "FILTERED",
+        "amount": 300,
+        "status": "processing",
+        "currency": "BRL",
+        "payment_method": "voucher",
+        "created_at": "2021-09-20T13:40:04Z",
+        "updated_at": "2021-09-20T13:40:04Z",
+        "customer": {
+          "id": "FILTERED",
+          "name": "FILTERED",
+          "email": "FILTERED",
+          "delinquent": false,
+          "created_at": "2021-09-20T13:40:04Z",
+          "updated_at": "2021-09-20T13:40:04Z",
+          "phones": {}
+        },
+        "last_transaction": {
+          "id": "FILTERED",
+          "transaction_type": "voucher",
+          "amount": 300,
+          "status": "with_error",
+          "success": false,
+          "operation_type": "auth_and_capture",
+          "card": {
+            "id": "FILTERED",
+            "first_six_digits": "FILTERED",
+            "last_four_digits": "FILTERED",
+            "brand": "Sodexo",
+            "holder_name": "FILTERED",
+            "holder_document": "FILTERED",
+            "exp_month": 5,
+            "exp_year": 2030,
+            "status": "active",
+            "type": "voucher",
+            "created_at": "2021-09-20T13:40:04Z",
+            "updated_at": "2021-09-20T13:40:04Z",
+            "billing_address": {
+              "street": "FILTERED",
+              "number": "00",
+              "zip_code": "FILTERED",
+              "neighborhood": "FILTERED",
+              "city": "FILTERED",
+              "state": "FILTERED",
+              "country": "FILTERED",
+              "line_1": "FILTERED"
+            },
+            "customer": {
+              "id": "FILTERED",
+              "name": "FILTERED",
+              "email": "FILTERED",
+              "delinquent": false,
+              "created_at": "2021-09-20T13:40:04Z",
+              "updated_at": "2021-09-20T13:40:04Z",
+              "phones": {}
+            }
+          },
+          "created_at": "2021-09-20T13:40:04Z",
+          "updated_at": "2021-09-20T13:40:04Z",
+          "gateway_response": {
+            "code": "500",
+            "errors": [
+              {
+                "message": "General Failure"
+              }
+            ]
+          },
+          "antifraud_response": {}
         }
       }
     )

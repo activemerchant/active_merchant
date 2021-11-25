@@ -276,14 +276,14 @@ module ActiveMerchant #:nodoc:
                    end
 
         Response.new(
-          success_from(response),
+          success_from(response, action),
           message_from(response),
           response,
           authorization: authorization_from(response, action),
           avs_result: AVSResult.new(code: response['some_avs_response_key']),
           cvv_result: CVVResult.new(response['some_cvv_response_key']),
           test: test?,
-          error_code: error_code_from(response)
+          error_code: error_code_from(response, action)
         )
       rescue ResponseError => e
         message = get_error_messages(e)
@@ -297,8 +297,10 @@ module ActiveMerchant #:nodoc:
         )
       end
 
-      def success_from(response)
-        %w[pending paid processing canceled active].include? response['status']
+      def success_from(response, action)
+        success = response.try(:[], 'last_transaction').try(:[], 'success') unless action == 'store'
+        success = !response.try(:[], 'id').nil? if action == 'store'
+        success
       end
 
       def message_from(response)
@@ -350,8 +352,8 @@ module ActiveMerchant #:nodoc:
         parameters.to_json
       end
 
-      def error_code_from(response)
-        return if success_from(response)
+      def error_code_from(response, action)
+        return if success_from(response, action)
         return response['last_transaction']['acquirer_return_code'] if response['last_transaction']
 
         STANDARD_ERROR_CODE[:processing_error]
