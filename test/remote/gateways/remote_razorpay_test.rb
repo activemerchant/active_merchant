@@ -5,6 +5,8 @@ class RemoteRazorpayTest < Test::Unit::TestCase
     @gateway = RazorpayGateway.new(fixtures(:razorpay))
 
     @amount = 10000
+    @order_id = 'order_12345trewq6543'
+    @invalid_order_id = 'order_HziMBC148n2VXu'
     @payment_id = 'pay_HziML4B8Uybcvr'
     @unauthorized_payment_id = 'pay_HyQdXlAAwUuNxt'
     @invalid_payment_id = 'pay_HnTllcQFCxVGNU'
@@ -80,6 +82,28 @@ class RemoteRazorpayTest < Test::Unit::TestCase
     response = gateway.capture(@amount, @payment_id, @options)
     assert_failure response
     assert_match "The api key provided is invalid", response.message
+  end
+
+  def test_successful_order_fetch
+    response = @gateway.get_payments_by_order_id(@order_id)
+    assert_success response
+    assert_equal "collection", response.params["entity"]
+    assert_equal 1, response.params["items"].length()
+    assert_equal @order_id, response.params["items"][0]["order_id"]
+    assert response.params["items"][0]["id"] != nil
+  end
+
+  def test_order_fetch_when_order_id_not_provided_then_400
+    response = @gateway.get_payments_by_order_id('')
+    assert_failure response
+    assert_match 'Order ID is mandatory', response.message
+  end
+
+  def test_order_fetch_when_invalid_order_id_provided_then_400
+    response = @gateway.get_payments_by_order_id(@invalid_order_id)
+    assert_success response
+    assert_equal "collection", response.params["entity"]
+    assert_equal 0, response.params["count"]
   end
 
   def test_successful_payment_fetch

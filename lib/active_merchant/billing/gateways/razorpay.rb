@@ -34,6 +34,13 @@ module ActiveMerchant #:nodoc:
           parameters[:authorization_id] = payment_id
           commit(:get, 'fetch', parameters)
         end
+
+        def get_payments_by_order_id(order_id, options={})
+          return Response.new(false, 'Order ID is mandatory') if order_id.empty?
+          parameters = {}
+          parameters[:authorization_id] = order_id
+          commit(:get, 'fetch_payments_by_order', parameters)
+        end
   
         def capture(money, payment_id, options={})
           return Response.new(false, 'Payment ID is mandatory') if payment_id.empty?
@@ -81,6 +88,8 @@ module ActiveMerchant #:nodoc:
             "payments/#{parameters[:authorization_id]}/capture"
           when 'fetch'
             "payments/#{parameters[:authorization_id]}"
+          when 'fetch_payments_by_order'
+            "orders/#{parameters[:authorization_id]}/payments"
           end
         end
 
