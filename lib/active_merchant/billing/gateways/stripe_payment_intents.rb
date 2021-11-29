@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
       CREATE_INTENT_ATTRIBUTES = %i[description statement_descriptor_suffix statement_descriptor receipt_email save_payment_method]
       CONFIRM_INTENT_ATTRIBUTES = %i[receipt_email return_url save_payment_method setup_future_usage off_session]
       UPDATE_INTENT_ATTRIBUTES = %i[description statement_descriptor_suffix statement_descriptor receipt_email setup_future_usage]
-      DEFAULT_API_VERSION = '2019-05-16'
+      DEFAULT_API_VERSION = '2020-08-27'
 
       def create_intent(money, payment_method, options = {})
         post = {}
@@ -192,6 +192,7 @@ module ActiveMerchant #:nodoc:
             post[:description] = options[:description] if options[:description]
             post[:email] = options[:email] if options[:email]
             options = format_idempotency_key(options, 'customer')
+            post[:expand] = [:sources]
             customer = commit(:post, 'customers', post, options)
             customer_id = customer.params['id']
           end

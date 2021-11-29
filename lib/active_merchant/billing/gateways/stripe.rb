@@ -23,7 +23,7 @@ module ActiveMerchant #:nodoc:
         'unchecked' => 'P'
       }
 
-      DEFAULT_API_VERSION = '2015-04-07'
+      DEFAULT_API_VERSION = '2020-08-27'
 
       self.supported_countries = %w(AE AT AU BE BG BR CA CH CY CZ DE DK EE ES FI FR GB GR HK HU IE IN IT JP LT LU LV MT MX MY NL NO NZ PL PT RO SE SG SI SK US)
       self.default_currency = 'USD'
@@ -223,9 +223,10 @@ module ActiveMerchant #:nodoc:
 
             post[:default_card] = r.params['id'] if options[:set_default] && r.success? && !r.params['id'].blank?
 
-            r.process { update_customer(options[:customer], post) } if post.count > 0
+            r.process { update_customer(options[:customer], post.merge(expand: [:sources])) } if post.count > 0
           end
         else
+          post[:expand] = [:sources]
           commit(:post, 'customers', post.merge(params), options)
         end
       end
@@ -762,7 +763,7 @@ module ActiveMerchant #:nodoc:
             country: 'US',
             currency: 'usd',
             routing_number: bank_account.routing_number,
-            name: bank_account.name,
+            account_holder_name: bank_account.name,
             account_holder_type: account_holder_type
           }
         }
