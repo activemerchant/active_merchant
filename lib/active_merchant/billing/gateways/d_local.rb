@@ -60,6 +60,10 @@ module ActiveMerchant #:nodoc:
         commit('void', post, options)
       end
 
+      def verify_credentials(params = {}, options = {})
+        commit('verify_credentials', params, options, method='get')
+      end
+
       def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
@@ -192,27 +196,47 @@ module ActiveMerchant #:nodoc:
         JSON.parse(body)
       end
 
-      def commit(action, parameters, options = {})
+      def commit(action, parameters, options = {}, method='post')
         url = url(action, parameters, options)
         post = post_data(action, parameters)
         begin
-          raw = ssl_post(url, post, headers(post, options))
+          if method == 'post'
+            raw = ssl_post(url, post, headers(post, options))
+          else
+            raw = ssl_get(get_url(action), headers(""))
+          end
           response = parse(raw)
         rescue ResponseError => e
           raw = e.response.body
           response = parse(raw)
         end
-
-        Response.new(
-          success_from(action, response),
-          message_from(action, response),
-          response,
-          authorization: authorization_from(response),
-          avs_result: AVSResult.new(code: response['some_avs_response_key']),
-          cvv_result: CVVResult.new(response['some_cvv_response_key']),
-          test: test?,
-          error_code: error_code_from(action, response)
-        )
+        if method == 'post'
+            Response.new(
+              success_from(action, response),
+              message_from(action, response),
+              response,
+              authorization: authorization_from(response),
+              avs_result: AVSResult.new(code: response['some_avs_response_key']),
+              cvv_result: CVVResult.new(response['some_cvv_response_key']),
+              test: test?,
+              error_code: error_code_from(action, response)
+            )
+        else
+            tmp_response = response
+            if response.instance_of? Array
+              tmp_response = {'response': response}
+            end
+            Response.new(
+              success_from_get(response),
+              message_from_get(response),
+              tmp_response,
+              avs_result: nil,
+              cvv_result: nil,
+              authorization: nil,
+              test: test?,
+              error_code: error_code_from_get(response)
+            )
+        end
       end
 
       # A refund may not be immediate, and return a status_code of 100, "Pending".
@@ -228,6 +252,25 @@ module ActiveMerchant #:nodoc:
         response['status_detail'] || response['message']
       end
 
+      def success_from_get(response)
+        if response.instance_of? Array
+          return true
+        end
+        return false unless response['status_code']
+
+        %w[100 200 400 600].include? response['status_code'].to_s
+      end
+
+      def message_from_get(response)
+        if success_from_get(response)
+          'OK'
+        elsif !(response.instance_of? Array) && response['error']
+          response['error']['description']
+        elsif !(response.instance_of? Array) && response['error_description']
+          response['error_description']
+        end
+      end
+
       def authorization_from(response)
         response['id']
       end
@@ -239,8 +282,20 @@ module ActiveMerchant #:nodoc:
         code&.to_s
       end
 
+      def error_code_from_get(response)
+        return if success_from_get(response)
+        if !response.instance_of? Array
+          code = response['status_code'] || response['code']
+          code&.to_s
+        end
+      end
+
       def url(action, parameters, options = {})
         "#{(test? ? test_url : live_url)}/#{endpoint(action, parameters, options)}/"
+      end
+
+      def get_url(action, parameters={}, options={})
+        "#{(test? ? test_url : live_url)}/#{endpoint(action, parameters, options)}"
       end
 
       def endpoint(action, parameters, options)
@@ -257,6 +312,8 @@ module ActiveMerchant #:nodoc:
           'payments'
         when 'void'
           "payments/#{parameters[:authorization_id]}/cancel"
+        when 'verify_credentials'
+          "payments-methods?country=MX"
         end
       end
 
