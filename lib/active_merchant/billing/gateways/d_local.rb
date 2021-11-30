@@ -203,7 +203,7 @@ module ActiveMerchant #:nodoc:
           if method == 'post'
             raw = ssl_post(url, post, headers(post, options))
           else
-            raw = ssl_get(get_url(action), headers(""))
+            raw = ssl_get(url(action, parameters, options), headers(""))
           end
           response = parse(raw)
         rescue ResponseError => e
@@ -253,20 +253,19 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from_get(response)
-        if response.instance_of? Array
+        if response.instance_of? Array || (response['status_code'].nil? && response['error_code'].nil?)
           return true
+        else
+          return false
         end
-        return false unless response['status_code']
-
-        %w[100 200 400 600].include? response['status_code'].to_s
       end
 
       def message_from_get(response)
         if success_from_get(response)
           'OK'
-        elsif !(response.instance_of? Array) && response['error']
+        elsif response['error']
           response['error']['description']
-        elsif !(response.instance_of? Array) && response['error_description']
+        elsif response['error_description']
           response['error_description']
         end
       end
@@ -283,18 +282,26 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_code_from_get(response)
-        return if success_from_get(response)
-        if !response.instance_of? Array
-          code = response['status_code'] || response['code']
-          code&.to_s
+        unless success_from_get(response)
+          if response['error']
+            if response['error']['reason'] != 'NA'
+              response['error']['reason']
+            else
+              response['error']['code']
+            end
+          elsif response['error_reason']
+            response['error_reason']
+          elsif response['error_code']
+            response['error_code']
+          elsif response['code']
+            response['code'].to_s
+          else
+            'BAD_REQUEST_ERROR'
+          end
         end
       end
 
       def url(action, parameters, options = {})
-        "#{(test? ? test_url : live_url)}/#{endpoint(action, parameters, options)}/"
-      end
-
-      def get_url(action, parameters={}, options={})
         "#{(test? ? test_url : live_url)}/#{endpoint(action, parameters, options)}"
       end
 
