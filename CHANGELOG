@@ -34,6 +34,7 @@
 * Mundipagg: Update success method [ajawadmirza] #4210
 * Worldpay: Add support for Visa Direct Fast Funds Credit [dsmcclain] #4212
 * Paysafe: Add support for stored credentials [meagabeth] #4214
+* Worldpay: Adding missing countries to supported countries [cristian] #4213
 
 == Version 1.124.0 (October 28th, 2021)
 * Worldpay: Add Support for Submerchant Data on Worldpay [almalee24] #4147
