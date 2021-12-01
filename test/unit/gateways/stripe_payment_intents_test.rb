@@ -472,6 +472,11 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     end.respond_with(successful_setup_purchase)
   end
 
+  def test_supported_countries
+    countries = %w(AE AT AU BE BG BR CA CH CY CZ DE DK EE ES FI FR GB GR HK HU IE IN IT JP LT LU LV MT MX MY NL NO NZ PL PT RO SE SG SI SK US)
+    assert_equal countries.sort, StripePaymentIntentsGateway.supported_countries.sort
+  end
+
   private
 
   def successful_setup_purchase
