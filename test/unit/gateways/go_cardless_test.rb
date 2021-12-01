@@ -92,6 +92,11 @@ class GoCardlessTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_scrub
+    assert @gateway.supports_scrubbing?
+    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
   private
 
   def mock_bank_account
@@ -214,5 +219,59 @@ class GoCardlessTest < Test::Unit::TestCase
         "refunds": []
       }
     RESPONSE
+  end
+
+  def pre_scrubbed
+    <<-PRE_SCRUBBED
+      "opening connection to api-sandbox.gocardless.com:443...\n
+      opened\n
+      starting SSL for api-sandbox.gocardless.com:443...\n
+      SSL established, protocol: TLSv1.3, cipher: TLS_AES_256_GCM_SHA384\n
+      <- \"POST /customers HTTP/1.1\\r\\n
+      Content-Type: application/json\\r\\n
+      Accept: application/json\\r\\n
+      User-Agent: ActiveMerchantBindings/1.60.0\\r\\n
+      Authorization: Bearer sandbox_2q9vefoLmsn99vvSu2togwKjvfOPtlyKUHMx2o5q\\r\\n
+      Gocardless-Version: 2015-07-06\\r\\n
+      Accept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\\r\\n
+      Connection: close\\r\\n
+      Host: api-sandbox.gocardless.com\\r\\n
+      Content-Length: 291\\r\\n
+      \\r\\n\"\n
+      <- \"{\\\"customers\\\":{\\\"email\\\":\\\"test@example.com\\\",\\\"given_name\\\":\\\"John\\\",\\\"family_name\\\":\\\"GoCardless\\\",\\\"phone_number\\\":null,\\\"danish_identity_number\\\":null,\\\"swedish_identity_number\\\":\\\"198112289874\\\",\\\"address_line1\\\":\\\"Test\\\",\\\"address_line2\\\":\\\"\\\",\\\"city\\\":\\\"Test\\\",\\\"region\\\":\\\"K\\\",\\\"postal_code\\\":\\\"12345\\\",\\\"country_code\\\":\\\"SE\\\"}}\"\n
+      -> \"HTTP/1.1 201 Created\\r\\n\"\n->
+      opening connection to api-sandbox.gocardless.com:443...\n
+      opened\nstarting SSL for api-sandbox.gocardless.com:443...\n
+      SSL established, protocol: TLSv1.3, cipher: TLS_AES_256_GCM_SHA384\n
+      <- \"POST /customer_bank_accounts HTTP/1.1\\r\\nContent-Type: application/json\\r\\nAccept: application/json\\r\\nUser-Agent: ActiveMerchantBindings/1.60.0\\r\\nAuthorization: Bearer sandbox_2q9vefoLmsn99vvSu2togwKjvfOPtlyKUHMx2o5q\\r\\nGocardless-Version: 2015-07-06\\r\\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\\r\\nConnection: close\\r\\nHost: api-sandbox.gocardless.com\\r\\nContent-Length: 208\\r\\n\\r\\n\"\n<- \"{\\\"customer_bank_accounts\\\":{\\\"account_holder_name\\\":\\\"John GoCardless\\\",\\\"links\\\":{\\\"customer\\\":\\\"CU000JN4G2PXE7\\\"},\\\"currency\\\":\\\"SEK\\\",\\\"country_code\\\":\\\"SE\\\",\\\"bank_code\\\":null,\\\"branch_code\\\":\\\"5491\\\",\\\"account_number\\\":\\\"0000003\\\"}}\"\n
+      -> \"HTTP/1.1 201 Created
+    PRE_SCRUBBED
+  end
+
+  def post_scrubbed
+    <<-POST_SCRUBBED
+      "opening connection to api-sandbox.gocardless.com:443...\n
+      opened\n
+      starting SSL for api-sandbox.gocardless.com:443...\n
+      SSL established, protocol: TLSv1.3, cipher: TLS_AES_256_GCM_SHA384\n
+      <- \"POST /customers HTTP/1.1\\r\\n
+      Content-Type: application/json\\r\\n
+      Accept: application/json\\r\\n
+      User-Agent: ActiveMerchantBindings/1.60.0\\r\\n
+      Authorization: Bearer [FILTERED]\\r\\n
+      Gocardless-Version: 2015-07-06\\r\\n
+      Accept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\\r\\n
+      Connection: close\\r\\n
+      Host: api-sandbox.gocardless.com\\r\\n
+      Content-Length: 291\\r\\n
+      \\r\\n\"\n
+      <- \"{\\\"customers\\\":{\\\"email\\\":\\\"test@example.com\\\",\\\"given_name\\\":\\\"John\\\",\\\"family_name\\\":\\\"GoCardless\\\",\\\"phone_number\\\":null,\\\"danish_identity_number\\\":[FILTERED],\\\"swedish_identity_number\\\":[FILTERED],\\\"address_line1\\\":\\\"Test\\\",\\\"address_line2\\\":\\\"\\\",\\\"city\\\":\\\"Test\\\",\\\"region\\\":\\\"K\\\",\\\"postal_code\\\":\\\"12345\\\",\\\"country_code\\\":\\\"SE\\\"}}\"\n
+      -> \"HTTP/1.1 201 Created\\r\\n\"\n->
+      opening connection to api-sandbox.gocardless.com:443...\n
+      opened\nstarting SSL for api-sandbox.gocardless.com:443...\n
+      SSL established, protocol: TLSv1.3, cipher: TLS_AES_256_GCM_SHA384\n
+      <- \"POST /customer_bank_accounts HTTP/1.1\\r\\nContent-Type: application/json\\r\\nAccept: application/json\\r\\nUser-Agent: ActiveMerchantBindings/1.60.0\\r\\nAuthorization: Bearer [FILTERED]\\r\\nGocardless-Version: 2015-07-06\\r\\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\\r\\nConnection: close\\r\\nHost: api-sandbox.gocardless.com\\r\\nContent-Length: 208\\r\\n\\r\\n\"\n<- \"{\\\"customer_bank_accounts\\\":{\\\"account_holder_name\\\":\\\"John GoCardless\\\",\\\"links\\\":{\\\"customer\\\":\\\"CU000JN4G2PXE7\\\"},\\\"currency\\\":\\\"SEK\\\",\\\"country_code\\\":\\\"SE\\\",\\\"bank_code\\\":[FILTERED],\\\"branch_code\\\":[FILTERED],\\\"account_number\\\":[FILTERED]}}\"\n
+      -> \"HTTP/1.1 201 Created
+    POST_SCRUBBED
   end
 end

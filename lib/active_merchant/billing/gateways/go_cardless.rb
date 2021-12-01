@@ -98,7 +98,18 @@ module ActiveMerchant #:nodoc:
       end
 
       def supports_scrubbing?
-        false
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Bearer ).[^\\\r]+), '\1[FILTERED]').
+          gsub(%r((\\"danish_identity_number\\":).[^,}]+), '\1[FILTERED]').
+          gsub(%r((\\"swedish_identity_number\\":).[^,}]+), '\1[FILTERED]').
+          gsub(%r((\\"iban\\":).[^,}]+), '\1[FILTERED]').
+          gsub(%r((\\"bank_code\\":).[^,}]+), '\1[FILTERED]').
+          gsub(%r((\\"branch_code\\":).[^,}]+), '\1[FILTERED]').
+          gsub(%r((\\"account_number\\":).[^,}]+), '\1[FILTERED]')
       end
 
       private
