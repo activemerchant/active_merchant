@@ -24,6 +24,7 @@ module ActiveMerchant #:nodoc:
         add_airline_travel_details(post, options)
         add_customer_data(post, payment, options) unless payment.is_a?(String)
         add_three_d_secure(post, payment, options) if options[:three_d_secure]
+        add_stored_credential(post, options) if options[:stored_credential]
         add_split_pay_details(post, options)
         post[:settleWithAuth] = true
 
@@ -38,6 +39,7 @@ module ActiveMerchant #:nodoc:
         add_merchant_details(post, options)
         add_customer_data(post, payment, options) unless payment.is_a?(String)
         add_three_d_secure(post, payment, options) if options[:three_d_secure]
+        add_stored_credential(post, options) if options[:stored_credential]
 
         commit(:post, 'auths', post, options)
       end
@@ -282,6 +284,34 @@ module ActiveMerchant #:nodoc:
           split_pay << split
         end
         post[:splitpay] = split_pay
+      end
+
+      def add_stored_credential(post, options)
+        return unless options[:stored_credential]
+
+        post[:storedCredential] = {}
+
+        case options[:stored_credential][:initial_transaction]
+        when true
+          post[:storedCredential][:occurrence] = 'INITIAL'
+        when false
+          post[:storedCredential][:occurrence] = 'SUBSEQUENT'
+        end
+
+        case options[:stored_credential][:reason_type]
+        when 'recurring' || 'installment'
+          post[:storedCredential][:type] = 'RECURRING'
+        when 'unscheduled'
+          if options[:stored_credential][:initiator] == 'merchant'
+            post[:storedCredential][:type] = 'TOPUP'
+          elsif options[:stored_credential][:initiator] == 'cardholder'
+            post[:storedCredential][:type] = 'ADHOC'
+          else
+            return
+          end
+        end
+
+        post[:storedCredential][:initialTransactionId] = options[:stored_credential][:network_transaction_id] if options[:stored_credential][:network_transaction_id]
       end
 
       def mastercard?(payment)

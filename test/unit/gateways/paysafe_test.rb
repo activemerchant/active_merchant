@@ -97,6 +97,24 @@ class PaysafeTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_stored_credentials
+    stored_credential_options = {
+      stored_credential: {
+        initial_transaction: true,
+        reason_type: 'recurring',
+        initiator: 'merchant'
+      }
+    }
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential_options))
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(%r{"type":"RECURRING"}, data)
+      assert_match(%r{"occurrence":"INITIAL"}, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_failed_purchase
     @gateway.expects(:ssl_request).returns(failed_purchase_response)
 

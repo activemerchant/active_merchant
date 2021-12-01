@@ -64,7 +64,7 @@ class RemotePaysafeTest < Test::Unit::TestCase
     @airline_details = {
       airline_travel_details: {
         passenger_name: 'Joe Smith',
-        departure_date: '2021-11-30',
+        departure_date: '2026-11-30',
         origin: 'SXF',
         computerized_reservation_system: 'DATS',
         ticket: {
@@ -86,7 +86,7 @@ class RemotePaysafeTest < Test::Unit::TestCase
             is_stop_over_allowed: true,
             destination: 'ISL',
             fare_basis: 'VMAY',
-            departure_date: '2021-11-30'
+            departure_date: '2026-11-30'
           },
           leg2: {
             flight: {
@@ -97,7 +97,7 @@ class RemotePaysafeTest < Test::Unit::TestCase
             is_stop_over_allowed: true,
             destination: 'SOF',
             fare_basis: 'VMAY',
-            departure_date: '2021-11-30'
+            departure_date: '2026-11-30'
           }
         }
       }
@@ -189,6 +189,31 @@ class RemotePaysafeTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'COMPLETED', response.message
     assert_not_nil response.params['authCode']
+  end
+
+  def test_successful_purchase_with_stored_credentials
+    initial_options = @options.merge(
+      stored_credential: {
+        initial_transaction: true,
+        reason_type: 'recurring'
+      }
+    )
+
+    initial_response = @gateway.purchase(@amount, @credit_card, initial_options)
+    assert_success initial_response
+    assert_not_nil initial_response.params['storedCredential']
+    network_transaction_id = initial_response.params['id']
+
+    stored_options = @options.merge(
+      stored_credential: {
+        initial_transaction: false,
+        reason_type: 'installment',
+        network_transaction_id: network_transaction_id
+      }
+    )
+    response = @gateway.purchase(@amount, @credit_card, stored_options)
+    assert_success response
+    assert_equal 'COMPLETED', response.message
   end
 
   def test_failed_purchase
