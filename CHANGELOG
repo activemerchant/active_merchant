@@ -30,6 +30,7 @@
 * Worldpay: Update supported countries list, currencies [jherreraa] #4207
 * StripePI: Adding countries available. [gasb150] #4208
 * Orbital: Adding google pay payment tests for Orbital. [ajawadmirza] #4205
+* Bug: Fixing supported countries method when there is inheritance involved [cristian] #4211
 
 == Version 1.124.0 (October 28th, 2021)
 * Worldpay: Add Support for Submerchant Data on Worldpay [almalee24] #4147
