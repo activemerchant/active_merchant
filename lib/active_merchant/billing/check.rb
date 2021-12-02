@@ -71,11 +71,8 @@ module ActiveMerchant #:nodoc:
             (7 * (digits[1] + digits[4] + digits[7])) +
             (digits[2] + digits[5] + digits[8])) % 10
 
-          return checksum == 0
+          return checksum == 0 || CAN_INSTITUTION_NUMBERS.include?(routing_number[1..3])
         end
-
-        return CAN_INSTITUTION_NUMBERS.include?(routing_number[0..2]) if digits.size == 8
-
         false
       end
     end
