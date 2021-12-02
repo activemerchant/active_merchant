@@ -516,9 +516,10 @@ module ActiveMerchant #:nodoc:
               )
             end
             name = card_holder_name(payment_method, options)
+            eci = format(payment_method.eci, :two_digits)
             xml.cardHolderName name if name.present?
             xml.cryptogram payment_method.payment_cryptogram
-            xml.eciIndicator format(payment_method.eci, :two_digits)
+            xml.eciIndicator eci.empty? ? '07' : eci
           end
         end
       end

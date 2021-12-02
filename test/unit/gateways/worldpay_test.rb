@@ -21,7 +21,10 @@ class WorldpayTest < Test::Unit::TestCase
       brand: 'elo')
     @nt_credit_card = network_tokenization_credit_card('4895370015293175',
       brand: 'visa',
-      eci: '07',
+      eci: 5,
+      source: :network_token,
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
+    @nt_credit_card_without_eci = network_tokenization_credit_card('4895370015293175',
       source: :network_token,
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
     @credit_card_with_two_digits_year = credit_card('4514 1600 0000 0008',
@@ -230,6 +233,24 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @nt_credit_card, @options)
     end.respond_with(successful_authorize_response, successful_capture_response)
+    assert_success response
+  end
+
+  def test_successful_authorize_with_network_token_with_eci
+    response = stub_comms do
+      @gateway.authorize(@amount, @nt_credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r(<eciIndicator>05</eciIndicator>), data
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_successful_authorize_with_network_token_without_eci
+    response = stub_comms do
+      @gateway.authorize(@amount, @nt_credit_card_without_eci, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r(<eciIndicator>07</eciIndicator>), data
+    end.respond_with(successful_authorize_response)
     assert_success response
   end
 
