@@ -252,6 +252,17 @@ class MercadoPagoTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_verify_with_custom_amount
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options.merge({ amount: 200 }))
+    end.check_request do |endpoint, data, _headers|
+      params = JSON.parse(data)
+      assert_equal 2.0, params['transaction_amount'] if endpoint.include? 'payment'
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
   def test_successful_verify_with_failed_void
     @gateway.expects(:ssl_request).at_most(3).returns(failed_void_response)
 
