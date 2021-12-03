@@ -85,7 +85,7 @@ module ActiveMerchant #:nodoc:
         params['merchantId'] = @options[:merchant_id]
         params['paymentToken'] = get_hash(authorization)['payment_token']
         params['shouldGetCreditCardLevel'] = true
-        params['source'] = options['source']
+        params['source'] = options[:source]
         params['tenderType'] = options[:tender_type]
 
         commit('capture', params: params, jwt: options)
@@ -146,8 +146,8 @@ module ActiveMerchant #:nodoc:
 
         case action
         when 'purchase'
-          card_details['avsStreet'] = options[:billing_address][:address1]
-          card_details['avsZip'] =  options[:billing_address][:zip]
+          card_details['avsStreet'] = options[:billing_address][:address1] if options[:billing_address]
+          card_details['avsZip'] =  options[:billing_address][:zip] if options[:billing_address]
         when 'refund'
           card_details['cardId'] = options[:card_id]
           card_details['cardPresent'] = options[:card_present]
@@ -185,8 +185,8 @@ module ActiveMerchant #:nodoc:
 
         params['shouldGetCreditCardLevel'] = true
         params['shouldVaultCard'] = true
-        params['source'] = options['source']
-        params['sourceZip'] = options[:billing_address][:zip]
+        params['source'] = options[:source]
+        params['sourceZip'] = options[:billing_address][:zip] if options[:billing_address]
         params['taxExempt'] = false
         params['tenderType'] = options[:tender_type]
       end
