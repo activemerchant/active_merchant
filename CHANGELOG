@@ -39,6 +39,7 @@
 * Worldpay: Set default eCommerce indicator for EMVCO network tokens [shasum] #4215
 * Update handling routing numbers for Canadian banks [therufs] #4217
 * Stripe: API version updated [jherreraa] #4209
+* Mercado Pago: Update verify method [ajawadmirza] #4219
 
 == Version 1.124.0 (October 28th, 2021)
 * Worldpay: Add Support for Submerchant Data on Worldpay [almalee24] #4147

@@ -53,8 +53,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify(credit_card, options = {})
+        verify_amount = 100
+        verify_amount = options[:amount].to_i if options[:amount]
         MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
+          r.process { authorize(verify_amount, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
         end
       end

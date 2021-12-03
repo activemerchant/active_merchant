@@ -307,6 +307,13 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
     assert_match %r{pending_capture}, response.message
   end
 
+  def test_successful_verify_with_amount
+    @options[:amount] = 200
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_match %r{pending_capture}, response.message
+  end
+
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
