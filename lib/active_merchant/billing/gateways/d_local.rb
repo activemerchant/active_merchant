@@ -260,7 +260,7 @@ module ActiveMerchant #:nodoc:
         if method == 'post'
             response['status_detail'] || response['message']
         else
-            if success_from(action, response, method='get')
+            if success_from(action, response, method=method)
               'OK'
             elsif response['message']
               response['message']
