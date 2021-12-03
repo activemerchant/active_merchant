@@ -203,7 +203,7 @@ module ActiveMerchant #:nodoc:
           if method == 'post'
             raw = ssl_post(url, post, headers(post, options))
           else
-            raw = ssl_get(url(action, parameters, options), headers(""))
+            raw = ssl_get(url, headers(""))
           end
           response = parse(raw)
         rescue ResponseError => e
@@ -227,14 +227,14 @@ module ActiveMerchant #:nodoc:
               tmp_response = {'response': response}
             end
             Response.new(
-              success_from_get(response),
-              message_from_get(response),
+              success_from(action,response,method=method),
+              message_from(action,response,method=method),
               tmp_response,
               avs_result: nil,
               cvv_result: nil,
               authorization: nil,
               test: test?,
-              error_code: error_code_from_get(response)
+              error_code: error_code_from(action, response, method=method)
             )
         end
       end
@@ -242,31 +242,29 @@ module ActiveMerchant #:nodoc:
       # A refund may not be immediate, and return a status_code of 100, "Pending".
       # Since we aren't handling async notifications of eventual success,
       # we count 100 as a success.
-      def success_from(action, response)
-        return false unless response['status_code']
+      def success_from(action, response, method='post')
+        if method == 'post'
+            return false unless response['status_code']
 
-        %w[100 200 400 600].include? response['status_code'].to_s
-      end
-
-      def message_from(action, response)
-        response['status_detail'] || response['message']
-      end
-
-      def success_from_get(response)
-        if response.instance_of? Array || (response['status_code'].nil? && response['error_code'].nil?)
-          return true
+            %w[100 200 400 600].include? response['status_code'].to_s
         else
-          return false
+            if response.instance_of? Array || (!response.instance_of? Array && response['status_code'])
+              return true
+            else
+              %w[100 200 400 600].include? response['status_code'].to_s
+            end
         end
       end
 
-      def message_from_get(response)
-        if success_from_get(response)
-          'OK'
-        elsif response['error']
-          response['error']['description']
-        elsif response['error_description']
-          response['error_description']
+      def message_from(action, response, method='post')
+        if method == 'post'
+            response['status_detail'] || response['message']
+        else
+            if success_from(action, response, method='get')
+              'OK'
+            elsif response['message']
+              response['message']
+            end
         end
       end
 
@@ -274,31 +272,11 @@ module ActiveMerchant #:nodoc:
         response['id']
       end
 
-      def error_code_from(action, response)
-        return if success_from(action, response)
+      def error_code_from(action, response, method='post')
+        return if success_from(action, response, method=method)
 
         code = response['status_code'] || response['code']
         code&.to_s
-      end
-
-      def error_code_from_get(response)
-        unless success_from_get(response)
-          if response['error']
-            if response['error']['reason'] != 'NA'
-              response['error']['reason']
-            else
-              response['error']['code']
-            end
-          elsif response['error_reason']
-            response['error_reason']
-          elsif response['error_code']
-            response['error_code']
-          elsif response['code']
-            response['code'].to_s
-          else
-            'BAD_REQUEST_ERROR'
-          end
-        end
       end
 
       def url(action, parameters, options = {})
