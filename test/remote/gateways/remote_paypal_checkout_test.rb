@@ -37,6 +37,22 @@ class PaypalExpressRestTest < Test::Unit::TestCase
     assert_equal order_id, response.params["id"]
   end
 
+  def test_create_access_token_when_valid_credentials_then_success
+    response      = @gateway.create_access_token()
+    assert_success response
+    assert response.params["access_token"] != nil
+  end
+
+  def test_create_access_token_when_invalid_credentials_then_failure
+    invalid_credentials = {
+        "client_id": "dummy",
+        "client_secret": "dummy"
+    }
+    temp_gateway  = ActiveMerchant::Billing::PaypalCheckoutGateway.new(invalid_credentials)
+    response      = temp_gateway.create_access_token()
+    assert_failure response
+  end
+
   def test_get_capture_details
     response   = @gateway.create_order("CAPTURE", @order_options)
     order_id   = response.params["id"]

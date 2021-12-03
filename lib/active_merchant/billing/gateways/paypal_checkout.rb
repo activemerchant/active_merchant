@@ -11,6 +11,13 @@ module ActiveMerchant #:nodoc:
       self.default_currency    = 'USD'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club]
 
+      def create_access_token()
+        default_headers = {
+            "Content-Type" => "application/x-www-form-urlencoded"
+        }
+        commit(:post, "v1/oauth2/token?grant_type=client_credentials", nil, default_headers)
+      end
+
       def create_order(intent, options)
         requires!(options.merge!(intent.nil? ? {} : { intent: intent}), :intent, :purchase_units)
 

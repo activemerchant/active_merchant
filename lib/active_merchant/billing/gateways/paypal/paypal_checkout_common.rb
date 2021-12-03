@@ -46,6 +46,9 @@ module ActiveMerchant
         raw_response = response = nil
         parameters = parameters.nil? ? nil : parameters.to_json
         opt_headers.update(default_headers)
+        if !opt_headers.key?("Content-Type")
+            opt_headers["Content-Type"] = "application/json"
+        end
         begin
         raw_response = ssl_request(method, endpoint, parameters, opt_headers)
         response     = parse(raw_response)
@@ -64,7 +67,6 @@ module ActiveMerchant
 
       def default_headers
         return {
-          "Content-Type"  => "application/json",
           "Authorization" => "Basic #{ encoded_credentials }"
         }
       end
