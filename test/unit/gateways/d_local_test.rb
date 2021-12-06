@@ -210,6 +210,14 @@ class DLocalTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
+  def test_api_version_param_header 
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, _data, headers|
+      assert_equal '2.1', headers['X-Version']
+    end.respond_with(successful_purchase_response)
+  end
+
   private
 
   def pre_scrubbed

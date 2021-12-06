@@ -233,6 +233,7 @@ module ActiveMerchant #:nodoc:
           'X-Date' => timestamp,
           'X-Login' => @options[:login],
           'X-Trans-Key' => @options[:trans_key],
+          'X-Version' => '2.1',
           'Authorization' => signature(post, timestamp)
         }
         headers.merge('X-Idempotency-Key' => options[:idempotency_key]) if options[:idempotency_key]
