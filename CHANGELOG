@@ -41,6 +41,7 @@
 * Stripe: API version updated [jherreraa] #4209
 * Mercado Pago: Update verify method [ajawadmirza] #4219
 * DLocal: Set API Version [gasb150] #4222
+* Wompi: Add support for Authorize and Capture [rachelkirk] #4218
 
 == Version 1.124.0 (October 28th, 2021)
 * Worldpay: Add Support for Submerchant Data on Worldpay [almalee24] #4147
