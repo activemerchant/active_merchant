@@ -210,7 +210,7 @@ class DLocalTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
-  def test_api_version_param_header 
+  def test_api_version_param_header
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |_endpoint, _data, headers|
