@@ -1205,30 +1205,27 @@ class WorldpayTest < Test::Unit::TestCase
   end
 
   def test_network_token_type_assignation_when_apple_token
-    response = stub_comms do
+    stub_comms do
       @gateway.authorize(@amount, @apple_play_network_token, @options)
-    end.check_request do |_endpoint, data, _headers|
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
       assert_match %r(<EMVCO_TOKEN-SSL type="APPLEPAY">), data
-    end.respond_with(successful_authorize_response)
-    assert_success response
+    end
   end
 
   def test_network_token_type_assignation_when_network_token
-    response = stub_comms do
+    stub_comms do
       @gateway.authorize(@amount, @nt_credit_card, @options)
-    end.check_request do |_endpoint, data, _headers|
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
       assert_match %r(<EMVCO_TOKEN-SSL type="NETWORKTOKEN">), data
-    end.respond_with(successful_authorize_response)
-    assert_success response
+    end
   end
 
   def test_network_token_type_assignation_when_google_pay
-    response = stub_comms do
+    stub_comms do
       @gateway.authorize(@amount, @google_pay_network_token, @options)
-    end.check_request do |_endpoint, data, _headers|
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
       assert_match %r(<EMVCO_TOKEN-SSL type="GOOGLEPAY">), data
-    end.respond_with(successful_authorize_response)
-    assert_success response
+    end
   end
 
   def test_order_id_crop_and_clean
