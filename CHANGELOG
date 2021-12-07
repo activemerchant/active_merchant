@@ -51,6 +51,7 @@
 * USA ePay: Update implementation to send valid authorization [ajawadmirza] #4231
 * USA ePay: Add store test, update authorize param [jessiagee] #4232
 * Stripe: Update destination test account [jherreraa] #4234
+* Add skip_response option on request check for commit stubs [cristian] #4223
 
 == Version 1.124.0 (October 28th, 2021)
 * Worldpay: Add Support for Submerchant Data on Worldpay [almalee24] #4147
