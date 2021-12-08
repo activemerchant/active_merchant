@@ -19,6 +19,16 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_store
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+
+    payment_token = response.params['card_ref']
+    assert response = @gateway.purchase(@amount, payment_token, @options)
+    assert_equal 'Success', response.message
+    assert_success response
+  end
+
   def test_successful_purchase_with_track_data
     assert response = @gateway.purchase(@amount, @credit_card_with_track_data, @options)
     assert_equal 'Success', response.message
