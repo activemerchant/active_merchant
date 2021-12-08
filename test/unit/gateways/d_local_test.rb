@@ -248,6 +248,22 @@ class DLocalTest < Test::Unit::TestCase
     assert_equal '5002', response.error_code
   end
 
+  def test_successful_verify_credentials
+    @gateway.expects(:ssl_get).returns(successful_verify_credentials_response)
+
+    response = @gateway.verify_credentials()
+    assert_success response
+  end
+
+  def test_failed_verify_credentials
+    @gateway.expects(:ssl_get).returns(failed_verify_credentials_response)
+
+    response = @gateway.verify_credentials()
+    assert_failure response
+
+    assert_equal '3001', response.error_code
+  end
+
   def test_successful_verify
     @gateway.expects(:ssl_request).times(2).returns(successful_authorize_response, successful_void_response)
 
@@ -375,4 +391,13 @@ class DLocalTest < Test::Unit::TestCase
   def failed_void_response
     '{"code":5002,"message":"Invalid transaction status"}'
   end
+
+  def successful_verify_credentials_response
+    '[{"id": "OX", "type": "TICKET", "name": "Oxxo", "logo": "https://pay.dlocal.com/views/2.0/images/payments/OX.png", "allowed_flows": ["REDIRECT"]}, {"id": "VI", "type": "CARD", "name": "Visa", "logo": "https://pay.dlocal.com/views/2.0/images/payments/VI.png", "allowed_flows": ["DIRECT", "REDIRECT"]}]'
+  end
+
+  def failed_verify_credentials_response
+    '{"code": "3001", "message": "Invalid credentials"}'
+  end
+
 end

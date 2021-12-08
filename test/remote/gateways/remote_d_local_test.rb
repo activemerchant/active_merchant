@@ -351,6 +351,18 @@ class RemoteDLocalTest < Test::Unit::TestCase
     assert_match 'Invalid request', response.message
   end
 
+  def test_successful_verify_credentials
+    response = @gateway.verify_credentials()
+    assert_success response
+    assert_match "OK", response.message
+  end
+
+  def test_failed_verify_credentials
+    gateway = DLocalGateway.new(login: 'dssdfsdf', trans_key: 'sdfsdf', secret_key: 'sdfsdf')
+    response = gateway.verify_credentials()
+    assert_match '3001', response.error_code
+  end
+
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response
