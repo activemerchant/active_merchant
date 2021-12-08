@@ -19,6 +19,7 @@ module ActiveMerchant #:nodoc:
       def initialize(options = {})
         requires!(options, :store_id, :user_id, :password, :pem, :pem_password)
         @credentials = options
+        @hosted_data_id = nil
         super
       end
 
