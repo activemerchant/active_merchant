@@ -16,7 +16,8 @@ module ActiveMerchant #:nodoc:
         refund: 'cc:refund',
         void: 'cc:void',
         void_release: 'cc:void:release',
-        check_purchase: 'check:sale'
+        check_purchase: 'check:sale',
+        store: 'cc:save'
       }
 
       STANDARD_ERROR_CODE_MAPPING = {
@@ -95,6 +96,12 @@ module ActiveMerchant #:nodoc:
         add_amount(post, money)
         add_test_mode(post, options)
         commit(:refund, post)
+      end
+
+      def store(payment, options = {})
+        post = {}
+        add_payment(post, payment, options)
+        commit(:store, post)
       end
 
       def verify(creditcard, options = {})
@@ -213,6 +220,8 @@ module ActiveMerchant #:nodoc:
         elsif payment.respond_to?(:track_data) && payment.track_data.present?
           post[:magstripe] = payment.track_data
           post[:cardpresent] = true
+        elsif payment.is_a?(String)
+          post[:card]   = payment
         else
           post[:card]   = payment.number
           post[:cvv2]   = payment.verification_value if payment.verification_value?
@@ -299,6 +308,7 @@ module ActiveMerchant #:nodoc:
           status: fields['UMstatus'],
           auth_code: fields['UMauthCode'],
           ref_num: fields['UMrefNum'],
+          card_ref: fields['UMcardRef'],
           batch: fields['UMbatch'],
           avs_result: fields['UMavsResult'],
           avs_result_code: fields['UMavsResultCode'],
