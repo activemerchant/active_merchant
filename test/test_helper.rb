@@ -13,6 +13,9 @@ require 'comm_stub'
 require 'active_support/core_ext/integer/time'
 require 'active_support/core_ext/numeric/time'
 require 'active_support/core_ext/time/acts_like'
+require 'simplecov'
+
+SimpleCov.start
 
 ActiveMerchant::Billing::Base.mode = :test
 
