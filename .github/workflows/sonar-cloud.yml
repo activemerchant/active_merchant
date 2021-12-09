@@ -22,7 +22,7 @@ jobs:
           bundle install
           bundle exec rake test:local
     - name: Upload coverage report
-      if: success(Build and test with Rake)
+      if: success()
       uses: actions/upload-artifact@v2
       with:
         name: head-result
