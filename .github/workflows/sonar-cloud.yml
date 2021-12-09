@@ -47,6 +47,7 @@ jobs:
 
   slack-notification:
     needs: sonarcloud
+    runs-on: ubuntu-latest
     name: Send slack message
     env:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
