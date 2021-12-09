@@ -1,44 +1,28 @@
-name: CI
+name: Ruby
 
 on:
-  pull_request:
-    branches:
-      - '**'
   push:
-    branches:
-      - master
+    branches: [ $default-branch ]
+  pull_request:
+    branches: [ $default-branch ]
 
 jobs:
-  build:
-    name: Ruby ${{ matrix.version }} ${{ matrix.gemfile }}
+  test:
+
     runs-on: ubuntu-latest
-    env:
-      BUNDLE_GEMFILE: ${{ matrix.gemfile }}
     strategy:
       matrix:
-        version:
-          - 2.5
-          - 2.6
-          - 2.7
-        gemfile:
-          - gemfiles/Gemfile.rails50
-          - gemfiles/Gemfile.rails51
-          - gemfiles/Gemfile.rails52
-          - gemfiles/Gemfile.rails60
-          - gemfiles/Gemfile.rails_master
-        exclude:
-          - version: 2.6
-            gemfile: gemfiles/Gemfile.rails_master
-          - version: 2.5
-            gemfile: gemfiles/Gemfile.rails_master
-    steps:
-      - uses: actions/checkout@v2
-      
-      - name: Set up Ruby ${{ matrix.version }}
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: ${{ matrix.version }}
-          bundler-cache: true
+        ruby-version: ['2.6', '2.7', '3.0']
 
-      - name: Test
-        run: bundle exec rake test
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Ruby
+    # To automatically get bug fixes and new Ruby versions for ruby/setup-ruby,
+    # change this to (see https://github.com/ruby/setup-ruby#versioning):
+    # uses: ruby/setup-ruby@v1
+      uses: ruby/setup-ruby@473e4d8fe5dd94ee328fdfca9f8c9c7afc9dae5e
+      with:
+        ruby-version: ${{ matrix.ruby-version }}
+        bundler-cache: true # runs 'bundle install' and caches installed gems automatically
+    - name: Run tests
+      run: bundle exec rake
