@@ -22,7 +22,7 @@ jobs:
           bundle install
           bundle exec rake test:local
     - name: Upload coverage report
-      if: always()
+      if: success(Build and test with Rake)
       uses: actions/upload-artifact@v2
       with:
         name: head-result
@@ -44,5 +44,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  slack-notification:
+
 
 
