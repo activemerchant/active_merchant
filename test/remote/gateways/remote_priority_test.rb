@@ -181,7 +181,7 @@ class RemotePriorityTest < Test::Unit::TestCase
 
   # Must enter 6 to 10 numbers from start of card to test
   def test_successful_verify
-    # Generate jwt token from key and secret. Pass generated jwt to verify function. The verify function requries a jwt for header authorization.
+    # Generate jwt token from key and secret. Pass generated jwt to verify function. The verify function requires a jwt for header authorization.
     jwt_response = @gateway.create_jwt(@option_spr)
     response = @gateway.verify(@credit_card, { jwt_token: jwt_response.params['jwtToken'] })
     assert_success response
@@ -190,7 +190,7 @@ class RemotePriorityTest < Test::Unit::TestCase
 
   # Must enter 6 to 10 numbers from start of card to test
   def test_failed_verify
-    # Generate jwt token from key and secret. Pass generated jwt to verify function. The verify function requries a jwt for header authorization.
+    # Generate jwt token from key and secret. Pass generated jwt to verify function. The verify function requires a jwt for header authorization.
     jwt_response = @gateway.create_jwt(@option_spr)
     @gateway.verify(@invalid_credit_card, { jwt_token: jwt_response.params['jwtToken'] })
   rescue StandardError => e
@@ -203,7 +203,7 @@ class RemotePriorityTest < Test::Unit::TestCase
   end
 
   def test_failed_verify_must_be_6_to_10_digits
-    # Generate jwt token from key and secret. Pass generated jwt to verify function. The verify function requries a jwt for header authorization.
+    # Generate jwt token from key and secret. Pass generated jwt to verify function. The verify function requires a jwt for header authorization.
     jwt_response = @gateway.create_jwt(@option_spr)
     @gateway.verify(@faulty_credit_card, { jwt_token: jwt_response.params['jwtToken'] })
   rescue StandardError => e

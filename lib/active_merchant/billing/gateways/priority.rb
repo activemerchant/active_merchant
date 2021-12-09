@@ -72,7 +72,6 @@ module ActiveMerchant #:nodoc:
         params = {}
         # refund amounts must be negative
         params['amount'] = ('-' + localized_amount(amount.to_f, options[:currency])).to_f
-        add_bank(params, options[:auth_code])
         add_credit_card(params, credit_card, 'refund', options) unless options[:auth_code]
         add_type_merchant_refund(params, options)
         commit('refund', params: params, jwt: options)
@@ -86,7 +85,7 @@ module ActiveMerchant #:nodoc:
         params['paymentToken'] = get_hash(authorization)['payment_token']
         params['shouldGetCreditCardLevel'] = true
         params['source'] = options[:source]
-        params['tenderType'] = options[:tender_type]
+        params['tenderType'] = 'Card'
 
         commit('capture', params: params, jwt: options)
       end
@@ -121,12 +120,6 @@ module ActiveMerchant #:nodoc:
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
           gsub(%r((number\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]').
           gsub(%r((cvv\\?"\s*:\s*\\?")[^"]*)i, '\1[FILTERED]')
-      end
-
-      def add_bank(params, auth_code)
-        params['authCode'] = auth_code
-        params['authOnly'] = false
-        params['availableAuthAmount'] = 0
       end
 
       def add_credit_card(params, credit_card, action, options)
@@ -188,7 +181,7 @@ module ActiveMerchant #:nodoc:
         params['source'] = options[:source]
         params['sourceZip'] = options[:billing_address][:zip] if options[:billing_address]
         params['taxExempt'] = false
-        params['tenderType'] = options[:tender_type]
+        params['tenderType'] = 'Card'
       end
 
       def add_type_merchant_refund(params, options)
@@ -223,7 +216,7 @@ module ActiveMerchant #:nodoc:
         params['status'] = options[:status]
         params['tax'] = options[:tax]
         params['taxExempt'] = options[:tax_exempt]
-        params['tenderType'] = options[:tender_type]
+        params['tenderType'] = 'Card'
         params['type'] = options[:type]
       end
 
