@@ -858,6 +858,26 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_match @store_options[:customer], response.authorization
   end
 
+  def test_successful_store_with_transaction_identifier_using_gateway_specific_field
+    transaction_identifier = 'ABC123'
+    options_with_transaction_id = @store_options.merge(stored_credential_transaction_id: transaction_identifier)
+    assert response = @gateway.store(@credit_card, options_with_transaction_id)
+
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+    assert_match transaction_identifier, response.params['transaction_identifier']
+  end
+
+  def test_successful_store_with_transaction_identifier_using_normalized_fields
+    transaction_identifier = 'CDE456'
+    options_with_transaction_id = @store_options.merge(stored_credential: { network_transaction_id: transaction_identifier })
+    assert response = @gateway.store(@credit_card, options_with_transaction_id)
+
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+    assert_match transaction_identifier, response.params['transaction_identifier']
+  end
+
   def test_successful_purchase_with_statement_narrative
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(statement_narrative: 'Merchant Statement Narrative'))
     assert_success response

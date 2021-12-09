@@ -303,8 +303,19 @@ module ActiveMerchant #:nodoc:
                   add_card(xml, credit_card, options)
                 end
               end
+              add_transaction_identifier(xml, options) if network_transaction_id(options)
             end
           end
+        end
+      end
+
+      def network_transaction_id(options)
+        options[:stored_credential_transaction_id] || options.dig(:stored_credential, :network_transaction_id)
+      end
+
+      def add_transaction_identifier(xml, options)
+        xml.storedCredentials 'usage' => 'FIRST' do
+          xml.schemeTransactionIdentifier network_transaction_id(options)
         end
       end
 
@@ -743,6 +754,7 @@ module ActiveMerchant #:nodoc:
       def commit(action, request, *success_criteria, options)
         xml = ssl_post(url, request, headers(options))
         raw = parse(action, xml)
+
         if options[:execute_threed]
           raw[:cookie] = @cookie if defined?(@cookie)
           raw[:session_id] = options[:session_id]
