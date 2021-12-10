@@ -32,6 +32,10 @@ jobs:
     needs: build-head 
     runs-on: ubuntu-latest
     steps:
+    - name: send slack message
+      run: |
+          curl -X POST --data-urlencode "payload={\"channel\": \"#qa-process\", \"username\": \"webhookbot\", \"text\": \"Build complete...\", \"icon_emoji\": \":ghost:\"}" https://hooks.slack.com/services/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
+
     - uses: actions/checkout@v2
       with:
         # Disabling shallow clone is recommended for improving relevancy of reporting
@@ -44,21 +48,6 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-  slack-notification:
-    needs: sonarcloud
-    runs-on: ubuntu-latest
-    name: Send slack message
-    
-    steps:
-    - uses: act10ns/slack@v1.5.0
-      with:
-        status: ${{ job.status }}
-        steps: ${{ toJson(steps) }}
-        channel: '#workflows'
-      if: always()
-    env:
-      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
 
 
 
