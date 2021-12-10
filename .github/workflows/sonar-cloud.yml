@@ -31,13 +31,7 @@ jobs:
       run: |
           cd coverage
           ls -a 
-           
-    - name: Fix code coverage paths
-        working-directory: ./coverage
-        run: |
-          sed -i 's@'$GITHUB_WORKSPACE'@/github/workspace/@g' coverage.json
-      
-        
+   
   sonarcloud:
     needs: build-head 
     runs-on: ubuntu-latest
