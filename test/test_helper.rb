@@ -22,7 +22,6 @@ SimpleCov.formatter = SimpleCov::Formatter::JSONFormatter
 SimpleCov.start do
   enable_coverage :branch
   add_filter %r{^/test/}
-  relative_paths true
 end
 
 ActiveMerchant::Billing::Base.mode = :test
