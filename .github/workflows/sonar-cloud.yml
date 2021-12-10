@@ -31,7 +31,11 @@ jobs:
       run: |
           cd coverage
           ls -a 
-          cat .resultset.json 
+           
+    - name: Fix code coverage paths
+        working-directory: ./coverage
+        run: |
+          sed -i 's@'$GITHUB_WORKSPACE'@/github/workspace/@g' coverage.json
       
         
   sonarcloud:
@@ -42,8 +46,14 @@ jobs:
       uses: actions/download-artifact@v2
       with:
         name: code-coverage
-    - name: current files
-      run: ls -a 
+    - name: move report tu results carpet
+      run: |
+          ls -s
+          mkdir results
+          mv .resultset.json ./results/
+          ls -a
+          cd results
+          ls -a
 
     - name: send slack message
       run: |
