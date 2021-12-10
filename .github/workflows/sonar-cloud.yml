@@ -1,4 +1,6 @@
 on:
+  # Trigger analysis when pushing in master or pull requests, and when creating
+  # a pull request.
   push:
     branches:
       - master
@@ -10,11 +12,6 @@ jobs:
     name: 'Build head'
     runs-on: ubuntu-latest
     steps:
-    - uses: act10ns/slack@v1.5.0
-      with:
-      status: starting
-          channel: '#qa-process'
-          message: Starting Build...
     - uses: actions/checkout@v2
     - uses: ruby/setup-ruby@v1
       with:
@@ -30,8 +27,6 @@ jobs:
       with:
         name: head-result
         path: coverage/.resultset.json
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
         
   sonarcloud:
     needs: build-head 
@@ -49,7 +44,23 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+
+  slack-notification:
+    needs: sonarcloud
+    runs-on: ubuntu-latest
+    name: Send slack message
+    
+    steps:
+    - uses: act10ns/slack@v1.5.0
+      with:
+        status: ${{ job.status }}
+        steps: ${{ toJson(steps) }}
+        channel: '#workflows'
+      if: always()
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+
+
 
 
   
