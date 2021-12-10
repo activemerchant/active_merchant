@@ -12,13 +12,12 @@ name: Main Workflow
 jobs:
   build-head:
     name: 'Build head'
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        ruby: [2.5.7, 2.6.9, 2.7.5]
     steps:
-    - uses: actions/checkout@v2
-    - uses: ruby/setup-ruby@v1
-      strategy:
-        matrix:
-          ruby-version: [2.5.7, 2.6.9, 2.7.5]
+    - uses: actions/checkout@v2   
     - name: Build 
       run: |
           gem install bundler -v '1.17.3'
