@@ -28,10 +28,7 @@ jobs:
         name: head-result
         path: coverage/.resultset.json
         
-  sonarcloud:
-    needs: build-head 
-    runs-on: ubuntu-latest
-    steps:
+
     - name: send slack message
       run: |
           curl -X POST --data-urlencode "payload={\"channel\": \"#qa-process\", \"username\": \"webhookbot\", \"text\": \"Build complete...\", \"icon_emoji\": \":ghost:\"}" https://hooks.slack.com/services/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
