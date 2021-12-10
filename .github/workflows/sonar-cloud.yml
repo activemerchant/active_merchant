@@ -25,7 +25,7 @@ jobs:
       if: success()
       uses: actions/upload-artifact@v2
       with:
-        name: head-result
+        name: code-coverage
         path: coverage/.resultset.json
     - name: see current carpet
       run: |
@@ -38,6 +38,13 @@ jobs:
     needs: build-head 
     runs-on: ubuntu-latest
     steps:
+    - name: downdload code-coverage artifact  
+      uses: actions/download-artifact@v2
+      with:
+        name: code-coverage
+    - name: current files
+      run: ls -a 
+
     - name: send slack message
       run: |
           curl -X POST --data-urlencode "payload={\"channel\": \"#qa-process\", \"username\": \"webhookbot\", \"text\": \"Build complete...\", \"icon_emoji\": \":ghost:\"}" https://hooks.slack.com/services/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
