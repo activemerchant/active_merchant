@@ -48,6 +48,7 @@
 * IPG: Quick fix to remove warning [ajawadmirza] #4225
 * Worldpay: Add support for tokenizing payment methods with transaction identifiers [dsmcclain] #4227
 * USA ePay: Update implementation to send valid authorization [ajawadmirza] #4231
+* USA ePay: Add store test, update authorize param [jessiagee] #4232
 
 == Version 1.124.0 (October 28th, 2021)
 * Worldpay: Add Support for Submerchant Data on Worldpay [almalee24] #4147
