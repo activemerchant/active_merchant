@@ -8,6 +8,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     @three_ds_gateway = ActiveMerchant::Billing::OrbitalGateway.new(fixtures(:orbital_3ds_gateway))
 
     @amount = 100
+    @google_pay_amount = 10000
     @credit_card = credit_card('4556761029983886')
     @declined_card = credit_card('4000300011112220')
     # Electronic Check object with test credentials of saving account
@@ -503,7 +504,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_google_pay
-    response = @gateway.purchase(@amount, @google_pay_card, @options)
+    response = @gateway.purchase(@google_pay_amount, @google_pay_card, @options)
     assert_success response
     assert_equal 'Approved', response.message
   end
