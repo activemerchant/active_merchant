@@ -28,8 +28,11 @@ jobs:
         name: head-result
         path: coverage/.resultset.json
     - name: see current carpet
-      run: cd coverage  
-      run: ls -a
+      run: |
+          cd coverage
+          ls -a 
+          cat .resultset.json 
+      
         
   sonarcloud:
     needs: build-head 
