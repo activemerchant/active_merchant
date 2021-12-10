@@ -28,9 +28,9 @@ jobs:
     - name: Static code analyze
       run: |
         bundle exec rake rubocop
-    - name: Local test
+    - name: Remote worldpay test
       run: |
-         bundle exec rake test:local        
+        bundle exec rake test:remote TEST=test/remote/gateways/remote_worldpay_test.rb        
     - name: Upload coverage report
       if: success()
       uses: actions/upload-artifact@v2
@@ -53,6 +53,9 @@ jobs:
     - name: Current path
       run: |
           ls -a
+          pwd
+          mv .resultset.json /home/runner/work/active_merchant/active_merchant
+          ls -a
     - name: send slack message
       run: |
           curl -X POST --data-urlencode "payload={\"channel\": \"#qa-process\", \"username\": \"webhookbot\", \"text\": \"Build complete...\", \"icon_emoji\": \":ghost:\"}" https://hooks.slack.com/services/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
@@ -63,9 +66,6 @@ jobs:
         fetch-depth: 0
     - name: SonarCloud Scan
       uses: sonarsource/sonarcloud-github-action@master
-      with:
-        args: >
-          -Dsonar.ruby.coverage.reportPaths=.
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
