@@ -5,7 +5,9 @@ on:
     branches:
       - master
   pull_request:
-      types: [opened, synchronize, reopened]
+    branches:
+      - master
+    types: [opened, synchronize, reopened]
 name: Main Workflow
 jobs:
   build-head:
@@ -15,12 +17,20 @@ jobs:
     - uses: actions/checkout@v2
     - uses: ruby/setup-ruby@v1
       with:
-        ruby-version: 2.5.7
-    - name: Build and test with Rake
+        ruby-version: [2.5.7, 2.6.9, 2.7.5]
+    - name: Build 
       run: |
           gem install bundler -v '1.17.3'
           bundle install
-          bundle exec rake test:local
+    - name: Unit test
+      run: |
+        bundle exec rake test:units
+    - name: Static code analyze
+      run: |
+        bundle exec rake rubocop
+    - name: Local test
+      run: |
+         bundle exec rake test:local        
     - name: Upload coverage report
       if: success()
       uses: actions/upload-artifact@v2
@@ -40,15 +50,9 @@ jobs:
       uses: actions/download-artifact@v2
       with:
         name: code-coverage
-    - name: move report tu results carpet
+    - name: Current path
       run: |
-          ls -s
-          mkdir results
-          mv .resultset.json ./results/
           ls -a
-          cd results
-          ls -a
-
     - name: send slack message
       run: |
           curl -X POST --data-urlencode "payload={\"channel\": \"#qa-process\", \"username\": \"webhookbot\", \"text\": \"Build complete...\", \"icon_emoji\": \":ghost:\"}" https://hooks.slack.com/services/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
@@ -61,7 +65,7 @@ jobs:
       uses: sonarsource/sonarcloud-github-action@master
       with:
         args: >
-          -Dsonar.ruby.coverage.reportPaths=.results/
+          -Dsonar.ruby.coverage.reportPaths=.
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

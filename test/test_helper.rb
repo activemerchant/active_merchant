@@ -15,7 +15,10 @@ require 'active_support/core_ext/numeric/time'
 require 'active_support/core_ext/time/acts_like'
 require 'simplecov'
 
-SimpleCov.start
+SimpleCov.start do
+  enable_coverage :branch
+  add_filter %r{^/test/}
+end
 
 ActiveMerchant::Billing::Base.mode = :test
 
