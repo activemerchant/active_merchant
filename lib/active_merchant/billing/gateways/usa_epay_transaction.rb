@@ -44,14 +44,14 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      def authorize(money, credit_card, options = {})
+      def authorize(money, payment, options = {})
         post = {}
 
         add_amount(post, money)
         add_invoice(post, options)
-        add_payment(post, credit_card)
-        unless credit_card.track_data.present?
-          add_address(post, credit_card, options)
+        add_payment(post, payment)
+        unless payment.is_a?(CreditCard) && payment.track_data.present?
+          add_address(post, payment, options)
           add_customer_data(post, options)
         end
         add_split_payments(post, options)
