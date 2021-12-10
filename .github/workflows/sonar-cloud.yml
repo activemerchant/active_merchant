@@ -61,7 +61,7 @@ jobs:
       uses: sonarsource/sonarcloud-github-action@master
       with:
         args: >
-          -Dsonar.ruby.coverage.reportPaths=.resultset.json
+          -Dsonar.ruby.coverage.reportPaths=.results/
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
