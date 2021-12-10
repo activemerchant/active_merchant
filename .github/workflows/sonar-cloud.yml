@@ -24,10 +24,11 @@ jobs:
     - name: Upload coverage report
       if: success()
       uses: actions/upload-artifact@v2
-      run: ls -a
       with:
         name: head-result
         path: coverage/.resultset.json
+    - name: see current carpet
+      run: ls -a
         
   sonarcloud:
     needs: build-head 
