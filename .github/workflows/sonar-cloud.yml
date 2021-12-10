@@ -24,13 +24,7 @@ jobs:
           bundle install
     - name: Unit test
       run: |
-        bundle exec rake test:units
-    - name: Static code analyze
-      run: |
-        bundle exec rake rubocop
-    - name: Remote worldpay test
-      run: |
-        bundle exec rake test:remote TEST=test/remote/gateways/remote_worldpay_test.rb        
+        bundle exec rake test:units  
     - name: Upload coverage report
       if: success()
       uses: actions/upload-artifact@v2
