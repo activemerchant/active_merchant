@@ -1,6 +1,4 @@
 on:
-  # Trigger analysis when pushing in master or pull requests, and when creating
-  # a pull request.
   push:
     branches:
       - master
@@ -13,8 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: act10ns/slack@v1.5.0
-        with:
-          status: starting
+      with:
+      status: starting
           channel: '#qa-process'
           message: Starting Build...
     - uses: actions/checkout@v2
