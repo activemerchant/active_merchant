@@ -30,7 +30,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: code-coverage
-        path: coverage/.resultset.json
+        path: coverage/coverage.json
     - name: see current carpet
       run: |
           cd coverage
