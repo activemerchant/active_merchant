@@ -29,7 +29,7 @@ jobs:
       if: success()
       uses: actions/upload-artifact@v2
       with:
-        name: code-coverage
+        name: result
         path: coverage/coverage.json
     - name: see current carpet
       run: |
@@ -39,11 +39,10 @@ jobs:
   sonarcloud:
     needs: build-head 
     runs-on: ubuntu-latest
-    steps:
-    - name: downdload code-coverage artifact  
-      uses: actions/download-artifact@v2
+    steps:  
+    - uses: actions/download-artifact@v2
       with:
-        name: code-coverage
+          name: result
     - name: Current path
       run: |
           ls -a
