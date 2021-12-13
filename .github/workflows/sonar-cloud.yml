@@ -25,6 +25,9 @@ jobs:
       run: |
           gem install bundler -v '2.2.21'
           bundle install
+    - name: Static code analyze
+      run: |
+        rubocop --format progress --format json --out rubocop.json
     - name: Unit test
       run: |
         bundle exec rake test:units  
@@ -32,8 +35,10 @@ jobs:
       if: success()
       uses: actions/upload-artifact@v2
       with:
-        name: result
-        path: coverage/coverage.json
+        name: results
+        path: |
+          coverage/coverage.json
+          rubocop.json
     - name: see current carpet
       run: |
           cd coverage
