@@ -54,6 +54,33 @@ class WompiTest < Test::Unit::TestCase
     assert_equal 'La transacción fue rechazada (Sandbox)', response.message
   end
 
+  def test_successful_authorize
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+
+    assert_equal 19930, response.authorization
+    assert response.test?
+  end
+
+  def test_successful_capture
+    @gateway.expects(:ssl_post).returns(successful_capture_response)
+
+    response = @gateway.capture(@amount, '113879-1638483506-80282', @options)
+    assert_success response
+
+    assert_equal '113879-1638483506-80282', response.authorization
+  end
+
+  def test_failed_capture
+    @gateway.expects(:ssl_post).returns(failed_capture_response)
+
+    response = @gateway.capture(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'La transacción fue rechazada (Sandbox)', response.message
+  end
+
   def test_successful_refund
     @gateway.expects(:ssl_post).returns(successful_refund_response)
 
@@ -119,6 +146,24 @@ class WompiTest < Test::Unit::TestCase
   def failed_purchase_response
     %(
       {"data":{"id":"113879-1635300920-47863","created_at":"2021-10-27T02:15:21.455Z","amount_in_cents":150000,"reference":"sljAsra9maeh","currency":"COP","payment_method_type":"CARD","payment_method":{"type":"CARD","extra":{"name":"VISA-1111","brand":"VISA","last_four":"1111","external_identifier":"liEZAwoiCD"},"installments":2},"redirect_url":null,"status":"DECLINED","status_message":"La transacción fue rechazada (Sandbox)","merchant":{"name":"Spreedly MV","legal_name":"Longbob Longsen","contact_name":"Longbob Longsen","phone_number":"+573017654567","logo_url":null,"legal_id_type":"CC","email":"longbob@example.com","legal_id":"14671275"},"taxes":[]}}
+    )
+  end
+
+  def successful_authorize_response
+    %(
+      {"data":{"id":19930,"public_data":{"type":"CARD","financial_operation":"PREAUTHORIZATION","amount_in_cents":1500,"number_of_installments":1,"currency":"COP"},"token":"tok_test_13879_29dbd1E75A7dc06e42bE08dbad959771","type":"CARD","status":"AVAILABLE","customer_email":null}}
+    )
+  end
+
+  def successful_capture_response
+    %(
+      {"data":{"id":"113879-1638483506-80282","created_at":"2021-12-02T22:18:27.877Z","amount_in_cents":160000,"reference":"larenciadediana3","currency":"COP","payment_method_type":"CARD","payment_method":{"type":"CARD","extra":{"name":"VISA-4242","brand":"VISA","last_four":"4242","external_identifier":"N4Dup17YZn"}},"redirect_url":null,"status":"APPROVED","status_message":null,"merchant":{"name":"Spreedly MV","legal_name":"Miguel Valencia","contact_name":"Miguel Valencia","phone_number":"+573117654567","logo_url":null,"legal_id_type":"CC","email":"mvalencia@spreedly.com","legal_id":"14671275"},"taxes":[]}}
+    )
+  end
+
+  def failed_capture_response
+    %(
+      {"data":{"id":"113879-1638802203-50693","created_at":"2021-12-06T14:50:04.497Z","amount_in_cents":160000,"reference":"larencia987diana37","currency":"COP","payment_method_type":"CARD","payment_method":{"type":"CARD","extra":{"name":"VISA-1111","brand":"VISA","last_four":"1111","external_identifier":"1cAREQ60RX"}},"redirect_url":null,"status":"DECLINED","status_message":"La transacción fue rechazada (Sandbox)","merchant":{"name":"Spreedly MV","legal_name":"Miguel Valencia","contact_name":"Miguel Valencia","phone_number":"+573117654567","logo_url":null,"legal_id_type":"CC","email":"mvalencia@spreedly.com","legal_id":"14671275"},"taxes":[]}}
     )
   end
 

@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'AUD'
       self.money_format = :cents
       self.supported_countries = ['AU']
-      self.supported_cardtypes = %i[visa master american_express]
+      self.supported_cardtypes = %i[visa master american_express diners_club discover jcb]
       self.homepage_url = 'http://www.pinpayments.com/'
       self.display_name = 'Pin Payments'
 
