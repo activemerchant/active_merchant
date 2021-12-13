@@ -35,7 +35,7 @@ jobs:
         bundle exec rake test:units
     - name: Remote test
       run: |
-        bundle exec rake test:remote TEST=test/remote/gateways/remote_${{ matriz.gateways }}_test.rb
+        bundle exec rake test:remote TEST=test/remote/gateways/remote_${{ matrix.gateways }}_test.rb
     - name: Upload coverage report
       if: success()
       uses: actions/upload-artifact@v2
