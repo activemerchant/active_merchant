@@ -16,11 +16,13 @@ jobs:
     strategy:
       matrix:
         ruby: [2.5.7, 2.6.9, 2.7.5]
+        gateways: ['stripe']
     steps:
     - uses: actions/checkout@v2
     - uses: ruby/setup-ruby@v1
       with:
         ruby-version: ${{ matrix.ruby }}
+    
     - name: Build
       run: |
           gem install bundler -v '2.2.21'
@@ -30,7 +32,10 @@ jobs:
         rubocop --format progress --format json --out rubocop.json
     - name: Unit test
       run: |
-        bundle exec rake test:units  
+        bundle exec rake test:units
+    - name: Remote test
+      run: |
+        bundle exec rake test:remote TEST=test/remote/gateways/remote_${{ matriz.gateways }}_test.rb
     - name: Upload coverage report
       if: success()
       uses: actions/upload-artifact@v2
@@ -59,7 +64,8 @@ jobs:
       run: |
           ls -a
           pwd
-          sed -i 's@'$GITHUB_WORKSPACE'@/github/workspace/@g' coverage.json
+          sed -i 's@'$GITHUB_WORKSPACE'@/github/workspace/@g' coverage/coverage.json
+          sed -i 's@'$GITHUB_WORKSPACE'@/github/workspace/@g' rubocop.json
         
     - name: send slack message
       run: |
