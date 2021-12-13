@@ -10,3 +10,4 @@ Gemfile*.lock
 .rvmrc
 /doc/
 .ruby-version
+coverage
