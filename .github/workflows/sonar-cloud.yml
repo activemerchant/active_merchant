@@ -38,6 +38,7 @@ jobs:
       run: |
           cd coverage
           ls -a 
+          pwd
    
   sonarcloud:
     needs: build-head 
