@@ -17,10 +17,13 @@ jobs:
       matrix:
         ruby: [2.5.7, 2.6.9, 2.7.5]
     steps:
-    - uses: actions/checkout@v2   
-    - name: Build 
+    - uses: actions/checkout@v2
+    - uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: ${{ matrix.ruby }}
+    - name: Build
       run: |
-          gem install bundler -v '1.17.3'
+          gem install bundler -v '2.2.21'
           bundle install
     - name: Unit test
       run: |
