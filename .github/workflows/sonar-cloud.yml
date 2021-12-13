@@ -55,10 +55,6 @@ jobs:
       run: |
           curl -X POST --data-urlencode "payload={\"channel\": \"#qa-process\", \"username\": \"webhookbot\", \"text\": \"Build complete...\", \"icon_emoji\": \":ghost:\"}" https://hooks.slack.com/services/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
 
-    - uses: actions/checkout@v2
-      with:
-        # Disabling shallow clone is recommended for improving relevancy of reporting
-        fetch-depth: 0
     - name: SonarCloud Scan
       uses: sonarsource/sonarcloud-github-action@master
       env:
