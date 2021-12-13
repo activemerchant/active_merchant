@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         ruby: [2.5.7, 2.6.9, 2.7.5]
-       #   gateways: ['stripe']
+        gateways: ['stripe']
     steps:
     - uses: actions/checkout@v2
     - uses: ruby/setup-ruby@v1
@@ -33,9 +33,9 @@ jobs:
     - name: Unit test
       run: |
         bundle exec rake test:units
-      #- name: Remote test
-        #run: |
-          #bundle exec rake test:remote TEST=test/remote/gateways/remote_${{ matrix.gateways }}_test.rb
+    - name: Remote test
+      run: |
+        bundle exec rake test:remote TEST=test/remote/gateways/remote_${{ matrix.gateways }}_test.rb
     - name: Upload coverage report
       if: success()
       uses: actions/upload-artifact@v2
