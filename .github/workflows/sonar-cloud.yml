@@ -11,8 +11,8 @@ on:
 name: Main Workflow
 jobs:
   build-head:
-   name: 'Build head'
-    runs-on: macos-latest
+    name: 'Build'
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         ruby: [2.5.7, 2.6.9, 2.7.5]
@@ -38,7 +38,7 @@ jobs:
    
   sonarcloud:
     needs: build-head 
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:  
     - uses: actions/checkout@v2
       with:
