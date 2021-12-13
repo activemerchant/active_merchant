@@ -16,24 +16,25 @@ jobs:
     strategy:
       matrix:
         ruby: [2.5.7, 2.6.9, 2.7.5]
-        gateways: ['stripe']
+        gateways: ['stripe','d_local']
     steps:
     - uses: actions/checkout@v2
     - uses: ruby/setup-ruby@v1
       with:
         ruby-version: ${{ matrix.ruby }}
-    
     - name: Build
       run: |
           gem install bundler -v '2.2.21'
           bundle install
     - name: Static code analyze
+      if: always()
       run: |
         rubocop --format progress --format json --out rubocop.json
     - name: Unit test
       run: |
         bundle exec rake test:units
     - name: Remote test
+      if: always()
       run: |
         bundle exec rake test:remote TEST=test/remote/gateways/remote_${{ matrix.gateways }}_test.rb
     - name: Upload coverage report

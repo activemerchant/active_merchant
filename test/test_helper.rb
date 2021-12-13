@@ -22,8 +22,9 @@ ActiveMerchant::Billing::Base.mode = :test
 
 if ENV['DEBUG_ACTIVE_MERCHANT'] == 'true'
   require 'logger'
-  ActiveMerchant::Billing::Gateway.logger = Logger.new(STDOUT)
+  ActiveMerchant::Billing::Gateway.logger = Logger.new(STDOUT) 
   ActiveMerchant::Billing::Gateway.wiredump_device = STDOUT
+  
 end
 
 # Test gateways
