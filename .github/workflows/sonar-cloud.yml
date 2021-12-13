@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         ruby: [2.5.7, 2.6.9, 2.7.5]
-        gateways: ['stripe','d_local']
+        gateways: ['stripe','stripe_payment_intents']
     steps:
     - uses: actions/checkout@v2
     - uses: ruby/setup-ruby@v1
