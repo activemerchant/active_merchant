@@ -50,10 +50,11 @@ jobs:
     - uses: actions/download-artifact@v2
       with:
           name: result
-    - name: Current path
+    - name: Current path and sed command
       run: |
           ls -a
           pwd
+          sed -i 's@'$GITHUB_WORKSPACE'@/github/workspace/@g' coverage.json
         
     - name: send slack message
       run: |
@@ -61,8 +62,6 @@ jobs:
 
     - name: SonarCloud Scan
       uses: sonarsource/sonarcloud-github-action@master
-      with:
-        projectBaseDir: /home/runner/work/active_merchant/active_merchant
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
