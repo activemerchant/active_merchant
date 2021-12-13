@@ -54,7 +54,7 @@ jobs:
         fetch-depth: 0
     - uses: actions/download-artifact@v2
       with:
-          name: result
+          name: results
     - name: Current path and sed command
       run: |
           ls -a
