@@ -11,19 +11,13 @@ on:
 name: Main Workflow
 jobs:
   build-head:
-    name: 'Build head'
-    runs-on: ubuntu-latest
+   name: 'Build head'
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        ruby: [2.5.7, 2.6.9, 2.7.5]
     steps:
-    - uses: actions/checkout@v2
-    - uses: ruby/setup-ruby@v1
-      with:
-        ruby-version: 2.5.7
-   
     - uses: actions/checkout@v2   
-    - uses: ruby/setup-ruby@473e4d8fe5dd94ee328fdfca9f8c9c7afc9dae5e
-      with:
-        ruby-version: ${{ matrix.ruby-version }}
-        bundler-cache: true 
     - name: Build 
       run: |
           gem install bundler -v '1.17.3'
@@ -44,7 +38,7 @@ jobs:
    
   sonarcloud:
     needs: build-head 
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:  
     - uses: actions/checkout@v2
       with:
