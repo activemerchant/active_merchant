@@ -16,7 +16,6 @@ require 'active_support/core_ext/time/acts_like'
 require 'simplecov'
 require 'simplecov_json_formatter'
 
-
 SimpleCov.formatter = SimpleCov::Formatter::JSONFormatter
 SimpleCov.start do
   enable_coverage :branch
