@@ -31,12 +31,9 @@ jobs:
       run: |
         rubocop --format progress --format json --out rubocop.json
     - name: Unit test
-      run: |
-        bundle exec rake test:units
-    - name: Remote test
       if: always()
       run: |
-        bundle exec rake test:remote TEST=test/remote/gateways/remote_${{ matrix.gateways }}_test.rb
+        bundle exec rake test:units
     - name: Upload coverage report
       if: success()
       uses: actions/upload-artifact@v2
@@ -45,12 +42,11 @@ jobs:
         path: |
           coverage/coverage.json
           rubocop.json
-    - name: see current carpet
+    - name: Remote test
+      if: always()
       run: |
-          cd coverage
-          ls -a 
-          pwd
-   
+        bundle exec rake test:remote TEST=test/remote/gateways/remote_${{ matrix.gateways }}_test.rb
+
   sonarcloud:
     needs: build-head 
     runs-on: ubuntu-latest
@@ -61,10 +57,8 @@ jobs:
     - uses: actions/download-artifact@v2
       with:
           name: results
-    - name: Current path and sed command
+    - name: Passing reports to sonar cloud
       run: |
-          ls -a
-          pwd
           sed -i 's@'$GITHUB_WORKSPACE'@/github/workspace/@g' coverage/coverage.json
           sed -i 's@'$GITHUB_WORKSPACE'@/github/workspace/@g' rubocop.json
         
