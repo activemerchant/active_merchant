@@ -46,9 +46,11 @@
 * Pin Payments: Add support for `diners_club`, `discover`, and `jcb` cardtypes [montdidier] #4142
 * USA ePay: Add store method [ajawadmirza] #4224
 * IPG: Quick fix to remove warning [ajawadmirza] #4225
+* Remove YAML warning on load_fixtures_method [jherreraa] #4226
 * Worldpay: Add support for tokenizing payment methods with transaction identifiers [dsmcclain] #4227
 * USA ePay: Update implementation to send valid authorization [ajawadmirza] #4231
 * USA ePay: Add store test, update authorize param [jessiagee] #4232
+* Stripe: Update destination test account [jherreraa] #4234
 
 == Version 1.124.0 (October 28th, 2021)
 * Worldpay: Add Support for Submerchant Data on Worldpay [almalee24] #4147
