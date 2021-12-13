@@ -332,7 +332,7 @@ module ActiveMerchant #:nodoc:
           response[:success],
           message_from(response),
           response,
-          authorization: authorization_from(response),
+          authorization: authorization_from(action, response),
           avs_result: AVSResult.new(code: response[:AVSResponse]),
           cvv_result: CVVResult.new(response[:ProcessorCCVResponse]),
           test: test?,
@@ -370,8 +370,8 @@ module ActiveMerchant #:nodoc:
         response[:TransactionResult]
       end
 
-      def authorization_from(response)
-        response[:OrderId]
+      def authorization_from(action, response)
+        return (action == 'vault' ? response[:hosted_data_id] : response[:OrderId])
       end
 
       def error_code_from(response)

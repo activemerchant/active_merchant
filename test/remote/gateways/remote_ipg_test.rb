@@ -34,7 +34,7 @@ class RemoteIpgTest < Test::Unit::TestCase
     response = @gateway.store(@credit_card, @options)
     assert_success response
     assert_equal 'true', response.params['successfully']
-    payment_token = response.params['hosted_data_id']
+    payment_token = response.authorization
     assert payment_token
 
     response = @gateway.purchase(@amount, payment_token, @options)
