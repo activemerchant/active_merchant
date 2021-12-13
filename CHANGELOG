@@ -1,7 +1,5 @@
+g= ActiveMerchant CHANGELOG
 
-= ActiveMerchant CHANGELOG
-
-== HEAD
 * Wompi: support gateway [therufs] #4173
 * Stripe Payment Intents: Add setup_purchase [aenand] #4178
 * Ipg: Add new gateway [ajawadmirza] #4171
@@ -51,6 +49,7 @@
 * USA ePay: Update implementation to send valid authorization [ajawadmirza] #4231
 * USA ePay: Add store test, update authorize param [jessiagee] #4232
 * Stripe: Update destination test account [jherreraa] #4234
+
 * Add skip_response option on request check for commit stubs [cristian] #4223
 * Pin Payments: Add support for `void` and New Zealand to supported countries. [montdidier] #4144
 * Wompi: Update authorization in `capture` method. [rachelkirk] #4238
