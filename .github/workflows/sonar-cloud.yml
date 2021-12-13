@@ -15,9 +15,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ruby: [2.5.7, 2.6.9, 2.7.5]
+        ruby-version: [2.5.7, 2.6.9, 2.7.5]
     steps:
     - uses: actions/checkout@v2   
+    - uses: ruby/setup-ruby@473e4d8fe5dd94ee328fdfca9f8c9c7afc9dae5e
+      with:
+        ruby-version: ${{ matrix.ruby-version }}
+        bundler-cache: true 
     - name: Build 
       run: |
           gem install bundler -v '1.17.3'
