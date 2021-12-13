@@ -54,6 +54,7 @@
 * Add skip_response option on request check for commit stubs [cristian] #4223
 * Pin Payments: Add support for `void` and New Zealand to supported countries. [montdidier] #4144
 * Wompi: Update authorization in `capture` method. [rachelkirk] #4238
+* IPG: Update authorization to support `store` method token. [ajawadmirza] #4233
 
 == Version 1.124.0 (October 28th, 2021)
 * Worldpay: Add Support for Submerchant Data on Worldpay [almalee24] #4147
