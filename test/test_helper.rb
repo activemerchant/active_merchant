@@ -18,7 +18,6 @@ require 'simplecov_json_formatter'
 
 SimpleCov.formatter = SimpleCov::Formatter::JSONFormatter
 SimpleCov.start do
-  enable_coverage :branch
   add_filter %r{^/test/}
 end
 
