@@ -10,11 +10,51 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     @declined_card = credit_card('42424242424242424', verification_value: '234', month: '6', year: '2025')
     @threeds_card = credit_card('4485040371536584', verification_value: '100', month: '12', year: '2020')
 
-    @network_token = network_tokenization_credit_card('4242424242424242',
+    @vts_network_token = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'AgAAAAAAAIR8CQrXcIhbQAAAAAA',
       month:              '10',
       year:               '2025',
       source:             :network_token,
+      brand:              'visa',
+      verification_value: nil)
+
+    @mdes_network_token = network_tokenization_credit_card('5436031030606378',
+      eci:                '02',
+      payment_cryptogram: 'AgAAAAAAAIR8CQrXcIhbQAAAAAA',
+      month:              '10',
+      year:               '2025',
+      source:             :network_token,
+      brand:              'master',
+      verification_value: nil)
+
+    @google_pay_visa_cryptogram_3ds_network_token = network_tokenization_credit_card('4242424242424242',
+      eci:                '05',
+      payment_cryptogram: 'AgAAAAAAAIR8CQrXcIhbQAAAAAA',
+      month:              '10',
+      year:               '2025',
+      source:             :google_pay,
+      verification_value: nil)
+
+    @google_pay_master_cryptogram_3ds_network_token = network_tokenization_credit_card('5436031030606378',
+      payment_cryptogram: 'AgAAAAAAAIR8CQrXcIhbQAAAAAA',
+      month:              '10',
+      year:               '2025',
+      source:             :google_pay,
+      brand:              'master',
+      verification_value: nil)
+
+    @google_pay_pan_only_network_token = network_tokenization_credit_card('4242424242424242',
+      month:              '10',
+      year:               '2025',
+      source:             :google_pay,
+      verification_value: nil)
+
+    @apple_pay_network_token = network_tokenization_credit_card('4242424242424242',
+      eci:                '05',
+      payment_cryptogram: 'AgAAAAAAAIR8CQrXcIhbQAAAAAA',
+      month:              '10',
+      year:               '2025',
+      source:             :apple_pay,
       verification_value: nil)
 
     @options = {
@@ -66,11 +106,42 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
-  def test_successful_purchase_with_network_token
-    response = @gateway.purchase(100, @network_token, @options)
+  def test_successful_purchase_with_vts_network_token
+    response = @gateway.purchase(100, @vts_network_token, @options)
     assert_success response
     assert_equal 'Succeeded', response.message
     assert_not_nil response.params['source']['payment_account_reference']
+  end
+
+  def test_successful_purchase_with_mdes_network_token
+    response = @gateway.purchase(100, @mdes_network_token, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_not_nil response.params['source']['payment_account_reference']
+  end
+
+  def test_successful_purchase_with_google_pay_visa_cryptogram_3ds_network_token
+    response = @gateway.purchase(100, @google_pay_visa_cryptogram_3ds_network_token, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_purchase_with_google_pay_master_cryptogram_3ds_network_token
+    response = @gateway.purchase(100, @google_pay_master_cryptogram_3ds_network_token, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_purchase_with_google_pay_pan_only_network_token
+    response = @gateway.purchase(100, @google_pay_pan_only_network_token, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_purchase_with_apple_pay_network_token
+    response = @gateway.purchase(100, @apple_pay_network_token, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
   end
 
   def test_successful_purchase_with_additional_options

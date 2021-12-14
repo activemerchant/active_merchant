@@ -41,10 +41,153 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_equal 'Y', response.cvv_result['code']
   end
 
-  def test_successful_purchase_using_network_token
-    network_token = network_tokenization_credit_card({ source: :network_token })
+  def test_successful_purchase_using_vts_network_token_without_eci
+    network_token = network_tokenization_credit_card(
+      '4242424242424242',
+      { source: :network_token, brand: 'visa' }
+    )
     response = stub_comms do
       @gateway.purchase(@amount, network_token)
+    end.check_request do |_endpoint, data, _headers|
+      request_data = JSON.parse(data)
+
+      assert_equal(request_data['source']['type'], 'network_token')
+      assert_equal(request_data['source']['token'], network_token.number)
+      assert_equal(request_data['source']['token_type'], 'vts')
+      assert_equal(request_data['source']['eci'], '05')
+      assert_equal(request_data['source']['cryptogram'], network_token.payment_cryptogram)
+    end.respond_with(successful_purchase_with_network_token_response)
+
+    assert_success response
+    assert_equal '2FCFE326D92D4C27EDD699560F484', response.params['source']['payment_account_reference']
+    assert response.test?
+  end
+
+  def test_successful_purchase_using_vts_network_token_with_eci
+    network_token = network_tokenization_credit_card(
+      '4242424242424242',
+      { source: :network_token, brand: 'visa', eci: '06' }
+    )
+    response = stub_comms do
+      @gateway.purchase(@amount, network_token)
+    end.check_request do |_endpoint, data, _headers|
+      request_data = JSON.parse(data)
+
+      assert_equal(request_data['source']['type'], 'network_token')
+      assert_equal(request_data['source']['token'], network_token.number)
+      assert_equal(request_data['source']['token_type'], 'vts')
+      assert_equal(request_data['source']['eci'], '06')
+      assert_equal(request_data['source']['cryptogram'], network_token.payment_cryptogram)
+    end.respond_with(successful_purchase_with_network_token_response)
+
+    assert_success response
+    assert_equal '2FCFE326D92D4C27EDD699560F484', response.params['source']['payment_account_reference']
+    assert response.test?
+  end
+
+  def test_successful_purchase_using_mdes_network_token
+    network_token = network_tokenization_credit_card(
+      '5436031030606378',
+      { source: :network_token, brand: 'master' }
+    )
+    response = stub_comms do
+      @gateway.purchase(@amount, network_token)
+    end.check_request do |_endpoint, data, _headers|
+      request_data = JSON.parse(data)
+
+      assert_equal(request_data['source']['type'], 'network_token')
+      assert_equal(request_data['source']['token'], network_token.number)
+      assert_equal(request_data['source']['token_type'], 'mdes')
+      assert_equal(request_data['source']['eci'], nil)
+      assert_equal(request_data['source']['cryptogram'], network_token.payment_cryptogram)
+    end.respond_with(successful_purchase_with_network_token_response)
+
+    assert_success response
+    assert_equal '2FCFE326D92D4C27EDD699560F484', response.params['source']['payment_account_reference']
+    assert response.test?
+  end
+
+  def test_successful_purchase_using_apple_pay_network_token
+    network_token = network_tokenization_credit_card(
+      '4242424242424242',
+      { source: :apple_pay, eci: '05', payment_cryptogram: 'AgAAAAAAAIR8CQrXcIhbQAAAAAA' }
+    )
+    response = stub_comms do
+      @gateway.purchase(@amount, network_token)
+    end.check_request do |_endpoint, data, _headers|
+      request_data = JSON.parse(data)
+
+      assert_equal(request_data['source']['type'], 'network_token')
+      assert_equal(request_data['source']['token'], network_token.number)
+      assert_equal(request_data['source']['token_type'], 'applepay')
+      assert_equal(request_data['source']['eci'], '05')
+      assert_equal(request_data['source']['cryptogram'], network_token.payment_cryptogram)
+    end.respond_with(successful_purchase_with_network_token_response)
+
+    assert_success response
+    assert_equal '2FCFE326D92D4C27EDD699560F484', response.params['source']['payment_account_reference']
+    assert response.test?
+  end
+
+  def test_successful_purchase_using_android_pay_network_token
+    network_token = network_tokenization_credit_card(
+      '4242424242424242',
+      { source: :android_pay, eci: '05', payment_cryptogram: 'AgAAAAAAAIR8CQrXcIhbQAAAAAA' }
+    )
+    response = stub_comms do
+      @gateway.purchase(@amount, network_token)
+    end.check_request do |_endpoint, data, _headers|
+      request_data = JSON.parse(data)
+
+      assert_equal(request_data['source']['type'], 'network_token')
+      assert_equal(request_data['source']['token'], network_token.number)
+      assert_equal(request_data['source']['token_type'], 'googlepay')
+      assert_equal(request_data['source']['eci'], '05')
+      assert_equal(request_data['source']['cryptogram'], network_token.payment_cryptogram)
+    end.respond_with(successful_purchase_with_network_token_response)
+
+    assert_success response
+    assert_equal '2FCFE326D92D4C27EDD699560F484', response.params['source']['payment_account_reference']
+    assert response.test?
+  end
+
+  def test_successful_purchase_using_google_pay_network_token
+    network_token = network_tokenization_credit_card(
+      '4242424242424242',
+      { source: :google_pay, eci: '05', payment_cryptogram: 'AgAAAAAAAIR8CQrXcIhbQAAAAAA' }
+    )
+    response = stub_comms do
+      @gateway.purchase(@amount, network_token)
+    end.check_request do |_endpoint, data, _headers|
+      request_data = JSON.parse(data)
+
+      assert_equal(request_data['source']['type'], 'network_token')
+      assert_equal(request_data['source']['token'], network_token.number)
+      assert_equal(request_data['source']['token_type'], 'googlepay')
+      assert_equal(request_data['source']['eci'], '05')
+      assert_equal(request_data['source']['cryptogram'], network_token.payment_cryptogram)
+    end.respond_with(successful_purchase_with_network_token_response)
+
+    assert_success response
+    assert_equal '2FCFE326D92D4C27EDD699560F484', response.params['source']['payment_account_reference']
+    assert response.test?
+  end
+
+  def test_successful_purchase_using_google_pay_pan_only_network_token
+    network_token = network_tokenization_credit_card(
+      '4242424242424242',
+      { source: :google_pay }
+    )
+    response = stub_comms do
+      @gateway.purchase(@amount, network_token)
+    end.check_request do |_endpoint, data, _headers|
+      request_data = JSON.parse(data)
+
+      assert_equal(request_data['source']['type'], 'network_token')
+      assert_equal(request_data['source']['token'], network_token.number)
+      assert_equal(request_data['source']['token_type'], 'googlepay')
+      assert_equal(request_data['source']['eci'], nil)
+      assert_equal(request_data['source']['cryptogram'], nil)
     end.respond_with(successful_purchase_with_network_token_response)
 
     assert_success response

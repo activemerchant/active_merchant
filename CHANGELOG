@@ -72,6 +72,7 @@
 * Cashnet: convert amounts to integers for proper gateway handling [peteroas] #2207
 * PayTrace: Add `unstore` operation [ajawadmirza] #4262
 * Decidir Plus: Add gateway adapter [naashton] #4264
+* CheckoutV2: Add support for Apple Pay and Google Pay tokens [AMHOL] #4235
 
 == Version 1.124.0 (October 28th, 2021)
 * Worldpay: Add Support for Submerchant Data on Worldpay [almalee24] #4147
