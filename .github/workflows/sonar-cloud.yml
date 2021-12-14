@@ -75,7 +75,7 @@ jobs:
       - name: Newman Run
         uses: matt-ball/newman-action@master
         with:
-          apiKey: ${{ secrets.postmanApiKey }}
+          apiKey: ${{ secrets.POSTMAN_API_KEY }}
           collection: 17203768-1862af3e-2c20-4795-854f-ee41419adccb
           environment: 17203768-06389fa3-127c-40e0-9fe4-9b46611b0452
    
