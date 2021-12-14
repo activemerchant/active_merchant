@@ -10,8 +10,8 @@ on:
     types: [opened, synchronize, reopened]
 name: Main Workflow
 jobs:
-  build-head:
-    name: 'Build'
+  Build and test:
+    name: active_merchant tests
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -22,7 +22,7 @@ jobs:
     - uses: ruby/setup-ruby@v1
       with:
         ruby-version: ${{ matrix.ruby }}
-    - name: Build
+    - name: Set up active_merchant
       run: |
           gem install bundler -v '2.2.21'
           bundle install
@@ -34,11 +34,11 @@ jobs:
       if: always()
       run: |
         bundle exec rake test:units
-    - name: Upload coverage report
+    - name: Upload reports
       if: success()
       uses: actions/upload-artifact@v2
       with:
-        name: results
+        name: reports
         path: |
           coverage/coverage.json
           rubocop.json
@@ -56,7 +56,7 @@ jobs:
         fetch-depth: 0
     - uses: actions/download-artifact@v2
       with:
-          name: results
+          name: reports
     - name: Passing reports to sonar cloud
       run: |
           sed -i 's@'$GITHUB_WORKSPACE'@/github/workspace/@g' coverage/coverage.json
