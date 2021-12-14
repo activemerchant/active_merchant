@@ -109,12 +109,18 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_method(post, payment_method, options)
         post[:source] = {}
-        if payment_method.is_a?(NetworkTokenizationCreditCard) && payment_method.source == :network_token
+        if payment_method.is_a?(NetworkTokenizationCreditCard)
           post[:source][:type] = 'network_token'
           post[:source][:token] = payment_method.number
-          post[:source][:token_type] = payment_method.brand == 'visa' ? 'vts' : 'mdes'
-          post[:source][:cryptogram] = payment_method.payment_cryptogram
-          post[:source][:eci] = options[:eci] || '05'
+          post[:source][:token_type] = token_type_from(payment_method)
+
+          if cryptogram = payment_method.payment_cryptogram
+            post[:source][:cryptogram] = cryptogram
+          end
+
+          if eci = payment_method.eci || options[:eci]
+            post[:source][:eci] = eci
+          end
         else
           post[:source][:type] = 'card'
           post[:source][:name] = payment_method.name
@@ -304,6 +310,17 @@ module ActiveMerchant #:nodoc:
           response['error_type']
         else
           STANDARD_ERROR_CODE_MAPPING[response['response_code']]
+        end
+      end
+
+      def token_type_from(payment_method)
+        case payment_method.source
+        when :network_token
+          payment_method.brand == 'visa' ? 'vts' : 'mdes'
+        when :google_pay, :android_pay
+          'googlepay'
+        when :apple_pay
+          'applepay'
         end
       end
     end
