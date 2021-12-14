@@ -48,7 +48,7 @@ jobs:
         bundle exec rake test:remote TEST=test/remote/gateways/remote_${{ matrix.gateways }}_test.rb
 
   sonarcloud:
-    needs: build-head 
+    needs: Build_and_test
     runs-on: ubuntu-latest
     steps:  
     - uses: actions/checkout@v2
