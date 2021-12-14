@@ -508,10 +508,10 @@ class RemoteStripeTest < Test::Unit::TestCase
   end
 
   def test_successful_store_with_existing_account
-    account = fixtures(:stripe_destination)[:stripe_user_id]
-
+    account = fixtures(:stripe_destination)[:stripe_user_id]    
     assert response = @gateway.store(@debit_card, account: account)
     assert_success response
+    @gateway.delete_latest_test_external_account(account)
     assert_equal 'card', response.params['object']
   end
 
