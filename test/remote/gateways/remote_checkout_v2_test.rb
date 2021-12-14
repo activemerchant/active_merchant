@@ -66,7 +66,11 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     @additional_options = @options.merge(
       card_on_file: true,
       transaction_indicator: 2,
-      previous_charge_id: 'pay_123'
+      previous_charge_id: 'pay_123',
+      processing_channel_id: 'pc_123',
+      marketplace: {
+        sub_entity_id: 'ent_123'
+      }
     )
     @additional_options_3ds = @options.merge(
       execute_threed: true,

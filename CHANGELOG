@@ -76,6 +76,7 @@
 * Decidir Plus: Update payment reference [naashton] #4271
 * Paysafe: Update redact method [meagabeth] #4269
 * CyberSource: Add `line_items` field in authorize method [ajawadmirza] #4268
+* CheckoutV2: Support processing channel and marketplace sub entity ID [AMHOL] #4236
 
 == Version 1.124.0 (October 28th, 2021)
 * Worldpay: Add Support for Submerchant Data on Worldpay [almalee24] #4147

@@ -87,6 +87,8 @@ module ActiveMerchant #:nodoc:
         add_transaction_data(post, options)
         add_3ds(post, options)
         add_metadata(post, options)
+        add_processing_channel(post, options)
+        add_marketplace_data(post, options)
       end
 
       def add_invoice(post, money, options)
@@ -188,6 +190,17 @@ module ActiveMerchant #:nodoc:
           post[:'3ds'][:cryptogram] = options[:three_d_secure][:cavv] if options[:three_d_secure][:cavv]
           post[:'3ds'][:version] = options[:three_d_secure][:version] if options[:three_d_secure][:version]
           post[:'3ds'][:xid] = options[:three_d_secure][:ds_transaction_id] || options[:three_d_secure][:xid]
+        end
+      end
+
+      def add_processing_channel(post, options)
+        post[:processing_channel_id] = options[:processing_channel_id] if options[:processing_channel_id]
+      end
+
+      def add_marketplace_data(post, options)
+        if options[:marketplace]
+          post[:marketplace] = {}
+          post[:marketplace][:sub_entity_id] = options[:marketplace][:sub_entity_id] if options[:marketplace][:sub_entity_id]
         end
       end
 
