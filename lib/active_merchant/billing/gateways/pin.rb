@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
 
       self.default_currency = 'AUD'
       self.money_format = :cents
-      self.supported_countries = ['AU']
+      self.supported_countries = %w(AU NZ)
       self.supported_cardtypes = %i[visa master american_express diners_club discover jcb]
       self.homepage_url = 'http://www.pinpayments.com/'
       self.display_name = 'Pin Payments'
@@ -63,6 +63,11 @@ module ActiveMerchant #:nodoc:
       # authorization is currently not supported.
       def capture(money, token, options = {})
         commit(:put, "charges/#{CGI.escape(token)}/capture", { amount: amount(money) }, options)
+      end
+
+      # Voids a previously authorized charge.
+      def void(token, options = {})
+        commit(:put, "charges/#{CGI.escape(token)}/void", {}, options)
       end
 
       # Updates the credit card for the customer.
