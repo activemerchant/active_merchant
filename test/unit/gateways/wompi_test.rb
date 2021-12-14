@@ -76,8 +76,9 @@ class WompiTest < Test::Unit::TestCase
   def test_failed_capture
     @gateway.expects(:ssl_post).returns(failed_capture_response)
 
-    response = @gateway.capture(@amount, @credit_card, @options)
+    response = @gateway.capture(@amount, '')
     assert_failure response
+
     assert_equal 'La transacción fue rechazada (Sandbox)', response.message
   end
 

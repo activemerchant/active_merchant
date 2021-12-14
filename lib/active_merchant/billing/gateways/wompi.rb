@@ -54,10 +54,9 @@ module ActiveMerchant #:nodoc:
         post = {
           reference: options[:reference] || generate_reference,
           public_key: public_key,
-          payment_source_id: authorization
+          payment_source_id: authorization.to_i
         }
         add_invoice(post, money, options)
-
         commit('capture', post, '/transactions_sync')
       end
 
