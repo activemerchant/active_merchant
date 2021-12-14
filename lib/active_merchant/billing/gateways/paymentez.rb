@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = %w[MX EC CO BR CL PE]
       self.default_currency = 'USD'
-      self.supported_cardtypes = %i[visa master american_express diners_club elo alia olimpica]
+      self.supported_cardtypes = %i[visa master american_express diners_club elo alia olimpica discover maestro sodexo carnet unionpay jcb]
 
       self.homepage_url = 'https://secure.paymentez.com/'
       self.display_name = 'Paymentez'
@@ -39,7 +39,14 @@ module ActiveMerchant #:nodoc:
         'master' => 'mc',
         'american_express' => 'ax',
         'diners_club' => 'di',
-        'elo' => 'el'
+        'elo' => 'el',
+        'discover' => 'dc',
+        'maestro' => 'ms',
+        'sodexo' => 'sx',
+        'olimpica' => 'ol',
+        'carnet' => 'ct',
+        'unionpay' => 'up',
+        'jcb' => 'jc'
       }.freeze
 
       def initialize(options = {})
