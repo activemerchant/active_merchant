@@ -10,7 +10,7 @@ on:
     types: [opened, synchronize, reopened]
 name: Main Workflow
 jobs:
-  Build and test:
+  Build_and_test:
     name: active_merchant tests
     runs-on: ubuntu-latest
     strategy:
