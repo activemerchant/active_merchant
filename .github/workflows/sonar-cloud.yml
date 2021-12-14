@@ -66,6 +66,19 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+  
+  Run-Postman-Collections:
+    needs: sonarcloud
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Newman Run
+        uses: matt-ball/newman-action@master
+        with:
+          apiKey: ${{ secrets.postmanApiKey }}
+          collection: 17203768-1862af3e-2c20-4795-854f-ee41419adccb
+          environment: 17203768-06389fa3-127c-40e0-9fe4-9b46611b0452
+   
 
 
 
