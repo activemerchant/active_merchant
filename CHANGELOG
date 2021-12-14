@@ -62,6 +62,7 @@
 * StripePI: Set restriction for Apple/Google Pay [jherreraa] #4247
 * Cashnet: support multiple itemcodes and amounts [peteroas] #4243
 * IPG: Send default currency in `verify` and two digit `ExpMonth` [ajawadmirza] #4244
+* Stripe: Add remote tests set up to avoid exceed the max external accounts limit [jherreraa] #4239
 
 == Version 1.124.0 (October 28th, 2021)
 * Worldpay: Add Support for Submerchant Data on Worldpay [almalee24] #4147

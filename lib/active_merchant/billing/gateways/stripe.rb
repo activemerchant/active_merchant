@@ -295,6 +295,16 @@ module ActiveMerchant #:nodoc:
         true
       end
 
+      # Helper method to prevent hitting the external_account limit from remote test runs
+      def delete_latest_test_external_account(account)
+        return unless test?
+        auth_header = { 'Authorization': "Bearer #{options[:login]}" }
+        url = "#{live_url}accounts/#{CGI.escape(account)}/external_accounts"
+        accounts_response = JSON.parse(ssl_get("#{url}?limit=100", auth_header))
+        to_delete = accounts_response['data'].reject { |ac| ac['default_for_currency'] }
+        ssl_request(:delete, "#{url}/#{to_delete.first['id']}", nil, auth_header)
+      end
+
       private
 
       class StripePaymentToken < PaymentToken
