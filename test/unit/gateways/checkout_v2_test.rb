@@ -252,13 +252,19 @@ class CheckoutV2Test < Test::Unit::TestCase
       options = {
         card_on_file: true,
         transaction_indicator: 2,
-        previous_charge_id: 'pay_123'
+        previous_charge_id: 'pay_123',
+        processing_channel_id: 'pc_123',
+        marketplace: {
+          sub_entity_id: 'ent_123'
+        }
       }
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
       assert_match(%r{"stored":"true"}, data)
       assert_match(%r{"payment_type":"Recurring"}, data)
       assert_match(%r{"previous_payment_id":"pay_123"}, data)
+      assert_match(%r{"processing_channel_id":"pc_123"}, data)
+      assert_match(/"marketplace\":{\"sub_entity_id\":\"ent_123\"}/, data)
     end.respond_with(successful_authorize_response)
 
     assert_success response
