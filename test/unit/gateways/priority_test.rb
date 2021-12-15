@@ -177,26 +177,11 @@ class PriorityTest < Test::Unit::TestCase
     assert_equal 'Original Payment Not Found Or You Do Not Have Access.', response.params['details'][0]
   end
 
-  def test_successful_refund_purchase_response
-    refund = @options.merge(tender_type: 'Card', source: 'Tester')
-
-    response = stub_comms do
-      @gateway.refund(544, @credit_card, refund)
-    end.check_request do |_endpoint, data, _headers|
-      json = JSON.parse(data)
-
-      assert_equal json['amount'], -5.44
-      assert_credit_card_data_passed(data, @credit_card)
-      assert_refund_data_passed(data, refund)
-    end.respond_with(successful_refund_purchase_response)
-    assert_success response
-    assert_equal 'PU2QSwaBlKx5OEzBKavi1L0Dy9yIMSEx', response.authorization['payment_token']
-    assert response.test?
-  end
-
   def test_successful_refund
+    authorization = '{"payment_token"=>"PTp2WxLTXEP9Ml4DfDzTAbDWRaEFLKEM", "id"=>86044396}'
+
     response = stub_comms do
-      @gateway.refund(544, @credit_card, @options)
+      @gateway.refund(544, authorization, @options)
     end.respond_with(successful_refund_response)
     assert_success response
     assert_equal 'Approved', response.params['status']
@@ -206,8 +191,9 @@ class PriorityTest < Test::Unit::TestCase
 
   # Payment already refunded
   def test_failed_refund_purchase_response
+    authorization = '{"payment_token"=>"PTp2WxLTXEP9Ml4DfDzTAbDWRaEFLKEM", "id"=>86044396}'
     response = stub_comms do
-      @gateway.refund(544, @credit_card, @options)
+      @gateway.refund(544, authorization, @options)
     end.respond_with(failed_refund_purchase_response)
     assert_failure response
     assert_equal 'Declined', response.params['status']
@@ -303,94 +289,6 @@ class PriorityTest < Test::Unit::TestCase
             "shouldGetCreditCardLevel": false
         }
     )
-  end
-
-  def assert_credit_card_data_passed(data, credit_card)
-    parsed_data = JSON.parse(data)
-    card_data = parsed_data['cardAccount']
-
-    assert_equal card_data['cardType'], credit_card.brand
-    assert_equal card_data['entryMode'], @options[:entry_mode]
-
-    assert_equal card_data['last4'], credit_card.last_digits
-    assert_equal card_data['cardId'], @options[:card_id]
-    assert_equal card_data['token'], @options[:token]
-    assert_equal card_data['expiryMonth'], '01'
-    assert_equal card_data['expiryYear'], '29'
-    assert_equal card_data['hasContract'], @options[:has_contract]
-
-    assert_equal card_data['cardPresent'], @options[:card_present]
-    assert_equal card_data['isDebit'], @options[:is_debit]
-    assert_equal card_data['isCorp'], @options[:is_corp]
-  end
-
-  def assert_refund_data_passed(data, purchase_resp)
-    parsed_data = JSON.parse(data)
-    assert_equal parsed_data['cardAccount']['cardPresent'], purchase_resp[:card_present]
-    assert_equal parsed_data['clientReference'], purchase_resp[:client_ref]
-    assert_equal parsed_data['created'], purchase_resp[:created]
-    assert_equal parsed_data['creatorName'], purchase_resp[:creator_name]
-    assert_equal parsed_data['currency'], purchase_resp[:currency]
-    assert_equal parsed_data['customerCode'], purchase_resp[:customer_code]
-    assert_equal parsed_data['enteredAmount'], purchase_resp[:amount]
-    assert_equal parsed_data['id'], 0
-    assert_equal parsed_data['invoice'], purchase_resp[:invoice]
-    assert_equal parsed_data['isDuplicate'], false
-    assert_equal parsed_data['merchantId'], purchase_resp[:merchant_id]
-    assert_equal parsed_data['paymentToken'], purchase_resp[:payment_token]
-
-    pos_data = parsed_data['posData']
-    purchase_resp_pos_data = purchase_resp[:pos_data]
-
-    assert_equal pos_data['panCaptureMethod'], purchase_resp_pos_data[:pan_capture_method]
-
-    purchases_data = parsed_data['purchases'][0]
-    purchase_resp_purchase = purchase_resp[:purchases][0]
-
-    assert_equal purchases_data['code'], purchase_resp_purchase[:code]
-    assert_equal purchases_data['dateCreated'], purchase_resp_purchase[:date_created]
-    assert_equal purchases_data['description'], purchase_resp_purchase[:description]
-    assert_equal purchases_data['discountAmount'], purchase_resp_purchase[:discount_amt]
-    assert_equal purchases_data['discountRate'], purchase_resp_purchase[:discount_rate]
-    assert_equal purchases_data['extendedAmount'], purchase_resp_purchase[:extended_amt]
-    assert_equal purchases_data['iId'], purchase_resp_purchase[:i_id]
-    assert_equal purchases_data['lineItemId'], purchase_resp_purchase[:line_item_id]
-    assert_equal purchases_data['name'], purchase_resp_purchase[:name]
-    assert_equal purchases_data['quantity'], purchase_resp_purchase[:quantity]
-    assert_equal purchases_data['taxAmount'], purchase_resp_purchase[:tax_amount]
-    assert_equal purchases_data['taxRate'], purchase_resp_purchase[:tax_rate]
-    assert_equal purchases_data['transactionIId'], purchase_resp_purchase[:transaction_i_id]
-    assert_equal purchases_data['transactionId'], purchase_resp_purchase[:transaction_id]
-    assert_equal purchases_data['unitOfMeasure'], purchase_resp_purchase[:unit_of_measure]
-    assert_equal purchases_data['unitPrice'], purchase_resp_purchase[:unit_price]
-
-    assert_equal parsed_data['reference'], purchase_resp[:reference]
-    assert_equal parsed_data['replayId'], nil
-    assert_equal parsed_data['requireSignature'], false
-    assert_equal parsed_data['reviewIndicator'], nil
-
-    risk_data = parsed_data['risk']
-    purchase_resp_risk = purchase_resp[:risk]
-
-    assert_equal risk_data['avsAddressMatch'], purchase_resp_risk[:avs_address_match]
-    assert_equal risk_data['avsResponse'], purchase_resp_risk[:avs_response]
-    assert_equal risk_data['avsZipMatch'], purchase_resp_risk[:avs_zip_match]
-    assert_equal risk_data['cvvMatch'], purchase_resp_risk[:cvv_match]
-    assert_equal risk_data['cvvResponse'], purchase_resp_risk[:cvv_response]
-    assert_equal risk_data['cvvResponseCode'], purchase_resp_risk[:cvv_response_code]
-
-    assert_equal parsed_data['settledAmount'], purchase_resp[:settled_amt]
-    assert_equal parsed_data['settledCurrency'], purchase_resp[:settled_currency]
-    assert_equal parsed_data['settledDate'], purchase_resp[:created]
-    assert_equal parsed_data['shipToCountry'], purchase_resp[:ship_to_country]
-    assert_equal parsed_data['shouldGetCreditCardLevel'], purchase_resp[:should_get_credit_card_level]
-    assert_equal parsed_data['source'], 'Tester'
-    assert_equal parsed_data['sourceZip'], nil
-    assert_equal parsed_data['status'], purchase_resp[:status]
-    assert_equal parsed_data['tax'], purchase_resp[:tax]
-    assert_equal parsed_data['taxExempt'], purchase_resp[:tax_exempt]
-    assert_equal parsed_data['tenderType'], 'Card'
-    assert_equal parsed_data['type'], purchase_resp[:type]
   end
 
   def failed_void_response
