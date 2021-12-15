@@ -68,12 +68,12 @@ module ActiveMerchant #:nodoc:
         commit('purchase', params: params, jwt: options)
       end
 
-      def refund(amount, credit_card, options)
+      def refund(amount, authorization, options)
         params = {}
+        params['merchantId'] = @options[:merchant_id]
+        params['paymentToken'] = get_hash(authorization)['payment_token'] || options[:payment_token]
         # refund amounts must be negative
         params['amount'] = ('-' + localized_amount(amount.to_f, options[:currency])).to_f
-        add_credit_card(params, credit_card, 'refund', options) unless options[:auth_code]
-        add_type_merchant_refund(params, options)
         commit('refund', params: params, jwt: options)
       end
 
@@ -182,42 +182,6 @@ module ActiveMerchant #:nodoc:
         params['sourceZip'] = options[:billing_address][:zip] if options[:billing_address]
         params['taxExempt'] = false
         params['tenderType'] = 'Card'
-      end
-
-      def add_type_merchant_refund(params, options)
-        params['cardPresent'] = options[:card_present]
-        params['clientReference'] = options[:client_ref]
-        params['created'] = options[:created]
-        params['creatorName'] = options[:creator_name]
-        params['currency'] = options[:currency]
-        params['customerCode'] = options[:customer_code]
-        params['enteredAmount'] = options[:amount]
-        params['id'] = 0
-        params['invoice'] = options[:invoice]
-        params['isDuplicate'] = false
-        params['merchantId'] = @options[:merchant_id]
-        params['paymentToken'] = options[:payment_token]
-
-        params['posData'] = add_pos_data(options[:pos_data]) if options[:pos_data]
-
-        params['purchases'] = add_purchases_data(options[:purchases][0]) if options[:purchases]
-
-        params['reference'] = options[:reference]
-        params['requireSignature'] = false
-
-        params['risk'] = add_risk_data(options[:risk]) if options[:risk]
-
-        params['settledAmount'] = options[:settled_amt]
-        params['settledCurrency'] = options[:settled_currency]
-        params['settledDate'] = options[:created]
-        params['shipToCountry'] = options[:ship_to_country]
-        params['shouldGetCreditCardLevel'] = options[:should_get_credit_card_level]
-        params['source'] = options[:source]
-        params['status'] = options[:status]
-        params['tax'] = options[:tax]
-        params['taxExempt'] = options[:tax_exempt]
-        params['tenderType'] = 'Card'
-        params['type'] = options[:type]
       end
 
       def commit(action, params: '', iid: '', card_number: nil, jwt: '')

@@ -22,10 +22,7 @@ class RemotePriorityTest < Test::Unit::TestCase
     @faulty_credit_card = credit_card('12345', month: '01', year: '2029', first_name: 'Marcus', last_name: 'Rashford', verification_value: '999')
 
     @option_spr = {
-      billing_address: address(),
-      avs_street: '666',
-      avs_zip: '55044',
-      tender_type: 'Card'
+      billing_address: address()
     }
 
     # purchase params fail inavalid card number
@@ -241,7 +238,7 @@ class RemotePriorityTest < Test::Unit::TestCase
       @gateway.close_batch(response.params['batchId'], @option_spr)
       refund_params = @option_spr.merge(response.params).deep_transform_keys { |key| key.to_s.underscore }.transform_keys(&:to_sym)
 
-      refund = @gateway.refund(response.params['amount'].to_f * 100, @credit_card, refund_params)
+      refund = @gateway.refund(response.params['amount'].to_f * 100, response.authorization.to_s, refund_params)
       assert_success refund
       assert refund.params['status'] == 'Approved'
 
