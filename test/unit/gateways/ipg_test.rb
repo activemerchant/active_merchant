@@ -270,6 +270,15 @@ class IpgTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_failed_store
+    @gateway.expects(:ssl_post).returns(failed_store_response)
+
+    response = @gateway.store(@credit_card, @options.merge!({ hosted_data_id: '123' }))
+    assert_failure response
+    assert_equal response.params['tpv_error_code'], 'SGSDAS-020300'
+    assert !response.params['tpv_error_msg'].nil?
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
@@ -610,6 +619,22 @@ class IpgTest < Test::Unit::TestCase
           </ipgapi:IPGApiActionResponse>
       </SOAP-ENV:Body>
       </SOAP-ENV:Envelope>
+    RESPONSE
+  end
+
+  def failed_store_response
+    <<~RESPONSE
+      <ns4:IPGApiActionResponse xmlns:ns4="http://ipg-online.com/ipgapi/schemas/ipgapi" xmlns:ns2="http://ipg-online.com/ipgapi/schemas/a1" xmlns:ns3="http://ipg-online.com/ipgapi/schemas/v1">
+      <ns4:successfully>true</ns4:successfully>
+        <ns2:Error Code="SGSDAS-020300">
+                          <ns2:ErrorMessage>
+                                Could not store the hosted data id:
+        691c7cb3-a752-4d6d-abde-83cad63de258.
+                                Reason: An internal error has occured while
+                                processing your request
+                          </ns2:ErrorMessage>
+        </ns2:Error>
+      </ns4:IPGApiActionResponse>
     RESPONSE
   end
 
