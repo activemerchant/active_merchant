@@ -343,8 +343,13 @@ module ActiveMerchant #:nodoc:
       def parse(xml)
         reply = {}
         xml = REXML::Document.new(xml)
-        root = REXML::XPath.first(xml, '//ipgapi:IPGApiOrderResponse') || REXML::XPath.first(xml, '//ipgapi:IPGApiActionResponse') || REXML::XPath.first(xml, '//SOAP-ENV:Fault')
+        root = REXML::XPath.first(xml, '//ipgapi:IPGApiOrderResponse') || REXML::XPath.first(xml, '//ipgapi:IPGApiActionResponse') || REXML::XPath.first(xml, '//SOAP-ENV:Fault') || REXML::XPath.first(xml, '//ns4:IPGApiActionResponse')
         reply[:success] = REXML::XPath.first(xml, '//faultcode') ? false : true
+        if REXML::XPath.first(xml, '//ns4:IPGApiActionResponse')
+          reply[:tpv_error_code] = REXML::XPath.first(root, '//ns2:Error').attributes['Code']
+          reply[:tpv_error_msg] = REXML::XPath.first(root, '//ns2:ErrorMessage').text
+          reply[:success] = false
+        end
         root.elements.to_a.each do |node|
           parse_element(reply, node)
         end
