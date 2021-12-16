@@ -570,7 +570,7 @@ module ActiveMerchant #:nodoc:
         # - http://download.chasepaymentech.com/docs/orbital/orbital_gateway_xml_specification.pdf
         unless creditcard.nil?
           if creditcard.verification_value?
-            xml.tag! :CardSecValInd, '1' if %w(visa mastercard discover).include?(creditcard.brand)
+            xml.tag! :CardSecValInd, '1' if %w(visa master discover).include?(creditcard.brand)
             xml.tag! :CardSecVal, creditcard.verification_value
           end
         end
