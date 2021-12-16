@@ -11,7 +11,6 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     @threeds_card = credit_card('4485040371536584', verification_value: '100', month: '12', year: '2020')
 
     @vts_network_token = network_tokenization_credit_card('4242424242424242',
-      eci:                '05',
       payment_cryptogram: 'AgAAAAAAAIR8CQrXcIhbQAAAAAA',
       month:              '10',
       year:               '2025',

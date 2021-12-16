@@ -110,17 +110,16 @@ module ActiveMerchant #:nodoc:
       def add_payment_method(post, payment_method, options)
         post[:source] = {}
         if payment_method.is_a?(NetworkTokenizationCreditCard)
+          token_type = token_type_from(payment_method)
+          cryptogram = payment_method.payment_cryptogram
+          eci = payment_method.eci || options[:eci]
+          eci ||= '05' if token_type == 'vts'
+
           post[:source][:type] = 'network_token'
           post[:source][:token] = payment_method.number
-          post[:source][:token_type] = token_type_from(payment_method)
-
-          if cryptogram = payment_method.payment_cryptogram
-            post[:source][:cryptogram] = cryptogram
-          end
-
-          if eci = payment_method.eci || options[:eci]
-            post[:source][:eci] = eci
-          end
+          post[:source][:token_type] = token_type
+          post[:source][:cryptogram] = cryptogram if cryptogram
+          post[:source][:eci] = eci if eci
         else
           post[:source][:type] = 'card'
           post[:source][:name] = payment_method.name
