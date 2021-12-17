@@ -63,6 +63,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify(credit_card, options = {})
+        options[:currency] = self.default_currency unless options[:currency] && !options[:currency].empty?
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -165,7 +166,7 @@ module ActiveMerchant #:nodoc:
 
           xml.tag!("#{credit_envelope}:CreditCardData") do
             xml.tag!('v1:CardNumber', payment.number) if payment.number
-            xml.tag!('v1:ExpMonth', payment.month) if payment.month
+            xml.tag!('v1:ExpMonth', format(payment.month, :two_digits)) if payment.month
             xml.tag!('v1:ExpYear', format(payment.year, :two_digits)) if payment.year
             xml.tag!('v1:CardCodeValue', payment.verification_value) if payment.verification_value
             xml.tag!('v1:Brand', options[:brand]) if options[:brand]
