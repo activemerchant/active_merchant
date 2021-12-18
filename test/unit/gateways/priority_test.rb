@@ -123,7 +123,7 @@ class PriorityTest < Test::Unit::TestCase
     assert_failure response
     assert_equal 'Declined', response.params['status']
 
-    assert_equal 'Invalid card number', response.params['authMessage']
+    assert_equal 'Invalid card number', response.message
     assert response.test?
   end
 
@@ -133,6 +133,7 @@ class PriorityTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
     assert_success response
     assert_equal 'Approved', response.params['status']
+    assert_equal 'Approved or completed successfully. ', response.message
     assert_equal 'Authorization', response.params['type']
     assert response.test?
   end
@@ -143,9 +144,9 @@ class PriorityTest < Test::Unit::TestCase
     end.respond_with(failed_authorize_response)
 
     assert_failure response
-    assert_equal 'Declined', response.params['status']
+    assert_equal 'Declined', response.error_code
 
-    assert_equal 'Invalid card number', response.params['authMessage']
+    assert_equal 'Invalid card number', response.message
     assert_equal 'Authorization', response.params['type']
     assert response.test?
   end
@@ -155,7 +156,7 @@ class PriorityTest < Test::Unit::TestCase
       @gateway.capture(@amount_authorize, { 'payment_token' => 'authobj' }.to_s, @option_spr)
     end.respond_with(successful_capture_response)
     assert_success response
-    assert_equal 'Approved', response.params['status']
+    assert_equal 'Approved', response.message
     assert_equal 'PaQLIYLRdWtcFKl5VaKTdUVxMutXJ5Ru', response.authorization['payment_token']
   end
 
@@ -164,17 +165,17 @@ class PriorityTest < Test::Unit::TestCase
       @gateway.capture(@amount_authorize, { 'payment_token' => 'bogus' }.to_s, jwt: {})
     end.respond_with(failed_capture_response)
     assert_failure response
-    assert_equal 'Validation error happened', response.params['message']
+    assert_equal 'merchantId required', response.message
     assert_equal nil, response.authorization
   end
 
   def test_failed_void
     @gateway.expects(:ssl_request).returns(failed_void_response)
 
-    response = @gateway.void({ 'id' => 123456 }.to_s, @option_spr)
+    response = @gateway.void({ 'id' => 123456 }.to_s)
     assert_failure response
-    assert_equal 'Unauthorized', response.params['message']
-    assert_equal 'Original Payment Not Found Or You Do Not Have Access.', response.params['details'][0]
+    assert_equal 'Unauthorized', response.error_code
+    assert_equal 'Original Payment Not Found Or You Do Not Have Access.', response.message
   end
 
   def test_successful_refund
@@ -185,7 +186,7 @@ class PriorityTest < Test::Unit::TestCase
     end.respond_with(successful_refund_response)
     assert_success response
     assert_equal 'Approved', response.params['status']
-    assert_equal 'Approved or completed successfully. ', response.params['authMessage']
+    assert_equal 'Approved or completed successfully. ', response.message
     assert response.test?
   end
 
@@ -196,8 +197,8 @@ class PriorityTest < Test::Unit::TestCase
       @gateway.refund(544, authorization, @options)
     end.respond_with(failed_refund_purchase_response)
     assert_failure response
-    assert_equal 'Declined', response.params['status']
-    assert_equal 'Payment already refunded', response.params['authMessage']
+    assert_equal 'Declined', response.error_code
+    assert_equal 'Payment already refunded', response.message
     assert response.test?
   end
 
@@ -292,14 +293,14 @@ class PriorityTest < Test::Unit::TestCase
   end
 
   def failed_void_response
-    {
-      'errorCode': 'Unauthorized',
-      'message': 'Unauthorized',
-      'details': [
-        'Original Payment Not Found Or You Do Not Have Access.'
-      ],
-      'responseCode': 'eer9iUr2GboeBU1YQxAHa0w'
-    }
+    '{
+        "errorCode": "Unauthorized",
+        "message": "Unauthorized",
+        "details": [
+            "Original Payment Not Found Or You Do Not Have Access."
+        ],
+        "responseCode": "eENKmhrToV9UYxsXAh7iGAQ"
+      }'
   end
 
   def transcript

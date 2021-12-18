@@ -50,7 +50,7 @@ class RemotePriorityTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount_purchase, @credit_card_purchase_fail_invalid_number, @option_spr)
     assert_failure response
 
-    assert_equal 'Invalid card number', response.params['authMessage']
+    assert_equal 'Invalid card number', response.message
     assert_equal 'Declined', response.params['status']
   end
 
@@ -59,9 +59,9 @@ class RemotePriorityTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount_purchase, @credit_card_purchase_fail_missing_month, @option_spr)
     assert_failure response
 
-    assert_equal 'ValidationError', response.params['errorCode']
+    assert_equal 'ValidationError', response.error_code
     assert_equal 'Validation error happened', response.params['message']
-    assert_equal 'Missing expiration month and / or year', response.params['details'][0]
+    assert_equal 'Missing expiration month and / or year', response.message
   end
 
   # Missing card verification number
@@ -69,7 +69,7 @@ class RemotePriorityTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount_purchase, @credit_card_purchase_fail_missing_verification, @option_spr)
     assert_failure response
 
-    assert_equal 'CVV is required based on merchant fraud settings', response.params['authMessage']
+    assert_equal 'CVV is required based on merchant fraud settings', response.message
     assert_equal 'Declined', response.params['status']
   end
 
@@ -85,7 +85,7 @@ class RemotePriorityTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount_purchase, @credit_card_purchase_fail_invalid_number, @option_spr)
     assert_failure response
 
-    assert_equal 'Invalid card number', response.params['authMessage']
+    assert_equal 'Invalid card number', response.message
     assert_equal 'Declined', response.params['status']
   end
 
@@ -94,9 +94,9 @@ class RemotePriorityTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount_purchase, @credit_card_purchase_fail_missing_month, @option_spr)
     assert_failure response
 
-    assert_equal 'ValidationError', response.params['errorCode']
+    assert_equal 'ValidationError', response.error_code
     assert_equal 'Validation error happened', response.params['message']
-    assert_equal 'Missing expiration month and / or year', response.params['details'][0]
+    assert_equal 'Missing expiration month and / or year', response.message
   end
 
   # Missing card verification number
@@ -104,7 +104,7 @@ class RemotePriorityTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount_purchase, @credit_card_purchase_fail_missing_verification, @option_spr)
     assert_failure response
 
-    assert_equal 'CVV is required based on merchant fraud settings', response.params['authMessage']
+    assert_equal 'CVV is required based on merchant fraud settings', response.message
     assert_equal 'Declined', response.params['status']
   end
 
@@ -117,7 +117,7 @@ class RemotePriorityTest < Test::Unit::TestCase
 
     capture = @gateway.capture(@amount_authorize, auth_obj.authorization.to_s, @option_spr)
     assert_success capture
-    assert_equal 'Approved', capture.params['authMessage']
+    assert_equal 'Approved', capture.message
     assert_equal 'Approved', capture.params['status']
   end
 
@@ -128,7 +128,7 @@ class RemotePriorityTest < Test::Unit::TestCase
     capture = @gateway.capture(@amount_authorize, { 'payment_token' => 'bogus' }.to_s, @option_spr)
     assert_failure capture
 
-    assert_equal 'Original Transaction Not Found', capture.params['authMessage']
+    assert_equal 'Original Transaction Not Found', capture.message
     assert_equal 'Declined', capture.params['status']
   end
 
@@ -152,9 +152,8 @@ class RemotePriorityTest < Test::Unit::TestCase
   def test_failed_void
     assert void = @gateway.void({ 'id' => 123456 }.to_s, @option_spr)
     assert_failure void
-    assert_equal 'Unauthorized', void.params['errorCode']
-    assert_equal 'Unauthorized', void.params['message']
-    assert_equal 'Original Payment Not Found Or You Do Not Have Access.', void.params['details'][0]
+    assert_equal 'Unauthorized', void.error_code
+    assert_equal 'Original Payment Not Found Or You Do Not Have Access.', void.message
   end
 
   def test_success_get_payment_status
@@ -242,7 +241,7 @@ class RemotePriorityTest < Test::Unit::TestCase
       assert_success refund
       assert refund.params['status'] == 'Approved'
 
-      assert_equal 'Approved', refund.message
+      assert_equal 'Approved or completed successfully', refund.message
     else
       assert_failure response
     end

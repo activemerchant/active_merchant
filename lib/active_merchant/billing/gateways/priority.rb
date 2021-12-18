@@ -68,7 +68,7 @@ module ActiveMerchant #:nodoc:
         commit('purchase', params: params, jwt: options)
       end
 
-      def refund(amount, authorization, options)
+      def refund(amount, authorization, options = {})
         params = {}
         params['merchantId'] = @options[:merchant_id]
         params['paymentToken'] = get_hash(authorization)['payment_token'] || options[:payment_token]
@@ -90,7 +90,7 @@ module ActiveMerchant #:nodoc:
         commit('capture', params: params, jwt: options)
       end
 
-      def void(authorization, options)
+      def void(authorization, options = {})
         commit('void', iid: get_hash(authorization)['id'], jwt: options)
       end
 
@@ -189,13 +189,13 @@ module ActiveMerchant #:nodoc:
           begin
             case action
             when 'void'
-              ssl_request(:delete, url(action, params, ref_number: iid), nil, request_headers)
+              parse(ssl_request(:delete, url(action, params, ref_number: iid), nil, request_headers))
             when 'verify'
               parse(ssl_get(url(action, params, credit_card_number: card_number), request_verify_headers(jwt)))
             when 'get_payment_status', 'create_jwt'
               parse(ssl_get(url(action, params, ref_number: iid), request_headers))
             when 'close_batch'
-              ssl_request(:put, url(action, params, ref_number: iid), nil, request_headers)
+              parse(ssl_request(:put, url(action, params, ref_number: iid), nil, request_headers))
             else
               parse(ssl_post(url(action, params), post_data(params), request_headers))
             end
@@ -206,10 +206,10 @@ module ActiveMerchant #:nodoc:
         response = { 'code' => '204' } if response == ''
         Response.new(
           success,
-          message_from(success, response),
+          message_from(response),
           response,
-          authorization: success && response['code'] != '204' ? authorization_from(response) : nil,
-          error_code: success || response['code'] == '204' || response == '' ? nil : error_from(response),
+          authorization: success ? authorization_from(response) : nil,
+          error_code: success || response == '' ? nil : error_from(response),
           test: test?
         )
       end
@@ -256,6 +256,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
+        return body if body['code'] == '204'
+
         JSON.parse(body)
       rescue JSON::ParserError
         message = 'Invalid JSON response received from Priority Gateway. Please contact Priority Gateway if you continue to receive this message.'
@@ -272,12 +274,10 @@ module ActiveMerchant #:nodoc:
         success
       end
 
-      def message_from(succeeded, response)
-        if succeeded
-          response['status']
-        else
-          response['authMessage']
-        end
+      def message_from(response)
+        return response['details'][0] if response['details'] && response['details'][0]
+
+        response['authMessage'] || response['message'] || response['status']
       end
 
       def authorization_from(response)
@@ -288,7 +288,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_from(response)
-        response['errorCode']
+        response['errorCode'] || response['status']
       end
 
       def post_data(params)
