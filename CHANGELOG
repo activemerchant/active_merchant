@@ -59,6 +59,7 @@
 * Priority: Update parsing for error messages [jessiagee] #4245
 * GlobalCollect: Support for Airline Data [naashton] #4187
 * IPG: Add `tpv_error_code` and `tpv_error_msg` fields [ajawadmirza] #4241
+* StripePI: Set restriction for Apple/Google Pay [jherreraa] #4247
 
 == Version 1.124.0 (October 28th, 2021)
 * Worldpay: Add Support for Submerchant Data on Worldpay [almalee24] #4147
