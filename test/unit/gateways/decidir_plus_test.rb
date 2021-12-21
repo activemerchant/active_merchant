@@ -1,0 +1,154 @@
+require 'test_helper'
+
+class DecidirPlusTest < Test::Unit::TestCase
+  include CommStub
+
+  def setup
+    @gateway = DecidirPlusGateway.new(public_key: 'public_key', private_key: 'private_key')
+    @credit_card = credit_card
+    @amount = 100
+
+    @options = {
+      payment_id: '2bf7bffb-1257-4b45-8d42-42d090409b8a|448459',
+      billing_address: address,
+      description: 'Store Purchase'
+    }
+  end
+
+  def test_successful_purchase
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_action, _endpoint, data, _headers|
+      assert_match(/2bf7bffb-1257-4b45-8d42-42d090409b8a/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_failed_purchase
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(failed_purchase_response)
+
+    assert_failure response
+  end
+
+  def test_successful_refund
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.refund(@amount, @options[:payment_id])
+    end.respond_with(successful_refund_response)
+
+    assert_success response
+  end
+
+  def test_failed_refund
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.refund(@amount, @options[:payment_id])
+    end.respond_with(failed_purchase_response)
+
+    assert_failure response
+  end
+
+  def test_successful_store
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.store(@credit_card, @options)
+    end.check_request do |_action, _endpoint, data, _headers|
+      assert_match(/#{@credit_card.number}/, data)
+    end.respond_with(successful_store_response)
+
+    assert_success response
+  end
+
+  def test_scrub
+    assert @gateway.supports_scrubbing?
+    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
+  private
+
+  def pre_scrubbed
+    %q(
+      opening connection to developers.decidir.com:443...
+      opened
+      starting SSL for developers.decidir.com:443...
+      SSL established
+      <- "POST /api/v2/tokens HTTP/1.1\r\nContent-Type: application/json\r\nApikey: 96e7f0d36a0648fb9a8dcb50ac06d260\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: developers.decidir.com\r\nContent-Length: 207\r\n\r\n"
+      <- "{\"card_number\":\"4484590159923090\",\"card_expiration_month\":\"09\",\"card_expiration_year\":\"22\",\"security_code\":\"123\",\"card_holder_name\":\"Longbob Longsen\",\"card_holder_identification\":{\"type\":null,\"number\":null}}"
+      -> "HTTP/1.1 201 Created\r\n"
+      -> "Content-Type: application/json\r\n"
+      -> "Content-Length: 342\r\n"
+      -> "Connection: close\r\n"
+      -> "Date: Wed, 15 Dec 2021 15:04:23 GMT\r\n"
+      -> "vary: Origin\r\n"
+      -> "Access-Control-Allow-Origin: *\r\n"
+      -> "X-Kong-Upstream-Latency: 42\r\n"
+      -> "X-Kong-Proxy-Latency: 2\r\n"
+      -> "Via: kong/2.0.5\r\n"
+      -> "Strict-Transport-Security: max-age=16070400; includeSubDomains\r\n"
+      -> "Set-Cookie: TS017a11a6=012e46d8ee3b62f63065925e2c71ee113cba96e0166c66ac2397184d6961bbe2cd1b41d64f6ee14cb9d440cf66a097465e0a31a786; Path=/; Domain=.developers.decidir.com\r\n"
+      -> "\r\n"
+      reading 342 bytes...
+      -> "{\"id\":\"2e416527-b757-47e1-80e1-51b2cb77092f\",\"status\":\"active\",\"card_number_length\":16,\"date_created\":\"2021-12-14T16:20Z\",\"bin\":\"448459\",\"last_four_digits\":\"3090\",\"security_code_length\":3,\"expiration_month\":9,\"expiration_year\":22,\"date_due\":\"2021-12-14T16:35Z\",\"cardholder\":{\"identification\":{\"type\":\"\",\"number\":\"\"},\"name\":\"Longbob Longsen\"}}"
+      read 342 bytes
+      Conn close
+    )
+  end
+
+  def post_scrubbed
+    %q(
+      opening connection to developers.decidir.com:443...
+      opened
+      starting SSL for developers.decidir.com:443...
+      SSL established
+      <- "POST /api/v2/tokens HTTP/1.1\r\nContent-Type: application/json\r\nApikey: [FILTERED]\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: developers.decidir.com\r\nContent-Length: 207\r\n\r\n"
+      <- "{\"card_number\":\"[FILTERED]",\"card_expiration_month\":\"09\",\"card_expiration_year\":\"22\",\"security_code\":\"[FILTERED]",\"card_holder_name\":\"Longbob Longsen\",\"card_holder_identification\":{\"type\":null,\"number\":null}}"
+      -> "HTTP/1.1 201 Created\r\n"
+      -> "Content-Type: application/json\r\n"
+      -> "Content-Length: 342\r\n"
+      -> "Connection: close\r\n"
+      -> "Date: Wed, 15 Dec 2021 15:04:23 GMT\r\n"
+      -> "vary: Origin\r\n"
+      -> "Access-Control-Allow-Origin: *\r\n"
+      -> "X-Kong-Upstream-Latency: 42\r\n"
+      -> "X-Kong-Proxy-Latency: 2\r\n"
+      -> "Via: kong/2.0.5\r\n"
+      -> "Strict-Transport-Security: max-age=16070400; includeSubDomains\r\n"
+      -> "Set-Cookie: TS017a11a6=012e46d8ee3b62f63065925e2c71ee113cba96e0166c66ac2397184d6961bbe2cd1b41d64f6ee14cb9d440cf66a097465e0a31a786; Path=/; Domain=.developers.decidir.com\r\n"
+      -> "\r\n"
+      reading 342 bytes...
+      -> "{\"id\":\"2e416527-b757-47e1-80e1-51b2cb77092f\",\"status\":\"active\",\"card_number_length\":16,\"date_created\":\"2021-12-14T16:20Z\",\"bin\":\"448459\",\"last_four_digits\":\"3090\",\"security_code_length\":3,\"expiration_month\":9,\"expiration_year\":22,\"date_due\":\"2021-12-14T16:35Z\",\"cardholder\":{\"identification\":{\"type\":\"\",\"number\":\"\"},\"name\":\"Longbob Longsen\"}}"
+      read 342 bytes
+      Conn close
+    )
+  end
+
+  def successful_store_response
+    %{
+      {\"id\":\"cd4ba1c0-4b41-4c5c-8530-d0c757df8603\",\"status\":\"active\",\"card_number_length\":16,\"date_created\":\"2022-01-07T17:37Z\",\"bin\":\"448459\",\"last_four_digits\":\"3090\",\"security_code_length\":3,\"expiration_month\":9,\"expiration_year\":23,\"date_due\":\"2022-01-07T17:52Z\",\"cardholder\":{\"identification\":{\"type\":\"\",\"number\":\"\"},\"name\":\"Longbob Longsen\"}}
+    }
+  end
+
+  def successful_purchase_response
+    %{
+      {\"id\":12232003,\"site_transaction_id\":\"d80cb4c7430b558cb9362b7bb89d2d38\",\"payment_method_id\":1,\"card_brand\":\"Visa\",\"amount\":100,\"currency\":\"ars\",\"status\":\"approved\",\"status_details\":{\"ticket\":\"4588\",\"card_authorization_code\":\"173710\",\"address_validation_code\":\"VTE0011\",\"error\":null},\"date\":\"2022-01-07T17:37Z\",\"customer\":null,\"bin\":\"448459\",\"installments\":1,\"first_installment_expiration_date\":null,\"payment_type\":\"single\",\"sub_payments\":[],\"site_id\":\"99999999\",\"fraud_detection\":null,\"aggregate_data\":null,\"establishment_name\":null,\"spv\":null,\"confirmed\":null,\"pan\":\"48d2eeca7a9041dc4b2008cf495bc5a8c4\",\"customer_token\":null,\"card_data\":\"/tokens/12232003\",\"token\":\"cd4ba1c0-4b41-4c5c-8530-d0c757df8603\"}
+    }
+  end
+
+  def failed_purchase_response
+    %{
+      {\"error_type\":\"invalid_request_error\",\"validation_errors\":[{\"code\":\"invalid_param\",\"param\":\"site_transaction_id\"}]}
+    }
+  end
+
+  def successful_refund_response
+    %{
+      {\"id\":417921,\"amount\":100,\"sub_payments\":null,\"error\":null,\"status\":\"approved\",\"status_details\":{\"ticket\":\"4589\",\"card_authorization_code\":\"173711\",\"address_validation_code\":\"VTE0011\",\"error\":null}}
+    }
+  end
+
+  def failed_refund_response
+    %{
+      {\"error_type\":\"not_found_error\",\"entity_name\":\"\",\"id\":\"\"}
+    }
+  end
+end
