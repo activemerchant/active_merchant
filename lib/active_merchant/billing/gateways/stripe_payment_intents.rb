@@ -11,8 +11,15 @@ module ActiveMerchant #:nodoc:
       CONFIRM_INTENT_ATTRIBUTES = %i[receipt_email return_url save_payment_method setup_future_usage off_session]
       UPDATE_INTENT_ATTRIBUTES = %i[description statement_descriptor_suffix statement_descriptor receipt_email setup_future_usage]
       DEFAULT_API_VERSION = '2020-08-27'
+      NO_WALLET_SUPPORT = %w(apple_pay google_pay android_pay)
 
       def create_intent(money, payment_method, options = {})
+        card_source_pay = payment_method.source.to_s if defined?(payment_method.source)
+        card_brand_pay = card_brand(payment_method) unless payment_method.is_a?(String) || payment_method.nil?
+        if NO_WALLET_SUPPORT.include?(card_source_pay) || NO_WALLET_SUPPORT.include?(card_brand_pay)
+          store_apple_or_google_pay_token = 'Direct Apple Pay and Google Pay transactions are not supported. Those payment methods must be stored before use.'
+          return Response.new(false, store_apple_or_google_pay_token)
+        end
         post = {}
         add_amount(post, money, options, true)
         add_capture_method(post, options)

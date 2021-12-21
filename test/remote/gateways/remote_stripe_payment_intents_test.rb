@@ -35,6 +35,7 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
       verification_value: '737',
       month: 10,
       year: 2028)
+    @apple_pay = apple_pay_payment_token
     @destination_account = fixtures(:stripe_destination)[:stripe_user_id]
   end
 
@@ -61,6 +62,15 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
 
     assert_equal 'succeeded', purchase.params['status']
     assert purchase.params.dig('charges', 'data')[0]['captured']
+  end
+
+  def test_unsuccessful_purchase_apple_pay
+    options = {
+      currency: 'GBP',
+      customer: @customer
+    }
+    assert error = @gateway.purchase(@amount, @apple_pay, options)
+    assert_equal 'Direct Apple Pay and Google Pay transactions are not supported. Those payment methods must be stored before use.', error.message
   end
 
   def test_purchases_with_same_idempotency_key
