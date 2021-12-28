@@ -34,16 +34,16 @@ class MultiResponseTest < Test::Unit::TestCase
     r1 = Response.new(
       true,
       '1',
-      {'one' => 1},
+      { 'one' => 1 },
       test: true,
       authorization: 'auth1',
-      avs_result: {code: 'AVS1'},
+      avs_result: { code: 'AVS1' },
       cvv_result: 'CVV1',
       error_code: :card_declined,
       fraud_review: true
     )
     m.process { r1 }
-    assert_equal({'one' => 1}, m.params)
+    assert_equal({ 'one' => 1 }, m.params)
     assert_equal '1', m.message
     assert m.test
     assert_equal 'auth1', m.authorization
@@ -56,15 +56,15 @@ class MultiResponseTest < Test::Unit::TestCase
     r2 = Response.new(
       true,
       '2',
-      {'two' => 2},
+      { 'two' => 2 },
       test: false,
       authorization: 'auth2',
-      avs_result: {code: 'AVS2'},
+      avs_result: { code: 'AVS2' },
       cvv_result: 'CVV2',
       fraud_review: false
     )
     m.process { r2 }
-    assert_equal({'two' => 2}, m.params)
+    assert_equal({ 'two' => 2 }, m.params)
     assert_equal '2', m.message
     assert !m.test
     assert_equal 'auth2', m.authorization
@@ -80,15 +80,15 @@ class MultiResponseTest < Test::Unit::TestCase
     r1 = Response.new(
       true,
       '1',
-      {'one' => 1},
+      { 'one' => 1 },
       test: true,
       authorization: 'auth1',
-      avs_result: {code: 'AVS1'},
+      avs_result: { code: 'AVS1' },
       cvv_result: 'CVV1',
       fraud_review: true
     )
     m.process { r1 }
-    assert_equal({'one' => 1}, m.params)
+    assert_equal({ 'one' => 1 }, m.params)
     assert_equal '1', m.message
     assert m.test
     assert_equal 'auth1', m.authorization
@@ -100,15 +100,15 @@ class MultiResponseTest < Test::Unit::TestCase
     r2 = Response.new(
       true,
       '2',
-      {'two' => 2},
+      { 'two' => 2 },
       test: false,
       authorization: 'auth2',
-      avs_result: {code: 'AVS2'},
+      avs_result: { code: 'AVS2' },
       cvv_result: 'CVV2',
       fraud_review: false
     )
     m.process { r2 }
-    assert_equal({'one' => 1}, m.params)
+    assert_equal({ 'one' => 1 }, m.params)
     assert_equal '1', m.message
     assert m.test
     assert_equal 'auth1', m.authorization

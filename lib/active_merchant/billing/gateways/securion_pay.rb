@@ -31,17 +31,17 @@ module ActiveMerchant #:nodoc:
         'expired_token' => STANDARD_ERROR_CODE[:card_declined]
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :secret_key)
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         post = create_post_for_auth_or_purchase(money, payment, options)
         commit('charges', post, options)
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         post = create_post_for_auth_or_purchase(money, payment, options)
         post[:captured] = 'false'
         commit('charges', post, options)
@@ -63,7 +63,7 @@ module ActiveMerchant #:nodoc:
         commit("charges/#{CGI.escape(authorization)}/refund", {}, options)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -190,8 +190,7 @@ module ActiveMerchant #:nodoc:
           response,
           test: test?,
           authorization: (success ? response['id'] : response['error']['charge']),
-          error_code: (success ? nil : STANDARD_ERROR_CODE_MAPPING[response['error']['code']])
-        )
+          error_code: (success ? nil : STANDARD_ERROR_CODE_MAPPING[response['error']['code']]))
       end
 
       def headers(options = {})

@@ -13,7 +13,7 @@ class RemotePayGateXmlTest < Test::Unit::TestCase
       billing_address: address,
       email: 'john.doe@example.com',
       ip: '127.0.0.1',
-      description: 'Store Purchase',
+      description: 'Store Purchase'
     }
   end
 

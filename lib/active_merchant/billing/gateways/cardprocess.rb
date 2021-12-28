@@ -26,7 +26,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>:user_id</tt> -- The CardProcess user ID
       # * <tt>:password</tt> -- The CardProcess password
       # * <tt>:entity_id</tt> -- The CardProcess channel or entity ID for any transactions
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :user_id, :password, :entity_id)
         super
         # This variable exists purely to allow remote tests to force error codes;

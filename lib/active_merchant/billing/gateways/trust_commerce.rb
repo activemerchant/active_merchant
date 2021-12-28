@@ -151,7 +151,7 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, creditcard_or_billing_id, options = {})
         parameters = {
-          amount: amount(money),
+          amount: amount(money)
         }
 
         add_order_id(parameters, options)
@@ -168,7 +168,7 @@ module ActiveMerchant #:nodoc:
       # to process a purchase are an amount in cents or a money object and a creditcard object or billingid string.
       def purchase(money, creditcard_or_billing_id, options = {})
         parameters = {
-          amount: amount(money),
+          amount: amount(money)
         }
 
         add_order_id(parameters, options)
@@ -188,7 +188,7 @@ module ActiveMerchant #:nodoc:
         transaction_id, = split_authorization(authorization)
         parameters = {
           amount: amount(money),
-          transid: transaction_id,
+          transid: transaction_id
         }
         add_aggregator(parameters, options)
         add_custom_fields(parameters, options)
@@ -239,7 +239,7 @@ module ActiveMerchant #:nodoc:
         action = (VOIDABLE_ACTIONS - ['preauth']).include?(original_action) ? 'void' : 'reversal'
 
         parameters = {
-          transid: transaction_id,
+          transid: transaction_id
         }
 
         add_aggregator(parameters, options)
@@ -285,7 +285,7 @@ module ActiveMerchant #:nodoc:
           cycle: cycle,
           verify: options[:verify] || 'y',
           billingid: options[:billingid] || nil,
-          payments: options[:payments] || nil,
+          payments: options[:payments] || nil
         }
 
         add_creditcard(parameters, creditcard)
@@ -300,7 +300,7 @@ module ActiveMerchant #:nodoc:
       def store(creditcard, options = {})
         parameters = {
           verify: options[:verify] || 'y',
-          billingid: options[:billingid] || options[:billing_id] || nil,
+          billingid: options[:billingid] || options[:billing_id] || nil
         }
 
         add_creditcard(parameters, creditcard)
@@ -314,7 +314,7 @@ module ActiveMerchant #:nodoc:
       # unstore() the information will be removed and a Response object will be returned indicating the success of the action.
       def unstore(identification, options = {})
         parameters = {
-          billingid: identification,
+          billingid: identification
         }
 
         add_custom_fields(parameters, options)
@@ -331,7 +331,8 @@ module ActiveMerchant #:nodoc:
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
           gsub(%r((&?cc=)\d*(&?)), '\1[FILTERED]\2').
           gsub(%r((&?password=)[^&]+(&?)), '\1[FILTERED]\2').
-          gsub(%r((&?cvv=)\d*(&?)), '\1[FILTERED]\2')
+          gsub(%r((&?cvv=)\d*(&?)), '\1[FILTERED]\2').
+          gsub(%r((&?account=)\d*(&?)), '\1[FILTERED]\2')
       end
 
       private
@@ -447,8 +448,7 @@ module ActiveMerchant #:nodoc:
           test: test?,
           authorization: authorization_from(action, data),
           cvv_result: data['cvv'],
-          avs_result: { code: data['avs'] }
-        )
+          avs_result: { code: data['avs'] })
       end
 
       def parse(body)

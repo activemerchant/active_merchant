@@ -63,7 +63,7 @@ class RemoteStripe3DSTest < Test::Unit::TestCase
   end
 
   def test_create_webhook_endpoint_on_connected_account
-    response = @gateway.send(:create_webhook_endpoint, @options.merge({stripe_account: @stripe_account}), ['source.chargeable'])
+    response = @gateway.send(:create_webhook_endpoint, @options.merge({ stripe_account: @stripe_account }), ['source.chargeable'])
     assert_includes response.params['enabled_events'], 'source.chargeable'
     assert_equal @options[:callback_url], response.params['url']
     assert_equal 'enabled', response.params['status']
@@ -81,7 +81,7 @@ class RemoteStripe3DSTest < Test::Unit::TestCase
   end
 
   def test_delete_webhook_endpoint_on_connected_account
-    webhook = @gateway.send(:create_webhook_endpoint, @options.merge({stripe_account: @stripe_account}), ['source.chargeable'])
+    webhook = @gateway.send(:create_webhook_endpoint, @options.merge({ stripe_account: @stripe_account }), ['source.chargeable'])
     response = @gateway.send(:delete_webhook_endpoint, @options.merge(webhook_id: webhook.params['id']))
     assert_equal response.params['id'], webhook.params['id']
     assert_equal true, response.params['deleted']
@@ -100,8 +100,8 @@ class RemoteStripe3DSTest < Test::Unit::TestCase
   end
 
   def test_show_webhook_endpoint_on_connected_account
-    webhook = @gateway.send(:create_webhook_endpoint, @options.merge({stripe_account: @stripe_account}), ['source.chargeable'])
-    response = @gateway.send(:show_webhook_endpoint,  @options.merge({webhook_id: webhook.params['id'], stripe_account: @stripe_account}))
+    webhook = @gateway.send(:create_webhook_endpoint, @options.merge({ stripe_account: @stripe_account }), ['source.chargeable'])
+    response = @gateway.send(:show_webhook_endpoint,  @options.merge({ webhook_id: webhook.params['id'], stripe_account: @stripe_account }))
 
     assert_includes response.params['enabled_events'], 'source.chargeable'
     assert_equal @options[:callback_url], response.params['url']
@@ -114,11 +114,11 @@ class RemoteStripe3DSTest < Test::Unit::TestCase
 
   def test_list_webhook_endpoints
     webhook1 = @gateway.send(:create_webhook_endpoint, @options, ['source.chargeable'])
-    webhook2 = @gateway.send(:create_webhook_endpoint, @options.merge({stripe_account: @stripe_account}), ['source.chargeable'])
+    webhook2 = @gateway.send(:create_webhook_endpoint, @options.merge({ stripe_account: @stripe_account }), ['source.chargeable'])
     assert_nil webhook1.params['application']
     assert_not_nil webhook2.params['application']
 
-    response = @gateway.send(:list_webhook_endpoints, @options.merge({limit: 100}))
+    response = @gateway.send(:list_webhook_endpoints, @options.merge({ limit: 100 }))
     assert_not_nil response.params
     assert_equal 'list', response.params['object']
     assert response.params['data'].size >= 2

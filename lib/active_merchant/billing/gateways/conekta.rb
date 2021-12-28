@@ -180,7 +180,7 @@ module ActiveMerchant #:nodoc:
           'Accept-Language' => 'es',
           'Authorization' => 'Basic ' + Base64.encode64("#{@options[:key]}:"),
           'RaiseHtmlError' => 'false',
-          'Conekta-Client-User-Agent' => {'agent' => "Conekta ActiveMerchantBindings/#{ActiveMerchant::VERSION}"}.to_json,
+          'Conekta-Client-User-Agent' => { 'agent' => "Conekta ActiveMerchantBindings/#{ActiveMerchant::VERSION}" }.to_json,
           'X-Conekta-Client-User-Agent' => conekta_client_user_agent(options),
           'X-Conekta-Client-User-Metadata' => options[:meta].to_json
         }
@@ -189,7 +189,7 @@ module ActiveMerchant #:nodoc:
       def conekta_client_user_agent(options)
         return user_agent unless options[:application]
 
-        JSON.dump(JSON.parse(user_agent).merge!({application: options[:application]}))
+        JSON.dump(JSON.parse(user_agent).merge!({ application: options[:application] }))
       end
 
       def commit(method, url, parameters, options = {})

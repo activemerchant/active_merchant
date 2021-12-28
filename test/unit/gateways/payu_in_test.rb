@@ -16,7 +16,7 @@ class PayuInTest < Test::Unit::TestCase
     }
   end
 
-  def assert_parameter(parameter, expected_value, data, options={})
+  def assert_parameter(parameter, expected_value, data, options = {})
     assert (data =~ %r{(?:^|&)#{parameter}=([^&]*)(?:&|$)}), "Unable to find #{parameter} in #{data}"
     value = CGI.unescape($1 || '')
     case expected_value
@@ -203,7 +203,7 @@ class PayuInTest < Test::Unit::TestCase
           phone: ('a-' + ('1' * 51))
         }
       )
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |endpoint, data, _headers|
       case endpoint
       when /_payment/
         assert_parameter('txnid', /^a/, data, length: 30)
@@ -291,7 +291,7 @@ class PayuInTest < Test::Unit::TestCase
   def test_successful_refund
     response = stub_comms do
       @gateway.refund(100, 'abc')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_parameter('command', 'cancel_refund_transaction', data)
       assert_parameter('var1', 'abc', data)
       assert_parameter('var2', /./, data)
@@ -343,108 +343,108 @@ class PayuInTest < Test::Unit::TestCase
   private
 
   def pre_scrubbed
-    <<-PRE_SCRUBBED
-opening connection to test.payu.in:443...
-opened
-starting SSL for test.payu.in:443...
-SSL established
-<- "POST /_payment HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: identity\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: test.payu.in\r\nContent-Length: 460\r\n\r\n"
-<- "amount=1.00&txnid=19ceaa9a230d3057dba07b78ad5c7d46&productinfo=Store+Purchase&surl=http%3A%2F%2Fexample.com&furl=http%3A%2F%2Fexample.com&pg=CC&firstname=Longbob&bankcode=VISA&ccnum=5123456789012346&ccvv=123&ccname=Longbob+Longsen&ccexpmon=5&ccexpyr=2017&email=unknown%40example.com&phone=11111111111&key=Gzv04m&txn_s2s_flow=1&hash=a255c1b5107556b7f00b7c5bbebf92392ec4d2c0675253ca20ef459d4259775efbeae039b59357ddd42374d278dedb432f2e9c238acc6358afe9b22cf908fbb3"
--> "HTTP/1.1 200 OK\r\n"
--> "Date: Fri, 08 May 2015 15:41:17 GMT\r\n"
--> "Server: Apache\r\n"
--> "P3P: CP=\"IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT\"\r\n"
--> "Set-Cookie: PHPSESSID=ud24vi12os6m7f7g0lpmked4a0; path=/; secure; HttpOnly\r\n"
--> "Expires: Thu, 19 Nov 1981 08:52:00 GMT\r\n"
--> "Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0\r\n"
--> "Pragma: no-cache\r\n"
--> "Vary: Accept-Encoding\r\n"
--> "Content-Length: 691\r\n"
--> "Connection: close\r\n"
--> "Content-Type: text/html; charset=UTF-8\r\n"
--> "\r\n"
-reading 691 bytes...
--> ""
--> "{\"status\":\"success\",\"response\":{\"form_post_vars\":{\"transactionId\":\"b84436e889cf6864a9fa2ab267f3f76a766ad6437b017ccb5093e8217996b814\",\"pgId\":\"8\",\"eci\":\"7\",\"nonEnrolled\":1,\"nonDomestic\":0,\"bank\":\"VISA\",\"cccat\":\"creditcard\",\"ccnum\":\"4b5c9002295c6cd8e5289e2f9c312dc737810a747b84e71665cf077c78fe245a\",\"ccname\":\"53ab689fdb1b025c7e9c53c6b4a6e27f51e0d627579e7c12af2cb6cbc4944cc0\",\"ccvv\":\"f31c6a1d6582f44ee1be4a3e1126b9cb08d1e7006f7afe083d7270b00dcb933f\",\"ccexpmon\":\"5ddf3702e74f473ec89762f6efece025737c2ab999e695cf10496e6fa3946079\",\"ccexpyr\":\"5da83563fcaa945063dc4c2094c48e800badf7c8246c9d13b43757fe99d63e6d\",\"is_seamless\":\"1\"},\"post_uri\":\"https:\\/\\/test.payu.in\\/hdfc_not_enrolled\",\"enrolled\":\"0\"}}"
-read 691 bytes
-Conn close
-opening connection to test.payu.in:443...
-opened
-starting SSL for test.payu.in:443...
-SSL established
-<- "POST /hdfc_not_enrolled HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: identity\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: test.payu.in\r\nContent-Length: 520\r\n\r\n"
-<- "transactionId=b84436e889cf6864a9fa2ab267f3f76a766ad6437b017ccb5093e8217996b814&pgId=8&eci=7&nonEnrolled=1&nonDomestic=0&bank=VISA&cccat=creditcard&ccnum=4b5c9002295c6cd8e5289e2f9c312dc737810a747b84e71665cf077c78fe245a&ccname=53ab689fdb1b025c7e9c53c6b4a6e27f51e0d627579e7c12af2cb6cbc4944cc0&ccvv=f31c6a1d6582f44ee1be4a3e1126b9cb08d1e7006f7afe083d7270b00dcb933f&ccexpmon=5ddf3702e74f473ec89762f6efece025737c2ab999e695cf10496e6fa3946079&ccexpyr=5da83563fcaa945063dc4c2094c48e800badf7c8246c9d13b43757fe99d63e6d&is_seamless=1"
--> "HTTP/1.1 200 OK\r\n"
--> "Date: Fri, 08 May 2015 15:41:27 GMT\r\n"
--> "Server: Apache\r\n"
--> "P3P: CP=\"IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT\"\r\n"
--> "Set-Cookie: PHPSESSID=n717g1mr5lvht96ukdobu6m344; path=/; secure; HttpOnly\r\n"
--> "Expires: Thu, 19 Nov 1981 08:52:00 GMT\r\n"
--> "Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0\r\n"
--> "Pragma: no-cache\r\n"
--> "Vary: Accept-Encoding\r\n"
--> "Content-Length: 1012\r\n"
--> "Connection: close\r\n"
--> "Content-Type: text/html; charset=UTF-8\r\n"
--> "\r\n"
-reading 1012 bytes...
--> ""
--> "{\"status\":\"success\",\"result\":\"mihpayid=403993715511983692&mode=CC&status=success&key=Gzv04m&txnid=19ceaa9a230d3057dba07b78ad5c7d46&amount=1.00&addedon=2015-05-08+21%3A11%3A17&productinfo=Store+Purchase&firstname=Longbob&lastname=&address1=&address2=&city=&state=&country=&zipcode=&email=unknown%40example.com&phone=11111111111&udf1=&udf2=&udf3=&udf4=&udf5=&udf6=&udf7=&udf8=&udf9=&udf10=&card_token=&card_no=512345XXXXXX2346&field0=&field1=512816420000&field2=999999&field3=6816991112151281&field4=-1&field5=&field6=&field7=&field8=&field9=SUCCESS&PG_TYPE=HDFCPG&error=E000&error_Message=No+Error&net_amount_debit=1&unmappedstatus=success&hash=c0d3e5346c37ddd32bb3b386ed1d0709a612d304180e7a25dcbf047cc1c3a4e9de9940af0179c6169c0038b2a826d7ea4b868fcbc4e435928e8cbd25da3c1e56&bank_ref_no=6816991112151281&bank_ref_num=6816991112151281&bankcode=VISA&surl=http%3A%2F%2Fexample.com&curl=http%3A%2F%2Fexample.com&furl=http%3A%2F%2Fexample.com&card_hash=f25e4f9ea802050c23423966d35adc54046f651f0d9a2b837b49c75f964d1fa7\"}"
-read 1012 bytes
-Conn close
+    <<~PRE_SCRUBBED
+      opening connection to test.payu.in:443...
+      opened
+      starting SSL for test.payu.in:443...
+      SSL established
+      <- "POST /_payment HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: identity\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: test.payu.in\r\nContent-Length: 460\r\n\r\n"
+      <- "amount=1.00&txnid=19ceaa9a230d3057dba07b78ad5c7d46&productinfo=Store+Purchase&surl=http%3A%2F%2Fexample.com&furl=http%3A%2F%2Fexample.com&pg=CC&firstname=Longbob&bankcode=VISA&ccnum=5123456789012346&ccvv=123&ccname=Longbob+Longsen&ccexpmon=5&ccexpyr=2017&email=unknown%40example.com&phone=11111111111&key=Gzv04m&txn_s2s_flow=1&hash=a255c1b5107556b7f00b7c5bbebf92392ec4d2c0675253ca20ef459d4259775efbeae039b59357ddd42374d278dedb432f2e9c238acc6358afe9b22cf908fbb3"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Date: Fri, 08 May 2015 15:41:17 GMT\r\n"
+      -> "Server: Apache\r\n"
+      -> "P3P: CP=\"IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT\"\r\n"
+      -> "Set-Cookie: PHPSESSID=ud24vi12os6m7f7g0lpmked4a0; path=/; secure; HttpOnly\r\n"
+      -> "Expires: Thu, 19 Nov 1981 08:52:00 GMT\r\n"
+      -> "Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0\r\n"
+      -> "Pragma: no-cache\r\n"
+      -> "Vary: Accept-Encoding\r\n"
+      -> "Content-Length: 691\r\n"
+      -> "Connection: close\r\n"
+      -> "Content-Type: text/html; charset=UTF-8\r\n"
+      -> "\r\n"
+      reading 691 bytes...
+      -> ""
+      -> "{\"status\":\"success\",\"response\":{\"form_post_vars\":{\"transactionId\":\"b84436e889cf6864a9fa2ab267f3f76a766ad6437b017ccb5093e8217996b814\",\"pgId\":\"8\",\"eci\":\"7\",\"nonEnrolled\":1,\"nonDomestic\":0,\"bank\":\"VISA\",\"cccat\":\"creditcard\",\"ccnum\":\"4b5c9002295c6cd8e5289e2f9c312dc737810a747b84e71665cf077c78fe245a\",\"ccname\":\"53ab689fdb1b025c7e9c53c6b4a6e27f51e0d627579e7c12af2cb6cbc4944cc0\",\"ccvv\":\"f31c6a1d6582f44ee1be4a3e1126b9cb08d1e7006f7afe083d7270b00dcb933f\",\"ccexpmon\":\"5ddf3702e74f473ec89762f6efece025737c2ab999e695cf10496e6fa3946079\",\"ccexpyr\":\"5da83563fcaa945063dc4c2094c48e800badf7c8246c9d13b43757fe99d63e6d\",\"is_seamless\":\"1\"},\"post_uri\":\"https:\\/\\/test.payu.in\\/hdfc_not_enrolled\",\"enrolled\":\"0\"}}"
+      read 691 bytes
+      Conn close
+      opening connection to test.payu.in:443...
+      opened
+      starting SSL for test.payu.in:443...
+      SSL established
+      <- "POST /hdfc_not_enrolled HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: identity\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: test.payu.in\r\nContent-Length: 520\r\n\r\n"
+      <- "transactionId=b84436e889cf6864a9fa2ab267f3f76a766ad6437b017ccb5093e8217996b814&pgId=8&eci=7&nonEnrolled=1&nonDomestic=0&bank=VISA&cccat=creditcard&ccnum=4b5c9002295c6cd8e5289e2f9c312dc737810a747b84e71665cf077c78fe245a&ccname=53ab689fdb1b025c7e9c53c6b4a6e27f51e0d627579e7c12af2cb6cbc4944cc0&ccvv=f31c6a1d6582f44ee1be4a3e1126b9cb08d1e7006f7afe083d7270b00dcb933f&ccexpmon=5ddf3702e74f473ec89762f6efece025737c2ab999e695cf10496e6fa3946079&ccexpyr=5da83563fcaa945063dc4c2094c48e800badf7c8246c9d13b43757fe99d63e6d&is_seamless=1"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Date: Fri, 08 May 2015 15:41:27 GMT\r\n"
+      -> "Server: Apache\r\n"
+      -> "P3P: CP=\"IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT\"\r\n"
+      -> "Set-Cookie: PHPSESSID=n717g1mr5lvht96ukdobu6m344; path=/; secure; HttpOnly\r\n"
+      -> "Expires: Thu, 19 Nov 1981 08:52:00 GMT\r\n"
+      -> "Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0\r\n"
+      -> "Pragma: no-cache\r\n"
+      -> "Vary: Accept-Encoding\r\n"
+      -> "Content-Length: 1012\r\n"
+      -> "Connection: close\r\n"
+      -> "Content-Type: text/html; charset=UTF-8\r\n"
+      -> "\r\n"
+      reading 1012 bytes...
+      -> ""
+      -> "{\"status\":\"success\",\"result\":\"mihpayid=403993715511983692&mode=CC&status=success&key=Gzv04m&txnid=19ceaa9a230d3057dba07b78ad5c7d46&amount=1.00&addedon=2015-05-08+21%3A11%3A17&productinfo=Store+Purchase&firstname=Longbob&lastname=&address1=&address2=&city=&state=&country=&zipcode=&email=unknown%40example.com&phone=11111111111&udf1=&udf2=&udf3=&udf4=&udf5=&udf6=&udf7=&udf8=&udf9=&udf10=&card_token=&card_no=512345XXXXXX2346&field0=&field1=512816420000&field2=999999&field3=6816991112151281&field4=-1&field5=&field6=&field7=&field8=&field9=SUCCESS&PG_TYPE=HDFCPG&error=E000&error_Message=No+Error&net_amount_debit=1&unmappedstatus=success&hash=c0d3e5346c37ddd32bb3b386ed1d0709a612d304180e7a25dcbf047cc1c3a4e9de9940af0179c6169c0038b2a826d7ea4b868fcbc4e435928e8cbd25da3c1e56&bank_ref_no=6816991112151281&bank_ref_num=6816991112151281&bankcode=VISA&surl=http%3A%2F%2Fexample.com&curl=http%3A%2F%2Fexample.com&furl=http%3A%2F%2Fexample.com&card_hash=f25e4f9ea802050c23423966d35adc54046f651f0d9a2b837b49c75f964d1fa7\"}"
+      read 1012 bytes
+      Conn close
     PRE_SCRUBBED
   end
 
   def post_scrubbed
-    <<-POST_SCRUBBED
-opening connection to test.payu.in:443...
-opened
-starting SSL for test.payu.in:443...
-SSL established
-<- "POST /_payment HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: identity\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: test.payu.in\r\nContent-Length: 460\r\n\r\n"
-<- "amount=1.00&txnid=19ceaa9a230d3057dba07b78ad5c7d46&productinfo=Store+Purchase&surl=http%3A%2F%2Fexample.com&furl=http%3A%2F%2Fexample.com&pg=CC&firstname=Longbob&bankcode=VISA&ccnum=[FILTERED]&ccvv=[FILTERED]&ccname=Longbob+Longsen&ccexpmon=5&ccexpyr=2017&email=unknown%40example.com&phone=11111111111&key=Gzv04m&txn_s2s_flow=1&hash=a255c1b5107556b7f00b7c5bbebf92392ec4d2c0675253ca20ef459d4259775efbeae039b59357ddd42374d278dedb432f2e9c238acc6358afe9b22cf908fbb3"
--> "HTTP/1.1 200 OK\r\n"
--> "Date: Fri, 08 May 2015 15:41:17 GMT\r\n"
--> "Server: Apache\r\n"
--> "P3P: CP=\"IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT\"\r\n"
--> "Set-Cookie: PHPSESSID=ud24vi12os6m7f7g0lpmked4a0; path=/; secure; HttpOnly\r\n"
--> "Expires: Thu, 19 Nov 1981 08:52:00 GMT\r\n"
--> "Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0\r\n"
--> "Pragma: no-cache\r\n"
--> "Vary: Accept-Encoding\r\n"
--> "Content-Length: 691\r\n"
--> "Connection: close\r\n"
--> "Content-Type: text/html; charset=UTF-8\r\n"
--> "\r\n"
-reading 691 bytes...
--> ""
--> "{\"status\":\"success\",\"response\":{\"form_post_vars\":{\"transactionId\":\"b84436e889cf6864a9fa2ab267f3f76a766ad6437b017ccb5093e8217996b814\",\"pgId\":\"8\",\"eci\":\"7\",\"nonEnrolled\":1,\"nonDomestic\":0,\"bank\":\"VISA\",\"cccat\":\"creditcard\",\"ccnum\":\"[FILTERED]\",\"ccname\":\"53ab689fdb1b025c7e9c53c6b4a6e27f51e0d627579e7c12af2cb6cbc4944cc0\",\"ccvv\":\"[FILTERED]\",\"ccexpmon\":\"5ddf3702e74f473ec89762f6efece025737c2ab999e695cf10496e6fa3946079\",\"ccexpyr\":\"5da83563fcaa945063dc4c2094c48e800badf7c8246c9d13b43757fe99d63e6d\",\"is_seamless\":\"1\"},\"post_uri\":\"https:\\/\\/test.payu.in\\/hdfc_not_enrolled\",\"enrolled\":\"0\"}}"
-read 691 bytes
-Conn close
-opening connection to test.payu.in:443...
-opened
-starting SSL for test.payu.in:443...
-SSL established
-<- "POST /hdfc_not_enrolled HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: identity\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: test.payu.in\r\nContent-Length: 520\r\n\r\n"
-<- "transactionId=b84436e889cf6864a9fa2ab267f3f76a766ad6437b017ccb5093e8217996b814&pgId=8&eci=7&nonEnrolled=1&nonDomestic=0&bank=VISA&cccat=creditcard&ccnum=[FILTERED]&ccname=53ab689fdb1b025c7e9c53c6b4a6e27f51e0d627579e7c12af2cb6cbc4944cc0&ccvv=[FILTERED]&ccexpmon=5ddf3702e74f473ec89762f6efece025737c2ab999e695cf10496e6fa3946079&ccexpyr=5da83563fcaa945063dc4c2094c48e800badf7c8246c9d13b43757fe99d63e6d&is_seamless=1"
--> "HTTP/1.1 200 OK\r\n"
--> "Date: Fri, 08 May 2015 15:41:27 GMT\r\n"
--> "Server: Apache\r\n"
--> "P3P: CP=\"IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT\"\r\n"
--> "Set-Cookie: PHPSESSID=n717g1mr5lvht96ukdobu6m344; path=/; secure; HttpOnly\r\n"
--> "Expires: Thu, 19 Nov 1981 08:52:00 GMT\r\n"
--> "Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0\r\n"
--> "Pragma: no-cache\r\n"
--> "Vary: Accept-Encoding\r\n"
--> "Content-Length: 1012\r\n"
--> "Connection: close\r\n"
--> "Content-Type: text/html; charset=UTF-8\r\n"
--> "\r\n"
-reading 1012 bytes...
--> ""
--> "{\"status\":\"success\",\"result\":\"mihpayid=403993715511983692&mode=CC&status=success&key=Gzv04m&txnid=19ceaa9a230d3057dba07b78ad5c7d46&amount=1.00&addedon=2015-05-08+21%3A11%3A17&productinfo=Store+Purchase&firstname=Longbob&lastname=&address1=&address2=&city=&state=&country=&zipcode=&email=unknown%40example.com&phone=11111111111&udf1=&udf2=&udf3=&udf4=&udf5=&udf6=&udf7=&udf8=&udf9=&udf10=&card_token=&card_no=512345XXXXXX2346&field0=&field1=512816420000&field2=999999&field3=6816991112151281&field4=-1&field5=&field6=&field7=&field8=&field9=SUCCESS&PG_TYPE=HDFCPG&error=E000&error_Message=No+Error&net_amount_debit=1&unmappedstatus=success&hash=c0d3e5346c37ddd32bb3b386ed1d0709a612d304180e7a25dcbf047cc1c3a4e9de9940af0179c6169c0038b2a826d7ea4b868fcbc4e435928e8cbd25da3c1e56&bank_ref_no=6816991112151281&bank_ref_num=6816991112151281&bankcode=VISA&surl=http%3A%2F%2Fexample.com&curl=http%3A%2F%2Fexample.com&furl=http%3A%2F%2Fexample.com&card_hash=[FILTERED]\"}"
-read 1012 bytes
-Conn close
+    <<~POST_SCRUBBED
+      opening connection to test.payu.in:443...
+      opened
+      starting SSL for test.payu.in:443...
+      SSL established
+      <- "POST /_payment HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: identity\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: test.payu.in\r\nContent-Length: 460\r\n\r\n"
+      <- "amount=1.00&txnid=19ceaa9a230d3057dba07b78ad5c7d46&productinfo=Store+Purchase&surl=http%3A%2F%2Fexample.com&furl=http%3A%2F%2Fexample.com&pg=CC&firstname=Longbob&bankcode=VISA&ccnum=[FILTERED]&ccvv=[FILTERED]&ccname=Longbob+Longsen&ccexpmon=5&ccexpyr=2017&email=unknown%40example.com&phone=11111111111&key=Gzv04m&txn_s2s_flow=1&hash=a255c1b5107556b7f00b7c5bbebf92392ec4d2c0675253ca20ef459d4259775efbeae039b59357ddd42374d278dedb432f2e9c238acc6358afe9b22cf908fbb3"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Date: Fri, 08 May 2015 15:41:17 GMT\r\n"
+      -> "Server: Apache\r\n"
+      -> "P3P: CP=\"IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT\"\r\n"
+      -> "Set-Cookie: PHPSESSID=ud24vi12os6m7f7g0lpmked4a0; path=/; secure; HttpOnly\r\n"
+      -> "Expires: Thu, 19 Nov 1981 08:52:00 GMT\r\n"
+      -> "Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0\r\n"
+      -> "Pragma: no-cache\r\n"
+      -> "Vary: Accept-Encoding\r\n"
+      -> "Content-Length: 691\r\n"
+      -> "Connection: close\r\n"
+      -> "Content-Type: text/html; charset=UTF-8\r\n"
+      -> "\r\n"
+      reading 691 bytes...
+      -> ""
+      -> "{\"status\":\"success\",\"response\":{\"form_post_vars\":{\"transactionId\":\"b84436e889cf6864a9fa2ab267f3f76a766ad6437b017ccb5093e8217996b814\",\"pgId\":\"8\",\"eci\":\"7\",\"nonEnrolled\":1,\"nonDomestic\":0,\"bank\":\"VISA\",\"cccat\":\"creditcard\",\"ccnum\":\"[FILTERED]\",\"ccname\":\"53ab689fdb1b025c7e9c53c6b4a6e27f51e0d627579e7c12af2cb6cbc4944cc0\",\"ccvv\":\"[FILTERED]\",\"ccexpmon\":\"5ddf3702e74f473ec89762f6efece025737c2ab999e695cf10496e6fa3946079\",\"ccexpyr\":\"5da83563fcaa945063dc4c2094c48e800badf7c8246c9d13b43757fe99d63e6d\",\"is_seamless\":\"1\"},\"post_uri\":\"https:\\/\\/test.payu.in\\/hdfc_not_enrolled\",\"enrolled\":\"0\"}}"
+      read 691 bytes
+      Conn close
+      opening connection to test.payu.in:443...
+      opened
+      starting SSL for test.payu.in:443...
+      SSL established
+      <- "POST /hdfc_not_enrolled HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: identity\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: test.payu.in\r\nContent-Length: 520\r\n\r\n"
+      <- "transactionId=b84436e889cf6864a9fa2ab267f3f76a766ad6437b017ccb5093e8217996b814&pgId=8&eci=7&nonEnrolled=1&nonDomestic=0&bank=VISA&cccat=creditcard&ccnum=[FILTERED]&ccname=53ab689fdb1b025c7e9c53c6b4a6e27f51e0d627579e7c12af2cb6cbc4944cc0&ccvv=[FILTERED]&ccexpmon=5ddf3702e74f473ec89762f6efece025737c2ab999e695cf10496e6fa3946079&ccexpyr=5da83563fcaa945063dc4c2094c48e800badf7c8246c9d13b43757fe99d63e6d&is_seamless=1"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Date: Fri, 08 May 2015 15:41:27 GMT\r\n"
+      -> "Server: Apache\r\n"
+      -> "P3P: CP=\"IDC DSP COR ADM DEVi TAIi PSA PSD IVAi IVDi CONi HIS OUR IND CNT\"\r\n"
+      -> "Set-Cookie: PHPSESSID=n717g1mr5lvht96ukdobu6m344; path=/; secure; HttpOnly\r\n"
+      -> "Expires: Thu, 19 Nov 1981 08:52:00 GMT\r\n"
+      -> "Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0\r\n"
+      -> "Pragma: no-cache\r\n"
+      -> "Vary: Accept-Encoding\r\n"
+      -> "Content-Length: 1012\r\n"
+      -> "Connection: close\r\n"
+      -> "Content-Type: text/html; charset=UTF-8\r\n"
+      -> "\r\n"
+      reading 1012 bytes...
+      -> ""
+      -> "{\"status\":\"success\",\"result\":\"mihpayid=403993715511983692&mode=CC&status=success&key=Gzv04m&txnid=19ceaa9a230d3057dba07b78ad5c7d46&amount=1.00&addedon=2015-05-08+21%3A11%3A17&productinfo=Store+Purchase&firstname=Longbob&lastname=&address1=&address2=&city=&state=&country=&zipcode=&email=unknown%40example.com&phone=11111111111&udf1=&udf2=&udf3=&udf4=&udf5=&udf6=&udf7=&udf8=&udf9=&udf10=&card_token=&card_no=512345XXXXXX2346&field0=&field1=512816420000&field2=999999&field3=6816991112151281&field4=-1&field5=&field6=&field7=&field8=&field9=SUCCESS&PG_TYPE=HDFCPG&error=E000&error_Message=No+Error&net_amount_debit=1&unmappedstatus=success&hash=c0d3e5346c37ddd32bb3b386ed1d0709a612d304180e7a25dcbf047cc1c3a4e9de9940af0179c6169c0038b2a826d7ea4b868fcbc4e435928e8cbd25da3c1e56&bank_ref_no=6816991112151281&bank_ref_num=6816991112151281&bankcode=VISA&surl=http%3A%2F%2Fexample.com&curl=http%3A%2F%2Fexample.com&furl=http%3A%2F%2Fexample.com&card_hash=[FILTERED]\"}"
+      read 1012 bytes
+      Conn close
     POST_SCRUBBED
   end
 

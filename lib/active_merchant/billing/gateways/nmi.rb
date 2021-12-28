@@ -27,7 +27,7 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      def purchase(amount, payment_method, options={})
+      def purchase(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method, options)
@@ -36,11 +36,12 @@ module ActiveMerchant #:nodoc:
         add_vendor_data(post, options)
         add_merchant_defined_fields(post, options)
         add_level3_fields(post, options)
+        add_three_d_secure(post, options)
 
         commit('sale', post)
       end
 
-      def authorize(amount, payment_method, options={})
+      def authorize(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method, options)
@@ -49,11 +50,12 @@ module ActiveMerchant #:nodoc:
         add_vendor_data(post, options)
         add_merchant_defined_fields(post, options)
         add_level3_fields(post, options)
+        add_three_d_secure(post, options)
 
         commit('auth', post)
       end
 
-      def capture(amount, authorization, options={})
+      def capture(amount, authorization, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_reference(post, authorization)
@@ -62,7 +64,7 @@ module ActiveMerchant #:nodoc:
         commit('capture', post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = {}
         add_reference(post, authorization)
         add_payment_type(post, authorization)
@@ -70,7 +72,7 @@ module ActiveMerchant #:nodoc:
         commit('void', post)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_reference(post, authorization)
@@ -79,7 +81,7 @@ module ActiveMerchant #:nodoc:
         commit('refund', post)
       end
 
-      def credit(amount, payment_method, options={})
+      def credit(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method, options)
@@ -90,7 +92,7 @@ module ActiveMerchant #:nodoc:
         commit('credit', post)
       end
 
-      def verify(payment_method, options={})
+      def verify(payment_method, options = {})
         post = {}
         add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
@@ -204,7 +206,8 @@ module ActiveMerchant #:nodoc:
           post[:stored_credential_indicator] = 'stored'
         else
           post[:stored_credential_indicator] = 'used'
-          post[:initial_transaction_id] = stored_credential[:network_transaction_id]
+          # should only send :initial_transaction_id if it is a MIT
+          post[:initial_transaction_id] = stored_credential[:network_transaction_id] if post[:initiated_by] == 'merchant'
         end
       end
 
@@ -234,6 +237,19 @@ module ActiveMerchant #:nodoc:
           post[:shipping_zip] = shipping_address[:zip]
           post[:shipping_phone] = shipping_address[:phone]
         end
+
+        if (descriptor = options[:descriptors])
+          post[:descriptor] = descriptor[:descriptor]
+          post[:descriptor_phone] = descriptor[:descriptor_phone]
+          post[:descriptor_address] = descriptor[:descriptor_address]
+          post[:descriptor_city] = descriptor[:descriptor_city]
+          post[:descriptor_state] = descriptor[:descriptor_state]
+          post[:descriptor_postal] = descriptor[:descriptor_postal]
+          post[:descriptor_country] = descriptor[:descriptor_country]
+          post[:descriptor_mcc] = descriptor[:descriptor_mcc]
+          post[:descriptor_merchant_id] = descriptor[:descriptor_merchant_id]
+          post[:descriptor_url] = descriptor[:descriptor_url]
+        end
       end
 
       def add_vendor_data(post, options)
@@ -246,6 +262,23 @@ module ActiveMerchant #:nodoc:
           key = "merchant_defined_field_#{each}".to_sym
           post[key] = options[key] if options[key]
         end
+      end
+
+      def add_three_d_secure(post, options)
+        three_d_secure = options[:three_d_secure]
+        return unless three_d_secure
+
+        post[:cardholder_auth] = cardholder_auth(three_d_secure[:authentication_response_status])
+        post[:cavv] = three_d_secure[:cavv]
+        post[:xid] = three_d_secure[:xid]
+        post[:three_ds_version] = three_d_secure[:version]
+        post[:directory_server_id] = three_d_secure[:ds_transaction_id]
+      end
+
+      def cardholder_auth(trans_status)
+        return nil if trans_status.nil?
+
+        trans_status == 'Y' ? 'verified' : 'attempted'
       end
 
       def add_reference(post, authorization)

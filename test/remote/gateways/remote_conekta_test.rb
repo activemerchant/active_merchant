@@ -34,7 +34,7 @@ class RemoteConektaTest < Test::Unit::TestCase
         country: 'Mexico',
         zip: '5555',
         name: 'Mario Reyes',
-        phone: '12345678',
+        phone: '12345678'
       },
       carrier: 'Estafeta',
       email: 'bob@something.com',
@@ -56,7 +56,7 @@ class RemoteConektaTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_installments
-    assert response = @gateway.purchase(@amount * 300, @credit_card, @options.merge({monthly_installments: 3}))
+    assert response = @gateway.purchase(@amount * 300, @credit_card, @options.merge({ monthly_installments: 3 }))
     assert_success response
     assert_equal nil, response.message
   end
@@ -143,7 +143,7 @@ class RemoteConektaTest < Test::Unit::TestCase
         city: 'Wanaque',
         state: 'NJ',
         country: 'USA',
-        zip: '01085',
+        zip: '01085'
       },
       line_items: [
         {

@@ -171,7 +171,7 @@ class NetworkConnectionRetriesTest < Test::Unit::TestCase
     @requester.expects(:post).raises(MyNewError)
 
     assert_raises(ActiveMerchant::ConnectionError) do
-      retry_exceptions connection_exceptions: {MyNewError => 'my message'} do
+      retry_exceptions connection_exceptions: { MyNewError => 'my message' } do
         @requester.post
       end
     end

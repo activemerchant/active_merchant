@@ -27,8 +27,7 @@ class AuthorizeNetArbTest < Test::Unit::TestCase
       duration: {
         start_date: Time.now.strftime('%Y-%m-%d'),
         occurrences: 30
-      }
-    )
+      })
 
     assert_instance_of Response, response
     assert response.success?
@@ -76,66 +75,66 @@ class AuthorizeNetArbTest < Test::Unit::TestCase
   private
 
   def successful_recurring_response
-    <<-XML
-<ARBCreateSubscriptionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
-  <refId>Sample</refId>
-  <messages>
-    <resultCode>Ok</resultCode>
-    <message>
-      <code>I00001</code>
-      <text>Successful.</text>
-    </message>
-  </messages>
-  <subscriptionId>#{@subscription_id}</subscriptionId>
-</ARBCreateSubscriptionResponse>
+    <<~XML
+      <ARBCreateSubscriptionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
+        <refId>Sample</refId>
+        <messages>
+          <resultCode>Ok</resultCode>
+          <message>
+            <code>I00001</code>
+            <text>Successful.</text>
+          </message>
+        </messages>
+        <subscriptionId>#{@subscription_id}</subscriptionId>
+      </ARBCreateSubscriptionResponse>
     XML
   end
 
   def successful_update_recurring_response
-    <<-XML
-<ARBUpdateSubscriptionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
-  <refId>Sample</refId>
-  <messages>
-    <resultCode>Ok</resultCode>
-    <message>
-      <code>I00001</code>
-      <text>Successful.</text>
-    </message>
-  </messages>
-  <subscriptionId>#{@subscription_id}</subscriptionId>
-</ARBUpdateSubscriptionResponse>
+    <<~XML
+      <ARBUpdateSubscriptionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
+        <refId>Sample</refId>
+        <messages>
+          <resultCode>Ok</resultCode>
+          <message>
+            <code>I00001</code>
+            <text>Successful.</text>
+          </message>
+        </messages>
+        <subscriptionId>#{@subscription_id}</subscriptionId>
+      </ARBUpdateSubscriptionResponse>
     XML
   end
 
   def successful_cancel_recurring_response
-    <<-XML
-<ARBCancelSubscriptionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
-  <refId>Sample</refId>
-  <messages>
-    <resultCode>Ok</resultCode>
-    <message>
-      <code>I00001</code>
-      <text>Successful.</text>
-    </message>
-  </messages>
-  <subscriptionId>#{@subscription_id}</subscriptionId>
-</ARBCancelSubscriptionResponse>
+    <<~XML
+      <ARBCancelSubscriptionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
+        <refId>Sample</refId>
+        <messages>
+          <resultCode>Ok</resultCode>
+          <message>
+            <code>I00001</code>
+            <text>Successful.</text>
+          </message>
+        </messages>
+        <subscriptionId>#{@subscription_id}</subscriptionId>
+      </ARBCancelSubscriptionResponse>
     XML
   end
 
   def successful_status_recurring_response
-    <<-XML
-<ARBGetSubscriptionStatusResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
-  <refId>Sample</refId>
-  <messages>
-    <resultCode>Ok</resultCode>
-    <message>
-      <code>I00001</code>
-      <text>Successful.</text>
-    </message>
-  </messages>
-  <Status>#{@subscription_status}</Status>
-</ARBGetSubscriptionStatusResponse>
+    <<~XML
+      <ARBGetSubscriptionStatusResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
+        <refId>Sample</refId>
+        <messages>
+          <resultCode>Ok</resultCode>
+          <message>
+            <code>I00001</code>
+            <text>Successful.</text>
+          </message>
+        </messages>
+        <Status>#{@subscription_status}</Status>
+      </ARBGetSubscriptionStatusResponse>
     XML
   end
 end

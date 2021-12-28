@@ -45,7 +45,7 @@ module ActiveMerchant #:nodoc:
         commit(build_reference_request(:credit, money, reference, options), options)
       end
 
-      def verify(payment, options={})
+      def verify(payment, options = {})
         if credit_card_type(payment) == 'Amex'
           MultiResponse.run(:use_first_response) do |r|
             r.process { authorize(100, payment, options) }
@@ -54,6 +54,10 @@ module ActiveMerchant #:nodoc:
         else
           authorize(0, payment, options)
         end
+      end
+
+      def store(payment, options = {})
+        raise ArgumentError, 'Store is not supported on Payflow gateways'
       end
 
       def verify_credentials
@@ -141,6 +145,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'FreightAmt', options[:freightamt] unless options[:freightamt].blank?
               xml.tag! 'DutyAmt', options[:dutyamt] unless options[:dutyamt].blank?
               xml.tag! 'DiscountAmt', options[:discountamt] unless options[:discountamt].blank?
+              xml.tag! 'MerchDescr', options[:merch_descr] unless options[:merch_descr].blank?
 
               billing_address = options[:billing_address] || options[:address]
               add_address(xml, 'BillTo', billing_address, options) if billing_address
@@ -154,6 +159,7 @@ module ActiveMerchant #:nodoc:
               end
             end
           end
+          xml.tag! 'ExtData', 'Name' => 'BUTTONSOURCE', 'Value' => application_id unless application_id.blank?
         end
         xml.target!
       end
@@ -175,6 +181,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'DutyAmt', options[:dutyamt] unless options[:dutyamt].blank?
               xml.tag! 'DiscountAmt', options[:discountamt] unless options[:discountamt].blank?
               xml.tag! 'EMail', options[:email] unless options[:email].nil?
+              xml.tag! 'MerchDescr', options[:merch_descr] unless options[:merch_descr].blank?
 
               billing_address = options[:billing_address] || options[:address]
               add_address(xml, 'BillTo', billing_address, options) if billing_address
@@ -187,6 +194,7 @@ module ActiveMerchant #:nodoc:
               add_credit_card(xml, credit_card, options)
             end
           end
+          xml.tag! 'ExtData', 'Name' => 'BUTTONSOURCE', 'Value' => application_id unless application_id.blank?
         end
         add_level_two_three_fields(xml.target!, options)
       end
@@ -237,6 +245,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'InvNum', options[:order_id].to_s.gsub(/[^\w.]/, '') unless options[:order_id].blank?
               xml.tag! 'Description', options[:description] unless options[:description].blank?
               xml.tag! 'OrderDesc', options[:order_desc] unless options[:order_desc].blank?
+              xml.tag! 'MerchDescr', options[:merch_descr] unless options[:merch_descr].blank?
               xml.tag! 'BillTo' do
                 xml.tag! 'Name', check.name
               end
@@ -250,6 +259,7 @@ module ActiveMerchant #:nodoc:
               end
             end
           end
+          xml.tag! 'ExtData', 'Name' => 'BUTTONSOURCE', 'Value' => application_id unless application_id.blank?
         end
         add_level_two_three_fields(xml.target!, options)
       end
@@ -279,16 +289,26 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'ECI', three_d_secure[:eci] unless three_d_secure[:eci].blank?
             xml.tag! 'CAVV', three_d_secure[:cavv] unless three_d_secure[:cavv].blank?
             xml.tag! 'XID', three_d_secure[:xid] unless three_d_secure[:xid].blank?
+            xml.tag! 'ThreeDSVersion', three_d_secure[:version] unless three_d_secure[:version].blank?
+            xml.tag! 'DSTransactionID', three_d_secure[:ds_transaction_id] unless three_d_secure[:ds_transaction_id].blank?
           end
         end
       end
 
       def authentication_status(three_d_secure, xml)
-        if three_d_secure[:authentication_response_status].present?
-          xml.tag! 'Status', three_d_secure[:authentication_response_status]
-        elsif three_d_secure[:directory_response_status].present?
-          xml.tag! 'Status', three_d_secure[:directory_response_status]
+        status = if three_d_secure[:authentication_response_status].present?
+                   three_d_secure[:authentication_response_status]
+                 elsif three_d_secure[:directory_response_status].present?
+                   three_d_secure[:directory_response_status]
+                 end
+        if status.present?
+          xml.tag! 'Status', status
+          xml.tag! 'AuthenticationStatus', status if version_2_or_newer?(three_d_secure)
         end
+      end
+
+      def version_2_or_newer?(three_d_secure)
+        three_d_secure[:version]&.start_with?('2')
       end
 
       def credit_card_type(credit_card)

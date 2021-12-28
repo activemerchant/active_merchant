@@ -38,9 +38,19 @@ class DLocalTest < Test::Unit::TestCase
 
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(installments: installments, installments_id: installments_id))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_equal installments, JSON.parse(data)['card']['installments']
       assert_equal installments_id, JSON.parse(data)['card']['installments_id']
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_purchase_with_additional_data
+    additional_data = { 'submerchant' => { 'name' => 'socks' } }
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(additional_data: additional_data))
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal additional_data, JSON.parse(data)['additional_risk_data']
     end.respond_with(successful_purchase_response)
   end
 
@@ -65,7 +75,7 @@ class DLocalTest < Test::Unit::TestCase
   def test_passing_billing_address
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, @credit_card, @options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/"state\":\"ON\"/, data)
       assert_match(/"city\":\"Ottawa\"/, data)
       assert_match(/"zip_code\":\"K1C2N6\"/, data)
@@ -77,7 +87,7 @@ class DLocalTest < Test::Unit::TestCase
   def test_passing_incomplete_billing_address
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, @credit_card, @options.merge(billing_address: address(address1: 'Just a Street')))
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/"state\":\"ON\"/, data)
       assert_match(/"city\":\"Ottawa\"/, data)
       assert_match(/"zip_code\":\"K1C2N6\"/, data)
@@ -88,7 +98,7 @@ class DLocalTest < Test::Unit::TestCase
   def test_passing_nil_address_1
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, @credit_card, @options.merge(billing_address: address(address1: nil)))
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       refute_match(/"street\"/, data)
     end.respond_with(successful_authorize_response)
   end
@@ -96,7 +106,7 @@ class DLocalTest < Test::Unit::TestCase
   def test_passing_country_as_string
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, @credit_card, @options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/"country\":\"CA\"/, data)
     end.respond_with(successful_authorize_response)
   end
@@ -104,7 +114,7 @@ class DLocalTest < Test::Unit::TestCase
   def test_invalid_country
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, @credit_card, @options.merge(billing_address: address(country: 'INVALID')))
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/\"country\":null/, data)
     end.respond_with(successful_authorize_response)
   end
@@ -179,34 +189,33 @@ class DLocalTest < Test::Unit::TestCase
   end
 
   def test_successful_verify
-    @gateway.expects(:ssl_request).times(2).returns(successful_authorize_response, successful_void_response)
+    @gateway.expects(:ssl_post).returns(successful_verify_response)
 
     response = @gateway.verify(@credit_card, @options)
     assert_success response
 
-    assert_equal 'D-15104-be03e883-3e6b-497d-840e-54c8b6209bc3', response.authorization
-  end
-
-  def test_successful_verify_with_failed_void
-    @gateway.expects(:ssl_request).times(2).returns(successful_authorize_response, failed_void_response)
-
-    response = @gateway.verify(@credit_card, @options)
-    assert_success response
-
-    assert_equal 'D-15104-be03e883-3e6b-497d-840e-54c8b6209bc3', response.authorization
+    assert_equal 'T-15104-bb204de6-2708-4398-955f-2b16cf633687', response.authorization
   end
 
   def test_failed_verify
-    @gateway.expects(:ssl_post).returns(failed_authorize_response)
+    @gateway.expects(:ssl_post).returns(failed_verify_response)
 
     response = @gateway.verify(@credit_card, @options)
     assert_failure response
-    assert_equal '309', response.error_code
+    assert_equal '315', response.error_code
   end
 
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
+  def test_api_version_param_header
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, _data, headers|
+      assert_equal '2.1', headers['X-Version']
+    end.respond_with(successful_purchase_response)
   end
 
   private
@@ -275,6 +284,14 @@ class DLocalTest < Test::Unit::TestCase
 
   def failed_capture_response
     '{"code":4000,"message":"Payment not found"}'
+  end
+
+  def successful_verify_response
+    '{"id":"T-15104-bb204de6-2708-4398-955f-2b16cf633687","amount":0,"currency":"BRL","payment_method_id":"CARD","payment_method_type":"CARD","payment_method_flow":"DIRECT","country":"BR","card":{"holder_name":"Longbob Longsen", "expiration_month":9, "expiration_year":2022, "brand":"VI", "last4":"1111", "verify":true},"three_dsecure":{},"created_date":"2021-11-05T19:54:34.000+0000","approved_date":"2021-11-05T19:54:35.000+0000","status":"VERIFIED","status_detail":"The payment was verified.","status_code":"700","order_id":"e3ec1f40e9cb06b2d9c61f35bd5115e9"}'
+  end
+
+  def failed_verify_response
+    '{"id":"T-15104-585b4fb0-8fc5-4ae2-bb87-41218b744ca0","amount":0,"currency":"BRL","payment_method_id":"CARD","payment_method_type":"CARD","payment_method_flow":"DIRECT","country":"BR","card":{"holder_name":"Longbob Longsen", "expiration_month":9, "expiration_year":2022, "brand":"VI", "last4":"1111", "verify":true},"three_dsecure":{},"created_date":"2021-11-05T19:54:34.000+0000","status":"REJECTED","status_detail":"Invalid security code.","status_code":"315","order_id":"e013030bd5a7330a5d490247a9ca2bf47","description":"315"}'
   end
 
   def successful_refund_response

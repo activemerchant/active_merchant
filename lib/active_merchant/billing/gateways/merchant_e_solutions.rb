@@ -169,8 +169,7 @@ module ActiveMerchant #:nodoc:
           authorization: response['transaction_id'],
           test: test?,
           cvv_result: response['cvv2_result'],
-          avs_result: { code: response['avs_result'] }
-        )
+          avs_result: { code: response['avs_result'] })
       end
 
       def message_from(response)

@@ -21,7 +21,7 @@ module ActiveMerchant #:nodoc:
       CECA_UI_LESS_REFUND_PAGE = 'anulacion_xml'
       CECA_ACTION_REFUND   = 'anulaciones/anularParcial' # use partial refund's URL to avoid time frame limitations and decision logic on client side
       CECA_ACTION_PURCHASE = 'tpv/compra'
-      CECA_CURRENCIES_DICTIONARY = {'EUR' => 978, 'USD' => 840, 'GBP' => 826}
+      CECA_CURRENCIES_DICTIONARY = { 'EUR' => 978, 'USD' => 840, 'GBP' => 826 }
 
       # Creates a new CecabankGateway
       #
@@ -57,14 +57,14 @@ module ActiveMerchant #:nodoc:
       def purchase(money, creditcard, options = {})
         requires!(options, :order_id)
 
-        post = {'Descripcion' => options[:description],
+        post = { 'Descripcion' => options[:description],
                 'Num_operacion' => options[:order_id],
                 'Idioma' => CECA_UI_LESS_LANGUAGE,
                 'Pago_soportado' => CECA_MODE,
                 'URL_OK' => CECA_NOTIFICATIONS_URL,
                 'URL_NOK' => CECA_NOTIFICATIONS_URL,
                 'Importe' => amount(money),
-                'TipoMoneda' => CECA_CURRENCIES_DICTIONARY[options[:currency] || currency(money)]}
+                'TipoMoneda' => CECA_CURRENCIES_DICTIONARY[options[:currency] || currency(money)] }
 
         add_creditcard(post, creditcard)
 
@@ -84,12 +84,12 @@ module ActiveMerchant #:nodoc:
       def refund(money, identification, options = {})
         reference, order_id = split_authorization(identification)
 
-        post = {'Referencia' => reference,
+        post = { 'Referencia' => reference,
                 'Num_operacion' => order_id,
                 'Idioma' => CECA_UI_LESS_LANGUAGE_REFUND,
                 'Pagina' => CECA_UI_LESS_REFUND_PAGE,
                 'Importe' => amount(money),
-                'TipoMoneda' => CECA_CURRENCIES_DICTIONARY[options[:currency] || currency(money)]}
+                'TipoMoneda' => CECA_CURRENCIES_DICTIONARY[options[:currency] || currency(money)] }
 
         commit(CECA_ACTION_REFUND, post)
       end

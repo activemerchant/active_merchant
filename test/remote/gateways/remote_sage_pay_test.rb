@@ -133,8 +133,7 @@ class RemoteSagePayTest < Test::Unit::TestCase
 
     assert refund = @gateway.refund(@amount, capture.authorization,
       description: 'Crediting trx',
-      order_id: generate_unique_id
-    )
+      order_id: generate_unique_id)
     assert_success refund
   end
 
@@ -160,8 +159,7 @@ class RemoteSagePayTest < Test::Unit::TestCase
 
     assert refund = @gateway.refund(@amount, purchase.authorization,
       description: 'Crediting trx',
-      order_id: generate_unique_id
-    )
+      order_id: generate_unique_id)
 
     assert_success refund
   end
@@ -414,56 +412,56 @@ class RemoteSagePayTest < Test::Unit::TestCase
   # Based on example from http://www.sagepay.co.uk/support/basket-xml
   # Only kept required fields to make sense
   def basket_xml
-    <<-XML
-<basket>
-  <item>
-    <description>DVD 1</description>
-    <quantity>2</quantity>
-    <unitNetAmount>24.50</unitNetAmount>
-    <unitTaxAmount>00.50</unitTaxAmount>
-    <unitGrossAmount>25.00</unitGrossAmount>
-    <totalGrossAmount>50.00</totalGrossAmount>
-  </item>
- </basket>
+    <<~XML
+      <basket>
+        <item>
+          <description>DVD 1</description>
+          <quantity>2</quantity>
+          <unitNetAmount>24.50</unitNetAmount>
+          <unitTaxAmount>00.50</unitTaxAmount>
+          <unitGrossAmount>25.00</unitGrossAmount>
+          <totalGrossAmount>50.00</totalGrossAmount>
+        </item>
+       </basket>
     XML
   end
 
   # Example from http://www.sagepay.co.uk/support/customer-xml
   def customer_xml
-    <<-XML
-<customer>
-  <customerMiddleInitial>W</customerMiddleInitial>
-  <customerBirth>1983-01-01</customerBirth>
-  <customerWorkPhone>020 1234567</customerWorkPhone>
-  <customerMobilePhone>0799 1234567</customerMobilePhone>
-  <previousCust>0</previousCust>
-  <timeOnFile>10</timeOnFile>
-  <customerId>CUST123</customerId>
-</customer>
+    <<~XML
+      <customer>
+        <customerMiddleInitial>W</customerMiddleInitial>
+        <customerBirth>1983-01-01</customerBirth>
+        <customerWorkPhone>020 1234567</customerWorkPhone>
+        <customerMobilePhone>0799 1234567</customerMobilePhone>
+        <previousCust>0</previousCust>
+        <timeOnFile>10</timeOnFile>
+        <customerId>CUST123</customerId>
+      </customer>
     XML
   end
 
   # Example from https://www.sagepay.co.uk/support/12/36/protocol-3-00-surcharge-xml
   def surcharge_xml
-    <<-XML
-<surcharges>
-  <surcharge>
-    <paymentType>DELTA</paymentType>
-    <fixed>2.50</fixed>
-  </surcharge>
-  <surcharge>
-    <paymentType>VISA</paymentType>
-    <fixed>2.50</fixed>
-  </surcharge>
-  <surcharge>
-    <paymentType>AMEX</paymentType>
-    <percentage>1.50</percentage>
-  </surcharge>
-  <surcharge>
-    <paymentType>MC</paymentType>
-    <percentage>1.50</percentage>
-  </surcharge>
-</surcharges>
+    <<~XML
+      <surcharges>
+        <surcharge>
+          <paymentType>DELTA</paymentType>
+          <fixed>2.50</fixed>
+        </surcharge>
+        <surcharge>
+          <paymentType>VISA</paymentType>
+          <fixed>2.50</fixed>
+        </surcharge>
+        <surcharge>
+          <paymentType>AMEX</paymentType>
+          <percentage>1.50</percentage>
+        </surcharge>
+        <surcharge>
+          <paymentType>MC</paymentType>
+          <percentage>1.50</percentage>
+        </surcharge>
+      </surcharges>
     XML
   end
 end

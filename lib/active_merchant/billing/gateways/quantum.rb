@@ -219,8 +219,7 @@ module ActiveMerchant #:nodoc:
           test: test?,
           authorization: authorization,
           avs_result: { code: response[:AVSResponseCode] },
-          cvv_result: response[:CVV2ResponseCode]
-        )
+          cvv_result: response[:CVV2ResponseCode])
       end
 
       # Parse the SOAP response

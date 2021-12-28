@@ -6,7 +6,7 @@ class TrustCommerceTest < Test::Unit::TestCase
 
     @credit_card = credit_card('4111111111111111')
     @declined_credit_card = credit_card('4111111111111112')
-    @check = check({account_number: 55544433221, routing_number: 789456124})
+    @check = check({ account_number: 55544433221, routing_number: 789456124 })
 
     @amount = 100
 
@@ -211,6 +211,15 @@ class TrustCommerceTest < Test::Unit::TestCase
 
     assert_scrubbed(@credit_card.number, clean_transcript)
     assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
+  end
+
+  def test_transcript_scrubbing_echeck
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @check, @options)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@check.account_number, clean_transcript)
   end
 
   private

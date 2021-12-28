@@ -42,7 +42,7 @@ module ActiveMerchant #:nodoc:
         discover: 'Discover',
         american_express: 'Amex',
         jcb: 'JCB',
-        diners_club: 'DinersClub',
+        diners_club: 'DinersClub'
       }
 
       TRANSACTIONS = {
@@ -118,6 +118,7 @@ module ActiveMerchant #:nodoc:
               xml.tag!('Description', options[:description]) unless options[:description].blank?
               xml.tag!('Comment', options[:comment]) unless options[:comment].blank?
               xml.tag!('ExtData', 'Name' => 'COMMENT2', 'Value' => options[:comment2]) unless options[:comment2].blank?
+              xml.tag!('MerchDescr', options[:merch_descr]) unless options[:merch_descr].blank?
               xml.tag!(
                 'ExtData',
                 'Name' => 'CAPTURECOMPLETE',

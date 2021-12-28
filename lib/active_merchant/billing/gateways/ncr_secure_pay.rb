@@ -13,12 +13,12 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://www.ncrretailonline.com'
       self.display_name = 'NCR Secure Pay'
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :username, :password)
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         post = {}
         add_invoice(post, money, options)
         add_payment(post, payment)
@@ -27,7 +27,7 @@ module ActiveMerchant #:nodoc:
         commit('sale', post)
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         post = {}
         add_invoice(post, money, options)
         add_payment(post, payment)
@@ -36,7 +36,7 @@ module ActiveMerchant #:nodoc:
         commit('preauth', post)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         post = {}
         add_reference(post, authorization)
         add_invoice(post, money, options)
@@ -44,7 +44,7 @@ module ActiveMerchant #:nodoc:
         commit('preauthcomplete', post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         post = {}
         add_reference(post, authorization)
         add_invoice(post, money, options)
@@ -52,13 +52,13 @@ module ActiveMerchant #:nodoc:
         commit('credit', post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = {}
         add_reference(post, authorization)
         commit('void', post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }

@@ -1,6 +1,6 @@
 # Active Merchant
-[![Build Status](https://travis-ci.org/activemerchant/active_merchant.png?branch=master)](https://travis-ci.org/activemerchant/active_merchant)
-[![Code Climate](https://codeclimate.com/github/activemerchant/active_merchant.png)](https://codeclimate.com/github/activemerchant/active_merchant)
+[![Build Status](https://github.com/activemerchant/active_merchant/workflows/CI/badge.svg?branch=master)](https://github.com/activemerchant/active_merchant/actions?query=workflow%3ACI)
+[![Code Climate](https://codeclimate.com/github/activemerchant/active_merchant.svg)](https://codeclimate.com/github/activemerchant/active_merchant)
 
 Active Merchant is an extraction from the ecommerce system [Shopify](http://www.shopify.com).
 Shopify's requirements for a simple and unified API to access dozens of different payment
@@ -17,7 +17,7 @@ from an ever-growing set of contributors.
 See [GettingStarted.md](GettingStarted.md) if you want to learn more about using Active Merchant in your
 applications.
 
-If you'd like to contribute to Active Merchant, please start with our [contribution guide](CONTRIBUTING.md).
+If you'd like to contribute to Active Merchant, please start with our [Contribution Guide](https://github.com/activemerchant/active_merchant/wiki/Contributing).
 
 ## Installation
 
@@ -80,6 +80,8 @@ if credit_card.validate.empty?
   end
 end
 ```
+
+## Contributing
 
 For more in-depth documentation and tutorials, see [GettingStarted.md](GettingStarted.md) and the
 [API documentation](http://www.rubydoc.info/github/activemerchant/active_merchant/).
@@ -158,7 +160,7 @@ The [ActiveMerchant Wiki](https://github.com/activemerchant/active_merchant/wiki
 * [Metrics Global](http://www.metricsglobal.com) - US
 * [MasterCard Internet Gateway Service (MiGS)](http://mastercard.com/mastercardsps) - AU, AE, BD, BN, EG, HK, ID, IN, JO, KW, LB, LK, MU, MV, MY, NZ, OM, PH, QA, SA, SG, TT, VN
 * [Modern Payments](http://www.modpay.com) - US
-* [MONEI](http://www.monei.net/) - AD, AT, BE, BG, CA, CH, CY, CZ, DE, DK, EE, ES, FI, FO, FR, GB, GI, GR, HU, IE, IL, IS, IT, LI, LT, LU, LV, MT, NL, NO, PL, PT, RO, SE, SI, SK, TR, US, VA
+* [MONEI](http://www.monei.com/) - AD, AT, BE, BG, CA, CH, CY, CZ, DE, DK, EE, ES, FI, FO, FR, GB, GI, GR, HU, IE, IL, IS, IT, LI, LT, LU, LV, MT, NL, NO, PL, PT, RO, SE, SI, SK, TR, US, VA
 * [Moneris](http://www.moneris.com/) - CA
 * [MoneyMovers](http://mmoa.us/) - US
 * [NAB Transact](http://transact.nab.com.au) - AU

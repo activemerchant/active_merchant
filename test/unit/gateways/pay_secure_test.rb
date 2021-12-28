@@ -50,22 +50,22 @@ class PaySecureTest < Test::Unit::TestCase
   private
 
   def successful_purchase_response
-    <<-RESPONSE
-Status: Accepted
-SettlementDate: 2007-10-09
-AUTHNUM: 2778
-ErrorString: No Error
-CardBin: 1
-ERROR: 0
-TransID: SimProxy 54041670
+    <<~RESPONSE
+      Status: Accepted
+      SettlementDate: 2007-10-09
+      AUTHNUM: 2778
+      ErrorString: No Error
+      CardBin: 1
+      ERROR: 0
+      TransID: SimProxy 54041670
     RESPONSE
   end
 
   def failure_response
-    <<-RESPONSE
-Status: Declined
-ErrorString: Field value '8f796cb29a1be32af5ce12d4ca7425c2' does not match required format.
-ERROR: 1
+    <<~RESPONSE
+      Status: Declined
+      ErrorString: Field value '8f796cb29a1be32af5ce12d4ca7425c2' does not match required format.
+      ERROR: 1
     RESPONSE
   end
 end

@@ -123,7 +123,7 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
       shopper_reference: 'John Smith',
       billing_address: address(),
       order_id: '123',
-      stored_credential: {reason_type: 'unscheduled'},
+      stored_credential: { reason_type: 'unscheduled' },
       three_ds_2: {
         channel: 'browser',
         browser_info: {
@@ -254,9 +254,9 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
       shopper_reference: 'John Smith',
       billing_address: address(),
       order_id: '123',
-      stored_credential: {reason_type: 'unscheduled'},
+      stored_credential: { reason_type: 'unscheduled' },
       three_ds_2: {
-        channel: 'app',
+        channel: 'app'
       }
     }
 
@@ -342,7 +342,7 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
   end
 
   def test_successful_third_party_payout
-    response = @gateway.credit(@amount, @credit_card, @options_with_credit_fields.merge({third_party_payout: true}))
+    response = @gateway.credit(@amount, @credit_card, @options_with_credit_fields.merge({ third_party_payout: true }))
     assert_success response
   end
 

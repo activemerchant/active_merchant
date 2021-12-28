@@ -36,20 +36,20 @@ module ActiveMerchant #:nodoc:
         50000 => 'Clearhaus error'
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :api_key)
         options[:private_key] = options[:private_key].strip if options[:private_key]
         super
       end
 
-      def purchase(amount, payment, options={})
+      def purchase(amount, payment, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(amount, payment, options) }
           r.process { capture(amount, r.authorization, options) }
         end
       end
 
-      def authorize(amount, payment, options={})
+      def authorize(amount, payment, options = {})
         post = {}
         add_invoice(post, amount, options)
 
@@ -69,14 +69,14 @@ module ActiveMerchant #:nodoc:
         commit(action, post)
       end
 
-      def capture(amount, authorization, options={})
+      def capture(amount, authorization, options = {})
         post = {}
         add_invoice(post, amount, options)
 
         commit("/authorizations/#{authorization}/captures", post)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, options = {})
         post = {}
         add_amount(post, amount, options)
 
@@ -87,14 +87,14 @@ module ActiveMerchant #:nodoc:
         commit("/authorizations/#{authorization}/voids", options)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(0, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
         end
       end
 
-      def store(credit_card, options={})
+      def store(credit_card, options = {})
         post = {}
         add_payment(post, credit_card)
 

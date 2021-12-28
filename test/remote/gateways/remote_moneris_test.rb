@@ -278,20 +278,20 @@ class MonerisRemoteTest < Test::Unit::TestCase
   def test_cvv_match_when_not_enabled
     assert response = @gateway.purchase(1039, @credit_card, @options)
     assert_success response
-    assert_equal({'code' => nil, 'message' => nil}, response.cvv_result)
+    assert_equal({ 'code' => nil, 'message' => nil }, response.cvv_result)
   end
 
   def test_cvv_no_match_when_not_enabled
     assert response = @gateway.purchase(1053, @credit_card, @options)
     assert_success response
-    assert_equal({'code' => nil, 'message' => nil}, response.cvv_result)
+    assert_equal({ 'code' => nil, 'message' => nil }, response.cvv_result)
   end
 
   def test_cvv_match_when_enabled
     gateway = MonerisGateway.new(fixtures(:moneris).merge(cvv_enabled: true))
     assert response = gateway.purchase(1039, @credit_card, @options)
     assert_success response
-    assert_equal({'code' => 'M', 'message' => 'CVV matches'}, response.cvv_result)
+    assert_equal({ 'code' => 'M', 'message' => 'CVV matches' }, response.cvv_result)
   end
 
   def test_avs_result_valid_when_enabled

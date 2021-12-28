@@ -27,7 +27,7 @@ class OppTest < Test::Unit::TestCase
         city:     'Istambul',
         state:    'IS',
         zip:      'H12JK2354',
-        country:  'TR',
+        country:  'TR'
       },
       shipping_address: {
         name:     '',
@@ -35,7 +35,7 @@ class OppTest < Test::Unit::TestCase
         city:     'Moskau',
         state:    'MO',
         zip:      'MO2342432',
-        country:  'RU',
+        country:  'RU'
       },
       customer: {
         merchant_customer_id:  "merchantCustomerId #{ip}",
@@ -48,13 +48,13 @@ class OppTest < Test::Unit::TestCase
         company_name:  'No such deal Ltd.',
         identification_doctype:  'PASSPORT',
         identification_docid:  'FakeID2342431234123',
-        ip:  ip,
-      },
+        ip:  ip
+      }
     }
 
     @minimal_request_options = {
       order_id: "Order #{time}",
-      description: 'Store Purchase - Books',
+      description: 'Store Purchase - Books'
     }
 
     @complete_request_options['customParameters[SHOPPER_test124TestName009]'] = 'customParameters_test'
@@ -173,11 +173,11 @@ class OppTest < Test::Unit::TestCase
   end
 
   def test_passes_3d_secure_fields
-    options = @complete_request_options.merge({eci: 'eci', cavv: 'cavv', xid: 'xid'})
+    options = @complete_request_options.merge({ eci: 'eci', cavv: 'cavv', xid: 'xid' })
 
     response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.purchase(@amount, @valid_card, options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/threeDSecure.eci=eci/, data)
       assert_match(/threeDSecure.verificationId=cavv/, data)
       assert_match(/threeDSecure.xid=xid/, data)
@@ -224,8 +224,7 @@ class OppTest < Test::Unit::TestCase
         'buildNumber' => '20150618-111601.r185004.opp-tags-20150618_stage',
         'timestamp' => '2015-06-20 19:31:01+0000',
         'ndc' => '8a8294174b7ecb28014b9699220015ca_4453edbc001f405da557c05cb3c3add9'
-      })
-    )
+      }))
   end
 
   def successful_store_response(id)
@@ -246,11 +245,10 @@ class OppTest < Test::Unit::TestCase
         'buildNumber' => '20150618-111601.r185004.opp-tags-20150618_stage',
         'timestamp' => '2015-06-20 19:31:01+0000',
         'ndc' => '8a8294174b7ecb28014b9699220015ca_4453edbc001f405da557c05cb3c3add9'
-      })
-    )
+      }))
   end
 
-  def failed_response(type, id, code='100.100.101')
+  def failed_response(type, id, code = '100.100.101')
     OppMockResponse.new(400,
       JSON.generate({
         'id' => id,
@@ -270,11 +268,10 @@ class OppTest < Test::Unit::TestCase
         'buildNumber' => '20150618-111601.r185004.opp-tags-20150618_stage',
         'timestamp' => '2015-06-20 20:40:26+0000',
         'ndc' => '8a8294174b7ecb28014b9699220015ca_5200332e7d664412a84ed5f4777b3c7d'
-      })
-    )
+      }))
   end
 
-  def failed_store_response(id, code='100.100.101')
+  def failed_store_response(id, code = '100.100.101')
     OppMockResponse.new(400,
       JSON.generate({
         'id' => id,
@@ -292,8 +289,7 @@ class OppTest < Test::Unit::TestCase
         'buildNumber' => '20150618-111601.r185004.opp-tags-20150618_stage',
         'timestamp' => '2015-06-20 20:40:26+0000',
         'ndc' => '8a8294174b7ecb28014b9699220015ca_5200332e7d664412a84ed5f4777b3c7d'
-      })
-    )
+      }))
   end
 
   class OppMockResponse

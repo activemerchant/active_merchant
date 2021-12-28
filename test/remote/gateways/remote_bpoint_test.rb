@@ -41,7 +41,7 @@ class RemoteBpointTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_more_options
-    response = @gateway.purchase(@amount, @credit_card, @options.merge({ crn1: 'ref'}))
+    response = @gateway.purchase(@amount, @credit_card, @options.merge({ crn1: 'ref' }))
     assert_success response
     assert_equal 'Approved', response.message
   end

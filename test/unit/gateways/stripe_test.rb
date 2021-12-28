@@ -31,7 +31,7 @@ class StripeTest < Test::Unit::TestCase
     @check = check({
       bank_name: 'STRIPE TEST BANK',
       account_number: '000123456789',
-      routing_number: '110000000',
+      routing_number: '110000000'
     })
   end
 
@@ -287,7 +287,7 @@ class StripeTest < Test::Unit::TestCase
   def test_passing_validate_false_on_store
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.store(@credit_card, validate: false)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/validate=false/, data)
     end.respond_with(successful_new_customer_response)
 
@@ -297,7 +297,7 @@ class StripeTest < Test::Unit::TestCase
   def test_empty_values_not_sent
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, referrer: '')
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       refute_match(/referrer/, data)
     end.respond_with(successful_purchase_response)
 
@@ -368,7 +368,7 @@ class StripeTest < Test::Unit::TestCase
 
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/statement_descriptor_suffix=suffix/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -390,7 +390,7 @@ class StripeTest < Test::Unit::TestCase
 
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/transfer_data\[destination\]=#{destination}/, data)
       assert_match(/transfer_data\[amount\]=#{amount}/, data)
       assert_match(/on_behalf_of=#{on_behalf_of}/, data)
@@ -545,8 +545,8 @@ class StripeTest < Test::Unit::TestCase
     }
 
     response = stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, 'cus_xxx|card_xxx', @options.merge({application: application}))
-    end.check_request do |method, endpoint, data, headers|
+      @gateway.purchase(@amount, 'cus_xxx|card_xxx', @options.merge({ application: application }))
+    end.check_request do |_method, _endpoint, _data, headers|
       assert_match(/\"application\"/, headers['X-Stripe-Client-User-Agent'])
       assert_match(/\"name\":\"app\"/, headers['X-Stripe-Client-User-Agent'])
       assert_match(/\"version\":\"1.0\"/, headers['X-Stripe-Client-User-Agent'])
@@ -559,7 +559,7 @@ class StripeTest < Test::Unit::TestCase
   def test_successful_purchase_with_token_including_customer
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, 'cus_xxx|card_xxx')
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/customer=cus_xxx/, data)
       assert_match(/card=card_xxx/, data)
     end.respond_with(successful_purchase_response)
@@ -570,7 +570,7 @@ class StripeTest < Test::Unit::TestCase
   def test_successful_purchase_with_token
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, 'card_xxx')
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/card=card_xxx/, data)
     end.respond_with(successful_purchase_response)
 
@@ -580,7 +580,7 @@ class StripeTest < Test::Unit::TestCase
   def test_successful_purchase_with_statement_description
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, statement_description: '5K RACE TICKET')
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/statement_descriptor=5K\+RACE\+TICKET/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -631,7 +631,7 @@ class StripeTest < Test::Unit::TestCase
       post.include?('metadata[first_value]=true')
     end.returns(successful_purchase_response(true))
 
-    assert response = @gateway.void('ch_test_charge', {metadata: {first_value: true}})
+    assert response = @gateway.void('ch_test_charge', { metadata: { first_value: true } })
     assert_success response
   end
 
@@ -640,7 +640,7 @@ class StripeTest < Test::Unit::TestCase
       post.include?('reason=fraudulent')
     end.returns(successful_purchase_response(true))
 
-    assert response = @gateway.void('ch_test_charge', {reason: 'fraudulent'})
+    assert response = @gateway.void('ch_test_charge', { reason: 'fraudulent' })
     assert_success response
   end
 
@@ -670,7 +670,7 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def test_successful_refund_with_refund_application_fee
-    @gateway.expects(:ssl_request).with do |method, url, post, headers|
+    @gateway.expects(:ssl_request).with do |_method, _url, post, _headers|
       post.include?('refund_application_fee=true')
     end.returns(successful_partially_refunded_response)
 
@@ -709,18 +709,18 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def test_successful_refund_with_metadata
-    @gateway.expects(:ssl_request).with do |method, url, post, headers|
+    @gateway.expects(:ssl_request).with do |_method, _url, post, _headers|
       post.include?('metadata[first_value]=true')
     end.returns(successful_partially_refunded_response)
 
-    assert response = @gateway.refund(@refund_amount, 'ch_test_charge', {metadata: {first_value: true}})
+    assert response = @gateway.refund(@refund_amount, 'ch_test_charge', { metadata: { first_value: true } })
     assert_success response
   end
 
   def test_successful_refund_with_reverse_transfer
     stub_comms(@gateway, :ssl_request) do
       @gateway.refund(@amount, 'auth', reverse_transfer: true)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/reverse_transfer=true/, data)
     end.respond_with(successful_partially_refunded_response)
   end
@@ -952,8 +952,7 @@ class StripeTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: '111111111100cryptogram',
       verification_value: nil,
-      eci: '7'
-    )
+      eci: '7')
 
     @gateway.send(:add_creditcard, post, credit_card, {})
 
@@ -962,57 +961,77 @@ class StripeTest < Test::Unit::TestCase
 
   def test_application_fee_is_submitted_for_purchase
     stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @credit_card, @options.merge({application_fee: 144}))
-    end.check_request do |method, endpoint, data, headers|
+      @gateway.purchase(@amount, @credit_card, @options.merge({ application_fee: 144 }))
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/application_fee=144/, data)
     end.respond_with(successful_purchase_response)
   end
 
   def test_application_fee_is_submitted_for_capture
     stub_comms(@gateway, :ssl_request) do
-      @gateway.capture(@amount, 'ch_test_charge', @options.merge({application_fee: 144}))
-    end.check_request do |method, endpoint, data, headers|
+      @gateway.capture(@amount, 'ch_test_charge', @options.merge({ application_fee: 144 }))
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/application_fee=144/, data)
     end.respond_with(successful_capture_response)
   end
 
   def test_exchange_rate_is_submitted_for_purchase
     stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @credit_card, @options.merge({exchange_rate: 0.96251}))
-    end.check_request do |method, endpoint, data, headers|
+      @gateway.purchase(@amount, @credit_card, @options.merge({ exchange_rate: 0.96251 }))
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/exchange_rate=0.96251/, data)
     end.respond_with(successful_purchase_response)
   end
 
   def test_exchange_rate_is_submitted_for_capture
     stub_comms(@gateway, :ssl_request) do
-      @gateway.capture(@amount, 'ch_test_charge', @options.merge({exchange_rate: 0.96251}))
-    end.check_request do |method, endpoint, data, headers|
+      @gateway.capture(@amount, 'ch_test_charge', @options.merge({ exchange_rate: 0.96251 }))
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/exchange_rate=0.96251/, data)
     end.respond_with(successful_capture_response)
   end
 
   def test_destination_is_submitted_for_purchase
     stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @credit_card, @options.merge({destination: 'subaccountid'}))
-    end.check_request do |method, endpoint, data, headers|
+      @gateway.purchase(@amount, @credit_card, @options.merge({ destination: 'subaccountid' }))
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/destination\[account\]=subaccountid/, data)
     end.respond_with(successful_purchase_response)
   end
 
   def test_destination_amount_is_submitted_for_purchase
     stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @credit_card, @options.merge({destination: 'subaccountid', destination_amount: @amount - 20}))
-    end.check_request do |method, endpoint, data, headers|
+      @gateway.purchase(@amount, @credit_card, @options.merge({ destination: 'subaccountid', destination_amount: @amount - 20 }))
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/destination\[amount\]=#{@amount - 20}/, data)
     end.respond_with(successful_purchase_response)
   end
 
+  def test_radar_session_is_submitted_for_purchase
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, {
+        radar_session_id: 'test_radar_session_id'
+      })
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/radar_options\[session\]=test_radar_session_id/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_radar_session_is_submitted_for_authorize
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@amount, @credit_card, {
+        radar_session_id: 'test_radar_session_id'
+      })
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/radar_options\[session\]=test_radar_session_id/, data)
+    end.respond_with(successful_authorization_response)
+  end
+
   def test_client_data_submitted_with_purchase
     stub_comms(@gateway, :ssl_request) do
-      updated_options = @options.merge({description: 'a test customer', ip: '127.127.127.127', user_agent: 'some browser', order_id: '42', email: 'foo@wonderfullyfakedomain.com', receipt_email: 'receipt-receiver@wonderfullyfakedomain.com', referrer: 'http://www.shopify.com'})
+      updated_options = @options.merge({ description: 'a test customer', ip: '127.127.127.127', user_agent: 'some browser', order_id: '42', email: 'foo@wonderfullyfakedomain.com', receipt_email: 'receipt-receiver@wonderfullyfakedomain.com', referrer: 'http://www.shopify.com' })
       @gateway.purchase(@amount, @credit_card, updated_options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/description=a\+test\+customer/, data)
       assert_match(/ip=127\.127\.127\.127/, data)
       assert_match(/user_agent=some\+browser/, data)
@@ -1027,9 +1046,9 @@ class StripeTest < Test::Unit::TestCase
 
   def test_client_data_submitted_with_purchase_without_email_or_order
     stub_comms(@gateway, :ssl_request) do
-      updated_options = @options.merge({description: 'a test customer', ip: '127.127.127.127', user_agent: 'some browser', referrer: 'http://www.shopify.com'})
+      updated_options = @options.merge({ description: 'a test customer', ip: '127.127.127.127', user_agent: 'some browser', referrer: 'http://www.shopify.com' })
       @gateway.purchase(@amount, @credit_card, updated_options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/description=a\+test\+customer/, data)
       assert_match(/ip=127\.127\.127\.127/, data)
       assert_match(/user_agent=some\+browser/, data)
@@ -1041,9 +1060,9 @@ class StripeTest < Test::Unit::TestCase
 
   def test_client_data_submitted_with_metadata_in_options
     stub_comms(@gateway, :ssl_request) do
-      updated_options = @options.merge({metadata: {this_is_a_random_key_name: 'with a random value', i_made_up_this_key_too: 'canyoutell'}, order_id: '42', email: 'foo@wonderfullyfakedomain.com'})
+      updated_options = @options.merge({ metadata: { this_is_a_random_key_name: 'with a random value', i_made_up_this_key_too: 'canyoutell' }, order_id: '42', email: 'foo@wonderfullyfakedomain.com' })
       @gateway.purchase(@amount, @credit_card, updated_options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/metadata\[this_is_a_random_key_name\]=with\+a\+random\+value/, data)
       assert_match(/metadata\[i_made_up_this_key_too\]=canyoutell/, data)
       assert_match(/metadata\[email\]=foo\%40wonderfullyfakedomain\.com/, data)
@@ -1053,9 +1072,9 @@ class StripeTest < Test::Unit::TestCase
 
   def test_client_data_submitted_with_metadata_in_options_with_emv_credit_card_purchase
     stub_comms(@gateway, :ssl_request) do
-      updated_options = @options.merge({metadata: {this_is_a_random_key_name: 'with a random value', i_made_up_this_key_too: 'canyoutell'}, order_id: '42', email: 'foo@wonderfullyfakedomain.com'})
+      updated_options = @options.merge({ metadata: { this_is_a_random_key_name: 'with a random value', i_made_up_this_key_too: 'canyoutell' }, order_id: '42', email: 'foo@wonderfullyfakedomain.com' })
       @gateway.purchase(@amount, @emv_credit_card, updated_options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/metadata\[this_is_a_random_key_name\]=with\+a\+random\+value/, data)
       assert_match(/metadata\[i_made_up_this_key_too\]=canyoutell/, data)
       assert_match(/metadata\[email\]=foo\%40wonderfullyfakedomain\.com/, data)
@@ -1066,9 +1085,9 @@ class StripeTest < Test::Unit::TestCase
 
   def test_client_data_submitted_with_metadata_in_options_with_emv_credit_card_authorize
     stub_comms(@gateway, :ssl_request) do
-      updated_options = @options.merge({metadata: {this_is_a_random_key_name: 'with a random value', i_made_up_this_key_too: 'canyoutell'}, order_id: '42', email: 'foo@wonderfullyfakedomain.com'})
+      updated_options = @options.merge({ metadata: { this_is_a_random_key_name: 'with a random value', i_made_up_this_key_too: 'canyoutell' }, order_id: '42', email: 'foo@wonderfullyfakedomain.com' })
       @gateway.authorize(@amount, @emv_credit_card, updated_options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/metadata\[this_is_a_random_key_name\]=with\+a\+random\+value/, data)
       assert_match(/metadata\[i_made_up_this_key_too\]=canyoutell/, data)
       assert_match(/metadata\[email\]=foo\%40wonderfullyfakedomain\.com/, data)
@@ -1081,7 +1100,7 @@ class StripeTest < Test::Unit::TestCase
     stub_comms(@gateway, :ssl_request) do
       @emv_credit_card.read_method = 'contact_quickchip'
       @gateway.purchase(@amount, @emv_credit_card, @options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert_match(/card\[processing_method\]=quick_chip/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -1090,13 +1109,13 @@ class StripeTest < Test::Unit::TestCase
     stub_comms(@gateway, :ssl_request) do
       @emv_credit_card.read_method = 'contact_quickchip'
       @gateway.authorize(@amount, @emv_credit_card, @options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       refute_match(/card\[processing_method\]=quick_chip/, data)
     end.respond_with(successful_purchase_response)
   end
 
   def test_add_address
-    post = {card: {}}
+    post = { card: {} }
     @gateway.send(:add_address, post, @options)
     assert_equal @options[:billing_address][:zip], post[:card][:address_zip]
     assert_equal @options[:billing_address][:state], post[:card][:address_state]
@@ -1143,15 +1162,15 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def test_metadata_header
-    @gateway.expects(:ssl_request).once.with { |method, url, post, headers|
-      headers && headers['X-Stripe-Client-User-Metadata'] == {ip: '1.1.1.1'}.to_json
+    @gateway.expects(:ssl_request).once.with { |_method, _url, _post, headers|
+      headers && headers['X-Stripe-Client-User-Metadata'] == { ip: '1.1.1.1' }.to_json
     }.returns(successful_purchase_response)
 
     @gateway.purchase(@amount, @credit_card, @options.merge(ip: '1.1.1.1'))
   end
 
   def test_optional_version_header
-    @gateway.expects(:ssl_request).once.with { |method, url, post, headers|
+    @gateway.expects(:ssl_request).once.with { |_method, _url, _post, headers|
       headers && headers['Stripe-Version'] == '2013-10-29'
     }.returns(successful_purchase_response)
 
@@ -1159,7 +1178,7 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def test_optional_idempotency_key_header
-    @gateway.expects(:ssl_request).once.with { |method, url, post, headers|
+    @gateway.expects(:ssl_request).once.with { |_method, _url, _post, headers|
       headers && headers['Idempotency-Key'] == 'test123'
     }.returns(successful_purchase_response)
 
@@ -1168,7 +1187,7 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def test_optional_idempotency_on_void
-    @gateway.expects(:ssl_request).once.with { |method, url, post, headers|
+    @gateway.expects(:ssl_request).once.with { |_method, _url, _post, headers|
       headers && headers['Idempotency-Key'] == 'test123'
     }.returns(successful_purchase_response(true))
 
@@ -1177,11 +1196,11 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def test_optional_idempotency_on_verify
-    @gateway.expects(:ssl_request).with do |method, url, post, headers|
+    @gateway.expects(:ssl_request).with do |_method, _url, _post, headers|
       headers && headers['Idempotency-Key'] == nil
     end.returns(successful_void_response)
 
-    @gateway.expects(:ssl_request).with do |method, url, post, headers|
+    @gateway.expects(:ssl_request).with do |_method, _url, _post, headers|
       headers && headers['Idempotency-Key'] == 'test123'
     end.returns(successful_authorization_response)
 
@@ -1191,7 +1210,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_initialize_gateway_with_version
     @gateway = StripeGateway.new(login: 'login', version: '2013-12-03')
-    @gateway.expects(:ssl_request).once.with { |method, url, post, headers|
+    @gateway.expects(:ssl_request).once.with { |_method, _url, _post, headers|
       headers && headers['Stripe-Version'] == '2013-12-03'
     }.returns(successful_purchase_response)
 
@@ -1201,7 +1220,7 @@ class StripeTest < Test::Unit::TestCase
   def test_track_data_and_traditional_should_be_mutually_exclusive
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert data =~ /card\[name\]/
       assert data !~ /card\[swipe_data\]/
     end.respond_with(successful_purchase_response)
@@ -1209,7 +1228,7 @@ class StripeTest < Test::Unit::TestCase
     stub_comms(@gateway, :ssl_request) do
       @credit_card.track_data = '%B378282246310005^LONGSON/LONGBOB^1705101130504392?'
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert data !~ /card\[name\]/
       assert data =~ /card\[swipe_data\]/
     end.respond_with(successful_purchase_response)
@@ -1218,7 +1237,7 @@ class StripeTest < Test::Unit::TestCase
   def test_address_is_included_with_card_data
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert data =~ /card\[address_line1\]/
     end.respond_with(successful_purchase_response)
   end
@@ -1227,7 +1246,7 @@ class StripeTest < Test::Unit::TestCase
     stub_comms(@gateway, :ssl_request) do
       @emv_credit_card.read_method = 'contactless'
       @gateway.purchase(@amount, @emv_credit_card, @options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert data =~ /card\[read_method\]=contactless/
     end.respond_with(successful_purchase_response)
   end
@@ -1236,7 +1255,7 @@ class StripeTest < Test::Unit::TestCase
     stub_comms(@gateway, :ssl_request) do
       @emv_credit_card.read_method = 'contactless_magstripe'
       @gateway.purchase(@amount, @emv_credit_card, @options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert data =~ /card\[read_method\]=contactless_magstripe_mode/
     end.respond_with(successful_purchase_response)
   end
@@ -1244,7 +1263,7 @@ class StripeTest < Test::Unit::TestCase
   def test_contactless_flag_is_not_included_with_emv_card_data_by_default
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @emv_credit_card, @options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert data !~ /card\[read_method\]=contactless/ && data !~ /card\[read_method\]=contactless_magstripe_mode/
     end.respond_with(successful_purchase_response)
   end
@@ -1254,18 +1273,18 @@ class StripeTest < Test::Unit::TestCase
       @emv_credit_card.encrypted_pin_cryptogram = '8b68af72199529b8'
       @emv_credit_card.encrypted_pin_ksn = 'ffff0102628d12000001'
       @gateway.purchase(@amount, @emv_credit_card, @options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert data =~ /card\[encrypted_pin\]=8b68af72199529b8/
       assert data =~ /card\[encrypted_pin_key_id\]=ffff0102628d12000001/
     end.respond_with(successful_purchase_response)
   end
 
   def generate_options_should_allow_key
-    assert_equal({key: '12345'}, generate_options({key: '12345'}))
+    assert_equal({ key: '12345' }, generate_options({ key: '12345' }))
   end
 
   def test_passing_expand_parameters
-    @gateway.expects(:ssl_request).with do |method, url, post, headers|
+    @gateway.expects(:ssl_request).with do |_method, _url, post, _headers|
       post.include?('expand[0]=balance_transaction')
     end.returns(successful_authorization_response)
 
@@ -1275,7 +1294,7 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def test_passing_expand_parameters_as_array
-    @gateway.expects(:ssl_request).with do |method, url, post, headers|
+    @gateway.expects(:ssl_request).with do |_method, _url, post, _headers|
       post.include?('expand[0]=balance_transaction&expand[1]=customer')
     end.returns(successful_authorization_response)
 
@@ -1285,7 +1304,7 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def test_recurring_flag_not_set_by_default
-    @gateway.expects(:ssl_request).with do |method, url, post, headers|
+    @gateway.expects(:ssl_request).with do |_method, _url, post, _headers|
       !post.include?('recurring')
     end.returns(successful_authorization_response)
 
@@ -1293,7 +1312,7 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def test_passing_recurring_eci_sets_recurring_flag
-    @gateway.expects(:ssl_request).with do |method, url, post, headers|
+    @gateway.expects(:ssl_request).with do |_method, _url, post, _headers|
       post.include?('recurring=true')
     end.returns(successful_authorization_response)
 
@@ -1303,7 +1322,7 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def test_passing_unknown_eci_does_not_set_recurring_flag
-    @gateway.expects(:ssl_request).with do |method, url, post, headers|
+    @gateway.expects(:ssl_request).with do |_method, _url, post, _headers|
       !post.include?('recurring')
     end.returns(successful_authorization_response)
 
@@ -1313,7 +1332,7 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def test_passing_recurring_true_option_sets_recurring_flag
-    @gateway.expects(:ssl_request).with do |method, url, post, headers|
+    @gateway.expects(:ssl_request).with do |_method, _url, post, _headers|
       post.include?('recurring=true')
     end.returns(successful_authorization_response)
 
@@ -1323,7 +1342,7 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def test_passing_recurring_false_option_does_not_set_recurring_flag
-    @gateway.expects(:ssl_request).with do |method, url, post, headers|
+    @gateway.expects(:ssl_request).with do |_method, _url, post, _headers|
       !post.include?('recurring')
     end.returns(successful_authorization_response)
 
@@ -1335,7 +1354,7 @@ class StripeTest < Test::Unit::TestCase
   def test_new_attributes_are_included_in_update
     stub_comms(@gateway, :ssl_request) do
       @gateway.send(:update, 'cus_3sgheFxeBgTQ3M', 'card_483etw4er9fg4vF3sQdrt3FG', { name: 'John Smith', exp_year: 2021, exp_month: 6 })
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, endpoint, data, _headers|
       assert data == 'name=John+Smith&exp_year=2021&exp_month=6'
       assert endpoint.include? '/customers/cus_3sgheFxeBgTQ3M/cards/card_483etw4er9fg4vF3sQdrt3FG'
     end.respond_with(successful_update_credit_card_response)
@@ -1343,6 +1362,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_scrub
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+    assert_equal @gateway.scrub(pre_scrubbed_nested_payment_method_data), post_scrubbed_nested_payment_method_data
   end
 
   def test_scrubs_track_data
@@ -1353,12 +1373,16 @@ class StripeTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed_with_emv_data), post_scrubbed_with_emv_data
   end
 
+  def test_scrubs_account_number
+    assert_equal @gateway.scrub(pre_scrubbed_with_account_number), post_scrubbed_with_account_number
+  end
+
   def test_supports_scrubbing?
     assert @gateway.supports_scrubbing?
   end
 
   def test_successful_auth_with_network_tokenization_apple_pay
-    @gateway.expects(:ssl_request).with do |method, endpoint, data, headers|
+    @gateway.expects(:ssl_request).with do |method, _endpoint, data, _headers|
       assert_equal :post, method
       assert_match %r'card\[cryptogram\]=111111111100cryptogram&card\[eci\]=05&card\[tokenization_method\]=apple_pay', data
       true
@@ -1367,8 +1391,7 @@ class StripeTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: '111111111100cryptogram',
       verification_value: nil,
-      eci: '05'
-    )
+      eci: '05')
 
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_instance_of Response, response
@@ -1379,7 +1402,7 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def test_successful_auth_with_network_tokenization_android_pay
-    @gateway.expects(:ssl_request).with do |method, endpoint, data, headers|
+    @gateway.expects(:ssl_request).with do |method, _endpoint, data, _headers|
       assert_equal :post, method
       assert_match %r'card\[cryptogram\]=111111111100cryptogram&card\[eci\]=05&card\[tokenization_method\]=android_pay', data
       true
@@ -1389,8 +1412,7 @@ class StripeTest < Test::Unit::TestCase
       payment_cryptogram: '111111111100cryptogram',
       verification_value: nil,
       eci: '05',
-      source: :android_pay
-    )
+      source: :android_pay)
 
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_instance_of Response, response
@@ -1401,7 +1423,7 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_network_tokenization_apple_pay
-    @gateway.expects(:ssl_request).with do |method, endpoint, data, headers|
+    @gateway.expects(:ssl_request).with do |method, _endpoint, data, _headers|
       assert_equal :post, method
       assert_match %r'card\[cryptogram\]=111111111100cryptogram&card\[eci\]=05&card\[tokenization_method\]=apple_pay', data
       true
@@ -1410,8 +1432,7 @@ class StripeTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: '111111111100cryptogram',
       verification_value: nil,
-      eci: '05'
-    )
+      eci: '05')
 
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_instance_of Response, response
@@ -1422,7 +1443,7 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_network_tokenization_android_pay
-    @gateway.expects(:ssl_request).with do |method, endpoint, data, headers|
+    @gateway.expects(:ssl_request).with do |method, _endpoint, data, _headers|
       assert_equal :post, method
       assert_match %r'card\[cryptogram\]=111111111100cryptogram&card\[eci\]=05&card\[tokenization_method\]=android_pay', data
       true
@@ -1432,8 +1453,7 @@ class StripeTest < Test::Unit::TestCase
       payment_cryptogram: '111111111100cryptogram',
       verification_value: nil,
       eci: '05',
-      source: :android_pay
-    )
+      source: :android_pay)
 
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_instance_of Response, response
@@ -1450,7 +1470,7 @@ class StripeTest < Test::Unit::TestCase
   def test_emv_capture_application_fee_ignored
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.capture(@amount, 'ch_test_charge', application_fee: 100, icc_data: @emv_credit_card.icc_data)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert data !~ /application_fee/, 'request should not include application_fee'
     end.respond_with(successful_capture_response_with_icc_data)
 
@@ -1460,7 +1480,7 @@ class StripeTest < Test::Unit::TestCase
   def test_authorization_with_emv_payment_application_fee_included
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, 'ch_test_charge', application_fee: 100, icc_data: @emv_credit_card.icc_data)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert data =~ /application_fee/, 'request should include application_fee'
     end.respond_with(successful_capture_response_with_icc_data)
 
@@ -1470,7 +1490,7 @@ class StripeTest < Test::Unit::TestCase
   def test_authorization_with_emv_payment_sets_capture_to_false
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, 'ch_test_charge', application_fee: 100, icc_data: @emv_credit_card.icc_data)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       assert data =~ /capture\=false/, 'request should set capture to false'
     end.respond_with(successful_capture_response_with_icc_data)
 
@@ -1478,7 +1498,7 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def test_passing_stripe_account_header
-    @gateway.expects(:ssl_request).with do |method, url, post, headers|
+    @gateway.expects(:ssl_request).with do |_method, _url, _post, headers|
       headers.include?('Stripe-Account')
     end.returns(successful_authorization_response)
 
@@ -1579,6 +1599,35 @@ class StripeTest < Test::Unit::TestCase
     PRE_SCRUBBED
   end
 
+  def pre_scrubbed_nested_payment_method_data
+    <<-PRE_SCRUBBED
+      opening connection to api.stripe.com:443...
+      opened
+      starting SSL for api.stripe.com:443...
+      SSL established
+      <- "POST /v1/charges HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic c2tfdGVzdF9oQkwwTXF6ZGZ6Rnk3OXU0cFloUmVhQlo6\r\nUser-Agent: Stripe/v1 ActiveMerchantBindings/1.45.0\r\nX-Stripe-Client-User-Agent: {\"bindings_version\":\"1.45.0\",\"lang\":\"ruby\",\"lang_version\":\"2.1.3 p242 (2014-09-19)\",\"platform\":\"x86_64-linux\",\"publisher\":\"active_merchant\"}\r\nX-Stripe-Client-User-Metadata: {\"ip\":null}\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: api.stripe.com\r\nContent-Length: 270\r\n\r\n"
+      <- "amount=100&currency=usd&payment_method_data[card][number]=4242424242424242&payment_method_data[card][exp_month]=9&payment_method_data[card][exp_year]=2015&payment_method_data[card][cvc]=123&payment_method_data[card][name]=Longbob+Longsen&description=ActiveMerchant+Test+Purchase&payment_user_agent=Stripe%2Fv1+ActiveMerchantBindings%2F1.45.0&metadata[email]=wow%40example.com&payment_method_data[card][cryptogram]=sensitive_data&three_d_secure[cryptogram]=123456789abcdefghijklmnop&three_d_secure[apple_pay]=true"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Server: nginx\r\n"
+      -> "Date: Tue, 02 Dec 2014 19:44:17 GMT\r\n"
+      -> "Content-Type: application/json;charset=utf-8\r\n"
+      -> "Content-Length: 1303\r\n"
+      -> "Connection: close\r\n"
+      -> "Access-Control-Allow-Credentials: true\r\n"
+      -> "Access-Control-Allow-Methods: GET, POST, HEAD, OPTIONS, DELETE\r\n"
+      -> "Access-Control-Max-Age: 300\r\n"
+      -> "Cache-Control: no-cache, no-store\r\n"
+      -> "Request-Id: 89de951c-f880-4c39-93b0-832b3cc6dd32\r\n"
+      -> "Stripe-Version: 2013-12-03\r\n"
+      -> "Strict-Transport-Security: max-age=31556926; includeSubDomains\r\n"
+      -> "\r\n"
+      reading 1303 bytes...
+      -> "{\n  \"id\": \"ch_155MZJ2gKyKnHxtY1dGqFhSb\",\n  \"object\": \"charge\",\n  \"created\": 1417549457,\n  \"livemode\": false,\n  \"paid\": true,\n  \"amount\": 100,\n  \"currency\": \"usd\",\n  \"refunded\": false,\n  \"captured\": true,\n  \"refunds\": [],\n  \"card\": {\n    \"id\": \"card_155MZJ2gKyKnHxtYihrJ8z94\",\n    \"object\": \"card\",\n    \"last4\": \"4242\",\n    \"brand\": \"Visa\",\n    \"funding\": \"credit\",\n    \"exp_month\": 9,\n    \"exp_year\": 2015,\n    \"fingerprint\": \"944LvWcY01HVTbVc\",\n    \"country\": \"US\",\n    \"name\": \"Longbob Longsen\",\n    \"address_line1\": null,\n    \"address_line2\": null,\n    \"address_city\": null,\n    \"address_state\": null,\n    \"address_zip\": null,\n    \"address_country\": null,\n    \"cvc_check\": \"pass\",\n    \"address_line1_check\": null,\n    \"address_zip_check\": null,\n    \"dynamic_last4\": null,\n    \"customer\": null,\n    \"type\": \"Visa\"\n  },\n  \"balance_transaction\": \"txn_155MZJ2gKyKnHxtYxpYDI5OW\",\n  \"failure_message\": null,\n  \"failure_code\": null,\n  \"amount_refunded\": 0,\n  \"customer\": null,\n  \"invoice\": null,\n  \"description\": \"ActiveMerchant Test Purchase\",\n  \"dispute\": null,\n  \"metadata\": {\n    \"email\": \"wow@example.com\"\n  },\n  \"statement_description\": null,\n  \"fraud_details\": {\n    \"stripe_report\": \"unavailable\",\n    \"user_report\": null\n  },\n  \"receipt_email\": null,\n  \"receipt_number\": null,\n  \"shipping\": null\n}\n"
+      read 1303 bytes
+      Conn close
+    PRE_SCRUBBED
+  end
+
   def pre_scrubbed_with_track_data
     <<-PRE_SCRUBBED
       opening connection to api.stripe.com:443...
@@ -1634,6 +1683,63 @@ class StripeTest < Test::Unit::TestCase
       reading 195 bytes...
       -> "{\n  \"error\": {\n    \"message\": \"Your card was declined.\",\n    \"type\": \"card_error\",\n    \"code\": \"card_declined\",\n    \"charge\": \"ch_16yQYEAWOtgoysogscsBRQwg\",\n    \"emv_auth_data\": \"8A023035\"\n  }\n}\n"
       read 195 bytes
+      Conn close
+    PRE_SCRUBBED
+  end
+
+  def pre_scrubbed_with_account_number
+    <<-PRE_SCRUBBED
+      opening connection to api.stripe.com:443...
+      opened
+      starting SSL for api.stripe.com:443...
+      SSL established, protocol: TLSv1.2, cipher: ECDHE-RSA-AES128-GCM-SHA256
+      <- "POST /v1/tokens?bank_account[account_number]=000123456789&bank_account[country]=US&bank_account[currency]=usd&bank_account[routing_number]=110000000&bank_account[name]=Jim+Smith&bank_account[account_holder_type]=individual HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic c2tfdGVzdF8zT0Q0VGRLU0lPaERPTDIxNDZKSmNDNzk6\r\nUser-Agent: Stripe/v1 ActiveMerchantBindings/1.123.0\r\nStripe-Version: 2015-04-07\r\nX-Stripe-Client-User-Agent: {\"bindings_version\":\"1.123.0\",\"lang\":\"ruby\",\"lang_version\":\"2.6.6 p146 (2020-03-31)\",\"platform\":\"x86_64-darwin20\",\"publisher\":\"active_merchant\"}\r\nX-Stripe-Client-User-Metadata: {\"ip\":null}\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nHost: api.stripe.com\r\nContent-Length: 0\r\n\r\n"
+      <- ""
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Server: nginx\r\n"
+      -> "Date: Wed, 06 Oct 2021 18:51:30 GMT\r\n"
+      -> "Content-Type: application/json\r\n"
+      -> "Content-Length: 610\r\n"
+      -> "Connection: close\r\n"
+      -> "access-control-allow-credentials: true\r\n"
+      -> "access-control-allow-methods: GET, POST, HEAD, OPTIONS, DELETE\r\n"
+      -> "access-control-allow-origin: *\r\n"
+      -> "access-control-expose-headers: Request-Id, Stripe-Manage-Version, X-Stripe-External-Auth-Required, X-Stripe-Privileged-Session-Required\r\n"
+      -> "access-control-max-age: 300\r\n"
+      -> "cache-control: no-cache, no-store\r\n"
+      -> "request-id: req_cueTxQR09SjIOA\r\n"
+      -> "stripe-version: 2015-04-07\r\n"
+      -> "Strict-Transport-Security: max-age=31556926; includeSubDomains; preload\r\n"
+      -> "\r\n"
+      reading 610 bytes...
+      -> "{\n  \"id\": \"btok_1JhfDCAWOtgoysogF0IbYRWH\",\n  \"object\": \"token\",\n  \"bank_account\": {\n    \"id\": \"ba_1JhfDCAWOtgoysogLB5vljcp\",\n    \"object\": \"bank_account\",\n    \"account_holder_name\": \"Jim Smith\",\n    \"account_holder_type\": \"individual\",\n    \"account_type\": null,\n    \"bank_name\": \"STRIPE TEST BANK\",\n    \"country\": \"US\",\n    \"currency\": \"usd\",\n    \"fingerprint\": \"uCkXlMFxqys7GosR\",\n    \"last4\": \"6789\",\n    \"name\": \"Jim Smith\",\n    \"routing_number\": \"110000000\",\n    \"status\": \"new\"\n  },\n  \"client_ip\": \"172.74.90.160\",\n  \"created\": 1633546290,\n  \"livemode\": false,\n  \"type\": \"bank_account\",\n  \"used\": false\n}\n"
+      read 610 bytes
+      Conn close
+      opening connection to api.stripe.com:443...
+      opened
+      starting SSL for api.stripe.com:443...
+      SSL established, protocol: TLSv1.2, cipher: ECDHE-RSA-AES128-GCM-SHA256
+      <- "POST /v1/customers HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic c2tfdGVzdF8zT0Q0VGRLU0lPaERPTDIxNDZKSmNDNzk6\r\nUser-Agent: Stripe/v1 ActiveMerchantBindings/1.123.0\r\nStripe-Version: 2015-04-07\r\nX-Stripe-Client-User-Agent: {\"bindings_version\":\"1.123.0\",\"lang\":\"ruby\",\"lang_version\":\"2.6.6 p146 (2020-03-31)\",\"platform\":\"x86_64-darwin20\",\"publisher\":\"active_merchant\"}\r\nX-Stripe-Client-User-Metadata: {\"ip\":null}\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nHost: api.stripe.com\r\nContent-Length: 36\r\n\r\n"
+      <- "source=btok_1JhfDCAWOtgoysogF0IbYRWH"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Server: nginx\r\n"
+      -> "Date: Wed, 06 Oct 2021 18:51:31 GMT\r\n"
+      -> "Content-Type: application/json\r\n"
+      -> "Content-Length: 1713\r\n"
+      -> "Connection: close\r\n"
+      -> "access-control-allow-credentials: true\r\n"
+      -> "access-control-allow-methods: GET, POST, HEAD, OPTIONS, DELETE\r\n"
+      -> "access-control-allow-origin: *\r\n"
+      -> "access-control-expose-headers: Request-Id, Stripe-Manage-Version, X-Stripe-External-Auth-Required, X-Stripe-Privileged-Session-Required\r\n"
+      -> "access-control-max-age: 300\r\n"
+      -> "cache-control: no-cache, no-store\r\n"
+      -> "request-id: req_CfMAs2B351RDr0\r\n"
+      -> "stripe-version: 2015-04-07\r\n"
+      -> "Strict-Transport-Security: max-age=31556926; includeSubDomains; preload\r\n"
+      -> "\r\n"
+      reading 1713 bytes...
+      -> "{\n  \"id\": \"cus_KMNzQZK4SN7Agn\",\n  \"object\": \"customer\",\n  \"account_balance\": 0,\n  \"address\": null,\n  \"balance\": 0,\n  \"created\": 1633546290,\n  \"currency\": null,\n  \"default_source\": \"ba_1JhfDCAWOtgoysogLB5vljcp\",\n  \"delinquent\": false,\n  \"description\": null,\n  \"discount\": null,\n  \"email\": null,\n  \"invoice_prefix\": \"02D58981\",\n  \"invoice_settings\": {\n    \"custom_fields\": null,\n    \"default_payment_method\": null,\n    \"footer\": null\n  },\n  \"livemode\": false,\n  \"metadata\": {\n  },\n  \"name\": null,\n  \"next_invoice_sequence\": 1,\n  \"phone\": null,\n  \"preferred_locales\": [\n\n  ],\n  \"shipping\": null,\n  \"sources\": {\n    \"object\": \"list\",\n    \"data\": [\n      {\n        \"id\": \"ba_1JhfDCAWOtgoysogLB5vljcp\",\n        \"object\": \"bank_account\",\n        \"account_holder_name\": \"Jim Smith\",\n        \"account_holder_type\": \"individual\",\n        \"account_type\": null,\n        \"bank_name\": \"STRIPE TEST BANK\",\n        \"country\": \"US\",\n        \"currency\": \"usd\",\n        \"customer\": \"cus_KMNzQZK4SN7Agn\",\n        \"fingerprint\": \"uCkXlMFxqys7GosR\",\n        \"last4\": \"6789\",\n        \"metadata\": {\n        },\n        \"name\": \"Jim Smith\",\n        \"routing_number\": \"110000000\",\n        \"status\": \"new\"\n      }\n    ],\n    \"has_more\": false,\n    \"total_count\": 1,\n    \"url\": \"/v1/customers/cus_KMNzQZK4SN7Agn/sources\"\n  },\n  \"subscriptions\": {\n    \"object\": \"list\",\n    \"data\": [\n\n    ],\n    \"has_more\": false,\n    \"total_count\": 0,\n    \"url\": \"/v1/customers/cus_KMNzQZK4SN7Agn/subscriptions\"\n  },\n  \"tax_exempt\": \"none\",\n  \"tax_ids\": {\n    \"object\": \"list\",\n    \"data\": [\n\n    ],\n    \"has_more\": false,\n    \"total_count\": 0,\n    \"url\": \"/v1/customers/cus_KMNzQZK4SN7Agn/tax_ids\"\n  },\n  \"tax_info\": null,\n  \"tax_info_verification\": null\n}\n"
+      read 1713 bytes
       Conn close
     PRE_SCRUBBED
   end
@@ -1722,6 +1828,92 @@ class StripeTest < Test::Unit::TestCase
       reading 1303 bytes...
       -> "{\n  \"id\": \"ch_155MZJ2gKyKnHxtY1dGqFhSb\",\n  \"object\": \"charge\",\n  \"created\": 1417549457,\n  \"livemode\": false,\n  \"paid\": true,\n  \"amount\": 100,\n  \"currency\": \"usd\",\n  \"refunded\": false,\n  \"captured\": true,\n  \"refunds\": [],\n  \"card\": {\n    \"id\": \"card_155MZJ2gKyKnHxtYihrJ8z94\",\n    \"object\": \"card\",\n    \"last4\": \"4242\",\n    \"brand\": \"Visa\",\n    \"funding\": \"credit\",\n    \"exp_month\": 9,\n    \"exp_year\": 2015,\n    \"fingerprint\": \"944LvWcY01HVTbVc\",\n    \"country\": \"US\",\n    \"name\": \"Longbob Longsen\",\n    \"address_line1\": null,\n    \"address_line2\": null,\n    \"address_city\": null,\n    \"address_state\": null,\n    \"address_zip\": null,\n    \"address_country\": null,\n    \"cvc_check\": \"pass\",\n    \"address_line1_check\": null,\n    \"address_zip_check\": null,\n    \"dynamic_last4\": null,\n    \"customer\": null,\n    \"type\": \"Visa\"\n  },\n  \"balance_transaction\": \"txn_155MZJ2gKyKnHxtYxpYDI5OW\",\n  \"failure_message\": null,\n  \"failure_code\": null,\n  \"amount_refunded\": 0,\n  \"customer\": null,\n  \"invoice\": null,\n  \"description\": \"ActiveMerchant Test Purchase\",\n  \"dispute\": null,\n  \"metadata\": {\n    \"email\": \"wow@example.com\"\n  },\n  \"statement_description\": null,\n  \"fraud_details\": {\n    \"stripe_report\": \"unavailable\",\n    \"user_report\": null\n  },\n  \"receipt_email\": null,\n  \"receipt_number\": null,\n  \"shipping\": null\n}\n"
       read 1303 bytes
+      Conn close
+    POST_SCRUBBED
+  end
+
+  def post_scrubbed_nested_payment_method_data
+    <<-POST_SCRUBBED
+      opening connection to api.stripe.com:443...
+      opened
+      starting SSL for api.stripe.com:443...
+      SSL established
+      <- "POST /v1/charges HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic [FILTERED]\r\nUser-Agent: Stripe/v1 ActiveMerchantBindings/1.45.0\r\nX-Stripe-Client-User-Agent: {\"bindings_version\":\"1.45.0\",\"lang\":\"ruby\",\"lang_version\":\"2.1.3 p242 (2014-09-19)\",\"platform\":\"x86_64-linux\",\"publisher\":\"active_merchant\"}\r\nX-Stripe-Client-User-Metadata: {\"ip\":null}\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: api.stripe.com\r\nContent-Length: 270\r\n\r\n"
+      <- "amount=100&currency=usd&payment_method_data[card][number]=[FILTERED]&payment_method_data[card][exp_month]=9&payment_method_data[card][exp_year]=2015&payment_method_data[card][cvc]=[FILTERED]&payment_method_data[card][name]=Longbob+Longsen&description=ActiveMerchant+Test+Purchase&payment_user_agent=Stripe%2Fv1+ActiveMerchantBindings%2F1.45.0&metadata[email]=wow%40example.com&payment_method_data[card][cryptogram]=[FILTERED]&three_d_secure[cryptogram]=[FILTERED]&three_d_secure[apple_pay]=true"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Server: nginx\r\n"
+      -> "Date: Tue, 02 Dec 2014 19:44:17 GMT\r\n"
+      -> "Content-Type: application/json;charset=utf-8\r\n"
+      -> "Content-Length: 1303\r\n"
+      -> "Connection: close\r\n"
+      -> "Access-Control-Allow-Credentials: true\r\n"
+      -> "Access-Control-Allow-Methods: GET, POST, HEAD, OPTIONS, DELETE\r\n"
+      -> "Access-Control-Max-Age: 300\r\n"
+      -> "Cache-Control: no-cache, no-store\r\n"
+      -> "Request-Id: 89de951c-f880-4c39-93b0-832b3cc6dd32\r\n"
+      -> "Stripe-Version: 2013-12-03\r\n"
+      -> "Strict-Transport-Security: max-age=31556926; includeSubDomains\r\n"
+      -> "\r\n"
+      reading 1303 bytes...
+      -> "{\n  \"id\": \"ch_155MZJ2gKyKnHxtY1dGqFhSb\",\n  \"object\": \"charge\",\n  \"created\": 1417549457,\n  \"livemode\": false,\n  \"paid\": true,\n  \"amount\": 100,\n  \"currency\": \"usd\",\n  \"refunded\": false,\n  \"captured\": true,\n  \"refunds\": [],\n  \"card\": {\n    \"id\": \"card_155MZJ2gKyKnHxtYihrJ8z94\",\n    \"object\": \"card\",\n    \"last4\": \"4242\",\n    \"brand\": \"Visa\",\n    \"funding\": \"credit\",\n    \"exp_month\": 9,\n    \"exp_year\": 2015,\n    \"fingerprint\": \"944LvWcY01HVTbVc\",\n    \"country\": \"US\",\n    \"name\": \"Longbob Longsen\",\n    \"address_line1\": null,\n    \"address_line2\": null,\n    \"address_city\": null,\n    \"address_state\": null,\n    \"address_zip\": null,\n    \"address_country\": null,\n    \"cvc_check\": \"pass\",\n    \"address_line1_check\": null,\n    \"address_zip_check\": null,\n    \"dynamic_last4\": null,\n    \"customer\": null,\n    \"type\": \"Visa\"\n  },\n  \"balance_transaction\": \"txn_155MZJ2gKyKnHxtYxpYDI5OW\",\n  \"failure_message\": null,\n  \"failure_code\": null,\n  \"amount_refunded\": 0,\n  \"customer\": null,\n  \"invoice\": null,\n  \"description\": \"ActiveMerchant Test Purchase\",\n  \"dispute\": null,\n  \"metadata\": {\n    \"email\": \"wow@example.com\"\n  },\n  \"statement_description\": null,\n  \"fraud_details\": {\n    \"stripe_report\": \"unavailable\",\n    \"user_report\": null\n  },\n  \"receipt_email\": null,\n  \"receipt_number\": null,\n  \"shipping\": null\n}\n"
+      read 1303 bytes
+      Conn close
+    POST_SCRUBBED
+  end
+
+  def post_scrubbed_with_account_number
+    <<-POST_SCRUBBED
+      opening connection to api.stripe.com:443...
+      opened
+      starting SSL for api.stripe.com:443...
+      SSL established, protocol: TLSv1.2, cipher: ECDHE-RSA-AES128-GCM-SHA256
+      <- "POST /v1/tokens?bank_account[account_number]=[FILTERED]&bank_account[country]=US&bank_account[currency]=usd&bank_account[routing_number]=110000000&bank_account[name]=Jim+Smith&bank_account[account_holder_type]=individual HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic [FILTERED]\r\nUser-Agent: Stripe/v1 ActiveMerchantBindings/1.123.0\r\nStripe-Version: 2015-04-07\r\nX-Stripe-Client-User-Agent: {\"bindings_version\":\"1.123.0\",\"lang\":\"ruby\",\"lang_version\":\"2.6.6 p146 (2020-03-31)\",\"platform\":\"x86_64-darwin20\",\"publisher\":\"active_merchant\"}\r\nX-Stripe-Client-User-Metadata: {\"ip\":null}\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nHost: api.stripe.com\r\nContent-Length: 0\r\n\r\n"
+      <- ""
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Server: nginx\r\n"
+      -> "Date: Wed, 06 Oct 2021 18:51:30 GMT\r\n"
+      -> "Content-Type: application/json\r\n"
+      -> "Content-Length: 610\r\n"
+      -> "Connection: close\r\n"
+      -> "access-control-allow-credentials: true\r\n"
+      -> "access-control-allow-methods: GET, POST, HEAD, OPTIONS, DELETE\r\n"
+      -> "access-control-allow-origin: *\r\n"
+      -> "access-control-expose-headers: Request-Id, Stripe-Manage-Version, X-Stripe-External-Auth-Required, X-Stripe-Privileged-Session-Required\r\n"
+      -> "access-control-max-age: 300\r\n"
+      -> "cache-control: no-cache, no-store\r\n"
+      -> "request-id: req_cueTxQR09SjIOA\r\n"
+      -> "stripe-version: 2015-04-07\r\n"
+      -> "Strict-Transport-Security: max-age=31556926; includeSubDomains; preload\r\n"
+      -> "\r\n"
+      reading 610 bytes...
+      -> "{\n  \"id\": \"btok_1JhfDCAWOtgoysogF0IbYRWH\",\n  \"object\": \"token\",\n  \"bank_account\": {\n    \"id\": \"ba_1JhfDCAWOtgoysogLB5vljcp\",\n    \"object\": \"bank_account\",\n    \"account_holder_name\": \"Jim Smith\",\n    \"account_holder_type\": \"individual\",\n    \"account_type\": null,\n    \"bank_name\": \"STRIPE TEST BANK\",\n    \"country\": \"US\",\n    \"currency\": \"usd\",\n    \"fingerprint\": \"uCkXlMFxqys7GosR\",\n    \"last4\": \"6789\",\n    \"name\": \"Jim Smith\",\n    \"routing_number\": \"110000000\",\n    \"status\": \"new\"\n  },\n  \"client_ip\": \"172.74.90.160\",\n  \"created\": 1633546290,\n  \"livemode\": false,\n  \"type\": \"bank_account\",\n  \"used\": false\n}\n"
+      read 610 bytes
+      Conn close
+      opening connection to api.stripe.com:443...
+      opened
+      starting SSL for api.stripe.com:443...
+      SSL established, protocol: TLSv1.2, cipher: ECDHE-RSA-AES128-GCM-SHA256
+      <- "POST /v1/customers HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic [FILTERED]\r\nUser-Agent: Stripe/v1 ActiveMerchantBindings/1.123.0\r\nStripe-Version: 2015-04-07\r\nX-Stripe-Client-User-Agent: {\"bindings_version\":\"1.123.0\",\"lang\":\"ruby\",\"lang_version\":\"2.6.6 p146 (2020-03-31)\",\"platform\":\"x86_64-darwin20\",\"publisher\":\"active_merchant\"}\r\nX-Stripe-Client-User-Metadata: {\"ip\":null}\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nHost: api.stripe.com\r\nContent-Length: 36\r\n\r\n"
+      <- "source=btok_1JhfDCAWOtgoysogF0IbYRWH"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Server: nginx\r\n"
+      -> "Date: Wed, 06 Oct 2021 18:51:31 GMT\r\n"
+      -> "Content-Type: application/json\r\n"
+      -> "Content-Length: 1713\r\n"
+      -> "Connection: close\r\n"
+      -> "access-control-allow-credentials: true\r\n"
+      -> "access-control-allow-methods: GET, POST, HEAD, OPTIONS, DELETE\r\n"
+      -> "access-control-allow-origin: *\r\n"
+      -> "access-control-expose-headers: Request-Id, Stripe-Manage-Version, X-Stripe-External-Auth-Required, X-Stripe-Privileged-Session-Required\r\n"
+      -> "access-control-max-age: 300\r\n"
+      -> "cache-control: no-cache, no-store\r\n"
+      -> "request-id: req_CfMAs2B351RDr0\r\n"
+      -> "stripe-version: 2015-04-07\r\n"
+      -> "Strict-Transport-Security: max-age=31556926; includeSubDomains; preload\r\n"
+      -> "\r\n"
+      reading 1713 bytes...
+      -> "{\n  \"id\": \"cus_KMNzQZK4SN7Agn\",\n  \"object\": \"customer\",\n  \"account_balance\": 0,\n  \"address\": null,\n  \"balance\": 0,\n  \"created\": 1633546290,\n  \"currency\": null,\n  \"default_source\": \"ba_1JhfDCAWOtgoysogLB5vljcp\",\n  \"delinquent\": false,\n  \"description\": null,\n  \"discount\": null,\n  \"email\": null,\n  \"invoice_prefix\": \"02D58981\",\n  \"invoice_settings\": {\n    \"custom_fields\": null,\n    \"default_payment_method\": null,\n    \"footer\": null\n  },\n  \"livemode\": false,\n  \"metadata\": {\n  },\n  \"name\": null,\n  \"next_invoice_sequence\": 1,\n  \"phone\": null,\n  \"preferred_locales\": [\n\n  ],\n  \"shipping\": null,\n  \"sources\": {\n    \"object\": \"list\",\n    \"data\": [\n      {\n        \"id\": \"ba_1JhfDCAWOtgoysogLB5vljcp\",\n        \"object\": \"bank_account\",\n        \"account_holder_name\": \"Jim Smith\",\n        \"account_holder_type\": \"individual\",\n        \"account_type\": null,\n        \"bank_name\": \"STRIPE TEST BANK\",\n        \"country\": \"US\",\n        \"currency\": \"usd\",\n        \"customer\": \"cus_KMNzQZK4SN7Agn\",\n        \"fingerprint\": \"uCkXlMFxqys7GosR\",\n        \"last4\": \"6789\",\n        \"metadata\": {\n        },\n        \"name\": \"Jim Smith\",\n        \"routing_number\": \"110000000\",\n        \"status\": \"new\"\n      }\n    ],\n    \"has_more\": false,\n    \"total_count\": 1,\n    \"url\": \"/v1/customers/cus_KMNzQZK4SN7Agn/sources\"\n  },\n  \"subscriptions\": {\n    \"object\": \"list\",\n    \"data\": [\n\n    ],\n    \"has_more\": false,\n    \"total_count\": 0,\n    \"url\": \"/v1/customers/cus_KMNzQZK4SN7Agn/subscriptions\"\n  },\n  \"tax_exempt\": \"none\",\n  \"tax_ids\": {\n    \"object\": \"list\",\n    \"data\": [\n\n    ],\n    \"has_more\": false,\n    \"total_count\": 0,\n    \"url\": \"/v1/customers/cus_KMNzQZK4SN7Agn/tax_ids\"\n  },\n  \"tax_info\": null,\n  \"tax_info_verification\": null\n}\n"
+      read 1713 bytes
       Conn close
     POST_SCRUBBED
   end
@@ -2249,7 +2441,7 @@ class StripeTest < Test::Unit::TestCase
     RESPONSE
   end
 
-  def successful_purchase_response(refunded=false)
+  def successful_purchase_response(refunded = false)
     <<-RESPONSE
     {
       "amount": 400,

@@ -21,13 +21,13 @@ class BluePayTest < Test::Unit::TestCase
     @check = check
     @rebill_id = '100096219669'
     @rebill_status = 'active'
-    @options = {ip: '192.168.0.1'}
+    @options = { ip: '192.168.0.1' }
   end
 
   def test_successful_authorization
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/CUSTOMER_IP=192.168.0.1/, data)
     end.respond_with(RSP[:approved_auth])
 
@@ -40,7 +40,7 @@ class BluePayTest < Test::Unit::TestCase
   def test_successful_purchase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/CUSTOMER_IP=192.168.0.1/, data)
     end.respond_with(RSP[:approved_purchase])
 
@@ -53,7 +53,7 @@ class BluePayTest < Test::Unit::TestCase
   def test_failed_authorization
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/CUSTOMER_IP=192.168.0.1/, data)
     end.respond_with(RSP[:declined])
 
@@ -66,7 +66,7 @@ class BluePayTest < Test::Unit::TestCase
   def test_add_address_outsite_north_america
     result = {}
 
-    @gateway.send(:add_address, result, billing_address: {address1: '123 Test St.', address2: '5F', city: 'Testville', company: 'Test Company', country: 'DE', state: ''})
+    @gateway.send(:add_address, result, billing_address: { address1: '123 Test St.', address2: '5F', city: 'Testville', company: 'Test Company', country: 'DE', state: '' })
     assert_equal %w[ADDR1 ADDR2 CITY COMPANY_NAME COUNTRY PHONE STATE ZIP], result.stringify_keys.keys.sort
     assert_equal 'n/a', result[:STATE]
     assert_equal '123 Test St.', result[:ADDR1]
@@ -76,7 +76,7 @@ class BluePayTest < Test::Unit::TestCase
   def test_add_address
     result = {}
 
-    @gateway.send(:add_address, result, billing_address: {address1: '123 Test St.', address2: '5F', city: 'Testville', company: 'Test Company', country: 'US', state: 'AK'})
+    @gateway.send(:add_address, result, billing_address: { address1: '123 Test St.', address2: '5F', city: 'Testville', company: 'Test Company', country: 'US', state: 'AK' })
 
     assert_equal %w[ADDR1 ADDR2 CITY COMPANY_NAME COUNTRY PHONE STATE ZIP], result.stringify_keys.keys.sort
     assert_equal 'AK', result[:STATE]
@@ -88,7 +88,7 @@ class BluePayTest < Test::Unit::TestCase
     result = {}
 
     @gateway.send(:add_creditcard, result, @credit_card)
-    @gateway.send(:add_address, result, billing_address: {address1: '123 Test St.', address2: '5F', city: 'Testville', company: 'Test Company', country: 'US', state: 'AK'})
+    @gateway.send(:add_address, result, billing_address: { address1: '123 Test St.', address2: '5F', city: 'Testville', company: 'Test Company', country: 'US', state: 'AK' })
 
     assert_equal @credit_card.first_name, result[:NAME1]
     assert_equal @credit_card.last_name, result[:NAME2]
@@ -108,7 +108,7 @@ class BluePayTest < Test::Unit::TestCase
 
   def test_purchase_meets_minimum_requirements
     params = {
-      amount: '1.01',
+      amount: '1.01'
     }
 
     @gateway.send(:add_creditcard, params, @credit_card)
@@ -121,8 +121,8 @@ class BluePayTest < Test::Unit::TestCase
 
   def test_successful_refund
     response = stub_comms do
-      @gateway.refund(@amount, '100134230412', @options.merge({card_number: @credit_card.number}))
-    end.check_request do |endpoint, data, headers|
+      @gateway.refund(@amount, '100134230412', @options.merge({ card_number: @credit_card.number }))
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/CUSTOMER_IP=192\.168\.0\.1/, data)
     end.respond_with(successful_refund_response)
 
@@ -133,8 +133,8 @@ class BluePayTest < Test::Unit::TestCase
 
   def test_refund_passing_extra_info
     response = stub_comms do
-      @gateway.refund(50, '123456789', @options.merge({card_number: @credit_card.number, first_name: 'Bob', last_name: 'Smith', zip: '12345', doc_type: 'WEB'}))
-    end.check_request do |endpoint, data, headers|
+      @gateway.refund(50, '123456789', @options.merge({ card_number: @credit_card.number, first_name: 'Bob', last_name: 'Smith', zip: '12345', doc_type: 'WEB' }))
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/NAME1=Bob/, data)
       assert_match(/NAME2=Smith/, data)
       assert_match(/ZIP=12345/, data)
@@ -147,8 +147,8 @@ class BluePayTest < Test::Unit::TestCase
 
   def test_failed_refund
     response = stub_comms do
-      @gateway.refund(@amount, '123456789', @options.merge({card_number: @credit_card.number}))
-    end.check_request do |endpoint, data, headers|
+      @gateway.refund(@amount, '123456789', @options.merge({ card_number: @credit_card.number }))
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/CUSTOMER_IP=192\.168\.0\.1/, data)
     end.respond_with(failed_refund_response)
 
@@ -161,8 +161,8 @@ class BluePayTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     assert_deprecation_warning('credit should only be used to credit a payment method') do
       response = stub_comms do
-        @gateway.credit(@amount, '123456789', @options.merge({card_number: @credit_card.number}))
-      end.check_request do |endpoint, data, headers|
+        @gateway.credit(@amount, '123456789', @options.merge({ card_number: @credit_card.number }))
+      end.check_request do |_endpoint, data, _headers|
         assert_match(/CUSTOMER_IP=192\.168\.0\.1/, data)
       end.respond_with(failed_refund_response)
 
@@ -174,8 +174,8 @@ class BluePayTest < Test::Unit::TestCase
 
   def test_successful_credit_with_check
     response = stub_comms do
-      @gateway.credit(50, @check, @options.merge({doc_type: 'PPD'}))
-    end.check_request do |endpoint, data, headers|
+      @gateway.credit(50, @check, @options.merge({ doc_type: 'PPD' }))
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/DOC_TYPE=PPD/, data)
     end.respond_with(successful_credit_response)
 
@@ -224,6 +224,36 @@ class BluePayTest < Test::Unit::TestCase
       @gateway.send(:parse, 'STATUS=2&CVV2=M&AVS=A&MESSAGE=FAILURE').message
   end
 
+  def test_passing_stored_credentials_data_for_mit_transaction
+    options = @options.merge({ stored_credential: { initiator: 'merchant', reason_type: 'recurring' } })
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/cof=M/, data)
+      assert_match(/cofscheduled=Y/, data)
+    end.respond_with(RSP[:approved_auth])
+  end
+
+  def test_passing_stored_credentials_for_cit_transaction
+    options = @options.merge({ stored_credential: { initiator: 'cardholder', reason_type: 'unscheduled' } })
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/cof=C/, data)
+      assert_match(/cofscheduled=N/, data)
+    end.respond_with(RSP[:approved_auth])
+  end
+
+  def test_passes_nothing_for_unrecognized_stored_credentials_values
+    options = @options.merge({ stored_credential: { initiator: 'unknown', reason_type: 'something weird' } })
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/cof=&/, data)
+      assert_match(/cofscheduled=&/, data)
+    end.respond_with(RSP[:approved_auth])
+  end
+
   # Recurring Billing Unit Tests
   def test_successful_recurring
     @gateway.expects(:ssl_post).returns(successful_recurring_response)
@@ -234,8 +264,7 @@ class BluePayTest < Test::Unit::TestCase
         rebill_start_date: '1 MONTH',
         rebill_expression: '14 DAYS',
         rebill_cycles: '24',
-        rebill_amount: @amount * 4
-      )
+        rebill_amount: @amount * 4)
     end
 
     assert_instance_of Response, response

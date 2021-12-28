@@ -166,7 +166,7 @@ module ActiveMerchant #:nodoc:
       # :threshold              Tells how many times to retry the transaction (if it fails) before contacting the merchant.
       # :comments               Uh... comments
       #
-      def recurring(money, creditcard, options={})
+      def recurring(money, creditcard, options = {})
         ActiveMerchant.deprecated RECURRING_DEPRECATION_MESSAGE
 
         requires!(options, %i[periodicity bimonthly monthly biweekly weekly yearly daily], :installments, :order_id)
@@ -184,7 +184,7 @@ module ActiveMerchant #:nodoc:
       end
 
       # Buy the thing
-      def purchase(money, creditcard, options={})
+      def purchase(money, creditcard, options = {})
         requires!(options, :order_id)
         options.update(
           ordertype: 'SALE'
@@ -267,8 +267,7 @@ module ActiveMerchant #:nodoc:
           test: test?,
           authorization: response[:ordernum],
           avs_result: { code: response[:avs].to_s[2, 1] },
-          cvv_result: response[:avs].to_s[3, 1]
-        )
+          cvv_result: response[:avs].to_s[3, 1])
       end
 
       def successful?(response)
@@ -364,7 +363,7 @@ module ActiveMerchant #:nodoc:
             dlstate: options[:telecheck_dlstate],
             void: options[:telecheck_void],
             accounttype: options[:telecheck_accounttype],
-            ssn: options[:telecheck_ssn],
+            ssn: options[:telecheck_ssn]
           }
         }
 
@@ -431,7 +430,7 @@ module ActiveMerchant #:nodoc:
         # <r_approved>APPROVED</r_approved>
         # <r_avs></r_avs>
 
-        response = {message: 'Global Error Receipt', complete: false}
+        response = { message: 'Global Error Receipt', complete: false }
 
         xml = REXML::Document.new("<response>#{xml}</response>")
         xml.root&.elements&.each do |node|

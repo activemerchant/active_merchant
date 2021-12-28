@@ -22,13 +22,13 @@ class IxopayTest < Test::Unit::TestCase
       ip: '192.168.1.1'
     }
 
-    @extra_data = {extra_data: { customData1: 'some data', customData2: 'Can be anything really' }}
+    @extra_data = { extra_data: { customData1: 'some data', customData2: 'Can be anything really' } }
   end
 
   def test_successful_purchase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<description>.+<\/description>/, data)
     end.respond_with(successful_purchase_response)
 
@@ -41,7 +41,7 @@ class IxopayTest < Test::Unit::TestCase
   def test_successful_purchase_with_extra_data
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(@extra_data))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<extraData key="customData1">some data<\/extraData>/, data)
       assert_match(/<extraData key="customData2">Can be anything really<\/extraData>/, data)
     end.respond_with(successful_purchase_response)
@@ -76,7 +76,7 @@ class IxopayTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert match(/<description>.+<\/description>/, data)
     end.respond_with(successful_authorize_response)
 
@@ -91,7 +91,7 @@ class IxopayTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options.merge(@extra_data))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<extraData key="customData1">some data<\/extraData>/, data)
       assert_match(/<extraData key="customData2">Can be anything really<\/extraData>/, data)
     end.respond_with(successful_authorize_response)
@@ -128,7 +128,7 @@ class IxopayTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.capture(@amount, '00eb44f8f0382443cce5|20191028-00eb44f8f0382443cce5', @options.merge(@extra_data))
-    end.check_request do |endpoint, data, header|
+    end.check_request do |_endpoint, data, _header|
       assert_match(/<extraData key="customData1">some data<\/extraData>/, data)
       assert_match(/<extraData key="customData2">Can be anything really<\/extraData>/, data)
     end.respond_with(successful_capture_response)
@@ -162,7 +162,7 @@ class IxopayTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.refund(@amount, 'eb2bef23a30b537b90fb|20191016-b2bef23a30b537b90fbe', @options.merge(@extra_data))
-    end.check_request do |endpoint, data, header|
+    end.check_request do |_endpoint, data, _header|
       assert_match(/<extraData key="customData1">some data<\/extraData>/, data)
       assert_match(/<extraData key="customData2">Can be anything really<\/extraData>/, data)
     end.respond_with(successful_refund_response)
@@ -176,7 +176,7 @@ class IxopayTest < Test::Unit::TestCase
 
     stub_comms do
       @gateway.refund(@amount, 'eb2bef23a30b537b90fb|20191016-b2bef23a30b537b90fbe', options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<currency>USD<\/currency>/, data)
     end.respond_with(successful_refund_response)
   end
@@ -201,7 +201,7 @@ class IxopayTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_void_response)
     response = stub_comms do
       @gateway.void('eb2bef23a30b537b90fb|20191016-b2bef23a30b537b90fbe', @options.merge(@extra_data))
-    end.check_request do |endpoint, data, header|
+    end.check_request do |_endpoint, data, _header|
       assert_match(/<extraData key="customData1">some data<\/extraData>/, data)
       assert_match(/<extraData key="customData2">Can be anything really<\/extraData>/, data)
     end.respond_with(successful_void_response)
@@ -230,7 +230,7 @@ class IxopayTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).times(2).returns(successful_authorize_response, successful_void_response)
     response = stub_comms do
       @gateway.verify(credit_card('4111111111111111'), @options.merge(@extra_data))
-    end.check_request do |endpoint, data, header|
+    end.check_request do |_endpoint, data, _header|
       assert_match(/<extraData key="customData1">some data<\/extraData>/, data)
       assert_match(/<extraData key="customData2">Can be anything really<\/extraData>/, data)
     end.respond_with(successful_authorize_response, successful_void_response)
@@ -272,7 +272,7 @@ class IxopayTest < Test::Unit::TestCase
     )
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<transactionIndicator>INITIAL<\/transactionIndicator>/, data)
     end.respond_with(successful_purchase_response)
 
@@ -286,7 +286,7 @@ class IxopayTest < Test::Unit::TestCase
     )
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<transactionIndicator>INITIAL<\/transactionIndicator>/, data)
     end.respond_with(successful_authorize_response)
 
@@ -300,7 +300,7 @@ class IxopayTest < Test::Unit::TestCase
     )
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<transactionIndicator>RECURRING<\/transactionIndicator>/, data)
     end.respond_with(successful_purchase_response)
 
@@ -314,7 +314,7 @@ class IxopayTest < Test::Unit::TestCase
     )
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<transactionIndicator>RECURRING<\/transactionIndicator>/, data)
     end.respond_with(successful_authorize_response)
 
@@ -328,7 +328,7 @@ class IxopayTest < Test::Unit::TestCase
     )
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<transactionIndicator>CARDONFILE<\/transactionIndicator>/, data)
     end.respond_with(successful_purchase_response)
 
@@ -342,7 +342,7 @@ class IxopayTest < Test::Unit::TestCase
     )
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<transactionIndicator>CARDONFILE<\/transactionIndicator>/, data)
     end.respond_with(successful_authorize_response)
 
@@ -353,7 +353,7 @@ class IxopayTest < Test::Unit::TestCase
   def test_three_decimal_currency_handling
     response = stub_comms do
       @gateway.authorize(14200, @credit_card, @options.merge(currency: 'KWD'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<amount>14.200<\/amount>/, data)
       assert_match(/<currency>KWD<\/currency>/, data)
     end.respond_with(successful_authorize_response)

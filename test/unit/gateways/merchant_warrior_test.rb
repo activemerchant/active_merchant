@@ -31,6 +31,15 @@ class MerchantWarriorTest < Test::Unit::TestCase
     assert_equal '1336-20be3569-b600-11e6-b9c3-005056b209e0', response.authorization
   end
 
+  def test_failed_authorize
+    @gateway.expects(:ssl_post).returns(nil)
+
+    assert response = @gateway.authorize(@success_amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'Invalid gateway response', response.message
+    assert response.test?
+  end
+
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
@@ -97,7 +106,7 @@ class MerchantWarriorTest < Test::Unit::TestCase
 
     store = stub_comms do
       @gateway.store(@credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/cardExpiryMonth=02\b/, data)
       assert_match(/cardExpiryYear=05\b/, data)
     end.respond_with(successful_store_response)
@@ -114,7 +123,7 @@ class MerchantWarriorTest < Test::Unit::TestCase
 
     stub_comms do
       @gateway.purchase(@success_amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/customerName=Ren\+\+Stimpy/, data)
       assert_match(/paymentCardName=Chars\+Merchant-Warrior\+Dont\+Like\+\+More\.\+\+Here/, data)
     end.respond_with(successful_purchase_response)
@@ -135,7 +144,7 @@ class MerchantWarriorTest < Test::Unit::TestCase
 
     stub_comms do
       @gateway.purchase(@success_amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/customerName=Bat\+Man/, data)
       assert_match(/customerCountry=US/, data)
       assert_match(/customerState=NY/, data)
@@ -156,7 +165,7 @@ class MerchantWarriorTest < Test::Unit::TestCase
 
     stub_comms do
       @gateway.purchase(@success_amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/customerState=N%2FA/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -164,7 +173,7 @@ class MerchantWarriorTest < Test::Unit::TestCase
   def test_orderid_truncated
     stub_comms do
       @gateway.purchase(@success_amount, @credit_card, order_id: 'ThisIsQuiteALongDescriptionWithLotsOfChars')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/transactionProduct=ThisIsQuiteALongDescriptionWithLot&/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -172,7 +181,7 @@ class MerchantWarriorTest < Test::Unit::TestCase
   def test_authorize_recurring_flag_absent
     stub_comms do
       @gateway.authorize(@success_amount, @credit_card)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_not_match(/recurringFlag&/, data)
     end.respond_with(successful_authorize_response)
   end
@@ -182,7 +191,7 @@ class MerchantWarriorTest < Test::Unit::TestCase
 
     stub_comms do
       @gateway.authorize(@success_amount, @credit_card, recurring_flag: recurring_flag)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/recurringFlag=#{recurring_flag}&/, data)
     end.respond_with(successful_authorize_response)
   end
@@ -190,7 +199,7 @@ class MerchantWarriorTest < Test::Unit::TestCase
   def test_purchase_recurring_flag_absent
     stub_comms do
       @gateway.purchase(@success_amount, @credit_card)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_not_match(/recurringFlag&/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -200,7 +209,7 @@ class MerchantWarriorTest < Test::Unit::TestCase
 
     stub_comms do
       @gateway.purchase(@success_amount, @credit_card, recurring_flag: recurring_flag)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/recurringFlag=#{recurring_flag}&/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -208,7 +217,7 @@ class MerchantWarriorTest < Test::Unit::TestCase
   def test_authorize_with_soft_descriptor_absent
     stub_comms do
       @gateway.authorize(@success_amount, @credit_card)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_not_match(/descriptorName&/, data)
       assert_not_match(/descriptorCity&/, data)
       assert_not_match(/descriptorState&/, data)
@@ -218,7 +227,7 @@ class MerchantWarriorTest < Test::Unit::TestCase
   def test_authorize_with_soft_descriptor_present
     stub_comms do
       @gateway.authorize(@success_amount, @credit_card, soft_descriptor_options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/descriptorName=FOO%2ATest&/, data)
       assert_match(/descriptorCity=Melbourne&/, data)
       assert_match(/descriptorState=VIC&/, data)
@@ -228,7 +237,7 @@ class MerchantWarriorTest < Test::Unit::TestCase
   def test_purchase_with_soft_descriptor_absent
     stub_comms do
       @gateway.purchase(@success_amount, @credit_card)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_not_match(/descriptorName&/, data)
       assert_not_match(/descriptorCity&/, data)
       assert_not_match(/descriptorState&/, data)
@@ -238,7 +247,7 @@ class MerchantWarriorTest < Test::Unit::TestCase
   def test_purchase_with_soft_descriptor_present
     stub_comms do
       @gateway.purchase(@success_amount, @credit_card, soft_descriptor_options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/descriptorName=FOO%2ATest&/, data)
       assert_match(/descriptorCity=Melbourne&/, data)
       assert_match(/descriptorState=VIC&/, data)
@@ -248,7 +257,7 @@ class MerchantWarriorTest < Test::Unit::TestCase
   def test_capture_with_soft_descriptor_absent
     stub_comms do
       @gateway.capture(@success_amount, @credit_card)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_not_match(/descriptorName&/, data)
       assert_not_match(/descriptorCity&/, data)
       assert_not_match(/descriptorState&/, data)
@@ -258,7 +267,7 @@ class MerchantWarriorTest < Test::Unit::TestCase
   def test_capture_with_soft_descriptor_present
     stub_comms do
       @gateway.capture(@success_amount, @credit_card, soft_descriptor_options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/descriptorName=FOO%2ATest&/, data)
       assert_match(/descriptorCity=Melbourne&/, data)
       assert_match(/descriptorState=VIC&/, data)
@@ -268,7 +277,7 @@ class MerchantWarriorTest < Test::Unit::TestCase
   def test_refund_with_soft_descriptor_absent
     stub_comms do
       @gateway.refund(@success_amount, @credit_card)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_not_match(/descriptorName&/, data)
       assert_not_match(/descriptorCity&/, data)
       assert_not_match(/descriptorState&/, data)
@@ -278,7 +287,7 @@ class MerchantWarriorTest < Test::Unit::TestCase
   def test_refund_with_soft_descriptor_present
     stub_comms do
       @gateway.refund(@success_amount, @credit_card, soft_descriptor_options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/descriptorName=FOO%2ATest&/, data)
       assert_match(/descriptorCity=Melbourne&/, data)
       assert_match(/descriptorState=VIC&/, data)
@@ -293,120 +302,120 @@ class MerchantWarriorTest < Test::Unit::TestCase
   private
 
   def successful_purchase_response
-    <<-XML
-<?xml version="1.0" encoding="UTF-8"?>
-<mwResponse>
-  <responseCode>0</responseCode>
-  <responseMessage>Transaction approved</responseMessage>
-  <transactionID>30-98a79008-dae8-11df-9322-0022198101cd</transactionID>
-  <authCode>44639</authCode>
-  <authMessage>Approved</authMessage>
-  <authResponseCode>0</authResponseCode>
-  <authSettledDate>2010-10-19</authSettledDate>
-  <custom1></custom1>
-  <custom2></custom2>
-  <custom3></custom3>
-  <customHash>c0aca5a0d9573322c79cc323d6cc8050</customHash>
-</mwResponse>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <mwResponse>
+        <responseCode>0</responseCode>
+        <responseMessage>Transaction approved</responseMessage>
+        <transactionID>30-98a79008-dae8-11df-9322-0022198101cd</transactionID>
+        <authCode>44639</authCode>
+        <authMessage>Approved</authMessage>
+        <authResponseCode>0</authResponseCode>
+        <authSettledDate>2010-10-19</authSettledDate>
+        <custom1></custom1>
+        <custom2></custom2>
+        <custom3></custom3>
+        <customHash>c0aca5a0d9573322c79cc323d6cc8050</customHash>
+      </mwResponse>
     XML
   end
 
   def failed_purchase_response
-    <<-XML
-<?xml version="1.0" encoding="UTF-8"?>
-<mwResponse>
-  <responseCode>4</responseCode>
-  <responseMessage>Card has expired</responseMessage>
-  <transactionID>30-69433444-af1-11df-9322-0022198101cd</transactionID>
-  <authCode>44657</authCode>
-  <authMessage>Expired+Card</authMessage>
-  <authResponseCode>4</authResponseCode>
-  <authSettledDate>2010-10-19</authSettledDate>
-  <custom1></custom1>
-  <custom2></custom2>
-  <custom3></custom3>
-  <customHash>c0aca5a0d9573322c79cc323d6cc8050</customHash>
-</mwResponse>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <mwResponse>
+        <responseCode>4</responseCode>
+        <responseMessage>Card has expired</responseMessage>
+        <transactionID>30-69433444-af1-11df-9322-0022198101cd</transactionID>
+        <authCode>44657</authCode>
+        <authMessage>Expired+Card</authMessage>
+        <authResponseCode>4</authResponseCode>
+        <authSettledDate>2010-10-19</authSettledDate>
+        <custom1></custom1>
+        <custom2></custom2>
+        <custom3></custom3>
+        <customHash>c0aca5a0d9573322c79cc323d6cc8050</customHash>
+      </mwResponse>
     XML
   end
 
   def successful_refund_response
-    <<-XML
-<?xml version="1.0" encoding="UTF-8"?>
-<mwResponse>
-  <responseCode>0</responseCode>
-  <responseMessage>Transaction approved</responseMessage>
-  <transactionID>30-d4d19f4-db17-11df-9322-0022198101cd</transactionID>
-  <authCode>44751</authCode>
-  <authMessage>Approved</authMessage>
-  <authResponseCode>0</authResponseCode>
-  <authSettledDate>2010-10-19</authSettledDate>
-</mwResponse>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <mwResponse>
+        <responseCode>0</responseCode>
+        <responseMessage>Transaction approved</responseMessage>
+        <transactionID>30-d4d19f4-db17-11df-9322-0022198101cd</transactionID>
+        <authCode>44751</authCode>
+        <authMessage>Approved</authMessage>
+        <authResponseCode>0</authResponseCode>
+        <authSettledDate>2010-10-19</authSettledDate>
+      </mwResponse>
     XML
   end
 
   def failed_refund_response
-    <<-XML
-<?xml version="1.0" encoding="UTF-8"?>
-  <mwResponse>
-  <responseCode>-2</responseCode>
-  <responseMessage>MW -016:transactionID has already been reversed</responseMessage>
-</mwResponse>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+        <mwResponse>
+        <responseCode>-2</responseCode>
+        <responseMessage>MW -016:transactionID has already been reversed</responseMessage>
+      </mwResponse>
     XML
   end
 
   def successful_store_response
-    <<-XML
-<?xml version="1.0" encoding="UTF-8"?>
-<mwResponse>
-  <responseCode>0</responseCode>
-  <responseMessage>Operation successful</responseMessage>
-  <cardID>KOCI10023982</cardID>
-  <cardKey>s5KQIxsZuiyvs3Sc</cardKey>
-  <ivrCardID>10023982</ivrCardID>
-</mwResponse>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <mwResponse>
+        <responseCode>0</responseCode>
+        <responseMessage>Operation successful</responseMessage>
+        <cardID>KOCI10023982</cardID>
+        <cardKey>s5KQIxsZuiyvs3Sc</cardKey>
+        <ivrCardID>10023982</ivrCardID>
+      </mwResponse>
     XML
   end
 
   def successful_authorize_response
-    <<-XML
-<?xml version="1.0" encoding="UTF-8"?>
-<mwResponse>
-  <responseCode>0</responseCode>
-  <responseMessage>Transaction approved</responseMessage>
-  <transactionID>1336-20be3569-b600-11e6-b9c3-005056b209e0</transactionID>
-  <transactionReferenceID>12345</transactionReferenceID>
-  <authCode>731357421</authCode>
-  <receiptNo>731357421</receiptNo>
-  <authMessage>Honour with identification</authMessage>
-  <authResponseCode>08</authResponseCode>
-  <authSettledDate>2016-11-29</authSettledDate>
-  <paymentCardNumber>512345XXXXXX2346</paymentCardNumber>
-  <transactionAmount>1.00</transactionAmount>
-  <cardType>mc</cardType>
-  <cardExpiryMonth>05</cardExpiryMonth>
-  <cardExpiryYear>21</cardExpiryYear>
-  <custom1/>
-  <custom2/>
-  <custom3/>
-  <customHash>65b172551b7d3a0706c0ce5330c98470</customHash>
-</mwResponse>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <mwResponse>
+        <responseCode>0</responseCode>
+        <responseMessage>Transaction approved</responseMessage>
+        <transactionID>1336-20be3569-b600-11e6-b9c3-005056b209e0</transactionID>
+        <transactionReferenceID>12345</transactionReferenceID>
+        <authCode>731357421</authCode>
+        <receiptNo>731357421</receiptNo>
+        <authMessage>Honour with identification</authMessage>
+        <authResponseCode>08</authResponseCode>
+        <authSettledDate>2016-11-29</authSettledDate>
+        <paymentCardNumber>512345XXXXXX2346</paymentCardNumber>
+        <transactionAmount>1.00</transactionAmount>
+        <cardType>mc</cardType>
+        <cardExpiryMonth>05</cardExpiryMonth>
+        <cardExpiryYear>21</cardExpiryYear>
+        <custom1/>
+        <custom2/>
+        <custom3/>
+        <customHash>65b172551b7d3a0706c0ce5330c98470</customHash>
+      </mwResponse>
     XML
   end
 
   def successful_capture_response
-    <<-XML
-<?xml version="1.0" encoding="UTF-8"?>
-<mwResponse>
-  <responseCode>0</responseCode>
-  <responseMessage>Transaction approved</responseMessage>
-  <transactionID>1336-fe4d3be6-b604-11e6-b9c3-005056b209e0</transactionID>
-  <authCode>731357526</authCode>
-  <receiptNo>731357526</receiptNo>
-  <authMessage>Approved or completed successfully</authMessage>
-  <authResponseCode>00</authResponseCode>
-  <authSettledDate>2016-11-30</authSettledDate>
-</mwResponse>
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <mwResponse>
+        <responseCode>0</responseCode>
+        <responseMessage>Transaction approved</responseMessage>
+        <transactionID>1336-fe4d3be6-b604-11e6-b9c3-005056b209e0</transactionID>
+        <authCode>731357526</authCode>
+        <receiptNo>731357526</receiptNo>
+        <authMessage>Approved or completed successfully</authMessage>
+        <authResponseCode>00</authResponseCode>
+        <authSettledDate>2016-11-30</authSettledDate>
+      </mwResponse>
     XML
   end
 

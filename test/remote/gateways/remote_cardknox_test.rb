@@ -33,7 +33,7 @@ class RemoteCardknoxTest < Test::Unit::TestCase
         zip: '46112',
         country: 'US',
         phone: '(555)555-5555',
-        fax: '(555)555-6666',
+        fax: '(555)555-6666'
       }
     }
 

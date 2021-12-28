@@ -4,10 +4,14 @@ module ActiveMerchant #:nodoc:
     end
 
     class Response
-      attr_reader :params, :message, :test, :authorization, :avs_result, :cvv_result, :error_code, :emv_authorization
+      attr_reader :params, :message, :test, :authorization, :avs_result, :cvv_result, :error_code, :emv_authorization, :network_transaction_id
 
       def success?
         @success
+      end
+
+      def failure?
+        !success?
       end
 
       def test?
@@ -25,6 +29,7 @@ module ActiveMerchant #:nodoc:
         @fraud_review = options[:fraud_review]
         @error_code = options[:error_code]
         @emv_authorization = options[:emv_authorization]
+        @network_transaction_id = options[:network_transaction_id]
 
         @avs_result = if options[:avs_result].kind_of?(AVSResult)
                         options[:avs_result].to_hash
@@ -53,7 +58,7 @@ module ActiveMerchant #:nodoc:
         @primary_response = nil
       end
 
-      def process(ignore_result=false)
+      def process(ignore_result = false)
         return unless success?
 
         response = yield

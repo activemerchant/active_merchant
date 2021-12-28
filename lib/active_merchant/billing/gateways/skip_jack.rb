@@ -51,7 +51,7 @@ module ActiveMerchant #:nodoc:
         'W' => '9-digit zip/postal code matches billing information, street address does not',
         'X' => 'Street address and 9-digit zip/postal code matches billing information',
         'Y' => 'Street address and 5-digit zip/postal code matches billing information',
-        'Z' => '5-digit zip/postal code matches billing information, street address does not',
+        'Z' => '5-digit zip/postal code matches billing information, street address does not'
       }
 
       CHANGE_STATUS_ERROR_MESSAGES = {
@@ -213,7 +213,7 @@ module ActiveMerchant #:nodoc:
       #
       # * <tt>:force_settlement</tt> -- Force the settlement to occur as soon as possible. This option is not supported by other gateways. See the SkipJack API reference for more details
       def capture(money, authorization, options = {})
-        post = { }
+        post = {}
         add_status_action(post, 'SETTLE')
         add_forced_settlement(post, options)
         add_transaction_id(post, authorization)
@@ -267,8 +267,7 @@ module ActiveMerchant #:nodoc:
           test: test?,
           authorization: response[:szTransactionFileName] || parameters[:szTransactionId],
           avs_result: { code: response[:szAVSResponseCode] },
-          cvv_result: response[:szCVV2ResponseCode]
-        )
+          cvv_result: response[:szCVV2ResponseCode])
       end
 
       def url_for(action)

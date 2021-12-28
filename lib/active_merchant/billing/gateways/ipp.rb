@@ -18,16 +18,16 @@ module ActiveMerchant #:nodoc:
         '05' => STANDARD_ERROR_CODE[:card_declined],
         '06' => STANDARD_ERROR_CODE[:processing_error],
         '14' => STANDARD_ERROR_CODE[:invalid_number],
-        '54' => STANDARD_ERROR_CODE[:expired_card],
+        '54' => STANDARD_ERROR_CODE[:expired_card]
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         ActiveMerchant.deprecated('IPP gateway is now named Bambora Asia-Pacific')
         requires!(options, :username, :password)
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         commit('SubmitSinglePayment') do |xml|
           xml.Transaction do
             xml.CustRef options[:order_id]
@@ -40,7 +40,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         commit('SubmitSinglePayment') do |xml|
           xml.Transaction do
             xml.CustRef options[:order_id]
@@ -53,7 +53,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         commit('SubmitSingleCapture') do |xml|
           xml.Capture do
             xml.Receipt authorization
@@ -63,7 +63,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         commit('SubmitSingleRefund') do |xml|
           xml.Refund do
             xml.Receipt authorization
@@ -121,7 +121,7 @@ module ActiveMerchant #:nodoc:
       def commit(action, &block)
         headers = {
           'Content-Type' => 'text/xml; charset=utf-8',
-          'SOAPAction' => "http://www.ippayments.com.au/interface/api/dts/#{action}",
+          'SOAPAction' => "http://www.ippayments.com.au/interface/api/dts/#{action}"
         }
         response = parse(ssl_post(commit_url, new_submit_xml(action, &block), headers))
 

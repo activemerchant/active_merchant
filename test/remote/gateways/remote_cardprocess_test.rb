@@ -50,7 +50,7 @@ class RemoteCardprocessTest < Test::Unit::TestCase
   end
 
   def test_failed_authorize
-    @gateway.instance_variable_set(:@test_options, {'customParameters[forceResultCode]' => '800.100.151'})
+    @gateway.instance_variable_set(:@test_options, { 'customParameters[forceResultCode]' => '800.100.151' })
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'transaction declined (invalid card)', response.message
@@ -121,7 +121,7 @@ class RemoteCardprocessTest < Test::Unit::TestCase
   end
 
   def test_failed_verify
-    @gateway.instance_variable_set(:@test_options, {'customParameters[forceResultCode]' => '600.200.100'})
+    @gateway.instance_variable_set(:@test_options, { 'customParameters[forceResultCode]' => '600.200.100' })
     response = @gateway.verify(@credit_card, @options)
     assert_failure response
     assert_match %r{invalid Payment Method}, response.message

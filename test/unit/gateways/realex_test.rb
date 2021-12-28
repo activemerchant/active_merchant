@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class RealexTest < Test::Unit::TestCase
+  include CommStub
+
   class ActiveMerchant::Billing::RealexGateway
     # For the purposes of testing, lets redefine some protected methods as public.
     public :build_purchase_or_authorization_request, :build_refund_request, :build_void_request,
@@ -116,6 +118,28 @@ class RealexTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_purchase_passes_stored_credential
+    options = @options.merge({
+      stored_credential: {
+        initial_transaction: true,
+        reason_type: 'unscheduled',
+        initiator: 'cardholder',
+        network_transaction_id: nil
+      }
+    })
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      stored_credential_params = Nokogiri::XML.parse(data).xpath('//storedcredential')
+
+      assert_equal stored_credential_params.xpath('type').text, 'oneoff'
+      assert_equal stored_credential_params.xpath('initiator').text, 'cardholder'
+      assert_equal stored_credential_params.xpath('sequence').text, 'first'
+      assert_equal stored_credential_params.xpath('srd').text, ''
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_successful_refund
     @gateway.expects(:ssl_post).returns(successful_refund_response)
     assert_success @gateway.refund(@amount, '1234;1234;1234')
@@ -171,16 +195,16 @@ class RealexTest < Test::Unit::TestCase
   def test_capture_xml
     @gateway.expects(:new_timestamp).returns('20090824160201')
 
-    valid_capture_xml = <<-SRC
-<request timestamp="20090824160201" type="settle">
-  <merchantid>your_merchant_id</merchantid>
-  <account>your_account</account>
-  <amount>100</amount>
-  <orderid>1</orderid>
-  <pasref>4321</pasref>
-  <authcode>1234</authcode>
-  <sha1hash>ef0a6c485452f3f94aff336fa90c6c62993056ca</sha1hash>
-</request>
+    valid_capture_xml = <<~SRC
+      <request timestamp="20090824160201" type="settle">
+        <merchantid>your_merchant_id</merchantid>
+        <account>your_account</account>
+        <amount>100</amount>
+        <orderid>1</orderid>
+        <pasref>4321</pasref>
+        <authcode>1234</authcode>
+        <sha1hash>ef0a6c485452f3f94aff336fa90c6c62993056ca</sha1hash>
+      </request>
     SRC
 
     assert_xml_equal valid_capture_xml, @gateway.build_capture_request(@amount, '1;4321;1234', {})
@@ -189,34 +213,34 @@ class RealexTest < Test::Unit::TestCase
   def test_purchase_xml
     options = {
       order_id: '1',
-      ip: '123.456.789.0',
+      ip: '123.456.789.0'
     }
 
     @gateway.expects(:new_timestamp).returns('20090824160201')
 
-    valid_purchase_request_xml = <<-SRC
-<request timestamp="20090824160201" type="auth">
-  <merchantid>your_merchant_id</merchantid>
-  <account>your_account</account>
-  <orderid>1</orderid>
-  <amount currency="EUR">100</amount>
-  <card>
-    <number>4263971921001307</number>
-    <expdate>0808</expdate>
-    <chname>Longbob Longsen</chname>
-    <type>VISA</type>
-    <issueno></issueno>
-    <cvn>
-      <number></number>
-      <presind></presind>
-    </cvn>
-  </card>
-  <autosettle flag="1"/>
-  <sha1hash>3499d7bc8dbacdcfba2286bd74916d026bae630f</sha1hash>
-  <tssinfo>
-    <custipaddress>123.456.789.0</custipaddress>
-  </tssinfo>
-</request>
+    valid_purchase_request_xml = <<~SRC
+      <request timestamp="20090824160201" type="auth">
+        <merchantid>your_merchant_id</merchantid>
+        <account>your_account</account>
+        <orderid>1</orderid>
+        <amount currency="EUR">100</amount>
+        <card>
+          <number>4263971921001307</number>
+          <expdate>0808</expdate>
+          <chname>Longbob Longsen</chname>
+          <type>VISA</type>
+          <issueno></issueno>
+          <cvn>
+            <number></number>
+            <presind></presind>
+          </cvn>
+        </card>
+        <autosettle flag="1"/>
+        <sha1hash>3499d7bc8dbacdcfba2286bd74916d026bae630f</sha1hash>
+        <tssinfo>
+          <custipaddress>123.456.789.0</custipaddress>
+        </tssinfo>
+      </request>
     SRC
 
     assert_xml_equal valid_purchase_request_xml, @gateway.build_purchase_or_authorization_request(:purchase, @amount, @credit_card, options)
@@ -225,7 +249,7 @@ class RealexTest < Test::Unit::TestCase
   def test_purchase_xml_with_ipv6
     options = {
       order_id: '1',
-      ip: '2a02:c7d:da18:ac00:6d10:4f13:1795:4890',
+      ip: '2a02:c7d:da18:ac00:6d10:4f13:1795:4890'
     }
 
     @gateway.expects(:new_timestamp).returns('20090824160201')
@@ -258,15 +282,15 @@ class RealexTest < Test::Unit::TestCase
   def test_void_xml
     @gateway.expects(:new_timestamp).returns('20090824160201')
 
-    valid_void_request_xml = <<-SRC
-<request timestamp="20090824160201" type="void">
-  <merchantid>your_merchant_id</merchantid>
-  <account>your_account</account>
-  <orderid>1</orderid>
-  <pasref>4321</pasref>
-  <authcode>1234</authcode>
-  <sha1hash>4132600f1dc70333b943fc292bd0ca7d8e722f6e</sha1hash>
-</request>
+    valid_void_request_xml = <<~SRC
+      <request timestamp="20090824160201" type="void">
+        <merchantid>your_merchant_id</merchantid>
+        <account>your_account</account>
+        <orderid>1</orderid>
+        <pasref>4321</pasref>
+        <authcode>1234</authcode>
+        <sha1hash>4132600f1dc70333b943fc292bd0ca7d8e722f6e</sha1hash>
+      </request>
     SRC
 
     assert_xml_equal valid_void_request_xml, @gateway.build_void_request('1;4321;1234', {})
@@ -278,24 +302,24 @@ class RealexTest < Test::Unit::TestCase
     }
     @gateway.expects(:new_timestamp).returns('20181026114304')
 
-    valid_verify_request_xml = <<-SRC
-<request timestamp="20181026114304" type="otb">
-  <merchantid>your_merchant_id</merchantid>
-  <account>your_account</account>
-  <orderid>1</orderid>
-  <card>
-    <number>4263971921001307</number>
-    <expdate>0808</expdate>
-    <chname>Longbob Longsen</chname>
-    <type>VISA</type>
-    <issueno></issueno>
-    <cvn>
-      <number></number>
-      <presind></presind>
-    </cvn>
-  </card>
-  <sha1hash>d53aebf1eaee4c3ff4c30f83f27b80ce99ba5644</sha1hash>
-</request>
+    valid_verify_request_xml = <<~SRC
+      <request timestamp="20181026114304" type="otb">
+        <merchantid>your_merchant_id</merchantid>
+        <account>your_account</account>
+        <orderid>1</orderid>
+        <card>
+          <number>4263971921001307</number>
+          <expdate>0808</expdate>
+          <chname>Longbob Longsen</chname>
+          <type>VISA</type>
+          <issueno></issueno>
+          <cvn>
+            <number></number>
+            <presind></presind>
+          </cvn>
+        </card>
+        <sha1hash>d53aebf1eaee4c3ff4c30f83f27b80ce99ba5644</sha1hash>
+      </request>
     SRC
 
     assert_xml_equal valid_verify_request_xml, @gateway.build_verify_request(@credit_card, options)
@@ -308,26 +332,26 @@ class RealexTest < Test::Unit::TestCase
 
     @gateway.expects(:new_timestamp).returns('20090824160201')
 
-    valid_auth_request_xml = <<-SRC
-<request timestamp="20090824160201" type="auth">
-  <merchantid>your_merchant_id</merchantid>
-  <account>your_account</account>
-  <orderid>1</orderid>
-  <amount currency=\"EUR\">100</amount>
-  <card>
-    <number>4263971921001307</number>
-    <expdate>0808</expdate>
-    <chname>Longbob Longsen</chname>
-    <type>VISA</type>
-    <issueno></issueno>
-    <cvn>
-      <number></number>
-      <presind></presind>
-    </cvn>
-  </card>
-  <autosettle flag="0"/>
-  <sha1hash>3499d7bc8dbacdcfba2286bd74916d026bae630f</sha1hash>
-</request>
+    valid_auth_request_xml = <<~SRC
+      <request timestamp="20090824160201" type="auth">
+        <merchantid>your_merchant_id</merchantid>
+        <account>your_account</account>
+        <orderid>1</orderid>
+        <amount currency=\"EUR\">100</amount>
+        <card>
+          <number>4263971921001307</number>
+          <expdate>0808</expdate>
+          <chname>Longbob Longsen</chname>
+          <type>VISA</type>
+          <issueno></issueno>
+          <cvn>
+            <number></number>
+            <presind></presind>
+          </cvn>
+        </card>
+        <autosettle flag="0"/>
+        <sha1hash>3499d7bc8dbacdcfba2286bd74916d026bae630f</sha1hash>
+      </request>
     SRC
 
     assert_xml_equal valid_auth_request_xml, @gateway.build_purchase_or_authorization_request(:authorization, @amount, @credit_card, options)
@@ -336,17 +360,17 @@ class RealexTest < Test::Unit::TestCase
   def test_refund_xml
     @gateway.expects(:new_timestamp).returns('20090824160201')
 
-    valid_refund_request_xml = <<-SRC
-<request timestamp="20090824160201" type="rebate">
-  <merchantid>your_merchant_id</merchantid>
-  <account>your_account</account>
-  <orderid>1</orderid>
-  <pasref>4321</pasref>
-  <authcode>1234</authcode>
-  <amount currency="EUR">100</amount>
-  <autosettle flag="1"/>
-  <sha1hash>ef0a6c485452f3f94aff336fa90c6c62993056ca</sha1hash>
-</request>
+    valid_refund_request_xml = <<~SRC
+      <request timestamp="20090824160201" type="rebate">
+        <merchantid>your_merchant_id</merchantid>
+        <account>your_account</account>
+        <orderid>1</orderid>
+        <pasref>4321</pasref>
+        <authcode>1234</authcode>
+        <amount currency="EUR">100</amount>
+        <autosettle flag="1"/>
+        <sha1hash>ef0a6c485452f3f94aff336fa90c6c62993056ca</sha1hash>
+      </request>
     SRC
 
     assert_xml_equal valid_refund_request_xml, @gateway.build_refund_request(@amount, '1;4321;1234', {})
@@ -357,18 +381,18 @@ class RealexTest < Test::Unit::TestCase
 
     gateway.expects(:new_timestamp).returns('20090824160201')
 
-    valid_refund_request_xml = <<-SRC
-<request timestamp="20090824160201" type="rebate">
-  <merchantid>your_merchant_id</merchantid>
-  <account>your_account</account>
-  <orderid>1</orderid>
-  <pasref>4321</pasref>
-  <authcode>1234</authcode>
-  <amount currency="EUR">100</amount>
-  <refundhash>f94ff2a7c125a8ad87e5683114ba1e384889240e</refundhash>
-  <autosettle flag="1"/>
-  <sha1hash>ef0a6c485452f3f94aff336fa90c6c62993056ca</sha1hash>
-</request>
+    valid_refund_request_xml = <<~SRC
+      <request timestamp="20090824160201" type="rebate">
+        <merchantid>your_merchant_id</merchantid>
+        <account>your_account</account>
+        <orderid>1</orderid>
+        <pasref>4321</pasref>
+        <authcode>1234</authcode>
+        <amount currency="EUR">100</amount>
+        <refundhash>f94ff2a7c125a8ad87e5683114ba1e384889240e</refundhash>
+        <autosettle flag="1"/>
+        <sha1hash>ef0a6c485452f3f94aff336fa90c6c62993056ca</sha1hash>
+      </request>
     SRC
 
     assert_xml_equal valid_refund_request_xml, gateway.build_refund_request(@amount, '1;4321;1234', {})
@@ -381,26 +405,26 @@ class RealexTest < Test::Unit::TestCase
 
     @gateway.expects(:new_timestamp).returns('20190717161006')
 
-    valid_credit_request_xml = <<-SRC
-  <request timestamp="20190717161006" type="credit">
-  <merchantid>your_merchant_id</merchantid>
-  <account>your_account</account>
-  <orderid>1</orderid>
-  <amount currency="EUR">100</amount>
-  <card>
-    <number>4263971921001307</number>
-    <expdate>0808</expdate>
-    <chname>Longbob Longsen</chname>
-    <type>VISA</type>
-    <issueno></issueno>
-    <cvn>
-      <number></number>
-      <presind></presind>
-    </cvn>
-  </card>
-  <autosettle flag="1"/>
-  <sha1hash>73ff566dcfc3a73bebf1a2d387316162111f030e</sha1hash>
-</request>
+    valid_credit_request_xml = <<~SRC
+        <request timestamp="20190717161006" type="credit">
+        <merchantid>your_merchant_id</merchantid>
+        <account>your_account</account>
+        <orderid>1</orderid>
+        <amount currency="EUR">100</amount>
+        <card>
+          <number>4263971921001307</number>
+          <expdate>0808</expdate>
+          <chname>Longbob Longsen</chname>
+          <type>VISA</type>
+          <issueno></issueno>
+          <cvn>
+            <number></number>
+            <presind></presind>
+          </cvn>
+        </card>
+        <autosettle flag="1"/>
+        <sha1hash>73ff566dcfc3a73bebf1a2d387316162111f030e</sha1hash>
+      </request>
     SRC
 
     assert_xml_equal valid_credit_request_xml, @gateway.build_credit_request(@amount, @credit_card, options)
@@ -411,27 +435,27 @@ class RealexTest < Test::Unit::TestCase
 
     gateway.expects(:new_timestamp).returns('20190717161006')
 
-    valid_credit_request_xml = <<-SRC
-<request timestamp="20190717161006" type="credit">
-  <merchantid>your_merchant_id</merchantid>
-  <account>your_account</account>
-  <orderid>1</orderid>
-  <amount currency="EUR">100</amount>
-  <card>
-    <number>4263971921001307</number>
-    <expdate>0808</expdate>
-    <chname>Longbob Longsen</chname>
-    <type>VISA</type>
-    <issueno></issueno>
-    <cvn>
-      <number></number>
-      <presind></presind>
-    </cvn>
-  </card>
-  <refundhash>bbc192c6eac0132a039c23eae8550a22907c6796</refundhash>
-  <autosettle flag="1"/>
-  <sha1hash>73ff566dcfc3a73bebf1a2d387316162111f030e</sha1hash>
-</request>
+    valid_credit_request_xml = <<~SRC
+      <request timestamp="20190717161006" type="credit">
+        <merchantid>your_merchant_id</merchantid>
+        <account>your_account</account>
+        <orderid>1</orderid>
+        <amount currency="EUR">100</amount>
+        <card>
+          <number>4263971921001307</number>
+          <expdate>0808</expdate>
+          <chname>Longbob Longsen</chname>
+          <type>VISA</type>
+          <issueno></issueno>
+          <cvn>
+            <number></number>
+            <presind></presind>
+          </cvn>
+        </card>
+        <refundhash>bbc192c6eac0132a039c23eae8550a22907c6796</refundhash>
+        <autosettle flag="1"/>
+        <sha1hash>73ff566dcfc3a73bebf1a2d387316162111f030e</sha1hash>
+      </request>
     SRC
 
     assert_xml_equal valid_credit_request_xml, gateway.build_credit_request(@amount, @credit_card, @options)
@@ -489,7 +513,7 @@ class RealexTest < Test::Unit::TestCase
         cavv: '1234',
         eci: '1234',
         xid: '1234',
-        version: '1.0.2',
+        version: '1.0.2'
       }
     }
 
@@ -504,38 +528,38 @@ class RealexTest < Test::Unit::TestCase
         cavv: '1234',
         eci: '1234',
         xid: '1234',
-        version: '1.0.2',
+        version: '1.0.2'
       }
     }
 
     @gateway.expects(:new_timestamp).returns('20090824160201')
 
-    valid_auth_request_xml = <<-SRC
-<request timestamp="20090824160201" type="auth">
-  <merchantid>your_merchant_id</merchantid>
-  <account>your_account</account>
-  <orderid>1</orderid>
-  <amount currency=\"EUR\">100</amount>
-  <card>
-    <number>4263971921001307</number>
-    <expdate>0808</expdate>
-    <chname>Longbob Longsen</chname>
-    <type>VISA</type>
-    <issueno></issueno>
-    <cvn>
-      <number></number>
-      <presind></presind>
-    </cvn>
-  </card>
-  <autosettle flag="0"/>
-  <sha1hash>3499d7bc8dbacdcfba2286bd74916d026bae630f</sha1hash>
-  <mpi>
-    <cavv>1234</cavv>
-    <xid>1234</xid>
-    <eci>1234</eci>
-    <message_version>1.0.2</message_version>
-  </mpi>
-</request>
+    valid_auth_request_xml = <<~SRC
+      <request timestamp="20090824160201" type="auth">
+        <merchantid>your_merchant_id</merchantid>
+        <account>your_account</account>
+        <orderid>1</orderid>
+        <amount currency=\"EUR\">100</amount>
+        <card>
+          <number>4263971921001307</number>
+          <expdate>0808</expdate>
+          <chname>Longbob Longsen</chname>
+          <type>VISA</type>
+          <issueno></issueno>
+          <cvn>
+            <number></number>
+            <presind></presind>
+          </cvn>
+        </card>
+        <autosettle flag="0"/>
+        <sha1hash>3499d7bc8dbacdcfba2286bd74916d026bae630f</sha1hash>
+        <mpi>
+          <cavv>1234</cavv>
+          <xid>1234</xid>
+          <eci>1234</eci>
+          <message_version>1</message_version>
+        </mpi>
+      </request>
     SRC
 
     assert_xml_equal valid_auth_request_xml, @gateway.build_purchase_or_authorization_request(:authorization, @amount, @credit_card, options)
@@ -548,38 +572,38 @@ class RealexTest < Test::Unit::TestCase
         cavv: '1234',
         eci: '1234',
         ds_transaction_id: '1234',
-        version: '2.1.0',
+        version: '2.1.0'
       }
     }
 
     @gateway.expects(:new_timestamp).returns('20090824160201')
 
-    valid_auth_request_xml = <<-SRC
-<request timestamp="20090824160201" type="auth">
-  <merchantid>your_merchant_id</merchantid>
-  <account>your_account</account>
-  <orderid>1</orderid>
-  <amount currency=\"EUR\">100</amount>
-  <card>
-    <number>4263971921001307</number>
-    <expdate>0808</expdate>
-    <chname>Longbob Longsen</chname>
-    <type>VISA</type>
-    <issueno></issueno>
-    <cvn>
-      <number></number>
-      <presind></presind>
-    </cvn>
-  </card>
-  <autosettle flag="0"/>
-  <sha1hash>3499d7bc8dbacdcfba2286bd74916d026bae630f</sha1hash>
-  <mpi>
-    <authentication_value>1234</authentication_value>
-    <ds_trans_id>1234</ds_trans_id>
-    <eci>1234</eci>
-    <message_version>2.1.0</message_version>
-  </mpi>
-</request>
+    valid_auth_request_xml = <<~SRC
+      <request timestamp="20090824160201" type="auth">
+        <merchantid>your_merchant_id</merchantid>
+        <account>your_account</account>
+        <orderid>1</orderid>
+        <amount currency=\"EUR\">100</amount>
+        <card>
+          <number>4263971921001307</number>
+          <expdate>0808</expdate>
+          <chname>Longbob Longsen</chname>
+          <type>VISA</type>
+          <issueno></issueno>
+          <cvn>
+            <number></number>
+            <presind></presind>
+          </cvn>
+        </card>
+        <autosettle flag="0"/>
+        <sha1hash>3499d7bc8dbacdcfba2286bd74916d026bae630f</sha1hash>
+        <mpi>
+          <authentication_value>1234</authentication_value>
+          <ds_trans_id>1234</ds_trans_id>
+          <eci>1234</eci>
+          <message_version>2.1.0</message_version>
+        </mpi>
+      </request>
     SRC
 
     assert_xml_equal valid_auth_request_xml, @gateway.build_purchase_or_authorization_request(:authorization, @amount, @credit_card, options)
@@ -588,125 +612,125 @@ class RealexTest < Test::Unit::TestCase
   private
 
   def successful_purchase_response
-    <<-RESPONSE
-<response timestamp='20010427043422'>
-  <merchantid>your merchant id</merchantid>
-  <account>account to use</account>
-  <orderid>order id from request</orderid>
-  <authcode>authcode received</authcode>
-  <result>00</result>
-  <message>[ test system ] message returned from system</message>
-  <pasref> realex payments reference</pasref>
-  <cvnresult>M</cvnresult>
-  <batchid>batch id for this transaction (if any)</batchid>
-  <cardissuer>
-    <bank>Issuing Bank Name</bank>
-    <country>Issuing Bank Country</country>
-    <countrycode>Issuing Bank Country Code</countrycode>
-    <region>Issuing Bank Region</region>
-  </cardissuer>
-  <tss>
-    <result>89</result>
-    <check id="1000">9</check>
-    <check id="1001">9</check>
-  </tss>
-  <sha1hash>7384ae67....ac7d7d</sha1hash>
-  <md5hash>34e7....a77d</md5hash>
-</response>"
+    <<~RESPONSE
+      <response timestamp='20010427043422'>
+        <merchantid>your merchant id</merchantid>
+        <account>account to use</account>
+        <orderid>order id from request</orderid>
+        <authcode>authcode received</authcode>
+        <result>00</result>
+        <message>[ test system ] message returned from system</message>
+        <pasref> realex payments reference</pasref>
+        <cvnresult>M</cvnresult>
+        <batchid>batch id for this transaction (if any)</batchid>
+        <cardissuer>
+          <bank>Issuing Bank Name</bank>
+          <country>Issuing Bank Country</country>
+          <countrycode>Issuing Bank Country Code</countrycode>
+          <region>Issuing Bank Region</region>
+        </cardissuer>
+        <tss>
+          <result>89</result>
+          <check id="1000">9</check>
+          <check id="1001">9</check>
+        </tss>
+        <sha1hash>7384ae67....ac7d7d</sha1hash>
+        <md5hash>34e7....a77d</md5hash>
+      </response>"
     RESPONSE
   end
 
   def unsuccessful_purchase_response
-    <<-RESPONSE
-<response timestamp='20010427043422'>
-  <merchantid>your merchant id</merchantid>
-  <account>account to use</account>
-  <orderid>order id from request</orderid>
-  <authcode>authcode received</authcode>
-  <result>01</result>
-  <message>[ test system ] message returned from system</message>
-  <pasref> realex payments reference</pasref>
-  <cvnresult>M</cvnresult>
-  <batchid>batch id for this transaction (if any)</batchid>
-  <cardissuer>
-    <bank>Issuing Bank Name</bank>
-    <country>Issuing Bank Country</country>
-    <countrycode>Issuing Bank Country Code</countrycode>
-    <region>Issuing Bank Region</region>
-  </cardissuer>
-  <tss>
-    <result>89</result>
-    <check id="1000">9</check>
-    <check id="1001">9</check>
-  </tss>
-  <sha1hash>7384ae67....ac7d7d</sha1hash>
-  <md5hash>34e7....a77d</md5hash>
-</response>"
+    <<~RESPONSE
+      <response timestamp='20010427043422'>
+        <merchantid>your merchant id</merchantid>
+        <account>account to use</account>
+        <orderid>order id from request</orderid>
+        <authcode>authcode received</authcode>
+        <result>01</result>
+        <message>[ test system ] message returned from system</message>
+        <pasref> realex payments reference</pasref>
+        <cvnresult>M</cvnresult>
+        <batchid>batch id for this transaction (if any)</batchid>
+        <cardissuer>
+          <bank>Issuing Bank Name</bank>
+          <country>Issuing Bank Country</country>
+          <countrycode>Issuing Bank Country Code</countrycode>
+          <region>Issuing Bank Region</region>
+        </cardissuer>
+        <tss>
+          <result>89</result>
+          <check id="1000">9</check>
+          <check id="1001">9</check>
+        </tss>
+        <sha1hash>7384ae67....ac7d7d</sha1hash>
+        <md5hash>34e7....a77d</md5hash>
+      </response>"
     RESPONSE
   end
 
   def malformed_unsuccessful_purchase_response
-    <<-RESPONSE
-<response timestamp='20010427043422'>
-  <merchantid>your merchant id</merchantid>
-  <account>account to use</account>
-  <orderid>order id from request</orderid>
-  <authcode>authcode received</authcode>
-  <result>01</result>
-  <message>[ test system ] This is & not awesome</message>
-  <pasref> realex payments reference</pasref>
-  <cvnresult>M</cvnresult>
-  <batchid>batch id for this transaction (if any)</batchid>
-  <cardissuer>
-    <bank>Issuing Bank Name</bank>
-    <country>Issuing Bank Country</country>
-    <countrycode>Issuing Bank Country Code</countrycode>
-    <region>Issuing Bank Region</region>
-  </cardissuer>
-  <tss>
-    <result>89</result>
-    <check id="1000">9</check>
-    <check id="1001">9</check>
-  </tss>
-  <sha1hash>7384ae67....ac7d7d</sha1hash>
-  <md5hash>34e7....a77d</md5hash>
-</response>"
+    <<~RESPONSE
+      <response timestamp='20010427043422'>
+        <merchantid>your merchant id</merchantid>
+        <account>account to use</account>
+        <orderid>order id from request</orderid>
+        <authcode>authcode received</authcode>
+        <result>01</result>
+        <message>[ test system ] This is & not awesome</message>
+        <pasref> realex payments reference</pasref>
+        <cvnresult>M</cvnresult>
+        <batchid>batch id for this transaction (if any)</batchid>
+        <cardissuer>
+          <bank>Issuing Bank Name</bank>
+          <country>Issuing Bank Country</country>
+          <countrycode>Issuing Bank Country Code</countrycode>
+          <region>Issuing Bank Region</region>
+        </cardissuer>
+        <tss>
+          <result>89</result>
+          <check id="1000">9</check>
+          <check id="1001">9</check>
+        </tss>
+        <sha1hash>7384ae67....ac7d7d</sha1hash>
+        <md5hash>34e7....a77d</md5hash>
+      </response>"
     RESPONSE
   end
 
   def successful_refund_response
-    <<-RESPONSE
-<response timestamp='20010427043422'>
-  <merchantid>your merchant id</merchantid>
-  <account>account to use</account>
-  <orderid>order id from request</orderid>
-  <authcode>authcode received</authcode>
-  <result>00</result>
-  <message>[ test system ] message returned from system</message>
-  <pasref> realex payments reference</pasref>
-  <cvnresult>M</cvnresult>
-  <batchid>batch id for this transaction (if any)</batchid>
-  <sha1hash>7384ae67....ac7d7d</sha1hash>
-  <md5hash>34e7....a77d</md5hash>
-</response>"
+    <<~RESPONSE
+      <response timestamp='20010427043422'>
+        <merchantid>your merchant id</merchantid>
+        <account>account to use</account>
+        <orderid>order id from request</orderid>
+        <authcode>authcode received</authcode>
+        <result>00</result>
+        <message>[ test system ] message returned from system</message>
+        <pasref> realex payments reference</pasref>
+        <cvnresult>M</cvnresult>
+        <batchid>batch id for this transaction (if any)</batchid>
+        <sha1hash>7384ae67....ac7d7d</sha1hash>
+        <md5hash>34e7....a77d</md5hash>
+      </response>"
     RESPONSE
   end
 
   def unsuccessful_refund_response
-    <<-RESPONSE
-<response timestamp='20010427043422'>
-  <merchantid>your merchant id</merchantid>
-  <account>account to use</account>
-  <orderid>order id from request</orderid>
-  <authcode>authcode received</authcode>
-  <result>508</result>
-  <message>[ test system ] You may only rebate up to 115% of the original amount.</message>
-  <pasref> realex payments reference</pasref>
-  <cvnresult>M</cvnresult>
-  <batchid>batch id for this transaction (if any)</batchid>
-  <sha1hash>7384ae67....ac7d7d</sha1hash>
-  <md5hash>34e7....a77d</md5hash>
-</response>"
+    <<~RESPONSE
+      <response timestamp='20010427043422'>
+        <merchantid>your merchant id</merchantid>
+        <account>account to use</account>
+        <orderid>order id from request</orderid>
+        <authcode>authcode received</authcode>
+        <result>508</result>
+        <message>[ test system ] You may only rebate up to 115% of the original amount.</message>
+        <pasref> realex payments reference</pasref>
+        <cvnresult>M</cvnresult>
+        <batchid>batch id for this transaction (if any)</batchid>
+        <sha1hash>7384ae67....ac7d7d</sha1hash>
+        <md5hash>34e7....a77d</md5hash>
+      </response>"
     RESPONSE
   end
 
@@ -811,7 +835,6 @@ class RealexTest < Test::Unit::TestCase
     REQUEST
   end
 
-  require 'nokogiri'
   def assert_xml_equal(expected, actual)
     assert_xml_equal_recursive(Nokogiri::XML(expected).root, Nokogiri::XML(actual).root)
   end

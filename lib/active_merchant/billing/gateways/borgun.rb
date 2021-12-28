@@ -16,12 +16,12 @@ module ActiveMerchant #:nodoc:
 
       self.homepage_url = 'https://www.borgun.is/'
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :processor, :merchant_id, :username, :password)
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         post = {}
         post[:TransType] = '1'
         add_invoice(post, money, options)
@@ -29,7 +29,7 @@ module ActiveMerchant #:nodoc:
         commit('sale', post)
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         post = {}
         post[:TransType] = '5'
         add_invoice(post, money, options)
@@ -37,7 +37,7 @@ module ActiveMerchant #:nodoc:
         commit('authonly', post, options)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         post = {}
         post[:TransType] = '1'
         add_invoice(post, money, options)
@@ -45,7 +45,7 @@ module ActiveMerchant #:nodoc:
         commit('capture', post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         post = {}
         post[:TransType] = '3'
         add_invoice(post, money, options)
@@ -53,7 +53,7 @@ module ActiveMerchant #:nodoc:
         commit('refund', post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = {}
         # TransType, TrAmount, and currency must match original values from auth or purchase.
         _, _, _, _, _, transtype, tramount, currency = split_authorization(authorization)
@@ -76,7 +76,7 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      CURRENCY_CODES = Hash.new { |h, k| raise ArgumentError.new("Unsupported currency for HDFC: #{k}") }
+      CURRENCY_CODES = Hash.new { |_h, k| raise ArgumentError.new("Unsupported currency for HDFC: #{k}") }
       CURRENCY_CODES['ISK'] = '352'
       CURRENCY_CODES['EUR'] = '978'
       CURRENCY_CODES['USD'] = '840'
@@ -125,7 +125,7 @@ module ActiveMerchant #:nodoc:
         response
       end
 
-      def commit(action, post, options={})
+      def commit(action, post, options = {})
         post[:Version] = '1000'
         post[:Processor] = @options[:processor]
         post[:MerchantID] = @options[:merchant_id]
@@ -176,11 +176,11 @@ module ActiveMerchant #:nodoc:
 
       def headers
         {
-          'Authorization' => 'Basic ' + Base64.strict_encode64(@options[:username].to_s + ':' + @options[:password].to_s),
+          'Authorization' => 'Basic ' + Base64.strict_encode64(@options[:username].to_s + ':' + @options[:password].to_s)
         }
       end
 
-      def build_request(action, post, options={})
+      def build_request(action, post, options = {})
         mode = action == 'void' ? 'cancel' : 'get'
         xml = Builder::XmlMarkup.new indent: 18
         xml.instruct!(:xml, version: '1.0', encoding: 'utf-8')
@@ -205,7 +205,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def envelope(mode)
-        <<-EOS
+        <<-XML
           <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:aut="http://Borgun/Heimir/pub/ws/Authorization">
             <soapenv:Header/>
             <soapenv:Body>
@@ -216,7 +216,7 @@ module ActiveMerchant #:nodoc:
               </aut:#{mode}AuthorizationInput>
             </soapenv:Body>
           </soapenv:Envelope>
-        EOS
+        XML
       end
 
       def url(action)

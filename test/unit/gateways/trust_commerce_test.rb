@@ -41,7 +41,7 @@ class TrustCommerceTest < Test::Unit::TestCase
     ActiveMerchant::Billing::TrustCommerceGateway.application_id = 'abc123'
     stub_comms do
       @gateway.purchase(@amount, @check)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{aggregator1}, data)
       assert_match(%r{name=Jim\+Smith}, data)
     end.respond_with(successful_purchase_response)
@@ -50,7 +50,7 @@ class TrustCommerceTest < Test::Unit::TestCase
   def test_succesful_purchase_with_custom_fields
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options_with_custom_fields)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{customfield1=test1}, data)
     end.respond_with(successful_purchase_response)
   end
@@ -58,7 +58,7 @@ class TrustCommerceTest < Test::Unit::TestCase
   def test_succesful_authorize_with_custom_fields
     stub_comms do
       @gateway.authorize(@amount, @check, @options_with_custom_fields)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{customfield1=test1}, data)
     end.respond_with(successful_authorize_response)
   end
@@ -66,7 +66,7 @@ class TrustCommerceTest < Test::Unit::TestCase
   def test_successful_void_from_purchase
     stub_comms do
       @gateway.void('1235|sale')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{action=void}, data)
     end.respond_with(successful_void_response)
   end
@@ -74,7 +74,7 @@ class TrustCommerceTest < Test::Unit::TestCase
   def test_successful_void_from_authorize
     stub_comms do
       @gateway.void('1235|preauth')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{action=reversal}, data)
     end.respond_with(successful_void_response)
   end
@@ -82,7 +82,7 @@ class TrustCommerceTest < Test::Unit::TestCase
   def test_succesful_capture_with_custom_fields
     stub_comms do
       @gateway.capture(@amount, 'auth', @options_with_custom_fields)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{customfield1=test1}, data)
     end.respond_with(successful_capture_response)
   end
@@ -90,7 +90,7 @@ class TrustCommerceTest < Test::Unit::TestCase
   def test_succesful_refund_with_custom_fields
     stub_comms do
       @gateway.refund(@amount, 'auth|100', @options_with_custom_fields)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{customfield1=test1}, data)
     end.respond_with(successful_refund_response)
   end
@@ -98,7 +98,7 @@ class TrustCommerceTest < Test::Unit::TestCase
   def test_succesful_void_with_custom_fields
     stub_comms do
       @gateway.void('1235|sale', @options_with_custom_fields)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{customfield1=test1}, data)
     end.respond_with(successful_void_response)
   end
@@ -106,7 +106,7 @@ class TrustCommerceTest < Test::Unit::TestCase
   def test_succesful_store_with_custom_fields
     stub_comms do
       @gateway.store(@credit_card, @options_with_custom_fields)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{customfield1=test1}, data)
     end.respond_with(successful_store_response)
   end
@@ -114,7 +114,7 @@ class TrustCommerceTest < Test::Unit::TestCase
   def test_succesful_unstore_with_custom_fields
     stub_comms do
       @gateway.unstore('test', @options_with_custom_fields)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r{customfield1=test1}, data)
     end.respond_with(successful_unstore_response)
   end
@@ -163,83 +163,99 @@ class TrustCommerceTest < Test::Unit::TestCase
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end
 
+  def test_transcript_scrubbing_echeck
+    assert_equal scrubbed_echeck_transcript, @gateway.scrub(echeck_transcript)
+  end
+
   private
 
   def successful_authorize_response
-    <<-RESPONSE
-authcode=123456
-transid=026-0193338367,
-status=approved
-avs=Y
-cvv=M
+    <<~RESPONSE
+      authcode=123456
+      transid=026-0193338367,
+      status=approved
+      avs=Y
+      cvv=M
     RESPONSE
   end
 
   def successful_purchase_response
-    <<-RESPONSE
-transid=025-0007423614
-status=approved
-avs=Y
-cvv=P
+    <<~RESPONSE
+      transid=025-0007423614
+      status=approved
+      avs=Y
+      cvv=P
     RESPONSE
   end
 
   def successful_capture_response
-    <<-RESPONSE
-transid=026-0193338993
-status=accepted
+    <<~RESPONSE
+      transid=026-0193338993
+      status=accepted
     RESPONSE
   end
 
   def unsuccessful_purchase_response
-    <<-RESPONSE
-transid=025-0007423827
-declinetype=cvv
-status=decline
-cvv=N
+    <<~RESPONSE
+      transid=025-0007423827
+      declinetype=cvv
+      status=decline
+      cvv=N
     RESPONSE
   end
 
   def successful_void_response
-    <<-RESPONSE
-transid=025-0007423828
-status=accpeted
+    <<~RESPONSE
+      transid=025-0007423828
+      status=accpeted
     RESPONSE
   end
 
   def successful_refund_response
-    <<-RESPONSE
-transid=026-0193345407
-status=accepted
+    <<~RESPONSE
+      transid=026-0193345407
+      status=accepted
     RESPONSE
   end
 
   def successful_store_response
-    <<-RESPONSE
-transid=026-0193346109
-status=approved,
-cvv=M,
-avs=0
-billingid=Q5T7PT
+    <<~RESPONSE
+      transid=026-0193346109
+      status=approved,
+      cvv=M,
+      avs=0
+      billingid=Q5T7PT
     RESPONSE
   end
 
   def successful_unstore_response
-    <<-RESPONSE
-transid=026-0193346231
-status=rejected
+    <<~RESPONSE
+      transid=026-0193346231
+      status=rejected
     RESPONSE
   end
 
   def transcript
-    <<-TRANSCRIPT
-action=sale&demo=y&password=password&custid=TestMerchant&shipto_zip=90001&shipto_state=CA&shipto_city=Somewhere&shipto_address1=123+Test+St.&avs=n&zip=90001&state=CA&city=Somewhere&address1=123+Test+St.&cvv=1234&exp=0916&cc=4111111111111111&name=Longbob+Longsen&media=cc&ip=10.10.10.10&email=cody%40example.com&ticket=%231000.1&amount=100
+    <<~TRANSCRIPT
+      action=sale&demo=y&password=password&custid=TestMerchant&shipto_zip=90001&shipto_state=CA&shipto_city=Somewhere&shipto_address1=123+Test+St.&avs=n&zip=90001&state=CA&city=Somewhere&address1=123+Test+St.&cvv=1234&exp=0916&cc=4111111111111111&name=Longbob+Longsen&media=cc&ip=10.10.10.10&email=cody%40example.com&ticket=%231000.1&amount=100
     TRANSCRIPT
   end
 
   def scrubbed_transcript
-    <<-TRANSCRIPT
-action=sale&demo=y&password=[FILTERED]&custid=TestMerchant&shipto_zip=90001&shipto_state=CA&shipto_city=Somewhere&shipto_address1=123+Test+St.&avs=n&zip=90001&state=CA&city=Somewhere&address1=123+Test+St.&cvv=[FILTERED]&exp=0916&cc=[FILTERED]&name=Longbob+Longsen&media=cc&ip=10.10.10.10&email=cody%40example.com&ticket=%231000.1&amount=100
+    <<~TRANSCRIPT
+      action=sale&demo=y&password=[FILTERED]&custid=TestMerchant&shipto_zip=90001&shipto_state=CA&shipto_city=Somewhere&shipto_address1=123+Test+St.&avs=n&zip=90001&state=CA&city=Somewhere&address1=123+Test+St.&cvv=[FILTERED]&exp=0916&cc=[FILTERED]&name=Longbob+Longsen&media=cc&ip=10.10.10.10&email=cody%40example.com&ticket=%231000.1&amount=100
+    TRANSCRIPT
+  end
+
+  def echeck_transcript
+    <<~TRANSCRIPT
+      action=sale&demo=y&password=A3pN3F3Am8du&custid=1249400&customfield1=test1&shipto_zip=90001&shipto_state=CA&shipto_city=Somewhere&shipto_address1=123+Test+St.&avs=n&zip=90001&state=CA&city=Somewhere&address1=123+Test+St.&name=Jim+Smith&account=55544433221&routing=789456124&media=ach&ip=10.10.10.10&email=cody%40example.com&aggregator1=2FCTLKF&aggregators=1&ticket=%231000.1&amount=100
+    TRANSCRIPT
+  end
+
+  def scrubbed_echeck_transcript
+    <<~TRANSCRIPT
+      action=sale&demo=y&password=[FILTERED]&custid=1249400&customfield1=test1&shipto_zip=90001&shipto_state=CA&shipto_city=Somewhere&shipto_address1=123+Test+St.&avs=n&zip=90001&state=CA&city=Somewhere&address1=123+Test+St.&name=Jim+Smith&account=[FILTERED]&routing=789456124&media=ach&ip=10.10.10.10&email=cody%40example.com&aggregator1=2FCTLKF&aggregators=1&ticket=%231000.1&amount=100
     TRANSCRIPT
   end
 end

@@ -13,8 +13,7 @@ class CardStreamTest < Test::Unit::TestCase
       month: '12',
       year: '2014',
       verification_value: '356',
-      brand: :visa
-    )
+      brand: :visa)
 
     @visacredit_options = {
       billing_address: {
@@ -44,13 +43,11 @@ class CardStreamTest < Test::Unit::TestCase
       month: '12',
       year: 2014,
       verification_value: '4887',
-      brand: :american_express
-    )
+      brand: :american_express)
 
     @declined_card = credit_card('4000300011112220',
       month: '9',
-      year: '2014'
-    )
+      year: '2014')
   end
 
   def test_successful_visacreditcard_authorization
@@ -137,7 +134,7 @@ class CardStreamTest < Test::Unit::TestCase
   def test_successful_visacreditcard_purchase_with_descriptors
     stub_comms do
       @gateway.purchase(284, @visacreditcard, @visacredit_descriptor_options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/statementNarrative1=merchant/, data)
       assert_match(/statementNarrative2=product/, data)
     end.respond_with(successful_purchase_response_with_descriptors)
@@ -146,7 +143,7 @@ class CardStreamTest < Test::Unit::TestCase
   def test_successful_visacreditcard_purchase_with_default_ip
     stub_comms do
       @gateway.purchase(284, @visacreditcard, @visacredit_options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/remoteAddress=1\.1\.1\.1/, data)
     end.respond_with(successful_purchase_response_with_descriptors)
   end
@@ -154,7 +151,7 @@ class CardStreamTest < Test::Unit::TestCase
   def test_successful_visacreditcard_purchase_with_default_country
     stub_comms do
       @gateway.purchase(284, @visacreditcard, @visacredit_options.delete(:billing_address))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/customerCountryCode=GB/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -189,7 +186,7 @@ class CardStreamTest < Test::Unit::TestCase
   def test_successful_amex_purchase_with_localized_invoice_amount
     stub_comms do
       @gateway.purchase(28400, @amex, @visacredit_descriptor_options.merge(currency: 'JPY', order_id: '1234567890'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/item1GrossValue=284&/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -214,7 +211,7 @@ class CardStreamTest < Test::Unit::TestCase
     # Default
     purchase = stub_comms do
       @gateway.purchase(142, @visacreditcard, @visacredit_options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/type=1/, data)
     end.respond_with(successful_purchase_response)
 
@@ -222,7 +219,7 @@ class CardStreamTest < Test::Unit::TestCase
 
     purchase = stub_comms do
       @gateway.purchase(142, @visacreditcard, @visacredit_options.merge(type: 2))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/type=2/, data)
     end.respond_with(successful_purchase_response)
 
@@ -230,7 +227,7 @@ class CardStreamTest < Test::Unit::TestCase
 
     purchase = stub_comms do
       @gateway.purchase(142, @visacreditcard, @visacredit_options.merge(currency: 'PEN'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/currencyCode=604/, data)
     end.respond_with(successful_purchase_response)
 
@@ -239,7 +236,7 @@ class CardStreamTest < Test::Unit::TestCase
 
   def test_successful_purchase_without_street_address
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
-    assert response = @gateway.purchase(142, @visacreditcard, billing_address: {state: 'Northampton'})
+    assert response = @gateway.purchase(142, @visacreditcard, billing_address: { state: 'Northampton' })
     assert_equal 'APPROVED', response.message
   end
 
@@ -249,11 +246,21 @@ class CardStreamTest < Test::Unit::TestCase
     assert_equal 'APPROVED', response.message
   end
 
+  def test_adding_country_code
+    %i[authorize purchase refund].each do |action|
+      stub_comms do
+        @gateway.send(action, 142, @visacreditcard, @visacredit_options.merge(country_code: 'US'))
+      end.check_request do |_endpoint, data, _headers|
+        assert_match(/&countryCode=US/, data)
+      end.respond_with(successful_purchase_response)
+    end
+  end
+
   def test_hmac_signature_added_to_post
     post_params = "action=SALE&amount=10000&captureDelay=0&cardCVV=356&cardExpiryMonth=12&cardExpiryYear=14&cardNumber=4929421234600821&countryCode=GB&currencyCode=826&customerAddress=Flat+6%2C+Primrose+Rise+347+Lavender+Road&customerCountryCode=GB&customerName=Longbob+Longsen&customerPostCode=NN17+8YG+&merchantID=login&orderRef=AM+test+purchase&remoteAddress=1.1.1.1&threeDSRequired=N&transactionUnique=#{@visacredit_options[:order_id]}&type=1"
     expected_signature = Digest::SHA512.hexdigest("#{post_params}#{@gateway.options[:shared_secret]}")
 
-    @gateway.expects(:ssl_post).with do |url, data|
+    @gateway.expects(:ssl_post).with do |_url, data|
       data.include?("signature=#{expected_signature}")
     end.returns(successful_authorization_response)
 
@@ -263,7 +270,7 @@ class CardStreamTest < Test::Unit::TestCase
   def test_nonfractional_currency_handling
     stub_comms do
       @gateway.authorize(200, @visacreditcard, @visacredit_options.merge(currency: 'JPY'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/amount=2&currencyCode=392/, data)
     end.respond_with(successful_authorization_response)
   end
@@ -271,7 +278,7 @@ class CardStreamTest < Test::Unit::TestCase
   def test_3ds_response
     purchase = stub_comms do
       @gateway.purchase(142, @visacreditcard, @visacredit_options.merge(threeds_required: true))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/threeDSRequired=Y/, data)
     end.respond_with(successful_purchase_response_with_3dsecure)
 
@@ -291,7 +298,7 @@ class CardStreamTest < Test::Unit::TestCase
     end
     stub_comms do
       @gateway.purchase(142, @visacreditcard, @visacredit_options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/threeDSRequired=Y/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -299,7 +306,7 @@ class CardStreamTest < Test::Unit::TestCase
   def test_default_3dsecure_required
     stub_comms do
       @gateway.purchase(142, @visacreditcard, @visacredit_options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/threeDSRequired=N/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -363,16 +370,16 @@ class CardStreamTest < Test::Unit::TestCase
   end
 
   def transcript
-    <<-eos
+    <<-REQUEST
      POST /direct/ HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: gateway.cardstream.com\r\nContent-Length: 501\r\n\r\n"
      amount=&currencyCode=826&transactionUnique=a017ca2ac0569188517ad8368c36a06d&orderRef=AM+test+purchase&customerName=Longbob+Longsen&cardNumber=4929421234600821&cardExpiryMonth=12&cardExpiryYear=14&cardCVV=356&customerAddress=Flat+6%2C+Primrose+Rise+347+Lavender+Road&customerPostCode=NN17+8YG+&merchantID=102922&action=SALE&type=1&countryCode=GB&threeDSRequired=N&signature=970b3fe099a85c9922a79af46c2cb798616b9fbd044a921ac5eb46cd1907a5e89b8c720aae59c7eb1d81a59563f209d5db51aa3c270838199f2bfdcbe2c1149d
-    eos
+    REQUEST
   end
 
   def scrubbed_transcript
-    <<-eos
+    <<-REQUEST
      POST /direct/ HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: gateway.cardstream.com\r\nContent-Length: 501\r\n\r\n"
      amount=&currencyCode=826&transactionUnique=a017ca2ac0569188517ad8368c36a06d&orderRef=AM+test+purchase&customerName=Longbob+Longsen&cardNumber=[FILTERED]&cardExpiryMonth=12&cardExpiryYear=14&cardCVV=[FILTERED]&customerAddress=Flat+6%2C+Primrose+Rise+347+Lavender+Road&customerPostCode=NN17+8YG+&merchantID=102922&action=SALE&type=1&countryCode=GB&threeDSRequired=N&signature=970b3fe099a85c9922a79af46c2cb798616b9fbd044a921ac5eb46cd1907a5e89b8c720aae59c7eb1d81a59563f209d5db51aa3c270838199f2bfdcbe2c1149d
-    eos
+    REQUEST
   end
 end

@@ -13,12 +13,12 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://www.iveri.com'
       self.display_name = 'iVeri'
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :app_id, :cert_id)
         super
       end
 
-      def purchase(money, payment_method, options={})
+      def purchase(money, payment_method, options = {})
         post = build_vxml_request('Debit', options) do |xml|
           add_auth_purchase_params(xml, money, payment_method, options)
         end
@@ -26,7 +26,7 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
-      def authorize(money, payment_method, options={})
+      def authorize(money, payment_method, options = {})
         post = build_vxml_request('Authorisation', options) do |xml|
           add_auth_purchase_params(xml, money, payment_method, options)
         end
@@ -34,7 +34,7 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         post = build_vxml_request('Debit', options) do |xml|
           add_authorization(xml, authorization, options)
         end
@@ -42,7 +42,7 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         post = build_vxml_request('Credit', options) do |xml|
           add_amount(xml, money, options)
           add_authorization(xml, authorization, options)
@@ -51,7 +51,7 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = build_vxml_request('Void', options) do |xml|
           add_authorization(xml, authorization, options)
         end
@@ -59,7 +59,7 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }

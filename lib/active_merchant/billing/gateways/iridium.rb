@@ -203,7 +203,7 @@ module ActiveMerchant #:nodoc:
         'YER' => '886',
         'ZAR' => '710',
         'ZMK' => '894',
-        'ZWD' => '716',
+        'ZWD' => '716'
       }
 
       AVS_CODE = {
@@ -251,16 +251,16 @@ module ActiveMerchant #:nodoc:
         commit(build_reference_request('COLLECTION', money, authorization, options), options)
       end
 
-      def credit(money, authorization, options={})
+      def credit(money, authorization, options = {})
         ActiveMerchant.deprecated CREDIT_DEPRECATION_MESSAGE
         refund(money, authorization, options)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         commit(build_reference_request('REFUND', money, authorization, options), options)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         commit(build_reference_request('VOID', nil, authorization, options), options)
       end
 
@@ -292,12 +292,12 @@ module ActiveMerchant #:nodoc:
         build_request(options) do |xml|
           if money
             currency = options[:currency] || currency(money)
-            details = {'CurrencyCode' => currency_code(currency), 'Amount' => localized_amount(money, currency)}
+            details = { 'CurrencyCode' => currency_code(currency), 'Amount' => localized_amount(money, currency) }
           else
-            details = {'CurrencyCode' => currency_code(default_currency), 'Amount' => '0'}
+            details = { 'CurrencyCode' => currency_code(default_currency), 'Amount' => '0' }
           end
           xml.tag! 'TransactionDetails', details do
-            xml.tag! 'MessageDetails', {'TransactionType' => type, 'CrossReference' => cross_reference}
+            xml.tag! 'MessageDetails', { 'TransactionType' => type, 'CrossReference' => cross_reference }
             xml.tag! 'OrderID', (options[:order_id] || order_id)
           end
         end
@@ -309,9 +309,9 @@ module ActiveMerchant #:nodoc:
         xml.instruct!(:xml, version: '1.0', encoding: 'utf-8')
         xml.tag! 'soap:Envelope', { 'xmlns:soap' => 'http://schemas.xmlsoap.org/soap/envelope/',
                                     'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance',
-                                    'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema'} do
+                                    'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema' } do
           xml.tag! 'soap:Body' do
-            xml.tag! options[:action], {'xmlns' => 'https://www.thepaymentgateway.net/'} do
+            xml.tag! options[:action], { 'xmlns' => 'https://www.thepaymentgateway.net/' } do
               xml.tag! 'PaymentMessage' do
                 add_merchant_data(xml, options)
                 yield(xml)
@@ -330,8 +330,8 @@ module ActiveMerchant #:nodoc:
       def add_purchase_data(xml, type, money, options)
         currency = options[:currency] || currency(money)
         requires!(options, :order_id)
-        xml.tag! 'TransactionDetails', {'Amount' => localized_amount(money, currency), 'CurrencyCode' => currency_code(currency)} do
-          xml.tag! 'MessageDetails', {'TransactionType' => type}
+        xml.tag! 'TransactionDetails', { 'Amount' => localized_amount(money, currency), 'CurrencyCode' => currency_code(currency) } do
+          xml.tag! 'MessageDetails', { 'TransactionType' => type }
           xml.tag! 'OrderID', options[:order_id]
           xml.tag! 'TransactionControl' do
             xml.tag! 'ThreeDSecureOverridePolicy', 'FALSE'
@@ -371,13 +371,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_merchant_data(xml, options)
-        xml.tag! 'MerchantAuthentication', {'MerchantID' => @options[:login], 'Password' => @options[:password]}
+        xml.tag! 'MerchantAuthentication', { 'MerchantID' => @options[:login], 'Password' => @options[:password] }
       end
 
       def commit(request, options)
         requires!(options, :action)
         response = parse(ssl_post(test? ? self.test_url : self.live_url, request,
-          {'SOAPAction' => 'https://www.thepaymentgateway.net/' + options[:action],
+          { 'SOAPAction' => 'https://www.thepaymentgateway.net/' + options[:action],
            'Content-Type' => 'text/xml; charset=utf-8' }))
 
         success = response[:transaction_result][:status_code] == '0'
@@ -389,16 +389,15 @@ module ActiveMerchant #:nodoc:
           authorization: authorization,
           avs_result: {
             street_match: AVS_CODE[ response[:transaction_output_data][:address_numeric_check_result] ],
-            postal_match: AVS_CODE[ response[:transaction_output_data][:post_code_check_result] ],
+            postal_match: AVS_CODE[ response[:transaction_output_data][:post_code_check_result] ]
           },
-          cvv_result: CVV_CODE[ response[:transaction_output_data][:cv2_check_result] ]
-        )
+          cvv_result: CVV_CODE[ response[:transaction_output_data][:cv2_check_result] ])
       end
 
       def parse(xml)
         reply = {}
         xml = REXML::Document.new(xml)
-        if (root = REXML::XPath.first(xml, '//CardDetailsTransactionResponse')) or
+        if (root = REXML::XPath.first(xml, '//CardDetailsTransactionResponse')) ||
            (root = REXML::XPath.first(xml, '//CrossReferenceTransactionResponse'))
           root.elements.to_a.each do |node|
             case node.name

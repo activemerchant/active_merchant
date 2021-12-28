@@ -204,7 +204,7 @@ module ActiveMerchant #:nodoc:
         perform_reference_credit(money, reference, options)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -432,9 +432,9 @@ module ActiveMerchant #:nodoc:
             raise "Unknown signature algorithm #{algorithm}"
           end
 
-        filtered_params = signed_parameters.select { |k, v| !v.blank? }
+        filtered_params = signed_parameters.select { |_k, v| !v.blank? }
         sha_encryptor.hexdigest(
-          filtered_params.sort_by { |k, v| k.upcase }.map { |k, v| "#{k.upcase}=#{v}#{secret}" }.join('')
+          filtered_params.sort_by { |k, _v| k.upcase }.map { |k, v| "#{k.upcase}=#{v}#{secret}" }.join('')
         ).upcase
       end
 

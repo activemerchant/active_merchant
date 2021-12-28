@@ -73,7 +73,7 @@ class CheckoutTest < Test::Unit::TestCase
   def test_passes_correct_currency
     stub_comms do
       @gateway.purchase(100, credit_card, @options.merge(currency: 'EUR'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<bill_currencycode>EUR<\/bill_currencycode>/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -85,7 +85,7 @@ class CheckoutTest < Test::Unit::TestCase
     )
     stub_comms do
       @gateway.purchase(100, credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/<descriptor_name>ZahName<\/descriptor_name>/, data)
       assert_match(/<descriptor_city>Oakland<\/descriptor_city>/, data)
     end.respond_with(successful_purchase_response)
@@ -95,7 +95,7 @@ class CheckoutTest < Test::Unit::TestCase
     @options['orderid'] = '9c38d0506da258e216fa072197faaf37'
     void = stub_comms(@gateway, :ssl_request) do
       @gateway.void('36919371|9c38d0506da258e216fa072197faaf37|1|CAD|100', @options)
-    end.check_request do |method, endpoint, data, headers|
+    end.check_request do |_method, _endpoint, data, _headers|
       # Should only be one pair of track id tags.
       assert_equal 2, data.scan(/trackid/).count
     end.respond_with(successful_void_response)

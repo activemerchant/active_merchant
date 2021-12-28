@@ -53,6 +53,13 @@ class RemoteHpsTest < Test::Unit::TestCase
     assert_equal 'Success', response.message
   end
 
+  def test_successful_purchase_with_hyphenated_zip
+    @options[:billing_address][:zip] = '12345-1234'
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
   def test_successful_purchase_no_address
     options = {
       order_id: '1',
@@ -116,7 +123,7 @@ class RemoteHpsTest < Test::Unit::TestCase
     assert_failure response
   end
 
-  def test_successful_refund
+  def test_successful_purchase_refund
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
@@ -126,7 +133,20 @@ class RemoteHpsTest < Test::Unit::TestCase
     assert_equal '0', refund.params['GatewayRspCode']
   end
 
-  def test_partial_refund
+  def test_successful_capture_refund
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    assert capture = @gateway.capture(nil, auth.authorization)
+    assert_success capture
+
+    assert refund = @gateway.refund(@amount, capture.authorization)
+    assert_success refund
+    assert_equal 'Success', refund.params['GatewayRspMsg']
+    assert_equal '0', refund.params['GatewayRspCode']
+  end
+
+  def test_partial_purchase_refund
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
@@ -136,9 +156,33 @@ class RemoteHpsTest < Test::Unit::TestCase
     assert_equal '0', refund.params['GatewayRspCode']
   end
 
+  def test_partial_capture_refund
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    assert capture = @gateway.capture(nil, auth.authorization)
+    assert_success capture
+
+    assert refund = @gateway.refund(@amount - 1, capture.authorization)
+    assert_success refund
+    assert_equal 'Success', refund.params['GatewayRspMsg']
+    assert_equal '0', refund.params['GatewayRspCode']
+  end
+
   def test_failed_refund
     response = @gateway.refund(nil, '')
     assert_failure response
+  end
+
+  def test_successful_credit
+    credit = @gateway.credit(@amount, @credit_card, @options)
+    assert_success credit
+    assert_equal 'Success', credit.params['GatewayRspMsg']
+  end
+
+  def test_failed_credit
+    credit = @gateway.credit(nil, @credit_card)
+    assert_failure credit
   end
 
   def test_successful_void
@@ -227,6 +271,31 @@ class RemoteHpsTest < Test::Unit::TestCase
     assert_equal 'Success', response.message
   end
 
+  def test_successful_purchase_with_stored_credentials
+    initial_options = @options.merge(
+      stored_credential: {
+        initial_transaction: true,
+        reason_type: 'recurring'
+      }
+    )
+    initial_response = @gateway.purchase(@amount, @credit_card, initial_options)
+    assert_success initial_response
+    assert_equal 'Success', initial_response.message
+    assert_not_nil initial_response.params['CardBrandTxnId']
+    network_transaction_id = initial_response.params['CardBrandTxnId']
+
+    used_options = @options.merge(
+      stored_credential: {
+        initial_transaction: false,
+        reason_type: 'unscheduled',
+        network_transaction_id: network_transaction_id
+      }
+    )
+    response = @gateway.purchase(@amount, @credit_card, used_options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
   def test_failed_purchase_with_swipe_bad_track_data
     @credit_card.track_data = '%B547888879888877776?;?'
     response = @gateway.purchase(@amount, @credit_card, @options)
@@ -250,6 +319,13 @@ class RemoteHpsTest < Test::Unit::TestCase
     @options[:ktb] = '/wECAQECAoFGAgEH3QgVTDT6jRZwb3NAc2VjdXJlZXhjaGFuZ2UubmV0Nkt08KRSPigRYcr1HVgjRFEvtUBy+VcCKlOGA3871r3SOkqDvH2+30insdLHmhTLCc4sC2IhlobvWnutAfylKk2GLspH/pfEnVKPvBv0hBnF4413+QIRlAuGX6+qZjna2aMl0kIsjEY4N6qoVq2j5/e5I+41+a2pbm61blv2PEMAmyuCcAbN3/At/1kRZNwN6LSUg9VmJO83kOglWBe1CbdFtncq'
     @credit_card.track_data = '7SV2BK6ESQPrq01iig27E74SxMg'
     response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_purchase_with_truncated_invoicenbr
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(order_id: '04863692e6b56aaed85760b3d0879afd18b980da0521f6454c007a838435e561'))
 
     assert_success response
     assert_equal 'Success', response.message
@@ -287,8 +363,7 @@ class RemoteHpsTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :apple_pay
-    )
+      source: :apple_pay)
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, credit_card, @options)
     end
@@ -299,13 +374,21 @@ class RemoteHpsTest < Test::Unit::TestCase
     assert_scrubbed(credit_card.payment_cryptogram, transcript)
   end
 
+  def test_account_number_scrubbing
+    options = @options.merge(company_name: 'Hot Buttered Toast Incorporated')
+    transcript = capture_transcript(@check_gateway) do
+      @check_gateway.purchase(@check_amount, @check, options)
+    end
+    clean_transcript = @check_gateway.scrub(transcript)
+    assert_scrubbed(@check.account_number, clean_transcript)
+  end
+
   def test_successful_purchase_with_apple_pay_raw_cryptogram_with_eci
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :apple_pay
-    )
+      source: :apple_pay)
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -315,8 +398,7 @@ class RemoteHpsTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :apple_pay
-    )
+      source: :apple_pay)
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -327,8 +409,7 @@ class RemoteHpsTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :apple_pay
-    )
+      source: :apple_pay)
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -338,8 +419,7 @@ class RemoteHpsTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :apple_pay
-    )
+      source: :apple_pay)
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -350,8 +430,7 @@ class RemoteHpsTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :android_pay
-    )
+      source: :android_pay)
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -361,8 +440,7 @@ class RemoteHpsTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :android_pay
-    )
+      source: :android_pay)
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -373,8 +451,7 @@ class RemoteHpsTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :android_pay
-    )
+      source: :android_pay)
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -384,8 +461,7 @@ class RemoteHpsTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :android_pay
-    )
+      source: :android_pay)
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -396,8 +472,7 @@ class RemoteHpsTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :google_pay
-    )
+      source: :google_pay)
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -407,8 +482,7 @@ class RemoteHpsTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :google_pay
-    )
+      source: :google_pay)
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -419,8 +493,7 @@ class RemoteHpsTest < Test::Unit::TestCase
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
-      source: :google_pay
-    )
+      source: :google_pay)
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -430,8 +503,7 @@ class RemoteHpsTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
-      source: :google_pay
-    )
+      source: :google_pay)
     assert response = @gateway.authorize(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message

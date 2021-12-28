@@ -8,12 +8,11 @@ class RemotePaymentezTest < Test::Unit::TestCase
     @credit_card = credit_card('4111111111111111', verification_value: '666')
     @elo_credit_card = credit_card('6362970000457013',
       month: 10,
-      year: 2020,
+      year: 2022,
       first_name: 'John',
       last_name: 'Smith',
       verification_value: '737',
-      brand: 'elo'
-    )
+      brand: 'elo')
     @declined_card = credit_card('4242424242424242', verification_value: '666')
     @options = {
       billing_address: address,
@@ -22,6 +21,29 @@ class RemotePaymentezTest < Test::Unit::TestCase
       email: 'joe@example.com',
       vat: 0,
       dev_reference: 'Testing'
+    }
+
+    @cavv = 'example-cavv-value'
+    @xid = 'three-ds-v1-trans-id'
+    @eci = '01'
+    @three_ds_v1_version = '1.0.2'
+    @three_ds_v2_version = '2.1.0'
+    @three_ds_server_trans_id = 'three-ds-v2-trans-id'
+    @authentication_response_status = 'Y'
+
+    @three_ds_v1_mpi = {
+      cavv: @cavv,
+      eci: @eci,
+      version: @three_ds_v1_version,
+      xid: @xid
+    }
+
+    @three_ds_v2_mpi = {
+      cavv: @cavv,
+      eci: @eci,
+      version: @three_ds_v2_version,
+      three_ds_server_trans_id: @three_ds_server_trans_id,
+      authentication_response_status: @authentication_response_status
     }
   end
 
@@ -93,6 +115,18 @@ class RemotePaymentezTest < Test::Unit::TestCase
     assert_success purchase_response
   end
 
+  def test_successful_purchase_with_3ds1_mpi_fields
+    @options[:three_d_secure] = @three_ds_v1_mpi
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+  end
+
+  def test_successful_purchase_with_3ds2_mpi_fields
+    @options[:three_d_secure] = @three_ds_v2_mpi
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
@@ -106,6 +140,17 @@ class RemotePaymentezTest < Test::Unit::TestCase
     assert refund = @gateway.refund(@amount, auth.authorization, @options)
     assert_success refund
     assert_equal 'Completed', refund.message
+  end
+
+  def test_successful_refund_with_more_info
+    auth = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success auth
+
+    assert refund = @gateway.refund(@amount, auth.authorization, @options.merge(more_info: true))
+    assert_success refund
+    assert_equal 'Completed', refund.message
+    assert_equal '00', refund.params['transaction']['carrier_code']
+    assert_equal 'Reverse by mock', refund.params['transaction']['message']
   end
 
   def test_successful_refund_with_elo
@@ -138,7 +183,7 @@ class RemotePaymentezTest < Test::Unit::TestCase
   def test_failed_void
     response = @gateway.void('')
     assert_failure response
-    assert_equal 'Carrier not supported', response.message
+    assert_equal 'ValidationError', response.message
     assert_equal Gateway::STANDARD_ERROR_CODE[:config_error], response.error_code
   end
 
@@ -172,9 +217,22 @@ class RemotePaymentezTest < Test::Unit::TestCase
   def test_successful_authorize_and_capture_with_different_amount
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
-    assert capture = @gateway.capture(@amount + 100, auth.authorization)
+    amount = 99.0
+    assert capture = @gateway.capture(amount, auth.authorization)
     assert_success capture
     assert_equal 'Response by mock', capture.message
+  end
+
+  def test_successful_authorize_with_3ds1_mpi_fields
+    @options[:three_d_secure] = @three_ds_v1_mpi
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+  end
+
+  def test_successful_authorize_with_3ds2_mpi_fields
+    @options[:three_d_secure] = @three_ds_v2_mpi
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
   end
 
   def test_failed_authorize

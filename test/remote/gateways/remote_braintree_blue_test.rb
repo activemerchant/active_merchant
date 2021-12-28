@@ -75,7 +75,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_hold_in_escrow
-    @options.merge({merchant_account_id: fixtures(:braintree_blue)[:merchant_account_id], hold_in_escrow: true})
+    @options.merge({ merchant_account_id: fixtures(:braintree_blue)[:merchant_account_id], hold_in_escrow: true })
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
     assert_equal '1000 Approved', response.message
@@ -167,6 +167,17 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal '1000 Approved', response.message
   end
 
+  def test_successful_purchase_sending_risk_data
+    options = @options.merge(
+      risk_data: {
+        customer_browser: 'User-Agent Header',
+        customer_ip: '127.0.0.1'
+      }
+    )
+    assert response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+  end
+
   def test_successful_verify
     assert response = @gateway.verify(@credit_card, @options)
     assert_success response
@@ -179,9 +190,26 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_match %r{number is not an accepted test number}, response.message
   end
 
+  def test_successful_credit_card_verification
+    card = credit_card('4111111111111111')
+    assert response = @gateway.verify(card, @options.merge({ allow_card_verification: true }))
+    assert_success response
+    assert_match 'OK', response.message
+    assert_equal 'M', response.cvv_result['code']
+    assert_equal 'P', response.avs_result['code']
+  end
+
+  def test_failed_credit_card_verification
+    credit_card = credit_card('378282246310005', verification_value: '544')
+
+    assert response = @gateway.verify(credit_card, @options.merge({ allow_card_verification: true }))
+    assert_failure response
+    assert_match 'CVV must be 4 digits for American Express and 3 digits for other card types. (81707)', response.message
+  end
+
   def test_successful_verify_with_device_data
     # Requires Advanced Fraud Tools to be enabled
-    assert response = @gateway.verify(@credit_card, @options.merge({device_data: 'device data for verify'}))
+    assert response = @gateway.verify(@credit_card, @options.merge({ device_data: 'device data for verify' }))
     assert_success response
     assert_equal '1000 Approved', response.message
 
@@ -190,7 +218,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert transaction['risk_data']['id']
     assert_equal 'Approve', transaction['risk_data']['decision']
     assert_equal false, transaction['risk_data']['device_data_captured']
-    assert_equal 'kount', transaction['risk_data']['fraud_service_provider']
+    assert_equal 'fraud_protection', transaction['risk_data']['fraud_service_provider']
   end
 
   def test_successful_validate_on_store
@@ -379,19 +407,18 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
   def test_cvv_match
     assert response = @gateway.purchase(@amount, credit_card('5105105105105100', verification_value: '400'))
     assert_success response
-    assert_equal({'code' => 'M', 'message' => ''}, response.cvv_result)
+    assert_equal({ 'code' => 'M', 'message' => '' }, response.cvv_result)
   end
 
   def test_cvv_no_match
     assert response = @gateway.purchase(@amount, credit_card('5105105105105100', verification_value: '200'))
     assert_success response
-    assert_equal({'code' => 'N', 'message' => ''}, response.cvv_result)
+    assert_equal({ 'code' => 'N', 'message' => '' }, response.cvv_result)
   end
 
   def test_successful_purchase_with_email
     assert response = @gateway.purchase(@amount, @credit_card,
-      email: 'customer@example.com'
-    )
+      email: 'customer@example.com')
     assert_success response
     transaction = response.params['braintree_transaction']
     assert_equal 'customer@example.com', transaction['customer_details']['email']
@@ -443,7 +470,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert transaction['risk_data']['id']
     assert_equal 'Approve', transaction['risk_data']['decision']
     assert_equal false, transaction['risk_data']['device_data_captured']
-    assert_equal 'kount', transaction['risk_data']['fraud_service_provider']
+    assert_equal 'fraud_protection', transaction['risk_data']['fraud_service_provider']
   end
 
   def test_purchase_with_store_using_random_customer_id
@@ -483,8 +510,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert response = @gateway.store(
       credit_card('4111111111111111',
         first_name: 'Old First', last_name: 'Old Last',
-        month: 9, year: 2012
-      ),
+        month: 9, year: 2012),
       email: 'old@example.com',
       phone: '321-654-0987'
     )
@@ -518,8 +544,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     }
     assert response = @gateway.purchase(@amount, @credit_card,
       billing_address: billing_address,
-      shipping_address: shipping_address
-    )
+      shipping_address: shipping_address)
     assert_success response
     transaction = response.params['braintree_transaction']
     assert_equal '1 E Main St', transaction['billing_details']['street_address']
@@ -541,16 +566,14 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
   def test_successful_purchase_with_three_d_secure_pass_thru
     three_d_secure_params = { version: '2.0', cavv: 'cavv', eci: '02', ds_transaction_id: 'trans_id', cavv_algorithm: 'algorithm', directory_response_status: 'directory', authentication_response_status: 'auth' }
     response = @gateway.purchase(@amount, @credit_card,
-      three_d_secure: three_d_secure_params
-    )
+      three_d_secure: three_d_secure_params)
     assert_success response
   end
 
   def test_successful_purchase_with_some_three_d_secure_pass_thru_fields
     three_d_secure_params = { version: '2.0', cavv: 'cavv', eci: '02', ds_transaction_id: 'trans_id' }
     response = @gateway.purchase(@amount, @credit_card,
-      three_d_secure: three_d_secure_params
-    )
+      three_d_secure: three_d_secure_params)
     assert_success response
   end
 
@@ -565,7 +588,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, credit_card('51051051051051000'))
     assert_failure response
     assert_match %r{Credit card number is invalid\. \(81715\)}, response.message
-    assert_equal({'processor_response_code' => '91577'}, response.params['braintree_transaction'])
+    assert_equal({ 'processor_response_code' => '91577' }, response.params['braintree_transaction'])
   end
 
   def test_authorize_and_capture
@@ -581,8 +604,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     credit_card = network_tokenization_credit_card('4111111111111111',
       brand: 'visa',
       eci: '05',
-      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
-    )
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=')
 
     assert auth = @gateway.authorize(@amount, credit_card, @options)
     assert_success auth
@@ -599,8 +621,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
       year: '2024',
       source: :android_pay,
       transaction_id: '123456789',
-      eci: '05'
-    )
+      eci: '05')
 
     assert auth = @gateway.authorize(@amount, credit_card, @options)
     assert_success auth
@@ -617,8 +638,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
       year: '2024',
       source: :google_pay,
       transaction_id: '123456789',
-      eci: '05'
-    )
+      eci: '05')
 
     assert auth = @gateway.authorize(@amount, credit_card, @options)
     assert_success auth
@@ -669,7 +689,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert failed_void = @gateway.void(auth.authorization)
     assert_failure failed_void
     assert_match('Transaction can only be voided if status is authorized', failed_void.message)
-    assert_equal({'processor_response_code' => '91504'}, failed_void.params['braintree_transaction'])
+    assert_equal({ 'processor_response_code' => '91504' }, failed_void.params['braintree_transaction'])
   end
 
   def test_failed_capture_with_invalid_transaction_id
@@ -731,8 +751,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert response = @gateway.store(
       credit_card('4111111111111111',
         first_name: 'Old First', last_name: 'Old Last',
-        month: 9, year: 2012
-      ),
+        month: 9, year: 2012),
       email: 'old@example.com',
       phone: '321-654-0987'
     )
@@ -753,8 +772,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
       customer_vault_id,
       credit_card('5105105105105100',
         first_name: 'New First', last_name: 'New Last',
-        month: 10, year: 2014
-      ),
+        month: 10, year: 2014),
       email: 'new@example.com',
       phone: '987-765-5432'
     )
@@ -814,7 +832,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert response = @gateway.update(
       customer_vault_id,
       credit_card('4000111111111115'),
-      {verify_card: true}
+      { verify_card: true }
     )
     assert_failure response
     assert_equal 'Processor declined: Do Not Honor (2000)', response.message
@@ -867,8 +885,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
         lodging_check_in_date: '2050-07-22',
         lodging_check_out_date: '2050-07-25',
         lodging_name: 'Best Hotel Ever'
-      }
-    )
+      })
     assert_success auth
   end
 
@@ -879,8 +896,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
         check_in_date: '2050-12-22',
         check_out_date: '2050-12-25',
         room_rate: '80.00'
-      }
-    )
+      })
     assert_success auth
   end
 
@@ -959,6 +975,25 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal 'submitted_for_settlement', response.params['braintree_transaction']['status']
   end
 
+  def test_successful_cardholder_purchase_initial_setup
+    creds_options = { initiator: 'merchant', reason_type: 'recurring_first', initial_transaction: true }
+    response = @gateway.purchase(@amount, credit_card('4111111111111111'), @options.merge(stored_credential: creds_options))
+    assert_success response
+    assert_equal '1000 Approved', response.message
+    assert_not_nil response.params['braintree_transaction']['network_transaction_id']
+    assert_equal 'submitted_for_settlement', response.params['braintree_transaction']['status']
+    assert_equal true, response.params['braintree_transaction']['recurring']
+  end
+
+  def test_successful_cardholder_purchase_initial_moto
+    creds_options = { initiator: 'merchant', reason_type: 'moto', initial_transaction: true }
+    response = @gateway.purchase(@amount, credit_card('4111111111111111'), @options.merge(stored_credential: creds_options))
+    assert_success response
+    assert_equal '1000 Approved', response.message
+    assert_not_nil response.params['braintree_transaction']['network_transaction_id']
+    assert_equal 'submitted_for_settlement', response.params['braintree_transaction']['status']
+  end
+
   private
 
   def stored_credential_options(*args, id: nil)
@@ -966,7 +1001,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
   end
 
   def assert_avs(address1, zip, expected_avs_code)
-    response = @gateway.purchase(@amount, @credit_card, billing_address: {address1: address1, zip: zip})
+    response = @gateway.purchase(@amount, @credit_card, billing_address: { address1: address1, zip: zip })
 
     assert_success response
     assert_equal expected_avs_code, response.avs_result['code']

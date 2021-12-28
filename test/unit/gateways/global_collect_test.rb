@@ -16,6 +16,18 @@ class GlobalCollectTest < Test::Unit::TestCase
       billing_address: address,
       description: 'Store Purchase'
     }
+    @options_3ds2 = @options.merge(
+      three_d_secure: {
+        version: '2.1.0',
+        eci: '05',
+        cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA=',
+        xid: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA=',
+        ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC',
+        acs_transaction_id: '13c701a3-5a88-4c45-89e9-ef65e50a8bf9',
+        cavv_algorithm: 1,
+        authentication_response_status: 'Y'
+      }
+    )
   end
 
   def test_successful_authorize_and_capture
@@ -28,11 +40,26 @@ class GlobalCollectTest < Test::Unit::TestCase
 
     capture = stub_comms do
       @gateway.capture(@accepted_amount, response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |endpoint, _data, _headers|
       assert_match(/000000142800000000920000100001/, endpoint)
     end.respond_with(successful_capture_response)
 
     assert_success capture
+  end
+
+  def test_successful_preproduction_url
+    @gateway = GlobalCollectGateway.new(
+      merchant_id: '1234',
+      api_key_id: '39u4193urng12',
+      secret_api_key: '109H/288H*50Y18W4/0G8571F245KA=',
+      url_override: 'preproduction'
+    )
+
+    stub_comms do
+      @gateway.authorize(@accepted_amount, @credit_card)
+    end.check_request do |endpoint, _data, _headers|
+      assert_match(/world\.preprod\.api-ingenico\.com\/v1\/#{@gateway.options[:merchant_id]}/, endpoint)
+    end.respond_with(successful_authorize_response)
   end
 
   # When requires_approval is true (or not present),
@@ -48,7 +75,7 @@ class GlobalCollectTest < Test::Unit::TestCase
   def test_successful_purchase_with_requires_approval_false
     stub_comms do
       @gateway.purchase(@accepted_amount, @credit_card, @options.merge(requires_approval: false))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_equal false, JSON.parse(data)['cardPaymentMethodSpecificInput']['requiresApproval']
     end.respond_with(successful_authorize_response)
   end
@@ -66,22 +93,96 @@ class GlobalCollectTest < Test::Unit::TestCase
             date: '20190810',
             carrier_code: 'SA',
             number: 596,
-            airline_class: 'ZZ'},
+            airline_class: 'ZZ' },
           { arrival_airport: 'RDU',
             origin_airport: 'BDL',
             date: '20190817',
             carrier_code: 'SA',
             number: 597,
-            airline_class: 'ZZ'}
+            airline_class: 'ZZ' }
         ]
       }
     )
     stub_comms do
       @gateway.purchase(@accepted_amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_equal 111, JSON.parse(data)['order']['additionalInput']['airlineData']['code']
       assert_equal '20190810', JSON.parse(data)['order']['additionalInput']['airlineData']['flightDate']
       assert_equal 2, JSON.parse(data)['order']['additionalInput']['airlineData']['flightLegs'].length
+    end.respond_with(successful_authorize_response, successful_capture_response)
+  end
+
+  def test_successful_purchase_lodging_fields
+    options = @options.merge(
+      lodging_data: {
+        charges: [
+          { charge_amount: '1000',
+            charge_amount_currency_code: 'USD',
+            charge_type: 'giftshop' }
+        ],
+        check_in_date: '20211223',
+        check_out_date: '20211227',
+        folio_number: 'randAssortmentofChars',
+        is_confirmed_reservation: 'true',
+        is_facility_fire_safety_conform: 'true',
+        is_no_show: 'false',
+        is_preference_smoking_room: 'false',
+        number_of_adults: '2',
+        number_of_nights: '1',
+        number_of_rooms: '1',
+        program_code: 'advancedDeposit',
+        property_customer_service_phone_number: '5555555555',
+        property_phone_number: '5555555555',
+        renter_name: 'Guy',
+        rooms: [
+          { daily_room_rate: '25000',
+            daily_room_rate_currency_code: 'USD',
+            daily_room_tax_amount: '5',
+            daily_room_tax_amount_currency_code: 'USD',
+            number_of_nights_at_room_rate: '1',
+            room_location: 'Courtyard',
+            type_of_bed: 'Queen',
+            type_of_room: 'Walled' }
+        ]
+      }
+    )
+    stub_comms do
+      @gateway.purchase(@accepted_amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 'advancedDeposit', JSON.parse(data)['order']['additionalInput']['lodgingData']['programCode']
+      assert_equal '20211223', JSON.parse(data)['order']['additionalInput']['lodgingData']['checkInDate']
+      assert_equal '1000', JSON.parse(data)['order']['additionalInput']['lodgingData']['charges'][0]['chargeAmount']
+    end.respond_with(successful_authorize_response, successful_capture_response)
+  end
+
+  def test_successful_purchase_passenger_fields
+    options = @options.merge(
+      airline_data: {
+        passengers: [
+          { first_name: 'Randi',
+            surname: 'Smith',
+            surname_prefix: 'S',
+            title: 'Mr' },
+          { first_name: 'Julia',
+            surname: 'Smith',
+            surname_prefix: 'S',
+            title: 'Mrs' }
+        ]
+      }
+    )
+    stub_comms do
+      @gateway.purchase(@accepted_amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 'Julia', JSON.parse(data)['order']['additionalInput']['airlineData']['passengers'][1]['firstName']
+      assert_equal 2, JSON.parse(data)['order']['additionalInput']['airlineData']['passengers'].length
+    end.respond_with(successful_authorize_response, successful_capture_response)
+  end
+
+  def test_purchase_passes_installments
+    stub_comms do
+      @gateway.purchase(@accepted_amount, @credit_card, @options.merge(number_of_installments: '3'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/"numberOfInstallments\":\"3\"/, data)
     end.respond_with(successful_authorize_response, successful_capture_response)
   end
 
@@ -98,7 +199,7 @@ class GlobalCollectTest < Test::Unit::TestCase
   def test_authorize_with_pre_authorization_flag
     response = stub_comms do
       @gateway.authorize(@accepted_amount, @credit_card, @options.merge(pre_authorization: true))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/PRE_AUTHORIZATION/, data)
     end.respond_with(successful_authorize_response)
 
@@ -108,7 +209,7 @@ class GlobalCollectTest < Test::Unit::TestCase
   def test_authorize_without_pre_authorization_flag
     response = stub_comms do
       @gateway.authorize(@accepted_amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/FINAL_AUTHORIZATION/, data)
     end.respond_with(successful_authorize_response)
 
@@ -132,10 +233,46 @@ class GlobalCollectTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.authorize(@accepted_amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match %r("fraudFields":{"website":"www.example.com","giftMessage":"Happy Day!","customerIpAddress":"127.0.0.1"}), data
       assert_match %r("merchantReference":"123"), data
       assert_match %r("customer":{"personalInformation":{"name":{"firstName":"Longbob","surname":"Longsen"}},"merchantCustomerId":"123987","contactDetails":{"emailAddress":"example@example.com","phoneNumber":"\(555\)555-5555"},"billingAddress":{"street":"456 My Street","additionalInfo":"Apt 1","zip":"K1C2N6","city":"Ottawa","state":"ON","countryCode":"CA"}}}), data
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
+  def test_successful_authorize_with_3ds_auth
+    response = stub_comms do
+      @gateway.authorize(@accepted_amount, @credit_card, @options_3ds2)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/"threeDSecure\":{\"externalCardholderAuthenticationData\":{/, data)
+      assert_match(/"eci\":\"05\"/, data)
+      assert_match(/"cavv\":\"jJ81HADVRtXfCBATEp01CJUAAAA=\"/, data)
+      assert_match(/"xid\":\"BwABBJQ1AgAAAAAgJDUCAAAAAAA=\"/, data)
+      assert_match(/"threeDSecureVersion\":\"2.1.0\"/, data)
+      assert_match(/"directoryServerTransactionId\":\"97267598-FAE6-48F2-8083-C23433990FBC\"/, data)
+      assert_match(/"acsTransactionId\":\"13c701a3-5a88-4c45-89e9-ef65e50a8bf9\"/, data)
+      assert_match(/"cavvAlgorithm\":1/, data)
+      assert_match(/"validationResult\":\"Y\"/, data)
+    end.respond_with(successful_authorize_with_3ds2_data_response)
+
+    assert_success response
+  end
+
+  def test_does_not_send_3ds_auth_when_empty
+    response = stub_comms do
+      @gateway.authorize(@accepted_amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_not_match(/threeDSecure/, data)
+      assert_not_match(/externalCardholderAuthenticationData/, data)
+      assert_not_match(/cavv/, data)
+      assert_not_match(/xid/, data)
+      assert_not_match(/threeDSecureVersion/, data)
+      assert_not_match(/directoryServerTransactionId/, data)
+      assert_not_match(/acsTransactionId/, data)
+      assert_not_match(/cavvAlgorithm/, data)
+      assert_not_match(/validationResult/, data)
     end.respond_with(successful_authorize_response)
 
     assert_success response
@@ -146,7 +283,7 @@ class GlobalCollectTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.authorize(@accepted_amount, credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/thisisaverylong/, data)
     end.respond_with(successful_authorize_response)
 
@@ -155,12 +292,30 @@ class GlobalCollectTest < Test::Unit::TestCase
   end
 
   def test_handles_blank_names
-    credit_card = credit_card('4567350000427977', { first_name: nil, last_name: nil})
+    credit_card = credit_card('4567350000427977', { first_name: nil, last_name: nil })
 
     response = stub_comms do
       @gateway.authorize(@accepted_amount, credit_card, @options)
     end.respond_with(successful_authorize_response)
 
+    assert_success response
+  end
+
+  def test_truncates_address_fields
+    response = stub_comms do
+      @gateway.purchase(@accepted_amount, @credit_card, {
+        billing_address: {
+          address1: '1234 Supercalifragilisticexpialidociousthiscantbemorethanfiftycharacters',
+          address2: 'Unit 6',
+          city: '‎Portland',
+          state: 'ME',
+          zip: '09901',
+          country: 'US'
+        }
+      })
+    end.check_request do |_endpoint, data, _headers|
+      refute_match(/Supercalifragilisticexpialidociousthiscantbemorethanfiftycharacters/, data)
+    end.respond_with(successful_capture_response)
     assert_success response
   end
 
@@ -191,7 +346,7 @@ class GlobalCollectTest < Test::Unit::TestCase
 
     void = stub_comms do
       @gateway.void(response.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |endpoint, _data, _headers|
       assert_match(/000000142800000000920000100001/, endpoint)
     end.respond_with(successful_void_response)
 
@@ -201,7 +356,7 @@ class GlobalCollectTest < Test::Unit::TestCase
   def test_failed_void
     response = stub_comms do
       @gateway.void('5d53a33d960c46d00f5dc061947d998c')
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |endpoint, _data, _headers|
       assert_match(/5d53a33d960c46d00f5dc061947d998c/, endpoint)
     end.respond_with(failed_void_response)
 
@@ -239,7 +394,7 @@ class GlobalCollectTest < Test::Unit::TestCase
 
     refund = stub_comms do
       @gateway.refund(@accepted_amount, capture.authorization)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |endpoint, _data, _headers|
       assert_match(/000000142800000000920000100001/, endpoint)
     end.respond_with(successful_refund_response)
 
@@ -248,8 +403,8 @@ class GlobalCollectTest < Test::Unit::TestCase
 
   def test_refund_passes_currency_code
     stub_comms do
-      @gateway.refund(@accepted_amount, '000000142800000000920000100001', {currency: 'COP'})
-    end.check_request do |endpoint, data, headers|
+      @gateway.refund(@accepted_amount, '000000142800000000920000100001', { currency: 'COP' })
+    end.check_request do |_endpoint, data, _headers|
       assert_match(/"currencyCode\":\"COP\"/, data)
     end.respond_with(failed_refund_response)
   end
@@ -292,6 +447,16 @@ class GlobalCollectTest < Test::Unit::TestCase
     end.respond_with(invalid_json_plus_card_data).message
 
     assert_equal @gateway.scrub(response), scrubbed_invalid_json_plus
+  end
+
+  def test_authorize_with_optional_idempotency_key_header
+    response = stub_comms do
+      @gateway.authorize(@accepted_amount, @credit_card, @options.merge(idempotency_key: 'test123'))
+    end.check_request do |_endpoint, _data, headers|
+      assert_equal headers['X-GCS-Idempotence-Key'], 'test123'
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
   end
 
   private
@@ -410,6 +575,10 @@ class GlobalCollectTest < Test::Unit::TestCase
 
   def successful_authorize_response
     "{\n   \"creationOutput\" : {\n      \"additionalReference\" : \"00000014280000000092\",\n      \"externalReference\" : \"000000142800000000920000100001\"\n   },\n   \"payment\" : {\n      \"id\" : \"000000142800000000920000100001\",\n      \"paymentOutput\" : {\n         \"amountOfMoney\" : {\n            \"amount\" : 4005,\n            \"currencyCode\" : \"USD\"\n         },\n         \"references\" : {\n            \"paymentReference\" : \"0\"\n         },\n         \"paymentMethod\" : \"card\",\n         \"cardPaymentMethodSpecificOutput\" : {\n            \"paymentProductId\" : 1,\n            \"authorisationCode\" : \"OK1131\",\n            \"fraudResults\" : {\n               \"fraudServiceResult\" : \"no-advice\",\n               \"avsResult\" : \"0\",\n               \"cvvResult\" : \"0\"\n            },\n            \"card\" : {\n               \"cardNumber\" : \"************7977\",\n               \"expiryDate\" : \"0920\"\n            }\n         }\n      },\n      \"status\" : \"PENDING_APPROVAL\",\n      \"statusOutput\" : {\n         \"isCancellable\" : true,\n         \"statusCategory\" : \"PENDING_MERCHANT\",\n         \"statusCode\" : 600,\n         \"statusCodeChangeDateTime\" : \"20191203162910\",\n         \"isAuthorized\" : true,\n         \"isRefundable\" : false\n      }\n   }\n}"
+  end
+
+  def successful_authorize_with_3ds2_data_response
+    %({\"creationOutput\":{\"additionalReference\":\"00000021960000002279\",\"externalReference\":\"000000219600000022790000100001\"},\"payment\":{\"id\":\"000000219600000022790000100001\",\"paymentOutput\":{\"amountOfMoney\":{\"amount\":100,\"currencyCode\":\"USD\"},\"references\":{\"paymentReference\":\"0\"},\"paymentMethod\":\"card\",\"cardPaymentMethodSpecificOutput\":{\"paymentProductId\":1,\"authorisationCode\":\"OK1131\",\"fraudResults\":{\"fraudServiceResult\":\"no-advice\",\"avsResult\":\"0\",\"cvvResult\":\"0\"},\"threeDSecureResults\":{\"cavv\":\"jJ81HADVRtXfCBATEp01CJUAAAA=\",\"directoryServerTransactionId\":\"97267598-FAE6-48F2-8083-C23433990FBC\",\"eci\":\"5\",\"threeDSecureVersion\":\"2.1.0\"},\"card\":{\"cardNumber\":\"************7977\",\"expiryDate\":\"0921\"}}},\"status\":\"PENDING_APPROVAL\",\"statusOutput\":{\"isCancellable\":true,\"statusCategory\":\"PENDING_MERCHANT\",\"statusCode\":600,\"statusCodeChangeDateTime\":\"20201029212921\",\"isAuthorized\":true,\"isRefundable\":false}}})
   end
 
   def failed_authorize_response

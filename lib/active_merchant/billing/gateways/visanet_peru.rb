@@ -13,19 +13,19 @@ module ActiveMerchant #:nodoc:
       self.money_format = :dollars
       self.supported_cardtypes = %i[visa master american_express discover]
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :access_key_id, :secret_access_key, :merchant_id)
         super
       end
 
-      def purchase(amount, payment_method, options={})
+      def purchase(amount, payment_method, options = {})
         MultiResponse.run() do |r|
           r.process { authorize(amount, payment_method, options) }
           r.process { capture(amount, r.authorization, options) }
         end
       end
 
-      def authorize(amount, payment_method, options={})
+      def authorize(amount, payment_method, options = {})
         params = {}
 
         add_invoice(params, amount, options)
@@ -37,20 +37,20 @@ module ActiveMerchant #:nodoc:
         commit('authorize', params, options)
       end
 
-      def capture(amount, authorization, options={})
+      def capture(amount, authorization, options = {})
         params = {}
         options[:id_unico] = split_authorization(authorization)[1]
         add_auth_order_id(params, authorization, options)
         commit('deposit', params, options)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         params = {}
         add_auth_order_id(params, authorization, options)
         commit('void', params, options)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, options = {})
         params = {}
         params[:amount] = amount(amount) if amount
         add_auth_order_id(params, authorization, options)
@@ -65,7 +65,7 @@ module ActiveMerchant #:nodoc:
         commit('refund', params, options)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -85,7 +85,7 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      CURRENCY_CODES = Hash.new { |h, k| raise ArgumentError.new("Unsupported currency: #{k}") }
+      CURRENCY_CODES = Hash.new { |_h, k| raise ArgumentError.new("Unsupported currency: #{k}") }
       CURRENCY_CODES['USD'] = 840
       CURRENCY_CODES['PEN'] = 604
 
@@ -142,7 +142,7 @@ module ActiveMerchant #:nodoc:
         authorization.split('|')
       end
 
-      def commit(action, params, options={})
+      def commit(action, params, options = {})
         raw_response = ssl_request(method(action), url(action, params, options), params.to_json, headers)
         response = parse(raw_response)
       rescue ResponseError => e
@@ -168,7 +168,7 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def url(action, params, options={})
+      def url(action, params, options = {})
         if action == 'authorize'
           "#{base_url}/#{@options[:merchant_id]}"
         elsif action == 'refund'

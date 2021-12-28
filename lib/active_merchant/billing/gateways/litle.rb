@@ -5,7 +5,10 @@ module ActiveMerchant #:nodoc:
     class LitleGateway < Gateway
       SCHEMA_VERSION = '9.14'
 
+      class_attribute :postlive_url
+
       self.test_url = 'https://www.testvantivcnp.com/sandbox/communicator/online'
+      self.postlive_url = 'https://payments.vantivpostlive.com/vap/communicator/online'
       self.live_url = 'https://payments.vantivcnp.com/vap/communicator/online'
 
       self.supported_countries = ['US']
@@ -15,12 +18,12 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://www.vantiv.com/'
       self.display_name = 'Vantiv eCommerce'
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :login, :password, :merchant_id)
         super
       end
 
-      def purchase(money, payment_method, options={})
+      def purchase(money, payment_method, options = {})
         request = build_xml_request do |doc|
           add_authentication(doc)
           if check?(payment_method)
@@ -36,7 +39,7 @@ module ActiveMerchant #:nodoc:
         check?(payment_method) ? commit(:echeckSales, request, money) : commit(:sale, request, money)
       end
 
-      def authorize(money, payment_method, options={})
+      def authorize(money, payment_method, options = {})
         request = build_xml_request do |doc|
           add_authentication(doc)
           if check?(payment_method)
@@ -52,7 +55,7 @@ module ActiveMerchant #:nodoc:
         check?(payment_method) ? commit(:echeckVerification, request, money) : commit(:authorization, request, money)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         transaction_id, = split_authorization(authorization)
 
         request = build_xml_request do |doc|
@@ -72,7 +75,7 @@ module ActiveMerchant #:nodoc:
         refund(money, authorization, options)
       end
 
-      def refund(money, payment, options={})
+      def refund(money, payment, options = {})
         request = build_xml_request do |doc|
           add_authentication(doc)
           add_descriptor(doc, options)
@@ -84,7 +87,7 @@ module ActiveMerchant #:nodoc:
             elsif check?(payment)
               add_echeck_purchase_params(doc, money, payment, options)
             else
-              add_auth_purchase_params(doc, money, payment, options)
+              add_credit_params(doc, money, payment, options)
             end
           end
         end
@@ -99,7 +102,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         transaction_id, kind, money = split_authorization(authorization)
 
         request = build_xml_request do |doc|
@@ -227,7 +230,18 @@ module ActiveMerchant #:nodoc:
         add_stored_credential_params(doc, options)
       end
 
-      def add_merchant_data(doc, options={})
+      def add_credit_params(doc, money, payment_method, options)
+        doc.orderId(truncate(options[:order_id], 24))
+        doc.amount(money)
+        add_order_source(doc, payment_method, options)
+        add_billing_address(doc, payment_method, options)
+        add_payment_method(doc, payment_method, options)
+        add_pos(doc, payment_method)
+        add_descriptor(doc, options)
+        add_merchant_data(doc, options)
+      end
+
+      def add_merchant_data(doc, options = {})
         if options[:affiliate] || options[:campaign] || options[:merchant_grouping_id]
           doc.merchantData do
             doc.affiliate(options[:affiliate]) if options[:affiliate]
@@ -274,7 +288,7 @@ module ActiveMerchant #:nodoc:
             doc.accType(payment_method.account_type.capitalize)
             doc.accNum(payment_method.account_number)
             doc.routingNum(payment_method.routing_number)
-            doc.checkNum(payment_method.number)
+            doc.checkNum(payment_method.number) if payment_method.number
           end
         else
           doc.card do
@@ -296,7 +310,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_stored_credential_params(doc, options={})
+      def add_stored_credential_params(doc, options = {})
         return unless options[:stored_credential]
 
         if options[:stored_credential][:initial_transaction]
@@ -357,9 +371,9 @@ module ActiveMerchant #:nodoc:
         return unless address
 
         doc.companyName(address[:company]) unless address[:company].blank?
-        doc.addressLine1(address[:address1]) unless address[:address1].blank?
-        doc.addressLine2(address[:address2]) unless address[:address2].blank?
-        doc.city(address[:city]) unless address[:city].blank?
+        doc.addressLine1(truncate(address[:address1], 35)) unless address[:address1].blank?
+        doc.addressLine2(truncate(address[:address2], 35)) unless address[:address2].blank?
+        doc.city(truncate(address[:city], 35)) unless address[:city].blank?
         doc.state(address[:state]) unless address[:state].blank?
         doc.zip(address[:zip]) unless address[:zip].blank?
         doc.country(address[:country]) unless address[:country].blank?
@@ -381,7 +395,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def order_source(options={})
+      def order_source(options = {})
         return options[:order_source] unless options[:stored_credential]
 
         order_source = nil
@@ -448,7 +462,7 @@ module ActiveMerchant #:nodoc:
         parsed
       end
 
-      def commit(kind, request, money=nil)
+      def commit(kind, request, money = nil)
         parsed = parse(kind, ssl_post(url, request, headers))
 
         options = {
@@ -480,8 +494,8 @@ module ActiveMerchant #:nodoc:
         attributes = {}
         attributes[:id] = truncate(options[:id] || options[:order_id], 24)
         attributes[:reportGroup] = options[:merchant] || 'Default Report Group'
-        attributes[:customerId] = options[:customer]
-        attributes.delete_if { |key, value| value == nil }
+        attributes[:customerId] = options[:customer_id]
+        attributes.delete_if { |_key, value| value == nil }
         attributes
       end
 
@@ -502,6 +516,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def url
+        return postlive_url if @options[:url_override].to_s == 'postlive'
+
         test? ? test_url : live_url
       end
 

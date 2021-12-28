@@ -23,7 +23,7 @@ class RemoteWorldpayUsTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_on_backup_url
-    gateway = WorldpayUsGateway.new(fixtures(:worldpay_us).merge({ use_backup_url: true}))
+    gateway = WorldpayUsGateway.new(fixtures(:worldpay_us).merge({ use_backup_url: true }))
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'Succeeded', response.message

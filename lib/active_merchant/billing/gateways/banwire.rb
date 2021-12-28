@@ -74,7 +74,7 @@ module ActiveMerchant #:nodoc:
 
       def card_brand(card)
         brand = super
-        ({'master' => 'mastercard', 'american_express' => 'amex'}[brand] || brand)
+        ({ 'master' => 'mastercard', 'american_express' => 'amex' }[brand] || brand)
       end
 
       def parse(body)

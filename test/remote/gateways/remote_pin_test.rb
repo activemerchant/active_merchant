@@ -16,6 +16,15 @@ class RemotePinTest < Test::Unit::TestCase
       billing_address: address,
       description: "Store Purchase #{DateTime.now.to_i}"
     }
+
+    @additional_options_3ds = @options.merge(
+      three_d_secure: {
+        version: '1.0.2',
+        eci: '06',
+        cavv: 'AgAAAAAAAIR8CQrXcIhbQAAAAAA',
+        xid: 'MDAwMDAwMDAwMDAwMDAwMzIyNzY='
+      }
+    )
   end
 
   def test_successful_purchase
@@ -45,6 +54,16 @@ class RemotePinTest < Test::Unit::TestCase
 
   def test_successful_authorize_and_capture
     authorization = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorization
+    assert_equal false, authorization.params['response']['captured']
+
+    response = @gateway.capture(@amount, authorization.authorization, @options)
+    assert_success response
+    assert_equal true, response.params['response']['captured']
+  end
+
+  def test_successful_authorize_and_capture_with_passthrough_3ds
+    authorization = @gateway.authorize(@amount, @credit_card, @additional_options_3ds)
     assert_success authorization
     assert_equal false, authorization.params['response']['captured']
 
@@ -168,6 +187,25 @@ class RemotePinTest < Test::Unit::TestCase
 
     response = @gateway.refund(@amount, token.reverse, @options)
     assert_failure response
+  end
+
+  def test_successful_void
+    authorization = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorization
+
+    assert void = @gateway.void(authorization.authorization, @options)
+    assert_success void
+  end
+
+  def test_failed_void
+    authorization = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorization
+
+    assert void = @gateway.void(authorization.authorization, @options)
+    assert_success void
+
+    assert already_voided = @gateway.void(authorization.authorization, @options)
+    assert_failure already_voided
   end
 
   def test_invalid_login

@@ -11,7 +11,7 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://www.cardsave.net/'
       self.display_name = 'CardSave'
 
-      def initialize(options={})
+      def initialize(options = {})
         super
         @test_url = 'https://gw1.cardsaveonlinepayments.com:4430/'
         @live_url = 'https://gw1.cardsaveonlinepayments.com:4430/'

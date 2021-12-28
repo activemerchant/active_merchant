@@ -38,7 +38,7 @@ class RemotePaystationTest < Test::Unit::TestCase
       ['invalid_transaction', @invalid_transaction_amount, 'Transaction Type Not Supported'],
       ['expired_card', @expired_card_amount, 'Expired Card'],
       ['bank_error', @bank_error_amount, 'Error Communicating with Bank']
-    ].each do |name, amount, message|
+    ].each do |_name, amount, message|
       assert response = @gateway.purchase(amount, @credit_card, @options)
       assert_failure response
       assert_equal message, response.message

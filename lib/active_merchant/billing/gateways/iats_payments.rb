@@ -23,7 +23,7 @@ module ActiveMerchant #:nodoc:
         unstore: 'DeleteCustomerCode'
       }
 
-      def initialize(options={})
+      def initialize(options = {})
         if options[:login]
           ActiveMerchant.deprecated("The 'login' option is deprecated in favor of 'agent_code' and will be removed in a future version.")
           options[:agent_code] = options[:login]
@@ -35,18 +35,19 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         post = {}
         add_invoice(post, money, options)
         add_payment(post, payment)
         add_address(post, options)
         add_ip(post, options)
         add_description(post, options)
+        add_customer_details(post, options)
 
         commit(determine_purchase_type(payment), post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         post = {}
         transaction_id, payment_type = split_authorization(authorization)
         post[:transaction_id] = transaction_id
@@ -160,6 +161,10 @@ module ActiveMerchant #:nodoc:
         post[:amount] = 0
       end
 
+      def add_customer_details(post, options)
+        post[:email] = options[:email] if options[:email]
+      end
+
       def expdate(creditcard)
         year  = sprintf('%.4i', creditcard.year)
         month = sprintf('%.2i', creditcard.month)
@@ -181,7 +186,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, parameters)
         response = parse(ssl_post(url(action), post_data(action, parameters),
-          { 'Content-Type' => 'application/soap+xml; charset=utf-8'}))
+          { 'Content-Type' => 'application/soap+xml; charset=utf-8' }))
 
         Response.new(
           success_from(response),

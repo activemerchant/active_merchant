@@ -31,38 +31,27 @@ class <%= class_name %>Test < Test::Unit::TestCase
     assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
   end
 
-  def test_successful_authorize
-  end
+  def test_successful_authorize; end
 
-  def test_failed_authorize
-  end
+  def test_failed_authorize; end
 
-  def test_successful_capture
-  end
+  def test_successful_capture; end
 
-  def test_failed_capture
-  end
+  def test_failed_capture; end
 
-  def test_successful_refund
-  end
+  def test_successful_refund; end
 
-  def test_failed_refund
-  end
+  def test_failed_refund; end
 
-  def test_successful_void
-  end
+  def test_successful_void; end
 
-  def test_failed_void
-  end
+  def test_failed_void; end
 
-  def test_successful_verify
-  end
+  def test_successful_verify; end
 
-  def test_successful_verify_with_failed_void
-  end
+  def test_successful_verify_with_failed_void; end
 
-  def test_failed_verify
-  end
+  def test_failed_verify; end
 
   def test_scrub
     assert @gateway.supports_scrubbing?
@@ -72,19 +61,19 @@ class <%= class_name %>Test < Test::Unit::TestCase
   private
 
   def pre_scrubbed
-    %q(
+    '
       Run the remote tests for this gateway, and then put the contents of transcript.log here.
-    )
+    '
   end
 
   def post_scrubbed
-    %q(
+    '
       Put the scrubbed contents of transcript.log here after implementing your scrubbing function.
       Things to scrub:
         - Credit card number
         - CVV
         - Sensitive authentication details
-    )
+    '
   end
 
   def successful_purchase_response
@@ -98,30 +87,21 @@ class <%= class_name %>Test < Test::Unit::TestCase
     )
   end
 
-  def failed_purchase_response
-  end
+  def failed_purchase_response; end
 
-  def successful_authorize_response
-  end
+  def successful_authorize_response; end
 
-  def failed_authorize_response
-  end
+  def failed_authorize_response; end
 
-  def successful_capture_response
-  end
+  def successful_capture_response; end
 
-  def failed_capture_response
-  end
+  def failed_capture_response; end
 
-  def successful_refund_response
-  end
+  def successful_refund_response; end
 
-  def failed_refund_response
-  end
+  def failed_refund_response; end
 
-  def successful_void_response
-  end
+  def successful_void_response; end
 
-  def failed_void_response
-  end
+  def failed_void_response; end
 end

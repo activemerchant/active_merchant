@@ -109,8 +109,7 @@ module ActiveMerchant #:nodoc:
                 TRANSACTION_APPROVED_MSG :
                 TRANSACTION_DECLINED_MSG,
                 response,
-                test: test?
-              )
+                test: test?)
             else
               build_error_response(message, response)
             end
@@ -125,7 +124,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def call_api(api, params=nil)
+      def call_api(api, params = nil)
         params ||= {}
         params[:merchant_id] = @options[:login]
         params[:api_key] = @options[:api_key]
@@ -139,7 +138,7 @@ module ActiveMerchant #:nodoc:
         (test? ? self.test_url : self.live_url) + api
       end
 
-      def build_error_response(message, params={})
+      def build_error_response(message, params = {})
         Response.new(
           false,
           message,
