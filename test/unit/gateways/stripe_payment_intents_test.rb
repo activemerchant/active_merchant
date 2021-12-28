@@ -24,14 +24,28 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
       confirmation_method: 'manual'
     }
 
-    @apple_pay = apple_pay_payment_token
     @google_pay = network_tokenization_credit_card(
-      '4777777777777778',
-      payment_cryptogram: 'BwAQCFVQdwEAABNZI1B3EGLyGC8=',
-      verification_value: '987',
+      '4242424242424242',
+      payment_cryptogram: 'dGVzdGNyeXB0b2dyYW1YWFhYWFhYWFhYWFg9PQ==',
       source: :google_pay,
       brand: 'visa',
-      eci: '5'
+      eci: '05',
+      month: '09',
+      year: '2030',
+      first_name: 'Longbob',
+      last_name: 'Longsen'
+    )
+
+    @apple_pay = network_tokenization_credit_card(
+      '4242424242424242',
+      payment_cryptogram: 'dGVzdGNyeXB0b2dyYW1YWFhYWFhYWFhYWFg9PQ==',
+      source: :apple_pay,
+      brand: 'visa',
+      eci: '05',
+      month: '09',
+      year: '2030',
+      first_name: 'Longbob',
+      last_name: 'Longsen'
     )
   end
 
@@ -39,7 +53,7 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     @gateway.expects(:ssl_request).times(3).returns(successful_create_3ds2_payment_method, successful_create_3ds2_intent_response, successful_confirm_3ds2_intent_response)
 
     assert create = @gateway.create_intent(@amount, @threeds_2_card, @options.merge(return_url: 'https://www.example.com', capture_method: 'manual'))
-    assert_instance_of Response, create
+    assert_instance_of MultiResponse, create
     assert_success create
 
     assert_equal 'pi_1F1wpFAWOtgoysog8nTulYGk', create.authorization
@@ -343,6 +357,30 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     end.respond_with(successful_create_intent_response)
   end
 
+  def test_purchase_with_google_pay
+    options = {
+      currency: 'GBP'
+    }
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @google_pay, options)
+    end.check_request do |_method, endpoint, data, _headers|
+      assert_match('card[tokenization_method]=android_pay', data) if %r{/tokens}.match?(endpoint)
+      assert_match('payment_method=pi_', data) if %r{/payment_intents}.match?(endpoint)
+    end.respond_with(successful_create_intent_response)
+  end
+
+  def test_authorize_with_apple_pay
+    options = {
+      currency: 'GBP'
+    }
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @apple_pay, options)
+    end.check_request do |_method, endpoint, data, _headers|
+      assert_match('card[tokenization_method]=apple_pay', data) if %r{/tokens}.match?(endpoint)
+      assert_match('payment_method=pi_', data) if %r{/payment_intents}.match?(endpoint)
+    end.respond_with(successful_create_intent_response)
+  end
+
   def test_stored_credentials_does_not_override_ntid_field
     network_transaction_id = '1098510912210968'
     sc_network_transaction_id = '1078784111114777'
@@ -497,10 +535,8 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     assert_equal countries.sort, StripePaymentIntentsGateway.supported_countries.sort
   end
 
-  def test_unsuccessful_create_and_confirm_intent_using_apple_pay
-    assert error = @gateway.create_intent(@amount, @google_pay, @options.merge(return_url: 'https://www.example.com', capture_method: 'manual'))
-    assert_instance_of Response, error
-    assert_equal 'Direct Apple Pay and Google Pay transactions are not supported. Those payment methods must be stored before use.', error.message
+  def test_scrub_filter_token
+    assert_equal @gateway.scrub(pre_scrubbed), scrubbed
   end
 
   private
@@ -1084,5 +1120,73 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
         "type": "card"
       }
     RESPONSE
+  end
+
+  def pre_scrubbed
+    <<-PRE_SCRUBBED
+      opening connection to api.stripe.com:443...
+      opened
+      starting SSL for api.stripe.com:443...
+      SSL established
+      <- "POST /v1/charges HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic c2tfdGVzdF9oQkwwTXF6ZGZ6Rnk3OXU0cFloUmVhQlo6\r\nUser-Agent: Stripe/v1 ActiveMerchantBindings/1.45.0\r\nX-Stripe-Client-User-Agent: {\"bindings_version\":\"1.45.0\",\"lang\":\"ruby\",\"lang_version\":\"2.1.3 p242 (2014-09-19)\",\"platform\":\"x86_64-linux\",\"publisher\":\"active_merchant\"}\r\nX-Stripe-Client-User-Metadata: {\"ip\":null}\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: api.stripe.com\r\nContent-Length: 270\r\n\r\n"
+      <- "amount=100&currency=usd&card[number]=4242424242424242&card[exp_month]=9&card[exp_year]=2015&card[tokenization_method]=android_pay&card[eci]=07&capture_method=automatic&card[name]=Longbob+Longsen&description=ActiveMerchant+Test+Purchase&payment_user_agent=Stripe%2Fv1+ActiveMerchantBindings%2F1.45.0&metadata[email]=wow%40example.com&card[cryptogram]=sensitive_data&payment_method_types[0]=card&payment_method_data[type]=card&payment_method_data[card][token]=tok_1KHrnVAWOtgoysogWbF1jrM9&metadata[connect_agent]=placeholder&metadata[transaction_token]=Coe7nlopnvhfcNRXhJMH5DTVusU&metadata[email]=john.smith%40example.com&metadata[order_id]=order_id-xxxxxx-x&confirm=true&return_url=http%3A%2F%2Fexaple.com%2Ftransaction%transaction_idxxxx%2Fredirect"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Server: nginx\r\n"
+      -> "Date: Fri, 14 Jan 2022 15:34:39 GMT\r\n"
+      -> "Content-Type: application/json\r\n"
+      -> "Content-Length: 5204\r\n"
+      -> "Connection: close\r\n"
+      -> "access-control-allow-credentials: true\r\n"
+      -> "access-control-allow-methods: GET, POST, HEAD, OPTIONS, DELETE\r\n"
+      -> "access-control-allow-origin: *\r\n"
+      -> "access-control-expose-headers: Request-Id, Stripe-Manage-Version, X-Stripe-External-Auth-Required, X-Stripe-Privileged-Session-Required\r\n"
+      -> "access-control-max-age: 300\r\n"
+      -> "cache-control: no-cache, no-store\r\n"
+      -> "idempotency-key: 87bd1ae5-1cf2-4735-85e0-c8cdafb25fff\r\n"
+      -> "original-request: req_VkIqZgctQBI9yo\r\n"
+      -> "request-id: req_VkIqZgctQBI9yo\r\n"
+      -> "stripe-should-retry: false\r\n"
+      -> "stripe-version: 2020-08-27\r\n"
+      -> "Strict-Transport-Security: max-age=31556926; includeSubDomains; preload\r\n"
+      -> "\r\n"
+      reading 5204 bytes...
+      -> "{\n  \"id\": \"pi_3KHrnWAWOtgoysog1Y5qMLqc\",\n  \"object\": \"payment_intent\",\n  \"amount\": 100,\n  \"amount_capturable\": 0,\n  \"amount_received\": 100,\n  \"application\": null,\n  \"application_fee_amount\": null,\n  \"automatic_payment_methods\": null,\n  \"canceled_at\": null,\n  \"cancellation_reason\": null,\n  \"capture_method\": \"automatic\",\n  \"charges\": {\n    \"object\": \"list\",\n    \"data\": [\n      {\n        \"id\": \"ch_3KHrnWAWOtgoysog1noj1iU9\",\n        \"object\": \"charge\",\n        \"amount\": 100,\n        \"amount_captured\": 100,\n        \"amount_refunded\": 0,\n        \"application\": null,\n        \"application_fee\": null,\n        \"application_fee_amount\": null,\n        \"balance_transaction\": \"txn_3KHrnWAWOtgoysog1vy6pmxk\",\n        \"billing_details\": {\n          \"address\": {\n            \"city\": null,\n            \"country\": null,\n            \"line1\": null,\n            \"line2\": null,\n            \"postal_code\": null,\n            \"state\": null\n          },\n          \"email\": null,\n          \"name\": null,\n          \"phone\": null\n        },\n        \"calculated_statement_descriptor\": \"SPREEDLY\",\n        \"captured\": true,\n        \"created\": 1642174478,\n        \"currency\": \"usd\",\n        \"customer\": null,\n        \"description\": null,\n        \"destination\": null,\n        \"dispute\": null,\n        \"disputed\": false,\n        \"failure_code\": null,\n        \"failure_message\": null,\n        \"fraud_details\": {\n        },\n        \"invoice\": null,\n        \"livemode\": false,\n        \"metadata\": {\n          \"connect_agent\": \"placeholder\",\n          \"transaction_token\": \"Coe7nlopnvhfcNRXhJMH5DTVusU\",\n          \"email\": \"john.smith@example.com\",\n          \"order_id\": \"AH2EjtfMGoZkWNEwLU90sq7VzcDlzWH_KugIYT4aVWEtJF9AwmqiXqsBs2l9q6F2Ruq9WKkUBbuLWNmA3P22ShFXFCZosTwkoflaDeTD2xeiMvmYv29VPINEDtLdSAoJ-DDlRKnsxa-n\"\n        },\n        \"on_behalf_of\": null,\n        \"order\": null,\n        \"outcome\": {\n          \"network_status\": \"approved_by_network\",\n          \"reason\": null,\n          \"risk_level\": \"normal\",\n          \"risk_score\": 36,\n          \"seller_message\": \"Payment complete.\",\n          \"type\": \"authorized\"\n        },\n        \"paid\": true,\n        \"payment_intent\": \"pi_3KHrnWAWOtgoysog1Y5qMLqc\",\n        \"payment_method\": \"pm_1KHrnWAWOtgoysogqXkTXrCb\",\n        \"payment_method_details\": {\n          \"card\": {\n            \"brand\": \"visa\",\n            \"checks\": {\n              \"address_line1_check\": null,\n              \"address_postal_code_check\": null,\n              \"cvc_check\": null\n            },\n            \"country\": \"US\",\n            \"ds_transaction_id\": null,\n            \"exp_month\": 12,\n            \"exp_year\": 2027,\n            \"fingerprint\": \"sUdMrygQwzOKqwSm\",\n            \"funding\": \"debit\",\n            \"installments\": null,\n            \"last4\": \"0000\",\n            \"mandate\": null,\n            \"moto\": null,\n            \"network\": \"visa\",\n            \"network_transaction_id\": \"1158510077114121\",\n            \"three_d_secure\": null,\n            \"wallet\": {\n              \"dynamic_last4\": \"3478\",\n              \"google_pay\": {\n              },\n              \"type\": \"google_pay\"\n            }\n          },\n          \"type\": \"card\"\n        },\n        \"receipt_email\": null,\n        \"receipt_number\": null,\n        \"receipt_url\": \"https://pay.stripe.com/receipts/acct_160DX6AWOtgoysog/ch_3KHrnWAWOtgoysog1noj1iU9/rcpt_KxnOefAivglRgWZmxp0PLOJUQg0VhS9\",\n        \"refunded\": false,\n        \"refunds\": {\n          \"object\": \"list\",\n          \"data\": [\n\n          ],\n          \"has_more\": false,\n          \"total_count\": 0,\n          \"url\": \"/v1/charges/ch_3KHrnWAWOtgoysog1noj1iU9/refunds\"\n        },\n        \"review\": null,\n        \"shipping\": null,\n        \"source\": null,\n        \"source_transfer\": null,\n        \"statement_descriptor\": null,\n        \"statement_descriptor_suffix\": null,\n        \"status\": \"succeeded\",\n        \"transfer_data\": null,\n        \"transfer_group\": null\n      }\n    ],\n    \"has_more\": false,\n    \"total_count\": 1,\n    \"url\": \"/v1/charges?payment_intent=pi_3KHrnWAWOtgoysog1Y5qMLqc\"\n  },\n  \"client_secret\": \"pi_3KHrnWAWOtgoysog1Y5qMLqc_secret_5ZEt4fzM7YCi1zdMzs4iQXLjC\",\n  \"confirmation_method\": \"automatic\",\n  \"created\": 1642174478,\n  \"currency\": \"usd\",\n  \"customer\": null,\n  \"description\": null,\n  \"invoice\": null,\n  \"last_payment_error\": null,\n  \"livemode\": false,\n  \"metadata\": {\n    \"connect_agent\": \"placeholder\",\n    \"transaction_token\": \"Coe7nlopnvhfcNRXhJMH5DTVusU\",\n    \"email\": \"john.smith@example.com\",\n    \"order_id\": \"AH2EjtfMGoZkWNEwLU90sq7VzcDlzWH_KugIYT4aVWEtJF9AwmqiXqsBs2l9q6F2Ruq9WKkUBbuLWNmA3P22ShFXFCZosTwkoflaDeTD2xeiMvmYv29VPINEDtLdSAoJ-DDlRKnsxa-n\"\n  },\n  \"next_action\": null,\n  \"on_behalf_of\": null,\n  \"payment_method\": \"pm_1KHrnWAWOtgoysogqXkTXrCb\",\n  \"payment_method_options\": {\n    \"card\": {\n      \"installments\": null,\n      \"mandate_options\": null,\n      \"network\": null,\n      \"request_three_d_secure\": \"automatic\"\n    }\n  },\n  \"payment_method_types\": [\n    \"card\"\n  ],\n  \"processing\": null,\n  \"receipt_email\": null,\n  \"review\": null,\n  \"setup_future_usage\": null,\n  \"shipping\": null,\n  \"source\": null,\n  \"statement_descriptor\": null,\n  \"statement_descriptor_suffix\": null,\n  \"status\": \"succeeded\",\n  \"transfer_data\": null,\n  \"transfer_group\": null\n}\n"
+      read 5204 bytes
+      Conn close
+    PRE_SCRUBBED
+  end
+
+  def scrubbed
+    <<-SCRUBBED
+      opening connection to api.stripe.com:443...
+      opened
+      starting SSL for api.stripe.com:443...
+      SSL established
+      <- "POST /v1/charges HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic [FILTERED]\r\nUser-Agent: Stripe/v1 ActiveMerchantBindings/1.45.0\r\nX-Stripe-Client-User-Agent: {\"bindings_version\":\"1.45.0\",\"lang\":\"ruby\",\"lang_version\":\"2.1.3 p242 (2014-09-19)\",\"platform\":\"x86_64-linux\",\"publisher\":\"active_merchant\"}\r\nX-Stripe-Client-User-Metadata: {\"ip\":null}\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: api.stripe.com\r\nContent-Length: 270\r\n\r\n"
+      <- "amount=100&currency=usd&card[number]=[FILTERED]&card[exp_month]=9&card[exp_year]=2015&card[tokenization_method]=android_pay&card[eci]=07&capture_method=automatic&card[name]=Longbob+Longsen&description=ActiveMerchant+Test+Purchase&payment_user_agent=Stripe%2Fv1+ActiveMerchantBindings%2F1.45.0&metadata[email]=wow%40example.com&card[cryptogram]=[FILTERED]&payment_method_types[0]=card&payment_method_data[type]=card&payment_method_data[card][token]=[FILTERED]&metadata[connect_agent]=placeholder&metadata[transaction_token]=Coe7nlopnvhfcNRXhJMH5DTVusU&metadata[email]=john.smith%40example.com&metadata[order_id]=order_id-xxxxxx-x&confirm=true&return_url=http%3A%2F%2Fexaple.com%2Ftransaction%transaction_idxxxx%2Fredirect"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Server: nginx\r\n"
+      -> "Date: Fri, 14 Jan 2022 15:34:39 GMT\r\n"
+      -> "Content-Type: application/json\r\n"
+      -> "Content-Length: 5204\r\n"
+      -> "Connection: close\r\n"
+      -> "access-control-allow-credentials: true\r\n"
+      -> "access-control-allow-methods: GET, POST, HEAD, OPTIONS, DELETE\r\n"
+      -> "access-control-allow-origin: *\r\n"
+      -> "access-control-expose-headers: Request-Id, Stripe-Manage-Version, X-Stripe-External-Auth-Required, X-Stripe-Privileged-Session-Required\r\n"
+      -> "access-control-max-age: 300\r\n"
+      -> "cache-control: no-cache, no-store\r\n"
+      -> "idempotency-key: 87bd1ae5-1cf2-4735-85e0-c8cdafb25fff\r\n"
+      -> "original-request: req_VkIqZgctQBI9yo\r\n"
+      -> "request-id: req_VkIqZgctQBI9yo\r\n"
+      -> "stripe-should-retry: false\r\n"
+      -> "stripe-version: 2020-08-27\r\n"
+      -> "Strict-Transport-Security: max-age=31556926; includeSubDomains; preload\r\n"
+      -> "\r\n"
+      reading 5204 bytes...
+      -> "{\n  \"id\": \"pi_3KHrnWAWOtgoysog1Y5qMLqc\",\n  \"object\": \"payment_intent\",\n  \"amount\": 100,\n  \"amount_capturable\": 0,\n  \"amount_received\": 100,\n  \"application\": null,\n  \"application_fee_amount\": null,\n  \"automatic_payment_methods\": null,\n  \"canceled_at\": null,\n  \"cancellation_reason\": null,\n  \"capture_method\": \"automatic\",\n  \"charges\": {\n    \"object\": \"list\",\n    \"data\": [\n      {\n        \"id\": \"ch_3KHrnWAWOtgoysog1noj1iU9\",\n        \"object\": \"charge\",\n        \"amount\": 100,\n        \"amount_captured\": 100,\n        \"amount_refunded\": 0,\n        \"application\": null,\n        \"application_fee\": null,\n        \"application_fee_amount\": null,\n        \"balance_transaction\": \"txn_3KHrnWAWOtgoysog1vy6pmxk\",\n        \"billing_details\": {\n          \"address\": {\n            \"city\": null,\n            \"country\": null,\n            \"line1\": null,\n            \"line2\": null,\n            \"postal_code\": null,\n            \"state\": null\n          },\n          \"email\": null,\n          \"name\": null,\n          \"phone\": null\n        },\n        \"calculated_statement_descriptor\": \"SPREEDLY\",\n        \"captured\": true,\n        \"created\": 1642174478,\n        \"currency\": \"usd\",\n        \"customer\": null,\n        \"description\": null,\n        \"destination\": null,\n        \"dispute\": null,\n        \"disputed\": false,\n        \"failure_code\": null,\n        \"failure_message\": null,\n        \"fraud_details\": {\n        },\n        \"invoice\": null,\n        \"livemode\": false,\n        \"metadata\": {\n          \"connect_agent\": \"placeholder\",\n          \"transaction_token\": \"Coe7nlopnvhfcNRXhJMH5DTVusU\",\n          \"email\": \"john.smith@example.com\",\n          \"order_id\": \"AH2EjtfMGoZkWNEwLU90sq7VzcDlzWH_KugIYT4aVWEtJF9AwmqiXqsBs2l9q6F2Ruq9WKkUBbuLWNmA3P22ShFXFCZosTwkoflaDeTD2xeiMvmYv29VPINEDtLdSAoJ-DDlRKnsxa-n\"\n        },\n        \"on_behalf_of\": null,\n        \"order\": null,\n        \"outcome\": {\n          \"network_status\": \"approved_by_network\",\n          \"reason\": null,\n          \"risk_level\": \"normal\",\n          \"risk_score\": 36,\n          \"seller_message\": \"Payment complete.\",\n          \"type\": \"authorized\"\n        },\n        \"paid\": true,\n        \"payment_intent\": \"pi_3KHrnWAWOtgoysog1Y5qMLqc\",\n        \"payment_method\": \"pm_1KHrnWAWOtgoysogqXkTXrCb\",\n        \"payment_method_details\": {\n          \"card\": {\n            \"brand\": \"visa\",\n            \"checks\": {\n              \"address_line1_check\": null,\n              \"address_postal_code_check\": null,\n              \"cvc_check\": null\n            },\n            \"country\": \"US\",\n            \"ds_transaction_id\": null,\n            \"exp_month\": 12,\n            \"exp_year\": 2027,\n            \"fingerprint\": \"sUdMrygQwzOKqwSm\",\n            \"funding\": \"debit\",\n            \"installments\": null,\n            \"last4\": \"0000\",\n            \"mandate\": null,\n            \"moto\": null,\n            \"network\": \"visa\",\n            \"network_transaction_id\": \"1158510077114121\",\n            \"three_d_secure\": null,\n            \"wallet\": {\n              \"dynamic_last4\": \"3478\",\n              \"google_pay\": {\n              },\n              \"type\": \"google_pay\"\n            }\n          },\n          \"type\": \"card\"\n        },\n        \"receipt_email\": null,\n        \"receipt_number\": null,\n        \"receipt_url\": \"https://pay.stripe.com/receipts/acct_160DX6AWOtgoysog/ch_3KHrnWAWOtgoysog1noj1iU9/rcpt_KxnOefAivglRgWZmxp0PLOJUQg0VhS9\",\n        \"refunded\": false,\n        \"refunds\": {\n          \"object\": \"list\",\n          \"data\": [\n\n          ],\n          \"has_more\": false,\n          \"total_count\": 0,\n          \"url\": \"/v1/charges/ch_3KHrnWAWOtgoysog1noj1iU9/refunds\"\n        },\n        \"review\": null,\n        \"shipping\": null,\n        \"source\": null,\n        \"source_transfer\": null,\n        \"statement_descriptor\": null,\n        \"statement_descriptor_suffix\": null,\n        \"status\": \"succeeded\",\n        \"transfer_data\": null,\n        \"transfer_group\": null\n      }\n    ],\n    \"has_more\": false,\n    \"total_count\": 1,\n    \"url\": \"/v1/charges?payment_intent=pi_3KHrnWAWOtgoysog1Y5qMLqc\"\n  },\n  \"client_secret\": \"pi_3KHrnWAWOtgoysog1Y5qMLqc_secret_5ZEt4fzM7YCi1zdMzs4iQXLjC\",\n  \"confirmation_method\": \"automatic\",\n  \"created\": 1642174478,\n  \"currency\": \"usd\",\n  \"customer\": null,\n  \"description\": null,\n  \"invoice\": null,\n  \"last_payment_error\": null,\n  \"livemode\": false,\n  \"metadata\": {\n    \"connect_agent\": \"placeholder\",\n    \"transaction_token\": \"Coe7nlopnvhfcNRXhJMH5DTVusU\",\n    \"email\": \"john.smith@example.com\",\n    \"order_id\": \"AH2EjtfMGoZkWNEwLU90sq7VzcDlzWH_KugIYT4aVWEtJF9AwmqiXqsBs2l9q6F2Ruq9WKkUBbuLWNmA3P22ShFXFCZosTwkoflaDeTD2xeiMvmYv29VPINEDtLdSAoJ-DDlRKnsxa-n\"\n  },\n  \"next_action\": null,\n  \"on_behalf_of\": null,\n  \"payment_method\": \"pm_1KHrnWAWOtgoysogqXkTXrCb\",\n  \"payment_method_options\": {\n    \"card\": {\n      \"installments\": null,\n      \"mandate_options\": null,\n      \"network\": null,\n      \"request_three_d_secure\": \"automatic\"\n    }\n  },\n  \"payment_method_types\": [\n    \"card\"\n  ],\n  \"processing\": null,\n  \"receipt_email\": null,\n  \"review\": null,\n  \"setup_future_usage\": null,\n  \"shipping\": null,\n  \"source\": null,\n  \"statement_descriptor\": null,\n  \"statement_descriptor_suffix\": null,\n  \"status\": \"succeeded\",\n  \"transfer_data\": null,\n  \"transfer_group\": null\n}\n"
+      read 5204 bytes
+      Conn close
+    SCRUBBED
   end
 end

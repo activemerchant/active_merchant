@@ -288,7 +288,8 @@ module ActiveMerchant #:nodoc:
           gsub(%r(((\[card\]|card)\[encrypted_pin_key_id\]=)[\w=]+(&?)), '\1[FILTERED]\3').
           gsub(%r(((\[card\]|card)\[number\]=)\d+), '\1[FILTERED]').
           gsub(%r(((\[card\]|card)\[swipe_data\]=)[^&]+(&?)), '\1[FILTERED]\3').
-          gsub(%r(((\[bank_account\]|bank_account)\[account_number\]=)\d+), '\1[FILTERED]')
+          gsub(%r(((\[bank_account\]|bank_account)\[account_number\]=)\d+), '\1[FILTERED]').
+          gsub(%r(((\[payment_method_data\]|payment_method_data)\[card\]\[token\]=)[^&]+(&?)), '\1[FILTERED]\3')
       end
 
       def supports_network_tokenization?

@@ -35,7 +35,31 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
       verification_value: '737',
       month: 10,
       year: 2028)
-    @apple_pay = apple_pay_payment_token
+
+    @google_pay = network_tokenization_credit_card(
+      '4242424242424242',
+      payment_cryptogram: 'dGVzdGNyeXB0b2dyYW1YWFhYWFhYWFhYWFg9PQ==',
+      source: :google_pay,
+      brand: 'visa',
+      eci: '05',
+      month: '09',
+      year: '2030',
+      first_name: 'Longbob',
+      last_name: 'Longsen'
+    )
+
+    @apple_pay = network_tokenization_credit_card(
+      '4242424242424242',
+      payment_cryptogram: 'dGVzdGNyeXB0b2dyYW1YWFhYWFhYWFhYWFg9PQ==',
+      source: :apple_pay,
+      brand: 'visa',
+      eci: '05',
+      month: '09',
+      year: '2030',
+      first_name: 'Longbob',
+      last_name: 'Longsen'
+    )
+
     @destination_account = fixtures(:stripe_destination)[:stripe_user_id]
   end
 
@@ -64,13 +88,58 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert purchase.params.dig('charges', 'data')[0]['captured']
   end
 
-  def test_unsuccessful_purchase_apple_pay
+  def test_unsuccessful_purchase_google_pay_with_invalid_card_number
     options = {
-      currency: 'GBP',
-      customer: @customer
+      currency: 'GBP'
     }
-    assert error = @gateway.purchase(@amount, @apple_pay, options)
-    assert_equal 'Direct Apple Pay and Google Pay transactions are not supported. Those payment methods must be stored before use.', error.message
+
+    @google_pay.number = '378282246310000'
+    purchase = @gateway.purchase(@amount, @google_pay, options)
+    assert_equal 'The tokenization process fails. Your card number is incorrect.', purchase.message
+    assert_false purchase.success?
+  end
+
+  def test_unsuccessful_purchase_google_pay_without_cryptogram
+    options = {
+      currency: 'GBP'
+    }
+    @google_pay.payment_cryptogram = ''
+    purchase = @gateway.purchase(@amount, @google_pay, options)
+    assert_equal "The tokenization process fails. Cards using 'tokenization_method=android_pay' require the 'cryptogram' field to be set.", purchase.message
+    assert_false purchase.success?
+  end
+
+  def test_unsuccessful_purchase_google_pay_without_month
+    options = {
+      currency: 'GBP'
+    }
+    @google_pay.month = ''
+    purchase = @gateway.purchase(@amount, @google_pay, options)
+    assert_equal 'The tokenization process fails. Missing required param: card[exp_month].', purchase.message
+    assert_false purchase.success?
+  end
+
+  def test_successful_authorize_with_google_pay
+    options = {
+      currency: 'GBP'
+    }
+
+    auth = @gateway.authorize(@amount, @google_pay, options)
+
+    assert_match('android_pay', auth.responses.first.params.dig('token', 'card', 'tokenization_method'))
+    assert auth.success?
+    assert_match('google_pay', auth.params.dig('charges', 'data')[0]['payment_method_details']['card']['wallet']['type'])
+  end
+
+  def test_successful_purchase_with_apple_pay
+    options = {
+      currency: 'GBP'
+    }
+
+    purchase = @gateway.purchase(@amount, @apple_pay, options)
+    assert_match('apple_pay', purchase.responses.first.params.dig('token', 'card', 'tokenization_method'))
+    assert purchase.success?
+    assert_match('apple_pay', purchase.params.dig('charges', 'data')[0]['payment_method_details']['card']['wallet']['type'])
   end
 
   def test_purchases_with_same_idempotency_key
@@ -642,7 +711,6 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     }
 
     assert response = @gateway.create_intent(@amount, nil, options)
-
     assert_success response
     assert_equal application_fee, response.params['application_fee_amount']
     assert_equal transfer_group, response.params['transfer_group']
@@ -971,7 +1039,6 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
       customer: @customer
     }
     assert verify = @gateway.verify(@visa_payment_method, options)
-
     assert_equal 'succeeded', verify.params['status']
   end
 
