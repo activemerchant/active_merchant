@@ -399,6 +399,8 @@ module ActiveMerchant
           add_check(xml, source)
         elsif card_brand(source) == 'apple_pay'
           add_apple_pay_payment_token(xml, source)
+        elsif card_brand(source) == 'opaque_data'
+          add_opaque_data_payment_method(xml, source)
         else
           add_credit_card(xml, source, action)
         end
@@ -518,8 +520,17 @@ module ActiveMerchant
         end
       end
 
+      def add_opaque_data_payment_method(xml, opaque_data_payment_token)
+        xml.payment do
+          xml.opaqueData do
+            xml.dataDescriptor opaque_data_payment_token.data_descriptor
+            xml.dataValue opaque_data_payment_token.payment_data
+          end
+        end
+      end
+
       def add_market_type_device_type(xml, payment, options)
-        return if payment.is_a?(String) || card_brand(payment) == 'check' || card_brand(payment) == 'apple_pay'
+        return if payment.is_a?(String) || card_brand(payment) == 'check' || card_brand(payment) == 'apple_pay' || card_brand(payment) == 'opaque_data'
 
         if valid_track_data
           xml.retail do
@@ -777,7 +788,7 @@ module ActiveMerchant
       end
 
       def names_from(payment_source, address, options)
-        if payment_source && !payment_source.is_a?(PaymentToken) && !payment_source.is_a?(String)
+        if payment_source && !payment_source.is_a?(ApplePayPaymentToken) && !payment_source.is_a?(String)
           first_name, last_name = split_names(address[:name])
           [(payment_source.first_name || first_name), (payment_source.last_name || last_name)]
         else
@@ -925,6 +936,11 @@ module ActiveMerchant
         response[:account_number] =
           if element = doc.at_xpath('//accountNumber')
             empty?(element.content) ? nil : element.content[-4..-1]
+          end
+
+        response[:card_type] =
+          if(element = doc.at_xpath('//accountType'))
+            (empty?(element.content) ? nil : element.content)
           end
 
         response[:test_request] =
@@ -1101,6 +1117,20 @@ module ActiveMerchant
           requested_amount: parts[53] || '',
           balance_on_card: parts[54] || ''
         }
+      end
+
+      class OpaqueDataToken < PaymentToken
+        attr_reader :data_descriptor, :first_name, :last_name
+
+        def initialize(payment_data, options = {})
+          super
+          @data_descriptor = @metadata[:data_descriptor]
+          raise ArgumentError, 'data_descriptor is required' unless @data_descriptor
+        end
+
+        def type
+          'opaque_data'
+        end
       end
     end
   end
