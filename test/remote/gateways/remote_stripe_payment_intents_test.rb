@@ -35,8 +35,29 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
       verification_value: '737',
       month: 10,
       year: 2028)
-    @apple_pay = apple_pay_payment_token
     @destination_account = fixtures(:stripe_destination)[:stripe_user_id]
+    @google_pay = network_tokenization_credit_card(
+      '4242424242424242',
+      payment_cryptogram: 'reddelicious',
+      source: 'google_pay',
+      brand: 'visa',
+      eci: '05',
+      month: '09',
+      year: '2030',
+      first_name: 'Longbob',
+      last_name: 'Longsen'
+    )
+    @apple_pay = network_tokenization_credit_card(
+      '4242424242424242',
+      payment_cryptogram: 'reddelicious',
+      source: 'apple_pay',
+      brand: 'visa',
+      eci: '05',
+      month: '09',
+      year: '2030',
+      first_name: 'Longbob',
+      last_name: 'Longsen'
+    )
   end
 
   def test_authorization_and_void
@@ -62,6 +83,33 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
 
     assert_equal 'succeeded', purchase.params['status']
     assert purchase.params.dig('charges', 'data')[0]['captured']
+  end
+
+  def test_successful_purchase_with_google_pay_stored
+    options = {
+      currency: 'GBP',
+      customer: @customer
+    }
+    stripe_tok = @gateway.store(@google_pay, options).params['token']['id']
+    assert purchase = @gateway.purchase(@amount, stripe_tok, options)
+    assert_equal 'succeeded', purchase.params['status']
+    assert purchase.params.dig('charges', 'data')[0]['captured']
+  end
+
+  def test_successful_google_pay_store
+    options = {
+      currency: 'GBP'
+    }
+    assert store = @gateway.store(@google_pay, options)
+    assert store.params['token']['id'].start_with?('tok_')
+  end
+
+  def test_successful_apple_pay_store
+    options = {
+      currency: 'GBP'
+    }
+    assert store = @gateway.store(@apple_pay, options)
+    assert store.params['token']['id'].start_with?('tok_')
   end
 
   def test_unsuccessful_purchase_apple_pay
@@ -634,7 +682,6 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     }
 
     assert response = @gateway.create_intent(@amount, nil, options)
-
     assert_success response
     assert_equal application_fee, response.params['application_fee_amount']
     assert_equal transfer_group, response.params['transfer_group']

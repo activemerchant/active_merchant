@@ -26,12 +26,15 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
 
     @apple_pay = apple_pay_payment_token
     @google_pay = network_tokenization_credit_card(
-      '4777777777777778',
-      payment_cryptogram: 'BwAQCFVQdwEAABNZI1B3EGLyGC8=',
-      verification_value: '987',
-      source: :google_pay,
+      '4242424242424242',
+      payment_cryptogram: 'reddelicious',
+      source: 'google_pay',
       brand: 'visa',
-      eci: '5'
+      eci: '05',
+      month: '09',
+      year: '2030',
+      first_name: 'Longbob',
+      last_name: 'Longsen'
     )
   end
 
@@ -61,6 +64,14 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     assert_success capture
     assert_equal 'succeeded', capture.params['status']
     assert_equal 'Payment complete.', capture.params.dig('charges', 'data')[0].dig('outcome', 'seller_message')
+  end
+
+  def test_store_does_not_pass_validation_to_attach_by_default2
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.store(@google_pay)
+    end.check_request do |_method, endpoint, data, _headers|
+      assert_no_match(/validate=/, data) if /attach/.match?(endpoint)
+    end.respond_with(successful_payment_method_response, successful_create_customer_response, successful_payment_method_attach_response)
   end
 
   def test_successful_create_and_update_intent

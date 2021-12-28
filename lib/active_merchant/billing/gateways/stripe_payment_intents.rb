@@ -20,13 +20,19 @@ module ActiveMerchant #:nodoc:
           store_apple_or_google_pay_token = 'Direct Apple Pay and Google Pay transactions are not supported. Those payment methods must be stored before use.'
           return Response.new(false, store_apple_or_google_pay_token)
         end
+
         post = {}
         add_amount(post, money, options, true)
         add_capture_method(post, options)
         add_confirmation_method(post, options)
         add_customer(post, options)
-        result = add_payment_method_token(post, payment_method, options)
-        return result if result.is_a?(ActiveMerchant::Billing::Response)
+        if payment_method.is_a?(String) && payment_method.include?('tok_')
+          add_payment_method_card_data_tok(post, payment_method, options)
+        else
+          result = add_payment_method_token(post, payment_method, options)
+          return result if result.is_a?(ActiveMerchant::Billing::Response)
+
+        end
 
         add_external_three_d_secure_auth_data(post, options)
         add_metadata(post, options)
@@ -83,6 +89,16 @@ module ActiveMerchant #:nodoc:
         post_data[:card][:cvc] = payment_method.verification_value if payment_method.verification_value
         add_billing_address(post_data, options)
         add_name_only(post_data, payment_method) if post_data[:billing_details].nil?
+        post_data
+      end
+
+      def add_payment_method_card_data_tok(post_data, payment_method, options = {})
+        post_data[:payment_method_types] = {}
+        post_data[:payment_method_types][''] = 'card'
+        post_data[:payment_method_data] = {}
+        post_data[:payment_method_data][:type] = 'card'
+        post_data[:payment_method_data][:card] = {}
+        post_data[:payment_method_data][:card][:token] = payment_method
         post_data
       end
 
@@ -189,7 +205,10 @@ module ActiveMerchant #:nodoc:
 
         # If customer option is provided, create a payment method and attach to customer id
         # Otherwise, create a customer, then attach
-        if payment_method.is_a?(StripePaymentToken) || payment_method.is_a?(ActiveMerchant::Billing::CreditCard)
+        if payment_method.is_a?(ActiveMerchant::Billing::NetworkTokenizationCreditCard)
+          result = tokenize_apple_google_token(payment_method, options)
+          return result
+        elsif payment_method.is_a?(StripePaymentToken) || payment_method.is_a?(ActiveMerchant::Billing::CreditCard)
           result = add_payment_method_token(params, payment_method, options)
           return result if result.is_a?(ActiveMerchant::Billing::Response)
 
@@ -320,6 +339,32 @@ module ActiveMerchant #:nodoc:
         return if payment_method_types.nil?
 
         post[:payment_method_types] = Array(payment_method_types)
+      end
+
+      def tokenize_apple_google_token(payment, options = {})
+        if payment.inspect.include?('google_pay')
+          tokenization_method = 'android_pay'
+        elsif payment.inspect.include?('apple_pay')
+          tokenization_method = 'apple_pay'
+        end
+        post = {
+          card: {
+            number: payment.number,
+            exp_month: payment.month,
+            exp_year: payment.year,
+            tokenization_method: tokenization_method,
+            eci: payment.eci,
+            cryptogram: payment.payment_cryptogram
+          }
+        }
+        token_response = api_request(:post, 'tokens', post, {})
+        #p token_response
+        success = token_response['error'].nil?
+        if success && token_response['id']
+          Response.new(success, nil, token: token_response)
+        else
+          Response.new(success, token_response['error']['message'])
+        end
       end
 
       def add_exemption(post, options = {})
