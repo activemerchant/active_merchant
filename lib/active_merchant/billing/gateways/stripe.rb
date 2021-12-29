@@ -298,6 +298,7 @@ module ActiveMerchant #:nodoc:
       # Helper method to prevent hitting the external_account limit from remote test runs
       def delete_latest_test_external_account(account)
         return unless test?
+
         auth_header = { 'Authorization': "Bearer #{options[:login]}" }
         url = "#{live_url}accounts/#{CGI.escape(account)}/external_accounts"
         accounts_response = JSON.parse(ssl_get("#{url}?limit=100", auth_header))
@@ -583,11 +584,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_radar_data(post, options = {})
-        return unless options[:radar_session_id]
+        radar_options = {}
+        radar_options[:session] = options[:radar_session_id] if options[:radar_session_id]
+        radar_options[:skip_rules] = ['all'] if options[:skip_radar_rules]
 
-        post[:radar_options] = {
-          session: options[:radar_session_id]
-        }
+        post[:radar_options] = radar_options unless radar_options.empty?
       end
 
       def parse(body)

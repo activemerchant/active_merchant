@@ -1027,6 +1027,16 @@ class StripeTest < Test::Unit::TestCase
     end.respond_with(successful_authorization_response)
   end
 
+  def test_skip_rules_is_submitted_for_purchase
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, {
+        skip_radar_rules: true
+      })
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/radar_options\[skip_rules\]\[0\]=all/, data)
+    end.respond_with(successful_authorization_response)
+  end
+
   def test_client_data_submitted_with_purchase
     stub_comms(@gateway, :ssl_request) do
       updated_options = @options.merge({ description: 'a test customer', ip: '127.127.127.127', user_agent: 'some browser', order_id: '42', email: 'foo@wonderfullyfakedomain.com', receipt_email: 'receipt-receiver@wonderfullyfakedomain.com', referrer: 'http://www.shopify.com' })
