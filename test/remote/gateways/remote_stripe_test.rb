@@ -165,6 +165,13 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal 'wow@example.com', response.params['metadata']['email']
   end
 
+  def test_successful_purchase_with_skip_radar_rules
+    options = @options.merge(skip_radar_rules: true)
+    assert purchase = @gateway.purchase(@amount, @credit_card, options)
+    assert_success purchase
+    assert_equal ['all'], purchase.params['radar_options']['skip_rules']
+  end
+
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
