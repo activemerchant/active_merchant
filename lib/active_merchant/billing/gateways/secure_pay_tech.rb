@@ -2,26 +2,26 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class SecurePayTechGateway < Gateway
       class SecurePayTechPostData < PostData
-        self.required_fields = [ :OrderReference, :CardNumber, :CardExpiry, :CardHolderName, :CardType, :MerchantID, :MerchantKey, :Amount, :Currency ]
+        self.required_fields = %i[OrderReference CardNumber CardExpiry CardHolderName CardType MerchantID MerchantKey Amount Currency]
       end
 
       self.live_url = self.test_url = 'https://tx.securepaytech.com/web/HttpPostPurchase'
 
       PAYMENT_GATEWAY_RESPONSES = {
-        1 => "Transaction OK",
-        2 => "Insufficient funds",
-        3 => "Card expired",
-        4 => "Card declined",
-        5 => "Server error",
-        6 => "Communications error",
-        7 => "Unsupported transaction type",
-        8 => "Bad or malformed request",
-        9 => "Invalid card number"
+        1 => 'Transaction OK',
+        2 => 'Insufficient funds',
+        3 => 'Card expired',
+        4 => 'Card declined',
+        5 => 'Server error',
+        6 => 'Communications error',
+        7 => 'Unsupported transaction type',
+        8 => 'Bad or malformed request',
+        9 => 'Invalid card number'
       }
 
       self.default_currency = 'NZD'
       self.supported_countries = ['NZ']
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
+      self.supported_cardtypes = %i[visa master american_express diners_club]
       self.homepage_url = 'http://www.securepaytech.com/'
       self.display_name = 'SecurePayTech'
 
@@ -82,12 +82,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, post)
-        response = parse( ssl_post(self.live_url, post_data(action, post) ) )
+        response = parse(ssl_post(self.live_url, post_data(action, post)))
 
         Response.new(response[:result_code] == 1, message_from(response), response,
-          :test => test?,
-          :authorization => response[:merchant_transaction_reference]
-        )
+          test: test?,
+          authorization: response[:merchant_transaction_reference])
       end
 
       def message_from(result)
@@ -102,4 +101,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

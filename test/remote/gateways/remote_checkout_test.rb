@@ -4,19 +4,19 @@ class RemoteCheckoutTest < Test::Unit::TestCase
   def setup
     @gateway = ActiveMerchant::Billing::CheckoutGateway.new(fixtures(:checkout))
     @credit_card = credit_card(
-      "4543474002249996",
-      month: "06",
-      year: "2017",
-      verification_value: "956"
+      '4543474002249996',
+      month: '06',
+      year: '2017',
+      verification_value: '956'
     )
-    @declined_card  = credit_card(
+    @declined_card = credit_card(
       '4543474002249996',
       month: '06',
       year: '2018',
       verification_value: '958'
     )
     @options = {
-      currency: "CAD"
+      currency: 'CAD'
     }
   end
 
@@ -27,13 +27,14 @@ class RemoteCheckoutTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_extra_options
-    response = @gateway.purchase(100, @credit_card, @options.merge(
-      currency: "EUR",
-      email: "bob@example.com",
+    options = @options.merge(
+      currency: 'EUR',
+      email: 'bob@example.com',
       order_id: generate_unique_id,
       customer: generate_unique_id,
-      ip: "127.0.0.1"
-    ))
+      ip: '127.0.0.1'
+    )
+    response = @gateway.purchase(100, @credit_card, options)
     assert_success response
     assert_equal 'Successful', response.message
   end
@@ -45,7 +46,7 @@ class RemoteCheckoutTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_descriptors
-    response = @gateway.purchase(100, @credit_card, descriptor_name: "TheName", descriptor_city: "Wanaque")
+    response = @gateway.purchase(100, @credit_card, descriptor_name: 'TheName', descriptor_city: 'Wanaque')
     assert_success response
     assert_equal 'Successful', response.message
   end
@@ -60,7 +61,7 @@ class RemoteCheckoutTest < Test::Unit::TestCase
     auth = @gateway.authorize(100, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(100, auth.authorization, {currency: "CAD"})
+    assert capture = @gateway.capture(100, auth.authorization, { currency: 'CAD' })
     assert_success capture
     assert_equal 'Successful', capture.message
   end
@@ -101,26 +102,26 @@ class RemoteCheckoutTest < Test::Unit::TestCase
     assert response = @gateway.purchase(100, @credit_card, @options)
     assert_success response
 
-    assert refund = @gateway.refund(100, response.authorization, {currency: "CAD"})
+    assert refund = @gateway.refund(100, response.authorization, { currency: 'CAD' })
     assert_success refund
-    assert_equal "Successful", refund.message
+    assert_equal 'Successful', refund.message
   end
 
   def test_failed_refund
     assert response = @gateway.purchase(100, @credit_card, @options)
     assert_success response
 
-    assert refund = @gateway.refund(100, '||||', {currency: "CAD"})
+    assert refund = @gateway.refund(100, '||||', { currency: 'CAD' })
     assert_failure refund
   end
 
   def test_successful_verify
     assert response = @gateway.verify(@credit_card, @options)
     assert_success response
-    assert_equal "Successful", response.message
+    assert_equal 'Successful', response.message
 
-    assert_success response.responses.last, "The void should succeed"
-    assert_equal "Successful", response.responses.last.params["result"]
+    assert_success response.responses.last, 'The void should succeed'
+    assert_equal 'Successful', response.responses.last.params['result']
   end
 
   def test_failed_verify

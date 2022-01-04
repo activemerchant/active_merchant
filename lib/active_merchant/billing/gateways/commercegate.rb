@@ -11,7 +11,7 @@ module ActiveMerchant #:nodoc:
 
       self.money_format = :dollars
       self.default_currency = 'EUR'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.homepage_url = 'http://www.commercegate.com/'
       self.display_name = 'CommerceGate'
 
@@ -65,18 +65,17 @@ module ActiveMerchant #:nodoc:
           post[:state]       = address[:state]
           post[:postalCode]  = address[:zip]
         end
-        post[:countryCode] = ((address && address[:country]) || "US")
+        post[:countryCode] = ((address && address[:country]) || 'US')
       end
 
       def add_auth_purchase_options(post, money, options)
         add_address(post, options[:address])
 
-        post[:customerIP]  = options[:ip] || "127.0.0.1"
+        post[:customerIP]  = options[:ip] || '127.0.0.1'
         post[:amount]      = amount(money)
-        post[:email]       = options[:email] || "unknown@example.com"
-        post[:currencyCode]= options[:currency] || currency(money)
-        post[:merchAcct]   = options[:merchant]
-
+        post[:email]       = options[:email] || 'unknown@example.com'
+        post[:currencyCode] = options[:currency] || currency(money)
+        post[:merchAcct] = options[:merchant]
       end
 
       def add_creditcard(params, creditcard)
@@ -103,7 +102,7 @@ module ActiveMerchant #:nodoc:
           response,
           authorization: response['transID'],
           test: test?,
-          avs_result: {code: response['avsCode']},
+          avs_result: { code: response['avsCode'] },
           cvv_result: response['cvvCode']
         )
       end
@@ -112,7 +111,7 @@ module ActiveMerchant #:nodoc:
         results = {}
 
         body.split(/\&/).each do |pair|
-          key,val = pair.split(%r{=})
+          key, val = pair.split(%r{=})
           results[key] = CGI.unescape(val)
         end
 
@@ -127,8 +126,8 @@ module ActiveMerchant #:nodoc:
         if response['returnText'].present?
           response['returnText']
         else
-          "Invalid response received from the CommerceGate API. " +
-          "Please contact CommerceGate support if you continue to receive this message. " +
+          'Invalid response received from the CommerceGate API. ' \
+          'Please contact CommerceGate support if you continue to receive this message. ' \
           "(The raw response returned by the API was #{response.inspect})"
         end
       end
@@ -136,7 +135,7 @@ module ActiveMerchant #:nodoc:
       def post_data(parameters)
         parameters.collect do |key, value|
           "#{key}=#{CGI.escape(value.to_s)}"
-        end.join("&")
+        end.join('&')
       end
     end
   end

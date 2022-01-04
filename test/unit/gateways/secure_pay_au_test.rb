@@ -5,17 +5,17 @@ class SecurePayAuTest < Test::Unit::TestCase
 
   def setup
     @gateway = SecurePayAuGateway.new(
-                 :login => 'login',
-                 :password => 'password'
-               )
+      login: 'login',
+      password: 'password'
+    )
 
     @credit_card = credit_card
     @amount = 100
 
     @options = {
-      :order_id => '1',
-      :billing_address => address,
-      :description => 'Store Purchase'
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase'
     }
   end
 
@@ -24,9 +24,8 @@ class SecurePayAuTest < Test::Unit::TestCase
   end
 
   def test_supported_card_types
-    assert_equal [:visa, :master, :american_express, :diners_club, :jcb], SecurePayAuGateway.supported_cardtypes
+    assert_equal %i[visa master american_express diners_club jcb], SecurePayAuGateway.supported_cardtypes
   end
-
 
   def test_successful_purchase_with_live_data
     @gateway.expects(:ssl_post).returns(successful_live_purchase_response)
@@ -52,14 +51,14 @@ class SecurePayAuTest < Test::Unit::TestCase
 
   def test_localized_currency
     stub_comms do
-      @gateway.purchase(100, @credit_card, @options.merge(:currency => 'CAD'))
-    end.check_request do |endpoint, data, headers|
+      @gateway.purchase(100, @credit_card, @options.merge(currency: 'CAD'))
+    end.check_request do |_endpoint, data, _headers|
       assert_match %r{<amount>100<\/amount>}, data
     end.respond_with(successful_purchase_response)
 
     stub_comms do
-      @gateway.purchase(100, @credit_card, @options.merge(:currency => 'JPY'))
-    end.check_request do |endpoint, data, headers|
+      @gateway.purchase(100, @credit_card, @options.merge(currency: 'JPY'))
+    end.check_request do |_endpoint, data, _headers|
       assert_match %r{<amount>1<\/amount>}, data
     end.respond_with(successful_purchase_response)
   end
@@ -71,13 +70,13 @@ class SecurePayAuTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_failure response
     assert response.test?
-    assert_equal "CARD EXPIRED", response.message
+    assert_equal 'CARD EXPIRED', response.message
   end
 
   def test_purchase_with_stored_id_calls_commit_periodic
     @gateway.expects(:commit_periodic)
 
-    @gateway.purchase(@amount, "123", @options)
+    @gateway.purchase(@amount, '123', @options)
   end
 
   def test_purchase_with_creditcard_calls_commit_with_purchase
@@ -100,59 +99,59 @@ class SecurePayAuTest < Test::Unit::TestCase
 
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "Insufficient Funds", response.message
+    assert_equal 'Insufficient Funds', response.message
   end
 
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
 
-    assert response = @gateway.capture(@amount, "crazy*reference*thingy*100", {})
+    assert response = @gateway.capture(@amount, 'crazy*reference*thingy*100', {})
     assert_success response
-    assert_equal "Approved", response.message
+    assert_equal 'Approved', response.message
   end
 
   def test_failed_capture
     @gateway.expects(:ssl_post).returns(failed_capture_response)
 
-    assert response = @gateway.capture(@amount, "crazy*reference*thingy*100")
+    assert response = @gateway.capture(@amount, 'crazy*reference*thingy*100')
     assert_failure response
-    assert_equal "Preauth was done for smaller amount", response.message
+    assert_equal 'Preauth was done for smaller amount', response.message
   end
 
   def test_successful_refund
     @gateway.expects(:ssl_post).returns(successful_refund_response)
-    assert_success @gateway.refund(@amount, "crazy*reference*thingy*100", {})
+    assert_success @gateway.refund(@amount, 'crazy*reference*thingy*100', {})
   end
 
   def test_failed_refund
     @gateway.expects(:ssl_post).returns(failed_refund_response)
 
-    assert response = @gateway.refund(@amount, "crazy*reference*thingy*100")
+    assert response = @gateway.refund(@amount, 'crazy*reference*thingy*100')
     assert_failure response
-    assert_equal "Only $1.00 available for refund", response.message
+    assert_equal 'Only $1.00 available for refund', response.message
   end
 
   def test_deprecated_credit
     @gateway.expects(:ssl_post).returns(successful_refund_response)
 
     assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE) do
-      assert_success @gateway.credit(@amount, "crazy*reference*thingy*100", {})
+      assert_success @gateway.credit(@amount, 'crazy*reference*thingy*100', {})
     end
   end
 
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_void_response)
 
-    assert response = @gateway.void("crazy*reference*thingy*100", {})
+    assert response = @gateway.void('crazy*reference*thingy*100', {})
     assert_success response
   end
 
   def test_failed_void
     @gateway.expects(:ssl_post).returns(failed_void_response)
 
-    assert response = @gateway.void("crazy*reference*thingy*100")
+    assert response = @gateway.void('crazy*reference*thingy*100')
     assert_failure response
-    assert_equal "Transaction was done for different amount", response.message
+    assert_equal 'Transaction was done for different amount', response.message
   end
 
   def test_failed_login
@@ -161,15 +160,15 @@ class SecurePayAuTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_failure response
-    assert_equal "Invalid merchant ID", response.message
+    assert_equal 'Invalid merchant ID', response.message
   end
 
   def test_successful_store
     @gateway.expects(:ssl_post).returns(successful_store_response)
 
-    assert response = @gateway.store(@credit_card, {:billing_id => 'test3', :amount => 123})
+    assert response = @gateway.store(@credit_card, { billing_id: 'test3', amount: 123 })
     assert_instance_of Response, response
-    assert_equal "Successful", response.message
+    assert_equal 'Successful', response.message
     assert_equal 'test3', response.params['client_id']
   end
 
@@ -178,7 +177,7 @@ class SecurePayAuTest < Test::Unit::TestCase
 
     assert response = @gateway.unstore('test2')
     assert_instance_of Response, response
-    assert_equal "Successful", response.message
+    assert_equal 'Successful', response.message
     assert_equal 'test2', response.params['client_id']
   end
 
@@ -187,7 +186,7 @@ class SecurePayAuTest < Test::Unit::TestCase
 
     assert response = @gateway.purchase(@amount, 'test3', @options)
     assert_instance_of Response, response
-    assert_equal "Approved", response.message
+    assert_equal 'Approved', response.message
     assert_equal 'test3', response.params['client_id']
   end
 
@@ -202,7 +201,7 @@ class SecurePayAuTest < Test::Unit::TestCase
   private
 
   def successful_store_response
-    <<-XML.gsub(/^\s{4}/,'')
+    <<-XML.gsub(/^\s{4}/, '')
     <?xml version="1.0" encoding="UTF-8"?>
     <SecurePayMessage>
       <MessageInfo>
@@ -241,7 +240,7 @@ class SecurePayAuTest < Test::Unit::TestCase
   end
 
   def successful_unstore_response
-    <<-XML.gsub(/^\s{4}/,'')
+    <<-XML.gsub(/^\s{4}/, '')
     <?xml version="1.0" encoding="UTF-8"?>
     <SecurePayMessage>
       <MessageInfo>
@@ -273,7 +272,7 @@ class SecurePayAuTest < Test::Unit::TestCase
   end
 
   def successful_triggered_payment_response
-    <<-XML.gsub(/^\s{4}/,'')
+    <<-XML.gsub(/^\s{4}/, '')
     <?xml version="1.0" encoding="UTF-8"?>
     <SecurePayMessage>
       <MessageInfo>
@@ -319,7 +318,7 @@ class SecurePayAuTest < Test::Unit::TestCase
   end
 
   def successful_purchase_response
-    <<-XML.gsub(/^\s{4}/,'')
+    <<-XML.gsub(/^\s{4}/, '')
     <?xml version="1.0" encoding="UTF-8"?>
     <SecurePayMessage>
       <MessageInfo>
@@ -366,7 +365,7 @@ class SecurePayAuTest < Test::Unit::TestCase
   end
 
   def failed_purchase_response
-    <<-XML.gsub(/^\s{4}/,'')
+    <<-XML.gsub(/^\s{4}/, '')
     <?xml version="1.0" encoding="UTF-8"?>
     <SecurePayMessage>
       <MessageInfo>
@@ -413,7 +412,7 @@ class SecurePayAuTest < Test::Unit::TestCase
   end
 
   def successful_live_purchase_response
-    <<-XML.gsub(/^\s{4}/,'')
+    <<-XML.gsub(/^\s{4}/, '')
     <?xml version="1.0" encoding="UTF-8"?>
     <SecurePayMessage>
       <MessageInfo>

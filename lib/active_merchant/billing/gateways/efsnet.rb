@@ -2,10 +2,9 @@ require 'rexml/document'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-
     class EfsnetGateway < Gateway
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.homepage_url = 'http://www.concordefsnet.com/'
       self.display_name = 'Efsnet'
 
@@ -54,8 +53,8 @@ module ActiveMerchant #:nodoc:
 
       def void(identification, options = {})
         requires!(options, :order_id)
-        original_transaction_id, _ = identification.split(";")
-        commit(:void_transaction, {:reference_number => format_reference_number(options[:order_id]), :transaction_id => original_transaction_id})
+        original_transaction_id, = identification.split(';')
+        commit(:void_transaction, { reference_number: format_reference_number(options[:order_id]), transaction_id: original_transaction_id })
       end
 
       def voice_authorize(money, authorization_code, creditcard, options = {})
@@ -77,16 +76,16 @@ module ActiveMerchant #:nodoc:
       private
 
       def build_refund_or_settle_request(money, identification, options = {})
-        original_transaction_id, original_transaction_amount = identification.split(";")
+        original_transaction_id, original_transaction_amount = identification.split(';')
 
         requires!(options, :order_id)
 
         {
-          :reference_number => format_reference_number(options[:order_id]),
-          :transaction_amount => amount(money),
-          :original_transaction_amount => original_transaction_amount,
-          :original_transaction_id => original_transaction_id,
-          :client_ip_address => options[:ip]
+          reference_number: format_reference_number(options[:order_id]),
+          transaction_amount: amount(money),
+          original_transaction_amount: original_transaction_amount,
+          original_transaction_id: original_transaction_id,
+          client_ip_address: options[:ip]
         }
       end
 
@@ -94,65 +93,63 @@ module ActiveMerchant #:nodoc:
         requires!(options, :order_id)
 
         post = {
-          :reference_number => format_reference_number(options[:order_id]),
-          :authorization_number => options[:authorization_number],
-          :transaction_amount => amount(money),
-          :client_ip_address => options[:ip]
+          reference_number: format_reference_number(options[:order_id]),
+          authorization_number: options[:authorization_number],
+          transaction_amount: amount(money),
+          client_ip_address: options[:ip]
 
         }
-        add_creditcard(post,creditcard)
-        add_address(post,options)
+        add_creditcard(post, creditcard)
+        add_address(post, options)
         post
       end
 
       def format_reference_number(number)
-        number.to_s.slice(0,12)
+        number.to_s.slice(0, 12)
       end
 
-      def add_address(post,options)
+      def add_address(post, options)
         if address = options[:billing_address] || options[:address]
           if address[:address2]
-            post[:billing_address]    = address[:address1].to_s << ' ' <<  address[:address2].to_s
+            post[:billing_address]    = address[:address1].to_s << ' ' << address[:address2].to_s
           else
             post[:billing_address]    = address[:address1].to_s
           end
           post[:billing_city]         = address[:city].to_s
-          post[:billing_state]        = address[:state].blank?  ? 'n/a' : address[:state]
+          post[:billing_state]        = address[:state].blank? ? 'n/a' : address[:state]
           post[:billing_postal_code]  = address[:zip].to_s
           post[:billing_country]      = address[:country].to_s
         end
 
         if address = options[:shipping_address]
           if address[:address2]
-            post[:shipping_address]   = address[:address1].to_s << ' ' <<  address[:address2].to_s
+            post[:shipping_address]   = address[:address1].to_s << ' ' << address[:address2].to_s
           else
             post[:shipping_address]   = address[:address1].to_s
           end
           post[:shipping_city]        = address[:city].to_s
-          post[:shipping_state]       = address[:state].blank?  ? 'n/a' : address[:state]
+          post[:shipping_state]       = address[:state].blank? ? 'n/a' : address[:state]
           post[:shipping_postal_code] = address[:zip].to_s
           post[:shipping_country]     = address[:country].to_s
         end
       end
 
       def add_creditcard(post, creditcard)
-        post[:billing_name]  = creditcard.name if creditcard.name
-        post[:account_number]  = creditcard.number
+        post[:billing_name] = creditcard.name if creditcard.name
+        post[:account_number] = creditcard.number
         post[:card_verification_value] = creditcard.verification_value if creditcard.verification_value?
-        post[:expiration_month]  = sprintf("%.2i", creditcard.month)
-        post[:expiration_year]  = sprintf("%.4i", creditcard.year)[-2..-1]
+        post[:expiration_month] = sprintf('%.2i', creditcard.month)
+        post[:expiration_year] = sprintf('%.4i', creditcard.year)[-2..-1]
       end
-
 
       def commit(action, parameters)
         response = parse(ssl_post(test? ? self.test_url : self.live_url, post_data(action, parameters), 'Content-Type' => 'text/xml'))
 
         Response.new(success?(response), message_from(response[:result_message]), response,
-          :test => test?,
-          :authorization => authorization_from(response, parameters),
-          :avs_result => { :code => response[:avs_response_code] },
-          :cvv_result => response[:cvv_response_code]
-        )
+          test: test?,
+          authorization: authorization_from(response, parameters),
+          avs_result: { code: response[:avs_response_code] },
+          cvv_result: response[:cvv_response_code])
       end
 
       def success?(response)
@@ -160,7 +157,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response, params)
-        [ response[:transaction_id], params[:transaction_amount] ].compact.join(';')
+        [response[:transaction_id], params[:transaction_amount]].compact.join(';')
       end
 
       def parse(xml)
@@ -169,9 +166,7 @@ module ActiveMerchant #:nodoc:
         xml = REXML::Document.new(xml)
 
         xml.elements.each('//Reply//TransactionReply/*') do |node|
-
           response[node.name.underscore.to_sym] = normalize(node.text)
-
         end unless xml.root.nil?
 
         response
@@ -179,10 +174,10 @@ module ActiveMerchant #:nodoc:
 
       def post_data(action, parameters = {})
         xml   = REXML::Document.new("<?xml version='1.0' encoding='UTF-8'?>")
-        root  = xml.add_element("Request")
-        root.attributes["StoreID"] = options[:login]
-        root.attributes["StoreKey"] = options[:password]
-        root.attributes["ApplicationID"] = 'ot 1.0'
+        root  = xml.add_element('Request')
+        root.attributes['StoreID'] = options[:login]
+        root.attributes['StoreKey'] = options[:password]
+        root.attributes['ApplicationID'] = 'ot 1.0'
         transaction = root.add_element(action.to_s.camelize)
 
         actions[action].each do |key|
@@ -194,25 +189,26 @@ module ActiveMerchant #:nodoc:
 
       def message_from(message)
         return 'Unspecified error' if message.blank?
-        message.gsub(/[^\w]/, ' ').split.join(" ").capitalize
+
+        message.gsub(/[^\w]/, ' ').split.join(' ').capitalize
       end
 
       def actions
         ACTIONS
       end
 
-      CREDIT_CARD_FIELDS =  %w(AuthorizationNumber ClientIpAddress BillingAddress BillingCity BillingState BillingPostalCode BillingCountry BillingName CardVerificationValue ExpirationMonth ExpirationYear ReferenceNumber TransactionAmount AccountNumber )
+      CREDIT_CARD_FIELDS = %w(AuthorizationNumber ClientIpAddress BillingAddress BillingCity BillingState BillingPostalCode BillingCountry BillingName CardVerificationValue ExpirationMonth ExpirationYear ReferenceNumber TransactionAmount AccountNumber)
 
       ACTIONS = {
-           :credit_card_authorize		=> CREDIT_CARD_FIELDS,
-           :credit_card_charge			=> CREDIT_CARD_FIELDS,
-           :credit_card_voice_authorize		=> CREDIT_CARD_FIELDS,
-           :credit_card_capture			=> CREDIT_CARD_FIELDS,
-           :credit_card_credit			=> CREDIT_CARD_FIELDS + ["OriginalTransactionAmount"],
-           :credit_card_refund			=> %w(ReferenceNumber TransactionAmount OriginalTransactionAmount OriginalTransactionID ClientIpAddress),
-           :void_transaction			=> %w(ReferenceNumber TransactionID),
-           :credit_card_settle			=> %w(ReferenceNumber TransactionAmount OriginalTransactionAmount OriginalTransactionID ClientIpAddress),
-           :system_check			=> %w(SystemCheck),
+        credit_card_authorize: CREDIT_CARD_FIELDS,
+        credit_card_charge: CREDIT_CARD_FIELDS,
+        credit_card_voice_authorize: CREDIT_CARD_FIELDS,
+        credit_card_capture: CREDIT_CARD_FIELDS,
+        credit_card_credit: CREDIT_CARD_FIELDS + ['OriginalTransactionAmount'],
+        credit_card_refund: %w(ReferenceNumber TransactionAmount OriginalTransactionAmount OriginalTransactionID ClientIpAddress),
+        void_transaction: %w(ReferenceNumber TransactionID),
+        credit_card_settle: %w(ReferenceNumber TransactionAmount OriginalTransactionAmount OriginalTransactionID ClientIpAddress),
+        system_check: %w(SystemCheck)
       }
     end
   end

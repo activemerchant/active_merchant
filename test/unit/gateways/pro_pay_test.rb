@@ -1,5 +1,4 @@
 require 'test_helper'
-
 class ProPayTest < Test::Unit::TestCase
   include CommStub
 
@@ -56,7 +55,7 @@ class ProPayTest < Test::Unit::TestCase
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
 
-    response = @gateway.capture(@amount, "auth", @options)
+    response = @gateway.capture(@amount, 'auth', @options)
     assert_success response
 
     assert_equal '24', response.authorization
@@ -66,7 +65,7 @@ class ProPayTest < Test::Unit::TestCase
   def test_failed_capture
     @gateway.expects(:ssl_post).returns(failed_capture_response)
 
-    response = @gateway.capture(@amount, "invalid-auth", @options)
+    response = @gateway.capture(@amount, 'invalid-auth', @options)
     assert_failure response
     assert_equal '51', response.error_code
     assert_equal 'Invalid transNum and/or Unable to act perform actions on transNum due to funding', response.message
@@ -90,7 +89,7 @@ class ProPayTest < Test::Unit::TestCase
   def test_successful_void
     response = stub_comms do
       @gateway.void('auth', @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r(<transType>07</transType>), data)
     end.respond_with(successful_void_response)
 
@@ -100,7 +99,7 @@ class ProPayTest < Test::Unit::TestCase
   def test_failed_void
     response = stub_comms do
       @gateway.void('invalid-auth', @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r(<transType>07</transType>), data)
     end.respond_with(failed_void_response)
 
@@ -145,7 +144,7 @@ class ProPayTest < Test::Unit::TestCase
 
     response = @gateway.verify(@credit_card, @options)
     assert_failure response
-    assert_equal "58", response.error_code
+    assert_equal '58', response.error_code
   end
 
   def test_scrub
@@ -153,67 +152,77 @@ class ProPayTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
+  def test_does_not_send_dashed_zip_code
+    options = @options.merge(billing_address: address.update(zip: '12345-3456'))
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<zip>123453456</, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   private
 
   def pre_scrubbed
-    <<-RESPONSE
-opening connection to xmltest.propay.com:443...
-opened
-starting SSL for xmltest.propay.com:443...
-SSL established
-<- "POST /API/PropayAPI.aspx HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: xmltest.propay.com\r\nContent-Length: 547\r\n\r\n"
-<- "<?xml version=\"1.0\"?>\n<XMLRequest>\n  <certStr>5ab9cddef2e4911b77e0c4ffb70f03</certStr>\n  <class>partner</class>\n  <XMLTrans>\n    <amount>100</amount>\n    <currencyCode>USD</currencyCode>\n    <ccNum>4747474747474747</ccNum>\n    <expDate>0918</expDate>\n    <CVV2>999</CVV2>\n    <cardholderName>Longbob Longsen</cardholderName>\n    <addr>456 My Street</addr>\n    <aptNum>Apt 1</aptNum>\n    <city>Ottawa</city>\n    <state>ON</state>\n    <zip>K1C2N6</zip>\n    <accountNum>32287391</accountNum>\n    <transType>04</transType>\n  </XMLTrans>\n</XMLRequest>\n"
--> "HTTP/1.1 200 OK\r\n"
--> "Cache-Control: max-age=0,no-cache,no-store,must-revalidate\r\n"
--> "Pragma: no-cache\r\n"
--> "Content-Type: text/xml; charset=utf-8\r\n"
--> "Content-Encoding: gzip\r\n"
--> "Expires: Thu, 01 Jan 1970 00:00:00 GMT\r\n"
--> "Vary: Accept-Encoding\r\n"
--> "Server: Microsoft-IIS/7.5\r\n"
--> "Set-Cookie: ASP.NET_SessionId=hn1orxwu31yeoym5fkdhac4o; path=/; secure; HttpOnly\r\n"
--> "Set-Cookie: sessionValidation=1a1d69b6-6e53-408b-b054-602593da00e7; path=/; secure; HttpOnly\r\n"
--> "X-Powered-By: ASP.NET\r\n"
--> "X-Frame-Options: SAMEORIGIN\r\n"
--> "Date: Tue, 25 Apr 2017 19:44:03 GMT\r\n"
--> "Connection: close\r\n"
--> "Content-Length: 343\r\n"
--> "\r\n"
-reading 343 bytes...
--> ""
-read 343 bytes
-Conn close
+    <<~RESPONSE
+      opening connection to xmltest.propay.com:443...
+      opened
+      starting SSL for xmltest.propay.com:443...
+      SSL established
+      <- "POST /API/PropayAPI.aspx HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: xmltest.propay.com\r\nContent-Length: 547\r\n\r\n"
+      <- "<?xml version=\"1.0\"?>\n<XMLRequest>\n  <certStr>5ab9cddef2e4911b77e0c4ffb70f03</certStr>\n  <class>partner</class>\n  <XMLTrans>\n    <amount>100</amount>\n    <currencyCode>USD</currencyCode>\n    <ccNum>4747474747474747</ccNum>\n    <expDate>0918</expDate>\n    <CVV2>999</CVV2>\n    <cardholderName>Longbob Longsen</cardholderName>\n    <addr>456 My Street</addr>\n    <aptNum>Apt 1</aptNum>\n    <city>Ottawa</city>\n    <state>ON</state>\n    <zip>K1C2N6</zip>\n    <accountNum>32287391</accountNum>\n    <transType>04</transType>\n  </XMLTrans>\n</XMLRequest>\n"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Cache-Control: max-age=0,no-cache,no-store,must-revalidate\r\n"
+      -> "Pragma: no-cache\r\n"
+      -> "Content-Type: text/xml; charset=utf-8\r\n"
+      -> "Content-Encoding: gzip\r\n"
+      -> "Expires: Thu, 01 Jan 1970 00:00:00 GMT\r\n"
+      -> "Vary: Accept-Encoding\r\n"
+      -> "Server: Microsoft-IIS/7.5\r\n"
+      -> "Set-Cookie: ASP.NET_SessionId=hn1orxwu31yeoym5fkdhac4o; path=/; secure; HttpOnly\r\n"
+      -> "Set-Cookie: sessionValidation=1a1d69b6-6e53-408b-b054-602593da00e7; path=/; secure; HttpOnly\r\n"
+      -> "X-Powered-By: ASP.NET\r\n"
+      -> "X-Frame-Options: SAMEORIGIN\r\n"
+      -> "Date: Tue, 25 Apr 2017 19:44:03 GMT\r\n"
+      -> "Connection: close\r\n"
+      -> "Content-Length: 343\r\n"
+      -> "\r\n"
+      reading 343 bytes...
+      -> ""
+      read 343 bytes
+      Conn close
     RESPONSE
   end
 
   def post_scrubbed
-    <<-POST_SCRUBBED
-opening connection to xmltest.propay.com:443...
-opened
-starting SSL for xmltest.propay.com:443...
-SSL established
-<- "POST /API/PropayAPI.aspx HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: xmltest.propay.com\r\nContent-Length: 547\r\n\r\n"
-<- "<?xml version=\"1.0\"?>\n<XMLRequest>\n  <certStr>[FILTERED]</certStr>\n  <class>partner</class>\n  <XMLTrans>\n    <amount>100</amount>\n    <currencyCode>USD</currencyCode>\n    <ccNum>[FILTERED]</ccNum>\n    <expDate>0918</expDate>\n    <CVV2>[FILTERED]</CVV2>\n    <cardholderName>Longbob Longsen</cardholderName>\n    <addr>456 My Street</addr>\n    <aptNum>Apt 1</aptNum>\n    <city>Ottawa</city>\n    <state>ON</state>\n    <zip>K1C2N6</zip>\n    <accountNum>32287391</accountNum>\n    <transType>04</transType>\n  </XMLTrans>\n</XMLRequest>\n"
--> "HTTP/1.1 200 OK\r\n"
--> "Cache-Control: max-age=0,no-cache,no-store,must-revalidate\r\n"
--> "Pragma: no-cache\r\n"
--> "Content-Type: text/xml; charset=utf-8\r\n"
--> "Content-Encoding: gzip\r\n"
--> "Expires: Thu, 01 Jan 1970 00:00:00 GMT\r\n"
--> "Vary: Accept-Encoding\r\n"
--> "Server: Microsoft-IIS/7.5\r\n"
--> "Set-Cookie: ASP.NET_SessionId=hn1orxwu31yeoym5fkdhac4o; path=/; secure; HttpOnly\r\n"
--> "Set-Cookie: sessionValidation=1a1d69b6-6e53-408b-b054-602593da00e7; path=/; secure; HttpOnly\r\n"
--> "X-Powered-By: ASP.NET\r\n"
--> "X-Frame-Options: SAMEORIGIN\r\n"
--> "Date: Tue, 25 Apr 2017 19:44:03 GMT\r\n"
--> "Connection: close\r\n"
--> "Content-Length: 343\r\n"
--> "\r\n"
-reading 343 bytes...
--> ""
-read 343 bytes
-Conn close
+    <<~POST_SCRUBBED
+      opening connection to xmltest.propay.com:443...
+      opened
+      starting SSL for xmltest.propay.com:443...
+      SSL established
+      <- "POST /API/PropayAPI.aspx HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: xmltest.propay.com\r\nContent-Length: 547\r\n\r\n"
+      <- "<?xml version=\"1.0\"?>\n<XMLRequest>\n  <certStr>[FILTERED]</certStr>\n  <class>partner</class>\n  <XMLTrans>\n    <amount>100</amount>\n    <currencyCode>USD</currencyCode>\n    <ccNum>[FILTERED]</ccNum>\n    <expDate>0918</expDate>\n    <CVV2>[FILTERED]</CVV2>\n    <cardholderName>Longbob Longsen</cardholderName>\n    <addr>456 My Street</addr>\n    <aptNum>Apt 1</aptNum>\n    <city>Ottawa</city>\n    <state>ON</state>\n    <zip>K1C2N6</zip>\n    <accountNum>32287391</accountNum>\n    <transType>04</transType>\n  </XMLTrans>\n</XMLRequest>\n"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Cache-Control: max-age=0,no-cache,no-store,must-revalidate\r\n"
+      -> "Pragma: no-cache\r\n"
+      -> "Content-Type: text/xml; charset=utf-8\r\n"
+      -> "Content-Encoding: gzip\r\n"
+      -> "Expires: Thu, 01 Jan 1970 00:00:00 GMT\r\n"
+      -> "Vary: Accept-Encoding\r\n"
+      -> "Server: Microsoft-IIS/7.5\r\n"
+      -> "Set-Cookie: ASP.NET_SessionId=hn1orxwu31yeoym5fkdhac4o; path=/; secure; HttpOnly\r\n"
+      -> "Set-Cookie: sessionValidation=1a1d69b6-6e53-408b-b054-602593da00e7; path=/; secure; HttpOnly\r\n"
+      -> "X-Powered-By: ASP.NET\r\n"
+      -> "X-Frame-Options: SAMEORIGIN\r\n"
+      -> "Date: Tue, 25 Apr 2017 19:44:03 GMT\r\n"
+      -> "Connection: close\r\n"
+      -> "Content-Length: 343\r\n"
+      -> "\r\n"
+      reading 343 bytes...
+      -> ""
+      read 343 bytes
+      Conn close
     POST_SCRUBBED
   end
 

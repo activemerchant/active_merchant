@@ -9,10 +9,10 @@ class RemoteBridgePayTest < Test::Unit::TestCase
     @declined_card = credit_card('4000300011100000')
 
     @check = check(
-      :name => 'John Doe',
-      :routing_number => '490000018',
-      :account_number => '1234567890',
-      :number => '1001'
+      name: 'John Doe',
+      routing_number: '490000018',
+      account_number: '1234567890',
+      number: '1001'
     )
 
     @options = {
@@ -57,7 +57,7 @@ class RemoteBridgePayTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@amount - 1, auth.authorization)
     assert_success capture
   end
 
@@ -78,7 +78,7 @@ class RemoteBridgePayTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount-1, purchase.authorization)
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization)
     assert_success refund
   end
 
@@ -103,10 +103,10 @@ class RemoteBridgePayTest < Test::Unit::TestCase
   def test_successful_verify
     assert response = @gateway.verify(@credit_card, @options)
     assert_success response
-    assert_equal "Approved", response.message
+    assert_equal 'Approved', response.message
 
-    assert_success response.responses.last, "The void should succeed"
-    assert_equal "Approved", response.responses.last.params["respmsg"]
+    assert_success response.responses.last, 'The void should succeed'
+    assert_equal 'Approved', response.responses.last.params['respmsg']
   end
 
   def test_unsuccessful_verify
@@ -141,5 +141,14 @@ class RemoteBridgePayTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:password], transcript)
+  end
+
+  def test_account_number_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(150, @check, @options)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@check.account_number, clean_transcript)
   end
 end

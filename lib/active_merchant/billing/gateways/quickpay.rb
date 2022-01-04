@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
       self.abstract_class = true
 
       def self.new(options = {})
-        options.fetch(:login) { raise ArgumentError.new("Missing required parameter: login") }
+        options.fetch(:login) { raise ArgumentError.new('Missing required parameter: login') }
 
         version = options[:login].to_i < 10000000 ? 10 : 7
         if version <= 7
@@ -19,8 +19,6 @@ module ActiveMerchant #:nodoc:
           QuickpayV10Gateway.new(options)
         end
       end
-
     end
   end
 end
-

@@ -8,13 +8,13 @@ module ActiveMerchant #:nodoc:
       self.delimiter = "\r\n"
 
       self.actions = {
-        :purchase => 'SALE',
-        :credit => 'CREDIT'
+        purchase: 'SALE',
+        credit: 'CREDIT'
       }
 
       APPROVED = '0'
 
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.supported_countries = ['US']
       self.display_name = 'ViaKLIX'
       self.homepage_url = 'http://viaklix.com'
@@ -49,9 +49,7 @@ module ActiveMerchant #:nodoc:
       # Make a credit to a card (Void can only be done from the virtual terminal)
       # Viaklix does not support credits by reference. You must pass in the credit card
       def credit(money, creditcard, options = {})
-        if creditcard.is_a?(String)
-          raise ArgumentError, "Reference credits are not supported. Please supply the original credit card"
-        end
+        raise ArgumentError, 'Reference credits are not supported. Please supply the original credit card' if creditcard.is_a?(String)
 
         form = {}
         add_invoice(form, options)
@@ -63,6 +61,7 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
       def add_test_mode(form, options)
         form[:test_mode] = 'TRUE' if options[:test_mode]
       end
@@ -72,12 +71,12 @@ module ActiveMerchant #:nodoc:
         form[:customer_code] = options[:customer].to_s.slice(0, 10) unless options[:customer].blank?
       end
 
-      def add_invoice(form,options)
+      def add_invoice(form, options)
         form[:invoice_number] = (options[:order_id] || options[:invoice]).to_s.slice(0, 10)
         form[:description] = options[:description].to_s.slice(0, 255)
       end
 
-      def add_address(form,options)
+      def add_address(form, options)
         billing_address = options[:billing_address] || options[:address]
 
         if billing_address
@@ -108,9 +107,7 @@ module ActiveMerchant #:nodoc:
         form[:card_number] = creditcard.number
         form[:exp_date] = expdate(creditcard)
 
-        if creditcard.verification_value?
-          add_verification_value(form, creditcard)
-        end
+        add_verification_value(form, creditcard) if creditcard.verification_value?
 
         form[:first_name] = creditcard.first_name.to_s.slice(0, 20)
         form[:last_name] = creditcard.last_name.to_s.slice(0, 30)
@@ -137,14 +134,13 @@ module ActiveMerchant #:nodoc:
         parameters[:amount] = amount(money)
         parameters[:transaction_type] = self.actions[action]
 
-        response = parse( ssl_post(test? ? self.test_url : self.live_url, post_data(parameters)) )
+        response = parse(ssl_post(test? ? self.test_url : self.live_url, post_data(parameters)))
 
         Response.new(response['result'] == APPROVED, message_from(response), response,
-          :test => @options[:test] || test?,
-          :authorization => authorization_from(response),
-          :avs_result => { :code => response['avs_response'] },
-          :cvv_result => response['cvv2_response']
-        )
+          test: @options[:test] || test?,
+          authorization: authorization_from(response),
+          avs_result: { code: response['avs_response'] },
+          cvv_result: response['cvv2_response'])
       end
 
       def authorization_from(response)
@@ -158,16 +154,16 @@ module ActiveMerchant #:nodoc:
       def post_data(parameters)
         result = preamble
         result.merge!(parameters)
-        result.collect { |key, value| "ssl_#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        result.collect { |key, value| "ssl_#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 
       # Parse the response message
       def parse(msg)
         resp = {}
-        msg.split(self.delimiter).collect{|li|
-            key, value = li.split("=")
-            resp[key.strip.gsub(/^ssl_/, '')] = value.to_s.strip
-          }
+        msg.split(self.delimiter).collect { |li|
+          key, value = li.split('=')
+          resp[key.strip.gsub(/^ssl_/, '')] = value.to_s.strip
+        }
         resp
       end
     end

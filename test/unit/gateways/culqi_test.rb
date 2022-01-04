@@ -5,7 +5,7 @@ class CulqiTest < Test::Unit::TestCase
     @gateway = CulqiGateway.new(merchant_id: 'merchant', terminal_id: 'terminal', secret_key: 'password')
 
     @amount = 1000
-    @credit_card = credit_card("4111111111111111")
+    @credit_card = credit_card('4111111111111111')
 
     @options = {
       order_id: generate_unique_id,
@@ -56,7 +56,7 @@ class CulqiTest < Test::Unit::TestCase
   def test_failed_capture
     @gateway.expects(:ssl_post).returns(failed_capture_response)
 
-    response = @gateway.capture(@amount, "0")
+    response = @gateway.capture(@amount, '0')
     assert_failure response
     assert_match %r{Transaction not found}, response.message
   end
@@ -77,7 +77,7 @@ class CulqiTest < Test::Unit::TestCase
   def test_failed_refund
     @gateway.expects(:ssl_post).returns(failed_refund_response)
 
-    response = @gateway.refund(@amount, "0")
+    response = @gateway.refund(@amount, '0')
     assert_failure response
     assert_match %r{Transaction not found}, response.message
   end
@@ -98,7 +98,7 @@ class CulqiTest < Test::Unit::TestCase
   def test_failed_void
     @gateway.expects(:ssl_post).returns(failed_void_response)
 
-    response = @gateway.void("0", @options)
+    response = @gateway.void('0', @options)
     assert_failure response
     assert_match %r{Transaction not found}, response.message
   end

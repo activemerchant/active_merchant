@@ -2,19 +2,19 @@ require 'test_helper'
 
 class EvoCaTest < Test::Unit::TestCase
   def setup
-    @gateway = EvoCaGateway.new(:username => 'demo', :password => 'password')
+    @gateway = EvoCaGateway.new(username: 'demo', password: 'password')
 
     @credit_card = credit_card
     @amount = 100
 
     @options = {
-      :order_id => '1',
-      :billing_address => address,
-      :description => 'Store Purchase',
-      :tracking_number => '123456789-0',
-      :shipping_carrier => 'fedex',
-      :email => 'evo@example.com',
-      :ip => '127.0.0.1'
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase',
+      tracking_number: '123456789-0',
+      shipping_carrier: 'fedex',
+      email: 'evo@example.com',
+      ip: '127.0.0.1'
     }
   end
 
@@ -84,7 +84,7 @@ class EvoCaTest < Test::Unit::TestCase
 
   def test_successful_update
     @gateway.expects(:ssl_post).returns(successful_update_response)
-    assert response = @gateway.update('1812639342', :tracking_number => '1234', :shipping_carrier => 'fedex')
+    assert response = @gateway.update('1812639342', tracking_number: '1234', shipping_carrier: 'fedex')
     assert_success response
     assert_equal '1812639342', response.authorization
   end
@@ -99,7 +99,7 @@ class EvoCaTest < Test::Unit::TestCase
   def test_add_address
     result = {}
 
-    @gateway.send(:add_address, result, :address => {:address1 => '123 Main Street', :country => 'CA', :state => 'BC'} )
+    @gateway.send(:add_address, result, address: { address1: '123 Main Street', country: 'CA', state: 'BC' })
     assert_equal %w{address1 address2 city company country firstname lastname phone state zip}, result.stringify_keys.keys.sort
     assert_equal 'BC', result[:state]
     assert_equal '123 Main Street', result[:address1]
@@ -109,7 +109,7 @@ class EvoCaTest < Test::Unit::TestCase
   def test_add_shipping_address
     result = {}
 
-    @gateway.send(:add_address, result, :shipping_address => {:address1 => '123 Main Street', :country => 'CA', :state => 'BC'} )
+    @gateway.send(:add_address, result, shipping_address: { address1: '123 Main Street', country: 'CA', state: 'BC' })
     assert_equal %w{shipping_address1 shipping_address2 shipping_city shipping_company shipping_country shipping_firstname shipping_lastname shipping_state shipping_zip}, result.stringify_keys.keys.sort
     assert_equal 'BC', result[:shipping_state]
     assert_equal '123 Main Street', result[:shipping_address1]

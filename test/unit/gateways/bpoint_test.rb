@@ -46,7 +46,7 @@ class BpointTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "Declined", response.message
+    assert_equal 'Declined', response.message
   end
 
   def test_successful_authorize
@@ -88,13 +88,23 @@ class BpointTest < Test::Unit::TestCase
 
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_void_response)
-    response = @gateway.void(@amount, '')
+    response = @gateway.void('', amount: 300)
     assert_success response
+  end
+
+  def test_void_passes_correct_transaction_reference
+    stub_comms do
+      # transaction number from successful authorize response
+      @gateway.void('219388558', amount: 300)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r(<OriginalTransactionNumber>219388558</OriginalTransactionNumber>)m, data)
+      assert_match(%r(<Amount>300</Amount>)m, data)
+    end.respond_with(successful_void_response)
   end
 
   def test_failed_void
     @gateway.expects(:ssl_post).returns(failed_void_response)
-    response = @gateway.void(@amount, '')
+    response = @gateway.void('')
     assert_failure response
   end
 
@@ -125,8 +135,17 @@ class BpointTest < Test::Unit::TestCase
   def test_passing_biller_code
     stub_comms do
       @gateway.authorize(@amount, @credit_card, { biller_code: '1234' })
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_endpoint, data, _headers|
       assert_match(%r(<BillerCode>1234</BillerCode>)m, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_passing_reference_and_crn
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ crn1: 'ref' }))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r(<MerchantReference>1</MerchantReference>)m, data)
+      assert_match(%r(<CRN1>ref</CRN1>)m, data)
     end.respond_with(successful_authorize_response)
   end
 
@@ -225,7 +244,7 @@ class BpointTest < Test::Unit::TestCase
     </soap:Envelope>
     )
   end
-  alias_method :successful_verify_response, :successful_authorize_response
+  alias successful_verify_response successful_authorize_response
 
   def failed_authorize_response
     %(
@@ -252,7 +271,7 @@ class BpointTest < Test::Unit::TestCase
     </soap:Envelope>
     )
   end
-  alias_method :failed_verify_response, :failed_authorize_response
+  alias failed_verify_response failed_authorize_response
 
   def successful_capture_response
     %(
@@ -399,23 +418,23 @@ class BpointTest < Test::Unit::TestCase
   end
 
   def successful_store_response
-   %(
-    <?xml version="1.0" encoding="UTF-8"?>
-    <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-      <soap:Body>
-        <AddTokenResponse xmlns="urn:Eve_1_4_4">
-          <AddTokenResult>
-            <Token>5999992142370790</Token>
-            <MaskedCardNumber>498765...769</MaskedCardNumber>
-            <CardType>VC</CardType>
-          </AddTokenResult>
-          <response>
-            <ResponseCode>SUCCESS</ResponseCode>
-          </response>
-        </AddTokenResponse>
-      </soap:Body>
-    </soap:Envelope>
-   )
+    %(
+     <?xml version="1.0" encoding="UTF-8"?>
+     <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+       <soap:Body>
+         <AddTokenResponse xmlns="urn:Eve_1_4_4">
+           <AddTokenResult>
+             <Token>5999992142370790</Token>
+             <MaskedCardNumber>498765...769</MaskedCardNumber>
+             <CardType>VC</CardType>
+           </AddTokenResult>
+           <response>
+             <ResponseCode>SUCCESS</ResponseCode>
+           </response>
+         </AddTokenResponse>
+       </soap:Body>
+     </soap:Envelope>
+    )
   end
 
   def failed_store_response

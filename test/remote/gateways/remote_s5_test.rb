@@ -54,7 +54,7 @@ class RemoteS5Test < Test::Unit::TestCase
   end
 
   def test_failed_purchase
-    @options[:memo] = "800.100.151"
+    @options[:memo] = '800.100.151'
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
     assert_equal 'transaction declined (invalid card)', response.message
@@ -81,7 +81,7 @@ class RemoteS5Test < Test::Unit::TestCase
   end
 
   def test_failed_authorize
-    @options[:memo] = "100.400.080"
+    @options[:memo] = '100.400.080'
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
   end
@@ -90,7 +90,7 @@ class RemoteS5Test < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@amount - 1, auth.authorization)
     assert_success capture
   end
 
@@ -111,7 +111,7 @@ class RemoteS5Test < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount-1, purchase.authorization)
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization)
     assert_success refund
   end
 
@@ -140,7 +140,7 @@ class RemoteS5Test < Test::Unit::TestCase
   end
 
   def test_failed_verify
-    @options[:memo] = "100.400.080"
+    @options[:memo] = '100.400.080'
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
     assert_match %r{authorization failure}, response.message

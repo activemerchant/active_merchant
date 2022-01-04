@@ -3,10 +3,10 @@ require 'test_helper'
 class CardSaveTest < Test::Unit::TestCase
   def setup
     Base.mode = :test
-    @gateway = CardSaveGateway.new(:login => 'login', :password => 'password')
+    @gateway = CardSaveGateway.new(login: 'login', password: 'password')
     @credit_card = credit_card
     @amount = 100
-    @options = {:order_id =>'1', :billing_address => address, :description =>'Store Purchase'}
+    @options = { order_id: '1', billing_address: address, description: 'Store Purchase' }
   end
 
   def test_successful_purchase
@@ -59,7 +59,7 @@ class CardSaveTest < Test::Unit::TestCase
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(capture_successful)
 
-    assert response = @gateway.capture(1111, "1;110706124418747501702211;702211")
+    assert response = @gateway.capture(1111, '1;110706124418747501702211;702211')
     assert_success response
     assert_equal('110706124418747501702211', response.authorization)
     assert response.test?
@@ -273,5 +273,4 @@ class CardSaveTest < Test::Unit::TestCase
       </soap:Body>
     </soap:Envelope>)
   end
-
 end

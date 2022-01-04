@@ -5,21 +5,17 @@ require 'test_helper'
 class GarantiTest < Test::Unit::TestCase
   def setup
     @original_kcode = nil
-    if RUBY_VERSION < '1.9' && $KCODE == "NONE"
-      @original_kcode = $KCODE
-      $KCODE = 'u'
-    end
 
     Base.mode = :test
-    @gateway = GarantiGateway.new(:login => 'a', :password => 'b', :terminal_id => 'c', :merchant_id => 'd')
+    @gateway = GarantiGateway.new(login: 'a', password: 'b', terminal_id: 'c', merchant_id: 'd')
 
     @credit_card = credit_card(4242424242424242)
-    @amount = 1000 #1000 cents, 10$
+    @amount = 1000 # 1000 cents, 10$
 
     @options = {
-      :order_id => 'db4af18c5222503d845180350fbda516',
-      :billing_address => address,
-      :description => 'Store Purchase'
+      order_id: 'db4af18c5222503d845180350fbda516',
+      billing_address: address,
+      description: 'Store Purchase'
     }
   end
 
@@ -51,12 +47,9 @@ class GarantiTest < Test::Unit::TestCase
     if ActiveSupport::Inflector.method(:transliterate).arity == -2
       assert_equal 'ABCCDEFGGHIIJKLMNOOPRSSTUUVYZ', @gateway.send(:normalize, 'ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ')
       assert_equal 'abccdefgghiijklmnooprsstuuvyz', @gateway.send(:normalize, 'abcçdefgğhıijklmnoöprsştuüvyz')
-    elsif RUBY_VERSION >= '1.9'
+    else
       assert_equal 'ABCDEFGHIJKLMNOPRSTUVYZ', @gateway.send(:normalize, 'ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ')
       assert_equal 'abcdefghijklmnoprstuvyz', @gateway.send(:normalize, 'abcçdefgğhıijklmnoöprsştuüvyz')
-    else
-      assert_equal 'ABCCDEFGGHIIJKLMNOOPRSSTUUVYZ', @gateway.send(:normalize, 'ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ')
-      assert_equal 'abccdefgghijklmnooprsstuuvyz', @gateway.send(:normalize, 'abcçdefgğhıijklmnoöprsştuüvyz')
     end
   end
 
@@ -65,11 +58,11 @@ class GarantiTest < Test::Unit::TestCase
   end
 
   def test_strip_invalid_xml_chars
-    xml = <<EOF
+    xml = <<XML
       <response>
         <element>Parse the First & but not this &tilde; &x002a;</element>
       </response>
-EOF
+XML
     parsed_xml = @gateway.send(:strip_invalid_xml_chars, xml)
 
     assert REXML::Document.new(parsed_xml)
@@ -82,71 +75,71 @@ EOF
 
   # Place raw successful response from gateway here
   def successful_purchase_response
-    <<-EOF
-<GVPSResponse>
-      <Mode></Mode>
-      <Order>
-            <OrderID>db4af18c5222503d845180350fbda516</OrderID>
-            <GroupID></GroupID>
-      </Order>
-      <Transaction>
-            <Response>
-                  <Source>HOST</Source>
-                  <Code>00</Code>
-                  <ReasonCode>00</ReasonCode>
-                  <Message>Approved</Message>
-                  <ErrorMsg></ErrorMsg>
-                  <SysErrMsg></SysErrMsg>
-            </Response>
-            <RetrefNum>035208609374</RetrefNum>
-            <AuthCode>784260</AuthCode>
-            <BatchNum>000089</BatchNum>
-            <SequenceNum>000008</SequenceNum>
-            <ProvDate>20101218 08:56:39</ProvDate>
-            <CardNumberMasked></CardNumberMasked>
-            <CardHolderName>Company Name & Another Name</CardHolderName>
-            <HostMsgList></HostMsgList>
-            <RewardInqResult>
-                  <RewardList></RewardList>
-                  <ChequeList></ChequeList>
-            </RewardInqResult>
-      </Transaction>
-</GVPSResponse>
-  EOF
+    <<~XML
+      <GVPSResponse>
+            <Mode></Mode>
+            <Order>
+                  <OrderID>db4af18c5222503d845180350fbda516</OrderID>
+                  <GroupID></GroupID>
+            </Order>
+            <Transaction>
+                  <Response>
+                        <Source>HOST</Source>
+                        <Code>00</Code>
+                        <ReasonCode>00</ReasonCode>
+                        <Message>Approved</Message>
+                        <ErrorMsg></ErrorMsg>
+                        <SysErrMsg></SysErrMsg>
+                  </Response>
+                  <RetrefNum>035208609374</RetrefNum>
+                  <AuthCode>784260</AuthCode>
+                  <BatchNum>000089</BatchNum>
+                  <SequenceNum>000008</SequenceNum>
+                  <ProvDate>20101218 08:56:39</ProvDate>
+                  <CardNumberMasked></CardNumberMasked>
+                  <CardHolderName>Company Name & Another Name</CardHolderName>
+                  <HostMsgList></HostMsgList>
+                  <RewardInqResult>
+                        <RewardList></RewardList>
+                        <ChequeList></ChequeList>
+                  </RewardInqResult>
+            </Transaction>
+      </GVPSResponse>
+    XML
   end
 
   # Place raw failed response from gateway here
   def failed_purchase_response
-    <<-EOF
-<GVPSResponse>
-      <Mode></Mode>
-      <Order>
-            <OrderID>db4af18c5222503d845180350fbda516</OrderID>
-            <GroupID></GroupID>
-      </Order>
-      <Transaction>
-            <Response>
-                  <Source>GVPS</Source>
-                  <Code>92</Code>
-                  <ReasonCode>0651</ReasonCode>
-                  <Message>Declined</Message>
-                  <ErrorMsg></ErrorMsg>
-                  <SysErrMsg>ErrorId: 0651</SysErrMsg>
-            </Response>
-            <RetrefNum></RetrefNum>
-            <AuthCode> </AuthCode>
-            <BatchNum></BatchNum>
-            <SequenceNum></SequenceNum>
-            <ProvDate>20101220 01:58:41</ProvDate>
-            <CardNumberMasked></CardNumberMasked>
-            <CardHolderName></CardHolderName>
-            <HostMsgList></HostMsgList>
-            <RewardInqResult>
-                  <RewardList></RewardList>
-                  <ChequeList></ChequeList>
-            </RewardInqResult>
-      </Transaction>
-</GVPSResponse>
-    EOF
+    <<~XML
+      <GVPSResponse>
+            <Mode></Mode>
+            <Order>
+                  <OrderID>db4af18c5222503d845180350fbda516</OrderID>
+                  <GroupID></GroupID>
+            </Order>
+            <Transaction>
+                  <Response>
+                        <Source>GVPS</Source>
+                        <Code>92</Code>
+                        <ReasonCode>0651</ReasonCode>
+                        <Message>Declined</Message>
+                        <ErrorMsg></ErrorMsg>
+                        <SysErrMsg>ErrorId: 0651</SysErrMsg>
+                  </Response>
+                  <RetrefNum></RetrefNum>
+                  <AuthCode> </AuthCode>
+                  <BatchNum></BatchNum>
+                  <SequenceNum></SequenceNum>
+                  <ProvDate>20101220 01:58:41</ProvDate>
+                  <CardNumberMasked></CardNumberMasked>
+                  <CardHolderName></CardHolderName>
+                  <HostMsgList></HostMsgList>
+                  <RewardInqResult>
+                        <RewardList></RewardList>
+                        <ChequeList></ChequeList>
+                  </RewardInqResult>
+            </Transaction>
+      </GVPSResponse>
+    XML
   end
 end

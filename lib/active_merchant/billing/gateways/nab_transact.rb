@@ -6,41 +6,40 @@ module ActiveMerchant #:nodoc:
     # be a rebadged Securepay Australia service, though some differences exist.
     class NabTransactGateway < Gateway
       API_VERSION = 'xml-4.2'
-      PERIODIC_API_VERSION = "spxml-4.2"
+      PERIODIC_API_VERSION = 'spxml-4.2'
 
       class_attribute :test_periodic_url, :live_periodic_url
 
-      self.test_url = 'https://transact.nab.com.au/test/xmlapi/payment'
+      self.test_url = 'https://demo.transact.nab.com.au/xmlapi/payment'
       self.live_url = 'https://transact.nab.com.au/live/xmlapi/payment'
-      self.test_periodic_url = 'https://transact.nab.com.au/xmlapidemo/periodic'
+      self.test_periodic_url = 'https://demo.transact.nab.com.au/xmlapi/periodic'
       self.live_periodic_url = 'https://transact.nab.com.au/xmlapi/periodic'
 
       self.supported_countries = ['AU']
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
+      self.supported_cardtypes = %i[visa master american_express diners_club jcb]
 
       self.homepage_url = 'http://transact.nab.com.au'
       self.display_name = 'NAB Transact'
       self.money_format = :cents
       self.default_currency = 'AUD'
 
-      #Transactions currently accepted by NAB Transact XML API
+      # Transactions currently accepted by NAB Transact XML API
       TRANSACTIONS = {
-        :purchase => 0,           #Standard Payment
-        :refund => 4,             #Refund
-        :void => 6,               #Client Reversal (Void)
-        :unmatched_refund => 666, #Unmatched Refund
-        :authorization => 10,     #Preauthorise
-        :capture => 11            #Preauthorise Complete (Advice)
+        purchase: 0,           # Standard Payment
+        refund: 4,             # Refund
+        void: 6,               # Client Reversal (Void)
+        unmatched_refund: 666, # Unmatched Refund
+        authorization: 10,     # Preauthorise
+        capture: 11            # Preauthorise Complete (Advice)
       }
 
       PERIODIC_TYPES = {
-        :addcrn    => 5,
-        :deletecrn => 5,
-        :trigger   => 8
+        addcrn: 5,
+        deletecrn: 5,
+        trigger: 8
       }
 
-      SUCCESS_CODES = [ '00', '08', '11', '16', '77' ]
-
+      SUCCESS_CODES = %w[00 08 11 16 77]
 
       def initialize(options = {})
         requires!(options, :login, :password)
@@ -84,7 +83,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def scrub(transcript)
-        return "" if transcript.blank?
+        return '' if transcript.blank?
+
         transcript.
           gsub(%r((<cardNumber>)[^<]+(<))i, '\1[FILTERED]\2').
           gsub(%r((<cvv>)[^<]+(<))i, '\1[FILTERED]\2').
@@ -96,15 +96,15 @@ module ActiveMerchant #:nodoc:
       def add_metadata(xml, options)
         if options[:merchant_name] || options[:merchant_location]
           xml.tag! 'metadata' do
-            xml.tag! 'meta', :name => 'ca_name', :value => options[:merchant_name] if options[:merchant_name]
-            xml.tag! 'meta', :name => 'ca_location', :value => options[:merchant_location] if options[:merchant_location]
+            xml.tag! 'meta', name: 'ca_name', value: options[:merchant_name] if options[:merchant_name]
+            xml.tag! 'meta', name: 'ca_location', value: options[:merchant_location] if options[:merchant_location]
           end
         end
       end
 
       def build_purchase_request(money, credit_card, options)
         xml = Builder::XmlMarkup.new
-        xml.tag! 'amount', amount(money)
+        xml.tag! 'amount', localized_amount(money, options[:currency] || currency(money))
         xml.tag! 'currency', options[:currency] || currency(money)
         xml.tag! 'purchaseOrderNo', options[:order_id].to_s.gsub(/[ ']/, '')
 
@@ -124,7 +124,7 @@ module ActiveMerchant #:nodoc:
 
         transaction_id, order_id, preauth_id, original_amount = reference.split('*')
 
-        xml.tag! 'amount', (money ? amount(money) : original_amount)
+        xml.tag! 'amount', (money ? localized_amount(money, options[:currency] || currency(money)) : original_amount)
         xml.tag! 'currency', options[:currency] || currency(money)
         xml.tag! 'txnID', transaction_id
         xml.tag! 'purchaseOrderNo', order_id
@@ -135,7 +135,7 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
-      #Generate payment request XML
+      # Generate payment request XML
       # - API is set to allow multiple Txn's but currently only allows one
       # - txnSource = 23 - (XML)
       def build_request(action, body)
@@ -156,8 +156,8 @@ module ActiveMerchant #:nodoc:
 
           xml.tag! 'RequestType', 'Payment'
           xml.tag! 'Payment' do
-            xml.tag! 'TxnList', "count" => 1 do
-              xml.tag! 'Txn', "ID" => 1 do
+            xml.tag! 'TxnList', 'count' => 1 do
+              xml.tag! 'Txn', 'ID' => 1 do
                 xml.tag! 'txnType', TRANSACTIONS[action]
                 xml.tag! 'txnSource', 23
                 xml << body
@@ -187,8 +187,8 @@ module ActiveMerchant #:nodoc:
 
           xml.tag! 'RequestType', 'Periodic'
           xml.tag! 'Periodic' do
-            xml.tag! 'PeriodicList', "count" => 1 do
-              xml.tag! 'PeriodicItem', "ID" => 1 do
+            xml.tag! 'PeriodicList', 'count' => 1 do
+              xml.tag! 'PeriodicItem', 'ID' => 1 do
                 xml.tag! 'actionType', action.to_s
                 xml.tag! 'periodicType', PERIODIC_TYPES[action] if PERIODIC_TYPES[action]
                 xml << body
@@ -205,7 +205,7 @@ module ActiveMerchant #:nodoc:
 
         xml.tag! 'crn', identification
         xml.tag! 'currency', options[:currency] || currency(money)
-        xml.tag! 'amount', amount(money)
+        xml.tag! 'amount', localized_amount(money, options[:currency] || currency(money))
 
         xml.target!
       end
@@ -234,17 +234,15 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(test? ? self.test_url : self.live_url, build_request(action, request)))
 
         Response.new(success?(response), message_from(response), response,
-          :test => test?,
-          :authorization => authorization_from(action, response)
-        )
+          test: test?,
+          authorization: authorization_from(action, response))
       end
 
       def commit_periodic(action, request)
         response = parse(ssl_post(test? ? self.test_periodic_url : self.live_periodic_url, build_periodic_request(action, request)))
         Response.new(success?(response), message_from(response), response,
-          :test => test?,
-          :authorization => authorization_from(action, response)
-        )
+          test: test?,
+          authorization: authorization_from(action, response))
       end
 
       def success?(response)
@@ -281,7 +279,7 @@ module ActiveMerchant #:nodoc:
 
       def parse_element(response, node)
         if node.has_elements?
-          node.elements.each{|element| parse_element(response, element) }
+          node.elements.each { |element| parse_element(response, element) }
         else
           response[node.name.underscore.to_sym] = node.text
         end
@@ -296,7 +294,6 @@ module ActiveMerchant #:nodoc:
       def request_timeout
         @options[:request_timeout] || 60
       end
-
     end
   end
 end

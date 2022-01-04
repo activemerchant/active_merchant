@@ -8,18 +8,19 @@ class BluePayTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card('4242424242424242')
     @options = {
-      :order_id => generate_unique_id,
-      :billing_address => address,
-      :description => 'Store purchase'
+      order_id: generate_unique_id,
+      billing_address: address,
+      description: 'Store purchase',
+      ip: '192.168.0.1'
     }
 
     @recurring_options = {
-      :rebill_amount => 100,
-      :rebill_start_date => Date.today,
-      :rebill_expression => '1 DAY',
-      :rebill_cycles => '4',
-      :billing_address => address.merge(:first_name => 'Jim', :last_name => 'Smith'),
-      :duplicate_override => 1
+      rebill_amount: 100,
+      rebill_start_date: Date.today,
+      rebill_expression: '1 DAY',
+      rebill_cycles: '4',
+      billing_address: address.merge(first_name: 'Jim', last_name: 'Smith'),
+      duplicate_override: 1
     }
   end
 
@@ -33,7 +34,16 @@ class BluePayTest < Test::Unit::TestCase
 
   #  The included test account credentials do not support ACH processor.
   def test_successful_purchase_with_check
-    assert response = @gateway.purchase(@amount, check, @options.merge(:email=>'foo@example.com'))
+    assert response = @gateway.purchase(@amount, check, @options.merge(email: 'foo@example.com'))
+    assert_success response
+    assert response.test?
+    assert_equal 'App ACH Sale', response.message
+    assert response.authorization
+  end
+
+  def test_successful_purchase_with_stored_credential
+    options = @options.merge(stored_credential: { initiator: 'cardholder', reason_type: 'recurring' })
+    assert response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert response.test?
     assert_equal 'This transaction has been approved', response.message
@@ -49,7 +59,7 @@ class BluePayTest < Test::Unit::TestCase
   end
 
   def test_forced_test_mode_purchase
-    gateway = BluePayGateway.new(fixtures(:blue_pay).update(:test => true))
+    gateway = BluePayGateway.new(fixtures(:blue_pay).update(test: true))
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert response.test?
@@ -72,23 +82,23 @@ class BluePayTest < Test::Unit::TestCase
     unknown_response_keys = response_keys - BluePayGateway::FIELD_MAP.values
     missing_response_keys = BluePayGateway::FIELD_MAP.values - response_keys
 
-    assert_empty unknown_response_keys, "unknown_response_keys"
-    assert_empty missing_response_keys, "missing response_keys"
+    assert_empty unknown_response_keys, 'unknown_response_keys'
+    assert_empty missing_response_keys, 'missing response_keys'
   end
 
   def test_that_we_understand_and_parse_all_keys_in_rebilling_response
     assert response = @gateway.recurring(@amount, @credit_card, @recurring_options)
     assert_success response
     rebill_id = response.params['rebid']
-    assert response = @gateway.update_recurring(:rebill_id => rebill_id, :rebill_amount => @amount * 2)
+    assert response = @gateway.update_recurring(rebill_id: rebill_id, rebill_amount: @amount * 2)
     assert_success response
 
     response_keys = response.params.keys.map(&:to_sym)
     unknown_response_keys = response_keys - BluePayGateway::REBILL_FIELD_MAP.values
     missing_response_keys = BluePayGateway::REBILL_FIELD_MAP.values - response_keys
 
-    assert_empty unknown_response_keys, "unknown_response_keys"
-    assert_empty missing_response_keys, "missing response_keys"
+    assert_empty unknown_response_keys, 'unknown_response_keys'
+    assert_empty missing_response_keys, 'missing response_keys'
   end
 
   def test_authorization_and_capture
@@ -110,8 +120,8 @@ class BluePayTest < Test::Unit::TestCase
 
   def test_bad_login
     gateway = BluePayGateway.new(
-      :login => 'X',
-      :password => 'Y'
+      login: 'X',
+      password: 'Y'
     )
     assert response = gateway.purchase(@amount, @credit_card)
 
@@ -122,8 +132,8 @@ class BluePayTest < Test::Unit::TestCase
 
   def test_using_test_request
     gateway = BluePayGateway.new(
-      :login => 'X',
-      :password => 'Y'
+      login: 'X',
+      password: 'Y'
     )
     assert response = gateway.purchase(@amount, @credit_card)
     assert_equal Response, response.class
@@ -139,7 +149,7 @@ class BluePayTest < Test::Unit::TestCase
 
     rebill_id = response.params['rebid']
 
-    assert response = @gateway.update_recurring(:rebill_id => rebill_id, :rebill_amount => @amount * 2)
+    assert response = @gateway.update_recurring(rebill_id: rebill_id, rebill_amount: @amount * 2)
     assert_success response
 
     assert response = @gateway.status_recurring(rebill_id)
@@ -170,6 +180,24 @@ class BluePayTest < Test::Unit::TestCase
     ActiveMerchant::Billing::BluePayGateway.application_id = nil
   end
 
+  def test_successful_refund_with_check
+    assert response = @gateway.purchase(@amount, check, @options.merge(email: 'foo@example.com'))
+    assert_success response
+    assert response.test?
+    assert_equal 'App ACH Sale', response.message
+    assert response.authorization
+
+    assert refund = @gateway.refund(@amount, response.authorization, @options.merge(doc_type: 'PPD'))
+    assert_success refund
+    assert_equal 'App ACH Void', refund.message
+  end
+
+  def test_successful_credit_with_check
+    assert credit = @gateway.credit(@amount, check, @options.merge(doc_type: 'PPD'))
+    assert_success credit
+    assert_equal 'App ACH Credit', credit.message
+  end
+
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card, @options)
@@ -178,5 +206,14 @@ class BluePayTest < Test::Unit::TestCase
 
     assert_scrubbed(@credit_card.number, clean_transcript)
     assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
+  end
+
+  def test_account_number_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, check, @options)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(check.account_number, clean_transcript)
   end
 end

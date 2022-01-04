@@ -1,24 +1,24 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class ModernPaymentsCimGateway < Gateway #:nodoc:
-      self.test_url = "https://secure.modpay.com/netservices/test/ModpayTest.asmx"
+      self.test_url = 'https://secure.modpay.com/netservices/test/ModpayTest.asmx'
       self.live_url = 'https://secure.modpay.com/ws/modpay.asmx'
 
-      LIVE_XMLNS = "https://secure.modpay.com/ws/"
-      TEST_XMLNS = "https://secure.modpay.com/netservices/test/"
+      LIVE_XMLNS = 'https://secure.modpay.com/ws/'
+      TEST_XMLNS = 'https://secure.modpay.com/netservices/test/'
 
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.homepage_url = 'http://www.modpay.com'
       self.display_name = 'Modern Payments'
 
-      SUCCESS_MESSAGE = "Transaction accepted"
-      FAILURE_MESSAGE = "Transaction failed"
-      ERROR_MESSAGE   = "Transaction error"
+      SUCCESS_MESSAGE = 'Transaction accepted'
+      FAILURE_MESSAGE = 'Transaction failed'
+      ERROR_MESSAGE   = 'Transaction error'
 
       PAYMENT_METHOD = {
-        :check => 1,
-        :credit_card => 2
+        check: 1,
+        credit_card: 2
       }
 
       def initialize(options = {})
@@ -35,7 +35,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def modify_customer_credit_card(customer_id, credit_card)
-        raise ArgumentError, "The customer_id cannot be blank" if customer_id.blank?
+        raise ArgumentError, 'The customer_id cannot be blank' if customer_id.blank?
 
         post = {}
         add_customer_id(post, customer_id)
@@ -45,7 +45,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize_credit_card_payment(customer_id, amount)
-        raise ArgumentError, "The customer_id cannot be blank" if customer_id.blank?
+        raise ArgumentError, 'The customer_id cannot be blank' if customer_id.blank?
 
         post = {}
         add_customer_id(post, customer_id)
@@ -55,7 +55,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def create_payment(customer_id, amount, options = {})
-        raise ArgumentError, "The customer_id cannot be blank" if customer_id.blank?
+        raise ArgumentError, 'The customer_id cannot be blank' if customer_id.blank?
 
         post = {}
         add_customer_id(post, customer_id)
@@ -66,8 +66,9 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
       def add_payment_details(post, options)
-        post[:pmtDate] = (options[:payment_date] || Time.now.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        post[:pmtDate] = (options[:payment_date] || Time.now.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
         post[:pmtType] = PAYMENT_METHOD[options[:payment_method] || :credit_card]
       end
 
@@ -80,7 +81,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, options)
-        post[:acctNum]   = options[:customer]
+        post[:acctNum] = options[:customer]
       end
 
       def add_address(post, options)
@@ -110,7 +111,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_request(action, params)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new indent: 2
         xml.instruct!
         xml.tag! 'env:Envelope',
           { 'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema',
@@ -118,10 +119,10 @@ module ActiveMerchant #:nodoc:
             'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance' } do
 
           xml.tag! 'env:Body' do
-            xml.tag! action, { "xmlns" => xmlns(action) } do
-              xml.tag! "clientId", @options[:login]
-              xml.tag! "clientCode", @options[:password]
-              params.each {|key, value| xml.tag! key, value }
+            xml.tag! action, { 'xmlns' => xmlns(action) } do
+              xml.tag! 'clientId', @options[:login]
+              xml.tag! 'clientCode', @options[:password]
+              params.each { |key, value| xml.tag! key, value }
             end
           end
         end
@@ -146,16 +147,14 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, params)
         data = ssl_post(url(action), build_request(action, params),
-                 { 'Content-Type' =>'text/xml; charset=utf-8',
-                   'SOAPAction' => "#{xmlns(action)}#{action}" }
-                )
+          { 'Content-Type' => 'text/xml; charset=utf-8',
+            'SOAPAction' => "#{xmlns(action)}#{action}" })
 
         response = parse(action, data)
         Response.new(successful?(action, response), message_from(action, response), response,
-          :test => test?,
-          :authorization => authorization_from(action, response),
-          :avs_result => { :code => response[:avs_code] }
-        )
+          test: test?,
+          authorization: authorization_from(action, response),
+          avs_result: { code: response[:avs_code] })
       end
 
       def authorization_from(action, response)
@@ -163,14 +162,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_key(action)
-        action == "AuthorizeCreditCardPayment" ? :trans_id : "#{action.underscore}_result".to_sym
+        action == 'AuthorizeCreditCardPayment' ? :trans_id : "#{action.underscore}_result".to_sym
       end
 
       def successful?(action, response)
         key = authorization_key(action)
 
         if key == :trans_id
-          response[:approved] == "true"
+          response[:approved] == 'true'
         else
           response[key].to_i > 0
         end
@@ -195,7 +194,7 @@ module ActiveMerchant #:nodoc:
           root.elements.to_a.each do |node|
             parse_element(response, node)
           end
-        elsif root = REXML::XPath.first(xml, "//soap:Fault")
+        elsif root = REXML::XPath.first(xml, '//soap:Fault')
           root.elements.to_a.each do |node|
             response[node.name.underscore.to_sym] = node.text
           end
@@ -206,7 +205,7 @@ module ActiveMerchant #:nodoc:
 
       def parse_element(response, node)
         if node.has_elements?
-          node.elements.each{|e| parse_element(response, e) }
+          node.elements.each { |e| parse_element(response, e) }
         else
           response[node.name.underscore.to_sym] = node.text.to_s.strip
         end
@@ -214,4 +213,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

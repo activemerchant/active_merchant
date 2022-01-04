@@ -1,29 +1,44 @@
 require 'test_helper'
 
 class PayuLatamTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
-    @gateway = PayuLatamGateway.new(merchant_id: 'merchant_id', account_id: 'account_id', api_login: 'api_login', api_key: 'api_key')
+    @gateway = PayuLatamGateway.new(merchant_id: 'merchant_id', account_id: 'account_id', api_login: 'api_login', api_key: 'api_key', payment_country: 'AR')
 
     @amount = 4000
-    @credit_card = credit_card("4097440000000004", verification_value: "444", first_name: "APPROVED", last_name: "")
-    @declined_card = credit_card("4097440000000004", verification_value: "333", first_name: "REJECTED", last_name: "")
-    @pending_card = credit_card("4097440000000004", verification_value: "222", first_name: "PENDING", last_name: "")
-    @no_cvv_visa_card = credit_card("4097440000000004", verification_value: " ")
-    @no_cvv_amex_card = credit_card("4097440000000004", verification_value: " ", brand: "american_express")
+    @credit_card = credit_card('4097440000000004', verification_value: '444', first_name: 'APPROVED', last_name: '')
+    @declined_card = credit_card('4097440000000004', verification_value: '333', first_name: 'REJECTED', last_name: '')
+    @pending_card = credit_card('4097440000000004', verification_value: '222', first_name: 'PENDING', last_name: '')
+    @no_cvv_visa_card = credit_card('4097440000000004', verification_value: ' ')
+    @no_cvv_amex_card = credit_card('4097440000000004', verification_value: ' ', brand: 'american_express')
+    @cabal_credit_card = credit_card('5896570000000004', verification_value: '123', first_name: 'APPROVED', last_name: '', brand: 'cabal')
+    @maestro_card = credit_card('6759000000000000005', verification_value: '123', first_name: 'APPROVED', brand: 'maestro')
+    @codensa_card = credit_card('5907120000000009', verification_value: '123', first_name: 'APPROVED', brand: 'maestro')
 
     @options = {
-      currency: "ARS",
+      dni_number: '5415668464654',
+      dni_type: 'TI',
+      merchant_buyer_id: '1',
+      currency: 'ARS',
       order_id: generate_unique_id,
-      description: "Active Merchant Transaction",
+      description: 'Active Merchant Transaction',
       installments_number: 1,
+      tax: 0,
+      tax_return_base: 0,
+      email: 'username@domain.com',
+      ip: '127.0.0.1',
+      device_session_id: 'vghs6tvkcle931686k1900o6e1',
+      cookie: 'pt1t38347bs6jc9ruv2ecpv7o2',
+      user_agent: 'Mozilla/5.0 (Windows NT 5.1; rv:18.0) Gecko/20100101 Firefox/18.0',
       billing_address: address(
-        address1: "Viamonte",
-        address2: "1366",
-        city: "Plata",
-        state: "Buenos Aires",
-        country: "AR",
-        zip: "64000",
-        phone: "7563126"
+        address1: 'Viamonte',
+        address2: '1366',
+        city: 'Plata',
+        state: 'Buenos Aires',
+        country: 'AR',
+        zip: '64000',
+        phone: '7563126'
       )
     }
   end
@@ -33,7 +48,24 @@ class PayuLatamTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "APPROVED", response.message
+    assert_equal 'APPROVED', response.message
+    assert response.test?
+  end
+
+  def test_successful_purchase_with_specified_language
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(language: 'es'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/"language":"es"/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_purchase_with_cabal_card
+    @gateway.expects(:ssl_post).returns(successful_purchase_with_cabal_response)
+
+    response = @gateway.purchase(@amount, @cabal_credit_card, @options)
+    assert_success response
+    assert_equal 'APPROVED', response.message
     assert response.test?
   end
 
@@ -42,8 +74,24 @@ class PayuLatamTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "ANTIFRAUD_REJECTED", response.message
-    assert_equal "DECLINED", response.params["transactionResponse"]["state"]
+    assert_equal 'ANTIFRAUD_REJECTED', response.message
+    assert_equal 'DECLINED', response.params['transactionResponse']['state']
+  end
+
+  def test_failed_purchase_correct_message_when_payment_network_response_error_present
+    @gateway.expects(:ssl_post).returns(failed_purchase_response_when_payment_network_response_error_expected)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'CONTACT_THE_ENTITY | Contactar con entidad emisora', response.message
+    assert_equal 'Contactar con entidad emisora', response.params['transactionResponse']['paymentNetworkResponseErrorMessage']
+
+    @gateway.expects(:ssl_post).returns(failed_purchase_response_when_payment_network_response_error_not_expected)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'CONTACT_THE_ENTITY', response.message
+    assert_nil response.params['transactionResponse']['paymentNetworkResponseErrorMessage']
   end
 
   def test_successful_authorize
@@ -51,7 +99,24 @@ class PayuLatamTest < Test::Unit::TestCase
 
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "APPROVED", response.message
+    assert_equal 'APPROVED', response.message
+    assert_match %r(^\d+\|(\w|-)+$), response.authorization
+  end
+
+  def test_successful_authorize_with_specified_language
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(language: 'es'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/"language":"es"/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_authorize_with_cabal_card
+    @gateway.expects(:ssl_post).returns(successful_authorize_with_cabal_response)
+
+    response = @gateway.authorize(@amount, @cabal_credit_card, @options)
+    assert_success response
+    assert_equal 'APPROVED', response.message
     assert_match %r(^\d+\|(\w|-)+$), response.authorization
   end
 
@@ -60,40 +125,108 @@ class PayuLatamTest < Test::Unit::TestCase
 
     response = @gateway.authorize(@amount, @pending_card, @options)
     assert_failure response
-    assert_equal "PENDING_TRANSACTION_REVIEW", response.message
-    assert_equal "PENDING", response.params["transactionResponse"]["state"]
+    assert_equal 'PENDING_TRANSACTION_REVIEW', response.message
+    assert_equal 'PENDING', response.params['transactionResponse']['state']
   end
 
   def test_pending_refund
     @gateway.expects(:ssl_post).returns(pending_refund_response)
 
-    response = @gateway.refund(@amount, "7edbaf68-8f3a-4ae7-b9c7-d1e27e314999")
+    response = @gateway.refund(@amount, '7edbaf68-8f3a-4ae7-b9c7-d1e27e314999')
     assert_success response
-    assert_equal "PENDING", response.params["transactionResponse"]["state"]
+    assert_equal 'PENDING', response.params['transactionResponse']['state']
+  end
+
+  def test_pending_refund_with_specified_language
+    stub_comms do
+      @gateway.refund(@amount, '7edbaf68-8f3a-4ae7-b9c7-d1e27e314999', @options.merge(language: 'es'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/"language":"es"/, data)
+      assert_match(/"type":"REFUND"/, data)
+    end.respond_with(pending_refund_response)
+  end
+
+  def test_partial_refund
+    stub_comms do
+      @gateway.refund(2000, '7edbaf68-8f3a-4ae7-b9c7-d1e27e314999', @options.merge(partial_refund: true))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/"type":"PARTIAL_REFUND"/, data)
+      assert_match(/"TX_VALUE"/, data)
+      assert_match(/"value":"20.00"/, data)
+    end.respond_with(pending_refund_response)
   end
 
   def test_failed_refund
     @gateway.expects(:ssl_post).returns(failed_refund_response)
 
-    response = @gateway.refund(@amount, "")
+    response = @gateway.refund(@amount, '')
     assert_failure response
-    assert_equal "property: order.id, message: must not be null property: parentTransactionId, message: must not be null", response.message
+    assert_equal 'property: order.id, message: must not be null property: parentTransactionId, message: must not be null', response.message
   end
 
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_void_response)
 
-    response = @gateway.void("7edbaf68-8f3a-4ae7-b9c7-d1e27e314999", @options)
+    response = @gateway.void('7edbaf68-8f3a-4ae7-b9c7-d1e27e314999', @options)
     assert_success response
-    assert_equal "APPROVED", response.message
+    assert_equal 'PENDING_REVIEW', response.message
+  end
+
+  def test_successful_void_with_specified_language
+    stub_comms do
+      @gateway.void('7edbaf68-8f3a-4ae7-b9c7-d1e27e314999', @options.merge(language: 'es'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/"language":"es"/, data)
+    end.respond_with(successful_void_response)
   end
 
   def test_failed_void
     @gateway.expects(:ssl_post).returns(failed_void_response)
 
-    response = @gateway.void("")
+    response = @gateway.void('')
     assert_failure response
-    assert_equal "property: order.id, message: must not be null property: parentTransactionId, message: must not be null", response.message
+    assert_equal 'property: order.id, message: must not be null property: parentTransactionId, message: must not be null', response.message
+  end
+
+  def test_successful_purchase_with_dni_number
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/"dniNumber":"5415668464654"/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_purchase_with_merchant_buyer_id
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/"merchantBuyerId":"1"/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_purchase_with_phone_number
+    options = @options.merge(billing_address: {}, shipping_address: { phone_number: 5555555555 })
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 5555555555, JSON.parse(data)['transaction']['order']['buyer']['contactPhone']
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_card_type_maestro_maps_to_mastercard
+    stub_comms do
+      @gateway.purchase(@amount, @maestro_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 'MASTERCARD', JSON.parse(data)['transaction']['paymentMethod']
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_card_type_codensa
+    stub_comms do
+      @gateway.purchase(@amount, @codensa_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 'CODENSA', JSON.parse(data)['transaction']['paymentMethod']
+    end.respond_with(successful_purchase_response)
   end
 
   def test_verify_good_credentials
@@ -107,53 +240,233 @@ class PayuLatamTest < Test::Unit::TestCase
   end
 
   def test_request_using_visa_card_with_no_cvv
-    @gateway.expects(:ssl_post).with { |url, body, headers|
-      body.match '"securityCode":"000"'
+    @gateway.expects(:ssl_post).with { |_url, body, _headers|
+      body =~ /"securityCode":"000"/
       body.match '"processWithoutCvv2":true'
     }.returns(successful_purchase_response)
     response = @gateway.purchase(@amount, @no_cvv_visa_card, @options)
     assert_success response
-    assert_equal "APPROVED", response.message
+    assert_equal 'APPROVED', response.message
     assert response.test?
   end
 
   def test_request_using_amex_card_with_no_cvv
-    @gateway.expects(:ssl_post).with { |url, body, headers|
-      body.match '"securityCode":"0000"'
+    @gateway.expects(:ssl_post).with { |_url, body, _headers|
+      body =~ /"securityCode":"0000"/
       body.match '"processWithoutCvv2":true'
     }.returns(successful_purchase_response)
     response = @gateway.purchase(@amount, @no_cvv_amex_card, @options)
     assert_success response
-    assert_equal "APPROVED", response.message
+    assert_equal 'APPROVED', response.message
     assert response.test?
   end
 
   def test_request_passes_cvv_option
-    @gateway.expects(:ssl_post).with { |url, body, headers|
-      body.match '"securityCode":"777"'
+    @gateway.expects(:ssl_post).with { |_url, body, _headers|
+      body =~ /"securityCode":"777"/
       !body.match '"processWithoutCvv2"'
     }.returns(successful_purchase_response)
-    options = @options.merge(cvv: "777")
+    options = @options.merge(cvv: '777')
     response = @gateway.purchase(@amount, @no_cvv_visa_card, options)
     assert_success response
-    assert_equal "APPROVED", response.message
+    assert_equal 'APPROVED', response.message
     assert response.test?
   end
 
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
 
-    response = @gateway.capture(@amount, "4000|authorization", @options)
+    response = @gateway.capture(@amount, '4000|authorization', @options)
     assert_success response
-    assert_equal "APPROVED", response.message
+    assert_equal 'APPROVED', response.message
+  end
+
+  def test_successful_capture_with_specified_language
+    stub_comms do
+      @gateway.capture(@amount, '4000|authorization', @options.merge(language: 'es'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/"language":"es"/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_partial_capture
+    stub_comms do
+      @gateway.capture(@amount - 1, '4000|authorization', @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal '39.99', JSON.parse(data)['transaction']['additionalValues']['TX_VALUE']['value']
+    end.respond_with(successful_purchase_response)
   end
 
   def test_failed_capture
     @gateway.expects(:ssl_post).returns(failed_void_response)
 
-    response = @gateway.capture(@amount, "")
+    response = @gateway.capture(@amount, '')
     assert_failure response
-    assert_equal "property: order.id, message: must not be null property: parentTransactionId, message: must not be null", response.message
+    assert_equal 'property: order.id, message: must not be null property: parentTransactionId, message: must not be null', response.message
+  end
+
+  def test_partial_buyer_hash_info
+    options_buyer = {
+      shipping_address: address(
+        address1: 'Calle 200',
+        address2: 'N107',
+        city: 'Sao Paulo',
+        state: 'SP',
+        country: 'BR',
+        zip: '01019-030',
+        phone_number: '(11)756312345'
+      ),
+      buyer: {
+        name: 'Jorge Borges',
+        dni_number: '5415668464456',
+        merchant_buyer_id: '1',
+        email: 'axaxaxas@mlo.org'
+      }
+    }
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.update(options_buyer))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/\"buyer\":{\"fullName\":\"Jorge Borges\",\"dniNumber\":\"5415668464456\",\"dniType\":null,\"merchantBuyerId\":\"1\",\"emailAddress\":\"axaxaxas@mlo.org\",\"contactPhone\":\"7563126\",\"shippingAddress\":{\"street1\":\"Calle 200\",\"street2\":\"N107\",\"city\":\"Sao Paulo\",\"state\":\"SP\",\"country\":\"BR\",\"postalCode\":\"01019-030\",\"phone\":\"\(11\)756312345\"}}/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_buyer_fields_default_to_payer
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/\"buyer\":{\"fullName\":\"APPROVED\",\"dniNumber\":\"5415668464654\",\"dniType\":\"TI\",\"merchantBuyerId\":\"1\",\"emailAddress\":\"username@domain.com\",\"contactPhone\":\"7563126\"/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_request_with_blank_billing_address_fields
+    options = {
+      dni_number: '5415668464654',
+      dni_type: 'TI',
+      merchant_buyer_id: '1',
+      currency: 'ARS',
+      order_id: generate_unique_id,
+      description: 'Active Merchant Transaction',
+      billing_address: address(
+        address1: 'Viamonte',
+        address2: nil,
+        city: 'Plata',
+        state: 'Buenos Aires',
+        country: '',
+        zip: '64000',
+        phone: '7563126'
+      )
+    }
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/"merchantBuyerId":"1"/, data)
+      assert_match(/"street2":null/, data)
+      refute_match(/"country"/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_brazil_required_fields
+    gateway = PayuLatamGateway.new(merchant_id: 'merchant_id', account_id: 'account_id', api_login: 'api_login', api_key: 'api_key', payment_country: 'BR')
+
+    options_brazil = {
+      currency: 'BRL',
+      billing_address: address(
+        address1: 'Calle 100',
+        address2: 'BL4',
+        city: 'Sao Paulo',
+        state: 'SP',
+        country: 'BR',
+        zip: '09210710',
+        phone: '(11)756312633'
+      ),
+      shipping_address: address(
+        address1: 'Calle 200',
+        address2: 'N107',
+        city: 'Sao Paulo',
+        state: 'SP',
+        country: 'BR',
+        zip: '01019-030',
+        phone_number: '(11)756312633'
+      ),
+      buyer: {
+        cnpj: '32593371000110'
+      }
+    }
+
+    stub_comms(gateway) do
+      gateway.purchase(@amount, @credit_card, @options.update(options_brazil))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/\"cnpj\":\"32593371000110\"/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_colombia_required_fields
+    gateway = PayuLatamGateway.new(merchant_id: 'merchant_id', account_id: 'account_id', api_login: 'api_login', api_key: 'api_key', payment_country: 'CO')
+
+    options_colombia = {
+      currency: 'COP',
+      billing_address: address(
+        address1: 'Calle 100',
+        address2: 'BL4',
+        city: 'Bogota',
+        state: 'Bogota DC',
+        country: 'CO',
+        zip: '09210710',
+        phone: '(11)756312633'
+      ),
+      shipping_address: address(
+        address1: 'Calle 200',
+        address2: 'N107',
+        city: 'Bogota',
+        state: 'Bogota DC',
+        country: 'CO',
+        zip: '01019-030',
+        phone_number: '(11)756312633'
+      ),
+      tx_tax: '3193',
+      tx_tax_return_base: '16806'
+    }
+
+    stub_comms(gateway) do
+      gateway.purchase(@amount, @credit_card, @options.update(options_colombia))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/\"additionalValues\":{\"TX_VALUE\":{\"value\":\"40.00\",\"currency\":\"COP\"},\"TX_TAX\":{\"value\":0,\"currency\":\"COP\"},\"TX_TAX_RETURN_BASE\":{\"value\":0,\"currency\":\"COP\"}}/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_mexico_required_fields
+    gateway = PayuLatamGateway.new(merchant_id: 'merchant_id', account_id: 'account_id', api_login: 'api_login', api_key: 'api_key', payment_country: 'MX')
+
+    options_mexico = {
+      currency: 'MXN',
+      billing_address: address(
+        address1: 'Calle 100',
+        address2: 'BL4',
+        city: 'Guadalajara',
+        state: 'Jalisco',
+        country: 'MX',
+        zip: '09210710',
+        phone: '(11)756312633'
+      ),
+      shipping_address: address(
+        address1: 'Calle 200',
+        address2: 'N107',
+        city: 'Guadalajara',
+        state: 'Jalisco',
+        country: 'MX',
+        zip: '01019-030',
+        phone_number: '(11)756312633'
+      ),
+      birth_date: '1985-05-25'
+    }
+
+    stub_comms(gateway) do
+      gateway.purchase(@amount, @credit_card, @options.update(options_mexico))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/\"birthdate\":\"1985-05-25\"/, data)
+    end.respond_with(successful_purchase_response)
   end
 
   def test_scrub
@@ -249,6 +562,37 @@ class PayuLatamTest < Test::Unit::TestCase
     RESPONSE
   end
 
+  def successful_purchase_with_cabal_response
+    <<-RESPONSE
+    {
+    	"code":"SUCCESS",
+    	"error":null,
+    	"transactionResponse": {
+    	  "orderId":846449068,
+	  "transactionId":"34fa1616-f16c-4474-98dc-6163cb05f6d1",
+    	  "state":"APPROVED",
+	  "paymentNetworkResponseCode":null,
+	  "paymentNetworkResponseErrorMessage":null,
+	  "trazabilityCode":"00000000",
+	  "authorizationCode":"00000000",
+	  "pendingReason":null,
+	  "responseCode":"APPROVED",
+	  "errorCode":null,
+	  "responseMessage":null,
+	  "transactionDate":null,
+	  "transactionTime":null,
+	  "operationDate":1567524354749,
+	  "referenceQuestionnaire":null,
+	  "extraParameters": {
+	    "PAYMENT_WAY_ID":"28",
+	    "BANK_REFERENCED_CODE":"DEBIT"
+	    },
+	  "additionalInfo":null
+	}
+    }
+    RESPONSE
+  end
+
   def failed_purchase_response
     <<-RESPONSE
     {
@@ -264,6 +608,60 @@ class PayuLatamTest < Test::Unit::TestCase
         "authorizationCode": null,
         "pendingReason": null,
         "responseCode": "ANTIFRAUD_REJECTED",
+        "errorCode": null,
+        "responseMessage": null,
+        "transactionDate": null,
+        "transactionTime": null,
+        "operationDate": null,
+        "referenceQuestionnaire": null,
+        "extraParameters": null
+      }
+    }
+    RESPONSE
+  end
+
+  def failed_purchase_response_when_payment_network_response_error_expected
+    <<-RESPONSE
+    {
+      "code": "SUCCESS",
+      "error": null,
+      "transactionResponse": {
+        "orderId": 7354347,
+        "transactionId": "15b6cec0-9eec-4564-b6b9-c846b868203e",
+        "state": "DECLINED",
+        "paymentNetworkResponseCode": "290",
+        "paymentNetworkResponseErrorMessage": "Contactar con entidad emisora",
+        "trazabilityCode": null,
+        "authorizationCode": null,
+        "pendingReason": null,
+        "responseCode": "CONTACT_THE_ENTITY",
+        "errorCode": null,
+        "responseMessage": null,
+        "transactionDate": null,
+        "transactionTime": null,
+        "operationDate": null,
+        "referenceQuestionnaire": null,
+        "extraParameters": null
+      }
+    }
+    RESPONSE
+  end
+
+  def failed_purchase_response_when_payment_network_response_error_not_expected
+    <<-RESPONSE
+    {
+      "code": "SUCCESS",
+      "error": null,
+      "transactionResponse": {
+        "orderId": 7354347,
+        "transactionId": "15b6cec0-9eec-4564-b6b9-c846b868203e",
+        "state": "DECLINED",
+        "paymentNetworkResponseCode": null,
+        "paymentNetworkResponseErrorMessage": null,
+        "trazabilityCode": null,
+        "authorizationCode": null,
+        "pendingReason": null,
+        "responseCode": "CONTACT_THE_ENTITY",
         "errorCode": null,
         "responseMessage": null,
         "transactionDate": null,
@@ -299,6 +697,38 @@ class PayuLatamTest < Test::Unit::TestCase
           "extraParameters": null
        }
     }
+    RESPONSE
+  end
+
+  def successful_authorize_with_cabal_response
+    <<-RESPONSE
+    {
+    	"code":"SUCCESS",
+    	"error":null,
+    	"transactionResponse": {
+    	  "orderId":846449155,
+    	  "transactionId":"c15e6015-87c2-4db9-9100-894bf5564330",
+    	  "state":"APPROVED",
+	  "paymentNetworkResponseCode":null,
+	  "paymentNetworkResponseErrorMessage":null,
+	  "trazabilityCode":"00000000",
+	  "authorizationCode":"00000000",
+	  "pendingReason":null,
+	  "responseCode":"APPROVED",
+	  "errorCode":null,
+	  "responseMessage":null,
+	  "transactionDate":null,
+	  "transactionTime":null,
+	  "operationDate":1567524806987,
+	  "referenceQuestionnaire":null,
+	  "extraParameters": {
+	    "PAYMENT_WAY_ID":"28",
+	    "BANK_REFERENCED_CODE":"DEBIT"
+	  },
+	  "additionalInfo":null
+	}
+    }
+
     RESPONSE
   end
 
@@ -376,15 +806,15 @@ class PayuLatamTest < Test::Unit::TestCase
       "transactionResponse": {
         "orderId": 840434914,
         "transactionId": "e66fd9aa-f485-4f10-b1d6-be8e9e354b63",
-        "state": "APPROVED",
+        "state": "PENDING",
         "paymentNetworkResponseCode": "0",
         "paymentNetworkResponseErrorMessage": null,
         "trazabilityCode": "49263990",
         "authorizationCode": "NPS-011111",
-        "pendingReason": null,
-        "responseCode": "APPROVED",
+        "pendingReason": "PENDING_REVIEW",
+        "responseCode": null,
         "errorCode": null,
-        "responseMessage": "APROBADA - Autorizada",
+        "responseMessage": null,
         "transactionDate": null,
         "transactionTime": null,
         "operationDate": 1486655230074,

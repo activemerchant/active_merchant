@@ -2,7 +2,6 @@ require 'active_merchant'
 require 'support/gateway_support'
 
 class SSLVerify
-
   def initialize
     @gateways = GatewaySupport.new.gateways
   end
@@ -18,22 +17,20 @@ class SSLVerify
         next
       end
 
-      if !g.ssl_strict
-        disabled << g
-      end
+      disabled << g if !g.ssl_strict
 
       uri = URI.parse(g.live_url)
-      result,message = ssl_verify_peer?(uri)
+      result, message = ssl_verify_peer?(uri)
       case result
       when :success
-        print "."
+        print '.'
         success << g
       when :fail
-        print "F"
-        failed << {:gateway => g, :message => message}
+        print 'F'
+        failed << { gateway: g, message: message }
       when :error
-        print "E"
-        errored << {:gateway => g, :message => message}
+        print 'E'
+        errored << { gateway: g, message: message }
       end
     end
 
@@ -60,13 +57,12 @@ class SSLVerify
         puts d.name
       end
     end
-
   end
 
   def try_host(http, path)
     http.get(path)
   rescue Net::HTTPBadResponse, EOFError, SocketError
-    http.post(path, "")
+    http.post(path, '')
   end
 
   def ssl_verify_peer?(uri)
@@ -78,7 +74,7 @@ class SSLVerify
     http.read_timeout = 60
 
     if uri.path.blank?
-      try_host(http, "/")
+      try_host(http, '/')
     else
       try_host(http, uri.path)
     end
@@ -89,5 +85,4 @@ class SSLVerify
   rescue Net::HTTPBadResponse, Errno::ETIMEDOUT, EOFError, SocketError, Errno::ECONNREFUSED, Timeout::Error => ex
     return :error, ex.inspect
   end
-
 end

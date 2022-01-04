@@ -6,7 +6,7 @@ class BankFrickTest < Test::Unit::TestCase
       sender: 'sender-uuid',
       channel: 'channel-uuid',
       userid: 'user-uuid',
-      userpwd: 'password',
+      userpwd: 'password'
     )
 
     @credit_card = credit_card

@@ -13,7 +13,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = self.test_url = 'https://secure.quantumgateway.com/cgi/xml_requester.php'
 
       # visa, master, american_express, discover
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
       self.supported_countries = ['US']
       self.default_currency = 'USD'
       self.money_format = :dollars
@@ -44,7 +44,7 @@ module ActiveMerchant #:nodoc:
       #
       def authorize(money, creditcard, options = {})
         setup_address_hash(options)
-        commit(build_auth_request(money, creditcard, options), options )
+        commit(build_auth_request(money, creditcard, options), options)
       end
 
       # Capture an authorization that has previously been requested
@@ -81,7 +81,7 @@ module ActiveMerchant #:nodoc:
 
       def build_auth_request(money, creditcard, options)
         xml = Builder::XmlMarkup.new
-        add_common_credit_card_info(xml,'AUTH_ONLY')
+        add_common_credit_card_info(xml, 'AUTH_ONLY')
         add_purchase_data(xml, money)
         add_creditcard(xml, creditcard)
         add_address(xml, creditcard, options[:billing_address], options)
@@ -94,15 +94,15 @@ module ActiveMerchant #:nodoc:
 
       def build_capture_request(money, authorization, options)
         xml = Builder::XmlMarkup.new
-        add_common_credit_card_info(xml,'PREVIOUS_SALE')
-        transaction_id, _ = authorization_parts_from(authorization)
+        add_common_credit_card_info(xml, 'PREVIOUS_SALE')
+        transaction_id, = authorization_parts_from(authorization)
         add_transaction_id(xml, transaction_id)
         xml.target!
       end
 
       def build_purchase_request(money, creditcard, options)
         xml = Builder::XmlMarkup.new
-        add_common_credit_card_info(xml, @options[:ignore_avs] ||  @options[:ignore_cvv] ? 'SALES' : 'AUTH_CAPTURE')
+        add_common_credit_card_info(xml, @options[:ignore_avs] || @options[:ignore_cvv] ? 'SALES' : 'AUTH_CAPTURE')
         add_address(xml, creditcard, options[:billing_address], options)
         add_purchase_data(xml, money)
         add_creditcard(xml, creditcard)
@@ -115,15 +115,15 @@ module ActiveMerchant #:nodoc:
 
       def build_void_request(authorization, options)
         xml = Builder::XmlMarkup.new
-        add_common_credit_card_info(xml,'VOID')
-        transaction_id, _ = authorization_parts_from(authorization)
+        add_common_credit_card_info(xml, 'VOID')
+        transaction_id, = authorization_parts_from(authorization)
         add_transaction_id(xml, transaction_id)
         xml.target!
       end
 
       def build_credit_request(money, authorization, options)
         xml = Builder::XmlMarkup.new
-        add_common_credit_card_info(xml,'RETURN')
+        add_common_credit_card_info(xml, 'RETURN')
         add_purchase_data(xml, money)
         transaction_id, cc = authorization_parts_from(authorization)
         add_transaction_id(xml, transaction_id)
@@ -182,7 +182,7 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'CreditCardNumber', creditcard.number
         xml.tag! 'ExpireMonth', format(creditcard.month, :two_digits)
         xml.tag! 'ExpireYear', format(creditcard.year, :four_digits)
-        xml.tag!('CVV2', creditcard.verification_value) unless (@options[:ignore_cvv] || creditcard.verification_value.blank? )
+        xml.tag!('CVV2', creditcard.verification_value) unless @options[:ignore_cvv] || creditcard.verification_value.blank?
       end
 
       # Where we actually build the full SOAP request using builder
@@ -206,7 +206,7 @@ module ActiveMerchant #:nodoc:
         headers = { 'Content-Type' => 'text/xml' }
         response = parse(ssl_post(self.live_url, build_request(request, options), headers))
 
-        success = response[:request_status] == "Success"
+        success = response[:request_status] == 'Success'
         message = response[:request_message]
 
         if success # => checking for connectivity success first
@@ -216,11 +216,10 @@ module ActiveMerchant #:nodoc:
         end
 
         Response.new(success, message, response,
-        :test => test?,
-        :authorization => authorization,
-        :avs_result => { :code => response[:AVSResponseCode] },
-        :cvv_result => response[:CVV2ResponseCode]
-        )
+          test: test?,
+          authorization: authorization,
+          avs_result: { code: response[:AVSResponseCode] },
+          cvv_result: response[:CVV2ResponseCode])
       end
 
       # Parse the SOAP response
@@ -231,19 +230,19 @@ module ActiveMerchant #:nodoc:
         begin
           xml = REXML::Document.new(xml)
 
-          root = REXML::XPath.first(xml, "//QGWRequest/ResponseSummary")
+          root = REXML::XPath.first(xml, '//QGWRequest/ResponseSummary')
           parse_element(reply, root)
           reply[:request_status] = reply[:Status]
           reply[:request_message] = "#{reply[:Status]}: #{reply[:StatusDescription]}"
 
-          if root = REXML::XPath.first(xml, "//QGWRequest/Result")
+          if root = REXML::XPath.first(xml, '//QGWRequest/Result')
             root.elements.to_a.each do |node|
               parse_element(reply, node)
             end
           end
         rescue Exception
           reply[:request_status] = 'Failure'
-          reply[:request_message] = "Failure: There was a problem parsing the response XML"
+          reply[:request_message] = 'Failure: There was a problem parsing the response XML'
         end
 
         return reply
@@ -251,10 +250,10 @@ module ActiveMerchant #:nodoc:
 
       def parse_element(reply, node)
         if node.has_elements?
-          node.elements.each{|e| parse_element(reply, e) }
+          node.elements.each { |e| parse_element(reply, e) }
         else
-          if node.parent.name =~ /item/
-            parent = node.parent.name + (node.parent.attributes["id"] ? "_" + node.parent.attributes["id"] : '')
+          if /item/.match?(node.parent.name)
+            parent = node.parent.name + (node.parent.attributes['id'] ? '_' + node.parent.attributes['id'] : '')
             reply[(parent + '_' + node.name).to_sym] = node.text
           else
             reply[node.name.to_sym] = node.text
@@ -270,7 +269,6 @@ module ActiveMerchant #:nodoc:
       def authorization_parts_from(authorization)
         authorization.split(/;/)
       end
-
     end
   end
 end

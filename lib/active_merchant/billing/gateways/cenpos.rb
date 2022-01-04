@@ -1,51 +1,51 @@
-require "nokogiri"
+require 'nokogiri'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class CenposGateway < Gateway
-      self.display_name = "CenPOS"
-      self.homepage_url = "https://www.cenpos.com/"
+      self.display_name = 'CenPOS'
+      self.homepage_url = 'https://www.cenpos.com/'
 
-      self.live_url = "https://ww3.cenpos.net/6/transact.asmx"
+      self.live_url = 'https://ww3.cenpos.net/6/transact.asmx'
 
-      self.supported_countries = %w(AD AI AG AR AU AT BS BB BE BZ BM BR BN BG CA HR CY CZ DK DM EE FI FR DE GR GD GY HK HU IS IN IL IT JP LV LI LT LU MY MT MX MC MS NL PA PL PT KN LC MF VC SM SG SK SI ZA ES SR SE CH TR GB US UY)
-      self.default_currency = "USD"
+      self.supported_countries = %w(AD AI AG AR AU AT BS BB BE BZ BM BR BN BG CA HR CY CZ DK DM EE FI FR DE GR GD GY HK HU IS IL IT JP LV LI LT LU MY MT MX MC MS NL PA PL PT KN LC MF VC SM SG SK SI ZA ES SR SE CH TR GB US UY)
+      self.default_currency = 'USD'
       self.money_format = :dollars
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = %i[visa master american_express discover]
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :merchant_id, :password, :user_id)
         super
       end
 
-      def purchase(amount, payment_method, options={})
+      def purchase(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)
         add_customer_data(post, options)
 
-        commit("Sale", post)
+        commit('Sale', post)
       end
 
-      def authorize(amount, payment_method, options={})
+      def authorize(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)
         add_customer_data(post, options)
 
-        commit("Auth", post)
+        commit('Auth', post)
       end
 
-      def capture(amount, authorization, options={})
+      def capture(amount, authorization, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_reference(post, authorization)
         add_customer_data(post, options)
 
-        commit("SpecialForce", post)
+        commit('SpecialForce', post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         post = {}
         add_void_required_elements(post)
         add_reference(post, authorization)
@@ -53,27 +53,27 @@ module ActiveMerchant #:nodoc:
         add_tax(post, options)
         add_order_id(post, options)
 
-        commit("Void", post)
+        commit('Void', post)
       end
 
-      def refund(amount, authorization, options={})
+      def refund(amount, authorization, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_reference(post, authorization)
         add_customer_data(post, options)
 
-        commit("SpecialReturn", post)
+        commit('SpecialReturn', post)
       end
 
-      def credit(amount, payment_method, options={})
+      def credit(amount, payment_method, options = {})
         post = {}
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)
 
-        commit("Credit", post)
+        commit('Credit', post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -112,7 +112,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, options)
-        if(billing_address = (options[:billing_address] || options[:address]))
+        if (billing_address = (options[:billing_address] || options[:address]))
           post[:CustomerEmailAddress] = billing_address[:email]
           post[:CustomerPhone] = billing_address[:phone]
           post[:CustomerBillingAddress] = billing_address[:address1]
@@ -156,9 +156,9 @@ module ActiveMerchant #:nodoc:
           xml = ssl_post(self.live_url, data, headers)
           raw = parse(xml)
         rescue ActiveMerchant::ResponseError => e
-          if(e.response.code == "500" && e.response.body.start_with?("<s:Envelope"))
+          if e.response.code == '500' && e.response.body.start_with?('<s:Envelope')
             raw = {
-              message: "See transcript for detailed error description."
+              message: 'See transcript for detailed error description.'
             }
           else
             raise
@@ -180,17 +180,17 @@ module ActiveMerchant #:nodoc:
 
       def headers
         {
-          "Accept-Encoding" => "gzip,deflate",
-          "Content-Type"  => "text/xml;charset=UTF-8",
-          "SOAPAction"  => "http://tempuri.org/Transactional/ProcessCreditCard"
+          'Accept-Encoding' => 'identity',
+          'Content-Type' => 'text/xml;charset=UTF-8',
+          'SOAPAction' => 'http://tempuri.org/Transactional/ProcessCreditCard'
         }
       end
 
       def build_request(post)
-        xml = Builder::XmlMarkup.new :indent => 8
-        xml.tag!("acr:MerchantId", post.delete(:MerchantId))
-        xml.tag!("acr:Password", post.delete(:Password))
-        xml.tag!("acr:UserId", post.delete(:UserId))
+        xml = Builder::XmlMarkup.new indent: 8
+        xml.tag!('acr:MerchantId', post.delete(:MerchantId))
+        xml.tag!('acr:Password', post.delete(:Password))
+        xml.tag!('acr:UserId', post.delete(:UserId))
         post.sort.each do |field, value|
           xml.tag!("acr1:#{field}", value)
         end
@@ -198,18 +198,18 @@ module ActiveMerchant #:nodoc:
       end
 
       def envelope(body)
-        <<-EOS
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/" xmlns:acr="http://schemas.datacontract.org/2004/07/Acriter.ABI.CenPOS.EPayment.VirtualTerminal.Common" xmlns:acr1="http://schemas.datacontract.org/2004/07/Acriter.ABI.CenPOS.EPayment.VirtualTerminal.v6.Common" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-<soapenv:Header/>
-   <soapenv:Body>
-      <tem:ProcessCreditCard>
-         <tem:request>
-           #{body}
-         </tem:request>
-      </tem:ProcessCreditCard>
-   </soapenv:Body>
-</soapenv:Envelope>
-        EOS
+        <<~XML
+          <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/" xmlns:acr="http://schemas.datacontract.org/2004/07/Acriter.ABI.CenPOS.EPayment.VirtualTerminal.Common" xmlns:acr1="http://schemas.datacontract.org/2004/07/Acriter.ABI.CenPOS.EPayment.VirtualTerminal.v6.Common" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+          <soapenv:Header/>
+             <soapenv:Body>
+                <tem:ProcessCreditCard>
+                   <tem:request>
+                     #{body}
+                   </tem:request>
+                </tem:ProcessCreditCard>
+             </soapenv:Body>
+          </soapenv:Envelope>
+        XML
       end
 
       def parse(xml)
@@ -217,9 +217,9 @@ module ActiveMerchant #:nodoc:
 
         doc = Nokogiri::XML(xml)
         doc.remove_namespaces!
-        body = doc.xpath("//ProcessCreditCardResult")
+        body = doc.xpath('//ProcessCreditCardResult')
         body.children.each do |node|
-          if (node.elements.size == 0)
+          if node.elements.size == 0
             response[node.name.underscore.to_sym] = node.text
           else
             node.elements.each do |childnode|
@@ -233,32 +233,32 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response == "0"
+        response == '0'
       end
 
       def message_from(succeeded, response)
         if succeeded
-          "Succeeded"
+          'Succeeded'
         else
-          response[:message] || "Unable to read error message"
+          response[:message] || 'Unable to read error message'
         end
       end
 
       STANDARD_ERROR_CODE_MAPPING = {
-        "211" => STANDARD_ERROR_CODE[:invalid_number],
-        "252" => STANDARD_ERROR_CODE[:invalid_expiry_date],
-        "257" => STANDARD_ERROR_CODE[:invalid_cvc],
-        "333" => STANDARD_ERROR_CODE[:expired_card],
-        "1" => STANDARD_ERROR_CODE[:card_declined],
-        "99" => STANDARD_ERROR_CODE[:processing_error],
+        '211' => STANDARD_ERROR_CODE[:invalid_number],
+        '252' => STANDARD_ERROR_CODE[:invalid_expiry_date],
+        '257' => STANDARD_ERROR_CODE[:invalid_cvc],
+        '333' => STANDARD_ERROR_CODE[:expired_card],
+        '1' => STANDARD_ERROR_CODE[:card_declined],
+        '99' => STANDARD_ERROR_CODE[:processing_error]
       }
 
       def authorization_from(request, response)
-        [ response[:reference_number], request[:CardLastFourDigits], request[:Amount] ].join("|")
+        [response[:reference_number], request[:CardLastFourDigits], request[:Amount]].join('|')
       end
 
       def split_authorization(authorization)
-        reference_number, last_four_digits, original_amount = authorization.split("|")
+        reference_number, last_four_digits, original_amount = authorization.split('|')
         [reference_number, last_four_digits, original_amount]
       end
 
@@ -275,14 +275,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def cvv_result_code(xml)
-        cvv = validation_result_element(xml, "CVV")
+        cvv = validation_result_element(xml, 'CVV')
         return nil unless cvv
+
         validation_result_matches?(*validation_result_element_text(cvv.parent)) ? 'M' : 'N'
       end
 
       def avs_result_code(xml)
-        billing_address_elem = validation_result_element(xml, "Billing Address")
-        zip_code_elem = validation_result_element(xml, "Zip Code")
+        billing_address_elem = validation_result_element(xml, 'Billing Address')
+        zip_code_elem = validation_result_element(xml, 'Zip Code')
 
         return nil unless billing_address_elem && zip_code_elem
 
@@ -312,10 +313,10 @@ module ActiveMerchant #:nodoc:
 
       def validation_result_element_text(element)
         result_text = element.elements.detect { |elem|
-          elem.name == "Result"
-        }.children.detect { |elem| elem.text }.text
+          elem.name == 'Result'
+        }.children.detect(&:text).text
 
-        result_text.split(";").collect(&:strip)
+        result_text.split(';').collect(&:strip)
       end
 
       def validation_result_matches?(present, match)

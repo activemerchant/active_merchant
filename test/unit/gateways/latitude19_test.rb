@@ -1,12 +1,14 @@
 require 'test_helper'
 
 class Latitude19Test < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = Latitude19Gateway.new(fixtures(:latitude19))
 
     @amount = 100
-    @credit_card = credit_card("4000100011112224", verification_value: "747")
-    @declined_card = credit_card("0000000000000000")
+    @credit_card = credit_card('4000100011112224', verification_value: '747')
+    @declined_card = credit_card('0000000000000000')
 
     @options = {
       order_id: generate_unique_id,
@@ -21,7 +23,7 @@ class Latitude19Test < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "Approved", response.message
+    assert_equal 'Approved', response.message
     assert response.test?
   end
 
@@ -29,20 +31,20 @@ class Latitude19Test < Test::Unit::TestCase
   # end
 
   def test_successful_authorize_and_capture
-    @gateway.expects(:ssl_post).returns(successful_authorize_response)
-    @gateway.expects(:ssl_post).returns(successful_token_response)
-    @gateway.expects(:ssl_post).returns(successful_session_response)
-
-    response = @gateway.authorize(@amount, @credit_card, @options)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.respond_with(successful_session_response, successful_token_response, successful_authorize_response)
     assert_success response
-    assert_equal "Approved", response.message
+    assert_equal 'Approved', response.message
     assert_match %r(^auth\|\w+$), response.authorization
 
-    @gateway.expects(:ssl_post).returns(successful_capture_response)
-
-    capture = @gateway.capture(@amount, response.authorization, @options)
+    capture = stub_comms do
+      @gateway.capture(@amount, response.authorization, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/"amount\":\"1.00\"/, data)
+    end.respond_with(successful_capture_response)
     assert_success capture
-    assert_equal "Approved", capture.message
+    assert_equal 'Approved', capture.message
   end
 
   # def test_failed_authorize
@@ -51,11 +53,11 @@ class Latitude19Test < Test::Unit::TestCase
   def test_failed_capture
     @gateway.expects(:ssl_post).returns(failed_capture_response)
 
-    authorization = "auth" + "|" + SecureRandom.hex(6)
+    authorization = 'auth' + '|' + SecureRandom.hex(6)
     response = @gateway.capture(@amount, authorization, @options)
     assert_failure response
-    assert_equal "Not submitted", response.message
-    assert_equal "400", response.error_code
+    assert_equal 'Not submitted', response.message
+    assert_equal '400', response.error_code
   end
 
   def test_successful_void
@@ -70,7 +72,7 @@ class Latitude19Test < Test::Unit::TestCase
 
     void = @gateway.void(auth.authorization, @options)
     assert_success void
-    assert_equal "Approved", void.message
+    assert_equal 'Approved', void.message
 
     # response = @gateway.authorize(@amount, @credit_card, @options)
     # assert_success response
@@ -95,7 +97,7 @@ class Latitude19Test < Test::Unit::TestCase
 
     void = @gateway.void(purchase.authorization, @options)
     assert_success void
-    assert_equal "Approved", void.message
+    assert_equal 'Approved', void.message
   end
 
   def test_failed_void
@@ -108,12 +110,12 @@ class Latitude19Test < Test::Unit::TestCase
 
     @gateway.expects(:ssl_post).returns(failed_reversal_response)
 
-    authorization = auth.authorization[0..9] + "XX"
+    authorization = auth.authorization[0..9] + 'XX'
     response = @gateway.void(authorization, @options)
 
     assert_failure response
-    assert_equal "Not submitted", response.message
-    assert_equal "400", response.error_code
+    assert_equal 'Not submitted', response.message
+    assert_equal '400', response.error_code
   end
 
   def test_successful_credit
@@ -123,7 +125,7 @@ class Latitude19Test < Test::Unit::TestCase
 
     response = @gateway.credit(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "Approved", response.message
+    assert_equal 'Approved', response.message
   end
 
   # def test_failed_credit
@@ -136,7 +138,7 @@ class Latitude19Test < Test::Unit::TestCase
 
     response = @gateway.verify(@credit_card, @options)
     assert_success response
-    assert_equal "Approved", response.message
+    assert_equal 'Approved', response.message
   end
 
   # def test_failed_verify
@@ -149,13 +151,13 @@ class Latitude19Test < Test::Unit::TestCase
 
     store = @gateway.store(@credit_card, @options)
     assert_success store
-    assert_equal "Approved", store.message
+    assert_equal 'Approved', store.message
 
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
     purchase = @gateway.purchase(@amount, store.authorization, @options)
     assert_success purchase
-    assert_equal "Approved", purchase.message
+    assert_equal 'Approved', purchase.message
   end
 
   def test_scrub

@@ -3,17 +3,17 @@ require 'test_helper'
 class RemoteMerchantWareVersionFourTest < Test::Unit::TestCase
   def setup
     @gateway = MerchantWareVersionFourGateway.new(fixtures(:merchant_ware_version_four))
-    @amount = rand(1000) + 200
-    @credit_card = credit_card('5424180279791732', {:brand => 'master'})
+    @amount = rand(200..1199)
+    @credit_card = credit_card('5424180279791732', { brand: 'master' })
     @declined_card = credit_card('1234567890123')
 
     @options = {
-      :order_id => generate_unique_id[0,8],
-      :billing_address => address
+      order_id: generate_unique_id[0, 8],
+      billing_address: address
     }
 
     @reference_purchase_options = {
-      :order_id => generate_unique_id[0,8]
+      order_id: generate_unique_id[0, 8]
     }
   end
 
@@ -24,7 +24,7 @@ class RemoteMerchantWareVersionFourTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_authorization
-    @credit_card.number = "1234567890123"
+    @credit_card.number = '1234567890123'
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
   end
@@ -36,7 +36,7 @@ class RemoteMerchantWareVersionFourTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_purchase
-    @credit_card.number = "1234567890123"
+    @credit_card.number = '1234567890123'
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
   end
@@ -70,8 +70,8 @@ class RemoteMerchantWareVersionFourTest < Test::Unit::TestCase
     assert purchase.authorization
 
     assert reference_purchase = @gateway.purchase(@amount,
-                                                  purchase.authorization,
-                                                  @reference_purchase_options)
+      purchase.authorization,
+      @reference_purchase_options)
     assert_success reference_purchase
     assert_not_nil reference_purchase.authorization
   end
@@ -92,10 +92,10 @@ class RemoteMerchantWareVersionFourTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = MerchantWareVersionFourGateway.new(
-                :login => '',
-                :password => '',
-                :name => ''
-              )
+      login: '',
+      password: '',
+      name: ''
+    )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Invalid Credentials.', response.message

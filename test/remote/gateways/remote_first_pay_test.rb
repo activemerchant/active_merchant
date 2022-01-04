@@ -27,6 +27,14 @@ class RemoteFirstPayTest < Test::Unit::TestCase
     assert_equal 'Declined', response.message
   end
 
+  def test_failed_purchase_with_no_address
+    @options.delete(:billing_address)
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_failure response
+    assert_equal 'Address is invalid (street, city, zip, state and or country fields)', response.message
+  end
+
   def test_successful_authorize_and_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
@@ -100,5 +108,25 @@ class RemoteFirstPayTest < Test::Unit::TestCase
     )
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
+    assert_match(/Merchant: 1234 has encountered error #DTO-200-TC./, response.error_code)
+  end
+
+  def test_recurring_payment
+    @options.merge!({ recurring: 1, recurring_start_date: DateTime.now.strftime('%m/%d/%Y'), recurring_end_date: DateTime.now.strftime('%m/%d/%Y'), recurring_type: 'monthly' })
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_transcript_scrubbing
+    @credit_card.verification_value = 789
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:gateway_id], transcript)
   end
 end

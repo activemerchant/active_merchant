@@ -22,8 +22,8 @@ class Remote<%= class_name %>Test < Test::Unit::TestCase
   def test_successful_purchase_with_more_options
     options = {
       order_id: '1',
-      ip: "127.0.0.1",
-      email: "joe@example.com"
+      ip: '127.0.0.1',
+      email: 'joe@example.com'
     }
 
     response = @gateway.purchase(@amount, @credit_card, options)
@@ -43,7 +43,7 @@ class Remote<%= class_name %>Test < Test::Unit::TestCase
 
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
-    assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
+    assert_equal 'REPLACE WITH SUCCESS MESSAGE', capture.message
   end
 
   def test_failed_authorize
@@ -56,7 +56,7 @@ class Remote<%= class_name %>Test < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@amount - 1, auth.authorization)
     assert_success capture
   end
 
@@ -79,7 +79,7 @@ class Remote<%= class_name %>Test < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount-1, purchase.authorization)
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization)
     assert_success refund
   end
 
@@ -143,5 +143,4 @@ class Remote<%= class_name %>Test < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:password], transcript)
   end
-
 end

@@ -17,11 +17,11 @@ module ActiveMerchant
       self.default_currency = 'GBP'
 
       self.supported_countries = ['GB']
-      # Visa Credit, Visa Debit, Mastercard, Maestro, Solo, Electron,
+      # Visa Credit, Visa Debit, Mastercard, Maestro, Electron,
       # American Express, Diners Club, JCB, International Maestro,
       # Style, Clydesdale Financial Services, Other
 
-      self.supported_cardtypes = [ :visa, :master, :american_express, :diners_club, :jcb, :switch, :solo, :maestro ]
+      self.supported_cardtypes = %i[visa master american_express diners_club jcb maestro]
       self.homepage_url = 'http://www.paymentsolutionsltd.com/'
       self.display_name = 'PSL Payment Solutions'
 
@@ -46,38 +46,38 @@ module ActiveMerchant
         'USD' => 840
       }
 
-      #The terminal used - only for swipe transactions, so hard coded to 32 for online
+      # The terminal used - only for swipe transactions, so hard coded to 32 for online
       EMV_TERMINAL_TYPE = 32
 
-      #Different Dispatch types
+      # Different Dispatch types
       DISPATCH_LATER  = 'LATER'
       DISPATCH_NOW    = 'NOW'
 
       # Return codes
       APPROVED = '00'
 
-      #Nominal amount to authorize for a 'dispatch later' type
-      #The nominal amount is held straight away, when the goods are ready
-      #to be dispatched, PSL is informed and the full amount is the
-      #taken.
+      # Nominal amount to authorize for a 'dispatch later' type
+      # The nominal amount is held straight away, when the goods are ready
+      # to be dispatched, PSL is informed and the full amount is the
+      # taken.
       NOMINAL_AMOUNT = 101
 
       AVS_CODE = {
-        "ALL MATCH"	=> 'Y',
-        "SECURITY CODE MATCH ONLY" => 'N',
-        "ADDRESS MATCH ONLY" => 'Y',
-        "NO DATA MATCHES"	=> 'N',
-        "DATA NOT CHECKED"	=> 'R',
-        "SECURITY CHECKS NOT SUPPORTED"	=> 'X'
+        'ALL MATCH'	=> 'Y',
+        'SECURITY CODE MATCH ONLY' => 'N',
+        'ADDRESS MATCH ONLY' => 'Y',
+        'NO DATA MATCHES'	=> 'N',
+        'DATA NOT CHECKED'	=> 'R',
+        'SECURITY CHECKS NOT SUPPORTED'	=> 'X'
       }
 
       CVV_CODE = {
-        "ALL MATCH"	=> 'M',
-        "SECURITY CODE MATCH ONLY" => 'M',
-        "ADDRESS MATCH ONLY" => 'N',
-        "NO DATA MATCHES"	=> 'N',
-        "DATA NOT CHECKED"	=> 'P',
-        "SECURITY CHECKS NOT SUPPORTED"	=> 'X'
+        'ALL MATCH'	=> 'M',
+        'SECURITY CODE MATCH ONLY' => 'M',
+        'ADDRESS MATCH ONLY' => 'N',
+        'NO DATA MATCHES'	=> 'N',
+        'DATA NOT CHECKED'	=> 'P',
+        'SECURITY CHECKS NOT SUPPORTED'	=> 'X'
       }
 
       # Create a new PslCardGateway
@@ -174,12 +174,6 @@ module ActiveMerchant
         post[:ExpMonth] = credit_card.month
         post[:ExpYear] = credit_card.year
 
-        if requires_start_date_or_issue_number?(credit_card)
-          post[:IssueNumber] = credit_card.issue_number unless credit_card.issue_number.blank?
-          post[:StartMonth] = credit_card.start_month unless credit_card.start_month.blank?
-          post[:StartYear] = credit_card.start_year unless credit_card.start_year.blank?
-        end
-
         # CV2 check
         post[:AVSCV2Check] = credit_card.verification_value? ? 'YES' : 'NO'
         post[:CV2] = credit_card.verification_value if credit_card.verification_value?
@@ -189,7 +183,7 @@ module ActiveMerchant
         address = options[:billing_address] || options[:address]
         return if address.nil?
 
-        post[:QAAddress] = [:address1, :address2, :city, :state].collect{|a| address[a]}.reject{|a| a.blank?}.join(' ')
+        post[:QAAddress] = %i[address1 address2 city state].collect { |a| address[a] }.reject(&:blank?).join(' ')
         post[:QAPostcode] = address[:zip]
       end
 
@@ -217,7 +211,7 @@ module ActiveMerchant
 
       def add_purchase_details(post)
         post[:EchoAmount] = 'YES'
-        post[:SCBI] = 'YES'                   # Return information about the transaction
+        post[:SCBI] = 'YES' # Return information about the transaction
         post[:MessageType] = MESSAGE_TYPE
       end
 
@@ -246,10 +240,9 @@ module ActiveMerchant
       #   -a hash with all of the values returned in the PSL response
       #
       def parse(body)
-
         fields = {}
         for line in body.split('&')
-          key, value = *line.scan( %r{^(\w+)\=(.*)$} ).flatten
+          key, value = *line.scan(%r{^(\w+)\=(.*)$}).flatten
           fields[key] = CGI.unescape(value)
         end
         fields.symbolize_keys
@@ -264,14 +257,13 @@ module ActiveMerchant
       #   - ActiveMerchant::Billing::Response object
       #
       def commit(request)
-        response = parse( ssl_post(self.live_url, post_data(request)) )
+        response = parse(ssl_post(self.live_url, post_data(request)))
 
         Response.new(response[:ResponseCode] == APPROVED, response[:Message], response,
-          :test => test?,
-          :authorization => response[:CrossReference],
-          :cvv_result => CVV_CODE[response[:AVSCV2Check]],
-          :avs_result => { :code => AVS_CODE[response[:AVSCV2Check]] }
-        )
+          test: test?,
+          authorization: response[:CrossReference],
+          cvv_result: CVV_CODE[response[:AVSCV2Check]],
+          avs_result: { code: AVS_CODE[response[:AVSCV2Check]] })
       end
 
       # Put the passed data into a format that can be submitted to PSL
@@ -296,7 +288,7 @@ module ActiveMerchant
 
         post.collect { |key, value|
           "#{key}=#{CGI.escape(value.to_s.tr('&=', ' '))}"
-        }.join("&")
+        }.join('&')
       end
     end
   end

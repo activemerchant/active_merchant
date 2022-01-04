@@ -5,14 +5,15 @@ class RemotePayJunctionV2Test < Test::Unit::TestCase
     @gateway = PayJunctionV2Gateway.new(fixtures(:pay_junction_v2))
 
     @amount = 99
-    @credit_card = credit_card('4444333322221111', month: 01, year: 2020, verification_value: 999)
+    @credit_card = credit_card('4444333322221111', month: 01, year: 2021, verification_value: 999)
     @options = {
-      order_id: generate_unique_id
+      order_id: generate_unique_id,
+      billing_address: address()
     }
   end
 
   def test_invalid_login
-    gateway = PayJunctionV2Gateway.new(api_login: "", api_password: "", api_key: "")
+    gateway = PayJunctionV2Gateway.new(api_login: '', api_password: '', api_key: '')
 
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
@@ -24,6 +25,13 @@ class RemotePayJunctionV2Test < Test::Unit::TestCase
     assert_success response
     assert_equal 'Approved', response.message
     assert response.test?
+
+    assert_match @options[:billing_address][:company], response.params['billing']['companyName']
+    assert_match @options[:billing_address][:address1], response.params['billing']['address']['address']
+    assert_match @options[:billing_address][:city], response.params['billing']['address']['city']
+    assert_match @options[:billing_address][:state], response.params['billing']['address']['state']
+    assert_match @options[:billing_address][:country], response.params['billing']['address']['country']
+    assert_match @options[:billing_address][:zip], response.params['billing']['address']['zip']
   end
 
   def test_successful_purchase_sans_options
@@ -60,9 +68,9 @@ class RemotePayJunctionV2Test < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@amount - 1, auth.authorization)
     assert_success capture
-    assert_equal sprintf("%.2f", (@amount-1).to_f / 100), capture.params["amountTotal"]
+    assert_equal sprintf('%.2f', (@amount - 1).to_f / 100), capture.params['amountTotal']
   end
 
   def test_failed_capture
@@ -81,13 +89,13 @@ class RemotePayJunctionV2Test < Test::Unit::TestCase
   end
 
   def test_partial_refund
-    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    purchase = @gateway.purchase(@amount + 50, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount-50, purchase.authorization)
+    assert refund = @gateway.refund(@amount, purchase.authorization)
     assert_success refund
     assert_equal 'Approved', refund.message
-    assert_equal sprintf("%.2f", (@amount-50).to_f / 100), refund.params["amountTotal"]
+    assert_equal sprintf('%.2f', @amount.to_f / 100), refund.params['amountTotal']
   end
 
   def test_failed_refund
@@ -99,14 +107,14 @@ class RemotePayJunctionV2Test < Test::Unit::TestCase
   def test_successful_credit
     response = @gateway.credit(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "Approved", response.message
+    assert_equal 'Approved', response.message
   end
 
   def test_failed_credit
     amount = 0
     response = @gateway.credit(amount, @credit_card, @options)
     assert_failure response
-    assert_equal "Amount Base must be greater than 0.|", response.message
+    assert_equal 'Amount Base must be greater than 0.|', response.message
   end
 
   def test_successful_void
@@ -127,7 +135,7 @@ class RemotePayJunctionV2Test < Test::Unit::TestCase
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response
-    assert_equal "Approved", response.message
+    assert_equal 'Approved', response.message
   end
 
   def test_failed_verify
@@ -141,7 +149,7 @@ class RemotePayJunctionV2Test < Test::Unit::TestCase
     response = @gateway.store(@credit_card, @options)
     assert_success response
     assert response.authorization
-    assert_equal "Approved", response.message
+    assert_equal 'Approved', response.message
 
     response = @gateway.purchase(@amount, response.authorization, @options)
     assert_success response

@@ -36,7 +36,7 @@ class LinkpointTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card('4111111111111111')
-    @options = { :order_id => generate_unique_id, :billing_address => address }
+    @options = { order_id: generate_unique_id, billing_address: address }
   end
 
   def test_successful_authorization
@@ -44,7 +44,7 @@ class LinkpointTest < Test::Unit::TestCase
 
     assert_instance_of Response, response
     assert_success response
-    assert_equal "APPROVED", response.params["approved"]
+    assert_equal 'APPROVED', response.params['approved']
   end
 
   def test_successful_authorization_and_capture
@@ -62,15 +62,15 @@ class LinkpointTest < Test::Unit::TestCase
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "APPROVED", response.params["approved"]
-    assert_equal 'NNN', response.params["avs"]
+    assert_equal 'APPROVED', response.params['approved']
+    assert_equal 'NNN', response.params['avs']
   end
 
   def test_successful_purchase_with_cvv2_code
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "APPROVED", response.params["approved"]
-    assert_equal 'NNNM', response.params["avs"]
+    assert_equal 'APPROVED', response.params['approved']
+    assert_equal 'NNNM', response.params['avs']
   end
 
   def test_successful_purchase_and_void
@@ -90,33 +90,32 @@ class LinkpointTest < Test::Unit::TestCase
   end
 
   def test_successfull_purchase_with_item_entity
-    @options.merge!({:line_items => [
-        {:id => '123456', :description => "Logo T-Shirt", :price => "12.00", :quantity => '1', :options =>
-            [{:name => "Color", :value => "Red"}, {:name => "Size", :value => "XL"}]},
-        {:id => '111', :description => "keychain", :price => "3.00", :quantity => '1'}]})
+    @options[:line_items] = [
+      { id: '123456', description: 'Logo T-Shirt', price: '12.00', quantity: '1',
+       options: [{ name: 'Color', value: 'Red' }, { name: 'Size', value: 'XL' }] },
+      { id: '111', description: 'keychain', price: '3.00', quantity: '1' }
+    ]
     assert purchase = @gateway.purchase(1500, @credit_card, @options)
     assert_success purchase
-
   end
 
   def test_successful_recurring_payment
     assert response = @gateway.recurring(2400, @credit_card,
-      :order_id => generate_unique_id,
-      :installments => 12,
-      :startdate => "immediate",
-      :periodicity => :monthly,
-      :billing_address => address
-    )
+      order_id: generate_unique_id,
+      installments: 12,
+      startdate: 'immediate',
+      periodicity: :monthly,
+      billing_address: address)
 
     assert_success response
-    assert_equal "APPROVED", response.params["approved"]
+    assert_equal 'APPROVED', response.params['approved']
   end
 
   def test_declined_purchase_with_invalid_credit_card
     @credit_card.number = '1111111111111111'
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "DECLINED", response.params["approved"]
+    assert_equal 'DECLINED', response.params['approved']
   end
 
   def test_cleans_whitespace_from_pem

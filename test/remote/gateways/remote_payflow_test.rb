@@ -8,28 +8,80 @@ class RemotePayflowTest < Test::Unit::TestCase
 
     @credit_card = credit_card(
       '5105105105105100',
-      :brand => 'master'
+      brand: 'master'
     )
 
     @options = {
-      :billing_address => address,
-      :email => 'cody@example.com',
-      :customer => 'codyexample'
+      billing_address: address,
+      email: 'cody@example.com',
+      customer: 'codyexample'
+    }
+
+    @extra_options = {
+      order_id: '123',
+      description: 'Description string',
+      order_desc: 'OrderDesc string',
+      comment: 'Comment string',
+      comment2: 'Comment2 string',
+      merch_descr: 'MerchDescr string'
     }
 
     @check = check(
-      :routing_number => '111111118',
-      :account_number => '1234567801'
+      routing_number: '111111118',
+      account_number: '1111111111'
     )
+
+    @l2_json = '{
+        "Tender": {
+          "ACH": {
+            "AcctType": "C",
+            "AcctNum": "6355059797",
+            "ABA": "021000021"
+          }
+        }
+      }'
+
+    @l3_json = '{
+        "Invoice": {
+          "Date": "20190104",
+          "Level3Invoice": {
+            "CountyTax": {"Amount": "3.23"}
+          },
+          "Items":
+            "<Item Number=\"1\"><SKU>1111</SKU><UPC>9999</UPC><Description>Widget</Description><Quantity>2</Quantity><UnitOfMeasurement>INQ</UnitOfMeasurement><UnitPrice>49.99</UnitPrice><DiscountAmt>9.98</DiscountAmt><FreightAmt>3.00</FreightAmt><HandlingAmt>8.00</HandlingAmt><TotalAmt>101.00</TotalAmt><PickUp>  <Address>  <Street>500 Main St.</Street><City>Anytown</City><State>NY</State><Zip>67890</Zip><Country>US</Country></Address><Time>15:30</Time><Date>20030630</Date><RecordNumber>24680</RecordNumber></PickUp><TrackingNumber>ABC0123</TrackingNumber><Delivery><Date>20030714</Date><Time>12:00</Time></Delivery><UNSPSCCode>54.10.15.05</UNSPSCCode></Item><Item Number=\"2\"><SKU>2222</SKU><UPC>8888</UPC><Description>Gizmo</Description><Quantity>5</Quantity><UnitOfMeasurement>INQ</UnitOfMeasurement><UnitPrice>9.99</UnitPrice><DiscountAmt>2.50</DiscountAmt><FreightAmt>3.00</FreightAmt><HandlingAmt>2.50</HandlingAmt><TotalAmt>52.95</TotalAmt><PickUp>  <Address>    <Street>500 Main St.</Street><City>Anytown</City><State>NY</State><Zip>67890</Zip><Country>US</Country></Address><Time>09:00</Time><Date>20030628</Date><RecordNumber>13579</RecordNumber></PickUp><TrackingNumber>XYZ7890</TrackingNumber><Delivery><Date>20030711</Date><Time>09:00</Time></Delivery><UNSPSCCode>54.10.16.05</UNSPSCCode></Item>"
+        }
+      }'
   end
 
   def test_successful_purchase
     assert response = @gateway.purchase(100000, @credit_card, @options)
-    assert_equal "Approved", response.message
+    assert_equal 'Approved', response.message
     assert_success response
     assert response.test?
     assert_not_nil response.authorization
     assert !response.fraud_review?
+  end
+
+  def test_successful_purchase_with_extra_options
+    assert response = @gateway.purchase(100000, @credit_card, @options.merge(@extra_options))
+    assert_equal 'Approved', response.message
+    assert_success response
+    assert response.test?
+    assert_not_nil response.authorization
+    assert !response.fraud_review?
+  end
+
+  def test_successful_purchase_with_application_id
+    ActiveMerchant::Billing::PayflowGateway.application_id = 'partner_id'
+
+    assert response = @gateway.purchase(100000, @credit_card, @options)
+    assert_equal 'Approved', response.message
+    assert_success response
+    assert response.test?
+    assert_not_nil response.authorization
+    assert !response.fraud_review?
+  ensure
+    ActiveMerchant::Billing::PayflowGateway.application_id = nil
   end
 
   # In order for this remote test to pass, you must go into your Payflow test
@@ -44,11 +96,55 @@ class RemotePayflowTest < Test::Unit::TestCase
   def test_successful_purchase_with_fraud_review
     assert response = @gateway.purchase(
       100000,
-      credit_card("5555555555554444", verification_value: "")
+      credit_card('5555555555554444', verification_value: '')
     )
-    assert_success response, "This is probably failing due to your Payflow test account not being set up for fraud filters."
-    assert_equal "126", response.params["result"]
+    assert_success response, 'This is probably failing due to your Payflow test account not being set up for fraud filters.'
+    assert_equal '126', response.params['result']
     assert response.fraud_review?
+  end
+
+  def test_successful_purchase_with_l2_fields
+    options = @options.merge(level_two_fields: @l2_json)
+
+    assert response = @gateway.purchase(100000, @credit_card, options)
+    assert_equal 'Approved', response.message
+    assert_success response
+    assert response.test?
+    assert_not_nil response.authorization
+  end
+
+  def test_successful_purchase_with_l3_fields
+    options = @options.merge(level_three_fields: @l3_json)
+
+    assert response = @gateway.purchase(100000, @credit_card, options)
+    assert_equal 'Approved', response.message
+    assert_success response
+    assert response.test?
+    assert_not_nil response.authorization
+  end
+
+  def test_successful_purchase_with_l2_l3_fields
+    options = @options.merge(level_two_fields: @l2_json).merge(level_three_fields: @l3_json)
+
+    assert response = @gateway.purchase(100000, @credit_card, options)
+    assert_equal 'Approved', response.message
+    assert_success response
+    assert response.test?
+    assert_not_nil response.authorization
+  end
+
+  def test_successful_purchase_with_l3_fields_and_application_id
+    ActiveMerchant::Billing::PayflowGateway.application_id = 'partner_id'
+
+    options = @options.merge(level_three_fields: @l3_json)
+
+    assert response = @gateway.purchase(100000, @credit_card, options)
+    assert_equal 'Approved', response.message
+    assert_success response
+    assert response.test?
+    assert_not_nil response.authorization
+  ensure
+    ActiveMerchant::Billing::PayflowGateway.application_id = nil
   end
 
   def test_declined_purchase
@@ -66,15 +162,25 @@ class RemotePayflowTest < Test::Unit::TestCase
   # This can be accomplished by sending an email to payflow-support@paypal.com with your Merchant Login.
   def test_successful_ach_purchase
     assert response = @gateway.purchase(50, @check)
-    assert_success response, "This is probably failing due to your Payflow test account not being set up for ACH."
-    assert_equal "Approved", response.message
+    assert_success response, 'This is probably failing due to your Payflow test account not being set up for ACH.'
+    assert_equal 'Approved', response.message
     assert response.test?
     assert_not_nil response.authorization
   end
 
+  def test_ach_purchase_and_refund
+    assert response = @gateway.purchase(50, @check)
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert !response.authorization.blank?
+
+    assert credit = @gateway.refund(50, response.authorization)
+    assert_success credit
+  end
+
   def test_successful_authorization
     assert response = @gateway.authorize(100, @credit_card, @options)
-    assert_equal "Approved", response.message
+    assert_equal 'Approved', response.message
     assert_success response
     assert response.test?
     assert_not_nil response.authorization
@@ -98,11 +204,50 @@ class RemotePayflowTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_successful_authorize_with_application_id
+    ActiveMerchant::Billing::PayflowGateway.application_id = 'partner_id'
+
+    assert response = @gateway.authorize(100000, @credit_card, @options)
+    assert_equal 'Approved', response.message
+    assert_success response
+    assert response.test?
+    assert_not_nil response.authorization
+    assert !response.fraud_review?
+  ensure
+    ActiveMerchant::Billing::PayflowGateway.application_id = nil
+  end
+
   def test_authorize_and_partial_capture
     assert auth = @gateway.authorize(100 * 2, @credit_card, @options)
     assert_success auth
     assert_equal 'Approved', auth.message
     assert auth.authorization
+
+    assert capture = @gateway.capture(100, auth.authorization)
+    assert_success capture
+  end
+
+  def test_authorize_and_complete_capture
+    assert auth = @gateway.authorize(100 * 2, @credit_card, @options)
+    assert_success auth
+    assert_equal 'Approved', auth.message
+    assert auth.authorization
+
+    assert capture = @gateway.capture(100, auth.authorization, capture_complete: 'Y')
+    assert_success capture
+
+    assert capture = @gateway.capture(100, auth.authorization)
+    assert_failure capture
+  end
+
+  def test_authorize_and_uncomplete_capture
+    assert auth = @gateway.authorize(100 * 2, @credit_card, @options)
+    assert_success auth
+    assert_equal 'Approved', auth.message
+    assert auth.authorization
+
+    assert capture = @gateway.capture(100, auth.authorization, capture_complete: 'N')
+    assert_success capture
 
     assert capture = @gateway.capture(100, auth.authorization)
     assert_success capture
@@ -126,19 +271,29 @@ class RemotePayflowTest < Test::Unit::TestCase
   def test_successful_verify
     assert response = @gateway.verify(@credit_card, @options)
     assert_success response
-    assert_equal "Verified", response.message
+    assert_equal 'Verified', response.message
+  end
+
+  def test_successful_verify_amex
+    @amex_credit_card = credit_card(
+      '378282246310005',
+      brand: 'american_express'
+    )
+    assert response = @gateway.verify(@amex_credit_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
   end
 
   def test_failed_verify
-    assert response = @gateway.verify(credit_card("4000056655665556"), @options)
+    assert response = @gateway.verify(credit_card('4000056655665556'), @options)
     assert_failure response
-    assert_equal "Declined", response.message
+    assert_equal 'Declined', response.message
   end
 
   def test_invalid_login
     gateway = PayflowGateway.new(
-      :login => '',
-      :password => ''
+      login: '',
+      password: ''
     )
     assert response = gateway.purchase(100, @credit_card, @options)
     assert_equal 'Invalid vendor account', response.message
@@ -150,7 +305,7 @@ class RemotePayflowTest < Test::Unit::TestCase
     SecureRandom.expects(:hex).times(2).returns(request_id)
 
     response1 = @gateway.purchase(100, @credit_card, @options)
-    assert  response1.success?
+    assert response1.success?
     assert_nil response1.params['duplicate']
 
     response2 = @gateway.purchase(100, @credit_card, @options)
@@ -160,7 +315,7 @@ class RemotePayflowTest < Test::Unit::TestCase
 
   def test_create_recurring_profile
     response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
-      @gateway.recurring(1000, @credit_card, :periodicity => :monthly)
+      @gateway.recurring(1000, @credit_card, periodicity: :monthly)
     end
     assert_success response
     assert !response.params['profile_id'].blank?
@@ -169,7 +324,7 @@ class RemotePayflowTest < Test::Unit::TestCase
 
   def test_create_recurring_profile_with_invalid_date
     response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
-      @gateway.recurring(1000, @credit_card, :periodicity => :monthly, :starting_at => Time.now)
+      @gateway.recurring(1000, @credit_card, periodicity: :monthly, starting_at: Time.now)
     end
     assert_failure response
     assert_equal 'Field format error: Start or next payment date must be a valid future date', response.message
@@ -179,7 +334,7 @@ class RemotePayflowTest < Test::Unit::TestCase
 
   def test_create_and_cancel_recurring_profile
     response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
-      @gateway.recurring(1000, @credit_card, :periodicity => :monthly)
+      @gateway.recurring(1000, @credit_card, periodicity: :monthly)
     end
     assert_success response
     assert !response.params['profile_id'].blank?
@@ -195,16 +350,16 @@ class RemotePayflowTest < Test::Unit::TestCase
   def test_full_feature_set_for_recurring_profiles
     # Test add
     @options.update(
-      :periodicity => :weekly,
-      :payments => '12',
-      :starting_at => Time.now + 1.day,
-      :comment => "Test Profile"
+      periodicity: :weekly,
+      payments: '12',
+      starting_at: Time.now + 1.day,
+      comment: 'Test Profile'
     )
     response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
       @gateway.recurring(100, @credit_card, @options)
     end
-    assert_equal "Approved", response.params['message']
-    assert_equal "0", response.params['result']
+    assert_equal 'Approved', response.params['message']
+    assert_equal '0', response.params['result']
     assert_success response
     assert response.test?
     assert !response.params['profile_id'].blank?
@@ -212,16 +367,16 @@ class RemotePayflowTest < Test::Unit::TestCase
 
     # Test modify
     @options.update(
-      :periodicity => :monthly,
-      :starting_at => Time.now + 1.day,
-      :payments => '4',
-      :profile_id => @recurring_profile_id
+      periodicity: :monthly,
+      starting_at: Time.now + 1.day,
+      payments: '4',
+      profile_id: @recurring_profile_id
     )
     response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
       @gateway.recurring(400, @credit_card, @options)
     end
-    assert_equal "Approved", response.params['message']
-    assert_equal "0", response.params['result']
+    assert_equal 'Approved', response.params['message']
+    assert_equal '0', response.params['result']
     assert_success response
     assert response.test?
 
@@ -229,13 +384,13 @@ class RemotePayflowTest < Test::Unit::TestCase
     response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
       @gateway.recurring_inquiry(@recurring_profile_id)
     end
-    assert_equal "0", response.params['result']
+    assert_equal '0', response.params['result']
     assert_success response
     assert response.test?
 
     # Test payment history inquiry
     response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
-      @gateway.recurring_inquiry(@recurring_profile_id, :history => true)
+      @gateway.recurring_inquiry(@recurring_profile_id, history: true)
     end
     assert_equal '0', response.params['result']
     assert_success response
@@ -245,8 +400,8 @@ class RemotePayflowTest < Test::Unit::TestCase
     response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
       @gateway.cancel_recurring(@recurring_profile_id)
     end
-    assert_equal "Approved", response.params['message']
-    assert_equal "0", response.params['result']
+    assert_equal 'Approved', response.params['message']
+    assert_equal '0', response.params['result']
     assert_success response
     assert response.test?
   end
@@ -254,14 +409,14 @@ class RemotePayflowTest < Test::Unit::TestCase
   # Note that this test will only work if you enable reference transactions!!
   def test_reference_purchase
     assert response = @gateway.purchase(10000, @credit_card, @options)
-    assert_equal "Approved", response.message
+    assert_equal 'Approved', response.message
     assert_success response
     assert response.test?
     assert_not_nil pn_ref = response.authorization
 
     # now another purchase, by reference
     assert response = @gateway.purchase(10000, pn_ref)
-    assert_equal "Approved", response.message
+    assert_equal 'Approved', response.message
     assert_success response
     assert response.test?
   end
@@ -269,12 +424,11 @@ class RemotePayflowTest < Test::Unit::TestCase
   def test_recurring_with_initial_authorization
     response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
       @gateway.recurring(1000, @credit_card,
-        :periodicity => :monthly,
-        :initial_transaction => {
-          :type => :purchase,
-          :amount => 500
-        }
-      )
+        periodicity: :monthly,
+        initial_transaction: {
+          type: :purchase,
+          amount: 500
+        })
     end
 
     assert_success response
@@ -297,7 +451,7 @@ class RemotePayflowTest < Test::Unit::TestCase
   def test_verify_credentials
     assert @gateway.verify_credentials
 
-    gateway = PayflowGateway.new(login: "unknown_login", password: "unknown_password", partner: "PayPal")
+    gateway = PayflowGateway.new(login: 'unknown_login', password: 'unknown_password', partner: 'PayPal')
     assert !gateway.verify_credentials
   end
 
@@ -320,13 +474,13 @@ class RemotePayflowTest < Test::Unit::TestCase
   # check) unless Allow non-referenced credits = Yes in PayPal manager
   def test_purchase_and_credit
     assert credit = @gateway.credit(100, @credit_card, @options)
-    assert_success credit, "This is probably failing due to your Payflow test account not being set up to allow non-referenced credits."
+    assert_success credit, 'This is probably failing due to your Payflow test account not being set up to allow non-referenced credits.'
   end
 
   def test_successful_ach_credit
     assert response = @gateway.credit(50, @check)
-    assert_success response, "This is probably failing due to your Payflow test account not being set up for ACH."
-    assert_equal "Approved", response.message
+    assert_success response, 'This is probably failing due to your Payflow test account not being set up for ACH.'
+    assert_equal 'Approved', response.message
     assert response.test?
     assert_not_nil response.authorization
   end
@@ -341,13 +495,32 @@ class RemotePayflowTest < Test::Unit::TestCase
 
   def three_d_secure_option
     {
-        :three_d_secure => {
-            :status => 'Y',
-            :authentication_id => 'QvDbSAxSiaQs241899E0',
-            :eci => '02',
-            :cavv => 'jGvQIvG/5UhjAREALGYa6Vu/hto=',
-            :xid => 'UXZEYlNBeFNpYVFzMjQxODk5RTA='
-        }
+      three_d_secure: {
+        authentication_id: 'QvDbSAxSiaQs241899E0',
+        authentication_response_status: 'Y',
+        eci: '02',
+        cavv: 'jGvQIvG/5UhjAREALGYa6Vu/hto=',
+        xid: 'UXZEYlNBeFNpYVFzMjQxODk5RTA='
+      }
     }
+  end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
+
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(50, @check)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@check.account_number, transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
   end
 end

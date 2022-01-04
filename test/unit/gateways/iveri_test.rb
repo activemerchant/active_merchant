@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class IveriTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = IveriGateway.new(app_id: '123', cert_id: '321')
     @credit_card = credit_card('4242424242424242')
@@ -19,7 +21,7 @@ class IveriTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "{F0568958-D10B-4093-A3BF-663168B06140}|{5CEF96FD-960E-4EA5-811F-D02CE6E36A96}|48b63446223ce91451fc3c1641a9ec03", response.authorization
+    assert_equal '{F0568958-D10B-4093-A3BF-663168B06140}|{5CEF96FD-960E-4EA5-811F-D02CE6E36A96}|48b63446223ce91451fc3c1641a9ec03', response.authorization
     assert response.test?
   end
 
@@ -36,7 +38,7 @@ class IveriTest < Test::Unit::TestCase
 
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "{B90D7CDB-C8E8-4477-BDF2-695F28137874}|{EF0DC64E-2D00-4B6C-BDA0-2AD265391317}|23b4125c3b8e2777bffee52e196a863b", response.authorization
+    assert_equal '{B90D7CDB-C8E8-4477-BDF2-695F28137874}|{EF0DC64E-2D00-4B6C-BDA0-2AD265391317}|23b4125c3b8e2777bffee52e196a863b', response.authorization
     assert response.test?
   end
 
@@ -53,7 +55,7 @@ class IveriTest < Test::Unit::TestCase
 
     response = @gateway.capture(@amount, '{B90D7CDB-C8E8-4477-BDF2-695F28137874}|{EF0DC64E-2D00-4B6C-BDA0-2AD265391317}|23b4125c3b8e2777bffee52e196a863b')
     assert_success response
-    assert_equal "{7C91245F-607D-44AE-8958-C26E447BAEB7}|{EF0DC64E-2D00-4B6C-BDA0-2AD265391317}|23b4125c3b8e2777bffee52e196a863b", response.authorization
+    assert_equal '{7C91245F-607D-44AE-8958-C26E447BAEB7}|{EF0DC64E-2D00-4B6C-BDA0-2AD265391317}|23b4125c3b8e2777bffee52e196a863b', response.authorization
     assert response.test?
   end
 
@@ -70,7 +72,7 @@ class IveriTest < Test::Unit::TestCase
 
     response = @gateway.refund(@amount, '{33C8274D-6811-409A-BF86-661F24084A2F}|{D50DB1B4-B6EC-4AF1-AFF7-71C2AA4A957B}|5be2c040bd46b7eebc70274659779acf')
     assert_success response
-    assert_equal "{097C55B5-D020-40AD-8949-F9F5E4102F1D}|{D50DB1B4-B6EC-4AF1-AFF7-71C2AA4A957B}|5be2c040bd46b7eebc70274659779acf", response.authorization
+    assert_equal '{097C55B5-D020-40AD-8949-F9F5E4102F1D}|{D50DB1B4-B6EC-4AF1-AFF7-71C2AA4A957B}|5be2c040bd46b7eebc70274659779acf', response.authorization
     assert response.test?
   end
 
@@ -87,7 +89,7 @@ class IveriTest < Test::Unit::TestCase
 
     response = @gateway.void('{230390C8-4A9E-4426-BDD3-15D072F135FE}|{3CC6E6A8-13E0-41A6-AB1E-71BE1AEEAE58}|1435f1a008137cd8508bf43751e07495')
     assert_success response
-    assert_equal "{0A1A3FFF-C2A3-4B91-85FD-10D1C25B765B}||", response.authorization
+    assert_equal '{0A1A3FFF-C2A3-4B91-85FD-10D1C25B765B}||', response.authorization
     assert response.test?
   end
 
@@ -100,20 +102,19 @@ class IveriTest < Test::Unit::TestCase
   end
 
   def test_successful_verify
-    @gateway.expects(:ssl_post).returns(successful_verify_response)
-
-    response = @gateway.verify(@credit_card, @options)
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(successful_authorize_response, failed_void_response)
     assert_success response
-    assert_equal "{F4337D04-B526-4A7E-A400-2A6DEADDCF57}|{5D5F8BF7-2D9D-42C3-AF32-08C5E62CD45E}|c0006d1d739905afc9e70beaf4194ea3", response.authorization
-    assert response.test?
+    assert_equal 'Succeeded', response.message
   end
 
   def test_failed_verify
-    @gateway.expects(:ssl_post).returns(failed_verify_response)
-
-    response = @gateway.verify(credit_card('2121212121212121'), @options)
+    response = stub_comms do
+      @gateway.verify(credit_card('2121212121212121'), @options)
+    end.respond_with(failed_authorize_response, successful_void_response)
     assert_failure response
-    assert_equal '4', response.error_code
+    assert_equal 'Denied', response.message
   end
 
   def test_successful_verify_credentials
@@ -184,370 +185,332 @@ Conn close
   end
 
   def successful_purchase_response
-    <<-XML
-<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><ExecuteResponse xmlns="http://iveri.com/"><ExecuteResult>&lt;V_XML Version="2.0" Direction="Response"&gt;
-&lt;Transaction ApplicationID="{D10A603D-4ADE-405B-93F1-826DFC0181E8}" Command="Debit" Mode="Test" RequestID="{F0568958-D10B-4093-A3BF-663168B06140}"&gt;
-  &lt;Result Status="0" AppServer="105IVERIAPPPR01" DBServer="105IVERIDBPR01" Gateway="Nedbank" AcquirerCode="00" /&gt;
-  &lt;Amount&gt;100&lt;/Amount&gt;
-  &lt;AuthorisationCode&gt;537473&lt;/AuthorisationCode&gt;
-  &lt;Currency&gt;ZAR&lt;/Currency&gt;
-  &lt;ExpiryDate&gt;092018&lt;/ExpiryDate&gt;
-  &lt;MerchantReference&gt;48b63446223ce91451fc3c1641a9ec03&lt;/MerchantReference&gt;
-  &lt;Terminal&gt;Default&lt;/Terminal&gt;
-  &lt;TransactionIndex&gt;{5CEF96FD-960E-4EA5-811F-D02CE6E36A96}&lt;/TransactionIndex&gt;
-  &lt;MerchantName&gt;iVeri Payment Technology&lt;/MerchantName&gt;
-  &lt;MerchantUSN&gt;7771777&lt;/MerchantUSN&gt;
-  &lt;Acquirer&gt;NBPostilionBICISONBSouthAfrica&lt;/Acquirer&gt;
-  &lt;AcquirerReference&gt;70417:04077982&lt;/AcquirerReference&gt;
-  &lt;AcquirerDate&gt;20170417&lt;/AcquirerDate&gt;
-  &lt;AcquirerTime&gt;190433&lt;/AcquirerTime&gt;
-  &lt;DisplayAmount&gt;R 1.00&lt;/DisplayAmount&gt;
-  &lt;BIN&gt;4&lt;/BIN&gt;
-  &lt;Association&gt;VISA&lt;/Association&gt;
-  &lt;CardType&gt;Unknown CardType&lt;/CardType&gt;
-  &lt;Issuer&gt;Unknown&lt;/Issuer&gt;
-  &lt;Jurisdiction&gt;International&lt;/Jurisdiction&gt;
-  &lt;PANMode&gt;Keyed,CVV&lt;/PANMode&gt;
-  &lt;ReconReference&gt;04077982&lt;/ReconReference&gt;
-  &lt;CardHolderPresence&gt;CardNotPresent&lt;/CardHolderPresence&gt;
-  &lt;MerchantAddress&gt;MERCHANT ADDRESS&lt;/MerchantAddress&gt;
-  &lt;MerchantCity&gt;Sandton&lt;/MerchantCity&gt;
-  &lt;MerchantCountryCode&gt;ZA&lt;/MerchantCountryCode&gt;
-  &lt;MerchantCountry&gt;South Africa&lt;/MerchantCountry&gt;
-  &lt;DistributorName&gt;Nedbank&lt;/DistributorName&gt;
-  &lt;CCNumber&gt;4242........4242&lt;/CCNumber&gt;
-  &lt;PAN&gt;4242........4242&lt;/PAN&gt;
-&lt;/Transaction&gt;
-&lt;/V_XML&gt;</ExecuteResult></ExecuteResponse></soap:Body></soap:Envelope>
+    <<~XML
+      <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><ExecuteResponse xmlns="http://iveri.com/"><ExecuteResult>&lt;V_XML Version="2.0" Direction="Response"&gt;
+      &lt;Transaction ApplicationID="{D10A603D-4ADE-405B-93F1-826DFC0181E8}" Command="Debit" Mode="Test" RequestID="{F0568958-D10B-4093-A3BF-663168B06140}"&gt;
+        &lt;Result Status="0" AppServer="105IVERIAPPPR01" DBServer="105IVERIDBPR01" Gateway="Nedbank" AcquirerCode="00" /&gt;
+        &lt;Amount&gt;100&lt;/Amount&gt;
+        &lt;AuthorisationCode&gt;537473&lt;/AuthorisationCode&gt;
+        &lt;Currency&gt;ZAR&lt;/Currency&gt;
+        &lt;ExpiryDate&gt;092018&lt;/ExpiryDate&gt;
+        &lt;MerchantReference&gt;48b63446223ce91451fc3c1641a9ec03&lt;/MerchantReference&gt;
+        &lt;Terminal&gt;Default&lt;/Terminal&gt;
+        &lt;TransactionIndex&gt;{5CEF96FD-960E-4EA5-811F-D02CE6E36A96}&lt;/TransactionIndex&gt;
+        &lt;MerchantName&gt;iVeri Payment Technology&lt;/MerchantName&gt;
+        &lt;MerchantUSN&gt;7771777&lt;/MerchantUSN&gt;
+        &lt;Acquirer&gt;NBPostilionBICISONBSouthAfrica&lt;/Acquirer&gt;
+        &lt;AcquirerReference&gt;70417:04077982&lt;/AcquirerReference&gt;
+        &lt;AcquirerDate&gt;20170417&lt;/AcquirerDate&gt;
+        &lt;AcquirerTime&gt;190433&lt;/AcquirerTime&gt;
+        &lt;DisplayAmount&gt;R 1.00&lt;/DisplayAmount&gt;
+        &lt;BIN&gt;4&lt;/BIN&gt;
+        &lt;Association&gt;VISA&lt;/Association&gt;
+        &lt;CardType&gt;Unknown CardType&lt;/CardType&gt;
+        &lt;Issuer&gt;Unknown&lt;/Issuer&gt;
+        &lt;Jurisdiction&gt;International&lt;/Jurisdiction&gt;
+        &lt;PANMode&gt;Keyed,CVV&lt;/PANMode&gt;
+        &lt;ReconReference&gt;04077982&lt;/ReconReference&gt;
+        &lt;CardHolderPresence&gt;CardNotPresent&lt;/CardHolderPresence&gt;
+        &lt;MerchantAddress&gt;MERCHANT ADDRESS&lt;/MerchantAddress&gt;
+        &lt;MerchantCity&gt;Sandton&lt;/MerchantCity&gt;
+        &lt;MerchantCountryCode&gt;ZA&lt;/MerchantCountryCode&gt;
+        &lt;MerchantCountry&gt;South Africa&lt;/MerchantCountry&gt;
+        &lt;DistributorName&gt;Nedbank&lt;/DistributorName&gt;
+        &lt;CCNumber&gt;4242........4242&lt;/CCNumber&gt;
+        &lt;PAN&gt;4242........4242&lt;/PAN&gt;
+      &lt;/Transaction&gt;
+      &lt;/V_XML&gt;</ExecuteResult></ExecuteResponse></soap:Body></soap:Envelope>
     XML
   end
 
   def failed_purchase_response
-    <<-XML
-<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><ExecuteResponse xmlns="http://iveri.com/"><ExecuteResult>&lt;V_XML Version="2.0" Direction="Response"&gt;
-  &lt;Transaction ApplicationID="{D10A603D-4ADE-405B-93F1-826DFC0181E8}" Command="Debit" Mode="Test" RequestID="{B14C3834-72B9-4ACA-B362-B3C9EC96E8C0}"&gt;
-    &lt;Result Status="-1" Code="4" Description="Denied" Source="NBPostilionBICISONBSouthAfrica" AppServer="105IVERIAPPPR01" DBServer="105IVERIDBPR01" Gateway="Nedbank" AcquirerCode="05" AcquirerDescription="Do not Honour" /&gt;
-    &lt;Amount&gt;100&lt;/Amount&gt;
-    &lt;Currency&gt;ZAR&lt;/Currency&gt;
-    &lt;ExpiryDate&gt;092018&lt;/ExpiryDate&gt;
-    &lt;MerchantReference&gt;435a5d60b5fe874840c34e2e0504626b&lt;/MerchantReference&gt;
-    &lt;Terminal&gt;Default&lt;/Terminal&gt;
-    &lt;TransactionIndex&gt;{B35872A9-39C7-4DB8-9774-A5E34FFA519E}&lt;/TransactionIndex&gt;
-    &lt;MerchantName&gt;iVeri Payment Technology&lt;/MerchantName&gt;
-    &lt;MerchantUSN&gt;7771777&lt;/MerchantUSN&gt;
-    &lt;Acquirer&gt;NBPostilionBICISONBSouthAfrica&lt;/Acquirer&gt;
-    &lt;AcquirerReference&gt;70417:04077988&lt;/AcquirerReference&gt;
-    &lt;AcquirerDate&gt;20170417&lt;/AcquirerDate&gt;
-    &lt;AcquirerTime&gt;192038&lt;/AcquirerTime&gt;
-    &lt;DisplayAmount&gt;R 1.00&lt;/DisplayAmount&gt;
-    &lt;BIN&gt;2&lt;/BIN&gt;
-    &lt;Association&gt;Unknown Association&lt;/Association&gt;
-    &lt;CardType&gt;Unknown CardType&lt;/CardType&gt;
-    &lt;Issuer&gt;Unknown&lt;/Issuer&gt;
-    &lt;Jurisdiction&gt;Local&lt;/Jurisdiction&gt;
-    &lt;PANMode&gt;Keyed,CVV&lt;/PANMode&gt;
-    &lt;ReconReference&gt;04077988&lt;/ReconReference&gt;
-    &lt;CardHolderPresence&gt;CardNotPresent&lt;/CardHolderPresence&gt;
-    &lt;MerchantAddress&gt;MERCHANT ADDRESS&lt;/MerchantAddress&gt;
-    &lt;MerchantCity&gt;Sandton&lt;/MerchantCity&gt;
-    &lt;MerchantCountryCode&gt;ZA&lt;/MerchantCountryCode&gt;
-    &lt;MerchantCountry&gt;South Africa&lt;/MerchantCountry&gt;
-    &lt;DistributorName&gt;Nedbank&lt;/DistributorName&gt;
-    &lt;CCNumber&gt;2121........2121&lt;/CCNumber&gt;
-    &lt;PAN&gt;2121........2121&lt;/PAN&gt;
-  &lt;/Transaction&gt;
-&lt;/V_XML&gt;</ExecuteResult></ExecuteResponse></soap:Body></soap:Envelope>
+    <<~XML
+      <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><ExecuteResponse xmlns="http://iveri.com/"><ExecuteResult>&lt;V_XML Version="2.0" Direction="Response"&gt;
+        &lt;Transaction ApplicationID="{D10A603D-4ADE-405B-93F1-826DFC0181E8}" Command="Debit" Mode="Test" RequestID="{B14C3834-72B9-4ACA-B362-B3C9EC96E8C0}"&gt;
+          &lt;Result Status="-1" Code="4" Description="Denied" Source="NBPostilionBICISONBSouthAfrica" AppServer="105IVERIAPPPR01" DBServer="105IVERIDBPR01" Gateway="Nedbank" AcquirerCode="05" AcquirerDescription="Do not Honour" /&gt;
+          &lt;Amount&gt;100&lt;/Amount&gt;
+          &lt;Currency&gt;ZAR&lt;/Currency&gt;
+          &lt;ExpiryDate&gt;092018&lt;/ExpiryDate&gt;
+          &lt;MerchantReference&gt;435a5d60b5fe874840c34e2e0504626b&lt;/MerchantReference&gt;
+          &lt;Terminal&gt;Default&lt;/Terminal&gt;
+          &lt;TransactionIndex&gt;{B35872A9-39C7-4DB8-9774-A5E34FFA519E}&lt;/TransactionIndex&gt;
+          &lt;MerchantName&gt;iVeri Payment Technology&lt;/MerchantName&gt;
+          &lt;MerchantUSN&gt;7771777&lt;/MerchantUSN&gt;
+          &lt;Acquirer&gt;NBPostilionBICISONBSouthAfrica&lt;/Acquirer&gt;
+          &lt;AcquirerReference&gt;70417:04077988&lt;/AcquirerReference&gt;
+          &lt;AcquirerDate&gt;20170417&lt;/AcquirerDate&gt;
+          &lt;AcquirerTime&gt;192038&lt;/AcquirerTime&gt;
+          &lt;DisplayAmount&gt;R 1.00&lt;/DisplayAmount&gt;
+          &lt;BIN&gt;2&lt;/BIN&gt;
+          &lt;Association&gt;Unknown Association&lt;/Association&gt;
+          &lt;CardType&gt;Unknown CardType&lt;/CardType&gt;
+          &lt;Issuer&gt;Unknown&lt;/Issuer&gt;
+          &lt;Jurisdiction&gt;Local&lt;/Jurisdiction&gt;
+          &lt;PANMode&gt;Keyed,CVV&lt;/PANMode&gt;
+          &lt;ReconReference&gt;04077988&lt;/ReconReference&gt;
+          &lt;CardHolderPresence&gt;CardNotPresent&lt;/CardHolderPresence&gt;
+          &lt;MerchantAddress&gt;MERCHANT ADDRESS&lt;/MerchantAddress&gt;
+          &lt;MerchantCity&gt;Sandton&lt;/MerchantCity&gt;
+          &lt;MerchantCountryCode&gt;ZA&lt;/MerchantCountryCode&gt;
+          &lt;MerchantCountry&gt;South Africa&lt;/MerchantCountry&gt;
+          &lt;DistributorName&gt;Nedbank&lt;/DistributorName&gt;
+          &lt;CCNumber&gt;2121........2121&lt;/CCNumber&gt;
+          &lt;PAN&gt;2121........2121&lt;/PAN&gt;
+        &lt;/Transaction&gt;
+      &lt;/V_XML&gt;</ExecuteResult></ExecuteResponse></soap:Body></soap:Envelope>
     XML
   end
 
   def successful_authorize_response
-    <<-XML
-<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><ExecuteResponse xmlns="http://iveri.com/"><ExecuteResult>&lt;V_XML Version="2.0" Direction="Response"&gt;
-  &lt;Transaction ApplicationID="{D10A603D-4ADE-405B-93F1-826DFC0181E8}" Command="Authorisation" Mode="Test" RequestID="{B90D7CDB-C8E8-4477-BDF2-695F28137874}"&gt;
-    &lt;Result Status="0" AppServer="105IVERIAPPPR01" DBServer="105IVERIDBPR01" Gateway="Nedbank" AcquirerCode="00" /&gt;
-    &lt;Amount&gt;100&lt;/Amount&gt;
-    &lt;AuthorisationCode&gt;541267&lt;/AuthorisationCode&gt;
-    &lt;Currency&gt;ZAR&lt;/Currency&gt;
-    &lt;ExpiryDate&gt;092018&lt;/ExpiryDate&gt;
-    &lt;MerchantReference&gt;23b4125c3b8e2777bffee52e196a863b&lt;/MerchantReference&gt;
-    &lt;Terminal&gt;Default&lt;/Terminal&gt;
-    &lt;TransactionIndex&gt;{EF0DC64E-2D00-4B6C-BDA0-2AD265391317}&lt;/TransactionIndex&gt;
-    &lt;MerchantName&gt;iVeri Payment Technology&lt;/MerchantName&gt;
-    &lt;MerchantUSN&gt;7771777&lt;/MerchantUSN&gt;
-    &lt;Acquirer&gt;NBPostilionBICISONBSouthAfrica&lt;/Acquirer&gt;
-    &lt;AcquirerReference&gt;70417:04078057&lt;/AcquirerReference&gt;
-    &lt;AcquirerDate&gt;20170417&lt;/AcquirerDate&gt;
-    &lt;AcquirerTime&gt;200747&lt;/AcquirerTime&gt;
-    &lt;DisplayAmount&gt;R 1.00&lt;/DisplayAmount&gt;
-    &lt;BIN&gt;4&lt;/BIN&gt;
-    &lt;Association&gt;VISA&lt;/Association&gt;
-    &lt;CardType&gt;Unknown CardType&lt;/CardType&gt;
-    &lt;Issuer&gt;Unknown&lt;/Issuer&gt;
-    &lt;Jurisdiction&gt;International&lt;/Jurisdiction&gt;
-    &lt;PANMode&gt;Keyed,CVV&lt;/PANMode&gt;
-    &lt;ReconReference&gt;04078057&lt;/ReconReference&gt;
-    &lt;CardHolderPresence&gt;CardNotPresent&lt;/CardHolderPresence&gt;
-    &lt;MerchantAddress&gt;MERCHANT ADDRESS&lt;/MerchantAddress&gt;
-    &lt;MerchantCity&gt;Sandton&lt;/MerchantCity&gt;
-    &lt;MerchantCountryCode&gt;ZA&lt;/MerchantCountryCode&gt;
-    &lt;MerchantCountry&gt;South Africa&lt;/MerchantCountry&gt;
-    &lt;DistributorName&gt;Nedbank&lt;/DistributorName&gt;
-    &lt;CCNumber&gt;4242........4242&lt;/CCNumber&gt;
-    &lt;PAN&gt;4242........4242&lt;/PAN&gt;
-  &lt;/Transaction&gt;
-&lt;/V_XML&gt;</ExecuteResult></ExecuteResponse></soap:Body></soap:Envelope>
+    <<~XML
+      <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><ExecuteResponse xmlns="http://iveri.com/"><ExecuteResult>&lt;V_XML Version="2.0" Direction="Response"&gt;
+        &lt;Transaction ApplicationID="{D10A603D-4ADE-405B-93F1-826DFC0181E8}" Command="Authorisation" Mode="Test" RequestID="{B90D7CDB-C8E8-4477-BDF2-695F28137874}"&gt;
+          &lt;Result Status="0" AppServer="105IVERIAPPPR01" DBServer="105IVERIDBPR01" Gateway="Nedbank" AcquirerCode="00" /&gt;
+          &lt;Amount&gt;100&lt;/Amount&gt;
+          &lt;AuthorisationCode&gt;541267&lt;/AuthorisationCode&gt;
+          &lt;Currency&gt;ZAR&lt;/Currency&gt;
+          &lt;ExpiryDate&gt;092018&lt;/ExpiryDate&gt;
+          &lt;MerchantReference&gt;23b4125c3b8e2777bffee52e196a863b&lt;/MerchantReference&gt;
+          &lt;Terminal&gt;Default&lt;/Terminal&gt;
+          &lt;TransactionIndex&gt;{EF0DC64E-2D00-4B6C-BDA0-2AD265391317}&lt;/TransactionIndex&gt;
+          &lt;MerchantName&gt;iVeri Payment Technology&lt;/MerchantName&gt;
+          &lt;MerchantUSN&gt;7771777&lt;/MerchantUSN&gt;
+          &lt;Acquirer&gt;NBPostilionBICISONBSouthAfrica&lt;/Acquirer&gt;
+          &lt;AcquirerReference&gt;70417:04078057&lt;/AcquirerReference&gt;
+          &lt;AcquirerDate&gt;20170417&lt;/AcquirerDate&gt;
+          &lt;AcquirerTime&gt;200747&lt;/AcquirerTime&gt;
+          &lt;DisplayAmount&gt;R 1.00&lt;/DisplayAmount&gt;
+          &lt;BIN&gt;4&lt;/BIN&gt;
+          &lt;Association&gt;VISA&lt;/Association&gt;
+          &lt;CardType&gt;Unknown CardType&lt;/CardType&gt;
+          &lt;Issuer&gt;Unknown&lt;/Issuer&gt;
+          &lt;Jurisdiction&gt;International&lt;/Jurisdiction&gt;
+          &lt;PANMode&gt;Keyed,CVV&lt;/PANMode&gt;
+          &lt;ReconReference&gt;04078057&lt;/ReconReference&gt;
+          &lt;CardHolderPresence&gt;CardNotPresent&lt;/CardHolderPresence&gt;
+          &lt;MerchantAddress&gt;MERCHANT ADDRESS&lt;/MerchantAddress&gt;
+          &lt;MerchantCity&gt;Sandton&lt;/MerchantCity&gt;
+          &lt;MerchantCountryCode&gt;ZA&lt;/MerchantCountryCode&gt;
+          &lt;MerchantCountry&gt;South Africa&lt;/MerchantCountry&gt;
+          &lt;DistributorName&gt;Nedbank&lt;/DistributorName&gt;
+          &lt;CCNumber&gt;4242........4242&lt;/CCNumber&gt;
+          &lt;PAN&gt;4242........4242&lt;/PAN&gt;
+        &lt;/Transaction&gt;
+      &lt;/V_XML&gt;</ExecuteResult></ExecuteResponse></soap:Body></soap:Envelope>
     XML
   end
 
   def failed_authorize_response
-    <<-XML
-<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><ExecuteResponse xmlns="http://iveri.com/"><ExecuteResult>&lt;V_XML Version="2.0" Direction="Response"&gt;
-  &lt;Transaction ApplicationID="{D10A603D-4ADE-405B-93F1-826DFC0181E8}" Command="Authorisation" Mode="Test" RequestID="{3A1A29BE-288F-4FEE-8C15-B3BB8A207544}"&gt;
-    &lt;Result Status="-1" Code="4" Description="Denied" Source="NBPostilionBICISONBSouthAfrica" AppServer="105IVERIAPPPR01" DBServer="105IVERIDBPR01" Gateway="Nedbank" AcquirerCode="05" AcquirerDescription="Do not Honour" /&gt;
-    &lt;Amount&gt;100&lt;/Amount&gt;
-    &lt;Currency&gt;ZAR&lt;/Currency&gt;
-    &lt;ExpiryDate&gt;092018&lt;/ExpiryDate&gt;
-    &lt;MerchantReference&gt;3d12442ea042e78fd33057b7b50c76f7&lt;/MerchantReference&gt;
-    &lt;Terminal&gt;Default&lt;/Terminal&gt;
-    &lt;TransactionIndex&gt;{8AC33FB1-0D2E-42C7-A0DB-CF8B20279825}&lt;/TransactionIndex&gt;
-    &lt;MerchantName&gt;iVeri Payment Technology&lt;/MerchantName&gt;
-    &lt;MerchantUSN&gt;7771777&lt;/MerchantUSN&gt;
-    &lt;Acquirer&gt;NBPostilionBICISONBSouthAfrica&lt;/Acquirer&gt;
-    &lt;AcquirerReference&gt;70417:04078062&lt;/AcquirerReference&gt;
-    &lt;AcquirerDate&gt;20170417&lt;/AcquirerDate&gt;
-    &lt;AcquirerTime&gt;202648&lt;/AcquirerTime&gt;
-    &lt;DisplayAmount&gt;R 1.00&lt;/DisplayAmount&gt;
-    &lt;BIN&gt;2&lt;/BIN&gt;
-    &lt;Association&gt;Unknown Association&lt;/Association&gt;
-    &lt;CardType&gt;Unknown CardType&lt;/CardType&gt;
-    &lt;Issuer&gt;Unknown&lt;/Issuer&gt;
-    &lt;Jurisdiction&gt;Local&lt;/Jurisdiction&gt;
-    &lt;PANMode&gt;Keyed,CVV&lt;/PANMode&gt;
-    &lt;ReconReference&gt;04078062&lt;/ReconReference&gt;
-    &lt;CardHolderPresence&gt;CardNotPresent&lt;/CardHolderPresence&gt;
-    &lt;MerchantAddress&gt;MERCHANT ADDRESS&lt;/MerchantAddress&gt;
-    &lt;MerchantCity&gt;Sandton&lt;/MerchantCity&gt;
-    &lt;MerchantCountryCode&gt;ZA&lt;/MerchantCountryCode&gt;
-    &lt;MerchantCountry&gt;South Africa&lt;/MerchantCountry&gt;
-    &lt;DistributorName&gt;Nedbank&lt;/DistributorName&gt;
-    &lt;CCNumber&gt;2121........2121&lt;/CCNumber&gt;
-    &lt;PAN&gt;2121........2121&lt;/PAN&gt;
-  &lt;/Transaction&gt;
-&lt;/V_XML&gt;</ExecuteResult></ExecuteResponse></soap:Body></soap:Envelope>
+    <<~XML
+      <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><ExecuteResponse xmlns="http://iveri.com/"><ExecuteResult>&lt;V_XML Version="2.0" Direction="Response"&gt;
+        &lt;Transaction ApplicationID="{D10A603D-4ADE-405B-93F1-826DFC0181E8}" Command="Authorisation" Mode="Test" RequestID="{3A1A29BE-288F-4FEE-8C15-B3BB8A207544}"&gt;
+          &lt;Result Status="-1" Code="4" Description="Denied" Source="NBPostilionBICISONBSouthAfrica" AppServer="105IVERIAPPPR01" DBServer="105IVERIDBPR01" Gateway="Nedbank" AcquirerCode="05" AcquirerDescription="Do not Honour" /&gt;
+          &lt;Amount&gt;100&lt;/Amount&gt;
+          &lt;Currency&gt;ZAR&lt;/Currency&gt;
+          &lt;ExpiryDate&gt;092018&lt;/ExpiryDate&gt;
+          &lt;MerchantReference&gt;3d12442ea042e78fd33057b7b50c76f7&lt;/MerchantReference&gt;
+          &lt;Terminal&gt;Default&lt;/Terminal&gt;
+          &lt;TransactionIndex&gt;{8AC33FB1-0D2E-42C7-A0DB-CF8B20279825}&lt;/TransactionIndex&gt;
+          &lt;MerchantName&gt;iVeri Payment Technology&lt;/MerchantName&gt;
+          &lt;MerchantUSN&gt;7771777&lt;/MerchantUSN&gt;
+          &lt;Acquirer&gt;NBPostilionBICISONBSouthAfrica&lt;/Acquirer&gt;
+          &lt;AcquirerReference&gt;70417:04078062&lt;/AcquirerReference&gt;
+          &lt;AcquirerDate&gt;20170417&lt;/AcquirerDate&gt;
+          &lt;AcquirerTime&gt;202648&lt;/AcquirerTime&gt;
+          &lt;DisplayAmount&gt;R 1.00&lt;/DisplayAmount&gt;
+          &lt;BIN&gt;2&lt;/BIN&gt;
+          &lt;Association&gt;Unknown Association&lt;/Association&gt;
+          &lt;CardType&gt;Unknown CardType&lt;/CardType&gt;
+          &lt;Issuer&gt;Unknown&lt;/Issuer&gt;
+          &lt;Jurisdiction&gt;Local&lt;/Jurisdiction&gt;
+          &lt;PANMode&gt;Keyed,CVV&lt;/PANMode&gt;
+          &lt;ReconReference&gt;04078062&lt;/ReconReference&gt;
+          &lt;CardHolderPresence&gt;CardNotPresent&lt;/CardHolderPresence&gt;
+          &lt;MerchantAddress&gt;MERCHANT ADDRESS&lt;/MerchantAddress&gt;
+          &lt;MerchantCity&gt;Sandton&lt;/MerchantCity&gt;
+          &lt;MerchantCountryCode&gt;ZA&lt;/MerchantCountryCode&gt;
+          &lt;MerchantCountry&gt;South Africa&lt;/MerchantCountry&gt;
+          &lt;DistributorName&gt;Nedbank&lt;/DistributorName&gt;
+          &lt;CCNumber&gt;2121........2121&lt;/CCNumber&gt;
+          &lt;PAN&gt;2121........2121&lt;/PAN&gt;
+        &lt;/Transaction&gt;
+      &lt;/V_XML&gt;</ExecuteResult></ExecuteResponse></soap:Body></soap:Envelope>
     XML
   end
 
   def successful_capture_response
-    <<-XML
-<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><ExecuteResponse xmlns="http://iveri.com/"><ExecuteResult>&lt;V_XML Version="2.0" Direction="Response"&gt;
-  &lt;Transaction ApplicationID="{D10A603D-4ADE-405B-93F1-826DFC0181E8}" Command="Debit" Mode="Test" RequestID="{7C91245F-607D-44AE-8958-C26E447BAEB7}"&gt;
-    &lt;Result Status="0" AppServer="105IVERIAPPPR02" DBServer="105iveridbpr01" Gateway="Nedbank" AcquirerCode="00" /&gt;
-    &lt;Amount&gt;100&lt;/Amount&gt;
-    &lt;AuthorisationCode&gt;541268&lt;/AuthorisationCode&gt;
-    &lt;Currency&gt;ZAR&lt;/Currency&gt;
-    &lt;ExpiryDate&gt;092018&lt;/ExpiryDate&gt;
-    &lt;MerchantReference&gt;23b4125c3b8e2777bffee52e196a863b&lt;/MerchantReference&gt;
-    &lt;Terminal&gt;Default&lt;/Terminal&gt;
-    &lt;TransactionIndex&gt;{EF0DC64E-2D00-4B6C-BDA0-2AD265391317}&lt;/TransactionIndex&gt;
-    &lt;MerchantName&gt;iVeri Payment Technology&lt;/MerchantName&gt;
-    &lt;MerchantUSN&gt;7771777&lt;/MerchantUSN&gt;
-    &lt;Acquirer&gt;NBPostilionBICISONBSouthAfrica&lt;/Acquirer&gt;
-    &lt;AcquirerReference&gt;70417:04078057&lt;/AcquirerReference&gt;
-    &lt;AcquirerDate&gt;20170417&lt;/AcquirerDate&gt;
-    &lt;AcquirerTime&gt;200748&lt;/AcquirerTime&gt;
-    &lt;DisplayAmount&gt;R 1.00&lt;/DisplayAmount&gt;
-    &lt;BIN&gt;4&lt;/BIN&gt;
-    &lt;Association&gt;VISA&lt;/Association&gt;
-    &lt;CardType&gt;Unknown CardType&lt;/CardType&gt;
-    &lt;Issuer&gt;Unknown&lt;/Issuer&gt;
-    &lt;Jurisdiction&gt;International&lt;/Jurisdiction&gt;
-    &lt;PANMode&gt;Keyed,CVV&lt;/PANMode&gt;
-    &lt;ReconReference&gt;04078057&lt;/ReconReference&gt;
-    &lt;CardHolderPresence&gt;CardNotPresent&lt;/CardHolderPresence&gt;
-    &lt;MerchantAddress&gt;MERCHANT ADDRESS&lt;/MerchantAddress&gt;
-    &lt;MerchantCity&gt;Sandton&lt;/MerchantCity&gt;
-    &lt;MerchantCountryCode&gt;ZA&lt;/MerchantCountryCode&gt;
-    &lt;MerchantCountry&gt;South Africa&lt;/MerchantCountry&gt;
-    &lt;DistributorName&gt;Nedbank&lt;/DistributorName&gt;
-    &lt;CCNumber&gt;4242........4242&lt;/CCNumber&gt;
-    &lt;PAN&gt;4242........4242&lt;/PAN&gt;
-  &lt;/Transaction&gt;
-&lt;/V_XML&gt;</ExecuteResult></ExecuteResponse></soap:Body></soap:Envelope>
+    <<~XML
+      <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><ExecuteResponse xmlns="http://iveri.com/"><ExecuteResult>&lt;V_XML Version="2.0" Direction="Response"&gt;
+        &lt;Transaction ApplicationID="{D10A603D-4ADE-405B-93F1-826DFC0181E8}" Command="Debit" Mode="Test" RequestID="{7C91245F-607D-44AE-8958-C26E447BAEB7}"&gt;
+          &lt;Result Status="0" AppServer="105IVERIAPPPR02" DBServer="105iveridbpr01" Gateway="Nedbank" AcquirerCode="00" /&gt;
+          &lt;Amount&gt;100&lt;/Amount&gt;
+          &lt;AuthorisationCode&gt;541268&lt;/AuthorisationCode&gt;
+          &lt;Currency&gt;ZAR&lt;/Currency&gt;
+          &lt;ExpiryDate&gt;092018&lt;/ExpiryDate&gt;
+          &lt;MerchantReference&gt;23b4125c3b8e2777bffee52e196a863b&lt;/MerchantReference&gt;
+          &lt;Terminal&gt;Default&lt;/Terminal&gt;
+          &lt;TransactionIndex&gt;{EF0DC64E-2D00-4B6C-BDA0-2AD265391317}&lt;/TransactionIndex&gt;
+          &lt;MerchantName&gt;iVeri Payment Technology&lt;/MerchantName&gt;
+          &lt;MerchantUSN&gt;7771777&lt;/MerchantUSN&gt;
+          &lt;Acquirer&gt;NBPostilionBICISONBSouthAfrica&lt;/Acquirer&gt;
+          &lt;AcquirerReference&gt;70417:04078057&lt;/AcquirerReference&gt;
+          &lt;AcquirerDate&gt;20170417&lt;/AcquirerDate&gt;
+          &lt;AcquirerTime&gt;200748&lt;/AcquirerTime&gt;
+          &lt;DisplayAmount&gt;R 1.00&lt;/DisplayAmount&gt;
+          &lt;BIN&gt;4&lt;/BIN&gt;
+          &lt;Association&gt;VISA&lt;/Association&gt;
+          &lt;CardType&gt;Unknown CardType&lt;/CardType&gt;
+          &lt;Issuer&gt;Unknown&lt;/Issuer&gt;
+          &lt;Jurisdiction&gt;International&lt;/Jurisdiction&gt;
+          &lt;PANMode&gt;Keyed,CVV&lt;/PANMode&gt;
+          &lt;ReconReference&gt;04078057&lt;/ReconReference&gt;
+          &lt;CardHolderPresence&gt;CardNotPresent&lt;/CardHolderPresence&gt;
+          &lt;MerchantAddress&gt;MERCHANT ADDRESS&lt;/MerchantAddress&gt;
+          &lt;MerchantCity&gt;Sandton&lt;/MerchantCity&gt;
+          &lt;MerchantCountryCode&gt;ZA&lt;/MerchantCountryCode&gt;
+          &lt;MerchantCountry&gt;South Africa&lt;/MerchantCountry&gt;
+          &lt;DistributorName&gt;Nedbank&lt;/DistributorName&gt;
+          &lt;CCNumber&gt;4242........4242&lt;/CCNumber&gt;
+          &lt;PAN&gt;4242........4242&lt;/PAN&gt;
+        &lt;/Transaction&gt;
+      &lt;/V_XML&gt;</ExecuteResult></ExecuteResponse></soap:Body></soap:Envelope>
     XML
   end
 
   def failed_capture_response
-    <<-XML
-<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><ExecuteResponse xmlns="http://iveri.com/"><ExecuteResult>&lt;V_XML Version="2.0" Direction="Response"&gt;
-  &lt;Transaction ApplicationID="{D10A603D-4ADE-405B-93F1-826DFC0181E8}" Command="Debit" Mode="Test" RequestID="{9DAAA002-0EF9-46DC-A440-8DCD9E78B36F}"&gt;
-    &lt;Result Status="-1" Code="14" Description="Missing PAN" Source="NBPostilionBICISONBSouthAfricaTestProvider" AppServer="105IVERIAPPPR02" DBServer="105iveridbpr01" Gateway="Nedbank" AcquirerCode="" AcquirerDescription="" /&gt;
-  &lt;/Transaction&gt;
-&lt;/V_XML&gt;</ExecuteResult></ExecuteResponse></soap:Body></soap:Envelope>
+    <<~XML
+      <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><ExecuteResponse xmlns="http://iveri.com/"><ExecuteResult>&lt;V_XML Version="2.0" Direction="Response"&gt;
+        &lt;Transaction ApplicationID="{D10A603D-4ADE-405B-93F1-826DFC0181E8}" Command="Debit" Mode="Test" RequestID="{9DAAA002-0EF9-46DC-A440-8DCD9E78B36F}"&gt;
+          &lt;Result Status="-1" Code="14" Description="Missing PAN" Source="NBPostilionBICISONBSouthAfricaTestProvider" AppServer="105IVERIAPPPR02" DBServer="105iveridbpr01" Gateway="Nedbank" AcquirerCode="" AcquirerDescription="" /&gt;
+        &lt;/Transaction&gt;
+      &lt;/V_XML&gt;</ExecuteResult></ExecuteResponse></soap:Body></soap:Envelope>
     XML
   end
 
   def successful_refund_response
-    <<-XML
-<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><ExecuteResponse xmlns="http://iveri.com/"><ExecuteResult>&lt;V_XML Version="2.0" Direction="Response"&gt;
-  &lt;Transaction ApplicationID="{D10A603D-4ADE-405B-93F1-826DFC0181E8}" Command="Credit" Mode="Test" RequestID="{097C55B5-D020-40AD-8949-F9F5E4102F1D}"&gt;
-    &lt;Result Status="0" AppServer="105IVERIAPPPR02" DBServer="105iveridbpr01" Gateway="Nedbank" AcquirerCode="00" /&gt;
-    &lt;Amount&gt;100&lt;/Amount&gt;
-    &lt;AuthorisationCode&gt;541996&lt;/AuthorisationCode&gt;
-    &lt;Currency&gt;ZAR&lt;/Currency&gt;
-    &lt;ExpiryDate&gt;092018&lt;/ExpiryDate&gt;
-    &lt;MerchantReference&gt;5be2c040bd46b7eebc70274659779acf&lt;/MerchantReference&gt;
-    &lt;Terminal&gt;Default&lt;/Terminal&gt;
-    &lt;TransactionIndex&gt;{D50DB1B4-B6EC-4AF1-AFF7-71C2AA4A957B}&lt;/TransactionIndex&gt;
-    &lt;MerchantName&gt;iVeri Payment Technology&lt;/MerchantName&gt;
-    &lt;MerchantUSN&gt;7771777&lt;/MerchantUSN&gt;
-    &lt;Acquirer&gt;NBPostilionBICISONBSouthAfrica&lt;/Acquirer&gt;
-    &lt;AcquirerReference&gt;70417:04078059&lt;/AcquirerReference&gt;
-    &lt;AcquirerDate&gt;20170417&lt;/AcquirerDate&gt;
-    &lt;AcquirerTime&gt;201956&lt;/AcquirerTime&gt;
-    &lt;DisplayAmount&gt;R 1.00&lt;/DisplayAmount&gt;
-    &lt;BIN&gt;4&lt;/BIN&gt;
-    &lt;Association&gt;VISA&lt;/Association&gt;
-    &lt;CardType&gt;Unknown CardType&lt;/CardType&gt;
-    &lt;Issuer&gt;Unknown&lt;/Issuer&gt;
-    &lt;Jurisdiction&gt;International&lt;/Jurisdiction&gt;
-    &lt;PANMode /&gt;
-    &lt;ReconReference&gt;04078059&lt;/ReconReference&gt;
-    &lt;CardHolderPresence&gt;CardNotPresent&lt;/CardHolderPresence&gt;
-    &lt;MerchantAddress&gt;MERCHANT ADDRESS&lt;/MerchantAddress&gt;
-    &lt;MerchantCity&gt;Sandton&lt;/MerchantCity&gt;
-    &lt;MerchantCountryCode&gt;ZA&lt;/MerchantCountryCode&gt;
-    &lt;MerchantCountry&gt;South Africa&lt;/MerchantCountry&gt;
-    &lt;DistributorName&gt;Nedbank&lt;/DistributorName&gt;
-    &lt;CCNumber&gt;4242........4242&lt;/CCNumber&gt;
-    &lt;PAN&gt;4242........4242&lt;/PAN&gt;
-  &lt;/Transaction&gt;
-&lt;/V_XML&gt;</ExecuteResult></ExecuteResponse></soap:Body></soap:Envelope>
+    <<~XML
+      <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><ExecuteResponse xmlns="http://iveri.com/"><ExecuteResult>&lt;V_XML Version="2.0" Direction="Response"&gt;
+        &lt;Transaction ApplicationID="{D10A603D-4ADE-405B-93F1-826DFC0181E8}" Command="Credit" Mode="Test" RequestID="{097C55B5-D020-40AD-8949-F9F5E4102F1D}"&gt;
+          &lt;Result Status="0" AppServer="105IVERIAPPPR02" DBServer="105iveridbpr01" Gateway="Nedbank" AcquirerCode="00" /&gt;
+          &lt;Amount&gt;100&lt;/Amount&gt;
+          &lt;AuthorisationCode&gt;541996&lt;/AuthorisationCode&gt;
+          &lt;Currency&gt;ZAR&lt;/Currency&gt;
+          &lt;ExpiryDate&gt;092018&lt;/ExpiryDate&gt;
+          &lt;MerchantReference&gt;5be2c040bd46b7eebc70274659779acf&lt;/MerchantReference&gt;
+          &lt;Terminal&gt;Default&lt;/Terminal&gt;
+          &lt;TransactionIndex&gt;{D50DB1B4-B6EC-4AF1-AFF7-71C2AA4A957B}&lt;/TransactionIndex&gt;
+          &lt;MerchantName&gt;iVeri Payment Technology&lt;/MerchantName&gt;
+          &lt;MerchantUSN&gt;7771777&lt;/MerchantUSN&gt;
+          &lt;Acquirer&gt;NBPostilionBICISONBSouthAfrica&lt;/Acquirer&gt;
+          &lt;AcquirerReference&gt;70417:04078059&lt;/AcquirerReference&gt;
+          &lt;AcquirerDate&gt;20170417&lt;/AcquirerDate&gt;
+          &lt;AcquirerTime&gt;201956&lt;/AcquirerTime&gt;
+          &lt;DisplayAmount&gt;R 1.00&lt;/DisplayAmount&gt;
+          &lt;BIN&gt;4&lt;/BIN&gt;
+          &lt;Association&gt;VISA&lt;/Association&gt;
+          &lt;CardType&gt;Unknown CardType&lt;/CardType&gt;
+          &lt;Issuer&gt;Unknown&lt;/Issuer&gt;
+          &lt;Jurisdiction&gt;International&lt;/Jurisdiction&gt;
+          &lt;PANMode /&gt;
+          &lt;ReconReference&gt;04078059&lt;/ReconReference&gt;
+          &lt;CardHolderPresence&gt;CardNotPresent&lt;/CardHolderPresence&gt;
+          &lt;MerchantAddress&gt;MERCHANT ADDRESS&lt;/MerchantAddress&gt;
+          &lt;MerchantCity&gt;Sandton&lt;/MerchantCity&gt;
+          &lt;MerchantCountryCode&gt;ZA&lt;/MerchantCountryCode&gt;
+          &lt;MerchantCountry&gt;South Africa&lt;/MerchantCountry&gt;
+          &lt;DistributorName&gt;Nedbank&lt;/DistributorName&gt;
+          &lt;CCNumber&gt;4242........4242&lt;/CCNumber&gt;
+          &lt;PAN&gt;4242........4242&lt;/PAN&gt;
+        &lt;/Transaction&gt;
+      &lt;/V_XML&gt;</ExecuteResult></ExecuteResponse></soap:Body></soap:Envelope>
     XML
   end
 
   def failed_refund_response
-    <<-XML
-<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><ExecuteResponse xmlns="http://iveri.com/"><ExecuteResult>&lt;V_XML Version="2.0" Direction="Response"&gt;
-  &lt;Transaction ApplicationID="{D10A603D-4ADE-405B-93F1-826DFC0181E8}" Command="Credit" Mode="Test" RequestID="{5097A60A-A112-42F1-9490-FA17A859E7A3}"&gt;
-    &lt;Result Status="-1" Code="255" Description="Credit is not supported for ApplicationID (D10A603D-4ADE-405B-93F1-826DFC0181E8)" Source="PortalService" AppServer="105IVERIAPPPR02" DBServer="105iveridbpr01" Gateway="Nedbank" AcquirerCode="" AcquirerDescription="" /&gt;
-  &lt;/Transaction&gt;
-&lt;/V_XML&gt;</ExecuteResult></ExecuteResponse></soap:Body></soap:Envelope>
+    <<~XML
+      <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><ExecuteResponse xmlns="http://iveri.com/"><ExecuteResult>&lt;V_XML Version="2.0" Direction="Response"&gt;
+        &lt;Transaction ApplicationID="{D10A603D-4ADE-405B-93F1-826DFC0181E8}" Command="Credit" Mode="Test" RequestID="{5097A60A-A112-42F1-9490-FA17A859E7A3}"&gt;
+          &lt;Result Status="-1" Code="255" Description="Credit is not supported for ApplicationID (D10A603D-4ADE-405B-93F1-826DFC0181E8)" Source="PortalService" AppServer="105IVERIAPPPR02" DBServer="105iveridbpr01" Gateway="Nedbank" AcquirerCode="" AcquirerDescription="" /&gt;
+        &lt;/Transaction&gt;
+      &lt;/V_XML&gt;</ExecuteResult></ExecuteResponse></soap:Body></soap:Envelope>
     XML
   end
 
   def successful_void_response
-    <<-XML
-<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><ExecuteResponse xmlns="http://iveri.com/"><ExecuteResult>&lt;V_XML Version="2.0" Direction="Response"&gt;
-  &lt;Transaction ApplicationID="{D10A603D-4ADE-405B-93F1-826DFC0181E8}" Command="Void" Mode="Test" RequestID="{0A1A3FFF-C2A3-4B91-85FD-10D1C25B765B}"&gt;
-    &lt;Result Status="0" AppServer="105IVERIAPPPR02" DBServer="105iveridbpr01" Gateway="Nedbank" /&gt;
-    &lt;OriginalRequestID&gt;{230390C8-4A9E-4426-BDD3-15D072F135FE}&lt;/OriginalRequestID&gt;
-  &lt;/Transaction&gt;
-&lt;/V_XML&gt;</ExecuteResult></ExecuteResponse></soap:Body></soap:Envelope>
+    <<~XML
+      <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><ExecuteResponse xmlns="http://iveri.com/"><ExecuteResult>&lt;V_XML Version="2.0" Direction="Response"&gt;
+        &lt;Transaction ApplicationID="{D10A603D-4ADE-405B-93F1-826DFC0181E8}" Command="Void" Mode="Test" RequestID="{0A1A3FFF-C2A3-4B91-85FD-10D1C25B765B}"&gt;
+          &lt;Result Status="0" AppServer="105IVERIAPPPR02" DBServer="105iveridbpr01" Gateway="Nedbank" /&gt;
+          &lt;OriginalRequestID&gt;{230390C8-4A9E-4426-BDD3-15D072F135FE}&lt;/OriginalRequestID&gt;
+        &lt;/Transaction&gt;
+      &lt;/V_XML&gt;</ExecuteResult></ExecuteResponse></soap:Body></soap:Envelope>
     XML
   end
 
   def failed_void_response
-    <<-XML
-<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><ExecuteResponse xmlns="http://iveri.com/"><ExecuteResult>&lt;V_XML Version="2.0" Direction="Response"&gt;
-  &lt;Transaction ApplicationID="{D10A603D-4ADE-405B-93F1-826DFC0181E8}" Command="Void" Mode="Test" RequestID="{AE97CCE4-0631-4F08-AB47-9C2698ABEC75}"&gt;
-    &lt;Result Status="-1" Code="255" Description="Missing OriginalMerchantTrace" Source="NBPostilionBICISONBSouthAfricaTestProvider" AppServer="105IVERIAPPPR01" DBServer="105IVERIDBPR01" Gateway="Nedbank" AcquirerCode="" AcquirerDescription="" /&gt;
-  &lt;/Transaction&gt;
-&lt;/V_XML&gt;</ExecuteResult></ExecuteResponse></soap:Body></soap:Envelope>
+    <<~XML
+      <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><ExecuteResponse xmlns="http://iveri.com/"><ExecuteResult>&lt;V_XML Version="2.0" Direction="Response"&gt;
+        &lt;Transaction ApplicationID="{D10A603D-4ADE-405B-93F1-826DFC0181E8}" Command="Void" Mode="Test" RequestID="{AE97CCE4-0631-4F08-AB47-9C2698ABEC75}"&gt;
+          &lt;Result Status="-1" Code="255" Description="Missing OriginalMerchantTrace" Source="NBPostilionBICISONBSouthAfricaTestProvider" AppServer="105IVERIAPPPR01" DBServer="105IVERIDBPR01" Gateway="Nedbank" AcquirerCode="" AcquirerDescription="" /&gt;
+        &lt;/Transaction&gt;
+      &lt;/V_XML&gt;</ExecuteResult></ExecuteResponse></soap:Body></soap:Envelope>
     XML
   end
 
   def successful_verify_response
-    <<-XML
-<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><ExecuteResponse xmlns="http://iveri.com/"><ExecuteResult>&lt;V_XML Version="2.0" Direction="Response"&gt;
-  &lt;Transaction ApplicationID="{D10A603D-4ADE-405B-93F1-826DFC0181E8}" Command="Authorisation" Mode="Test" RequestID="{F4337D04-B526-4A7E-A400-2A6DEADDCF57}"&gt;
-    &lt;Result Status="0" AppServer="105IVERIAPPPR01" DBServer="105IVERIDBPR01" Gateway="Nedbank" AcquirerCode="00" /&gt;
-    &lt;Amount&gt;0&lt;/Amount&gt;
-    &lt;AuthorisationCode&gt;613755&lt;/AuthorisationCode&gt;
-    &lt;Currency&gt;ZAR&lt;/Currency&gt;
-    &lt;ExpiryDate&gt;092018&lt;/ExpiryDate&gt;
-    &lt;MerchantReference&gt;c0006d1d739905afc9e70beaf4194ea3&lt;/MerchantReference&gt;
-    &lt;Terminal&gt;Default&lt;/Terminal&gt;
-    &lt;TransactionIndex&gt;{5D5F8BF7-2D9D-42C3-AF32-08C5E62CD45E}&lt;/TransactionIndex&gt;
-    &lt;MerchantName&gt;iVeri Payment Technology&lt;/MerchantName&gt;
-    &lt;MerchantUSN&gt;7771777&lt;/MerchantUSN&gt;
-    &lt;Acquirer&gt;NBPostilionBICISONBSouthAfrica&lt;/Acquirer&gt;
-    &lt;AcquirerReference&gt;70418:04078335&lt;/AcquirerReference&gt;
-    &lt;AcquirerDate&gt;20170418&lt;/AcquirerDate&gt;
-    &lt;AcquirerTime&gt;161555&lt;/AcquirerTime&gt;
-    &lt;DisplayAmount&gt;R 0.00&lt;/DisplayAmount&gt;
-    &lt;BIN&gt;4&lt;/BIN&gt;
-    &lt;Association&gt;VISA&lt;/Association&gt;
-    &lt;CardType&gt;Unknown CardType&lt;/CardType&gt;
-    &lt;Issuer&gt;Unknown&lt;/Issuer&gt;
-    &lt;Jurisdiction&gt;International&lt;/Jurisdiction&gt;
-    &lt;PANMode&gt;Keyed,CVV&lt;/PANMode&gt;
-    &lt;ReconReference&gt;04078335&lt;/ReconReference&gt;
-    &lt;CardHolderPresence&gt;CardNotPresent&lt;/CardHolderPresence&gt;
-    &lt;MerchantAddress&gt;MERCHANT ADDRESS&lt;/MerchantAddress&gt;
-    &lt;MerchantCity&gt;Sandton&lt;/MerchantCity&gt;
-    &lt;MerchantCountryCode&gt;ZA&lt;/MerchantCountryCode&gt;
-    &lt;MerchantCountry&gt;South Africa&lt;/MerchantCountry&gt;
-    &lt;DistributorName&gt;Nedbank&lt;/DistributorName&gt;
-    &lt;CCNumber&gt;4242........4242&lt;/CCNumber&gt;
-    &lt;PAN&gt;4242........4242&lt;/PAN&gt;
-  &lt;/Transaction&gt;
-&lt;/V_XML&gt;</ExecuteResult></ExecuteResponse></soap:Body></soap:Envelope>
-    XML
-  end
-
-  def failed_verify_response
-    <<-XML
-<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><ExecuteResponse xmlns="http://iveri.com/"><ExecuteResult>&lt;V_XML Version="2.0" Direction="Response"&gt;
-  &lt;Transaction ApplicationID="{D10A603D-4ADE-405B-93F1-826DFC0181E8}" Command="Authorisation" Mode="Test" RequestID="{A700FAE2-2A76-407D-A540-B41668E2B703}"&gt;
-    &lt;Result Status="-1" Code="4" Description="Denied" Source="NBPostilionBICISONBSouthAfrica" AppServer="105IVERIAPPPR02" DBServer="105iveridbpr01" Gateway="Nedbank" AcquirerCode="05" AcquirerDescription="Do not Honour" /&gt;
-    &lt;Amount&gt;0&lt;/Amount&gt;
-    &lt;Currency&gt;ZAR&lt;/Currency&gt;
-    &lt;ExpiryDate&gt;092018&lt;/ExpiryDate&gt;
-    &lt;MerchantReference&gt;e955afb03f224284b09ad6ae7e9b4683&lt;/MerchantReference&gt;
-    &lt;Terminal&gt;Default&lt;/Terminal&gt;
-    &lt;TransactionIndex&gt;{2A378547-AEA4-48E1-8A3E-29F9BBEA954D}&lt;/TransactionIndex&gt;
-    &lt;MerchantName&gt;iVeri Payment Technology&lt;/MerchantName&gt;
-    &lt;MerchantUSN&gt;7771777&lt;/MerchantUSN&gt;
-    &lt;Acquirer&gt;NBPostilionBICISONBSouthAfrica&lt;/Acquirer&gt;
-    &lt;AcquirerReference&gt;70418:04078337&lt;/AcquirerReference&gt;
-    &lt;AcquirerDate&gt;20170418&lt;/AcquirerDate&gt;
-    &lt;AcquirerTime&gt;161716&lt;/AcquirerTime&gt;
-    &lt;DisplayAmount&gt;R 0.00&lt;/DisplayAmount&gt;
-    &lt;BIN&gt;2&lt;/BIN&gt;
-    &lt;Association&gt;Unknown Association&lt;/Association&gt;
-    &lt;CardType&gt;Unknown CardType&lt;/CardType&gt;
-    &lt;Issuer&gt;Unknown&lt;/Issuer&gt;
-    &lt;Jurisdiction&gt;Local&lt;/Jurisdiction&gt;
-    &lt;PANMode&gt;Keyed,CVV&lt;/PANMode&gt;
-    &lt;ReconReference&gt;04078337&lt;/ReconReference&gt;
-    &lt;CardHolderPresence&gt;CardNotPresent&lt;/CardHolderPresence&gt;
-    &lt;MerchantAddress&gt;MERCHANT ADDRESS&lt;/MerchantAddress&gt;
-    &lt;MerchantCity&gt;Sandton&lt;/MerchantCity&gt;
-    &lt;MerchantCountryCode&gt;ZA&lt;/MerchantCountryCode&gt;
-    &lt;MerchantCountry&gt;South Africa&lt;/MerchantCountry&gt;
-    &lt;DistributorName&gt;Nedbank&lt;/DistributorName&gt;
-    &lt;CCNumber&gt;2121........2121&lt;/CCNumber&gt;
-    &lt;PAN&gt;2121........2121&lt;/PAN&gt;
-  &lt;/Transaction&gt;
-&lt;/V_XML&gt;</ExecuteResult></ExecuteResponse></soap:Body></soap:Envelope>
+    <<~XML
+      <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><ExecuteResponse xmlns="http://iveri.com/"><ExecuteResult>&lt;V_XML Version="2.0" Direction="Response"&gt;
+        &lt;Transaction ApplicationID="{D10A603D-4ADE-405B-93F1-826DFC0181E8}" Command="Authorisation" Mode="Test" RequestID="{F4337D04-B526-4A7E-A400-2A6DEADDCF57}"&gt;
+          &lt;Result Status="0" AppServer="105IVERIAPPPR01" DBServer="105IVERIDBPR01" Gateway="Nedbank" AcquirerCode="00" /&gt;
+          &lt;Amount&gt;0&lt;/Amount&gt;
+          &lt;AuthorisationCode&gt;613755&lt;/AuthorisationCode&gt;
+          &lt;Currency&gt;ZAR&lt;/Currency&gt;
+          &lt;ExpiryDate&gt;092018&lt;/ExpiryDate&gt;
+          &lt;MerchantReference&gt;c0006d1d739905afc9e70beaf4194ea3&lt;/MerchantReference&gt;
+          &lt;Terminal&gt;Default&lt;/Terminal&gt;
+          &lt;TransactionIndex&gt;{5D5F8BF7-2D9D-42C3-AF32-08C5E62CD45E}&lt;/TransactionIndex&gt;
+          &lt;MerchantName&gt;iVeri Payment Technology&lt;/MerchantName&gt;
+          &lt;MerchantUSN&gt;7771777&lt;/MerchantUSN&gt;
+          &lt;Acquirer&gt;NBPostilionBICISONBSouthAfrica&lt;/Acquirer&gt;
+          &lt;AcquirerReference&gt;70418:04078335&lt;/AcquirerReference&gt;
+          &lt;AcquirerDate&gt;20170418&lt;/AcquirerDate&gt;
+          &lt;AcquirerTime&gt;161555&lt;/AcquirerTime&gt;
+          &lt;DisplayAmount&gt;R 0.00&lt;/DisplayAmount&gt;
+          &lt;BIN&gt;4&lt;/BIN&gt;
+          &lt;Association&gt;VISA&lt;/Association&gt;
+          &lt;CardType&gt;Unknown CardType&lt;/CardType&gt;
+          &lt;Issuer&gt;Unknown&lt;/Issuer&gt;
+          &lt;Jurisdiction&gt;International&lt;/Jurisdiction&gt;
+          &lt;PANMode&gt;Keyed,CVV&lt;/PANMode&gt;
+          &lt;ReconReference&gt;04078335&lt;/ReconReference&gt;
+          &lt;CardHolderPresence&gt;CardNotPresent&lt;/CardHolderPresence&gt;
+          &lt;MerchantAddress&gt;MERCHANT ADDRESS&lt;/MerchantAddress&gt;
+          &lt;MerchantCity&gt;Sandton&lt;/MerchantCity&gt;
+          &lt;MerchantCountryCode&gt;ZA&lt;/MerchantCountryCode&gt;
+          &lt;MerchantCountry&gt;South Africa&lt;/MerchantCountry&gt;
+          &lt;DistributorName&gt;Nedbank&lt;/DistributorName&gt;
+          &lt;CCNumber&gt;4242........4242&lt;/CCNumber&gt;
+          &lt;PAN&gt;4242........4242&lt;/PAN&gt;
+        &lt;/Transaction&gt;
+      &lt;/V_XML&gt;</ExecuteResult></ExecuteResponse></soap:Body></soap:Envelope>
     XML
   end
 
   def successful_verify_credentials_response
-    <<-XML
-<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><ExecuteResponse xmlns="http://iveri.com/"><ExecuteResult>&lt;V_XML Version="2.0" Direction="Response"&gt;
-  &lt;Transaction ApplicationID="{D10A603D-4ADE-405B-93F1-826DFC0181E8}" Command="Void" Mode="Test" RequestID="{5ED922D0-92AD-40DF-9019-320591A4BA59}"&gt;
-    &lt;Result Status="-1" Code="255" Description="Missing OriginalMerchantTrace" Source="NBPostilionBICISONBSouthAfricaTestProvider" AppServer="105IVERIAPPPR01" DBServer="105IVERIDBPR01" Gateway="Nedbank" AcquirerCode="" AcquirerDescription="" /&gt;
-  &lt;/Transaction&gt;
-&lt;/V_XML&gt;</ExecuteResult></ExecuteResponse></soap:Body></soap:Envelope>
+    <<~XML
+      <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><ExecuteResponse xmlns="http://iveri.com/"><ExecuteResult>&lt;V_XML Version="2.0" Direction="Response"&gt;
+        &lt;Transaction ApplicationID="{D10A603D-4ADE-405B-93F1-826DFC0181E8}" Command="Void" Mode="Test" RequestID="{5ED922D0-92AD-40DF-9019-320591A4BA59}"&gt;
+          &lt;Result Status="-1" Code="255" Description="Missing OriginalMerchantTrace" Source="NBPostilionBICISONBSouthAfricaTestProvider" AppServer="105IVERIAPPPR01" DBServer="105IVERIDBPR01" Gateway="Nedbank" AcquirerCode="" AcquirerDescription="" /&gt;
+        &lt;/Transaction&gt;
+      &lt;/V_XML&gt;</ExecuteResult></ExecuteResponse></soap:Body></soap:Envelope>
     XML
   end
 
   def failed_verify_credentials_response
-    <<-XML
-<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><ExecuteResponse xmlns="http://iveri.com/"><ExecuteResult>&lt;V_XML Version="2.0" Direction="Response"&gt;
-  &lt;Result Status="-1" Code="255" Description="The ApplicationID {11111111-1111-1111-1111-111111111111} is not valid for the current CertificateID {11111111-1111-1111-1111-111111111111}" Source="RequestHandler" RequestID="{EE6E5B39-63AD-402C-8331-F25082AD8564}" AppServer="105IVERIAPPPR01" DBServer="105IVERIDBPR01" Gateway="Nedbank" AcquirerCode="" AcquirerDescription="" /&gt;
-&lt;/V_XML&gt;</ExecuteResult></ExecuteResponse></soap:Body></soap:Envelope>
+    <<~XML
+      <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><ExecuteResponse xmlns="http://iveri.com/"><ExecuteResult>&lt;V_XML Version="2.0" Direction="Response"&gt;
+        &lt;Result Status="-1" Code="255" Description="The ApplicationID {11111111-1111-1111-1111-111111111111} is not valid for the current CertificateID {11111111-1111-1111-1111-111111111111}" Source="RequestHandler" RequestID="{EE6E5B39-63AD-402C-8331-F25082AD8564}" AppServer="105IVERIAPPPR01" DBServer="105IVERIDBPR01" Gateway="Nedbank" AcquirerCode="" AcquirerDescription="" /&gt;
+      &lt;/V_XML&gt;</ExecuteResult></ExecuteResponse></soap:Body></soap:Envelope>
     XML
   end
 end

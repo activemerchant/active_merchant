@@ -9,12 +9,12 @@ class RemoteIppTest < Test::Unit::TestCase
     @options = {
       order_id: '1',
       billing_address: address,
-      description: 'Store Purchase',
+      description: 'Store Purchase'
     }
   end
 
   def test_dump_transcript
-    skip("Transcript scrubbing for this gateway has been tested.")
+    skip('Transcript scrubbing for this gateway has been tested.')
     dump_transcript_and_fail(@gateway, @amount, @credit_card, @options)
   end
 
@@ -76,7 +76,7 @@ class RemoteIppTest < Test::Unit::TestCase
   def test_invalid_login
     gateway = IppGateway.new(
       username: '',
-      password: '',
+      password: ''
     )
     response = gateway.purchase(200, @credit_card, @options)
     assert_failure response

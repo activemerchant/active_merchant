@@ -22,31 +22,27 @@ class VancoTest < Test::Unit::TestCase
 
     assert_success response
     assert_equal '14949117|15756594|16136938', response.authorization
-    assert_equal "Success", response.message
+    assert_equal 'Success', response.message
     assert response.test?
   end
 
   def test_successful_purchase_with_fund_id
     response = stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(fund_id: "MyEggcellentFund"))
-    end.check_request do |endpoint, data, headers|
-      if data =~ /<RequestType>EFTAdd/
-        assert_match(%r(<FundID>MyEggcellentFund<\/FundID>), data)
-      end
+      @gateway.purchase(@amount, @credit_card, @options.merge(fund_id: 'MyEggcellentFund'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r(<FundID>MyEggcellentFund<\/FundID>), data) if data =~ /<RequestType>EFTAdd/
     end.respond_with(successful_login_response, successful_purchase_with_fund_id_response)
 
     assert_success response
     assert_equal '14949117|15756594|16137331', response.authorization
-    assert_equal "Success", response.message
+    assert_equal 'Success', response.message
   end
 
   def test_successful_purchase_with_ip_address
     response = stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(ip: "192.168.0.1"))
-    end.check_request do |endpoint, data, headers|
-      if data =~ /<RequestType>EFTAdd/
-        assert_match(%r(<CustomerIPAddress>192), data)
-      end
+      @gateway.purchase(@amount, @credit_card, @options.merge(ip: '192.168.0.1'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(%r(<CustomerIPAddress>192), data) if data =~ /<RequestType>EFTAdd/
     end.respond_with(successful_login_response, successful_purchase_response)
     assert_success response
   end
@@ -57,7 +53,7 @@ class VancoTest < Test::Unit::TestCase
     end.respond_with(successful_login_response, failed_purchase_response)
 
     assert_failure response
-    assert_equal "286", response.params["error_codes"]
+    assert_equal '286', response.params['error_codes']
   end
 
   def test_failed_purchase_multiple_errors
@@ -66,8 +62,8 @@ class VancoTest < Test::Unit::TestCase
     end.respond_with(successful_login_response, failed_purchase_multiple_errors_response)
 
     assert_failure response
-    assert_equal "Client not set up for International Credit Card Processing. Another Error.", response.message
-    assert_equal "286, 331", response.params["error_codes"]
+    assert_equal 'Client not set up for International Credit Card Processing. Another Error.', response.message
+    assert_equal '286, 331', response.params['error_codes']
   end
 
   def test_successful_purchase_echeck
@@ -77,7 +73,7 @@ class VancoTest < Test::Unit::TestCase
 
     assert_success response
     assert_equal '14949514|15757035|16138421', response.authorization
-    assert_equal "Success", response.message
+    assert_equal 'Success', response.message
     assert response.test?
   end
 
@@ -87,25 +83,25 @@ class VancoTest < Test::Unit::TestCase
     end.respond_with(successful_login_response, failed_purchase_echeck_response)
 
     assert_failure response
-    assert_equal "178", response.params["error_codes"]
+    assert_equal '178', response.params['error_codes']
   end
 
   def test_successful_refund
     response = stub_comms do
-      @gateway.refund(@amount, "authoriziation")
+      @gateway.refund(@amount, 'authoriziation')
     end.respond_with(successful_login_response, successful_refund_response)
 
     assert_success response
-    assert_equal "Success", response.message
+    assert_equal 'Success', response.message
   end
 
   def test_failed_refund
     response = stub_comms do
-      @gateway.refund(@amount, "authorization")
+      @gateway.refund(@amount, 'authorization')
     end.respond_with(successful_login_response, failed_refund_response)
 
     assert_failure response
-    assert_equal "575", response.params["error_codes"]
+    assert_equal '575', response.params['error_codes']
   end
 
   def test_scrub
@@ -184,5 +180,4 @@ class VancoTest < Test::Unit::TestCase
       <?xml version="1.0" encoding="UTF-8"  ?><VancoWS><Auth><RequestID>dc9a5e2b620eee5d248e1b33cc1f33</RequestID><RequestTime>2015-05-01 16:19:33 -0400</RequestTime><RequestType>EFTAddCredit</RequestType><Signature></Signature><SessionID>67a731057f821413155033bc23551aef3ba0b204</SessionID><Version>2</Version></Auth><Response><Errors><Error><ErrorCode>575</ErrorCode><ErrorDescription>Amount Cannot Be Greater Than $100.05</ErrorDescription></Error></Errors></Response></VancoWS>
      )
   end
-
 end

@@ -6,17 +6,17 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['MX']
       self.default_currency = 'MXN'
-      self.supported_cardtypes = [:visa, :master, :american_express, :jcb]
+      self.supported_cardtypes = %i[visa master american_express jcb]
 
       self.homepage_url = 'http://www.pagofacil.net/'
       self.display_name = 'PagoFacil'
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :branch_id, :merchant_id, :service_id)
         super
       end
 
-      def purchase(money, credit_card, options={})
+      def purchase(money, credit_card, options = {})
         post = {}
         add_invoice(post, money, options)
         add_payment(post, credit_card)
@@ -53,9 +53,7 @@ module ActiveMerchant #:nodoc:
 
       def add_currency(post, money, options)
         currency = options.fetch(:currency, currency(money))
-        unless currency == self.class.default_currency
-          post[:divisa] = currency
-        end
+        post[:divisa] = currency unless currency == self.class.default_currency
       end
 
       def add_payment(post, credit_card)
@@ -63,7 +61,7 @@ module ActiveMerchant #:nodoc:
         post[:apellidos] = credit_card.last_name
         post[:numeroTarjeta] = credit_card.number
         post[:cvt] = credit_card.verification_value
-        post[:mesExpiracion] = sprintf("%02d", credit_card.month)
+        post[:mesExpiracion] = sprintf('%02d', credit_card.month)
         post[:anyoExpiracion] = credit_card.year.to_s.slice(-2, 2)
       end
 
@@ -74,7 +72,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        JSON.parse(body)["WebServices_Transacciones"]["transaccion"]
+        JSON.parse(body)['WebServices_Transacciones']['transaccion']
       rescue JSON::ParserError
         json_error(body)
       end
@@ -92,16 +90,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response["autorizado"] == "1" ||
-          response["autorizado"] == true
+        response['autorizado'] == '1' ||
+          response['autorizado'] == true
       end
 
       def message_from(response)
-        response["texto"]
+        response['texto']
       end
 
       def authorization_from(response)
-        response["autorizacion"]
+        response['autorizacion']
       end
 
       def post_data(parameters = {})
@@ -113,8 +111,8 @@ module ActiveMerchant #:nodoc:
 
       def json_error(response)
         {
-          "texto" => 'Invalid response received from the PagoFacil API.',
-          "raw_response" => response
+          'texto' => 'Invalid response received from the PagoFacil API.',
+          'raw_response' => response
         }
       end
     end

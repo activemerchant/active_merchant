@@ -19,15 +19,15 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'THB'
       self.money_format     = :cents
 
-      #Country supported by Omise
+      # Country supported by Omise
       # * Thailand
-      self.supported_countries = %w( TH JP )
+      self.supported_countries = %w(TH JP)
 
       # Credit cards supported by Omise
       # * VISA
       # * MasterCard
       # * JCB
-      self.supported_cardtypes = [:visa, :master, :jcb]
+      self.supported_cardtypes = %i[visa master jcb]
 
       # Omise main page
       self.homepage_url = 'https://www.omise.co/'
@@ -46,7 +46,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>:api_version</tt> -- Omise's API Version (OPTIONAL), default version is '2014-07-27'
       #                            See version at page https://dashboard.omise.co/api-version/edit
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :public_key, :secret_key)
         @public_key  = options[:public_key]
         @secret_key  = options[:secret_key]
@@ -79,7 +79,7 @@ module ActiveMerchant #:nodoc:
       #
       #   purchase(money, nil, { :customer_id => customer_id })
 
-      def purchase(money, payment_method, options={})
+      def purchase(money, payment_method, options = {})
         create_charge(money, payment_method, options)
       end
 
@@ -91,7 +91,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>payment_method</tt> -- The CreditCard object
       # * <tt>options</tt>        -- An optional parameters, such as token or capture
 
-      def authorize(money, payment_method, options={})
+      def authorize(money, payment_method, options = {})
         options[:capture] = 'false'
         create_charge(money, payment_method, options)
       end
@@ -104,7 +104,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>charge_id</tt> -- The CreditCard object
       # * <tt>options</tt>   -- An optional parameters, such as token or capture
 
-      def capture(money, charge_id, options={})
+      def capture(money, charge_id, options = {})
         post = {}
         add_amount(post, money, options)
         commit(:post, "charges/#{CGI.escape(charge_id)}/capture", post, options)
@@ -118,7 +118,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>charge_id</tt> -- The CreditCard object
       # * <tt>options</tt>   -- An optional parameters, such as token or capture
 
-      def refund(money, charge_id, options={})
+      def refund(money, charge_id, options = {})
         options[:amount] = money if money
         commit(:post, "charges/#{CGI.escape(charge_id)}/refunds", options)
       end
@@ -132,7 +132,7 @@ module ActiveMerchant #:nodoc:
       #     'email'       (A customer email)
       #     'description' (A customer description)
 
-      def store(payment_method, options={})
+      def store(payment_method, options = {})
         post, card_params = {}, {}
         add_customer_data(post, options)
         add_token(card_params, payment_method, options)
@@ -145,7 +145,7 @@ module ActiveMerchant #:nodoc:
       #
       # * <tt>customer_id</tt> -- The Customer identifier (REQUIRED).
 
-      def unstore(customer_id, options={})
+      def unstore(customer_id, options = {})
         commit(:delete, "customers/#{CGI.escape(customer_id)}")
       end
 
@@ -164,7 +164,7 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(/(Authorization: Basic )\w+/i, '\1[FILTERED]').
           gsub(/(\\"number\\":)\\"\d+\\"/, '\1[FILTERED]').
-          gsub(/(\\"security_code\\":)\\"\d+\\"/,'\1[FILTERED]')
+          gsub(/(\\"security_code\\":)\\"\d+\\"/, '\1[FILTERED]')
       end
 
       private
@@ -178,11 +178,11 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'charges', post, options)
       end
 
-      def headers(options={})
+      def headers(options = {})
         key = options[:key] || @secret_key
         {
           'Content-Type'    => 'application/json;utf-8',
-          'Omise-Version'   => @api_version || "2014-07-27",
+          'Omise-Version'   => @api_version || '2014-07-27',
           'User-Agent'      => "ActiveMerchantBindings/#{ActiveMerchant::VERSION} Ruby/#{RUBY_VERSION}",
           'Authorization'   => 'Basic ' + Base64.encode64(key.to_s + ':').strip,
           'Accept-Encoding' => 'utf-8'
@@ -197,7 +197,7 @@ module ActiveMerchant #:nodoc:
         parameters.present? ? parameters.to_json : nil
       end
 
-      def https_request(method, endpoint, parameters=nil, options={})
+      def https_request(method, endpoint, parameters = nil, options = {})
         raw_response = response = nil
         begin
           raw_response = ssl_request(method, url_for(endpoint), post_data(parameters), headers(options))
@@ -216,12 +216,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def json_error(raw_response)
-        msg  = "Invalid response received from Omise API. Please contact support@omise.co if you continue to receive this message."
+        msg  = 'Invalid response received from Omise API. Please contact support@omise.co if you continue to receive this message.'
         msg += "The raw response returned by the API was #{raw_response.inspect})"
         { message: msg }
       end
 
-      def commit(method, endpoint, params=nil, options={})
+      def commit(method, endpoint, params = nil, options = {})
         response = https_request(method, endpoint, params, options)
         Response.new(
           successful?(response),
@@ -246,16 +246,16 @@ module ActiveMerchant #:nodoc:
       def message_to_standard_error_code_from(response)
         message = response['message'] if response['code'] == 'invalid_card'
         case message
-          when /brand not supported/
-            STANDARD_ERROR_CODE[:invalid_number]
-          when /number is invalid/
-            STANDARD_ERROR_CODE[:incorrect_number]
-          when /expiration date cannot be in the past/
-            STANDARD_ERROR_CODE[:expired_card]
-          when /expiration \w+ is invalid/
-            STANDARD_ERROR_CODE[:invalid_expiry_date]
-          else
-            STANDARD_ERROR_CODE[:processing_error]
+        when /brand not supported/
+          STANDARD_ERROR_CODE[:invalid_number]
+        when /number is invalid/
+          STANDARD_ERROR_CODE[:incorrect_number]
+        when /expiration date cannot be in the past/
+          STANDARD_ERROR_CODE[:expired_card]
+        when /expiration \w+ is invalid/
+          STANDARD_ERROR_CODE[:invalid_expiry_date]
+        else
+          STANDARD_ERROR_CODE[:processing_error]
         end
       end
 
@@ -263,7 +263,7 @@ module ActiveMerchant #:nodoc:
         if successful?(response)
           'Success'
         else
-          (response['message'] ? response['message'] : response['failure_message'])
+          response['message'] || response['failure_message']
         end
       end
 
@@ -284,7 +284,7 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'tokens', post, { key: @public_key })
       end
 
-      def add_token(post, credit_card, options={})
+      def add_token(post, credit_card, options = {})
         if options[:token_id].present?
           post[:card] = options[:token_id]
         else
@@ -304,11 +304,11 @@ module ActiveMerchant #:nodoc:
         post[:card] = card
       end
 
-      def add_customer(post, options={})
+      def add_customer(post, options = {})
         post[:customer] = options[:customer_id] if options[:customer_id]
       end
 
-      def add_customer_data(post, options={})
+      def add_customer_data(post, options = {})
         post[:description] = options[:description] if options[:description]
         post[:email]       = options[:email] if options[:email]
       end
@@ -318,7 +318,6 @@ module ActiveMerchant #:nodoc:
         post[:currency]    = (options[:currency] || currency(money))
         post[:description] = options[:description] if options.key?(:description)
       end
-
     end
   end
 end

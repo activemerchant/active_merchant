@@ -6,7 +6,7 @@ class RemoteOmiseTest < Test::Unit::TestCase
     @amount  = 8888
     @credit_card   = credit_card('4242424242424242')
     @declined_card = credit_card('4255555555555555')
-    @invalid_cvc   = credit_card('4111111111160001', {verification_value: ''})
+    @invalid_cvc   = credit_card('4111111111160001', { verification_value: '' })
     @options = {
       description: 'Active Merchant',
       email: 'active.merchant@testing.test',
@@ -54,7 +54,7 @@ class RemoteOmiseTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase_with_token
-    response = @gateway.purchase(@amount, nil, {token_id: 'tokn_invalid_12345'})
+    response = @gateway.purchase(@amount, nil, { token_id: 'tokn_invalid_12345' })
     assert_failure response
   end
 
@@ -95,9 +95,8 @@ class RemoteOmiseTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
     assert_equal purchase.params['amount'], @amount
-    response = @gateway.refund(@amount-1000, purchase.authorization)
+    response = @gateway.refund(@amount - 1000, purchase.authorization)
     assert_success response
-    assert_equal @amount-1000, response.params['amount']
+    assert_equal @amount - 1000, response.params['amount']
   end
-
 end

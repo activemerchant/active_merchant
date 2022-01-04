@@ -1,28 +1,27 @@
 require 'test_helper'
 
 class PaywayTest < Test::Unit::TestCase
-
   def setup
     @gateway = PaywayGateway.new(
-      :username => '12341234',
-      :password => 'abcdabcd',
-      :pem      => certificate
+      username: '12341234',
+      password: 'abcdabcd',
+      pem: certificate
     )
 
     @amount = 1000
 
     @credit_card = ActiveMerchant::Billing::CreditCard.new(
-      :number             => 4564710000000004,
-      :month              => 2,
-      :year               => 2019,
-      :first_name         => 'Bob',
-      :last_name          => 'Smith',
-      :verification_value => '847',
-      :brand              => 'visa'
+      number: 4564710000000004,
+      month: 2,
+      year: 2019,
+      first_name: 'Bob',
+      last_name: 'Smith',
+      verification_value: '847',
+      brand: 'visa'
     )
 
     @options = {
-      :order_id => 'abc'
+      order_id: 'abc'
     }
   end
 
@@ -50,7 +49,6 @@ class PaywayTest < Test::Unit::TestCase
     assert_match '0', response.params['summary_code']
     assert_match '08', response.params['response_code']
     assert_match 'VISA', response.params['card_scheme_name']
-
   end
 
   def test_successful_purchase_master_card
@@ -210,7 +208,7 @@ class PaywayTest < Test::Unit::TestCase
   def test_store
     @gateway.stubs(:ssl_post).returns(successful_response_store)
 
-    response = @gateway.store(@credit_card, :billing_id => 84517)
+    response = @gateway.store(@credit_card, billing_id: 84517)
 
     assert_instance_of Response, response
     assert_success response
@@ -220,40 +218,40 @@ class PaywayTest < Test::Unit::TestCase
 
   private
 
-    def successful_response_store
-      "response.responseCode=00"
-    end
+  def successful_response_store
+    'response.responseCode=00'
+  end
 
-    def successful_response_visa
-      "response.summaryCode=0&response.responseCode=08&response.cardSchemeName=VISA"
-    end
+  def successful_response_visa
+    'response.summaryCode=0&response.responseCode=08&response.cardSchemeName=VISA'
+  end
 
-    def successful_response_master_card
-      "response.summaryCode=0&response.responseCode=08&response.cardSchemeName=MASTERCARD"
-    end
+  def successful_response_master_card
+    'response.summaryCode=0&response.responseCode=08&response.cardSchemeName=MASTERCARD'
+  end
 
-    def purchase_with_invalid_credit_card_response
-      "response.summaryCode=1&response.responseCode=14"
-    end
+  def purchase_with_invalid_credit_card_response
+    'response.summaryCode=1&response.responseCode=14'
+  end
 
-    def purchase_with_expired_credit_card_response
-      "response.summaryCode=1&response.responseCode=54"
-    end
+  def purchase_with_expired_credit_card_response
+    'response.summaryCode=1&response.responseCode=54'
+  end
 
-    def purchase_with_invalid_month_response
-      "response.summaryCode=3&response.responseCode=QA"
-    end
+  def purchase_with_invalid_month_response
+    'response.summaryCode=3&response.responseCode=QA'
+  end
 
-    def bad_login_response
-      "response.summaryCode=3&response.responseCode=QH"
-    end
+  def bad_login_response
+    'response.summaryCode=3&response.responseCode=QH'
+  end
 
-    def bad_merchant_response
-      "response.summaryCode=3&response.responseCode=QK"
-    end
+  def bad_merchant_response
+    'response.summaryCode=3&response.responseCode=QK'
+  end
 
-    def certificate
-      '------BEGIN CERTIFICATE-----
+  def certificate
+    '------BEGIN CERTIFICATE-----
  -MIIDeDCCAmCgAwIBAgIBATANBgkqhkiG9w0BAQUFADBBMRMwEQYDVQQDDApjb2R5
  -ZmF1c2VyMRUwEwYKCZImiZPyLGQBGRYFZ21haWwxEzARBgoJkiaJk/IsZAEZFgNj
  -b20wHhcNMTMxMTEzMTk1NjE2WhcNMTQxMTEzMTk1NjE2WjBBMRMwEQYDVQQDDApj
@@ -274,5 +272,5 @@ class PaywayTest < Test::Unit::TestCase
  -ZJB9YPQZG+vWBdDSca3sUMtvFxpLUFwdKF5APSPOVnhbFJ3vSXY1ulP/R6XW9vnw
  -6kkQi2fHhU20ugMzp881Eixr+TjC0RvUerLG7g==
  ------END CERTIFICATE-----'
-    end
+  end
 end
