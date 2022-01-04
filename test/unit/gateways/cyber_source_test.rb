@@ -29,13 +29,17 @@ class CyberSourceTest < Test::Unit::TestCase
           quantity: 2,
           code: 'default',
           description: 'Giant Walrus',
-          sku: 'WA323232323232323'
+          sku: 'WA323232323232323',
+          tax_amount: '5',
+          national_tax: '10'
         },
         {
           declared_value: @amount,
           quantity: 2,
           description: 'Marble Snowcone',
-          sku: 'FAKE1232132113123'
+          sku: 'FAKE1232132113123',
+          tax_amount: '4',
+          national_tax: '8'
         }
       ],
       currency: 'USD'
@@ -401,6 +405,19 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_credit_card_tax_request_with_amounts
+    stub_comms do
+      @gateway.calculate_tax(@credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      doc = REXML::Document.new(data)
+      REXML::XPath.each(doc, '//item') do |item|
+        request_item = @options[:line_items][item.attributes['id'].to_i]
+        assert_match(request_item[:tax_amount], item.get_elements('taxAmount')[0].text)
+        assert_match(request_item[:national_tax], item.get_elements('nationalTax')[0].text)
+      end
+    end.respond_with(successful_tax_response)
+  end
+
   def test_successful_credit_card_capture_request
     @gateway.stubs(:ssl_post).returns(successful_authorization_response, successful_capture_response)
     assert response = @gateway.authorize(@amount, @credit_card, @options)
@@ -424,6 +441,16 @@ class CyberSourceTest < Test::Unit::TestCase
       @gateway.capture(100, '1842651133440156177166', national_tax_amount: '0.05')
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<otherTax>\s+<nationalTaxAmount>0.05<\/nationalTaxAmount>\s+<\/otherTax>/, data)
+    end.respond_with(successful_capture_response)
+  end
+
+  def test_capture_with_additional_tax_fields
+    stub_comms do
+      @gateway.capture(100, '1842651133440156177166', user_po: 'ABC123', taxable: true, national_tax_indicator: 1)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<userPO>ABC123<\/userPO>/, data)
+      assert_match(/<taxable>true<\/taxable>/, data)
+      assert_match(/<nationalTaxIndicator>1<\/nationalTaxIndicator>/, data)
     end.respond_with(successful_capture_response)
   end
 
