@@ -295,6 +295,18 @@ class IpgTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_unstore
+    payment_token = generate_unique_id
+    response = stub_comms do
+      @gateway.unstore(payment_token)
+    end.check_request do |_endpoint, data, _headers|
+      doc = REXML::Document.new(data)
+      assert_match(payment_token, REXML::XPath.first(doc, '//ns2:HostedDataID').text)
+    end.respond_with(successful_store_response)
+
+    assert_success response
+  end
+
   def test_failed_store
     @gateway.expects(:ssl_post).returns(failed_store_response)
 

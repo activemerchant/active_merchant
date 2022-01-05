@@ -42,6 +42,18 @@ class RemoteIpgTest < Test::Unit::TestCase
     assert_equal 'APPROVED', response.message
   end
 
+  def test_successful_unstore
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+    assert_equal 'true', response.params['successfully']
+    payment_token = response.authorization
+    assert payment_token
+
+    response = @gateway.unstore(payment_token)
+    assert_success response
+    assert_equal 'true', response.params['successfully']
+  end
+
   def test_successful_purchase_with_stored_credential
     @options[:stored_credential] = {
       initial_transaction: true,
