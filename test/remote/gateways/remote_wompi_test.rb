@@ -54,7 +54,6 @@ class RemoteWompiTest < Test::Unit::TestCase
 
     assert capture = @gateway.capture(@amount, response.authorization)
     assert_success capture
-
     assert void = @gateway.void(capture.authorization)
     assert_success void
   end

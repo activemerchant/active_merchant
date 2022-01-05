@@ -1,8 +1,8 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class WompiGateway < Gateway
-      self.test_url = 'https://sandbox.wompi.co/v1'
-      self.live_url = 'https://production.wompi.co/v1'
+      self.test_url = 'https://sync.sandbox.wompi.co/v1'
+      self.live_url = 'https://sync.production.wompi.co/v1'
 
       self.supported_countries = ['CO']
       self.default_currency = 'COP'
@@ -66,7 +66,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def void(authorization, options = {})
-        commit('void', {}, "/transactions/#{authorization}/void")
+        commit('void', {}, "/transactions/#{authorization}/void_sync")
       end
 
       def supports_scrubbing?
@@ -85,7 +85,10 @@ module ActiveMerchant #:nodoc:
       private
 
       def headers
-        { 'Authorization': "Bearer #{private_key}" }
+        {
+          'Authorization' => "Bearer #{private_key}",
+          'Content-Type' => 'application/json'
+        }
       end
 
       def generate_reference
