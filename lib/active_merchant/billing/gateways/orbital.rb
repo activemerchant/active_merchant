@@ -632,6 +632,14 @@ module ActiveMerchant #:nodoc:
         xml.tag!(:SCARecurringPayment, parameters[:sca_recurring]) if valid_eci
       end
 
+      def add_mc_sca_merchant_initiated(xml, creditcard, parameters, three_d_secure)
+        return unless parameters && parameters[:sca_merchant_initiated] && creditcard.brand == 'master'
+
+        valid_eci = three_d_secure && three_d_secure[:eci] && three_d_secure[:eci] == '7'
+
+        xml.tag!(:SCAMerchantInitiatedTransaction, parameters[:sca_merchant_initiated]) if valid_eci
+      end
+
       def add_dpanind(xml, creditcard)
         return unless creditcard.is_a?(NetworkTokenizationCreditCard)
 
@@ -900,6 +908,7 @@ module ActiveMerchant #:nodoc:
             add_card_indicators(xml, parameters)
             add_stored_credentials(xml, parameters)
             add_pymt_brand_program_code(xml, payment_source, three_d_secure)
+            add_mc_sca_merchant_initiated(xml, payment_source, parameters, three_d_secure)
             add_mc_scarecurring(xml, payment_source, parameters, three_d_secure)
             add_mc_program_protocol(xml, payment_source, three_d_secure)
             add_mc_directory_trans_id(xml, payment_source, three_d_secure)

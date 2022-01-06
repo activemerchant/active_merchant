@@ -227,6 +227,27 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_false response.authorization.blank?
   end
 
+  def test_successful_purchase_with_sca_merchant_initiated_master_card
+    cc = credit_card('5555555555554444', first_name: 'Joe', last_name: 'Smith',
+                     month: '12', year: '2022', brand: 'master', verification_value: '999')
+    options_local = {
+      three_d_secure: {
+        eci: '7',
+        xid: 'TESTXID',
+        cavv: 'AAAEEEDDDSSSAAA2243234',
+        ds_transaction_id: '97267598FAE648F28083C23433990FBC',
+        version: '2.2.0'
+      },
+      sca_merchant_initiated: 'Y'
+    }
+
+    assert response = @three_ds_gateway.purchase(100, cc, @options.merge(options_local))
+
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+  end
+
   def test_successful_purchase_with_american_express_network_tokenization_credit_card
     network_card = network_tokenization_credit_card('4788250000028291',
       payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
