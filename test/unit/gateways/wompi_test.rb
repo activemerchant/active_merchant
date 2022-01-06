@@ -21,7 +21,7 @@ class WompiTest < Test::Unit::TestCase
     response = stub_comms(@ambidextrous_gateway) do
       @ambidextrous_gateway.purchase(@amount, @credit_card)
     end.check_request do |_endpoint, _data, headers|
-      assert_match(/priv_test_5678/, headers[:Authorization])
+      assert_match(/Bearer priv_test_5678/, headers['Authorization'])
     end.respond_with(successful_purchase_response)
 
     assert_success response
