@@ -67,6 +67,7 @@
 * CyberSource: Add `user_po`, `taxable`, `national_tax_indicator`, `tax_amount`, and `national_tax` fields [ajawadmirza] #4251
 * Kushki: Add support for `metadata` [rachelkirk] #4253
 * IPG: Add `redact` operation [ajawadmirza] #4254
+* Orbital: Add `sca_merchant_initiated` operation [ajawadmirza] #4256
 
 == Version 1.124.0 (October 28th, 2021)
 * Worldpay: Add Support for Submerchant Data on Worldpay [almalee24] #4147
