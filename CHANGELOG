@@ -70,6 +70,7 @@
 * Wompi: Update sandbox and production endpoints [rachelkirk] #4255
 * Orbital: Add `sca_merchant_initiated` operation [ajawadmirza] #4256
 * Cashnet: convert amounts to integers for proper gateway handling [peteroas] #2207
+* PayTrace: Add `unstore` operation [ajawadmirza] #4262
 
 == Version 1.124.0 (October 28th, 2021)
 * Worldpay: Add Support for Submerchant Data on Worldpay [almalee24] #4147

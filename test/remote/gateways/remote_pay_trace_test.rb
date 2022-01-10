@@ -322,7 +322,7 @@ class RemotePayTraceTest < Test::Unit::TestCase
     response = @gateway.store(@mastercard, @options)
     assert_success response
     customer_id = response.params['customer_id']
-    redact = @gateway.redact(customer_id)
+    redact = @gateway.unstore(customer_id)
     assert_success redact
     assert_equal true, redact.success?
   end
