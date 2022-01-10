@@ -371,16 +371,16 @@ class MundipaggTest < Test::Unit::TestCase
   end
 
   def test_gateway_id_fallback
-    gateway = MundipaggGateway.new(api_key: 'my_api_key', gateway_id: 'abc123')
+    @gateway = MundipaggGateway.new(api_key: 'my_api_key', gateway_id: 'abcd123')
     options = {
       order_id: '1',
       billing_address: address,
       description: 'Store Purchase'
     }
     stub_comms do
-      gateway.purchase(@amount, @credit_card, options)
+      @gateway.purchase(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match(/"gateway_affiliation_id":"abc123"/, data)
+      assert_match(/"gateway_affiliation_id":"abcd123"/, data)
     end.respond_with(successful_purchase_response)
   end
 
