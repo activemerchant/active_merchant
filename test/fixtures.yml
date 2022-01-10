@@ -16,6 +16,10 @@ adyen:
   password: ''
   merchant_account: ''
 
+airwallex:
+  client_id: SOMECREDENTIAL
+  client_api_key: ANOTHERCREDENTIAL
+
 allied_wallet:
   site_id: site_id
   merchant_id: merchant_id

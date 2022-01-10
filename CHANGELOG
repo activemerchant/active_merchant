@@ -40,6 +40,7 @@
 * Adyen: Include Application ID in adyen authorize and purchase transactions [peteroas] #4343
 * Priority: Add support for `replay_id` field [drkjc] #4352
 * Stripe PI: standardize `shipping_address` fields [dsmcclain] #4355
+* Airwallex: support gateway [therufs] #4342
 
 == Version 1.125.0 (January 20, 2022)
 * Wompi: support gateway [therufs] #4173
