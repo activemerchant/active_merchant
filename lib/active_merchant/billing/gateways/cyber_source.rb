@@ -305,6 +305,8 @@ module ActiveMerchant #:nodoc:
         add_merchant_description(xml, options)
         add_sales_slip_number(xml, options)
         add_airline_data(xml, options)
+        calculate_tax(creditcard_or_reference, options)
+
         xml.target!
       end
 
@@ -370,6 +372,7 @@ module ActiveMerchant #:nodoc:
         end
 
         add_merchant_description(xml, options)
+        calculate_tax(payment_method_or_reference, options)
 
         xml.target!
       end
@@ -500,6 +503,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_line_item_data(xml, options)
+        return unless options[:line_items]
+
         options[:line_items].each_with_index do |value, index|
           xml.tag! 'item', { 'id' => index } do
             xml.tag! 'unitPrice', localized_amount(value[:declared_value].to_i, options[:currency] || default_currency)
