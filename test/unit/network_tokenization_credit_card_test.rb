@@ -7,7 +7,9 @@ class NetworkTokenizationCreditCardTest < Test::Unit::TestCase
       month: default_expiration_date.month, year: default_expiration_date.year,
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=', eci: '05'
     })
-    @tokenized_apple_pay_card = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
+    @tokenized_apple_pay_card = ActiveMerchant::Billing::ApplePayNetworkTokenizationCreditCard.new({
+      payment_data_type: '3DSecure',
+      device_manufacturer_id: '040010030273',
       source: :apple_pay
     })
     @tokenized_android_pay_card = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
@@ -47,5 +49,10 @@ class NetworkTokenizationCreditCardTest < Test::Unit::TestCase
     assert_equal @tokenized_google_pay_card.source, :google_pay
     assert_equal @tokenized_bogus_pay_card.source, :apple_pay
     assert_equal @existing_network_token.source, :network_token
+  end
+
+  def test_tokenized_apple_pay_metadata
+    assert_equal '3DSecure', @tokenized_apple_pay_card.payment_data_type
+    assert_equal '040010030273', @tokenized_apple_pay_card.device_manufacturer_id
   end
 end

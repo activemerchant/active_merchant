@@ -13,13 +13,15 @@ class LitleTest < Test::Unit::TestCase
     )
 
     @credit_card = credit_card
-    @decrypted_apple_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
+    @decrypted_apple_pay = ActiveMerchant::Billing::ApplePayNetworkTokenizationCreditCard.new(
       {
         month: '01',
         year: '2012',
         brand: 'visa',
         number:  '44444444400009',
-        payment_cryptogram: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA='
+        payment_cryptogram: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA=',
+        payment_data_type: '3DSecure',
+        device_manufacturer_id: '040010030273'
       }
     )
     @decrypted_android_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
