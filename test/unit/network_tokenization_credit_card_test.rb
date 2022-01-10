@@ -15,7 +15,9 @@ class NetworkTokenizationCreditCardTest < Test::Unit::TestCase
     @tokenized_android_pay_card = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
       source: :android_pay
     })
-    @tokenized_google_pay_card = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
+    @tokenized_google_pay_card = ActiveMerchant::Billing::GooglePayNetworkTokenizationCreditCard.new({
+      auth_method: 'PAN_ONLY',
+      payment_method: 'CARD',
       source: :google_pay
     })
     @existing_network_token = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
@@ -54,5 +56,10 @@ class NetworkTokenizationCreditCardTest < Test::Unit::TestCase
   def test_tokenized_apple_pay_metadata
     assert_equal '3DSecure', @tokenized_apple_pay_card.payment_data_type
     assert_equal '040010030273', @tokenized_apple_pay_card.device_manufacturer_id
+  end
+
+  def test_tokenized_google_pay_metadata
+    assert_equal 'PAN_ONLY', @tokenized_google_pay_card.auth_method
+    assert_equal 'CARD', @tokenized_google_pay_card.payment_method
   end
 end
