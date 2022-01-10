@@ -38,6 +38,11 @@ EOYAML
   end
 
   def next_identifier
+    yml_data = if Psych::VERSION > '4.0'
+      YAML.safe_load(File.read(fixtures_file), aliases: true)
+    else
+      YAML.safe_load(File.read(fixtures_file), [], [], true)
+    end
     fixtures = (YAML.safe_load(File.read(fixtures_file), [], [], true).keys + [identifier]).uniq.sort
     fixtures[fixtures.sort.index(identifier)+1]
   end

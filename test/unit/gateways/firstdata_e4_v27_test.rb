@@ -1001,7 +1001,7 @@ class FirstdataE4V27Test < Test::Unit::TestCase
         read: true
         socket:
     RESPONSE
-    YAML.safe_load(yamlexcep, ['Net::HTTPBadRequest', 'ActiveMerchant::ResponseError'])
+    yaml_load_wrapper(yamlexcep, ['Net::HTTPBadRequest', 'ActiveMerchant::ResponseError'])
   end
 
   def bad_credentials_response
@@ -1038,7 +1038,7 @@ class FirstdataE4V27Test < Test::Unit::TestCase
         http_version: '1.1'
         socket:
     RESPONSE
-    YAML.safe_load(yamlexcep, ['Net::HTTPUnauthorized', 'ActiveMerchant::ResponseError'])
+    yaml_load_wrapper(yamlexcep, ['Net::HTTPUnauthorized', 'ActiveMerchant::ResponseError'])
   end
 
   def successful_void_response

@@ -14,6 +14,8 @@ require 'active_support/core_ext/integer/time'
 require 'active_support/core_ext/numeric/time'
 require 'active_support/core_ext/time/acts_like'
 
+require 'support/yaml_helper'
+
 ActiveMerchant::Billing::Base.mode = :test
 
 if ENV['DEBUG_ACTIVE_MERCHANT'] == 'true'
@@ -294,7 +296,7 @@ module ActiveMerchant
     def load_fixtures
       [DEFAULT_CREDENTIALS, LOCAL_CREDENTIALS].inject({}) do |credentials, file_name|
         if File.exist?(file_name)
-          yaml_data = YAML.safe_load(File.read(file_name), [], [], true)
+          yaml_data = yaml_load_wrapper(File.read(file_name), [], [], true)
           credentials.merge!(symbolize_keys(yaml_data))
         end
         credentials

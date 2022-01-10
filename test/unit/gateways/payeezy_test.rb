@@ -778,7 +778,7 @@ class PayeezyGateway < Test::Unit::TestCase
         body_exist: true
       message:
     RESPONSE
-    YAML.safe_load(yamlexcep, ['Net::HTTPBadRequest', 'ActiveMerchant::ResponseError'])
+    yaml_load_wrapper(yamlexcep, ['Net::HTTPBadRequest', 'ActiveMerchant::ResponseError'])
   end
 
   def failed_purchase_response_for_insufficient_funds
@@ -863,7 +863,7 @@ class PayeezyGateway < Test::Unit::TestCase
         body_exist: true
       message:
     RESPONSE
-    YAML.safe_load(yamlexcep, ['Net::HTTPBadRequest', 'ActiveMerchant::ResponseError'])
+    yaml_load_wrapper(yamlexcep, ['Net::HTTPBadRequest', 'ActiveMerchant::ResponseError'])
   end
 
   def successful_void_response
@@ -908,7 +908,7 @@ class PayeezyGateway < Test::Unit::TestCase
         body_exist: true
       message:
     RESPONSE
-    YAML.safe_load(yamlexcep, ['Net::HTTPBadRequest', 'ActiveMerchant::ResponseError'])
+    yaml_load_wrapper(yamlexcep, ['Net::HTTPBadRequest', 'ActiveMerchant::ResponseError'])
   end
 
   def failed_capture_response
@@ -948,7 +948,7 @@ class PayeezyGateway < Test::Unit::TestCase
         body_exist: true
       message:
     RESPONSE
-    YAML.safe_load(yamlexcep, ['Net::HTTPBadRequest', 'ActiveMerchant::ResponseError'])
+    yaml_load_wrapper(yamlexcep, ['Net::HTTPBadRequest', 'ActiveMerchant::ResponseError'])
   end
 
   def invalid_token_response
@@ -987,7 +987,7 @@ class PayeezyGateway < Test::Unit::TestCase
         body_exist: true
       message:
     RESPONSE
-    YAML.safe_load(yamlexcep, ['Net::HTTPUnauthorized', 'ActiveMerchant::ResponseError'])
+    yaml_load_wrapper(yamlexcep, ['Net::HTTPUnauthorized', 'ActiveMerchant::ResponseError'])
   end
 
   def invalid_token_response_integration
@@ -1012,7 +1012,7 @@ class PayeezyGateway < Test::Unit::TestCase
         body_exist: true
       message:
     RESPONSE
-    YAML.safe_load(yamlexcep, ['Net::HTTPUnauthorized', 'ActiveMerchant::ResponseError'])
+    yaml_load_wrapper(yamlexcep, ['Net::HTTPUnauthorized', 'ActiveMerchant::ResponseError'])
   end
 
   def bad_credentials_response
@@ -1037,6 +1037,6 @@ class PayeezyGateway < Test::Unit::TestCase
         body_exist: true
       message:
     RESPONSE
-    YAML.safe_load(yamlexcep, ['Net::HTTPForbidden', 'ActiveMerchant::ResponseError'])
+    yaml_load_wrapper(yamlexcep, ['Net::HTTPForbidden', 'ActiveMerchant::ResponseError'])
   end
 end
