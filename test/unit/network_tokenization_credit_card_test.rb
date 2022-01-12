@@ -5,7 +5,8 @@ class NetworkTokenizationCreditCardTest < Test::Unit::TestCase
     @tokenized_card = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
       number: '4242424242424242', brand: 'visa',
       month: default_expiration_date.month, year: default_expiration_date.year,
-      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=', eci: '05'
+      payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=', eci: '05',
+      metadata: { device_manufacturer_id: '1324' }
     })
     @tokenized_apple_pay_card = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
       source: :apple_pay
