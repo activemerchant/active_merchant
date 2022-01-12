@@ -418,6 +418,19 @@ class CyberSourceTest < Test::Unit::TestCase
     end.respond_with(successful_tax_response)
   end
 
+  def test_successful_credit_card_authorize_request_with_line_items
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      doc = REXML::Document.new(data)
+      REXML::XPath.each(doc, '//item') do |item|
+        request_item = @options[:line_items][item.attributes['id'].to_i]
+        assert_match(request_item[:tax_amount], item.get_elements('taxAmount')[0].text)
+        assert_match(request_item[:national_tax], item.get_elements('nationalTax')[0].text)
+      end
+    end.respond_with(successful_tax_response)
+  end
+
   def test_successful_credit_card_capture_request
     @gateway.stubs(:ssl_post).returns(successful_authorization_response, successful_capture_response)
     assert response = @gateway.authorize(@amount, @credit_card, @options)
