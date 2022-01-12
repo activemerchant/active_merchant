@@ -94,8 +94,8 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'profiles', post, options)
       end
 
-      def redact(pm_profile_id)
-        commit_for_redact(:delete, "profiles/#{pm_profile_id}", nil, nil)
+      def unstore(pm_profile_id)
+        commit_for_unstore(:delete, "profiles/#{pm_profile_id}", nil, nil)
       end
 
       def supports_scrubbing?
@@ -342,7 +342,7 @@ module ActiveMerchant #:nodoc:
         )
       end
 
-      def commit_for_redact(method, action, parameters, options)
+      def commit_for_unstore(method, action, parameters, options)
         url = url(action)
         response = raw_ssl_request(method, url, post_data(parameters, options), headers)
         success = true if response.code == '200'
