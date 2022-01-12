@@ -47,7 +47,9 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
           quantity: 2,
           code: 'default',
           description: 'Giant Walrus',
-          sku: 'WA323232323232323'
+          sku: 'WA323232323232323',
+          tax_amount: 5,
+          national_tax: 10
         },
         {
           declared_value: 100,
@@ -59,7 +61,10 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
       currency: 'USD',
       ignore_avs: 'true',
       ignore_cvv: 'true',
-      commerce_indicator: 'internet'
+      commerce_indicator: 'internet',
+      user_po: 'ABC123',
+      taxable: true,
+      national_tax_indicator: 1
     }
 
     @subscription_options = {

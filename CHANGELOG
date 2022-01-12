@@ -62,6 +62,17 @@ g= ActiveMerchant CHANGELOG
 * Cashnet: support multiple itemcodes and amounts [peteroas] #4243
 * IPG: Send default currency in `verify` and two digit `ExpMonth` [ajawadmirza] #4244
 
+* Stripe: Add remote tests set up to avoid exceed the max external accounts limit [jherreraa] #4239
+* Stripe: Add support for `radar_options: skip_rules` [dsmcclain] #4250
+* CyberSource: Add `user_po`, `taxable`, `national_tax_indicator`, `tax_amount`, and `national_tax` fields [ajawadmirza] #4251
+* Kushki: Add support for `metadata` [rachelkirk] #4253
+* IPG: Add `redact` operation [ajawadmirza] #4254
+* Wompi: Update sandbox and production endpoints [rachelkirk] #4255
+* Orbital: Add `sca_merchant_initiated` operation [ajawadmirza] #4256
+* Cashnet: convert amounts to integers for proper gateway handling [peteroas] #2207
+* PayTrace: Add `unstore` operation [ajawadmirza] #4262
+* Decidir Plus: Add gateway adapter [naashton] #4264
+
 == Version 1.124.0 (October 28th, 2021)
 * Worldpay: Add Support for Submerchant Data on Worldpay [almalee24] #4147
 * dlocal: Add device_id and ip to payer object and add additional_data [aenand] #4116

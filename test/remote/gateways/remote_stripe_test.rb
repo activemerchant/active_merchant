@@ -165,6 +165,13 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal 'wow@example.com', response.params['metadata']['email']
   end
 
+  def test_successful_purchase_with_skip_radar_rules
+    options = @options.merge(skip_radar_rules: true)
+    assert purchase = @gateway.purchase(@amount, @credit_card, options)
+    assert_success purchase
+    assert_equal ['all'], purchase.params['radar_options']['skip_rules']
+  end
+
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
@@ -509,9 +516,10 @@ class RemoteStripeTest < Test::Unit::TestCase
 
   def test_successful_store_with_existing_account
     account = fixtures(:stripe_destination)[:stripe_user_id]
-
     assert response = @gateway.store(@debit_card, account: account)
     assert_success response
+    # Delete the stored external account to prevent hitting the limit
+    @gateway.delete_latest_test_external_account(account)
     assert_equal 'card', response.params['object']
   end
 

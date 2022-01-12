@@ -507,6 +507,8 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'productCode', value[:code] || 'shipping_only'
             xml.tag! 'productName', value[:description]
             xml.tag! 'productSKU', value[:sku]
+            xml.tag! 'taxAmount', value[:tax_amount] if value[:tax_amount]
+            xml.tag! 'nationalTax', value[:national_tax] if value[:national_tax]
           end
         end
       end
@@ -522,10 +524,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_merchant_descriptor(xml, options)
-        return unless options[:merchant_descriptor]
+        return unless options[:merchant_descriptor] || options[:user_po] || options[:taxable]
 
         xml.tag! 'invoiceHeader' do
-          xml.tag! 'merchantDescriptor', options[:merchant_descriptor]
+          xml.tag! 'merchantDescriptor', options[:merchant_descriptor] if options[:merchant_descriptor]
+          xml.tag! 'userPO', options[:user_po] if options[:user_po]
+          xml.tag! 'taxable', options[:taxable] if options[:taxable]
         end
       end
 
@@ -628,11 +632,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_other_tax(xml, options)
-        return unless options[:local_tax_amount] || options[:national_tax_amount]
+        return unless options[:local_tax_amount] || options[:national_tax_amount] || options[:national_tax_indicator]
 
         xml.tag! 'otherTax' do
           xml.tag! 'localTaxAmount', options[:local_tax_amount] if options[:local_tax_amount]
           xml.tag! 'nationalTaxAmount', options[:national_tax_amount] if options[:national_tax_amount]
+          xml.tag! 'nationalTaxIndicator', options[:national_tax_indicator] if options[:national_tax_indicator]
         end
       end
 

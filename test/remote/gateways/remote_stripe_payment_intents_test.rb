@@ -209,6 +209,14 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert purchase.params.dig('charges', 'data')[0]['captured']
   end
 
+  def test_successful_purchase_with_skip_radar_rules
+    options = { skip_radar_rules: true }
+    assert purchase = @gateway.purchase(@amount, @visa_card, options)
+
+    assert_equal 'succeeded', purchase.params['status']
+    assert_equal ['all'], purchase.params['charges']['data'][0]['radar_options']['skip_rules']
+  end
+
   def test_successful_authorization_with_external_auth_data_3ds_2
     options = {
       currency: 'GBP',

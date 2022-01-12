@@ -460,6 +460,16 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     end.respond_with(successful_create_intent_response)
   end
 
+  def test_successful_authorize_with_skip_radar_rules
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@amount, @credit_card, {
+        skip_radar_rules: true
+      })
+    end.check_request do |_method, endpoint, data, _headers|
+      assert_match(/radar_options\[skip_rules\]\[0\]=all/, data) if /payment_intents/.match?(endpoint)
+    end.respond_with(successful_create_intent_response)
+  end
+
   def test_successful_authorization_with_event_type_metadata
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, @credit_card, {

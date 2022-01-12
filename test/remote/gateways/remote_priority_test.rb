@@ -138,15 +138,11 @@ class RemotePriorityTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount_purchase, @credit_card, @option_spr)
     assert_success response
 
-    # check is this transaction associated batch is "Closed".
     batch_check = @gateway.get_payment_status(response.params['batchId'], @option_spr)
-    # if batch Open then fail test. Batch must be closed to perform a Refund
-    if batch_check.params['status'] == 'Open'
-      @gateway.void({ 'id' => response.params['id'] }.to_s, @option_spr)
-      assert_success response
-    else
-      assert_failure response
-    end
+    assert_equal batch_check.params['status'], 'Open'
+
+    void = @gateway.void({ 'id' => response.params['id'] }.to_s, @option_spr)
+    assert_success void
   end
 
   def test_failed_void
@@ -230,21 +226,15 @@ class RemotePriorityTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount_purchase, @credit_card, @option_spr)
     assert_success response
 
-    # check if this transaction associated batch is "Closed".
     batch_check = @gateway.get_payment_status(response.params['batchId'], @option_spr)
-    # if batch Open then fail test. Batch must be closed to perform a Refund
-    if batch_check.params['status'] == 'Open'
-      @gateway.close_batch(response.params['batchId'], @option_spr)
-      refund_params = @option_spr.merge(response.params).deep_transform_keys { |key| key.to_s.underscore }.transform_keys(&:to_sym)
+    assert_equal batch_check.params['status'], 'Open'
+    @gateway.close_batch(response.params['batchId'], @option_spr)
+    refund_params = @option_spr.merge(response.params).deep_transform_keys { |key| key.to_s.underscore }.transform_keys(&:to_sym)
 
-      refund = @gateway.refund(response.params['amount'].to_f * 100, response.authorization.to_s, refund_params)
-      assert_success refund
-      assert refund.params['status'] == 'Approved'
-
-      assert_equal 'Approved or completed successfully', refund.message
-    else
-      assert_failure response
-    end
+    refund = @gateway.refund(response.params['amount'].to_f * 100, response.authorization.to_s, refund_params)
+    assert_success refund
+    assert refund.params['status'] == 'Approved'
+    assert_equal 'Approved or completed successfully', refund.message
   end
 
   def test_successful_batch_closed_and_void
