@@ -16,24 +16,25 @@ class RemoteDecidirPlusTest < Test::Unit::TestCase
 
   def test_successful_purchase
     assert response = @gateway.store(@credit_card)
+    payment_reference = response.authorization
 
-    response = @gateway.purchase(@amount, @credit_card, @options.merge(payment_id: response.authorization))
+    response = @gateway.purchase(@amount, payment_reference, @options)
     assert_success response
     assert_equal 'approved', response.message
   end
 
   def test_failed_purchase
-    assert response = @gateway.store(@credit_card)
+    assert @gateway.store(@credit_card)
 
-    response = @gateway.purchase(@amount, @declined_card, @options.merge(payment_id: response.authorization))
+    response = @gateway.purchase(@amount, '', @options)
     assert_failure response
-    assert_equal 'invalid_param: bin', response.message
+    assert_equal 'invalid_param: token', response.message
   end
 
   def test_successful_refund
     response = @gateway.store(@credit_card)
 
-    purchase = @gateway.purchase(@amount, @credit_card, @options.merge(payment_id: response.authorization))
+    purchase = @gateway.purchase(@amount, response.authorization, @options)
     assert_success purchase
     assert_equal 'approved', purchase.message
 
@@ -45,7 +46,7 @@ class RemoteDecidirPlusTest < Test::Unit::TestCase
   def test_partial_refund
     assert response = @gateway.store(@credit_card)
 
-    purchase = @gateway.purchase(@amount, @credit_card, @options.merge(payment_id: response.authorization))
+    purchase = @gateway.purchase(@amount, response.authorization, @options)
     assert_success purchase
 
     assert refund = @gateway.refund(@amount - 1, purchase.authorization)

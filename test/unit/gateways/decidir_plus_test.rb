@@ -6,10 +6,10 @@ class DecidirPlusTest < Test::Unit::TestCase
   def setup
     @gateway = DecidirPlusGateway.new(public_key: 'public_key', private_key: 'private_key')
     @credit_card = credit_card
+    @payment_reference = '2bf7bffb-1257-4b45-8d42-42d090409b8a|448459'
     @amount = 100
 
     @options = {
-      payment_id: '2bf7bffb-1257-4b45-8d42-42d090409b8a|448459',
       billing_address: address,
       description: 'Store Purchase'
     }
@@ -17,7 +17,7 @@ class DecidirPlusTest < Test::Unit::TestCase
 
   def test_successful_purchase
     response = stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @credit_card, @options)
+      @gateway.purchase(@amount, @payment_reference, @options)
     end.check_request do |_action, _endpoint, data, _headers|
       assert_match(/2bf7bffb-1257-4b45-8d42-42d090409b8a/, data)
     end.respond_with(successful_purchase_response)
@@ -35,7 +35,7 @@ class DecidirPlusTest < Test::Unit::TestCase
 
   def test_successful_refund
     response = stub_comms(@gateway, :ssl_request) do
-      @gateway.refund(@amount, @options[:payment_id])
+      @gateway.refund(@amount, @payment_reference)
     end.respond_with(successful_refund_response)
 
     assert_success response
@@ -43,7 +43,7 @@ class DecidirPlusTest < Test::Unit::TestCase
 
   def test_failed_refund
     response = stub_comms(@gateway, :ssl_request) do
-      @gateway.refund(@amount, @options[:payment_id])
+      @gateway.refund(@amount, @payment_reference)
     end.respond_with(failed_purchase_response)
 
     assert_failure response

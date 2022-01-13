@@ -18,15 +18,9 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, payment, options = {})
         post = {}
-        post[:site_transaction_id] = options[:site_transaction_id] || SecureRandom.hex
-        post[:token] = options[:payment_id].split('|')[0]
-        post[:payment_method_id] = 1
-        post[:bin] = payment.number.to_s[0..5]
-        post[:amount] = money
-        post[:currency] = options[:currency] || self.default_currency
-        post[:installments] = options[:installments] || 1
-        post[:payment_type] = options[:payment_type] || 'single'
-        post[:sub_payments] = []
+
+        add_payment(post, payment, options)
+        add_purchase_data(post, money, payment, options)
 
         commit(:post, 'payments', post)
       end
@@ -65,14 +59,30 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment(post, payment, options = {})
-        post[:card_number] = payment.number
-        post[:card_expiration_month] = payment.month.to_s.rjust(2, '0')
-        post[:card_expiration_year] = payment.year.to_s[-2..-1]
-        post[:security_code] = payment.verification_value.to_s
-        post[:card_holder_name] = payment.name
-        post[:card_holder_identification] = {}
-        post[:card_holder_identification][:type] = options[:dni]
-        post[:card_holder_identification][:number] = options[:card_holder_identification_number]
+        if payment.is_a?(String)
+          token, bin = payment.split('|')
+          post[:token] = token
+          post[:bin] = bin
+        else
+          post[:card_number] = payment.number
+          post[:card_expiration_month] = payment.month.to_s.rjust(2, '0')
+          post[:card_expiration_year] = payment.year.to_s[-2..-1]
+          post[:security_code] = payment.verification_value.to_s
+          post[:card_holder_name] = payment.name
+          post[:card_holder_identification] = {}
+          post[:card_holder_identification][:type] = options[:dni]
+          post[:card_holder_identification][:number] = options[:card_holder_identification_number]
+        end
+      end
+
+      def add_purchase_data(post, money, payment, options = {})
+        post[:site_transaction_id] = options[:site_transaction_id] || SecureRandom.hex
+        post[:payment_method_id] = 1
+        post[:amount] = money
+        post[:currency] = options[:currency] || self.default_currency
+        post[:installments] = options[:installments] || 1
+        post[:payment_type] = options[:payment_type] || 'single'
+        post[:sub_payments] = []
       end
 
       def parse(body)
