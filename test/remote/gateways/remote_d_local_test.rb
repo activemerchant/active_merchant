@@ -88,7 +88,7 @@ class RemoteDLocalTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_device_id_and_ip
-    options = @options.merge({ip: "127.0.0.1", device_id: "test_device"})
+    options = @options.merge({customer_ip: "127.0.0.1", device_id: "test_device"})
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert_match 'The payment was paid', response.message

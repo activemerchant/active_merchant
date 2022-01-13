@@ -136,7 +136,7 @@ module ActiveMerchant #:nodoc:
         post[:payer][:document] = options[:document] if options[:document]
         post[:payer][:document2] = options[:document2] if options[:document2]
         post[:payer][:user_reference] = options[:user_reference] if options[:user_reference]
-        post[:payer][:ip] = options[:ip] if options[:ip]
+        post[:payer][:ip] = options[:customer_ip] if options[:customer_ip]
         post[:payer][:device_id] = options[:device_id] if options[:device_id]
         post[:payer][:address] = add_address(post, card, options)
       end
