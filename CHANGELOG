@@ -8,6 +8,7 @@
 * StripePI: Enable Apple Pay and Google Pay payment methods [gasb150] #4252
 * PaySafe: Update `unstore` method and authorization for redact [ajawadmirza] #4294
 * CyberSource: Add `national_tax_indicator` fields in authorize and purchase [ajawadmirza] #4299
+* Credorax: Update `OpCode` for credit transactions [dsmcclain] #4279
 
 == Version 1.125.0 (January 20, 2022)
 * Wompi: support gateway [therufs] #4173

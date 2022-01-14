@@ -212,6 +212,7 @@ module ActiveMerchant #:nodoc:
         add_submerchant_id(post, options)
         add_transaction_type(post, options)
         add_processor(post, options)
+        add_customer_name(post, options)
 
         commit(:credit, post)
       end
@@ -424,7 +425,7 @@ module ActiveMerchant #:nodoc:
         capture: '3',
         authorize_void: '4',
         refund: '5',
-        credit: '6',
+        credit: '35',
         purchase_void: '7',
         refund_void: '8',
         capture_void: '9',
@@ -465,11 +466,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def request_action(action, reference_action)
-        if reference_action
-          ACTIONS["#{reference_action}_#{action}".to_sym]
-        else
-          ACTIONS[action]
-        end
+        return ACTIONS["#{reference_action}_#{action}".to_sym] if reference_action
+
+        ACTIONS[action]
       end
 
       def url
