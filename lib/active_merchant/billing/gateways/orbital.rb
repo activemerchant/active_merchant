@@ -220,8 +220,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify(creditcard, options = {})
+        amount = allow_0_auth?(creditcard) ? 0 : 100
         MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, creditcard, options) }
+          r.process { authorize(amount, creditcard, options) }
           r.process(:ignore_result) { void(r.authorization) }
         end
       end
@@ -274,6 +275,11 @@ module ActiveMerchant #:nodoc:
 
         order = build_void_request_xml(authorization, options)
         commit(order, :void, options[:retry_logic], options[:trace_number])
+      end
+
+      def allow_0_auth?(credit_card)
+        # Discover does not support a $0.00 authorization instead use $1.00
+        %w(visa master american_express diners_club jcb).include?(credit_card.brand)
       end
 
       # ==== Customer Profiles
