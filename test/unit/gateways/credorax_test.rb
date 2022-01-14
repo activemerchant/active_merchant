@@ -233,6 +233,23 @@ class CredoraxTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_credit_sends_correct_action_code
+    stub_comms do
+      @gateway.credit(@amount, @credit_card)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/O=35/, data)
+    end.respond_with(successful_credit_response)
+  end
+
+  def test_credit_sends_customer_name
+    stub_comms do
+      @gateway.credit(@amount, @credit_card, { first_name: 'Test', last_name: 'McTest' })
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/j5=Test/, data)
+      assert_match(/j13=McTest/, data)
+    end.respond_with(successful_credit_response)
+  end
+
   def test_failed_credit
     response = stub_comms do
       @gateway.credit(@amount, @credit_card)
@@ -1092,11 +1109,11 @@ class CredoraxTest < Test::Unit::TestCase
   end
 
   def successful_credit_response
-    'M=SPREE978&O=6&T=03%2F09%2F2016+03%3A16%3A35&V=413&a1=868f8b942fae639d28e27e8933d575d4&a2=2&a4=100&z1=8a82944a53515706015359604c135301&z13=606944188289&z15=100&z2=0&z3=Transaction+has+been+executed+successfully.&z5=0&z6=00&K=51ba24f6ef3aa161f86e53c34c9616ac'
+    'M=SPREE978&O=35&T=03%2F09%2F2016+03%3A16%3A35&V=413&a1=868f8b942fae639d28e27e8933d575d4&a2=2&a4=100&z1=8a82944a53515706015359604c135301&z13=606944188289&z15=100&z2=0&z3=Transaction+has+been+executed+successfully.&z5=0&z6=00&K=51ba24f6ef3aa161f86e53c34c9616ac'
   end
 
   def failed_credit_response
-    'M=SPREE978&O=6&T=03%2F09%2F2016+03%3A16%3A59&V=413&a1=ff28246cfc811b1c686a52d08d075d9c&a2=2&a4=100&z1=8a829449535154bc01535960a962524f&z13=606944188290&z15=100&z2=05&z3=Transaction+has+been+declined.&z5=0&z6=57&K=cf34816d5c25dc007ef3525505c4c610'
+    'M=SPREE978&O=35&T=03%2F09%2F2016+03%3A16%3A59&V=413&a1=ff28246cfc811b1c686a52d08d075d9c&a2=2&a4=100&z1=8a829449535154bc01535960a962524f&z13=606944188290&z15=100&z2=05&z3=Transaction+has+been+declined.&z5=0&z6=57&K=cf34816d5c25dc007ef3525505c4c610'
   end
 
   def empty_purchase_response
