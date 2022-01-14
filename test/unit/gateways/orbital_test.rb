@@ -1492,6 +1492,54 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_valid_amount_with_jcb_card
+    @credit_card.brand = 'jcb'
+    stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      assert_match %r{<Amount>0<\/Amount>}, data
+    end
+  end
+
+  def test_successful_verify_0_auth_defferent_cards
+    @credit_card.brand = 'master'
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(successful_purchase_response, successful_purchase_response)
+    assert_success response
+    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', response.authorization
+    assert_equal 'Approved', response.message
+  end
+
+  def test_valid_amount_with_discover_brand
+    @credit_card.brand = 'discover'
+    stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      assert_match %r{<Amount>100<\/Amount>}, data
+    end
+  end
+
+  def test_successful_verify_with_discover_brand
+    @credit_card.brand = 'discover'
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(successful_purchase_response, successful_purchase_response)
+    assert_success response
+    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', response.authorization
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_verify_and_failed_void_discover_brand
+    @credit_card.brand = 'discover'
+    response = stub_comms do
+      @gateway.verify(credit_card, @options)
+    end.respond_with(successful_purchase_response, failed_purchase_response)
+    assert_success response
+    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', response.authorization
+    assert_equal 'Approved', response.message
+  end
+
   def test_successful_verify_and_failed_void
     response = stub_comms do
       @gateway.verify(credit_card, @options)

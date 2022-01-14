@@ -908,7 +908,28 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response
+    assert_equal 'No reason to decline', response.message
+  end
+
+  def test_successful_different_cards
+    @credit_card.brand = 'master'
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_equal 'No reason to decline', response.message
+  end
+
+  def test_successful_verify_with_discover_brand
+    @credit_card.brand = 'discover'
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
     assert_equal 'Approved', response.message
+  end
+
+  def test_unsuccessful_verify_with_invalid_discover_card
+    @declined_card.brand = 'discover'
+    response = @gateway.verify(@declined_card, @options)
+    assert_failure response
+    assert_equal 'Invalid CC Number', response.message
   end
 
   def test_failed_verify
