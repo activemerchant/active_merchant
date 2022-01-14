@@ -90,8 +90,8 @@ module ActiveMerchant #:nodoc:
         post[:payment_method_flow] = options[:payment_method_flow] || 'DIRECT'
         add_country(post, card, options)
         add_payer(post, card, options)
-        
-        # check for dlocal redirect payment methods 
+
+        # check for dlocal redirect payment methods
         if card.present?
           if card.is_a?(WalletToken)
             add_wallet(post, card, action, options)
@@ -132,7 +132,7 @@ module ActiveMerchant #:nodoc:
         end
         post[:payer][:email] = options[:email] if options[:email]
         post[:payer][:birth_date] = options[:birth_date] if options[:birth_date]
-        post[:payer][:phone] = address[:phone] if address && address[:phone]
+        post[:payer][:phone] = options[:phone] if options[:phone]
         post[:payer][:document] = options[:document] if options[:document]
         post[:payer][:document2] = options[:document2] if options[:document2]
         post[:payer][:user_reference] = options[:user_reference] if options[:user_reference]

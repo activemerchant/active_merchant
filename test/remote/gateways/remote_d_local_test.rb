@@ -94,6 +94,13 @@ class RemoteDLocalTest < Test::Unit::TestCase
     assert_match 'The payment was paid', response.message
   end
 
+  def test_successful_purchase_with_phone
+    options = @options.merge({phone: "1111111111"})
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_match 'The payment was paid', response.message
+  end
+
   def test_successful_card_save
     response = @gateway.verify(@credit_card, @card_save_options)
     assert_success response.primary_response
