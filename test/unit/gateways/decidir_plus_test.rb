@@ -13,6 +13,19 @@ class DecidirPlusTest < Test::Unit::TestCase
       billing_address: address,
       description: 'Store Purchase'
     }
+
+    @sub_payments = [
+      {
+        site_id: '04052018',
+        installments: 1,
+        amount: 1500
+      },
+      {
+        site_id: '04052018',
+        installments: 1,
+        amount: 1500
+      }
+    ]
   end
 
   def test_successful_purchase
@@ -55,6 +68,22 @@ class DecidirPlusTest < Test::Unit::TestCase
     end.check_request do |_action, _endpoint, data, _headers|
       assert_match(/#{@credit_card.number}/, data)
     end.respond_with(successful_store_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_options
+    options = @options.merge(sub_payments: @sub_payments)
+    options[:installments] = 4
+    options[:payment_type] = 'distributed'
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @payment_reference, options)
+    end.check_request do |_action, _endpoint, data, _headers|
+      assert_equal(@sub_payments, JSON.parse(data, symbolize_names: true)[:sub_payments])
+      assert_match(/#{options[:installments]}/, data)
+      assert_match(/#{options[:payment_type]}/, data)
+    end.respond_with(successful_purchase_response)
 
     assert_success response
   end

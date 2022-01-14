@@ -12,6 +12,18 @@ class RemoteDecidirPlusTest < Test::Unit::TestCase
       billing_address: address,
       description: 'Store Purchase'
     }
+    @sub_payments = [
+      {
+        site_id: '04052018',
+        installments: 1,
+        amount: 1500
+      },
+      {
+        site_id: '04052018',
+        installments: 1,
+        amount: 1500
+      }
+    ]
   end
 
   def test_successful_purchase
@@ -64,6 +76,17 @@ class RemoteDecidirPlusTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'active', response.message
     assert_equal @credit_card.number[0..5], response.authorization.split('|')[1]
+  end
+
+  def test_successful_purchase_with_options
+    options = @options.merge(sub_payments: @sub_payments)
+
+    assert response = @gateway.store(@credit_card)
+    payment_reference = response.authorization
+
+    response = @gateway.purchase(@amount, payment_reference, options)
+    assert_success response
+    assert_equal 'approved', response.message
   end
 
   def test_invalid_login

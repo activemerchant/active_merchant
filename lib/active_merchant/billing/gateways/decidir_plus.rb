@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://developers.decidir.com/api/v2'
       self.live_url = 'https://live.decidir.com/api/v2'
 
-      self.supported_countries = ['ARG']
+      self.supported_countries = ['AR']
       self.default_currency = 'ARS'
       self.supported_cardtypes = %i[visa master american_express discover]
 
@@ -82,7 +82,23 @@ module ActiveMerchant #:nodoc:
         post[:currency] = options[:currency] || self.default_currency
         post[:installments] = options[:installments] || 1
         post[:payment_type] = options[:payment_type] || 'single'
+        add_sub_payments(post, options)
+      end
+
+      def add_sub_payments(post, options)
+        # sub_payments field is required for purchase transactions, even if empty
         post[:sub_payments] = []
+
+        return unless sub_payments = options[:sub_payments]
+
+        sub_payments.each do |sub_payment|
+          sub_payment_hash = {
+            site_id: sub_payment[:site_id],
+            installments: sub_payment[:installments],
+            amount: sub_payment[:amount]
+          }
+          post[:sub_payments] << sub_payment_hash
+        end
       end
 
       def parse(body)
