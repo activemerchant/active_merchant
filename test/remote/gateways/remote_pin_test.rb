@@ -166,6 +166,15 @@ class RemotePinTest < Test::Unit::TestCase
     assert_equal @visa_credit_card.year, response.params['response']['card']['expiry_year']
   end
 
+  def test_store_and_unstore
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+    assert_not_nil response.authorization
+
+    response = @gateway.unstore(response.authorization)
+    assert_success response
+  end
+
   def test_refund
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response

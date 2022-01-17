@@ -79,6 +79,7 @@
 * CheckoutV2: Support processing channel and marketplace sub entity ID [AMHOL] #4236
 * Elavon: `third_party_token` bug fix [rachelkirk] #4273
 * Decidir Plus: Add `sub_payments` field [naashton] #4274
+* Pin Payments: Add `unstore` support [montdidier] #4276
 
 == Version 1.124.0 (October 28th, 2021)
 * Worldpay: Add Support for Submerchant Data on Worldpay [almalee24] #4147
