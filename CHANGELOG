@@ -3,6 +3,7 @@
 
 == HEAD
 * GlobalCollect: Improve support for Naranja and Cabal card types [dsmcclain] #4286
+* Payflow: Add support for stored credentials [ajawadmirza] #4277
 
 == Version 1.125.0 (January 20, 2022)
 * Wompi: support gateway [therufs] #4173
@@ -87,6 +88,7 @@
 * Update inline documentation with all supported cardtypes [ali-hassan] #4283
 * PayWay: Update endpoints, response code [jessiagee] #4281
 * CyberSource: Add `line_items` for purchase [ajawadmirza] #4282
+* Payflow Pro: Add `stored_credential` fields [ajawadmirza] #4277
 
 == Version 1.124.0 (October 28th, 2021)
 * Worldpay: Add Support for Submerchant Data on Worldpay [almalee24] #4147
