@@ -83,6 +83,7 @@ module ActiveMerchant #:nodoc:
         options[:name] = credit_card.name if options[:name].blank? && credit_card
         request = build_recurring_request(options[:profile_id] ? :modify : :add, money, options) do |xml|
           add_credit_card(xml, credit_card, options) if credit_card
+          add_stored_credential(xml, options[:stored_credential])
         end
         commit(request, options.merge(request_type: :recurring))
       end
@@ -158,6 +159,7 @@ module ActiveMerchant #:nodoc:
                 xml.tag! 'ExtData', 'Name' => 'ORIGID', 'Value' => reference
               end
             end
+            add_stored_credential(xml, options[:stored_credential])
           end
           xml.tag! 'ExtData', 'Name' => 'BUTTONSOURCE', 'Value' => application_id unless application_id.blank?
         end
@@ -193,6 +195,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'Tender' do
               add_credit_card(xml, credit_card, options)
             end
+            add_stored_credential(xml, options[:stored_credential])
           end
           xml.tag! 'ExtData', 'Name' => 'BUTTONSOURCE', 'Value' => application_id unless application_id.blank?
         end
@@ -258,6 +261,7 @@ module ActiveMerchant #:nodoc:
                 xml.tag! 'ABA', check.routing_number
               end
             end
+            add_stored_credential(xml, options[:stored_credential])
           end
           xml.tag! 'ExtData', 'Name' => 'BUTTONSOURCE', 'Value' => application_id unless application_id.blank?
         end
@@ -276,6 +280,37 @@ module ActiveMerchant #:nodoc:
 
           xml.tag! 'ExtData', 'Name' => 'LASTNAME', 'Value' => credit_card.last_name
         end
+      end
+
+      def add_stored_credential(xml, stored_credential)
+        return unless stored_credential
+
+        xml.tag! 'CardOnFile', add_card_on_file_type(stored_credential)
+        xml.tag! 'TxnId', stored_credential[:network_transaction_id] if stored_credential[:network_transaction_id]
+      end
+
+      def card_on_file_initiator(initator)
+        case initator
+        when 'merchant'
+          'MIT'
+        when 'cardholder'
+          'CIT'
+        end
+      end
+
+      def card_on_file_reason(stored_credential)
+        return 'I' if stored_credential[:initial_transaction] && stored_credential[:reason_type] == 'unscheduled'
+
+        case stored_credential[:reason_type]
+        when 'recurring', 'installment'
+          'R'
+        when 'unscheduled'
+          'U'
+        end
+      end
+
+      def add_card_on_file_type(stored_credential)
+        card_on_file_initiator(stored_credential[:initiator]).to_s + card_on_file_reason(stored_credential).to_s
       end
 
       def add_three_d_secure(options, xml)

@@ -49,6 +49,70 @@ class PayflowTest < Test::Unit::TestCase
     refute response.fraud_review?
   end
 
+  def test_successful_purchase_with_stored_credential
+    @options[:stored_credential] = {
+      initial_transaction: false,
+      reason_type: 'recurring',
+      initiator: 'cardholder',
+      network_transaction_id: nil
+    }
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r(<CardOnFile>CITR</CardOnFile>), data
+    end.respond_with(successful_purchase_with_fraud_review_response)
+
+    @options[:stored_credential] = {
+      initial_transaction: true,
+      reason_type: 'unscheduled',
+      initiator: 'cardholder',
+      network_transaction_id: nil
+    }
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r(<CardOnFile>CITI</CardOnFile>), data
+    end.respond_with(successful_purchase_with_fraud_review_response)
+
+    @options[:stored_credential] = {
+      initial_transaction: false,
+      reason_type: 'unscheduled',
+      initiator: 'cardholder',
+      network_transaction_id: nil
+    }
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r(<CardOnFile>CITU</CardOnFile>), data
+    end.respond_with(successful_purchase_with_fraud_review_response)
+
+    @options[:stored_credential] = {
+      initial_transaction: false,
+      reason_type: 'recurring',
+      initiator: 'merchant',
+      network_transaction_id: '1234'
+    }
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r(<CardOnFile>MITR</CardOnFile>), data
+      assert_match %r(<TxnId>1234</TxnId>), data
+    end.respond_with(successful_purchase_with_fraud_review_response)
+
+    @options[:stored_credential] = {
+      initial_transaction: false,
+      reason_type: 'unscheduled',
+      initiator: 'merchant',
+      network_transaction_id: '123'
+    }
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r(<CardOnFile>MITU</CardOnFile>), data
+      assert_match %r(<TxnId>123</TxnId>), data
+    end.respond_with(successful_purchase_with_fraud_review_response)
+  end
+
   def test_failed_authorization
     @gateway.stubs(:ssl_post).returns(failed_authorization_response)
 
