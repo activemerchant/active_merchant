@@ -87,7 +87,9 @@ module ActiveMerchant #:nodoc:
         'master' => '3',
         'discover' => '128',
         'jcb' => '125',
-        'diners_club' => '132'
+        'diners_club' => '132',
+        'cabal' => '135',
+        'naranja' => '136'
       }
 
       def add_order(post, money, options, capture: false)
@@ -248,7 +250,6 @@ module ActiveMerchant #:nodoc:
         month = format(payment.month, :two_digits)
         expirydate = "#{month}#{year}"
         pre_authorization = options[:pre_authorization] ? 'PRE_AUTHORIZATION' : 'FINAL_AUTHORIZATION'
-
         post['cardPaymentMethodSpecificInput'] = {
           'paymentProductId' => BRAND_MAP[payment.brand],
           'skipAuthentication' => 'true', # refers to 3DSecure
