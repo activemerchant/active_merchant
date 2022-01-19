@@ -373,7 +373,7 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
   def test_purchase_with_shipping_options
     options = {
       currency: 'GBP',
-      customer: @customer,
+      customer: 'abc123',
       shipping_address: {
         name: 'John Adam',
         phone_number: '+0018313818368',
