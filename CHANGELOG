@@ -83,6 +83,7 @@
 * Orbital: Add support for $0 verify [javierpedrozaing] #4275
 * Update inline documentation with all supported cardtypes [ali-hassan] #4283
 * PayWay: Update endpoints, response code [jessiagee] #4281
+* CyberSource: Add `line_items` for purchase [ajawadmirza] #4282
 
 == Version 1.124.0 (October 28th, 2021)
 * Worldpay: Add Support for Submerchant Data on Worldpay [almalee24] #4147
