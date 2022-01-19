@@ -30,16 +30,8 @@ class CyberSourceTest < Test::Unit::TestCase
           code: 'default',
           description: 'Giant Walrus',
           sku: 'WA323232323232323',
-          tax_amount: '5',
-          national_tax: '10'
-        },
-        {
-          declared_value: @amount,
-          quantity: 2,
-          description: 'Marble Snowcone',
-          sku: 'FAKE1232132113123',
-          tax_amount: '4',
-          national_tax: '8'
+          tax_amount: '10',
+          national_tax: '5'
         }
       ],
       currency: 'USD'
@@ -490,6 +482,19 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert response.success?
     assert response.test?
+  end
+
+  def test_successful_credit_card_purchase_request_with_line_items
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      doc = REXML::Document.new(data)
+      REXML::XPath.each(doc, '//item') do |item|
+        request_item = @options[:line_items][item.attributes['id'].to_i]
+        assert_match(request_item[:tax_amount], item.get_elements('taxAmount')[0].text)
+        assert_match(request_item[:national_tax], item.get_elements('nationalTax')[0].text)
+      end
+    end.respond_with(successful_purchase_response)
   end
 
   def test_successful_credit_card_purchase_with_elo_request

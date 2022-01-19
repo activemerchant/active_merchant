@@ -48,14 +48,8 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
           code: 'default',
           description: 'Giant Walrus',
           sku: 'WA323232323232323',
-          tax_amount: 5,
-          national_tax: 10
-        },
-        {
-          declared_value: 100,
-          quantity: 2,
-          description: 'Marble Snowcone',
-          sku: 'FAKE1232132113123'
+          tax_amount: 10,
+          national_tax: 5
         }
       ],
       currency: 'USD',

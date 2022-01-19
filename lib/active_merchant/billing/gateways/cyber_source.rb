@@ -290,7 +290,7 @@ module ActiveMerchant #:nodoc:
       def build_auth_request(money, creditcard_or_reference, options)
         xml = Builder::XmlMarkup.new indent: 2
         add_customer_id(xml, options)
-        add_payment_method_or_subscription(xml, money, creditcard_or_reference, options, true)
+        add_payment_method_or_subscription(xml, money, creditcard_or_reference, options)
         add_threeds_2_ucaf_data(xml, creditcard_or_reference, options)
         add_decision_manager_fields(xml, options)
         add_mdd_fields(xml, options)
@@ -881,7 +881,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_payment_method_or_subscription(xml, money, payment_method_or_reference, options, include_items = false)
+      def add_payment_method_or_subscription(xml, money, payment_method_or_reference, options)
         if payment_method_or_reference.is_a?(String)
           add_purchase_data(xml, money, true, options)
           add_installments(xml, options)
@@ -894,7 +894,7 @@ module ActiveMerchant #:nodoc:
         else
           add_address(xml, payment_method_or_reference, options[:billing_address], options)
           add_address(xml, payment_method_or_reference, options[:shipping_address], options, true)
-          add_line_item_data(xml, options) if include_items
+          add_line_item_data(xml, options)
           add_purchase_data(xml, money, true, options)
           add_installments(xml, options)
           add_creditcard(xml, payment_method_or_reference)
