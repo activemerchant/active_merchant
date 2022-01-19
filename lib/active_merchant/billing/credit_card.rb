@@ -18,6 +18,11 @@ module ActiveMerchant #:nodoc:
     # * Dankort
     # * Maestro
     # * Forbrugsforeningen
+    # * Sodexo
+    # * Vr
+    # * Carnet
+    # * Synchrony
+    # * Routex
     # * Elo
     # * Alelo
     # * Cabal
@@ -97,6 +102,11 @@ module ActiveMerchant #:nodoc:
       # * +'dankort'+
       # * +'maestro'+
       # * +'forbrugsforeningen'+
+      # * +'sodexo'+
+      # * +'vr'+
+      # * +'carnet'+
+      # * +'synchrony'+
+      # * +'routex'+
       # * +'elo'+
       # * +'alelo'+
       # * +'cabal'+
