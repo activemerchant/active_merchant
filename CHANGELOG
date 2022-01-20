@@ -2,6 +2,8 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+
+== Version 1.125.0 (January 20, 2022)
 * Wompi: support gateway [therufs] #4173
 * Stripe Payment Intents: Add setup_purchase [aenand] #4178
 * Ipg: Add new gateway [ajawadmirza] #4171
