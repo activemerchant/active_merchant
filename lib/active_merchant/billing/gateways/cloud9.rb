@@ -18,6 +18,7 @@ module ActiveMerchant #:nodoc: ALL
         'Visa'             => 'Visa',
         'VISA'             => 'Visa',
         'Master'           => 'Mastercard',
+        'Mastercard'       => 'Mastercard',
         'MasterCard'       => 'Mastercard',
         'Master Card'      => 'Mastercard',
         'Discover'         => 'Discover',
@@ -546,6 +547,11 @@ module ActiveMerchant #:nodoc: ALL
         post = { TransType: action }
 
         JSON.generate(post.merge(parameters))
+      end
+
+      def requires!(hash, *params)
+        hash.select! { |_key, value| value.present? } # discard any nil entries
+        super
       end
 
       def target_url(endpoint, gmid)
