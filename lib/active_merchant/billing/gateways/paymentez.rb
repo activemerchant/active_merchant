@@ -49,25 +49,37 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, payment, options = {})
         post = {}
+        if options[:otp] && options[:transaction_id]
+          add_verify_data(post, options)
 
-        add_invoice(post, money, options)
-        add_payment(post, payment)
-        add_customer_data(post, options)
-        add_extra_params(post, options)
-        action = payment.is_a?(String) ? 'debit' : 'debit_cc'
+          commit_transaction('verify', post)
+        else
 
-        commit_transaction(action, post)
+          add_invoice(post, money, options)
+          add_payment(post, payment)
+          add_customer_data(post, options)
+          add_extra_params(post, options)
+          action = payment.is_a?(String) ? 'debit' : 'debit_cc'
+          
+          commit_transaction(action, post)
+      
+        end
       end
 
       def authorize(money, payment, options = {})
         post = {}
+        if options[:otp] && options[:transaction_id]
+          add_verify_data(post, options)
 
-        add_invoice(post, money, options)
-        add_payment(post, payment)
-        add_customer_data(post, options)
-        add_extra_params(post, options)
-
-        commit_transaction('authorize', post)
+          commit_transaction('verify', post)
+        else
+          add_invoice(post, money, options)
+          add_payment(post, payment)
+          add_customer_data(post, options)
+          add_extra_params(post, options)
+  
+          commit_transaction('authorize', post)
+        end
       end
 
       def capture(money, authorization, _options = {})
@@ -101,10 +113,16 @@ module ActiveMerchant #:nodoc:
       def store(credit_card, options = {})
         post = {}
 
-        add_customer_data(post, options)
-        add_payment(post, credit_card)
+        if options[:otp] && options[:transaction_id]
+          add_verify_data(post, options)
 
-        response = commit_card('add', post)
+          response = commit_transaction('verify', post)
+        else
+          add_customer_data(post, options)
+          add_payment(post, credit_card)
+
+          response = commit_card('add', post)
+        end
         if !response.success? && !(token = extract_previous_card_token(response)).nil?
           unstore(token, options)
           response = commit_card('add', post)
@@ -129,6 +147,19 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
+      def add_verify_data(post,options)
+        requires!(options, :user_id, :transaction_id, :otp)
+
+        post[:user] ||= {}
+        post[:user][:id] = options[:user_id]
+        
+        post[:transaction] ||= {}
+        post[:transaction][:id] = options[:transaction_id]
+
+        post[:type] = options[:type] 
+        post[:value] = options[:otp]
+      end
 
       def add_customer_data(post, options)
         requires!(options, :user_id, :email)
@@ -250,12 +281,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
+        return true if response['transaction']['status_detail'] == 31
+        return true if response['status_detail'] == 32
+
         !response.include?('error') && (response['status'] || response['transaction']['status']) == 'success'
       end
 
       def card_success_from(response)
         return false if response.include?('error')
         return true if response['message'] == 'card deleted'
+        return true if response['card']['message'] == 'WAITING_OTP'
 
         response['card']['status'] == 'valid'
       end
@@ -265,6 +300,10 @@ module ActiveMerchant #:nodoc:
 
         if !success_from(response) && response['error']
           response['error'] && response['error']['type']
+        elsif response['status_detail'] == 32
+          return response['message'] = 'opt_verification_success'
+        elsif response['status_detail'] == 33
+          return response['message'] = 'opt_verification_failed'
         else
           response['transaction'] && response['transaction']['message']
         end
