@@ -45,6 +45,7 @@ module ActiveMerchant #:nodoc:
       OTP_STATUS_PENDING = 31
       OTP_STATUS_SUCCESS = 32
       OTP_STATUS_FAILURE = 33
+      OTP_STATUS_PAID = 3
       
 
       def initialize(options = {})
@@ -290,6 +291,7 @@ module ActiveMerchant #:nodoc:
         return true if response['transaction'] && response['transaction']['status_detail'] == OTP_STATUS_SUCCESS
         return true if response['status_detail'] == OTP_STATUS_PENDING
         return true if response['status_detail'] == OTP_STATUS_SUCCESS
+        return true if response['status_detail'] == OTP_STATUS_PAID
         return true if response['transaction']['carrier_code'] == 'WAITING_OTP'
 
         !response.include?('error') && (response['status'] || response['transaction']['status']) == 'success'
@@ -305,13 +307,14 @@ module ActiveMerchant #:nodoc:
 
       def message_from(response)
         return response['detail'] if response['detail'].present?
-
         if !success_from(response) && response['error']
           response['error'] && response['error']['type']
         elsif response['status_detail'] == OTP_STATUS_SUCCESS
           return response['message'] = 'opt_verification_success'
         elsif response['status_detail'] == OTP_STATUS_FAILURE
           return response['message'] = 'opt_verification_failed'
+        elsif response['status_detail'] == OTP_STATUS_PAID
+          return response['message'] = 'opt_verification_success_paid'
         else
           response['transaction'] && response['transaction']['message']
         end
