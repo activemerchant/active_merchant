@@ -4,6 +4,7 @@
 == HEAD
 * GlobalCollect: Improve support for Naranja and Cabal card types [dsmcclain] #4286
 * Payflow: Add support for stored credentials [ajawadmirza] #4277
+* Orbital: Don't void $0 auths for Verify [javierpedrozaing] #2487
 
 == Version 1.125.0 (January 20, 2022)
 * Wompi: support gateway [therufs] #4173
