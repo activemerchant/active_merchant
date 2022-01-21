@@ -94,8 +94,9 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'profiles', post, options)
       end
 
-      def unstore(pm_profile_id)
-        commit_for_unstore(:delete, "profiles/#{pm_profile_id}", nil, nil)
+      def unstore(authorization, options = {})
+        pm_profile_id = options[:customer_id]
+        commit_for_unstore(:delete, "profiles/#{pm_profile_id}", nil, options)
       end
 
       def supports_scrubbing?

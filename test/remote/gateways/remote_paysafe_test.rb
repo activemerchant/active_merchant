@@ -367,8 +367,9 @@ class RemotePaysafeTest < Test::Unit::TestCase
   def test_successful_store_and_unstore
     response = @gateway.store(credit_card('4111111111111111'), @profile_options)
     assert_success response
+    auth = response.authorization
     id = response.params['id']
-    unstore = @gateway.unstore(id)
+    unstore = @gateway.unstore(auth, { customer_id: id })
     assert_success unstore
   end
 
