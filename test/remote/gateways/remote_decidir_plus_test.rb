@@ -24,6 +24,17 @@ class RemoteDecidirPlusTest < Test::Unit::TestCase
         amount: 1500
       }
     ]
+    @fraud_detection = {
+      send_to_cs: false,
+      channel: 'Web',
+      dispatch_method: 'Store Pick Up',
+      csmdds: [
+        {
+          code: 17,
+          description: 'Campo MDD17'
+        }
+      ]
+    }
   end
 
   def test_successful_purchase
@@ -87,6 +98,17 @@ class RemoteDecidirPlusTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, payment_reference, options)
     assert_success response
     assert_equal 'approved', response.message
+  end
+
+  def test_successful_purchase_with_fraud_detection
+    options = @options.merge(fraud_detection: @fraud_detection)
+
+    assert response = @gateway.store(@credit_card)
+    payment_reference = response.authorization
+
+    response = @gateway.purchase(@amount, payment_reference, options)
+    assert_success response
+    assert_equal({ 'status' => nil }, response.params['fraud_detection'])
   end
 
   def test_invalid_login

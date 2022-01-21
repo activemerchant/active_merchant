@@ -26,6 +26,17 @@ class DecidirPlusTest < Test::Unit::TestCase
         amount: 1500
       }
     ]
+    @fraud_detection = {
+      send_to_cs: false,
+      channel: 'Web',
+      dispatch_method: 'Store Pick Up',
+      csmdds: [
+        {
+          code: 17,
+          description: 'Campo MDD17'
+        }
+      ]
+    }
   end
 
   def test_successful_purchase
@@ -83,6 +94,18 @@ class DecidirPlusTest < Test::Unit::TestCase
       assert_equal(@sub_payments, JSON.parse(data, symbolize_names: true)[:sub_payments])
       assert_match(/#{options[:installments]}/, data)
       assert_match(/#{options[:payment_type]}/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_fraud_detection
+    options = @options.merge(fraud_detection: @fraud_detection)
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @payment_reference, options)
+    end.check_request do |_action, _endpoint, data, _headers|
+      assert_equal(@fraud_detection, JSON.parse(data, symbolize_names: true)[:fraud_detection])
     end.respond_with(successful_purchase_response)
 
     assert_success response

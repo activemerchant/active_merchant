@@ -21,6 +21,7 @@ module ActiveMerchant #:nodoc:
 
         add_payment(post, payment, options)
         add_purchase_data(post, money, payment, options)
+        add_fraud_detection(post, options)
 
         commit(:post, 'payments', post)
       end
@@ -98,6 +99,18 @@ module ActiveMerchant #:nodoc:
             amount: sub_payment[:amount]
           }
           post[:sub_payments] << sub_payment_hash
+        end
+      end
+
+      def add_fraud_detection(post, options)
+        return unless fraud_detection = options[:fraud_detection]
+
+        {}.tap do |hsh|
+          hsh[:send_to_cs] = fraud_detection[:send_to_cs] ? true : false # true/false
+          hsh[:channel] = fraud_detection[:channel] if fraud_detection[:channel]
+          hsh[:dispatch_method] = fraud_detection[:dispatch_method] if fraud_detection[:dispatch_method]
+          hsh[:csmdds] = fraud_detection[:csmdds] if fraud_detection[:csmdds]
+          post[:fraud_detection] = hsh
         end
       end
 

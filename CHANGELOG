@@ -89,6 +89,7 @@
 * PayWay: Update endpoints, response code [jessiagee] #4281
 * CyberSource: Add `line_items` for purchase [ajawadmirza] #4282
 * Payflow Pro: Add `stored_credential` fields [ajawadmirza] #4277
+* Decidir Plus: Add `fraud_detection` fields [naashton] #4289
 
 == Version 1.124.0 (October 28th, 2021)
 * Worldpay: Add Support for Submerchant Data on Worldpay [almalee24] #4147
