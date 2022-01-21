@@ -251,6 +251,7 @@ module ActiveMerchant #:nodoc:
 
       def commit_transaction(action, parameters)
         response = commit_raw('transaction', action, parameters)
+
         Response.new(
           success_from(response),
           message_from(response),
@@ -281,7 +282,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        return true if response['transaction']['status_detail'] == 31
+        return true if response['transaction'] && response['transaction']['status_detail'] == 31
         return true if response['status_detail'] == 32
 
         !response.include?('error') && (response['status'] || response['transaction']['status']) == 'success'
