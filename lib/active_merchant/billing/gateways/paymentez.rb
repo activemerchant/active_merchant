@@ -42,6 +42,11 @@ module ActiveMerchant #:nodoc:
         'elo' => 'el'
       }.freeze
 
+      OTP_STATUS_PENDING = 31
+      OTP_STATUS_SUCCESS = 32
+      OTP_STATUS_FAILURE = 33
+      
+
       def initialize(options = {})
         requires!(options, :application_code, :app_key)
         super
@@ -282,8 +287,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        return true if response['transaction'] && response['transaction']['status_detail'] == 31
-        return true if response['status_detail'] == 32
+        return true if response['transaction'] && response['transaction']['status_detail'] == OTP_STATUS_PENDING
+        return true if response['status_detail'] == OTP_STATUS_PENDING
 
         !response.include?('error') && (response['status'] || response['transaction']['status']) == 'success'
       end
@@ -301,9 +306,9 @@ module ActiveMerchant #:nodoc:
 
         if !success_from(response) && response['error']
           response['error'] && response['error']['type']
-        elsif response['status_detail'] == 32
+        elsif response['status_detail'] == OTP_STATUS_SUCCESS
           return response['message'] = 'opt_verification_success'
-        elsif response['status_detail'] == 33
+        elsif response['status_detail'] == OTP_STATUS_FAILURE
           return response['message'] = 'opt_verification_failed'
         else
           response['transaction'] && response['transaction']['message']
