@@ -292,7 +292,7 @@ module ActiveMerchant #:nodoc:
         return true if response['status_detail'] == OTP_STATUS_PENDING
         return true if response['status_detail'] == OTP_STATUS_SUCCESS
         return true if response['status_detail'] == OTP_STATUS_PAID
-        return true if response['transaction']['carrier_code'] == 'WAITING_OTP'
+        return true if response['transaction'] && response['transaction']['carrier_code'] == 'WAITING_OTP'
 
         !response.include?('error') && (response['status'] || response['transaction']['status']) == 'success'
       end
