@@ -115,6 +115,14 @@ class RemotePaymentezTest < Test::Unit::TestCase
     assert_success purchase_response
   end
 
+  def test_successful_purchase_with_token_and_cvc
+    store_response = @gateway.store(@credit_card, @options)
+    assert_success store_response
+    token = store_response.authorization
+    purchase_response = @gateway.purchase(@amount, token, @options.merge({"cvc": "012", "vat": 0, "tax_percentage": 0.0}))
+    assert_success purchase_response
+  end
+
   def test_successful_purchase_with_3ds1_mpi_fields
     @options[:three_d_secure] = @three_ds_v1_mpi
     response = @gateway.purchase(@amount, @credit_card, @options)

@@ -62,7 +62,7 @@ module ActiveMerchant #:nodoc:
         else
 
           add_invoice(post, money, options)
-          add_payment(post, payment)
+          add_payment(post, payment, options)
           add_customer_data(post, options)
           add_extra_params(post, options)
           action = payment.is_a?(String) ? 'debit' : 'debit_cc'
@@ -80,7 +80,7 @@ module ActiveMerchant #:nodoc:
           commit_transaction('verify', post)
         else
           add_invoice(post, money, options)
-          add_payment(post, payment)
+          add_payment(post, payment, options)
           add_customer_data(post, options)
           add_extra_params(post, options)
   
@@ -194,10 +194,11 @@ module ActiveMerchant #:nodoc:
         post[:order][:tax_percentage] = options[:tax_percentage] if options[:tax_percentage]
       end
 
-      def add_payment(post, payment)
+      def add_payment(post, payment, options = {})
         post[:card] ||= {}
         if payment.is_a?(String)
           post[:card][:token] = payment
+          post[:card][:cvc] = options[:cvc] if options[:cvc]
         else
           post[:card][:number] = payment.number
           post[:card][:holder_name] = payment.name
