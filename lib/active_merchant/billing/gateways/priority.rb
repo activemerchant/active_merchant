@@ -53,7 +53,7 @@ module ActiveMerchant #:nodoc:
 
       def purchase(amount, credit_card, options = {})
         params = {}
-        add_bank_amount_purchase(params, amount, false)
+        add_bank_amount_purchase(params, amount, false, options)
         add_credit_card(params, credit_card, 'purchase', options)
         add_type_merchant_purchase(params, @options[:merchant_id], true, options)
         commit('purchase', params, '', '', options)
@@ -61,7 +61,7 @@ module ActiveMerchant #:nodoc:
 
       def authorize(amount, credit_card, options = {})
         params = {}
-        add_bank_amount_purchase(params, amount, true)
+        add_bank_amount_purchase(params, amount, true, options)
         add_credit_card(params, credit_card, 'purchase', options)
         add_type_merchant_purchase(params, @options[:merchant_id], false, options)
         commit('purchase', params, '', '', options)
@@ -120,9 +120,10 @@ module ActiveMerchant #:nodoc:
           gsub(%r((cvv)\W+\d+), '\1[FILTERED]')
       end
 
-      def add_bank_amount_purchase(params, amount, auth_only)
+      def add_bank_amount_purchase(params, amount, auth_only, options)
         params['achIndicator'] = nil
         params['amount'] = amount
+        params['invoice'] = options[:invoice] 
         params['authCode'] = nil
         params['authOnly'] = auth_only
         params['bankAccount'] = nil
@@ -180,27 +181,34 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_type_merchant_purchase(params, merchant, is_settle_funds, options)
-        params['cardPresent'] = false
-        params['cardPresentType'] = 'CardNotPresent'
-        params['isAuth'] = true
+        params['cardPresent'] = options[:cardPresent]
+        params['cardPresentType'] = options[:cardPresentType]
+        params['cardholderPresence'] = ''
+        params['deviceAttendance'] = ''
+        params['deviceInputCapability'] = ''
+        params['deviceLocation'] = ''
+        params['panCaptureMethod'] = ''
+        params['partialApprovalSupport'] = ''
+        params['pinCaptureCapability'] = ''
+        params['isAuth'] = options[:isAuth]
         params['isSettleFunds'] = is_settle_funds
         params['isTicket'] = false
-
         params['merchantId'] = merchant
         params['mxAdvantageEnabled'] = false
         params['mxAdvantageFeeLabel'] = ''
-        params['paymentType'] = 'Sale'
-        params['bankAccount'] = nil
-
-        params['purchases'] = purchases
-
+        params['paymentType'] = options[:paymentType]
+        params['bankAccount'] = options[:bankAccount]
+        params['purchases'] = options[:purchases]
         params['shouldGetCreditCardLevel'] = true
-        params['shouldVaultCard'] = true
+        params['shouldVaultCard'] = options[:shouldVaultCard]
         params['source'] = options['source']
         params['sourceZip'] = options[:billing_address][:zip]
-        params['taxExempt'] = false
-        params['tenderType'] = 'Card'
+        params['taxExempt'] = options[:taxExempt]
+        params['tenderType'] = options[:tenderType]
         params['terminals'] = []
+        params['shipAmount'] = options[:shipAmount]
+        params['shipToCountry'] = options[:shipToCountry]
+        params['shipToZip'] = options[:shipToZip] 
       end
 
       def add_type_merchant_refund(params, options)

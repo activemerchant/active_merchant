@@ -22,7 +22,41 @@ class RemotePriorityTest < Test::Unit::TestCase
     @option_spr = {
       billing_address: address,
       avsStreet: '666',
-      avsZip: '55044'
+      avsZip: '55044',
+      invoice: '666',
+      cardPresent: false,
+      cardPresentType: 'CardNotPresent',
+      isAuth: false,
+      paymentType: 'Sale',
+      bankAccount: '',
+      shouldVaultCard: false,
+      taxExempt: false,
+      tenderType: 'Card',
+      shipAmount: 0.01,
+      shipToCountry: 'USA',
+      shipToZip: '55667',
+      purchases: [
+        {
+          lineItemId: 79402,
+          name: 'Pipe bend',
+          description: 'pipe bit',
+          quantity: 1,
+          unitPrice: '1.23',
+          discountAmount: 0,
+          extendedAmount: '1.23',
+          discountRate: 0
+        },
+        {
+          lineItemId: 79403,
+          name: 'Pipe seal',
+          description: 'pipe stuff',
+          quantity: 1,
+          unitPrice: '2.34',
+          discountAmount: 0,
+          extendedAmount: '2.34',
+          discountRate: 0
+        }
+      ]
     }
 
     # purchase params fail inavalid card number
