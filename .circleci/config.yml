@@ -29,7 +29,6 @@ jobs:
       - run:
           name: "Push image"
           command: |
-            docker login -u="${QUAY_DOCKER_LOGIN}" -p="${QUAY_DOCKER_LOGIN_PASSWORD}" quay.io
             VERSION=${CIRCLE_TAG:-development-$CIRCLE_SHA1} docker-compose run deploy
 
 
