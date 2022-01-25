@@ -1,3 +1,4 @@
+GEM_VERSION = ENV["PACKAGE_VERSION"] || '0.1.0'
 module ActiveMerchant
-  VERSION = '1.125.0'
+  VERSION = GEM_VERSION
 end

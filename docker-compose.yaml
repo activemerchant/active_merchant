@@ -1,0 +1,18 @@
+version: '3'
+services:
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: rake test
+    image: quay.io/verygoodsecurity/active_merchant:${VERSION:-latest}
+
+  deploy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      GEMFURY_PYPI_PUSH_TOKEN: ${GEMFURY_PYPI_PUSH_TOKEN}
+      PACKAGE_VERSION: ${VERSION}
+    command: sh deploy.sh
+    image: quay.io/verygoodsecurity/active_merchant:${VERSION:-latest}
