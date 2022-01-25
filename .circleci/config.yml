@@ -50,7 +50,7 @@ workflows:
             tags:
               only: /.+/
       - deploy:
-          context: circleci
+          context: private-pypi
           requires:
             - build
           filters:
