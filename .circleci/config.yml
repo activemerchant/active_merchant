@@ -1,0 +1,61 @@
+job-defaults: &job-defaults
+  machine: true
+  working_directory: /home/circleci/active_merchant
+version: 2
+
+jobs:
+  build:
+    <<: *job-defaults
+    steps:
+      - checkout
+      - run:
+          name: "Build"
+          command: |
+            VERSION=$CIRCLE_SHA1 docker-compose build
+
+  test:
+    <<: *job-defaults
+    steps:
+      - checkout
+      - run:
+          name: "Run tests"
+          command: |
+            VERSION=$CIRCLE_SHA1 docker-compose run test
+
+  deploy:
+    <<: *job-defaults
+    steps:
+      - checkout
+      - run:
+          name: "Push image"
+          command: |
+            docker login -u="${QUAY_DOCKER_LOGIN}" -p="${QUAY_DOCKER_LOGIN_PASSWORD}" quay.io
+            VERSION=${CIRCLE_TAG:-development-$CIRCLE_SHA1} docker-compose run deploy
+
+
+workflows:
+  version: 2
+  build-test-and-deploy:
+    jobs:
+      - build:
+          context: circleci
+          filters:
+            tags:
+              only: /.+/
+      - test:
+          context: circleci
+          requires:
+            - build
+          filters:
+            tags:
+              only: /.+/
+      - deploy:
+          context: circleci
+          requires:
+            - build
+          filters:
+            tags:
+              only: /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)-(vgs|VGS*)(\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/
+            branches:
+              ignore: /.*/
+
