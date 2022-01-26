@@ -60,8 +60,9 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     assert_equal 'requires_confirmation', create.params['status']
     assert create.test?
 
-    assert confirm = @gateway.confirm_intent(create.params['id'], nil, return_url: 'https://example.com/return-to-me')
+    assert confirm = @gateway.confirm_intent(create.params['id'], nil, @options.merge(return_url: 'https://example.com/return-to-me', payment_method_types: 'card'))
     assert_equal 'redirect_to_url', confirm.params.dig('next_action', 'type')
+    assert_equal 'card', confirm.params.dig('payment_method_types')[0]
   end
 
   def test_successful_create_and_capture_intent

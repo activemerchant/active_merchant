@@ -60,6 +60,7 @@ module ActiveMerchant #:nodoc:
         result = add_payment_method_token(post, payment_method, options)
         return result if result.is_a?(ActiveMerchant::Billing::Response)
 
+        add_payment_method_types(post, options)
         CONFIRM_INTENT_ATTRIBUTES.each do |attribute|
           add_whitelisted_attribute(post, options, attribute)
         end
