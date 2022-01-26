@@ -47,7 +47,7 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://www.cybersource.com'
       self.display_name = 'CyberSource'
 
-      @@credit_card_codes = {
+      CREDIT_CARD_CODES = {
         visa: '001',
         master: '002',
         american_express: '003',
@@ -59,12 +59,12 @@ module ActiveMerchant #:nodoc:
         elo: '054'
       }
 
-      @@decision_codes = {
+      DECISION_CODES = {
         accept: 'ACCEPT',
         review: 'REVIEW'
       }
 
-      @@response_codes = {
+      RESPONSE_CODES = {
         r100: 'Successful transaction',
         r101: 'Request is missing one or more required fields',
         r102: 'One or more fields contains invalid data',
@@ -103,6 +103,74 @@ module ActiveMerchant #:nodoc:
         r250: 'The request was received, but a time-out occurred with the payment processor',
         r254: 'Your CyberSource account is prohibited from processing stand-alone refunds',
         r255: 'Your CyberSource account is not configured to process the service in the country you specified'
+      }
+
+      PROCESSOR_ERROR_CODES = {
+        '00' => 'Approved and completed successfully',
+        '01' => 'Refer to card issuer',
+        '02' => 'Refer to card issuer, special condition',
+        '03' => 'Invalid merchant',
+        '04' => 'Pick up card (no fraud)',
+        '05' => 'Do not honor',
+        '06' => 'Error',
+        '07' => 'Pick up card, special condition (fraud account)',
+        '10' => 'Partial approval',
+        '11' => 'Approved (V.I.P)',
+        '12' => 'Invalid transaction',
+        '13' => 'Invalid amount or currency conversion field overflow',
+        '14' => 'Invalid account number (no such number)',
+        '15' => 'No such issuer',
+        '19' => 'Re-enter transaction',
+        '21' => 'No action taken',
+        '25' => 'Unable to locate record in file',
+        '28' => 'File temporarily not available for update or inquiry',
+        '39' => 'No credit account',
+        '41' => 'Lost card, pick up (fraud account)',
+        '43' => 'Stolen card, pick up (fraud account)',
+        '51' => 'Not sufficient funds',
+        '52' => 'No checking account',
+        '53' => 'No savings account',
+        '54' => 'Expired card or expiration date is missing',
+        '55' => 'Incorrect PIN or PIN missing',
+        '57' => 'Transaction not permitted to cardholder',
+        '58' => 'Transaction not allowed at terminal',
+        '59' => 'Suspected fraud',
+        '61' => 'Exceeds approval amount limit',
+        '62' => 'Restricted card (card invalid in this region or country)',
+        '63' => 'Security violation (source is not correct issuer)',
+        '64' => 'Transaction does not fulfill AML requirement',
+        '65' => 'Exceeds withdrawal frequency limit',
+        '70' => 'PIN data required',
+        '74' => 'Different value than that used for PIN encryption errors',
+        '75' => 'Allowable number of PIN entry tries exceeded',
+        '76' => 'Unsolicited reversal',
+        '78' => '"Blocked, first used"—Transaction from new cardholder, and card not properly unblocked',
+        '79' => 'Already reversed (by Switch)',
+        '80' => 'No financial impact',
+        '81' => 'Cryptographic error found in PIN',
+        '82' => 'Negative CAM, dCVV, iCVV, or CVV results',
+        '85' => 'No reason to decline a request for address verification, CVV2 verification, or a credit voucher or merchandise return',
+        '86' => 'Cannot verify PIN; for example, no PVV',
+        '89' => 'Ineligible to receive financial position information (GIV)',
+        '91' => 'Issuer or switch inoperative and STIP not applicable or not available for this transaction; Time-out when no stand-in; POS Check Service: Destination unavailable; Credit Voucher and Merchandise Return Authorizations: V.I.P. sent the transaction to the issuer, but the issuer was unavailable.',
+        '92' => 'Financial institution or intermediate network facility cannot be found for routing (receiving institution ID is invalid)',
+        '93' => 'Transaction cannot be completed - violation of law',
+        '1A' => 'Additional customer authentication required',
+        'B1' => 'Surcharge amount not permitted on Visa cards or EBT food stamps (U.S. acquirers only)',
+        'B2' => 'Surcharge amount not supported by debit network issuer.',
+        'N0' => 'Force STIP',
+        'N3' => 'Cash service not available',
+        'N4' => 'Cash request exceeds issuer or approved limit',
+        'N5' => 'Ineligible for resubmission',
+        'N7' => 'Decline for CVV2 failure',
+        'N8' => 'Transaction amount exceeds preauthorized approval amount',
+        'P5' => 'Denied PIN unblock—PIN change or unblock request declined by issuer',
+        'P6' => 'Denied PIN change—requested PIN unsafe',
+        'Q1' => 'Card Authentication failed',
+        'R0' => 'Stop Payment Order',
+        'R2' => 'Transaction does not qualify for Visa PIN',
+        'R3' => 'Revocation of all authorizations order',
+        'Z3' => 'Unable to go online; offline-declined'
       }
 
       # These are the options that can be used when creating a new CyberSource
@@ -612,7 +680,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'expirationMonth', format(creditcard.month, :two_digits)
           xml.tag! 'expirationYear', format(creditcard.year, :four_digits)
           xml.tag!('cvNumber', creditcard.verification_value) unless @options[:ignore_cvv].to_s == 'true' || creditcard.verification_value.blank?
-          xml.tag! 'cardType', @@credit_card_codes[card_brand(creditcard).to_sym]
+          xml.tag! 'cardType', CREDIT_CARD_CODES[card_brand(creditcard).to_sym]
         end
       end
 
@@ -1000,10 +1068,10 @@ module ActiveMerchant #:nodoc:
         rescue REXML::ParseException => e
           response = { message: e.to_s }
         end
-
         success = success?(response)
         message = message_from(response)
         authorization = success || in_fraud_review?(response) ? authorization_from(response, action, amount, options) : nil
+        add_processor_message!(response)
 
         Response.new(success, message, response,
           test: test?,
@@ -1032,7 +1100,10 @@ module ActiveMerchant #:nodoc:
           parse_element(reply, root)
           reply[:message] = "#{reply[:faultcode]}: #{reply[:faultstring]}"
         end
-        return reply
+
+        add_processor_message!(reply)
+
+        reply
       end
 
       def parse_element(reply, node)
@@ -1052,7 +1123,7 @@ module ActiveMerchant #:nodoc:
       def reason_message(reason_code)
         return if reason_code.blank?
 
-        @@response_codes[:"r#{reason_code}"]
+        RESPONSE_CODES[:"r#{reason_code}"]
       end
 
       def authorization_from(response, action, amount, options)
@@ -1061,11 +1132,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def in_fraud_review?(response)
-        response[:decision] == @@decision_codes[:review]
+        response[:decision] == DECISION_CODES[:review]
       end
 
       def success?(response)
-        response[:decision] == @@decision_codes[:accept]
+        response[:decision] == DECISION_CODES[:accept]
       end
 
       def message_from(response)
@@ -1076,6 +1147,12 @@ module ActiveMerchant #:nodoc:
         else
           response[:message]
         end
+      end
+
+      def add_processor_message!(response)
+        return unless processor_code = response[:processorResponse]
+
+        response[:processorMessage] = PROCESSOR_ERROR_CODES[processor_code]
       end
     end
   end

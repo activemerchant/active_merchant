@@ -59,6 +59,7 @@ class CyberSourceTest < Test::Unit::TestCase
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal 'Successful transaction', response.message
+    assert_equal 'Approved and completed successfully', response.params['processorMessage']
     assert_success response
     assert_equal "#{@options[:order_id]};#{response.params['requestID']};#{response.params['requestToken']};purchase;100;USD;", response.authorization
     assert response.test?
