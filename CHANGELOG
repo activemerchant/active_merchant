@@ -6,6 +6,7 @@
 * Payflow: Add support for stored credentials [ajawadmirza] #4277
 * Orbital: Don't void $0 auths for Verify [javierpedrozaing] #2487
 * StripePI: Enable Apple Pay and Google Pay payment methods [gasb150] #4252
+* PaySafe: Update `unstore` method and authorization for redact [ajawadmirza] #4294
 
 == Version 1.125.0 (January 20, 2022)
 * Wompi: support gateway [therufs] #4173
