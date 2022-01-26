@@ -95,7 +95,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def unstore(pm_profile_id)
-        commit_for_unstore(:delete, "profiles/#{pm_profile_id}", nil, nil)
+        commit_for_unstore(:delete, "profiles/#{get_id_from_store_auth(pm_profile_id)}", nil, nil)
       end
 
       def supports_scrubbing?
@@ -179,7 +179,7 @@ module ActiveMerchant #:nodoc:
       def add_payment(post, payment)
         if payment.is_a?(String)
           post[:card] = {}
-          post[:card][:paymentToken] = payment
+          post[:card][:paymentToken] = get_pm_from_store_auth(payment)
         else
           post[:card] = { cardExpiry: {} }
           post[:card][:cardNum] = payment.number
@@ -384,10 +384,19 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(action, response)
         if action == 'profiles'
-          response['cards'].first['paymentToken']
+          pm = response['cards'].first['paymentToken']
+          "#{pm}|#{response['id']}"
         else
           response['id']
         end
+      end
+
+      def get_pm_from_store_auth(authorization)
+        authorization.split('|')[0]
+      end
+
+      def get_id_from_store_auth(authorization)
+        authorization.split('|')[1]
       end
 
       def post_data(parameters = {}, options = {})
