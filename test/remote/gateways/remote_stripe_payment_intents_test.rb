@@ -869,6 +869,22 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert_equal 'requires_confirmation', update_response.params['status']
   end
 
+  def test_create_a_payment_intent_and_confirm_with_different_payment_method
+    options = {
+      currency: 'USD',
+      payment_method_types: %w[afterpay_clearpay],
+      metadata: { key_1: 'value_1', key_2: 'value_2' }
+    }
+    assert create_response = @gateway.setup_purchase(@amount, options)
+    assert_equal 'requires_payment_method', create_response.params['status']
+    intent_id = create_response.params['id']
+    assert_equal 2000, create_response.params['amount']
+    assert_equal 'afterpay_clearpay', create_response.params['payment_method_types'][0]
+
+    assert confirm_response = @gateway.confirm_intent(intent_id, @visa_payment_method, payment_method_types: 'card')
+    assert_equal 'card', confirm_response.params['payment_method_types'][0]
+  end
+
   def test_create_a_payment_intent_and_void
     options = {
       currency: 'GBP',

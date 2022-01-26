@@ -2,6 +2,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* StripePI: Add ability to change payment_method_type to confirm_intent [aenand] #4300
 * GlobalCollect: Improve support for Naranja and Cabal card types [dsmcclain] #4286
 * Payflow: Add support for stored credentials [ajawadmirza] #4277
 * Orbital: Don't void $0 auths for Verify [javierpedrozaing] #2487
