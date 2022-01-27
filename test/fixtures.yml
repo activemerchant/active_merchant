@@ -641,6 +641,9 @@ nmi:
   login: demo
   password: password
 
+nmi_secure:
+  security_key: '6457Thfj624V5r7WUwc5v6a68Zsd6YEm'
+
 ogone:
   login: LOGIN
   user: USER
