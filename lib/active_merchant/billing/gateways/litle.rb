@@ -78,12 +78,12 @@ module ActiveMerchant #:nodoc:
       def refund(money, payment, options = {})
         request = build_xml_request do |doc|
           add_authentication(doc)
-          add_descriptor(doc, options)
           doc.send(refund_type(payment), transaction_attributes(options)) do
             if payment.is_a?(String)
               transaction_id, = split_authorization(payment)
               doc.litleTxnId(transaction_id)
               doc.amount(money) if money
+              add_descriptor(doc, options)
             elsif check?(payment)
               add_echeck_purchase_params(doc, money, payment, options)
             else
