@@ -22,7 +22,41 @@ class RemotePriorityTest < Test::Unit::TestCase
     @faulty_credit_card = credit_card('12345', month: '01', year: '2029', first_name: 'Marcus', last_name: 'Rashford', verification_value: '999')
 
     @option_spr = {
-      billing_address: address()
+      billing_address: address(),
+      invoice: '666',
+      cardPresent: false,
+      cardPresentType: 'CardNotPresent',
+      isAuth: false,
+      paymentType: 'Sale',
+      bankAccount: '',
+      shouldVaultCard: false,
+      taxExempt: false,
+      tenderType: 'Card',
+      shipAmount: 0.01,
+      shipToCountry: 'USA',
+      shipToZip: '55667',
+      purchases: [
+        {
+          lineItemId: 79402,
+          name: 'Anita',
+          description: 'Dump',
+          quantity: 1,
+          unitPrice: '1.23',
+          discountAmount: 0,
+          extendedAmount: '1.23',
+          discountRate: 0
+        },
+        {
+          lineItemId: 79403,
+          name: 'Old Peculier',
+          description: 'Beer',
+          quantity: 1,
+          unitPrice: '2.34',
+          discountAmount: 0,
+          extendedAmount: '2.34',
+          discountRate: 0
+        }
+      ]
     }
 
     # purchase params fail inavalid card number

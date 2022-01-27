@@ -79,6 +79,7 @@ module ActiveMerchant #:nodoc:
 
       def capture(amount, authorization, options = {})
         params = {}
+        params['invoice'] = options[:invoice]
         params['amount'] = localized_amount(amount.to_f, options[:currency])
         params['authCode'] = options[:authCode]
         params['merchantId'] = @options[:merchant_id]
@@ -182,6 +183,17 @@ module ActiveMerchant #:nodoc:
         params['sourceZip'] = options[:billing_address][:zip] if options[:billing_address]
         params['taxExempt'] = false
         params['tenderType'] = 'Card'
+
+        params['cardholderPresence'] = ''
+        params['deviceAttendance'] = ''
+        params['deviceInputCapability'] = ''
+        params['deviceLocation'] = ''
+        params['panCaptureMethod'] = ''
+        params['partialApprovalSupport'] = ''
+        params['pinCaptureCapability'] = ''
+        params['shipAmount'] = options[:shipAmount]
+        params['shipToCountry'] = options[:shipToCountry]
+        params['shipToZip'] = options[:shipToZip]
       end
 
       def commit(action, params: '', iid: '', card_number: nil, jwt: '')
