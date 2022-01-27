@@ -125,7 +125,6 @@ module ActiveMerchant #:nodoc:
 
       def add_credit_card(params, credit_card, action, options)
         return unless credit_card&.is_a?(CreditCard)
-
         card_details = {}
         card_details['expiryMonth'] = format(credit_card.month, :two_digits).to_s
         card_details['expiryYear'] = format(credit_card.year, :two_digits).to_s
