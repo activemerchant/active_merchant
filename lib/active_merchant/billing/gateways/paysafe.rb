@@ -95,7 +95,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def unstore(pm_profile_id)
-        commit_for_unstore(:delete, "profiles/#{get_id_from_store_auth(pm_profile_id)}", nil, nil)
+        commit(:delete, "profiles/#{get_id_from_store_auth(pm_profile_id)}", nil, nil)
       end
 
       def supports_scrubbing?
@@ -321,6 +321,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
+        return {} if body.empty?
+
         JSON.parse(body)
       end
 
@@ -339,17 +341,6 @@ module ActiveMerchant #:nodoc:
           cvv_result: CVVResult.new(response['cvvVerification']),
           test: test?,
           error_code: success ? nil : error_code_from(response)
-        )
-      end
-
-      def commit_for_unstore(method, action, parameters, options)
-        url = url(action)
-        response = raw_ssl_request(method, url, post_data(parameters, options), headers)
-        success = true if response.code == '200'
-
-        Response.new(
-          success,
-          message: response.message
         )
       end
 
