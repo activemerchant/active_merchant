@@ -102,10 +102,11 @@ module ActiveMerchant
       end
 
       def refund(money, authorization, options = {})
-        commit(:refund, options, :put) do |doc|
-          add_authorization(doc, authorization)
-          add_amount(doc, money, options)
-          add_order(doc, options)
+        options[:endpoint] = options[:merchant_transaction_id] ? "/refund/merchant/#{options[:merchant_transaction_id]}" : "/refund/#{authorization}"
+        commit(:refund, options, :post) do |doc|
+          add_amount(doc, money, options) if money
+          %i[reason cancel_subscription tax_amount].each { |field| send_when_present(doc, field, options) }
+          add_metadata(doc, options)
         end
       end
 
@@ -234,6 +235,7 @@ module ActiveMerchant
               doc.send('meta-key', truncate(entry[:meta_key], 40))
               doc.send('meta-value', truncate(entry[:meta_value], 500))
               doc.send('meta-description', truncate(entry[:meta_description], 40))
+              doc.send('is-visible', truncate(entry[:meta_is_visible], 5))
             end
           end
         end
@@ -386,7 +388,7 @@ module ActiveMerchant
 
       def parse(response)
         return bad_authentication_response if response.code.to_i == 401
-        return generic_error_response(response.body) if [403, 429].include?(response.code.to_i)
+        return generic_error_response(response.body) if [403, 405, 429].include?(response.code.to_i)
 
         parsed = {}
         doc = Nokogiri::XML(response.body)
@@ -433,7 +435,7 @@ module ActiveMerchant
       end
 
       def api_request(action, request, verb, payment_method_details, options)
-        ssl_request(verb, url(action, payment_method_details), request, headers(options))
+        ssl_request(verb, url(action, options, payment_method_details), request, headers(options))
       rescue ResponseError => e
         e.response
       end
@@ -456,9 +458,10 @@ module ActiveMerchant
         )
       end
 
-      def url(action = nil, payment_method_details = PaymentMethodDetails.new())
+      def url(action = nil, options = {}, payment_method_details = PaymentMethodDetails.new())
         base = test? ? test_url : live_url
         resource = action == :store ? 'vaulted-shoppers' : payment_method_details.resource_url
+        resource += options[:endpoint] if action == :refund
         "#{base}/#{resource}"
       end
 
@@ -531,7 +534,10 @@ module ActiveMerchant
       end
 
       def root_element(action, payment_method_details)
-        action == :store ? 'vaulted-shopper' : payment_method_details.root_element
+        return 'refund' if action == :refund
+        return 'vaulted-shopper' if action == :store
+
+        payment_method_details.root_element
       end
 
       def headers(options)
@@ -549,7 +555,7 @@ module ActiveMerchant
       def build_xml_request(action, payment_method_details)
         builder = Nokogiri::XML::Builder.new
         builder.__send__(root_element(action, payment_method_details), root_attributes) do |doc|
-          doc.send('card-transaction-type', TRANSACTIONS[action]) if TRANSACTIONS[action] && !payment_method_details.alt_transaction?
+          doc.send('card-transaction-type', TRANSACTIONS[action]) if TRANSACTIONS[action] && !payment_method_details.alt_transaction? && action != :refund
           yield(doc)
         end
         builder.doc.root.to_xml

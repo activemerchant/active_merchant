@@ -31,6 +31,25 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
         version: '2.2.0'
       }
     )
+    @refund_options = {
+      reason: 'Refund for order #1992',
+      cancel_subscription: 'false',
+      tax_amount: 0.05,
+      transaction_meta_data: [
+        {
+          meta_key: 'refundedItems',
+          meta_value: '1552,8832',
+          meta_description: 'Refunded Items',
+          meta_is_visible: 'false'
+        },
+        {
+          meta_key: 'Number2',
+          meta_value: 'KTD',
+          meta_description: 'Metadata 2',
+          meta_is_visible: 'true'
+        }
+      ]
+    }
 
     @check = check
     @invalid_check = check(routing_number: '123456', account_number: '123456789')
@@ -427,7 +446,17 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount, purchase.authorization, @options)
+    assert refund = @gateway.refund(@amount, purchase.authorization, @refund_options)
+    assert_success refund
+    assert_equal 'Success', refund.message
+  end
+
+  def test_successful_refund_with_merchant_id
+    order_id = generate_unique_id
+    purchase = @gateway.purchase(@amount, @credit_card, @options.merge({ order_id: order_id }))
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount, purchase.authorization, @refund_options.merge({ merchant_transaction_id: order_id }))
     assert_success refund
     assert_equal 'Success', refund.message
   end
@@ -436,14 +465,13 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount - 1, purchase.authorization)
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization, @refund_options)
     assert_success refund
   end
 
   def test_failed_refund
     response = @gateway.refund(@amount, '')
     assert_failure response
-    assert_match(/cannot be completed due to missing transaction ID/, response.message)
   end
 
   def test_successful_void
