@@ -397,12 +397,12 @@ class RemoteCredoraxTest < Test::Unit::TestCase
   end
 
   def test_successful_credit
-    response = @gateway.credit(@amount, @credit_card, @options.merge(first_name: 'Test', last_name: 'McTest'))
+    response = @gateway.credit(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'Succeeded', response.message
   end
 
-  def test_failed_credit_with_zero_amount
+  def test_failed_credit
     response = @gateway.credit(0, @declined_card, @options)
     assert_failure response
     assert_equal 'Invalid amount', response.message
