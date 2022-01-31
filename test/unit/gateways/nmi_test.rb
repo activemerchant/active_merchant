@@ -84,7 +84,7 @@ class NmiTest < Test::Unit::TestCase
 
   def test_failed_purchase_using_security_key
     response = stub_comms do
-      @gateway.purchase(@amount, @credit_card)
+      @gateway_secure.purchase(@amount, @credit_card)
     end.respond_with(failed_purchase_response)
     assert_failure response
     assert response.test?
