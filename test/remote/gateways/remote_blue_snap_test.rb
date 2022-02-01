@@ -573,4 +573,10 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     assert_scrubbed(@check.routing_number, transcript)
     assert_scrubbed(@gateway.options[:api_password], transcript)
   end
+
+  def test_successful_purchase_with_idempotency_key
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(idempotency_key: 'test123'))
+    assert_success response
+    assert_equal 'Success', response.message
+  end
 end
