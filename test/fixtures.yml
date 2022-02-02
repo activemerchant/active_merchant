@@ -540,6 +540,10 @@ metrics_global:
 micropayment:
   access_key: "0b4832ca37a31e748c4490b58d743986"
 
+midtrans:
+  client_key: 'SB-Mid-client-aJe_6ctMpSPO8TY5'
+  server_key: 'SB-Mid-server-qgyVDv5TRpkAbV6b6iqtvlrk'
+
 # Working credentials, no need to replace
 migs:
   login: TESTH-STATION
