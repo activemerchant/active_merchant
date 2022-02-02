@@ -81,6 +81,8 @@ module ActiveMerchant #:nodoc:
         deny: 'deny'
       }
 
+      MISSING_AUTHORIZATION_MESSAGE = "Missing required parameter: authorization"
+
       def initialize(options={})
         requires!(options, :client_key, :server_key)
         super
@@ -96,7 +98,26 @@ module ActiveMerchant #:nodoc:
         add_payment(post, payment, options)
         add_address(post, options)
         add_customer_data(post, options)
-        create_charge(post)
+        commit("purchase", post)
+      end
+
+      def authorize(money, payment, options={})
+        options[:transaction_type] = TRANSACTION_STATUS_MAPPING[:authorize]
+        purchase(money, payment, options)
+      end
+
+      def capture(money, authorization, options={})
+        raise ArgumentError.new(MISSING_AUTHORIZATION_MESSAGE) if authorization.nil?
+        post = {}
+        add_authorization(post, money, authorization)
+        commit("capture", post)
+      end
+
+      def void(authorization, options={})
+        raise ArgumentError.new(MISSING_AUTHORIZATION_MESSAGE) if authorization.nil?
+        post = {}
+        post[:transaction_id] = authorization
+        commit("void", post)
       end
 
       def authorize(money, payment, options={})
@@ -153,9 +174,21 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def create_charge(parameters)
+      def add_authorization(post, money, authorization)
+        post[:transaction_id] = authorization
+        post[:amount] = money
+      end
+
+      def commit(action, parameters)
         begin
-          gateway_response = @midtrans_gateway.charge(parameters)
+          case action
+          when "purchase"
+            gateway_response = @midtrans_gateway.charge(parameters)
+          when "capture"
+            gateway_response = @midtrans_gateway.capture(parameters[:transaction_id], parameters[:amount])
+          when "void"
+            gateway_response = @midtrans_gateway.cancel(parameters[:transaction_id])
+          end
           response_for(gateway_response)
         rescue MidtransError => error
           error_response_for(error)
