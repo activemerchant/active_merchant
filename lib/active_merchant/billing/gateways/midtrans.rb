@@ -99,6 +99,11 @@ module ActiveMerchant #:nodoc:
         create_charge(post)
       end
 
+      def authorize(money, payment, options={})
+        options[:transaction_type] = TRANSACTION_STATUS_MAPPING[:authorize]
+        purchase(money, payment, options)
+      end
+
       private
 
       def add_customer_data(post, options)
@@ -170,8 +175,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_code_from(status)
-        return nil if %w[200 201].include? status.to_i
-        STATUS_CODE_MAPPING[status.to_i]
+        if [200, 201].include?(status.to_i)
+          return nil
+        else
+          return STATUS_CODE_MAPPING[status.to_i]
+        end
       end
 
       def error_response_for(gateway_response)
