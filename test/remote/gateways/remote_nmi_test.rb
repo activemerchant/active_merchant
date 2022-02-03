@@ -3,6 +3,7 @@ require 'test_helper'
 class RemoteNmiTest < Test::Unit::TestCase
   def setup
     @gateway = NmiGateway.new(fixtures(:nmi))
+    @gateway_secure = NmiGateway.new(fixtures(:nmi_secure))
     @amount = Random.rand(100...1000)
     @credit_card = credit_card('4111111111111111', verification_value: 917)
     @check = check(
@@ -45,9 +46,50 @@ class RemoteNmiTest < Test::Unit::TestCase
     assert_equal 'Authentication Failed', response.message
   end
 
+  def test_invalid_login_security_key_empty
+    gateway_secure = NmiGateway.new(security_key: '')
+    assert response = gateway_secure.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'Authentication Failed', response.message
+  end
+
+  def test_valid_login_username_password
+    @gateway = NmiGateway.new(login: 'demo', password: 'password')
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+  end
+
+  def test_valid_login_security_key
+    gateway_secure = NmiGateway.new(fixtures(:nmi_secure))
+    assert response = gateway_secure.purchase(@amount, @credit_card, @options)
+    assert_success response
+  end
+
+  def test_successful_authorization_security_key
+    assert response = @gateway_secure.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert response.authorization
+  end
+
+  def test_successful_purchase_using_security_key
+    assert response = @gateway_secure.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert response.test?
+    assert_equal 'Succeeded', response.message
+    assert response.authorization
+  end
+
+  def test_transcript_scrubbing_using_security_key
+    transcript = capture_transcript(@gateway_secure) do
+      @gateway_secure.purchase(@amount, @credit_card, @options)
+    end
+    transcript = @gateway_secure.scrub(transcript)
+    assert_scrubbed(@gateway_secure.options[:security_key], transcript)
+  end
+
   def test_successful_purchase
     options = @options.merge(@level3_options)
-
     assert response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert response.test?
@@ -388,7 +430,6 @@ class RemoteNmiTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options)
     end
     clean_transcript = @gateway.scrub(transcript)
-
     assert_scrubbed(@credit_card.number, clean_transcript)
     assert_cvv_scrubbed(clean_transcript)
     assert_password_scrubbed(clean_transcript)

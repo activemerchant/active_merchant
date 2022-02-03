@@ -291,6 +291,7 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new indent: 2
         add_customer_id(xml, options)
         add_payment_method_or_subscription(xml, money, creditcard_or_reference, options)
+        add_other_tax(xml, options)
         add_threeds_2_ucaf_data(xml, creditcard_or_reference, options)
         add_decision_manager_fields(xml, options)
         add_mdd_fields(xml, options)
@@ -349,6 +350,7 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new indent: 2
         add_customer_id(xml, options)
         add_payment_method_or_subscription(xml, money, payment_method_or_reference, options)
+        add_other_tax(xml, options)
         add_threeds_2_ucaf_data(xml, payment_method_or_reference, options)
         add_decision_manager_fields(xml, options)
         add_mdd_fields(xml, options)

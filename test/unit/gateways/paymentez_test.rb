@@ -67,6 +67,21 @@ class PaymentezTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_capture_with_otp
+    authorization = 'CI-14952'
+    options = @options.merge({ type: 'BY_OTP', value: '012345' })
+    response = stub_comms do
+      @gateway.capture(nil, authorization, options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal 'BY_OTP', request['type']
+      assert_equal '012345', request['value']
+      assert_equal authorization, request['transaction']['id']
+      assert_equal '123', request['user']['id']
+    end.respond_with(successful_otp_capture_response)
+    assert_success response
+  end
+
   def test_successful_purchase_with_token
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
@@ -604,6 +619,17 @@ Conn close
         }
       }
     '
+  end
+
+  def successful_otp_capture_response
+    '{
+      "status": 1,
+      "payment_date": "2017-09-26T21:16:00",
+      "amount": 99.0,
+      "transaction_id": "CI-14952",
+      "status_detail": 3,
+      "message": ""
+    }'
   end
 
   def failed_capture_response
