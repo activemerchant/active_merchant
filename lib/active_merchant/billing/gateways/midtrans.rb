@@ -68,7 +68,8 @@ module ActiveMerchant #:nodoc:
         deny: 'deny',
         authorize: 'authorize',
         cancel: 'cancel',
-        expire: 'expire'
+        expire: 'expire',
+        refund: 'refund'
       }
 
       MINIMUM_AUTHORIZE_AMOUNTS = {
@@ -120,9 +121,11 @@ module ActiveMerchant #:nodoc:
         commit("void", post)
       end
 
-      def authorize(money, payment, options={})
-        options[:transaction_type] = TRANSACTION_STATUS_MAPPING[:authorize]
-        purchase(money, payment, options)
+      def refund(money, authorization, options={})
+        raise ArgumentError.new(MISSING_AUTHORIZATION_MESSAGE) if authorization.nil?
+        post = {}
+        contruct_refund_request(post, money, authorization, options)
+        commit("refund", post)
       end
 
       private
@@ -179,6 +182,14 @@ module ActiveMerchant #:nodoc:
         post[:amount] = money
       end
 
+      def contruct_refund_request(post, money, authorization, options={})
+        post[:transaction_id] = authorization
+        post[:details] = {}
+        post[:details][:amount] = money if money
+        post[:details][:reason] = options[:reason] if options[:reason]
+        post[:details][:refund_key] = options[:order_id] if options[:order_id]
+      end
+
       def commit(action, parameters)
         begin
           case action
@@ -188,6 +199,8 @@ module ActiveMerchant #:nodoc:
             gateway_response = @midtrans_gateway.capture(parameters[:transaction_id], parameters[:amount])
           when "void"
             gateway_response = @midtrans_gateway.cancel(parameters[:transaction_id])
+          when "refund"
+            gateway_response = @midtrans_gateway.refund(parameters[:transaction_id], parameters[:details])
           end
           response_for(gateway_response)
         rescue MidtransError => error

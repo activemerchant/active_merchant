@@ -150,4 +150,28 @@ class RemoteMidtransTest < Test::Unit::TestCase
       @gateway.void(nil)
     end
   end
+
+  def test_refund_when_valid_tx_then_success
+    purchase_response = @gateway.purchase(@amount, @accepted_card, @card_payment_options)
+    assert_success purchase_response
+
+    assert refund_response = @gateway.refund(@amount, purchase_response.authorization, {})
+    # The created charge ios only in settling state hence added assertion for checking failure message and code
+    assert_failure refund_response
+    assert_equal refund_response.error_code, "CANNOT_MODIFY_TRANSACTION"
+    assert_equal refund_response.message, "Transaction status cannot be updated."
+    assert_equal refund_response.params["status_code"], "412"
+  end
+
+  def test_refund_when_invalid_tx_then_failure
+    response = @gateway.refund(@amount, 'invalid_tx')
+    assert_failure response
+    assert_equal response.error_code, MidtransGateway::STATUS_CODE_MAPPING[404]
+  end
+
+  def test_refund_when_id_nil_then_failure
+    assert_raise(ArgumentError) do
+      @gateway.refund(@amount, nil)
+    end
+  end
 end
