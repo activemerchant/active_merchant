@@ -15,8 +15,53 @@ class PriorityTest < Test::Unit::TestCase
     # Note the 'avsStreet' and 'avsZip' are the values obtained from credit card input on MX Merchant
     @option_spr = {
       billing_address: address(),
-      avs_street: '666',
-      avs_zip: '55044'
+      invoice: '666',
+      cardPresent: false,
+      cardPresentType: 'CardNotPresent',
+      isAuth: false,
+      paymentType: 'Sale',
+      bankAccount: '',
+      shouldVaultCard: false,
+      taxExempt: false,
+      tenderType: 'Card',
+      ship_amount: 0.01,
+      ship_to_country: 'USA',
+      ship_to_zip: '55667',
+      purchases: [
+        {
+          lineItemId: 79402,
+          name: 'Anita',
+          description: 'Dump',
+          quantity: 1,
+          unitPrice: '1.23',
+          discountAmount: 0,
+          extendedAmount: '1.23',
+          discountRate: 0
+        },
+        {
+          lineItemId: 79403,
+          name: 'Old Peculier',
+          description: 'Beer',
+          quantity: 1,
+          unitPrice: '2.34',
+          discountAmount: 0,
+          extendedAmount: '2.34',
+          discountRate: 0
+        }
+      ],
+      code: '101',
+      taxRate: '05',
+      taxAmount: '0.50',
+      posData: {
+        cardholderPresence: 'Present',
+        cardPresent: 'true',
+        deviceAttendance: 'Attended',
+        deviceInputCapability: 'ContactlessChip',
+        deviceLocation: 'OnPremise',
+        panCaptureMethod: 'Manual',
+        partialApprovalSupport: 'Supported',
+        pinCaptureCapability: 'Incapable'
+      }
     }
 
     # purchase params fail

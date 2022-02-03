@@ -32,9 +32,9 @@ class RemotePriorityTest < Test::Unit::TestCase
       shouldVaultCard: false,
       taxExempt: false,
       tenderType: 'Card',
-      shipAmount: 0.01,
-      shipToCountry: 'USA',
-      shipToZip: '55667',
+      ship_amount: 0.01,
+      ship_to_country: 'USA',
+      ship_to_zip: '55667',
       purchases: [
         {
           lineItemId: 79402,
@@ -56,7 +56,20 @@ class RemotePriorityTest < Test::Unit::TestCase
           extendedAmount: '2.34',
           discountRate: 0
         }
-      ]
+      ],
+      code: '101',
+      taxRate: '05',
+      taxAmount: '0.50',
+      posData: {
+        cardholderPresence: 'Present',
+        cardPresent: 'true',
+        deviceAttendance: 'Attended',
+        deviceInputCapability: 'ContactlessChip',
+        deviceLocation: 'OnPremise',
+        panCaptureMethod: 'Manual',
+        partialApprovalSupport: 'Supported',
+        pinCaptureCapability: 'Incapable'
+      }
     }
 
     # purchase params fail inavalid card number
