@@ -62,7 +62,6 @@ class RemotePriorityTest < Test::Unit::TestCase
       taxAmount: '0.50',
       posData: {
         cardholderPresence: 'Ecom',
-        cardPresent: 'false',
         deviceAttendance: 'HomePc',
         deviceInputCapability: 'Unknown',
         deviceLocation: 'HomePc',
