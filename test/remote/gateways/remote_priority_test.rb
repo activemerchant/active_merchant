@@ -61,13 +61,13 @@ class RemotePriorityTest < Test::Unit::TestCase
       taxRate: '05',
       taxAmount: '0.50',
       posData: {
-        cardholderPresence: 'Present',
-        cardPresent: 'true',
-        deviceAttendance: 'Attended',
-        deviceInputCapability: 'ContactlessChip',
-        deviceLocation: 'OnPremise',
+        cardholderPresence: 'Ecom',
+        cardPresent: 'false',
+        deviceAttendance: 'HomePc',
+        deviceInputCapability: 'Unknown',
+        deviceLocation: 'HomePc',
         panCaptureMethod: 'Manual',
-        partialApprovalSupport: 'Supported',
+        partialApprovalSupport: 'NotSupported',
         pinCaptureCapability: 'Incapable'
       }
     }
