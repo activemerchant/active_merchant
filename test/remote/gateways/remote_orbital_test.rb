@@ -349,113 +349,6 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_false response.authorization.blank?
   end
 
-  [
-    {
-      card: {
-        number: '4112344112344113',
-        verification_value: '411',
-        brand: 'visa'
-      },
-      three_d_secure: {
-        eci: '5',
-        cavv: 'AAABAIcJIoQDIzAgVAkiAAAAAAA=',
-        xid: 'AAABAIcJIoQDIzAgVAkiAAAAAAA='
-      },
-      address: {
-        address1: '55 Forever Ave',
-        address2: '',
-        city: 'Concord',
-        state: 'NH',
-        zip: '03301',
-        country: 'US'
-      }
-    },
-    {
-      card: {
-        number: '5112345112345114',
-        verification_value: '823',
-        brand: 'master'
-      },
-      three_d_secure: {
-        eci: '5',
-        cavv: 'AAAEEEDDDSSSAAA2243234',
-        xid: 'Asju1ljfl86bAAAAAACm9zU6aqY=',
-        version: '2.2.0',
-        ds_transaction_id: '8dh4htokdf84jrnxyemfiosheuyfjt82jiek'
-      },
-      address: {
-        address1: 'Byway Street',
-        address2: '',
-        city: 'Portsmouth',
-        state: 'MA',
-        zip: '67890',
-        country: 'US',
-        phone: '5555555555'
-      }
-    },
-    {
-      card: {
-        number: '371144371144376',
-        verification_value: '1234',
-        brand: 'american_express'
-      },
-      three_d_secure: {
-        eci: '5',
-        cavv: 'AAABBWcSNIdjeUZThmNHAAAAAAA=',
-        xid: 'AAABBWcSNIdjeUZThmNHAAAAAAA='
-      },
-      address: {
-        address1: '4 Northeastern Blvd',
-        address2: '',
-        city: 'Salem',
-        state: 'NH',
-        zip: '03105',
-        country: 'US'
-      }
-    }
-  ].each do |fixture|
-    define_method("test_successful_#{fixture[:card][:brand]}_authorization_with_3ds") do
-      cc = credit_card(fixture[:card][:number], {
-        verification_value: fixture[:card][:verification_value],
-        brand: fixture[:card][:brand]
-      })
-      options = @options.merge(
-        order_id: '2',
-        currency: 'USD',
-        three_d_secure: fixture[:three_d_secure],
-        address: fixture[:address],
-        soft_descriptors: {
-          merchant_name: 'Merch',
-          product_description: 'Description',
-          merchant_email: 'email@example'
-        }
-      )
-      assert response = @three_ds_gateway.authorize(100, cc, options)
-
-      assert_success response
-      assert_equal 'Approved', response.message
-      assert_false response.authorization.blank?
-    end
-
-    define_method("test_successful_#{fixture[:card][:brand]}_purchase_with_3ds") do
-      cc = credit_card(fixture[:card][:number], {
-        verification_value: fixture[:card][:verification_value],
-        brand: fixture[:card][:brand]
-      })
-      options = @options.merge(
-        order_id: '2',
-        currency: 'USD',
-        three_d_secure: fixture[:three_d_secure],
-        address: fixture[:address]
-      )
-      assert response = @three_ds_gateway.purchase(100, cc, options)
-
-      assert_success response
-      assert_equal 'Approved', response.message
-      assert_false response.authorization.blank?
-    end
-  end
-
   def test_successful_purchase_with_mit_stored_credentials
     mit_stored_credentials = {
       mit_msg_type: 'MUSE',
@@ -998,5 +891,160 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
   def stored_credential_options(*args, id: nil)
     @options.merge(order_id: generate_unique_id,
                    stored_credential: stored_credential(*args, id: id))
+  end
+end
+
+class BrandSpecificOrbitalTests < RemoteOrbitalGatewayTest
+  # Additional class for a subset of tests that share setup logic.
+  # This will run automatically with the rest of the tests in this file,
+  # or you can specify individual tests by name as you usually would.
+  def setup
+    super
+
+    @brand_specific_fixtures = {
+      visa: {
+        card: {
+          number: '4112344112344113',
+          verification_value: '411',
+          brand: 'visa'
+        },
+        three_d_secure: {
+          eci: '5',
+          cavv: 'AAABAIcJIoQDIzAgVAkiAAAAAAA=',
+          xid: 'AAABAIcJIoQDIzAgVAkiAAAAAAA='
+        },
+        address: {
+          address1: '55 Forever Ave',
+          address2: '',
+          city: 'Concord',
+          state: 'NH',
+          zip: '03301',
+          country: 'US'
+        }
+      },
+      master: {
+        card: {
+          number: '5112345112345114',
+          verification_value: '823',
+          brand: 'master'
+        },
+        three_d_secure: {
+          eci: '5',
+          cavv: 'AAAEEEDDDSSSAAA2243234',
+          xid: 'Asju1ljfl86bAAAAAACm9zU6aqY=',
+          version: '2.2.0',
+          ds_transaction_id: '8dh4htokdf84jrnxyemfiosheuyfjt82jiek'
+        },
+        address: {
+          address1: 'Byway Street',
+          address2: '',
+          city: 'Portsmouth',
+          state: 'MA',
+          zip: '67890',
+          country: 'US',
+          phone: '5555555555'
+        }
+      },
+      american_express: {
+        card: {
+          number: '371144371144376',
+          verification_value: '1234',
+          brand: 'american_express'
+        },
+        three_d_secure: {
+          eci: '5',
+          cavv: 'AAABBWcSNIdjeUZThmNHAAAAAAA=',
+          xid: 'AAABBWcSNIdjeUZThmNHAAAAAAA='
+        },
+        address: {
+          address1: '4 Northeastern Blvd',
+          address2: '',
+          city: 'Salem',
+          state: 'NH',
+          zip: '03105',
+          country: 'US'
+        }
+      }
+    }
+  end
+
+  def test_successful_3ds_authorization_with_visa
+    cc = brand_specific_card(@brand_specific_fixtures[:visa][:card])
+    options = brand_specific_3ds_options(@brand_specific_fixtures[:visa])
+
+    assert response = @three_ds_gateway.authorize(100, cc, options)
+    assert_success_with_authorization(response)
+  end
+
+  def test_successful_3ds_purchase_with_visa
+    cc = brand_specific_card(@brand_specific_fixtures[:visa][:card])
+    options = brand_specific_3ds_options(@brand_specific_fixtures[:visa])
+
+    assert response = @three_ds_gateway.purchase(100, cc, options)
+    assert_success_with_authorization(response)
+  end
+
+  def test_successful_3ds_authorization_with_mastercard
+    cc = brand_specific_card(@brand_specific_fixtures[:master][:card])
+    options = brand_specific_3ds_options(@brand_specific_fixtures[:master])
+
+    assert response = @three_ds_gateway.authorize(100, cc, options)
+    assert_success_with_authorization(response)
+  end
+
+  def test_succesful_3ds_purchase_with_mastercard
+    cc = brand_specific_card(@brand_specific_fixtures[:master][:card])
+    options = brand_specific_3ds_options(@brand_specific_fixtures[:master])
+
+    assert response = @three_ds_gateway.purchase(100, cc, options)
+    assert_success_with_authorization(response)
+  end
+
+  def test_successful_3ds_authorization_with_american_express
+    cc = brand_specific_card(@brand_specific_fixtures[:american_express][:card])
+    options = brand_specific_3ds_options(@brand_specific_fixtures[:american_express])
+
+    assert response = @three_ds_gateway.authorize(100, cc, options)
+    assert_success_with_authorization(response)
+  end
+
+  def test_successful_3ds_purchase_with_american_express
+    cc = brand_specific_card(@brand_specific_fixtures[:american_express][:card])
+    options = brand_specific_3ds_options(@brand_specific_fixtures[:american_express])
+
+    assert response = @three_ds_gateway.purchase(100, cc, options)
+    assert_success_with_authorization(response)
+  end
+
+  private
+
+  def assert_success_with_authorization(response)
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+  end
+
+  def brand_specific_3ds_options(data)
+    @options.merge(
+      order_id: '2',
+      currency: 'USD',
+      three_d_secure: data[:three_d_secure],
+      address: data[:address],
+      soft_descriptors: {
+        merchant_name: 'Merch',
+        product_description: 'Description',
+        merchant_email: 'email@example'
+      }
+    )
+  end
+
+  def brand_specific_card(card_data)
+    credit_card(
+      card_data[:number],
+      {
+        verification_value: card_data[:verification_value],
+        brand: card_data[:brand]
+      }
+    )
   end
 end
