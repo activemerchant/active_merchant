@@ -1146,6 +1146,14 @@ class AdyenTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_three_decimal_places_currency_handling
+    stub_comms do
+      @gateway.authorize(1000, @credit_card, @options.merge(currency: 'JOD'))
+    end.check_request(skip_response: true) do |_endpoint, data|
+      assert_match(/"amount\":{\"value\":\"1000\",\"currency\":\"JOD\"}/, data)
+    end
+  end
+
   private
 
   def stored_credential_options(*args, ntid: nil)
