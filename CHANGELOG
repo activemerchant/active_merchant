@@ -16,6 +16,7 @@
 * Paymentez: Update `capture` method to verify by otp for pending transactions [ajawadmirza] #4267
 * BlueSnap: Update refund request and endpoint along with merchant transaction support [ajawadmirza] #4307
 * DecidirPlus: Added `authorize`, `capture`, `void`, and `verify` methods [ajawadmirza] #4284
+* Paymentez: Fix `authorize` to call `purchase` for otp flow [ajawadmirza] #4310
 
 == Version 1.125.0 (January 20, 2022)
 * Wompi: support gateway [therufs] #4173
