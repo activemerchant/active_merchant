@@ -10,3 +10,5 @@ Gemfile*.lock
 .rvmrc
 /doc/
 .ruby-version
+coverage
+rubocop.json
