@@ -18,19 +18,42 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, payment, options = {})
         post = {}
-
-        add_payment(post, payment, options)
-        add_purchase_data(post, money, payment, options)
-        add_fraud_detection(post, options)
+        build_purchase_authorize_request(post, money, payment, options)
 
         commit(:post, 'payments', post)
+      end
+
+      def authorize(money, payment, options = {})
+        post = {}
+        build_purchase_authorize_request(post, money, payment, options)
+
+        commit(:post, 'payments', post)
+      end
+
+      def capture(money, authorization, options = {})
+        post = {}
+        post[:amount] = money
+
+        commit(:put, "payments/#{add_reference(authorization)}", post)
       end
 
       def refund(money, authorization, options = {})
         post = {}
         post[:amount] = money
 
+        commit(:post, "payments/#{add_reference(authorization)}/refunds", post)
+      end
+
+      def void(authorization, options = {})
         commit(:post, "payments/#{add_reference(authorization)}/refunds")
+      end
+
+      def verify(credit_card, options = {})
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { store(credit_card, options) }
+          r.process { authorize(100, r.authorization, options) }
+          r.process(:ignore_result) { void(r.authorization, options) }
+        end
       end
 
       def store(payment, options = {})
@@ -53,6 +76,12 @@ module ActiveMerchant #:nodoc:
 
       private
 
+      def build_purchase_authorize_request(post, money, payment, options)
+        add_payment(post, payment, options)
+        add_purchase_data(post, money, payment, options)
+        add_fraud_detection(post, options)
+      end
+
       def add_reference(authorization)
         return unless authorization
 
@@ -66,8 +95,8 @@ module ActiveMerchant #:nodoc:
           post[:bin] = bin
         else
           post[:card_number] = payment.number
-          post[:card_expiration_month] = payment.month.to_s.rjust(2, '0')
-          post[:card_expiration_year] = payment.year.to_s[-2..-1]
+          post[:card_expiration_month] = format(payment.month, :two_digits)
+          post[:card_expiration_year] = format(payment.year, :two_digits)
           post[:security_code] = payment.verification_value.to_s
           post[:card_holder_name] = payment.name
           post[:card_holder_identification] = {}
@@ -106,12 +135,26 @@ module ActiveMerchant #:nodoc:
         return unless fraud_detection = options[:fraud_detection]
 
         {}.tap do |hsh|
-          hsh[:send_to_cs] = fraud_detection[:send_to_cs] ? true : false # true/false
+          hsh[:send_to_cs] = fraud_detection[:send_to_cs] == 'true' # true/false
           hsh[:channel] = fraud_detection[:channel] if fraud_detection[:channel]
           hsh[:dispatch_method] = fraud_detection[:dispatch_method] if fraud_detection[:dispatch_method]
-          hsh[:csmdds] = fraud_detection[:csmdds] if fraud_detection[:csmdds]
+          add_csmdds(hsh, fraud_detection)
+
           post[:fraud_detection] = hsh
         end
+      end
+
+      def add_csmdds(hsh, fraud_detection)
+        return unless fraud_detection[:csmdds]
+
+        csmdds_arr = []
+        fraud_detection[:csmdds].each do |csmdds|
+          csmdds_hsh = {}
+          csmdds_hsh[:code] = csmdds[:code].to_i
+          csmdds_hsh[:description] = csmdds[:description]
+          csmdds_arr.append(csmdds_hsh)
+        end
+        hsh[:csmdds] = csmdds_arr unless csmdds_arr.empty?
       end
 
       def parse(body)
@@ -153,7 +196,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response.dig('status') == 'approved' || response.dig('status') == 'active'
+        response.dig('status') == 'approved' || response.dig('status') == 'active' || response.dig('status') == 'pre_approved'
       end
 
       def message_from(response)
