@@ -10,6 +10,11 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
 
     @credit_card = credit_card('4111111111111111', verification_value: '987')
     @declined_card = credit_card('801111111111111')
+    @master_credit_card = credit_card('5555555555554444',
+      verification_value: '321',
+      month: '12',
+      year: (Time.now.year + 2).to_s,
+      brand: :master)
     @pinless_debit_card = credit_card('4002269999999999')
     @elo_credit_card = credit_card('5067310000000010',
       verification_value: '321',
@@ -1007,6 +1012,29 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
 
     gateway = CyberSourceGateway.new(login: 'an_unknown_login', password: 'unknown_password')
     assert !gateway.verify_credentials
+  end
+
+  def test_successful_verify
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_match '1.00', response.params['amount']
+    assert_equal 'Successful transaction', response.message
+  end
+
+  def test_successful_verify_zero_amount_visa
+    @options[:zero_amount_auth] = true
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_match '0.00', response.params['amount']
+    assert_equal 'Successful transaction', response.message
+  end
+
+  def test_successful_verify_zero_amount_master
+    @options[:zero_amount_auth] = true
+    response = @gateway.verify(@master_credit_card, @options)
+    assert_success response
+    assert_match '0.00', response.params['amount']
+    assert_equal 'Successful transaction', response.message
   end
 
   private

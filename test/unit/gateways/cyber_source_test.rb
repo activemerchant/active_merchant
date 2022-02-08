@@ -737,6 +737,23 @@ class CyberSourceTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_verify_zero_amount_request
+    @options[:zero_amount_auth] = true
+    stub_comms(@gateway, :ssl_post) do
+      @gateway.verify(@credit_card, @options)
+    end.check_request(skip_response: true) do |_endpoint, data|
+      assert_match %r(<grandTotalAmount>0.00<\/grandTotalAmount>), data
+    end
+  end
+
+  def test_successful_verify_request
+    stub_comms(@gateway, :ssl_post) do
+      @gateway.verify(@credit_card, @options)
+    end.check_request(skip_response: true) do |_endpoint, data|
+      assert_match %r(<grandTotalAmount>1.00<\/grandTotalAmount>), data
+    end
+  end
+
   def test_successful_verify_with_elo
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.verify(@elo_credit_card, @options)

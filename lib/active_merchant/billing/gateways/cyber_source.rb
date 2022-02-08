@@ -158,9 +158,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify(payment, options = {})
+        amount = eligible_for_zero_auth?(payment, options) ? 0 : 100
         MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, payment, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
+          r.process { authorize(amount, payment, options) }
+          r.process(:ignore_result) { void(r.authorization, options) } unless amount == 0
         end
       end
 
@@ -1078,6 +1079,10 @@ module ActiveMerchant #:nodoc:
         else
           response[:message]
         end
+      end
+
+      def eligible_for_zero_auth?(payment_method, options = {})
+        payment_method.is_a?(CreditCard) && options[:zero_amount_auth]
       end
     end
   end
