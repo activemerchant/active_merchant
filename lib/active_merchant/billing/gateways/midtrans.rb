@@ -83,6 +83,9 @@ module ActiveMerchant #:nodoc:
       }
 
       MISSING_AUTHORIZATION_MESSAGE = "Missing required parameter: authorization"
+      CARD_TOKEN_CREATION_SUCCESSFUL = "CARD_TOKEN_CREATION_SUCCESSFUL"
+      CARD_TOKEN_CREATION_FAILED = "CARD_TOKEN_CREATION_FAILED"
+
 
       def initialize(options={})
         requires!(options, :client_key, :server_key)
@@ -128,6 +131,27 @@ module ActiveMerchant #:nodoc:
         commit("refund", post)
       end
 
+      def store(payment, options={})
+        options[:save_token_id] = true
+        options[:payment_type] = "credit_card"
+        options[:order_id] = generate_unique_id()
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { token_response_for(authorize(MINIMUM_AUTHORIZE_AMOUNTS['IDR'], payment, options).params) }
+          r.process(:ignore_result) { void(r.params["transaction_id"], options) }
+        end
+      end
+
+      def verify_credentials()
+        transaction_details = {
+          :gross_amount => MINIMUM_AUTHORIZE_AMOUNTS['IDR'],
+          :order_id => generate_unique_id()
+        }
+        options = {
+          :transaction_details => transaction_details
+        }
+        commit('verify_credentials', options)
+      end
+
       private
 
       def add_customer_data(post, options)
@@ -151,9 +175,15 @@ module ActiveMerchant #:nodoc:
       def add_payment(post, payment, options)
         post[:payment_type] = options[:payment_type]
         post[:credit_card] = {}
-        token_id = tokenize_card(payment)
+        token_id = nil
+        if payment.is_a?(WalletToken)
+          token_id = payment.token if payment.token
+        else
+          token_id = tokenize_card(payment)["token_id"]
+        end
         post[:credit_card][:token_id] = token_id
         post[:credit_card][:type] = options[:transaction_type] if options[:transaction_type]
+        post[:credit_card][:save_token_id] = options[:save_token_id] if options[:save_token_id]
       end
 
       def url()
@@ -171,7 +201,7 @@ module ActiveMerchant #:nodoc:
         @uri = URI.parse("#{url()}/token?#{URI.encode_www_form(query_params)}")
         begin
           response = Net::HTTP.get_response(@uri)
-          JSON.parse(response.body)["token_id"]
+          JSON.parse(response.body)
         rescue ResponseError => e
           Response.new(false, e.response.message)
         end
@@ -201,6 +231,8 @@ module ActiveMerchant #:nodoc:
             gateway_response = @midtrans_gateway.cancel(parameters[:transaction_id])
           when "refund"
             gateway_response = @midtrans_gateway.refund(parameters[:transaction_id], parameters[:details])
+          when "verify_credentials"
+            gateway_response = @midtrans_gateway.create_snap_token(parameters)
           end
           response_for(gateway_response)
         rescue MidtransError => error
@@ -248,6 +280,19 @@ module ActiveMerchant #:nodoc:
           authorization: authorization_from(gateway_response),
           test: test?,
           error_code: error_code_from(gateway_response.status_code)
+        )
+      end
+
+      def token_response_for(gateway_response)
+        success = gateway_response["status_code"] == "200"
+        message = success ? CARD_TOKEN_CREATION_SUCCESSFUL: CARD_TOKEN_CREATION_FAILED
+        Response.new(
+          success,
+          message,
+          gateway_response,
+          authorization: success ? gateway_response["saved_token_id"]: nil,
+          test: test?,
+          error_code: error_code_from(gateway_response["status_code"])
         )
       end
     end
