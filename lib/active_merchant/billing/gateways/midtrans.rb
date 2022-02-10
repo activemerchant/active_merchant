@@ -30,7 +30,7 @@ module ActiveMerchant #:nodoc:
         :xl_tunai, 
         :indosat_dompetku, 
         :mandiri_ecash, 
-        :cstor
+        :cstor,
         :qris
       ]
 

@@ -13,7 +13,7 @@ class RemoteMidtransTest < Test::Unit::TestCase
       order_id: SecureRandom.uuid
     }
     @gopay_payment_options = {
-      payment_type: 'credit_card',
+      payment_type: 'qris',
       order_id: SecureRandom.uuid,
       notification_url: 'dummyurl.com'
     }
@@ -30,6 +30,8 @@ class RemoteMidtransTest < Test::Unit::TestCase
     assert_success response
     assert_equal response.params["status_code"], "201"
     assert_equal response.params["transaction_status"], MidtransGateway::TRANSACTION_STATUS_MAPPING[:pending]
+    assert_equal response.params["fraud_status"], "accept"
+    assert_equal response.params["acquirer"], "gopay"
   end
 
   def test_purchase_when_declined_card_then_failure
