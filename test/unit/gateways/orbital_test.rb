@@ -104,6 +104,10 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     }
   end
 
+  def test_supports_network_tokenization
+    assert_true @gateway.supports_network_tokenization?
+  end
+
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 

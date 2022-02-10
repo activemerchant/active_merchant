@@ -69,6 +69,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(money, payment, options = {})
+        return purchase(money, payment, options) if options[:otp_flow]
+
         post = {}
 
         add_invoice(post, money, options)

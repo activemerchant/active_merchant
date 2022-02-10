@@ -267,7 +267,7 @@ class RemotePaymentezTest < Test::Unit::TestCase
 
   def test_successful_capture_with_otp
     @options[:vat] = 0.1
-    response = @ecuador_gateway.purchase(@amount, @otp_card, @options)
+    response = @ecuador_gateway.authorize(@amount, @otp_card, @options.merge({ otp_flow: true }))
     assert_success response
     assert_equal 'pending', response.params['transaction']['status']
 

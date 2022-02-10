@@ -269,6 +269,10 @@ decidir_plus:
   public_key: SOMECREDENTIAL
   private_key: SOMECREDENTIAL
 
+decidir_plus_preauth:
+  public_key: SOMECREDENTIAL
+  private_key: SOMECREDENTIAL
+
 decidir_purchase:
   api_key: 5df6b5764c3f4822aecdc82d56f26b9d
 

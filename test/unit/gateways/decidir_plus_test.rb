@@ -57,6 +57,17 @@ class DecidirPlusTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_successful_capture
+    authorization = '12420186'
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.capture(@amount, authorization)
+    end.check_request do |_action, endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_includes endpoint, "payments/#{authorization}"
+      assert_equal @amount, request['amount']
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_successful_refund
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.refund(@amount, @payment_reference)
@@ -107,6 +118,33 @@ class DecidirPlusTest < Test::Unit::TestCase
     end.check_request do |_action, _endpoint, data, _headers|
       assert_equal(@fraud_detection, JSON.parse(data, symbolize_names: true)[:fraud_detection])
     end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_fraud_detection_without_csmdds
+    @fraud_detection.delete(:csmdds)
+    options = @options.merge(fraud_detection: @fraud_detection)
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @payment_reference, options)
+    end.check_request do |_action, _endpoint, data, _headers|
+      fraud_detection_fields = JSON.parse(data, symbolize_names: true)[:fraud_detection]
+      assert_equal(@fraud_detection, fraud_detection_fields)
+      assert_nil fraud_detection_fields[:csmdds]
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_void
+    authorization = '418943'
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.void(authorization)
+    end.check_request do |_action, endpoint, data, _headers|
+      assert_includes endpoint, "payments/#{authorization}/refunds"
+      assert_equal '{}', data
+    end.respond_with(successful_void_response)
 
     assert_success response
   end
@@ -201,6 +239,18 @@ class DecidirPlusTest < Test::Unit::TestCase
   def failed_refund_response
     %{
       {\"error_type\":\"not_found_error\",\"entity_name\":\"\",\"id\":\"\"}
+    }
+  end
+
+  def successful_void_response
+    %{
+      {"id":418966,"amount":100,"sub_payments":null,"error":null,"status":"approved","status_details":{"ticket":"4630","card_authorization_code":"074206","address_validation_code":"VTE0011","error":null}}
+    }
+  end
+
+  def successful_verify_response
+    %{
+      {"id":12421487,"site_transaction_id":"e6936a3fbc65cfa1fded1e84d4bbeaf9","payment_method_id":1,"card_brand":"Visa","amount":100,"currency":"ars","status":"approved","status_details":{"ticket":"4747","card_authorization_code":"094329","address_validation_code":"VTE0011","error":null},"date":"2022-01-20T09:43Z","customer":null,"bin":"448459","installments":1,"first_installment_expiration_date":null,"payment_type":"single","sub_payments":[],"site_id":"99999999","fraud_detection":null,"aggregate_data":null,"establishment_name":null,"spv":null,"confirmed":null,"pan":"48d2eeca7a9041dc4b2008cf495bc5a8c4","customer_token":null,"card_data":"/tokens/12421487","token":"a36cadd5-5b06-41f5-972d-fffd524e2a35"}
     }
   end
 end
