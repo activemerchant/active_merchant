@@ -12,12 +12,24 @@ class RemoteMidtransTest < Test::Unit::TestCase
       payment_type: 'credit_card',
       order_id: SecureRandom.uuid
     }
+    @gopay_payment_options = {
+      payment_type: 'credit_card',
+      order_id: SecureRandom.uuid,
+      notification_url: 'dummyurl.com'
+    }
   end
 
   def test_purchase_when_valid_card_then_success
     response = @gateway.purchase(@amount, @accepted_card, @card_payment_options)
     assert_success response
     assert_equal response.params["status_code"], "200"
+  end
+
+  def test_purchase_when_gopay_valid_request_then_success
+    response = @gateway.purchase(@amount, {}, @gopay_payment_options)
+    assert_success response
+    assert_equal response.params["status_code"], "201"
+    assert_equal response.params["transaction_status"], MidtransGateway::TRANSACTION_STATUS_MAPPING[:pending]
   end
 
   def test_purchase_when_declined_card_then_failure

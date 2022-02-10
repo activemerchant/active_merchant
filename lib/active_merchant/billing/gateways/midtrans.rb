@@ -31,6 +31,7 @@ module ActiveMerchant #:nodoc:
         :indosat_dompetku, 
         :mandiri_ecash, 
         :cstor
+        :qris
       ]
 
       STATUS_CODE_MAPPING = {
@@ -69,7 +70,8 @@ module ActiveMerchant #:nodoc:
         authorize: 'authorize',
         cancel: 'cancel',
         expire: 'expire',
-        refund: 'refund'
+        refund: 'refund',
+        pending: 'pending'
       }
 
       MINIMUM_AUTHORIZE_AMOUNTS = {
@@ -97,6 +99,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, payment, options={})
+        @midtrans_gateway.config.override_notif_url = options[:notification_url] if options[:notification_url]
         post = {}
         add_invoice(post, money, options)
         add_payment(post, payment, options)
@@ -174,16 +177,18 @@ module ActiveMerchant #:nodoc:
 
       def add_payment(post, payment, options)
         post[:payment_type] = options[:payment_type]
-        post[:credit_card] = {}
-        token_id = nil
-        if payment.is_a?(WalletToken)
-          token_id = payment.token if payment.token
-        else
-          token_id = tokenize_card(payment)["token_id"]
+        if options[:payemnt_type] == 'credit_card'
+          post[:credit_card] = {}
+          token_id = nil
+          if payment.is_a?(WalletToken)
+            token_id = payment.token if payment.token
+          else
+            token_id = tokenize_card(payment)["token_id"]
+          end
+          post[:credit_card][:token_id] = token_id
+          post[:credit_card][:type] = options[:transaction_type] if options[:transaction_type]
+          post[:credit_card][:save_token_id] = options[:save_token_id] if options[:save_token_id]
         end
-        post[:credit_card][:token_id] = token_id
-        post[:credit_card][:type] = options[:transaction_type] if options[:transaction_type]
-        post[:credit_card][:save_token_id] = options[:save_token_id] if options[:save_token_id]
       end
 
       def url()
