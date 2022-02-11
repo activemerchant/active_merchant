@@ -94,6 +94,18 @@ class DecidirPlusTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_unstore
+    token_id = '132141|123|3d5992f9-90f8-4ac4-94dd-6baa7306941f'
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.unstore(token_id)
+    end.check_request do |_action, endpoint, data, _headers|
+      assert_includes endpoint, "cardtokens/#{token_id.split('|')[2]}"
+      assert_empty JSON.parse(data)
+    end.respond_with(successful_unstore_response)
+
+    assert_success response
+  end
+
   def test_successful_purchase_with_options
     options = @options.merge(sub_payments: @sub_payments)
     options[:installments] = 4
@@ -217,6 +229,8 @@ class DecidirPlusTest < Test::Unit::TestCase
       {\"id\":\"cd4ba1c0-4b41-4c5c-8530-d0c757df8603\",\"status\":\"active\",\"card_number_length\":16,\"date_created\":\"2022-01-07T17:37Z\",\"bin\":\"448459\",\"last_four_digits\":\"3090\",\"security_code_length\":3,\"expiration_month\":9,\"expiration_year\":23,\"date_due\":\"2022-01-07T17:52Z\",\"cardholder\":{\"identification\":{\"type\":\"\",\"number\":\"\"},\"name\":\"Longbob Longsen\"}}
     }
   end
+
+  def successful_unstore_response; end
 
   def successful_purchase_response
     %{

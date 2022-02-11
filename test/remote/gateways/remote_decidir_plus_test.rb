@@ -136,6 +136,25 @@ class RemoteDecidirPlusTest < Test::Unit::TestCase
     assert_equal @credit_card.number[0..5], response.authorization.split('|')[1]
   end
 
+  def test_successful_unstore
+    customer = {
+      id: 'John',
+      email: 'decidir@decidir.com'
+    }
+
+    assert response = @gateway_purchase.store(@credit_card)
+    payment_reference = response.authorization
+
+    response = @gateway_purchase.purchase(@amount, payment_reference, @options.merge({ customer: customer }))
+    assert_success response
+
+    assert_equal 'approved', response.message
+    token_id = response.authorization
+
+    assert unstore_response = @gateway_purchase.unstore(token_id)
+    assert_success unstore_response
+  end
+
   def test_successful_purchase_with_options
     options = @options.merge(sub_payments: @sub_payments)
 

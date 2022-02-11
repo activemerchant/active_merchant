@@ -63,6 +63,10 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'tokens', post)
       end
 
+      def unstore(authorization)
+        commit(:delete, "cardtokens/#{add_customer_token(authorization)}")
+      end
+
       def supports_scrubbing?
         true
       end
@@ -77,6 +81,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def build_purchase_authorize_request(post, money, payment, options)
+        add_customer_data(post, options)
         add_payment(post, payment, options)
         add_purchase_data(post, money, payment, options)
         add_fraud_detection(post, options)
@@ -86,6 +91,12 @@ module ActiveMerchant #:nodoc:
         return unless authorization
 
         authorization.split('|')[0]
+      end
+
+      def add_customer_token(authorization)
+        return unless authorization
+
+        authorization.split('|')[2]
       end
 
       def add_payment(post, payment, options = {})
@@ -103,6 +114,14 @@ module ActiveMerchant #:nodoc:
           post[:card_holder_identification][:type] = options[:dni]
           post[:card_holder_identification][:number] = options[:card_holder_identification_number]
         end
+      end
+
+      def add_customer_data(post, options = {})
+        return unless customer = options[:customer]
+
+        post[:customer] = {}
+        post[:customer][:id] = customer[:id] if customer[:id]
+        post[:customer][:email] = customer[:email] if customer[:email]
       end
 
       def add_purchase_data(post, money, payment, options = {})
@@ -158,6 +177,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
+        return {} if body.nil?
+
         JSON.parse(body)
       end
 
@@ -196,17 +217,19 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response.dig('status') == 'approved' || response.dig('status') == 'active' || response.dig('status') == 'pre_approved'
+        response.dig('status') == 'approved' || response.dig('status') == 'active' || response.dig('status') == 'pre_approved' || response.empty?
       end
 
       def message_from(response)
+        return '' if response.empty?
+
         response.dig('status') || error_message(response) || response.dig('message')
       end
 
       def authorization_from(response)
         return nil unless response.dig('id') || response.dig('bin')
 
-        "#{response.dig('id')}|#{response.dig('bin')}"
+        "#{response.dig('id')}|#{response.dig('bin')}|#{response.dig('customer_token')}"
       end
 
       def post_data(parameters = {})
