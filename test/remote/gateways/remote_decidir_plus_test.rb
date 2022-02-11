@@ -21,8 +21,8 @@ class RemoteDecidirPlusTest < Test::Unit::TestCase
       },
       {
         site_id: '04052018',
-        installments: 1,
-        amount: 1500
+        installments: '1',
+        amount: '1500'
       }
     ]
     @fraud_detection = {

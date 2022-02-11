@@ -21,8 +21,8 @@ class RemoteDecidirTest < Test::Unit::TestCase
     @sub_payments = [
       {
         site_id: '04052018',
-        installments: 1,
-        amount: 1500
+        installments: '1',
+        amount: '1500'
       },
       {
         site_id: '04052018',

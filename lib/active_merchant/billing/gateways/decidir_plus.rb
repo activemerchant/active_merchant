@@ -143,8 +143,8 @@ module ActiveMerchant #:nodoc:
         sub_payments.each do |sub_payment|
           sub_payment_hash = {
             site_id: sub_payment[:site_id],
-            installments: sub_payment[:installments],
-            amount: sub_payment[:amount]
+            installments: sub_payment[:installments].to_i,
+            amount: sub_payment[:amount].to_i
           }
           post[:sub_payments] << sub_payment_hash
         end
