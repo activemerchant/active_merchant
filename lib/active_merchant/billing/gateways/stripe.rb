@@ -48,7 +48,8 @@ module ActiveMerchant #:nodoc:
         'processing_error' => STANDARD_ERROR_CODE[:processing_error],
         'incorrect_pin' => STANDARD_ERROR_CODE[:incorrect_pin],
         'test_mode_live_card' => STANDARD_ERROR_CODE[:test_mode_live_card],
-        'pickup_card' => STANDARD_ERROR_CODE[:pickup_card]
+        'pickup_card' => STANDARD_ERROR_CODE[:pickup_card],
+        'amount_too_small' => STANDARD_ERROR_CODE[:invalid_amount]
       }
 
       BANK_ACCOUNT_HOLDER_TYPE_MAPPING = {
