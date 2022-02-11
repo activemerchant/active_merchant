@@ -22,7 +22,53 @@ class RemotePriorityTest < Test::Unit::TestCase
     @faulty_credit_card = credit_card('12345', month: '01', year: '2029', first_name: 'Marcus', last_name: 'Rashford', verification_value: '999')
 
     @option_spr = {
-      billing_address: address()
+      billing_address: address(),
+      invoice: '666',
+      cardPresent: false,
+      cardPresentType: 'CardNotPresent',
+      isAuth: false,
+      paymentType: 'Sale',
+      bankAccount: '',
+      shouldVaultCard: false,
+      taxExempt: false,
+      tenderType: 'Card',
+      ship_amount: 0.01,
+      ship_to_country: 'USA',
+      ship_to_zip: '55667',
+      purchases: [
+        {
+          lineItemId: 79402,
+          name: 'Anita',
+          description: 'Dump',
+          quantity: 1,
+          unitPrice: '1.23',
+          discountAmount: 0,
+          extendedAmount: '1.23',
+          discountRate: 0
+        },
+        {
+          lineItemId: 79403,
+          name: 'Old Peculier',
+          description: 'Beer',
+          quantity: 1,
+          unitPrice: '2.34',
+          discountAmount: 0,
+          extendedAmount: '2.34',
+          discountRate: 0
+        }
+      ],
+      code: '101',
+      tax_rate: '05',
+      tax_amount: '0.50',
+      pos_data: {
+        cardholderPresence: 'Ecom',
+        deviceAttendance: 'HomePc',
+        deviceInputCapability: 'Unknown',
+        deviceLocation: 'HomePc',
+        panCaptureMethod: 'Manual',
+        partialApprovalSupport: 'NotSupported',
+        pinCaptureCapability: 'Incapable'
+      }
     }
 
     # purchase params fail inavalid card number

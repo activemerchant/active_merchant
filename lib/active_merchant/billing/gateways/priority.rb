@@ -79,6 +79,7 @@ module ActiveMerchant #:nodoc:
 
       def capture(amount, authorization, options = {})
         params = {}
+        params['invoice'] = options[:invoice]
         params['amount'] = localized_amount(amount.to_f, options[:currency])
         params['authCode'] = options[:authCode]
         params['merchantId'] = @options[:merchant_id]
@@ -126,7 +127,6 @@ module ActiveMerchant #:nodoc:
         return unless credit_card&.is_a?(CreditCard)
 
         card_details = {}
-
         card_details['expiryMonth'] = format(credit_card.month, :two_digits).to_s
         card_details['expiryYear'] = format(credit_card.year, :two_digits).to_s
         card_details['expiryDate'] = exp_date(credit_card)
@@ -134,9 +134,10 @@ module ActiveMerchant #:nodoc:
         card_details['last4'] = credit_card.last_digits
         card_details['cvv'] = credit_card.verification_value
         card_details['number'] = credit_card.number
-
+        card_details['code'] = options[:code]
+        card_details['taxRate'] = options[:tax_rate]
+        card_details['taxAmount'] = options[:tax_amount]
         card_details['entryMode'] = options['entryMode'].blank? ? 'Keyed' : options['entryMode']
-
         case action
         when 'purchase'
           card_details['avsStreet'] = options[:billing_address][:address1] if options[:billing_address]
@@ -159,29 +160,26 @@ module ActiveMerchant #:nodoc:
         "#{format(credit_card.month, :two_digits)}/#{format(credit_card.year, :two_digits)}"
       end
 
-      def purchases
-        [{ taxRate: '0.0000', additionalTaxRate: nil, discountRate: nil }]
-      end
-
       def add_type_merchant_purchase(params, merchant, is_settle_funds, options)
         params['cardPresent'] = false
         params['cardPresentType'] = 'CardNotPresent'
         params['isAuth'] = true
         params['isSettleFunds'] = is_settle_funds
         params['isTicket'] = false
-
         params['merchantId'] = merchant
         params['mxAdvantageEnabled'] = false
         params['paymentType'] = 'Sale'
-
-        params['purchases'] = purchases
-
+        params['purchases'] = options[:purchases]
         params['shouldGetCreditCardLevel'] = true
         params['shouldVaultCard'] = true
         params['source'] = options[:source]
         params['sourceZip'] = options[:billing_address][:zip] if options[:billing_address]
         params['taxExempt'] = false
         params['tenderType'] = 'Card'
+        params['posData'] = options[:pos_data]
+        params['shipAmount'] = options[:ship_amount]
+        params['shipToCountry'] = options[:ship_to_country]
+        params['shipToZip'] = options[:ship_to_zip]
       end
 
       def commit(action, params: '', iid: '', card_number: nil, jwt: '')
