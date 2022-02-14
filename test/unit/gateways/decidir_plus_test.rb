@@ -95,11 +95,11 @@ class DecidirPlusTest < Test::Unit::TestCase
   end
 
   def test_successful_unstore
-    token_id = '132141|123|3d5992f9-90f8-4ac4-94dd-6baa7306941f'
+    token_id = '3d5992f9-90f8-4ac4-94dd-6baa7306941f'
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.unstore(token_id)
     end.check_request do |_action, endpoint, data, _headers|
-      assert_includes endpoint, "cardtokens/#{token_id.split('|')[2]}"
+      assert_includes endpoint, "cardtokens/#{token_id}"
       assert_empty JSON.parse(data)
     end.respond_with(successful_unstore_response)
 

@@ -149,7 +149,7 @@ class RemoteDecidirPlusTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal 'approved', response.message
-    token_id = response.authorization
+    token_id = response.params['customer_token']
 
     assert unstore_response = @gateway_purchase.unstore(token_id)
     assert_success unstore_response
