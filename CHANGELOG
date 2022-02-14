@@ -23,6 +23,7 @@
 * Priority: Add additional fields to purchase and capture requests [dsmcclain] #4301
 * DecidirPlus: Added `unstore` method [ajawadmirza] #4317
 * Decidir & Decidir Plus: Revise handling of `sub_payment` sub-fields [meagabeth] #4318
+* DecidirPlus: Update `unstore` implementation to get token from params [ajawadmirza] #4320
 
 == Version 1.125.0 (January 20, 2022)
 * Wompi: support gateway [therufs] #4173

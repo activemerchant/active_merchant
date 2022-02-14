@@ -63,8 +63,8 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'tokens', post)
       end
 
-      def unstore(authorization)
-        commit(:delete, "cardtokens/#{add_customer_token(authorization)}")
+      def unstore(customer_token)
+        commit(:delete, "cardtokens/#{customer_token}")
       end
 
       def supports_scrubbing?
@@ -91,12 +91,6 @@ module ActiveMerchant #:nodoc:
         return unless authorization
 
         authorization.split('|')[0]
-      end
-
-      def add_customer_token(authorization)
-        return unless authorization
-
-        authorization.split('|')[2]
       end
 
       def add_payment(post, payment, options = {})
@@ -229,7 +223,7 @@ module ActiveMerchant #:nodoc:
       def authorization_from(response)
         return nil unless response.dig('id') || response.dig('bin')
 
-        "#{response.dig('id')}|#{response.dig('bin')}|#{response.dig('customer_token')}"
+        "#{response.dig('id')}|#{response.dig('bin')}"
       end
 
       def post_data(parameters = {})
