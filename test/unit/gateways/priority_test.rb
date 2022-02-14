@@ -246,6 +246,28 @@ class PriorityTest < Test::Unit::TestCase
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
+  
+  def test_successful_credit
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(successful_credit_response)
+
+    assert_success response
+    assert_equal @approval_message, response.message
+    assert_equal 'Return', response.params['type']
+    assert response.test?
+  end
+
+  def test_failed_credit_invalid_credit_card_month
+    response = stub_comms do
+      @gateway.purchase(@amount, @invalid_credit_card, @options)
+    end.respond_with(failed_credit_response)
+
+    assert_failure response
+    assert_equal 'ValidationError', response.error_code
+    assert_equal 'Year, Month, and Day parameters describe an un-representable DateTime.', response.message
+    assert response.test?
+  end
 
   def successful_refund_response
     %(
@@ -1253,5 +1275,78 @@ class PriorityTest < Test::Unit::TestCase
     %(
       {\"achIndicator\":null,\"amount\":2.11,\"authCode\":null,\"authOnly\":false,\"bankAccount\":null,\"cardAccount\":{\"avsStreet\":\"1\",\"avsZip\":\"88888\",\"cvv\":\"[FILTERED]\",\"entryMode\":\"Keyed\",\"expiryDate\":\"01/29\",\"expiryMonth\":\"01\",\"expiryYear\":\"29\",\"last4\":null,\"magstripe\":null,\"number\":\"[FILTERED]\"},\"cardPresent\":false,\"cardPresentType\":\"CardNotPresent\",\"isAuth\":true,\"isSettleFunds\":true,\"isTicket\":false,\"merchantId\":12345678,\"mxAdvantageEnabled\":false,\"mxAdvantageFeeLabel\":\"\",\"paymentType\":\"Sale\",\"purchases\":[{\"taxRate\":\"0.0000\",\"additionalTaxRate\":null,\"discountRate\":null}],\"shouldGetCreditCardLevel\":true,\"shouldVaultCard\":true,\"source\":\"Tester\",\"sourceZip\":\"K1C2N6\",\"taxExempt\":false,\"tenderType\":\"Card\",\"terminals\":[]}
      )
+  end
+
+  def successful_credit_response
+    %(
+      {
+        "created": "2022-07-21T15:12:48.543Z",
+        "paymentToken": "PfUCohlRQpcR1cKarXkKFHV4pjcX2RJl",
+        "id": 87523059,
+        "creatorName": "spreedlyprapi",
+        "replayId": 16584146247154989,
+        "isDuplicate": false,
+        "shouldVaultCard": true,
+        "merchantId": 1000003310,
+        "batch": "0015",
+        "batchId": 10000000275553,
+        "tenderType": "Card",
+        "currency": "USD",
+        "amount": "-26.34",
+        "meta": "I like beer",
+        "cardAccount": {
+            "cardType": "Visa",
+            "entryMode": "Keyed",
+            "last4": "4242",
+            "cardId": "ESkW1RwQPcSW12HOH4wdBllGQMsf",
+            "token": "PfUCohlRQpcR1cKarXkKFHV4pjcX2RJl",
+            "expiryMonth": "09",
+            "expiryYear": "23",
+            "hasContract": false,
+            "cardPresent": false
+        },
+        "posData": {
+            "panCaptureMethod": "Manual"
+        },
+        "authOnly": false,
+        "authCode": "PPS6bf",
+        "status": "Approved",
+        "risk": {
+            "cvvResponseCode": "N",
+            "cvvResponse": "No Match",
+            "cvvMatch": false,
+            "avsResponseCode": "D",
+            "avsAddressMatch": true,
+            "avsZipMatch": true
+        },
+        "requireSignature": false,
+        "settledAmount": "0",
+        "settledCurrency": "USD",
+        "cardPresent": false,
+        "authMessage": "Approved or completed successfully. ",
+        "availableAuthAmount": "0",
+        "reference": "220215004077",
+        "tax": "0",
+        "invoice": "12345",
+        "type": "Return",
+        "taxExempt": false,
+        "reviewIndicator": 1,
+        "source": "Spreedly",
+        "shouldGetCreditCardLevel": false
+      }
+    )
+  end
+
+  def failed_credit_response
+    %(
+      {
+        "errorCode": "ValidationError",
+        "message": "Validation error happened",
+        "details": [
+            "Year, Month, and Day parameters describe an un-representable DateTime."
+        ],
+        "responseCode": "eSD7row8WL3JkUkOymB3FlQ"
+    }
+    )
   end
 end
