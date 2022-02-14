@@ -24,7 +24,6 @@
 * DecidirPlus: Added `unstore` method [ajawadmirza] #4317
 * Decidir & Decidir Plus: Revise handling of `sub_payment` sub-fields [meagabeth] #4318
 * DecidirPlus: Update `unstore` implementation to get token from params [ajawadmirza] #4320
-* GlobalCollect: Provides more action-specific success Criteria for Global Collect's payment gateway [poas14] #4308
 
 == Version 1.125.0 (January 20, 2022)
 * Wompi: support gateway [therufs] #4173

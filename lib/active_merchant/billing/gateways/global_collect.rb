@@ -387,12 +387,12 @@ module ActiveMerchant #:nodoc:
           response = json_error(raw_response)
         end
 
-        succeeded = success_from(action, response)
+        succeeded = success_from(response)
         Response.new(
           succeeded,
           message_from(succeeded, response),
           response,
-          authorization: authorization_from(response),
+          authorization: authorization_from(succeeded, response),
           error_code: error_code_from(succeeded, response),
           test: test?
         )
@@ -401,7 +401,8 @@ module ActiveMerchant #:nodoc:
       def json_error(raw_response)
         {
           'error_message' => 'Invalid response received from the Ingenico ePayments (formerly GlobalCollect) API.  Please contact Ingenico ePayments if you continue to receive this message.' \
-            "  (The raw response returned by the API was #{raw_response.inspect})"
+            "  (The raw response returned by the API was #{raw_response.inspect})",
+          'status' => 'REJECTED'
         }
       end
 
@@ -438,27 +439,8 @@ module ActiveMerchant #:nodoc:
         'application/json'
       end
 
-      def success_from(action, response)
-        return false if response['errorId'] || response['error_message']
-
-        case action
-        when :authorize
-          response.dig('payment', 'statusOutput', 'isAuthorized')
-        when :capture
-          capture_status = response.dig('status') || response.dig('payment', 'status')
-          %w(CAPTURED CAPTURE_REQUESTED).include?(capture_status)
-        when :void
-          if void_response_id = response.dig('cardPaymentMethodSpecificOutput', 'voidResponseId') || response.dig('mobilePaymentMethodSpecificOutput', 'voidResponseId')
-            %w(00 0 8 11).include?(void_response_id)
-          else
-            response.dig('payment', 'status') == 'CANCELLED'
-          end
-        when :refund
-          refund_status = response.dig('status') || response.dig('payment', 'status')
-          %w(REFUNDED REFUND_REQUESTED).include?(refund_status)
-        else
-          response['status'] != 'REJECTED'
-        end
+      def success_from(response)
+        !response['errorId'] && response['status'] != 'REJECTED'
       end
 
       def message_from(succeeded, response)
@@ -475,8 +457,14 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def authorization_from(response)
-        response.dig('id') || response.dig('payment', 'id') || response.dig('paymentResult', 'payment', 'id')
+      def authorization_from(succeeded, response)
+        if succeeded
+          response['id'] || response['payment']['id'] || response['paymentResult']['payment']['id']
+        elsif response['errorId']
+          response['errorId']
+        else
+          'GATEWAY ERROR'
+        end
       end
 
       def error_code_from(succeeded, response)
