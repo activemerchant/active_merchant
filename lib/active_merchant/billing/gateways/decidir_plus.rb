@@ -217,7 +217,7 @@ module ActiveMerchant #:nodoc:
       def message_from(response)
         return '' if response.empty?
 
-        response.dig('status') || error_message(response) || response.dig('message')
+        rejected?(response) ? message_from_status_details(response) : response.dig('status') || error_message(response) || response.dig('message')
       end
 
       def authorization_from(response)
@@ -240,6 +240,21 @@ module ActiveMerchant #:nodoc:
         validation_errors = validation_errors[0]
 
         "#{validation_errors.dig('code')}: #{validation_errors.dig('param')}"
+      end
+
+      def rejected?(response)
+        return response.dig('status') == 'rejected'
+      end
+
+      def message_from_status_details(response)
+        return unless error = response.dig('status_details', 'error')
+        return message_from_fraud_detection(response) if error.dig('type') == 'cybersource_error'
+
+        "#{error.dig('type')}: #{error.dig('reason', 'description')}"
+      end
+
+      def message_from_fraud_detection(response)
+        return error_message(response.dig('fraud_detection', 'status', 'details'))
       end
     end
   end

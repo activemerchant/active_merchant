@@ -57,6 +57,15 @@ class DecidirPlusTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_failed_purchase_response
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(failed_purchase_message_response)
+
+    assert_failure response
+    assert_equal response.message, 'invalid_card: TRANS. NO PERMITIDA'
+  end
+
   def test_successful_capture
     authorization = '12420186'
     stub_comms(@gateway, :ssl_request) do
@@ -241,6 +250,12 @@ class DecidirPlusTest < Test::Unit::TestCase
   def failed_purchase_response
     %{
       {\"error_type\":\"invalid_request_error\",\"validation_errors\":[{\"code\":\"invalid_param\",\"param\":\"site_transaction_id\"}]}
+    }
+  end
+
+  def failed_purchase_message_response
+    %{
+      {\"id\":552537664,\"site_transaction_id\":\"9a59630fd51de97fbd8390adf796c683\",\"payment_method_id\":1,\"card_brand\":\"Visa\",\"amount\":74416,\"currency\":\"ars\",\"status\":\"rejected\",\"status_details\":{\"ticket\":\"2\",\"card_authorization_code\":\"\",\"address_validation_code\":\"VTE0000\",\"error\":{\"type\":\"invalid_card\",\"reason\":{\"id\":57,\"description\":\"TRANS. NO PERMITIDA\",\"additional_description\":\"\"}}},\"date\":\"2022-02-07T10:16Z\",\"customer\":null,\"bin\":\"466057\",\"installments\":1,\"first_installment_expiration_date\":null,\"payment_type\":\"single\",\"sub_payments\":[],\"site_id\":\"92003011\",\"fraud_detection\":{\"status\":null},\"aggregate_data\":null,\"establishment_name\":null,\"spv\":null,\"confirmed\":null,\"pan\":null,\"customer_token\":null,\"card_data\":\"/tokens/552537664\",\"token\":\"ea1bde57-5bdf-4f58-8586-df45c4359664\"}
     }
   end
 

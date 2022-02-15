@@ -126,7 +126,7 @@ class RemoteDecidirPlusTest < Test::Unit::TestCase
   def test_failed_verify
     assert response = @gateway_auth.verify(@declined_card, @options)
     assert_failure response
-    assert_equal 'rejected', response.message
+    assert_equal 'missing: fraud_detection', response.message
   end
 
   def test_successful_store
