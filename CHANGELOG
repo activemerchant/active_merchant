@@ -25,6 +25,7 @@
 * Decidir & Decidir Plus: Revise handling of `sub_payment` sub-fields [meagabeth] #4318
 * DecidirPlus: Update `unstore` implementation to get token from params [ajawadmirza] #4320
 * CyberSource: Add option for zero amount verify [gasb150] #4313
+* PayU Latam: Refactor `message_from` method, fix failing remote tests [rachelkirk] #4326
 
 == Version 1.125.0 (January 20, 2022)
 * Wompi: support gateway [therufs] #4173
