@@ -31,7 +31,7 @@ module ActiveMerchant #:nodoc:
         :indosat_dompetku, 
         :mandiri_ecash, 
         :cstor,
-        :qris
+        :gopay
       ]
 
       STATUS_CODE_MAPPING = {
@@ -188,6 +188,10 @@ module ActiveMerchant #:nodoc:
           post[:credit_card][:token_id] = token_id
           post[:credit_card][:type] = options[:transaction_type] if options[:transaction_type]
           post[:credit_card][:save_token_id] = options[:save_token_id] if options[:save_token_id]
+        elsif post[:payment_type] == "gopay"
+          post[:gopay] = {}
+          post[:gopay][:enable_callback] = true
+          post[:gopay][:callback_url] = options[:callback_url]
         end
       end
 
