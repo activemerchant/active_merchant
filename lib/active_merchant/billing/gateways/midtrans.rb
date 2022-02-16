@@ -191,7 +191,7 @@ module ActiveMerchant #:nodoc:
         elsif post[:payment_type] == "gopay"
           post[:gopay] = {}
           post[:gopay][:enable_callback] = true
-          post[:gopay][:callback_url] = options[:callback_url]
+          post[:gopay][:callback_url] = options[:callback_url] if options[:callback_url]
         end
       end
 
