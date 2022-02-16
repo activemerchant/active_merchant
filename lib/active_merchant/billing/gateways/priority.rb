@@ -81,7 +81,7 @@ module ActiveMerchant #:nodoc:
         params = {}
         params['invoice'] = options[:invoice]
         params['amount'] = localized_amount(amount.to_f, options[:currency])
-        params['authCode'] = options[:authCode]
+        params['authCode'] = options[:auth_code]
         params['merchantId'] = @options[:merchant_id]
         params['paymentToken'] = get_hash(authorization)['payment_token']
         params['shouldGetCreditCardLevel'] = true
@@ -161,21 +161,21 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_type_merchant_purchase(params, merchant, is_settle_funds, options)
-        params['cardPresent'] = false
-        params['cardPresentType'] = 'CardNotPresent'
-        params['isAuth'] = true
+        params['cardPresent'] = options[:card_present].present? ? options[:card_present] : 'false'
+        params['cardPresentType'] = options[:card_present_type].present? ? options[:card_present_type] : 'CardNotPresent'
+        params['isAuth'] = options[:is_auth].present? ? options[:is_auth] : 'true'
         params['isSettleFunds'] = is_settle_funds
         params['isTicket'] = false
         params['merchantId'] = merchant
         params['mxAdvantageEnabled'] = false
-        params['paymentType'] = 'Sale'
-        params['purchases'] = options[:purchases]
+        params['paymentType'] = options[:payment_type].present? ? options[:payment_type] : 'Sale'
+        params['purchases'] = add_purchases_data(params, options)
         params['shouldGetCreditCardLevel'] = true
-        params['shouldVaultCard'] = true
+        params['shouldVaultCard'] = options[:should_vault_card].present? ? options[:should_vault_card] : 'true'
         params['source'] = options[:source]
         params['sourceZip'] = options[:billing_address][:zip] if options[:billing_address]
-        params['taxExempt'] = false
-        params['tenderType'] = 'Card'
+        params['taxExempt'] = options[:tax_exempt].present? ? options[:tax_exempt] : 'false'
+        params['tenderType'] = options[:tender_type].present? ? options[:tender_type] : 'Card'
         params['posData'] = options[:pos_data]
         params['shipAmount'] = options[:ship_amount]
         params['shipToCountry'] = options[:ship_to_country]
@@ -300,29 +300,31 @@ module ActiveMerchant #:nodoc:
         pos_options
       end
 
-      def add_purchases_data(options)
-        purchases = {}
+      def add_purchases_data(params, options)
+        return if options[:purchases].empty?
 
-        purchases['dateCreated'] = options[:date_created]
-        purchases['iId'] = options[:i_id]
-        purchases['transactionIId'] = options[:transaction_i_id]
-        purchases['transactionId'] = options[:transaction_id]
-        purchases['name'] = options[:name]
-        purchases['description'] = options[:description]
-        purchases['code'] = options[:code]
-        purchases['unitOfMeasure'] = options[:unit_of_measure]
-        purchases['unitPrice'] = options[:unit_price]
-        purchases['quantity'] = options[:quantity]
-        purchases['taxRate'] = options[:tax_rate]
-        purchases['taxAmount'] = options[:tax_amount]
-        purchases['discountRate'] = options[:discount_rate]
-        purchases['discountAmount'] = options[:discount_amt]
-        purchases['extendedAmount'] = options[:extended_amt]
-        purchases['lineItemId'] = options[:line_item_id]
+        params['purchases'] = []
+        options[:purchases].each do |purchase|
+          purchases = {}
 
-        purchase_arr = []
-        purchase_arr[0] = purchases
-        purchase_arr
+          purchases['dateCreated'] = purchase[:date_created] if purchase[:date_created]
+          purchases['iId'] = purchase[:i_id] if purchase[:i_id]
+          purchases['transactionIId'] = purchase[:transaction_i_id] if purchase[:transaction_i_id]
+          purchases['transactionId'] = purchase[:transaction_id] if purchase[:transaction_id]
+          purchases['name'] = purchase[:name] if purchase[:name]
+          purchases['description'] = purchase[:description] if purchase[:description]
+          purchases['code'] = purchase[:code] if purchase[:code]
+          purchases['unitOfMeasure'] = purchase[:unit_of_measure] if purchase[:unit_of_measure]
+          purchases['unitPrice'] = purchase[:unit_price] if purchase[:unit_price]
+          purchases['quantity'] = purchase[:quantity] if purchase[:quantity]
+          purchases['taxRate'] = purchase[:tax_rate] if purchase[:tax_rate]
+          purchases['taxAmount'] = purchase[:tax_amount] if purchase[:tax_amount]
+          purchases['discountRate'] = purchase[:discount_rate] if purchase[:discount_rate]
+          purchases['discountAmount'] = purchase[:discount_amt] if purchase[:discount_amt]
+          purchases['extendedAmount'] = purchase[:extended_amt] if purchase[:extended_amt]
+          purchases['lineItemId'] = purchase[:line_item_id] if purchase[:line_item_id]
+          params['purchases'].append(purchases)
+        end
       end
 
       def add_risk_data(options)
