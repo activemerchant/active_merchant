@@ -32,6 +32,33 @@ class RemoteMidtransTest < Test::Unit::TestCase
     assert_equal response.params["status_code"], "201"
     assert_equal response.params["transaction_status"], MidtransGateway::TRANSACTION_STATUS_MAPPING[:pending]
     assert_equal response.params["status_message"], "GoPay transaction is created"
+    assert_equal response.params["actions"][0]["name"], "generate-qr-code"
+    assert_equal response.params["actions"][1]["name"], "deeplink-redirect"
+  end
+
+  def test_purchase_with_gopay_when_incorrect_amount_then_failure
+    response = @gateway.purchase(39.10, {}, @gopay_payment_options)
+    assert_failure response
+    assert_equal response.error_code, MidtransGateway::STATUS_CODE_MAPPING[400]
+    assert_equal response.message, "One or more parameters in the payload is invalid."
+  end
+
+  def test_purchase_with_gopay_when_missing_order_id_then_validation_error
+    response = @gateway.purchase(@amount, {}, {payment_type: 'gopay'})
+    assert_failure response
+    assert_equal response.error_code, MidtransGateway::STATUS_CODE_MAPPING[400]
+    assert_equal response.message, "One or more parameters in the payload is invalid."
+  end
+
+  def test_purchase_with_gopay_when_duplicated_order_id_then_failure
+    options = @gopay_payment_options
+    response = @gateway.purchase(@amount, {}, options)
+    assert_success response
+
+    response = @gateway.purchase(@amount, {}, options)
+    assert_failure response
+    assert_equal response.error_code, MidtransGateway::STATUS_CODE_MAPPING[406]
+    assert_equal response.message, "The request could not be completed due to a conflict with the current state of the target resource, please try again"
   end
 
   def test_purchase_when_declined_card_then_failure
