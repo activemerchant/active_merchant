@@ -31,6 +31,7 @@
 * Priority Payment Systems - Clean up/refactor gateway file and tests [ali-hassan] #4327
 * SafeCharge: change `verify` to send 0 amount [dsmcclain] #4332
 * DLocal: add support for `force_type` field [dsmcclain] #4336
+* Barclaycard SmartPay: Support more nonstandard currencies [jherreraa] #4335
 
 == Version 1.125.0 (January 20, 2022)
 * Wompi: support gateway [therufs] #4173
