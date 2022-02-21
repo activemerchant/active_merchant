@@ -17,9 +17,10 @@ adyen:
   merchant_account: ''
 
 adyen_checkout:
-  username: ''
-  password: ''
-  merchant_account: ''
+  username: 'ws@Company.Chargify692'
+  password: ':7}Y%_7sr}CZ(m&Gjh*2j8%v&'
+  merchant_account: 'Chargify692ECOM'
+  url_prefix: 'random-merchant'
 
 allied_wallet:
   site_id: site_id

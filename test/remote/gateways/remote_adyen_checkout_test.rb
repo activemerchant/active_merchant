@@ -149,7 +149,7 @@ class RemoteAdyenCheckoutTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = AdyenCheckoutGateway.new(username: '', password: '', merchant_account: '')
+    gateway = AdyenCheckoutGateway.new(username: '', password: '', merchant_account: '', url_prefix: '')
 
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
@@ -184,7 +184,7 @@ class RemoteAdyenCheckoutTest < Test::Unit::TestCase
     card = credit_card('4242424242424242', month: 16)
     assert response = @gateway.purchase(@amount, card, @options)
     assert_failure response
-    assert_equal 'Expiry Date Invalid: Expiry month should be between 1 and 12 inclusive', response.message
+    assert_equal 'The provided Expiry Date is not valid.: Expiry month should be between 1 and 12 inclusive', response.message
   end
 
   def test_invalid_expiry_year_for_purchase

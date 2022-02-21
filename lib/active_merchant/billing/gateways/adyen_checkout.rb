@@ -2,7 +2,6 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class AdyenCheckoutGateway < Gateway
       self.test_url = 'https://checkout-test.adyen.com/'
-      self.live_url = 'https://checkout-live.adyen.com/'
 
       self.supported_countries = %w(AT AU BE BG BR CH CY CZ DE DK EE ES FI FR GB GI GR HK HU IE IS IT LI LT LU LV MC MT MX NL NO PL PT RO SE SG SK SI US)
       self.default_currency = 'USD'
@@ -17,7 +16,6 @@ module ActiveMerchant #:nodoc:
       PAYMENTS_API_VERSION = 'v51'
       PAL_API_VERSION = 'v49'
       PAL_TEST_URL = 'https://pal-test.adyen.com/pal/servlet/'
-      PAL_LIVE_URL = 'https://pal-live.adyen.com/pal/servlet/'
 
       STANDARD_ERROR_CODE_MAPPING = {
           '101' => STANDARD_ERROR_CODE[:incorrect_number],
@@ -30,8 +28,8 @@ module ActiveMerchant #:nodoc:
       }
 
       def initialize(options={})
-        requires!(options, :username, :password, :merchant_account)
-        @username, @password, @merchant_account = options.values_at(:username, :password, :merchant_account)
+        requires!(options, :username, :password, :merchant_account, :url_prefix)
+        @username, @password, @merchant_account, @url_prefix = options.values_at(:username, :password, :merchant_account, :url_prefix)
         super
       end
 
@@ -387,13 +385,21 @@ module ActiveMerchant #:nodoc:
         "#{PAYMENTS_API_VERSION}/#{action}"
       end
 
+      def live_url
+        "https://#{@url_prefix}-checkout-live.adyenpayments.com/"
+      end
+
+      def pal_live_url
+        "https://#{@url_prefix}-pal-live.adyenpayments.com/pal/servlet/"
+      end
+
       def url(action)
         if test?
           use_pal_endpoint?(action) ? "#{PAL_TEST_URL}#{endpoint(action)}" : "#{test_url}#{endpoint(action)}"
         elsif @options[:subdomain]
           "https://#{@options[:subdomain]}-pal-live.adyenpayments.com/pal/servlet/#{endpoint(action)}"
         else
-          use_pal_endpoint?(action) ? "#{PAL_LIVE_URL}#{endpoint(action)}" : "#{live_url}#{endpoint(action)}"
+          use_pal_endpoint?(action) ? "#{pal_live_url}#{endpoint(action)}" : "#{live_url}#{endpoint(action)}"
         end
       end
 

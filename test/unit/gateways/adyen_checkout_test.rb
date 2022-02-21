@@ -7,7 +7,8 @@ class AdyenTest < Test::Unit::TestCase
     @gateway = AdyenCheckoutGateway.new(
         username: 'ws@adyenmerchant.com',
         password: 'password',
-        merchant_account: 'merchantAccount'
+        merchant_account: 'merchantAccount',
+        url_prefix: 'random-account'
     )
 
     @credit_card = credit_card('4111111111111111',
