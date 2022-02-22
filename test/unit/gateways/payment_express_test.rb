@@ -45,6 +45,14 @@ class PaymentExpressTest < Test::Unit::TestCase
     assert_equal '00000004011a2478', response.authorization
   end
 
+  def test_pass_currency_code_on_validation
+    stub_comms do
+      @gateway.verify(@visa, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<InputCurrency>NZD<\/InputCurrency>/, data)
+    end.respond_with(successful_validation_response)
+  end
+
   def test_successful_validation
     @gateway.expects(:ssl_post).returns(successful_validation_response)
 
@@ -194,6 +202,24 @@ class PaymentExpressTest < Test::Unit::TestCase
       assert_match(/<TxnData2>Transaction Data 2-#{truncated_addendum}<\/TxnData2>/, body)
       assert_match(/<TxnData3>Transaction Data 3-#{truncated_addendum}<\/TxnData3>/, body)
     end
+  end
+
+  def test_pass_enable_avs_data_and_avs_action
+    options = {
+      address: {
+        address1: '123 Pine Street',
+        zip: '12345'
+      },
+    enable_avs_data: 0,
+    avs_action: 3
+    }
+
+    stub_comms do
+      @gateway.purchase(@amount, @visa, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<EnableAvsData>0<\/EnableAvsData>/, data)
+      assert_match(/<AvsAction>3<\/AvsAction>/, data)
+    end.respond_with(successful_authorization_response)
   end
 
   def test_pass_client_type_as_symbol_for_web

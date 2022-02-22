@@ -37,12 +37,15 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, amount, options)
         add_customer_data(post, options)
+        add_metadata(post, options)
 
         commit(:capture, post, authorization)
       end
 
       def void(authorization, _options = {})
         post = {}
+        add_metadata(post, options)
+
         commit(:void, post, authorization)
       end
 
@@ -50,6 +53,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, amount, options)
         add_customer_data(post, options)
+        add_metadata(post, options)
 
         commit(:refund, post, authorization)
       end
@@ -79,8 +83,12 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
+        add_stored_credential_options(post, options)
         add_transaction_data(post, options)
         add_3ds(post, options)
+        add_metadata(post, options)
+        add_processing_channel(post, options)
+        add_marketplace_data(post, options)
       end
 
       def add_invoice(post, money, options)
@@ -96,14 +104,24 @@ module ActiveMerchant #:nodoc:
         post[:metadata][:udf5] = application_id || 'ActiveMerchant'
       end
 
+      def add_metadata(post, options)
+        post[:metadata] = {} unless post[:metadata]
+        post[:metadata].merge!(options[:metadata]) if options[:metadata]
+      end
+
       def add_payment_method(post, payment_method, options)
         post[:source] = {}
-        if payment_method.is_a?(NetworkTokenizationCreditCard) && payment_method.source == :network_token
+        if payment_method.is_a?(NetworkTokenizationCreditCard)
+          token_type = token_type_from(payment_method)
+          cryptogram = payment_method.payment_cryptogram
+          eci = payment_method.eci || options[:eci]
+          eci ||= '05' if token_type == 'vts'
+
           post[:source][:type] = 'network_token'
           post[:source][:token] = payment_method.number
-          post[:source][:token_type] = payment_method.brand == 'visa' ? 'vts' : 'mdes'
-          post[:source][:cryptogram] = payment_method.payment_cryptogram
-          post[:source][:eci] = options[:eci] || '05'
+          post[:source][:token_type] = token_type
+          post[:source][:cryptogram] = cryptogram if cryptogram
+          post[:source][:eci] = eci if eci
         else
           post[:source][:type] = 'card'
           post[:source][:name] = payment_method.name
@@ -138,6 +156,26 @@ module ActiveMerchant #:nodoc:
         post[:previous_payment_id] = options[:previous_charge_id] if options[:previous_charge_id]
       end
 
+      def add_stored_credential_options(post, options = {})
+        return unless options[:stored_credential]
+
+        case options[:stored_credential][:initial_transaction]
+        when true
+          post[:merchant_initiated] = false
+        when false
+          post[:'source.stored'] = true
+          post[:previous_payment_id] = options[:stored_credential][:network_transaction_id] if options[:stored_credential][:network_transaction_id]
+          post[:merchant_initiated] = true
+        end
+
+        case options[:stored_credential][:reason_type]
+        when 'recurring' || 'installment'
+          post[:payment_type] = 'Recurring'
+        when 'unscheduled'
+          return
+        end
+      end
+
       def add_3ds(post, options)
         if options[:three_d_secure] || options[:execute_threed]
           post[:'3ds'] = {}
@@ -152,6 +190,17 @@ module ActiveMerchant #:nodoc:
           post[:'3ds'][:cryptogram] = options[:three_d_secure][:cavv] if options[:three_d_secure][:cavv]
           post[:'3ds'][:version] = options[:three_d_secure][:version] if options[:three_d_secure][:version]
           post[:'3ds'][:xid] = options[:three_d_secure][:ds_transaction_id] || options[:three_d_secure][:xid]
+        end
+      end
+
+      def add_processing_channel(post, options)
+        post[:processing_channel_id] = options[:processing_channel_id] if options[:processing_channel_id]
+      end
+
+      def add_marketplace_data(post, options)
+        if options[:marketplace]
+          post[:marketplace] = {}
+          post[:marketplace][:sub_entity_id] = options[:marketplace][:sub_entity_id] if options[:marketplace][:sub_entity_id]
         end
       end
 
@@ -273,6 +322,17 @@ module ActiveMerchant #:nodoc:
           response['error_type']
         else
           STANDARD_ERROR_CODE_MAPPING[response['response_code']]
+        end
+      end
+
+      def token_type_from(payment_method)
+        case payment_method.source
+        when :network_token
+          payment_method.brand == 'visa' ? 'vts' : 'mdes'
+        when :google_pay, :android_pay
+          'googlepay'
+        when :apple_pay
+          'applepay'
         end
       end
     end

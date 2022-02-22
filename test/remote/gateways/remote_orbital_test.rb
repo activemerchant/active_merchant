@@ -8,10 +8,19 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     @three_ds_gateway = ActiveMerchant::Billing::OrbitalGateway.new(fixtures(:orbital_3ds_gateway))
 
     @amount = 100
+    @google_pay_amount = 10000
     @credit_card = credit_card('4556761029983886')
     @declined_card = credit_card('4000300011112220')
     # Electronic Check object with test credentials of saving account
     @echeck = check(account_number: '072403004', account_type: 'savings', routing_number: '072403004')
+    @google_pay_card = network_tokenization_credit_card(
+      '4777777777777778',
+      payment_cryptogram: 'BwAQCFVQdwEAABNZI1B3EGLyGC8=',
+      verification_value: '987',
+      source: :google_pay,
+      brand: 'visa',
+      eci: '5'
+    )
 
     @options = {
       order_id: generate_unique_id,
@@ -197,6 +206,48 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_false response.authorization.blank?
   end
 
+  def test_successful_purchase_with_sca_recurring_master_card
+    cc = credit_card('5555555555554444', first_name: 'Joe', last_name: 'Smith',
+                     month: '12', year: '2022', brand: 'master', verification_value: '999')
+    options_local = {
+      three_d_secure: {
+        eci: '7',
+        xid: 'TESTXID',
+        cavv: 'AAAEEEDDDSSSAAA2243234',
+        ds_transaction_id: '97267598FAE648F28083C23433990FBC',
+        version: '2.2.0'
+      },
+      sca_recurring: 'Y'
+    }
+
+    assert response = @three_ds_gateway.purchase(100, cc, @options.merge(options_local))
+
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+  end
+
+  def test_successful_purchase_with_sca_merchant_initiated_master_card
+    cc = credit_card('5555555555554444', first_name: 'Joe', last_name: 'Smith',
+                     month: '12', year: '2022', brand: 'master', verification_value: '999')
+    options_local = {
+      three_d_secure: {
+        eci: '7',
+        xid: 'TESTXID',
+        cavv: 'AAAEEEDDDSSSAAA2243234',
+        ds_transaction_id: '97267598FAE648F28083C23433990FBC',
+        version: '2.2.0'
+      },
+      sca_merchant_initiated: 'Y'
+    }
+
+    assert response = @three_ds_gateway.purchase(100, cc, @options.merge(options_local))
+
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+  end
+
   def test_successful_purchase_with_american_express_network_tokenization_credit_card
     network_card = network_tokenization_credit_card('4788250000028291',
       payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
@@ -298,113 +349,6 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_false response.authorization.blank?
   end
 
-  [
-    {
-      card: {
-        number: '4112344112344113',
-        verification_value: '411',
-        brand: 'visa'
-      },
-      three_d_secure: {
-        eci: '5',
-        cavv: 'AAABAIcJIoQDIzAgVAkiAAAAAAA=',
-        xid: 'AAABAIcJIoQDIzAgVAkiAAAAAAA='
-      },
-      address: {
-        address1: '55 Forever Ave',
-        address2: '',
-        city: 'Concord',
-        state: 'NH',
-        zip: '03301',
-        country: 'US'
-      }
-    },
-    {
-      card: {
-        number: '5112345112345114',
-        verification_value: '823',
-        brand: 'master'
-      },
-      three_d_secure: {
-        eci: '5',
-        cavv: 'AAAEEEDDDSSSAAA2243234',
-        xid: 'Asju1ljfl86bAAAAAACm9zU6aqY=',
-        version: '2',
-        ds_transaction_id: '8dh4htokdf84jrnxyemfiosheuyfjt82jiek'
-      },
-      address: {
-        address1: 'Byway Street',
-        address2: '',
-        city: 'Portsmouth',
-        state: 'MA',
-        zip: '67890',
-        country: 'US',
-        phone: '5555555555'
-      }
-    },
-    {
-      card: {
-        number: '371144371144376',
-        verification_value: '1234',
-        brand: 'american_express'
-      },
-      three_d_secure: {
-        eci: '5',
-        cavv: 'AAABBWcSNIdjeUZThmNHAAAAAAA=',
-        xid: 'AAABBWcSNIdjeUZThmNHAAAAAAA='
-      },
-      address: {
-        address1: '4 Northeastern Blvd',
-        address2: '',
-        city: 'Salem',
-        state: 'NH',
-        zip: '03105',
-        country: 'US'
-      }
-    }
-  ].each do |fixture|
-    define_method("test_successful_#{fixture[:card][:brand]}_authorization_with_3ds") do
-      cc = credit_card(fixture[:card][:number], {
-        verification_value: fixture[:card][:verification_value],
-        brand: fixture[:card][:brand]
-      })
-      options = @options.merge(
-        order_id: '2',
-        currency: 'USD',
-        three_d_secure: fixture[:three_d_secure],
-        address: fixture[:address],
-        soft_descriptors: {
-          merchant_name: 'Merch',
-          product_description: 'Description',
-          merchant_email: 'email@example'
-        }
-      )
-      assert response = @three_ds_gateway.authorize(100, cc, options)
-
-      assert_success response
-      assert_equal 'Approved', response.message
-      assert_false response.authorization.blank?
-    end
-
-    define_method("test_successful_#{fixture[:card][:brand]}_purchase_with_3ds") do
-      cc = credit_card(fixture[:card][:number], {
-        verification_value: fixture[:card][:verification_value],
-        brand: fixture[:card][:brand]
-      })
-      options = @options.merge(
-        order_id: '2',
-        currency: 'USD',
-        three_d_secure: fixture[:three_d_secure],
-        address: fixture[:address]
-      )
-      assert response = @three_ds_gateway.purchase(100, cc, options)
-
-      assert_success response
-      assert_equal 'Approved', response.message
-      assert_false response.authorization.blank?
-    end
-  end
-
   def test_successful_purchase_with_mit_stored_credentials
     mit_stored_credentials = {
       mit_msg_type: 'MUSE',
@@ -473,6 +417,12 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_purchase_with_google_pay
+    response = @gateway.purchase(@google_pay_amount, @google_pay_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
   def test_successful_force_capture_with_echeck
     @options[:force_capture] = true
     assert response = @echeck_gateway.purchase(@amount, @echeck, @options)
@@ -488,6 +438,25 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_failure capture
     assert_equal '801', capture.params['proc_status']
     assert_equal 'Error validating amount. Must be numerical and greater than 0 [-1]', capture.message
+  end
+
+  def test_successful_force_capture_with_echeck_prenote_valid_action_code
+    @options[:force_capture] = true
+    @options[:action_code] = 'W8'
+    assert response = @echeck_gateway.authorize(0, @echeck, @options)
+    assert_success response
+    assert_match 'APPROVAL', response.message
+    assert_equal 'Approved and Completed', response.params['status_msg']
+    assert_false response.authorization.blank?
+  end
+
+  def test_failed_force_capture_with_echeck_prenote_invalid_action_code
+    @options[:force_capture] = true
+    @options[:action_code] = 'W7'
+    assert authorize = @echeck_gateway.authorize(0, @echeck, @options)
+    assert_failure authorize
+    assert_equal '19784', authorize.params['proc_status']
+    assert_equal ' EWS: Invalid Action Code [W7], For Transaction Type [A].', authorize.message
   end
 
   # Amounts of x.01 will fail
@@ -534,6 +503,24 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_successful_authorize_and_capture_with_line_items
+    auth = @gateway.authorize(@amount, @credit_card, @options.merge(level_2_data: @level_2_options, level_3_data: @level_3_options_visa, line_items: @line_items_visa))
+    assert_success auth
+    assert_equal 'Approved', auth.message
+
+    capture = @gateway.capture(@amount, auth.authorization, @options.merge(level_2_data: @level_2_options, level_3_data: @level_3_options_visa, line_items: @line_items_visa))
+    assert_success capture
+  end
+
+  def test_successful_authorize_and_capture_with_google_pay
+    auth = @gateway.authorize(@amount, @google_pay_card, @options)
+    assert_success auth
+    assert_equal 'Approved', auth.message
+
+    capture = @gateway.capture(@amount, auth.authorization, @options)
+    assert_success capture
+  end
+
   def test_failed_authorize_with_echeck_due_to_invalid_amount
     assert auth = @echeck_gateway.authorize(-1, @echeck, @options.merge(order_id: '2'))
     assert_failure auth
@@ -559,12 +546,41 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_success void
   end
 
-  def test_refund
+  def test_authorize_and_void_using_google_pay
+    assert auth = @gateway.authorize(@amount, @google_pay_card, @options)
+    assert_success auth
+    assert_equal 'Approved', auth.message
+
+    assert auth.authorization
+    assert void = @gateway.void(auth.authorization)
+    assert_success void
+  end
+
+  def test_successful_refund
     amount = @amount
     assert response = @gateway.purchase(amount, @credit_card, @options)
     assert_success response
     assert response.authorization
     assert refund = @gateway.refund(amount, response.authorization, @options)
+    assert_success refund
+  end
+
+  def test_failed_refund
+    assert refund = @gateway.refund(@amount, '123;123', @options)
+    assert_failure refund
+    assert_equal '881', refund.params['proc_status']
+  end
+
+  def test_successful_refund_with_google_pay
+    auth = @gateway.authorize(@amount, @google_pay_card, @options)
+    assert_success auth
+    assert_equal 'Approved', auth.message
+
+    capture = @gateway.capture(@amount, auth.authorization, @options)
+    assert_success capture
+
+    assert capture.authorization
+    assert refund = @gateway.refund(@amount, capture.authorization, @options)
     assert_success refund
   end
 
@@ -592,6 +608,12 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_success refund
   end
 
+  def test_successful_credit
+    payment_method = credit_card('5454545454545454')
+    assert response = @gateway.credit(@amount, payment_method, @options)
+    assert_success response
+  end
+
   def test_failed_capture
     assert response = @gateway.capture(@amount, '')
     assert_failure response
@@ -608,17 +630,6 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert auth = @echeck_gateway.authorize(@amount, @echeck, @options.merge(order_id: '4', payment_delivery: 'A'))
     assert_success auth
     assert_equal 'Approved', auth.message
-  end
-
-  def test_authorize_sends_with_incorrect_payment_delivery
-    transcript = capture_transcript(@echeck_gateway) do
-      @echeck_gateway.authorize(@amount, @echeck, @options.merge(order_id: '4', payment_delivery: 'X'))
-    end
-
-    assert_match(/<BankPmtDelv>B/, transcript)
-    assert_match(/<MessageType>A/, transcript)
-    assert_match(/<ApprovalStatus>1/, transcript)
-    assert_match(/<RespCode>00/, transcript)
   end
 
   def test_default_payment_delivery_with_no_payment_delivery_sent
@@ -670,7 +681,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
 
     assert_match(/<AVSname>Jim Smith/, transcript)
     assert_match(/<RespCode>00/, transcript)
-    assert_match(/<StatusMsg>Approved/, transcript)
+    assert_match(/atusMsg>Approved</, transcript)
   end
 
   def test_echeck_purchase_with_no_address_responds_with_name
@@ -682,7 +693,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
 
     assert_match(/<AVSname>Test McTest/, transcript)
     assert_match(/<RespCode>00/, transcript)
-    assert_match(/<StatusMsg>Approved/, transcript)
+    assert_match(/atusMsg>Approved</, transcript)
   end
 
   def test_credit_purchase_with_address_responds_with_name
@@ -790,7 +801,28 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response
+    assert_equal 'No reason to decline', response.message
+  end
+
+  def test_successful_different_cards
+    @credit_card.brand = 'master'
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_equal 'No reason to decline', response.message
+  end
+
+  def test_successful_verify_with_discover_brand
+    @credit_card.brand = 'discover'
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
     assert_equal 'Approved', response.message
+  end
+
+  def test_unsuccessful_verify_with_invalid_discover_card
+    @declined_card.brand = 'discover'
+    response = @gateway.verify(@declined_card, @options)
+    assert_failure response
+    assert_equal 'Invalid CC Number', response.message
   end
 
   def test_failed_verify
@@ -825,10 +857,194 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_scrubbed(@gateway.options[:merchant_id], transcript)
   end
 
+  def test_transcript_scrubbing_echeck
+    transcript = capture_transcript(@echeck_gateway) do
+      @echeck_gateway.purchase(20, @echeck, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@echeck.account_number, transcript)
+    assert_scrubbed(@echeck_gateway.options[:password], transcript)
+    assert_scrubbed(@echeck_gateway.options[:login], transcript)
+    assert_scrubbed(@echeck_gateway.options[:merchant_id], transcript)
+  end
+
+  def test_transcript_scrubbing_network_card
+    network_card = network_tokenization_credit_card(
+      '4788250000028291',
+      payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
+      transaction_id: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
+      verification_value: '111',
+      brand: 'visa',
+      eci: '5'
+    )
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, network_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(network_card.payment_cryptogram, transcript)
+  end
+
   private
 
   def stored_credential_options(*args, id: nil)
     @options.merge(order_id: generate_unique_id,
                    stored_credential: stored_credential(*args, id: id))
+  end
+end
+
+class BrandSpecificOrbitalTests < RemoteOrbitalGatewayTest
+  # Additional class for a subset of tests that share setup logic.
+  # This will run automatically with the rest of the tests in this file,
+  # or you can specify individual tests by name as you usually would.
+  def setup
+    super
+
+    @brand_specific_fixtures = {
+      visa: {
+        card: {
+          number: '4112344112344113',
+          verification_value: '411',
+          brand: 'visa'
+        },
+        three_d_secure: {
+          eci: '5',
+          cavv: 'AAABAIcJIoQDIzAgVAkiAAAAAAA=',
+          xid: 'AAABAIcJIoQDIzAgVAkiAAAAAAA='
+        },
+        address: {
+          address1: '55 Forever Ave',
+          address2: '',
+          city: 'Concord',
+          state: 'NH',
+          zip: '03301',
+          country: 'US'
+        }
+      },
+      master: {
+        card: {
+          number: '5112345112345114',
+          verification_value: '823',
+          brand: 'master'
+        },
+        three_d_secure: {
+          eci: '5',
+          cavv: 'AAAEEEDDDSSSAAA2243234',
+          xid: 'Asju1ljfl86bAAAAAACm9zU6aqY=',
+          version: '2.2.0',
+          ds_transaction_id: '8dh4htokdf84jrnxyemfiosheuyfjt82jiek'
+        },
+        address: {
+          address1: 'Byway Street',
+          address2: '',
+          city: 'Portsmouth',
+          state: 'MA',
+          zip: '67890',
+          country: 'US',
+          phone: '5555555555'
+        }
+      },
+      american_express: {
+        card: {
+          number: '371144371144376',
+          verification_value: '1234',
+          brand: 'american_express'
+        },
+        three_d_secure: {
+          eci: '5',
+          cavv: 'AAABBWcSNIdjeUZThmNHAAAAAAA=',
+          xid: 'AAABBWcSNIdjeUZThmNHAAAAAAA='
+        },
+        address: {
+          address1: '4 Northeastern Blvd',
+          address2: '',
+          city: 'Salem',
+          state: 'NH',
+          zip: '03105',
+          country: 'US'
+        }
+      }
+    }
+  end
+
+  def test_successful_3ds_authorization_with_visa
+    cc = brand_specific_card(@brand_specific_fixtures[:visa][:card])
+    options = brand_specific_3ds_options(@brand_specific_fixtures[:visa])
+
+    assert response = @three_ds_gateway.authorize(100, cc, options)
+    assert_success_with_authorization(response)
+  end
+
+  def test_successful_3ds_purchase_with_visa
+    cc = brand_specific_card(@brand_specific_fixtures[:visa][:card])
+    options = brand_specific_3ds_options(@brand_specific_fixtures[:visa])
+
+    assert response = @three_ds_gateway.purchase(100, cc, options)
+    assert_success_with_authorization(response)
+  end
+
+  def test_successful_3ds_authorization_with_mastercard
+    cc = brand_specific_card(@brand_specific_fixtures[:master][:card])
+    options = brand_specific_3ds_options(@brand_specific_fixtures[:master])
+
+    assert response = @three_ds_gateway.authorize(100, cc, options)
+    assert_success_with_authorization(response)
+  end
+
+  def test_succesful_3ds_purchase_with_mastercard
+    cc = brand_specific_card(@brand_specific_fixtures[:master][:card])
+    options = brand_specific_3ds_options(@brand_specific_fixtures[:master])
+
+    assert response = @three_ds_gateway.purchase(100, cc, options)
+    assert_success_with_authorization(response)
+  end
+
+  def test_successful_3ds_authorization_with_american_express
+    cc = brand_specific_card(@brand_specific_fixtures[:american_express][:card])
+    options = brand_specific_3ds_options(@brand_specific_fixtures[:american_express])
+
+    assert response = @three_ds_gateway.authorize(100, cc, options)
+    assert_success_with_authorization(response)
+  end
+
+  def test_successful_3ds_purchase_with_american_express
+    cc = brand_specific_card(@brand_specific_fixtures[:american_express][:card])
+    options = brand_specific_3ds_options(@brand_specific_fixtures[:american_express])
+
+    assert response = @three_ds_gateway.purchase(100, cc, options)
+    assert_success_with_authorization(response)
+  end
+
+  private
+
+  def assert_success_with_authorization(response)
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+  end
+
+  def brand_specific_3ds_options(data)
+    @options.merge(
+      order_id: '2',
+      currency: 'USD',
+      three_d_secure: data[:three_d_secure],
+      address: data[:address],
+      soft_descriptors: {
+        merchant_name: 'Merch',
+        product_description: 'Description',
+        merchant_email: 'email@example'
+      }
+    )
+  end
+
+  def brand_specific_card(card_data)
+    credit_card(
+      card_data[:number],
+      {
+        verification_value: card_data[:verification_value],
+        brand: card_data[:brand]
+      }
+    )
   end
 end

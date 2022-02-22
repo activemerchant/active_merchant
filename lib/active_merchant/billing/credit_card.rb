@@ -18,6 +18,11 @@ module ActiveMerchant #:nodoc:
     # * Dankort
     # * Maestro
     # * Forbrugsforeningen
+    # * Sodexo
+    # * Vr
+    # * Carnet
+    # * Synchrony
+    # * Routex
     # * Elo
     # * Alelo
     # * Cabal
@@ -25,6 +30,8 @@ module ActiveMerchant #:nodoc:
     # * UnionPay
     # * Alia
     # * Olimpica
+    # * Creditel
+    # * Confiable
     #
     # For testing purposes, use the 'bogus' credit card brand. This skips the vast majority of
     # validations, allowing you to focus on your core concerns until you're ready to be more concerned
@@ -95,6 +102,11 @@ module ActiveMerchant #:nodoc:
       # * +'dankort'+
       # * +'maestro'+
       # * +'forbrugsforeningen'+
+      # * +'sodexo'+
+      # * +'vr'+
+      # * +'carnet'+
+      # * +'synchrony'+
+      # * +'routex'+
       # * +'elo'+
       # * +'alelo'+
       # * +'cabal'+
@@ -103,6 +115,7 @@ module ActiveMerchant #:nodoc:
       # * +'alia'+
       # * +'olimpica'+
       # * +'creditel'+
+      # * +'confiable'+
       #
       # Or, if you wish to test your implementation, +'bogus'+.
       #

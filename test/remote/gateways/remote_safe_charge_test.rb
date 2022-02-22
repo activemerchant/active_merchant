@@ -16,9 +16,18 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
 
     @three_ds_options = @options.merge(three_d_secure: true)
     @three_ds_gateway = SafeChargeGateway.new(fixtures(:safe_charge_three_ds))
-    @three_ds_enrolled_card = credit_card('4012 0010 3749 0014')
+    @three_ds_enrolled_card = credit_card('4407 1064 3967 1112')
     @three_ds_non_enrolled_card = credit_card('5333 3062 3122 6927')
     @three_ds_invalid_pa_res_card = credit_card('4012 0010 3749 0006')
+
+    @network_token_credit_card = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
+      brand: 'Visa',
+      payment_cryptogram: 'UnVBR0RlYm42S2UzYWJKeWJBdWQ=',
+      number: '4012001037490014',
+      source: :network_token,
+      month: '12',
+      year: 2020
+    })
   end
 
   def test_successful_3ds_purchase
@@ -56,6 +65,15 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
     assert_equal 'Success', response.message
   end
 
+  def test_successful_purchase_with_non_fractional_currency
+    options = @options.merge(currency: 'CLP')
+    response = @gateway.purchase(127999, @credit_card, options)
+
+    assert_success response
+    assert_equal 'Success', response.message
+    assert_equal '1279', response.params['requestedamount']
+  end
+
   def test_successful_purchase_with_mpi_options_3ds_1
     options = @options.merge({
       three_d_secure: {
@@ -76,11 +94,24 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
         version: '2.1.0',
         ds_transaction_id: 'c5b808e7-1de1-4069-a17b-f70d3b3b1645',
         eci: '05',
-        cavv: 'Vk83Y2t0cHRzRFZzRlZlR0JIQXo='
+        cavv: 'Vk83Y2t0cHRzRFZzRlZlR0JIQXo=',
+        challenge_preference: 'NoPreference'
       }
     })
 
     response = @gateway.purchase(@amount, @three_ds_enrolled_card, options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_network_tokenization_request
+    options = @options.merge({
+      three_d_secure: {
+        eci: '05'
+      }
+    })
+
+    response = @gateway.purchase(@amount, @network_token_credit_card, options)
     assert_success response
     assert_equal 'Success', response.message
   end
@@ -91,7 +122,8 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
         version: '2.1.0',
         ds_transaction_id: 'c5b808e7-1de1-4069-a17b-f70d3b3b1645',
         eci: '05',
-        cavv: 'Vk83Y2t0cHRzRFZzRlZlR0JIQXo='
+        cavv: 'Vk83Y2t0cHRzRFZzRlZlR0JIQXo=',
+        challenge_preference: 'NoPreference'
       }
     })
 
@@ -106,7 +138,8 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
         version: '2.1.0',
         ds_transaction_id: 'c5b808e7-1de1-4069-a17b-f70d3b3b1645',
         eci: '05',
-        cavv: 'Vk83Y2t0cHRzRFZzRlZlR0JIQXo='
+        cavv: 'Vk83Y2t0cHRzRFZzRlZlR0JIQXo=',
+        challenge_preference: 'NoPreference'
       }
     })
 
@@ -126,7 +159,8 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
       merchant_descriptor: 'Test Descriptor',
       merchant_phone_number: '(555)555-5555',
       merchant_name: 'Test Merchant',
-      stored_credential_mode: true
+      stored_credential_mode: true,
+      product_id: 'Test Product'
     }
 
     response = @gateway.purchase(@amount, @credit_card, options)
@@ -160,9 +194,20 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
       merchant_descriptor: 'Test Descriptor',
       merchant_phone_number: '(555)555-5555',
       merchant_name: 'Test Merchant',
-      stored_credential_mode: true
+      stored_credential_mode: true,
+      product_id: 'Test Product'
     }
     auth = @gateway.authorize(@amount, @credit_card, extra)
+    assert_success auth
+
+    assert capture = @gateway.capture(@amount, auth.authorization, extra)
+    assert_success capture
+    assert_equal 'Success', capture.message
+  end
+
+  def test_successful_authorize_and_capture_with_not_use_cvv
+    @credit_card.verification_value = nil
+    auth = @gateway.authorize(@amount, @credit_card, @options.merge!({ not_use_cvv: true }))
     assert_success auth
 
     assert capture = @gateway.capture(@amount, auth.authorization)
@@ -230,7 +275,8 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
       merchant_descriptor: 'Test Descriptor',
       merchant_phone_number: '(555)555-5555',
       merchant_name: 'Test Merchant',
-      stored_credential_mode: true
+      stored_credential_mode: true,
+      product_id: 'Test Product'
     }
 
     response = @gateway.credit(@amount, credit_card('4444436501403986'), extra)

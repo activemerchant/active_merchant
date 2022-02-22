@@ -261,6 +261,10 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end
 
+  def test_account_number_scrubbing
+    assert_equal post_scrubbed_account_number, @gateway.scrub(pre_scrubbed_account_number)
+  end
+
   private
 
   def successful_purchase_response
@@ -395,6 +399,62 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
       read 2 bytes
       -> "0\r\n"
       -> "\r\n"
+      Conn close
+    POST_SCRUBBED
+  end
+
+  def pre_scrubbed_account_number
+    <<~PRE_SCRUBBED
+      opening connection to ws.cert.transactionexpress.com:443...
+      opened
+      starting SSL for ws.cert.transactionexpress.com:443...
+      SSL established, protocol: TLSv1.2, cipher: ECDHE-RSA-AES256-GCM-SHA384
+      <- "POST /portal/merchantframework/MerchantWebServices-v1?wsdl HTTP/1.1\r\nContent-Type: text/xml\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: ws.cert.transactionexpress.com\r\nContent-Length: 1553\r\n\r\n"
+      <- "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soapenv:Body>\n    <v1:SendTranRequest xmlns:v1=\"http://postilion/realtime/merchantframework/xsd/v1/\">\n      <v1:merc>\n        <v1:id>7777778764</v1:id>\n        <v1:regKey>M84PKPDMD5BY86HN</v1:regKey>\n        <v1:inType>1</v1:inType>\n      </v1:merc><v1:tranCode>11</v1:tranCode>\n      <v1:achEcheck>\n        <v1:bankRtNr>244183602</v1:bankRtNr>\n        <v1:acctNr>15378535</v1:acctNr>\n      </v1:achEcheck>\n      <v1:contact>\n        <v1:fullName>Jim Smith</v1:fullName>\n        <v1:coName>Acme</v1:coName>\n        <v1:title>QA Manager</v1:title>\n        <v1:phone>\n          <v1:type>4</v1:type>\n          <v1:nr>3334445555</v1:nr>\n        </v1:phone>\n        <v1:addrLn1>450 Main</v1:addrLn1>\n        <v1:addrLn2>Suite 100</v1:addrLn2>\n        <v1:city>Broomfield</v1:city>\n        <v1:state>CO</v1:state>\n        <v1:zipCode>85284</v1:zipCode>\n        <v1:ctry>US</v1:ctry>\n        <v1:email>example@example.com</v1:email>\n        <v1:ship>\n          <v1:fullName>Jim Smith</v1:fullName>\n          <v1:addrLn1>450 Main</v1:addrLn1>\n          <v1:addrLn2>Suite 100</v1:addrLn2>\n          <v1:city>Broomfield</v1:city>\n          <v1:state>CO</v1:state>\n          <v1:zipCode>85284</v1:zipCode>\n          <v1:phone>3334445555</v1:phone>\n        </v1:ship>\n      </v1:contact>\n      <v1:reqAmt>100</v1:reqAmt>\n      <v1:authReq>\n        <v1:ordNr>20811a5033205f7dcdc5c7e0c89a0189</v1:ordNr>\n      </v1:authReq>\n    </v1:SendTranRequest>\n  </soapenv:Body>\n</soapenv:Envelope>"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Cache-Control: private\r\n"
+      -> "Content-Type: text/xml; charset=utf-8\r\n"
+      -> "Server: Microsoft-IIS/10.0\r\n"
+      -> "X-AspNet-Version: 4.0.30319\r\n"
+      -> "X-Powered-By: ASP.NET\r\n"
+      -> "Strict-Transport-Security: max-age=31536000; includeSubDomains\r\n"
+      -> "Date: Mon, 11 Oct 2021 13:53:27 GMT\r\n"
+      -> "Cteonnt-Length: 782\r\n"
+      -> "X-Frame-Options: SAMEORIGIN\r\n"
+      -> "Set-Cookie: NSC_JOyfb3nwcgpzfpmezjperccrokp05cn=ffffffff09180b7045525d5f4f58455e445a4a42378b;expires=Mon, 11-Oct-2021 14:03:27 GMT;path=/;secure;httponly\r\n"
+      -> "Content-Encoding: gzip\r\n"
+      -> "Content-Length:        437\r\n"
+      -> "\r\n"
+      reading 437 bytes...
+      read 437 bytes
+      Conn close
+    PRE_SCRUBBED
+  end
+
+  def post_scrubbed_account_number
+    <<~POST_SCRUBBED
+      opening connection to ws.cert.transactionexpress.com:443...
+      opened
+      starting SSL for ws.cert.transactionexpress.com:443...
+      SSL established, protocol: TLSv1.2, cipher: ECDHE-RSA-AES256-GCM-SHA384
+      <- "POST /portal/merchantframework/MerchantWebServices-v1?wsdl HTTP/1.1\r\nContent-Type: text/xml\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: ws.cert.transactionexpress.com\r\nContent-Length: 1553\r\n\r\n"
+      <- "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soapenv:Body>\n    <v1:SendTranRequest xmlns:v1=\"http://postilion/realtime/merchantframework/xsd/v1/\">\n      <v1:merc>\n        <v1:id>[FILTERED]</v1:id>\n        <v1:regKey>[FILTERED]</v1:regKey>\n        <v1:inType>1</v1:inType>\n      </v1:merc><v1:tranCode>11</v1:tranCode>\n      <v1:achEcheck>\n        <v1:bankRtNr>244183602</v1:bankRtNr>\n        <v1:acctNr>[FILTERED]</v1:acctNr>\n      </v1:achEcheck>\n      <v1:contact>\n        <v1:fullName>Jim Smith</v1:fullName>\n        <v1:coName>Acme</v1:coName>\n        <v1:title>QA Manager</v1:title>\n        <v1:phone>\n          <v1:type>4</v1:type>\n          <v1:nr>3334445555</v1:nr>\n        </v1:phone>\n        <v1:addrLn1>450 Main</v1:addrLn1>\n        <v1:addrLn2>Suite 100</v1:addrLn2>\n        <v1:city>Broomfield</v1:city>\n        <v1:state>CO</v1:state>\n        <v1:zipCode>85284</v1:zipCode>\n        <v1:ctry>US</v1:ctry>\n        <v1:email>example@example.com</v1:email>\n        <v1:ship>\n          <v1:fullName>Jim Smith</v1:fullName>\n          <v1:addrLn1>450 Main</v1:addrLn1>\n          <v1:addrLn2>Suite 100</v1:addrLn2>\n          <v1:city>Broomfield</v1:city>\n          <v1:state>CO</v1:state>\n          <v1:zipCode>85284</v1:zipCode>\n          <v1:phone>3334445555</v1:phone>\n        </v1:ship>\n      </v1:contact>\n      <v1:reqAmt>100</v1:reqAmt>\n      <v1:authReq>\n        <v1:ordNr>20811a5033205f7dcdc5c7e0c89a0189</v1:ordNr>\n      </v1:authReq>\n    </v1:SendTranRequest>\n  </soapenv:Body>\n</soapenv:Envelope>"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Cache-Control: private\r\n"
+      -> "Content-Type: text/xml; charset=utf-8\r\n"
+      -> "Server: Microsoft-IIS/10.0\r\n"
+      -> "X-AspNet-Version: 4.0.30319\r\n"
+      -> "X-Powered-By: ASP.NET\r\n"
+      -> "Strict-Transport-Security: max-age=31536000; includeSubDomains\r\n"
+      -> "Date: Mon, 11 Oct 2021 13:53:27 GMT\r\n"
+      -> "Cteonnt-Length: 782\r\n"
+      -> "X-Frame-Options: SAMEORIGIN\r\n"
+      -> "Set-Cookie: NSC_JOyfb3nwcgpzfpmezjperccrokp05cn=ffffffff09180b7045525d5f4f58455e445a4a42378b;expires=Mon, 11-Oct-2021 14:03:27 GMT;path=/;secure;httponly\r\n"
+      -> "Content-Encoding: gzip\r\n"
+      -> "Content-Length:        437\r\n"
+      -> "\r\n"
+      reading 437 bytes...
+      read 437 bytes
       Conn close
     POST_SCRUBBED
   end

@@ -23,6 +23,19 @@ class RemoteKushkiTest < Test::Unit::TestCase
         subtotal_iva: '10',
         iva: '1.54',
         ice: '3.50'
+      },
+      contact_details: {
+        document_type: 'CC',
+        document_number: '123456',
+        email: 'who_dis@monkeys.tv',
+        first_name: 'Who',
+        last_name: 'Dis',
+        second_last_name: 'Buscemi',
+        phone_number: '+13125556789'
+      },
+      metadata: {
+        productos: 'bananas',
+        nombre_apellido: 'Kirk'
       }
     }
 
@@ -57,6 +70,16 @@ class RemoteKushkiTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'Succeeded', response.message
     assert_match %r(^\d+$), response.authorization
+  end
+
+  def test_approval_code_comes_back_when_passing_full_response
+    options = {
+      full_response: true
+    }
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_not_empty response.params.dig('details', 'approvalCode')
+    assert_equal 'Succeeded', response.message
   end
 
   def test_failed_authorize

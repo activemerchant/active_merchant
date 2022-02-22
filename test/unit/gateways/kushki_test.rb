@@ -28,6 +28,19 @@ class KushkiTest < Test::Unit::TestCase
         subtotal_iva: '10',
         iva: '1.54',
         ice: '3.50'
+      },
+      contact_details: {
+        document_type: 'CC',
+        document_number: '123456',
+        email: 'who_dis@monkeys.tv',
+        first_name: 'Who',
+        last_name: 'Dis',
+        second_last_name: 'Buscemi',
+        phone_number: '+13125556789'
+      },
+      metadata: {
+        productos: 'bananas',
+        nombre_apellido: 'Kirk'
       }
     }
 
@@ -41,7 +54,12 @@ class KushkiTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_charge_response)
     @gateway.expects(:ssl_post).returns(successful_token_response)
 
-    response = @gateway.purchase(amount, @credit_card, options)
+    response = stub_comms do
+      @gateway.purchase(amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_includes data, 'metadata'
+    end.respond_with(successful_token_response, successful_charge_response)
+
     assert_success response
     assert_equal 'Succeeded', response.message
     assert_match %r(^\d+$), response.authorization
@@ -268,6 +286,23 @@ class KushkiTest < Test::Unit::TestCase
     assert_failure response
     assert_equal 'Tipo de moneda no válida', response.message
     assert_equal '205', response.error_code
+  end
+
+  def test_successful_purchase_with_full_response_flag
+    options = {
+      full_response: 'true'
+    }
+
+    @gateway.expects(:ssl_post).returns(successful_charge_response)
+    @gateway.expects(:ssl_post).returns(successful_token_response)
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_includes data, 'fullResponse'
+    end.respond_with(successful_token_response, successful_charge_response)
+
+    assert_success response
   end
 
   def test_scrub

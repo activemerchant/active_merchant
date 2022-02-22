@@ -87,7 +87,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify(payment_source, options = {})
-        request = build_purchase_or_authorization_request(nil, payment_source, options)
+        request = build_purchase_or_authorization_request(100, payment_source, options)
         commit(:validate, request)
       end
 
@@ -234,8 +234,8 @@ module ActiveMerchant #:nodoc:
         address = options[:billing_address] || options[:address]
         return if address.nil?
 
-        xml.add_element('EnableAvsData').text = 1
-        xml.add_element('AvsAction').text = 1
+        xml.add_element('EnableAvsData').text = options[:enable_avs_data] || 1
+        xml.add_element('AvsAction').text = options[:avs_action] || 1
 
         xml.add_element('AvsStreetAddress').text = address[:address1]
         xml.add_element('AvsPostCode').text = address[:zip]

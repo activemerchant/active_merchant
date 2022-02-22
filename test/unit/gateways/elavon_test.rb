@@ -17,6 +17,13 @@ class ElavonTest < Test::Unit::TestCase
       multi_currency: true
     )
 
+    @gateway_with_ssl_vendor_id = ElavonGateway.new(
+      login: 'login',
+      user: 'user',
+      password: 'password',
+      ssl_vendor_id: 'ABC123'
+    )
+
     @credit_card = credit_card
     @amount = 100
 
@@ -131,10 +138,28 @@ class ElavonTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_unscheduled
-    response = stub_comms do
+    stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(merchant_initiated_unscheduled: 'Y'))
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<ssl_merchant_initiated_unscheduled>Y<\/ssl_merchant_initiated_unscheduled>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_sends_ssl_add_token_field
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(add_recurring_token: 'Y'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<ssl_add_token>Y<\/ssl_add_token>/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_sends_ssl_token_field
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(ssl_token: '8675309'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<ssl_token>8675309<\/ssl_token>/, data)
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -161,13 +186,11 @@ class ElavonTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_without_multi_currency
-    response = stub_comms do
+    stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(currency: 'EUR', multi_currency: false))
     end.check_request do |_endpoint, data, _headers|
       assert_no_match(/ssl_transaction_currency=EUR/, data)
     end.respond_with(successful_purchase_response)
-
-    assert_success response
   end
 
   def test_failed_capture
@@ -385,6 +408,22 @@ class ElavonTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_ssl_vendor_id_from_gateway_credentials
+    stub_comms do
+      @gateway_with_ssl_vendor_id.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<ssl_vendor_id>ABC123<\/ssl_vendor_id>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_ssl_vendor_id_from_options
+    stub_comms do
+      @gateway_with_ssl_vendor_id.purchase(@amount, @credit_card, @options.merge(ssl_vendor_id: 'My special ID'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<ssl_vendor_id>My special ID<\/ssl_vendor_id>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_truncate_special_characters
     first_name = 'Ricky ™ Martínez įncogníto'
     credit_card = @credit_card
@@ -393,8 +432,23 @@ class ElavonTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, credit_card, @options)
     end.check_request do |_endpoint, data, _headers|
-      check = '<ssl_first_name>Ricky ™ Martínez </ssl_first_name>'
-      assert_match(/#{check}/, data)
+      check = 'Ricky %E2%84%A2 Mart'
+      assert_match(/<ssl_first_name>#{check}<\/ssl_first_name>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_special_character_encoding_truncation
+    special_card = @credit_card
+    special_card.first_name = 'Fear & Loathing'
+    special_card.last_name = 'Castañeda'
+
+    stub_comms do
+      @gateway.purchase(@amount, special_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      first = 'Fear %26amp; Loathin'
+      last = 'Casta%C3%B1eda'
+      assert_match(/<ssl_first_name>#{first}<\/ssl_first_name>/, data)
+      assert_match(/<ssl_last_name>#{last}<\/ssl_last_name>/, data)
     end.respond_with(successful_purchase_response)
   end
 

@@ -162,7 +162,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def self.supported_countries
-        @supported_countries ||= []
+        @supported_countries ||= (self.superclass.supported_countries || [])
       end
 
       def supported_countries

@@ -563,6 +563,8 @@ module ActiveMerchant #:nodoc:
 
       def build_get_customer_profile_request(xml, options)
         xml.tag!('customerProfileId', options[:customer_profile_id])
+        xml.tag!('unmaskExpirationDate', options[:unmask_expiration_date]) if options[:unmask_expiration_date]
+        xml.tag!('includeIssuerInfo', options[:include_issuer_info]) if options[:include_issuer_info]
         xml.target!
       end
 
@@ -574,6 +576,7 @@ module ActiveMerchant #:nodoc:
         xml.tag!('customerProfileId', options[:customer_profile_id])
         xml.tag!('customerPaymentProfileId', options[:customer_payment_profile_id])
         xml.tag!('unmaskExpirationDate', options[:unmask_expiration_date]) if options[:unmask_expiration_date]
+        xml.tag!('includeIssuerInfo', options[:include_issuer_info]) if options[:include_issuer_info]
         xml.target!
       end
 

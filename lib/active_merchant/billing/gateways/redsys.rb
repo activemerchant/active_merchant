@@ -203,11 +203,12 @@ module ActiveMerchant #:nodoc:
         add_order(data, options[:order_id])
         add_payment(data, payment)
         add_external_mpi_fields(data, options)
-        add_threeds(data, options) if options[:execute_threed]
+        add_three_ds_data(data, options) if options[:execute_threed]
         add_stored_credential_options(data, options)
         data[:description] = options[:description]
         data[:store_in_vault] = options[:store]
         data[:sca_exemption] = options[:sca_exemption]
+        data[:sca_exemption_direct_payment_enabled] = options[:sca_exemption_direct_payment_enabled]
 
         commit data, options
       end
@@ -221,11 +222,12 @@ module ActiveMerchant #:nodoc:
         add_order(data, options[:order_id])
         add_payment(data, payment)
         add_external_mpi_fields(data, options)
-        add_threeds(data, options) if options[:execute_threed]
+        add_three_ds_data(data, options) if options[:execute_threed]
         add_stored_credential_options(data, options)
         data[:description] = options[:description]
         data[:store_in_vault] = options[:store]
         data[:sca_exemption] = options[:sca_exemption]
+        data[:sca_exemption_direct_payment_enabled] = options[:sca_exemption_direct_payment_enabled]
 
         commit data, options
       end
@@ -310,7 +312,7 @@ module ActiveMerchant #:nodoc:
         test? ? test_url : live_url
       end
 
-      def threeds_url
+      def webservice_url
         test? ? 'https://sis-t.redsys.es:25443/sis/services/SerClsWSEntradaV2' : 'https://sis.redsys.es/sis/services/SerClsWSEntradaV2'
       end
 
@@ -370,42 +372,51 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_threeds(data, options)
-        data[:threeds] = { threeDSInfo: 'CardData' } if options[:execute_threed] == true
+      def add_three_ds_data(data, options)
+        data[:three_ds_data] = { threeDSInfo: 'CardData' } if options[:execute_threed] == true
       end
 
-      def determine_3ds_action(threeds_hash)
-        return 'iniciaPeticion' if threeds_hash[:threeDSInfo] == 'CardData'
-        return 'trataPeticion' if threeds_hash[:threeDSInfo] == 'AuthenticationData' ||
-                                  threeds_hash[:threeDSInfo] == 'ChallengeResponse'
+      def determine_peticion_type(data)
+        three_ds_info = data.dig(:three_ds_data, :threeDSInfo)
+        return 'iniciaPeticion' if three_ds_info == 'CardData'
+        return 'trataPeticion' if three_ds_info == 'AuthenticationData' ||
+                                  three_ds_info == 'ChallengeResponse' ||
+                                  data[:sca_exemption] == 'MIT'
+      end
+
+      def use_webservice_endpoint?(data, options)
+        options[:use_webservice_endpoint].to_s == 'true' || data[:three_ds_data] || data[:sca_exemption] == 'MIT'
       end
 
       def commit(data, options = {})
-        if data[:threeds]
-          action = determine_3ds_action(data[:threeds])
+        xmlreq = xml_request_from(data, options)
+
+        if use_webservice_endpoint?(data, options)
+          peticion_type = determine_peticion_type(data)
+
           request = <<-REQUEST
             <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:apachesoap="http://xml.apache.org/xml-soap" xmlns:impl="http://webservice.sis.sermepa.es" xmlns:intf="http://webservice.sis.sermepa.es" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:wsdlsoap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" >
             <soapenv:Header/>
             <soapenv:Body>
-              <intf:#{action} xmlns:intf="http://webservice.sis.sermepa.es">
+              <intf:#{peticion_type} xmlns:intf="http://webservice.sis.sermepa.es">
                 <intf:datoEntrada>
-                <![CDATA[#{xml_request_from(data, options)}]]>
+                <![CDATA[#{xmlreq}]]>
                 </intf:datoEntrada>
-              </intf:#{action}>
+              </intf:#{peticion_type}>
             </soapenv:Body>
           </soapenv:Envelope>
           REQUEST
-          parse(ssl_post(threeds_url, request, headers(action)), action)
+          parse(ssl_post(webservice_url, request, headers(peticion_type)), peticion_type)
         else
-          parse(ssl_post(url, "entrada=#{CGI.escape(xml_request_from(data, options))}", headers), action)
+          parse(ssl_post(url, "entrada=#{CGI.escape(xmlreq)}", headers), peticion_type)
         end
       end
 
-      def headers(action = nil)
-        if action
+      def headers(peticion_type = nil)
+        if peticion_type
           {
             'Content-Type' => 'text/xml',
-            'SOAPAction' => action
+            'SOAPAction' => peticion_type
           }
         else
           {
@@ -469,7 +480,7 @@ module ActiveMerchant #:nodoc:
 
       def build_merchant_data(xml, data, options = {})
         # See https://sis-t.redsys.es:25443/sis/services/SerClsWSEntradaV2/wsdl/SerClsWSEntradaV2.wsdl
-        # (which results from calling #threeds_url + '?WSDL', https://sis-t.redsys.es:25443/sis/services/SerClsWSEntradaV2?WSDL)
+        # (which results from calling #webservice_url + '?WSDL', https://sis-t.redsys.es:25443/sis/services/SerClsWSEntradaV2?WSDL)
         xml.DATOSENTRADA do
           # Basic elements
           xml.DS_Version 0.1
@@ -477,7 +488,7 @@ module ActiveMerchant #:nodoc:
           xml.DS_MERCHANT_AMOUNT             data[:amount]
           xml.DS_MERCHANT_ORDER              data[:order_id]
           xml.DS_MERCHANT_TRANSACTIONTYPE    data[:action]
-          if data[:description] && data[:threeds]
+          if data[:description] && use_webservice_endpoint?(data, options)
             xml.DS_MERCHANT_PRODUCTDESCRIPTION CGI.escape(data[:description])
           else
             xml.DS_MERCHANT_PRODUCTDESCRIPTION data[:description]
@@ -485,11 +496,18 @@ module ActiveMerchant #:nodoc:
           xml.DS_MERCHANT_TERMINAL           options[:terminal] || @options[:terminal]
           xml.DS_MERCHANT_MERCHANTCODE       @options[:login]
           xml.DS_MERCHANT_MERCHANTSIGNATURE  build_signature(data) unless sha256_authentication?
-          xml.DS_MERCHANT_EXCEP_SCA          data[:sca_exemption] if data[:sca_exemption]
+
+          peticion_type = determine_peticion_type(data) if data[:three_ds_data]
+          if peticion_type == 'iniciaPeticion' && data[:sca_exemption]
+            xml.DS_MERCHANT_EXCEP_SCA 'Y'
+          else
+            xml.DS_MERCHANT_EXCEP_SCA data[:sca_exemption] if data[:sca_exemption]
+            xml.DS_MERCHANT_DIRECTPAYMENT data[:sca_exemption_direct_payment_enabled] || 'true' if data[:sca_exemption] == 'MIT'
+          end
 
           # Only when card is present
           if data[:card]
-            if data[:card][:name] && data[:threeds]
+            if data[:card][:name] && use_webservice_endpoint?(data, options)
               xml.DS_MERCHANT_TITULAR    CGI.escape(data[:card][:name])
             else
               xml.DS_MERCHANT_TITULAR    data[:card][:name]
@@ -510,7 +528,7 @@ module ActiveMerchant #:nodoc:
           # Requires account configuration to be able to use
           xml.DS_MERCHANT_DIRECTPAYMENT 'moto' if options.dig(:moto) && options.dig(:metadata, :manual_entry)
 
-          xml.DS_MERCHANT_EMV3DS data[:threeds].to_json if data[:threeds]
+          xml.DS_MERCHANT_EMV3DS data[:three_ds_data].to_json if data[:three_ds_data]
 
           if options[:stored_credential]
             xml.DS_MERCHANT_COF_INI data[:DS_MERCHANT_COF_INI]

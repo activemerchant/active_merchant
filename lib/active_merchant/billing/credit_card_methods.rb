@@ -1,3 +1,5 @@
+require 'set'
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     # Convenience methods that can be included into a custom Credit Card object, such as an ActiveRecord based Credit Card object.
@@ -7,11 +9,11 @@ module ActiveMerchant #:nodoc:
         'master'             => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), MASTERCARD_RANGES) },
         'elo'                => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), ELO_RANGES) },
         'alelo'              => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), ALELO_RANGES) },
-        'discover'           => ->(num) { num =~ /^(6011|65\d{2}|64[4-9]\d)\d{12,15}|(62\d{14,17})$/ },
+        'discover'           => ->(num) { num =~ /^(6011|65\d{2}|64[4-9]\d)\d{12,15}$/ },
         'american_express'   => ->(num) { num =~ /^3[47]\d{13}$/ },
         'naranja'            => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), NARANJA_RANGES) },
         'diners_club'        => ->(num) { num =~ /^3(0[0-5]|[68]\d)\d{11,16}$/ },
-        'jcb'                => ->(num) { num =~ /^35(28|29|[3-8]\d)\d{12}$/ },
+        'jcb'                => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 4), JCB_RANGES) },
         'dankort'            => ->(num) { num =~ /^5019\d{12}$/ },
         'maestro'            => lambda { |num|
           (12..19).cover?(num&.size) && (
@@ -19,6 +21,7 @@ module ActiveMerchant #:nodoc:
             MAESTRO_BINS.any? { |bin| num.slice(0, bin.size) == bin }
           )
         },
+        'maestro_no_luhn'    => ->(num) { num =~ /^(501080|501081|501082)\d{6,13}$/ },
         'forbrugsforeningen' => ->(num) { num =~ /^600722\d{10}$/ },
         'sodexo'             => ->(num) { num =~ /^(606071|603389|606070|606069|606068|600818)\d{10}$/ },
         'alia'               => ->(num) { num =~ /^(504997|505878|601030|601073|505874)\d{10}$/ },
@@ -32,7 +35,10 @@ module ActiveMerchant #:nodoc:
           )
         },
         'olimpica' => ->(num) { num =~ /^636853\d{10}$/ },
-        'creditel' => ->(num) { num =~ /^601933\d{10}$/ }
+        'creditel' => ->(num) { num =~ /^601933\d{10}$/ },
+        'confiable' => ->(num) { num =~ /^560718\d{10}$/ },
+        'synchrony' => ->(num) { num =~ /^700600\d{10}$/ },
+        'routex' => ->(num) { num =~ /^(700676|700678)\d{13}$/ }
       }
 
       # http://www.barclaycard.co.uk/business/files/bin_rules.pdf
@@ -71,11 +77,17 @@ module ActiveMerchant #:nodoc:
       MASTERCARD_RANGES = [
         (222100..272099),
         (510000..559999),
+        [605272],
+        [606282],
+        [637095],
+        [637568],
+        (637599..637600),
+        [637609],
       ]
 
       MAESTRO_BINS = Set.new(
         %w[ 500057
-            501018 501043 501045 501047 501049 501051 501072 501075 501087 501089 501095
+            501018 501043 501045 501047 501049 501051 501072 501075 501083 501087 501089 501095
             501500
             501879 502113 502301 503175
             503645 503670
@@ -100,16 +112,16 @@ module ActiveMerchant #:nodoc:
             597077 597094 597143 597370 597410 597765 597855 597862
             598053 598054 598395 598585 598793 598794 598815 598835 598838 598880 598889
             599000 599069 599089 599148 599191 599310 599741 599742 599867
-            601070
+            601070 601638
             604983
             606126
             636380 636422 636502 636639
             637046 637756
-            639130
+            639130 639229
             690032]
       )
 
-      # https://www.mastercard.us/content/dam/mccom/global/documents/mastercard-rules.pdf, page 73
+      # https://www.mastercard.us/content/dam/mccom/global/documents/mastercard-rules.pdf, page 79
       MAESTRO_RANGES = [
         (500032..500033),
         (501015..501016),
@@ -119,17 +131,20 @@ module ActiveMerchant #:nodoc:
         (501053..501058),
         (501060..501063),
         (501066..501067),
-        (501080..501083),
         (501091..501092),
         (501104..501105),
         (501107..501108),
         (501104..501105),
         (501107..501108),
+        (501800..501899),
+        (502000..502099),
+        (503800..503899),
         (561200..561269),
         (561271..561299),
         (561320..561356),
         (581700..581751),
         (581753..581800),
+        (589300..589399),
         (589998..591259),
         (591261..596770),
         (596772..598744),
@@ -143,6 +158,7 @@ module ActiveMerchant #:nodoc:
         (601640..601652),
         (601689..601700),
         (602011..602050),
+        (630400..630499),
         (639000..639099),
         (670000..679999),
       ]
@@ -183,12 +199,14 @@ module ActiveMerchant #:nodoc:
         589562..589562
       ]
 
-      # In addition to the BIN ranges listed here that all begin with 81, UnionPay cards
-      # include many ranges that start with 62.
-      # Prior to adding UnionPay, cards that start with 62 were all classified as Discover.
-      # Because UnionPay cards are able to run on Discover rails, this was kept the same.
+      # https://www.discoverglobalnetwork.com/content/dam/discover/en_us/dgn/pdfs/IPP-VAR-Enabler-Compliance.pdf
       UNIONPAY_RANGES = [
+        62000000..62000000, 62212600..62379699, 62400000..62699999, 62820000..62889999,
         81000000..81099999, 81100000..81319999, 81320000..81519999, 81520000..81639999, 81640000..81719999
+      ]
+
+      JCB_RANGES = [
+        3528..3589, 3088..3094, 3096..3102, 3112..3120, 3158..3159, 3337..3349
       ]
 
       def self.included(base)
@@ -198,7 +216,7 @@ module ActiveMerchant #:nodoc:
       def self.in_bin_range?(number, ranges)
         bin = number.to_i
         ranges.any? do |range|
-          range.cover?(bin)
+          range.include?(bin)
         end
       end
 
@@ -349,7 +367,7 @@ module ActiveMerchant #:nodoc:
             valid_naranja_algo?(numbers)
           when 'creditel'
             valid_creditel_algo?(numbers)
-          when 'alia'
+          when 'alia', 'confiable', 'maestro_no_luhn'
             true
           else
             valid_luhn?(numbers)

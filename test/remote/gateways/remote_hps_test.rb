@@ -53,6 +53,13 @@ class RemoteHpsTest < Test::Unit::TestCase
     assert_equal 'Success', response.message
   end
 
+  def test_successful_purchase_with_hyphenated_zip
+    @options[:billing_address][:zip] = '12345-1234'
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
   def test_successful_purchase_no_address
     options = {
       order_id: '1',
@@ -365,6 +372,15 @@ class RemoteHpsTest < Test::Unit::TestCase
     assert_scrubbed(credit_card.number, transcript)
     assert_scrubbed(@gateway.options[:secret_api_key], transcript)
     assert_scrubbed(credit_card.payment_cryptogram, transcript)
+  end
+
+  def test_account_number_scrubbing
+    options = @options.merge(company_name: 'Hot Buttered Toast Incorporated')
+    transcript = capture_transcript(@check_gateway) do
+      @check_gateway.purchase(@check_amount, @check, options)
+    end
+    clean_transcript = @check_gateway.scrub(transcript)
+    assert_scrubbed(@check.account_number, clean_transcript)
   end
 
   def test_successful_purchase_with_apple_pay_raw_cryptogram_with_eci

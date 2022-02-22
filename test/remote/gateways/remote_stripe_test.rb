@@ -25,14 +25,23 @@ class RemoteStripeTest < Test::Unit::TestCase
   end
 
   def test_transcript_scrubbing
+    credit_card = credit_card('4242424242424242', verification_value: '745')
     transcript = capture_transcript(@gateway) do
-      @gateway.purchase(@amount, @credit_card, @options)
+      @gateway.purchase(@amount, credit_card, @options)
     end
     transcript = @gateway.scrub(transcript)
 
-    assert_scrubbed(@credit_card.number, transcript)
-    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(credit_card.number, transcript)
+    assert_scrubbed(credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:login], transcript)
+  end
+
+  def test_check_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.store(@check)
+    end
+    transcript = @gateway.scrub(transcript)
+    assert_scrubbed(@check.account_number, transcript)
   end
 
   def test_successful_purchase
@@ -146,6 +155,23 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal destination, response.params.dig('transfer_data', 'destination')
   end
 
+  def test_successful_purchase_with_radar_session
+    options = @options.merge(radar_session_id: 'rse_1JXSfZAWOtgoysogUpPJa4sm')
+    assert response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'charge', response.params['object']
+    assert response.params['paid']
+    assert_equal 'ActiveMerchant Test Purchase', response.params['description']
+    assert_equal 'wow@example.com', response.params['metadata']['email']
+  end
+
+  def test_successful_purchase_with_skip_radar_rules
+    options = @options.merge(skip_radar_rules: true)
+    assert purchase = @gateway.purchase(@amount, @credit_card, options)
+    assert_success purchase
+    assert_equal ['all'], purchase.params['radar_options']['skip_rules']
+  end
+
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
@@ -231,6 +257,18 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_success authorization
     refute authorization.params['captured']
     assert_equal destination, authorization.params['destination']
+    assert_equal 'ActiveMerchant Test Purchase', authorization.params['description']
+    assert_equal 'wow@example.com', authorization.params['metadata']['email']
+
+    assert capture = @gateway.capture(@amount, authorization.authorization)
+    assert_success capture
+  end
+
+  def test_successful_authorization_and_capture_with_radar_session
+    options = @options.merge(radar_session_id: 'rse_1JXSfZAWOtgoysogUpPJa4sm')
+    assert authorization = @gateway.authorize(@amount, @credit_card, options)
+    assert_success authorization
+    refute authorization.params['captured']
     assert_equal 'ActiveMerchant Test Purchase', authorization.params['description']
     assert_equal 'wow@example.com', authorization.params['metadata']['email']
 
@@ -478,9 +516,10 @@ class RemoteStripeTest < Test::Unit::TestCase
 
   def test_successful_store_with_existing_account
     account = fixtures(:stripe_destination)[:stripe_user_id]
-
     assert response = @gateway.store(@debit_card, account: account)
     assert_success response
+    # Delete the stored external account to prevent hitting the limit
+    @gateway.delete_latest_test_external_account(account)
     assert_equal 'card', response.params['object']
   end
 

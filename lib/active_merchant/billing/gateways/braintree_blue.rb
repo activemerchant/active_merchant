@@ -7,7 +7,7 @@ rescue LoadError
   raise 'Could not load the braintree gem.  Use `gem install braintree` to install it.'
 end
 
-raise "Need braintree gem >= 2.78.0. Run `gem install braintree --version '~>2.78'` to get the correct version." unless Braintree::Version::Major == 2 && Braintree::Version::Minor >= 78
+raise 'Need braintree gem >= 2.0.0.' unless Braintree::Version::Major >= 2 && Braintree::Version::Minor >= 0
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -115,10 +115,36 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def verify(credit_card, options = {})
-        MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
+      def verify(creditcard, options = {})
+        if options[:allow_card_verification] == true
+          options.delete(:allow_card_verification)
+          exp_month = creditcard.month.to_s
+          exp_year = creditcard.year.to_s
+          expiration = "#{exp_month}/#{exp_year}"
+          payload = {
+            credit_card: {
+              number: creditcard.number,
+              expiration_date: expiration,
+              cvv: creditcard.verification_value,
+              billing_address: {
+                postal_code: options[:billing_address][:zip]
+              }
+            }
+          }
+          commit do
+            result = @braintree_gateway.verification.create(payload)
+            response = Response.new(result.success?, message_from_transaction_result(result), response_options(result))
+            response.cvv_result['message'] = ''
+            response.cvv_result['code'] = response.params['cvv_result'] if response.params['cvv_result']
+            response.avs_result['code'] = response.params['avs_result'][:code] if response.params.dig('avs_result', :code)
+            response
+          end
+
+        else
+          MultiResponse.run(:use_first_response) do |r|
+            r.process { authorize(100, creditcard, options) }
+            r.process(:ignore_result) { void(r.authorization, options) }
+          end
         end
       end
 
@@ -368,7 +394,11 @@ module ActiveMerchant #:nodoc:
 
       def response_options(result)
         options = {}
-        if result.transaction
+        if result.credit_card_verification
+          options[:authorization] = result.credit_card_verification.id
+          options[:avs_result] = { code: avs_code_from(result.credit_card_verification) }
+          options[:cvv_result] = result.credit_card_verification.cvv_response_code
+        elsif result.transaction
           options[:authorization] = result.transaction.id
           options[:avs_result] = { code: avs_code_from(result.transaction) }
           options[:cvv_result] = result.transaction.cvv_response_code
@@ -558,7 +588,8 @@ module ActiveMerchant #:nodoc:
           'merchant_account_id'     => transaction.merchant_account_id,
           'risk_data'               => risk_data,
           'network_transaction_id'  => transaction.network_transaction_id || nil,
-          'processor_response_code' => response_code_from_result(result)
+          'processor_response_code' => response_code_from_result(result),
+          'recurring'               => transaction.recurring
         }
       end
 
@@ -592,6 +623,7 @@ module ActiveMerchant #:nodoc:
         add_addresses(parameters, options)
 
         add_descriptor(parameters, options)
+        add_risk_data(parameters, options)
         add_travel_data(parameters, options) if options[:travel_data]
         add_lodging_data(parameters, options) if options[:lodging_data]
         add_channel(parameters, options)
@@ -649,6 +681,15 @@ module ActiveMerchant #:nodoc:
           name: options[:descriptor_name],
           phone: options[:descriptor_phone],
           url: options[:descriptor_url]
+        }
+      end
+
+      def add_risk_data(parameters, options)
+        return unless options[:risk_data]
+
+        parameters[:risk_data] = {
+          customer_browser: options[:risk_data][:customer_browser],
+          customer_ip: options[:risk_data][:customer_ip]
         }
       end
 
@@ -730,6 +771,8 @@ module ActiveMerchant #:nodoc:
           else
             parameters[:transaction_source] = stored_credential[:reason_type]
           end
+        elsif %w(recurring_first moto).include?(stored_credential[:reason_type])
+          parameters[:transaction_source] = stored_credential[:reason_type]
         else
           parameters[:transaction_source] = ''
         end
@@ -761,7 +804,8 @@ module ActiveMerchant #:nodoc:
                 eci_indicator: credit_card_or_vault_id.eci
               }
             elsif credit_card_or_vault_id.source == :android_pay || credit_card_or_vault_id.source == :google_pay
-              parameters[:android_pay_card] = {
+              Braintree::Version::Major < 3 ? pay_card = :android_pay_card : pay_card = :google_pay_card
+              parameters[pay_card] = {
                 number: credit_card_or_vault_id.number,
                 cryptogram: credit_card_or_vault_id.payment_cryptogram,
                 expiration_month: credit_card_or_vault_id.month.to_s.rjust(2, '0'),

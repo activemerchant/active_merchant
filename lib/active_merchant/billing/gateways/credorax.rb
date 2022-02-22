@@ -20,8 +20,9 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://assigned-subdomain.credorax.net/crax_gate/service/gateway'
 
       self.supported_countries = %w(AD AT BE BG HR CY CZ DK EE FR DE GI GR GG HU IS IE IM IT JE LV LI LT LU MT MC NO PL PT RO SM SK ES SE CH GB)
+
       self.default_currency = 'EUR'
-      self.currencies_without_fractions = %w(BIF CLP DJF GNF JPY KMF KRW PYG RWF VND VUV XAF XOF XPF)
+      self.currencies_without_fractions = %w(BIF CLP DJF GNF ISK JPY KMF KRW PYG RWF VND VUV XAF XOF XPF)
       self.currencies_with_three_decimal_places = %w(BHD IQD JOD KWD LYD OMR TND)
 
       self.money_format = :cents
@@ -334,6 +335,7 @@ module ActiveMerchant #:nodoc:
           post[:f23] = options[:f23] if options[:f23]
           post[:'3ds_purchasedate'] = Time.now.utc.strftime('%Y%m%d%I%M%S')
           options.dig(:stored_credential, :initiator) == 'merchant' ? post[:'3ds_channel'] = '03' : post[:'3ds_channel'] = '02'
+          post[:'3ds_reqchallengeind'] = options[:three_ds_reqchallengeind] if options[:three_ds_reqchallengeind]
           post[:'3ds_redirect_url'] = three_ds_2_options[:notification_url]
           post[:'3ds_challengewindowsize'] = options[:three_ds_challenge_window_size] || '03'
           post[:d5] = browser_info[:user_agent]
@@ -345,14 +347,7 @@ module ActiveMerchant #:nodoc:
           post[:d6] = browser_info[:language]
           post[:'3ds_browserjavaenabled'] = browser_info[:java]
           post[:'3ds_browseracceptheader'] = browser_info[:accept_header]
-          if (shipping_address = options[:shipping_address])
-            post[:'3ds_shipaddrstate'] = shipping_address[:state]
-            post[:'3ds_shipaddrpostcode'] = shipping_address[:zip]
-            post[:'3ds_shipaddrline2'] = shipping_address[:address2]
-            post[:'3ds_shipaddrline1'] = shipping_address[:address1]
-            post[:'3ds_shipaddrcountry'] = shipping_address[:country]
-            post[:'3ds_shipaddrcity'] = shipping_address[:city]
-          end
+          add_complete_shipping_address(post, options[:shipping_address]) if options[:shipping_address]
         elsif options[:three_d_secure]
           add_normalized_3d_secure_2_data(post, options)
         end
@@ -370,6 +365,17 @@ module ActiveMerchant #:nodoc:
           post[:i8] = build_i8(options[:eci], options[:cavv], options[:xid])
           post[:'3ds_version'] = options[:three_ds_version].nil? || options[:three_ds_version]&.start_with?('1') ? '1.0' : options[:three_ds_version]
         end
+      end
+
+      def add_complete_shipping_address(post, shipping_address)
+        return if shipping_address.values.any?(&:blank?)
+
+        post[:'3ds_shipaddrstate'] = shipping_address[:state]
+        post[:'3ds_shipaddrpostcode'] = shipping_address[:zip]
+        post[:'3ds_shipaddrline2'] = shipping_address[:address2]
+        post[:'3ds_shipaddrline1'] = shipping_address[:address1]
+        post[:'3ds_shipaddrcountry'] = shipping_address[:country]
+        post[:'3ds_shipaddrcity'] = shipping_address[:city]
       end
 
       def add_normalized_3d_secure_2_data(post, options)

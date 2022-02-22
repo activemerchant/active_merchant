@@ -38,6 +38,18 @@ class HpsTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_zip_formatting
+    @options[:billing_address][:zip] = '12345-1234 '
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_method, _endpoint, data, _headers|
+      assert_match(/<hps:CardHolderZip>123451234<\/hps:CardHolderZip>/, data)
+    end.respond_with(successful_swipe_purchase_response)
+
+    assert_success response
+  end
+
   def test_successful_check_purchase
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@check_amount, @check, @options)
@@ -267,6 +279,10 @@ class HpsTest < Test::Unit::TestCase
   def test_transcript_scrubbing
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrub), post_scrub
+  end
+
+  def test_account_number_scrubbing
+    assert_equal @gateway.scrub(pre_scrubbed_account_number), post_scrubbed_account_number
   end
 
   def test_successful_purchase_with_apple_pay_raw_cryptogram_with_eci
@@ -1333,5 +1349,59 @@ reading 1067 bytes...
 read 1067 bytes
 Conn close
     }
+  end
+
+  def pre_scrubbed_account_number
+    <<~PRE_SCRUBBED
+      opening connection to posgateway.secureexchange.net:443...
+      opened
+      starting SSL for posgateway.secureexchange.net:443...
+      SSL established, protocol: TLSv1.2, cipher: DHE-RSA-AES256-SHA256
+      <- "POST /Hps.Exchange.PosGateway/PosGatewayService.asmx?wsdl HTTP/1.1\r\nContent-Type: text/xml\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: posgateway.secureexchange.net\r\nContent-Length: 1029\r\n\r\n"
+      <- "<?xml version=\"1.0\" encoding=\"UTF-8\"?><SOAP:Envelope xmlns:SOAP=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:hps=\"http://Hps.Exchange.PosGateway\"><SOAP:Body><hps:PosRequest><hps:Ver1.0><hps:Header><hps:SecretAPIKey/></hps:Header><hps:Transaction><hps:CheckSale><hps:Block1><hps:CheckAction>SALE</hps:CheckAction><hps:AccountInfo><hps:RoutingNumber>122000030</hps:RoutingNumber><hps:AccountNumber>1357902468</hps:AccountNumber><hps:CheckNumber>1234</hps:CheckNumber><hps:AccountType>SAVINGS</hps:AccountType></hps:AccountInfo><hps:CheckType>PERSONAL</hps:CheckType><hps:Amt>20.00</hps:Amt><hps:SECCode>WEB</hps:SECCode><hps:ConsumerInfo><hps:FirstName>Jim</hps:FirstName><hps:LastName>Smith</hps:LastName><hps:CheckName>Hot Buttered Toast Incorporated</hps:CheckName></hps:ConsumerInfo><hps:AdditionalTxnFields><hps:Description>Store Purchase</hps:Description><hps:InvoiceNbr>1</hps:InvoiceNbr></hps:AdditionalTxnFields></hps:Block1></hps:CheckSale></hps:Transaction></hps:Ver1.0></hps:PosRequest></SOAP:Body></SOAP:Envelope>"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Cache-Control: no-cache,no-store\r\n"
+      -> "Pragma: no-cache\r\n"
+      -> "Content-Type: text/xml; charset=utf-8\r\n"
+      -> "Expires: -1\r\n"
+      -> "X-Frame-Options: DENY\r\n"
+      -> "X-Content-Type-Options: nosniff\r\n"
+      -> "Strict-Transport-Security: max-age=31536000; includeSubDomains;\r\n"
+      -> "Date: Tue, 12 Oct 2021 15:17:29 GMT\r\n"
+      -> "Connection: close\r\n"
+      -> "Content-Length: 543\r\n"
+      -> "\r\n"
+      reading 543 bytes...
+      -> "<?xml version=\"1.0\" encoding=\"utf-8\"?><soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"><soap:Body><PosResponse rootUrl=\"https://posgateway.secureexchange.net/Hps.Exchange.PosGateway\" xmlns=\"http://Hps.Exchange.PosGateway\"><Ver1.0><Header><GatewayTxnId>1589181322</GatewayTxnId><GatewayRspCode>-2</GatewayRspCode><GatewayRspMsg>Authentication Error</GatewayRspMsg></Header></Ver1.0></PosResponse></soap:Body></soap:Envelope>"
+      read 543 bytes
+      Conn close
+    PRE_SCRUBBED
+  end
+
+  def post_scrubbed_account_number
+    <<~POST_SCRUBBED
+      opening connection to posgateway.secureexchange.net:443...
+      opened
+      starting SSL for posgateway.secureexchange.net:443...
+      SSL established, protocol: TLSv1.2, cipher: DHE-RSA-AES256-SHA256
+      <- "POST /Hps.Exchange.PosGateway/PosGatewayService.asmx?wsdl HTTP/1.1\r\nContent-Type: text/xml\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: posgateway.secureexchange.net\r\nContent-Length: 1029\r\n\r\n"
+      <- "<?xml version=\"1.0\" encoding=\"UTF-8\"?><SOAP:Envelope xmlns:SOAP=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:hps=\"http://Hps.Exchange.PosGateway\"><SOAP:Body><hps:PosRequest><hps:Ver1.0><hps:Header><hps:SecretAPIKey/></hps:Header><hps:Transaction><hps:CheckSale><hps:Block1><hps:CheckAction>SALE</hps:CheckAction><hps:AccountInfo><hps:RoutingNumber>[FILTERED]</hps:RoutingNumber><hps:AccountNumber>[FILTERED]</hps:AccountNumber><hps:CheckNumber>1234</hps:CheckNumber><hps:AccountType>SAVINGS</hps:AccountType></hps:AccountInfo><hps:CheckType>PERSONAL</hps:CheckType><hps:Amt>20.00</hps:Amt><hps:SECCode>WEB</hps:SECCode><hps:ConsumerInfo><hps:FirstName>Jim</hps:FirstName><hps:LastName>Smith</hps:LastName><hps:CheckName>Hot Buttered Toast Incorporated</hps:CheckName></hps:ConsumerInfo><hps:AdditionalTxnFields><hps:Description>Store Purchase</hps:Description><hps:InvoiceNbr>1</hps:InvoiceNbr></hps:AdditionalTxnFields></hps:Block1></hps:CheckSale></hps:Transaction></hps:Ver1.0></hps:PosRequest></SOAP:Body></SOAP:Envelope>"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Cache-Control: no-cache,no-store\r\n"
+      -> "Pragma: no-cache\r\n"
+      -> "Content-Type: text/xml; charset=utf-8\r\n"
+      -> "Expires: -1\r\n"
+      -> "X-Frame-Options: DENY\r\n"
+      -> "X-Content-Type-Options: nosniff\r\n"
+      -> "Strict-Transport-Security: max-age=31536000; includeSubDomains;\r\n"
+      -> "Date: Tue, 12 Oct 2021 15:17:29 GMT\r\n"
+      -> "Connection: close\r\n"
+      -> "Content-Length: 543\r\n"
+      -> "\r\n"
+      reading 543 bytes...
+      -> "<?xml version=\"1.0\" encoding=\"utf-8\"?><soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"><soap:Body><PosResponse rootUrl=\"https://posgateway.secureexchange.net/Hps.Exchange.PosGateway\" xmlns=\"http://Hps.Exchange.PosGateway\"><Ver1.0><Header><GatewayTxnId>1589181322</GatewayTxnId><GatewayRspCode>-2</GatewayRspCode><GatewayRspMsg>Authentication Error</GatewayRspMsg></Header></Ver1.0></PosResponse></soap:Body></soap:Envelope>"
+      read 543 bytes
+      Conn close
+    POST_SCRUBBED
   end
 end

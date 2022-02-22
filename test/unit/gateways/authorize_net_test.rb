@@ -539,11 +539,29 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal 'This transaction has been approved.', capture.message
   end
 
-  def test_successful_auth_with_initial_stored_credential
+  def test_successful_auth_with_initial_reccuring_stored_credential
+    stored_credential_params = {
+      initial_transaction: true,
+      reason_type: 'recurring',
+      initiator: 'cardholder',
+      network_transaction_id: nil
+    }
+    auth = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
+    end.check_request do |_endpoint, data, _headers|
+      doc = parse(data)
+      assert_equal 'true', doc.at_xpath('//processingOptions/isFirstRecurringPayment').content
+      assert_not_match(/isFirstSubsequentAuth/, doc)
+    end.respond_with(successful_authorize_response)
+    assert_success auth
+    assert auth.authorization
+  end
+
+  def test_successful_auth_with_initial_unscheduled_stored_credential
     stored_credential_params = {
       initial_transaction: true,
       reason_type: 'unscheduled',
-      initiator: 'merchant',
+      initiator: 'cardholder',
       network_transaction_id: nil
     }
     auth = stub_comms do
@@ -551,12 +569,31 @@ class AuthorizeNetTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       doc = parse(data)
       assert_equal 'true', doc.at_xpath('//processingOptions/isFirstSubsequentAuth').content
+      assert_not_match(/isFirstRecurringPayment/, doc)
     end.respond_with(successful_authorize_response)
     assert_success auth
     assert auth.authorization
   end
 
-  def test_successful_auth_with_installment_stored_credential
+  def test_successful_auth_with_initial_installment_stored_credential
+    stored_credential_params = {
+      initial_transaction: true,
+      reason_type: 'installment',
+      initiator: 'cardholder',
+      network_transaction_id: nil
+    }
+    auth = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
+    end.check_request do |_endpoint, data, _headers|
+      doc = parse(data)
+      assert_equal 'true', doc.at_xpath('//processingOptions/isFirstSubsequentAuth').content
+      assert_not_match(/isFirstRecurringPayment/, doc)
+    end.respond_with(successful_authorize_response)
+    assert_success auth
+    assert auth.authorization
+  end
+
+  def test_successful_auth_with_subsequent_installment_stored_credential
     stored_credential_params = {
       initial_transaction: false,
       reason_type: 'installment',
@@ -568,12 +605,31 @@ class AuthorizeNetTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       doc = parse(data)
       assert_equal 'true', doc.at_xpath('//processingOptions/isSubsequentAuth').content
+      assert_equal '0123', doc.at_xpath('//subsequentAuthInformation/originalNetworkTransId').content
     end.respond_with(successful_authorize_response)
     assert_success auth
     assert auth.authorization
   end
 
-  def test_successful_auth_with_recurring_stored_credential
+  def test_successful_auth_with_subsequent_unscheduled_stored_credential
+    stored_credential_params = {
+      initial_transaction: false,
+      reason_type: 'unscheduled',
+      initiator: 'merchant',
+      network_transaction_id: '0123'
+    }
+    auth = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
+    end.check_request do |_endpoint, data, _headers|
+      doc = parse(data)
+      assert_equal 'true', doc.at_xpath('//processingOptions/isSubsequentAuth').content
+      assert_equal '0123', doc.at_xpath('//subsequentAuthInformation/originalNetworkTransId').content
+    end.respond_with(successful_authorize_response)
+    assert_success auth
+    assert auth.authorization
+  end
+
+  def test_successful_auth_with_subsequent_recurring_stored_credential
     stored_credential_params = {
       initial_transaction: false,
       reason_type: 'recurring',
@@ -585,8 +641,60 @@ class AuthorizeNetTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       doc = parse(data)
       assert_equal 'true', doc.at_xpath('//processingOptions/isSubsequentAuth').content
+      assert_equal '0123', doc.at_xpath('//subsequentAuthInformation/originalNetworkTransId').content
       assert_equal 'recurringBilling', doc.at_xpath('//transactionSettings/setting/settingName').content
       assert_equal 'true', doc.at_xpath('//transactionSettings/setting/settingValue').content
+    end.respond_with(successful_authorize_response)
+    assert_success auth
+    assert auth.authorization
+  end
+
+  def test_successful_auth_with_subsequent_installment_stored_credential_and_cardholder_initiator
+    stored_credential_params = {
+      initial_transaction: false,
+      reason_type: 'installment',
+      initiator: 'cardholder',
+      network_transaction_id: '0123'
+    }
+    auth = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
+    end.check_request do |_endpoint, data, _headers|
+      doc = parse(data)
+      assert_equal 'true', doc.at_xpath('//processingOptions/isStoredCredentials').content
+    end.respond_with(successful_authorize_response)
+    assert_success auth
+    assert auth.authorization
+  end
+
+  def test_successful_auth_with_subsequent_unscheduled_stored_credential_and_cardholder_initiator
+    stored_credential_params = {
+      initial_transaction: false,
+      reason_type: 'unscheduled',
+      initiator: 'cardholder',
+      network_transaction_id: '0123'
+    }
+    auth = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
+    end.check_request do |_endpoint, data, _headers|
+      doc = parse(data)
+      assert_equal 'true', doc.at_xpath('//processingOptions/isStoredCredentials').content
+    end.respond_with(successful_authorize_response)
+    assert_success auth
+    assert auth.authorization
+  end
+
+  def test_successful_auth_with_subsequent_recurring_stored_credential_and_cardholder_initiator
+    stored_credential_params = {
+      initial_transaction: false,
+      reason_type: 'recurring',
+      initiator: 'cardholder',
+      network_transaction_id: '0123'
+    }
+    auth = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
+    end.check_request do |_endpoint, data, _headers|
+      doc = parse(data)
+      assert_equal 'true', doc.at_xpath('//processingOptions/isStoredCredentials').content
     end.respond_with(successful_authorize_response)
     assert_success auth
     assert auth.authorization
@@ -938,6 +1046,16 @@ class AuthorizeNetTest < Test::Unit::TestCase
         assert_equal 'E0Mvq8AAABEiMwARIjNEVWZ3iJk=', doc.at_xpath('//cardholderAuthentication/cardholderAuthenticationValue').content
         assert_equal '2', doc.at_xpath('//cardholderAuthentication/authenticationIndicator').content
         assert_equal '1.00', doc.at_xpath('//transactionRequest/amount').content
+      end
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_does_not_add_cardholder_authentication_element_without_relevant_values
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.check_request do |_endpoint, data, _headers|
+      parse(data) do |doc|
+        assert !doc.at_xpath('//cardholderAuthentication'), data
       end
     end.respond_with(successful_purchase_response)
   end

@@ -18,12 +18,13 @@ class CredoraxTest < Test::Unit::TestCase
       shopper_email: 'john.smith@test.com',
       shopper_ip: '77.110.174.153',
       shopper_reference: 'John Smith',
-      billing_address: address(),
-      shipping_address: address(),
+      billing_address: address,
+      shipping_address: address,
       order_id: '123',
       execute_threed: true,
       three_ds_initiate: '03',
       f23: '1',
+      three_ds_reqchallengeind: '04',
       three_ds_challenge_window_size: '01',
       stored_credential: { reason_type: 'unscheduled' },
       three_ds_2: {
@@ -257,6 +258,7 @@ class CredoraxTest < Test::Unit::TestCase
       assert_match(/3ds_transtype=01/, data)
       assert_match(/3ds_initiate=03/, data)
       assert_match(/f23=1/, data)
+      assert_match(/3ds_reqchallengeind=04/, data)
       assert_match(/3ds_redirect_url=www.example.com/, data)
       assert_match(/3ds_challengewindowsize=01/, data)
       assert_match(/d5=unknown/, data)
@@ -279,6 +281,32 @@ class CredoraxTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal '8a82944a5351570601535955efeb513c;006596;02617cf5f02ccaed239b6521748298c5;purchase', response.authorization
+    assert response.test?
+  end
+
+  def test_does_not_add_incomplete_3d2_shipping_address
+    incomplete_shipping_address = {
+      state: 'ON',
+      zip: 'K1C2N6',
+      address1: '456 My Street',
+      address2: '',
+      country: 'CA',
+      city: 'Ottawa'
+    }
+    options_with_3ds = @normalized_3ds_2_options.merge(shipping_address: incomplete_shipping_address)
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options_with_3ds)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/3ds_initiate=03/, data)
+      assert_not_match(/3ds_shipaddrstate=/, data)
+      assert_not_match(/3ds_shipaddrpostcode=/, data)
+      assert_not_match(/3ds_shipaddrline1=/, data)
+      assert_not_match(/3ds_shipaddrline2=/, data)
+      assert_not_match(/3ds_shipaddrcountry=/, data)
+      assert_not_match(/3ds_shipaddrcity=/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
     assert response.test?
   end
 
@@ -553,15 +581,6 @@ class CredoraxTest < Test::Unit::TestCase
     end.respond_with(successful_credit_response)
   end
 
-  def test_supports_billing_descriptor
-    @options[:billing_descriptor] = 'abcdefghijkl'
-    stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |_endpoint, data, _headers|
-      assert_match(/i2=abcdefghijkl/, data)
-    end.respond_with(successful_purchase_response)
-  end
-
   def test_purchase_adds_billing_descriptor
     @options[:billing_descriptor] = 'abcdefghijkl'
     stub_comms do
@@ -690,6 +709,72 @@ class CredoraxTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       assert_match(/r1=TEST/, data)
       assert_match(/r2=123/, data)
+    end.respond_with(successful_credit_response)
+  end
+
+  def test_purchase_adds_echo_field
+    @options[:echo] = 'Echo Parameter'
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/d2=Echo\+Parameter/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_authorize_adds_echo_field
+    @options[:echo] = 'Echo Parameter'
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/d2=Echo\+Parameter/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_capture_adds_echo_field
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card)
+    end.respond_with(successful_authorize_response)
+
+    @options[:echo] = 'Echo Parameter'
+    stub_comms do
+      @gateway.capture(@amount, response.authorization, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/d2=Echo\+Parameter/, data)
+    end.respond_with(successful_capture_response)
+  end
+
+  def test_void_adds_echo_field
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.respond_with(successful_authorize_response)
+
+    @options[:echo] = 'Echo Parameter'
+    stub_comms do
+      @gateway.void(response.authorization, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/d2=Echo\+Parameter/, data)
+    end.respond_with(successful_void_response)
+  end
+
+  def test_refund_adds_echo_field
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.respond_with(successful_purchase_response)
+
+    @options[:echo] = 'Echo Parameter'
+    stub_comms do
+      @gateway.refund(@amount, response.authorization, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/d2=Echo\+Parameter/, data)
+    end.respond_with(successful_refund_response)
+  end
+
+  def test_credit_adds_echo_field
+    @options[:echo] = 'Echo Parameter'
+    stub_comms do
+      @gateway.credit(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/d2=Echo\+Parameter/, data)
     end.respond_with(successful_credit_response)
   end
 
@@ -889,7 +974,7 @@ class CredoraxTest < Test::Unit::TestCase
 
   def test_nonfractional_currency_handling
     stub_comms do
-      @gateway.authorize(200, @credit_card, @options.merge(currency: 'JPY'))
+      @gateway.authorize(200, @credit_card, @options.merge(currency: 'ISK'))
     end.check_request do |_endpoint, data, _headers|
       assert_match(/a4=2&a1=/, data)
     end.respond_with(successful_authorize_response)

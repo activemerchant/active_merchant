@@ -252,6 +252,17 @@ class MercadoPagoTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_verify_with_custom_amount
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options.merge({ amount: 200 }))
+    end.check_request do |endpoint, data, _headers|
+      params = JSON.parse(data)
+      assert_equal 2.0, params['transaction_amount'] if endpoint.include? 'payment'
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
   def test_successful_verify_with_failed_void
     @gateway.expects(:ssl_request).at_most(3).returns(failed_void_response)
 
@@ -383,6 +394,18 @@ class MercadoPagoTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, _headers|
       assert_match("\"net_amount\":#{net_amount}", data) if endpoint =~ /payments/
     end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_includes_metadata
+    key1 = 'value_1'
+    key2 = 'value_2'
+    metadata_object = { key_1: key1, key_2: key2 }
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(metadata: metadata_object))
+    end.check_request do |endpoint, data, _headers|
+      assert_match("\"metadata\":{\"key_1\":\"#{key1}\",\"key_2\":\"#{key2}\"}", data) if endpoint =~ /payments/
+    end.respond_with(successful_purchase_with_metadata_response)
   end
 
   def test_authorize_includes_taxes_array
@@ -676,6 +699,12 @@ class MercadoPagoTest < Test::Unit::TestCase
   def failed_void_response
     %(
       {"message":"Method not allowed","error":"method_not_allowed","status":405,"cause":[{"code":"Method not allowed","description":"Method not allowed","data":null}]}
+    )
+  end
+
+  def successful_purchase_with_metadata_response
+    %(
+      {"id":4141491,"date_created":"2017-07-06T09:49:35.000-04:00","date_approved":"2017-07-06T09:49:35.000-04:00","date_last_updated":"2017-07-06T09:49:35.000-04:00","date_of_expiration":null,"money_release_date":"2017-07-18T09:49:35.000-04:00","operation_type":"regular_payment","issuer_id":"166","payment_method_id":"visa","payment_type_id":"credit_card","status":"approved","status_detail":"accredited","currency_id":"MXN","description":"Store Purchase","live_mode":false,"sponsor_id":null,"authorization_code":null,"related_exchange_rate":null,"collector_id":261735089,"payer":{"type":"guest","id":null,"email":"user@example.com","identification":{"type":null,"number":null},"phone":{"area_code":null,"number":null,"extension":""},"first_name":"First User","last_name":"User","entity_type":null},"metadata":{"key_1":"value_1","key_2":"value_2","key_3":{"nested_key_1":"value_3"}},"additional_info":{"payer":{"address":{"zip_code":"K1C2N6","street_name":"My Street","street_number":"456"}}},"order":{"type":"mercadopago","id":"2326513804447055222"},"external_reference":null,"transaction_amount":5,"transaction_amount_refunded":0,"coupon_amount":0,"differential_pricing_id":null,"deduction_schema":null,"transaction_details":{"net_received_amount":0.14,"total_paid_amount":5,"overpaid_amount":0,"external_resource_url":null,"installment_amount":5,"financial_institution":null,"payment_method_reference_id":null,"payable_deferral_period":null,"acquirer_reference":null},"fee_details":[{"type":"mercadopago_fee","amount":4.86,"fee_payer":"collector"}],"captured":true,"binary_mode":false,"call_for_authorize_id":null,"statement_descriptor":"WWW.MERCADOPAGO.COM","installments":1,"card":{"id":null,"first_six_digits":"450995","last_four_digits":"3704","expiration_month":9,"expiration_year":2018,"date_created":"2017-07-06T09:49:35.000-04:00","date_last_updated":"2017-07-06T09:49:35.000-04:00","cardholder":{"name":"Longbob Longsen","identification":{"number":null,"type":null}}},"notification_url":null,"refunds":[],"processing_mode":null,"merchant_account_id":null,"acquirer":null,"merchant_number":null}
     )
   end
 end

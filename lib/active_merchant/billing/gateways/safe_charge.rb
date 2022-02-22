@@ -62,6 +62,7 @@ module ActiveMerchant #:nodoc:
         post[:sg_CCToken] = token
         post[:sg_ExpMonth] = exp_month
         post[:sg_ExpYear] = exp_year
+        post[:sg_Email] = options[:email]
 
         commit(post)
       end
@@ -126,9 +127,11 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_transaction_data(trans_type, post, money, options)
+        currency = options[:currency] || currency(money)
+
         post[:sg_TransType] = trans_type
-        post[:sg_Currency] = (options[:currency] || currency(money))
-        post[:sg_Amount] = amount(money)
+        post[:sg_Currency] = currency
+        post[:sg_Amount] = localized_amount(money, currency)
         post[:sg_ClientLoginID] = @options[:client_login_id]
         post[:sg_ClientPassword] = @options[:client_password]
         post[:sg_ResponseFormat] = '4'
@@ -143,15 +146,25 @@ module ActiveMerchant #:nodoc:
         post[:sg_Descriptor] = options[:merchant_descriptor] if options[:merchant_descriptor]
         post[:sg_MerchantPhoneNumber] = options[:merchant_phone_number] if options[:merchant_phone_number]
         post[:sg_MerchantName] = options[:merchant_name] if options[:merchant_name]
+        post[:sg_ProductID] = options[:product_id] if options[:product_id]
+        post[:sg_NotUseCVV] = options[:not_use_cvv].to_s == 'true' ? 1 : 0 unless options[:not_use_cvv].nil?
       end
 
       def add_payment(post, payment, options = {})
-        post[:sg_NameOnCard] = payment.name
-        post[:sg_CardNumber] = payment.number
         post[:sg_ExpMonth] = format(payment.month, :two_digits)
         post[:sg_ExpYear] = format(payment.year, :two_digits)
-        post[:sg_CVV2] = payment.verification_value
-        post[:sg_StoredCredentialMode] = (options[:stored_credential_mode] == true ? 1 : 0)
+        post[:sg_CardNumber] = payment.number
+
+        if payment.is_a?(NetworkTokenizationCreditCard) && payment.source == :network_token
+          post[:sg_CAVV] = payment.payment_cryptogram
+          post[:sg_ECI] = options[:three_d_secure] && options[:three_d_secure][:eci] || '05'
+          post[:sg_IsExternalMPI] = 1
+          post[:sg_ExternalTokenProvider] = 5
+        else
+          post[:sg_CVV2] = payment.verification_value
+          post[:sg_NameOnCard] = payment.name
+          post[:sg_StoredCredentialMode] = (options[:stored_credential_mode] == true ? 1 : 0)
+        end
       end
 
       def add_customer_details(post, payment, options)
@@ -170,14 +183,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_external_mpi_data(post, options)
-        version = options[:three_d_secure][:ds_transaction_id] ? '2' : '1'
-
-        post[:sg_eci] = options[:three_d_secure][:eci] if options[:three_d_secure][:eci]
-        post[:sg_cavv] = options[:three_d_secure][:cavv] if options[:three_d_secure][:cavv]
-        post[:sg_dsTransID] = options[:three_d_secure][:ds_transaction_id] if version == '2'
-        post[:sg_threeDSProtocolVersion] = version
-        post[:sg_xid] = options[:three_d_secure][:xid] if version == '1'
+        post[:sg_ECI] = options[:three_d_secure][:eci] if options[:three_d_secure][:eci]
+        post[:sg_CAVV] = options[:three_d_secure][:cavv] if options[:three_d_secure][:cavv]
+        post[:sg_dsTransID] = options[:three_d_secure][:ds_transaction_id] if options[:three_d_secure][:ds_transaction_id]
+        post[:sg_threeDSProtocolVersion] = options[:three_d_secure][:ds_transaction_id] ? '2' : '1'
+        post[:sg_Xid] = options[:three_d_secure][:xid]
         post[:sg_IsExternalMPI] = 1
+        post[:sg_EnablePartialApproval] = options[:is_partial_approval]
+        post[:sg_challengePreference] = options[:three_d_secure][:challenge_preference] if options[:three_d_secure][:challenge_preference]
       end
 
       def parse(xml)

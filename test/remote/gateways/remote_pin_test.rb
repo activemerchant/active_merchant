@@ -166,6 +166,15 @@ class RemotePinTest < Test::Unit::TestCase
     assert_equal @visa_credit_card.year, response.params['response']['card']['expiry_year']
   end
 
+  def test_store_and_unstore
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+    assert_not_nil response.authorization
+
+    response = @gateway.unstore(response.authorization)
+    assert_success response
+  end
+
   def test_refund
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
@@ -187,6 +196,25 @@ class RemotePinTest < Test::Unit::TestCase
 
     response = @gateway.refund(@amount, token.reverse, @options)
     assert_failure response
+  end
+
+  def test_successful_void
+    authorization = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorization
+
+    assert void = @gateway.void(authorization.authorization, @options)
+    assert_success void
+  end
+
+  def test_failed_void
+    authorization = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorization
+
+    assert void = @gateway.void(authorization.authorization, @options)
+    assert_success void
+
+    assert already_voided = @gateway.void(authorization.authorization, @options)
+    assert_failure already_voided
   end
 
   def test_invalid_login

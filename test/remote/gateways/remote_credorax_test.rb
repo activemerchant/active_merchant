@@ -27,6 +27,7 @@ class RemoteCredoraxTest < Test::Unit::TestCase
       execute_threed: true,
       three_ds_version: '2',
       three_ds_challenge_window_size: '01',
+      three_ds_reqchallengeind: '04',
       stored_credential: { reason_type: 'unscheduled' },
       three_ds_2: {
         channel: 'browser',
@@ -60,6 +61,13 @@ class RemoteCredoraxTest < Test::Unit::TestCase
 
   def test_successful_purchase_and_amount_for_non_decimal_currency
     response = @gateway.purchase(14200, @credit_card, @options.merge(currency: 'JPY'))
+    assert_success response
+    assert_equal '142', response.params['A4']
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_purchase_and_amount_for_isk
+    response = @gateway.purchase(14200, @credit_card, @options.merge(currency: 'ISK'))
     assert_success response
     assert_equal '142', response.params['A4']
     assert_equal 'Succeeded', response.message
@@ -520,6 +528,13 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     # returns a failed response when an invalid processor parameter is sent
     assert bad_response = @gateway.purchase(@amount, @credit_card, @options.merge(processor: 'invalid'))
     assert_failure bad_response
+  end
+
+  def test_purchase_passes_d2_field
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(echo: 'Echo Parameter'))
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal 'Echo Parameter', response.params['D2']
   end
 
   # #########################################################################

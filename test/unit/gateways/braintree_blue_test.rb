@@ -127,6 +127,39 @@ class BraintreeBlueTest < Test::Unit::TestCase
     assert !@gateway.verify_credentials
   end
 
+  def test_zero_dollar_verification_transaction
+    Braintree::CreditCardVerificationGateway.any_instance.expects(:create).
+      returns(braintree_result(cvv_response_code: 'M', avs_error_response_code: 'P'))
+
+    card = credit_card('4111111111111111')
+    options = {
+      allow_card_verification: true,
+      billing_address: {
+        zip: '10000'
+      }
+    }
+    response = @gateway.verify(card, options)
+    assert_success response
+    assert_equal 'transaction_id', response.params['authorization']
+    assert_equal 'M', response.cvv_result['code']
+    assert_equal 'P', response.avs_result['code']
+  end
+
+  def test_failed_verification_transaction
+    Braintree::CreditCardVerificationGateway.any_instance.expects(:create).
+      returns(braintree_error_result(message: 'CVV must be 4 digits for American Express and 3 digits for other card types. (81707)'))
+
+    card = credit_card('4111111111111111')
+    options = {
+      allow_card_verification: true,
+      billing_address: {
+        zip: '10000'
+      }
+    }
+    response = @gateway.verify(card, options)
+    assert_failure response
+  end
+
   def test_user_agent_includes_activemerchant_version
     assert @internal_gateway.config.user_agent.include?("(ActiveMerchant #{ActiveMerchant::VERSION})")
   end
@@ -175,6 +208,17 @@ class BraintreeBlueTest < Test::Unit::TestCase
       returns(braintree_result)
 
     @gateway.authorize(100, credit_card('41111111111111111111'), service_fee_amount: '2.31')
+  end
+
+  def test_risk_data_can_be_specified
+    risk_data = {
+      customer_browser: 'User-Agent Header',
+      customer_ip: '127.0.0.1'
+    }
+    Braintree::TransactionGateway.any_instance.expects(:sale).
+      with(has_entries(risk_data: risk_data)).returns(braintree_result)
+
+    @gateway.authorize(100, credit_card('4111111111111111'), risk_data: risk_data)
   end
 
   def test_hold_in_escrow_can_be_specified
@@ -924,7 +968,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
                    first_name: 'Longbob', last_name: 'Longsen' },
         options: { store_in_vault: false, submit_for_settlement: nil, hold_in_escrow: nil },
         custom_fields: nil,
-        android_pay_card: {
+        google_pay_card: {
           number: '4111111111111111',
           expiration_month: '09',
           expiration_year: (Time.now.year + 1).to_s,
@@ -957,7 +1001,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
                    first_name: 'Longbob', last_name: 'Longsen' },
         options: { store_in_vault: false, submit_for_settlement: nil, hold_in_escrow: nil },
         custom_fields: nil,
-        android_pay_card: {
+        google_pay_card: {
           number: '4111111111111111',
           expiration_month: '09',
           expiration_year: (Time.now.year + 1).to_s,
@@ -1224,6 +1268,36 @@ class BraintreeBlueTest < Test::Unit::TestCase
     ).returns(braintree_result)
 
     @gateway.purchase(100, credit_card('41111111111111111111'), { test: true, order_id: '1', stored_credential: stored_credential(:merchant, :unscheduled, id: '123ABC') })
+  end
+
+  def test_stored_credential_recurring_first_cit_initial
+    Braintree::TransactionGateway.any_instance.expects(:sale).with(
+      standard_purchase_params.merge(
+        {
+          external_vault: {
+            status: 'will_vault'
+          },
+          transaction_source: 'recurring_first'
+        }
+      )
+    ).returns(braintree_result)
+
+    @gateway.purchase(100, credit_card('41111111111111111111'), { test: true, order_id: '1', stored_credential: { initiator: 'merchant', reason_type: 'recurring_first', initial_transaction: true } })
+  end
+
+  def test_stored_credential_moto_cit_initial
+    Braintree::TransactionGateway.any_instance.expects(:sale).with(
+      standard_purchase_params.merge(
+        {
+          external_vault: {
+            status: 'will_vault'
+          },
+          transaction_source: 'moto'
+        }
+      )
+    ).returns(braintree_result)
+
+    @gateway.purchase(100, credit_card('41111111111111111111'), { test: true, order_id: '1', stored_credential: { initiator: 'merchant', reason_type: 'moto', initial_transaction: true } })
   end
 
   private

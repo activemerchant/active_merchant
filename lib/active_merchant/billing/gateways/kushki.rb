@@ -37,6 +37,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         post[:ticketNumber] = authorization
         add_invoice(action, post, amount, options)
+        add_full_response(post, options)
 
         commit(action, post)
       end
@@ -46,6 +47,7 @@ module ActiveMerchant #:nodoc:
 
         post = {}
         post[:ticketNumber] = authorization
+        add_full_response(post, options)
 
         commit(action, post)
       end
@@ -55,6 +57,7 @@ module ActiveMerchant #:nodoc:
 
         post = {}
         post[:ticketNumber] = authorization
+        add_full_response(post, options)
 
         commit(action, post)
       end
@@ -78,6 +81,8 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(action, post, amount, options)
         add_payment_method(post, payment_method, options)
+        add_full_response(post, options)
+        add_metadata(post, options)
 
         commit(action, post)
       end
@@ -88,6 +93,9 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_reference(post, authorization, options)
         add_invoice(action, post, amount, options)
+        add_contact_details(post, options[:contact_details]) if options[:contact_details]
+        add_full_response(post, options)
+        add_metadata(post, options)
 
         commit(action, post)
       end
@@ -98,6 +106,8 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_reference(post, authorization, options)
         add_invoice(action, post, amount, options)
+        add_full_response(post, options)
+        add_metadata(post, options)
 
         commit(action, post)
       end
@@ -152,6 +162,26 @@ module ActiveMerchant #:nodoc:
 
       def add_reference(post, authorization, options)
         post[:token] = authorization
+      end
+
+      def add_contact_details(post, contact_details_options)
+        contact_details = {}
+        contact_details[:documentType] = contact_details_options[:document_type] if contact_details_options[:document_type]
+        contact_details[:documentNumber] = contact_details_options[:document_number] if contact_details_options[:document_number]
+        contact_details[:email] = contact_details_options[:email] if contact_details_options[:email]
+        contact_details[:firstName] = contact_details_options[:first_name] if contact_details_options[:first_name]
+        contact_details[:lastName] = contact_details_options[:last_name] if contact_details_options[:last_name]
+        contact_details[:secondLastName] = contact_details_options[:second_last_name] if contact_details_options[:second_last_name]
+        contact_details[:phoneNumber] = contact_details_options[:phone_number] if contact_details_options[:phone_number]
+        post[:contactDetails] = contact_details
+      end
+
+      def add_full_response(post, options)
+        post[:fullResponse] = options[:full_response].to_s.casecmp('true').zero? if options[:full_response]
+      end
+
+      def add_metadata(post, options)
+        post[:metadata] = options[:metadata] if options[:metadata]
       end
 
       ENDPOINT = {

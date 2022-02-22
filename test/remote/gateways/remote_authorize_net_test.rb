@@ -215,7 +215,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     stored_credential_params = {
       initial_transaction: true,
       reason_type: 'recurring',
-      initiator: 'merchant',
+      initiator: 'cardholder',
       network_transaction_id: nil
     }
     assert auth = @gateway.authorize(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
@@ -229,7 +229,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
       initial_transaction: false,
       reason_type: 'recurring',
       initiator: 'merchant',
-      network_transaction_id: auth.params['transaction_identifier']
+      network_transaction_id: auth.params['network_trans_id']
     }
 
     assert next_auth = @gateway.authorize(@amount, @credit_card, @options)
@@ -243,7 +243,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     stored_credential_params = {
       initial_transaction: true,
       reason_type: 'unscheduled',
-      initiator: 'merchant',
+      initiator: 'cardholder',
       network_transaction_id: nil
     }
     assert auth = @gateway.authorize(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
@@ -257,7 +257,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
       initial_transaction: false,
       reason_type: 'unscheduled',
       initiator: 'merchant',
-      network_transaction_id: auth.params['transaction_identifier']
+      network_transaction_id: auth.params['network_trans_id']
     }
 
     assert next_auth = @gateway.authorize(@amount, @credit_card, @options)
@@ -271,7 +271,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     stored_credential_params = {
       initial_transaction: true,
       reason_type: 'installment',
-      initiator: 'merchant',
+      initiator: 'cardholder',
       network_transaction_id: nil
     }
     assert auth = @gateway.authorize(@amount, @credit_card, @options.merge({ stored_credential: stored_credential_params }))
@@ -285,7 +285,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
       initial_transaction: false,
       reason_type: 'installment',
       initiator: 'merchant',
-      network_transaction_id: auth.params['transaction_identifier']
+      network_transaction_id: auth.params['network_trans_id']
     }
 
     assert next_auth = @gateway.authorize(@amount, @credit_card, @options)
@@ -662,6 +662,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
       card_code
       cardholder_authentication_code
       full_response_code
+      network_trans_id
       response_code
       response_reason_code
       response_reason_text
@@ -824,6 +825,15 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert_scrubbed(credit_card.number, transcript)
     assert_scrubbed(credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:password], transcript)
+  end
+
+  def test_account_number_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @check, @options)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@check.account_number, clean_transcript)
   end
 
   def test_verify_credentials

@@ -246,6 +246,10 @@ cyber_source:
   login: X
   password: Y
 
+cyber_source_latam_pe:
+  login: merchant_id
+  password: soap_key
+
 # Working credentials, no need to replace
 d_local:
   login: aeaf9bbfa1
@@ -260,6 +264,14 @@ data_cash:
 decidir_authorize:
   api_key: 5a15fbc227224edabdb6f2e8219e8b28
   preauth_mode: true
+
+decidir_plus:
+  public_key: SOMECREDENTIAL
+  private_key: SOMECREDENTIAL
+
+decidir_plus_preauth:
+  public_key: SOMECREDENTIAL
+  private_key: SOMECREDENTIAL
 
 decidir_purchase:
   api_key: 5df6b5764c3f4822aecdc82d56f26b9d
@@ -428,6 +440,14 @@ instapay:
   password:
 
 # Working credentials, no need to replace
+ipg:
+  store_id: "YOUR STORE ID"
+  user_id: "YOUR USER ID"
+  password: "YOUR PASSWORD"
+  pem_password: "CERTIFICATE PASSWORD"
+  pem: "YOUR CERTIFICATE WITH PRIVATE KEY"
+
+# Working credentials, no need to replace
 ipp:
   username: nmi.api
   password: qwerty123
@@ -544,16 +564,26 @@ migs:
   advanced_login: activemerchant
   advanced_password: test12345
 
+# Working credentials, no need to replace
+mit:
+  commerce_id: '147'
+  user: IVCA33721
+  api_key: IGECPJ0QOJJCEHUI
+  key_session: CB0DC4887DD1D5CEA205E66EE934E430
+  test: true
+
 modern_payments:
   login: login
   password: password
 
+moka:
+  dealer_code: DEALER_CODE
+  username: USERNAME
+  password: PASSWORD
+
 # Working credentials, no need to replace
 monei:
-  sender_id: 8a829417488d34c401489a5cd1350977
-  channel_id: 8a829417488d34c401489a5de5dd097b
-  login: 8a829417488d34c401489a5cd1360979
-  pwd: GyNSEAp2
+  api_key: pk_test_3cb2d54b7ee145fa92d683c01816ad15
 
 # Working credentials, no need to replace
 moneris:
@@ -615,6 +645,9 @@ nmi:
   login: demo
   password: password
 
+nmi_secure:
+  security_key: '6457Thfj624V5r7WUwc5v6a68Zsd6YEm'
+
 ogone:
   login: LOGIN
   user: USER
@@ -657,6 +690,10 @@ pago_facil:
   service_id: 3
 
 # Working credentials, no need to replace
+pay_arc:
+  api_key: APIKEY
+
+# Working credentials, no need to replace
 pay_conex:
   account_id: '220614968961'
   api_accesskey: '69e9c4dd6b8ab9ab47da4e288df78315'
@@ -687,6 +724,11 @@ pay_junction_v2:
 pay_secure:
   login: LOGIN
   password: PASSWORD
+
+pay_trace:
+  username: USERNAME
+  password: PASSWORD
+  integrator_id: INTEGRATOR_ID
 
 paybox_direct:
   login: 1999888
@@ -725,6 +767,10 @@ payment_express:
   password: PASSWORD
 
 paymentez:
+  application_code: APPCODE
+  app_key: APPKEY
+
+paymentez_ecuador:
   application_code: APPCODE
   app_key: APPKEY
 
@@ -775,6 +821,11 @@ paypal_signature:
   password: HBC6A84QLRWC923A
   signature: AFcWxV21C7fd0v3bYYYRCpSSRl31AC-11AKBL8FFO9tjImL311y8a0hx
 
+paysafe:
+  login: SOMECREDENTIAL
+  secret_key: ANOTHERCREDENTIAL
+  account_id: CREDENTIAL
+
 payscout:
   username: demo
   password: password
@@ -799,12 +850,24 @@ payway:
   password:
   pem:
 
+# Working credentials, no need to replace
+payway_dot_com:
+  login:      "sprerestwsdev"
+  password:   "sprerestwsdev1!"
+  company_id: "3"
+  source_id: "67"
+
 pin:
   api_key: "I_mo9BUUUXIwXF-avcs3LA"
 
 plugnpay:
   login: LOGIN
   password: PASSWORD
+
+priority:
+  key: SANDBOX_KEY
+  secret: SECRET
+  merchant_id: MERCHANT_ID
 
 # Working credentials, no need to replace
 pro_pay:
@@ -918,6 +981,11 @@ quickpay_with_api_key:
   apikey: "fB46983ZwR5dzy46A3r6ngDx7P37N5YTu1F4S9W2JKCs9v4t5L9m2Q8Mlbjpa2I1"
   version: 7
 
+# To get this credential, log into: https://quickstream.support.qvalent.com/->click Administration->Facility Settings->
+# Authentication and Credentials->update "Technology" to SOAP and save->create cert and download .pfx file->
+# use the following command to get the Bag Attributes:
+# $ openssl pkcs12 -in filename.pfx -out cert.pem -nodes
+# open cert.pem file in a text editor (e.g. TextEdit) and you'll see the Bag Attributes to add below under "pem:" field
 qvalent:
   username: "QRSL"
   password: "QRSLTEST"
@@ -1184,7 +1252,7 @@ stripe:
 
 # Working credentials, no need to replace
 stripe_destination:
-  stripe_user_id: "acct_17FRNfIPBJTitsen"
+  stripe_user_id: "acct_1K5HlrPT5iqVqrJn"
 
 # Externally verified bank account for testing
 stripe_verified_bank_account:
@@ -1285,6 +1353,12 @@ visanet_peru:
   merchant_id: "543025501"
   ruc: '20341198217'
 
+vpos:
+  public_key: SOMECREDENTIAL
+  private_key: ANOTHERCREDENTIAL
+  commerce: 123
+  commerce_branch: 45
+
 webpay:
   login: "test_secret_eHn4TTgsGguBcW764a2KA8Yd"
 
@@ -1305,6 +1379,10 @@ wirecard_checkout_page:
   secret: B8AKTPWBRMNBV455FG6M2DANE99WU2
   shop_id: ''
   paymenttype: IDL
+
+wompi:
+  test_public_key: SOMECREDENTIAL
+  test_private_key: ANOTHERCREDENTIAL
 
 # Working credentials, no need to replace
 world_net:

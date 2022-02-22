@@ -22,7 +22,8 @@ class RemotePayflowTest < Test::Unit::TestCase
       description: 'Description string',
       order_desc: 'OrderDesc string',
       comment: 'Comment string',
-      comment2: 'Comment2 string'
+      comment2: 'Comment2 string',
+      merch_descr: 'MerchDescr string'
     }
 
     @check = check(
@@ -59,6 +60,28 @@ class RemotePayflowTest < Test::Unit::TestCase
     assert response.test?
     assert_not_nil response.authorization
     assert !response.fraud_review?
+  end
+
+  def test_successful_purchase_with_stored_credential
+    @options[:stored_credential] = {
+      initial_transaction: true,
+      reason_type: 'recurring',
+      initiator: 'cardholder',
+      network_transaction_id: nil
+    }
+    assert response = @gateway.purchase(100000, @credit_card, @options)
+    assert_equal 'Approved', response.message
+    assert_success response
+
+    @options[:stored_credential] = {
+      initial_transaction: false,
+      reason_type: 'recurring',
+      initiator: 'merchant',
+      network_transaction_id: response.authorization
+    }
+    assert response = @gateway.purchase(100000, @credit_card, @options)
+    assert_equal 'Approved', response.message
+    assert_success response
   end
 
   def test_successful_purchase_with_extra_options

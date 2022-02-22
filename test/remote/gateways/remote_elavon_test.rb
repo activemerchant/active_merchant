@@ -3,7 +3,7 @@ require 'test_helper'
 class RemoteElavonTest < Test::Unit::TestCase
   def setup
     @gateway = ElavonGateway.new(fixtures(:elavon))
-    @tokenization_gateway = fixtures(:elavon_tokenization) ? ElavonGateway.new(fixtures(:elavon_tokenization)) : ElavonGateway.new(fixtures(:elavon))
+    @tokenization_gateway = all_fixtures[:elavon_tokenization] ? ElavonGateway.new(fixtures(:elavon_tokenization)) : ElavonGateway.new(fixtures(:elavon))
     @bad_creds_gateway = ElavonGateway.new(login: 'foo', password: 'bar', user: 'me')
     @multi_currency_gateway = ElavonGateway.new(fixtures(:elavon_multi_currency))
 
@@ -235,6 +235,44 @@ class RemoteElavonTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_successful_purchase_with_recurring_token
+    options = {
+      email: 'human@domain.com',
+      description: 'Test Transaction',
+      billing_address: address,
+      ip: '203.0.113.0',
+      merchant_initiated_unscheduled: 'Y',
+      add_recurring_token: 'Y'
+    }
+
+    purchase = @gateway.purchase(@amount, @credit_card, options)
+
+    assert_success purchase
+    assert_equal 'APPROVAL', purchase.message
+  end
+
+  # This test is essentially replicating a test on line 373 in order to get it passing.
+  # This test was part of the work to enable recurring transactions for Elavon. Recurring
+  # transactions aren't possible with Elavon unless cards are stored there as well. This work
+  # will be removed in a later cleanup ticket.
+  def test_successful_purchase_with_ssl_token
+    store_response = @tokenization_gateway.store(@credit_card, @options)
+    token = store_response.params['token']
+    options = {
+      email: 'paul@domain.com',
+      description: 'Test Transaction',
+      billing_address: address,
+      ip: '203.0.113.0',
+      merchant_initiated_unscheduled: 'Y',
+      ssl_token: token
+    }
+
+    purchase = @tokenization_gateway.purchase(@amount, token, options)
+
+    assert_success purchase
+    assert_equal 'APPROVAL', purchase.message
+  end
+
   def test_successful_auth_and_capture_with_unscheduled_stored_credential
     stored_credential_params = {
       initial_transaction: true,
@@ -341,6 +379,7 @@ class RemoteElavonTest < Test::Unit::TestCase
     assert response = @tokenization_gateway.purchase(@amount, token, @options)
     assert_success response
     assert response.test?
+    assert_not_empty response.params['token']
     assert_equal 'APPROVAL', response.message
   end
 
@@ -422,6 +461,30 @@ class RemoteElavonTest < Test::Unit::TestCase
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
+  end
+
+  def test_successful_special_character_encoding_truncation
+    special_card = credit_card('4000000000000002')
+    special_card.first_name = 'CÃ©saire'
+    special_card.last_name = 'Castañeda&%'
+
+    response = @gateway.purchase(@amount, special_card, @options)
+
+    assert_success response
+    assert response.test?
+    assert_equal 'APPROVAL', response.message
+    assert_equal 'CÃ©saire', response.params['first_name']
+    assert_equal 'Castañeda&%', response.params['last_name']
+    assert response.authorization
+  end
+
+  def test_invalid_byte_sequence
+    special_card = credit_card('4000000000000002')
+    special_card.last_name = "Castaneda \255" # add invalid utf-8 byte
+
+    response = @gateway.purchase(@amount, special_card, @options)
+    assert_success response
+    assert response.test?
   end
 
   def test_transcript_scrubbing

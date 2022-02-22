@@ -40,7 +40,7 @@ module ActiveMerchant #:nodoc:
         add_shipping_address(post, options)
         add_payment(post, payment, options)
         add_submerchant(post, options)
-
+        add_auth_key(post, options)
         commit('sale', post)
       end
 
@@ -52,6 +52,7 @@ module ActiveMerchant #:nodoc:
         add_payment(post, payment, options)
         add_capture_flag(post, payment)
         add_submerchant(post, options)
+        add_auth_key(post, options)
         commit('authonly', post)
       end
 
@@ -229,9 +230,16 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def headers
+      def add_auth_key(post, options)
+        if authorization_secret_key = options[:authorization_secret_key]
+          post[:authorization_secret_key] = authorization_secret_key
+        end
+      end
+
+      def headers(authorization_secret_key = nil)
+        basic_token = authorization_secret_key || @options[:api_key]
         {
-          'Authorization' => 'Basic ' + Base64.strict_encode64("#{@options[:api_key]}:"),
+          'Authorization' => 'Basic ' + Base64.strict_encode64("#{basic_token}:"),
           'Content-Type' => 'application/json',
           'Accept' => 'application/json'
         }
@@ -259,22 +267,23 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, parameters, auth = nil)
         url = url_for(action, auth)
+        authorization_secret_key = parameters[:authorization_secret_key] if parameters
         parameters.merge!(parameters[:payment][:credit_card].delete(:card)).delete(:payment) if action == 'store'
         response = if %w[refund void].include? action
-                     parse(ssl_request(:delete, url, post_data(parameters), headers))
+                     parse(ssl_request(:delete, url, post_data(parameters), headers(authorization_secret_key)))
                    else
-                     parse(ssl_post(url, post_data(parameters), headers))
+                     parse(ssl_post(url, post_data(parameters), headers(authorization_secret_key)))
                    end
 
         Response.new(
-          success_from(response),
+          success_from(response, action),
           message_from(response),
           response,
           authorization: authorization_from(response, action),
           avs_result: AVSResult.new(code: response['some_avs_response_key']),
           cvv_result: CVVResult.new(response['some_cvv_response_key']),
           test: test?,
-          error_code: error_code_from(response)
+          error_code: error_code_from(response, action)
         )
       rescue ResponseError => e
         message = get_error_messages(e)
@@ -288,8 +297,10 @@ module ActiveMerchant #:nodoc:
         )
       end
 
-      def success_from(response)
-        %w[pending paid processing canceled active].include? response['status']
+      def success_from(response, action)
+        success = response.try(:[], 'last_transaction').try(:[], 'success') unless action == 'store'
+        success = !response.try(:[], 'id').nil? if action == 'store'
+        success
       end
 
       def message_from(response)
@@ -341,8 +352,8 @@ module ActiveMerchant #:nodoc:
         parameters.to_json
       end
 
-      def error_code_from(response)
-        return if success_from(response)
+      def error_code_from(response, action)
+        return if success_from(response, action)
         return response['last_transaction']['acquirer_return_code'] if response['last_transaction']
 
         STANDARD_ERROR_CODE[:processing_error]

@@ -67,6 +67,21 @@ class PaymentezTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_capture_with_otp
+    authorization = 'CI-14952'
+    options = @options.merge({ type: 'BY_OTP', value: '012345' })
+    response = stub_comms do
+      @gateway.capture(nil, authorization, options)
+    end.check_request do |_endpoint, data, _headers|
+      request = JSON.parse(data)
+      assert_equal 'BY_OTP', request['type']
+      assert_equal '012345', request['value']
+      assert_equal authorization, request['transaction']['id']
+      assert_equal '123', request['user']['id']
+    end.respond_with(successful_otp_capture_response)
+    assert_success response
+  end
+
   def test_successful_purchase_with_token
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
@@ -277,6 +292,17 @@ class PaymentezTest < Test::Unit::TestCase
     response = @gateway.void('1234', @options)
     assert_equal 'Invalid Status', response.message
     assert_failure response
+  end
+
+  def test_successful_void_with_more_info
+    @gateway.expects(:ssl_post).returns(successful_void_response_with_more_info)
+
+    response = @gateway.void('1234', @options.merge(more_info: true))
+    assert_success response
+    assert_equal 'Completed', response.message
+    assert_equal '00', response.params['transaction']['carrier_code']
+    assert_equal 'Reverse by mock', response.params['transaction']['message']
+    assert response.test?
   end
 
   def test_simple_store
@@ -595,6 +621,17 @@ Conn close
     '
   end
 
+  def successful_otp_capture_response
+    '{
+      "status": 1,
+      "payment_date": "2017-09-26T21:16:00",
+      "amount": 99.0,
+      "transaction_id": "CI-14952",
+      "status_detail": 3,
+      "message": ""
+    }'
+  end
+
   def failed_capture_response
     '{"error": {"type": "Carrier not supported", "help": "", "description": "{}"}}'
   end
@@ -607,8 +644,13 @@ Conn close
     '{"status": "failure", "detail": "Invalid Status"}'
   end
 
+  def successful_void_response_with_more_info
+    '{"status": "success", "detail": "Completed", "transaction": {"carrier_code": "00", "message": "Reverse by mock"}}'
+  end
+
   alias successful_refund_response successful_void_response
   alias failed_refund_response failed_void_response
+  alias successful_refund_response_with_more_info successful_void_response_with_more_info
 
   def already_stored_response
     '{"error": {"type": "Card already added: 14436664108567261211", "help": "If you want to update the card, first delete it", "description": "{}"}}'

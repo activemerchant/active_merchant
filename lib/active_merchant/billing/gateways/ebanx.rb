@@ -183,6 +183,7 @@ module ActiveMerchant #:nodoc:
         post[:payment][:currency_code] = (options[:currency] || currency(money))
         post[:payment][:merchant_payment_code] = Digest::MD5.hexdigest(options[:order_id])
         post[:payment][:instalments] = options[:instalments] || 1
+        post[:payment][:order_number] = options[:order_id][0..39] if options[:order_id]
       end
 
       def add_card_or_token(post, payment)
@@ -214,6 +215,7 @@ module ActiveMerchant #:nodoc:
         post[:metadata] = options[:metadata] if options[:metadata]
         post[:metadata] = {} if post[:metadata].nil?
         post[:metadata][:merchant_payment_code] = options[:order_id] if options[:order_id]
+        post[:processing_type] = options[:processing_type] if options[:processing_type]
       end
 
       def parse(body)
@@ -222,7 +224,8 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, parameters)
         url = url_for((test? ? test_url : live_url), action, parameters)
-        response = parse(ssl_request(HTTP_METHOD[action], url, post_data(action, parameters), { 'x-ebanx-client-user-agent': "ActiveMerchant/#{ActiveMerchant::VERSION}" }))
+
+        response = parse(ssl_request(HTTP_METHOD[action], url, post_data(action, parameters), headers(parameters)))
 
         success = success_from(action, response)
 
@@ -234,6 +237,19 @@ module ActiveMerchant #:nodoc:
           test: test?,
           error_code: error_code_from(response, success)
         )
+      end
+
+      def headers(params)
+        processing_type = params[:processing_type]
+        commit_headers = { 'x-ebanx-client-user-agent': "ActiveMerchant/#{ActiveMerchant::VERSION}" }
+
+        add_processing_type_to_commit_headers(commit_headers, processing_type) if processing_type == 'local'
+
+        commit_headers
+      end
+
+      def add_processing_type_to_commit_headers(commit_headers, processing_type)
+        commit_headers['x-ebanx-api-processing-type'] = processing_type
       end
 
       def success_from(action, response)

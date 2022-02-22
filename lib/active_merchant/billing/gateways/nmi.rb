@@ -23,7 +23,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def initialize(options = {})
-        requires!(options, :login, :password)
+        if options.has_key?(:security_key)
+          requires!(options, :security_key)
+        else
+          requires!(options, :login, :password)
+        end
         super
       end
 
@@ -51,7 +55,6 @@ module ActiveMerchant #:nodoc:
         add_merchant_defined_fields(post, options)
         add_level3_fields(post, options)
         add_three_d_secure(post, options)
-
         commit('auth', post)
       end
 
@@ -126,6 +129,7 @@ module ActiveMerchant #:nodoc:
       def scrub(transcript)
         transcript.
           gsub(%r((password=)[^&\n]*), '\1[FILTERED]').
+          gsub(%r((security_key=)[^&\n]*), '\1[FILTERED]').
           gsub(%r((ccnumber=)\d+), '\1[FILTERED]').
           gsub(%r((cvv=)\d+), '\1[FILTERED]').
           gsub(%r((checkaba=)\d+), '\1[FILTERED]').
@@ -206,7 +210,8 @@ module ActiveMerchant #:nodoc:
           post[:stored_credential_indicator] = 'stored'
         else
           post[:stored_credential_indicator] = 'used'
-          post[:initial_transaction_id] = stored_credential[:network_transaction_id]
+          # should only send :initial_transaction_id if it is a MIT
+          post[:initial_transaction_id] = stored_credential[:network_transaction_id] if post[:initiated_by] == 'merchant'
         end
       end
 
@@ -236,6 +241,19 @@ module ActiveMerchant #:nodoc:
           post[:shipping_zip] = shipping_address[:zip]
           post[:shipping_phone] = shipping_address[:phone]
         end
+
+        if (descriptor = options[:descriptors])
+          post[:descriptor] = descriptor[:descriptor]
+          post[:descriptor_phone] = descriptor[:descriptor_phone]
+          post[:descriptor_address] = descriptor[:descriptor_address]
+          post[:descriptor_city] = descriptor[:descriptor_city]
+          post[:descriptor_state] = descriptor[:descriptor_state]
+          post[:descriptor_postal] = descriptor[:descriptor_postal]
+          post[:descriptor_country] = descriptor[:descriptor_country]
+          post[:descriptor_mcc] = descriptor[:descriptor_mcc]
+          post[:descriptor_merchant_id] = descriptor[:descriptor_merchant_id]
+          post[:descriptor_url] = descriptor[:descriptor_url]
+        end
       end
 
       def add_vendor_data(post, options)
@@ -251,15 +269,20 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_three_d_secure(post, options)
-        return unless options[:three_d_secure]
+        three_d_secure = options[:three_d_secure]
+        return unless three_d_secure
 
-        if (three_d_secure = options[:three_d_secure])
-          post[:eci] = three_d_secure[:eci]
-          post[:cavv] = three_d_secure[:cavv]
-          post[:xid] = three_d_secure[:xid]
-          post[:three_ds_version] = three_d_secure[:version]
-          post[:directory_server_id] = three_d_secure[:ds_transaction_id]
-        end
+        post[:cardholder_auth] = cardholder_auth(three_d_secure[:authentication_response_status])
+        post[:cavv] = three_d_secure[:cavv]
+        post[:xid] = three_d_secure[:xid]
+        post[:three_ds_version] = three_d_secure[:version]
+        post[:directory_server_id] = three_d_secure[:ds_transaction_id]
+      end
+
+      def cardholder_auth(trans_status)
+        return nil if trans_status.nil?
+
+        trans_status == 'Y' ? 'verified' : 'attempted'
       end
 
       def add_reference(post, authorization)
@@ -278,9 +301,9 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, params)
         params[action == 'add_customer' ? :customer_vault : :type] = action
-        params[:username] = @options[:login]
-        params[:password] = @options[:password]
-
+        params[:username] = @options[:login] unless @options[:login].nil?
+        params[:password] = @options[:password] unless @options[:password].nil?
+        params[:security_key] = @options[:security_key] unless @options[:security_key].nil?
         raw_response = ssl_post(url, post_data(action, params), headers)
         response = parse(raw_response)
         succeeded = success_from(response)
@@ -306,7 +329,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def headers
-        { 'Content-Type' => 'application/x-www-form-urlencoded;charset=UTF-8' }
+        headers = { 'Content-Type' => 'application/x-www-form-urlencoded;charset=UTF-8' }
+        headers
       end
 
       def post_data(action, params)

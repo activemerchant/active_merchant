@@ -13,6 +13,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       merchant_id: 'merchant_id'
     )
     @customer_ref_num = 'ABC'
+    @credit_card = credit_card('4556761029983886')
     # Electronic Check object with test credentials of saving account
     @echeck = check(account_number: '072403004', account_type: 'savings', routing_number: '072403004')
 
@@ -97,10 +98,14 @@ class OrbitalGatewayTest < Test::Unit::TestCase
         eci: '5',
         xid: 'TESTXID',
         cavv: 'TESTCAVV',
-        version: '2',
+        version: '2.2.0',
         ds_transaction_id: '97267598FAE648F28083C23433990FBC'
       }
     }
+  end
+
+  def test_supports_network_tokenization
+    assert_true @gateway.supports_network_tokenization?
   end
 
   def test_successful_purchase
@@ -140,6 +145,25 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_match 'APPROVAL', response.message
     assert_equal 'Approved and Completed', response.params['status_msg']
     assert_equal '5F8ED3D950A43BD63369845D5385B6354C3654B4;2930847bc732eb4e8102cf', response.authorization
+  end
+
+  def test_successful_force_capture_with_echeck_prenote
+    @gateway.expects(:ssl_post).returns(successful_force_capture_with_echeck_prenote_response)
+
+    assert response = @gateway.authorize(0, @echeck, order_id: '2', force_capture: true, action_code: 'W9')
+    assert_instance_of Response, response
+    assert_match 'APPROVAL', response.message
+    assert_equal 'Approved and Completed', response.params['status_msg']
+    assert_equal '5F8ED3D950A43BD63369845D5385B6354C3654B4;2930847bc732eb4e8102cf', response.authorization
+  end
+
+  def test_failed_force_capture_with_echeck_prenote
+    @gateway.expects(:ssl_post).returns(failed_force_capture_with_echeck_prenote_response)
+
+    assert response = @gateway.authorize(0, @echeck, order_id: '2', force_capture: true, action_code: 'W7')
+    assert_instance_of Response, response
+    assert_failure response
+    assert_equal ' EWS: Invalid Action Code [W7], For Transaction Type [A].', response.message
   end
 
   def test_level2_data
@@ -262,6 +286,77 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.check_request do |_endpoint, data, _headers|
       assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
       assert_match %{<AAV>TESTCAVV</AAV>}, data
+      assert_match %{<MCProgramProtocol>2</MCProgramProtocol>}, data
+      assert_match %{<MCDirectoryTransID>97267598FAE648F28083C23433990FBC</MCDirectoryTransID>}, data
+      assert_match %{<UCAFInd>4</UCAFInd>}, data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_three_d_secure_data_on_master_sca_recurring
+    options_local = {
+      three_d_secure: {
+        eci: '7',
+        xid: 'TESTXID',
+        cavv: 'AAAEEEDDDSSSAAA2243234',
+        ds_transaction_id: '97267598FAE648F28083C23433990FBC',
+        version: '2.2.0'
+      },
+      sca_recurring: 'Y'
+    }
+
+    stub_comms do
+      @gateway.authorize(50, credit_card(nil, brand: 'master'), @options.merge(options_local))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %{<AuthenticationECIInd>7</AuthenticationECIInd>}, data
+      assert_match %{<AAV>AAAEEEDDDSSSAAA2243234</AAV>}, data
+      assert_match %{<MCProgramProtocol>2</MCProgramProtocol>}, data
+      assert_match %{<MCDirectoryTransID>97267598FAE648F28083C23433990FBC</MCDirectoryTransID>}, data
+      assert_match %{<SCARecurringPayment>Y</SCARecurringPayment>}, data
+      assert_match %{<UCAFInd>4</UCAFInd>}, data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_three_d_secure_data_on_sca_merchant_initiated_master_card
+    options_local = {
+      three_d_secure: {
+        eci: '7',
+        xid: 'TESTXID',
+        cavv: 'AAAEEEDDDSSSAAA2243234',
+        ds_transaction_id: '97267598FAE648F28083C23433990FBC',
+        version: '2.2.0'
+      },
+      sca_merchant_initiated: 'Y'
+    }
+
+    stub_comms do
+      @gateway.purchase(50, credit_card(nil, brand: 'master'), @options.merge(options_local))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %{<AuthenticationECIInd>7</AuthenticationECIInd>}, data
+      assert_match %{<AAV>AAAEEEDDDSSSAAA2243234</AAV>}, data
+      assert_match %{<MCProgramProtocol>2</MCProgramProtocol>}, data
+      assert_match %{<MCDirectoryTransID>97267598FAE648F28083C23433990FBC</MCDirectoryTransID>}, data
+      assert_match %{<SCAMerchantInitiatedTransaction>Y</SCAMerchantInitiatedTransaction>}, data
+      assert_match %{<UCAFInd>4</UCAFInd>}, data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_three_d_secure_data_on_master_sca_recurring_with_invalid_eci
+    options_local = {
+      three_d_secure: {
+        eci: '5',
+        xid: 'TESTXID',
+        cavv: 'AAAEEEDDDSSSAAA2243234',
+        ds_transaction_id: '97267598FAE648F28083C23433990FBC',
+        version: '2.2.0'
+      },
+      sca_recurring: 'Y'
+    }
+
+    stub_comms do
+      @gateway.authorize(50, credit_card(nil, brand: 'master'), @options.merge(options_local))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
+      assert_match %{<AAV>AAAEEEDDDSSSAAA2243234</AAV>}, data
       assert_match %{<MCProgramProtocol>2</MCProgramProtocol>}, data
       assert_match %{<MCDirectoryTransID>97267598FAE648F28083C23433990FBC</MCDirectoryTransID>}, data
       assert_match %{<UCAFInd>4</UCAFInd>}, data
@@ -423,6 +518,20 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_splits_first_middle_name
+    name_test_check = check(name: 'Jane P Doe',
+                            account_number: '072403004', account_type: 'checking', routing_number: '072403004')
+
+    response = stub_comms do
+      @gateway.purchase(50, name_test_check, order_id: 1, action_code: 'W3')
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<EWSFirstName>Jane</, data)
+      assert_match(/<EWSMiddleName>P</, data)
+      assert_match(/<EWSLastName>Doe</, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
   def test_truncates_city
     long_city = 'Friendly Village of Crooked Creek'
 
@@ -472,7 +581,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1,
-                                         billing_address: address_with_invalid_chars)
+                        billing_address: address_with_invalid_chars)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/456 Main Street</, data)
       assert_match(/Apt. Number One</, data)
@@ -519,7 +628,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.purchase(50, card, order_id: 1,
-                                  billing_address: long_address)
+                        billing_address: long_address)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/456 Stréêt Name is Really Lo</, data)
       assert_match(/Apårtmeñt 123456789012345678</, data)
@@ -581,7 +690,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1,
-                                         billing_address: billing_address)
+                        billing_address: billing_address)
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<AVSDestzip>90001/, data)
       assert_match(/<AVSDestaddress1>456 Main St./, data)
@@ -597,7 +706,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     # non-AVS country
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1,
-                                         billing_address: billing_address.merge(dest_country: 'BR'))
+                        billing_address: billing_address.merge(dest_country: 'BR'))
     end.check_request do |_endpoint, data, _headers|
       assert_match(/<AVSDestcountryCode></, data)
     end.respond_with(successful_purchase_response)
@@ -630,7 +739,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def test_name_sends_for_echeck_with_address
     name_test_check = check(name: 'John Jacob Jingleheimer Smith-Jones',
-                   account_number: '072403004', account_type: 'checking', routing_number: '072403004')
+                            account_number: '072403004', account_type: 'checking', routing_number: '072403004')
 
     response = stub_comms do
       @gateway.purchase(50, name_test_check, order_id: 1)
@@ -663,6 +772,52 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       @gateway.purchase(50, card, order_id: 1, address: nil, billing_address: nil)
     end.check_request do |_endpoint, data, _headers|
       assert_no_match(/John Jacob/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
+  def test_avs_name_falls_back_to_billing_address
+    billing_address = address(
+      zip: '90001',
+      address1: '456 Main St.',
+      city: 'Somewhere',
+      state: 'CA',
+      name: 'Joan Smith',
+      phone: '(123) 456-7890',
+      country: 'US'
+    )
+
+    card = credit_card('4242424242424242',
+      first_name: nil,
+      last_name: '')
+
+    response = stub_comms do
+      @gateway.purchase(50, card, order_id: 1, billing_address: billing_address)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/Joan Smith/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
+  def test_completely_blank_name
+    billing_address = address(
+      zip: '90001',
+      address1: '456 Main St.',
+      city: 'Somewhere',
+      state: 'CA',
+      name: nil,
+      phone: '(123) 456-7890',
+      country: 'US'
+    )
+
+    card = credit_card('4242424242424242',
+      first_name: nil,
+      last_name: nil)
+
+    response = stub_comms do
+      @gateway.purchase(50, card, order_id: 1, billing_address: billing_address)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/\<AVSname\/>\n/, data)
     end.respond_with(successful_purchase_response)
     assert_success response
   end
@@ -1024,6 +1179,65 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_equal '9806', response.params['proc_status']
   end
 
+  def test_successful_refund
+    authorization = '123456789;abc987654321'
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
+
+    assert response = @gateway.refund(100, authorization, @options)
+    assert_instance_of Response, response
+    assert_success response
+  end
+
+  def test_failed_refund
+    @gateway.expects(:ssl_post).returns(failed_refund_response)
+
+    assert response = @gateway.refund(100, '', @options)
+    assert_instance_of Response, response
+    assert_failure response
+  end
+
+  def test_not_approved_refund
+    @gateway.expects(:ssl_post).returns(not_approved_refund_response)
+
+    assert response = @gateway.refund(100, '123;123', @options)
+    assert_instance_of Response, response
+    assert_failure response
+  end
+
+  def test_successful_credit
+    @gateway.expects(:ssl_post).returns(successful_credit_response)
+
+    assert response = @gateway.credit(100, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '1', response.params['approval_status']
+  end
+
+  def test_failed_credit
+    @gateway.expects(:ssl_post).returns(failed_credit_response)
+
+    assert response = @gateway.credit(100, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_failure response
+  end
+
+  def test_not_approved_credit
+    @gateway.expects(:ssl_post).returns(not_approved_credit_response)
+
+    assert response = @gateway.credit(100, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_failure response
+  end
+
+  def test_always_send_avs_for_echeck
+    response = stub_comms do
+      @gateway.purchase(50, @echeck, order_id: 1, address: nil, billing_address: address(country: nil))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<AVSname>Jim Smith</, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
   def test_send_address_details_for_united_states
     response = stub_comms do
       @gateway.purchase(50, credit_card, order_id: 1, billing_address: address)
@@ -1230,15 +1444,6 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_success response
   end
 
-  def test_payment_delivery_when_param_incorrect
-    response = stub_comms do
-      @gateway.purchase(50, @echeck, order_id: 1, payment_delivery: 'Z')
-    end.check_request do |_endpoint, data, _headers|
-      assert_match(/<BankPmtDelv>B/, data)
-    end.respond_with(successful_purchase_response)
-    assert_success response
-  end
-
   def test_payment_delivery_when_no_payment_delivery_param
     response = stub_comms do
       @gateway.purchase(50, @echeck, order_id: 1)
@@ -1291,6 +1496,54 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_valid_amount_with_jcb_card
+    @credit_card.brand = 'jcb'
+    stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      assert_match %r{<Amount>0<\/Amount>}, data
+    end
+  end
+
+  def test_successful_verify_zero_auth_different_cards
+    @credit_card.brand = 'master'
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', response.authorization
+    assert_equal 'Approved', response.message
+  end
+
+  def test_valid_amount_with_discover_brand
+    @credit_card.brand = 'discover'
+    stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.check_request(skip_response: true) do |_endpoint, data, _headers|
+      assert_match %r{<Amount>100<\/Amount>}, data
+    end
+  end
+
+  def test_successful_verify_with_discover_brand
+    @credit_card.brand = 'discover'
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(successful_purchase_response, successful_void_response)
+    assert_success response
+    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', response.authorization
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_verify_and_failed_void_discover_brand
+    @credit_card.brand = 'discover'
+    response = stub_comms do
+      @gateway.verify(credit_card, @options)
+    end.respond_with(successful_purchase_response, failed_purchase_response)
+    assert_success response
+    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', response.authorization
+    assert_equal 'Approved', response.message
+  end
+
   def test_successful_verify_and_failed_void
     response = stub_comms do
       @gateway.verify(credit_card, @options)
@@ -1326,9 +1579,23 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_invalid_characters_in_response
+    @gateway.expects(:ssl_post).returns(invalid_characters_response)
+
+    assert response = @gateway.purchase(50, credit_card, order_id: '1')
+    assert_instance_of Response, response
+    assert_failure response
+    assert_equal response.message, 'INV FIELD IN MSG                AAAAAAAAA1[null][null][null][null][null]'
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
+  def test_scrub_echeck
+    assert @gateway.supports_scrubbing?
+    assert_equal @gateway.scrub(pre_scrubbed_echeck), post_scrubbed_echeck
   end
 
   private
@@ -1367,6 +1634,14 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     '<?xml version="1.0" encoding="UTF-8"?><Response><NewOrderResp><IndustryType></IndustryType><MessageType>FC</MessageType><MerchantID>041756</MerchantID><TerminalID>001</TerminalID><CardBrand>EC</CardBrand><AccountNum></AccountNum><OrderID>2930847bc732eb4e8102cf</OrderID><TxRefNum>5F8ED3D950A43BD63369845D5385B6354C3654B4</TxRefNum><TxRefIdx>2</TxRefIdx><ProcStatus>0</ProcStatus><ApprovalStatus>1</ApprovalStatus><RespCode>00</RespCode><AVSRespCode></AVSRespCode><CVV2RespCode></CVV2RespCode><AuthCode></AuthCode><RecurringAdviceCd></RecurringAdviceCd><CAVVRespCode></CAVVRespCode><StatusMsg>Approved and Completed</StatusMsg><RespMsg>APPROVAL        </RespMsg><HostRespCode></HostRespCode><HostAVSRespCode></HostAVSRespCode><HostCVV2RespCode></HostCVV2RespCode><CustomerRefNum></CustomerRefNum><CustomerName></CustomerName><ProfileProcStatus></ProfileProcStatus><CustomerProfileMessage></CustomerProfileMessage><RespTime>081105</RespTime><PartialAuthOccurred></PartialAuthOccurred><RequestedAmount></RequestedAmount><RedeemedAmount></RedeemedAmount><RemainingBalance></RemainingBalance><CountryFraudFilterStatus></CountryFraudFilterStatus><IsoCountryCode></IsoCountryCode></NewOrderResp></Response>'
   end
 
+  def successful_force_capture_with_echeck_prenote_response
+    '<?xml version="1.0" encoding="UTF-8"?><Response><NewOrderResp><IndustryType></IndustryType><MessageType>FC</MessageType><MerchantID>041756</MerchantID><TerminalID>001</TerminalID><CardBrand>EC</CardBrand><AccountNum></AccountNum><OrderID>2930847bc732eb4e8102cf</OrderID><TxRefNum>5F8ED3D950A43BD63369845D5385B6354C3654B4</TxRefNum><TxRefIdx>2</TxRefIdx><ProcStatus>0</ProcStatus><ApprovalStatus>1</ApprovalStatus><RespCode>00</RespCode><AVSRespCode></AVSRespCode><CVV2RespCode></CVV2RespCode><AuthCode></AuthCode><RecurringAdviceCd></RecurringAdviceCd><CAVVRespCode></CAVVRespCode><StatusMsg>Approved and Completed</StatusMsg><RespMsg>APPROVAL        </RespMsg><HostRespCode></HostRespCode><HostAVSRespCode></HostAVSRespCode><HostCVV2RespCode></HostCVV2RespCode><CustomerRefNum></CustomerRefNum><CustomerName></CustomerName><ProfileProcStatus></ProfileProcStatus><CustomerProfileMessage></CustomerProfileMessage><RespTime>081105</RespTime><PartialAuthOccurred></PartialAuthOccurred><RequestedAmount></RequestedAmount><RedeemedAmount></RedeemedAmount><RemainingBalance></RemainingBalance><CountryFraudFilterStatus></CountryFraudFilterStatus><IsoCountryCode></IsoCountryCode></NewOrderResp></Response>'
+  end
+
+  def failed_force_capture_with_echeck_prenote_response
+    '<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response><QuickResp><ProcStatus>19784</ProcStatus><StatusMsg> EWS: Invalid Action Code [W7], For Transaction Type [A].</StatusMsg></QuickResp></Response>'
+  end
+
   def failed_echeck_for_invalid_routing_response
     '<?xml version="1.0" encoding="UTF-8"?><Response><QuickResp><ProcStatus>888</ProcStatus><StatusMsg>Invalid ECP Account Route: []. The field is missing, invalid, or it has exceeded the max length of: [9].</StatusMsg></QuickResp></Response>'
   end
@@ -1385,6 +1660,34 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def failed_refund_with_echeck_response
     '<?xml version="1.0" encoding="UTF-8"?><Response><QuickResp><ProcStatus>9806</ProcStatus><StatusMsg>Refund Transactions By TxRefNum Are Only Valid When The Original Transaction Was An AUTH Or AUTH CAPTURE.</StatusMsg></QuickResp></Response>'
+  end
+
+  def successful_refund_response
+    '<?xml version="1.0" encoding="UTF-8"?><Response><NewOrderResp><IndustryType></IndustryType><MessageType>R</MessageType><MerchantID>253997</MerchantID><TerminalID>001</TerminalID><CardBrand>VI</CardBrand><AccountNum>4556761029983886</AccountNum><OrderID>0c1792db5d167e0b96dd9c</OrderID><TxRefNum>60D1E12322FD50E1517A2598593A48EEA9965469</TxRefNum><TxRefIdx>2</TxRefIdx><ProcStatus>0</ProcStatus><ApprovalStatus>1</ApprovalStatus><RespCode>00</RespCode><AVSRespCode>3 </AVSRespCode><CVV2RespCode> </CVV2RespCode><AuthCode>tst743</AuthCode><RecurringAdviceCd></RecurringAdviceCd><CAVVRespCode></CAVVRespCode><StatusMsg>Approved</StatusMsg><RespMsg></RespMsg><HostRespCode>100</HostRespCode><HostAVSRespCode>  </HostAVSRespCode><HostCVV2RespCode>  </HostCVV2RespCode><CustomerRefNum></CustomerRefNum><CustomerName></CustomerName><ProfileProcStatus></ProfileProcStatus><CustomerProfileMessage></CustomerProfileMessage><RespTime>090955</RespTime><PartialAuthOccurred></PartialAuthOccurred><RequestedAmount></RequestedAmount><RedeemedAmount></RedeemedAmount><RemainingBalance></RemainingBalance><CountryFraudFilterStatus></CountryFraudFilterStatus><IsoCountryCode></IsoCountryCode></NewOrderResp></Response>'
+  end
+
+  def failed_refund_response
+    '<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response><QuickResp><ProcStatus>881</ProcStatus><StatusMsg>The LIDM you supplied (3F3F3F) does not match with any existing transaction</StatusMsg></QuickResp></Response>'
+  end
+
+  def not_approved_refund_response
+    '<?xml version="1.0" encoding="UTF-8"?><Response><NewOrderResp><IndustryType></IndustryType><MessageType>R</MessageType><MerchantID>253997</MerchantID><TerminalID>001</TerminalID><CardBrand>VI</CardBrand><AccountNum>4556761029983886</AccountNum><OrderID>0c1792db5d167e0b96dd9f</OrderID><TxRefNum>60D1E12322FD50E1517A2598593A48EEA9965445</TxRefNum><TxRefIdx>2</TxRefIdx><ProcStatus>0</ProcStatus><ApprovalStatus>0</ApprovalStatus><RespCode>12</RespCode><AVSRespCode>3 </AVSRespCode><CVV2RespCode> </CVV2RespCode><AuthCode></AuthCode><RecurringAdviceCd></RecurringAdviceCd><CAVVRespCode></CAVVRespCode><StatusMsg>Invalid Transaction Type</StatusMsg><RespMsg></RespMsg><HostRespCode>606</HostRespCode><HostAVSRespCode>  </HostAVSRespCode><HostCVV2RespCode>  </HostCVV2RespCode><CustomerRefNum></CustomerRefNum><CustomerName></CustomerName><ProfileProcStatus></ProfileProcStatus><CustomerProfileMessage></CustomerProfileMessage><RespTime>110503</RespTime><PartialAuthOccurred></PartialAuthOccurred><RequestedAmount></RequestedAmount><RedeemedAmount></RedeemedAmount><RemainingBalance></RemainingBalance><CountryFraudFilterStatus></CountryFraudFilterStatus><IsoCountryCode></IsoCountryCode></NewOrderResp></Response>'
+  end
+
+  def successful_credit_response
+    '<?xml version="1.0" encoding="UTF-8"?><Response><NewOrderResp><IndustryType></IndustryType><MessageType>R</MessageType><MerchantID>253997</MerchantID><TerminalID>001</TerminalID><CardBrand>MC</CardBrand><AccountNum>XXXXX5454</AccountNum><OrderID>6102f8d4ca9d5c08d6ea02</OrderID><TxRefNum>605266890AF5BA833E6190D89256B892981C531D</TxRefNum><TxRefIdx>1</TxRefIdx><ProcStatus>0</ProcStatus><ApprovalStatus>1</ApprovalStatus><RespCode>00</RespCode><AVSRespCode>3</AVSRespCode><CVV2RespCode>M</CVV2RespCode><AuthCode>tst627</AuthCode><RecurringAdviceCd></RecurringAdviceCd><CAVVRespCode></CAVVRespCode><StatusMsg>Approved</StatusMsg><RespMsg></RespMsg><HostRespCode>100</HostRespCode><HostAVSRespCode></HostAVSRespCode><HostCVV2RespCode></HostCVV2RespCode><CustomerRefNum></CustomerRefNum><CustomerName></CustomerName><ProfileProcStatus></ProfileProcStatus><CustomerProfileMessage></CustomerProfileMessage><RespTime>162857</RespTime><PartialAuthOccurred></PartialAuthOccurred><RequestedAmount></RequestedAmount><RedeemedAmount></RedeemedAmount><RemainingBalance></RemainingBalance><CountryFraudFilterStatus></CountryFraudFilterStatus><IsoCountryCode></IsoCountryCode></NewOrderResp></Response>'
+  end
+
+  def failed_credit_response
+    '<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response><QuickResp><ProcStatus>881</ProcStatus><StatusMsg>The LIDM you supplied (3F3F3F) does not match with any existing transaction</StatusMsg></QuickResp></Response>'
+  end
+
+  def not_approved_credit_response
+    '<?xml version="1.0" encoding="UTF-8"?><Response><NewOrderResp><IndustryType></IndustryType><MessageType>R</MessageType><MerchantID>253997</MerchantID><TerminalID>001</TerminalID><CardBrand>VI</CardBrand><AccountNum>4556761029983886</AccountNum><OrderID>0c1792db5d167e0b96dd9f</OrderID><TxRefNum>60D1E12322FD50E1517A2598593A48EEA9965445</TxRefNum><TxRefIdx>2</TxRefIdx><ProcStatus>0</ProcStatus><ApprovalStatus>0</ApprovalStatus><RespCode>12</RespCode><AVSRespCode>3 </AVSRespCode><CVV2RespCode> </CVV2RespCode><AuthCode></AuthCode><RecurringAdviceCd></RecurringAdviceCd><CAVVRespCode></CAVVRespCode><StatusMsg>Invalid Transaction Type</StatusMsg><RespMsg></RespMsg><HostRespCode>606</HostRespCode><HostAVSRespCode>  </HostAVSRespCode><HostCVV2RespCode>  </HostCVV2RespCode><CustomerRefNum></CustomerRefNum><CustomerName></CustomerName><ProfileProcStatus></ProfileProcStatus><CustomerProfileMessage></CustomerProfileMessage><RespTime>110503</RespTime><PartialAuthOccurred></PartialAuthOccurred><RequestedAmount></RequestedAmount><RedeemedAmount></RedeemedAmount><RemainingBalance></RemainingBalance><CountryFraudFilterStatus></CountryFraudFilterStatus><IsoCountryCode></IsoCountryCode></NewOrderResp></Response>'
+  end
+
+  def invalid_characters_response
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response><NewOrderResp><IndustryType></IndustryType><MessageType>A</MessageType><MerchantID>[FILTERED]</MerchantID><TerminalID>001</TerminalID><CardBrand>VI</CardBrand><AccountNum>[FILTERED]</AccountNum><OrderID>0c1792db5d167e0b96dd9f</OrderID><TxRefNum>60D1E12322FD50E1517A2598593A48EEA9965445</TxRefNum><TxRefIdx>2</TxRefIdx><ProcStatus>0</ProcStatus><ApprovalStatus>2</ApprovalStatus><RespCode>30</RespCode><AVSRespCode>  </AVSRespCode><CVV2RespCode> </CVV2RespCode><AuthCode></AuthCode><RecurringAdviceCd></RecurringAdviceCd><CAVVRespCode></CAVVRespCode><StatusMsg>Invalid value in message</StatusMsg><RespMsg>INV FIELD IN MSG                AAAAAAAAA1\x00\x00\x00\x00\x00</RespMsg><HostRespCode>30</HostRespCode><HostAVSRespCode></HostAVSRespCode><HostCVV2RespCode></HostCVV2RespCode><CustomerRefNum></CustomerRefNum><CustomerName></CustomerName><ProfileProcStatus></ProfileProcStatus><CustomerProfileMessage></CustomerProfileMessage><RespTime>105700</RespTime><PartialAuthOccurred></PartialAuthOccurred><RequestedAmount></RequestedAmount><RedeemedAmount></RedeemedAmount><RemainingBalance></RemainingBalance><CountryFraudFilterStatus></CountryFraudFilterStatus><IsoCountryCode></IsoCountryCode></NewOrderResp></Response>"
   end
 
   def pre_scrubbed
@@ -1444,6 +1747,76 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   def post_scrubbed_profile
     <<~REQUEST
       <?xml version="1.0" encoding="UTF-8"?><Response><ProfileResp><CustomerBin>000001</CustomerBin><CustomerMerchantID>[FILTERED]</CustomerMerchantID><CustomerName>LONGBOB LONGSEN</CustomerName><CustomerRefNum>109273631</CustomerRefNum><CustomerProfileAction>CREATE</CustomerProfileAction><ProfileProcStatus>0</ProfileProcStatus><CustomerProfileMessage>Profile Request Processed</CustomerProfileMessage><CustomerAddress1>456 MY STREET</CustomerAddress1><CustomerAddress2>APT 1</CustomerAddress2><CustomerCity>OTTAWA</CustomerCity><CustomerState>ON</CustomerState><CustomerZIP>K1C2N6</CustomerZIP><CustomerEmail></CustomerEmail><CustomerPhone>5555555555</CustomerPhone><CustomerCountryCode>CA</CustomerCountryCode><CustomerProfileOrderOverrideInd>NO</CustomerProfileOrderOverrideInd><OrderDefaultDescription></OrderDefaultDescription><OrderDefaultAmount></OrderDefaultAmount><CustomerAccountType>CC</CustomerAccountType><Status>A</Status><CCAccountNum>[FILTERED]</CCAccountNum><CCExpireDate>0919</CCExpireDate><ECPAccountDDA></ECPAccountDDA><ECPAccountType></ECPAccountType><ECPAccountRT></ECPAccountRT><ECPBankPmtDlv></ECPBankPmtDlv><SwitchSoloStartDate></SwitchSoloStartDate><SwitchSoloIssueNum></SwitchSoloIssueNum><RespTime></RespTime></ProfileResp></Response>
+    REQUEST
+  end
+
+  def pre_scrubbed_echeck
+    <<~REQUEST
+      opening connection to orbitalvar1.chasepaymentech.com:443...
+      opened
+      starting SSL for orbitalvar1.chasepaymentech.com:443...
+      SSL established, protocol: TLSv1.2, cipher: AES128-GCM-SHA256
+      <- "POST /authorize HTTP/1.1\r\nContent-Type: application/PTI81\r\nMime-Version: 1.1\r\nContent-Transfer-Encoding: text\r\nRequest-Number: 1\r\nDocument-Type: Request\r\nInterface-Version: Ruby|ActiveMerchant|Proprietary Gateway\r\nContent-Length: 999\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: orbitalvar1.chasepaymentech.com\r\n\r\n"
+      <- "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Request>\n  <NewOrder>\n    <OrbitalConnectionUsername>SPREEDLYTEST1</OrbitalConnectionUsername>\n    <OrbitalConnectionPassword>2NnPnYZylV8ft</OrbitalConnectionPassword>\n    <IndustryType>EC</IndustryType>\n    <MessageType>AC</MessageType>\n    <BIN>000001</BIN>\n    <MerchantID>408449</MerchantID>\n    <TerminalID>001</TerminalID>\n    <CardBrand>EC</CardBrand>\n    <CurrencyCode>124</CurrencyCode>\n    <CurrencyExponent>2</CurrencyExponent>\n    <BCRtNum>072403004</BCRtNum>\n    <CheckDDA>072403004</CheckDDA>\n    <BankAccountType>S</BankAccountType>\n    <BankPmtDelv>B</BankPmtDelv>\n    <AVSzip>K1C2N6</AVSzip>\n    <AVSaddress1>456 My Street</AVSaddress1>\n    <AVSaddress2>Apt 1</AVSaddress2>\n    <AVScity>Ottawa</AVScity>\n    <AVSstate>ON</AVSstate>\n    <AVSphoneNum>5555555555</AVSphoneNum>\n    <AVSname>Jim Smith</AVSname>\n    <AVScountryCode>CA</AVScountryCode>\n    <OrderID>5fe1bb6dcd2cd401f2a277</OrderID>\n    <Amount>20</Amount>\n  </NewOrder>\n</Request>\n"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Date: Mon, 09 Aug 2021 21:00:41 GMT\r\n"
+      -> "Strict-Transport-Security: max-age=63072000; includeSubdomains; preload\r\n"
+      -> "X-Frame-Options: SAMEORIGIN\r\n"
+      -> "Access-Control-Allow-Methods: POST, GET, OPTIONS, DELETE, PUT\r\n"
+      -> "Access-Control-Max-Age: 1000\r\n"
+      -> "Access-Control-Allow-Headers: x-requested-with, Content-Type, origin, authorization, accept, client-security-token, MerchantID, OrbitalConnectionUsername, OrbitalConnectionPassword\r\n"
+      -> "Access-Control-Allow-credentials: true\r\n"
+      -> "content-type: text/plain; charset=ISO-8859-1\r\n"
+      -> "content-length: 1185\r\n"
+      -> "content-transfer-encoding: text/xml\r\n"
+      -> "document-type: Response\r\n"
+      -> "mime-version: 1.0\r\n"
+      -> "X-Frame-Options: SAMEORIGIN\r\n"
+      -> "Strict-Transport-Security: max-age=31536000; includeSubDomains; preload\r\n"
+      -> "X-XSS-Protection: 1; mode=block\r\n"
+      -> "X-Content-Type-Options: nosniff\r\n"
+      -> "Connection: close\r\n"
+      -> "\r\n"
+      reading 1185 bytes...
+      -> "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response><NewOrderResp><IndustryType></IndustryType><MessageType>AC</MessageType><MerchantID>408449</MerchantID><TerminalID>001</TerminalID><CardBrand>EC</CardBrand><AccountNum></AccountNum><OrderID>5fe1bb6dcd2cd401f2a277</OrderID><TxRefNum>611197795A217041FDC714407285C2FC74F9533B</TxRefNum><TxRefIdx>1</TxRefIdx><ProcStatus>0</ProcStatus><ApprovalStatus>1</ApprovalStatus><RespCode>00</RespCode><AVSRespCode>3 </AVSRespCode><CVV2RespCode> </CVV2RespCode><AuthCode>123456</AuthCode><RecurringAdviceCd></RecurringAdviceCd><CAVVRespC"
+      -> "ode></CAVVRespCode><StatusMsg>Approved</StatusMsg><RespMsg></RespMsg><HostRespCode>102</HostRespCode><HostAVSRespCode>  </HostAVSRespCode><HostCVV2RespCode>  </HostCVV2RespCode><CustomerRefNum></CustomerRefNum><CustomerName></CustomerName><ProfileProcStatus></ProfileProcStatus><CustomerProfileMessage></CustomerProfileMessage><RespTime>170041</RespTime><PartialAuthOccurred></PartialAuthOccurred><RequestedAmount></RequestedAmount><RedeemedAmount></RedeemedAmount><RemainingBalance></RemainingBalance><CountryFraudFilterStatus></CountryFraudFilterStatus><IsoCountryCode></IsoCountryCode></NewOrderResp></Response>"
+      read 1185 bytes
+      Conn close
+    REQUEST
+  end
+
+  def post_scrubbed_echeck
+    <<~REQUEST
+      opening connection to orbitalvar1.chasepaymentech.com:443...
+      opened
+      starting SSL for orbitalvar1.chasepaymentech.com:443...
+      SSL established, protocol: TLSv1.2, cipher: AES128-GCM-SHA256
+      <- "POST /authorize HTTP/1.1\r\nContent-Type: application/PTI81\r\nMime-Version: 1.1\r\nContent-Transfer-Encoding: text\r\nRequest-Number: 1\r\nDocument-Type: Request\r\nInterface-Version: Ruby|ActiveMerchant|Proprietary Gateway\r\nContent-Length: 999\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: orbitalvar1.chasepaymentech.com\r\n\r\n"
+      <- "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Request>\n  <NewOrder>\n    <OrbitalConnectionUsername>[FILTERED]</OrbitalConnectionUsername>\n    <OrbitalConnectionPassword>[FILTERED]</OrbitalConnectionPassword>\n    <IndustryType>EC</IndustryType>\n    <MessageType>AC</MessageType>\n    <BIN>000001</BIN>\n    <MerchantID>[FILTERED]</MerchantID>\n    <TerminalID>001</TerminalID>\n    <CardBrand>EC</CardBrand>\n    <CurrencyCode>124</CurrencyCode>\n    <CurrencyExponent>2</CurrencyExponent>\n    <BCRtNum>[FILTERED]</BCRtNum>\n    <CheckDDA>[FILTERED]</CheckDDA>\n    <BankAccountType>S</BankAccountType>\n    <BankPmtDelv>B</BankPmtDelv>\n    <AVSzip>K1C2N6</AVSzip>\n    <AVSaddress1>456 My Street</AVSaddress1>\n    <AVSaddress2>Apt 1</AVSaddress2>\n    <AVScity>Ottawa</AVScity>\n    <AVSstate>ON</AVSstate>\n    <AVSphoneNum>5555555555</AVSphoneNum>\n    <AVSname>Jim Smith</AVSname>\n    <AVScountryCode>CA</AVScountryCode>\n    <OrderID>5fe1bb6dcd2cd401f2a277</OrderID>\n    <Amount>20</Amount>\n  </NewOrder>\n</Request>\n"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Date: Mon, 09 Aug 2021 21:00:41 GMT\r\n"
+      -> "Strict-Transport-Security: max-age=63072000; includeSubdomains; preload\r\n"
+      -> "X-Frame-Options: SAMEORIGIN\r\n"
+      -> "Access-Control-Allow-Methods: POST, GET, OPTIONS, DELETE, PUT\r\n"
+      -> "Access-Control-Max-Age: 1000\r\n"
+      -> "Access-Control-Allow-Headers: x-requested-with, Content-Type, origin, authorization, accept, client-security-token, MerchantID, OrbitalConnectionUsername, OrbitalConnectionPassword\r\n"
+      -> "Access-Control-Allow-credentials: true\r\n"
+      -> "content-type: text/plain; charset=ISO-8859-1\r\n"
+      -> "content-length: 1185\r\n"
+      -> "content-transfer-encoding: text/xml\r\n"
+      -> "document-type: Response\r\n"
+      -> "mime-version: 1.0\r\n"
+      -> "X-Frame-Options: SAMEORIGIN\r\n"
+      -> "Strict-Transport-Security: max-age=31536000; includeSubDomains; preload\r\n"
+      -> "X-XSS-Protection: 1; mode=block\r\n"
+      -> "X-Content-Type-Options: nosniff\r\n"
+      -> "Connection: close\r\n"
+      -> "\r\n"
+      reading 1185 bytes...
+      -> "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response><NewOrderResp><IndustryType></IndustryType><MessageType>AC</MessageType><MerchantID>[FILTERED]</MerchantID><TerminalID>001</TerminalID><CardBrand>EC</CardBrand><AccountNum></AccountNum><OrderID>5fe1bb6dcd2cd401f2a277</OrderID><TxRefNum>611197795A217041FDC714407285C2FC74F9533B</TxRefNum><TxRefIdx>1</TxRefIdx><ProcStatus>0</ProcStatus><ApprovalStatus>1</ApprovalStatus><RespCode>00</RespCode><AVSRespCode>3 </AVSRespCode><CVV2RespCode> </CVV2RespCode><AuthCode>123456</AuthCode><RecurringAdviceCd></RecurringAdviceCd><CAVVRespC"
+      -> "ode></CAVVRespCode><StatusMsg>Approved</StatusMsg><RespMsg></RespMsg><HostRespCode>102</HostRespCode><HostAVSRespCode>  </HostAVSRespCode><HostCVV2RespCode>  </HostCVV2RespCode><CustomerRefNum></CustomerRefNum><CustomerName></CustomerName><ProfileProcStatus></ProfileProcStatus><CustomerProfileMessage></CustomerProfileMessage><RespTime>170041</RespTime><PartialAuthOccurred></PartialAuthOccurred><RequestedAmount></RequestedAmount><RedeemedAmount></RedeemedAmount><RemainingBalance></RemainingBalance><CountryFraudFilterStatus></CountryFraudFilterStatus><IsoCountryCode></IsoCountryCode></NewOrderResp></Response>"
+      read 1185 bytes
+      Conn close
     REQUEST
   end
 end
