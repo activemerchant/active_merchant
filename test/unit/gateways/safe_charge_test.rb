@@ -248,31 +248,13 @@ class SafeChargeTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_verify
-    @gateway.expects(:ssl_post).times(2).returns(successful_authorize_response, successful_void_response)
-
-    response = @gateway.verify(@credit_card, @options)
-    assert_success response
-
-    assert_equal '111534|101508189855|MQBVAG4ASABkAEgAagB3AEsAbgAtACoAWgAzAFwAW' \
-                 'wBNAF8ATQBUAD0AegBQAGwAQAAtAD0AXAB5AFkALwBtAFAALABaAHoAOgBFAE' \
-                 'wAUAA1AFUAMwA=|%02d|%d|1.00|USD' % [@credit_card.month, @credit_card.year.to_s[-2..-1]], response.authorization
-    assert response.test?
-  end
-
-  def test_successful_verify_with_failed_void
-    @gateway.expects(:ssl_post).times(2).returns(successful_authorize_response, failed_void_response)
-
-    response = @gateway.verify(@credit_card, @options)
-    assert_success response
-  end
-
-  def test_failed_verify
-    @gateway.expects(:ssl_post).returns(failed_authorize_response)
-
-    response = @gateway.verify(@credit_card, @options)
-    assert_failure response
-    assert_equal '0', response.error_code
+  def test_verify_sends_zero_amount
+    stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/sg_TransType=Auth/, data)
+      assert_match(/sg_Amount=0.00/, data)
+    end.respond_with(successful_authorize_response)
   end
 
   def test_scrub
