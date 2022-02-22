@@ -32,6 +32,16 @@ class LitleTest < Test::Unit::TestCase
         payment_cryptogram: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA='
       }
     )
+    @decrypted_google_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
+      {
+        source: :google_pay,
+        month: '01',
+        year: '2021',
+        brand: 'visa',
+        number:  '4457000300000007',
+        payment_cryptogram: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA='
+      }
+    )
     @amount = 100
     @options = {}
     @check = check(
@@ -253,6 +263,14 @@ class LitleTest < Test::Unit::TestCase
   def test_add_android_pay_order_source
     stub_comms do
       @gateway.purchase(@amount, @decrypted_android_pay)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match '<orderSource>androidpay</orderSource>', data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_add_google_pay_order_source
+    stub_comms do
+      @gateway.purchase(@amount, @decrypted_google_pay)
     end.check_request do |_endpoint, data, _headers|
       assert_match '<orderSource>androidpay</orderSource>', data
     end.respond_with(successful_purchase_response)
