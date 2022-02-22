@@ -7,7 +7,7 @@ rescue LoadError
   raise 'Could not load the braintree gem.  Use `gem install braintree` to install it.'
 end
 
-raise 'Need braintree gem >= 2.0.0.' unless Braintree::Version::Major >= 2 && Braintree::Version::Minor >= 0
+raise 'Need braintree gem >= 2.0.0.' unless Braintree::Version::Major >= 4 && Braintree::Version::Minor >= 5
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:

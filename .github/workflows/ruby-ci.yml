@@ -17,7 +17,6 @@ jobs:
     strategy:
       matrix:
         version:
-          - 2.5
           - 2.6
           - 2.7
         gemfile:
@@ -29,11 +28,9 @@ jobs:
         exclude:
           - version: 2.6
             gemfile: gemfiles/Gemfile.rails_master
-          - version: 2.5
-            gemfile: gemfiles/Gemfile.rails_master
     steps:
       - uses: actions/checkout@v2
-      
+
       - name: Set up Ruby ${{ matrix.version }}
         uses: ruby/setup-ruby@v1
         with:
