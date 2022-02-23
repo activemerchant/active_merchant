@@ -1,21 +1,21 @@
 #
 # Copyright notice:
-# (c) Copyright 2007-2012 RocketGate LLC
+# (c) Copyright 2020 RocketGate
 # All rights reserved.
 #
 # The copyright notice must not be removed without specific, prior
-# written permission from RocketGate LLC.
+# written permission from RocketGate.
 #
 # This software is protected as an unpublished work under the U.S. copyright
 # laws. The above copyright notice is not intended to effect a publication of
 # this work.
-# This software is the confidential and proprietary information of RocketGate LLC.
+# This software is the confidential and proprietary information of RocketGate.
 # Neither the binaries nor the source code may be redistributed without prior
-# written permission from RocketGate LLC.
+# written permission from RocketGate.
 #
 # The software is provided "as-is" and without warranty of any kind, express, implied
 # or otherwise, including without limitation, any warranty of merchantability or fitness
-# for a particular purpose.  In no event shall RocketGate LLC be liable for any direct,
+# for a particular purpose.  In no event shall RocketGate be liable for any direct,
 # special, incidental, indirect, consequential or other damages of any kind, or any damages
 # whatsoever arising out of or in connection with the use or performance of this software,
 # including, without limitation, damages resulting from loss of use, data or profits, and
@@ -34,12 +34,20 @@ module RocketGate
 ######################################################################
 #
     VERSION_INDICATOR = "version"
+    ACS_URL = "acsURL"
     AUTH_NO = "authNo"
     AVS_RESPONSE = "avsResponse"
     BALANCE_AMOUNT = "balanceAmount"
     BALANCE_CURRENCY = "balanceCurrency"
+    BANK_RESPONSE_CODE = "bankResponseCode"
+    BILLING_ADDRESS = "billingAddress"
+    BILLING_CITY = "billingCity"
+    BILLING_COUNTRY = "billingCountry"
+    BILLING_STATE = "billingState"
+    BILLING_ZIPCODE = "billingZipCode"
     CARD_TYPE = "cardType"
     CARD_HASH = "cardHash"
+    CARD_BIN = "cardBin"
     CARD_LAST_FOUR = "cardLastFour"
     CARD_EXPIRATION = "cardExpiration"
     CARD_COUNTRY = "cardCountry"
@@ -50,9 +58,31 @@ module RocketGate
     CARD_ISSUER_PHONE = "cardIssuerPhone"
     CARD_ISSUER_URL = "cardIssuerURL"
     CAVV_RESPONSE = "cavvResponse"
+    CUSTOMER_FIRSTNAME = "customerFirstName"
+    CUSTOMER_LASTNAME = "customerLastName" 
     CVV2_CODE = "cvv2Code"
     EXCEPTION = "exception"
+    ECI = "ECI"
+    EMAIL = "email"
+    IOVATION_TRACKING_NO = "IOVATIONTRACKINGNO"
+    IOVATION_DEVICE = "IOVATIONDEVICE"
+    IOVATION_RESULTS = "IOVATIONRESULTS"
+    IOVATION_SCORE = "IOVATIONSCORE"
+    IOVATION_RULE_COUNT = "IOVATIONRULECOUNT"
+    IOVATION_RULE_TYPE_ = "IOVATIONRULETYPE_"
+    IOVATION_RULE_REASON_ = "IOVATIONRULEREASON_"
+    IOVATION_RULE_SCORE_ = "IOVATION_RULE_SCORE_"
+    JOIN_DATE = "joinDate"
+    JOIN_AMOUNT = "joinAmount"
+    LAST_BILLING_DATE = "lastBillingDate"
+    LAST_BILLING_AMOUNT = "lastBillingAmount"
+    LAST_REASON_CODE = "lastReasonCode"
     MERCHANT_ACCOUNT = "merchantAccount"
+    MERCHANT_CUSTOMER_ID = "merchantCustomerID"
+    MERCHANT_INVOICE_ID = "merchantInvoiceID"
+    MERCHANT_PRODUCT_ID = "merchantProductID"
+    MERCHANT_SITE_ID = "merchantSiteID"
+    PAREQ = "PAREQ"
     PAY_TYPE = "payType"
     PAY_HASH = "cardHash"
     PAY_LAST_FOUR = "cardLastFour"
@@ -60,7 +90,10 @@ module RocketGate
     REBILL_AMOUNT = "rebillAmount"
     REBILL_DATE = "rebillDate"
     REBILL_END_DATE = "rebillEndDate"
+    REBILL_FREQUENCY = "rebillFrequency"
+    REBILL_STATUS = "rebillStatus"
     RESPONSE_CODE = "responseCode"
+    ROCKETPAY_INDICATOR = "rocketPayIndicator"
     TRANSACT_ID = "guidNo"
     SCRUB_RESULTS = "scrubResults"
     SETTLED_AMOUNT = "approvedAmount"
