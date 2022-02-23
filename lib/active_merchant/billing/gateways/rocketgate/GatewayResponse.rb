@@ -184,7 +184,7 @@ module RocketGate
 ######################################################################
 #
     def Get(key)
-      return @parameterList[key]		# Return desired element
+      return @parameterList[key].to_s		# Return desired element
     end
   end
 end

@@ -32,7 +32,7 @@ module RocketGate
 ######################################################################
 #
     VERSION_INDICATOR = "version"
-    VERSION_NUMBER = "R3.3"
+    VERSION_NUMBER = "R3.4"
 
     AFFILIATE = "affiliate"
     AMOUNT = "amount"
