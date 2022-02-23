@@ -12,12 +12,106 @@ class RemoteMidtransTest < Test::Unit::TestCase
       payment_type: 'credit_card',
       order_id: SecureRandom.uuid
     }
+    @gopay_payment_options = {
+      payment_type: 'gopay',
+      order_id: SecureRandom.uuid,
+      notification_url: 'dummyurl.com',
+      callback_url: 'dummy://callback'
+    }
+    @qris_gopay_payment_options = {
+      payment_type: 'qris',
+      order_id: SecureRandom.uuid,
+      acquirer: 'gopay',
+      notification_url: 'dummyurl.com'
+    }
+    @shopeepay_payment_options = {
+      payment_type: 'shopeepay',
+      order_id: SecureRandom.uuid,
+      notification_url: 'dummyurl.com',
+      callback_url: 'dummy://callback'
+    }
+    @qris_shopeepay_payment_options = {
+      payment_type: 'qris',
+      order_id: SecureRandom.uuid,
+      acquirer: 'airpay shopee',
+      notification_url: 'dummyurl.com'
+    }
   end
 
   def test_purchase_when_valid_card_then_success
     response = @gateway.purchase(@amount, @accepted_card, @card_payment_options)
     assert_success response
     assert_equal response.params["status_code"], "200"
+  end
+
+  def test_purchase_when_gopay_valid_request_then_success
+    response = @gateway.purchase(@amount, {}, @gopay_payment_options)
+    assert_success response
+    assert_equal response.params["status_code"], "201"
+    assert_equal response.params["transaction_status"], MidtransGateway::TRANSACTION_STATUS_MAPPING[:pending]
+    assert_equal response.params["status_message"], "GoPay transaction is created"
+    assert_equal response.params["actions"][0]["name"], "generate-qr-code"
+    assert_equal response.params["actions"][1]["name"], "deeplink-redirect"
+  end
+
+  def test_purchase_with_gopay_when_incorrect_amount_then_failure
+    response = @gateway.purchase(39.10, {}, @gopay_payment_options)
+    assert_failure response
+    assert_equal response.error_code, MidtransGateway::STATUS_CODE_MAPPING[400]
+    assert_equal response.message, "One or more parameters in the payload is invalid."
+  end
+
+  def test_purchase_with_gopay_when_missing_order_id_then_validation_error
+    response = @gateway.purchase(@amount, {}, {payment_type: 'gopay'})
+    assert_failure response
+    assert_equal response.error_code, MidtransGateway::STATUS_CODE_MAPPING[400]
+    assert_equal response.message, "One or more parameters in the payload is invalid."
+  end
+
+  def test_purchase_with_gopay_when_duplicated_order_id_then_failure
+    options = @gopay_payment_options
+    response = @gateway.purchase(@amount, {}, options)
+    assert_success response
+
+    response = @gateway.purchase(@amount, {}, options)
+    assert_failure response
+    assert_equal response.error_code, MidtransGateway::STATUS_CODE_MAPPING[406]
+    assert_equal response.message, "The request could not be completed due to a conflict with the current state of the target resource, please try again"
+  end
+
+  def test_purchase_when_qris_gopay_valid_request_then_success
+    response = @gateway.purchase(@amount, {}, @qris_gopay_payment_options)
+    assert_success response
+    assert_equal "201", response.params["status_code"]
+    assert_equal MidtransGateway::TRANSACTION_STATUS_MAPPING[:pending], response.params["transaction_status"]
+    assert_equal "QRIS transaction is created", response.message
+    assert_equal "gopay", response.params["acquirer"]
+    assert response.params["qr_string"].present?
+  end
+
+  def test_purchase_with_qris_gopay_when_incorrect_amount_then_failure
+    response = @gateway.purchase(39.10, {}, @qris_gopay_payment_options)
+    assert_failure response
+    assert_equal MidtransGateway::STATUS_CODE_MAPPING[400], response.error_code
+    assert_equal "One or more parameters in the payload is invalid.", response.message
+  end
+
+  def test_purchase_with_qris_gopay_when_missing_order_id_then_validation_error
+    response = @gateway.purchase(@amount, {}, {payment_type: 'qris'})
+    assert_failure response
+    assert_equal MidtransGateway::STATUS_CODE_MAPPING[400], response.error_code
+    assert_equal "One or more parameters in the payload is invalid.", response.message
+  end
+
+  def test_purchase_with_qris_gopay_when_duplicated_order_id_then_failure
+    options = @qris_gopay_payment_options
+    response = @gateway.purchase(@amount, {}, options)
+    assert_success response
+
+    response = @gateway.purchase(@amount, {}, options)
+    assert_failure response
+    assert_equal MidtransGateway::STATUS_CODE_MAPPING[406], response.error_code
+    assert_equal "The request could not be completed due to a conflict with the current state of the target resource, please try again", response.message
   end
 
   def test_purchase_when_declined_card_then_failure
@@ -50,6 +144,75 @@ class RemoteMidtransTest < Test::Unit::TestCase
     assert_failure response
     assert_equal response.error_code, MidtransGateway::STATUS_CODE_MAPPING[406]
     assert_equal response.message, "The request could not be completed due to a conflict with the current state of the target resource, please try again"
+  end
+
+  def test_purchase_when_shopeepay_valid_request_then_success
+    response = @gateway.purchase(@amount, {}, @shopeepay_payment_options)
+    assert_success response
+    assert_equal "201", response.params["status_code"]
+    assert_equal MidtransGateway::TRANSACTION_STATUS_MAPPING[:pending], response.params["transaction_status"]
+    assert_equal "ShopeePay transaction is created", response.params["status_message"]
+    assert_equal "deeplink-redirect", response.params["actions"][0]["name"]
+  end
+
+  def test_purchase_with_shopeepay_when_incorrect_amount_then_failure
+    response = @gateway.purchase(39.10, {}, @shopeepay_payment_options)
+    assert_failure response
+    assert_equal MidtransGateway::STATUS_CODE_MAPPING[400], response.error_code
+    assert_equal "One or more parameters in the payload is invalid.", response.message
+  end
+
+  def test_purchase_with_shopeepay_when_missing_order_id_then_validation_error
+    response = @gateway.purchase(@amount, {}, {payment_type: 'shopeepay'})
+    assert_failure response
+    assert_equal MidtransGateway::STATUS_CODE_MAPPING[400], response.error_code
+    assert_equal "One or more parameters in the payload is invalid.", response.message
+  end
+
+  def test_purchase_with_shopeepay_when_duplicated_order_id_then_failure
+    options = @shopeepay_payment_options
+    response = @gateway.purchase(@amount, {}, options)
+    assert_success response
+
+    response = @gateway.purchase(@amount, {}, options)
+    assert_failure response
+    assert_equal MidtransGateway::STATUS_CODE_MAPPING[406], response.error_code
+    assert_equal "The request could not be completed due to a conflict with the current state of the target resource, please try again", response.message
+  end
+
+  def test_purchase_when_qris_shopeepay_valid_request_then_success
+    response = @gateway.purchase(@amount, {}, @qris_shopeepay_payment_options)
+    assert_success response
+    assert_equal "201", response.params["status_code"]
+    assert_equal MidtransGateway::TRANSACTION_STATUS_MAPPING[:pending], response.params["transaction_status"]
+    assert_equal "QRIS transaction is created", response.message
+    assert_equal "airpay shopee", response.params["acquirer"]
+    assert response.params["qr_string"].present?
+  end
+
+  def test_purchase_with_qris_shopeepay_when_incorrect_amount_then_failure
+    response = @gateway.purchase(39.10, {}, @qris_shopeepay_payment_options)
+    assert_failure response
+    assert_equal MidtransGateway::STATUS_CODE_MAPPING[400], response.error_code
+    assert_equal "One or more parameters in the payload is invalid.", response.message
+  end
+
+  def test_purchase_with_qris_shopeepay_when_missing_order_id_then_validation_error
+    response = @gateway.purchase(@amount, {}, {payment_type: 'qris'})
+    assert_failure response
+    assert_equal MidtransGateway::STATUS_CODE_MAPPING[400], response.error_code
+    assert_equal "One or more parameters in the payload is invalid.", response.message
+  end
+
+  def test_purchase_with_qris_shopeepay_when_duplicated_order_id_then_failure
+    options = @qris_shopeepay_payment_options
+    response = @gateway.purchase(@amount, {}, options)
+    assert_success response
+
+    response = @gateway.purchase(@amount, {}, options)
+    assert_failure response
+    assert_equal MidtransGateway::STATUS_CODE_MAPPING[406], response.error_code
+    assert_equal "The request could not be completed due to a conflict with the current state of the target resource, please try again", response.message
   end
 
   def test_authorize_when_valid_card_then_success

@@ -30,7 +30,9 @@ module ActiveMerchant #:nodoc:
         :xl_tunai, 
         :indosat_dompetku, 
         :mandiri_ecash, 
-        :cstor
+        :cstor,
+        :gopay,
+        :shopeepay
       ]
 
       STATUS_CODE_MAPPING = {
@@ -69,7 +71,8 @@ module ActiveMerchant #:nodoc:
         authorize: 'authorize',
         cancel: 'cancel',
         expire: 'expire',
-        refund: 'refund'
+        refund: 'refund',
+        pending: 'pending'
       }
 
       MINIMUM_AUTHORIZE_AMOUNTS = {
@@ -86,6 +89,11 @@ module ActiveMerchant #:nodoc:
       CARD_TOKEN_CREATION_SUCCESSFUL = "CARD_TOKEN_CREATION_SUCCESSFUL"
       CARD_TOKEN_CREATION_FAILED = "CARD_TOKEN_CREATION_FAILED"
 
+      GOPAY = "gopay"
+      SHOPEEPAY = "shopeepay"
+      QRIS = "qris"
+      CREDIT_CARD = "credit_card"
+
 
       def initialize(options={})
         requires!(options, :client_key, :server_key)
@@ -97,6 +105,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, payment, options={})
+        @midtrans_gateway.config.override_notif_url = options[:notification_url] if options[:notification_url]
         post = {}
         add_invoice(post, money, options)
         add_payment(post, payment, options)
@@ -133,7 +142,7 @@ module ActiveMerchant #:nodoc:
 
       def store(payment, options={})
         options[:save_token_id] = true
-        options[:payment_type] = "credit_card"
+        options[:payment_type] = CREDIT_CARD
         options[:order_id] = generate_unique_id()
         MultiResponse.run(:use_first_response) do |r|
           r.process { token_response_for(authorize(MINIMUM_AUTHORIZE_AMOUNTS['IDR'], payment, options).params) }
@@ -174,16 +183,29 @@ module ActiveMerchant #:nodoc:
 
       def add_payment(post, payment, options)
         post[:payment_type] = options[:payment_type]
-        post[:credit_card] = {}
-        token_id = nil
-        if payment.is_a?(WalletToken)
-          token_id = payment.token if payment.token
-        else
-          token_id = tokenize_card(payment)["token_id"]
+        if post[:payment_type] == CREDIT_CARD
+          post[:credit_card] = {}
+          token_id = nil
+          if payment.is_a?(WalletToken)
+            token_id = payment.token if payment.token
+          else
+            token_id = tokenize_card(payment)["token_id"]
+          end
+          post[:credit_card][:token_id] = token_id
+          post[:credit_card][:type] = options[:transaction_type] if options[:transaction_type]
+          post[:credit_card][:save_token_id] = options[:save_token_id] if options[:save_token_id]
+        elsif post[:payment_type] == GOPAY
+          post[:gopay] = {}
+          post[:gopay][:enable_callback] = true if options[:callback_url]
+          post[:gopay][:callback_url] = options[:callback_url] if options[:callback_url]
+        elsif post[:payment_type] == SHOPEEPAY
+          post[:shopeepay] = {}
+          post[:shopeepay][:enable_callback] = true if options[:callback_url]
+          post[:shopeepay][:callback_url] = options[:callback_url] if options[:callback_url]
+        elsif post[:payment_type] == QRIS
+          post[:qris] = {}
+          post[:qris][:acquirer] = options[:acquirer] if options[:acquirer]
         end
-        post[:credit_card][:token_id] = token_id
-        post[:credit_card][:type] = options[:transaction_type] if options[:transaction_type]
-        post[:credit_card][:save_token_id] = options[:save_token_id] if options[:save_token_id]
       end
 
       def url()
