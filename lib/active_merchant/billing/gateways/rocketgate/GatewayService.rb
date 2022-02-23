@@ -46,7 +46,7 @@ module RocketGate
     LIVE_HOST = "gw.rocketgate.com"
     LIVE_HOST_16 = "gw-16.rocketgate.com"
     LIVE_HOST_17 = "gw-17.rocketgate.com"
-    TEST_HOST = "dev-secure.rocketgate.com"
+    TEST_HOST = "dev-gateway.rocketgate.com"
 
 
 ######################################################################
