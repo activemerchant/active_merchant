@@ -1,21 +1,21 @@
 #
 # Copyright notice:
-# (c) Copyright 2007-2012 RocketGate LLC
+# (c) Copyright 2020 RocketGate
 # All rights reserved.
 #
 # The copyright notice must not be removed without specific, prior
-# written permission from RocketGate LLC.
+# written permission from RocketGate.
 #
 # This software is protected as an unpublished work under the U.S. copyright
 # laws. The above copyright notice is not intended to effect a publication of
 # this work.
-# This software is the confidential and proprietary information of RocketGate LLC.
+# This software is the confidential and proprietary information of RocketGate.
 # Neither the binaries nor the source code may be redistributed without prior
-# written permission from RocketGate LLC.
+# written permission from RocketGate.
 #
 # The software is provided "as-is" and without warranty of any kind, express, implied
 # or otherwise, including without limitation, any warranty of merchantability or fitness
-# for a particular purpose.  In no event shall RocketGate LLC be liable for any direct,
+# for a particular purpose.  In no event shall RocketGate be liable for any direct,
 # special, incidental, indirect, consequential or other damages of any kind, or any damages
 # whatsoever arising out of or in connection with the use or performance of this software,
 # including, without limitation, damages resulting from loss of use, data or profits, and
@@ -41,11 +41,11 @@ module RocketGate
     ROCKETGATE_READ_TIMEOUT = 90
     ROCKETGATE_PROTOCOL = "https"
     ROCKETGATE_PORTNO = "443"
-    ROCKETGATE_USER_AGENT = "RG Client - Ruby 1.2"
+    ROCKETGATE_USER_AGENT = "RG Client - Ruby " + GatewayRequest::VERSION_NUMBER;
 
-    LIVE_HOST = "gw.rocketgate.com"
-    LIVE_HOST_16 = "gw-16.rocketgate.com"
-    LIVE_HOST_17 = "gw-17.rocketgate.com"
+    LIVE_HOST = "gateway.rocketgate.com"
+    LIVE_HOST_16 = "gateway-16.rocketgate.com"
+    LIVE_HOST_17 = "gateway-17.rocketgate.com"
     TEST_HOST = "dev-gateway.rocketgate.com"
 
 
@@ -628,6 +628,43 @@ module RocketGate
       end
       return results				# Return results
     end
+
+######################################################################
+#
+#   PerformLookup() - Lookup previous transaction.
+#
+######################################################################
+#
+    def PerformLookup(request, response)
+      request.Set(GatewayRequest::TRANSACTION_TYPE, "LOOKUP");
+
+      referenceGUID = request.Get(GatewayRequest::REFERENCE_GUID)
+
+      if (referenceGUID != nil)			# Have reference?
+        results = self.PerformTargetedTransaction(request, response)
+      else
+        results = self.PerformTransaction(request, response)
+      end
+    end
+
+######################################################################
+#
+#   GenerateXsell() - Add an entry to the XsellQueue.
+#
+######################################################################
+#
+    def GenerateXsell(request, response)
+      request.Set(GatewayRequest::TRANSACTION_TYPE, "GENERATEXSELL");
+      request.Set(GatewayRequest::REFERENCE_GUID, request.Get(GatewayRequest::XSELL_REFERENCE_XACT) );
+
+      referenceGUID = request.Get(GatewayRequest::REFERENCE_GUID)
+      if (referenceGUID != nil)			# Have reference?
+        results = self.PerformTargetedTransaction(request, response)
+      else
+        results = self.PerformTransaction(request, response)
+      end
+    end
+#
   end
 end
 
