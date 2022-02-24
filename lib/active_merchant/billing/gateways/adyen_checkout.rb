@@ -385,8 +385,8 @@ module ActiveMerchant #:nodoc:
         "#{PAYMENTS_API_VERSION}/#{action}"
       end
 
-      def live_url
-        "https://#{@url_prefix}-checkout-live.adyenpayments.com/"
+      def checkout_live_url
+        "https://#{@url_prefix}-checkout-live.adyenpayments.com/checkout/"
       end
 
       def pal_live_url
@@ -399,7 +399,7 @@ module ActiveMerchant #:nodoc:
         elsif @options[:subdomain]
           "https://#{@options[:subdomain]}-pal-live.adyenpayments.com/pal/servlet/#{endpoint(action)}"
         else
-          use_pal_endpoint?(action) ? "#{pal_live_url}#{endpoint(action)}" : "#{live_url}#{endpoint(action)}"
+          use_pal_endpoint?(action) ? "#{pal_live_url}#{endpoint(action)}" : "#{checkout_live_url}#{endpoint(action)}"
         end
       end
 
