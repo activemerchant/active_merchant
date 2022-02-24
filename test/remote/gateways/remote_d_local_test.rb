@@ -94,6 +94,14 @@ class RemoteDLocalTest < Test::Unit::TestCase
     assert_match 'The payment was paid', response.message
   end
 
+  def test_successful_purchase_with_force_type_debit
+    options = @options.merge(force_type: 'DEBIT')
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_match 'The payment was paid', response.message
+  end
+
   # You may need dLocal to enable your test account to support individual countries
   def test_successful_purchase_colombia
     response = @gateway.purchase(100000, @credit_card, @options_colombia)

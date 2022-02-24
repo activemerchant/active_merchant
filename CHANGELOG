@@ -29,6 +29,8 @@
 * Adyen: Add currencies with three decimals places [gasb150] #4322
 * GlobalCollect: Stregthen success criteria for void action [peteroas] #4324
 * Priority Payment Systems - Clean up/refactor gateway file and tests [ali-hassan] #4327
+* SafeCharge: change `verify` to send 0 amount [dsmcclain] #4332
+* DLocal: add support for `force_type` field [dsmcclain] #4336
 
 == Version 1.125.0 (January 20, 2022)
 * Wompi: support gateway [therufs] #4173

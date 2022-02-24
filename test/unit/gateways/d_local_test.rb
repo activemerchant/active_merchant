@@ -54,6 +54,14 @@ class DLocalTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_successful_purchase_with_force_type
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(force_type: 'debit'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_equal 'DEBIT', JSON.parse(data)['card']['force_type']
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_successful_authorize
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
 
