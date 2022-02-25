@@ -44,6 +44,7 @@
 * Litle: Translate google_pay as android_pay [javierpedrozaing] #4331
 * Braintree: Add ACH support for store [cristian] #4285
 * Simetrik: Add support for Simetrik gateway [simetrik-frank] #4339
+* EBANX:  Change amount for Mexico and Chile [flaaviaa] #4337
 
 == Version 1.125.0 (January 20, 2022)
 * Wompi: support gateway [therufs] #4173
