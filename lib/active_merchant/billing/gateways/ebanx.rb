@@ -42,8 +42,8 @@ module ActiveMerchant #:nodoc:
         'ar' => 100,
         'co' => 100,
         'pe' => 300,
-        'mx' => 300,
-        'cl' => 5000
+        'mx' => 2000,
+        'cl' => 80000
       }
 
       def initialize(options = {})
