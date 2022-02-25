@@ -136,6 +136,15 @@ class RemoteDecidirPlusTest < Test::Unit::TestCase
     assert_equal @credit_card.number[0..5], response.authorization.split('|')[1]
   end
 
+  def test_successful_store_name_override
+    @credit_card.name = ''
+    options = { name_override: 'Rick Deckard' }
+    assert response = @gateway_purchase.store(@credit_card, options)
+    assert_success response
+    assert_equal 'active', response.message
+    assert_equal options[:name_override], response.params.dig('cardholder', 'name')
+  end
+
   def test_successful_unstore
     customer = {
       id: 'John',

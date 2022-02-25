@@ -98,6 +98,7 @@ class DecidirPlusTest < Test::Unit::TestCase
       @gateway.store(@credit_card, @options)
     end.check_request do |_action, _endpoint, data, _headers|
       assert_match(/#{@credit_card.number}/, data)
+      assert_match(/#{@credit_card.name}/, data)
     end.respond_with(successful_store_response)
 
     assert_success response

@@ -103,7 +103,7 @@ module ActiveMerchant #:nodoc:
           post[:card_expiration_month] = format(payment.month, :two_digits)
           post[:card_expiration_year] = format(payment.year, :two_digits)
           post[:security_code] = payment.verification_value.to_s
-          post[:card_holder_name] = payment.name
+          post[:card_holder_name] = payment.name.empty? ? options[:name_override] : payment.name
           post[:card_holder_identification] = {}
           post[:card_holder_identification][:type] = options[:dni]
           post[:card_holder_identification][:number] = options[:card_holder_identification_number]
