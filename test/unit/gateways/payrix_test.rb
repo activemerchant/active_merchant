@@ -110,7 +110,7 @@ class PayrixTest < Test::Unit::TestCase
     assert response.test?
     assert_equal 'TOKEN', response.token
     assert_equal 'PROCESSED_REJECTED', response.error_code
-    assert_equal 'URL Opened, not completed and closed', response.message
+    assert_equal 'Invalid credit card', response.message
   end
 
   def test_scrub

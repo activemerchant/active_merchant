@@ -72,6 +72,36 @@ module ActiveMerchant #:nodoc:
         'EXPIRED' => 'Token has expired and is no longer useable'
       }
 
+      TRANSACTION_STATUS = { cleared: 'C', settled: 'S', rejected: 'R' }
+
+      REJECTION_REASONS = {
+        'R1' => 'Insufficient funds',
+        'R2' => 'Invalid bank account number',
+        'R3' => 'Invalid credit card',
+        'R4' => 'Expired credit card',
+        'R5' => 'Invalid transaction',
+        'R6' => 'Transaction declined',
+        'R7' => 'Authority revoked by payer',
+        'R8' => 'Payer deceased',
+        'R9' => 'Invalid bank account',
+        'R10' => 'Bank account closed',
+        'R11' => 'Invalid payer contact details',
+        'R12' => 'Direct debit claim',
+        'R13' => 'Credit card chargeback',
+        'R14' => 'Stolen/pick up card',
+        'R15' => 'Limits exceeded',
+        'R16' => 'Pre-auth expired',
+        'R17' => 'Not processed (payer inactive)',
+        'R18' => 'Fraud protection triggered',
+        'R19' => 'Voided',
+        'R20' => 'Fraud Check / 3-D Secure: Authentication Failed',
+        'R21' => 'Fraud Check / 3-D Secure: Unable to Authenticate',
+        'R22' => 'Fraud Check / 3-D Secure: Transaction Abandoned',
+        'R23' => 'Fraud Check / 3-D Secure: Error Occurred',
+        'RF' => 'Partially refunded',
+        'UR' => 'Under review'
+      }
+
       def initialize(options = {})
         requires!(options, :login, :password, :business_id)
 
@@ -319,8 +349,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def token_message_from(response)
-        TOKEN_STATUS_DESCRIPTIONS[response[:status_description]] ||
-          response[:status_description]
+        if response[:transaction].nil?
+          TOKEN_STATUS_DESCRIPTIONS[response[:status_description]]
+        else
+          REJECTION_REASONS[response[:transaction][:sub_status_code]]
+        end
       end
 
       def token_fraud_review_from(response)
