@@ -31,10 +31,10 @@ class RemoteLitleTest < Test::Unit::TestCase
     @credit_card2 = CreditCard.new(
       first_name: 'Joe',
       last_name: 'Green',
-      month: '06',
-      year: '2012',
+      month: '12',
+      year: '2020',
       brand: 'visa',
-      number: '4457010100000008',
+      number: '4457002100000110',
       verification_value: '992'
     )
     @credit_card_nsf = CreditCard.new(
@@ -143,9 +143,15 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
-  def test_avs_and_cvv_result
+  def test_avs_result
+    @credit_card1.number = 4100401234567000
     assert response = @gateway.authorize(10010, @credit_card1, @options)
     assert_equal 'X', response.avs_result['code']
+  end
+
+  def test_cvv_result
+    @credit_card1.number = 4100501234567000
+    assert response = @gateway.authorize(10010, @credit_card1, @options)
     assert_equal 'M', response.cvv_result['code']
   end
 
@@ -218,19 +224,19 @@ class RemoteLitleTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_apple_pay
-    assert response = @gateway.purchase(10010, @decrypted_apple_pay)
+    assert response = @gateway.purchase(1000, @decrypted_apple_pay, @options)
     assert_success response
     assert_equal 'Approved', response.message
   end
 
   def test_successful_purchase_with_android_pay
-    assert response = @gateway.purchase(10000, @decrypted_android_pay)
+    assert response = @gateway.purchase(10000, @decrypted_android_pay, @options)
     assert_success response
     assert_equal 'Approved', response.message
   end
 
   def test_successful_purchase_with_google_pay
-    assert response = @gateway.purchase(10000, @decrypted_google_pay)
+    assert response = @gateway.purchase(10000, @decrypted_google_pay, @options)
     assert_success response
     assert_equal 'Approved', response.message
   end
@@ -273,26 +279,27 @@ class RemoteLitleTest < Test::Unit::TestCase
   end
 
   def test_authorize_capture_refund_void
+    @credit_card1.number = '4457010000000000'
     assert auth = @gateway.authorize(10010, @credit_card1, @options)
     assert_success auth
     assert_equal 'Approved', auth.message
 
-    assert capture = @gateway.capture(nil, auth.authorization)
+    assert capture = @gateway.capture(nil, auth.authorization, @options)
     assert_success capture
     assert_equal 'Approved', capture.message
 
-    assert refund = @gateway.refund(nil, capture.authorization)
+    assert refund = @gateway.refund(nil, capture.authorization, @options)
     assert_success refund
     assert_equal 'Approved', refund.message
 
-    assert void = @gateway.void(refund.authorization)
+    assert void = @gateway.void(refund.authorization, @options)
     assert_success void
     assert_equal 'Approved', void.message
   end
 
   def test_authorize_and_capture_with_stored_credential_recurring
     credit_card = CreditCard.new(@credit_card_hash.merge(
-                                   number: '4100200300011001',
+                                   number: '4100200300011000',
                                    month: '05',
                                    year: '2021',
                                    verification_value: '463'
@@ -312,7 +319,7 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_equal 'Approved', auth.message
     assert network_transaction_id = auth.params['networkTransactionId']
 
-    assert capture = @gateway.capture(4999, auth.authorization)
+    assert capture = @gateway.capture(4999, auth.authorization, initial_options)
     assert_success capture
     assert_equal 'Approved', capture.message
 
@@ -329,7 +336,7 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_success auth
     assert_equal 'Approved', auth.message
 
-    assert capture = @gateway.capture(4999, auth.authorization)
+    assert capture = @gateway.capture(4999, auth.authorization, used_options)
     assert_success capture
     assert_equal 'Approved', capture.message
   end
@@ -356,7 +363,7 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_equal 'Approved', auth.message
     assert network_transaction_id = auth.params['networkTransactionId']
 
-    assert capture = @gateway.capture(5500, auth.authorization)
+    assert capture = @gateway.capture(5500, auth.authorization, initial_options)
     assert_success capture
     assert_equal 'Approved', capture.message
 
@@ -373,7 +380,7 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_success auth
     assert_equal 'Approved', auth.message
 
-    assert capture = @gateway.capture(5500, auth.authorization)
+    assert capture = @gateway.capture(5500, auth.authorization, used_options)
     assert_success capture
     assert_equal 'Approved', capture.message
   end
@@ -399,8 +406,7 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_success auth
     assert_equal 'Approved', auth.message
     assert network_transaction_id = auth.params['networkTransactionId']
-
-    assert capture = @gateway.capture(5500, auth.authorization)
+    assert capture = @gateway.capture(5500, auth.authorization, initial_options)
     assert_success capture
     assert_equal 'Approved', capture.message
 
@@ -417,7 +423,7 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_success auth
     assert_equal 'Approved', auth.message
 
-    assert capture = @gateway.capture(2500, auth.authorization)
+    assert capture = @gateway.capture(2500, auth.authorization, used_options)
     assert_success capture
     assert_equal 'Approved', capture.message
   end
@@ -439,12 +445,12 @@ class RemoteLitleTest < Test::Unit::TestCase
         network_transaction_id: nil
       }
     )
+
     assert auth = @gateway.authorize(5500, credit_card, initial_options)
     assert_success auth
     assert_equal 'Approved', auth.message
     assert network_transaction_id = auth.params['networkTransactionId']
-
-    assert capture = @gateway.capture(5500, auth.authorization)
+    assert capture = @gateway.capture(5500, auth.authorization, initial_options)
     assert_success capture
     assert_equal 'Approved', capture.message
 
@@ -460,8 +466,7 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert auth = @gateway.authorize(4000, credit_card, used_options)
     assert_success auth
     assert_equal 'Approved', auth.message
-
-    assert capture = @gateway.capture(4000, auth.authorization)
+    assert capture = @gateway.capture(4000, auth.authorization, used_options)
     assert_success capture
     assert_equal 'Approved', capture.message
   end
@@ -515,21 +520,20 @@ class RemoteLitleTest < Test::Unit::TestCase
     })
     assert sale = @gateway.purchase(2004, @check, options)
 
-    assert void = @gateway.void(sale.authorization)
+    assert void = @gateway.void(sale.authorization, options)
     assert_success void
     assert_equal 'Approved', void.message
   end
 
   def test_void_authorization
     assert auth = @gateway.authorize(10010, @credit_card1, @options)
-
-    assert void = @gateway.void(auth.authorization)
+    assert void = @gateway.void(auth.authorization, @options)
     assert_success void
     assert_equal 'Approved', void.message
   end
 
   def test_unsuccessful_void
-    assert void = @gateway.void('123456789012345360;authorization;100')
+    assert void = @gateway.void('123456789012345360;authorization;1000', @options)
     assert_failure void
     assert_equal 'No transaction found with specified Transaction Id', void.message
   end
@@ -548,8 +552,7 @@ class RemoteLitleTest < Test::Unit::TestCase
 
   def test_partial_refund
     assert purchase = @gateway.purchase(10010, @credit_card1, @options)
-
-    assert refund = @gateway.refund(444, purchase.authorization)
+    assert refund = @gateway.refund(444, purchase.authorization, @options)
     assert_success refund
     assert_equal 'Approved', refund.message
   end
@@ -561,7 +564,7 @@ class RemoteLitleTest < Test::Unit::TestCase
     })
     assert purchase = @gateway.purchase(2004, @check, options)
 
-    assert refund = @gateway.refund(444, purchase.authorization)
+    assert refund = @gateway.refund(444, purchase.authorization, options)
     assert_success refund
     assert_equal 'Approved', refund.message
   end
@@ -571,7 +574,7 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_success auth
     assert_equal 'Approved', auth.message
 
-    assert capture = @gateway.capture(5005, auth.authorization)
+    assert capture = @gateway.capture(5005, auth.authorization, @options)
     assert_success capture
     assert_equal 'Approved', capture.message
   end
@@ -581,7 +584,7 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_success auth
     assert_equal 'Approved', auth.message
 
-    assert capture = @gateway.capture(10010, auth.authorization)
+    assert capture = @gateway.capture(10010, auth.authorization, @options)
     assert_success capture
     assert_equal 'Approved', capture.message
   end
@@ -591,39 +594,39 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_success auth
     assert_equal 'Approved', auth.message
 
-    assert capture = @gateway.capture(nil, auth.authorization)
+    assert capture = @gateway.capture(nil, auth.authorization, @options)
     assert_success capture
     assert_equal 'Approved', capture.message
   end
 
   def test_capture_unsuccessful
-    assert capture_response = @gateway.capture(10010, '123456789012345360')
+    assert capture_response = @gateway.capture(6000, '4488282659650360', @options)
     assert_failure capture_response
     assert_equal 'No transaction found with specified Transaction Id', capture_response.message
   end
 
   def test_refund_unsuccessful
-    assert credit_response = @gateway.refund(10010, '123456789012345360')
+    assert credit_response = @gateway.refund(10010, '123456789012345360', order_id: '360')
     assert_failure credit_response
     assert_equal 'No transaction found with specified Transaction Id', credit_response.message
   end
 
   def test_void_unsuccessful
-    assert void_response = @gateway.void('123456789012345360')
+    assert void_response = @gateway.void('123456789012345360', @options)
     assert_failure void_response
     assert_equal 'No transaction found with specified Transaction Id', void_response.message
   end
 
   def test_store_successful
     credit_card = CreditCard.new(@credit_card_hash.merge(number: '4457119922390123'))
-    assert store_response = @gateway.store(credit_card, order_id: '50')
+    assert store_response = @gateway.store(credit_card, { order_id: '50', merchant: 'RG1' })
 
     assert_success store_response
     assert_equal 'Account number was successfully registered', store_response.message
     assert_equal '445711', store_response.params['bin']
     assert_equal 'VI', store_response.params['type']
     assert_equal '801', store_response.params['response']
-    assert_equal '1111222233330123', store_response.params['litleToken']
+    assert_equal '1111222233334444', store_response.params['cnpToken']
   end
 
   def test_store_with_paypage_registration_id_successful
@@ -633,15 +636,15 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_success store_response
     assert_equal 'Account number was successfully registered', store_response.message
     assert_equal '801', store_response.params['response']
-    assert_equal '1111222233334444', store_response.params['litleToken']
+    assert_equal '1111222233334444', store_response.params['cnpToken']
   end
 
   def test_store_unsuccessful
-    credit_card = CreditCard.new(@credit_card_hash.merge(number: '4457119999999999'))
+    credit_card = CreditCard.new(@credit_card_hash.merge(number: '4100282040123000'))
     assert store_response = @gateway.store(credit_card, order_id: '51')
 
     assert_failure store_response
-    assert_equal 'Credit card number was invalid', store_response.message
+    assert_equal 'Credit card Number was invalid', store_response.message
     assert_equal '820', store_response.params['response']
   end
 
@@ -651,9 +654,9 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_success store_response
 
     token = store_response.authorization
-    assert_equal store_response.params['litleToken'], token
+    assert_equal store_response.params['cnpToken'], token
 
-    assert response = @gateway.purchase(10010, token)
+    assert response = @gateway.purchase(1000, token, @options)
     assert_success response
     assert_equal 'Approved', response.message
   end
@@ -663,22 +666,22 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_success store_response
 
     token = store_response.authorization
-    assert_equal store_response.params['litleToken'], token
+    assert_equal store_response.params['cnpToken'], token
 
-    assert response = @gateway.purchase(10010, token, { basis_expiration_month: '01', basis_expiration_year: '2024' })
+    assert response = @gateway.purchase(1000, token, { basis_expiration_month: '01', basis_expiration_year: '2024', order_id: '50' })
     assert_success response
     assert_equal 'Approved', response.message
   end
 
   def test_echeck_store_and_purchase
-    assert store_response = @gateway.store(@store_check)
+    assert store_response = @gateway.store(@store_check, @options)
     assert_success store_response
     assert_equal 'Account number was successfully registered', store_response.message
 
     token = store_response.authorization
-    assert_equal store_response.params['litleToken'], token
+    assert_equal store_response.params['cnpToken'], token
 
-    assert response = @gateway.purchase(10010, token)
+    assert response = @gateway.purchase(1000, token, @options)
     assert_success response
     assert_equal 'Approved', response.message
   end
