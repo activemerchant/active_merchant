@@ -79,15 +79,29 @@ class RemoteSimetrikTest < Test::Unit::TestCase
   end
 
   def test_failed_capture
+    auth = @gateway.authorize(@amount, @credit_card, @authorize_capture_options_success)
+    assert_success auth
+
+    option = {
+      vat: @authorize_capture_options_success[:order][:amount][:vat],
+      currency: @authorize_capture_options_success[:order][:amount][:currency],
+      transaction_id: auth.authorization,
+      token_acquirer: @token_acquirer,
+      trace_id: @authorize_capture_options_success[:trace_id]
+    }
+    sleep(3)
+    # First successful capture
+    capture = @gateway.capture(@amount, auth.authorization, option)
+    assert_success capture
     option = {
       vat: 19,
       currency: 'USD',
-      transaction_id: 'a81b1e60cbce4e7eb910f2db370a9fc7',
+      transaction_id: auth.authorization,
       token_acquirer: @token_acquirer,
-      trace_id: 'd30ece8b-0161-49bd-b697-630575a92392'
+      trace_id: @authorize_capture_options_success[:trace_id]
     }
 
-    assert capture = @gateway.capture(@amount, 'a81b1e60cbce4e7eb910f2db370a9fc7', option)
+    assert capture = @gateway.capture(@amount, auth.authorization, option)
     assert_failure capture
     assert_equal 'CAPTURE_REJECTED', capture.params['message']
   end
@@ -108,11 +122,26 @@ class RemoteSimetrikTest < Test::Unit::TestCase
   end
 
   def test_failed_void
+    # First successful void
+    auth = @gateway.authorize(@amount, @credit_card, @authorize_void_options_success)
+    assert_success auth
+
+    option = {
+      token_acquirer: @token_acquirer,
+      trace_id: @authorize_capture_options_success[:trace_id],
+      acquire_extra_options: {}
+    }
+    sleep(3)
+    assert void = @gateway.void(auth.authorization, option)
+    assert_success void
+    assert_equal 'successful void', void.params['message']
+
+    # Second failed void
     option = {
       token_acquirer: @token_acquirer,
       trace_id: '2717a3e0-0db2-4971-b94f-686d3b72c44b'
     }
-    void = @gateway.void('3d4b6e0fa9f742b282b91b5d7f47a06d', option)
+    void = @gateway.void(auth.authorization, option)
     assert_failure void
     assert_equal 'VOID_REJECTED', void.params['message']
   end
@@ -128,12 +157,13 @@ class RemoteSimetrikTest < Test::Unit::TestCase
       }
     }
 
-    assert refund = @gateway.refund(@amount, 'ba33b9b6915d46b5a9bd1c4e1cb2e6ce', option)
+    assert refund = @gateway.refund(200, '936ca6a48a8b4cd3a3050bc637a5e2bc', option)
     assert_success refund
     assert_equal 'successful refund', refund.message
   end
 
   def test_failed_refund
+    response = @gateway.purchase(@amount, @credit_card, @authorize_capture_options_success)
     option = {
       token_acquirer: @token_acquirer,
       trace_id: '2717a3e0-0db2-4971-b94f-686d3b72c44b',
@@ -143,7 +173,8 @@ class RemoteSimetrikTest < Test::Unit::TestCase
         ruc: '13431131234'
       }
     }
-    refund = @gateway.refund(@amount, '3d4b6e0fa9f742b282b91b5d7f47a06d', option)
+    sleep(3)
+    refund = @gateway.refund(@amount, response.authorization, option)
     assert_failure refund
     assert_equal('REFUND_REJECTED', refund.params['message'])
   end
@@ -156,22 +187,6 @@ class RemoteSimetrikTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@credit_card.verification_value.to_s, transcript)
   end
-
-  # def test_partial_capture
-  #   auth = @gateway.authorize(@amount, @credit_card, @options)
-  #   assert_success auth
-
-  #   assert capture = @gateway.capture(@amount - 1, auth.authorization)
-  #   assert_success capture
-  # end
-
-  # def test_partial_refund
-  #   purchase = @gateway.purchase(@amount, @credit_card, @options)
-  #   assert_success purchase
-
-  #   assert refund = @gateway.refund(@amount - 1, purchase.authorization)
-  #   assert_success refund
-  # end
 
   private
 
