@@ -64,7 +64,7 @@ class RemoteSimetrikTest < Test::Unit::TestCase
   def test_successful_authorize_and_capture
     auth = @gateway.authorize(@amount, @credit_card, @authorize_capture_options_success)
     assert_success auth
-
+    sleep(3)
     option = {
       vat: @authorize_capture_options_success[:order][:amount][:vat],
       currency: @authorize_capture_options_success[:order][:amount][:currency],
@@ -115,7 +115,7 @@ class RemoteSimetrikTest < Test::Unit::TestCase
       trace_id: @authorize_capture_options_success[:trace_id],
       acquire_extra_options: {}
     }
-
+    sleep(3)
     assert void = @gateway.void(auth.authorization, option)
     assert_success void
     assert_equal 'successful void', void.params['message']
