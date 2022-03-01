@@ -88,6 +88,30 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert purchase.params.dig('charges', 'data')[0]['captured']
   end
 
+  def test_successful_purchase_with_shipping_address
+    options = {
+      currency: 'GBP',
+      customer: @customer,
+      shipping: {
+        name: 'John Adam',
+        carrier: 'TEST',
+        phone: '+0018313818368',
+        tracking_number: 'TXNABC123',
+        address: {
+          city: 'San Diego',
+          country: 'USA',
+          line1: 'block C',
+          line2: 'street 48',
+          postal_code: '22400',
+          state: 'California'
+        }
+      }
+    }
+    assert response = @gateway.purchase(@amount, @visa_payment_method, options)
+    assert_success response
+    assert_equal 'succeeded', response.params['status']
+  end
+
   def test_unsuccessful_purchase_google_pay_with_invalid_card_number
     options = {
       currency: 'GBP'
