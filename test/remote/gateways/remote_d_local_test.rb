@@ -275,7 +275,7 @@ class RemoteDLocalTest < Test::Unit::TestCase
       cavv: '3q2+78r+ur7erb7vyv66vv\/\/\/\/8=',
       eci: '05',
       xid: 'ODUzNTYzOTcwODU5NzY3Qw==',
-      enrolled: 'Y',
+      enrolled: 'true',
       authentication_response_status: 'Y'
     }
     auth = @gateway.authorize(@amount, @credit_card, @options)
