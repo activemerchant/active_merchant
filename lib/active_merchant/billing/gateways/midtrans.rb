@@ -105,12 +105,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, payment, options={})
-        @midtrans_gateway.config.override_notif_url = options[:notification_url] if options[:notification_url]
         post = {}
+        configure_notification_url(options)
         add_invoice(post, money, options)
         add_payment(post, payment, options)
         add_address(post, options)
         add_customer_data(post, options)
+        add_metadata(post, options)
         commit("purchase", post)
       end
 
@@ -128,6 +129,7 @@ module ActiveMerchant #:nodoc:
 
       def void(authorization, options={})
         raise ArgumentError.new(MISSING_AUTHORIZATION_MESSAGE) if authorization.nil?
+        configure_notification_url(options)
         post = {}
         post[:transaction_id] = authorization
         commit("void", post)
@@ -163,6 +165,14 @@ module ActiveMerchant #:nodoc:
 
       private
 
+      def add_metadata(post, options)
+        post[:metadata] = options[:metadata] if options[:metadata]
+      end
+
+      def configure_notification_url(options)
+        @midtrans_gateway.config.override_notif_url = options[:notification_url] if options[:notification_url]
+      end
+
       def add_customer_data(post, options)
         post[:customer_details] = options['customer_details']
       end
@@ -192,6 +202,7 @@ module ActiveMerchant #:nodoc:
             token_id = tokenize_card(payment)["token_id"]
           end
           post[:credit_card][:token_id] = token_id
+          post[:credit_card][:authentication] = options[:enable_3ds] if options[:enable_3ds]
           post[:credit_card][:type] = options[:transaction_type] if options[:transaction_type]
           post[:credit_card][:save_token_id] = options[:save_token_id] if options[:save_token_id]
         elsif post[:payment_type] == GOPAY
@@ -306,7 +317,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def token_response_for(gateway_response)
-        success = gateway_response["status_code"] == "200"
+        success = ["200", "201"].include?(gateway_response["status_code"])
         message = success ? CARD_TOKEN_CREATION_SUCCESSFUL: CARD_TOKEN_CREATION_FAILED
         Response.new(
           success,

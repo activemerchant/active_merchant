@@ -12,6 +12,23 @@ class RemoteMidtransTest < Test::Unit::TestCase
       payment_type: 'credit_card',
       order_id: SecureRandom.uuid
     }
+    @card_with_3ds_payment_options = {
+      payment_type: 'credit_card',
+      order_id: SecureRandom.uuid,
+      enable_3ds: true
+    }
+    @metadata = {
+      name: "sasuke",
+      clan_name: "uchiha",
+      siblings: [
+        {
+          name: "itachi"
+        }
+      ],
+      father: {
+        name: "fugaku"
+      }
+    }
     @gopay_payment_options = {
       payment_type: 'gopay',
       order_id: SecureRandom.uuid,
@@ -44,6 +61,13 @@ class RemoteMidtransTest < Test::Unit::TestCase
     assert_equal response.params["status_code"], "200"
   end
 
+  def test_purchase_when_valid_card_with_3ds_then_success
+    response = @gateway.purchase(@amount, @accepted_card, @card_with_3ds_payment_options)
+    assert_success response
+    assert_equal "201", response.params["status_code"]
+    assert response.params["redirect_url"].present?
+  end
+  
   def test_purchase_when_gopay_valid_request_then_success
     response = @gateway.purchase(@amount, {}, @gopay_payment_options)
     assert_success response
@@ -222,6 +246,13 @@ class RemoteMidtransTest < Test::Unit::TestCase
     assert_equal response.message, "Success, Credit Card transaction is successful"
   end
 
+  def test_authorize_when_valid_card_with_3ds_then_success
+    response = @gateway.authorize(@amount, @accepted_card, @card_with_3ds_payment_options)
+    assert_success response
+    assert_equal "201", response.params["status_code"]
+    assert response.params["redirect_url"].present?
+  end
+
   def test_authorize_when_declined_card_then_failure
     response = @gateway.authorize(@amount, @declined_card, @card_payment_options)
     assert_failure response
@@ -342,6 +373,18 @@ class RemoteMidtransTest < Test::Unit::TestCase
     response = @gateway.store(@accepted_card)
     assert_success response
     assert_equal response.params["status_code"], "200"
+  end
+
+  def test_store_card_with_3ds_when_valid_card_then_success
+    response = @gateway.store(@accepted_card, {"enable_3ds": true})
+    assert_success response
+    assert_equal "201", response.params["status_code"]
+  end
+
+  def test_store_card_with_3ds_with_metadata_when_valid_card_then_success
+    response = @gateway.store(@accepted_card, {"enable_3ds": true, "metadata": @metadata, "notification_url": "https://webhook.site/d69ca01e-0af4-469f-91d4-d49898325ecf"})
+    assert_success response
+    assert_equal "201", response.params["status_code"]
   end
 
   def test_store_card_when_invalid_card_then_failure
