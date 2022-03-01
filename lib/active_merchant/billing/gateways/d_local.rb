@@ -272,7 +272,7 @@ module ActiveMerchant #:nodoc:
           three_dsecure_version: three_d_secure[:version],
           cavv: three_d_secure[:cavv],
           eci: three_d_secure[:eci],
-          enrollment_response: three_d_secure[:enrolled],
+          enrollment_response: formatted_enrollment(three_d_secure[:enrolled]),
           authentication_response: three_d_secure[:authentication_response_status]
         }.merge(xid_or_ds_trans_id(three_d_secure))
       end
@@ -280,8 +280,8 @@ module ActiveMerchant #:nodoc:
       def validate_three_ds_params(three_ds)
         errors = {}
         supported_version = %w{1.0 2.0 2.1.0 2.2.0}.include?(three_ds[:three_dsecure_version])
-        supported_enrollment = %w{Y N U}.include?(three_ds[:enrollment_response])
-        supported_auth_response = %w{Y A N U}.include?(three_ds[:authentication_response])
+        supported_enrollment = ['Y', 'N', 'U', nil].include?(three_ds[:enrollment_response])
+        supported_auth_response = ['Y', 'N', 'U', nil].include?(three_ds[:authentication_response])
 
         errors[:three_ds_version] = 'ThreeDs version not supported' unless supported_version
         errors[:enrollment] = 'Enrollment value not supported' unless supported_enrollment
@@ -289,6 +289,14 @@ module ActiveMerchant #:nodoc:
         errors.compact!
 
         errors.present? ? Response.new(false, 'ThreeDs data is invalid', errors) : nil
+      end
+
+      def formatted_enrollment(val)
+        case val
+        when 'Y', 'N', 'U' then val
+        when true, 'true' then 'Y'
+        when false, 'false' then 'N'
+        end
       end
     end
   end

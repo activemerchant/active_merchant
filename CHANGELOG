@@ -51,6 +51,7 @@
 * Stripe PI: Add `request_three_d_secure` field for `create_setup_intent` [aenand] #4365
 * Adyen: Add `verify_amount` field for verify [ajawadmirza] #4369
 * Stripe PI: Pass options for tokenizing Apple/Google Pay [gasb150] #4368
+* Dlocal: Format 3DS mpi enrollment data correctly [cristian] #4371
 
 == Version 1.125.0 (January 20, 2022)
 * Wompi: support gateway [therufs] #4173
