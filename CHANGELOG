@@ -47,6 +47,7 @@
 * EBANX:  Change amount for Mexico and Chile [flaaviaa] #4337
 * DecidirPlus: Add `establishment_name`, `aggregate_data`, `sub_payments`, `card_holder_identification_type`, `card_holder_identification_number`, `card_door_number`, and `card_holder_birthday` fields [ajawadmirza] #4361
 * DecidirPlus: Update `error_code_from` to get error reason id [ajawadmirza] #4364
+* Dlocal: Add three_ds mpi support [cristian] #4345
 
 == Version 1.125.0 (January 20, 2022)
 * Wompi: support gateway [therufs] #4173

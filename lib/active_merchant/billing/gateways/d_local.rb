@@ -19,6 +19,7 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment, options = {})
         post = {}
         add_auth_purchase_params(post, money, payment, 'purchase', options)
+        add_three_ds(post, options)
 
         commit('purchase', post, options)
       end
@@ -26,6 +27,7 @@ module ActiveMerchant #:nodoc:
       def authorize(money, payment, options = {})
         post = {}
         add_auth_purchase_params(post, money, payment, 'authorize', options)
+        add_three_ds(post, options)
         post[:card][:verify] = true if options[:verify].to_s == 'true'
 
         commit('authorize', post, options)
@@ -162,6 +164,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, parameters, options = {})
+        three_ds_errors = validate_three_ds_params(parameters[:three_dsecure]) if parameters[:three_dsecure].present?
+        return three_ds_errors if three_ds_errors
+
         url = url(action, parameters, options)
         post = post_data(action, parameters)
         begin
@@ -249,6 +254,41 @@ module ActiveMerchant #:nodoc:
 
       def post_data(action, parameters = {})
         parameters.to_json
+      end
+
+      def xid_or_ds_trans_id(three_d_secure)
+        if three_d_secure[:version].to_f >= 2
+          { ds_transaction_id: three_d_secure[:ds_transaction_id] }
+        else
+          { xid: three_d_secure[:xid] }
+        end
+      end
+
+      def add_three_ds(post, options)
+        return unless three_d_secure = options[:three_d_secure]
+
+        post[:three_dsecure] = {
+          mpi: true,
+          three_dsecure_version: three_d_secure[:version],
+          cavv: three_d_secure[:cavv],
+          eci: three_d_secure[:eci],
+          enrollment_response: three_d_secure[:enrolled],
+          authentication_response: three_d_secure[:authentication_response_status]
+        }.merge(xid_or_ds_trans_id(three_d_secure))
+      end
+
+      def validate_three_ds_params(three_ds)
+        errors = {}
+        supported_version = %w{1.0 2.0 2.1.0 2.2.0}.include?(three_ds[:three_dsecure_version])
+        supported_enrollment = %w{Y N U}.include?(three_ds[:enrollment_response])
+        supported_auth_response = %w{Y A N U}.include?(three_ds[:authentication_response])
+
+        errors[:three_ds_version] = 'ThreeDs version not supported' unless supported_version
+        errors[:enrollment] = 'Enrollment value not supported' unless supported_enrollment
+        errors[:auth_response] = 'Authentication response value not supported' unless supported_auth_response
+        errors.compact!
+
+        errors.present? ? Response.new(false, 'ThreeDs data is invalid', errors) : nil
       end
     end
   end

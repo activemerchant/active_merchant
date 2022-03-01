@@ -268,4 +268,32 @@ class RemoteDLocalTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:trans_key], transcript)
   end
+
+  def test_successful_authorize_with_3ds_v1_options
+    @options[:three_d_secure] = {
+      version: '1.0',
+      cavv: '3q2+78r+ur7erb7vyv66vv\/\/\/\/8=',
+      eci: '05',
+      xid: 'ODUzNTYzOTcwODU5NzY3Qw==',
+      enrolled: 'Y',
+      authentication_response_status: 'Y'
+    }
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert_match 'The payment was authorized', auth.message
+  end
+
+  def test_successful_authorize_with_3ds_v2_options
+    @options[:three_d_secure] = {
+      version: '2.2.0',
+      cavv: '3q2+78r+ur7erb7vyv66vv\/\/\/\/8=',
+      eci: '05',
+      ds_transaction_id: 'ODUzNTYzOTcwODU5NzY3Qw==',
+      enrolled: 'Y',
+      authentication_response_status: 'Y'
+    }
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert_match 'The payment was authorized', auth.message
+  end
 end
