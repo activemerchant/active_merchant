@@ -902,12 +902,9 @@ class AdyenTest < Test::Unit::TestCase
   end
 
   def test_successful_auth_application_info
+    ActiveMerchant::Billing::AdyenGateway.application_id = { name: 'Acme', version: '1.0' }
+
     options = @options.merge!(
-      externalPlatform: {
-        name: 'Acme',
-        version: '1',
-        integrator: 'abc'
-      },
       merchantApplication: {
         name: 'Acme Inc.',
         version: '2'
@@ -917,8 +914,7 @@ class AdyenTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |_endpoint, data, _headers|
       assert_equal 'Acme', JSON.parse(data)['applicationInfo']['externalPlatform']['name']
-      assert_equal '1', JSON.parse(data)['applicationInfo']['externalPlatform']['version']
-      assert_equal 'abc', JSON.parse(data)['applicationInfo']['externalPlatform']['integrator']
+      assert_equal '1.0', JSON.parse(data)['applicationInfo']['externalPlatform']['version']
       assert_equal 'Acme Inc.', JSON.parse(data)['applicationInfo']['merchantApplication']['name']
       assert_equal '2', JSON.parse(data)['applicationInfo']['merchantApplication']['version']
     end.respond_with(successful_authorize_response)

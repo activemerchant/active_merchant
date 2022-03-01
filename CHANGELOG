@@ -37,6 +37,7 @@
 * Stripe PI: update `shipping` field to `shipping_address` [ajawadmirza] #4347
 * DecidirPlus: Handle `payment_method_id` by `card_brand` [naashton] #4350
 * DecidirPlus: `debit` and `payment_method_id` fields [naashton] #4351
+* Adyen: Include Application ID in adyen authorize and purchase transactions [peteroas] #4343
 
 == Version 1.125.0 (January 20, 2022)
 * Wompi: support gateway [therufs] #4173

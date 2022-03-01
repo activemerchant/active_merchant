@@ -462,12 +462,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_external_platform(post, options)
+        options.update(externalPlatform: application_id) if application_id
+
         return unless options[:externalPlatform]
 
         post[:applicationInfo][:externalPlatform] = {
           name: options[:externalPlatform][:name],
-          version: options[:externalPlatform][:version],
-          integrator: options[:externalPlatform][:integrator]
+          version: options[:externalPlatform][:version]
         }
       end
 
