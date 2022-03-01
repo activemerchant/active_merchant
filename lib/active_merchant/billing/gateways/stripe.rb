@@ -388,6 +388,7 @@ module ActiveMerchant #:nodoc:
         end
 
         add_metadata(post, options)
+        add_shipping_address(post, options[:shipping_address]) if options[:shipping_address]
         add_application_fee(post, options)
         add_exchange_rate(post, options)
         add_destination(post, options)
@@ -395,6 +396,23 @@ module ActiveMerchant #:nodoc:
         add_connected_account(post, options)
         add_radar_data(post, options)
         post
+      end
+
+      def add_shipping_address(post, options)
+        requires!(options, :name)
+
+        post[:shipping] = {}
+        post[:shipping][:name] = options[:name] if options[:name]
+        post[:shipping][:carrier] = options[:carrier] if options[:carrier]
+        post[:shipping][:phone] = options[:phone] if options[:phone]
+        post[:shipping][:tracking_number] = options[:tracking_number] if options[:tracking_number]
+        post[:shipping][:address] = {}
+        post[:shipping][:address][:city] = options[:city] if options[:city]
+        post[:shipping][:address][:country] = options[:country] if options[:country]
+        post[:shipping][:address][:line1] = options[:line1] if options[:line1]
+        post[:shipping][:address][:line2] = options[:line2] if options[:line2]
+        post[:shipping][:address][:postal_code] = options[:postal_code] if options[:postal_code]
+        post[:shipping][:address][:state] = options[:state] if options[:state]
       end
 
       def add_amount(post, money, options, include_currency = false)

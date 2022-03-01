@@ -54,6 +54,21 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal 'wow@example.com', response.params['metadata']['email']
   end
 
+  def test_successful_purchase_with_shipping_address
+    shipping = {
+      name: 'John Adam',
+      phone: '+0018313818368',
+      city: 'San Diego',
+      country: 'USA',
+      line1: 'block C',
+      line2: 'street 48',
+      postal_code: '22400',
+      state: 'California'
+    }
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(shipping_address: shipping))
+    assert_success response
+  end
+
   def test_successful_purchase_with_blank_referer
     options = @options.merge({ referrer: '' })
     assert response = @gateway.purchase(@amount, @credit_card, options)
