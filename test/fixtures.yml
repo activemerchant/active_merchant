@@ -1094,6 +1094,10 @@ qvalent:
     RFjxWKtn9pXbM1PLmUXCkKQnSJSeD1K0NjV+g8KFChTEgmhnLogyF/7YYw/amfc=
     -----END CERTIFICATE-----
 
+rapyd:
+  access_key: SOMECREDENTIAL
+  secret_key: ANOTHERCREDENTIAL
+
 raven_pac_net:
   user: ernest
   secret: "all good men die young"
