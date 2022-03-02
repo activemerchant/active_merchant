@@ -33,7 +33,7 @@ class RemoteMidtransTest < Test::Unit::TestCase
       payment_type: 'gopay',
       order_id: SecureRandom.uuid,
       notification_url: 'dummyurl.com',
-      callback_url: 'dummy://callback'
+      callback_url: 'https://integrations-dev.inai-dev.com/v1/payment-callbacks/midtrans?callback_url=abc'
     }
     @qris_gopay_payment_options = {
       payment_type: 'qris',
@@ -51,6 +51,35 @@ class RemoteMidtransTest < Test::Unit::TestCase
       payment_type: 'qris',
       order_id: SecureRandom.uuid,
       acquirer: 'airpay shopee',
+      notification_url: 'dummyurl.com'
+    }
+    @permata_bank_transfer_payment_options = {
+      payment_type: 'bank_transfer',
+      order_id: SecureRandom.uuid,
+      notification_url: 'dummyurl.com',
+      bank_code: 'permata'
+    }
+    @bca_bank_transfer_payment_options = {
+      payment_type: 'bank_transfer',
+      order_id: SecureRandom.uuid,
+      notification_url: 'dummyurl.com',
+      bank_code: 'bca'
+    }
+    @bni_bank_transfer_payment_options = {
+      payment_type: 'bank_transfer',
+      order_id: SecureRandom.uuid,
+      notification_url: 'dummyurl.com',
+      bank_code: 'bni'
+    }
+    @bri_bank_transfer_payment_options = {
+      payment_type: 'bank_transfer',
+      order_id: SecureRandom.uuid,
+      notification_url: 'dummyurl.com',
+      bank_code: 'bri'
+    }
+    @mandiri_bank_transfer_payment_options = {
+      payment_type: 'echannel',
+      order_id: SecureRandom.uuid,
       notification_url: 'dummyurl.com'
     }
   end
@@ -237,6 +266,67 @@ class RemoteMidtransTest < Test::Unit::TestCase
     assert_failure response
     assert_equal MidtransGateway::STATUS_CODE_MAPPING[406], response.error_code
     assert_equal "The request could not be completed due to a conflict with the current state of the target resource, please try again", response.message
+  end
+
+  def test_purchase_when_bank_transfer_permata_valid_request_then_success
+    response = @gateway.purchase(@amount, {}, @permata_bank_transfer_payment_options)
+    assert_success response
+    assert_equal response.params["status_code"], "201"
+    assert_equal response.params["transaction_status"], MidtransGateway::TRANSACTION_STATUS_MAPPING[:pending]
+    assert_equal response.params["status_message"], "Success, PERMATA VA transaction is successful"
+    va_numbers = response.params["va_numbers"]
+    assert va_numbers.length() == 1
+    assert va_numbers[0][:bank] == "permata"
+    assert va_numbers[0].key?(:va_number)
+  end
+
+  def test_purchase_when_bank_transfer_bca_valid_request_then_success
+    response = @gateway.purchase(@amount, {}, @bca_bank_transfer_payment_options)
+    assert_success response
+    assert_equal response.params["status_code"], "201"
+    assert_equal response.params["transaction_status"], MidtransGateway::TRANSACTION_STATUS_MAPPING[:pending]
+    assert_equal response.params["status_message"], "Success, Bank Transfer transaction is created"
+    va_numbers = response.params["va_numbers"]
+    assert va_numbers.length() == 1
+    assert va_numbers[0]["bank"] == "bca"
+    assert va_numbers[0].key?("va_number")
+  end
+
+  def test_purchase_when_bank_transfer_bni_valid_request_then_success
+    response = @gateway.purchase(@amount, {}, @bni_bank_transfer_payment_options)
+    assert_success response
+    assert_equal response.params["status_code"], "201"
+    assert_equal response.params["transaction_status"], MidtransGateway::TRANSACTION_STATUS_MAPPING[:pending]
+    assert_equal response.params["status_message"], "Success, Bank Transfer transaction is created"
+    va_numbers = response.params["va_numbers"]
+    assert va_numbers.length() == 1
+    assert va_numbers[0]["bank"] == "bni"
+    assert va_numbers[0].key?("va_number")
+  end
+
+  def test_purchase_when_bank_transfer_bri_valid_request_then_success
+    response = @gateway.purchase(@amount, {}, @bri_bank_transfer_payment_options)
+    assert_success response
+    assert_equal response.params["status_code"], "201"
+    assert_equal response.params["transaction_status"], MidtransGateway::TRANSACTION_STATUS_MAPPING[:pending]
+    assert_equal response.params["status_message"], "Success, Bank Transfer transaction is created"
+    va_numbers = response.params["va_numbers"]
+    assert va_numbers.length() == 1
+    assert va_numbers[0]["bank"] == "bri"
+    assert va_numbers[0].key?("va_number")
+  end
+
+  def test_purchase_when_bank_transfer_mandiri_valid_request_then_success
+    response = @gateway.purchase(@amount, {}, @mandiri_bank_transfer_payment_options)
+    assert_success response
+    assert_equal response.params["status_code"], "201"
+    assert_equal response.params["transaction_status"], MidtransGateway::TRANSACTION_STATUS_MAPPING[:pending]
+    assert_equal response.params["status_message"], "OK, Mandiri Bill transaction is successful"
+    va_numbers = response.params["va_numbers"]
+    assert va_numbers.length() == 1
+    assert va_numbers[0][:bank] == "mandiri"
+    assert va_numbers[0].key?(:bill_key)
+    assert va_numbers[0].key?(:bill_code)
   end
 
   def test_authorize_when_valid_card_then_success
