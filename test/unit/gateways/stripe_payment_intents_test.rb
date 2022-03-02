@@ -374,7 +374,7 @@ class StripePaymentIntentsTest < Test::Unit::TestCase
     options = {
       currency: 'GBP',
       customer: @customer,
-      shipping: {
+      shipping_address: {
         name: 'John Adam',
         carrier: 'TEST',
         phone: '+0018313818368',
